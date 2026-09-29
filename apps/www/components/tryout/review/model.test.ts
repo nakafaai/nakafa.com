@@ -1,7 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
-import { projectTryoutReview } from "@/components/tryout/review/model";
+import {
+  projectTryoutPreview,
+  projectTryoutReview,
+} from "@/components/tryout/review/model";
 
 const FIRST_IDENTITY = {
   contentHash: "content-1",
@@ -27,6 +31,7 @@ describe("projectTryoutReview", () => {
         {
           answer: "answer:questions/1",
           content: "question:questions/1",
+          placementId: "placement-1",
           questionOrder: 1,
           response: {
             answeredAt: 10,
@@ -39,6 +44,7 @@ describe("projectTryoutReview", () => {
         {
           answer: "answer:questions/2",
           content: "question:questions/2",
+          placementId: "placement-2",
           questionOrder: 2,
           response: {
             answeredAt: 20,
@@ -155,6 +161,46 @@ describe("projectTryoutReview", () => {
   );
 });
 
+describe("projectTryoutPreview", () => {
+  it.effect(
+    "pairs locked questions with bodies but no answer or recorded response",
+    () =>
+      Effect.gen(function* () {
+        const content = createContent([SECOND_IDENTITY, FIRST_IDENTITY]);
+        const preview = yield* projectTryoutPreview({
+          content: { questions: content.questions },
+          questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
+        });
+
+        expect(preview).toEqual([
+          {
+            content: "question:questions/1",
+            questionOrder: 1,
+            responseSpec: responseSpec(),
+          },
+        ]);
+      })
+  );
+
+  it.effect(
+    "fails with a typed error when a locked question lost its body",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* Effect.flip(
+            projectTryoutPreview({
+              content: { questions: createContent([FIRST_IDENTITY]).questions },
+              questions: [createRuntimeQuestion(SECOND_IDENTITY, 2)],
+            })
+          )
+        ).toMatchObject({
+          _tag: "TryoutReviewProjectionError",
+          code: "TRYOUT_REVIEW_PROJECTION",
+        });
+      })
+  );
+});
+
 /** Expects the review projection to fail through its typed Effect channel. */
 function expectProjectionError(
   input: Parameters<typeof projectTryoutReview>[0]
@@ -190,6 +236,7 @@ function createRuntimeQuestion(
 ) {
   return {
     ...identity,
+    placementId: `placement-${questionOrder}` as Id<"tryoutAttemptPlacements">,
     questionOrder,
     response: {
       answeredAt: questionOrder * 10,

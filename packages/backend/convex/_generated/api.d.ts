@@ -3389,6 +3389,11 @@ export declare const api: {
             | {
                 kind: "message";
                 page: {
+                  focus?: {
+                    attemptId: Id<"tryoutAttempts">;
+                    kind: "tryout-question";
+                    placementId: Id<"tryoutAttemptPlacements">;
+                  };
                   locale: "en" | "id" | "de";
                   materialContextHint?: string;
                   slug: string;
@@ -3399,6 +3404,11 @@ export declare const api: {
                 kind: "retry";
                 order: number;
                 page?: {
+                  focus?: {
+                    attemptId: Id<"tryoutAttempts">;
+                    kind: "tryout-question";
+                    placementId: Id<"tryoutAttemptPlacements">;
+                  };
                   locale: "en" | "id" | "de";
                   materialContextHint?: string;
                   slug: string;
@@ -7523,6 +7533,64 @@ export declare const internal: {
     };
   };
   nina: {
+    focus: {
+      read: FunctionReference<
+        "query",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        {
+          explanationMdx: string;
+          isCorrect: boolean | null;
+          questionLocale: "en" | "id" | "de";
+          questionMdx: string;
+          questionOrder: number;
+          responseSpec:
+            | {
+                kind: "single-choice";
+                options: Array<{
+                  isCorrect: boolean;
+                  label: string;
+                  optionKey: string;
+                  order: number;
+                }>;
+              }
+            | {
+                kind: "multiple-choice";
+                options: Array<{
+                  isCorrect: boolean;
+                  label: string;
+                  optionKey: string;
+                  order: number;
+                }>;
+              }
+            | {
+                categories: Array<{
+                  categoryKey: string;
+                  label: string;
+                  order: number;
+                }>;
+                kind: "category";
+                statements: Array<{
+                  correctCategoryKey: string;
+                  label: string;
+                  order: number;
+                  statementKey: string;
+                }>;
+              };
+          selection:
+            | { kind: "single-choice"; optionKey: string }
+            | { kind: "multiple-choice"; optionKeys: Array<string> }
+            | {
+                assignments: Array<{
+                  categoryKey: string;
+                  statementKey: string;
+                }>;
+                kind: "category";
+              }
+            | null;
+        } | null
+      >;
+    };
     lifecycle: {
       claim: FunctionReference<
         "mutation",
@@ -7541,6 +7609,13 @@ export declare const internal: {
               locale: "en" | "id" | "de";
               needsFetch: boolean;
               nina: {
+                focus?: {
+                  attemptId: Id<"tryoutAttempts">;
+                  kind: "tryout-question";
+                  placementId: Id<"tryoutAttemptPlacements">;
+                  questionOrder: number;
+                  sectionKey: string;
+                };
                 learning: {
                   assetId?: string;
                   contentId?: string;
@@ -7689,6 +7764,13 @@ export declare const internal: {
               locale: "en" | "id" | "de";
               needsFetch: boolean;
               nina: {
+                focus?: {
+                  attemptId: Id<"tryoutAttempts">;
+                  kind: "tryout-question";
+                  placementId: Id<"tryoutAttemptPlacements">;
+                  questionOrder: number;
+                  sectionKey: string;
+                };
                 learning: {
                   assetId?: string;
                   contentId?: string;
@@ -7852,6 +7934,13 @@ export declare const internal: {
               locale: "en" | "id" | "de";
               needsFetch: boolean;
               nina: {
+                focus?: {
+                  attemptId: Id<"tryoutAttempts">;
+                  kind: "tryout-question";
+                  placementId: Id<"tryoutAttemptPlacements">;
+                  questionOrder: number;
+                  sectionKey: string;
+                };
                 learning: {
                   assetId?: string;
                   contentId?: string;
@@ -8005,6 +8094,13 @@ export declare const internal: {
               locale: "en" | "id" | "de";
               needsFetch: boolean;
               nina: {
+                focus?: {
+                  attemptId: Id<"tryoutAttempts">;
+                  kind: "tryout-question";
+                  placementId: Id<"tryoutAttemptPlacements">;
+                  questionOrder: number;
+                  sectionKey: string;
+                };
                 learning: {
                   assetId?: string;
                   contentId?: string;
@@ -8153,6 +8249,13 @@ export declare const internal: {
               locale: "en" | "id" | "de";
               needsFetch: boolean;
               nina: {
+                focus?: {
+                  attemptId: Id<"tryoutAttempts">;
+                  kind: "tryout-question";
+                  placementId: Id<"tryoutAttemptPlacements">;
+                  questionOrder: number;
+                  sectionKey: string;
+                };
                 learning: {
                   assetId?: string;
                   contentId?: string;
@@ -8316,6 +8419,13 @@ export declare const internal: {
               locale: "en" | "id" | "de";
               needsFetch: boolean;
               nina: {
+                focus?: {
+                  attemptId: Id<"tryoutAttempts">;
+                  kind: "tryout-question";
+                  placementId: Id<"tryoutAttemptPlacements">;
+                  questionOrder: number;
+                  sectionKey: string;
+                };
                 learning: {
                   assetId?: string;
                   contentId?: string;

@@ -17,6 +17,29 @@ import { useNinaSubmission } from "@/components/ai/submission";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
 
+/** Admission waits for identity and sends signed-out learners to sign in. */
+export function useAdmissionGate(onSignIn?: () => void) {
+  const router = useRouter();
+  const authNavigation = useCurrentAuthNavigation();
+  const pending = useViewer((state) => state.isPending);
+  const viewer = useViewer((state) => state.viewer);
+
+  /** Returns whether a prompt may be admitted for the current viewer now. */
+  function admit() {
+    if (pending) {
+      return false;
+    }
+    if (viewer === null) {
+      onSignIn?.();
+      router.push(authNavigation.readHref());
+      return false;
+    }
+    return true;
+  }
+
+  return { admit, pending, viewerId: viewer?.id };
+}
+
 /** Keeps new-chat admission, optimistic prompts and rollback identical at every entry. */
 export function useChatAdmission({
   onComplete,
@@ -25,11 +48,8 @@ export function useChatAdmission({
   onComplete: (chatId: Id<"chats">) => void;
   onSignIn?: () => void;
 }) {
-  const router = useRouter();
-  const authNavigation = useCurrentAuthNavigation();
+  const gate = useAdmissionGate(onSignIn);
   const setText = useAi((state) => state.setText);
-  const isUserPending = useViewer((state) => state.isPending);
-  const viewer = useViewer((state) => state.viewer);
   const { send } = useNinaSubmission();
   const [isPending, startTransition] = useTransition();
   const [prompt, showPrompt] = useOptimistic<
@@ -40,7 +60,7 @@ export function useChatAdmission({
   >(null);
   const promptId = useId();
   const activation = useRef(0);
-  const viewerId = viewer?.id;
+  const viewerId = gate.viewerId;
 
   useEffect(() => {
     if (!viewerId) {
@@ -53,12 +73,7 @@ export function useChatAdmission({
 
   function submit(message: PromptInputMessage) {
     const query = message.text?.trim();
-    if (!query || isUserPending || isPending) {
-      return false;
-    }
-    if (viewer === null) {
-      onSignIn?.();
-      router.push(authNavigation.readHref());
+    if (!query || isPending || !gate.admit()) {
       return false;
     }
     const draft = { ...message, text: query };
@@ -90,5 +105,5 @@ export function useChatAdmission({
     return admission.then((receipt) => receipt !== undefined);
   }
 
-  return { disabled: isPending || isUserPending, prompt, promptId, submit };
+  return { disabled: isPending || gate.pending, prompt, promptId, submit };
 }

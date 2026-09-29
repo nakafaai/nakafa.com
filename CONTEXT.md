@@ -51,7 +51,8 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Activity**: One native Agent tool invocation shown as a collapsed purpose row. Its children are published evidence artifacts, not an exhaustive specialist transcript.
 - **Capability policy**: The per-turn decision that returns Allowed or Denied for a LearningCapability.
 - **Pinned context**: The latest stored NinaContextPack reused when a continued chat is opened away from a verified learning asset.
-- **Page fetch**: The one permitted current-page Nakafa content read for a verified learning page.
+- **Page fetch**: The one permitted current-page Nakafa content read for a verified learning page. Only pages with signed Markdown are verified; try-out and topic pages have none.
+- **Question focus**: One finished try-out question a learner asks Nina about from their review. Admission freezes it into the NinaContextPack only for the attempt owner, a finished section, and a plan that grants review answers. Continued turns keep it while that entitlement holds.
 
 ## Evaluation
 
