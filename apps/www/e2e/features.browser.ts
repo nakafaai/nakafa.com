@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   withBrowserContext,
@@ -64,6 +64,28 @@ const prepareFeaturesPage = Effect.fn("NakafaE2E.prepareFeaturesPage")(
   }
 );
 
+/**
+ * Centers one control instantly. The page scrolls smoothly, so letting the
+ * pointer action scroll races the animation and hits the sticky header.
+ */
+const centerControl = Effect.fn("NakafaE2E.centerControl")(function* (
+  control: Locator
+) {
+  yield* Effect.promise(() =>
+    control.evaluate((element) =>
+      element.scrollIntoView({ behavior: "instant", block: "center" })
+    )
+  );
+});
+
+/** Clicks one centered control without a second, smooth scroll. */
+const clickCentered = Effect.fn("NakafaE2E.clickCentered")(function* (
+  control: Locator
+) {
+  yield* centerControl(control);
+  yield* Effect.promise(() => control.click({ scroll: "none" }));
+});
+
 const expectNinaPageFlow = Effect.fn("NakafaE2E.expectNinaPageFlow")(function* (
   page: Page
 ) {
@@ -86,22 +108,25 @@ const expectNinaPageFlow = Effect.fn("NakafaE2E.expectNinaPageFlow")(function* (
       conversation.getByText(NINA_ANSWER_TEXT, { exact: false })
     ).toBeVisible()
   );
-  yield* Effect.promise(() => reasoningTrigger.click());
-  yield* Effect.promise(() =>
-    expect(
-      conversation.getByText(NINA_REASONING_TEXT, { exact: false })
-    ).toBeVisible()
-  );
-  yield* Effect.promise(() => reasoningTrigger.click());
-  yield* Effect.promise(() => activityTrigger.click());
-  yield* Effect.promise(() => mathTrigger.click());
+  const reasoning = conversation.getByText(NINA_REASONING_TEXT, {
+    exact: false,
+  });
+  yield* clickCentered(reasoningTrigger);
+  yield* Effect.promise(() => expect(reasoning).toBeVisible());
+  yield* clickCentered(reasoningTrigger);
+  // The collapse moves every row below it, so wait before the next target.
+  yield* Effect.promise(() => expect(reasoning).toBeHidden());
+  yield* clickCentered(activityTrigger);
+  yield* clickCentered(mathTrigger);
   yield* Effect.promise(() =>
     expect(mathTrigger).toHaveAttribute("aria-expanded", "true")
   );
-  yield* Effect.promise(() => activityTrigger.click());
+  yield* clickCentered(activityTrigger);
+  yield* Effect.promise(() => expect(mathTrigger).toBeHidden());
 
   // The marketing transcript belongs to the page, so wheel input must not be trapped.
-  yield* Effect.promise(() => activityTrigger.hover());
+  yield* centerControl(activityTrigger);
+  yield* Effect.promise(() => activityTrigger.hover({ scroll: "none" }));
   const before = yield* Effect.promise(() =>
     page.evaluate(() => window.scrollY)
   );
