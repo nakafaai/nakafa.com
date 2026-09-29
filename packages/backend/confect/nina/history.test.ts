@@ -1,267 +1,380 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  boundHistory,
-  NinaContextLimitError,
-} from "@repo/backend/confect/nina/history";
+  countTextTokens,
+  NINA_BUDGET,
+} from "@repo/backend/confect/nina/budget";
+import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
 import type { ModelMessage } from "ai";
-import { Effect, Result } from "effect";
+
+/** One complete turn with a verified capability result. */
+function turn(
+  question: string,
+  evidence = "Verified evidence."
+): ModelMessage[] {
+  return [
+    { role: "user", content: question },
+    {
+      role: "assistant",
+      content: [
+        { type: "reasoning", text: "Private chain" },
+        {
+          type: "tool-call",
+          toolCallId: `${question}-call`,
+          toolName: "nakafa",
+          input: {},
+        },
+      ],
+    },
+    {
+      role: "tool",
+      content: [
+        {
+          type: "tool-result",
+          toolCallId: `${question}-call`,
+          toolName: "nakafa",
+          output: {
+            type: "json",
+            value: { text: evidence, artifacts: [] },
+          },
+        },
+      ],
+    },
+    { role: "assistant", content: `Answer to ${question}` },
+  ];
+}
+
+function tokens(messages: readonly ModelMessage[]) {
+  return countTextTokens(JSON.stringify(messages));
+}
 
 describe("Nina provider context", () => {
-  it.effect(
-    "projects validated evidence without changing the permanent transcript or losing tool pairs",
-    () =>
-      Effect.gen(function* () {
-        const messages: ModelMessage[] = [
-          { role: "user", content: "Explain the current page" },
+  it("projects stored evidence to text without changing the transcript or losing tool pairs", () => {
+    const history = turn("Explain the page");
+    const before = JSON.stringify(history);
+    const result = assembleContext({
+      current: [{ role: "user", content: "Next question" }],
+      currentOrder: 1,
+      recent: history,
+      throughOrder: null,
+    });
+    expect(JSON.stringify(history)).toBe(before);
+    expect(result).toEqual([
+      history[0],
+      {
+        role: "assistant",
+        content: [
           {
-            role: "assistant",
-            content: [
-              { type: "reasoning", text: "Private chain" },
-              {
-                type: "tool-call",
-                toolCallId: "read-1",
-                toolName: "nakafa",
-                input: {},
-              },
-            ],
+            type: "tool-call",
+            toolCallId: "Explain the page-call",
+            toolName: "nakafa",
+            input: {},
+          },
+        ],
+      },
+      {
+        role: "tool",
+        content: [
+          {
+            type: "tool-result",
+            toolCallId: "Explain the page-call",
+            toolName: "nakafa",
+            output: { type: "text", value: "Verified evidence." },
+          },
+        ],
+      },
+      history[3],
+      { role: "user", content: "Next question" },
+    ]);
+  });
+
+  it("keeps verified evidence of an unavailable capability and drops raw foreign output", () => {
+    const result = boundStep([
+      { role: "user", content: "Compute the determinant" },
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "tool-call",
+            toolName: "determinant",
+            toolCallId: "old",
+            input: {},
           },
           {
-            role: "tool",
-            content: [
-              {
-                type: "tool-result",
-                toolCallId: "read-1",
-                toolName: "nakafa",
-                output: {
-                  type: "json",
-                  value: {
-                    text: "Evidence with [source](https://example.com).",
-                    artifacts: [
-                      {
-                        id: "read-1",
-                        type: "data-nakafa",
-                        data: {
-                          kind: "content",
-                          status: "error",
-                          input: { content_ref: "https://nakafa.com/en/home" },
-                          error: "Unavailable",
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
-            ],
+            type: "tool-call",
+            toolName: "foreign",
+            toolCallId: "raw",
+            input: {},
           },
-        ];
-        const before = JSON.stringify(messages);
-        const result = yield* boundHistory(messages);
-        expect(JSON.stringify(messages)).toBe(before);
-        expect(result[1]).toMatchObject({
+        ],
+      },
+      {
+        role: "tool",
+        content: [
+          {
+            type: "tool-result",
+            toolName: "determinant",
+            toolCallId: "old",
+            output: {
+              type: "json",
+              value: { text: "Verified determinant: -2", artifacts: [] },
+            },
+          },
+          {
+            type: "tool-result",
+            toolName: "foreign",
+            toolCallId: "raw",
+            output: { type: "json", value: { result: true } },
+          },
+        ],
+      },
+      { role: "assistant", content: "The result is -2" },
+    ]);
+    expect(result).toEqual([
+      { role: "user", content: "Compute the determinant" },
+      { role: "assistant", content: "Verified determinant: -2" },
+      { role: "assistant", content: "The result is -2" },
+    ]);
+  });
+
+  it("keeps malformed or non-JSON stored results as bounded text instead of failing", () => {
+    const result = boundStep([
+      { role: "user", content: "Check the work" },
+      {
+        role: "assistant",
+        content: [
+          { type: "tool-call", toolName: "math", toolCallId: "a", input: {} },
+          { type: "tool-call", toolName: "math", toolCallId: "b", input: {} },
+          { type: "tool-call", toolName: "math", toolCallId: "c", input: {} },
+        ],
+      },
+      {
+        role: "tool",
+        content: [
+          {
+            type: "tool-result",
+            toolName: "math",
+            toolCallId: "a",
+            output: { type: "json", value: { text: 42 } },
+          },
+          {
+            type: "tool-result",
+            toolName: "math",
+            toolCallId: "b",
+            output: { type: "error-text", value: "CAS unavailable" },
+          },
+          {
+            type: "tool-result",
+            toolName: "math",
+            toolCallId: "c",
+            output: { type: "execution-denied", reason: "Not allowed" },
+          },
+          // The SDK prunes an approval response without its request.
+          { type: "tool-approval-response", approvalId: "c", approved: false },
+        ],
+      },
+    ]);
+    expect(result.at(-1)).toEqual({
+      role: "tool",
+      content: [
+        expect.objectContaining({
+          output: {
+            type: "text",
+            value: '{"type":"json","value":{"text":42}}',
+          },
+        }),
+        expect.objectContaining({
+          output: { type: "text", value: "CAS unavailable" },
+        }),
+        expect.objectContaining({
+          output: {
+            type: "text",
+            value: '{"type":"execution-denied","reason":"Not allowed"}',
+          },
+        }),
+      ],
+    });
+  });
+
+  it("omits turns the rolling summary already covers", () => {
+    const recent = [...turn("First"), ...turn("Second"), ...turn("Third")];
+    const result = assembleContext({
+      current: [{ role: "user", content: "Fourth" }],
+      currentOrder: 3,
+      recent,
+      throughOrder: 1,
+    });
+    expect(result[0]).toEqual({ role: "user", content: "Third" });
+    expect(JSON.stringify(result)).not.toContain("First");
+    expect(JSON.stringify(result)).not.toContain("Second");
+  });
+
+  it("keeps whole newest turns within the history budget and drops a cut turn", () => {
+    const large = "Long evidence paragraph.\n\n".repeat(900);
+    const recent: ModelMessage[] = [
+      { role: "assistant", content: "Tail of an older turn" },
+      ...turn("Old", large),
+      ...turn("Middle", large),
+      ...turn("New", large),
+    ];
+    const result = assembleContext({
+      current: [{ role: "user", content: "Latest" }],
+      currentOrder: 10,
+      recent,
+      throughOrder: null,
+    });
+    const history = result.slice(0, -1);
+    expect(tokens(history)).toBeLessThanOrEqual(NINA_BUDGET.history + 200);
+    expect(history[0]).toMatchObject({ role: "user" });
+    expect(JSON.stringify(result)).not.toContain("Tail of an older turn");
+    expect(JSON.stringify(result)).not.toContain("Answer to Old");
+    expect(JSON.stringify(result)).toContain("Answer to New");
+  });
+
+  it("shortens the evidence of one oversized newest turn instead of dropping it", () => {
+    const huge = "Evidence paragraph.\n\n".repeat(20_000);
+    // Three results each fill the evidence budget, so the turn outgrows history.
+    const oversized = [
+      ...turn("Huge", huge),
+      ...turn("Huge", huge).slice(1, 3),
+      ...turn("Huge", huge).slice(1, 3),
+    ];
+    const result = assembleContext({
+      current: [{ role: "user", content: "Follow up" }],
+      currentOrder: 1,
+      recent: oversized,
+      throughOrder: null,
+    });
+    expect(result[0]).toEqual({ role: "user", content: "Huge" });
+    expect(JSON.stringify(result)).toContain(
+      "Earlier evidence in this conversation, shortened."
+    );
+    expect(tokens(result)).toBeLessThanOrEqual(NINA_BUDGET.history);
+  });
+
+  it("counts attachments as flat file tokens, not their bytes", () => {
+    const recent: ModelMessage[] = [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Read this photo" },
+          {
+            type: "file",
+            mediaType: "image/png",
+            data: "A".repeat(2_000_000),
+          },
+        ],
+      },
+      { role: "assistant", content: "It shows a parabola." },
+    ];
+    const result = assembleContext({
+      current: [{ role: "user", content: "Explain more" }],
+      currentOrder: 1,
+      recent,
+      throughOrder: null,
+    });
+    expect(result).toHaveLength(3);
+  });
+
+  it("keeps approval parts while shortening the evidence around them", () => {
+    const evidence = "Approved evidence paragraph.\n\n".repeat(900);
+    const result = boundStep([
+      { role: "user", content: "Use the approved tool" },
+      ...[1, 2, 3, 4].flatMap((round): ModelMessage[] => [
+        {
           role: "assistant",
-          content: [{ type: "tool-call", toolCallId: "read-1" }],
-        });
-        expect(result[2]).toEqual({
+          content: [
+            {
+              type: "tool-call",
+              toolCallId: `call-${round}`,
+              toolName: "nakafa",
+              input: {},
+            },
+            {
+              type: "tool-approval-request",
+              approvalId: `approval-${round}`,
+              toolCallId: `call-${round}`,
+            },
+          ],
+        },
+        {
           role: "tool",
           content: [
             {
+              type: "tool-approval-response",
+              approvalId: `approval-${round}`,
+              approved: true,
+            },
+            {
               type: "tool-result",
-              toolCallId: "read-1",
+              toolCallId: `call-${round}`,
               toolName: "nakafa",
               output: {
-                type: "text",
-                value: "Evidence with [source](https://example.com).",
+                type: "json",
+                value: { text: evidence, artifacts: [] },
               },
             },
           ],
-        });
-      })
-  );
-
-  it.effect(
-    "prunes unavailable tools while retaining current tool evidence",
-    () =>
-      Effect.gen(function* () {
-        const messages: ModelMessage[] = [
-          {
-            role: "tool",
-            content: [
-              {
-                type: "tool-result",
-                toolCallId: "foreign",
-                toolName: "foreign",
-                output: { type: "json", value: { result: true } },
-              },
-              {
-                type: "tool-result",
-                toolCallId: "math",
-                toolName: "math",
-                output: { type: "text", value: "2" },
-              },
-            ],
+        },
+      ]),
+    ]);
+    expect(result[2]).toMatchObject({
+      role: "tool",
+      content: [
+        { type: "tool-approval-response", approvalId: "approval-1" },
+        expect.objectContaining({
+          output: {
+            type: "text",
+            value: expect.stringContaining("shortened"),
           },
-        ];
-        expect(yield* boundHistory(messages)).toEqual([
-          {
-            role: "tool",
-            content: [
-              {
-                type: "tool-result",
-                toolCallId: "math",
-                toolName: "math",
-                output: { type: "text", value: "2" },
-              },
-            ],
-          },
-        ]);
-      })
-  );
+        }),
+      ],
+    });
+  });
 
-  it.effect(
-    "compacts validated evidence from any recorded Nina capability",
-    () =>
-      Effect.gen(function* () {
-        const result = yield* boundHistory([
+  it("shortens older evidence within the current turn and keeps the newest result", () => {
+    const evidence = "Current evidence paragraph.\n\n".repeat(900);
+    const toolRound = (id: string): ModelMessage[] => [
+      {
+        role: "assistant",
+        content: [
+          { type: "tool-call", toolCallId: id, toolName: "nakafa", input: {} },
+        ],
+      },
+      {
+        role: "tool",
+        content: [
           {
-            role: "tool",
-            content: [
-              {
-                type: "tool-result",
-                toolCallId: "search-1",
-                toolName: "search",
-                output: {
-                  type: "json",
-                  value: { text: "Recorded search evidence", artifacts: [] },
-                },
-              },
-            ],
+            type: "tool-result",
+            toolCallId: id,
+            toolName: "nakafa",
+            output: { type: "json", value: { text: evidence, artifacts: [] } },
           },
-        ]);
-        expect(result).toEqual([
-          { role: "assistant", content: "Recorded search evidence" },
-        ]);
-      })
-  );
-
-  it.effect(
-    "removes unavailable call pairs without moving evidence into another turn",
-    () =>
-      Effect.gen(function* () {
-        const messages: ModelMessage[] = [
-          { role: "user", content: "Compute the determinant" },
-          {
-            role: "assistant",
-            content: [
-              {
-                type: "tool-call",
-                toolName: "determinant",
-                toolCallId: "old",
-                input: {},
-              },
-            ],
-          },
-          {
-            role: "tool",
-            content: [
-              {
-                type: "tool-result",
-                toolName: "determinant",
-                toolCallId: "old",
-                output: {
-                  type: "json",
-                  value: { text: "Verified determinant: -2", artifacts: [] },
-                },
-              },
-            ],
-          },
-          { role: "assistant", content: "The result is -2" },
-          { role: "user", content: "Explain the result" },
-        ];
-        const before = JSON.stringify(messages);
-        expect(yield* boundHistory(messages)).toEqual([
-          messages[0],
-          { role: "assistant", content: "Verified determinant: -2" },
-          messages[3],
-          messages[4],
-        ]);
-        expect(JSON.stringify(messages)).toBe(before);
-      })
-  );
-
-  it.effect(
-    "rejects corrupt Nina evidence instead of silently dropping its fields",
-    () =>
-      Effect.gen(function* () {
-        const result = yield* boundHistory([
-          {
-            role: "tool",
-            content: [
-              {
-                type: "tool-result",
-                toolCallId: "bad",
-                toolName: "math",
-                output: { type: "json", value: { text: 42 } },
-              },
-            ],
-          },
-        ]).pipe(Effect.result);
-        expect(result).toEqual(
-          Result.fail(
-            new NinaContextLimitError({
-              message: "Stored Nina evidence does not satisfy its contract.",
-            })
-          )
-        );
-      })
-  );
-
-  it.effect(
-    "removes whole older turns when the message or token budget is reached",
-    () =>
-      Effect.gen(function* () {
-        const messages: ModelMessage[] = Array.from(
-          { length: 26 },
-          (_, order): ModelMessage[] => [
-            { role: "user", content: `Question ${order}` },
-            { role: "assistant", content: `Answer ${order}` },
-          ]
-        ).flat();
-        const result = yield* boundHistory(messages);
-        expect(result).toHaveLength(50);
-        expect(result[0]).toEqual({ role: "user", content: "Question 1" });
-        expect(result.at(-1)).toEqual({
-          role: "assistant",
-          content: "Answer 25",
-        });
-        const newest: ModelMessage = {
-          role: "user",
-          content: "Keep the latest question",
-        };
-        expect(
-          yield* boundHistory([
-            { role: "user", content: "unbounded ".repeat(26_000) },
-            { role: "assistant", content: "Old answer" },
-            newest,
-          ])
-        ).toEqual([newest]);
-      })
-  );
-
-  it.effect(
-    "fails explicitly when the latest turn alone exceeds the token budget",
-    () =>
-      Effect.gen(function* () {
-        const result = yield* boundHistory([
-          { role: "user", content: "unbounded ".repeat(26_000) },
-        ]).pipe(Effect.result);
-        expect(result).toEqual(
-          Result.fail(
-            new NinaContextLimitError({
-              message:
-                "The latest prompt and its evidence exceed Nina's context limit.",
-            })
-          )
-        );
-      })
-  );
+        ],
+      },
+    ];
+    const history = turn("Earlier", evidence);
+    const result = boundStep([
+      ...history,
+      { role: "user", content: "Gather everything" },
+      ...toolRound("one"),
+      ...toolRound("two"),
+      ...toolRound("three"),
+      ...toolRound("four"),
+    ]);
+    const current = result.slice(
+      result.findIndex(
+        (message) =>
+          message.role === "user" && message.content === "Gather everything"
+      )
+    );
+    expect(tokens(current)).toBeLessThanOrEqual(NINA_BUDGET.turnEvidence + 400);
+    expect(JSON.stringify(current.at(-1))).not.toContain("shortened");
+    expect(JSON.stringify(current[2])).toContain("shortened");
+    expect(result[2]).toMatchObject({
+      role: "tool",
+      content: [
+        expect.objectContaining({ output: { type: "text", value: evidence } }),
+      ],
+    });
+  });
 });

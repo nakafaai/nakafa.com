@@ -477,6 +477,27 @@ describe("Nina generation through the real Agent component", () => {
     expect(languageModel.doGenerateCalls).toHaveLength(0);
   });
 
+  it("sends the rolling summary and omits the turns it covers", async () => {
+    const languageModel = ninaModel();
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    const f = await createNinaTest({ history: 6 });
+    await f.t.mutation((ctx) =>
+      ctx.db.insert("ninaSummaries", {
+        chatId: f.chatId,
+        text: "- The learner practiced limits.",
+        throughOrder: 3,
+        updatedAt: Date.now(),
+      })
+    );
+    await f.t.action(run, { turnId: f.turnId });
+    const prompt = JSON.stringify(languageModel.doStreamCalls[0]?.prompt);
+    expect(prompt).toContain("# Conversation Summary");
+    expect(prompt).toContain("- The learner practiced limits.");
+    expect(prompt).not.toContain("Earlier question 3");
+    expect(prompt).toContain("Earlier question 4");
+    expect(prompt).toContain("Earlier answer 5");
+  });
+
   it("places the verified current page in the prompt without forcing a tool", async () => {
     const languageModel = ninaModel();
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));

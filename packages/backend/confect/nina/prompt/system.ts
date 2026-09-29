@@ -52,12 +52,14 @@ export function createNinaSystemPrompt({
   page,
   pageContent,
   runtime,
+  summary,
   user,
 }: {
   readonly focus?: string;
   readonly page: NinaPage;
   readonly pageContent?: string;
   readonly runtime: NinaRuntime;
+  readonly summary?: string;
   readonly user: NinaUser;
 }) {
   const learningPage = readNinaLearningPage(page);
@@ -65,6 +67,7 @@ export function createNinaSystemPrompt({
   return createNinaPrompt({
     ...(focus === undefined ? {} : { focus }),
     ...(pageContent === undefined ? {} : { pageContent }),
+    ...(summary === undefined ? {} : { summary }),
     currentDate: runtime.currentDate,
     currentPage: {
       locale: learningPage.locale,

@@ -15,12 +15,27 @@ const cleanupDeletedChat = FunctionImpl.make(
   spec,
   "cleanupDeletedChat",
   Effect.fn("triggers.chats.cleanup.cleanupDeletedChat")(function* (args) {
-    const turns = yield* (yield* DatabaseReader)
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    // The rolling summary holds conversation content, so it leaves with the chat.
+    const summary = yield* reader
+      .table("ninaSummaries")
+      .get("by_chatId", args.chatId)
+      .pipe(
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    if (summary) {
+      yield* writer
+        .table("ninaSummaries")
+        .delete(summary._id)
+        .pipe(Effect.orDie);
+    }
+    const turns = yield* reader
       .table("ninaTurns")
       .index("by_chatId_and_order", (index) => index.eq("chatId", args.chatId))
       .take(20)
       .pipe(Effect.orDie);
-    const writer = yield* DatabaseWriter;
     for (const turn of turns) {
       yield* writer.table("ninaTurns").delete(turn._id).pipe(Effect.orDie);
     }

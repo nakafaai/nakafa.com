@@ -16,7 +16,7 @@ import {
   generationFailure,
   NinaGenerationError,
 } from "@repo/backend/confect/nina/failure";
-import { boundHistory } from "@repo/backend/confect/nina/history";
+import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
 import { readPageContext } from "@repo/backend/confect/nina/page";
 import { formatFocusPrompt } from "@repo/backend/confect/nina/prompt/focus";
 import { createNinaSystemPrompt } from "@repo/backend/confect/nina/prompt/system";
@@ -57,7 +57,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     user: turn.user,
     runtime,
   });
-  const { focus, pageContent } = yield* Effect.all(
+  const { focus, pageContent, summary } = yield* Effect.all(
     {
       focus: turn.page.nina.focus
         ? readFocus(turn._id)
@@ -65,12 +65,16 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
       pageContent: turn.page.needsFetch
         ? readPageContext(context.url)
         : Effect.succeed(undefined),
+      summary: (yield* QueryRunner)(refs.internal.nina.summaries.read, {
+        chatId: turn.chatId,
+      }).pipe(Effect.orDie),
     },
     { concurrency: "unbounded" }
   );
   const instructions = createNinaSystemPrompt({
     ...(focus === undefined ? {} : { focus }),
     ...(pageContent === undefined ? {} : { pageContent }),
+    ...(summary ? { summary: summary.text } : {}),
     page: turn.page,
     user: turn.user,
     runtime,
@@ -93,8 +97,19 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     tools,
     usageHandler,
     contextOptions: { recentMessages: 50, excludeToolMessages: false },
-    contextHandler: (_ctx, { allMessages }) =>
-      runPromise(boundHistory(allMessages)),
+    contextHandler: (_ctx, fetched) =>
+      Promise.resolve(
+        assembleContext({
+          current: [
+            ...fetched.inputMessages,
+            ...fetched.inputPrompt,
+            ...fetched.existingResponses,
+          ],
+          currentOrder: turn.order,
+          recent: fetched.recent,
+          throughOrder: summary?.throughOrder ?? null,
+        })
+      ),
   });
   const prepare = createNinaPrepareStep({ instructions });
   let streamFailure: NinaGenerationError | undefined;
@@ -115,11 +130,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
             });
           },
           prepareStep: (step) =>
-            runPromise(
-              boundHistory(step.messages).pipe(
-                Effect.map((messages) => prepare({ ...step, messages }))
-              )
-            ),
+            prepare({ ...step, messages: boundStep(step.messages) }),
           repairToolCall: (options) =>
             runPromise(
               repairToolCall({

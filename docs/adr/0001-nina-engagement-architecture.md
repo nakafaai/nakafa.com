@@ -24,8 +24,8 @@ action invokes Agent with a Vercel AI Gateway model. Lifecycle mutations settle
 successful responses or refund failed and cancelled responses once.
 
 A committed final answer releases the chat immediately. The settlement mutation
-also schedules optional title and follow-up generation exactly once through
-Confect's Scheduler. That action rechecks the retained conversation and account,
+also schedules optional title, follow-up, and summary generation exactly once
+through Confect's Scheduler. That action rechecks the retained conversation and account,
 and anchors its Agent context to the completed prompt so a newer turn cannot
 change its suggestions. Optional generation never reserves or refunds credits.
 The completion event records answer-time usage; the durable turn's usage and
@@ -72,9 +72,15 @@ the learner's language, and the learner's recorded answer through an internal
 query, so question text and answer keys never come from the client. The official
 explanation is the source of truth for the answer.
 
-The main Agent receives at most 50 projected history messages and 24,000 tokens.
-Old reasoning and verbose artifact payloads are excluded from provider history;
-full conversation data stays in Agent storage. External research admits at most
+Provider input keeps whole recent turns that the conversation summary does not
+cover, newest first, within 12,000 tokens, and the current turn's evidence
+within 16,000 tokens. Older evidence shortens with a visible note before a turn
+is dropped, and no budget fails a turn. After a completed turn, the follow-up
+action folds turns beyond the four newest into the chat's conversation summary
+with a fast model once four such turns accumulate. The summary, at most 1,200
+tokens, sits in the system prompt context and is deleted with its chat. Old
+reasoning is excluded from provider history; full conversation data stays in
+Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000
 selected characters per source. Excess requests receive an explicit limit;
 sources are never silently omitted. Public grounding sources are published for

@@ -22,6 +22,7 @@ const SystemPromptPropsSchema = RuntimePromptContextSchema.mapFields(
     ...fields,
     focus: Schema.optional(Schema.String),
     pageContent: Schema.optional(Schema.String),
+    summary: Schema.optional(Schema.String),
     userRole: Schema.optional(PromptUserRoleSchema),
   })
 );
@@ -31,11 +32,13 @@ type SystemPromptProps = Schema.Schema.Type<typeof SystemPromptPropsSchema>;
 /**
  * Builds Nina's system prompt with internal LearningCapability policy. Stable
  * instructions lead so provider prompt caching reuses them across turns; the
- * page, question focus, and per-turn runtime facts follow in that order.
+ * page, question focus, conversation summary, and per-turn runtime facts
+ * follow in that order.
  */
 export function createNinaPrompt({
   focus,
   pageContent,
+  summary,
   userRole,
   ...runtime
 }: SystemPromptProps) {
@@ -53,6 +56,8 @@ export function createNinaPrompt({
     instructions,
     pageContent,
     focus,
+    summary &&
+      `# Conversation Summary\n\nEarlier turns of this conversation:\n\n${summary}`,
     dedent(formatRuntimePrompt(runtime)),
   ]
     .filter(Boolean)
