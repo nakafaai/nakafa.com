@@ -153,6 +153,31 @@ describe("owned signed acceptance runtime", () => {
   );
 
   it.live(
+    "keeps the runtime for a retry when its signed responses cannot be removed",
+    () =>
+      Effect.gen(function* () {
+        initialize();
+        const { fs, root } = yield* fixture;
+        const cache = `${root}/apps/www/.next/cache`;
+        yield* fs.makeDirectory(`${cache}/fetch-cache`, { recursive: true });
+        yield* fs.writeFileString(`${cache}/fetch-cache/entry`, "{}");
+        yield* reserveLocalRuntime(root);
+        yield* initializeLocalRuntime(root);
+        yield* fs.chmod(cache, 0o500);
+        const failure = yield* cleanLocalRuntime(root).pipe(
+          Effect.scoped,
+          Effect.flip
+        );
+        yield* fs.chmod(cache, 0o700);
+        expect(failure).toMatchObject({ _tag: "PlatformError" });
+        expect(yield* readLocalRuntime(root)).toBeDefined();
+        yield* cleanLocalRuntime(root).pipe(Effect.scoped);
+        expect(yield* readLocalRuntime(root)).toBeUndefined();
+        expect(yield* fs.exists(`${cache}/fetch-cache`)).toBe(false);
+      }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
     "refuses duplicate preparation and cleanup during an active lease",
     () =>
       Effect.gen(function* () {

@@ -346,6 +346,7 @@ export const cleanLocalRuntime = Effect.fn(
   }
   yield* leaseLocalRuntime(root);
   yield* assertLocalPortsFree(runtime);
-  yield* releaseLocalRuntime(runtime);
+  // A failed cache removal leaves the runtime in place for a clean retry.
   yield* discardSignedResponses(root);
+  yield* releaseLocalRuntime(runtime);
 });

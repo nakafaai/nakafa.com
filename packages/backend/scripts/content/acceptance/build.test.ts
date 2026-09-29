@@ -155,25 +155,31 @@ layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
     );
   }
 
-  it.effect("builds only after dropping responses signed by other keys", () =>
-    Effect.gen(function* () {
-      yield* runAcceptance("/test", "build", []);
-      expect(mocks.discard).toHaveBeenCalledWith("/test");
-      expect(mocks.discard.mock.invocationCallOrder[0]).toBeGreaterThan(
-        mocks.lease.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY
-      );
-      expect(mocks.discard.mock.invocationCallOrder[0]).toBeLessThan(
-        mocks.command.mock.invocationCallOrder[0] ?? 0
-      );
-      yield* runAcceptance("/test", "start", []);
-      expect(mocks.discard).toHaveBeenCalledOnce();
-      const failure = acceptanceRuntimeError("test cache failure");
-      mocks.discard.mockReturnValue(Effect.fail(failure));
-      expect(yield* runAcceptance("/test", "build", []).pipe(Effect.flip)).toBe(
-        failure
-      );
-      expect(mocks.command).toHaveBeenCalledTimes(2);
-    })
+  it.effect(
+    "clears foreign signed responses once the backend is ready, before building",
+    () =>
+      Effect.gen(function* () {
+        const steps: string[] = [];
+        const record = (step: string) => Effect.sync(() => steps.push(step));
+        mocks.backend.mockImplementation((_runtime, program) =>
+          record("backend ready").pipe(Effect.andThen(program))
+        );
+        mocks.discard.mockReturnValue(record("discard"));
+        mocks.command.mockReturnValue(record("command"));
+        yield* runAcceptance("/test", "build", []);
+        expect(mocks.discard).toHaveBeenCalledWith("/test");
+        expect(steps).toEqual(["backend ready", "discard", "command"]);
+        steps.length = 0;
+        yield* runAcceptance("/test", "start", []);
+        expect(steps).toEqual(["backend ready", "command"]);
+        const failure = acceptanceRuntimeError("test cache failure");
+        mocks.discard.mockReturnValue(Effect.fail(failure));
+        steps.length = 0;
+        expect(
+          yield* runAcceptance("/test", "build", []).pipe(Effect.flip)
+        ).toBe(failure);
+        expect(steps).toEqual(["backend ready"]);
+      })
   );
 
   it.effect("refuses an unprepared acceptance build", () =>

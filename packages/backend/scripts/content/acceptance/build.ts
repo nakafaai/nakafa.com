@@ -57,15 +57,17 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
     );
   }
   yield* leaseLocalRuntime(root);
-  if (operation === "build") {
-    yield* discardSignedResponses(root);
-  }
+  const command = runBuildCommand(
+    root,
+    [...applicationCommands[operation], ...args],
+    localApplicationEnvironment(runtime)
+  );
+  // The cache is cleared once the backend is ready, right before the build
+  // reads it, so nothing written while the backend started can survive.
   yield* withLocalBackend(
     runtime,
-    runBuildCommand(
-      root,
-      [...applicationCommands[operation], ...args],
-      localApplicationEnvironment(runtime)
-    )
+    operation === "build"
+      ? discardSignedResponses(root).pipe(Effect.andThen(command))
+      : command
   );
 }, Effect.scoped);
