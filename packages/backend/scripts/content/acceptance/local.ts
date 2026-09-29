@@ -44,7 +44,8 @@ const localEnvironment = {
   AI_GATEWAY_API_KEY: "build-disabled",
   AUTH_GOOGLE_ID: "build-disabled",
   AUTH_GOOGLE_SECRET: "build-disabled",
-  BETTER_AUTH_SECRET: "build-inert-secret-00000000",
+  // Long and varied enough that Better Auth's secret checks stay quiet.
+  BETTER_AUTH_SECRET: "acceptance-inert-secret-9fK2qL7xVz4NbT6w",
   CONTENT_RUNTIME_TOKEN: LOCAL_RUNTIME_TOKEN,
   FIRECRAWL_API_KEY: "build-disabled",
   JWKS: "[]",
