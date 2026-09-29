@@ -2,6 +2,7 @@ import {
   DEPENDENCY_HOLDS,
   FORBIDDEN_EFFECT_DEPENDENCIES,
   SCRIPT_DEPENDENCY_HOLDS,
+  VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
 import type {
   FirstPartyManifest,
@@ -149,9 +150,9 @@ export function validateDependencyPolicy({
     "@vitest/coverage-istanbul",
     "@vitest/ui",
   ]) {
-    if (workspace.catalog?.[dependency] !== "5.0.1") {
+    if (workspace.catalog?.[dependency] !== VITEST_COHORT_VERSION) {
       problems.push(
-        `${dependency} must match the supported Vitest 5.0.1 cohort.`
+        `${dependency} must match the supported Vitest ${VITEST_COHORT_VERSION} cohort.`
       );
     }
   }

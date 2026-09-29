@@ -21,6 +21,7 @@ update:
     - '@effect/tsgo'
     - '@effect/vitest'
     - '@nakafa/aksara-contracts'
+    - '@polar-sh/sdk'
     - '@next/third-parties'
     - '@turbo/gen'
     - '@types/node'
@@ -42,11 +43,11 @@ update:
 catalog:
   '@effect/platform-node': 4.0.0-rc.117
   '@effect/vitest': 4.0.0-rc.117
-  '@vitest/coverage-istanbul': 5.0.1
-  '@vitest/ui': 5.0.1
+  '@vitest/coverage-istanbul': 5.0.2
+  '@vitest/ui': 5.0.2
   effect: 4.0.0-rc.117
   typescript: 7.0.2
-  vitest: 5.0.1
+  vitest: 5.0.2
 
 overrides:
   "react": "19.2.8"
@@ -54,21 +55,21 @@ overrides:
   "@types/react": "19.2.18"
   "@types/react-dom": "19.2.7"
   "@effect/platform-node-shared": "4.0.0-rc.117"
-  "@react-email/ui@6.9.5>next": "16.3.6"
+  "@react-email/ui@6.11.0>next": "16.3.7"
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
-  "@scalar/json-magic@0.15.0>undici": "7.29.1"
+  "@scalar/json-magic@0.15.3>undici": "7.29.1"
   "auth@1.6.33>@babel/core": "7.29.7"
   "convex-helpers": "0.1.124"
   "fast-uri": "3.1.7"
   "ip-address": "10.7.0"
   "lodash": "4.18.1"
   "mermaid@11.17.2>dompurify": "^3.4.13"
-  "next@16.3.6>postcss": "8.5.28"
+  "next@16.3.7>postcss": "8.5.28"
 
 # The tested test-utils-only exception is recorded in scripts/dependencies/policy.ts.
 peerDependencyRules:
   allowedVersions:
-    "better-auth@1.6.33>vitest": "5.0.1"
+    "better-auth@1.6.33>vitest": "5.0.2"
 
 # The Next integration imports next/headers.js but omits its framework peer.
 # Resolve it from the consuming app so request storage has one identity.

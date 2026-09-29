@@ -4,7 +4,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { bumpDependencies } from "#scripts/dependencies/bump";
-import { DEPENDENCY_HOLDS } from "#scripts/dependencies/policy";
+import {
+  DEPENDENCY_HOLDS,
+  VITEST_COHORT_VERSION,
+} from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
@@ -56,11 +59,11 @@ function validInput() {
       catalog: {
         "@effect/platform-node": "4.0.0-rc.117",
         "@effect/vitest": "4.0.0-rc.117",
-        "@vitest/coverage-istanbul": "5.0.1",
-        "@vitest/ui": "5.0.1",
+        "@vitest/coverage-istanbul": VITEST_COHORT_VERSION,
+        "@vitest/ui": VITEST_COHORT_VERSION,
         effect: "4.0.0-rc.117",
         typescript: "7.0.2",
-        vitest: "5.0.1",
+        vitest: VITEST_COHORT_VERSION,
       },
       overrides: {
         "@effect/platform-node-shared": "4.0.0-rc.117",
