@@ -3,6 +3,7 @@
 import type { Ref } from "@confect/core";
 import { type OptimisticUpdate, useAction, useMutation } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
+import type { NinaFocusInput } from "@repo/backend/confect/nina/contract/focus";
 import {
   NinaFileType,
   NinaUploadError,
@@ -27,7 +28,10 @@ import {
 } from "@/lib/utils/browser";
 
 type Start = typeof refs.public.nina.turns.start;
-export type NinaDraft = PromptInputMessage & { text: string };
+export type NinaDraft = PromptInputMessage & {
+  focus?: NinaFocusInput;
+  text: string;
+};
 
 /** Confect replays this callback until the authoritative message arrives. */
 function optimisticPrompt(
@@ -273,6 +277,7 @@ export function useNinaSubmission() {
             locale: getLocale(),
             slug: getPathname(),
             ...(hint ? { materialContextHint: hint } : {}),
+            ...(prompt.focus ? { focus: prompt.focus } : {}),
           },
         }))
       ),

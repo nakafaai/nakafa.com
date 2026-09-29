@@ -17,11 +17,30 @@ export function createAiStore() {
             state.chatDrafts.unshift(key);
           }),
         getModel: () => get().model,
+        // A pending ask owns the sheet, so a second one is refused atomically.
+        openAsk: (ask) => {
+          if (get().ask) {
+            return false;
+          }
+          set({ activeChatId: null, ask, open: true, sheetActivated: true });
+          return true;
+        },
         removeChatDraft: (key) =>
           set((state) => {
             state.chatDrafts = state.chatDrafts.filter(
               (draft) => draft !== key
             );
+          }),
+        // One update hands the sheet from the pending prompt to its admitted chat.
+        resolveAsk: (id, chatId) =>
+          set((state) => {
+            if (state.ask?.id !== id) {
+              return;
+            }
+            state.ask = null;
+            if (chatId) {
+              state.activeChatId = chatId;
+            }
           }),
         resolveChatDraft: (key, receipt) =>
           set((state) => {
