@@ -6,12 +6,18 @@ import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
 import refs from "@repo/backend/confect/_generated/refs";
 import { products } from "@repo/backend/confect/utils/polar/products";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useConvexAuth } from "convex/react";
 
 import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
-import { FormBlock } from "@/components/user/settings/block";
+import { CardSection } from "@/components/shared/card/section";
 import { useBillingNavigation } from "@/lib/billing/navigation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
 
@@ -66,30 +72,33 @@ export function UserSettingsSubscriptions({
   };
 
   return (
-    <FormBlock
-      description={t("subscriptions-description")}
-      title={t("subscriptions")}
-    >
-      <div className="flex items-center gap-4">
-        <Activity mode={hasSubscription ? "visible" : "hidden"}>
-          <Button
-            disabled={billing.isPending || !isActiveLocale(locale)}
-            onClick={handleManageSubscription}
-          >
-            <Spinner icon={Settings01Icon} isLoading={billing.isPending} />
-            {t("manage")}
-          </Button>
-        </Activity>
-        <Activity mode={hasSubscription ? "hidden" : "visible"}>
-          <Button
-            disabled={billing.isPending || !isActiveLocale(locale)}
-            onClick={handleCheckout}
-          >
-            <Spinner icon={PartyIcon} isLoading={billing.isPending} />
-            {t("get-pro")}
-          </Button>
-        </Activity>
-      </div>
-    </FormBlock>
+    <CardSection>
+      <CardHeader>
+        <CardTitle>{t("subscriptions")}</CardTitle>
+        <CardDescription>{t("subscriptions-description")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-4">
+          <Activity mode={hasSubscription ? "visible" : "hidden"}>
+            <Button
+              disabled={billing.isPending || !isActiveLocale(locale)}
+              onClick={handleManageSubscription}
+            >
+              <Spinner icon={Settings01Icon} isLoading={billing.isPending} />
+              {t("manage")}
+            </Button>
+          </Activity>
+          <Activity mode={hasSubscription ? "hidden" : "visible"}>
+            <Button
+              disabled={billing.isPending || !isActiveLocale(locale)}
+              onClick={handleCheckout}
+            >
+              <Spinner icon={PartyIcon} isLoading={billing.isPending} />
+              {t("get-pro")}
+            </Button>
+          </Activity>
+        </div>
+      </CardContent>
+    </CardSection>
   );
 }

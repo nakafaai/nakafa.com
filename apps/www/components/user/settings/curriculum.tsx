@@ -5,6 +5,12 @@ import type { InvokeReturn } from "@confect/react";
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import {
   Select,
@@ -20,8 +26,11 @@ import { useConvexAuth } from "convex/react";
 
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
+import {
+  CardSection,
+  CardSectionFooter,
+} from "@/components/shared/card/section";
 import { CountryFlagIcon } from "@/components/shared/flag";
-import { FormBlock } from "@/components/user/settings/block";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
@@ -160,9 +169,55 @@ function UserSettingsCurriculumForm({
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-curriculum-form">
-      <FormBlock
-        description={t("curriculum-description")}
-        footer={
+      <CardSection>
+        <CardHeader>
+          <CardTitle>{t("curriculum")}</CardTitle>
+          <CardDescription>{t("curriculum-description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form.Field name="preferredCurriculumProgramKey">
+            {(field) => (
+              <Field>
+                <FieldLabel
+                  className="sr-only"
+                  htmlFor="user-settings-curriculum"
+                >
+                  {t("curriculum")}
+                </FieldLabel>
+                <Select
+                  items={selectItems}
+                  name={field.name}
+                  onValueChange={(value) => {
+                    if (value) {
+                      field.handleChange(value);
+                    }
+                  }}
+                  value={field.state.value || undefined}
+                >
+                  <SelectTrigger
+                    className="w-full max-w-xs"
+                    id="user-settings-curriculum"
+                  >
+                    <SelectValue placeholder={t("curriculum-placeholder")} />
+                  </SelectTrigger>
+                  <SelectContent className="max-w-(--available-width)">
+                    <SelectGroup>
+                      {programs.map((program) => (
+                        <SelectItem key={program.key} value={program.key}>
+                          <CountryFlagIcon countryCode={program.countryCode} />
+                          <span className="min-w-0 whitespace-normal leading-snug">
+                            {program.title}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
+          </form.Field>
+        </CardContent>
+        <CardSectionFooter>
           <form.Subscribe
             selector={(state) => [
               state.isDirty,
@@ -185,51 +240,8 @@ function UserSettingsCurriculumForm({
               </div>
             )}
           </form.Subscribe>
-        }
-        title={t("curriculum")}
-      >
-        <form.Field name="preferredCurriculumProgramKey">
-          {(field) => (
-            <Field>
-              <FieldLabel
-                className="sr-only"
-                htmlFor="user-settings-curriculum"
-              >
-                {t("curriculum")}
-              </FieldLabel>
-              <Select
-                items={selectItems}
-                name={field.name}
-                onValueChange={(value) => {
-                  if (value) {
-                    field.handleChange(value);
-                  }
-                }}
-                value={field.state.value || undefined}
-              >
-                <SelectTrigger
-                  className="w-full max-w-xs"
-                  id="user-settings-curriculum"
-                >
-                  <SelectValue placeholder={t("curriculum-placeholder")} />
-                </SelectTrigger>
-                <SelectContent className="max-w-(--available-width)">
-                  <SelectGroup>
-                    {programs.map((program) => (
-                      <SelectItem key={program.key} value={program.key}>
-                        <CountryFlagIcon countryCode={program.countryCode} />
-                        <span className="min-w-0 whitespace-normal leading-snug">
-                          {program.title}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
-        </form.Field>
-      </FormBlock>
+        </CardSectionFooter>
+      </CardSection>
     </form>
   );
 }

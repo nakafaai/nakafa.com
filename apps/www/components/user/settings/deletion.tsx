@@ -13,6 +13,11 @@ import {
   AlertDescription,
 } from "@repo/design-system/components/ui/alert";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -20,7 +25,10 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { FormBlock } from "@/components/user/settings/block";
+import {
+  CardSection,
+  CardSectionFooter,
+} from "@/components/shared/card/section";
 import { env } from "@/env";
 import {
   clearAccountDeletionAttempt,
@@ -133,9 +141,12 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   }
   return (
     <>
-      <FormBlock
-        description={t("delete-account-description")}
-        footer={
+      <CardSection variant="destructive">
+        <CardHeader>
+          <CardTitle>{t("delete-account")}</CardTitle>
+          <CardDescription>{t("delete-account-description")}</CardDescription>
+        </CardHeader>
+        <CardSectionFooter>
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-muted-foreground text-sm">
               {t("delete-account-footer")}
@@ -149,10 +160,8 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
               {t("delete-account")}
             </Button>
           </div>
-        }
-        title={t("delete-account")}
-        variant="destructive"
-      />
+        </CardSectionFooter>
+      </CardSection>
 
       <ResponsiveDialog
         description={t("delete-account-dialog-description")}

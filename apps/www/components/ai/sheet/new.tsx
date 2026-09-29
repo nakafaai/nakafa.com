@@ -30,10 +30,16 @@ export function SheetNew() {
 
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const setOpen = useAi((state) => state.setOpen);
-  const { prompt, promptId, submit, disabled } = useChatAdmission({
+  const ask = useAi((state) => state.ask);
+  const admission = useChatAdmission({
     onComplete: setActiveChatId,
     onSignIn: () => setOpen(false),
   });
+  // A page-level ask shows its prompt here while its chat is admitted.
+  const prompt = admission.prompt
+    ? { ...admission.prompt, id: admission.promptId }
+    : ask && { ...ask, files: [] };
+  const disabled = admission.disabled || ask !== null;
 
   return (
     <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
@@ -42,10 +48,10 @@ export function SheetNew() {
           <MessageScrollerViewport aria-label={t("messages")}>
             <MessageScrollerContent className="p-6">
               {prompt ? (
-                <MessageScrollerItem messageId={promptId} scrollAnchor>
+                <MessageScrollerItem messageId={prompt.id} scrollAnchor>
                   <Message align="end">
                     <NinaPrompt files={prompt.files}>
-                      <Response id={promptId}>{prompt.text}</Response>
+                      <Response id={prompt.id}>{prompt.text}</Response>
                     </NinaPrompt>
                   </Message>
                 </MessageScrollerItem>
@@ -75,9 +81,9 @@ export function SheetNew() {
       </Primitive.Provider>
 
       <div className="grid shrink-0 px-2 pb-2">
-        <NinaInput autoFocus disabled={disabled} onSubmit={submit}>
+        <NinaInput autoFocus disabled={disabled} onSubmit={admission.submit}>
           {prompt ? null : (
-            <NinaSuggestions disabled={disabled} onSubmit={submit} />
+            <NinaSuggestions disabled={disabled} onSubmit={admission.submit} />
           )}
         </NinaInput>
       </div>
