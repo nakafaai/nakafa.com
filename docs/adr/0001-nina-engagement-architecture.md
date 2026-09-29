@@ -39,10 +39,19 @@ React uses Confect hooks for application functions and the official Agent
 optimistic update contract. There is no Next.js AI transport route or separate AI
 backend package.
 
+Nina's system prompt leads with stable instructions so provider prompt caching
+reuses them across turns. The current page, a question focus, and per-turn
+runtime facts follow in that order. On a verified learning page, generation
+reads the signed page once before the first model step and places it in that
+context within the page token budget. The model spends no forced tool step on
+it and asks Nakafa for other sections.
+
 Math, Nakafa retrieval, and external research are Agent tools implemented as
 Effect programs. Specialist agents use the same Vercel Gateway provider and
 Agent usage handler. Tool results retain progressive evidence cards and final
-model-facing evidence. Context compaction changes provider input only; it does
+model-facing evidence, which never exceeds the evidence token budget: a
+truncated output says what it omitted and how to ask for it, and Nakafa reads
+continue by heading section. Context compaction changes provider input only; it does
 not discard the stored transcript. Math uses deterministic computation, Nakafa
 uses authenticated signed content, and research admits retrieved sources.
 

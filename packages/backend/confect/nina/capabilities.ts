@@ -19,14 +19,12 @@ import {
 } from "@repo/backend/confect/nina/contract/tools";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
-import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
 import {
   decideNinaCapability,
   deniedCapabilityResult,
 } from "@repo/backend/confect/nina/policy/capability";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import { getSourceReferencesFromMessages } from "@repo/backend/confect/nina/research/source";
-import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import type { Locale } from "@repo/contents/content";
 import { Effect, Stream } from "effect";
 
@@ -41,14 +39,13 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
   usageHandler: UsageHandler
 ) {
   const services = yield* Effect.context<ActionCtx | QueryRunner>();
-  let pagePending = context.needsPageFetch;
   return {
     nakafa: createTool({
       description:
-        "Retrieve Nakafa educational evidence, current pages, lessons, articles, Quran, examples and practice. Select educational content here before verifying its mathematics.",
+        "Retrieve Nakafa educational evidence: lessons, articles, Quran, examples, practice, and other sections of the current page. Select educational content here before verifying its mathematics.",
       inputSchema: nakafaToolInputSchema,
       outputSchema,
-      execute: (_ctx, input, { toolCallId, abortSignal }) =>
+      execute: (_ctx, input, { abortSignal }) =>
         Stream.toAsyncIterableWith(
           streamCapability(
             (publish) =>
@@ -62,19 +59,6 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
                     capability: "nakafa",
                     decision,
                   });
-                }
-                if (pagePending) {
-                  pagePending = false;
-                  const text = yield* read({
-                    input: {
-                      content_ref: NakafaAgentContentRefInputSchema.make(
-                        context.url
-                      ),
-                    },
-                    toolCallId,
-                    publish,
-                  });
-                  return { text };
                 }
                 return yield* runNakafaAgent({
                   userId,

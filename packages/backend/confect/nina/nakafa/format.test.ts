@@ -17,6 +17,7 @@ import { Schema } from "effect";
 
 const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
 
+const MORE_SECTIONS = /- \d+ more sections$/;
 const subjectRoute =
   "material/lesson/mathematics/example-topic/example-section";
 
@@ -91,12 +92,12 @@ describe("Nakafa formatter", () => {
     expect(first).toContain("- Contoh (section: contoh)");
     expect(first).toContain("- Contoh (section: contoh-2)");
 
-    const later = formatRead(content, "contoh-2");
+    const later = formatRead(content, { section: "contoh-2" });
     expect(later).toContain("## Contoh");
     expect(later).not.toContain("Pengantar singkat.");
     expect(later).toContain("- Start (section: top)");
 
-    const missing = formatRead(content, "latihan");
+    const missing = formatRead(content, { section: "latihan" });
     expect(missing).toContain("Section latihan was not found in this content.");
     expect(missing).toContain("- Definisi (section: definisi)");
   });
@@ -113,7 +114,7 @@ describe("Nakafa formatter", () => {
       title: "Surah",
     });
     expect(countTextTokens(read)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
-    expect(read).toMatch(/- \d+ more sections$/);
+    expect(read).toMatch(MORE_SECTIONS);
   });
 
   it("formats Quran references with and without tafsir", () => {

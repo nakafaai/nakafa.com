@@ -130,7 +130,7 @@ describe("formatNinaContextPackPrompt", () => {
     expect(prompt).toContain("- title: Vector Addition");
     expect(prompt).toContain("- mode: placement");
     expect(prompt).toContain("- parentTitle: Vector");
-    expect(prompt).toContain("- current page fetch allowed: yes");
+    expect(prompt).toContain("- current page content provided: yes");
     expect(prompt).toContain("- evidence scope: verified-page");
   });
 });
@@ -160,11 +160,29 @@ describe("createNinaSystemPrompt", () => {
     expect(plain).not.toContain("# Focused Question Instructions");
     expect(focused).toContain("## Question\n\nWhat is 2 + 2?");
     expect(focused).toContain("# Focused Question Instructions");
-    expect(focused.indexOf("# Focused Try-out Question")).toBeLessThan(
-      focused.indexOf("# Task Instructions")
-    );
     expect(
       focused.split("\n").every((line) => !line.startsWith("      "))
     ).toBe(true);
+  });
+
+  it("keeps stable instructions ahead of per-turn context for prompt caching", () => {
+    const prompt = createNinaSystemPrompt({
+      ...input,
+      focus: "# Focused Try-out Question\n\n## Question\n\nWhat is 2 + 2?",
+      pageContent: "# Current Page\n\nThe learner is viewing a lesson.",
+    });
+    const order = [
+      "# Task Instructions",
+      "# Output Formatting Guidelines",
+      "# Current Page",
+      "# Focused Try-out Question",
+      "# Runtime Context",
+    ].map((heading) => prompt.indexOf(heading));
+
+    expect(order.every((index) => index >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((left, right) => left - right));
+    expect(prompt.slice(prompt.indexOf("# Runtime Context"))).toContain(
+      "- date: 2026-09-29T00:00:00.000Z"
+    );
   });
 });

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { boundText, countTextTokens } from "@repo/backend/confect/nina/budget";
 
+const SHORTENED_NOTE =
+  /\n\n\[Shortened to about 200 of \d+ tokens\. Read the next section\.\]$/;
+
 describe("Nina token budgets", () => {
   it("returns text that already fits unchanged", () => {
     const text = "A short explanation of limits.";
@@ -14,9 +17,7 @@ describe("Nina token budgets", () => {
     const text = [paragraph, paragraph, paragraph, paragraph].join("\n\n");
     const bounded = boundText(text, 200, "Read the next section.");
     expect(countTextTokens(bounded)).toBeLessThanOrEqual(200);
-    expect(bounded).toMatch(
-      /\n\n\[Shortened to about 200 of \d+ tokens\. Read the next section\.\]$/
-    );
+    expect(bounded).toMatch(SHORTENED_NOTE);
     expect(text.startsWith(bounded.slice(0, bounded.indexOf("\n\n[")))).toBe(
       true
     );

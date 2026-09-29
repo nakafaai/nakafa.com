@@ -64,5 +64,5 @@ export const read = Effect.fn("nakafa.read")(function* ({
       result: previewRead(value),
     },
   });
-  return formatRead(value, input.section);
+  return formatRead(value, { section: input.section });
 });

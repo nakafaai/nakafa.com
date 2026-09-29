@@ -16,36 +16,7 @@ const externalUrlMessages = [
 ] satisfies ModelMessage[];
 
 describe("nina/runtime/step", () => {
-  it("forces Nakafa on the first page-fetch step", () => {
-    const step = readPreparedStep({
-      messages: emptyMessages,
-      needsPageFetch: true,
-      stepNumber: 0,
-    });
-
-    expect(step).toEqual({
-      activeTools: ["nakafa"],
-      messages: [],
-      toolChoice: { type: "tool", toolName: "nakafa" },
-    });
-  });
-
-  it("reinforces final source policy after the first page-fetch step", () => {
-    const step = readPreparedStep({
-      messages: emptyMessages,
-      needsPageFetch: true,
-      stepNumber: 1,
-    });
-
-    expect(step).toEqual({
-      instructions: expect.stringContaining(
-        "Never append a final source, reference, citation, or bibliography section"
-      ),
-      messages: [],
-    });
-  });
-
-  it("leaves low-risk first non-page-fetch prompts to Nina's system prompt", () => {
+  it("leaves low-risk first prompts to Nina's system prompt", () => {
     const greetingMessages = [
       {
         content: "hi",
@@ -55,7 +26,6 @@ describe("nina/runtime/step", () => {
 
     const step = readPreparedStep({
       messages: greetingMessages,
-      needsPageFetch: false,
       stepNumber: 0,
     });
 
@@ -66,10 +36,9 @@ describe("nina/runtime/step", () => {
     expect(step).not.toHaveProperty("toolChoice");
   });
 
-  it("reinforces final source policy after the first non-page-fetch step", () => {
+  it("reinforces final source policy after the first step", () => {
     const step = readPreparedStep({
       messages: emptyMessages,
-      needsPageFetch: false,
       stepNumber: 1,
     });
 
@@ -142,7 +111,6 @@ describe("nina/runtime/step", () => {
   it("forces research for first-step external URL requests", () => {
     const step = readPreparedStep({
       messages: externalUrlMessages,
-      needsPageFetch: false,
       stepNumber: 0,
     });
 
@@ -150,20 +118,6 @@ describe("nina/runtime/step", () => {
       activeTools: ["deepResearch"],
       messages: externalUrlMessages,
       toolChoice: { type: "tool", toolName: "deepResearch" },
-    });
-  });
-
-  it("keeps page fetch ahead of external URL requests", () => {
-    const step = readPreparedStep({
-      messages: externalUrlMessages,
-      needsPageFetch: true,
-      stepNumber: 0,
-    });
-
-    expect(step).toEqual({
-      activeTools: ["nakafa"],
-      messages: externalUrlMessages,
-      toolChoice: { type: "tool", toolName: "nakafa" },
     });
   });
 
@@ -181,7 +135,6 @@ describe("nina/runtime/step", () => {
 
     const step = readPreparedStep({
       messages,
-      needsPageFetch: false,
       stepNumber: 1,
     });
 
@@ -214,7 +167,6 @@ describe("nina/runtime/step", () => {
 
     const step = readPreparedStep({
       messages,
-      needsPageFetch: false,
       stepNumber: 1,
     });
 
@@ -236,14 +188,12 @@ describe("nina/runtime/step", () => {
  */
 function readPreparedStep({
   messages,
-  needsPageFetch,
   stepNumber,
 }: {
   readonly messages: ModelMessage[];
-  readonly needsPageFetch: boolean;
   readonly stepNumber: number;
 }) {
-  const prepareStep = createNinaPrepareStep({ instructions, needsPageFetch });
+  const prepareStep = createNinaPrepareStep({ instructions });
 
   return prepareStep({
     initialInstructions: instructions,

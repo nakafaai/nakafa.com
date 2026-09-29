@@ -47,11 +47,11 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Nina turn**: One admitted user prompt, credit reservation, immutable learning context, provider usage, and durable response lifecycle. Confect owns admission and settlement; the Convex Agent component owns messages and streaming.
 - **LearningCapability**: An internal education Module Nina can invoke for bounded evidence such as Nakafa retrieval, deterministic math, or external research.
 - **Evidence**: Schema-derived facts, calculations, citations, content references, and limitations that constrain Nina's answer.
-- **Capability output**: A persisted Agent tool result with compact model-facing evidence, progressive artifacts, and an explicit failure when the invocation cannot finish. Agent stores the final result with the conversation so it survives reconnects.
+- **Capability output**: A persisted Agent tool result with bounded model-facing evidence, progressive artifacts, and an explicit failure when the invocation cannot finish. The evidence never exceeds its token budget; a truncation says what was omitted and how to ask for it. Agent stores the final result with the conversation so it survives reconnects.
 - **Activity**: One native Agent tool invocation shown as a collapsed purpose row. Its children are published evidence artifacts, not an exhaustive specialist transcript.
 - **Capability policy**: The per-turn decision that returns Allowed or Denied for a LearningCapability.
 - **Pinned context**: The latest stored NinaContextPack reused when a continued chat is opened away from a verified learning asset.
-- **Page fetch**: The one permitted current-page Nakafa content read for a verified learning page. Only pages with signed Markdown are verified; try-out and topic pages have none.
+- **Page fetch**: The one current-page Nakafa content read for a verified learning page. Generation performs it before the first model step and places the page, within its token budget, in Nina's stable prompt context; the model reads other sections through Nakafa. Only pages with signed Markdown are verified; try-out and topic pages have none.
 - **Question focus**: One finished try-out question a learner asks Nina about from their review. Admission freezes it into the NinaContextPack only for the attempt owner, a finished section, and a plan that grants review answers. Continued turns keep it while that entitlement holds.
 
 ## Evaluation

@@ -11,7 +11,7 @@ import {
   providerStep,
   runSpecialist,
 } from "@repo/backend/test/nina/specialist";
-import { InvalidToolInputError, type ModelMessage, NoSuchToolError } from "ai";
+import { InvalidToolInputError, NoSuchToolError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect } from "effect";
 
@@ -38,11 +38,8 @@ const options = {
     cause: new Error("Missing task"),
   }),
   inputSchema: () => Promise.resolve(nakafaToolInputSchema.jsonSchema),
-  messages: [],
   tools,
   toolCall,
-  needsPageFetch: false,
-  url: "https://nakafa.com/en/home",
   usageHandler: vi.fn(),
 };
 
@@ -65,81 +62,31 @@ describe("Nina tool repair with the Agent component", () => {
     }
   );
 
-  it.each([false, true])(
-    "repairs a known task and records usage after existing page result %s",
-    async (hasPage) => {
-      const model = new MockLanguageModelV4({
-        doGenerate: providerStep([
-          { type: "text", text: JSON.stringify(ninaToolInput) },
-        ]),
-      });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
-      const usageHandler = vi.fn();
-      const messages: ModelMessage[] = hasPage
-        ? [
-            { role: "user", content: "Read related evidence" },
-            {
-              role: "tool",
-              content: [
-                {
-                  type: "tool-result",
-                  toolName: "nakafa",
-                  toolCallId: "page",
-                  output: { type: "text", value: "Page already retrieved" },
-                },
-              ],
-            },
-          ]
-        : [{ role: "user", content: "Read related evidence" }];
-      const result = await runSpecialist((userId) =>
-        repairToolCall({
-          ...options,
-          userId,
-          messages,
-          needsPageFetch: hasPage,
-          usageHandler,
-        })
-      );
-      expect(result).toEqual({
-        ...toolCall,
-        input: JSON.stringify(ninaToolInput),
-      });
-      expect(usageHandler).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          agentName: "nina-repair",
-          userId: expect.any(String),
-        })
-      );
-      expect(JSON.stringify(model.doGenerateCalls[0]?.prompt)).toContain(
-        "Keep the original task and source constraints"
-      );
-    }
-  );
-
-  it("uses verified page context for the first read without a model call", async () => {
+  it("repairs a known task through the model and records usage", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: providerStep([
+        { type: "text", text: JSON.stringify(ninaToolInput) },
+      ]),
+    });
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    const usageHandler = vi.fn();
     const result = await runSpecialist((userId) =>
-      repairToolCall({
-        ...options,
-        userId,
-        needsPageFetch: true,
-        messages: [
-          {
-            role: "tool",
-            content: [
-              {
-                type: "tool-result",
-                toolName: "math",
-                toolCallId: "other",
-                output: { type: "text", value: "2" },
-              },
-            ],
-          },
-        ],
+      repairToolCall({ ...options, userId, usageHandler })
+    );
+    expect(result).toEqual({
+      ...toolCall,
+      input: JSON.stringify(ninaToolInput),
+    });
+    expect(usageHandler).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        agentName: "nina-repair",
+        userId: expect.any(String),
       })
     );
-    expect(result?.input).toContain(options.url);
-    expect(getGatewayModel).not.toHaveBeenCalled();
+    expect(JSON.stringify(model.doGenerateCalls[0]?.prompt)).toContain(
+      "Keep the original task and source constraints"
+    );
   });
 
   it.each(["schema", "provider", "output"] as const)(

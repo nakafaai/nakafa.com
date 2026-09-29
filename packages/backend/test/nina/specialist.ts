@@ -22,7 +22,6 @@ import { Effect } from "effect";
 export const specialistRequest = {
   context: {
     currentDate: "2026-09-27",
-    needsPageFetch: false,
     slug: "home",
     url: "https://nakafa.com/en/home",
     verified: false,

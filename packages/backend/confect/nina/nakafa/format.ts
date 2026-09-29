@@ -98,11 +98,20 @@ function formatOutline(sections: readonly ReadSection[]) {
 }
 
 /**
- * Formats a Nakafa content read within the evidence budget. Reading starts at
+ * Formats a Nakafa content read within a token budget. Reading starts at
  * `section` when given, then continues through the sections that fit, and the
  * outline names the rest so the model can read them next.
  */
-export function formatRead(result: NakafaAgentMarkdown, section?: string) {
+export function formatRead(
+  result: NakafaAgentMarkdown,
+  {
+    budget = NINA_BUDGET.evidence,
+    section,
+  }: {
+    readonly budget?: number;
+    readonly section?: string | undefined;
+  } = {}
+) {
   const description = result.description
     ? `\n- Description: ${result.description}`
     : "";
@@ -118,20 +127,18 @@ export function formatRead(result: NakafaAgentMarkdown, section?: string) {
         `Section ${section} was not found in this content.`,
         formatOutline(sections),
       ].join("\n\n"),
-      NINA_BUDGET.evidence,
+      budget,
       "Request one of the listed sections."
     );
   }
   const from = Math.max(start, 0);
-  const budget =
-    NINA_BUDGET.evidence -
-    countTextTokens(header) -
-    countTextTokens(formatOutline(sections));
+  const bodyBudget =
+    budget - countTextTokens(header) - countTextTokens(formatOutline(sections));
   const included: ReadSection[] = [];
   let used = 0;
   for (const candidate of sections.slice(from)) {
     const cost = countTextTokens(candidate.text);
-    if (included.length > 0 && used + cost > budget) {
+    if (included.length > 0 && used + cost > bodyBudget) {
       break;
     }
     included.push(candidate);
@@ -142,7 +149,7 @@ export function formatRead(result: NakafaAgentMarkdown, section?: string) {
   );
   const body = boundText(
     included.map(({ text }) => text).join("\n\n"),
-    budget,
+    bodyBudget,
     "Read the rest of this section with a narrower request."
   );
   return [header, body, formatOutline(remaining)].filter(Boolean).join("\n\n");

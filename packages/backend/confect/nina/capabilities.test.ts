@@ -8,7 +8,6 @@ import { MathGenerationError } from "@repo/backend/confect/nina/math/error";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/memory/pack";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { NakafaGenerationError } from "@repo/backend/confect/nina/nakafa/error";
-import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import {
   ResearchGenerationError,
@@ -33,9 +32,6 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 }));
 vi.mock("@repo/backend/confect/nina/research/agent", () => ({
   runResearchAgent: vi.fn(),
-}));
-vi.mock("@repo/backend/confect/nina/nakafa/tools/read", () => ({
-  read: vi.fn(),
 }));
 afterEach(() => vi.restoreAllMocks());
 
@@ -216,58 +212,4 @@ describe("Nina capability execution policy", () => {
       }
     );
   }
-
-  it("reads the current page once before later content delegation", async () => {
-    vi.mocked(read).mockReturnValue(Effect.succeed("Current page."));
-    vi.mocked(runNakafaAgent).mockReturnValue(
-      Effect.succeed({ text: "Additional content." })
-    );
-    const model = new MockLanguageModelV4({
-      doGenerate: [
-        toolCall("nakafa", "page"),
-        toolCall("nakafa", "followup"),
-        request,
-      ],
-    });
-    await runSpecialist((userId) =>
-      Effect.gen(function* () {
-        const session = yield* openNinaLearningSession({
-          capturedAt: "2026-09-27T12:00:00Z",
-          source: "current-page",
-          learning: {
-            locale: "en",
-            slug: "home",
-            url: "https://nakafa.com/en/home",
-            verified: false,
-          },
-        });
-        const tools = yield* createCapabilities(
-          userId,
-          {
-            ...specialistRequest.context,
-            needsPageFetch: true,
-            nina: session.context,
-          },
-          "en",
-          specialistRequest.modelId,
-          vi.fn()
-        );
-        const ctx = yield* ActionCtx;
-        yield* Effect.promise(() =>
-          new Agent(components.nina, {
-            name: "test",
-            languageModel: model,
-            tools,
-            stopWhen: isStepCount(3),
-          }).generateText(
-            ctx,
-            { userId },
-            { prompt: "Read the page and related content." }
-          )
-        );
-      })
-    );
-    expect(read).toHaveBeenCalledTimes(1);
-    expect(runNakafaAgent).toHaveBeenCalledTimes(1);
-  });
 });

@@ -17,6 +17,7 @@ import {
   NinaGenerationError,
 } from "@repo/backend/confect/nina/failure";
 import { boundHistory } from "@repo/backend/confect/nina/history";
+import { readPageContext } from "@repo/backend/confect/nina/page";
 import { formatFocusPrompt } from "@repo/backend/confect/nina/prompt/focus";
 import { createNinaSystemPrompt } from "@repo/backend/confect/nina/prompt/system";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
@@ -56,9 +57,20 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     user: turn.user,
     runtime,
   });
-  const focus = turn.page.nina.focus ? yield* readFocus(turn._id) : undefined;
+  const { focus, pageContent } = yield* Effect.all(
+    {
+      focus: turn.page.nina.focus
+        ? readFocus(turn._id)
+        : Effect.succeed(undefined),
+      pageContent: turn.page.needsFetch
+        ? readPageContext(context.url)
+        : Effect.succeed(undefined),
+    },
+    { concurrency: "unbounded" }
+  );
   const instructions = createNinaSystemPrompt({
     ...(focus === undefined ? {} : { focus }),
+    ...(pageContent === undefined ? {} : { pageContent }),
     page: turn.page,
     user: turn.user,
     runtime,
@@ -84,10 +96,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     contextHandler: (_ctx, { allMessages }) =>
       runPromise(boundHistory(allMessages)),
   });
-  const prepare = createNinaPrepareStep({
-    instructions,
-    needsPageFetch: turn.page.needsFetch,
-  });
+  const prepare = createNinaPrepareStep({ instructions });
   let streamFailure: NinaGenerationError | undefined;
   const result = yield* Effect.tryPromise({
     try: (signal) =>
@@ -116,8 +125,6 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
               repairToolCall({
                 ...options,
                 userId: turn.userId,
-                needsPageFetch: turn.page.needsFetch,
-                url: context.url,
                 usageHandler,
               })
             ),

@@ -51,7 +51,6 @@ export function createNinaAgentContext({
   const learningPage = readNinaLearningPage(page);
   return {
     currentDate: runtime.currentDate,
-    needsPageFetch: page.needsFetch,
     nina: page.nina,
     slug: learningPage.slug,
     url: learningPage.url,

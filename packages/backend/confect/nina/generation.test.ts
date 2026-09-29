@@ -2,13 +2,14 @@ import { GatewayRateLimitError } from "@ai-sdk/gateway";
 import { Ref } from "@confect/core";
 import { Agent, listUIMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { getNakafaContent } from "@repo/backend/agent/content";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   GatewayConfigurationError,
   getGatewayModel,
 } from "@repo/backend/confect/nina/config/provider";
-import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
+import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import {
   createNinaTest,
   ninaModel,
@@ -16,6 +17,8 @@ import {
   ninaUsage,
 } from "@repo/backend/test/nina";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
+import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import {
   AISDKError,
   APICallError,
@@ -31,8 +34,11 @@ vi.mock("@repo/backend/confect/nina/config/provider", async (original) => ({
   >()),
   getGatewayModel: vi.fn(),
 }));
-vi.mock("@repo/backend/confect/nina/nakafa/tools/read", () => ({
-  read: vi.fn(),
+vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
+  runNakafaAgent: vi.fn(),
+}));
+vi.mock("@repo/backend/agent/content", () => ({
+  getNakafaContent: vi.fn(),
 }));
 
 async function fixture(withTool = false) {
@@ -381,15 +387,20 @@ describe("Nina generation through the real Agent component", () => {
     vi.useRealTimers();
     const languageModel = ninaModel(true);
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
-    vi.mocked(read).mockImplementation(({ input, toolCallId, publish }) =>
+    const input = {
+      content_ref: NakafaAgentContentRefInputSchema.make(
+        "https://nakafa.com/en/home"
+      ),
+    };
+    vi.mocked(runNakafaAgent).mockImplementation(({ publish }) =>
       Effect.gen(function* () {
         yield* publish({
-          id: toolCallId,
+          id: "read-1",
           type: "data-nakafa",
           data: { kind: "content", status: "loading", input },
         });
         yield* publish({
-          id: toolCallId,
+          id: "read-1",
           type: "data-nakafa",
           data: {
             kind: "content",
@@ -398,10 +409,10 @@ describe("Nina generation through the real Agent component", () => {
             error: "Fixture evidence unavailable",
           },
         });
-        return "Fixture evidence unavailable";
+        return { text: "Fixture evidence unavailable" };
       })
     );
-    const f = await fixture(true);
+    const f = await fixture();
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(() => undefined);
     const state = await f.inspect();
@@ -466,27 +477,30 @@ describe("Nina generation through the real Agent component", () => {
     expect(languageModel.doGenerateCalls).toHaveLength(0);
   });
 
-  it("repairs the first page fetch using verified context without another model request", async () => {
-    vi.useRealTimers();
-    const languageModel = ninaModel(true, false, {});
+  it("places the verified current page in the prompt without forcing a tool", async () => {
+    const languageModel = ninaModel();
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
-    vi.mocked(read).mockReturnValue(Effect.succeed("Verified page evidence"));
-    const f = await fixture(true);
-    await f.t.action(run, { turnId: f.turnId });
-    await f.t.finishAllScheduledFunctions(() => undefined);
-    const state = await f.inspect();
-    expect(state.turn?.state.status).toBe("complete");
-    expect(read).toHaveBeenCalledWith(
-      expect.objectContaining({
-        input: { content_ref: "https://nakafa.com/en/home" },
+    vi.mocked(getNakafaContent).mockReturnValue(
+      Effect.succeedSome({
+        ...readNakafaContentRefFixture("en", "home", "material"),
+        text: "## Limits\n\nA limit describes the value a function approaches.",
+        title: "Limits",
       })
     );
-    expect(state.turn?.usage.map((entry) => entry.agent).sort()).toEqual([
-      "nina",
-      "suggestions",
-      "title",
-    ]);
-    expect(languageModel.doGenerateCalls).toHaveLength(2);
+    const f = await fixture(true);
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.inspect();
+    expect(state.turn?.state.status).toBe("complete");
+    const call = languageModel.doStreamCalls[0];
+    expect(JSON.stringify(call?.prompt)).toContain("# Current Page");
+    expect(JSON.stringify(call?.prompt)).toContain(
+      "A limit describes the value a function approaches."
+    );
+    expect(call?.toolChoice).not.toEqual({
+      type: "tool",
+      toolName: "nakafa",
+    });
+    expect(runNakafaAgent).not.toHaveBeenCalled();
   });
 
   it("answers a focused question from its signed body and official explanation", async () => {
