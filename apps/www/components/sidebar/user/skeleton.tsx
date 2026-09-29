@@ -5,20 +5,6 @@ import {
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 
 /**
- * Shows a neutral pending row until authentication settles for a guest.
- */
-export function NavUserSkeleton() {
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton aria-hidden disabled size="lg">
-        <Skeleton className="size-8 rounded-md" />
-        <Skeleton className="h-4 w-28" />
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
-}
-
-/**
  * Mirrors the account trigger while a confirmed user's profile data settles.
  */
 export function NavUserAccountSkeleton() {

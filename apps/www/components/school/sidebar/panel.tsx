@@ -1,9 +1,7 @@
 import {
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
 } from "@repo/design-system/components/ui/sidebar-content";
-import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { cn } from "cn";
 import { Effect } from "effect";
@@ -28,11 +26,7 @@ export function SchoolSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         <SchoolSidebarNavYours />
         <SchoolSidebarNavLearning />
       </SidebarContent>
-      <SidebarFooter className="border-t">
-        <SidebarMenu>
-          <SchoolSidebarNavUser />
-        </SidebarMenu>
-      </SidebarFooter>
+      <SchoolSidebarNavUser />
     </Sidebar>
   );
 }
