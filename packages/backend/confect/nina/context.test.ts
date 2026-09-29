@@ -1,17 +1,21 @@
+import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
+import schema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
+import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   activateMaterialCatalog,
   insertMaterialProjection,
 } from "@repo/backend/test/material/catalog";
+import { createFocusTest } from "@repo/backend/test/nina/focus";
 import {
   materialContext,
   materialGroup,
@@ -22,7 +26,8 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
-import { Effect } from "effect";
+import { activateTryoutStartSource } from "@repo/backend/test/tryout/source";
+import { Effect, Exit } from "effect";
 
 const capturedAt = "2026-09-27T12:00:00.000Z";
 const material = makeMaterialProjection("en", 1, 1);
@@ -262,4 +267,97 @@ describe("Nina signed learning context", () => {
         );
       })
   );
+
+  it("keeps a signed try-out route out of current-page fetch", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(async (ctx) => {
+      const { set } = await activateTryoutStartSource(ctx, "visible");
+      const context = await Effect.runPromise(
+        Effect.gen(function* () {
+          const user = yield* seedUser();
+          return yield* resolveNinaContext(
+            { locale: "id", slug: set.publicPath },
+            user,
+            capturedAt
+          );
+        }).pipe(
+          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+        )
+      );
+      // Try-out pages have no signed Markdown, so a forced read could only fail.
+      expect(context.page.verified).toBe(false);
+      expect(context.page.needsFetch).toBe(false);
+      expect(context.page.nina.tools.allowPageFetch).toBe(false);
+    });
+  });
+
+  it("freezes an asked question and keeps it for the conversation's next turn", async () => {
+    const f = await createFocusTest();
+    const learner = () =>
+      Effect.flatMap(DatabaseReader, (database) =>
+        database.table("users").get(f.identity.userId)
+      ).pipe(Effect.orDie);
+    await f.expectExit(
+      Effect.flatMap(learner(), (user) =>
+        resolveNinaContext(
+          { locale: "en", slug: "", focus: f.focus },
+          user,
+          capturedAt
+        )
+      ),
+      (exit) =>
+        expect(exit).toMatchObject({
+          _tag: "Success",
+          value: { page: { needsFetch: false, nina: { focus: f.frozen } } },
+        })
+    );
+    await f.focusTurn();
+    await f.expectExit(
+      Effect.flatMap(learner(), (user) =>
+        resolveNinaContext(
+          { locale: "en", slug: "" },
+          user,
+          capturedAt,
+          f.chatId
+        )
+      ),
+      (exit) =>
+        expect(exit).toMatchObject({
+          _tag: "Success",
+          value: { page: { nina: { focus: f.frozen } } },
+        })
+    );
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("users", f.identity.userId, { plan: "free" })
+    );
+    await f.expectExit(
+      Effect.flatMap(learner(), (user) =>
+        resolveNinaContext(
+          { locale: "en", slug: "", focus: f.focus },
+          user,
+          capturedAt
+        )
+      ),
+      (exit) => {
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(exit).toMatchObject({
+          cause: { reasons: [{ error: { code: "NINA_CONTEXT_FAILED" } }] },
+        });
+      }
+    );
+    await f.expectExit(
+      Effect.flatMap(learner(), (user) =>
+        resolveNinaContext(
+          { locale: "en", slug: "" },
+          user,
+          capturedAt,
+          f.chatId
+        )
+      ),
+      (exit) =>
+        expect(Exit.isSuccess(exit) && exit.value.page.nina.focus).toBe(
+          undefined
+        )
+    );
+  });
 });

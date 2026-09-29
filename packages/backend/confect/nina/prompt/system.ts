@@ -48,10 +48,12 @@ export function formatNinaContextPackPrompt(context: NinaContextPack) {
 
 /** Builds Nina's system prompt from validated runtime, page, and user context. */
 export function createNinaSystemPrompt({
+  focus,
   page,
   runtime,
   user,
 }: {
+  readonly focus?: string;
   readonly page: NinaPage;
   readonly runtime: NinaRuntime;
   readonly user: NinaUser;
@@ -59,6 +61,7 @@ export function createNinaSystemPrompt({
   const learningPage = readNinaLearningPage(page);
 
   return createNinaPrompt({
+    ...(focus === undefined ? {} : { focus }),
     currentDate: runtime.currentDate,
     currentPage: {
       locale: learningPage.locale,

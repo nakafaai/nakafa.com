@@ -2,6 +2,7 @@
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   Collapsible,
   CollapsiblePanel,
@@ -22,22 +23,11 @@ export function TryoutActiveQuestionShell({
   children,
   questionOrder,
 }: TryoutQuestionShellProps) {
-  const tExercises = useTranslations("Exercises");
-
   return (
     <Collapsible disabled>
       <TryoutQuestionArticle questionOrder={questionOrder}>
         <TryoutQuestionHeader questionOrder={questionOrder}>
-          <CollapsibleTrigger
-            className="group"
-            render={<Button disabled type="button" variant="outline" />}
-          >
-            {tExercises("explanation")}
-            <HugeIcons
-              className="transition-transform ease-out group-data-[panel-open]:rotate-180"
-              icon={ArrowDown01Icon}
-            />
-          </CollapsibleTrigger>
+          <TryoutExplanationTrigger />
         </TryoutQuestionHeader>
         {children}
       </TryoutQuestionArticle>
@@ -45,27 +35,42 @@ export function TryoutActiveQuestionShell({
   );
 }
 
-/** Composes one immutable review question with explanation disclosure. */
+/** Composes one immutable review question with optional question actions. */
 export function TryoutReviewQuestionShell({
+  action,
   children,
   questionOrder,
-}: TryoutQuestionShellProps) {
+}: TryoutQuestionShellProps & { readonly action?: ReactNode }) {
   const tExercises = useTranslations("Exercises");
 
   return (
     <Collapsible>
       <TryoutQuestionArticle questionOrder={questionOrder}>
         <TryoutQuestionHeader questionOrder={questionOrder}>
-          <CollapsibleTrigger
-            className="group"
-            render={<Button type="button" variant="outline" />}
+          <ButtonGroup
+            aria-label={tExercises("number-count", { count: questionOrder })}
+            className="shrink-0"
           >
-            {tExercises("explanation")}
-            <HugeIcons
-              className="transition-transform ease-out group-data-[panel-open]:rotate-180"
-              icon={ArrowDown01Icon}
-            />
-          </CollapsibleTrigger>
+            {action}
+            <TryoutExplanationTrigger />
+          </ButtonGroup>
+        </TryoutQuestionHeader>
+        {children}
+      </TryoutQuestionArticle>
+    </Collapsible>
+  );
+}
+
+/** Composes one locked review question with its explanation area held open. */
+export function TryoutLockedQuestionShell({
+  children,
+  questionOrder,
+}: TryoutQuestionShellProps) {
+  return (
+    <Collapsible defaultOpen disabled>
+      <TryoutQuestionArticle questionOrder={questionOrder}>
+        <TryoutQuestionHeader questionOrder={questionOrder}>
+          <TryoutExplanationTrigger />
         </TryoutQuestionHeader>
         {children}
       </TryoutQuestionArticle>
@@ -117,7 +122,7 @@ function TryoutQuestionHeader({
   const id = `question-${questionOrder}`;
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="@container flex items-center gap-4">
       <a
         className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
         href={`#${id}`}
@@ -134,5 +139,23 @@ function TryoutQuestionHeader({
       </a>
       {children}
     </div>
+  );
+}
+
+/** Toggles the explanation; a disabled question disables it through its root. */
+function TryoutExplanationTrigger() {
+  const tExercises = useTranslations("Exercises");
+
+  return (
+    <CollapsibleTrigger
+      className="group"
+      render={<Button type="button" variant="outline" />}
+    >
+      {tExercises("explanation")}
+      <HugeIcons
+        className="transition-transform ease-out group-data-[panel-open]:rotate-180"
+        icon={ArrowDown01Icon}
+      />
+    </CollapsibleTrigger>
   );
 }

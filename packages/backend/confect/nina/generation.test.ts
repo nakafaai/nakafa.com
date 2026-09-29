@@ -15,6 +15,7 @@ import {
   ninaStream,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { createFocusTest } from "@repo/backend/test/nina/focus";
 import {
   AISDKError,
   APICallError,
@@ -486,5 +487,41 @@ describe("Nina generation through the real Agent component", () => {
       "title",
     ]);
     expect(languageModel.doGenerateCalls).toHaveLength(2);
+  });
+
+  it("answers a focused question from its signed body and official explanation", async () => {
+    const languageModel = ninaModel();
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    const f = await createFocusTest();
+    await f.focusTurn();
+    await f.t.action(run, { turnId: f.turnId });
+    const turn = await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId));
+    expect(turn?.state.status).toBe("complete");
+    const prompt = JSON.stringify(languageModel.doStreamCalls[0]?.prompt);
+    expect(prompt).toContain("# Focused Try-out Question");
+    expect(prompt).toContain("Technical question");
+    expect(prompt).toContain("Technical answer");
+    expect(prompt).toContain("# Focused Question Instructions");
+  });
+
+  it("refunds a focused turn whose question is no longer entitled", async () => {
+    const languageModel = ninaModel();
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    const f = await createFocusTest();
+    await f.focusTurn();
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("users", f.identity.userId, { plan: "free" })
+    );
+    await f.t.action(run, { turnId: f.turnId });
+    const state = await f.t.query(async (ctx) => ({
+      turn: await ctx.db.get("ninaTurns", f.turnId),
+      user: await ctx.db.get("users", f.identity.userId),
+    }));
+    expect(state.turn?.state).toMatchObject({
+      status: "failed",
+      reason: "unknown",
+    });
+    expect(state.user?.credits).toBe(10);
+    expect(languageModel.doStreamCalls).toHaveLength(0);
   });
 });

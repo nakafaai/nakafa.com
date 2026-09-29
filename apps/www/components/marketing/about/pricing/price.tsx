@@ -35,6 +35,13 @@ function ResolvedPrice({ period, Price, plan }: PricingPriceProps) {
   );
 }
 
+/** Renders a request-localized price without the landing animation. */
+export function StaticPrice({ price }: PriceProps) {
+  return (
+    <span className="font-semibold text-4xl tracking-tight">{price.text}</span>
+  );
+}
+
 function PriceFallback() {
   return (
     <div className="flex h-10 items-center">

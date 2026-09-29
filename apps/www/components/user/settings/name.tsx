@@ -1,14 +1,23 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { useForm } from "@tanstack/react-form";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import {
+  CardSection,
+  CardSectionFooter,
+} from "@/components/shared/card/section";
 import { useUpdateUserNameMutation } from "@/components/user/mutation.client";
-import { FormBlock } from "@/components/user/settings/block";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
@@ -67,9 +76,38 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-name-form">
-      <FormBlock
-        description={t("name-description")}
-        footer={
+      <CardSection>
+        <CardHeader>
+          <CardTitle>{t("name")}</CardTitle>
+          <CardDescription>{t("name-description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form.Field name="name">
+            {(field) => {
+              const isInvalid =
+                Boolean(field.state.meta.isTouched) &&
+                Boolean(!field.state.meta.isValid);
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel className="sr-only" htmlFor="user-settings-name">
+                    {t("name")}
+                  </FieldLabel>
+                  <Input
+                    aria-invalid={isInvalid}
+                    className="max-w-xs"
+                    id="user-settings-name"
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder={t("name-placeholder")}
+                    value={field.state.value}
+                  />
+                </Field>
+              );
+            }}
+          </form.Field>
+        </CardContent>
+        <CardSectionFooter>
           <form.Subscribe
             selector={(state) => [
               state.isDirty,
@@ -92,34 +130,8 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               );
             }}
           </form.Subscribe>
-        }
-        title={t("name")}
-      >
-        <form.Field name="name">
-          {(field) => {
-            const isInvalid =
-              Boolean(field.state.meta.isTouched) &&
-              Boolean(!field.state.meta.isValid);
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldLabel className="sr-only" htmlFor="user-settings-name">
-                  {t("name")}
-                </FieldLabel>
-                <Input
-                  aria-invalid={isInvalid}
-                  className="max-w-xs"
-                  id="user-settings-name"
-                  name={field.name}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t("name-placeholder")}
-                  value={field.state.value}
-                />
-              </Field>
-            );
-          }}
-        </form.Field>
-      </FormBlock>
+        </CardSectionFooter>
+      </CardSection>
     </form>
   );
 }
