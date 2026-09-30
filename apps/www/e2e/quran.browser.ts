@@ -1,11 +1,14 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { type ConsoleMessage, expect, type Page, test } from "@playwright/test";
+import { Duration, Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const readinessTimeoutMilliseconds = 15_000;
+// Chrome reports a preload the page never used a few seconds after loading.
+const unusedPreloadSettleMilliseconds = 5000;
+const unusedPreloadWarning = "was preloaded using link preload but not used";
 const quranIndexUrlPattern = /\/id\/quran$/;
 const quranSurahUrlPattern = /\/id\/quran\/2$/;
 const quranTranslationNoteHrefPattern = /^#.+-translation-note-\d+$/u;
@@ -346,6 +349,129 @@ const verifyQuranLocaleCoverage = Effect.fn(
     ).toBe(true)
   );
   yield* Effect.promise(() => page.keyboard.press("Escape"));
+});
+
+const verifyQuranLayoutStability = Effect.fn(
+  "NakafaE2E.verifyQuranLayoutStability"
+)(function* (page: Page) {
+  yield* seedDeniedAnalyticsConsent(page);
+
+  // A short surah keeps the pagination in the first viewport, where a list
+  // that grows after hydration would push it down.
+  for (const href of ["/en/quran/1", "/en/quran/2"]) {
+    const response = yield* Effect.promise(() =>
+      page.goto(href, { waitUntil: "domcontentloaded" })
+    );
+    yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+    yield* waitForCommittedAppRouter(
+      page,
+      href,
+      href,
+      readinessTimeoutMilliseconds
+    );
+    yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+    // Buffered entries replay every shift since navigation; a page with none
+    // never calls the observer back.
+    const layoutShift = yield* Effect.promise(() =>
+      page.evaluate(
+        () =>
+          new Promise<number>((resolve) => {
+            new PerformanceObserver((list) => {
+              let total = 0;
+              for (const entry of list.getEntries()) {
+                if ("value" in entry && typeof entry.value === "number") {
+                  total += entry.value;
+                }
+              }
+              resolve(total);
+            }).observe({ buffered: true, type: "layout-shift" });
+            setTimeout(() => resolve(0), 1000);
+          })
+      )
+    );
+    yield* Effect.sync(() => expect(layoutShift).toBeLessThan(0.01));
+  }
+
+  // Verses past the document flow are virtualized, and the outline still
+  // scrolls one of them into view.
+  const outline = page
+    .locator(
+      'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]'
+    )
+    .filter({ visible: true });
+  yield* Effect.promise(() => outline.click());
+  yield* Effect.promise(() =>
+    page.getByRole("button", { exact: true, name: "Verse 200" }).click()
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator('[data-quran-verse="200"]')).toBeInViewport({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+});
+
+const verifyQuranTypefaceScope = Effect.fn(
+  "NakafaE2E.verifyQuranTypefaceScope"
+)(function* (page: Page) {
+  yield* seedDeniedAnalyticsConsent(page);
+
+  const warnings: string[] = [];
+  const recordUnusedPreload = (message: ConsoleMessage) => {
+    if (message.text().includes(unusedPreloadWarning)) {
+      warnings.push(message.text());
+    }
+  };
+  yield* Effect.acquireUseRelease(
+    Effect.sync(() => page.on("console", recordUnusedPreload)),
+    () =>
+      Effect.gen(function* () {
+        // The desktop sidebar links to the Quran, so this page prefetches its
+        // route; the prefetch must not preload the Quran typeface here.
+        const quranPrefetch = page.waitForRequest(
+          (request) =>
+            new URL(request.url()).pathname === "/en/quran" &&
+            request.headers()["next-router-prefetch"] !== undefined,
+          { timeout: readinessTimeoutMilliseconds }
+        );
+        const href = "/en/try-out";
+        yield* Effect.promise(() =>
+          page.goto(href, { waitUntil: "domcontentloaded" })
+        );
+        yield* waitForCommittedAppRouter(
+          page,
+          href,
+          href,
+          readinessTimeoutMilliseconds
+        );
+        yield* Effect.promise(() => quranPrefetch);
+        yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+        yield* Effect.sleep(Duration.millis(unusedPreloadSettleMilliseconds));
+      }),
+    () => Effect.sync(() => page.off("console", recordUnusedPreload))
+  );
+  yield* Effect.sync(() => expect(warnings).toEqual([]));
+});
+
+test.describe("Quran typeface", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("stays off the pages that only link to the Quran", async ({ page }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyQuranTypefaceScope(page))
+    );
+  });
+});
+
+test.describe("Quran layout stability", () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
+  test("renders surahs without layout shift and reaches far verses", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyQuranLayoutStability(page))
+    );
+  });
 });
 
 test.describe("Quran source and tafsir coverage", () => {

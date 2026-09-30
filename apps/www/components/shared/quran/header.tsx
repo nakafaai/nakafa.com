@@ -8,13 +8,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
-import { quranFont } from "@/components/shared/quran/font";
 
 /** Keeps surah navigation, name, and outline actions in one stable page row. */
 export function QuranSurahHeader({
@@ -58,7 +56,7 @@ export function QuranSurahHeader({
         </span>
         <span className="min-w-0 truncate">{title}</span>
         <span
-          className={cn(quranFont.className, "shrink-0 font-normal text-xl")}
+          className="shrink-0 font-normal font-quran text-xl"
           dir="rtl"
           lang="ar"
         >
