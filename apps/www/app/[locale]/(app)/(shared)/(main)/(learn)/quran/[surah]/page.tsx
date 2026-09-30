@@ -22,10 +22,9 @@ import {
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
-import {
-  QURAN_FLOW_VERSES,
-  QuranVerseList,
-} from "@/components/shared/quran/verses/list";
+import { QuranVersesProvider } from "@/components/shared/quran/verses/context";
+import { QURAN_FLOW_VERSES } from "@/components/shared/quran/verses/flow";
+import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -259,31 +258,27 @@ async function CachedSurahShell({
                   translationNotesLabel={translationNotesLabel}
                 />
               )}
-              {tafsirAccess.kind === "embedded" ? (
-                <QuranInterpretationControls
-                  appLocale={tafsirAccess.appLocale}
-                  errorMessage={t("interpretation-error")}
-                  label={interpretationLabel}
-                  recoverSnapshot={recoverSnapshot}
-                  refreshingMessage={t("interpretation-refreshing")}
-                  snapshotId={result.snapshotId}
-                  surahNumber={surahData.number}
-                >
-                  <QuranVerseList
-                    interpretationLabel={interpretationLabel}
-                    items={verseItems}
-                    tafsirAccess={tafsirAccess}
-                    translationNotesLabel={translationNotesLabel}
-                  />
-                </QuranInterpretationControls>
-              ) : (
-                <QuranVerseList
-                  interpretationLabel={interpretationLabel}
-                  items={verseItems}
-                  tafsirAccess={tafsirAccess}
-                  translationNotesLabel={translationNotesLabel}
-                />
-              )}
+              <QuranVersesProvider
+                interpretationLabel={interpretationLabel}
+                tafsirAccess={tafsirAccess}
+                translationNotesLabel={translationNotesLabel}
+              >
+                {tafsirAccess.kind === "embedded" ? (
+                  <QuranInterpretationControls
+                    appLocale={tafsirAccess.appLocale}
+                    errorMessage={t("interpretation-error")}
+                    label={interpretationLabel}
+                    recoverSnapshot={recoverSnapshot}
+                    refreshingMessage={t("interpretation-refreshing")}
+                    snapshotId={result.snapshotId}
+                    surahNumber={surahData.number}
+                  >
+                    <QuranVerseList items={verseItems} />
+                  </QuranInterpretationControls>
+                ) : (
+                  <QuranVerseList items={verseItems} />
+                )}
+              </QuranVersesProvider>
             </LayoutContent>
             <PaginationContent pagination={pagination} />
             {toolbar}
