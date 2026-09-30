@@ -29,7 +29,9 @@ export function Sidebar({
   collapsible?: "offcanvas" | "icon" | "none";
   containerClassName?: string;
 }) {
-  const { state, openMobile, setOpenMobile } = useSidebar();
+  const state = useSidebar((sidebar) => sidebar.state);
+  const openMobile = useSidebar((sidebar) => sidebar.openMobile);
+  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
 
   if (collapsible === "none") {
     return (
@@ -122,7 +124,11 @@ export function SidebarTrigger({
 }: ComponentProps<typeof Button> & {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
 }) {
-  const { isLocked, isMobile, open, openMobile, toggleSidebar } = useSidebar();
+  const isLocked = useSidebar((sidebar) => sidebar.isLocked);
+  const isMobile = useSidebar((sidebar) => sidebar.isMobile);
+  const open = useSidebar((sidebar) => sidebar.open);
+  const openMobile = useSidebar((sidebar) => sidebar.openMobile);
+  const toggleSidebar = useSidebar((sidebar) => sidebar.toggleSidebar);
 
   if (isLocked) {
     return null;
@@ -151,7 +157,8 @@ export function SidebarTrigger({
 
 /** Renders the narrow sidebar toggle rail for pointer gestures. */
 export function SidebarRail({ className, ...props }: ComponentProps<"button">) {
-  const { isLocked, toggleSidebar } = useSidebar();
+  const isLocked = useSidebar((sidebar) => sidebar.isLocked);
+  const toggleSidebar = useSidebar((sidebar) => sidebar.toggleSidebar);
 
   if (isLocked) {
     return null;

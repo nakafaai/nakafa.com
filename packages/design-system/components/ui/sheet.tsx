@@ -5,19 +5,14 @@ import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
-import { Activity, createContext, use, useMemo } from "react";
+import { Activity } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 
-const SheetContext = createContext<{
-  modal: SheetPrimitive.Root.Props["modal"];
-}>({
-  modal: true,
-});
+const SheetContext = createContext<SheetPrimitive.Root.Props["modal"]>(true);
 
 function Sheet({ modal = true, ...props }: SheetPrimitive.Root.Props) {
-  const contextValue = useMemo(() => ({ modal }), [modal]);
-
   return (
-    <SheetContext.Provider value={contextValue}>
+    <SheetContext.Provider value={modal}>
       <SheetPrimitive.Root data-slot="sheet" modal={modal} {...props} />
     </SheetContext.Provider>
   );
@@ -82,7 +77,7 @@ function SheetPopup({
 }: SheetPrimitive.Popup.Props & {
   showCloseButton?: boolean;
 } & VariantProps<typeof sheetPopupVariants>) {
-  const { modal } = use(SheetContext);
+  const modal = useContextSelector(SheetContext, (value) => value);
 
   return (
     <SheetPortal>

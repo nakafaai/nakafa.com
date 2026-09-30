@@ -51,7 +51,7 @@ export function SchoolSwitcher({
 }: {
   initialSchoolPage: SchoolSwitcherPage;
 }) {
-  const { isMobile } = useSidebar();
+  const isMobile = useSidebar((sidebar) => sidebar.isMobile);
   const t = useTranslations("School.Onboarding");
   const router = useRouter();
   const currentSchool = useSchool((state) => state.school);

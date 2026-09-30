@@ -64,14 +64,12 @@ export function Line({
   children,
   lineProps,
 }: LineProps) {
-  const {
-    config,
-    curveType: defaultCurve,
-    animationType: defaultAnimation,
-    isLoading,
-    selectedDataKey,
-    selectDataKey,
-  } = useComposedChart();
+  const config = useComposedChart((chart) => chart.config);
+  const defaultCurve = useComposedChart((chart) => chart.curveType);
+  const defaultAnimation = useComposedChart((chart) => chart.animationType);
+  const isLoading = useComposedChart((chart) => chart.isLoading);
+  const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useComposedChart((chart) => chart.selectDataKey);
   const id = useId().replace(/:/g, ""); // unique id scopes this line's style defs
   // Devices set to "reduce motion" skip the intro reveal entirely
   const shouldReduceMotion = useReducedMotion();

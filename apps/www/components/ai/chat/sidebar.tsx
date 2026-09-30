@@ -39,7 +39,7 @@ import { useViewer } from "@/lib/identity/client";
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
 export function AiChatSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Ai");
-  const { setOpenMobile } = useSidebar();
+  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const [q, setQ] = useState("");
   const [debouncedQ] = useDebouncedValue(q, CHAT_SEARCH_DEBOUNCE_MS);
   return (
@@ -105,7 +105,7 @@ function AiChatSidebarHistory({ q }: { q?: string }) {
 function AiChatSidebarChats({ q }: { q?: string | undefined }) {
   const t = useTranslations("Ai");
   const drafts = useAi((state) => state.chatDrafts);
-  const { setOpenMobile } = useSidebar();
+  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const params = useParams<{
     id: Id<"chats">;
   }>();

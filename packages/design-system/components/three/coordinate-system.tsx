@@ -81,7 +81,8 @@ export function CoordinateSystem({
   children,
   className,
 }: Props) {
-  const { play, showGrid } = useCoordinateControls();
+  const play = useCoordinateControls((controls) => controls.play);
+  const showGrid = useCoordinateControls((controls) => controls.showGrid);
   const { resolvedTheme } = useTheme();
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
   // Color mapping based on color scheme

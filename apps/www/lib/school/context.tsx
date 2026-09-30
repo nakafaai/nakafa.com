@@ -16,7 +16,11 @@ interface SchoolContextValue {
   schoolMembership: SchoolRouteValue["membership"];
 }
 
-const SchoolContext = createContext<SchoolContextValue | null>(null);
+const missingSchool = Symbol("missing-school");
+
+const SchoolContext = createContext<SchoolContextValue | typeof missingSchool>(
+  missingSchool
+);
 
 function createSchoolContextValue(value: SchoolRouteValue): SchoolContextValue {
   return {
@@ -57,9 +61,11 @@ export function SchoolContextProvider({
 
 /** Reads one selected value from the resolved school route snapshot. */
 export function useSchool<T>(selector: (state: SchoolContextValue) => T) {
-  const context = useContextSelector(SchoolContext, (value) => value);
-  if (!context) {
+  const selected = useContextSelector(SchoolContext, (value) =>
+    value === missingSchool ? missingSchool : selector(value)
+  );
+  if (selected === missingSchool) {
     throw new Error("useSchool must be used within a SchoolContextProvider");
   }
-  return selector(context);
+  return selected;
 }

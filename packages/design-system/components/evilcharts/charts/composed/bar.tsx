@@ -50,15 +50,13 @@ export function Bar({
   enableHoverHighlight = false,
   barProps,
 }: BarProps) {
-  const {
-    config,
-    animationType: defaultAnimation,
-    dataLength,
-    isLoading,
-    hoveredIndex,
-    selectedDataKey,
-    selectDataKey,
-  } = useComposedChart();
+  const config = useComposedChart((chart) => chart.config);
+  const defaultAnimation = useComposedChart((chart) => chart.animationType);
+  const dataLength = useComposedChart((chart) => chart.dataLength);
+  const isLoading = useComposedChart((chart) => chart.isLoading);
+  const hoveredIndex = useComposedChart((chart) => chart.hoveredIndex);
+  const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useComposedChart((chart) => chart.selectDataKey);
   const id = useId().replace(/:/g, ""); // unique id scopes this bar's style defs
   // Devices set to "reduce motion" skip the grow-in animation entirely
   const shouldReduceMotion = useReducedMotion();

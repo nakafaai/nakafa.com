@@ -90,10 +90,15 @@ export function NinaAttachments({
 }: {
   submittedFiles: readonly string[];
 }) {
-  const attachments = usePromptInputAttachments();
+  const attachedFiles = usePromptInputAttachments(
+    (attachments) => attachments.files
+  );
+  const removeAttachment = usePromptInputAttachments(
+    (attachments) => attachments.remove
+  );
   const t = useTranslations("Ai");
   const submitted = new Set(submittedFiles);
-  const files = attachments.files.filter((file) => !submitted.has(file.id));
+  const files = attachedFiles.filter((file) => !submitted.has(file.id));
   if (files.length === 0) {
     return null;
   }
@@ -104,7 +109,7 @@ export function NinaAttachments({
           <AttachmentActions>
             <AttachmentAction
               aria-label={t("remove-attachment", { filename: file.file.name })}
-              onClick={() => attachments.remove(file.id)}
+              onClick={() => removeAttachment(file.id)}
               type="button"
               variant="secondary"
             >
@@ -118,13 +123,15 @@ export function NinaAttachments({
 }
 
 export function NinaAttach() {
-  const attachments = usePromptInputAttachments();
+  const openFileDialog = usePromptInputAttachments(
+    (attachments) => attachments.openFileDialog
+  );
   const t = useTranslations("Ai");
   return (
     <InputGroupButton
       aria-label={t("attach-files")}
       className="rounded-full"
-      onClick={attachments.openFileDialog}
+      onClick={openFileDialog}
       size="icon"
       type="button"
       variant="outline"

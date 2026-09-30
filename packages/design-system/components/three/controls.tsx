@@ -11,14 +11,13 @@ import { CardFooter } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import {
-  createContext,
   type ReactNode,
-  use,
   useCallback,
   useLayoutEffect,
   useMemo,
   useState,
 } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 
 interface Controls {
   play: boolean;
@@ -27,7 +26,11 @@ interface Controls {
   togglePlay: () => void;
 }
 
-const ControlsContext = createContext<Controls | null>(null);
+const missingControls = Symbol("missing-coordinate-controls");
+
+const ControlsContext = createContext<Controls | typeof missingControls>(
+  missingControls
+);
 
 /** Shares interaction state between the scene body and its owning card footer. */
 export function CoordinateProvider({ children }: { children: ReactNode }) {
@@ -46,22 +49,32 @@ export function CoordinateProvider({ children }: { children: ReactNode }) {
   // Activity disconnects scene effects while preserving the card's React state.
   useLayoutEffect(() => () => setState({ play: false, showGrid: true }), []);
 
-  return <ControlsContext value={controls}>{children}</ControlsContext>;
+  return (
+    <ControlsContext.Provider value={controls}>
+      {children}
+    </ControlsContext.Provider>
+  );
 }
 
-export function useCoordinateControls() {
-  const controls = use(ControlsContext);
-  if (!controls) {
+/** Selects one part of the surrounding coordinate controls. */
+export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
+  const selected = useContextSelector(ControlsContext, (value) =>
+    value === missingControls ? missingControls : selector(value)
+  );
+  if (selected === missingControls) {
     // A missing provider is a programmer composition error at this React seam.
     throw new Error("Coordinate controls require CoordinateProvider.");
   }
-  return controls;
+  return selected;
 }
 
 /** The actual card footer, composed as a sibling of CardContent. */
 export function CoordinateControls({ children }: { children?: ReactNode }) {
   const t = useTranslations("Common");
-  const { play, showGrid, toggleGrid, togglePlay } = useCoordinateControls();
+  const play = useCoordinateControls((controls) => controls.play);
+  const showGrid = useCoordinateControls((controls) => controls.showGrid);
+  const toggleGrid = useCoordinateControls((controls) => controls.toggleGrid);
+  const togglePlay = useCoordinateControls((controls) => controls.togglePlay);
 
   return (
     <CardFooter

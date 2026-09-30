@@ -7,12 +7,20 @@ import {
 } from "@repo/design-system/components/ui/hover-card";
 import { cn } from "cn";
 import Image from "next/image";
-import { createContext, use, useMemo, useState } from "react";
+import { useState } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 
-const SourceContext = createContext<{
-  href: string;
+/** One cited link and the domain it is shown under. */
+interface SourceLink {
   domain: string;
-} | null>(null);
+  href: string;
+}
+
+const missingSource = Symbol("missing-source");
+
+const SourceContext = createContext<SourceLink | typeof missingSource>(
+  missingSource
+);
 
 /**
  * Derive the readable domain label shown for one source link.
@@ -41,13 +49,15 @@ function getDomainLabel(domain: string) {
   return domain.replace("www.", "");
 }
 
-/** Reads source link data from the nearest Source provider. */
-function useSourceContext() {
-  const ctx = use(SourceContext);
-  if (!ctx) {
+/** Selects one part of the nearest Source link. */
+function useSource<T>(selector: (source: SourceLink) => T) {
+  const selected = useContextSelector(SourceContext, (value) =>
+    value === missingSource ? missingSource : selector(value)
+  );
+  if (selected === missingSource) {
     throw new Error("Source.* must be used inside <Source>");
   }
-  return ctx;
+  return selected;
 }
 
 export interface SourceProps {
@@ -57,10 +67,9 @@ export interface SourceProps {
 
 export function Source({ href, children }: SourceProps) {
   const domain = getSourceDomain(href);
-  const contextValue = useMemo(() => ({ href, domain }), [href, domain]);
 
   return (
-    <SourceContext.Provider value={contextValue}>
+    <SourceContext.Provider value={{ domain, href }}>
       <HoverCard>{children}</HoverCard>
     </SourceContext.Provider>
   );
@@ -79,9 +88,10 @@ export function SourceTrigger({
   showFavicon = false,
   className,
 }: SourceTriggerProps) {
-  const { href, domain } = useSourceContext();
+  const href = useSource((source) => source.href);
+  const domainLabel = useSource((source) => getDomainLabel(source.domain));
   const [failedFaviconUrl, setFailedFaviconUrl] = useState("");
-  const labelToShow = label ?? domain.replace("www.", "");
+  const labelToShow = label ?? domainLabel;
   const sourceFaviconUrl =
     getCustomFaviconUrl(faviconUrl) ?? getFaviconUrl({ href });
   const visibleFaviconUrl =
@@ -132,10 +142,10 @@ export function SourceContent({
   faviconUrl,
   className,
 }: SourceContentProps) {
-  const { href, domain } = useSourceContext();
+  const href = useSource((source) => source.href);
+  const domainLabel = useSource((source) => getDomainLabel(source.domain));
   const sourceFaviconUrl =
     getCustomFaviconUrl(faviconUrl) ?? getFaviconUrl({ href });
-  const domainLabel = getDomainLabel(domain);
   const cleanTitle = title.trim();
   const shouldShowTitle = cleanTitle && cleanTitle !== domainLabel;
 

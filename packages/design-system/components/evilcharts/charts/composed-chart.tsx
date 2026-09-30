@@ -26,9 +26,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   type ComponentProps,
-  createContext,
   type ReactNode,
-  use,
   useCallback,
   useId,
   useMemo,
@@ -42,6 +40,7 @@ import {
   XAxis as RechartsXAxis,
   YAxis as RechartsYAxis,
 } from "recharts";
+import { createContext, useContextSelector } from "use-context-selector";
 
 // Constants
 export const STROKE_WIDTH = 2;
@@ -81,21 +80,27 @@ interface ComposedChartContextValue {
   selectedDataKey: string | null; // currently selected series, or null when none
 }
 
-const ComposedChartContext = createContext<ComposedChartContextValue | null>(
-  null
-);
+const missingComposedChart = Symbol("missing-composed-chart");
 
-// Reads the chart context, throwing a helpful error when used outside <EvilComposedChart />
-export function useComposedChart() {
-  const context = use(ComposedChartContext);
+const ComposedChartContext = createContext<
+  ComposedChartContextValue | typeof missingComposedChart
+>(missingComposedChart);
 
-  if (!context) {
+// Selects one part of the chart context, throwing a helpful error when used outside <EvilComposedChart />
+export function useComposedChart<T>(
+  selector: (chart: ComposedChartContextValue) => T
+) {
+  const selected = useContextSelector(ComposedChartContext, (value) =>
+    value === missingComposedChart ? missingComposedChart : selector(value)
+  );
+
+  if (selected === missingComposedChart) {
     throw new Error(
       "Composed chart parts (<Bar />, <Line />, <XAxis />, …) must be used within <EvilComposedChart />"
     );
   }
 
-  return context;
+  return selected;
 }
 
 // Root container
@@ -209,7 +214,7 @@ export function EvilComposedChart<
   );
 
   return (
-    <ComposedChartContext value={contextValue}>
+    <ComposedChartContext.Provider value={contextValue}>
       <ChartContainer
         className={className}
         config={config}
@@ -251,7 +256,7 @@ export function EvilComposedChart<
           )}
         </RechartsComposedChart>
       </ChartContainer>
-    </ComposedChartContext>
+    </ComposedChartContext.Provider>
   );
 }
 
@@ -262,7 +267,7 @@ type ReferenceLineProps = ComponentProps<typeof RechartsReferenceLine>;
  * pedagogical helpers such as residual distances on scatter diagrams.
  */
 export function ReferenceLine(props: ReferenceLineProps) {
-  const { isLoading } = useComposedChart();
+  const isLoading = useComposedChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -285,7 +290,7 @@ export function XAxis({
   minTickGap = 8,
   ...props
 }: XAxisProps) {
-  const { isLoading } = useComposedChart();
+  const isLoading = useComposedChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -316,7 +321,7 @@ export function YAxis({
   width = "auto",
   ...props
 }: YAxisProps) {
-  const { isLoading } = useComposedChart();
+  const isLoading = useComposedChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -373,7 +378,8 @@ export function Tooltip({
   hideContent = false,
   cursor = { strokeDasharray: "3 3", strokeWidth: STROKE_WIDTH },
 }: TooltipProps) {
-  const { isLoading, selectedDataKey } = useComposedChart();
+  const isLoading = useComposedChart((chart) => chart.isLoading);
+  const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
 
   if (isLoading) {
     return null;
@@ -413,7 +419,8 @@ export function Legend({
   verticalAlign = "top",
   isClickable = false,
 }: LegendProps) {
-  const { selectedDataKey, selectDataKey } = useComposedChart();
+  const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useComposedChart((chart) => chart.selectDataKey);
 
   return (
     <ChartLegend

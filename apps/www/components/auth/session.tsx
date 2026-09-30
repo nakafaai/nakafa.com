@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, type ReactNode, use } from "react";
+import type { ReactNode } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 import { env } from "@/env";
 import { authClient } from "@/lib/auth/client";
 
@@ -9,7 +10,11 @@ type AuthSession = Pick<
   "data" | "error" | "isPending"
 >;
 
-const AuthSessionContext = createContext<AuthSession | null>(null);
+const missingAuthSession = Symbol("missing-auth-session");
+
+const AuthSessionContext = createContext<
+  AuthSession | typeof missingAuthSession
+>(missingAuthSession);
 const previewSession = {
   data: null,
   error: null,
@@ -21,9 +26,9 @@ function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
   const { data, error, isPending } = authClient.useSession();
 
   return (
-    <AuthSessionContext value={{ data, error, isPending }}>
+    <AuthSessionContext.Provider value={{ data, error, isPending }}>
       {children}
-    </AuthSessionContext>
+    </AuthSessionContext.Provider>
   );
 }
 
@@ -31,19 +36,23 @@ function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
   if (env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true") {
     return (
-      <AuthSessionContext value={previewSession}>{children}</AuthSessionContext>
+      <AuthSessionContext.Provider value={previewSession}>
+        {children}
+      </AuthSessionContext.Provider>
     );
   }
   return <BetterAuthSessionProvider>{children}</BetterAuthSessionProvider>;
 }
 
-/** Reads the shared session and rejects a missing app provider. */
-export function useAuthSession() {
-  const session = use(AuthSessionContext);
-  if (session === null) {
+/** Selects one part of the shared session and rejects a missing app provider. */
+export function useAuthSession<T>(selector: (session: AuthSession) => T) {
+  const selected = useContextSelector(AuthSessionContext, (value) =>
+    value === missingAuthSession ? missingAuthSession : selector(value)
+  );
+  if (selected === missingAuthSession) {
     throw new TypeError(
       "useAuthSession must be used within AuthSessionProvider"
     );
   }
-  return session;
+  return selected;
 }

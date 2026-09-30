@@ -5,11 +5,11 @@ import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
-import { createContext, use, useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 
 interface StepperContextValue {
   activeStep: number;
-  orientation: "horizontal" | "vertical";
   setActiveStep: (step: number) => void;
 }
 
@@ -22,30 +22,37 @@ interface StepItemContextValue {
 
 type StepState = "active" | "completed" | "inactive" | "loading";
 
-const StepperContext = createContext<StepperContextValue | undefined>(
-  undefined
-);
-const StepItemContext = createContext<StepItemContextValue | undefined>(
-  undefined
-);
+const missingStepper = Symbol("missing-stepper");
+const missingStepItem = Symbol("missing-step-item");
 
-/** Reads the current stepper state from the nearest Stepper provider. */
-const useStepper = () => {
-  const context = use(StepperContext);
-  if (!context) {
+const StepperContext = createContext<
+  StepperContextValue | typeof missingStepper
+>(missingStepper);
+const StepItemContext = createContext<
+  StepItemContextValue | typeof missingStepItem
+>(missingStepItem);
+
+/** Selects one part of the nearest Stepper state. */
+function useStepper<T>(selector: (stepper: StepperContextValue) => T) {
+  const selected = useContextSelector(StepperContext, (value) =>
+    value === missingStepper ? missingStepper : selector(value)
+  );
+  if (selected === missingStepper) {
     throw new Error("useStepper must be used within a Stepper");
   }
-  return context;
-};
+  return selected;
+}
 
-/** Reads the current step item state from the nearest StepperItem provider. */
-const useStepItem = () => {
-  const context = use(StepItemContext);
-  if (!context) {
+/** Selects one part of the nearest StepperItem state. */
+function useStepItem<T>(selector: (item: StepItemContextValue) => T) {
+  const selected = useContextSelector(StepItemContext, (value) =>
+    value === missingStepItem ? missingStepItem : selector(value)
+  );
+  if (selected === missingStepItem) {
     throw new Error("useStepItem must be used within a StepperItem");
   }
-  return context;
-};
+  return selected;
+}
 
 interface StepperProps extends React.HTMLAttributes<HTMLDivElement> {
   defaultValue?: number;
@@ -74,18 +81,10 @@ function Stepper({
     [value, onValueChange]
   );
 
-  const currentStep = value ?? activeStep;
-  const contextValue = useMemo(
-    () => ({
-      activeStep: currentStep,
-      setActiveStep,
-      orientation,
-    }),
-    [currentStep, setActiveStep, orientation]
-  );
-
   return (
-    <StepperContext.Provider value={contextValue}>
+    <StepperContext.Provider
+      value={{ activeStep: value ?? activeStep, setActiveStep }}
+    >
       <div
         className={cn(
           "group/stepper inline-flex data-[orientation=horizontal]:w-full data-[orientation=horizontal]:flex-row data-[orientation=vertical]:flex-col",
@@ -115,7 +114,7 @@ function StepperItem({
   children,
   ...props
 }: StepperItemProps) {
-  const { activeStep } = useStepper();
+  const activeStep = useStepper((stepper) => stepper.activeStep);
 
   let state: StepState;
   if (completed || step < activeStep) {
@@ -127,13 +126,11 @@ function StepperItem({
   }
 
   const isLoading = loading && step === activeStep;
-  const contextValue = useMemo(
-    () => ({ step, state, isDisabled: disabled, isLoading }),
-    [step, state, disabled, isLoading]
-  );
 
   return (
-    <StepItemContext.Provider value={contextValue}>
+    <StepItemContext.Provider
+      value={{ isDisabled: disabled, isLoading, state, step }}
+    >
       <div
         className={cn(
           "group/step flex items-center group-data-[orientation=horizontal]/stepper:flex-row group-data-[orientation=vertical]/stepper:flex-col",
@@ -158,8 +155,9 @@ function StepperTrigger({
   type,
   ...props
 }: useRender.ComponentProps<"button">) {
-  const { setActiveStep } = useStepper();
-  const { step, isDisabled } = useStepItem();
+  const setActiveStep = useStepper((stepper) => stepper.setActiveStep);
+  const step = useStepItem((item) => item.step);
+  const isDisabled = useStepItem((item) => item.isDisabled);
 
   return useRender({
     defaultTagName: "button",
@@ -186,13 +184,10 @@ function StepperTrigger({
 }
 
 /** Renders the numbered, completed, or loading indicator content. */
-function StepperDefaultIndicator({
-  isLoading,
-  step,
-}: {
-  isLoading: boolean;
-  step: number;
-}) {
+function StepperDefaultIndicator() {
+  const isLoading = useStepItem((item) => item.isLoading);
+  const step = useStepItem((item) => item.step);
+
   return (
     <>
       <span className="transition-all group-data-[step-state=completed]/step:scale-0 group-data-loading/step:scale-0 group-data-[step-state=completed]/step:opacity-0 group-data-loading/step:opacity-0 group-data-loading/step:transition-none">
@@ -218,15 +213,13 @@ function StepperIndicator({
   render,
   ...props
 }: useRender.ComponentProps<"span">) {
-  const { state, step, isLoading } = useStepItem();
+  const state = useStepItem((item) => item.state);
 
   return useRender({
     defaultTagName: "span",
     render,
     props: {
-      children: children ?? (
-        <StepperDefaultIndicator isLoading={isLoading} step={step} />
-      ),
+      children: children ?? <StepperDefaultIndicator />,
       className: cn(
         "relative flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs data-[step-state=active]:bg-primary data-[step-state=completed]:bg-primary data-[step-state=active]:text-primary-foreground data-[step-state=completed]:text-primary-foreground",
         className

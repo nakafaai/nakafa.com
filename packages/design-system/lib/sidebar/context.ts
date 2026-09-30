@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, use } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 
 /** Responsive state and actions shared by composed sidebar components. */
 export interface SidebarContextValue {
@@ -14,15 +14,21 @@ export interface SidebarContextValue {
   toggleSidebar: () => void;
 }
 
-/** @internal Context consumed by SidebarProvider and sidebar controls. */
-export const SidebarContext = createContext<SidebarContextValue | null>(null);
+const missingSidebar = Symbol("missing-sidebar");
 
-/** Reads sidebar state and actions from the nearest SidebarProvider. */
-export function useSidebar() {
-  const context = use(SidebarContext);
-  if (!context) {
+/** @internal Context consumed by SidebarProvider and sidebar controls. */
+export const SidebarContext = createContext<
+  SidebarContextValue | typeof missingSidebar
+>(missingSidebar);
+
+/** Selects one part of the sidebar state and actions of the nearest SidebarProvider. */
+export function useSidebar<T>(selector: (sidebar: SidebarContextValue) => T) {
+  const selected = useContextSelector(SidebarContext, (value) =>
+    value === missingSidebar ? missingSidebar : selector(value)
+  );
+  if (selected === missingSidebar) {
     throw new Error("useSidebar must be used within a SidebarProvider.");
   }
 
-  return context;
+  return selected;
 }

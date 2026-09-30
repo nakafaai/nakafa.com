@@ -40,7 +40,7 @@ export function SchoolSidebarAccount({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const router = useRouter();
   const [open, { close, set }] = useDisclosure(false);
-  const { isMobile } = useSidebar();
+  const isMobile = useSidebar((sidebar) => sidebar.isMobile);
   const authNavigation = useCurrentAuthNavigation();
   const dropdownSide = isMobile ? "bottom" : "right";
   const submenuSide = isMobile ? "top" : "right";

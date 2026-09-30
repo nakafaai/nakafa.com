@@ -12,7 +12,11 @@ type ClassContextValue = Extract<
   { kind: "accessible" }
 >;
 
-const ClassContext = createContext<ClassContextValue | null>(null);
+const missingClass = Symbol("missing-class");
+
+const ClassContext = createContext<ClassContextValue | typeof missingClass>(
+  missingClass
+);
 
 /**
  * Provides the server-authorized first render and native reactive class data.
@@ -48,9 +52,11 @@ export function ClassContextProvider({
 
 /** Reads one selected value from the resolved class route snapshot. */
 export function useClass<T>(selector: (state: ClassContextValue) => T) {
-  const context = useContextSelector(ClassContext, (value) => value);
-  if (!context) {
+  const selected = useContextSelector(ClassContext, (value) =>
+    value === missingClass ? missingClass : selector(value)
+  );
+  if (selected === missingClass) {
     throw new Error("useClass must be used within a ClassContextProvider");
   }
-  return selector(context);
+  return selected;
 }

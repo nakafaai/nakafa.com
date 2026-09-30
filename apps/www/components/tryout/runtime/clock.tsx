@@ -1,13 +1,11 @@
 "use client";
 
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useSyncExternalStore,
-} from "react";
+import { type ReactNode, useSyncExternalStore } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 
-const InitialClock = createContext<number | undefined>(undefined);
+const missingClock = Symbol("missing-tryout-clock");
+
+const InitialClock = createContext<number | typeof missingClock>(missingClock);
 
 /** Transfers the request timestamp unchanged through server rendering and hydration. */
 export function TryoutClockProvider({
@@ -17,7 +15,9 @@ export function TryoutClockProvider({
   children: ReactNode;
   initialNow: number;
 }) {
-  return <InitialClock value={initialNow}>{children}</InitialClock>;
+  return (
+    <InitialClock.Provider value={initialNow}>{children}</InitialClock.Provider>
+  );
 }
 
 const TICK_MS = 1000;
@@ -28,8 +28,8 @@ const listeners = new Set<() => void>();
 
 /** Returns a shared realtime clock for active try-out timer UI. */
 export function useTryoutClock(active: boolean) {
-  const initialNow = use(InitialClock);
-  if (initialNow === undefined) {
+  const initialNow = useContextSelector(InitialClock, (value) => value);
+  if (initialNow === missingClock) {
     throw new Error("TryoutClockProvider is required for try-out controls.");
   }
   return useSyncExternalStore(

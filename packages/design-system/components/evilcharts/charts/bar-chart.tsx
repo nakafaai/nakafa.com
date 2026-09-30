@@ -30,9 +30,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   type ComponentProps,
-  createContext,
   type ReactNode,
-  use,
   useCallback,
   useId,
   useMemo,
@@ -45,6 +43,7 @@ import {
   YAxis as RechartsYAxis,
   ReferenceLine,
 } from "recharts";
+import { createContext, useContextSelector } from "use-context-selector";
 
 // Constants
 export const DEFAULT_BAR_RADIUS = 2;
@@ -84,19 +83,25 @@ interface BarChartContextValue {
   selectedDataKey: string | null; // currently selected series, or null when none
 }
 
-const BarChartContext = createContext<BarChartContextValue | null>(null);
+const missingBarChart = Symbol("missing-bar-chart");
 
-// Reads the chart context, throwing a helpful error when used outside <EvilBarChart />
-export function useBarChart() {
-  const context = use(BarChartContext);
+const BarChartContext = createContext<
+  BarChartContextValue | typeof missingBarChart
+>(missingBarChart);
 
-  if (!context) {
+// Selects one part of the chart context, throwing a helpful error when used outside <EvilBarChart />
+export function useBarChart<T>(selector: (chart: BarChartContextValue) => T) {
+  const selected = useContextSelector(BarChartContext, (value) =>
+    value === missingBarChart ? missingBarChart : selector(value)
+  );
+
+  if (selected === missingBarChart) {
     throw new Error(
       "Bar chart parts (<Bar />, <XAxis />, …) must be used within <EvilBarChart />"
     );
   }
 
-  return context;
+  return selected;
 }
 
 // Root container
@@ -222,7 +227,7 @@ export function EvilBarChart<
   );
 
   return (
-    <BarChartContext value={contextValue}>
+    <BarChartContext.Provider value={contextValue}>
       <ChartContainer
         className={className}
         config={config}
@@ -270,7 +275,7 @@ export function EvilBarChart<
           )}
         </RechartsBarChart>
       </ChartContainer>
-    </BarChartContext>
+    </BarChartContext.Provider>
   );
 }
 
@@ -291,7 +296,8 @@ export function XAxis({
   type,
   ...props
 }: XAxisProps) {
-  const { isLoading, isHorizontal } = useBarChart();
+  const isLoading = useBarChart((chart) => chart.isLoading);
+  const isHorizontal = useBarChart((chart) => chart.isHorizontal);
 
   if (isLoading) {
     return null;
@@ -325,7 +331,8 @@ export function YAxis({
   type,
   ...props
 }: YAxisProps) {
-  const { isLoading, isHorizontal } = useBarChart();
+  const isLoading = useBarChart((chart) => chart.isLoading);
+  const isHorizontal = useBarChart((chart) => chart.isHorizontal);
 
   if (isLoading) {
     return null;
@@ -357,7 +364,7 @@ export function Grid({
   horizontal,
   ...props
 }: GridProps) {
-  const { isHorizontal } = useBarChart();
+  const isHorizontal = useBarChart((chart) => chart.isHorizontal);
 
   return (
     <CartesianGrid
@@ -380,7 +387,8 @@ interface TooltipProps {
  * dims unselected series. Hidden automatically while the chart is loading.
  */
 export function Tooltip({ variant, roundness, defaultIndex }: TooltipProps) {
-  const { isLoading, selectedDataKey } = useBarChart();
+  const isLoading = useBarChart((chart) => chart.isLoading);
+  const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
 
   if (isLoading) {
     return null;
@@ -418,7 +426,8 @@ export function Legend({
   verticalAlign = "top",
   isClickable = false,
 }: LegendProps) {
-  const { selectedDataKey, selectDataKey } = useBarChart();
+  const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useBarChart((chart) => chart.selectDataKey);
 
   return (
     <ChartLegend

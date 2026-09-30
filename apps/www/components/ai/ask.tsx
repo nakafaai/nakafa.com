@@ -1,20 +1,18 @@
 "use client";
 
 import { Effect } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useEffect,
-  useEffectEvent,
-  useRef,
-} from "react";
+import { type ReactNode, useEffect, useEffectEvent, useRef } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 import { useAdmissionGate } from "@/components/ai/chat/admission";
 import { useAi } from "@/components/ai/context";
 import { preloadAiSheet } from "@/components/ai/sheet/module";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 
-const AskContext = createContext<((prompt: NinaDraft) => void) | null>(null);
+const missingAsk = Symbol("missing-nina-ask");
+
+const AskContext = createContext<
+  ((prompt: NinaDraft) => void) | typeof missingAsk
+>(missingAsk);
 
 /**
  * Owns every one-tap ask on a page. Nina opens with the prompt already shown,
@@ -78,13 +76,13 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
   // Leaving the page before identity settles must not hold Nina's one ask slot.
   useEffect(() => () => settleWaiting(false), []);
 
-  return <AskContext value={ask}>{children}</AskContext>;
+  return <AskContext.Provider value={ask}>{children}</AskContext.Provider>;
 }
 
 /** Sends one prompt through the surrounding page's ask owner. */
 export function useNinaAsk() {
-  const ask = use(AskContext);
-  if (!ask) {
+  const ask = useContextSelector(AskContext, (value) => value);
+  if (ask === missingAsk) {
     throw new Error("useNinaAsk must be used within NinaAskProvider");
   }
   return ask;

@@ -17,18 +17,25 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
-import { createContext, type ReactNode, use } from "react";
+import type { ReactNode } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
 import type { Invocation } from "@/components/ai/message/invocation";
 
-const ActivityContext = createContext<Invocation | null>(null);
+const missingActivity = Symbol("missing-activity");
 
-/** Reads the invocation state for evidence rendered inside an activity. */
-export function useActivity() {
-  const context = use(ActivityContext);
-  if (!context) {
+const ActivityContext = createContext<Invocation | typeof missingActivity>(
+  missingActivity
+);
+
+/** Selects one part of the invocation for evidence rendered inside an activity. */
+export function useActivity<T>(selector: (invocation: Invocation) => T) {
+  const selected = useContextSelector(ActivityContext, (value) =>
+    value === missingActivity ? missingActivity : selector(value)
+  );
+  if (selected === missingActivity) {
     throw new Error("Activity components must be used within Activity");
   }
-  return context;
+  return selected;
 }
 
 /**
@@ -43,7 +50,7 @@ export function Activity({
   invocation: Invocation;
 }) {
   return (
-    <ActivityContext value={invocation}>
+    <ActivityContext.Provider value={invocation}>
       <Collapsible className="not-prose min-w-0" defaultOpen={false}>
         <ActivityTrigger />
         <CollapsibleContent className="motion-reduce:transition-none">
@@ -52,22 +59,22 @@ export function Activity({
           </div>
         </CollapsibleContent>
       </Collapsible>
-    </ActivityContext>
+    </ActivityContext.Provider>
   );
 }
 
 function ActivityTrigger() {
   const t = useTranslations("Ai");
-  const {
-    artifacts,
-    capability,
-    denied,
-    failed,
-    failures,
-    running,
-    stopped,
-    sourceLimit,
-  } = useActivity();
+  const artifactCount = useActivity(
+    (invocation) => invocation.artifacts.length
+  );
+  const capability = useActivity((invocation) => invocation.capability);
+  const denied = useActivity((invocation) => invocation.denied);
+  const failed = useActivity((invocation) => invocation.failed);
+  const failures = useActivity((invocation) => invocation.failures);
+  const running = useActivity((invocation) => invocation.running);
+  const sourceLimit = useActivity((invocation) => invocation.sourceLimit);
+  const stopped = useActivity((invocation) => invocation.stopped);
   const icon = {
     math: Calculator01Icon,
     nakafa: BookOpen02Icon,
@@ -92,7 +99,7 @@ function ActivityTrigger() {
           ? "text-destructive"
           : "text-muted-foreground hover:text-foreground"
       )}
-      disabled={artifacts.length === 0}
+      disabled={artifactCount === 0}
     >
       <Spinner
         aria-hidden="true"
@@ -111,7 +118,7 @@ function ActivityTrigger() {
       {stopped ? (
         <span className="shrink-0 text-xs">{t("activity.stopped")}</span>
       ) : null}
-      {artifacts.length > 0 ? (
+      {artifactCount > 0 ? (
         <HugeIcons
           className="size-4 shrink-0 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"
           icon={ArrowDown01Icon}

@@ -25,7 +25,11 @@ export interface IdentityState {
   readonly viewer: Viewer | null;
 }
 
-const IdentityContext = createContext<IdentityState | null>(null);
+const missingIdentity = Symbol("missing-identity");
+
+const IdentityContext = createContext<IdentityState | typeof missingIdentity>(
+  missingIdentity
+);
 
 const signedOutState: IdentityState = {
   account: null,
@@ -101,8 +105,10 @@ function IdentityValueProvider({
  * waiting forever. Mounted once at the app boundary.
  */
 export function IdentityProvider({ children }: { children: ReactNode }) {
-  const { data: session, isPending: isSessionPending } = useAuthSession();
-  const hasSession = session?.session !== undefined;
+  const hasSession = useAuthSession(
+    (session) => session.data?.session !== undefined
+  );
+  const isSessionPending = useAuthSession((session) => session.isPending);
   const query = useQuery(
     refs.public.auth.queries.getCurrentUser,
     hasSession ? {} : "skip"
@@ -129,9 +135,11 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
  * whole state, which would re-render it whenever any identity field changes.
  */
 export function useViewer<T>(selector: (state: IdentityState) => T): T {
-  const value = useContextSelector(IdentityContext, (context) => context);
-  if (value === null) {
+  const selected = useContextSelector(IdentityContext, (context) =>
+    context === missingIdentity ? missingIdentity : selector(context)
+  );
+  if (selected === missingIdentity) {
     throw new Error("useViewer must be used within an IdentityProvider");
   }
-  return selector(value);
+  return selected;
 }

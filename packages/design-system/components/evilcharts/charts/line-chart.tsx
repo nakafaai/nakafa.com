@@ -26,9 +26,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   type ComponentProps,
-  createContext,
   type ReactNode,
-  use,
   useCallback,
   useId,
   useMemo,
@@ -41,6 +39,7 @@ import {
   XAxis as RechartsXAxis,
   YAxis as RechartsYAxis,
 } from "recharts";
+import { createContext, useContextSelector } from "use-context-selector";
 
 // Constants
 export const STROKE_WIDTH = 1;
@@ -65,19 +64,25 @@ interface LineChartContextValue {
   selectedDataKey: string | null; // currently selected series, or null when none
 }
 
-const LineChartContext = createContext<LineChartContextValue | null>(null);
+const missingLineChart = Symbol("missing-line-chart");
 
-// Reads the chart context, throwing a helpful error when used outside <EvilLineChart />
-export function useLineChart() {
-  const context = use(LineChartContext);
+const LineChartContext = createContext<
+  LineChartContextValue | typeof missingLineChart
+>(missingLineChart);
 
-  if (!context) {
+// Selects one part of the chart context, throwing a helpful error when used outside <EvilLineChart />
+export function useLineChart<T>(selector: (chart: LineChartContextValue) => T) {
+  const selected = useContextSelector(LineChartContext, (value) =>
+    value === missingLineChart ? missingLineChart : selector(value)
+  );
+
+  if (selected === missingLineChart) {
     throw new Error(
       "Line chart parts (<Line />, <XAxis />, …) must be used within <EvilLineChart />"
     );
   }
 
-  return context;
+  return selected;
 }
 
 // Root container
@@ -182,7 +187,7 @@ export function EvilLineChart<
   );
 
   return (
-    <LineChartContext value={contextValue}>
+    <LineChartContext.Provider value={contextValue}>
       <ChartContainer
         className={className}
         config={config}
@@ -225,7 +230,7 @@ export function EvilLineChart<
           )}
         </RechartsLineChart>
       </ChartContainer>
-    </LineChartContext>
+    </LineChartContext.Provider>
   );
 }
 
@@ -243,7 +248,7 @@ export function XAxis({
   minTickGap = 8,
   ...props
 }: XAxisProps) {
-  const { isLoading } = useLineChart();
+  const isLoading = useLineChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -275,7 +280,7 @@ export function YAxis({
   width = "auto",
   ...props
 }: YAxisProps) {
-  const { isLoading } = useLineChart();
+  const isLoading = useLineChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -330,7 +335,8 @@ export function Tooltip({
   defaultIndex,
   cursor = true,
 }: TooltipProps) {
-  const { isLoading, selectedDataKey } = useLineChart();
+  const isLoading = useLineChart((chart) => chart.isLoading);
+  const selectedDataKey = useLineChart((chart) => chart.selectedDataKey);
 
   if (isLoading) {
     return null;
@@ -370,7 +376,8 @@ export function Legend({
   verticalAlign = "top",
   isClickable = false,
 }: LegendProps) {
-  const { selectedDataKey, selectDataKey } = useLineChart();
+  const selectedDataKey = useLineChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useLineChart((chart) => chart.selectDataKey);
 
   return (
     <ChartLegend

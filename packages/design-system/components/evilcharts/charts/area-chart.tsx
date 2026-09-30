@@ -27,9 +27,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   type ComponentProps,
-  createContext,
   type ReactNode,
-  use,
   useCallback,
   useId,
   useMemo,
@@ -42,6 +40,7 @@ import {
   XAxis as RechartsXAxis,
   YAxis as RechartsYAxis,
 } from "recharts";
+import { createContext, useContextSelector } from "use-context-selector";
 
 const STROKE_WIDTH = 0.8;
 export type CurveType = NonNullable<
@@ -60,19 +59,25 @@ interface AreaChartContextValue {
   selectedDataKey: string | null; // currently selected series, or null when none
 }
 
-const AreaChartContext = createContext<AreaChartContextValue | null>(null);
+const missingAreaChart = Symbol("missing-area-chart");
 
-// Reads the chart context, throwing a helpful error when used outside <EvilAreaChart />
-export function useAreaChart() {
-  const context = use(AreaChartContext);
+const AreaChartContext = createContext<
+  AreaChartContextValue | typeof missingAreaChart
+>(missingAreaChart);
 
-  if (!context) {
+// Selects one part of the chart context, throwing a helpful error when used outside <EvilAreaChart />
+export function useAreaChart<T>(selector: (chart: AreaChartContextValue) => T) {
+  const selected = useContextSelector(AreaChartContext, (value) =>
+    value === missingAreaChart ? missingAreaChart : selector(value)
+  );
+
+  if (selected === missingAreaChart) {
     throw new Error(
       "Area chart parts (<Area />, <XAxis />, …) must be used within <EvilAreaChart />"
     );
   }
 
-  return context;
+  return selected;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -187,7 +192,7 @@ export function EvilAreaChart<
   );
 
   return (
-    <AreaChartContext value={contextValue}>
+    <AreaChartContext.Provider value={contextValue}>
       <ChartContainer
         className={className}
         config={config}
@@ -226,7 +231,7 @@ export function EvilAreaChart<
           {isLoading && <LoadingArea chartId={chartId} curveType={curveType} />}
         </RechartsAreaChart>
       </ChartContainer>
-    </AreaChartContext>
+    </AreaChartContext.Provider>
   );
 }
 
@@ -244,7 +249,7 @@ export function XAxis({
   minTickGap = 8,
   ...props
 }: XAxisProps) {
-  const { isLoading } = useAreaChart();
+  const isLoading = useAreaChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -277,7 +282,8 @@ export function YAxis({
   tickFormatter,
   ...props
 }: YAxisProps) {
-  const { isLoading, isExpanded } = useAreaChart();
+  const isLoading = useAreaChart((chart) => chart.isLoading);
+  const isExpanded = useAreaChart((chart) => chart.isExpanded);
 
   if (isLoading) {
     return null;
@@ -334,7 +340,8 @@ export function Tooltip({
   defaultIndex,
   cursor = true,
 }: TooltipProps) {
-  const { isLoading, selectedDataKey } = useAreaChart();
+  const isLoading = useAreaChart((chart) => chart.isLoading);
+  const selectedDataKey = useAreaChart((chart) => chart.selectedDataKey);
 
   if (isLoading) {
     return null;
@@ -374,7 +381,8 @@ export function Legend({
   verticalAlign = "top",
   isClickable = false,
 }: LegendProps) {
-  const { selectedDataKey, selectDataKey } = useAreaChart();
+  const selectedDataKey = useAreaChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useAreaChart((chart) => chart.selectDataKey);
 
   return (
     <ChartLegend

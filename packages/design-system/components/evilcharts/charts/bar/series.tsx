@@ -57,18 +57,16 @@ export function Bar({
   bufferBar = false,
   barProps,
 }: BarProps) {
-  const {
-    config,
-    isStacked,
-    isHorizontal,
-    isLoading,
-    barRadius: defaultRadius,
-    animationType: defaultAnimation,
-    dataLength,
-    selectedDataKey,
-    selectDataKey,
-    isMouseInChart,
-  } = useBarChart();
+  const config = useBarChart((chart) => chart.config);
+  const isStacked = useBarChart((chart) => chart.isStacked);
+  const isHorizontal = useBarChart((chart) => chart.isHorizontal);
+  const isLoading = useBarChart((chart) => chart.isLoading);
+  const defaultRadius = useBarChart((chart) => chart.barRadius);
+  const defaultAnimation = useBarChart((chart) => chart.animationType);
+  const dataLength = useBarChart((chart) => chart.dataLength);
+  const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useBarChart((chart) => chart.selectDataKey);
+  const isMouseInChart = useBarChart((chart) => chart.isMouseInChart);
   const id = useId().replace(/:/g, ""); // unique id scopes this bar's style defs
   // Devices set to "reduce motion" skip the grow-in animation entirely
   const shouldReduceMotion = useReducedMotion();

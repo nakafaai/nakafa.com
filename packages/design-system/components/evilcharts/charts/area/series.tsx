@@ -63,16 +63,14 @@ export function Area({
   children,
   areaProps,
 }: AreaProps) {
-  const {
-    config,
-    curveType: defaultCurve,
-    animationType: defaultAnimation,
-    isStacked,
-    isExpanded,
-    isLoading,
-    selectedDataKey,
-    selectDataKey,
-  } = useAreaChart();
+  const config = useAreaChart((chart) => chart.config);
+  const defaultCurve = useAreaChart((chart) => chart.curveType);
+  const defaultAnimation = useAreaChart((chart) => chart.animationType);
+  const isStacked = useAreaChart((chart) => chart.isStacked);
+  const isExpanded = useAreaChart((chart) => chart.isExpanded);
+  const isLoading = useAreaChart((chart) => chart.isLoading);
+  const selectedDataKey = useAreaChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useAreaChart((chart) => chart.selectDataKey);
   const id = useId().replace(/:/g, ""); // unique id scopes this area's style defs
   // Devices set to "reduce motion" skip the intro reveal entirely
   const shouldReduceMotion = useReducedMotion();

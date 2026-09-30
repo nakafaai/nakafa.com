@@ -7,30 +7,30 @@ import {
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import { cn } from "cn";
 import { domAnimation, LazyMotion } from "motion/react";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  use,
-  useId,
-  useMemo,
-} from "react";
+import { type ComponentProps, type ReactNode, useId, useMemo } from "react";
 import { ResponsiveContainer } from "recharts";
+import { createContext, useContextSelector } from "use-context-selector";
 
 interface ChartContextProps {
   config: ChartConfig;
 }
 
-const ChartContext = createContext<ChartContextProps | null>(null);
+const missingChart = Symbol("missing-chart");
 
-export function useChart() {
-  const context = use(ChartContext);
+const ChartContext = createContext<ChartContextProps | typeof missingChart>(
+  missingChart
+);
 
-  if (!context) {
+export function useChart<T>(selector: (chart: ChartContextProps) => T) {
+  const selected = useContextSelector(ChartContext, (value) =>
+    value === missingChart ? missingChart : selector(value)
+  );
+
+  if (selected === missingChart) {
     throw new Error("useChart must be used within a <ChartContainer />");
   }
 
-  return context;
+  return selected;
 }
 
 interface ChartContainerProps
