@@ -113,10 +113,13 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Root commands: `pnpm dev`, `pnpm dev:web`, `pnpm dev:all`, `pnpm start`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format`, `pnpm security:audit`, `pnpm analyze`, and `pnpm boundaries`.
 - Prefer `pnpm start` after a build. Use `pnpm dev` only for hot reload, development-mode diagnostics, devtools, or Convex live development.
 - There is no root typecheck. Run `pnpm --filter <workspace> typecheck` for every changed workspace.
+- Judge a typecheck by its exit code. The Effect-patched compiler reports language-service suggestions such as `suggestion TS377016` (use `Effect.undefined` for `Effect.succeed(undefined)`) that fail the typecheck and the build without the word "error".
+- The `www` typecheck and build validate environment variables while Next.js loads its config. Run them through `pnpm acceptance:build`, which supplies inert values, or pass inert local values; never copy deployment values.
 - Before changing Turborepo configuration or commands, read `docs/README.md` in the installed `turbo` package (resolve it with `node -p "require.resolve('turbo/package.json')"`) and the relevant pages under its `docs/` directory.
 - Run one test with `pnpm --filter <workspace> exec vitest run <relative-test-path>` and a workspace suite with `pnpm --filter <workspace> test`.
 - Run the smallest useful verification first, then expand based on risk. Format changed files, run `pnpm lint`, run affected tests and typechecks, and run `pnpm build` for build-critical changes.
 - Run `pnpm security:audit` after dependency or lockfile changes. Report any verification that could not run.
+- CI audits against live OSV advisories, so a new advisory can fail Quality with no code change. Bump the version-keyed override in `pnpm-workspace.yaml` in its own change, then merge `main` into waiting pull requests.
 
 ## Vercel Cost And Deployment Policy
 
@@ -133,3 +136,4 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Do not commit unless the user asks. Before creating a pull request, format, run the relevant local checks, inspect the complete diff, and use a ready pull request only when it is reviewable.
 - Production readiness requires the exact pull-request head, all required checks, reviews, mergeability, protected-branch policy, and cleanup evidence. Green results from another commit are not proof.
 - Never blindly trust automated review findings. Trace each claim through the current code and authoritative sources before changing anything.
+- Unresolved review threads, including automated reviewers', block merging. Fix each verified finding or reply with evidence, then resolve the thread.
