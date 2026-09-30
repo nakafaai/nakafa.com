@@ -203,6 +203,7 @@ describe("Nina message boundary", () => {
       kind: "list",
       messages: [expect.objectContaining({ streamId: streams.own })],
     });
+    expect(listed.page).toEqual([]);
     const resumed = Ref.decodeReturnsSync(
       refs.public.nina.messages.list,
       await owner.query(query, {
@@ -229,6 +230,9 @@ describe("Nina message boundary", () => {
         },
       ],
     });
+    expect(resumed.page).toEqual([]);
+    // Stream round trips never re-read the transcript.
+    expect(listUIMessages).not.toHaveBeenCalled();
     expect(syncStreams).toHaveBeenLastCalledWith(
       expect.anything(),
       components.nina,
@@ -258,34 +262,36 @@ describe("Nina message boundary", () => {
     }
   );
 
-  it.each(["messages", "streams", "cursors"] as const)(
-    "redacts %s transport failures",
-    async (source) => {
-      const { owner, args } = await fixture();
-      const error = new Error("private transport diagnostic");
-      if (source === "messages") {
-        vi.mocked(listUIMessages).mockRejectedValueOnce(error);
-      }
-      if (source === "streams") {
-        vi.mocked(syncStreams).mockRejectedValueOnce(error);
-      }
-      if (source === "cursors") {
-        vi.mocked(listStreams).mockRejectedValueOnce(error);
-      }
-      await expect(
-        owner.query(query, {
-          ...args,
-          streamArgs: { kind: "deltas", cursors: [] },
-        })
-      ).rejects.toMatchObject({
-        data: {
-          _tag: "NinaReadError",
-          message:
-            source === "messages"
-              ? "Unable to read Nina messages."
-              : "Unable to read Nina streams.",
-        },
-      });
+  it.each([
+    ["messages", undefined],
+    ["streams", { kind: "deltas", cursors: [] }],
+    ["cursors", { kind: "deltas", cursors: [] }],
+    ["missing streams", { kind: "list" }],
+  ] as const)("redacts %s transport failures", async (source, streamArgs) => {
+    const { owner, args } = await fixture();
+    const error = new Error("private transport diagnostic");
+    if (source === "messages") {
+      vi.mocked(listUIMessages).mockRejectedValueOnce(error);
     }
-  );
+    if (source === "streams") {
+      vi.mocked(syncStreams).mockRejectedValueOnce(error);
+    }
+    if (source === "cursors") {
+      vi.mocked(listStreams).mockRejectedValueOnce(error);
+    }
+    if (source === "missing streams") {
+      vi.mocked(syncStreams).mockResolvedValueOnce(undefined);
+    }
+    await expect(
+      owner.query(query, streamArgs ? { ...args, streamArgs } : args)
+    ).rejects.toMatchObject({
+      data: {
+        _tag: "NinaReadError",
+        message:
+          source === "messages"
+            ? "Unable to read Nina messages."
+            : "Unable to read Nina streams.",
+      },
+    });
+  });
 });
