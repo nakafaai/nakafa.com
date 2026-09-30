@@ -3,7 +3,7 @@ import "server-only";
 import { HttpClient } from "@confect/js";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
-import { env } from "@/env";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Expected server write failure for one authoritative onboarding admission. */
 export class OnboardingAdmissionError extends Schema.TaggedError<OnboardingAdmissionError>()(
@@ -24,9 +24,7 @@ export const readOnboardingStatus = Effect.fn("www.onboarding.readStatus")(
       const client = yield* HttpClient.HttpClient;
       return yield* client.query(refs.public.onboarding.queries.getStatus, {});
     }).pipe(
-      Effect.provide(
-        HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, { auth: token })
-      ),
+      Effect.provide(httpLayer({ auth: token })),
       Effect.mapError((cause) => new OnboardingStatusReadError({ cause }))
     );
   }
@@ -40,9 +38,7 @@ export const recordOnboardingAdmission = Effect.fn(
     const client = yield* HttpClient.HttpClient;
     return yield* client.mutation(refs.public.onboarding.mutations.admit, {});
   }).pipe(
-    Effect.provide(
-      HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, { auth: token })
-    ),
+    Effect.provide(httpLayer({ auth: token })),
     Effect.mapError((cause) => new OnboardingAdmissionError({ cause }))
   );
 });

@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserSettingsSubscriptions } from "@/components/user/settings/subscriptions";
-import { env } from "@/env";
+import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { admitUserSettingsRoute } from "@/lib/settings/server";
 
@@ -48,12 +48,7 @@ async function AuthenticatedSubscriptions({
           productId: products.pro.id,
         })
       ),
-      Effect.provide(
-        HttpClient.layer(
-          env.NEXT_PUBLIC_CONVEX_URL,
-          token ? { auth: token } : {}
-        )
-      )
+      Effect.provide(httpLayer(token ? { auth: token } : {}))
     )
   );
   return <UserSettingsSubscriptions initialSubscription={subscription} />;

@@ -1,10 +1,10 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Reads the active signed try-out sitemap inventory for one locale. */
 export const readPublishedTryoutSitemapCount = Effect.fn(
@@ -14,7 +14,7 @@ export const readPublishedTryoutSitemapCount = Effect.fn(
     client.query(refs.public.contentRelease.tryout.sitemapCount, {
       appLocale: AppLocaleSchema.make(locale),
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
 });
 
 /** Reads one exact bounded signed try-out sitemap page. */
@@ -26,5 +26,5 @@ export const readPublishedTryoutSitemap = Effect.fn(
       appLocale: AppLocaleSchema.make(locale),
       page,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
 });

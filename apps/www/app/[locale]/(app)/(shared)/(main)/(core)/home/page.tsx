@@ -10,8 +10,8 @@ import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
 import { HomeContinueLearning } from "@/components/home/recent";
 import { HomeTrending } from "@/components/home/trending";
-import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
+import { httpLayer } from "@/lib/convex/http";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { readOnboardingStatus } from "@/lib/onboarding/server";
@@ -74,9 +74,7 @@ async function AuthenticatedHome({
           { concurrency: "unbounded" }
         )
       ),
-      Effect.provide(
-        HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, { auth: token })
-      )
+      Effect.provide(httpLayer({ auth: token }))
     )
   );
 

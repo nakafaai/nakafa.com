@@ -5,7 +5,6 @@ import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back";
-import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
@@ -65,11 +64,7 @@ async function SearchHeader() {
     ? await Effect.runPromise(
         Effect.flatMap(HttpClient.HttpClient, (client) =>
           client.query(refs.public.auth.queries.getCurrentUser, {})
-        ).pipe(
-          Effect.provide(
-            HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, { auth: token })
-          )
-        )
+        ).pipe(Effect.provide(httpLayer({ auth: token })))
       )
     : null;
   return <HomeHeader name={account?.authUser.name ?? null} />;
@@ -78,3 +73,4 @@ async function SearchHeader() {
 import { HttpClient } from "@confect/js";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
+import { httpLayer } from "@/lib/convex/http";
