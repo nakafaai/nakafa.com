@@ -59,7 +59,10 @@ import {
 } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import type { TryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { testArtifactJson } from "@repo/backend/test/content/artifact";
+import {
+  insertTestArtifact,
+  testArtifactJson,
+} from "@repo/backend/test/content/artifact";
 import {
   testMaterialPublicPath,
   testProjectionJson,
@@ -143,12 +146,7 @@ export async function insertProofItem(
     stagedAt: 1,
   });
   if (operation === "upsert") {
-    await ctx.db.insert("contentArtifacts", {
-      artifactHash,
-      artifactJson,
-      createdAt: 1,
-      retainUntil: Number.MAX_SAFE_INTEGER,
-    });
+    await insertTestArtifact(ctx, { artifactHash, artifactJson });
   }
 }
 /** Inserts one ordered route proof row. */

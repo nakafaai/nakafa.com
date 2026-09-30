@@ -106,12 +106,10 @@ export const stageArtifact = Effect.fn("contentRelease.stageArtifact")(
         `Artifact ${artifact.artifactHash} does not match its staged upsert.`
       );
     }
-    const retainUntil = now + ROLLBACK_RETENTION_MS;
     const stored = yield* storeContentArtifact(
       artifact,
       artifactJson,
-      now,
-      retainUntil
+      now + ROLLBACK_RETENTION_MS
     );
     // Confect patch re-reads the whole row before replacing it, so replace
     // the row loaded above instead of reading it again per staged artifact.

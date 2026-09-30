@@ -5,6 +5,7 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { insertTestArtifact } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_ARTIFACT_HASH,
@@ -16,7 +17,7 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
-import { convexTest } from "convex-test";
+import { convexTest, type TestConvex } from "convex-test";
 
 const cleanup = internal.contentRelease.cleanup.cleanup;
 const RELEASE = {
@@ -41,12 +42,19 @@ function insertRelease(ctx: MutationCtx) {
 
 /** Inserts one expired or retained immutable artifact. */
 function insertArtifact(ctx: MutationCtx, index: number, retainUntil = 0) {
-  return ctx.db.insert("contentArtifacts", {
+  return insertTestArtifact(ctx, {
     artifactHash: `sha256:${index.toString(16).padStart(64, "0")}`,
     artifactJson: "{}",
-    createdAt: NOW,
     retainUntil,
   });
+}
+
+/** Reads every stored artifact body and fact left after cleanup. */
+function storedArtifacts(t: TestConvex<typeof schema>) {
+  return t.run(async (ctx) => ({
+    artifacts: await ctx.db.query("contentArtifacts").collect(),
+    facts: await ctx.db.query("contentArtifactFacts").collect(),
+  }));
 }
 
 /** Inserts one historical head that keeps the fixture artifact reachable. */
@@ -122,13 +130,15 @@ describe("contentRelease/cleanup", () => {
       deletedArtifacts: 1,
       releaseId: RELEASE.releaseId,
     });
-    const cleaned = await t.run(async (ctx) => ({
-      artifacts: await ctx.db.query("contentArtifacts").take(2),
-      releases: await ctx.db.query("contentReleases").take(2),
-    }));
-    expect(cleaned.artifacts).toEqual([]);
-    expect(cleaned.releases).toHaveLength(1);
-    expect(cleaned.releases[0]).toHaveProperty("cleanupAt");
+    const releases = await t.run((ctx) =>
+      ctx.db.query("contentReleases").take(2)
+    );
+    await expect(storedArtifacts(t)).resolves.toEqual({
+      artifacts: [],
+      facts: [],
+    });
+    expect(releases).toHaveLength(1);
+    expect(releases[0]).toHaveProperty("cleanupAt");
   });
 
   it("deletes expired unreachable artifacts in resumable bounded pages", async () => {
@@ -159,19 +169,19 @@ describe("contentRelease/cleanup", () => {
       releaseId: RELEASE.releaseId,
     });
     expect(repeated).toEqual(completed);
-    await expect(
-      t.run((ctx) => ctx.db.query("contentArtifacts").take(1))
-    ).resolves.toEqual([]);
+    await expect(storedArtifacts(t)).resolves.toEqual({
+      artifacts: [],
+      facts: [],
+    });
   });
 
   it("retains every artifact referenced by immutable heads or items", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertRelease(ctx);
-      await ctx.db.insert("contentArtifacts", {
+      await insertTestArtifact(ctx, {
         artifactHash: TEST_ARTIFACT_HASH,
         artifactJson: "{}",
-        createdAt: NOW,
         retainUntil: 0,
       });
       await insertHead(ctx);
@@ -185,9 +195,35 @@ describe("contentRelease/cleanup", () => {
       deletedArtifacts: 0,
       releaseId: RELEASE.releaseId,
     });
+    await expect(storedArtifacts(t)).resolves.toMatchObject({
+      artifacts: [{ artifactHash: TEST_ARTIFACT_HASH }],
+      facts: [{ artifactHash: TEST_ARTIFACT_HASH }],
+    });
+  });
+
+  it("leaves a body stored before artifact facts for the facts backfill", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRelease(ctx);
+      await ctx.db.insert("contentArtifacts", {
+        artifactHash: TEST_ARTIFACT_HASH,
+        artifactJson: "{}",
+        createdAt: NOW,
+        retainUntil: 0,
+      });
+    });
+
     await expect(
-      t.run((ctx) => ctx.db.query("contentArtifacts").unique())
-    ).resolves.toMatchObject({ artifactHash: TEST_ARTIFACT_HASH });
+      t.mutation(cleanup, { releaseId: RELEASE.releaseId })
+    ).resolves.toEqual({
+      complete: true,
+      deletedArtifacts: 0,
+      releaseId: RELEASE.releaseId,
+    });
+    await expect(storedArtifacts(t)).resolves.toMatchObject({
+      artifacts: [{ artifactHash: TEST_ARTIFACT_HASH }],
+      facts: [],
+    });
   });
 
   it("returns an exact retry deadline for retained future artifacts", async () => {

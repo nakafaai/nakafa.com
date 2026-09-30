@@ -16,6 +16,7 @@ import chats from "./tables/chats";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
+import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
 import contentBindings from "./tables/contentBindings";
 import contentHeads from "./tables/contentHeads";
@@ -99,6 +100,7 @@ export default $defineSchema({
   commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),
   contentAnalyticsPartitions: $Table.tableDefinition(contentAnalyticsPartitions),
+  contentArtifactFacts: $Table.tableDefinition(contentArtifactFacts),
   contentArtifacts: $Table.tableDefinition(contentArtifacts),
   contentBindings: $Table.tableDefinition(contentBindings),
   contentHeads: $Table.tableDefinition(contentHeads),
