@@ -1,14 +1,12 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { type ConsoleMessage, expect, type Page, test } from "@playwright/test";
-import { Duration, Effect } from "effect";
+import { expect, type Page, test } from "@playwright/test";
+import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { collectUnusedPreloads } from "@/e2e/support/preload";
 
 const readinessTimeoutMilliseconds = 15_000;
-// Chrome reports a preload the page never used a few seconds after loading.
-const unusedPreloadSettleMilliseconds = 5000;
-const unusedPreloadWarning = "was preloaded using link preload but not used";
 const quranIndexUrlPattern = /\/id\/quran$/;
 const quranSurahUrlPattern = /\/id\/quran\/2$/;
 const quranTranslationNoteHrefPattern = /^#.+-translation-note-\d+$/u;
@@ -425,39 +423,30 @@ const verifyQuranTypefaceScope = Effect.fn(
 )(function* (page: Page) {
   yield* seedDeniedAnalyticsConsent(page);
 
-  const warnings: string[] = [];
-  const recordUnusedPreload = (message: ConsoleMessage) => {
-    if (message.text().includes(unusedPreloadWarning)) {
-      warnings.push(message.text());
-    }
-  };
-  yield* Effect.acquireUseRelease(
-    Effect.sync(() => page.on("console", recordUnusedPreload)),
-    () =>
-      Effect.gen(function* () {
-        // The desktop sidebar links to the Quran, so this page prefetches its
-        // route; the prefetch must not preload the Quran typeface here.
-        const quranPrefetch = page.waitForRequest(
-          (request) =>
-            new URL(request.url()).pathname === "/en/quran" &&
-            request.headers()["next-router-prefetch"] !== undefined,
-          { timeout: readinessTimeoutMilliseconds }
-        );
-        const href = "/en/try-out";
-        yield* Effect.promise(() =>
-          page.goto(href, { waitUntil: "domcontentloaded" })
-        );
-        yield* waitForCommittedAppRouter(
-          page,
-          href,
-          href,
-          readinessTimeoutMilliseconds
-        );
-        yield* Effect.promise(() => quranPrefetch);
-        yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-        yield* Effect.sleep(Duration.millis(unusedPreloadSettleMilliseconds));
-      }),
-    () => Effect.sync(() => page.off("console", recordUnusedPreload))
+  const warnings = yield* collectUnusedPreloads(
+    page,
+    Effect.gen(function* () {
+      // The desktop sidebar links to the Quran, so this page prefetches its
+      // route; the prefetch must not preload the Quran typeface here.
+      const quranPrefetch = page.waitForRequest(
+        (request) =>
+          new URL(request.url()).pathname === "/en/quran" &&
+          request.headers()["next-router-prefetch"] !== undefined,
+        { timeout: readinessTimeoutMilliseconds }
+      );
+      const href = "/en/try-out";
+      yield* Effect.promise(() =>
+        page.goto(href, { waitUntil: "domcontentloaded" })
+      );
+      yield* waitForCommittedAppRouter(
+        page,
+        href,
+        href,
+        readinessTimeoutMilliseconds
+      );
+      yield* Effect.promise(() => quranPrefetch);
+      yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+    })
   );
   yield* Effect.sync(() => expect(warnings).toEqual([]));
 });

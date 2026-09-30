@@ -179,6 +179,12 @@ const nextConfig = {
     : {}),
   cacheComponents: true,
   partialPrefetching: true,
+  // Keep React's preloads in the HTML. React moves them into a Link header
+  // while that header has room, and a page generated on demand from its
+  // fallback shell stores the header before content inside Suspense renders,
+  // so the fonts a lesson's math preloads would never reach its cached page.
+  // https://nextjs.org/docs/app/api-reference/config/next-config-js/reactMaxHeadersLength
+  reactMaxHeadersLength: 0,
   typescript: {
     // pnpm build runs next typegen and the full two-checker tsc gate first.
     // Keep that check outside the resident web compiler's memory footprint.
