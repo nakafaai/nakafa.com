@@ -4,6 +4,7 @@ import {
   effectSourceViolations,
   effectTestViolations,
 } from "#scripts/check/effect";
+import { readRepositoryFiles } from "#scripts/check/files";
 import { writeError, writeOutput } from "#scripts/output";
 
 const TEST_FILE_PATTERN = /\.test\.tsx?$/u;
@@ -30,56 +31,6 @@ class TestPolicyReadError extends Schema.TaggedError<TestPolicyReadError>()(
   }
 ) {}
 
-/** Collects repository files without traversing generated output. */
-const readFiles = Effect.fn("RepositoryPolicy.readFiles")(function* (
-  directory: string
-) {
-  const fileSystem = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const files: string[] = [];
-  const pending = [directory];
-
-  while (pending.length > 0) {
-    const current = pending.pop();
-    if (!current) {
-      continue;
-    }
-
-    const entries = yield* fileSystem.readDirectory(current).pipe(
-      Effect.mapError(
-        (cause) =>
-          new TestPolicyReadError({
-            cause,
-            message: `Unable to read ${current}.`,
-          })
-      )
-    );
-    for (const entry of entries) {
-      if (IGNORED_DIRECTORIES.has(entry)) {
-        continue;
-      }
-
-      const entryPath = path.join(current, entry);
-      const info = yield* fileSystem.stat(entryPath).pipe(
-        Effect.mapError(
-          (cause) =>
-            new TestPolicyReadError({
-              cause,
-              message: `Unable to inspect ${entryPath}.`,
-            })
-        )
-      );
-      if (info.type === "Directory") {
-        pending.push(entryPath);
-      } else {
-        files.push(entryPath);
-      }
-    }
-  }
-
-  return files;
-});
-
 /** Returns whether a test has a colocated TypeScript Module with the same name. */
 const hasColocatedOwner = Effect.fn("RepositoryPolicy.hasColocatedOwner")(
   function* (testPath: string) {
@@ -95,9 +46,12 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const files = yield* Effect.forEach(["apps", "packages"], (directory) =>
-      readFiles(path.join(root, directory))
+      readRepositoryFiles(path.join(root, directory), IGNORED_DIRECTORIES)
     ).pipe(Effect.map((groups) => groups.flat()));
-    const scriptFiles = yield* readFiles(path.join(root, "scripts"));
+    const scriptFiles = yield* readRepositoryFiles(
+      path.join(root, "scripts"),
+      IGNORED_DIRECTORIES
+    );
     const tests = files.filter((file) => TEST_FILE_PATTERN.test(file));
     const effectTests = [...tests, ...scriptFiles].filter((file) =>
       TEST_FILE_PATTERN.test(file)
