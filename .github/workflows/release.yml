@@ -23,13 +23,38 @@ jobs:
           fetch-depth: 0
 
       - name: Setup toolchain
-        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
         with:
-          cache: true
+          cache: false
           install: false
+
+      - name: Locate pnpm store
+        id: pnpm-store
+        run: echo "path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore pnpm store
+        id: restore-store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+          path: ${{ steps.pnpm-store.outputs.path }}
+          restore-keys: pnpm-store-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # Pull requests only restore the store. Main saves it once per lockfile,
+      # pruned to exactly this install.
+      - name: Prune pnpm store
+        if: steps.restore-store.outputs.cache-hit != 'true'
+        run: pnpm store prune
+
+      - name: Save pnpm store
+        if: steps.restore-store.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+          path: ${{ steps.pnpm-store.outputs.path }}
 
       - name: Create Release Pull Request
         id: changesets

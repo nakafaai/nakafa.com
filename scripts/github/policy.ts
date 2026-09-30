@@ -2,6 +2,10 @@ import { Effect, FileSystem, Option, Path, Schema } from "effect";
 import { parse as yamlParse } from "yaml";
 
 const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
+const PNPM_STORE = "pnpm-store";
+const PNPM_STORE_PREFIX = `${PNPM_STORE}-\${{ runner.os }}-\${{ runner.arch }}-`;
+const PNPM_STORE_KEY = `${PNPM_STORE_PREFIX}\${{ hashFiles('pnpm-lock.yaml') }}`;
+const PNPM_STORE_PATH = `\${{ steps.${PNPM_STORE}.outputs.path }}`;
 const UnknownRecord = Schema.Record(Schema.String, Schema.Unknown);
 const NonNegativeInteger = Schema.Finite.pipe(
   Schema.check(Schema.isInt()),
@@ -39,12 +43,33 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   },
   {
     action: "pnpm/setup",
-    approvedSha: "84cb39b217b10273981911c288cd62326dc7c6d2",
-    expectedInputs: { cache: "true", install: "false" },
-    expectedTag: "v2.0.2",
+    approvedSha: "fbda4c85fc2e1e08721cd8763afea8f48d60f024",
+    expectedInputs: { cache: "false", install: "false" },
+    expectedTag: "v3.0.0",
     expectedUsages: 7,
     reason:
-      "The signed successor action owns Node, pnpm, and dependency caching.",
+      "The signed successor action owns Node and pnpm. Its v3 cache saves a full store from every job, so the store cache stays explicit.",
+  },
+  {
+    action: "actions/cache/restore",
+    approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+    expectedInputs: {
+      key: PNPM_STORE_KEY,
+      path: PNPM_STORE_PATH,
+      "restore-keys": PNPM_STORE_PREFIX,
+    },
+    expectedTag: "v6.1.0",
+    expectedUsages: 7,
+    reason:
+      "Every pnpm job restores the lockfile-keyed store, and only main saves it once per lockfile.",
+  },
+  {
+    action: "actions/cache/save",
+    approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+    expectedInputs: { key: PNPM_STORE_KEY, path: PNPM_STORE_PATH },
+    expectedTag: "v6.1.0",
+    expectedUsages: 1,
+    reason: "The main Packages job saves the pruned store after an exact miss.",
   },
   {
     action: "changesets/action",
@@ -141,6 +166,29 @@ function parseActionReference(reference: string) {
   };
 }
 
+function inputProblems(
+  use: GithubActionUse,
+  action: string,
+  expectedInputs: Readonly<Record<string, string>>
+) {
+  const problems: string[] = [];
+  for (const [input, expected] of Object.entries(expectedInputs)) {
+    if (String(use.inputs[input] ?? "") !== expected) {
+      problems.push(
+        `${use.workflowPath} configures ${action} ${input} as ${String(use.inputs[input] ?? "missing")}; approved ${expected}.`
+      );
+    }
+  }
+  for (const input of Object.keys(use.inputs)) {
+    if (!Object.hasOwn(expectedInputs, input)) {
+      problems.push(
+        `${use.workflowPath} configures unreviewed ${action} input ${input}.`
+      );
+    }
+  }
+  return problems;
+}
+
 function policyError(message: string, cause: unknown) {
   return new GithubActionPolicyError({ cause, message });
 }
@@ -181,7 +229,7 @@ export const readWorkflowActionUses = Effect.fn(
   return uses.filter(({ reference }) => !reference.startsWith("./"));
 });
 
-/** Validates immutable revisions, expected inputs, and complete action coverage. */
+/** Validates immutable revisions, exact reviewed inputs, and complete action coverage. */
 export function validateGithubActionPolicy(
   actionUses: readonly GithubActionUse[]
 ) {
@@ -214,15 +262,10 @@ export function validateGithubActionPolicy(
         `${use.workflowPath} pins ${parsed.action} to ${parsed.revision}; approved ${review.approvedSha}.`
       );
     }
-
-    for (const [input, expected] of Object.entries(
-      review.expectedInputs ?? {}
-    )) {
-      if (String(use.inputs[input] ?? "") !== expected) {
-        problems.push(
-          `${use.workflowPath} configures ${parsed.action} ${input} as ${String(use.inputs[input] ?? "missing")}; approved ${expected}.`
-        );
-      }
+    if (review.expectedInputs) {
+      problems.push(
+        ...inputProblems(use, parsed.action, review.expectedInputs)
+      );
     }
   }
 

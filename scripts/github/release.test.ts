@@ -30,7 +30,7 @@ describe("GitHub Action releases", () => {
       const repositories = reviews.map(({ repository }) => repository);
 
       expect(new Set(repositories).size).toBe(repositories.length);
-      expect(repositories).not.toContain("actions/cache");
+      expect(repositories).toContain("actions/cache");
     })
   );
 
