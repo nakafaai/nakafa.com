@@ -1,5 +1,7 @@
 "use client"; // Error boundaries must be Client Components
 
+import "@/styles/globals.css";
+
 import { captureException } from "@repo/analytics/posthog/browser";
 import { DesignSystemProvider } from "@repo/design-system";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -7,8 +9,6 @@ import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "cn";
-import "@repo/design-system/styles/globals.css";
-import "@repo/design-system/styles/theme.css";
 import { useEffect } from "react";
 
 export default function GlobalError({

@@ -1,5 +1,4 @@
-import "@repo/design-system/styles/globals.css";
-import "@repo/design-system/styles/theme.css";
+import "@/styles/globals.css";
 
 import { DesignSystemProvider } from "@repo/design-system";
 import { Particles } from "@repo/design-system/components/ui/particles";
