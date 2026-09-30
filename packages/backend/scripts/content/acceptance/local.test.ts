@@ -4,6 +4,7 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   cleanLocalRuntime,
+  discardSignedResponses,
   initializeLocalRuntime,
   leaseLocalRuntime,
   localApplicationEnvironment,
@@ -120,6 +121,78 @@ describe("owned signed acceptance runtime", () => {
         expect(yield* fs.exists(`${root}/packages/backend/.convex`)).toBe(true);
         expect(yield* readLocalRuntime(root)).toBeUndefined();
         yield* cleanLocalRuntime(root);
+      }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
+    "drops signed fetch responses on demand and at cleanup, keeping other caches",
+    () =>
+      Effect.gen(function* () {
+        initialize();
+        const { fs, root } = yield* fixture;
+        const cache = `${root}/apps/www/.next/cache`;
+        const cacheSignedResponse = () =>
+          Effect.gen(function* () {
+            yield* fs.makeDirectory(`${cache}/fetch-cache`, {
+              recursive: true,
+            });
+            yield* fs.writeFileString(`${cache}/fetch-cache/entry`, "{}");
+          });
+        yield* fs.makeDirectory(`${cache}/images`, { recursive: true });
+        yield* cacheSignedResponse();
+        yield* discardSignedResponses(root);
+        expect(yield* fs.exists(`${cache}/fetch-cache`)).toBe(false);
+        expect(yield* fs.exists(`${cache}/images`)).toBe(true);
+        yield* reserveLocalRuntime(root);
+        yield* initializeLocalRuntime(root);
+        yield* cacheSignedResponse();
+        yield* cleanLocalRuntime(root);
+        expect(yield* fs.exists(`${cache}/fetch-cache`)).toBe(false);
+        expect(yield* fs.exists(`${cache}/images`)).toBe(true);
+      }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.live("refuses to discard signed responses from a redirected cache", () =>
+    Effect.gen(function* () {
+      const { fs, root } = yield* fixture;
+      const shared = yield* fs.makeTempDirectoryScoped({
+        directory: tmpdir(),
+        prefix: "acceptance-shared-cache-",
+      });
+      yield* fs.makeDirectory(`${shared}/fetch-cache`);
+      yield* fs.writeFileString(`${shared}/fetch-cache/entry`, "{}");
+      yield* fs.makeDirectory(`${root}/apps/www/.next`, { recursive: true });
+      yield* fs.symlink(shared, `${root}/apps/www/.next/cache`);
+      const failure = yield* discardSignedResponses(root).pipe(Effect.flip);
+      expect(failure.message).toBe(
+        "The Next.js build cache must belong to this checkout."
+      );
+      expect(yield* fs.exists(`${shared}/fetch-cache/entry`)).toBe(true);
+    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
+    "keeps the runtime for a retry when its signed responses cannot be removed",
+    () =>
+      Effect.gen(function* () {
+        initialize();
+        const { fs, root } = yield* fixture;
+        const cache = `${root}/apps/www/.next/cache`;
+        yield* fs.makeDirectory(`${cache}/fetch-cache`, { recursive: true });
+        yield* fs.writeFileString(`${cache}/fetch-cache/entry`, "{}");
+        yield* reserveLocalRuntime(root);
+        yield* initializeLocalRuntime(root);
+        yield* fs.chmod(cache, 0o500);
+        const failure = yield* cleanLocalRuntime(root).pipe(
+          Effect.scoped,
+          Effect.flip
+        );
+        yield* fs.chmod(cache, 0o700);
+        expect(failure).toMatchObject({ _tag: "PlatformError" });
+        expect(yield* readLocalRuntime(root)).toBeDefined();
+        yield* cleanLocalRuntime(root).pipe(Effect.scoped);
+        expect(yield* readLocalRuntime(root)).toBeUndefined();
+        expect(yield* fs.exists(`${cache}/fetch-cache`)).toBe(false);
       }).pipe(Effect.provide(nodeServicesLayer))
   );
 

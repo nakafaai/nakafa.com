@@ -10,6 +10,7 @@ import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/loca
 import { Effect, Exit } from "effect";
 
 const mocks = vi.hoisted(() => ({
+  discard: vi.fn(),
   initialize: vi.fn(),
   lease: vi.fn(),
   read: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock("@repo/backend/scripts/content/acceptance/local", async (load) => ({
   ...(await load<
     typeof import("@repo/backend/scripts/content/acceptance/local")
   >()),
+  discardSignedResponses: mocks.discard,
   initializeLocalRuntime: mocks.initialize,
   leaseLocalRuntime: mocks.lease,
   readLocalRuntime: mocks.read,
@@ -69,6 +71,7 @@ layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
     mocks.initialize.mockReturnValue(Effect.succeed(runtime));
     mocks.read.mockReturnValue(Effect.succeed(runtime));
     for (const mock of [
+      mocks.discard,
       mocks.lease,
       mocks.release,
       mocks.command,
@@ -151,6 +154,33 @@ layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
         })
     );
   }
+
+  it.effect(
+    "clears foreign signed responses once the backend is ready, before building",
+    () =>
+      Effect.gen(function* () {
+        const steps: string[] = [];
+        const record = (step: string) => Effect.sync(() => steps.push(step));
+        mocks.backend.mockImplementation((_runtime, program) =>
+          record("backend ready").pipe(Effect.andThen(program))
+        );
+        mocks.discard.mockReturnValue(record("discard"));
+        mocks.command.mockReturnValue(record("command"));
+        yield* runAcceptance("/test", "build", []);
+        expect(mocks.discard).toHaveBeenCalledWith("/test");
+        expect(steps).toEqual(["backend ready", "discard", "command"]);
+        steps.length = 0;
+        yield* runAcceptance("/test", "start", []);
+        expect(steps).toEqual(["backend ready", "command"]);
+        const failure = acceptanceRuntimeError("test cache failure");
+        mocks.discard.mockReturnValue(Effect.fail(failure));
+        steps.length = 0;
+        expect(
+          yield* runAcceptance("/test", "build", []).pipe(Effect.flip)
+        ).toBe(failure);
+        expect(steps).toEqual(["backend ready"]);
+      })
+  );
 
   it.effect("refuses an unprepared acceptance build", () =>
     Effect.gen(function* () {
