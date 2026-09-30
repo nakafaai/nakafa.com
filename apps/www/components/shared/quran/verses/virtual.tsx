@@ -3,17 +3,9 @@
 import { WindowVirtualizer, type WindowVirtualizerProps } from "virtua";
 import { useVirtual } from "@/lib/content/virtual";
 
-export function WindowVirtualized({
-  children,
-  ...props
-}: {
-  children: React.ReactNode;
-} & WindowVirtualizerProps) {
+/** Virtualizes window-scrolled items through the page's shared handle. */
+export function WindowVirtualized<T>(props: WindowVirtualizerProps<T>) {
   const virtualRef = useVirtual((state) => state.virtualRef);
 
-  return (
-    <WindowVirtualizer ref={virtualRef} {...props}>
-      {children}
-    </WindowVirtualizer>
-  );
+  return <WindowVirtualizer ref={virtualRef} {...props} />;
 }
