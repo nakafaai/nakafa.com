@@ -21,11 +21,9 @@ import {
 } from "@/components/shared/outline/panel";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
-import {
-  QuranInterpretationButton,
-  QuranInterpretationLink,
-} from "@/components/shared/quran/interpretation/button";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
+import { QuranVersesProvider } from "@/components/shared/quran/verses/context";
+import { QURAN_FLOW_VERSES } from "@/components/shared/quran/verses/flow";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import {
   getPublishedQuranCatalog,
@@ -196,12 +194,18 @@ async function CachedSurahShell({
       verse,
     };
   });
-  const headings = verseItems.map(({ id, label }, index) => ({
-    label,
-    index,
-    href: `/quran/${surah}#${id}`,
-    children: [],
-  }));
+  // Verses in document flow link by fragment; later ones scroll through the
+  // virtualizer, which knows them only by their index in its list.
+  const headings = verseItems.map(({ id, label }, index) =>
+    index < QURAN_FLOW_VERSES
+      ? { label, href: `#${id}`, children: [] }
+      : {
+          label,
+          href: `/quran/${surah}#${id}`,
+          index: index - QURAN_FLOW_VERSES,
+          children: [],
+        }
+  );
 
   const pagination = getQuranPagination({
     nextSurah: result.nextSurah,
@@ -254,39 +258,27 @@ async function CachedSurahShell({
                   translationNotesLabel={translationNotesLabel}
                 />
               )}
-              {tafsirAccess.kind === "embedded" ? (
-                <QuranInterpretationControls
-                  appLocale={tafsirAccess.appLocale}
-                  errorMessage={t("interpretation-error")}
-                  label={interpretationLabel}
-                  recoverSnapshot={recoverSnapshot}
-                  refreshingMessage={t("interpretation-refreshing")}
-                  snapshotId={result.snapshotId}
-                  surahNumber={surahData.number}
-                >
-                  <QuranVerseList
-                    items={verseItems}
-                    renderAction={(verse, verseLabel) => (
-                      <QuranInterpretationButton
-                        label={`${interpretationLabel}: ${verseLabel}`}
-                        verseNumber={verse.number.inSurah}
-                      />
-                    )}
-                    translationNotesLabel={translationNotesLabel}
-                  />
-                </QuranInterpretationControls>
-              ) : (
-                <QuranVerseList
-                  items={verseItems}
-                  renderAction={(_verse, verseLabel) => (
-                    <QuranInterpretationLink
-                      href={tafsirAccess.source.sourceUrl}
-                      label={`${interpretationLabel}: ${verseLabel}`}
-                    />
-                  )}
-                  translationNotesLabel={translationNotesLabel}
-                />
-              )}
+              <QuranVersesProvider
+                interpretationLabel={interpretationLabel}
+                tafsirAccess={tafsirAccess}
+                translationNotesLabel={translationNotesLabel}
+              >
+                {tafsirAccess.kind === "embedded" ? (
+                  <QuranInterpretationControls
+                    appLocale={tafsirAccess.appLocale}
+                    errorMessage={t("interpretation-error")}
+                    label={interpretationLabel}
+                    recoverSnapshot={recoverSnapshot}
+                    refreshingMessage={t("interpretation-refreshing")}
+                    snapshotId={result.snapshotId}
+                    surahNumber={surahData.number}
+                  >
+                    <QuranVerseList items={verseItems} />
+                  </QuranInterpretationControls>
+                ) : (
+                  <QuranVerseList items={verseItems} />
+                )}
+              </QuranVersesProvider>
             </LayoutContent>
             <PaginationContent pagination={pagination} />
             {toolbar}
