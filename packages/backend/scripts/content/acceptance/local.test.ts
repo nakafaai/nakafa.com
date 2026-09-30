@@ -40,13 +40,23 @@ const fixture = Effect.gen(function* () {
   return { fs, root };
 });
 const initialize = (source = environment) => {
+  // Temporary roots that existed while their Convex command ran.
+  const temporaryRoots: string[] = [];
   mocks.command.mockImplementation(
-    (spec: { args: readonly string[]; cwd: string }) =>
+    (spec: {
+      args: readonly string[];
+      cwd: string;
+      env: Readonly<Record<string, string | undefined>>;
+    }) =>
       Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = spec.env.TMPDIR;
+        if (root !== undefined && (yield* fs.exists(root))) {
+          temporaryRoots.push(root);
+        }
         if (spec.args[1] !== "init") {
           return;
         }
-        const fs = yield* FileSystem.FileSystem;
         yield* fs.writeFileString(`${spec.cwd}/.env.local`, source);
         yield* fs.makeDirectory(`${spec.cwd}/.convex/local/default`, {
           recursive: true,
@@ -57,6 +67,7 @@ const initialize = (source = environment) => {
         );
       })
   );
+  return temporaryRoots;
 };
 
 describe("owned signed acceptance runtime", () => {
@@ -66,10 +77,15 @@ describe("owned signed acceptance runtime", () => {
     "retains a reusable private database and cleans only its own state",
     () =>
       Effect.gen(function* () {
-        initialize();
+        const temporaryRoots = initialize();
         const { fs, root } = yield* fixture;
         yield* reserveLocalRuntime(root);
         const runtime = yield* initializeLocalRuntime(root);
+        // Each Convex command ran in its own root, removed once it stopped.
+        expect(new Set(temporaryRoots).size).toBe(2);
+        for (const temporaryRoot of temporaryRoots) {
+          expect(yield* fs.exists(temporaryRoot)).toBe(false);
+        }
         expect(yield* readLocalRuntime(root)).toEqual(runtime);
         expect((yield* fs.stat(runtime.directory)).mode % 0o1000).toBe(0o700);
         expect(

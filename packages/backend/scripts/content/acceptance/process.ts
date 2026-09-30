@@ -139,6 +139,24 @@ const localBackendEnvironment = {
   FUNRUN_ISOLATE_ACTIVE_THREADS: String(availableParallelism()),
 };
 
+/**
+ * Scopes a private temporary root to one Convex process group.
+ *
+ * The local backend deletes its Node executor directory only when Ctrl-C stops
+ * it, yet this runner and the Convex CLI both stop it with SIGTERM, so every
+ * backend would leave that directory in the shared system temporary folder.
+ * Acquired before the group, the root is removed only after the group stops.
+ * It stays in the short system folder because the executor's Unix socket path
+ * must fit in 104 bytes on macOS.
+ * @see https://github.com/get-convex/convex-js/blob/main/src/cli/lib/localDeployment/run.ts
+ */
+export const makeConvexTemporaryRoot = Effect.fn(
+  "contentAcceptance.makeConvexTemporaryRoot"
+)(function* () {
+  const fileSystem = yield* FileSystem.FileSystem;
+  return yield* fileSystem.makeTempDirectoryScoped({ prefix: "convex-" });
+});
+
 /** Refreshes Convex bindings and owns the local backend through application acceptance. */
 export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
   function* <A, E, R>(runtime: LocalRuntime, program: Effect.Effect<A, E, R>) {
@@ -147,6 +165,7 @@ export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
     const fileSystem = yield* FileSystem.FileSystem;
     const logPath = `${runtime.directory}/convex.log`;
     yield* fileSystem.writeFileString(logPath, "", { mode: 0o600 });
+    const temporaryRoot = yield* makeConvexTemporaryRoot();
     const child = yield* ChildProcess.make(
       process.execPath,
       [
@@ -166,6 +185,7 @@ export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
           ...localBackendEnvironment,
           AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
           AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
+          TMPDIR: temporaryRoot,
         },
         extendEnv: true,
         forceKillAfter: "5 seconds",

@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { createServer } from "node:net";
 import { availableParallelism, tmpdir } from "node:os";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
@@ -56,10 +57,21 @@ function spawner(
 ) {
   const release = vi.fn();
   const commands: ChildProcess.Command[] = [];
+  const temporaryRoots: string[] = [];
   const service = ChildProcessSpawner.make((command) =>
     Effect.gen(function* () {
       commands.push(command);
-      yield* Effect.acquireRelease(Effect.void, () => Effect.sync(release));
+      const root =
+        command._tag === "StandardCommand"
+          ? command.options.env?.TMPDIR
+          : undefined;
+      if (root !== undefined) {
+        temporaryRoots.push(root);
+      }
+      // Records whether the command's temporary root outlived its group.
+      yield* Effect.acquireRelease(Effect.void, () =>
+        Effect.sync(() => release(root !== undefined && existsSync(root)))
+      );
       return ChildProcessSpawner.makeHandle({
         all: Stream.succeed(
           new TextEncoder().encode(options.output ?? "Convex functions ready!")
@@ -77,7 +89,7 @@ function spawner(
       });
     })
   );
-  return { commands, release, service };
+  return { commands, release, service, temporaryRoots };
 }
 
 describe("application process ownership", () => {
@@ -133,7 +145,8 @@ describe("application process ownership", () => {
           Effect.exit
         );
         expect(result._tag).toBe(outcome === "success" ? "Success" : "Failure");
-        expect(child.release).toHaveBeenCalledOnce();
+        // The temporary root outlives the process group, then leaves with it.
+        expect(child.release).toHaveBeenCalledExactlyOnceWith(true);
         expect(
           (yield* fs.stat(`${runtime.directory}/convex.log`)).mode % 0o1000
         ).toBe(0o600);
@@ -146,10 +159,15 @@ describe("application process ownership", () => {
                 AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
                 AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
                 FUNRUN_ISOLATE_ACTIVE_THREADS: String(availableParallelism()),
+                TMPDIR: expect.stringContaining(`${tmpdir()}/convex-`),
               },
             }),
           }),
         ]);
+        expect(child.temporaryRoots).toHaveLength(1);
+        for (const root of child.temporaryRoots) {
+          expect(existsSync(root)).toBe(false);
+        }
       }).pipe(Effect.provide(nodeServicesLayer))
     );
   }

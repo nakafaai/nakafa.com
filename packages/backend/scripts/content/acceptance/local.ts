@@ -10,6 +10,7 @@ import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance
 import {
   assertLocalPortsFree,
   localConvexEnvironment,
+  makeConvexTemporaryRoot,
 } from "@repo/backend/scripts/content/acceptance/process";
 import {
   createLocalSigningIdentity,
@@ -205,18 +206,19 @@ export const initializeLocalRuntime = Effect.fn(
     args: readonly string[],
     stdin?: string
   ) {
+    const temporaryRoot = yield* makeConvexTemporaryRoot();
     yield* runAcceptanceCommand({
       args: ["node_modules/convex/bin/main.js", ...args],
       command: process.execPath,
       cwd: backend,
-      env: localConvexEnvironment,
+      env: { ...localConvexEnvironment, TMPDIR: temporaryRoot },
       operation: `Anonymous Convex ${args[0]}`,
       reportStderr: true,
       stderrPath: `${directory}/setup.log`,
       stdoutPath: `${directory}/setup.log`,
       ...(stdin === undefined ? {} : { stdin }),
     });
-  });
+  }, Effect.scoped);
   yield* command(["init"]);
   const source = yield* fs.readFileString(`${backend}/.env.local`);
   const environment = parseEnv(source);
