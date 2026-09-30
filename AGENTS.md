@@ -112,7 +112,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 
 - Root commands: `pnpm dev`, `pnpm dev:web`, `pnpm dev:all`, `pnpm start`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format`, `pnpm security:audit`, `pnpm analyze`, and `pnpm boundaries`.
 - Prefer `pnpm start` after a build. Use `pnpm dev` only for hot reload, development-mode diagnostics, devtools, or Convex live development.
-- There is no root typecheck. Run `pnpm --filter <workspace> typecheck` for every changed workspace.
+- There is no root typecheck. Run `pnpm --filter <workspace> typecheck` for every changed workspace. CI's Quality job runs `pnpm lint`, every workspace typecheck through `pnpm -r run typecheck`, and `pnpm test`.
 - Judge a typecheck by its exit code. The Effect-patched compiler reports language-service suggestions such as `suggestion TS377016` (use `Effect.undefined` for `Effect.succeed(undefined)`) that fail the typecheck and the build without the word "error".
 - The `www` typecheck and build validate environment variables while Next.js loads its config. Run them through `pnpm acceptance:build`, which supplies inert values, or pass inert local values; never copy deployment values.
 - Before changing Turborepo configuration or commands, read `docs/README.md` in the installed `turbo` package (resolve it with `node -p "require.resolve('turbo/package.json')"`) and the relevant pages under its `docs/` directory.
