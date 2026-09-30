@@ -120,10 +120,7 @@ function runtimeImports(
           });
     for (const candidate of candidates) {
       const symbol = symbols.get(candidate.name);
-      if (symbol === undefined) {
-        continue;
-      }
-      if (candidate.kind !== undefined) {
+      if (candidate.kind !== undefined && symbol !== undefined) {
         bindings.set(symbol, candidate.kind);
       }
       directRunner ||= candidate.runner;
@@ -263,7 +260,12 @@ function isRunnerMember(node: Node, imports: RuntimeImports) {
   return member === undefined || runners.has(member);
 }
 
-/** Tests whether one destructuring pattern extracts a runtime runner. */
+/**
+ * Tests whether one destructuring pattern can extract a runtime runner.
+ *
+ * Rest elements and computed keys can expose any member, so they fail closed
+ * like element access with a dynamic key.
+ */
 function destructuresRunner(node: Node, imports: RuntimeImports) {
   if (
     !(isVariableDeclaration(node) && isObjectBindingPattern(node.name)) ||
@@ -274,9 +276,14 @@ function destructuresRunner(node: Node, imports: RuntimeImports) {
   const runners = runtimeRunners(node.initializer, imports);
   return (
     runners !== undefined &&
-    node.name.elements.some((element) =>
-      runners.has(staticProperty(element.propertyName ?? element.name) ?? "")
-    )
+    node.name.elements.some((element) => {
+      const member = staticProperty(element.propertyName ?? element.name);
+      return (
+        element.dotDotDotToken !== undefined ||
+        member === undefined ||
+        runners.has(member)
+      );
+    })
   );
 }
 

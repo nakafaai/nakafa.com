@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Result } from "effect";
+import { Effect, Layer, Option, Redacted, Result } from "effect";
 import {
   HttpClient,
   type HttpClientRequest,
@@ -31,6 +31,66 @@ describe("GitHub Action releases", () => {
 
       expect(new Set(repositories).size).toBe(repositories.length);
       expect(repositories).not.toContain("actions/cache");
+    })
+  );
+
+  it.effect("shares one review between actions from the same repository", () =>
+    Effect.gen(function* () {
+      const review = {
+        approvedSha: "0123456789abcdef0123456789abcdef01234567",
+        expectedTag: "v4.0.0",
+        expectedUsages: 1,
+        reason: "CodeQL analysis runs as one reviewed release.",
+      };
+      const reviews = yield* githubActionReleaseReviews([
+        { ...review, action: "github/codeql-action/init" },
+        { ...review, action: "github/codeql-action/analyze" },
+      ]);
+      const conflict = yield* githubActionReleaseReviews([
+        { ...review, action: "github/codeql-action/init" },
+        {
+          ...review,
+          action: "github/codeql-action/analyze",
+          expectedTag: "v3.0.0",
+        },
+      ]).pipe(Effect.flip);
+
+      expect(reviews).toEqual([
+        {
+          expectedTag: "v4.0.0",
+          reason: review.reason,
+          repository: "github/codeql-action",
+        },
+      ]);
+      expect(conflict).toMatchObject({
+        _tag: "GithubActionReleaseError",
+        cause: "github/codeql-action",
+        message: "github/codeql-action has conflicting action release reviews.",
+      });
+    })
+  );
+
+  it.effect("authenticates release reads with a configured token", () =>
+    Effect.gen(function* () {
+      let observedRequest: HttpClientRequest.HttpClientRequest | undefined;
+      yield* fetchLatestGithubActionTag(
+        { repository: "actions/checkout" },
+        Option.some(Redacted.make("reviewed-token"))
+      ).pipe(
+        Effect.provide(
+          makeHttpClient((request) => {
+            observedRequest = request;
+            return Response.json({ tag_name: "v7.0.1" });
+          })
+        )
+      );
+
+      expect(observedRequest?.headers).toMatchObject({
+        accept: "application/vnd.github+json",
+        authorization: "Bearer reviewed-token",
+        "user-agent": "nakafa-dependency-policy",
+        "x-github-api-version": "2022-11-28",
+      });
     })
   );
 

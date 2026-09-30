@@ -1,4 +1,7 @@
 import {
+  type BindingElement,
+  type Identifier,
+  type ImportSpecifier,
   isArrowFunction,
   isAwaitExpression,
   isBindingElement,
@@ -24,6 +27,11 @@ import {
   isVariableDeclaration,
   isYieldExpression,
   type Node,
+  type ParameterDeclaration,
+  type TypeAliasDeclaration,
+  type TypeQueryNode,
+  type TypeReferenceNode,
+  type VariableDeclaration,
 } from "typescript/unstable/ast";
 import type { Symbol as NativeSymbol } from "typescript/unstable/sync";
 
@@ -126,10 +134,8 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
     ) {
       continue;
     }
-    if (!(node.name && isIdentifier(node.name))) {
-      continue;
-    }
-    const symbol = symbols.get(node.name);
+    const symbol =
+      node.name && isIdentifier(node.name) ? symbols.get(node.name) : undefined;
     if (symbol) {
       declarations.set(symbol, node);
     }
@@ -181,7 +187,7 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
   }
 
   function resolveBinding(
-    node: Node,
+    node: BindingElement | Identifier | ImportSpecifier | VariableDeclaration,
     next: ReadonlySet<Node>
   ): Origin | undefined {
     if (isIdentifier(node)) {
@@ -194,17 +200,19 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
     if (isVariableDeclaration(node)) {
       return resolve(node.initializer, next);
     }
-    if (isBindingElement(node)) {
-      const owner = node.parent.parent;
-      const name = node.propertyName ?? node.name;
-      return isVariableDeclaration(owner) && name && isIdentifier(name)
-        ? property(resolve(owner.initializer, next), name.text)
-        : undefined;
-    }
+    const owner = node.parent.parent;
+    const name = node.propertyName ?? node.name;
+    return isVariableDeclaration(owner) && name && isIdentifier(name)
+      ? property(resolve(owner.initializer, next), name.text)
+      : undefined;
   }
 
   function resolveType(
-    node: Node,
+    node:
+      | ParameterDeclaration
+      | TypeAliasDeclaration
+      | TypeQueryNode
+      | TypeReferenceNode,
     next: ReadonlySet<Node>
   ): Origin | undefined {
     if (isParameterDeclaration(node) || isTypeAliasDeclaration(node)) {
@@ -213,15 +221,13 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
     if (isTypeQueryNode(node)) {
       return resolve(node.exprName, next);
     }
-    if (isTypeReferenceNode(node)) {
-      if (
-        isIdentifier(node.typeName) &&
-        ["Awaited", "ReturnType", "Pick"].includes(node.typeName.text)
-      ) {
-        return resolve(node.typeArguments?.[0], next);
-      }
-      return resolve(node.typeName, next);
+    if (
+      isIdentifier(node.typeName) &&
+      ["Awaited", "ReturnType", "Pick"].includes(node.typeName.text)
+    ) {
+      return resolve(node.typeArguments?.[0], next);
     }
+    return resolve(node.typeName, next);
   }
 
   function effectMember(node: Node) {
@@ -377,10 +383,10 @@ export function convexTestBoundary(
     return false;
   }
   const parameter = callback.parameters[0];
-  if (!(parameter && isIdentifier(parameter.name))) {
-    return false;
-  }
-  const context = symbols.get(parameter.name);
+  const context =
+    parameter && isIdentifier(parameter.name)
+      ? symbols.get(parameter.name)
+      : undefined;
   if (!context) {
     return false;
   }

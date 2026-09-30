@@ -1,10 +1,21 @@
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Schema } from "effect";
-import { ChildProcess } from "effect/unstable/process";
+import { assert, describe, expect, it } from "@effect/vitest";
+import {
+  ConfigProvider,
+  Effect,
+  FileSystem,
+  Layer,
+  PlatformError,
+  Schema,
+  Sink,
+  Stdio,
+  Stream,
+} from "effect";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import {
   readProductionChanges,
   requiresProductionAcceptance,
+  writeProductionAcceptanceDecision,
 } from "#scripts/production/acceptance";
 
 class GitFixtureError extends Schema.TaggedError<GitFixtureError>()(
@@ -38,6 +49,88 @@ const runGit = Effect.fn("ProductionAcceptanceTest.runGit")(function* (
     });
   }
 });
+
+const readRevision = Effect.fn("ProductionAcceptanceTest.readRevision")(
+  function* (repository: string, revision: string) {
+    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+    const output = yield* spawner
+      .string(
+        ChildProcess.make("git", ["rev-parse", revision], { cwd: repository })
+      )
+      .pipe(
+        Effect.mapError(
+          () =>
+            new GitFixtureError({
+              message: `git rev-parse ${revision} failed.`,
+            })
+        )
+      );
+    return output.trim();
+  }
+);
+
+const UNKNOWN_REVISION = /unknown-revision/u;
+const encoder = new TextEncoder();
+const closedPipe = PlatformError.systemError({
+  _tag: "BadResource",
+  method: "read",
+  module: "ChildProcess",
+});
+
+/** Answers every Git call with one scripted result. */
+function scriptedGit(result: {
+  readonly exitCode: number;
+  readonly stderr?: string;
+  readonly stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>;
+}) {
+  return Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make(() =>
+      Effect.succeed(
+        ChildProcessSpawner.makeHandle({
+          all: Stream.empty,
+          exitCode: Effect.succeed(
+            ChildProcessSpawner.ExitCode(result.exitCode)
+          ),
+          getInputFd: () => Sink.drain,
+          getOutputFd: () => Stream.empty,
+          isRunning: Effect.succeed(false),
+          kill: () => Effect.void,
+          pid: ChildProcessSpawner.ProcessId(1),
+          stderr: Stream.make(encoder.encode(result.stderr ?? "")),
+          stdin: Sink.drain,
+          stdout: result.stdout,
+          unref: Effect.succeed(Effect.void),
+        })
+      )
+    )
+  );
+}
+
+/** Writes the decision with one CI environment and captured job output. */
+const writeDecision = Effect.fn("ProductionAcceptanceTest.writeDecision")(
+  function* (repository: string, environment: Record<string, string>) {
+    const stdout: Array<string | Uint8Array> = [];
+    const result = yield* writeProductionAcceptanceDecision(repository).pipe(
+      Effect.provide(
+        Stdio.layerTest({
+          stdout: () =>
+            Sink.forEachArray((chunks) =>
+              Effect.sync(() => {
+                stdout.push(...chunks);
+              })
+            ),
+        })
+      ),
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromEnvRecord(environment)
+      ),
+      Effect.result
+    );
+    return { result, stdout };
+  }
+);
 
 const commitAll = Effect.fn("ProductionAcceptanceTest.commitAll")(function* (
   repository: string,
@@ -164,6 +257,150 @@ describe("production acceptance scope", () => {
       );
       expect(changes).toEqual([{ path: "example.test.ts", status: "M" }]);
       expect(requiresProductionAcceptance(changes)).toBe(false);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("reports Git failures and malformed change records", () =>
+    Effect.gen(function* () {
+      const repository = yield* makeRepository("production-acceptance-git-");
+      const unavailable = yield* readProductionChanges(
+        `${repository}/missing`,
+        "HEAD",
+        "HEAD"
+      ).pipe(Effect.flip);
+      const badRevision = yield* readProductionChanges(
+        repository,
+        "HEAD",
+        "unknown-revision"
+      ).pipe(Effect.flip);
+      const scripted = [
+        { exitCode: 0, stdout: Stream.fail(closedPipe) },
+        { exitCode: 128, stdout: Stream.make(encoder.encode("usage\n")) },
+        { exitCode: 128, stdout: Stream.empty },
+        { exitCode: 0, stdout: Stream.make(encoder.encode("M\0a.ts\0D\0")) },
+        { exitCode: 0, stdout: Stream.make(encoder.encode("M\0\0")) },
+      ];
+      const failures: { readonly message: string }[] = [];
+      for (const result of scripted) {
+        failures.push(
+          yield* readProductionChanges(repository, "HEAD", "HEAD").pipe(
+            Effect.provide(scriptedGit(result)),
+            Effect.flip
+          )
+        );
+      }
+
+      assert.strictEqual(
+        unavailable.message,
+        "Unable to inspect the pull request changes."
+      );
+      assert.match(badRevision.message, UNKNOWN_REVISION);
+      assert.deepStrictEqual(
+        failures.map(({ message }) => message),
+        [
+          "Unable to finish inspecting the pull request changes.",
+          "usage",
+          "Git could not inspect the pull request changes.",
+          "Git returned an invalid changed-path record.",
+          "Git returned an incomplete changed-path record.",
+        ]
+      );
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("accepts change records without a trailing separator", () =>
+    Effect.gen(function* () {
+      const changes = yield* readProductionChanges(
+        "/repository",
+        "HEAD",
+        "HEAD"
+      ).pipe(
+        Effect.provide(
+          scriptedGit({
+            exitCode: 0,
+            stdout: Stream.make(encoder.encode("M\0example.test.ts")),
+          })
+        )
+      );
+      expect(changes).toEqual([{ path: "example.test.ts", status: "M" }]);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("appends the decision for the exact pull request range", () =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const repository = yield* makeRepository("production-acceptance-range-");
+      const outputRoot = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "production-acceptance-output-",
+      });
+      const output = `${outputRoot}/github-output`;
+      yield* fileSystem.writeFileString(output, "trusted=true\n");
+      yield* fileSystem.writeFileString(
+        `${repository}/example.test.ts`,
+        "export const testExample = false;\n"
+      );
+      yield* commitAll(repository, "modify test");
+      const testRange = {
+        BASE_SHA: yield* readRevision(repository, "HEAD^"),
+        GITHUB_OUTPUT: output,
+        HEAD_SHA: yield* readRevision(repository, "HEAD"),
+      };
+      yield* fileSystem.writeFileString(
+        `${repository}/example.ts`,
+        "export const example = false;\n"
+      );
+      yield* commitAll(repository, "modify source");
+      const sourceRange = {
+        ...testRange,
+        HEAD_SHA: yield* readRevision(repository, "HEAD"),
+      };
+
+      const skipped = yield* writeDecision(repository, testRange);
+      const required = yield* writeDecision(repository, sourceRange);
+
+      expect([skipped.result._tag, required.result._tag]).toEqual([
+        "Success",
+        "Success",
+      ]);
+      expect([...skipped.stdout, ...required.stdout]).toEqual([
+        "Production acceptance skipped for 1 modified test modules.\n",
+        "Production acceptance required for 2 changed paths.\n",
+      ]);
+      expect(yield* fileSystem.readFileString(output)).toBe(
+        "trusted=true\nrequired=false\nrequired=true\n"
+      );
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("rejects incomplete configuration and unwritable output", () =>
+    Effect.gen(function* () {
+      const repository = yield* makeRepository("production-acceptance-config-");
+      const head = yield* readRevision(repository, "HEAD");
+      const failures: string[] = [];
+      for (const environment of [
+        { BASE_SHA: head, HEAD_SHA: head },
+        { GITHUB_OUTPUT: `${repository}/output`, HEAD_SHA: head },
+        {
+          BASE_SHA: "HEAD",
+          GITHUB_OUTPUT: `${repository}/output`,
+          HEAD_SHA: head,
+        },
+        { BASE_SHA: head, GITHUB_OUTPUT: `${repository}/apps`, HEAD_SHA: head },
+      ]) {
+        const { result, stdout } = yield* writeDecision(
+          repository,
+          environment
+        );
+        assert.deepStrictEqual(stdout, []);
+        failures.push(result._tag === "Failure" ? result.failure.message : "");
+      }
+
+      assert.deepStrictEqual(failures, [
+        "Production acceptance configuration is incomplete.",
+        "Production acceptance configuration is incomplete.",
+        "Production acceptance requires exact Git revisions.",
+        "Unable to write the production acceptance decision.",
+      ]);
     }).pipe(Effect.provide(NodeServices.layer))
   );
 });
