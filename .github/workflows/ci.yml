@@ -15,6 +15,15 @@ concurrency:
   group: ci-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+# Inert public values that the www typecheck and build validate while Next.js
+# loads its config. Never put deployment values here.
+env:
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  NEXT_PUBLIC_POSTHOG_KEY: phc_ci_disabled
+  NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
+  POSTHOG_PROXY_HOST: https://t.nakafa.com
+  SITE_URL: http://localhost:3000
+
 jobs:
   scope:
     name: Scope
@@ -77,7 +86,7 @@ jobs:
     if: ${{ !cancelled() && needs.scope.result == 'success' }}
     runs-on: ubuntu-latest
     # Keep bounded fail-closed advisory retries inside the aggregate job budget.
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -106,6 +115,21 @@ jobs:
       - name: Audit dependencies
         run: bash scripts/osv
 
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        # Production receives these from the acceptance runtime.
+        env:
+          CONTENT_RUNTIME_TOKEN: ci-typecheck
+          CONVEX_SITE_URL: http://127.0.0.1:3211
+          CONVEX_URL: http://127.0.0.1:3210
+          NAKAFA_CONVEX_SITE_URL: http://127.0.0.1:3211
+          NEXT_PUBLIC_CONVEX_SITE_URL: http://127.0.0.1:3211
+          NEXT_PUBLIC_CONVEX_URL: http://127.0.0.1:3210
+          NEXT_PUBLIC_POLAR_SERVER: sandbox
+        run: pnpm -r run typecheck
+
       - name: Run tests
         run: pnpm test
 
@@ -119,11 +143,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
-      NEXT_PUBLIC_POSTHOG_KEY: phc_ci_disabled
-      NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
-      POSTHOG_PROXY_HOST: https://t.nakafa.com
-      SITE_URL: http://localhost:3000
       VERCEL_GIT_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
