@@ -26,7 +26,11 @@ describe("tryouts/runtime/selectors", () => {
             })
           )
         );
-        for (const answers of [false, true]) {
+        for (const [answers, preview] of [
+          [false, false],
+          [true, false],
+          [false, true],
+        ] as const) {
           const content = yield* Effect.promise(() =>
             t.query(async (ctx) => {
               const attempt = await ctx.db.get(
@@ -45,6 +49,7 @@ describe("tryouts/runtime/selectors", () => {
                   appLocale: "id",
                   attempt,
                   placements: [placement],
+                  preview,
                   totalQuestions: 1,
                 }).pipe(
                   Effect.provide(
@@ -57,9 +62,68 @@ describe("tryouts/runtime/selectors", () => {
           assert.deepStrictEqual(content, {
             answers: answers ? [seeded.signedContent.answer] : [],
             kind: "signed",
+            previewAnswers: preview ? [seeded.signedContent.answer] : [],
             questions: [seeded.signedContent.question],
           });
         }
+      })
+  );
+  it.effect(
+    "previews only the answers of the section's leading questions",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const t = createConvexTestWithBetterAuth();
+        const seeded = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            seedTryoutContentAccessState(ctx, {
+              attemptStatus: "completed",
+              sectionStatus: "completed",
+              suffix: "preview-selectors",
+            })
+          )
+        );
+        const content = yield* Effect.promise(() =>
+          t.query(async (ctx) => {
+            const attempt = await ctx.db.get(
+              "tryoutAttempts",
+              seeded.attemptId
+            );
+            const placement = await ctx.db.get(
+              "tryoutAttemptPlacements",
+              seeded.placementId
+            );
+            assert.isNotNull(attempt);
+            assert.isNotNull(placement);
+            return Effect.runPromiseWith(runtimeServices)(
+              projectTryoutSignedContent({
+                answers: false,
+                appLocale: "id",
+                attempt,
+                placements: [3, 1, 2].map((questionOrder) => ({
+                  ...placement,
+                  questionOrder,
+                })),
+                preview: true,
+                totalQuestions: 3,
+              }).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
+            );
+          })
+        );
+        assert.deepStrictEqual(
+          content.kind === "signed"
+            ? content.previewAnswers.map((answer) => answer.questionOrder)
+            : [],
+          [1, 2]
+        );
+        assert.deepStrictEqual(
+          content.kind === "signed" ? content.answers : null,
+          []
+        );
       })
   );
   it.effect(
@@ -111,6 +175,7 @@ describe("tryouts/runtime/selectors", () => {
                             [field]: "",
                           },
                         ],
+                  preview: false,
                   totalQuestions: 1,
                 }).pipe(
                   Effect.match({

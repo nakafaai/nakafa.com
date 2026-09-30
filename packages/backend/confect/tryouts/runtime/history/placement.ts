@@ -2,7 +2,10 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { decodeArtifactJson } from "@repo/backend/confect/contentRelease/parse";
 import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
-import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
+import {
+  isTryoutReviewPreviewQuestion,
+  readTryoutSectionContentAccess,
+} from "@repo/backend/confect/tryouts/runtime/content";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import {
   TryoutHistoryError,
@@ -56,10 +59,14 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
       attempt,
       section.status
     );
-    if (
-      !access.questions ||
-      (selector.delivery === "entitled" && !access.answers)
-    ) {
+    if (!access.questions) {
+      return null;
+    }
+    const entitled =
+      selector.delivery === "authenticated" ||
+      access.answers ||
+      (access.preview && isTryoutReviewPreviewQuestion(selector.questionOrder));
+    if (!entitled) {
       return null;
     }
     const frozen = yield* database

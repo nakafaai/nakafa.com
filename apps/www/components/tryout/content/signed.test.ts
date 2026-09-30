@@ -149,6 +149,7 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
         (selector) => selector.delivery === "entitled"
       ),
       kind: "signed",
+      previewAnswers: [],
       questions: seed.request.selectors.filter(
         (selector) => selector.delivery === "authenticated"
       ),
@@ -358,6 +359,7 @@ describe("signed try-out execution", () => {
             kind: "signed",
             questions: [],
             answers: [],
+            previewAnswers: [],
           }).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
@@ -395,6 +397,7 @@ describe("signed try-out execution", () => {
             kind: "signed",
             questions: [],
             answers: [fixture.answer],
+            previewAnswers: [],
           }).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
