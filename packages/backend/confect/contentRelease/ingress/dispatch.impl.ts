@@ -8,7 +8,7 @@ import {
 import spec from "@repo/backend/confect/contentRelease/ingress/dispatch.spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect, Layer } from "effect";
-import { FetchHttpClient } from "effect/unstable/http";
+import { FetchHttpClient } from "effect/http";
 
 const dispatch = FunctionImpl.make(
   databaseSchema,

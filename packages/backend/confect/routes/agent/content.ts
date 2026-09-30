@@ -12,11 +12,7 @@ import { RequestIdentity } from "@repo/backend/confect/routes/middleware/identit
 import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/agent/constants";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { Effect, Option } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 /** Serves the bounded public content contract through native Confect services. */
 export const contentRoutes = [
   HttpRouter.route(

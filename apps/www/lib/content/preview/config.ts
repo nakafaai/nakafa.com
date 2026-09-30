@@ -31,8 +31,8 @@ const PreviewOriginSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^http:\/\/127\.0\.0\.1:\d+\/$/u))
 );
 const PreviewPublicKeySchema = Schema.String.check(
-  Schema.isStartsWith("-----BEGIN PUBLIC KEY-----\n"),
-  Schema.isEndsWith("-----END PUBLIC KEY-----\n"),
+  Schema.isStartingWith("-----BEGIN PUBLIC KEY-----\n"),
+  Schema.isEndingWith("-----END PUBLIC KEY-----\n"),
   Schema.isMaxLength(4096)
 );
 const PreviewEnvironmentSchema = Schema.Struct({

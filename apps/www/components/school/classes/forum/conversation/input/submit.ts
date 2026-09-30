@@ -10,7 +10,7 @@ import {
   HttpClient,
   HttpClientRequest,
   HttpClientResponse,
-} from "effect/unstable/http";
+} from "effect/http";
 
 const STORAGE_UPLOAD_TIMEOUT = "10 seconds";
 const StorageIdSchema = Schema.declare(

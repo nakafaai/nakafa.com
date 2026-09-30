@@ -43,11 +43,11 @@ update:
     - vitest
 
 catalog:
-  '@effect/platform-node': 4.0.0-rc.117
-  '@effect/vitest': 4.0.0-rc.117
+  '@effect/platform-node': 4.0.0-rc.118
+  '@effect/vitest': 4.0.0-rc.118
   '@vitest/coverage-istanbul': 5.0.2
   '@vitest/ui': 5.0.2
-  effect: 4.0.0-rc.117
+  effect: 4.0.0-rc.118
   typescript: 7.0.2
   vitest: 5.0.2
 
@@ -56,8 +56,8 @@ overrides:
   "react-dom": "19.2.8"
   "@types/react": "19.2.18"
   "@types/react-dom": "19.2.7"
-  "@effect/platform-node": "4.0.0-rc.117"
-  "@effect/platform-node-shared": "4.0.0-rc.117"
+  "@effect/platform-node": "4.0.0-rc.118"
+  "@effect/platform-node-shared": "4.0.0-rc.118"
   "@react-email/ui@6.11.0>next": "16.3.7"
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
   "@scalar/json-magic@0.15.3>undici": "7.29.1"

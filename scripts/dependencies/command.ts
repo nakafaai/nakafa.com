@@ -1,5 +1,5 @@
 import { Effect, type PlatformError, Schema, Stream } from "effect";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess } from "effect/process";
 
 interface RunOptions {
   readonly capture?: boolean;

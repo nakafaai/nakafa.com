@@ -1,6 +1,6 @@
 import { isForumAttachmentUploadPath } from "@repo/backend/confect/classes/forums/attachments/route";
 import { Clock, Effect } from "effect";
-import { HttpRouter, HttpServerRequest } from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest } from "effect/http";
 /** Logs HTTP outcomes without query strings or upload capabilities. */
 export const requestLogger = HttpRouter.middleware((handler) =>
   Effect.gen(function* () {

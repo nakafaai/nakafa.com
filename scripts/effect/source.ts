@@ -6,7 +6,7 @@ import {
   Schema,
   Stream,
 } from "effect";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";
 
 const GIT_OBJECT_PATTERN = /^[0-9a-f]{40}$/u;

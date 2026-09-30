@@ -9,8 +9,8 @@ import {
   Sink,
   Stdio,
 } from "effect";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { ChildProcessSpawner } from "effect/unstable/process";
+import { HttpClient, HttpClientResponse } from "effect/http";
+import { ChildProcessSpawner } from "effect/process";
 import { bumpDependencies } from "#scripts/dependencies/bump";
 import type { runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";

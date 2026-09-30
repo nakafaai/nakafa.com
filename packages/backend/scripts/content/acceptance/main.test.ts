@@ -124,7 +124,7 @@ describe("isolated acceptance CLI", () => {
         yield* fs.writeFileString(
           `${directory}/backend/entry.mjs`,
           `import { Effect, FileSystem } from ${JSON.stringify(import.meta.resolve("effect"))};
-import { ChildProcess } from ${JSON.stringify(import.meta.resolve("effect/unstable/process"))};
+import { ChildProcess } from ${JSON.stringify(import.meta.resolve("effect/process"))};
 import { runMain } from ${JSON.stringify(import.meta.resolve("@effect/platform-node/NodeRuntime"))};
 import { layer } from ${JSON.stringify(import.meta.resolve("@effect/platform-node/NodeServices"))};
 import { withTerminal } from ${JSON.stringify(new URL("./process.ts", import.meta.url).href)};

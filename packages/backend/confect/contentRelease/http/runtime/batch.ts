@@ -4,11 +4,7 @@ import { dispatchBatchProgram } from "@repo/backend/confect/contentRelease/runti
 import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/batch";
 import { PUBLIC_CONTENT_RUNTIME_BATCH_PATH } from "@repo/backend/content/endpoint";
 import { Config, Effect } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** Authenticates and forwards one bounded public batch contract. */
 const readPublicRuntimeBatch = Effect.fn(

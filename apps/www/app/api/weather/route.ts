@@ -1,7 +1,7 @@
 import { logError, logHttpRequest } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
 import { Cause, Effect } from "effect";
-import { FetchHttpClient } from "effect/unstable/http";
+import { FetchHttpClient } from "effect/http";
 import { NextResponse } from "next/server";
 import { scheduleServerExceptionCapture } from "@/lib/analytics/server";
 import {

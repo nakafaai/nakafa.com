@@ -14,11 +14,7 @@ import {
   NakafaAgentDataReadError,
 } from "@repo/contents/agent/errors";
 import { Effect, Layer, Result } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** Serves the protected Streamable HTTP MCP transport in native Effect. */
 const handleMcp = Effect.gen(function* () {

@@ -7,11 +7,7 @@ import {
 import { runMeteredRequest } from "@repo/backend/confect/routes/agent/runtime";
 import { RequestIdentity } from "@repo/backend/confect/routes/middleware/identity";
 import { Effect, Schema } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 /** Serves the bounded public quran contract through native Confect services. */
 export const quranRoutes = [
   HttpRouter.route(

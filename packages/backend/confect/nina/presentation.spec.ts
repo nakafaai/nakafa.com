@@ -9,7 +9,7 @@ export const NinaSuggestions = Schema.mutable(
   Schema.Array(
     Schema.Trim.check(Schema.isMinLength(1), Schema.isMaxLength(300))
   )
-).check(Schema.isLengthBetween(1, 5));
+).check(Schema.isBetweenLength(1, 5));
 export const NinaTitle = Schema.Trim.check(
   Schema.isMinLength(1),
   Schema.isMaxLength(MAX_TITLE_LENGTH)
