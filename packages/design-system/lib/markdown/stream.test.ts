@@ -14,10 +14,13 @@ describe("streamed markdown tail", () => {
       "Math source has no escapes, so $$a \\$$ closes here.",
       "Literal `$$` and `**` inside code and ``a ` b`` spans.",
       "**Answer:** the slope is **2x**.",
-      "An unclosed ** bold\nstays literal once its line ends.",
+      "An unclosed ** bold\n\nstays literal once its paragraph ends.",
+      "- **Step one\n- A list item starts a new block.",
+      "**first line\nsecond line** closes across a soft line break.",
+      "Code `first line\nsecond line` closes across one too.",
       "Read [the lesson](https://nakafa.com/x) and [notes] first.",
       "Use `const` and ``a ` b`` here.",
-      "Stray [ and ` and ** earlier\nstay literal once their line ends.",
+      "Stray [ and ` and ** earlier\n\nstay literal once their paragraph ends.",
     ]) {
       expect(trimIncompleteTail(markdown)).toBe(markdown);
     }
@@ -55,6 +58,7 @@ describe("streamed markdown tail", () => {
   it("withholds an unclosed bold span within its paragraph", () => {
     expect(trimIncompleteTail("Step one.\n\n**Answ")).toBe("Step one.\n\n");
     expect(trimIncompleteTail("The **slope")).toBe("The ");
+    expect(trimIncompleteTail("The **first line\nsecond")).toBe("The ");
   });
 
   it("withholds a block marker until its content starts", () => {
@@ -79,8 +83,9 @@ describe("streamed markdown tail", () => {
     expect(trimIncompleteTail(prose)).toBe(prose);
   });
 
-  it("withholds an unclosed code span or link on the final line", () => {
+  it("withholds an unclosed code span in its paragraph or link on its line", () => {
     expect(trimIncompleteTail("Call `slope(")).toBe("Call ");
+    expect(trimIncompleteTail("Call `slope(\n2")).toBe("Call ");
     for (const link of ["[Kemdik", "[Kemdikbud]", "[Kemdikbud](https://kem"]) {
       expect(trimIncompleteTail(`See ${link}`)).toBe("See ");
     }
