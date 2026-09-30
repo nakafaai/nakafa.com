@@ -45,10 +45,13 @@ export function TryoutPageHeader({
   );
 }
 
-/** Owns the body width and spacing shared by sets and timed sections. */
+/**
+ * Owns the body width and spacing shared by sets and timed sections. It fills
+ * the height below the header, so a locked review can end at the screen edge.
+ */
 export function TryoutPageBody({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-6 py-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-6">
       {children}
     </div>
   );

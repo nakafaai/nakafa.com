@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Effect } from "effect";
 import { getTranslations } from "next-intl/server";
@@ -22,7 +21,7 @@ import {
 } from "@/components/shared/card/section";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
-import { projectTryoutPreview } from "@/components/tryout/review/model";
+import { projectTryoutReview } from "@/components/tryout/review/model";
 import { TryoutReviewCheckout } from "@/components/tryout/review/upgrade.client";
 import {
   TryoutLockedQuestionShell,
@@ -31,23 +30,28 @@ import {
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
-const PREVIEW_QUESTIONS = 2;
-
-/** Loads only question bodies; the offer stays usable without its preview. */
+/**
+ * Loads the leading questions the backend previews to a free learner, with
+ * their explanations; the offer stays usable without them.
+ */
 const loadPreview = Effect.fn("TryoutReview.loadPreview")(
   function* (
     attemptId: Id<"tryoutAttempts">,
     access: SignedContentAccess,
     runtime: TryoutSectionRuntime
   ) {
+    const count = access.previewAnswers.length;
+    if (count === 0) {
+      return [];
+    }
     const content = yield* loadSignedTryoutContent(attemptId, {
       ...access,
-      answers: [],
-      questions: access.questions.slice(0, PREVIEW_QUESTIONS),
+      answers: access.previewAnswers,
+      questions: access.questions.slice(0, count),
     });
-    return yield* projectTryoutPreview({
+    return yield* projectTryoutReview({
       content,
-      questions: runtime.questions.slice(0, PREVIEW_QUESTIONS),
+      questions: runtime.questions.slice(0, count),
     });
   },
   Effect.catchTags({
@@ -57,8 +61,9 @@ const loadPreview = Effect.fn("TryoutReview.loadPreview")(
 );
 
 /**
- * Shows a free learner their own first questions behind the Pro offer. The
- * server never loads answers here, so removing the overlay reveals nothing new.
+ * Shows a free learner their own leading questions with explanations under
+ * the Pro offer. The backend authorizes only those answers, so removing the
+ * veil reveals nothing beyond the preview.
  */
 export async function TryoutReviewLocked({
   access,
@@ -78,73 +83,93 @@ export async function TryoutReviewLocked({
   return (
     <section
       aria-labelledby="tryout-review-offer"
-      className="relative isolate"
+      className="relative isolate -mx-6 -mb-6 flex flex-1 flex-col justify-end overflow-hidden md:min-h-104 md:items-center md:justify-center md:p-6"
       data-slot="tryout-review-locked"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none h-136 select-none overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_1.5rem,black_55%,transparent)] sm:h-152"
+        className="pointer-events-none absolute inset-x-0 top-0 select-none space-y-12 px-6 pt-1"
         inert
       >
-        <div className="space-y-12 blur-[2px]">
-          {preview.map((question) => (
-            <TryoutLockedQuestionShell
-              key={question.questionOrder}
+        {preview.map((question) => (
+          <TryoutLockedQuestionShell
+            key={question.questionOrder}
+            questionOrder={question.questionOrder}
+          >
+            <section className="my-6">{question.content}</section>
+            <section className="my-8">
+              {/* Correctness is not authorized here, so no choice is marked. */}
+              <TryoutReviewedResponse
+                questionOrder={question.questionOrder}
+                responseSpec={question.responseSpec}
+                selection={null}
+              />
+            </section>
+            <TryoutReviewQuestionExplanation
               questionOrder={question.questionOrder}
             >
-              <section className="my-6">{question.content}</section>
-              <section className="my-8">
-                {/* Correctness is not authorized here, so no choice is marked. */}
-                <TryoutReviewedResponse
-                  questionOrder={question.questionOrder}
-                  responseSpec={question.responseSpec}
-                  selection={null}
-                />
-              </section>
-              <TryoutReviewQuestionExplanation
-                questionOrder={question.questionOrder}
-              >
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-11/12" />
-                  <Skeleton className="h-4 w-4/5" />
-                </div>
-              </TryoutReviewQuestionExplanation>
-            </TryoutLockedQuestionShell>
-          ))}
-        </div>
+              {question.answer}
+            </TryoutReviewQuestionExplanation>
+          </TryoutLockedQuestionShell>
+        ))}
       </div>
 
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-full max-w-md">
-          <CardSection>
-            <CardHeader>
-              <CardTitle>
-                <h2 id="tryout-review-offer">
-                  {t("paywall-title", { count: runtime.questions.length })}
-                </h2>
-              </CardTitle>
-              <CardDescription>{t("paywall-description")}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PricingPrice
-                Price={StaticPrice}
-                period={tPricing("pro-period")}
-                plan="pro"
-              />
-            </CardContent>
-            <CardSectionFooter className="flex-col-reverse items-stretch gap-2 sm:flex-row sm:justify-end">
-              <IntentLink
-                className={buttonVariants({ variant: "outline" })}
-                href="/pricing"
-              >
-                {t("paywall-compare")}
-              </IntentLink>
-              <TryoutReviewCheckout />
-            </CardSectionFooter>
-          </CardSection>
-        </div>
-      </div>
+      {/*
+       * The section fills the page below the result and ends at the screen
+       * edge, so nothing scrolls; the offer in flow sets its smallest height.
+       * One blur covers the whole preview, and the page background rises from
+       * the bottom until the preview melts into it.
+       */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-linear-to-t from-5% from-background via-35% via-background/75 to-80% to-background/0 backdrop-blur-[2px]"
+      />
+
+      <TryoutReviewOffer
+        compare={t("paywall-compare")}
+        description={t("paywall-description")}
+        period={tPricing("pro-period")}
+        title={t("paywall-title", { count: runtime.questions.length })}
+      />
     </section>
+  );
+}
+
+/**
+ * The Pro offer: a bottom sheet with the drawer's anatomy on phones and a
+ * centered dialog card from the medium breakpoint up.
+ */
+function TryoutReviewOffer({
+  compare,
+  description,
+  period,
+  title,
+}: {
+  readonly compare: string;
+  readonly description: string;
+  readonly period: string;
+  readonly title: string;
+}) {
+  return (
+    <CardSection className="relative w-full shadow-lg/5 max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-t max-md:ring-0 md:max-w-md">
+      <CardHeader>
+        <CardTitle>
+          <h2 id="tryout-review-offer">{title}</h2>
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <PricingPrice Price={StaticPrice} period={period} plan="pro" />
+      </CardContent>
+      <CardSectionFooter className="flex-col-reverse items-stretch gap-2 max-md:rounded-none max-md:pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))] md:flex-row md:justify-end">
+        <IntentLink
+          className={buttonVariants({ variant: "outline" })}
+          href="/pricing"
+        >
+          {compare}
+        </IntentLink>
+        <TryoutReviewCheckout />
+      </CardSectionFooter>
+    </CardSection>
   );
 }
