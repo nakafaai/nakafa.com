@@ -1,9 +1,11 @@
 name: CI
 
 on:
+  # Checks belong to the head commit, so title and body edits never rerun CI.
+  # Stacked pull requests run on their own base, so their head already carries
+  # checks when GitHub retargets them to main.
   pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review]
   # The merge queue reruns every required check on each queued change combined
   # with main and the changes queued ahead of it, so ready pull requests never
   # update from main just to merge.
@@ -183,7 +185,7 @@ jobs:
 
       # Prepare already generated the bindings and the step above proved them
       # unchanged, so build and start call the backend acceptance command
-      # directly instead of repeating the 44-second codegen twice.
+      # directly instead of regenerating the bindings twice more.
       - name: Build production app
         id: production_build
         run: pnpm --dir packages/backend acceptance build
