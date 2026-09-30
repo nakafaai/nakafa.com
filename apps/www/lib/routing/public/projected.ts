@@ -9,10 +9,10 @@ import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";
-import { env } from "@/env";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentRoute } from "@/lib/content/published/route";
+import { httpLayer } from "@/lib/convex/http";
 
 interface ProjectedHtmlRouteInput {
   readonly hasAttemptCapability: boolean;
@@ -107,6 +107,6 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
         publicPath,
       },
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   return reference ? null : locale;
 });

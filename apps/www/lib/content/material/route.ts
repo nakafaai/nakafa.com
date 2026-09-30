@@ -1,6 +1,5 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import {
   CorpusSourcePathSchema,
@@ -31,6 +30,7 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
+import { httpLayer } from "@/lib/convex/http";
 
 interface PublishedMaterialIdentity {
   readonly activeManifestHash: typeof Sha256HashSchema.Type;
@@ -111,7 +111,7 @@ export const readPublishedMaterialRoute = Effect.fn(
       appLocale,
       publicPath,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   return yield* decodePublishedMaterialRoute(
     result,
     locale,

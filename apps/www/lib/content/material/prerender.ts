@@ -1,5 +1,4 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import {
   ReleaseIdSchema,
@@ -12,6 +11,7 @@ import type { Locale } from "next-intl";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Reads one authenticated lesson to validate its Cache Components route. */
 export const readPublishedMaterialPrerenderRoute = Effect.fn(
@@ -32,7 +32,7 @@ export const readPublishedMaterialPrerenderRoute = Effect.fn(
         numItems: 1,
       },
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   const source = result.result.page[0];
   if (
     !result.managed ||

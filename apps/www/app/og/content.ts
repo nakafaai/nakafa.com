@@ -7,8 +7,8 @@ import { parseMaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn
 import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
 import { resolveMaterialOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
 import { readArticleOgMetadata } from "@/app/og/article";
-import { env } from "@/env";
 import { getMaterialModel } from "@/lib/content/material/publication";
+import { httpLayer } from "@/lib/convex/http";
 import { getCachedMetadataFromSlug } from "@/lib/utils/system";
 
 /** Title and description copy resolved for one social image. */
@@ -61,7 +61,7 @@ export async function readOgMetadata(
             publicPath: slug.join("/"),
           },
         })
-      ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)))
+      ).pipe(Effect.provide(httpLayer()))
     );
     if (!reference) {
       return null;

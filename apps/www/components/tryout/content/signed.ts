@@ -30,6 +30,7 @@ import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
+import { httpLayer } from "@/lib/convex/http";
 
 const SIGNED_RENDER_CONCURRENCY = 4;
 
@@ -113,7 +114,7 @@ const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
     })
   ).pipe(
     Effect.provide(
-      HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, {
+      httpLayer({
         auth: token,
       })
     ),

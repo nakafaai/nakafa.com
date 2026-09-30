@@ -1,11 +1,11 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Resolves one exact curriculum path without loading its full page model. */
 export const readPublishedProgramPath = Effect.fn(
@@ -17,7 +17,7 @@ export const readPublishedProgramPath = Effect.fn(
       appLocale,
       publicPath,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   if (!(result.managed && result.routeJson)) {
     return {
       managed: result.managed,

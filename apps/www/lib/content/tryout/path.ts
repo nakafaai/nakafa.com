@@ -1,9 +1,9 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
+import { httpLayer } from "@/lib/convex/http";
 
 type TryoutLocalizedPathArgs = Ref.Args<
   typeof refs.public.tryouts.queries.catalog.getLocalizedPath
@@ -15,5 +15,5 @@ export const readPublishedTryoutLocalizedPath = Effect.fn(
 )(function* (args: TryoutLocalizedPathArgs) {
   return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(refs.public.tryouts.queries.catalog.getLocalizedPath, args)
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
 });

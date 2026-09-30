@@ -4,8 +4,8 @@ import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/refe
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { env } from "@/env";
 import { applyContentCache } from "@/lib/content/cache";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Expected failure raised when route metadata translations cannot be loaded. */
 class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
@@ -78,7 +78,7 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
           publicPath: slug.join("/"),
         },
       })
-    ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+    ).pipe(Effect.provide(httpLayer()));
     if (!reference) {
       return defaultMetadata;
     }

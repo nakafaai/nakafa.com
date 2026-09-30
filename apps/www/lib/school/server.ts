@@ -2,9 +2,9 @@ import { HttpClient } from "@confect/js";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import { cache } from "react";
-import { env } from "@/env";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { getToken } from "@/lib/auth/server";
+import { httpLayer } from "@/lib/convex/http";
 
 const SCHOOL_SWITCHER_PAGE_SIZE = 20;
 type SchoolAuthToken = Awaited<ReturnType<typeof getToken>>;
@@ -29,12 +29,7 @@ export const getSchoolRouteSnapshot = cache(async (slug: string) => {
           )
         );
     }).pipe(
-      Effect.provide(
-        HttpClient.layer(
-          env.NEXT_PUBLIC_CONVEX_URL,
-          token ? { auth: token } : {}
-        )
-      ),
+      Effect.provide(httpLayer(token ? { auth: token } : {})),
       Effect.tapError((error) =>
         captureServerExceptionSafely(error, { source: "school-route-boundary" })
       )
@@ -64,9 +59,7 @@ export const getClassRouteSnapshot = cache(async (classId: string) => {
             )
           );
       }).pipe(
-        Effect.provide(
-          HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, { auth: token })
-        ),
+        Effect.provide(httpLayer({ auth: token })),
         Effect.tapError((error) =>
           captureServerExceptionSafely(error, {
             source: "school-class-route-boundary",
@@ -90,9 +83,7 @@ export const getSchoolSwitcherPage = Effect.fn(
       paginationOpts: { cursor: null, numItems: SCHOOL_SWITCHER_PAGE_SIZE },
     });
   }).pipe(
-    Effect.provide(
-      HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, token ? { auth: token } : {})
-    ),
+    Effect.provide(httpLayer(token ? { auth: token } : {})),
     Effect.tapError((error) =>
       captureServerExceptionSafely(error, { source: "school-switcher-page" })
     )
