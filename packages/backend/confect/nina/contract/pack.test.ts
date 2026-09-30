@@ -4,7 +4,7 @@ import {
   type NinaLearningSessionInput,
   NinaLearningSessionSchema,
   openNinaLearningSession,
-} from "@repo/backend/confect/nina/memory/pack";
+} from "@repo/backend/confect/nina/contract/pack";
 import { Effect, Exit, Schema } from "effect";
 
 const learning = {
@@ -23,7 +23,7 @@ const placementProgramKey = LearningProgramKeySchema.make(
   "cambridge-lower-secondary"
 );
 
-describe("nina/memory/pack", () => {
+describe("nina/contract/pack", () => {
   it.effect(
     "opens a verified page session with a durable snapshot and page-fetch policy",
     () =>

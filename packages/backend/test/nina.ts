@@ -3,8 +3,8 @@ import { createThread, saveMessage, saveMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
+import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/memory/pack";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,

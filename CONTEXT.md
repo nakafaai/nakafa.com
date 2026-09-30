@@ -53,6 +53,8 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Pinned context**: The latest stored NinaContextPack reused when a continued chat is opened away from a verified learning asset.
 - **Page fetch**: The one current-page Nakafa content read for a verified learning page. Generation performs it before the first model step and places the page, within its token budget, in Nina's stable prompt context; the model reads other sections through Nakafa. Only pages with signed Markdown are verified; try-out and topic pages have none.
 - **Conversation summary**: A chat's rolling synopsis of turns older than its newest verbatim turns. It updates after completed turns, bounds Nina's provider context for long conversations, and never replaces the stored transcript.
+- **Learner profile**: Account facts Nina reads for a turn: onboarding focus and region, the preferred try-out country, and the latest finished try-out by section. It is derived on read and never stored with a turn.
+- **Learner memory**: At most 30 short facts a learner shared about themself, kept only while the learner turns memory on. Each fact leaves with its source chat, and turning memory off forgets all of them.
 - **Question focus**: One finished try-out question a learner asks Nina about from their review. Admission freezes it into the NinaContextPack only for the attempt owner, a finished section, and a plan that grants review answers. Continued turns keep it while that entitlement holds.
 
 ## Evaluation
