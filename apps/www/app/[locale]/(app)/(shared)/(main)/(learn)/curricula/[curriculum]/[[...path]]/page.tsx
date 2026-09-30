@@ -17,9 +17,16 @@ import { LayoutContent } from "@/components/shared/content/layout";
 import { RefContent } from "@/components/shared/content/references";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { LayoutMaterialToc } from "@/components/shared/material/toc";
-import { SidebarRightHeader } from "@/components/shared/outline/panel";
+import {
+  SidebarRight,
+  SidebarRightFooter,
+  SidebarRightHeader,
+} from "@/components/shared/outline/panel";
+import { SidebarTree } from "@/components/shared/outline/tree";
 import { ComingSoon } from "@/components/shared/upcoming";
+import { GithubButton } from "@/components/sidebar/actions/github";
+import { ReportButton } from "@/components/sidebar/actions/report";
+import { ShareButton } from "@/components/sidebar/actions/share";
 import { readPublishedProgramPrerenderRoute } from "@/lib/content/program/catalog";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/artwork";
 import {
@@ -221,14 +228,21 @@ function CurriculumRouteFrame({
         ) : null}
       </LayoutMaterialContent>
       {model.materialCards.length > 0 && (
-        <LayoutMaterialToc
-          chapters={{
-            label: route.title,
-            data: readMaterialCardChapters(model.materialCards),
-          }}
-          githubUrl={sourceUrl}
+        <SidebarRight
+          footer={
+            <SidebarRightFooter>
+              <ReportButton />
+              {sourceUrl ? <GithubButton githubUrl={sourceUrl} /> : null}
+              <ShareButton />
+            </SidebarRightFooter>
+          }
           header={<SidebarRightHeader {...readRuntimeCurriculumToc(model)} />}
-        />
+        >
+          <SidebarTree
+            data={readMaterialCardChapters(model.materialCards)}
+            title={route.title}
+          />
+        </SidebarRight>
       )}
     </>
   );

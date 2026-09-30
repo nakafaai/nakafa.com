@@ -27,12 +27,18 @@ import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { MaterialOutline } from "@/components/shared/material/toc";
 import {
+  SidebarRightFooter,
   SidebarRightHeader,
+  SidebarRightPanel,
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
+import { SidebarTree } from "@/components/shared/outline/tree";
 import { ComingSoon } from "@/components/shared/upcoming";
+import { CommentsButton } from "@/components/sidebar/actions/comments";
+import { GithubButton } from "@/components/sidebar/actions/github";
+import { ReportButton } from "@/components/sidebar/actions/report";
+import { ShareButton } from "@/components/sidebar/actions/share";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getOgUrl } from "@/lib/utils/metadata";
 
@@ -157,9 +163,17 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
             <DeferredAiSheetOpen contextTitle={metadata.title} />
           ) : null}
         </LayoutMaterialContent>
-        <MaterialOutline
-          chapters={{ label: tCommon("on-this-page"), data: headings }}
-          githubUrl={page.sourceUrl ?? undefined}
+        <SidebarRightPanel
+          footer={
+            <SidebarRightFooter>
+              {allowsInteractions ? <CommentsButton /> : null}
+              <ReportButton />
+              {page.sourceUrl ? (
+                <GithubButton githubUrl={page.sourceUrl} />
+              ) : null}
+              <ShareButton />
+            </SidebarRightFooter>
+          }
           header={
             <Suspense
               fallback={
@@ -173,8 +187,9 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
               <MaterialHeading context={context} />
             </Suspense>
           }
-          showComments={allowsInteractions}
-        />
+        >
+          <SidebarTree data={headings} title={tCommon("on-this-page")} />
+        </SidebarRightPanel>
       </SidebarRightProvider>
     </>
   );
