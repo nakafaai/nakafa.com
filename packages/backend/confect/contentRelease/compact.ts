@@ -27,7 +27,7 @@ export function nextPhase(
   if (phase === "items") {
     return "batches";
   }
-  if (phase === "batches" || phase === "artifacts") {
+  if (phase === "batches") {
     return "facts";
   }
   if (phase === "facts") {

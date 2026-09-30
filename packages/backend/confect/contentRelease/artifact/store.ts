@@ -52,23 +52,20 @@ export const storeContentArtifact = Effect.fn(
     }
     return true;
   }
-  // A body stored before artifact facts has no digest until the facts
-  // backfill migrates it, so it is proven by its stored bytes instead.
-  const legacy = yield* database
+  // Every stored body has facts, so this lookup finds nothing and reads no
+  // document unless a body lost them; a second body would break its hash key.
+  const stray = yield* database
     .table("contentArtifacts")
     .get("by_artifactHash", artifactHash)
     .pipe(
       Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
       Effect.orDie
     );
-  if (legacy) {
-    if (legacy.artifactJson !== artifactJson) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_CONFLICT",
-        `Artifact hash ${artifactHash} was reused with different bytes.`
-      );
-    }
-    return true;
+  if (stray) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Artifact ${artifactHash} is stored without its facts.`
+    );
   }
   const artifactId = yield* writer
     .table("contentArtifacts")
