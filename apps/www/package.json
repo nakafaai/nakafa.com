@@ -82,7 +82,7 @@
   "devDependencies": {
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@next/playwright": "16.3.7",
+    "@next/playwright": "16.3.8",
     "@playwright/test": "^1.63.0",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
