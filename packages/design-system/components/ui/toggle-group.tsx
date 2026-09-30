@@ -6,6 +6,7 @@ import { toggleVariants } from "@repo/design-system/lib/toggle/variants";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
+import { useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 type ToggleGroupLayout = "default" | "grid";
@@ -19,6 +20,24 @@ const ToggleGroupContext = createContext<ToggleGroupContextValue>({
   size: "default",
   variant: "default",
 });
+
+/** Shares a group's resolved layout and visual variants with its items. */
+function ToggleGroupStyle({
+  children,
+  layout,
+  size,
+  variant,
+}: ToggleGroupContextValue & { children: React.ReactNode }) {
+  const style = useMemo(
+    () => ({ layout, size, variant }),
+    [layout, size, variant]
+  );
+  return (
+    <ToggleGroupContext.Provider value={style}>
+      {children}
+    </ToggleGroupContext.Provider>
+  );
+}
 
 const toggleGroupRootVariants = cva(
   "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:w-full data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
@@ -148,11 +167,9 @@ function SingleToggleGroup({
       value={groupValue}
       {...props}
     >
-      <ToggleGroupContext.Provider
-        value={{ layout: resolvedLayout, size, variant }}
-      >
+      <ToggleGroupStyle layout={resolvedLayout} size={size} variant={variant}>
         {children}
-      </ToggleGroupContext.Provider>
+      </ToggleGroupStyle>
     </ToggleGroupPrimitive>
   );
 }
@@ -193,11 +210,9 @@ function MultipleToggleGroup({
       orientation={orientation}
       {...props}
     >
-      <ToggleGroupContext.Provider
-        value={{ layout: resolvedLayout, size, variant }}
-      >
+      <ToggleGroupStyle layout={resolvedLayout} size={size} variant={variant}>
         {children}
-      </ToggleGroupContext.Provider>
+      </ToggleGroupStyle>
     </ToggleGroupPrimitive>
   );
 }

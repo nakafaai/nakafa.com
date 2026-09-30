@@ -12,7 +12,7 @@ import { useControllableState } from "@repo/design-system/hooks/use-controllable
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 interface ReasoningContextValue {
@@ -109,14 +109,17 @@ export const Reasoning = memo(
       }
     }, [isStreaming, isOpen, defaultOpen, setIsOpen]);
 
+    const reasoning = useMemo(
+      () => ({ duration, hasContent, isOpen, isStreaming }),
+      [duration, hasContent, isOpen, isStreaming]
+    );
+
     function handleOpenChange(newOpen: boolean) {
       setIsOpen(newOpen);
     }
 
     return (
-      <ReasoningContext.Provider
-        value={{ duration, hasContent, isOpen, isStreaming }}
-      >
+      <ReasoningContext.Provider value={reasoning}>
         <Collapsible
           className={cn("not-prose flex flex-col gap-2", className)}
           onOpenChange={handleOpenChange}

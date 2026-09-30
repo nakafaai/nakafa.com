@@ -7,7 +7,7 @@ import {
 } from "@repo/design-system/components/ui/hover-card";
 import { cn } from "cn";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 /** One cited link and the domain it is shown under. */
@@ -67,9 +67,10 @@ export interface SourceProps {
 
 export function Source({ href, children }: SourceProps) {
   const domain = getSourceDomain(href);
+  const source = useMemo(() => ({ domain, href }), [domain, href]);
 
   return (
-    <SourceContext.Provider value={{ domain, href }}>
+    <SourceContext.Provider value={source}>
       <HoverCard>{children}</HoverCard>
     </SourceContext.Provider>
   );

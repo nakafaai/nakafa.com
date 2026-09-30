@@ -5,7 +5,7 @@ import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 interface StepperContextValue {
@@ -80,11 +80,13 @@ function Stepper({
     },
     [value, onValueChange]
   );
+  const stepper = useMemo(
+    () => ({ activeStep: value ?? activeStep, setActiveStep }),
+    [activeStep, setActiveStep, value]
+  );
 
   return (
-    <StepperContext.Provider
-      value={{ activeStep: value ?? activeStep, setActiveStep }}
-    >
+    <StepperContext.Provider value={stepper}>
       <div
         className={cn(
           "group/stepper inline-flex data-[orientation=horizontal]:w-full data-[orientation=horizontal]:flex-row data-[orientation=vertical]:flex-col",
@@ -126,11 +128,13 @@ function StepperItem({
   }
 
   const isLoading = loading && step === activeStep;
+  const item = useMemo(
+    () => ({ isDisabled: disabled, isLoading, state, step }),
+    [disabled, isLoading, state, step]
+  );
 
   return (
-    <StepItemContext.Provider
-      value={{ isDisabled: disabled, isLoading, state, step }}
-    >
+    <StepItemContext.Provider value={item}>
       <div
         className={cn(
           "group/step flex items-center group-data-[orientation=horizontal]/stepper:flex-row group-data-[orientation=vertical]/stepper:flex-col",
