@@ -15,6 +15,7 @@ import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/fini
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import type { TryoutInternalSetView } from "@/components/tryout/set/model";
 import {
+  TryoutPage,
   TryoutPageBody,
   TryoutPageHeader,
 } from "@/components/tryout/shell/header";
@@ -32,7 +33,7 @@ export function TryoutSetEntry({
   const state = value.runtimeState;
   const isRunning = state.kind === "active" || state.kind === "pending";
   return (
-    <>
+    <TryoutPage>
       {isRunning ? (
         <TryoutRuntimeControls
           title={value.page.set.title}
@@ -68,7 +69,7 @@ export function TryoutSetEntry({
           {children}
         </TryoutEntryRuntime>
       </TryoutPageBody>
-    </>
+    </TryoutPage>
   );
 }
 

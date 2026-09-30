@@ -8,6 +8,7 @@ import { TryoutSetAction } from "@/components/tryout/set/action.client";
 import type { TryoutSetView } from "@/components/tryout/set/model";
 import { TryoutSectionRows } from "@/components/tryout/set/rows.client";
 import {
+  TryoutPage,
   TryoutPageBody,
   TryoutPageHeader,
 } from "@/components/tryout/shell/header";
@@ -15,7 +16,7 @@ import {
 /** Renders a set page that offers visible nested sections. */
 export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
   return (
-    <>
+    <TryoutPage>
       <TryoutPageHeader
         action={
           <TryoutSetAction
@@ -49,7 +50,7 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
         <TryoutSetResult value={value} />
         <TryoutSetSections value={value} />
       </TryoutPageBody>
-    </>
+    </TryoutPage>
   );
 }
 

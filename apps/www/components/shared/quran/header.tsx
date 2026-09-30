@@ -13,6 +13,7 @@ import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
+import { QuranSurahName } from "@/components/shared/quran/name";
 
 /** Keeps surah navigation, name, and outline actions in one stable page row. */
 export function QuranSurahHeader({
@@ -54,14 +55,7 @@ export function QuranSurahHeader({
         >
           {meaning}
         </span>
-        <span className="min-w-0 truncate">{title}</span>
-        <span
-          className="shrink-0 font-normal font-quran text-xl"
-          dir="rtl"
-          lang="ar"
-        >
-          {arabic}
-        </span>
+        <QuranSurahName arabic={arabic} title={title} />
       </h1>
       <div
         className="col-start-2 row-start-1 flex min-w-0 justify-end md:col-start-3"

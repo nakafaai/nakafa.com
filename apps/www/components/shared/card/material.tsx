@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  ArrowDown01Icon,
-  ArrowRight02Icon,
-  Link04Icon,
-} from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Link04Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { MaterialList } from "@repo/contents/curriculum/list";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -20,10 +16,10 @@ import {
   CollapsibleContent,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { slugify } from "@repo/utilities/slug";
 import { cn } from "cn";
 import { useLayoutEffect, useState } from "react";
+import { CardLink, CardLinks } from "@/components/shared/card/link";
 
 interface Props {
   material: MaterialList[number];
@@ -113,23 +109,13 @@ export function CardMaterial({ material }: Props) {
       <Collapsible key={panelKey} onOpenChange={set} open={isOpen}>
         <CollapsibleContent>
           <CardContent className="border-t px-0">
-            <ul className="divide-y">
+            <CardLinks>
               {material.items.map((item) => (
-                <li className="group/list" key={item.href}>
-                  <IntentLink
-                    className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground group-last/list:pb-6"
-                    href={item.href}
-                    title={item.title}
-                  >
-                    <h3 className="flex-1">{item.title}</h3>
-                    <HugeIcons
-                      className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
-                      icon={ArrowRight02Icon}
-                    />
-                  </IntentLink>
-                </li>
+                <CardLink href={item.href} key={item.href} title={item.title}>
+                  <h3 className="flex-1">{item.title}</h3>
+                </CardLink>
               ))}
-            </ul>
+            </CardLinks>
           </CardContent>
         </CollapsibleContent>
       </Collapsible>

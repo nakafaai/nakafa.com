@@ -35,6 +35,7 @@ import type {
 } from "@/components/tryout/section/model";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import {
+  TryoutPage,
   TryoutPageBody,
   TryoutPageHeader,
 } from "@/components/tryout/shell/header";
@@ -233,30 +234,32 @@ function ResolvedTryoutSectionPage({
       articleNavigation={articleNavigation}
       locked={currentAttempt?.status === "in-progress"}
     >
-      <TryoutSectionHeader
-        actionAttempt={actionAttempt}
-        activeAttempt={activeAttempt}
-        binding={binding}
-        page={page}
-        route={route}
-        runtimeState={runtimeState}
-        sectionStatus={sectionStatus}
-        setHref={setHref}
-      />
-      <TryoutPageBody>
-        {!isRunning && (
-          <TryoutSectionSummary
-            value={{
-              score: actionAttempt?.section?.score ?? null,
-              section: page.section,
-              sectionStatus,
-            }}
-          />
-        )}
-        <TryoutSectionBody value={{ content, runtimeState }}>
-          {children}
-        </TryoutSectionBody>
-      </TryoutPageBody>
+      <TryoutPage>
+        <TryoutSectionHeader
+          actionAttempt={actionAttempt}
+          activeAttempt={activeAttempt}
+          binding={binding}
+          page={page}
+          route={route}
+          runtimeState={runtimeState}
+          sectionStatus={sectionStatus}
+          setHref={setHref}
+        />
+        <TryoutPageBody>
+          {!isRunning && (
+            <TryoutSectionSummary
+              value={{
+                score: actionAttempt?.section?.score ?? null,
+                section: page.section,
+                sectionStatus,
+              }}
+            />
+          )}
+          <TryoutSectionBody value={{ content, runtimeState }}>
+            {children}
+          </TryoutSectionBody>
+        </TryoutPageBody>
+      </TryoutPage>
     </AppShell>
   );
 }
