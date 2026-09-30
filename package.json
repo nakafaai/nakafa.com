@@ -55,7 +55,7 @@
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
     "@effect/platform-node": "catalog:",
-    "@effect/tsgo": "0.45.0",
+    "@effect/tsgo": "0.46.1",
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",

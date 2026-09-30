@@ -43,7 +43,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.45.0",
+    approved: "0.46.1",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -171,7 +171,7 @@ export const REGISTRY_REVIEWS = [
   [
     "@effect/tsgo@latest",
     "0.47.0",
-    "Compiler patching moves with TypeScript and Effect; 0.47.0 targets the Effect RC118 cohort.",
+    "Compiler patching moves with TypeScript and Effect; 0.46.1 fixes diagnostics within the Effect RC117 cohort, and 0.47.0 targets the Effect RC118 cohort.",
   ],
   ["vitest@latest", "5.0.2", "The Effect RC117 adapter accepts Vitest 5."],
   [
