@@ -77,7 +77,12 @@ describe("Nina memory curation", () => {
     expect(second).toContain("[0] Kelas 12, ikut SNBT 2027.");
     expect(await f.memory()).toEqual([
       expect.objectContaining({
-        facts: [expect.objectContaining({ key: 0, text: "Kelas 12, ikut SNBT 2027." })],
+        facts: [
+          expect.objectContaining({
+            key: 0,
+            text: "Kelas 12, ikut SNBT 2027.",
+          }),
+        ],
         usage: { calls: 2, input: 24, output: 8 },
       }),
     ]);
@@ -97,7 +102,10 @@ describe("Nina memory curation", () => {
     await f.curate(answer.messageId);
     expect(model.doGenerateCalls).toHaveLength(0);
     expect(await f.memory()).toEqual([
-      expect.objectContaining({ facts: [], usage: expect.objectContaining({ calls: 0 }) }),
+      expect.objectContaining({
+        facts: [],
+        usage: expect.objectContaining({ calls: 0 }),
+      }),
     ]);
   });
 
@@ -114,7 +122,10 @@ describe("Nina memory curation", () => {
     await f.curate();
     await f.curate("not-a-message-id");
     expect(await f.memory()).toEqual([
-      expect.objectContaining({ facts: [], usage: expect.objectContaining({ calls: 0 }) }),
+      expect.objectContaining({
+        facts: [],
+        usage: expect.objectContaining({ calls: 0 }),
+      }),
     ]);
   });
 
@@ -129,7 +140,11 @@ describe("Nina memory curation", () => {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify({ forget: [], remember: [], update: [] }),
+                  text: JSON.stringify({
+                    forget: [],
+                    remember: [],
+                    update: [],
+                  }),
                 },
               ],
               finishReason: { unified: "stop", raw: "stop" },

@@ -20,7 +20,7 @@ const readLatestTryout = Effect.fn("nina.memory.profile.tryout")(function* (
     .first()
     .pipe(Effect.map(Option.getOrNull), Effect.orDie);
   if (!score) {
-    return undefined;
+    return;
   }
   const attempt = yield* reader
     .table("tryoutAttempts")
@@ -30,7 +30,7 @@ const readLatestTryout = Effect.fn("nina.memory.profile.tryout")(function* (
       Effect.orDie
     );
   if (!attempt) {
-    return undefined;
+    return;
   }
   const sections = yield* reader
     .table("tryoutSectionAttempts")
