@@ -34,6 +34,26 @@ const read = FunctionImpl.make(
 );
 
 /**
+ * Returns the prompt message of the turn at `order`, where a refresh starts
+ * reading back, so it reads only the turns it folds.
+ */
+const anchor = FunctionImpl.make(
+  schema,
+  spec,
+  "anchor",
+  Effect.fn("nina.summaries.anchor")(function* ({ chatId, order }) {
+    const turn = yield* (yield* DatabaseReader)
+      .table("ninaTurns")
+      .get("by_chatId_and_order", chatId, order)
+      .pipe(
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    return turn?.promptMessageId ?? null;
+  })
+);
+
+/**
  * Stores a refreshed summary. Coverage only moves forward, so a slower refresh
  * never replaces a newer one, but its provider usage still counts; a chat
  * deleted meanwhile gets no orphan.
@@ -89,6 +109,7 @@ const save = FunctionImpl.make(
 );
 
 export default GroupImpl.make(schema, spec).pipe(
+  Layer.provide(anchor),
   Layer.provide(read),
   Layer.provide(save),
   GroupImpl.finalize

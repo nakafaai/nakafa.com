@@ -39,6 +39,13 @@ export default GroupSpec.make()
     })
   )
   .addFunction(
+    FunctionSpec.internalQuery({
+      name: "anchor",
+      args: () => ({ chatId: Id("chats"), order: TurnOrder }),
+      returns: () => Schema.NullOr(Schema.String),
+    })
+  )
+  .addFunction(
     FunctionSpec.internalMutation({
       name: "save",
       args: () => ({

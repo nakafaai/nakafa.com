@@ -15,7 +15,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Effect, Predicate } from "effect";
 
 vi.mock("@repo/backend/confect/nina/config/provider", async (original) => ({
   ...(await original<
@@ -25,22 +25,15 @@ vi.mock("@repo/backend/confect/nina/config/provider", async (original) => ({
 }));
 afterEach(() => vi.restoreAllMocks());
 
-/** A chat whose Agent thread holds `turns` complete learner and Nina turns. */
+/**
+ * A chat whose Agent thread holds `turns` complete learner and Nina turns,
+ * each with the turn row admission stores.
+ */
 async function fixture(turns: number) {
   const t = createConvexTestWithBetterAuth();
   const setup = await t.mutation(async (ctx) => {
     const { userId } = await seedAuthenticatedUser(ctx, { now: Date.now() });
     const threadId = await createThread(ctx, components.nina, { userId });
-    for (let order = 0; order < turns; order += 1) {
-      await saveMessages(ctx, components.nina, {
-        threadId,
-        order,
-        messages: [
-          { role: "user", content: `Question ${order}` },
-          { role: "assistant", content: `Answer ${order}` },
-        ],
-      });
-    }
     const chatId = await ctx.db.insert("chats", {
       userId,
       threadId,
@@ -48,7 +41,30 @@ async function fixture(turns: number) {
       visibility: "private",
       updatedAt: Date.now(),
     });
-    return { chatId, threadId, userId };
+    const prompts: string[] = [];
+    for (let order = 0; order < turns; order += 1) {
+      const { messages } = await saveMessages(ctx, components.nina, {
+        threadId,
+        order,
+        messages: [
+          { role: "user", content: `Question ${order}` },
+          { role: "assistant", content: `Answer ${order}` },
+        ],
+      });
+      const promptMessageId = messages[0]?._id ?? "";
+      prompts.push(promptMessageId);
+      await ctx.db.insert("ninaTurns", {
+        chatId,
+        order,
+        phase: "unanswered",
+        promptMessageId,
+        state: { status: "unanswered" },
+        threadId,
+        usage: [],
+        userId,
+      });
+    }
+    return { chatId, prompts, threadId, userId };
   });
   const refresh = (order: number) =>
     t.action((ctx) =>
@@ -213,11 +229,77 @@ describe("Nina rolling summary", () => {
     }
   );
 
+  it("reads back only from the prompt of the last folded turn", async () => {
+    vi.mocked(getGatewayModel).mockReturnValue(
+      Effect.succeed(summaryModel("- Folded."))
+    );
+    const f = await fixture(56);
+    const anchors = await f.t.action(async (ctx) => {
+      const runQuery = vi.spyOn(ctx, "runQuery");
+      await Effect.runPromise(
+        refreshSummary({ ...f, order: 55 }).pipe(
+          Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
+        )
+      );
+      return runQuery.mock.calls.flatMap(([, args]) =>
+        Predicate.hasProperty(args, "upToAndIncludingMessageId")
+          ? [String(args.upToAndIncludingMessageId)]
+          : []
+      );
+    });
+    expect(anchors).toEqual([f.prompts[15]]);
+  });
+
+  it("stops reading back once it reaches turns the summary covers", async () => {
+    const model = summaryModel("- Later study.");
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    const f = await fixture(62);
+    await f.t.mutation((ctx) =>
+      ctx.db.insert("ninaSummaries", {
+        chatId: f.chatId,
+        text: "- Earlier study.",
+        throughOrder: 40,
+        updatedAt: Date.now(),
+        usage: { calls: 1, input: 900, output: 120 },
+      })
+    );
+    await f.refresh(61);
+    const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
+    expect(prompt).toContain("Question 41");
+    expect(prompt).toContain("Answer 56");
+    expect(prompt).not.toContain("Question 40");
+    expect(prompt).not.toContain("Question 57");
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: 56 }),
+    ]);
+  });
+
+  it("keeps the previous summary when the last folded turn is missing", async () => {
+    vi.mocked(getGatewayModel).mockReturnValue(
+      Effect.succeed(summaryModel("unused"))
+    );
+    const f = await fixture(9);
+    await f.t.mutation(async (ctx) => {
+      const turn = await ctx.db
+        .query("ninaTurns")
+        .withIndex("by_chatId_and_order", (q) =>
+          q.eq("chatId", f.chatId).eq("order", 4)
+        )
+        .unique();
+      if (turn) {
+        await ctx.db.delete("ninaTurns", turn._id);
+      }
+    });
+    await f.refresh(8);
+    expect(getGatewayModel).not.toHaveBeenCalled();
+    expect(await f.summary()).toEqual([]);
+  });
+
   it("keeps the previous summary when the thread cannot be read", async () => {
     vi.mocked(getGatewayModel).mockReturnValue(
       Effect.succeed(summaryModel("unused"))
     );
-    const f = await fixture(1);
+    const f = await fixture(9);
     await f.t.action((ctx) =>
       Effect.runPromise(
         refreshSummary({

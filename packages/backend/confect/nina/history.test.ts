@@ -275,6 +275,54 @@ describe("Nina provider context", () => {
     expect(result).toHaveLength(3);
   });
 
+  it("keeps earlier images but leaves earlier documents as a note", () => {
+    const current: ModelMessage = {
+      role: "user",
+      content: [
+        { type: "text", text: "And this one?" },
+        { type: "file", mediaType: "text/plain", data: "New notes" },
+      ],
+    };
+    const result = assembleContext({
+      current: [current],
+      currentOrder: 1,
+      recent: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Read these" },
+            { type: "file", mediaType: "image/png", data: "photo" },
+            {
+              type: "file",
+              mediaType: "application/pdf",
+              filename: "worksheet.pdf",
+              data: "A".repeat(2_000_000),
+            },
+            { type: "file", mediaType: "text/plain", data: "notes" },
+          ],
+        },
+        { role: "assistant", content: "Both cover limits." },
+      ],
+      throughOrder: null,
+    });
+    expect(result[0]).toEqual({
+      role: "user",
+      content: [
+        { type: "text", text: "Read these" },
+        { type: "file", mediaType: "image/png", data: "photo" },
+        {
+          type: "text",
+          text: "[Attached earlier: worksheet.pdf (application/pdf). Ask the learner to attach it again when its full content matters.]",
+        },
+        {
+          type: "text",
+          text: "[Attached earlier: a document (text/plain). Ask the learner to attach it again when its full content matters.]",
+        },
+      ],
+    });
+    expect(result.at(-1)).toEqual(current);
+  });
+
   it("keeps approval parts while shortening the evidence around them", () => {
     const evidence = "Approved evidence paragraph.\n\n".repeat(900);
     const result = boundStep([

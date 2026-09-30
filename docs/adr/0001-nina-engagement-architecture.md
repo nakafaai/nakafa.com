@@ -78,10 +78,13 @@ explanation is the source of truth for the answer.
 Provider input keeps whole recent turns that the conversation summary does not
 cover, newest first, within 12,000 tokens, and the current turn's evidence
 within 16,000 tokens. Older evidence shortens with a visible note before a turn
-is dropped, and no budget fails a turn. After a completed turn, the follow-up
-action folds turns beyond the four newest into the chat's conversation summary
-with a fast model once four such turns accumulate, at most 16 turns per refresh,
-so a longer backlog advances one bounded batch per turn. The summary, at most 1,200
+is dropped, and no budget fails a turn. Earlier turns keep their images, while
+their PDF and text attachments, whose cost grows with size, leave provider
+history as a note naming the file. After a completed turn, the follow-up action
+folds turns beyond the four newest into the chat's conversation summary with a
+fast model once four such turns accumulate, at most 16 turns per refresh, so a
+longer backlog advances one bounded batch per turn and reads back only from its
+last folded turn. The summary, at most 1,200
 tokens, sits in the system prompt context and is deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
 rather than in a turn's usage ledger, which clients read. The learner profile
