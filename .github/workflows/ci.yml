@@ -181,9 +181,12 @@ jobs:
       - name: Verify generated Convex bindings
         run: test -z "$(git status --porcelain -- packages/backend/convex/_generated)"
 
+      # Prepare already generated the bindings and the step above proved them
+      # unchanged, so build and start call the backend acceptance command
+      # directly instead of repeating the 44-second codegen twice.
       - name: Build production app
         id: production_build
-        run: pnpm acceptance:build
+        run: pnpm --dir packages/backend acceptance build
         env:
           NEXT_EXPOSE_TESTING_API: "true"
           NODE_ENV: production
@@ -198,7 +201,7 @@ jobs:
           web_pid="$RUNNER_TEMP/runtime-www.pid"
           : > "$web_log"
           chmod 600 "$web_log"
-          setsid pnpm acceptance:start > "$web_log" 2>&1 &
+          setsid pnpm --dir packages/backend acceptance start > "$web_log" 2>&1 &
           echo "$!" > "$web_pid"
 
       - name: Wait for web app

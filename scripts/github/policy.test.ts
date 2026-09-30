@@ -98,7 +98,9 @@ describe("GitHub Action policy", () => {
               production: expect.objectContaining({
                 steps: expect.arrayContaining([
                   expect.objectContaining({ run: "pnpm acceptance:prepare" }),
-                  expect.objectContaining({ run: "pnpm acceptance:build" }),
+                  expect.objectContaining({
+                    run: "pnpm --dir packages/backend acceptance build",
+                  }),
                   expect.objectContaining({
                     run: "pnpm --filter www test:browser",
                   }),
@@ -106,6 +108,13 @@ describe("GitHub Action policy", () => {
               }),
             }),
           })
+        );
+        // Only prepare generates the Convex bindings; the root build and start
+        // scripts would regenerate them twice more.
+        expect(source).not.toContain("pnpm acceptance:build");
+        expect(source).not.toContain("pnpm acceptance:start");
+        expect(source).toContain(
+          "setsid pnpm --dir packages/backend acceptance start"
         );
         expect(source).not.toContain("secrets.CONVEX_DEPLOY_KEY");
         expect(source).not.toContain("secrets.CONTENT_RUNTIME_CACHE_KEY");
