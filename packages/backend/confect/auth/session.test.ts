@@ -36,7 +36,7 @@ const customerPortal = Ref.getFunctionReference(
 beforeEach(() => vi.setSystemTime(NOW));
 afterEach(() => vi.restoreAllMocks());
 
-describe("session-validated app identity", () => {
+describe("token-verified reads and session-validated writes", () => {
   it("resolves the same active account through registered reads and writes", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
@@ -58,7 +58,36 @@ describe("session-validated app identity", () => {
     });
   });
 
-  it("does not trust an identity whose Better Auth session expired", async () => {
+  it("refuses anonymous callers on every function type", async () => {
+    const t = createConvexTestWithBetterAuth();
+    expect(await t.query(currentUser, {})).toBeNull();
+    expect(await t.mutation(admitOnboarding, {})).toMatchObject({
+      isAuthenticated: false,
+    });
+    const failure = await t
+      .mutation(updateName, { name: "Verified user" })
+      .catch((error: unknown) => error);
+    assert(Ref.isConvexError(failure));
+    const decoded = Ref.decodeErrorOption(
+      refs.public.users.mutations.updateUserName,
+      failure.data
+    );
+    assert(Option.isSome(decoded));
+    expect(decoded.value).toBeInstanceOf(SessionRequired);
+    expect(Schema.encodeSync(AuthFailure)(decoded.value)).toEqual({
+      _tag: "SessionRequired",
+      code: "UNAUTHENTICATED",
+      message: "Unauthenticated",
+    });
+    await expect(t.query(schoolLanding, {})).rejects.toMatchObject({
+      data: { _tag: "SessionRequired" },
+    });
+    await expect(t.action(customerPortal, {})).rejects.toMatchObject({
+      data: { _tag: "SessionRequired" },
+    });
+  });
+
+  it("reads from the verified token without Better Auth and confirms the live session before writes", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -71,33 +100,24 @@ describe("session-validated app identity", () => {
       sessionId: identity.sessionId,
       subject: identity.authUserId,
     });
-    for (const caller of [t, expired]) {
-      expect(await caller.query(currentUser, {})).toBeNull();
-      expect(await caller.mutation(admitOnboarding, {})).toMatchObject({
-        isAuthenticated: false,
-      });
-      const failure = await caller
-        .mutation(updateName, { name: "Verified user" })
-        .catch((error: unknown) => error);
-      assert(Ref.isConvexError(failure));
-      const decoded = Ref.decodeErrorOption(
-        refs.public.users.mutations.updateUserName,
-        failure.data
-      );
-      assert(Option.isSome(decoded));
-      expect(decoded.value).toBeInstanceOf(SessionRequired);
-      expect(Schema.encodeSync(AuthFailure)(decoded.value)).toEqual({
-        _tag: "SessionRequired",
-        code: "UNAUTHENTICATED",
-        message: "Unauthenticated",
-      });
-      await expect(caller.query(schoolLanding, {})).rejects.toMatchObject({
-        data: { _tag: "SessionRequired" },
-      });
-      await expect(caller.action(customerPortal, {})).rejects.toMatchObject({
-        data: { _tag: "SessionRequired" },
-      });
-    }
+    const sessionLookup = vi.spyOn(authReader, "safeGetAuthUser");
+    // Revocation follows the token's short lifetime for reads.
+    expect(await expired.query(currentUser, {})).toMatchObject({
+      appUser: { _id: identity.userId },
+      authUser: { _id: identity.authUserId, name: "User expired-auth" },
+    });
+    expect(await expired.query(schoolLanding, {})).toEqual({ kind: "none" });
+    expect(sessionLookup).not.toHaveBeenCalled();
+    expect(await expired.mutation(admitOnboarding, {})).toMatchObject({
+      isAuthenticated: false,
+    });
+    await expect(
+      expired.mutation(updateName, { name: "Verified user" })
+    ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+    await expect(expired.action(customerPortal, {})).rejects.toMatchObject({
+      data: { _tag: "SessionRequired" },
+    });
+    expect(sessionLookup).toHaveBeenCalledTimes(3);
   });
 
   it("rejects removed accounts instead of allowing them to write anonymously", async () => {
@@ -140,17 +160,17 @@ describe("session-validated app identity", () => {
     });
   });
 
-  it("fails closed with a typed, sanitized error when the session component is unavailable", async () => {
+  it("fails a write closed with a typed, sanitized error when the session component is unavailable", async () => {
     vi.spyOn(authReader, "safeGetAuthUser").mockRejectedValueOnce(
       new Error("private adapter details")
     );
     const t = createConvexTestWithBetterAuth();
     const failure = await t
-      .query(schoolLanding, {})
+      .mutation(updateName, { name: "Verified user" })
       .catch((error: unknown) => error);
     assert(Ref.isConvexError(failure));
     const decoded = Ref.decodeErrorOption(
-      refs.public.schools.queries.getMySchoolLandingState,
+      refs.public.users.mutations.updateUserName,
       failure.data
     );
     assert(Option.isSome(decoded));

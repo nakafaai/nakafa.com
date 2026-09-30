@@ -407,7 +407,7 @@ describe("signed try-out execution", () => {
         expect(cacheMock).not.toHaveBeenCalled();
       })
   );
-  it.effect("rechecks the live session after successful rendering", () =>
+  it.effect("rechecks attempt access on every load after rendering", () =>
     Effect.gen(function* () {
       const fixture = yield* readOwnedFixture({
         compiledCode:
@@ -418,7 +418,14 @@ describe("signed try-out execution", () => {
       expect(queryMock.mock.invocationCallOrder[0]).toBeLessThan(
         cacheMock.mock.invocationCallOrder[0] ?? 0
       );
-      vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 366 * 24 * 60 * 60 * 1000));
+      // A cached render never outlives the account's access to the attempt.
+      yield* Effect.promise(() =>
+        fixture.t.mutation((ctx) =>
+          ctx.db.patch("users", fixture.seed.identity.userId, {
+            deletedAt: TRYOUT_TEST_NOW,
+          })
+        )
+      );
       expect(
         yield* loadSignedTryoutContent(fixture.attemptId, fixture.access).pipe(
           Effect.flip

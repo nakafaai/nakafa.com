@@ -6,7 +6,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 
 describe("authenticated user query contracts", () => {
-  it("returns the app and component identities only for an existing session", async () => {
+  it("returns the account projection only for an existing app user", async () => {
     const t = createConvexTestWithBetterAuth();
     expect(await t.query(api.auth.queries.getCurrentUser)).toBeNull();
     const user = await t.mutation((ctx) =>
@@ -19,6 +19,15 @@ describe("authenticated user query contracts", () => {
     expect(await authed.query(api.auth.queries.getCurrentUser)).toMatchObject({
       appUser: { _id: user.userId, authId: user.authUserId },
       authUser: { _id: user.authUserId, name: "User query-user" },
+    });
+    // The profile comes from the app user copy that auth triggers maintain.
+    await t.mutation((ctx) =>
+      ctx.db.patch("users", user.userId, {
+        image: "https://example.com/query-user.png",
+      })
+    );
+    expect(await authed.query(api.auth.queries.getCurrentUser)).toMatchObject({
+      authUser: { image: "https://example.com/query-user.png" },
     });
     await t.mutation((ctx) => ctx.db.delete("users", user.userId));
     expect(await authed.query(api.auth.queries.getCurrentUser)).toBeNull();
