@@ -1,6 +1,5 @@
 import type { UsersDoc } from "@repo/backend/confect/_generated/docs";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
-import type { authReader } from "@repo/backend/confect/auth/reader";
 import {
   AccountUnavailable,
   accountUnavailableCode,
@@ -9,15 +8,15 @@ import {
 } from "@repo/backend/confect/auth/spec";
 import { Context, Effect } from "effect";
 
-type AuthUser = NonNullable<
-  Awaited<ReturnType<typeof authReader.safeGetAuthUser>>
->;
-
-/** Better Auth validates the session; the middleware resolves its app identity once. */
+/**
+ * The caller's Better Auth user id and matching app user, resolved once per
+ * function by the session middleware. Queries trust the token Convex verified;
+ * mutations and actions also confirm the session with Better Auth.
+ */
 export class Session extends Context.Service<
   Session,
   {
-    readonly authUser: AuthUser | undefined;
+    readonly authId: string | undefined;
     readonly appUser: UsersDoc | null;
   }
 >()("@repo/backend/auth/Session") {}
@@ -25,11 +24,11 @@ export class Session extends Context.Service<
 /** Prepared users remain readable for account recovery. */
 export const getOptionalAppUserForRead = Effect.fn("auth.optionalRead")(
   function* () {
-    const { authUser, appUser } = yield* Session;
-    return authUser && appUser && appUser.deletedAt === undefined
+    const { authId, appUser } = yield* Session;
+    return authId && appUser && appUser.deletedAt === undefined
       ? {
           appUser,
-          authUser,
+          authId,
         }
       : null;
   }
@@ -38,17 +37,17 @@ export const getOptionalAppUserForRead = Effect.fn("auth.optionalRead")(
 /** Prepared sessions cannot create new writes as anonymous users. */
 export const getOptionalActiveAppUser = Effect.fn("auth.optionalWrite")(
   function* () {
-    const { authUser, appUser } = yield* Session;
-    if (authUser && (!appUser || isAccountDeletionPending(appUser))) {
+    const { authId, appUser } = yield* Session;
+    if (authId && (!appUser || isAccountDeletionPending(appUser))) {
       return yield* new AccountUnavailable({
         code: accountUnavailableCode,
         message: accountUnavailableMessage,
       });
     }
-    return authUser && appUser
+    return authId && appUser
       ? {
           appUser,
-          authUser,
+          authId,
         }
       : null;
   }
@@ -56,8 +55,8 @@ export const getOptionalActiveAppUser = Effect.fn("auth.optionalWrite")(
 
 /** Requires the session and active account supplied by authentication middleware. */
 export const requireAuth = Effect.fn("auth.require")(function* () {
-  const { authUser, appUser } = yield* Session;
-  if (!authUser) {
+  const { authId, appUser } = yield* Session;
+  if (!authId) {
     return yield* new SessionRequired({
       code: "UNAUTHENTICATED",
       message: "Unauthenticated",
@@ -71,6 +70,6 @@ export const requireAuth = Effect.fn("auth.require")(function* () {
   }
   return {
     appUser,
-    authUser,
+    authId,
   };
 });

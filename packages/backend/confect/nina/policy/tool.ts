@@ -48,7 +48,8 @@ export function formatToolPolicyPrompt() {
 
       ## Nakafa
 
-      Use Nakafa first for named educational topics, lesson explanations, study requests, current verified page content, and educational practice.
+      Answer from the Current Page context when it covers the request.
+      Use Nakafa first for named educational topics, lesson explanations, study requests, other sections of the current page, and educational practice.
       Practice includes warmups, starter examples, hints, quick reviews, quizzes, tryout preparation, and preparation before practice.
 
       Nakafa routing rules:
@@ -66,7 +67,6 @@ export function formatToolPolicyPrompt() {
       - exercises.
       - Quran content.
       - articles.
-      - current verified page content.
       - practice.
 
       ## deepResearch

@@ -21,7 +21,6 @@ export type AgentCurriculumPreference = Schema.Schema.Type<
 export const AgentContextSchema = Schema.Struct({
   currentDate: Schema.String,
   curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
-  needsPageFetch: Schema.Boolean,
   nina: Schema.optional(NinaContextPackSchema),
   slug: Schema.String,
   url: Schema.String,

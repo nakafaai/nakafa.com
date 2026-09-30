@@ -1,5 +1,4 @@
 import type { NakafaAgentQuranReference } from "@repo/contents/agent/schema/quran/reference";
-import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
 import type { NakafaAgentSearchResult } from "@repo/contents/agent/schema/search";
 import type { NakafaAgentTaxonomy } from "@repo/contents/agent/schema/taxonomy";
 import dedent from "dedent";
@@ -28,20 +27,6 @@ export function formatSearch(result: NakafaAgentSearchResult) {
     - Section: ${item.section}`
       )
       .join("\n")}
-  `);
-}
-
-/** Formats a full Nakafa content read for model consumption. */
-export function formatRead(result: NakafaAgentMarkdown) {
-  const description = result.description
-    ? `\n    - Description: ${result.description}`
-    : "";
-  return dedent(`
-    # Nakafa Content
-    - Title: ${result.title}${description}
-    - Content ID: ${result.content_id}
-
-    ${result.text}
   `);
 }
 

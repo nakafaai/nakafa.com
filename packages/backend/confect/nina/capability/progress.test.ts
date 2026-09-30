@@ -1,5 +1,9 @@
 import { expect, it } from "@effect/vitest";
 import {
+  countTextTokens,
+  NINA_BUDGET,
+} from "@repo/backend/confect/nina/budget";
+import {
   type CapabilityArtifact,
   CapabilityOutputSchema,
   streamCapability,
@@ -25,21 +29,24 @@ const loading = {
     status: "loading",
   },
 } satisfies CapabilityArtifact;
+const options = { continuation: "Ask a narrower question." };
 
 it.effect(
   "keeps stable cards in the final output while coalescing progressive snapshots",
   () =>
     Effect.gen(function* () {
-      const snapshots = yield* streamCapability((publish) =>
-        Effect.gen(function* () {
-          yield* publish(loading);
-          yield* publish({ ...loading, id: "search-2" });
-          yield* publish({
-            ...loading,
-            data: { ...loading.data, status: "done" },
-          });
-          return { text: "Verified evidence" };
-        })
+      const snapshots = yield* streamCapability(
+        (publish) =>
+          Effect.gen(function* () {
+            yield* publish(loading);
+            yield* publish({ ...loading, id: "search-2" });
+            yield* publish({
+              ...loading,
+              data: { ...loading.data, status: "done" },
+            });
+            return { text: "Verified evidence" };
+          }),
+        options
       ).pipe(Stream.runCollect);
       expect(snapshots.at(-1)).toEqual({
         text: "Verified evidence",
@@ -51,15 +58,32 @@ it.effect(
     })
 );
 
+it.effect("bounds oversized evidence and tells the model how to continue", () =>
+  Effect.gen(function* () {
+    const snapshots = yield* streamCapability(
+      () =>
+        Effect.succeed({
+          text: "A long lesson paragraph about limits.\n\n".repeat(2000),
+        }),
+      options
+    ).pipe(Stream.runCollect);
+    const text = snapshots.at(-1)?.text ?? "";
+    expect(countTextTokens(text)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
+    expect(text).toContain("Ask a narrower question.");
+  })
+);
+
 it.effect("emits pending evidence before the provider finishes", () =>
   Effect.gen(function* () {
     const observed = yield* Deferred.make<void>();
-    const snapshots = yield* streamCapability((publish) =>
-      Effect.gen(function* () {
-        yield* publish(loading);
-        yield* Deferred.await(observed);
-        return { text: "Finished" };
-      })
+    const snapshots = yield* streamCapability(
+      (publish) =>
+        Effect.gen(function* () {
+          yield* publish(loading);
+          yield* Deferred.await(observed);
+          return { text: "Finished" };
+        }),
+      options
     ).pipe(
       Stream.tap(() => Deferred.succeed(observed, undefined)),
       Stream.runCollect
@@ -73,10 +97,15 @@ it.effect("emits pending evidence before the provider finishes", () =>
 
 it.effect("retains gathered steps with a typed specialist failure", () =>
   Effect.gen(function* () {
-    const snapshots = yield* streamCapability((publish) =>
-      publish(loading).pipe(
-        Effect.as({ text: "Research unavailable", failure: "failed" as const })
-      )
+    const snapshots = yield* streamCapability(
+      (publish) =>
+        publish(loading).pipe(
+          Effect.as({
+            text: "Research unavailable",
+            failure: "failed" as const,
+          })
+        ),
+      options
     ).pipe(Stream.runCollect);
     const final = yield* Schema.decodeUnknownEffect(CapabilityOutputSchema)(
       snapshots.at(-1)
@@ -96,11 +125,13 @@ class EvidenceUnavailable extends Schema.TaggedError<EvidenceUnavailable>()(
 
 it.effect("preserves a typed capability failure after progress", () =>
   Effect.gen(function* () {
-    const result = yield* streamCapability((publish) =>
-      Effect.gen(function* () {
-        yield* publish(loading);
-        return yield* new EvidenceUnavailable();
-      })
+    const result = yield* streamCapability(
+      (publish) =>
+        Effect.gen(function* () {
+          yield* publish(loading);
+          return yield* new EvidenceUnavailable();
+        }),
+      options
     ).pipe(Stream.runCollect, Effect.result);
     expect(Result.isFailure(result) && result.failure._tag).toBe(
       "EvidenceUnavailable"
@@ -113,11 +144,13 @@ it.effect(
   () =>
     Effect.gen(function* () {
       const interrupted = yield* Ref.make(false);
-      yield* streamCapability((publish) =>
-        publish(loading).pipe(
-          Effect.andThen(Effect.never),
-          Effect.ensuring(Ref.set(interrupted, true))
-        )
+      yield* streamCapability(
+        (publish) =>
+          publish(loading).pipe(
+            Effect.andThen(Effect.never),
+            Effect.ensuring(Ref.set(interrupted, true))
+          ),
+        options
       ).pipe(Stream.take(1), Stream.runDrain);
       expect(yield* Ref.get(interrupted)).toBe(true);
     })
@@ -136,7 +169,7 @@ it.effect(
             Effect.andThen(Effect.never),
             Effect.ensuring(Ref.set(stopped, true))
           ),
-        controller.signal
+        { ...options, signal: controller.signal }
       ).pipe(Stream.runDrain, Effect.forkScoped);
       yield* Deferred.await(started);
       controller.abort();
@@ -150,14 +183,14 @@ it.effect(
   "honors an already-aborted Agent call and completes live signals normally",
   () =>
     Effect.gen(function* () {
-      const aborted = yield* streamCapability(
-        () => Effect.never,
-        AbortSignal.abort()
-      ).pipe(Stream.runDrain, Effect.exit);
+      const aborted = yield* streamCapability(() => Effect.never, {
+        ...options,
+        signal: AbortSignal.abort(),
+      }).pipe(Stream.runDrain, Effect.exit);
       expect(Exit.isFailure(aborted)).toBe(true);
       const result = yield* streamCapability(
         () => Effect.succeed({ text: "Completed" }),
-        yield* Effect.abortSignal
+        { ...options, signal: yield* Effect.abortSignal }
       ).pipe(Stream.runCollect);
       expect(result.at(-1)).toEqual({ text: "Completed", artifacts: [] });
     })

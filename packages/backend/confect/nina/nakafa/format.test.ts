@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   formatQuran,
-  formatRead,
   formatSearch,
   formatTaxonomy,
 } from "@repo/backend/confect/nina/nakafa/format";
@@ -39,32 +38,6 @@ describe("Nakafa formatter", () => {
     expect(text).not.toContain(`https://nakafa.com/id/${subjectRoute}`);
     expect(text).not.toContain("Markdown URL:");
     expect(text).toContain("Next offset: none");
-  });
-
-  it("formats full content reads", () => {
-    const text = formatRead({
-      ...readNakafaContentRefFixture("id", subjectRoute, "material"),
-      description: "Pelajari contoh.",
-      text: "Isi materi lengkap.",
-      title: "Contoh Materi",
-    });
-
-    expect(text).toContain("# Nakafa Content");
-    expect(text).not.toContain("Inline citation:");
-    expect(text).not.toContain(`https://nakafa.com/id/${subjectRoute}`);
-    expect(text).not.toContain("Markdown URL:");
-    expect(text).toContain("Isi materi lengkap.");
-  });
-
-  it("omits an unavailable content description", () => {
-    const text = formatRead({
-      ...readNakafaContentRefFixture("id", subjectRoute, "material"),
-      text: "Isi materi lengkap.",
-      title: "Contoh Materi",
-    });
-
-    expect(text).toContain("- Title: Contoh Materi");
-    expect(text).not.toContain("- Description:");
   });
 
   it("formats Quran references with and without tafsir", () => {

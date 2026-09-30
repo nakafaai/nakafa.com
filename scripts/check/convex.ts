@@ -45,6 +45,20 @@ const factories = new Map<string, Origin>([
   ],
   ["@repo/backend/test/polar:createWebhookTestConvex", "client"],
   [
+    "@repo/backend/test/nina:createNinaTest",
+    new Map([
+      ["t", "client"],
+      ["owner", "client"],
+    ]),
+  ],
+  [
+    "@repo/backend/test/nina/focus:createFocusTest",
+    new Map([
+      ["t", "client"],
+      ["owner", "client"],
+    ]),
+  ],
+  [
     "@repo/backend/test/forum/upload:createPendingUpload",
     new Map([
       ["t", "client"],

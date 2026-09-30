@@ -43,7 +43,7 @@ const updateUserName = FunctionImpl.make(
     // Update Better Auth user table
     yield* Effect.promise(async () =>
       ctx.runMutation(components.betterAuth.mutations.updateUserName, {
-        authId: user.authUser._id,
+        authId: user.authId,
         name: args.name,
       })
     );

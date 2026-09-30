@@ -17,7 +17,7 @@ import {
   suggestionGenerationTimeout,
 } from "@repo/backend/confect/nina/config/timeouts";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
-import { boundHistory } from "@repo/backend/confect/nina/history";
+import { assembleContext } from "@repo/backend/confect/nina/history";
 import {
   NinaSuggestions,
   NinaTitle,
@@ -43,23 +43,31 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
     const ctx = yield* ActionCtx;
     const mutate = yield* MutationRunner;
     const model = yield* getGatewayModel(defaultModel);
-    const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
     const suggestions = new Agent(components.nina, {
       name: "suggestions",
       languageModel: model,
       usageHandler,
       instructions: nakafaSuggestions({ locale: turn.page.locale }),
       contextOptions: { recentMessages: 50, excludeToolMessages: true },
-      contextHandler: (_ctx, { allMessages }) =>
-        runPromise(
-          boundHistory([
-            ...allMessages,
-            {
-              role: "user",
-              content:
-                "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
-            },
-          ])
+      // The completed turn is the newest history; the request is the new turn.
+      contextHandler: (_ctx, fetched) =>
+        Promise.resolve(
+          assembleContext({
+            current: [
+              {
+                role: "user",
+                content:
+                  "Generate follow-up suggestions for the student based on Nina's latest answer in this conversation.",
+              },
+            ],
+            currentOrder: turn.order + 1,
+            recent: [
+              ...fetched.recent,
+              ...fetched.inputPrompt,
+              ...fetched.existingResponses,
+            ],
+            throughOrder: null,
+          })
         ),
     });
     const providerOptions = {
