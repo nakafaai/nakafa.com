@@ -215,6 +215,116 @@ describe("CLI workflow policy", () => {
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
+  it.effect("rejects each weakened job boundary", () =>
+    Effect.gen(function* () {
+      const source = yield* readWorkflow();
+      const cases = [
+        {
+          change: source.replace(
+            "            --provenance\n",
+            '            --provenance\n          npx --yes "$NPM_CLI" publish "$TARBALL"\n'
+          ),
+          problem: "CLI publication may execute only one npm publish command.",
+        },
+        {
+          change: source.replace(
+            "      id-token: write\n    steps:\n",
+            "      id-token: write\n    steps:\n      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1\n"
+          ),
+          problem: "CLI publication must not checkout repository code.",
+        },
+        {
+          change: source.replace(
+            "    name: Verify publication\n",
+            "    name: Verify publication\n    environment: npm-production\n"
+          ),
+          problem: "CLI verification must not use a protected environment.",
+        },
+        {
+          change: source.replace(
+            "    needs: build\n    environment: npm-production\n",
+            "    environment: npm-production\n"
+          ),
+          problem: "CLI publication must consume the verified build job.",
+        },
+        {
+          change: source.replace(
+            "          node-version: 24.21.0",
+            "          node-version: 24.20.0"
+          ),
+          problem: "CLI publication must use the repository Node runtime.",
+        },
+        {
+          change: source.replace(
+            "          package-manager-cache: false",
+            "          package-manager-cache: true"
+          ),
+          problem: "CLI publication must disable package-manager caching.",
+        },
+        {
+          change: source.replace(
+            "permissions: {}",
+            "permissions:\n  contents: read"
+          ),
+          problem: "CLI workflow root permissions must remain empty.",
+        },
+        {
+          change: source.replace(
+            "github.ref == 'refs/heads/main' && github.repository",
+            "github.ref == 'refs/heads/next' && github.repository"
+          ),
+          problem: "CLI build must target protected Nakafa main.",
+        },
+        {
+          change: source.replace(
+            "steps.archive.outputs.size }}",
+            "steps.archive.outputs.bytes }}"
+          ),
+          problem: "CLI build must export exact output: size",
+        },
+      ];
+
+      for (const { change, problem } of cases) {
+        assert.notStrictEqual(change, source);
+        assert.include(validateCliWorkflow(change), problem);
+      }
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("accepts equivalent needs and inherited empty permissions", () =>
+    Effect.gen(function* () {
+      const source = yield* readWorkflow();
+      const listedNeeds = source.replace(
+        "    needs: build\n    environment: npm-production\n",
+        "    needs: [build]\n    environment: npm-production\n"
+      );
+      const inheritedPermissions = source.replace(
+        "    permissions: {}\n    steps:\n      - name: Download verified package",
+        "    steps:\n      - name: Download verified package"
+      );
+
+      assert.deepStrictEqual(validateCliWorkflow(listedNeeds), [
+        "CLI publication must match the exact trusted job.",
+      ]);
+      assert.deepStrictEqual(validateCliWorkflow(inheritedPermissions), [
+        "CLI verification must match the exact trusted job.",
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("requires separate build, publish, and verify jobs", () =>
+    Effect.gen(function* () {
+      const source = "permissions: {}\njobs:\n  build:\n    steps: []\n";
+      const problem =
+        "CLI workflow requires separate build, publish, and verify jobs.";
+      const failure = yield* verifyCliWorkflow(source).pipe(Effect.flip);
+
+      assert.deepStrictEqual(validateCliWorkflow(source), [problem]);
+      assert.strictEqual(failure._tag, "CliWorkflowPolicyError");
+      assert.deepStrictEqual(failure.problems, [problem]);
+    })
+  );
+
   it.effect("rejects unverified archives and provenance", () =>
     Effect.gen(function* () {
       const source = yield* readWorkflow();

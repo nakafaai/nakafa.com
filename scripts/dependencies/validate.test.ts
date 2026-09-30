@@ -1,0 +1,340 @@
+import { assert, describe, it } from "@effect/vitest";
+import {
+  DEPENDENCY_HOLDS,
+  VITEST_COHORT_VERSION,
+} from "#scripts/dependencies/policy";
+import {
+  dependencyDeclarations,
+  validateDependencyPolicy,
+} from "#scripts/dependencies/validate";
+
+const CONTRACT_MANIFEST_PATHS = [
+  "apps/www/package.json",
+  "packages/backend/package.json",
+  "packages/contents/package.json",
+  "packages/email/package.json",
+  "packages/internationalization/package.json",
+] as const;
+const CONTRACT_OWNERS = CONTRACT_MANIFEST_PATHS.join(", ");
+const WEB_MANIFEST = "apps/www/package.json";
+
+type PolicyInput = Parameters<typeof validateDependencyPolicy>[0];
+type Manifest = PolicyInput["manifests"][number]["manifest"];
+
+/** Returns the reviewed spec of one exact hold. */
+function approvedSpec(dependency: string) {
+  const hold = DEPENDENCY_HOLDS.find(
+    (candidate) => candidate.dependency === dependency
+  );
+  return hold !== undefined && "approved" in hold ? hold.approved : "";
+}
+
+/** Builds manifests and workspace settings that satisfy every reviewed hold. */
+function validInput(): PolicyInput {
+  const manifests = CONTRACT_MANIFEST_PATHS.map((path, index) => ({
+    manifest: {
+      dependencies: Object.fromEntries(
+        DEPENDENCY_HOLDS.filter((hold) =>
+          "declarationPaths" in hold
+            ? hold.declarationPaths.includes(path)
+            : index === 0
+        ).map((hold) => [
+          hold.dependency,
+          "approved" in hold ? hold.approved : hold.allowed[0],
+        ])
+      ),
+      scripts:
+        index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.14" } : undefined,
+    },
+    path,
+  }));
+  const ignoreDeps = [
+    ...new Set([
+      ...DEPENDENCY_HOLDS.map(({ dependency }) => dependency),
+      "node",
+      "pnpm",
+    ]),
+  ].sort();
+  return {
+    manifests,
+    rootManifest: {
+      devEngines: { runtime: { version: "24.21.0" } },
+      packageManager: "pnpm@11.27.0",
+    },
+    workspace: {
+      catalog: {
+        "@effect/platform-node": "4.0.0-rc.117",
+        "@effect/vitest": "4.0.0-rc.117",
+        "@vitest/coverage-istanbul": VITEST_COHORT_VERSION,
+        "@vitest/ui": VITEST_COHORT_VERSION,
+        effect: "4.0.0-rc.117",
+        typescript: "7.0.2",
+        vitest: VITEST_COHORT_VERSION,
+      },
+      overrides: {
+        "@effect/platform-node": "4.0.0-rc.117",
+        "@effect/platform-node-shared": "4.0.0-rc.117",
+      },
+      update: { ignoreDeps },
+    },
+  };
+}
+
+/** Replaces the web manifest, which owns every single-consumer hold. */
+function updateWebManifest(
+  input: PolicyInput,
+  update: (manifest: Manifest) => Manifest
+): PolicyInput {
+  return {
+    ...input,
+    manifests: input.manifests.map((entry) =>
+      entry.path === WEB_MANIFEST
+        ? { ...entry, manifest: update(entry.manifest) }
+        : entry
+    ),
+  };
+}
+
+/** Removes one dependency from every manifest. */
+function withoutDependency(input: PolicyInput, dependency: string) {
+  return {
+    ...input,
+    manifests: input.manifests.map(({ manifest, path }) => ({
+      manifest: {
+        ...manifest,
+        dependencies: Object.fromEntries(
+          Object.entries(manifest.dependencies ?? {}).filter(
+            ([name]) => name !== dependency
+          )
+        ),
+      },
+      path,
+    })),
+  };
+}
+
+describe("dependency policy validation", () => {
+  it("accepts every reviewed dependency cohort", () => {
+    assert.deepStrictEqual(validateDependencyPolicy(validInput()), []);
+  });
+
+  it("finds declarations in every dependency group", () => {
+    const declarations = dependencyDeclarations(
+      [
+        {
+          manifest: {
+            dependencies: { effect: "catalog:" },
+            devDependencies: { effect: "catalog:" },
+            optionalDependencies: { effect: "catalog:" },
+            peerDependencies: { effect: "4.0.0-rc.115" },
+          },
+          path: "package.json",
+        },
+      ],
+      "effect"
+    );
+
+    assert.deepStrictEqual(
+      declarations.map(({ group }) => group),
+      [
+        "dependencies",
+        "devDependencies",
+        "optionalDependencies",
+        "peerDependencies",
+      ]
+    );
+  });
+
+  it.each<{
+    readonly change: (input: PolicyInput) => PolicyInput;
+    readonly name: string;
+    readonly problem: string;
+  }>([
+    {
+      name: "a contract consumer outside the reviewed owners",
+      change: (input) => ({
+        ...input,
+        manifests: [
+          ...input.manifests,
+          {
+            manifest: {
+              dependencies: { "@nakafa/aksara-contracts": "0.42.0" },
+            },
+            path: "packages/cli/package.json",
+          },
+        ],
+      }),
+      problem:
+        "@nakafa/aksara-contracts declarations are apps/www/package.json, packages/backend/package.json, packages/cli/package.json, packages/contents/package.json, packages/email/package.json, packages/internationalization/package.json; " +
+        `expected ${CONTRACT_OWNERS}.`,
+    },
+    {
+      name: "missing contract consumers",
+      change: (input) => withoutDependency(input, "@nakafa/aksara-contracts"),
+      problem: `@nakafa/aksara-contracts declarations are missing; expected ${CONTRACT_OWNERS}.`,
+    },
+    {
+      name: "a missing held dependency",
+      change: (input) => withoutDependency(input, "react"),
+      problem: "react has 0 declarations; expected at least 1.",
+    },
+    {
+      name: "an unapproved exact version",
+      change: (input) =>
+        updateWebManifest(input, (manifest) => ({
+          ...manifest,
+          dependencies: { ...manifest.dependencies, next: "0.0.0" },
+        })),
+      problem: `apps/www/package.json declares next as 0.0.0; approved ${approvedSpec("next")}.`,
+    },
+    {
+      name: "a spec outside the allowed list",
+      change: (input) =>
+        updateWebManifest(input, (manifest) => ({
+          ...manifest,
+          dependencies: { ...manifest.dependencies, typescript: "^7.0.0" },
+        })),
+      problem:
+        "apps/www/package.json declares typescript as ^7.0.0; approved 7.0.2 or catalog: or npm:typescript@7.0.2.",
+    },
+    {
+      name: "an obsolete Effect package",
+      change: (input) =>
+        updateWebManifest(input, (manifest) => ({
+          ...manifest,
+          devDependencies: { "@effect/platform": "0.97.1" },
+        })),
+      problem:
+        "apps/www/package.json retains obsolete Effect dependency @effect/platform.",
+    },
+    {
+      name: "a drifted reviewed script",
+      change: (input) =>
+        updateWebManifest(input, (manifest) => ({
+          ...manifest,
+          scripts: { doctor: "pnpm dlx react-doctor@0.9.5" },
+        })),
+      problem:
+        "apps/www/package.json script doctor is pnpm dlx react-doctor@0.9.5; approved pnpm dlx react-doctor@0.9.14.",
+    },
+    {
+      name: "a missing reviewed script",
+      change: (input) =>
+        updateWebManifest(input, (manifest) => ({
+          ...manifest,
+          scripts: undefined,
+        })),
+      problem:
+        "apps/www/package.json script doctor is missing; approved pnpm dlx react-doctor@0.9.14.",
+    },
+    {
+      name: "missing update ignores",
+      change: (input) => ({
+        ...input,
+        workspace: { ...input.workspace, update: undefined },
+      }),
+      problem:
+        "pnpm update.ignoreDeps does not match the reviewed hold policy.",
+    },
+    {
+      name: "an Effect catalog drift",
+      change: (input) => ({
+        ...input,
+        workspace: {
+          ...input.workspace,
+          catalog: { ...input.workspace.catalog, effect: "4.0.0-rc.116" },
+        },
+      }),
+      problem: "The Effect catalog must be exactly 4.0.0-rc.117.",
+    },
+    {
+      name: "a platform-node catalog drift",
+      change: (input) => ({
+        ...input,
+        workspace: {
+          ...input.workspace,
+          catalog: {
+            ...input.workspace.catalog,
+            "@effect/platform-node": "4.0.0-rc.116",
+          },
+        },
+      }),
+      problem: "The platform-node catalog must match Effect RC 117.",
+    },
+    {
+      name: "an Effect Vitest catalog drift",
+      change: (input) => ({
+        ...input,
+        workspace: {
+          ...input.workspace,
+          catalog: {
+            ...input.workspace.catalog,
+            "@effect/vitest": "4.0.0-rc.116",
+          },
+        },
+      }),
+      problem: "The Effect Vitest catalog must match Effect RC 117.",
+    },
+    ...["@effect/platform-node", "@effect/platform-node-shared"].map(
+      (dependency) => ({
+        name: `a ${dependency} override drift`,
+        change: (input: PolicyInput) => ({
+          ...input,
+          workspace: {
+            ...input.workspace,
+            overrides: {
+              ...input.workspace.overrides,
+              [dependency]: "4.0.0-rc.110",
+            },
+          },
+        }),
+        problem: `The ${dependency} override must match Effect RC 117.`,
+      })
+    ),
+    {
+      name: "a TypeScript catalog drift",
+      change: (input) => ({
+        ...input,
+        workspace: {
+          ...input.workspace,
+          catalog: { ...input.workspace.catalog, typescript: "7.0.1" },
+        },
+      }),
+      problem: "The native TypeScript catalog must be exactly 7.0.2.",
+    },
+    {
+      name: "a Vitest cohort drift",
+      change: (input) => ({
+        ...input,
+        workspace: {
+          ...input.workspace,
+          catalog: { ...input.workspace.catalog, "@vitest/ui": "5.0.0" },
+        },
+      }),
+      problem: `@vitest/ui must match the supported Vitest ${VITEST_COHORT_VERSION} cohort.`,
+    },
+    {
+      name: "a package manager drift",
+      change: (input) => ({
+        ...input,
+        rootManifest: { ...input.rootManifest, packageManager: "pnpm@11.26.0" },
+      }),
+      problem: "packageManager must be pnpm@11.27.0.",
+    },
+    {
+      name: "a Node runtime drift",
+      change: (input) => ({
+        ...input,
+        rootManifest: {
+          ...input.rootManifest,
+          devEngines: { runtime: { version: "24.20.0" } },
+        },
+      }),
+      problem: "The managed Node runtime must be 24.21.0.",
+    },
+  ])("reports $name", ({ change, problem }) => {
+    assert.deepStrictEqual(validateDependencyPolicy(change(validInput())), [
+      problem,
+    ]);
+  });
+});

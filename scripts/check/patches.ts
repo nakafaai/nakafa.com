@@ -1,6 +1,6 @@
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path } from "effect";
 import { readRepositoryFiles } from "#scripts/check/files";
+import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
 const PATCHED_DEPENDENCIES_PATTERN = /^patchedDependencies:/mu;
@@ -61,17 +61,4 @@ export const checkPatchPolicy = Effect.fn("RepositoryPolicy.checkPatches")(
   }
 );
 
-if (import.meta.main) {
-  NodeRuntime.runMain(
-    checkPatchPolicy(process.cwd()).pipe(
-      Effect.tap((status) =>
-        status === 0
-          ? Effect.void
-          : Effect.sync(() => {
-              process.exitCode = status;
-            })
-      ),
-      Effect.provide(NodeServices.layer)
-    )
-  );
-}
+runEntry(import.meta.main, checkPatchPolicy(process.cwd()));

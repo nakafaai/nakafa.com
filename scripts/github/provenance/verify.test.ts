@@ -117,6 +117,27 @@ describe("npm provenance", () => {
     })
   );
 
+  it.effect("rejects audits that are not JSON evidence", () =>
+    Effect.gen(function* () {
+      let verified = false;
+      const result = yield* verifyProvenance("{", EXPECTATION).pipe(
+        Effect.provide(
+          verifier(statement(), () => {
+            verified = true;
+          })
+        ),
+        Effect.result
+      );
+
+      assert(Result.isFailure(result));
+      assert.strictEqual(
+        result.failure.message,
+        "The npm signature audit is not valid JSON evidence."
+      );
+      assert.strictEqual(verified, false);
+    })
+  );
+
   it.effect("rejects invalid audits before trusting a bundle", () =>
     Effect.gen(function* () {
       const result = yield* verifyProvenance(
