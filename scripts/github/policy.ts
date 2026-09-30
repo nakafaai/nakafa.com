@@ -2,10 +2,6 @@ import { Effect, FileSystem, Option, Path, Schema } from "effect";
 import { parse as yamlParse } from "yaml";
 
 const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
-const PNPM_STORE = "pnpm-store";
-const PNPM_STORE_PREFIX = `${PNPM_STORE}-\${{ runner.os }}-\${{ runner.arch }}-`;
-const PNPM_STORE_KEY = `${PNPM_STORE_PREFIX}\${{ hashFiles('pnpm-lock.yaml') }}`;
-const PNPM_STORE_PATH = `\${{ steps.${PNPM_STORE}.outputs.path }}`;
 const UnknownRecord = Schema.Record(Schema.String, Schema.Unknown);
 const NonNegativeInteger = Schema.Finite.pipe(
   Schema.check(Schema.isInt()),
@@ -48,28 +44,7 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     expectedTag: "v3.0.0",
     expectedUsages: 7,
     reason:
-      "The signed successor action owns Node and pnpm. Its v3 cache saves a full store from every job, so the store cache stays explicit.",
-  },
-  {
-    action: "actions/cache/restore",
-    approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
-    expectedInputs: {
-      key: PNPM_STORE_KEY,
-      path: PNPM_STORE_PATH,
-      "restore-keys": PNPM_STORE_PREFIX,
-    },
-    expectedTag: "v6.1.0",
-    expectedUsages: 7,
-    reason:
-      "Every pnpm job restores the lockfile-keyed store, and only main saves it once per lockfile.",
-  },
-  {
-    action: "actions/cache/save",
-    approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
-    expectedInputs: { key: PNPM_STORE_KEY, path: PNPM_STORE_PATH },
-    expectedTag: "v6.1.0",
-    expectedUsages: 1,
-    reason: "The main Packages job saves the pruned store after an exact miss.",
+      "The signed successor action owns Node and pnpm. The store stays uncached because a cold install beats restoring it on hosted runners.",
   },
   {
     action: "changesets/action",

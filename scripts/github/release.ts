@@ -1,6 +1,9 @@
 import { Effect, Option, Redacted, Schema } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { GITHUB_ACTION_REVIEWS } from "#scripts/github/policy";
+import {
+  GITHUB_ACTION_REVIEWS,
+  type GithubActionReview,
+} from "#scripts/github/policy";
 
 const GithubRelease = Schema.Struct({ tag_name: Schema.String });
 
@@ -29,10 +32,12 @@ function actionRepository(action: string) {
 /** Returns one consistent latest-release review for each upstream repository. */
 export const githubActionReleaseReviews = Effect.fn(
   "RepositoryPolicy.githubActionReleaseReviews"
-)(function* () {
+)(function* (
+  actionReviews: readonly GithubActionReview[] = GITHUB_ACTION_REVIEWS
+) {
   const reviews = new Map<string, GithubActionReleaseReview>();
 
-  for (const actionReview of GITHUB_ACTION_REVIEWS) {
+  for (const actionReview of actionReviews) {
     const repository = actionRepository(actionReview.action);
     const existing = reviews.get(repository);
     const review = {

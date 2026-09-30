@@ -1,10 +1,15 @@
-interface DependencyHold {
-  readonly allowed?: readonly string[];
-  readonly approved?: string;
-  readonly declarationPaths?: readonly string[];
-  readonly dependency: string;
-  readonly minimumDeclarations?: number;
-}
+/** The exact specs one reviewed dependency may declare. */
+type ApprovedSpecs =
+  | { readonly allowed: readonly [string, ...string[]] }
+  | { readonly approved: string };
+
+/** The manifests that must declare one reviewed dependency. */
+type DeclarationOwners =
+  | { readonly declarationPaths: readonly string[] }
+  | { readonly minimumDeclarations: number };
+
+type DependencyHold = ApprovedSpecs &
+  DeclarationOwners & { readonly dependency: string };
 
 export const CONTRACT_PACKAGE_VERSION = "0.42.0";
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
