@@ -152,6 +152,25 @@ describe("owned signed acceptance runtime", () => {
       }).pipe(Effect.provide(nodeServicesLayer))
   );
 
+  it.live("refuses to discard signed responses from a redirected cache", () =>
+    Effect.gen(function* () {
+      const { fs, root } = yield* fixture;
+      const shared = yield* fs.makeTempDirectoryScoped({
+        directory: tmpdir(),
+        prefix: "acceptance-shared-cache-",
+      });
+      yield* fs.makeDirectory(`${shared}/fetch-cache`);
+      yield* fs.writeFileString(`${shared}/fetch-cache/entry`, "{}");
+      yield* fs.makeDirectory(`${root}/apps/www/.next`, { recursive: true });
+      yield* fs.symlink(shared, `${root}/apps/www/.next/cache`);
+      const failure = yield* discardSignedResponses(root).pipe(Effect.flip);
+      expect(failure.message).toBe(
+        "The Next.js build cache must belong to this checkout."
+      );
+      expect(yield* fs.exists(`${shared}/fetch-cache/entry`)).toBe(true);
+    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
   it.live(
     "keeps the runtime for a retry when its signed responses cannot be removed",
     () =>

@@ -110,16 +110,23 @@ const directoryIdentity = Effect.fn("contentAcceptance.directoryIdentity")(
  * Next reuses cached fetch responses across builds, but every runtime signs with
  * a new random key, and any other build may write the same cache. Responses
  * signed by another key can never verify, so every acceptance build starts
- * without them and cleanup leaves none behind.
+ * without them and cleanup leaves none behind. A cache redirected outside the
+ * checkout is refused, so the removal never reaches a shared cache.
  */
 export const discardSignedResponses = Effect.fn(
   "contentAcceptance.discardSignedResponses"
 )(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.remove(`${root}/apps/www/.next/cache/fetch-cache`, {
-    force: true,
-    recursive: true,
-  });
+  const cache = `${root}/apps/www/.next/cache`;
+  if (!(yield* fs.exists(cache))) {
+    return;
+  }
+  if ((yield* fs.realPath(cache)) !== cache) {
+    return yield* acceptanceRuntimeError(
+      "The Next.js build cache must belong to this checkout."
+    );
+  }
+  yield* fs.remove(`${cache}/fetch-cache`, { force: true, recursive: true });
 });
 
 /** Reserves one private runtime without changing the checkout's Convex selection. */
