@@ -81,7 +81,16 @@ describe("GitHub Action policy", () => {
                 branches: ["main"],
                 types: ["checks_requested"],
               },
-              pull_request: expect.any(Object),
+              // Edits never rerun CI, and stacked pull requests run on their
+              // own base before GitHub retargets them to main.
+              pull_request: {
+                types: [
+                  "opened",
+                  "synchronize",
+                  "reopened",
+                  "ready_for_review",
+                ],
+              },
             }),
           })
         );
