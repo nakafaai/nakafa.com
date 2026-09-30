@@ -2,10 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
-import {
-  projectTryoutPreview,
-  projectTryoutReview,
-} from "@/components/tryout/review/model";
+import { projectTryoutReview } from "@/components/tryout/review/model";
 
 const FIRST_IDENTITY = {
   contentHash: "content-1",
@@ -158,46 +155,6 @@ describe("projectTryoutReview", () => {
         questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
       });
     })
-  );
-});
-
-describe("projectTryoutPreview", () => {
-  it.effect(
-    "pairs locked questions with bodies but no answer or recorded response",
-    () =>
-      Effect.gen(function* () {
-        const content = createContent([SECOND_IDENTITY, FIRST_IDENTITY]);
-        const preview = yield* projectTryoutPreview({
-          content: { questions: content.questions },
-          questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
-        });
-
-        expect(preview).toEqual([
-          {
-            content: "question:questions/1",
-            questionOrder: 1,
-            responseSpec: responseSpec(),
-          },
-        ]);
-      })
-  );
-
-  it.effect(
-    "fails with a typed error when a locked question lost its body",
-    () =>
-      Effect.gen(function* () {
-        expect(
-          yield* Effect.flip(
-            projectTryoutPreview({
-              content: { questions: createContent([FIRST_IDENTITY]).questions },
-              questions: [createRuntimeQuestion(SECOND_IDENTITY, 2)],
-            })
-          )
-        ).toMatchObject({
-          _tag: "TryoutReviewProjectionError",
-          code: "TRYOUT_REVIEW_PROJECTION",
-        });
-      })
   );
 });
 

@@ -2,6 +2,7 @@ import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
 import { loadAttemptRuntimeBundle } from "@repo/backend/confect/tryouts/runtime/attempt/source";
+import { isTryoutReviewPreviewQuestion } from "@repo/backend/confect/tryouts/runtime/content";
 import { selectorIntegrity } from "@repo/backend/confect/tryouts/runtime/ownership";
 import type {
   TryoutAnswerSelector,
@@ -13,7 +14,11 @@ import { Effect } from "effect";
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 
-/** Projects protected selectors from already-loaded frozen placements. */
+/**
+ * Projects protected selectors from already-loaded frozen placements. Pro
+ * learners receive every answer; a free learner's finished section receives
+ * only the answers of its leading preview questions.
+ */
 export const projectTryoutSignedContent = Effect.fn(
   "tryouts.selectors.projectSignedContent"
 )(function* (input: {
@@ -21,6 +26,7 @@ export const projectTryoutSignedContent = Effect.fn(
   readonly attempt: TryoutAttempt;
   readonly appLocale: AppLocaleCode;
   readonly placements: readonly TryoutPlacement[];
+  readonly preview: boolean;
   readonly totalQuestions: number;
 }) {
   if (input.placements.length !== input.totalQuestions) {
@@ -29,16 +35,26 @@ export const projectTryoutSignedContent = Effect.fn(
     );
   }
   const bundle = yield* loadAttemptRuntimeBundle(input.attempt);
+  const answerSelector = (placement: TryoutPlacement) =>
+    makeAnswerSelector(
+      placement,
+      bundle.bundleHash,
+      input.appLocale,
+      input.attempt.tryoutSnapshotId,
+      input.attempt.snapshotReleaseId,
+      input.attempt
+    );
   const answers = input.answers
-    ? yield* Effect.forEach(input.placements, (placement) =>
-        makeAnswerSelector(
-          placement,
-          bundle.bundleHash,
-          input.appLocale,
-          input.attempt.tryoutSnapshotId,
-          input.attempt.snapshotReleaseId,
-          input.attempt
-        )
+    ? yield* Effect.forEach(input.placements, answerSelector)
+    : [];
+  const previewAnswers = input.preview
+    ? yield* Effect.forEach(
+        input.placements
+          .filter((placement) =>
+            isTryoutReviewPreviewQuestion(placement.questionOrder)
+          )
+          .sort((left, right) => left.questionOrder - right.questionOrder),
+        answerSelector
       )
     : [];
   const questions = yield* Effect.forEach(input.placements, (placement) =>
@@ -53,6 +69,7 @@ export const projectTryoutSignedContent = Effect.fn(
   return {
     answers,
     kind: "signed",
+    previewAnswers,
     questions,
   } satisfies TryoutSectionContentAccess;
 });
