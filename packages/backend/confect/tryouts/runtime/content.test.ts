@@ -129,6 +129,65 @@ describe("try-out review entitlement", () => {
       })
   );
   it.effect(
+    "opens every answer to Pro and only the preview to a free learner",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const t = createConvexTestWithBetterAuth();
+        const seeded = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            seedTryoutContentAccessState(ctx, {
+              attemptStatus: "completed",
+              sectionStatus: "completed",
+              suffix: "review-preview",
+            })
+          )
+        );
+        const readAccess = (
+          plan: "free" | "pro",
+          sectionStatus: "completed" | "in-progress"
+        ) =>
+          Effect.promise(() =>
+            t.mutation(async (ctx) => {
+              await ctx.db.patch("users", seeded.identity.userId, { plan });
+              const attempt = await ctx.db.get(
+                "tryoutAttempts",
+                seeded.attemptId
+              );
+              assert.isNotNull(attempt);
+              return Effect.runPromiseWith(runtimeServices)(
+                readTryoutSectionContentAccess(
+                  sectionStatus === "in-progress"
+                    ? { ...attempt, status: "in-progress" }
+                    : attempt,
+                  sectionStatus
+                ).pipe(
+                  Effect.provide(
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
+              );
+            })
+          );
+        assert.deepStrictEqual(yield* readAccess("pro", "completed"), {
+          answers: true,
+          preview: false,
+          questions: true,
+        });
+        assert.deepStrictEqual(yield* readAccess("free", "completed"), {
+          answers: false,
+          preview: true,
+          questions: true,
+        });
+        // An unfinished section never previews answers, whatever the plan.
+        assert.deepStrictEqual(yield* readAccess("free", "in-progress"), {
+          answers: false,
+          preview: false,
+          questions: true,
+        });
+      })
+  );
+  it.effect(
     "does not release review content after its account has been removed",
     () =>
       Effect.gen(function* () {
@@ -163,6 +222,7 @@ describe("try-out review entitlement", () => {
         );
         assert.deepStrictEqual(access, {
           answers: false,
+          preview: false,
           questions: false,
         });
       })
