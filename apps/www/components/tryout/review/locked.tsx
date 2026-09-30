@@ -83,79 +83,93 @@ export async function TryoutReviewLocked({
   return (
     <section
       aria-labelledby="tryout-review-offer"
-      className="relative isolate"
+      className="relative isolate -mx-6 -mb-6 flex flex-1 flex-col justify-end overflow-hidden md:min-h-104 md:items-center md:justify-center md:p-6"
       data-slot="tryout-review-locked"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none h-160 select-none overflow-hidden sm:h-176"
+        className="pointer-events-none absolute inset-x-0 top-0 select-none space-y-12 px-6 pt-1"
         inert
       >
-        <div className="space-y-12">
-          {preview.map((question) => (
-            <TryoutLockedQuestionShell
-              key={question.questionOrder}
+        {preview.map((question) => (
+          <TryoutLockedQuestionShell
+            key={question.questionOrder}
+            questionOrder={question.questionOrder}
+          >
+            <section className="my-6">{question.content}</section>
+            <section className="my-8">
+              {/* Correctness is not authorized here, so no choice is marked. */}
+              <TryoutReviewedResponse
+                questionOrder={question.questionOrder}
+                responseSpec={question.responseSpec}
+                selection={null}
+              />
+            </section>
+            <TryoutReviewQuestionExplanation
               questionOrder={question.questionOrder}
             >
-              <section className="my-6">{question.content}</section>
-              <section className="my-8">
-                {/* Correctness is not authorized here, so no choice is marked. */}
-                <TryoutReviewedResponse
-                  questionOrder={question.questionOrder}
-                  responseSpec={question.responseSpec}
-                  selection={null}
-                />
-              </section>
-              <TryoutReviewQuestionExplanation
-                questionOrder={question.questionOrder}
-              >
-                {question.answer}
-              </TryoutReviewQuestionExplanation>
-            </TryoutLockedQuestionShell>
-          ))}
-        </div>
+              {question.answer}
+            </TryoutReviewQuestionExplanation>
+          </TryoutLockedQuestionShell>
+        ))}
       </div>
 
       {/*
-       * The veil reaches through the article gutter so it spans the screen on
-       * phones and ends in plain background elsewhere; its blur and tint fade
-       * in from the top and settle into the page background at the bottom.
+       * The section fills the page below the result and ends at the screen
+       * edge, so nothing scrolls; the offer in flow sets its smallest height.
+       * One blur covers the whole preview, and the page background rises from
+       * the bottom until the preview melts into it.
        */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-x-6 inset-y-0 bg-linear-to-b from-transparent via-65% via-background/50 to-background backdrop-blur-[2px] [mask-image:linear-gradient(to_bottom,transparent,black_8rem)]"
+        className="pointer-events-none absolute inset-0 bg-linear-to-t from-5% from-background via-35% via-background/75 to-80% to-background/0 backdrop-blur-[2px]"
       />
 
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-full max-w-md">
-          <CardSection>
-            <CardHeader>
-              <CardTitle>
-                <h2 id="tryout-review-offer">
-                  {t("paywall-title", { count: runtime.questions.length })}
-                </h2>
-              </CardTitle>
-              <CardDescription>{t("paywall-description")}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PricingPrice
-                Price={StaticPrice}
-                period={tPricing("pro-period")}
-                plan="pro"
-              />
-            </CardContent>
-            <CardSectionFooter className="flex-col-reverse items-stretch gap-2 sm:flex-row sm:justify-end">
-              <IntentLink
-                className={buttonVariants({ variant: "outline" })}
-                href="/pricing"
-              >
-                {t("paywall-compare")}
-              </IntentLink>
-              <TryoutReviewCheckout />
-            </CardSectionFooter>
-          </CardSection>
-        </div>
-      </div>
+      <TryoutReviewOffer
+        compare={t("paywall-compare")}
+        description={t("paywall-description")}
+        period={tPricing("pro-period")}
+        title={t("paywall-title", { count: runtime.questions.length })}
+      />
     </section>
+  );
+}
+
+/**
+ * The Pro offer: a bottom sheet with the drawer's anatomy on phones and a
+ * centered dialog card from the medium breakpoint up.
+ */
+function TryoutReviewOffer({
+  compare,
+  description,
+  period,
+  title,
+}: {
+  readonly compare: string;
+  readonly description: string;
+  readonly period: string;
+  readonly title: string;
+}) {
+  return (
+    <CardSection className="relative w-full shadow-lg/5 max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-t max-md:ring-0 md:max-w-md">
+      <CardHeader>
+        <CardTitle>
+          <h2 id="tryout-review-offer">{title}</h2>
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <PricingPrice Price={StaticPrice} period={period} plan="pro" />
+      </CardContent>
+      <CardSectionFooter className="flex-col-reverse items-stretch gap-2 max-md:rounded-none max-md:pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))] md:flex-row md:justify-end">
+        <IntentLink
+          className={buttonVariants({ variant: "outline" })}
+          href="/pricing"
+        >
+          {compare}
+        </IntentLink>
+        <TryoutReviewCheckout />
+      </CardSectionFooter>
+    </CardSection>
   );
 }
