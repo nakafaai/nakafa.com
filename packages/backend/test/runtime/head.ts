@@ -14,7 +14,10 @@ import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { writeSearchEntry } from "@repo/backend/confect/contentRelease/search/write";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { testArtifactJson } from "@repo/backend/test/content/artifact";
+import {
+  insertTestArtifact,
+  testArtifactJson,
+} from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import { testSignedArtifact } from "@repo/backend/test/content/proof";
 import {
@@ -23,7 +26,6 @@ import {
   testTextHash,
 } from "@repo/backend/test/content/release";
 import {
-  TEST_RUNTIME_NOW,
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime/values";
@@ -70,7 +72,7 @@ export async function insertRuntimeArtifact(
     "compiledCode" | "plainText" | "rendererDomain"
   >
 ) {
-  await ctx.db.insert("contentArtifacts", {
+  await insertTestArtifact(ctx, {
     artifactHash,
     artifactJson: testArtifactJson({
       artifactHash,
@@ -87,8 +89,6 @@ export async function insertRuntimeArtifact(
           }),
       rendererDomain: options?.rendererDomain,
     }),
-    createdAt: TEST_RUNTIME_NOW,
-    retainUntil: Number.MAX_SAFE_INTEGER,
   });
 }
 

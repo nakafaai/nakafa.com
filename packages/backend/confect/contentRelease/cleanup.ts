@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { validateAbortedRelease } from "@repo/backend/confect/contentRelease/abort";
+import { deleteStoredArtifact } from "@repo/backend/confect/contentRelease/artifact/facts";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   loadRelease,
@@ -69,7 +70,12 @@ export const ensureEligible = Effect.fn("contentRelease.ensureCleanupEligible")(
   }
 );
 
-/** Deletes one bounded artifact page while retaining every MVCC anchor. */
+/**
+ * Deletes one bounded artifact page while retaining every MVCC anchor.
+ *
+ * Pages read only the small artifact facts. A body stored before facts is left
+ * for the facts backfill, which gives it a full retention window first.
+ */
 export const cleanupProgram = Effect.fn("contentRelease.cleanup")(function* (
   releaseId: string
 ) {
@@ -97,7 +103,7 @@ export const cleanupProgram = Effect.fn("contentRelease.cleanup")(function* (
   }
   const cleanupHash = release.cleanupHash;
   const page = yield* (yield* DatabaseReader)
-    .table("contentArtifacts")
+    .table("contentArtifactFacts")
     .index("by_artifactHash", (query) =>
       cleanupHash ? query.gt("artifactHash", cleanupHash) : query
     )
@@ -111,18 +117,15 @@ export const cleanupProgram = Effect.fn("contentRelease.cleanup")(function* (
   const rows = page.page;
   let deleted = 0;
   let futureAt = release.cleanupFutureAt;
-  for (const artifact of rows) {
-    if (yield* isArtifactReferenced(artifact.artifactHash)) {
+  for (const facts of rows) {
+    if (yield* isArtifactReferenced(facts.artifactHash)) {
       continue;
     }
-    if (artifact.retainUntil > now) {
-      futureAt = Math.min(
-        futureAt ?? artifact.retainUntil,
-        artifact.retainUntil
-      );
+    if (facts.retainUntil > now) {
+      futureAt = Math.min(futureAt ?? facts.retainUntil, facts.retainUntil);
       continue;
     }
-    yield* writer.table("contentArtifacts").delete(artifact._id);
+    yield* deleteStoredArtifact(facts);
     deleted += 1;
   }
   const exhausted = page.isDone;

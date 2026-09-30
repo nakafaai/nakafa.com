@@ -9,11 +9,11 @@ import {
   compactProgram,
   runProgram,
 } from "@repo/backend/confect/contentRelease/compact";
-import { ARTIFACT_PAGE_COUNT } from "@repo/backend/confect/contentRelease/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { insertTestArtifact } from "@repo/backend/test/content/artifact";
 import {
   COMPACTION_OLD_TIME,
   compactionIdentity,
@@ -100,6 +100,7 @@ describe("contentRelease/compact", () => {
     const stored = await t.run(async (ctx) => ({
       artifacts: await ctx.db.query("contentArtifacts").collect(),
       bindings: await ctx.db.query("contentBindings").collect(),
+      facts: await ctx.db.query("contentArtifactFacts").collect(),
       heads: await ctx.db.query("contentHeads").collect(),
       items: await ctx.db.query("contentItems").collect(),
       search: await ctx.db.query("contentIndex").collect(),
@@ -129,13 +130,19 @@ describe("contentRelease/compact", () => {
     expect(stored.releases.map((row) => row.sequence).sort()).toEqual([
       3, 4, 5,
     ]);
-    expect(stored.artifacts.map((row) => row.artifactHash).sort()).toEqual([
+    const retained = [
       `sha256:${"c".repeat(64)}`,
       `sha256:${"d".repeat(64)}`,
       `sha256:${"f".repeat(64)}`,
-    ]);
+    ];
+    expect(stored.artifacts.map((row) => row.artifactHash).sort()).toEqual(
+      retained
+    );
+    expect(stored.facts.map((row) => row.artifactHash).sort()).toEqual(
+      retained
+    );
     expect(
-      stored.artifacts.find(
+      stored.facts.find(
         ({ artifactHash }) => artifactHash === `sha256:${"c".repeat(64)}`
       )?.retainUntil
     ).toBeGreaterThan(Date.now());
@@ -198,91 +205,12 @@ describe("contentRelease/compact", () => {
     });
     expect(sequences.sort()).toEqual([2, 3, 4, 5]);
   });
-  it("freezes artifact expiry at the durable cycle start", async () => {
-    const t = convexTest(schema, convexModules);
-    const expiredHash = `sha256:${"1".repeat(64)}`;
-    const futureHash = `sha256:${"2".repeat(64)}`;
-    await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentState", {
-        articleSlot: "blue",
-        compactFloor: 1,
-        compactFrom: 0,
-        compactPhase: "artifacts",
-        compactStartedAt: 0,
-        key: "primary",
-        materialSlot: "blue",
-        nextSequence: 2,
-        searchSlot: "blue",
-        updatedAt: 0,
-      });
-      for (const artifact of [
-        {
-          artifactHash: expiredHash,
-          retainUntil: 0,
-        },
-        {
-          artifactHash: futureHash,
-          retainUntil: 1,
-        },
-      ]) {
-        await ctx.db.insert("contentArtifacts", {
-          artifactHash: artifact.artifactHash,
-          artifactJson: "{}",
-          createdAt: 0,
-          retainUntil: artifact.retainUntil,
-        });
-      }
-    });
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          compactProgram().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      complete: false,
-      deleted: 1,
-      phase: "snapshots",
-    });
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          compactProgram().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      complete: false,
-      floor: 1,
-      phase: "releases",
-    });
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          compactProgram().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      complete: true,
-      floor: 1,
-    });
-    const hashes = await t.run(async (ctx) =>
-      (await ctx.db.query("contentArtifacts").collect()).map(
-        ({ artifactHash }) => artifactHash
-      )
-    );
-    expect(hashes).toEqual([futureHash]);
-  });
-  it("yields artifact compaction at the bounded maintenance page", async () => {
+  it("advances a cycle stored in the retired body scan without its cursor", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentState", {
         articleSlot: "blue",
+        compactCursor: "retired-body-scan-cursor",
         compactFloor: 1,
         compactFrom: 0,
         compactPhase: "artifacts",
@@ -293,41 +221,40 @@ describe("contentRelease/compact", () => {
         searchSlot: "blue",
         updatedAt: 0,
       });
-      for (let index = 0; index < ARTIFACT_PAGE_COUNT + 1; index += 1) {
-        await ctx.db.insert("contentArtifacts", {
-          artifactHash: `sha256:${index.toString(16).padStart(64, "0")}`,
-          artifactJson: "{}",
-          createdAt: 0,
-          retainUntil: 0,
-        });
-      }
+      await insertTestArtifact(ctx, {
+        artifactHash: `sha256:${"1".repeat(64)}`,
+        artifactJson: "{}",
+        retainUntil: 0,
+      });
     });
-    await expect(
+    const page = () =>
       t.mutation((ctx) =>
         Effect.runPromise(
           compactProgram().pipe(
             Effect.provide(mutationLayer(confectSchema, ctx))
           )
         )
-      )
-    ).resolves.toMatchObject({
+      );
+
+    await expect(page()).resolves.toMatchObject({
       complete: false,
-      deleted: ARTIFACT_PAGE_COUNT,
-      phase: "artifacts",
+      deleted: 0,
+      phase: "facts",
     });
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          compactProgram().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).resolves.toMatchObject({
+    const advanced = await t.run((ctx) =>
+      ctx.db.query("contentState").unique()
+    );
+    await expect(page()).resolves.toMatchObject({
       complete: false,
       deleted: 1,
       phase: "snapshots",
     });
+
+    expect(advanced?.compactPhase).toBe("facts");
+    expect(advanced?.compactCursor).toBeUndefined();
+    await expect(
+      t.run((ctx) => ctx.db.query("contentArtifactFacts").collect())
+    ).resolves.toEqual([]);
   });
   it("protects exact active bases and retained recovery slots", async () => {
     const t = convexTest(schema, convexModules);
@@ -422,8 +349,10 @@ describe("contentRelease/compact permanent history", () => {
       await ctx.db.patch(snapshot._id, {
         retainUntil: 0,
       });
-      for (const artifact of await ctx.db.query("contentArtifacts").collect()) {
-        await ctx.db.patch(artifact._id, {
+      for (const facts of await ctx.db
+        .query("contentArtifactFacts")
+        .collect()) {
+        await ctx.db.patch(facts._id, {
           retainUntil: 0,
         });
       }
