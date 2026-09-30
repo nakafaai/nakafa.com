@@ -17,7 +17,7 @@
     "@next/third-parties": "16.3.7",
     "@number-flow/react": "^0.6.2",
     "@react-three/drei": "^10.7.9",
-    "@react-three/fiber": "^9.8.1",
+    "@react-three/fiber": "9.7.0",
     "@repo/analytics": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/math": "workspace:*",

@@ -22,6 +22,7 @@ update:
     - '@effect/vitest'
     - '@nakafa/aksara-contracts'
     - '@polar-sh/sdk'
+    - '@react-three/fiber'
     - '@next/third-parties'
     - '@turbo/gen'
     - '@types/node'

@@ -114,6 +114,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@polar-sh/sdk",
     minimumDeclarations: 1,
   },
+  {
+    approved: "9.7.0",
+    dependency: "@react-three/fiber",
+    minimumDeclarations: 1,
+  },
 ];
 
 export const REGISTRY_REVIEWS = [
@@ -233,6 +238,11 @@ export const REGISTRY_REVIEWS = [
     "turbo@latest",
     "2.11.5",
     "Turbo and its generator move together; 2.11 adds hash and scope-filtering performance work, and 2.11.4 respects negated global dependencies in affected detection, with no config change for this repository.",
+  ],
+  [
+    "@react-three/fiber@latest",
+    "9.8.1",
+    "Fiber 9.8 widens React support to 19.3 and moves to the React 19.3 scheduler, so it moves with the React 19.3 upgrade; with React 19.2 it broke DOM removal during lesson navigation.",
   ],
   [
     "@polar-sh/sdk@latest",
