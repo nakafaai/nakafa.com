@@ -13,7 +13,7 @@ interface ChartDotProps {
   cy?: number;
   dataKey: string;
   fillOpacity?: number;
-  /** Optional SVG <mask> id — lets the dot share an area's intro reveal wipe. */
+  /** Optional SVG <mask> id that lets the dot share an area's intro reveal wipe. */
   maskId?: string | undefined;
   type?: DotVariant | undefined;
 }
