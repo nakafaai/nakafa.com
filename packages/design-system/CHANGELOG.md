@@ -1,5 +1,55 @@
 # @repo/design-system
 
+## 1.1.0
+
+### Minor Changes
+
+- [#657](https://github.com/nakafaai/nakafa.com/pull/657) [`2ba4e84`](https://github.com/nakafaai/nakafa.com/commit/2ba4e84a7c557f22be317f95dddbde66bc4eed2a) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Render the product in Inter and give every rendered content heading a scannable
+  section rule. Inter replaces Geist Sans as the interface and reading face, the
+  serif reading title becomes Inter, the lesson and article title and summary move
+  to the start of the reading column at the larger display size, and lesson pages
+  drop the summary under the title while articles keep theirs.
+  
+  Markdown and MDX headings render their words in the theme `primary` accent and
+  draw the underline in the theme's validated chart mark, at Tailwind's own
+  `decoration-2` and `underline-offset-4` values. A new `heading-rule` color role
+  owns that pairing, so the words and the rule never repeat one color and the rule
+  stays at least 3:1 against the page in all 31 concrete themes.
+
+### Patch Changes
+
+- [#730](https://github.com/nakafaai/nakafa.com/pull/730) [`3b02457`](https://github.com/nakafaai/nakafa.com/commit/3b024573b36e69694be1f02187ce08f27a251f07) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Preload only the fonts each page renders. The unused Geist Pixel faces leave
+  the font set and theme, Amiri moves to the Quran routes that render it at its
+  regular weight, and the sidebar logo no longer preloads on every app page.
+
+- [#757](https://github.com/nakafaai/nakafa.com/pull/757) [`90805e1`](https://github.com/nakafaai/nakafa.com/commit/90805e1217179134d135bea0f683cb9df13159a8) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Keep a Mermaid diagram's card one size from its first frame, so an answer or
+  lesson never moves or disappears around a diagram. The preview has a fixed
+  height and scales the diagram to fit, the placeholder shown while the card's
+  code loads shares its frame, and the dialog shows the diagram at full width.
+  Copying and downloading no longer load the syntax highlighter, and a
+  downloaded diagram is saved as a `.mmd` file.
+
+- [#668](https://github.com/nakafaai/nakafa.com/pull/668) [`bb9a7f8`](https://github.com/nakafaai/nakafa.com/commit/bb9a7f845e47eec2ab3bf8b1153a1baea5b86cc5) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Give the math lab number fields one border. The steppers in the unit circle,
+  right triangle, and function machine labs let the group own the shared border
+  and draw only their inner dividers, so the decrement and increment buttons stop
+  painting a second border that crossed the group's corner radius.
+
+- [#736](https://github.com/nakafaai/nakafa.com/pull/736) [`5c0723a`](https://github.com/nakafaai/nakafa.com/commit/5c0723a1c4baabae0b897a00761e00533eec3db8) Thanks [@nabilfatih](https://github.com/nabilfatih)! - The locked try-out review previews real explanations for a finished section's
+  first two questions under one blur that melts into the page from the bottom,
+  fits the screen without scrolling, and offers Pro as a bottom sheet on phones
+  and as a dialog card on wider screens. Disabled Base UI triggers, such as an
+  active question's explanation button, now look disabled.
+
+- [#748](https://github.com/nakafaai/nakafa.com/pull/748) [`5c61637`](https://github.com/nakafaai/nakafa.com/commit/5c6163735674860a3bf942d9149880ef7aea4b4c) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Remove fourteen components that nothing renders: the alert dialog, aspect
+  ratio, block art, carousel, context menu, drawer menu, input OTP, menubar,
+  navigation menu, pagination, progress, switch, and toggle primitives, the block
+  art cells, idle and ripple modules that only the block art rendered, and the
+  superseded server markdown code renderer. The carousel and input OTP were the
+  only users of `embla-carousel-react` and `input-otp`, so both dependencies go
+  with them.
+- Updated dependencies [[`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632)]:
+  - @repo/analytics@0.1.2
+
 ## 1.0.1
 
 ### Patch Changes

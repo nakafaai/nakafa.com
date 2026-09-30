@@ -1,5 +1,28 @@
 # @repo/backend
 
+## 3.1.0
+
+### Minor Changes
+
+- [#736](https://github.com/nakafaai/nakafa.com/pull/736) [`5c0723a`](https://github.com/nakafaai/nakafa.com/commit/5c0723a1c4baabae0b897a00761e00533eec3db8) Thanks [@nabilfatih](https://github.com/nabilfatih)! - The locked try-out review previews real explanations for a finished section's
+  first two questions under one blur that melts into the page from the bottom,
+  fits the screen without scrolling, and offers Pro as a bottom sheet on phones
+  and as a dialog card on wider screens. Disabled Base UI triggers, such as an
+  active question's explanation button, now look disabled.
+
+### Patch Changes
+
+- [#751](https://github.com/nakafaai/nakafa.com/pull/751) [`07c4e15`](https://github.com/nakafaai/nakafa.com/commit/07c4e1587872de0b7c170dbe15cc154d99801f98) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Feature each subject once on the homepage. The featured subjects read every
+  public subject route and keep the first route of each material domain in
+  authored order, so Mathematics, Physics, Chemistry, and Biology each appear once
+  and in the same order in every locale, instead of an arbitrary sample of
+  per-class routes that listed Physics or Mathematics twice and left Chemistry
+  out.
+- Updated dependencies [[`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632)]:
+  - @repo/analytics@0.1.2
+  - @repo/contents@2.0.2
+  - @repo/email@0.0.3
+
 ## 3.0.1
 
 ### Patch Changes
