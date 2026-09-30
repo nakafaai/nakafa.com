@@ -21,7 +21,7 @@ import {
 /** Entries rendered on the server, more than a tall outline panel shows. */
 const OUTLINE_SERVER_ENTRIES = 40;
 
-/** One entry: the menu button's 32 px row and the menu's 4 px gap. */
+/** One entry row: the menu button's 32 px and the 4 px below it. */
 const OUTLINE_ENTRY_SIZE = 36;
 
 /**
@@ -77,19 +77,28 @@ export function SidebarVirtualTree({
   );
 }
 
-/** The outline menu list, positioned by the virtualizer. */
+/**
+ * The outline menu list, positioned by the virtualizer. The server renders its
+ * entries in normal flow and the virtualizer positions them after hydration,
+ * so the list has no gap: rows then sit at the same offsets either way.
+ */
 function OutlineMenu({ children, ref, style }: CustomContainerComponentProps) {
   return (
-    <SidebarMenu ref={ref} style={style}>
+    <SidebarMenu className="gap-0" ref={ref} style={style}>
       {children}
     </SidebarMenu>
   );
 }
 
-/** One outline entry row; its bottom padding stands in for the menu's gap. */
+/**
+ * One outline entry row of a fixed height. The virtualizer measures a row's
+ * content box, so the space below the button is height, not padding. The
+ * server gives each row its offset as `top` without positioning it; a static
+ * row ignores that offset until the virtualizer positions it after hydration.
+ */
 function OutlineMenuItem({ children, ref, style }: CustomItemComponentProps) {
   return (
-    <SidebarMenuItem className="pb-1" ref={ref} style={style}>
+    <SidebarMenuItem className="static h-9" ref={ref} style={style}>
       {children}
     </SidebarMenuItem>
   );

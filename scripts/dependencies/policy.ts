@@ -248,7 +248,7 @@ export const REGISTRY_REVIEWS = [
   [
     "@react-three/fiber@latest",
     "9.8.1",
-    "Fiber 9.8 widens React support to 19.3 and moves to the React 19.3 scheduler, so it moves with the React 19.3 upgrade; with React 19.2 it broke DOM removal during lesson navigation.",
+    "Fiber 9.8 widens React support to 19.3 and moves to the React 19.3 scheduler, so it moves with the React 19.3 upgrade; with React 19.2 it broke DOM removal during lesson navigation. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
   ],
   [
     "@polar-sh/sdk@latest",

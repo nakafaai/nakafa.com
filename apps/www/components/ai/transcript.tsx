@@ -8,8 +8,11 @@ import {
   MessageScrollerItem,
   MessageScrollerViewport,
 } from "@repo/design-system/components/ui/scroller";
+import { loadMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
+import { Effect, Fiber } from "effect";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 import { useChat } from "@/components/ai/chat/context";
 import { AiChatError } from "@/components/ai/chat/error";
 import { AiChatPaginationTrigger } from "@/components/ai/chat/pagination";
@@ -20,6 +23,21 @@ import { AiChatMessage } from "@/components/ai/message/view";
 export function NinaTranscript() {
   const { messages, busy } = useChat((state) => state);
   const t = useTranslations("Ai");
+
+  // Answers render after the transcript, so their math would otherwise find
+  // its fonts missing and reflow the text around it once they arrive.
+  useEffect(() => {
+    const fiber = Effect.runFork(
+      loadMathFonts(document.fonts).pipe(
+        // A formula still requests these faces when it first renders.
+        Effect.catchTag("MathFontLoadError", () => Effect.void)
+      )
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
+  }, []);
+
   return (
     <Primitive.Provider autoScroll defaultScrollPosition="last-anchor">
       <MessageScroller className="flex-1">

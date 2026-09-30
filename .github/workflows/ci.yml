@@ -1,9 +1,11 @@
 name: CI
 
 on:
+  # Checks belong to the head commit, so title and body edits never rerun CI.
+  # Stacked pull requests run on their own base, so their head already carries
+  # checks when GitHub retargets them to main.
   pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review]
   # The merge queue reruns every required check on each queued change combined
   # with main and the changes queued ahead of it, so ready pull requests never
   # update from main just to merge.
@@ -175,6 +177,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Chromium needs only the installed Playwright package, so it installs
+      # while acceptance prepares and builds instead of after them. Idle CPU and
+      # disk priority leave the local backend's queries within Convex's limits.
+      - name: Start Chromium install
+        run: |
+          setsid bash -c "nice -n 19 ionice -c 3 pnpm --filter www exec playwright install --with-deps chromium; echo \$? > '$RUNNER_TEMP/chromium.exit'" \
+            > "$RUNNER_TEMP/chromium.log" 2>&1 &
+
       - name: Prepare signed acceptance publication
         run: pnpm acceptance:prepare
 
@@ -183,7 +193,7 @@ jobs:
 
       # Prepare already generated the bindings and the step above proved them
       # unchanged, so build and start call the backend acceptance command
-      # directly instead of repeating the 44-second codegen twice.
+      # directly instead of regenerating the bindings twice more.
       - name: Build production app
         id: production_build
         run: pnpm --dir packages/backend acceptance build
@@ -216,8 +226,18 @@ jobs:
           echo "The local production app did not become ready." >&2
           exit 1
 
-      - name: Install Chromium
-        run: pnpm --filter www exec playwright install --with-deps chromium
+      - name: Wait for Chromium
+        run: |
+          for _attempt in {1..300}; do
+            if [ -s "$RUNNER_TEMP/chromium.exit" ]; then
+              cat "$RUNNER_TEMP/chromium.log"
+              exit "$(cat "$RUNNER_TEMP/chromium.exit")"
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/chromium.log"
+          echo "Chromium did not finish installing." >&2
+          exit 1
 
       - name: Run production browser checks
         id: production_browser
