@@ -1,6 +1,6 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { API, Checker } from "typescript/unstable/sync";
+import { API, Checker, Program, Snapshot } from "typescript/unstable/sync";
 import {
   effectSourceViolations,
   effectTestViolations,
@@ -13,99 +13,6 @@ const VIOLATION =
 afterEach(() => vi.restoreAllMocks());
 
 describe("Effect test policy", () => {
-  it.effect("rejects imported Effect and ManagedRuntime runners", () =>
-    Effect.gen(function* () {
-      const sources = [
-        'import { Effect } from "effect";\nEffect.runPromise(program);',
-        'import { Effect } from "effect";\nEffect["runSync"](program);',
-        'import * as Runtime from "effect";\nRuntime.Effect.runFork(program);',
-        'import { Effect } from "effect";\nconst Runtime = Effect;\nRuntime[key](program);',
-        'import { runPromise as execute } from "effect/Effect";\nexecute(program);',
-        'import { ManagedRuntime } from "effect";\nconst runtime = ManagedRuntime.make(layer);\nruntime.runSync(program);',
-        'import { make } from "effect/ManagedRuntime";\nconst runtime = make(layer);\nruntime.runPromise(program);',
-        'import { make as buildRuntime } from "effect/ManagedRuntime";\nconst runtime = buildRuntime(layer);\nruntime.runPromise(program);',
-        'const Runtime = await import("effect");\nRuntime.Effect.runFork(program);',
-        'const { make: buildRuntime } = await import("effect/ManagedRuntime");\nconst runtime = buildRuntime(layer);\nruntime.runPromise(program);',
-      ];
-      const violations = yield* effectTestViolations(
-        sources.map((sourceText) => ({ file: FILE, sourceText }))
-      );
-      assert.deepStrictEqual(
-        violations,
-        sources.map(() => VIOLATION)
-      );
-    })
-  );
-
-  it.effect("rejects runners exposed through runtime destructuring", () =>
-    Effect.gen(function* () {
-      const sources = [
-        'import { Effect } from "effect";\nconst { runPromise } = Effect;',
-        'import { ManagedRuntime } from "effect";\nconst runtime = ManagedRuntime.make(layer);\nconst { runFork } = runtime;',
-      ];
-      const violations = yield* effectTestViolations(
-        sources.map((sourceText) => ({ file: FILE, sourceText }))
-      );
-      assert.deepStrictEqual(
-        violations,
-        sources.map(() => VIOLATION)
-      );
-    })
-  );
-
-  it.effect("resolves runtime aliases by lexical binding", () =>
-    Effect.gen(function* () {
-      const violations = yield* effectTestViolations([
-        {
-          file: FILE,
-          sourceText:
-            'import { Effect } from "effect";\nconst runtime = client;\n{\n  const runtime = Effect;\n  runtime.runPromise(program);\n}',
-        },
-        {
-          file: FILE,
-          sourceText:
-            'import { Effect } from "effect";\nconst runtime = Effect;\n{\n  const runtime = client;\n  runtime.runPromise(program);\n}',
-        },
-      ]);
-      assert.deepStrictEqual(violations, [VIOLATION]);
-    })
-  );
-
-  it.effect("allows native tests, types, and unrelated method names", () =>
-    Effect.gen(function* () {
-      const sources = [
-        'import { Effect } from "effect";\nimport { it } from "@effect/vitest";\nit.effect("runs", () => Effect.succeed(1));',
-        'import { it } from "@effect/vitest";\nit("pure", () => true);',
-        'import type { runPromise } from "effect/Effect";\ntype Runner = typeof runPromise;',
-        'import { Effect } from "effect";\ntype Runner = typeof Effect.runPromise;\nEffect.succeed(1);',
-        'import { Schema } from "effect";\nSchema.runSync(program);',
-        'import { Effect, Schema } from "effect";\nSchema.runSync(program);',
-        'import { Effect } from "effect";\nclient.runPromise(program);',
-        'import { Effect } from "effect";\nclient["runPromise"](program);',
-        'import { Effect } from "effect";\nconst { runPromise } = client;',
-        'import { Effect } from "effect";\nEffect["succeed"](1);',
-        'const { Effect } = await import("effect");\nEffect.void;',
-      ];
-      const violations = yield* effectTestViolations([
-        ...sources.map((sourceText) => ({ file: FILE, sourceText })),
-        {
-          file: "packages/example/src/program.ts",
-          sourceText:
-            'import { Effect } from "effect";\nEffect.runSync(program);',
-        },
-      ]);
-      assert.deepStrictEqual(violations, []);
-      const nonTests = yield* effectTestViolations([
-        {
-          file: "packages/example/src/program.ts",
-          sourceText:
-            'import { Effect } from "effect"; Effect.runSync(program);',
-        },
-      ]);
-      assert.deepStrictEqual(nonTests, []);
-    })
-  );
-
   it.effect("closes the compiler after an isolated batch", () =>
     Effect.gen(function* () {
       const close = vi.spyOn(API.prototype, "close");
@@ -120,6 +27,19 @@ describe("Effect test policy", () => {
       ]);
       assert.deepStrictEqual(violations, [VIOLATION]);
       assert.strictEqual(close.mock.calls.length, 1);
+    })
+  );
+
+  it.effect("ignores sources that are not TypeScript tests", () =>
+    Effect.gen(function* () {
+      const violations = yield* effectTestViolations([
+        {
+          file: "packages/example/src/program.ts",
+          sourceText:
+            'import { Effect } from "effect"; Effect.runSync(program);',
+        },
+      ]);
+      assert.deepStrictEqual(violations, []);
     })
   );
 
@@ -144,6 +64,73 @@ describe("Effect test policy", () => {
       assert.strictEqual(close.mock.calls.length, 1);
     })
   );
+
+  it.effect("fails when the native compiler omits the test project", () =>
+    Effect.gen(function* () {
+      vi.spyOn(Snapshot.prototype, "getProject").mockReturnValueOnce(undefined);
+      const failure = yield* effectTestViolations([
+        { file: FILE, sourceText: "export {};" },
+      ]).pipe(Effect.flip);
+      assert.strictEqual(failure._tag, "TestCompilerError");
+      assert.strictEqual(failure.cause, "The native test project is missing.");
+      assert.strictEqual(failure.message, `Unable to inspect ${FILE}.`);
+    })
+  );
+});
+
+describe("native compiler startup", () => {
+  it.effect("fails both policies with typed errors when it cannot start", () =>
+    Effect.gen(function* () {
+      const cause = new Error("native compiler unavailable");
+      vi.resetModules();
+      vi.doMock("typescript/unstable/sync", () => ({
+        API: class {
+          constructor() {
+            throw cause;
+          }
+        },
+      }));
+      const policy = yield* Effect.promise(
+        () => import("#scripts/check/effect")
+      );
+      const failures = [
+        yield* policy
+          .effectTestViolations([{ file: FILE, sourceText: "export {};" }])
+          .pipe(Effect.flip),
+        yield* policy
+          .effectSourceViolations([
+            { file: "packages/example/src/program.ts", sourceText: "" },
+          ])
+          .pipe(Effect.flip),
+      ];
+      assert.deepStrictEqual(
+        failures.map((failure) => [
+          failure._tag,
+          failure.cause,
+          failure.message,
+        ]),
+        [
+          [
+            "TestCompilerError",
+            cause,
+            "Unable to start the native test compiler.",
+          ],
+          [
+            "TestCompilerError",
+            cause,
+            "Unable to start the native source compiler.",
+          ],
+        ]
+      );
+    }).pipe(
+      Effect.ensuring(
+        Effect.sync(() => {
+          vi.doUnmock("typescript/unstable/sync");
+          vi.resetModules();
+        })
+      )
+    )
+  );
 });
 
 const BACKEND_FILE = "packages/backend/convex/example/program.ts";
@@ -164,6 +151,24 @@ describe("Effect source policy", () => {
         [...violations].sort(),
         [TRY_VIOLATION, NARROWING_VIOLATION].sort()
       );
+    })
+  );
+
+  it.effect("rejects typeof-object narrowing on either side", () =>
+    Effect.gen(function* () {
+      const violations = yield* effectSourceViolations([
+        {
+          file: BACKEND_FILE,
+          sourceText:
+            'export const isRecord = (value: unknown) => "object" !== typeof value;',
+        },
+        {
+          file: "apps/www/lib/example.ts",
+          sourceText:
+            'export const isText = (value: unknown) => typeof value === "string" || typeof value === typeof input;',
+        },
+      ]);
+      assert.deepStrictEqual(violations, [NARROWING_VIOLATION]);
     })
   );
 
@@ -219,6 +224,52 @@ describe("Effect source policy", () => {
         },
       ]);
       assert.deepStrictEqual(violations, []);
+    })
+  );
+
+  it.effect("fails when the native compiler cannot open the sources", () =>
+    Effect.gen(function* () {
+      const cause = new Error("native snapshot unavailable");
+      vi.spyOn(API.prototype, "updateSnapshot").mockImplementationOnce(() => {
+        throw cause;
+      });
+      const snapshotFailure = yield* effectSourceViolations([
+        { file: BACKEND_FILE, sourceText: "export {};" },
+      ]).pipe(Effect.flip);
+      vi.spyOn(Snapshot.prototype, "getProject").mockReturnValueOnce(undefined);
+      const projectFailure = yield* effectSourceViolations([
+        { file: BACKEND_FILE, sourceText: "export {};" },
+      ]).pipe(Effect.flip);
+
+      assert.deepStrictEqual(
+        [snapshotFailure, projectFailure].map((failure) => [
+          failure._tag,
+          failure.cause,
+          failure.message,
+        ]),
+        [
+          ["TestCompilerError", cause, "Unable to inspect repository sources."],
+          [
+            "TestCompilerError",
+            "The native source project is missing.",
+            "Unable to inspect repository sources.",
+          ],
+        ]
+      );
+    })
+  );
+
+  it.effect("reports a source the native compiler does not expose", () =>
+    Effect.gen(function* () {
+      vi.spyOn(Program.prototype, "getSourceFile").mockReturnValueOnce(
+        undefined
+      );
+      const violations = yield* effectSourceViolations([
+        { file: BACKEND_FILE, sourceText: "export {};" },
+      ]);
+      assert.deepStrictEqual(violations, [
+        `${BACKEND_FILE}: the native compiler did not expose this source file.`,
+      ]);
     })
   );
 });

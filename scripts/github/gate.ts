@@ -1,5 +1,5 @@
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Config, Effect, Schema } from "effect";
+import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
 
 export const GateOutcomeSchema = Schema.Literals([
@@ -82,48 +82,45 @@ const decodeConfig = <S extends Schema.Constraint>(name: string, schema: S) =>
     )
   );
 
-/** Runs the terminal check adapter at the Node CLI boundary. */
-export const runGate = Effect.fn("CiGate.run")(function* (roleInput: unknown) {
-  const role = yield* Schema.decodeUnknownEffect(GateRoleSchema)(
-    roleInput
-  ).pipe(
-    Effect.mapError(
-      (cause) => new CiGateError({ cause, message: "CI gate role is invalid." })
-    )
-  );
-  const [fullOutcome, productionOutcome, scopeOutcome] = yield* Effect.all([
-    decodeConfig("FULL_OUTCOME", GateOutcomeSchema),
-    decodeConfig("PRODUCTION_OUTCOME", GateOutcomeSchema),
-    decodeConfig("SCOPE_OUTCOME", GateOutcomeSchema),
-  ]);
-  const flags = yield* Config.all({
-    productionRequired: Config.Boolean("PRODUCTION_REQUIRED"),
-    trusted: Config.Boolean("TRUSTED_CANDIDATE"),
-  }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CiGateError({
-          cause,
-          message: "CI gate flags are incomplete.",
-        })
-    )
-  );
-  const message = yield* validateGate({
-    fullOutcome,
-    productionOutcome,
-    productionRequired: flags.productionRequired,
-    role,
-    scopeOutcome,
-    trusted: flags.trusted,
-  });
-  yield* writeOutput(`${message}\n`);
-});
+/** Runs the terminal check adapter and marks failures in the job log. */
+export const runGate = Effect.fn("CiGate.run")(
+  function* (roleInput: unknown) {
+    const role = yield* Schema.decodeUnknownEffect(GateRoleSchema)(
+      roleInput
+    ).pipe(
+      Effect.mapError(
+        (cause) =>
+          new CiGateError({ cause, message: "CI gate role is invalid." })
+      )
+    );
+    const [fullOutcome, productionOutcome, scopeOutcome] = yield* Effect.all([
+      decodeConfig("FULL_OUTCOME", GateOutcomeSchema),
+      decodeConfig("PRODUCTION_OUTCOME", GateOutcomeSchema),
+      decodeConfig("SCOPE_OUTCOME", GateOutcomeSchema),
+    ]);
+    const flags = yield* Config.all({
+      productionRequired: Config.Boolean("PRODUCTION_REQUIRED"),
+      trusted: Config.Boolean("TRUSTED_CANDIDATE"),
+    }).pipe(
+      Effect.mapError(
+        (cause) =>
+          new CiGateError({
+            cause,
+            message: "CI gate flags are incomplete.",
+          })
+      )
+    );
+    const message = yield* validateGate({
+      fullOutcome,
+      productionOutcome,
+      productionRequired: flags.productionRequired,
+      role,
+      scopeOutcome,
+      trusted: flags.trusted,
+    });
+    yield* writeOutput(`${message}\n`);
+  },
+  Effect.tapError(() => writeOutput("ERROR: CI gate failed.\n"))
+);
 
-if (import.meta.main) {
-  NodeRuntime.runMain(
-    runGate(process.argv[2]).pipe(
-      Effect.tapError(() => writeOutput("ERROR: CI gate failed.\n")),
-      Effect.provide(NodeServices.layer)
-    )
-  );
-}
+runEntry(import.meta.main, runGate(process.argv[2]));

@@ -1,6 +1,5 @@
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Result } from "effect";
+import { assert, describe, expect, it } from "@effect/vitest";
+import { ConfigProvider, Effect, Result, Sink, Stdio } from "effect";
 import { type GateInput, runGate, validateGate } from "#scripts/github/gate";
 
 const required: GateInput = {
@@ -20,16 +19,31 @@ const validEnvironment = {
   TRUSTED_CANDIDATE: "true",
 };
 
-const withEnvironment = <Value, Error>(
-  program: Effect.Effect<Value, Error>,
+/** Runs the gate adapter with one CI environment and captured job output. */
+const runCapturedGate = Effect.fn("CiGateTest.runCapturedGate")(function* (
+  role: string,
   environment: Record<string, string>
-) =>
-  program.pipe(
+) {
+  const stdout: Array<string | Uint8Array> = [];
+  const result = yield* runGate(role).pipe(
+    Effect.provide(
+      Stdio.layerTest({
+        stdout: () =>
+          Sink.forEachArray((chunks) =>
+            Effect.sync(() => {
+              stdout.push(...chunks);
+            })
+          ),
+      })
+    ),
     Effect.provideService(
       ConfigProvider.ConfigProvider,
       ConfigProvider.fromEnvRecord(environment)
-    )
+    ),
+    Effect.result
   );
+  return { result, stdout };
+});
 
 describe("terminal CI gate", () => {
   it.effect("accepts complete trusted production proof", () =>
@@ -107,13 +121,20 @@ describe("terminal CI gate", () => {
     )
   );
 
-  it.live("decodes the complete required-check environment", () =>
-    runGate("required").pipe(Effect.provide(nodeServicesLayer), (program) =>
-      withEnvironment(program, validEnvironment)
-    )
+  it.effect("decodes the complete required-check environment", () =>
+    Effect.gen(function* () {
+      const { result, stdout } = yield* runCapturedGate(
+        "required",
+        validEnvironment
+      );
+      expect(Result.isSuccess(result)).toBe(true);
+      expect(stdout).toEqual([
+        "Required acceptance completed on the current pull-request head.\n",
+      ]);
+    })
   );
 
-  it.live.each([
+  it.effect.each([
     {
       expected: "CI gate role is invalid.",
       environment: validEnvironment,
@@ -133,14 +154,20 @@ describe("terminal CI gate", () => {
       },
       role: "required",
     },
-  ])("rejects $expected", ({ environment, expected, role }) =>
-    Effect.gen(function* () {
-      expect(
-        yield* withEnvironment(
-          runGate(role).pipe(Effect.provide(nodeServicesLayer)),
-          environment
-        ).pipe(Effect.flip)
-      ).toMatchObject({ message: expected });
-    })
+    {
+      expected:
+        "Production acceptance finished with skipped; expected success.",
+      environment: { ...validEnvironment, PRODUCTION_OUTCOME: "skipped" },
+      role: "required",
+    },
+  ])(
+    "rejects $expected and marks the job log",
+    ({ environment, expected, role }) =>
+      Effect.gen(function* () {
+        const { result, stdout } = yield* runCapturedGate(role, environment);
+        assert(Result.isFailure(result));
+        expect(result.failure.message).toBe(expected);
+        expect(stdout).toEqual(["ERROR: CI gate failed.\n"]);
+      })
   );
 });
