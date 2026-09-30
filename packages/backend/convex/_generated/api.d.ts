@@ -8608,6 +8608,31 @@ export declare const internal: {
         null
       >;
     };
+    summaries: {
+      anchor: FunctionReference<
+        "query",
+        "internal",
+        { chatId: Id<"chats">; order: number },
+        string | null
+      >;
+      read: FunctionReference<
+        "query",
+        "internal",
+        { chatId: Id<"chats"> },
+        { text: string; throughOrder: number } | null
+      >;
+      save: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          chatId: Id<"chats">;
+          text: string;
+          throughOrder: number;
+          usage: { input: number; output: number };
+        },
+        null
+      >;
+    };
     uploads: {
       complete: FunctionReference<
         "mutation",

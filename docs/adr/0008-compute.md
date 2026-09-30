@@ -8,34 +8,34 @@ transaction commits. Concurrent requests cannot spend the same balance. A native
 Convex token bucket independently limits admission to a burst of five starts and
 ten starts per minute per user, including requests whose credits are refunded.
 
-The HTTP route reserves after required origin, request, locale, model and auth
-checks, before content verification, profile, curriculum and pinned-context
-reads. All later preparation belongs to the refund scope. A rejected turn does
-not perform optional preparation, and the route does not recheck a balance that
-reservation has already debited.
+The admission mutation reserves after its authentication, chat ownership,
+busy-chat and model checks, before resolving learning context. Reservation,
+context resolution, the saved prompt, the turn, and its scheduled generation
+commit in one transaction, so a rejected admission leaves no hold to refund.
 
-Nina loads at most the newest 50 complete messages before applying its text-token
-budget. This is a conversation-context policy, independent of token count, so
-empty and non-text histories cannot trigger unbounded pagination. Whole messages
-preserve tool-call and tool-result parts together. The full transcript remains
-available for browsing, and compression retains the current message.
+Nina's provider context follows ADR 0001: the Agent fetch reads at most the
+newest 50 messages, and the context module keeps whole turns within its token
+budgets, so empty and non-text histories cannot trigger unbounded pagination.
+Whole turns preserve tool-call and tool-result parts together. The full
+transcript remains available for browsing.
 
 Successful persistence closes the hold and completes its existing ledger entry.
 Failure refunds it at most once. A refund can restore only the allowance from
 which the hold was taken: both the reset timestamp and the plan grant identity
 must still match. Upgrades, downgrades, account deletion, and calendar resets
-cannot turn an old hold into extra credits. An abandoned hold expires after ten
-minutes, beyond the HTTP function's five-minute maximum. The native scheduled
-recovery is intentionally retained even when it becomes an idempotent no-op.
+cannot turn an old hold into extra credits. A turn still queued or running
+fifteen minutes after admission settles as failed and refunds, beyond the
+generation action's seven-minute stream deadline. The native scheduled recovery
+is intentionally retained even when it becomes an idempotent no-op.
 
-The HTTP request owns one work deadline with time left for durable persistence.
-Request cancellation and reader cancellation propagate through the main AI SDK
-stream, specialist agents, tool repair, suggestions, and abortable HTTP clients.
-The failure adapter registers Vercel `waitUntil` immediately and waits for local
-generation settlement before returning credits. An optional suggestion timeout
-must not discard an already completed main answer. External services remain
-responsible for stopping work after cancellation; each remote calculation also
-has its own execution limit.
+The scheduled generation action owns one stream deadline with time left for
+settlement within Convex's action limit. Cancellation settles the turn and
+aborts its Agent stream, which propagates through the main AI SDK stream,
+specialist agents, tool repair, and abortable HTTP clients. Titles, follow-up
+suggestions, and the rolling summary run later in a separate action with their
+own deadlines, so optional work never discards a completed answer. External
+services remain responsible for stopping work after cancellation; each remote
+calculation also has its own execution limit.
 
 CAS runs each calculation in the owned Python worker process. A twenty-second
 deadline kills and reaps that worker. Two local slots reject excess work instead

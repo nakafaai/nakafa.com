@@ -5,7 +5,6 @@ import { mathOperations } from "@repo/math/schema/operations";
 const base = {
   context: {
     currentDate: "May 15, 2026",
-    needsPageFetch: false,
     slug: "materi/matematika/integral/jumlahan-riemann",
     url: "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann",
     userRole: "student",

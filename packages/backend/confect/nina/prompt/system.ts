@@ -39,7 +39,7 @@ export function formatNinaContextPackPrompt(context: NinaContextPack) {
 
     Tool policy:
     - Nakafa evidence allowed: ${context.tools.allowNakafa ? "yes" : "no"}
-    - current page fetch allowed: ${context.tools.allowPageFetch ? "yes" : "no"}
+    - current page content provided: ${context.tools.allowPageFetch ? "yes" : "no"}
     - math evidence allowed: ${context.tools.allowMath ? "yes" : "no"}
     - deep research allowed: ${context.tools.allowDeepResearch ? "yes" : "no"}
     - evidence scope: ${context.tools.evidenceScope}
@@ -50,18 +50,24 @@ export function formatNinaContextPackPrompt(context: NinaContextPack) {
 export function createNinaSystemPrompt({
   focus,
   page,
+  pageContent,
   runtime,
+  summary,
   user,
 }: {
   readonly focus?: string;
   readonly page: NinaPage;
+  readonly pageContent?: string;
   readonly runtime: NinaRuntime;
+  readonly summary?: string;
   readonly user: NinaUser;
 }) {
   const learningPage = readNinaLearningPage(page);
 
   return createNinaPrompt({
     ...(focus === undefined ? {} : { focus }),
+    ...(pageContent === undefined ? {} : { pageContent }),
+    ...(summary === undefined ? {} : { summary }),
     currentDate: runtime.currentDate,
     currentPage: {
       locale: learningPage.locale,

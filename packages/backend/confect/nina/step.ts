@@ -1,6 +1,5 @@
 import {
   type LearningCapabilityName,
-  NAKAFA_CAPABILITY,
   RESEARCH_CAPABILITY,
 } from "@repo/backend/confect/nina/capability/spec";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
@@ -8,10 +7,6 @@ import { getSourceReferencesFromMessages } from "@repo/backend/confect/nina/rese
 import type { Tool, ToolLoopAgentSettings } from "ai";
 
 const firstStepNumber = 0;
-
-type RequiredStepToolName =
-  | typeof NAKAFA_CAPABILITY
-  | typeof RESEARCH_CAPABILITY;
 
 export type NinaToolSet = Record<LearningCapabilityName, Tool>;
 
@@ -24,18 +19,17 @@ type NinaPrepareStepInput = Parameters<NinaPrepareStep>[0];
 type NinaPreparedStep = Awaited<ReturnType<NinaPrepareStep>>;
 
 /**
- * Creates Nina's AI SDK step callback from verified page-fetch state.
+ * Creates Nina's AI SDK step callback.
  *
  * The returned function uses the SDK-owned `prepareStep` contract and only
  * decides first-step evidence routing plus continuation source policy; it does
- * not own ToolLoopAgent wiring or duplicate the SDK callback input shape.
+ * not own ToolLoopAgent wiring or duplicate the SDK callback input shape. The
+ * current page arrives in the prompt context, so no step forces a page read.
  */
 export function createNinaPrepareStep({
-  needsPageFetch,
   instructions,
 }: {
   readonly instructions: string;
-  readonly needsPageFetch: boolean;
 }): (input: NinaPrepareStepInput) => NinaPreparedStep {
   return ({ messages, stepNumber }) => {
     if (stepNumber !== firstStepNumber) {
@@ -87,35 +81,14 @@ export function createNinaPrepareStep({
       };
     }
 
-    if (needsPageFetch) {
-      return readToolStep({
-        messages,
-        toolName: NAKAFA_CAPABILITY,
-      });
-    }
-
     if (getSourceReferencesFromMessages(messages).length > 0) {
-      return readToolStep({
+      return {
+        activeTools: [RESEARCH_CAPABILITY],
         messages,
-        toolName: RESEARCH_CAPABILITY,
-      });
+        toolChoice: { toolName: RESEARCH_CAPABILITY, type: "tool" },
+      };
     }
 
     return { messages };
-  };
-}
-
-/** Builds the SDK-owned first-step shape for one required Nina evidence tool. */
-function readToolStep({
-  messages,
-  toolName,
-}: {
-  readonly messages: Parameters<NinaPrepareStep>[0]["messages"];
-  readonly toolName: Extract<LearningCapabilityName, RequiredStepToolName>;
-}): NinaPreparedStep {
-  return {
-    activeTools: [toolName],
-    messages,
-    toolChoice: { toolName, type: "tool" },
   };
 }

@@ -8,14 +8,15 @@ import {
   GatewayConfigurationError,
   getGatewayModel,
 } from "@repo/backend/confect/nina/config/provider";
-import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
+import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import {
   createNinaTest,
   ninaModel,
   ninaStream,
+  ninaToolInput,
   ninaUsage,
 } from "@repo/backend/test/nina";
-import { createFocusTest } from "@repo/backend/test/nina/focus";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import {
   AISDKError,
   APICallError,
@@ -31,15 +32,12 @@ vi.mock("@repo/backend/confect/nina/config/provider", async (original) => ({
   >()),
   getGatewayModel: vi.fn(),
 }));
-vi.mock("@repo/backend/confect/nina/nakafa/tools/read", () => ({
-  read: vi.fn(),
+vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
+  runNakafaAgent: vi.fn(),
 }));
 
-async function fixture(withTool = false) {
-  const seeded = await createNinaTest({
-    prompt: "Explain a function limit.",
-    needsFetch: withTool,
-  });
+async function fixture() {
+  const seeded = await createNinaTest({ prompt: "Explain a function limit." });
   const { t, identity, ...saved } = seeded;
   const inspect = () =>
     t.query(async (ctx) => ({
@@ -56,6 +54,17 @@ async function fixture(withTool = false) {
 }
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
+const PRIVATE_DIAGNOSTIC = /private (provider|authentication) diagnostic/;
+
+/** A provider HTTP failure carrying a diagnostic that must never persist. */
+function apiError(statusCode?: number) {
+  return new APICallError({
+    message: "private provider diagnostic",
+    url: "https://provider.example.invalid",
+    requestBodyValues: {},
+    ...(statusCode === undefined ? {} : { statusCode }),
+  });
+}
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -65,35 +74,67 @@ afterEach(() => {
 
 describe("Nina generation through the real Agent component", () => {
   it.effect.each([
-    [429, "provider-busy"],
-    [503, "provider-unavailable"],
-    [408, "response-timeout"],
-    [504, "response-timeout"],
-    [413, "input-too-large"],
-    [400, "request-rejected"],
-    [422, "request-rejected"],
-    [401, "service-configuration"],
-    [402, "service-configuration"],
-    [403, "service-configuration"],
-    [404, "service-configuration"],
-    [424, "service-configuration"],
-    [409, "unknown"],
-    [undefined, "unknown"],
+    ["status 429", apiError(429), "provider-busy"],
+    ["status 503", apiError(503), "provider-unavailable"],
+    ["status 408", apiError(408), "response-timeout"],
+    ["status 504", apiError(504), "response-timeout"],
+    ["status 413", apiError(413), "input-too-large"],
+    ["status 400", apiError(400), "request-rejected"],
+    ["status 422", apiError(422), "request-rejected"],
+    ["status 401", apiError(401), "service-configuration"],
+    ["status 402", apiError(402), "service-configuration"],
+    ["status 403", apiError(403), "service-configuration"],
+    ["status 404", apiError(404), "service-configuration"],
+    ["status 424", apiError(424), "service-configuration"],
+    ["status 409", apiError(409), "unknown"],
+    ["statusless", apiError(), "unknown"],
+    [
+      "exhausted retry",
+      new RetryError({
+        message: "Retries exhausted",
+        reason: "maxRetriesExceeded",
+        errors: [new GatewayRateLimitError()],
+      }),
+      "provider-busy",
+    ],
+    [
+      "rate-limited empty output",
+      new NoOutputGeneratedError({ cause: new GatewayRateLimitError() }),
+      "provider-busy",
+    ],
+    [
+      "timeout",
+      new DOMException("Timed out", "TimeoutError"),
+      "response-timeout",
+    ],
+    ["abort", new DOMException("Aborted", "AbortError"), "interrupted"],
+    ["empty output", new NoOutputGeneratedError(), "unknown"],
+    ["unstructured", "unstructured provider failure", "unknown"],
+    [
+      "gateway",
+      new AISDKError({
+        name: "GatewayError",
+        message: "private authentication diagnostic",
+      }),
+      "service-configuration",
+    ],
+    [
+      "gateway authentication",
+      Object.assign(new Error("private authentication diagnostic"), {
+        name: "GatewayAuthenticationError",
+      }),
+      "service-configuration",
+    ],
   ] as const)(
-    "persists a safe reason for provider status %s",
-    ([statusCode, reason]) =>
+    "persists a safe reason for a %s stream failure",
+    ([, error, reason]) =>
       Effect.gen(function* () {
-        const error = new APICallError({
-          message: "private provider diagnostic",
-          url: "https://provider.example.invalid",
-          requestBodyValues: {},
-          ...(statusCode === undefined ? {} : { statusCode }),
-        });
-        const languageModel = new MockLanguageModelV4({
-          doStream: ninaStream([{ type: "error", error }]),
-        });
         vi.mocked(getGatewayModel).mockReturnValue(
-          Effect.succeed(languageModel)
+          Effect.succeed(
+            new MockLanguageModelV4({
+              doStream: ninaStream([{ type: "error", error }]),
+            })
+          )
         );
         const f = yield* Effect.promise(() => fixture());
         yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
@@ -121,59 +162,7 @@ describe("Nina generation through the real Agent component", () => {
               message.metadata.state.reason === reason
           )
         ).toBe(true);
-        expect(JSON.stringify(page)).not.toContain(
-          "private provider diagnostic"
-        );
-      })
-  );
-
-  it.effect.each([
-    [
-      new RetryError({
-        message: "Retries exhausted",
-        reason: "maxRetriesExceeded",
-        errors: [new GatewayRateLimitError()],
-      }),
-      "provider-busy",
-    ],
-    [
-      new NoOutputGeneratedError({ cause: new GatewayRateLimitError() }),
-      "provider-busy",
-    ],
-    [new DOMException("Timed out", "TimeoutError"), "response-timeout"],
-    [new DOMException("Aborted", "AbortError"), "interrupted"],
-    [new NoOutputGeneratedError(), "unknown"],
-    ["unstructured provider failure", "unknown"],
-    [
-      new AISDKError({
-        name: "GatewayError",
-        message: "private authentication diagnostic",
-      }),
-      "service-configuration",
-    ],
-    [
-      Object.assign(new Error("private authentication diagnostic"), {
-        name: "GatewayAuthenticationError",
-      }),
-      "service-configuration",
-    ],
-  ] as const)(
-    "retains the expected reason through SDK error envelopes: %s",
-    ([error, reason]) =>
-      Effect.gen(function* () {
-        vi.mocked(getGatewayModel).mockReturnValue(
-          Effect.succeed(
-            new MockLanguageModelV4({
-              doStream: ninaStream([{ type: "error", error }]),
-            })
-          )
-        );
-        const f = yield* Effect.promise(() => fixture());
-        yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
-        expect((yield* Effect.promise(f.inspect)).turn?.state).toMatchObject({
-          status: "failed",
-          reason,
-        });
+        expect(JSON.stringify(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
       })
   );
 
@@ -328,19 +317,6 @@ describe("Nina generation through the real Agent component", () => {
     const languageModel = ninaModel();
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
     const f = await fixture();
-    await f.t.mutation((ctx) =>
-      ctx.db.patch("ninaTurns", f.turnId, {
-        user: {
-          role: "teacher",
-          curriculumPreference: {
-            program: {
-              key: "cambridge-lower-secondary",
-              title: "Cambridge Lower Secondary",
-            },
-          },
-        },
-      })
-    );
     await f.t.action(run, { turnId: f.turnId });
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
@@ -369,27 +345,26 @@ describe("Nina generation through the real Agent component", () => {
         }),
       ])
     );
-    expect(JSON.stringify(languageModel.doStreamCalls[0]?.prompt)).toContain(
-      "Cambridge Lower Secondary"
-    );
-    expect(JSON.stringify(languageModel.doStreamCalls[0]?.prompt)).toContain(
-      "teacher"
-    );
   });
 
   it("keeps progressive tool cards in permanent messages after the live stream ends", async () => {
     vi.useRealTimers();
     const languageModel = ninaModel(true);
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
-    vi.mocked(read).mockImplementation(({ input, toolCallId, publish }) =>
+    const input = {
+      content_ref: NakafaAgentContentRefInputSchema.make(
+        "https://nakafa.com/en/home"
+      ),
+    };
+    vi.mocked(runNakafaAgent).mockImplementation(({ publish }) =>
       Effect.gen(function* () {
         yield* publish({
-          id: toolCallId,
+          id: "read-1",
           type: "data-nakafa",
           data: { kind: "content", status: "loading", input },
         });
         yield* publish({
-          id: toolCallId,
+          id: "read-1",
           type: "data-nakafa",
           data: {
             kind: "content",
@@ -398,10 +373,10 @@ describe("Nina generation through the real Agent component", () => {
             error: "Fixture evidence unavailable",
           },
         });
-        return "Fixture evidence unavailable";
+        return { text: "Fixture evidence unavailable" };
       })
     );
-    const f = await fixture(true);
+    const f = await fixture();
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(() => undefined);
     const state = await f.inspect();
@@ -466,62 +441,50 @@ describe("Nina generation through the real Agent component", () => {
     expect(languageModel.doGenerateCalls).toHaveLength(0);
   });
 
-  it("repairs the first page fetch using verified context without another model request", async () => {
+  it("repairs invalid capability input through one accounted repair call", async () => {
     vi.useRealTimers();
-    const languageModel = ninaModel(true, false, {});
+    const languageModel = ninaModel(true, false, { request: 42 });
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
-    vi.mocked(read).mockReturnValue(Effect.succeed("Verified page evidence"));
-    const f = await fixture(true);
+    vi.mocked(runNakafaAgent).mockReturnValue(
+      Effect.succeed({ text: "Repaired evidence" })
+    );
+    const f = await fixture();
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(() => undefined);
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
-    expect(read).toHaveBeenCalledWith(
+    expect(runNakafaAgent).toHaveBeenCalledWith(
       expect.objectContaining({
-        input: { content_ref: "https://nakafa.com/en/home" },
+        task: expect.stringContaining(ninaToolInput.request),
       })
     );
-    expect(state.turn?.usage.map((entry) => entry.agent).sort()).toEqual([
-      "nina",
-      "suggestions",
-      "title",
-    ]);
-    expect(languageModel.doGenerateCalls).toHaveLength(2);
+    expect(JSON.stringify(languageModel.doGenerateCalls[0]?.prompt)).toContain(
+      "Repair the arguments for nakafa"
+    );
+    expect(state.turn?.usage.map((entry) => entry.agent)).toContain(
+      "nina-repair"
+    );
   });
 
-  it("answers a focused question from its signed body and official explanation", async () => {
+  it("sends the rolling summary and omits the turns it covers", async () => {
     const languageModel = ninaModel();
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
-    const f = await createFocusTest();
-    await f.focusTurn();
-    await f.t.action(run, { turnId: f.turnId });
-    const turn = await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId));
-    expect(turn?.state.status).toBe("complete");
-    const prompt = JSON.stringify(languageModel.doStreamCalls[0]?.prompt);
-    expect(prompt).toContain("# Focused Try-out Question");
-    expect(prompt).toContain("Technical question");
-    expect(prompt).toContain("Technical answer");
-    expect(prompt).toContain("# Focused Question Instructions");
-  });
-
-  it("refunds a focused turn whose question is no longer entitled", async () => {
-    const languageModel = ninaModel();
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
-    const f = await createFocusTest();
-    await f.focusTurn();
+    const f = await createNinaTest({ history: 6 });
     await f.t.mutation((ctx) =>
-      ctx.db.patch("users", f.identity.userId, { plan: "free" })
+      ctx.db.insert("ninaSummaries", {
+        chatId: f.chatId,
+        text: "- The learner practiced limits.",
+        throughOrder: 3,
+        updatedAt: Date.now(),
+        usage: { calls: 1, input: 900, output: 120 },
+      })
     );
     await f.t.action(run, { turnId: f.turnId });
-    const state = await f.t.query(async (ctx) => ({
-      turn: await ctx.db.get("ninaTurns", f.turnId),
-      user: await ctx.db.get("users", f.identity.userId),
-    }));
-    expect(state.turn?.state).toMatchObject({
-      status: "failed",
-      reason: "unknown",
-    });
-    expect(state.user?.credits).toBe(10);
-    expect(languageModel.doStreamCalls).toHaveLength(0);
+    const prompt = JSON.stringify(languageModel.doStreamCalls[0]?.prompt);
+    expect(prompt).toContain("# Conversation Summary");
+    expect(prompt).toContain("- The learner practiced limits.");
+    expect(prompt).not.toContain("Earlier question 3");
+    expect(prompt).toContain("Earlier question 4");
+    expect(prompt).toContain("Earlier answer 5");
   });
 });

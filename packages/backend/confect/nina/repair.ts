@@ -11,12 +11,7 @@ import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
 import { backgroundGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
 import type { NinaToolSet } from "@repo/backend/confect/nina/step";
-import {
-  InvalidToolInputError,
-  NoSuchToolError,
-  Output,
-  type ToolCallRepairFunction,
-} from "ai";
+import { NoSuchToolError, Output, type ToolCallRepairFunction } from "ai";
 import { Effect, Schema } from "effect";
 
 class NinaRepairError extends Schema.TaggedError<NinaRepairError>()(
@@ -30,16 +25,14 @@ export const repairToolCall = Effect.fn("nina.repair")(
     userId,
     error,
     inputSchema,
-    messages,
-    needsPageFetch,
     toolCall,
     tools,
-    url,
     usageHandler,
-  }: Omit<Parameters<ToolCallRepairFunction<NinaToolSet>>[0], "system"> & {
+  }: Omit<
+    Parameters<ToolCallRepairFunction<NinaToolSet>>[0],
+    "messages" | "system"
+  > & {
     userId: Docs["users"]["_id"];
-    needsPageFetch: boolean;
-    url: string;
     usageHandler: UsageHandler;
   }) {
     if (
@@ -47,29 +40,6 @@ export const repairToolCall = Effect.fn("nina.repair")(
       !Schema.is(LearningCapabilityNameSchema)(toolCall.toolName)
     ) {
       return null;
-    }
-    const hasPageResult = messages.some(
-      (message) =>
-        message.role === "tool" &&
-        message.content.some(
-          (part) => part.type === "tool-result" && part.toolName === "nakafa"
-        )
-    );
-    if (
-      needsPageFetch &&
-      !hasPageResult &&
-      toolCall.toolName === "nakafa" &&
-      InvalidToolInputError.isInstance(error)
-    ) {
-      return {
-        ...toolCall,
-        input: JSON.stringify({
-          request: url,
-          objective: "Read the current Nakafa page.",
-          deliverables: ["current page evidence"],
-          requirements: ["Use the current page URL."],
-        }),
-      };
     }
     const schema = yield* Effect.tryPromise({
       try: () => inputSchema(toolCall),

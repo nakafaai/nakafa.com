@@ -43,6 +43,7 @@ import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
+import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
 import onboardingProfiles from "./tables/onboardingProfiles";
@@ -124,6 +125,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly learningViews: typeof learningViews;
   readonly materialBuckets: typeof materialBuckets;
   readonly materialCatalog: typeof materialCatalog;
+  readonly ninaSummaries: typeof ninaSummaries;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
   readonly onboardingProfiles: typeof onboardingProfiles;
@@ -204,6 +206,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   learningViews,
   materialBuckets,
   materialCatalog,
+  ninaSummaries,
   ninaTurns,
   ninaUploads,
   onboardingProfiles,

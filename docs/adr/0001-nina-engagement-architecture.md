@@ -24,8 +24,8 @@ action invokes Agent with a Vercel AI Gateway model. Lifecycle mutations settle
 successful responses or refund failed and cancelled responses once.
 
 A committed final answer releases the chat immediately. The settlement mutation
-also schedules optional title and follow-up generation exactly once through
-Confect's Scheduler. That action rechecks the retained conversation and account,
+also schedules optional title, follow-up, and summary generation exactly once
+through Confect's Scheduler. That action rechecks the retained conversation and account,
 and anchors its Agent context to the completed prompt so a newer turn cannot
 change its suggestions. Optional generation never reserves or refunds credits.
 The completion event records answer-time usage; the durable turn's usage and
@@ -39,10 +39,21 @@ React uses Confect hooks for application functions and the official Agent
 optimistic update contract. There is no Next.js AI transport route or separate AI
 backend package.
 
+Nina's system prompt leads with stable instructions so provider prompt caching
+reuses them across turns. The current page, a question focus, and per-turn
+runtime facts follow in that order. On a verified learning page, generation
+reads the signed page once before the first model step and places it in that
+context within the page token budget. The model spends no forced tool step on
+it and asks Nakafa for other sections.
+
 Math, Nakafa retrieval, and external research are Agent tools implemented as
 Effect programs. Specialist agents use the same Vercel Gateway provider and
 Agent usage handler. Tool results retain progressive evidence cards and final
-model-facing evidence. Context compaction changes provider input only; it does
+model-facing evidence, which never exceeds the evidence token budget: a
+truncated output says what it omitted and how to ask for it, and Nakafa reads
+continue by heading section, or by numbered part inside a section too long for
+one read, with the following sections listed first. Context compaction changes
+provider input only; it does
 not discard the stored transcript. Math uses deterministic computation, Nakafa
 uses authenticated signed content, and research admits retrieved sources.
 
@@ -63,9 +74,21 @@ the learner's language, and the learner's recorded answer through an internal
 query, so question text and answer keys never come from the client. The official
 explanation is the source of truth for the answer.
 
-The main Agent receives at most 50 projected history messages and 24,000 tokens.
-Old reasoning and verbose artifact payloads are excluded from provider history;
-full conversation data stays in Agent storage. External research admits at most
+Provider input keeps whole recent turns that the conversation summary does not
+cover, newest first, within 12,000 tokens, and the current turn's evidence
+within 16,000 tokens. Older evidence shortens with a visible note before a turn
+is dropped, and no budget fails a turn. Earlier turns keep their images, while
+their PDF and text attachments, whose cost grows with size, leave provider
+history as a note naming the file. After a completed turn, the follow-up action
+folds turns beyond the four newest into the chat's conversation summary with a
+fast model once four such turns accumulate, at most 16 turns per refresh, so a
+longer backlog advances one bounded batch per turn and reads back only from its
+last folded turn. The summary, at most 1,200
+tokens, sits in the system prompt context and is deleted with its chat. Its
+refreshes are chat upkeep, so their provider usage accumulates on the summary
+rather than in a turn's usage ledger, which clients read. Old
+reasoning is excluded from provider history; full conversation data stays in
+Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000
 selected characters per source. Excess requests receive an explicit limit;
 sources are never silently omitted. Public grounding sources are published for
