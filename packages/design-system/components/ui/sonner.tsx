@@ -37,43 +37,43 @@ interface ToasterStyle extends React.CSSProperties {
   "--warning-text": string;
 }
 
+/**
+ * Status toasts reuse the subtle recipe of the `*-outline` buttons: a status
+ * border, the popover tinted with 5% of the status color, and popover text.
+ */
 const toasterStyle: ToasterStyle = {
   "--border-radius": "var(--radius)",
-  "--error-bg": "var(--destructive)",
-  "--error-border":
-    "color-mix(in oklch, var(--destructive-foreground) 20%, var(--destructive))",
-  "--error-text": "var(--destructive-foreground)",
+  "--error-bg": "color-mix(in oklch, var(--destructive) 5%, var(--popover))",
+  "--error-border": "var(--destructive)",
+  "--error-text": "var(--popover-foreground)",
   "--gray2": "var(--accent)",
   "--gray4": "var(--input)",
   "--gray5": "var(--input)",
   "--gray12": "var(--popover-foreground)",
-  "--info-bg": "var(--info)",
-  "--info-border":
-    "color-mix(in oklch, var(--info-foreground) 20%, var(--info))",
-  "--info-text": "var(--info-foreground)",
+  "--info-bg": "color-mix(in oklch, var(--info) 5%, var(--popover))",
+  "--info-border": "var(--info)",
+  "--info-text": "var(--popover-foreground)",
   "--normal-bg": "var(--popover)",
   "--normal-bg-hover": "var(--accent)",
   "--normal-border": "var(--border)",
   "--normal-border-hover": "var(--input)",
   "--normal-text": "var(--popover-foreground)",
-  "--success-bg": "var(--success)",
-  "--success-border":
-    "color-mix(in oklch, var(--success-foreground) 20%, var(--success))",
-  "--success-text": "var(--success-foreground)",
-  "--warning-bg": "var(--warning)",
-  "--warning-border":
-    "color-mix(in oklch, var(--warning-foreground) 20%, var(--warning))",
-  "--warning-text": "var(--warning-foreground)",
+  "--success-bg": "color-mix(in oklch, var(--success) 5%, var(--popover))",
+  "--success-border": "var(--success)",
+  "--success-text": "var(--popover-foreground)",
+  "--warning-bg": "color-mix(in oklch, var(--warning) 5%, var(--popover))",
+  "--warning-border": "var(--warning)",
+  "--warning-text": "var(--popover-foreground)",
 };
 
-/** Renders app toasts with the active appearance and semantic status colors. */
+/** Renders app toasts with the active appearance and subtle status colors. */
 function Toaster({ ...props }: ToasterProps) {
   const { resolvedTheme } = useTheme();
   const appearance = getThemeAppearance(resolvedTheme);
 
   return (
     <Sonner
-      className="toaster group"
+      className="toaster group font-sans!"
       closeButton
       icons={{
         success: <HugeIcons className="size-4" icon={Tick01Icon} />,
@@ -92,11 +92,10 @@ function Toaster({ ...props }: ToasterProps) {
           cancelButton:
             "bg-secondary! text-secondary-foreground! focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
           closeButton:
-            "transition-colors! ease-out! hover:border-current! hover:bg-accent! hover:text-accent-foreground! focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset group-data-[type=success]/toast:hover:bg-success! group-data-[type=success]/toast:hover:text-success-foreground! group-data-[type=info]/toast:hover:bg-info! group-data-[type=info]/toast:hover:text-info-foreground! group-data-[type=warning]/toast:hover:bg-warning! group-data-[type=warning]/toast:hover:text-warning-foreground! group-data-[type=error]/toast:hover:bg-destructive! group-data-[type=error]/toast:hover:text-destructive-foreground!",
-          description:
-            "text-muted-foreground! group-data-[type=success]/toast:text-success-foreground! group-data-[type=info]/toast:text-info-foreground! group-data-[type=warning]/toast:text-warning-foreground! group-data-[type=error]/toast:text-destructive-foreground!",
+            "transition-colors! ease-out! hover:border-current! hover:bg-accent! hover:text-accent-foreground! focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
+          description: "text-muted-foreground!",
           toast:
-            "group/toast focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
+            "focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
         },
       }}
       {...props}
