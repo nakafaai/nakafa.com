@@ -11,15 +11,20 @@ import {
   isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
+  isImportDeclaration,
   isJsxElement,
   isJsxFragment,
   isJsxSelfClosingElement,
+  isNamedImports,
+  isNamespaceImport,
   isParenthesizedExpression,
   isPropertyAccessExpression,
   isReturnStatement,
+  isStringLiteral,
   isVariableDeclaration,
   type Node,
   type SourceFile,
+  type Statement,
 } from "typescript/unstable/ast";
 
 type RenderFunction = ArrowFunction | FunctionDeclaration | FunctionExpression;
@@ -141,5 +146,74 @@ export function inspectReactSource(file: string, sourceFile: SourceFile) {
     });
   };
   visit(sourceFile, undefined);
+  return violations;
+}
+
+/** React's context APIs and the use-context-selector API that replaces each. */
+const CONTEXT_APIS = new Map([
+  ["createContext", "createContext from use-context-selector"],
+  ["useContext", "useContextSelector from use-context-selector"],
+]);
+
+/** The message for one use of a React context API. */
+function contextViolation(file: string, api: string, replacement: string) {
+  return `${file}: use ${replacement} instead of React's ${api}, so each consumer re-renders only for the value it selects.`;
+}
+
+/** Returns the import clause of an `import ... from "react"` statement. */
+function reactImportClause(statement: Statement) {
+  if (
+    !(
+      isImportDeclaration(statement) &&
+      isStringLiteral(statement.moduleSpecifier) &&
+      statement.moduleSpecifier.text === "react"
+    )
+  ) {
+    return;
+  }
+  return statement.importClause;
+}
+
+/**
+ * Reports React's createContext and useContext, whether imported by name or
+ * reached through a default or namespace import of react. Contexts come from
+ * use-context-selector, so each consumer selects the slice it renders.
+ */
+export function inspectContextSource(file: string, sourceFile: SourceFile) {
+  const violations: string[] = [];
+  const namespaces = new Set<string>();
+  for (const statement of sourceFile.statements) {
+    const clause = reactImportClause(statement);
+    if (clause?.name !== undefined) {
+      namespaces.add(clause.name.text);
+    }
+    const bindings = clause?.namedBindings;
+    if (bindings !== undefined && isNamespaceImport(bindings)) {
+      namespaces.add(bindings.name.text);
+    }
+    if (bindings !== undefined && isNamedImports(bindings)) {
+      for (const element of bindings.elements) {
+        const api = (element.propertyName ?? element.name).text;
+        const replacement = CONTEXT_APIS.get(api);
+        if (replacement !== undefined) {
+          violations.push(contextViolation(file, api, replacement));
+        }
+      }
+    }
+  }
+  const visit = (node: Node) => {
+    if (
+      isPropertyAccessExpression(node) &&
+      isIdentifier(node.expression) &&
+      namespaces.has(node.expression.text)
+    ) {
+      const replacement = CONTEXT_APIS.get(node.name.text);
+      if (replacement !== undefined) {
+        violations.push(contextViolation(file, node.name.text, replacement));
+      }
+    }
+    node.forEachChild(visit);
+  };
+  visit(sourceFile);
   return violations;
 }

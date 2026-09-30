@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { inspectReactSource } from "#scripts/check/react";
+import { inspectContextSource, inspectReactSource } from "#scripts/check/react";
 import { sourceViolations } from "#scripts/check/source";
 
 const VIEW = "apps/www/components/example.tsx";
@@ -122,6 +122,69 @@ declare function declared(): void;`);
         "export function build() { const render = () => null; return render; }",
         "apps/www/lib/example.ts"
       );
+      assert.deepStrictEqual(violations, []);
+    })
+  );
+});
+
+/** Inspects one module with the context policy alone. */
+function inspectContexts(sourceText: string, file = VIEW) {
+  return sourceViolations([{ file, sourceText }], [inspectContextSource]);
+}
+
+/** The message for one React context API. */
+function contextViolation(api: string, replacement: string, file = VIEW) {
+  return `${file}: use ${replacement} from use-context-selector instead of React's ${api}, so each consumer re-renders only for the value it selects.`;
+}
+
+describe("React context policy", () => {
+  it.effect("rejects React's context APIs imported by name", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspectContexts(`
+import { createContext, type ReactNode, useContext as read } from "react";
+const Theme = createContext("light");
+export function useTheme() {
+  return read(Theme);
+}`);
+      assert.deepStrictEqual(violations, [
+        contextViolation("createContext", "createContext"),
+        contextViolation("useContext", "useContextSelector"),
+      ]);
+    })
+  );
+
+  it.effect(
+    "rejects context APIs reached through default and namespace imports",
+    () =>
+      Effect.gen(function* () {
+        const file = "apps/www/lib/theme.ts";
+        const violations = yield* inspectContexts(
+          `
+import React from "react";
+import * as Core from "react";
+export const Theme = React.createContext("light");
+export const useTheme = () => Core.useContext(Theme);
+export const useFlag = () => React.useState(false);`,
+          file
+        );
+        assert.deepStrictEqual(violations, [
+          contextViolation("createContext", "createContext", file),
+          contextViolation("useContext", "useContextSelector", file),
+        ]);
+      })
+  );
+
+  it.effect("allows use-context-selector and third-party contexts", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspectContexts(`
+import "react";
+import { type ReactNode, use } from "react";
+import { createContext, useContextSelector } from "use-context-selector";
+import { LibraryContext } from "library";
+const Theme = createContext("light");
+export const useTheme = () => useContextSelector(Theme, (theme) => theme);
+export const useLibrary = () => use(LibraryContext);
+export const read = (store: { useContext: () => void }) => store.useContext();`);
       assert.deepStrictEqual(violations, []);
     })
   );
