@@ -28,7 +28,7 @@ import {
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
 import { getConvexSize } from "convex/values";
-import { Clock, Effect, Schema } from "effect";
+import { Clock, Effect, Schema, Struct } from "effect";
 
 /** Decodes one bounded artifact batch through the shared wire contract. */
 export const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(
@@ -113,9 +113,12 @@ export const stageArtifact = Effect.fn("contentRelease.stageArtifact")(
       now,
       retainUntil
     );
+    // Confect patch re-reads the whole row before replacing it, so replace
+    // the row loaded above instead of reading it again per staged artifact.
     yield* writer
       .table("contentItems")
-      .patch(item._id, {
+      .replace(item._id, {
+        ...Struct.omit(item, ["_id", "_creationTime"]),
         artifactBatchHash: batchHash,
         artifactBatchIndex: batchIndex,
         artifactReady: true,
