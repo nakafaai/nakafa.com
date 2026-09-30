@@ -62,6 +62,7 @@ overrides:
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
   "@scalar/json-magic@0.15.3>undici": "7.29.1"
   "auth@1.6.33>@babel/core": "7.29.7"
+  "axios": "1.20.0"
   "convex-helpers": "0.1.124"
   "fast-uri": "3.1.8"
   "ip-address": "10.7.2"
