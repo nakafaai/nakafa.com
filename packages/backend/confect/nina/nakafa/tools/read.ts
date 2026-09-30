@@ -1,8 +1,8 @@
 import { getNakafaContent } from "@repo/backend/agent/content";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import type { NinaReadOptions } from "@repo/backend/confect/nina/contract/data";
-import { formatRead } from "@repo/backend/confect/nina/nakafa/format";
 import { previewRead } from "@repo/backend/confect/nina/nakafa/preview";
+import { formatRead } from "@repo/backend/confect/nina/nakafa/sections";
 import { Effect, Option, Result } from "effect";
 
 const notFoundMessage = "Nakafa content was not found.";

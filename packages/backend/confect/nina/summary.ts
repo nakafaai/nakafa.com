@@ -19,8 +19,13 @@ import { Effect, Schema } from "effect";
 
 /** Complete turns kept verbatim after the summary. */
 export const RECENT_TURNS = 4;
-/** Turns one refresh folds into the summary. */
+/** Turns that must wait beyond the verbatim window before a refresh runs. */
 const FOLD_TURNS = 4;
+/**
+ * Most turns one refresh folds. A chat with a longer backlog, such as one that
+ * predates summaries, advances one bounded batch per completed turn.
+ */
+const FOLD_LIMIT = 16;
 /** Text one message contributes to a refresh transcript. */
 const MESSAGE_TOKENS = 1500;
 const MESSAGE_PAGE = 100;
@@ -41,11 +46,13 @@ class NinaSummaryError extends Schema.TaggedError<NinaSummaryError>()(
 /**
  * Returns the order a refresh should summarize through once `order` settles.
  * A refresh waits until enough turns sit between the summary and the verbatim
- * window, so one fast-model call folds several turns.
+ * window, so one fast-model call folds several turns, and never folds more
+ * than one bounded batch.
  */
 export function nextSummaryTarget(order: number, throughOrder: number | null) {
-  const target = order - RECENT_TURNS;
-  return target - (throughOrder ?? -1) >= FOLD_TURNS ? target : null;
+  const covered = throughOrder ?? -1;
+  const target = Math.min(order - RECENT_TURNS, covered + FOLD_LIMIT);
+  return target - covered >= FOLD_TURNS ? target : null;
 }
 
 /** Reads learner and Nina text for the turns after `from` through `through`. */
