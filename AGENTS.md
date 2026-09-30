@@ -72,6 +72,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Confect React owns application queries and mutations. Use the official Agent streaming hook and Better Auth integration at their component boundaries, without a custom transport or vanilla preload adapter.
 - Use optimistic updates for predictable user mutations with rollback on failure. Use React transitions for asynchronous UI boundaries; do not maintain separate `useState` loading or pending flags. Keep stable content visible while optional data arrives.
 - Share compound-component state through the owning context and compose children directly. Do not forward props through components that do not consume them.
+- Declare every component, including list items and render helpers, as a named module-level function component. Never define a component or a function that returns JSX inside another component; `scripts/check/react.ts` rejects both, alongside Biome's `noNestedComponentDefinitions`. Inline callbacks passed where they are used, such as list items or rich-text tags, stay inline.
 
 - Before React composition work, use the globally installed upstream `vercel-composition-patterns` skill. Use the official Vercel React, Next.js, and shadcn plugin skills when their focused guidance applies.
 - Before Next.js work, find the installed version-matched documentation with `find . -path '*/node_modules/next/dist/docs' -type d -print`. Installed docs and source are authoritative for APIs, file conventions, and deprecations.

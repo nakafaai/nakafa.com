@@ -1,9 +1,11 @@
 import { Effect, FileSystem, Path, Schema } from "effect";
 import {
-  effectSourceViolations,
   effectTestViolations,
+  inspectEffectSource,
 } from "#scripts/check/effect";
 import { readRepositoryFiles } from "#scripts/check/files";
+import { inspectReactSource } from "#scripts/check/react";
+import { sourceViolations as inspectSources } from "#scripts/check/source";
 import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
@@ -104,7 +106,10 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         )
       )
     );
-    const sourceViolations = yield* effectSourceViolations(authoredSources);
+    const sourceViolations = yield* inspectSources(authoredSources, [
+      inspectEffectSource,
+      inspectReactSource,
+    ]);
 
     if (
       orphanTests.length === 0 &&

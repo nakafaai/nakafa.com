@@ -1,63 +1,31 @@
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import {
   isBinaryExpression,
   isIdentifier,
   isShorthandPropertyAssignment,
   isStringLiteralLikeNode,
   isTryStatement,
-  isTypeNode,
   isTypeOfExpression,
   type Node,
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { createVirtualFileSystem } from "typescript/unstable/fs";
-import { API } from "typescript/unstable/sync";
+import type { API } from "typescript/unstable/sync";
 import { effectRunnerViolation } from "#scripts/check/runtime";
-
-export const EffectSource = Schema.Struct({
-  file: Schema.String,
-  sourceText: Schema.String,
-});
-
-export class TestCompilerError extends Schema.TaggedError<TestCompilerError>()(
-  "TestCompilerError",
-  { cause: Schema.Unknown, message: Schema.String }
-) {}
+import {
+  descendants,
+  openCompiler,
+  type RepositorySource,
+  TestCompilerError,
+} from "#scripts/check/source";
 
 const TEST_MODULE_PATTERN = /\.test\.ts$/u;
-const SOURCE_MODULE_PATTERN = /\.tsx?$/u;
 const EQUALITY_OPERATORS: ReadonlySet<SyntaxKind> = new Set([
   SyntaxKind.EqualsEqualsEqualsToken,
   SyntaxKind.EqualsEqualsToken,
   SyntaxKind.ExclamationEqualsEqualsToken,
   SyntaxKind.ExclamationEqualsToken,
 ]);
-
-/** Returns value-position descendants while excluding type-only subtrees. */
-function descendants(sourceFile: SourceFile, skipTypes = true) {
-  const nodes: Node[] = [sourceFile];
-  for (const node of nodes) {
-    if (skipTypes && isTypeNode(node)) {
-      continue;
-    }
-    node.forEachChild((child) => {
-      nodes.push(child);
-    });
-  }
-  return nodes;
-}
-
-/** Opens one scoped native compiler over an in-memory source set. */
-function openCompiler(files: Record<string, string>, message: string) {
-  return Effect.acquireRelease(
-    Effect.try({
-      try: () => new API({ cwd: "/", fs: createVirtualFileSystem(files) }),
-      catch: (cause) => new TestCompilerError({ cause, message }),
-    }),
-    (resource) => Effect.sync(() => resource.close())
-  );
-}
 
 /** Keeps each test in its own native project so lexical bindings stay local. */
 const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
@@ -124,7 +92,7 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
 
 /** Reports authored tests using one scoped, Effect-patched native compiler. */
 export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
-  function* (sources: readonly (typeof EffectSource.Type)[]) {
+  function* (sources: readonly (typeof RepositorySource.Type)[]) {
     const tests = sources.filter(({ file }) => TEST_MODULE_PATTERN.test(file));
     if (tests.length === 0) {
       return [];
@@ -176,8 +144,12 @@ function isTypeofObjectComparison(node: Node) {
   return false;
 }
 
-/** Reports raw failure handling and hand-rolled narrowing in one source file. */
-function inspectSourcePolicy(file: string, sourceFile: SourceFile) {
+/**
+ * Reports raw failure handling and hand-rolled narrowing in one authored
+ * module. Expected failure belongs to typed Effect errors and unknown input
+ * belongs to Schema or Predicate.
+ */
+export function inspectEffectSource(file: string, sourceFile: SourceFile) {
   const violations: string[] = [];
   for (const node of descendants(sourceFile)) {
     if (isTryStatement(node) && node.catchClause !== undefined) {
@@ -193,76 +165,3 @@ function inspectSourcePolicy(file: string, sourceFile: SourceFile) {
   }
   return violations;
 }
-
-/**
- * Reports raw failure handling and hand-rolled narrowing in backend sources.
- *
- * The Convex backend is Effect-native: expected failure belongs to typed
- * Effect errors and unknown input belongs to Schema or Predicate. One batch
- * project reads every authored backend syntax tree, so the cost stays flat
- * as the package grows.
- */
-export const effectSourceViolations = Effect.fn(
-  "RepositoryPolicy.effectSources"
-)(function* (sources: readonly (typeof EffectSource.Type)[]) {
-  const inspected = sources.filter(({ file }) =>
-    SOURCE_MODULE_PATTERN.test(file)
-  );
-  if (inspected.length === 0) {
-    return [];
-  }
-  const root = "/source-policy";
-  const configFile = `${root}/tsconfig.json`;
-  const modules = inspected.map(
-    ({ file }, index) => `${index}.${file.endsWith(".tsx") ? "tsx" : "ts"}`
-  );
-  const api = yield* openCompiler(
-    Object.fromEntries([
-      ...inspected.map(({ sourceText }, index) => [
-        `${root}/${modules[index]}`,
-        sourceText,
-      ]),
-      [
-        configFile,
-        JSON.stringify({
-          compilerOptions: {
-            jsx: "preserve",
-            noLib: true,
-            noResolve: true,
-          },
-          files: modules,
-        }),
-      ],
-    ]),
-    "Unable to start the native source compiler."
-  );
-  const snapshotFailure = (cause: unknown) =>
-    new TestCompilerError({
-      cause,
-      message: "Unable to inspect repository sources.",
-    });
-  const snapshot = yield* Effect.acquireRelease(
-    Effect.try({
-      try: () =>
-        api.updateSnapshot({
-          openProjects: [configFile],
-          closeProjects: [],
-        }),
-      catch: snapshotFailure,
-    }),
-    (resource) => Effect.sync(() => resource.dispose())
-  );
-  const program = snapshot.getProject(configFile)?.program;
-  if (program === undefined) {
-    return yield* new TestCompilerError({
-      cause: "The native source project is missing.",
-      message: "Unable to inspect repository sources.",
-    });
-  }
-  return inspected.flatMap(({ file }, index) => {
-    const sourceFile = program.getSourceFile(`${root}/${modules[index]}`);
-    return sourceFile === undefined
-      ? [`${file}: the native compiler did not expose this source file.`]
-      : inspectSourcePolicy(file, sourceFile);
-  });
-}, Effect.scoped);
