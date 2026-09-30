@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   ARTICLE_VALIDATION_CLAIM_READ_LIMIT,
@@ -24,7 +23,6 @@ import {
   PROGRAM_RELATED_LIMIT,
 } from "@repo/backend/confect/contentRelease/program/limits";
 import {
-  ARTIFACT_PAGE_BYTES,
   ARTIFACT_PAGE_COUNT,
   COMPACTION_HEAD_COUNT,
   COMPACTION_ITEM_COUNT,
@@ -33,6 +31,7 @@ import {
   TRANSACTION_READ_HEADROOM,
   TRANSACTION_READ_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
+import { TRYOUT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 
 describe("contentRelease/spec", () => {
   it("preserves four MiB around worst-case lifecycle pages", () => {
@@ -46,29 +45,42 @@ describe("contentRelease/spec", () => {
   });
 
   it("bounds maintenance pages below the transaction read budget", () => {
+    // Proving one artifact referenced reads one head, one release item, and
+    // the try-out placements naming it as question and answer. An
+    // unreferenced artifact reads only its small facts instead.
     const referenceBytes =
-      3 * CONTENT_DOCUMENT_LIMIT + READ_MODEL_DOCUMENT_LIMIT;
-    const maximumArtifactWork =
-      ARTIFACT_PAGE_BYTES + ARTIFACT_PAGE_COUNT * referenceBytes;
+      READ_MODEL_DOCUMENT_LIMIT +
+      CONTENT_DOCUMENT_LIMIT +
+      2 * TRYOUT_PLACEMENT_DOCUMENT_LIMIT;
+    // Artifact facts hold fixed-size identities, far below a read model.
+    const factsBytes = READ_MODEL_DOCUMENT_LIMIT;
     const maximumHeadWork =
-      COMPACTION_PAGE_BYTES + COMPACTION_HEAD_COUNT * 2 * referenceBytes;
+      COMPACTION_HEAD_COUNT *
+      (7 * READ_MODEL_DOCUMENT_LIMIT + 2 * referenceBytes);
     const maximumItemWork =
-      COMPACTION_PAGE_BYTES + COMPACTION_ITEM_COUNT * referenceBytes;
+      2 * (COMPACTION_PAGE_BYTES + CONTENT_DOCUMENT_LIMIT) +
+      COMPACTION_ITEM_COUNT * referenceBytes;
+    const maximumArtifactWork =
+      ARTIFACT_PAGE_COUNT *
+      (factsBytes +
+        Math.max(referenceBytes, CONTENT_DOCUMENT_LIMIT + factsBytes));
+    // Cleanup reads and then patches its release beside the facts page.
+    const maximumCleanupWork = 4 * CONTENT_DOCUMENT_LIMIT + maximumArtifactWork;
     const maximumSearchWork =
       CONTENT_DOCUMENT_LIMIT +
       PROJECTION_PAGE_LIMIT *
         (SEARCH_DOCUMENT_LIMIT + 4 * READ_MODEL_DOCUMENT_LIMIT);
 
-    expect(ARTIFACT_PAGE_COUNT * MAX_SIGNED_ARTIFACT_BYTES).toBeLessThan(
-      ARTIFACT_PAGE_BYTES
-    );
-    expect(maximumArtifactWork).toBeLessThanOrEqual(
-      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
-    );
     expect(maximumHeadWork).toBeLessThanOrEqual(
       TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
     expect(maximumItemWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(maximumArtifactWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(maximumCleanupWork).toBeLessThanOrEqual(
       TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
     expect(maximumSearchWork).toBeLessThanOrEqual(
