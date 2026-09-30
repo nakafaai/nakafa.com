@@ -10,6 +10,16 @@ import { Effect } from "effect";
  */
 export const TRYOUT_REVIEW_PREVIEW_QUESTIONS = 2;
 
+/**
+ * Whether a frozen question position belongs to its section's free preview.
+ * Frozen placements number a section's questions 1 through its question
+ * count, so the preview stays bound to those positions and a missing row can
+ * only shrink it.
+ */
+export function isTryoutReviewPreviewQuestion(questionOrder: number) {
+  return questionOrder <= TRYOUT_REVIEW_PREVIEW_QUESTIONS;
+}
+
 /** Derives question access and review state from one coherent lifecycle. */
 function getTryoutSectionLifecycle(
   attemptStatus: TryoutStatus,

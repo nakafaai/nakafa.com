@@ -149,6 +149,68 @@ describe("tryouts/runtime/history/placement", () => {
         );
       })
   );
+  it.effect(
+    "keeps the free preview on the leading positions when a placement is missing",
+    () =>
+      Effect.gen(function* () {
+        const { owned, seed, t } = yield* Effect.promise(setup);
+        const answer = seed.request.selectors.find(
+          (selector) => selector.delivery === "entitled"
+        );
+        assert.isDefined(answer);
+        const second = answer.questionOrder + 1;
+        const third = answer.questionOrder + 2;
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            await ctx.db.patch("users", seed.identity.userId, {
+              plan: "free",
+            });
+            const placement = await ctx.db.get(seed.placementId);
+            const retained = await ctx.db.get(seed.retainedId);
+            assert.isNotNull(placement);
+            assert.isNotNull(retained);
+            const { _creationTime, _id, ...frozen } = placement;
+            const {
+              _creationTime: _retainedCreationTime,
+              _id: _retainedId,
+              ...catalog
+            } = retained;
+            // Each later question is a genuine placement with its own
+            // retained snapshot row, so only the preview gate can withhold it.
+            for (const questionOrder of [second, third]) {
+              const identity = `${catalog.identity}:${questionOrder}`;
+              await ctx.db.insert("tryoutPlacements", {
+                ...catalog,
+                identity,
+                questionOrder,
+              });
+              await ctx.db.insert("tryoutAttemptPlacements", {
+                ...frozen,
+                placementIdentity: identity,
+                questionOrder,
+              });
+            }
+            await ctx.db.delete(seed.placementId);
+          })
+        );
+        assert.isNotNull(
+          yield* Effect.promise(() =>
+            owned.query(readReference, {
+              ...seed.request,
+              selectors: [{ ...answer, questionOrder: second }],
+            })
+          )
+        );
+        assert.isNull(
+          yield* Effect.promise(() =>
+            owned.query(readReference, {
+              ...seed.request,
+              selectors: [{ ...answer, questionOrder: third }],
+            })
+          )
+        );
+      })
+  );
   it.effect("withholds every answer while its section is in progress", () =>
     Effect.gen(function* () {
       const { owned, seed, t } = yield* Effect.promise(setup);

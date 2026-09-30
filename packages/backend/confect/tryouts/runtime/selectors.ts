@@ -2,7 +2,7 @@ import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
 import { loadAttemptRuntimeBundle } from "@repo/backend/confect/tryouts/runtime/attempt/source";
-import { TRYOUT_REVIEW_PREVIEW_QUESTIONS } from "@repo/backend/confect/tryouts/runtime/content";
+import { isTryoutReviewPreviewQuestion } from "@repo/backend/confect/tryouts/runtime/content";
 import { selectorIntegrity } from "@repo/backend/confect/tryouts/runtime/ownership";
 import type {
   TryoutAnswerSelector,
@@ -49,9 +49,11 @@ export const projectTryoutSignedContent = Effect.fn(
     : [];
   const previewAnswers = input.preview
     ? yield* Effect.forEach(
-        [...input.placements]
-          .sort((left, right) => left.questionOrder - right.questionOrder)
-          .slice(0, TRYOUT_REVIEW_PREVIEW_QUESTIONS),
+        input.placements
+          .filter((placement) =>
+            isTryoutReviewPreviewQuestion(placement.questionOrder)
+          )
+          .sort((left, right) => left.questionOrder - right.questionOrder),
         answerSelector
       )
     : [];
