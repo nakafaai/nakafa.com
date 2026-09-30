@@ -1,3 +1,4 @@
+import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { DataPartSchema } from "@repo/backend/confect/nina/contract/data";
 import { Effect, Exit, Queue, Schema, Stream } from "effect";
 
@@ -51,12 +52,20 @@ export type CapabilityProgress = (
  * all cards gathered by this invocation. Slow consumers coalesce intermediate
  * snapshots without losing cards or the final evidence. Closing the stream
  * interrupts the scoped capability, including its provider and tool requests.
+ * Final model-facing text never exceeds the evidence budget; `continuation`
+ * tells the model how to ask for what a truncation omitted.
  */
 export function streamCapability<E, R>(
   run: (
     publish: CapabilityProgress
   ) => Effect.Effect<Pick<CapabilityOutput, "text" | "failure">, E, R>,
-  signal?: AbortSignal
+  {
+    continuation,
+    signal,
+  }: {
+    readonly continuation: string;
+    readonly signal?: AbortSignal | undefined;
+  }
 ): Stream.Stream<CapabilityOutput, E, R> {
   return Stream.callback<CapabilityOutput, E, R>(
     (queue) =>
@@ -77,7 +86,7 @@ export function streamCapability<E, R>(
             Queue.offer(queue, {
               artifacts: [...artifacts.values()],
               ...(failure ? { failure } : {}),
-              text,
+              text: boundText(text, NINA_BUDGET.evidence, continuation),
             })
           ),
           Effect.onExit((exit) =>

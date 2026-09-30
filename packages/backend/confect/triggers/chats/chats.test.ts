@@ -118,6 +118,13 @@ describe("native Nina deletion lifecycle", () => {
           state: { status: "unanswered" },
         });
       }
+      await ctx.db.insert("ninaSummaries", {
+        chatId: receipt.chatId,
+        text: "- The learner asked about limits.",
+        throughOrder: 20,
+        updatedAt: NOW,
+        usage: { calls: 1, input: 900, output: 120 },
+      });
     });
     await owner.mutation(remove, { chatId: receipt.chatId });
     expect(
@@ -132,6 +139,7 @@ describe("native Nina deletion lifecycle", () => {
     const state = await t.query(async (ctx) => ({
       chat: await ctx.db.get("chats", receipt.chatId),
       turns: await ctx.db.query("ninaTurns").collect(),
+      summaries: await ctx.db.query("ninaSummaries").collect(),
       messages: await ctx.runQuery(
         components.nina.messages.listMessagesByThreadId,
         {
@@ -150,6 +158,7 @@ describe("native Nina deletion lifecycle", () => {
     }));
     expect(state.chat).toBeNull();
     expect(state.turns).toEqual([]);
+    expect(state.summaries).toEqual([]);
     expect(state.messages.page).toEqual([]);
     expect(state.threads.page).toEqual([]);
     expect(state.file).toMatchObject({ refcount: 0 });

@@ -1,5 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { createThread, saveMessage } from "@convex-dev/agent";
+import { createThread, saveMessage, saveMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
@@ -12,12 +12,17 @@ import {
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect } from "effect";
 
-/** A real component thread with a reserved turn and its authenticated owner. */
+/**
+ * A real component thread with a reserved turn and its authenticated owner.
+ * `history` complete earlier turns precede the reserved prompt.
+ */
 export async function createNinaTest({
+  history = 0,
   now = Date.now(),
   prompt: text = "Explain a limit.",
   needsFetch = false,
 }: {
+  history?: number;
   now?: number;
   prompt?: string;
   needsFetch?: boolean;
@@ -39,6 +44,16 @@ export async function createNinaTest({
     const threadId = await createThread(ctx, components.nina, {
       userId: identity.userId,
     });
+    for (let order = 0; order < history; order += 1) {
+      await saveMessages(ctx, components.nina, {
+        threadId,
+        order,
+        messages: [
+          { role: "user", content: `Earlier question ${order}` },
+          { role: "assistant", content: `Earlier answer ${order}` },
+        ],
+      });
+    }
     const prompt = await saveMessage(ctx, components.nina, {
       threadId,
       prompt: text,

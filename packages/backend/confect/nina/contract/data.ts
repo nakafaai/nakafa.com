@@ -30,7 +30,20 @@ const ContentPreviewSchema = NakafaAgentContentRefSchema.mapFields(
 ).mapFields(Struct.map(Schema.mutableKey));
 const SearchInputSchema = NakafaAgentSearchFactsSchema;
 const SearchResultSchema = NakafaAgentSearchResultSchema;
-const ReadInputSchema = NakafaAgentReadOptionsSchema;
+/** Nina's read input: one content reference and an optional heading section. */
+export const NinaReadOptionsSchema = NakafaAgentReadOptionsSchema.mapFields(
+  (fields) => ({
+    ...fields,
+    section: Schema.optionalKey(
+      Schema.String.annotate({
+        description:
+          "Heading section to start reading from, as listed under Other Sections in an earlier read of the same content.",
+      })
+    ),
+  })
+).mapFields(Struct.map(Schema.mutableKey));
+export type NinaReadOptions = Schema.Schema.Type<typeof NinaReadOptionsSchema>;
+const ReadInputSchema = NinaReadOptionsSchema;
 const QuranInputSchema = NakafaAgentQuranReferenceOptionsSchema;
 const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
 const quranPreviewFields = {

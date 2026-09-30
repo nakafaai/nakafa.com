@@ -13,31 +13,38 @@ import {
 } from "@repo/backend/confect/nina/prompt/runtime";
 import { formatTaskPrompt } from "@repo/backend/confect/nina/prompt/task";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
+import dedent from "dedent";
 import { Schema } from "effect";
 
-/** Runtime context, authenticated role and any verified question focus. */
+/** Runtime context, authenticated role, current page and question focus. */
 const SystemPromptPropsSchema = RuntimePromptContextSchema.mapFields(
   (fields) => ({
     ...fields,
     focus: Schema.optional(Schema.String),
+    pageContent: Schema.optional(Schema.String),
+    summary: Schema.optional(Schema.String),
     userRole: Schema.optional(PromptUserRoleSchema),
   })
 );
 
 type SystemPromptProps = Schema.Schema.Type<typeof SystemPromptPropsSchema>;
 
-/** Builds Nina's system prompt with internal LearningCapability policy. */
+/**
+ * Builds Nina's system prompt with internal LearningCapability policy. Stable
+ * instructions lead so provider prompt caching reuses them across turns; the
+ * page, question focus, conversation summary, and per-turn runtime facts
+ * follow in that order.
+ */
 export function createNinaPrompt({
   focus,
+  pageContent,
+  summary,
   userRole,
   ...runtime
 }: SystemPromptProps) {
-  return createPrompt({
+  const instructions = createPrompt({
     taskContext: formatIdentityPrompt(userRole),
     toneContext: formatTonePrompt(),
-    backgroundData: [formatRuntimePrompt(runtime), focus]
-      .filter(Boolean)
-      .join("\n\n"),
     toolUsageGuidelines: formatToolPolicyPrompt(),
     detailedTaskInstructions: focus
       ? [formatTaskPrompt(), formatFocusTaskPrompt()].join("\n\n")
@@ -45,4 +52,14 @@ export function createNinaPrompt({
     examples: formatExamplesPrompt(),
     outputFormatting: formatAnswerPrompt(),
   });
+  return [
+    instructions,
+    pageContent,
+    focus,
+    summary &&
+      `# Conversation Summary\n\nEarlier turns of this conversation:\n\n${summary}`,
+    dedent(formatRuntimePrompt(runtime)),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }

@@ -9,6 +9,7 @@ import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
 import { subAgentGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
 import type { NakafaAgentParams } from "@repo/backend/confect/nina/contract/agent";
+import { NinaReadOptionsSchema } from "@repo/backend/confect/nina/contract/data";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
 import {
@@ -30,7 +31,6 @@ import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
 import { search } from "@repo/backend/confect/nina/nakafa/tools/search";
 import { taxonomy } from "@repo/backend/confect/nina/nakafa/tools/taxonomy";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
-import { NakafaAgentReadOptionsSchema } from "@repo/contents/agent/schema/read";
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/agent/schema/taxonomy";
 import { isStepCount } from "ai";
@@ -39,7 +39,7 @@ import { Effect } from "effect";
 const nakafaSearchInputSchema = createEffectSchema(
   NakafaAgentSearchOptionsSchema
 );
-const nakafaReadInputSchema = createEffectSchema(NakafaAgentReadOptionsSchema);
+const nakafaReadInputSchema = createEffectSchema(NinaReadOptionsSchema);
 const nakafaQuranInputSchema = createEffectSchema(
   NakafaAgentQuranReferenceOptionsSchema
 );

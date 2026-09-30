@@ -7,7 +7,6 @@ import {
 
 const context = {
   currentDate: "May 15, 2026",
-  needsPageFetch: false,
   slug: "",
   url: "/id/chat/test",
   userRole: "student" as const,

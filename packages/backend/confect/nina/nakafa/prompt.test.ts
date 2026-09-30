@@ -4,7 +4,6 @@ import { nakafaAgentPrompt } from "@repo/backend/confect/nina/nakafa/prompt";
 
 const context = {
   currentDate: "May 15, 2026",
-  needsPageFetch: false,
   slug: "chat",
   url: "/id/chat",
   userRole: "student",
@@ -67,7 +66,6 @@ describe("nakafaAgentPrompt", () => {
     const prompt = nakafaAgentPrompt({
       context: {
         currentDate: "May 15, 2026",
-        needsPageFetch: true,
         slug: "kurikulum/merdeka/kelas-10/kimia",
         url: "/id/kurikulum/merdeka/kelas-10/kimia",
         verified: true,

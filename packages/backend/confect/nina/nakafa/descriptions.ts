@@ -25,13 +25,15 @@ export const nakafaRead = createPrompt({
   taskContext: `
     # read Tool
 
-    Read one full Nakafa content reference returned by search or supplied as a canonical Nakafa URL.
+    Read one Nakafa content reference returned by search or supplied as a canonical Nakafa URL.
+    Long content returns the sections that fit, then lists the other sections by name.
   `,
 
   toolUsageGuidelines: `
     # Tool Usage Guidelines
 
     Use this for article, subject, and full-surah content.
+    To continue a long read, call read again with the same content_ref and one listed section.
   `,
 });
 
