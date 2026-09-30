@@ -14,6 +14,7 @@ import { ChildProcessSpawner } from "effect/unstable/process";
 import { bumpDependencies } from "#scripts/dependencies/bump";
 import type { runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
+import { GITHUB_ACTION_REVIEWS } from "#scripts/github/policy";
 import {
   type GithubActionReleaseReview,
   githubActionReleaseReviews,
@@ -35,6 +36,12 @@ function reviewedDependencies(args: readonly string[]): CommandResult {
   const review = REGISTRY_REVIEWS.find(([registry]) => registry === args[1]);
   assert.isDefined(review);
   return { exitCode: 0, stderr: "", stdout: JSON.stringify(review[1]) };
+}
+
+/** Returns the release tag last reviewed for one action. */
+function reviewedTag(action: string) {
+  return GITHUB_ACTION_REVIEWS.find((review) => review.action === action)
+    ?.expectedTag;
 }
 
 function reviewedRelease(review: GithubActionReleaseReview) {
@@ -217,14 +224,14 @@ describe("dependency updates", () => {
             return new Response(null, { status: 404 });
           }
           return review.repository === "pnpm/setup"
-            ? Response.json({ tag_name: "v3.0.0" })
+            ? Response.json({ tag_name: "v99.0.0" })
             : reviewedRelease(review);
         },
       });
       assert.strictEqual(result.status, 1);
       assert.deepStrictEqual(result.errors, [
         "Unable to read the latest actions/checkout release.\n" +
-          "pnpm/setup is now v3.0.0; last reviewed v2.0.2.\n" +
+          `pnpm/setup is now v99.0.0; last reviewed ${reviewedTag("pnpm/setup")}.\n` +
           "pnpm outdated returned invalid JSON.\n",
       ]);
       assert.ok(

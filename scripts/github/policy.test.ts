@@ -219,12 +219,15 @@ describe("GitHub Action policy", () => {
     const setupIndex = actionUses.findIndex(({ reference }) =>
       reference.startsWith("pnpm/setup@")
     );
+    const { cache, ...reviewedInputs } =
+      GITHUB_ACTION_REVIEWS.find(({ action }) => action === "pnpm/setup")
+        ?.expectedInputs ?? {};
     const setupUse = actionUses[setupIndex];
     expect(setupUse).toBeDefined();
     if (!setupUse) {
       return;
     }
-    actionUses[setupIndex] = { ...setupUse, inputs: { install: "false" } };
+    actionUses[setupIndex] = { ...setupUse, inputs: reviewedInputs };
     actionUses.push(
       {
         inputs: {},
@@ -239,7 +242,7 @@ describe("GitHub Action policy", () => {
     );
 
     expect(validateGithubActionPolicy(actionUses)).toEqual([
-      `${setupUse.workflowPath} configures pnpm/setup cache as missing; approved true.`,
+      `${setupUse.workflowPath} configures pnpm/setup cache as missing; approved ${cache}.`,
       ".github/workflows/example.yml has an unpinned external action actions/checkout.",
       ".github/workflows/example.yml has an unpinned external action actions/checkout@.",
       "changesets/action has 0 workflow usages; expected 1.",
