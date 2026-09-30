@@ -1,5 +1,12 @@
 # mcp
 
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies [[`5c0723a`](https://github.com/nakafaai/nakafa.com/commit/5c0723a1c4baabae0b897a00761e00533eec3db8), [`07c4e15`](https://github.com/nakafaai/nakafa.com/commit/07c4e1587872de0b7c170dbe15cc154d99801f98)]:
+  - @repo/backend@3.1.0
+
 ## 2.0.1
 
 ### Patch Changes
