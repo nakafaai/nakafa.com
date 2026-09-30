@@ -89,7 +89,7 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
             ) : (
               <CatalogCardGradient seed={country.publicPath}>
                 <CountryFlagIcon
-                  className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
+                  className="relative h-6 w-9 rounded-xs ring-1 ring-border/60"
                   countryCode={country.countryCode}
                 />
               </CatalogCardGradient>

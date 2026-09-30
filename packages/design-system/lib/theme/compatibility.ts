@@ -16,7 +16,7 @@ export const THEME_COMPATIBILITY_COLORS = {
     secondary: "rgb(57, 199, 244)",
     "secondary-foreground": "rgb(24, 24, 27)",
     muted: "rgb(241, 245, 249)",
-    "muted-foreground": "rgb(95, 110, 133)",
+    "muted-foreground": "rgb(88, 104, 126)",
     accent: "rgb(223, 232, 241)",
     "accent-foreground": "rgb(15, 23, 42)",
     destructive: "rgb(214, 17, 65)",

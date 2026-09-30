@@ -98,11 +98,11 @@ const sidebarMenuSkeletonTextWidths = ["50", "60", "70", "80", "90"] as const;
 const sidebarMenuSkeletonTextVariants = cva("h-4 flex-1", {
   variants: {
     width: {
-      "50": "max-w-[50%]",
-      "60": "max-w-[60%]",
-      "70": "max-w-[70%]",
-      "80": "max-w-[80%]",
-      "90": "max-w-[90%]",
+      "50": "max-w-1/2",
+      "60": "max-w-3/5",
+      "70": "max-w-7/10",
+      "80": "max-w-4/5",
+      "90": "max-w-9/10",
     },
   },
 });

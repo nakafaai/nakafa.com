@@ -47,9 +47,7 @@ export function NinaAttachment({
       orientation={isImage ? "vertical" : "horizontal"}
     >
       <AttachmentMedia
-        className={
-          isImage && variant === "message" ? "aspect-[3/2]" : undefined
-        }
+        className={isImage && variant === "message" ? "aspect-3/2" : undefined}
         variant={isImage ? "image" : "icon"}
       >
         {isImage ? (

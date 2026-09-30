@@ -84,7 +84,7 @@ export async function Curricula({ locale }: { locale: Locale }) {
           ))}
         </nav>
 
-        <div className="relative min-h-80 overflow-hidden border-t sm:min-h-96 lg:min-h-[28rem]">
+        <div className="relative min-h-80 overflow-hidden border-t sm:min-h-96 lg:min-h-112">
           <CurriculaArt />
         </div>
       </div>

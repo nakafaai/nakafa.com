@@ -19,7 +19,7 @@ export function FeaturesTryout({
   const responseId = "features-tryout-response";
 
   return (
-    <div className="relative flex min-h-[38rem] flex-col overflow-hidden border-b bg-background lg:col-span-5 lg:min-h-[40rem]">
+    <div className="relative flex min-h-152 flex-col overflow-hidden border-b bg-background lg:col-span-5 lg:min-h-160">
       <h3 className="text-balance p-8 text-3xl tracking-tight sm:text-4xl lg:p-10">
         {t.rich("tryout-title", {
           mark: (chunks) => <mark>{chunks}</mark>,

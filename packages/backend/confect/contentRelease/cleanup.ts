@@ -73,8 +73,7 @@ export const ensureEligible = Effect.fn("contentRelease.ensureCleanupEligible")(
 /**
  * Deletes one bounded artifact page while retaining every MVCC anchor.
  *
- * Pages read only the small artifact facts. A body stored before facts is left
- * for the facts backfill, which gives it a full retention window first.
+ * Pages read only the small artifact facts; a body is read only to delete it.
  */
 export const cleanupProgram = Effect.fn("contentRelease.cleanup")(function* (
   releaseId: string

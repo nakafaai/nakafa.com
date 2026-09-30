@@ -77,13 +77,12 @@ describe("GitHub Action policy", () => {
               scope: expect.objectContaining({ name: "Scope" }),
             }),
             on: expect.objectContaining({
+              merge_group: {
+                branches: ["main"],
+                types: ["checks_requested"],
+              },
               pull_request: expect.any(Object),
             }),
-          })
-        );
-        expect(workflow).not.toEqual(
-          expect.objectContaining({
-            on: expect.objectContaining({ merge_group: expect.anything() }),
           })
         );
         expect(workflow).not.toEqual(
@@ -115,7 +114,7 @@ describe("GitHub Action policy", () => {
       }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.effect("runs every required check on the current pull-request head", () =>
+  it.effect("runs every required check on each candidate head", () =>
     readRepositoryFile("../../.github/workflows/ci.yml").pipe(
       Effect.tap((source) =>
         Effect.sync(() => {
@@ -123,11 +122,16 @@ describe("GitHub Action policy", () => {
             'pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE"'
           );
           expect(source).toContain(
+            `DOCTOR_BASE: \${{ github.event.merge_group.base_sha || 'origin/main' }}`
+          );
+          expect(source).toContain(
             `required: \${{ steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}`
           );
           expect(source).toContain("          REQUIRED: true");
+          expect(source).toContain(
+            `cancel-in-progress: \${{ github.event_name == 'pull_request' }}`
+          );
           expect(source).not.toContain("actions/github-script");
-          expect(source).not.toContain("merge_group");
           expect(source).not.toContain("pnpm ci:queue");
           expect(source).not.toContain("pnpm ci:review");
           expect(source).not.toContain("outputs.reuse");
@@ -135,6 +139,24 @@ describe("GitHub Action policy", () => {
       ),
       Effect.provide(NodeServices.layer)
     )
+  );
+
+  it.effect(
+    "trusts only the owner's pull requests and the merge groups the owner enqueued",
+    () =>
+      readRepositoryFile("../../.github/workflows/ci.yml").pipe(
+        Effect.tap((source) =>
+          Effect.sync(() => {
+            expect(source).toContain(
+              `TRUSTED_CANDIDATE: \${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') || (github.event_name == 'merge_group' && github.event.merge_group.base_ref == 'refs/heads/main' && github.actor == 'nabilfatih') }}`
+            );
+            expect(source).toContain(
+              `ref: \${{ env.TRUSTED_CANDIDATE == 'true' && github.sha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}`
+            );
+          })
+        ),
+        Effect.provide(NodeServices.layer)
+      )
   );
 
   it.effect("accepts every reviewed immutable GitHub Action", () =>

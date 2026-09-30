@@ -114,7 +114,7 @@ function ThreeCanvasComponent({
           <div className="flex h-full w-full items-center justify-center">
             <HugeIcons
               aria-hidden="true"
-              className="size-6 shrink-0"
+              className="size-4 shrink-0"
               icon={Sad02Icon}
             />
           </div>

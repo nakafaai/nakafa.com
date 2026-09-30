@@ -35,8 +35,7 @@ export const isArtifactReferenced = Effect.fn(
 /**
  * Starts retention when deleting rows removes an artifact's final reference.
  *
- * Retention lives only in the small artifact facts. A body stored before facts
- * stays protected until the facts backfill grants it a full retention window.
+ * Retention lives only in the small artifact facts, never in the body.
  */
 export const retainOrphanedArtifacts = Effect.fn(
   "contentRelease.retainOrphanedArtifacts"

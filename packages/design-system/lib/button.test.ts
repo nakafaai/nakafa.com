@@ -18,7 +18,7 @@ describe("buttonVariants", () => {
   it.each(BUTTON_VARIANTS)("keeps %s keyboard focus subtle", (variant) => {
     const classes = buttonVariants({ variant }).split(" ");
 
-    expect(classes).toContain("focus-visible:ring-[3px]");
+    expect(classes).toContain("focus-visible:ring-3");
     expect(classes).toContain("focus-visible:ring-ring/50");
   });
 

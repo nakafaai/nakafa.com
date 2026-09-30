@@ -50,7 +50,7 @@ describe("terminal CI gate", () => {
     validateGate(required).pipe(
       Effect.tap((message) =>
         Effect.sync(() => {
-          expect(message).toContain("current pull-request head");
+          expect(message).toContain("current candidate");
         })
       )
     )
@@ -129,7 +129,7 @@ describe("terminal CI gate", () => {
       );
       expect(Result.isSuccess(result)).toBe(true);
       expect(stdout).toEqual([
-        "Required acceptance completed on the current pull-request head.\n",
+        "Required acceptance completed on the current candidate.\n",
       ]);
     })
   );
