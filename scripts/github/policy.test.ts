@@ -7,6 +7,7 @@ import {
   GITHUB_ACTION_REVIEWS,
   type GithubActionUse,
   inspectGithubActionPolicy,
+  readWorkflowActionUses,
   validateGithubActionPolicy,
 } from "#scripts/github/policy";
 
@@ -27,6 +28,26 @@ const parseWorkflow = Effect.fn("GithubPolicyTest.parseWorkflow")(
       catch: (cause) => String(cause),
     })
 );
+
+/** Creates a repository root whose workflow directory holds the given files. */
+const makeWorkflows = Effect.fn("GithubPolicyTest.makeWorkflows")(function* (
+  files: Record<string, string>
+) {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const root = yield* fileSystem.makeTempDirectoryScoped({
+    prefix: "github-policy-",
+  });
+  yield* fileSystem.makeDirectory(`${root}/.github/workflows`, {
+    recursive: true,
+  });
+  for (const [file, content] of Object.entries(files)) {
+    yield* fileSystem.writeFileString(
+      `${root}/.github/workflows/${file}`,
+      content
+    );
+  }
+  return root;
+});
 
 function validActionUses(): GithubActionUse[] {
   return GITHUB_ACTION_REVIEWS.flatMap((review) =>
@@ -126,6 +147,104 @@ describe("GitHub Action policy", () => {
       ).toEqual([]);
     })
   );
+
+  it.effect("reads external action uses from every workflow file", () =>
+    Effect.gen(function* () {
+      const root = yield* makeWorkflows({
+        "README.md": "uses: example/ignored@0123456789abcdef\n",
+        "ci.yml": [
+          "jobs:",
+          "  build:",
+          "    steps:",
+          "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "      - uses: ./.github/actions/local",
+          "      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
+          "        with:",
+          "          cache: true",
+          "",
+        ].join("\n"),
+        "release.yaml":
+          "jobs:\n  release:\n    uses: example/reusable/.github/workflows/release.yml@main\n",
+      });
+
+      expect(yield* readWorkflowActionUses(root)).toEqual([
+        {
+          inputs: {},
+          reference:
+            "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          workflowPath: ".github/workflows/ci.yml",
+        },
+        {
+          inputs: { cache: true },
+          reference: "pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
+          workflowPath: ".github/workflows/ci.yml",
+        },
+        {
+          inputs: {},
+          reference: "example/reusable/.github/workflows/release.yml@main",
+          workflowPath: ".github/workflows/release.yaml",
+        },
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("reports workflows it cannot read or decode", () =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const missing = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "github-policy-missing-",
+      });
+      const unreadable = yield* makeWorkflows({});
+      yield* fileSystem.makeDirectory(
+        `${unreadable}/.github/workflows/broken.yml`
+      );
+      const invalid = yield* makeWorkflows({ "invalid.yml": "jobs: [\n" });
+
+      const problems: string[] = [];
+      for (const root of [missing, unreadable, invalid]) {
+        problems.push(...(yield* inspectGithubActionPolicy(root)));
+      }
+      expect(problems).toEqual([
+        "Unable to inspect GitHub Actions: Unable to read GitHub workflow files.",
+        "Unable to inspect GitHub Actions: Unable to read .github/workflows/broken.yml.",
+        "Unable to inspect GitHub Actions: Unable to decode .github/workflows/invalid.yml.",
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it("reports unpinned references, missing inputs, and unused reviews", () => {
+    const actionUses = validActionUses().filter(
+      ({ reference }) => !reference.startsWith("changesets/action@")
+    );
+    const setupIndex = actionUses.findIndex(({ reference }) =>
+      reference.startsWith("pnpm/setup@")
+    );
+    const setupUse = actionUses[setupIndex];
+    expect(setupUse).toBeDefined();
+    if (!setupUse) {
+      return;
+    }
+    actionUses[setupIndex] = { ...setupUse, inputs: { install: "false" } };
+    actionUses.push(
+      {
+        inputs: {},
+        reference: "actions/checkout",
+        workflowPath: ".github/workflows/example.yml",
+      },
+      {
+        inputs: {},
+        reference: "actions/checkout@",
+        workflowPath: ".github/workflows/example.yml",
+      }
+    );
+
+    expect(validateGithubActionPolicy(actionUses)).toEqual([
+      `${setupUse.workflowPath} configures pnpm/setup cache as missing; approved true.`,
+      ".github/workflows/example.yml has an unpinned external action actions/checkout.",
+      ".github/workflows/example.yml has an unpinned external action actions/checkout@.",
+      "changesets/action has 0 workflow usages; expected 1.",
+    ]);
+  });
 
   it("reports mutable, unreviewed, missing, and misconfigured actions", () => {
     const actionUses = validActionUses();

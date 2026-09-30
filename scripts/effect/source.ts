@@ -1,4 +1,3 @@
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import {
   Effect,
   FileSystem,
@@ -8,6 +7,7 @@ import {
   Stream,
 } from "effect";
 import { ChildProcess } from "effect/unstable/process";
+import { runEntry } from "#scripts/entry";
 
 const GIT_OBJECT_PATTERN = /^[0-9a-f]{40}$/u;
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u;
@@ -370,10 +370,4 @@ export const makeEffectSourceProgram = Effect.fn("EffectSource.main")(
     });
   }
 );
-if (import.meta.main) {
-  NodeRuntime.runMain(
-    makeEffectSourceProgram(process.argv[2]).pipe(
-      Effect.provide(NodeServices.layer)
-    )
-  );
-}
+runEntry(import.meta.main, makeEffectSourceProgram(process.argv[2]));

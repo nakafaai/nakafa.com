@@ -1,9 +1,9 @@
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Config, Effect, Layer, Result, Schema } from "effect";
+import { Config, Effect, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
+import { runEntry } from "#scripts/entry";
 import { inspectGithubActionPolicy } from "#scripts/github/policy";
 import {
   fetchLatestGithubActionTag,
@@ -216,17 +216,9 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
   }
 );
 
-if (import.meta.main) {
-  NodeRuntime.runMain(
-    bumpDependencies({ root: process.cwd() }).pipe(
-      Effect.tap((status) =>
-        status === 0
-          ? Effect.void
-          : Effect.sync(() => {
-              process.exitCode = status;
-            })
-      ),
-      Effect.provide(Layer.mergeAll(FetchHttpClient.layer, NodeServices.layer))
-    )
-  );
-}
+runEntry(
+  import.meta.main,
+  bumpDependencies({ root: process.cwd() }).pipe(
+    Effect.provide(FetchHttpClient.layer)
+  )
+);

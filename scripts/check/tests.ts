@@ -1,10 +1,10 @@
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path, Schema } from "effect";
 import {
   effectSourceViolations,
   effectTestViolations,
 } from "#scripts/check/effect";
 import { readRepositoryFiles } from "#scripts/check/files";
+import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
 const TEST_FILE_PATTERN = /\.test\.tsx?$/u;
@@ -149,17 +149,4 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   }
 );
 
-if (import.meta.main) {
-  NodeRuntime.runMain(
-    checkTestPolicy(process.cwd()).pipe(
-      Effect.tap((status) =>
-        status === 0
-          ? Effect.void
-          : Effect.sync(() => {
-              process.exitCode = status;
-            })
-      ),
-      Effect.provide(NodeServices.layer)
-    )
-  );
-}
+runEntry(import.meta.main, checkTestPolicy(process.cwd()));
