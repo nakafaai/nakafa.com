@@ -111,6 +111,68 @@ describe("tryouts/runtime/history/placement", () => {
       })
   );
   it.effect(
+    "gives a free learner only the answers of the section's leading questions",
+    () =>
+      Effect.gen(function* () {
+        const { owned, seed, t } = yield* Effect.promise(setup);
+        const answer = seed.request.selectors.find(
+          (selector) => selector.delivery === "entitled"
+        );
+        assert.isDefined(answer);
+        const later = answer.questionOrder + 2;
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            await ctx.db.patch("users", seed.identity.userId, {
+              plan: "free",
+            });
+            const placement = await ctx.db.get(seed.placementId);
+            assert.isNotNull(placement);
+            const { _creationTime, _id, ...frozen } = placement;
+            for (const questionOrder of [answer.questionOrder + 1, later]) {
+              await ctx.db.insert("tryoutAttemptPlacements", {
+                ...frozen,
+                questionOrder,
+              });
+            }
+          })
+        );
+        assert.isNotNull(
+          yield* Effect.promise(() => owned.query(readReference, seed.request))
+        );
+        assert.isNull(
+          yield* Effect.promise(() =>
+            owned.query(readReference, {
+              ...seed.request,
+              selectors: [{ ...answer, questionOrder: later }],
+            })
+          )
+        );
+      })
+  );
+  it.effect("withholds every answer while its section is in progress", () =>
+    Effect.gen(function* () {
+      const { owned, seed, t } = yield* Effect.promise(setup);
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          await ctx.db.patch(seed.request.attemptId, {
+            status: "in-progress",
+          });
+          await ctx.db.patch(seed.sectionId, { status: "in-progress" });
+        })
+      );
+      assert.isNull(
+        yield* Effect.promise(() =>
+          owned.query(readReference, {
+            ...seed.request,
+            selectors: seed.request.selectors.filter(
+              (selector) => selector.delivery === "entitled"
+            ),
+          })
+        )
+      );
+    })
+  );
+  it.effect(
     "rejects section state that no longer belongs to the frozen section",
     () =>
       Effect.gen(function* () {

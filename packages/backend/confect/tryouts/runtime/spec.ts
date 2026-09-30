@@ -92,6 +92,8 @@ export const tryoutSectionContentAccessValidator = Schema.Union([
   Schema.Struct({
     answers: Schema.mutable(Schema.Array(tryoutAnswerSelectorValidator)),
     kind: Schema.Literal("signed"),
+    /** Answers of the leading questions a free learner's review offer shows. */
+    previewAnswers: Schema.mutable(Schema.Array(tryoutAnswerSelectorValidator)),
     questions: Schema.mutable(Schema.Array(tryoutQuestionSelectorValidator)),
   }),
 ]);

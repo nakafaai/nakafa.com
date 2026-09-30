@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Effect } from "effect";
 import { getTranslations } from "next-intl/server";
@@ -22,7 +21,7 @@ import {
 } from "@/components/shared/card/section";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
-import { projectTryoutPreview } from "@/components/tryout/review/model";
+import { projectTryoutReview } from "@/components/tryout/review/model";
 import { TryoutReviewCheckout } from "@/components/tryout/review/upgrade.client";
 import {
   TryoutLockedQuestionShell,
@@ -31,23 +30,28 @@ import {
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
-const PREVIEW_QUESTIONS = 2;
-
-/** Loads only question bodies; the offer stays usable without its preview. */
+/**
+ * Loads the leading questions the backend previews to a free learner, with
+ * their explanations; the offer stays usable without them.
+ */
 const loadPreview = Effect.fn("TryoutReview.loadPreview")(
   function* (
     attemptId: Id<"tryoutAttempts">,
     access: SignedContentAccess,
     runtime: TryoutSectionRuntime
   ) {
+    const count = access.previewAnswers.length;
+    if (count === 0) {
+      return [];
+    }
     const content = yield* loadSignedTryoutContent(attemptId, {
       ...access,
-      answers: [],
-      questions: access.questions.slice(0, PREVIEW_QUESTIONS),
+      answers: access.previewAnswers,
+      questions: access.questions.slice(0, count),
     });
-    return yield* projectTryoutPreview({
+    return yield* projectTryoutReview({
       content,
-      questions: runtime.questions.slice(0, PREVIEW_QUESTIONS),
+      questions: runtime.questions.slice(0, count),
     });
   },
   Effect.catchTags({
@@ -57,8 +61,9 @@ const loadPreview = Effect.fn("TryoutReview.loadPreview")(
 );
 
 /**
- * Shows a free learner their own first questions behind the Pro offer. The
- * server never loads answers here, so removing the overlay reveals nothing new.
+ * Shows a free learner their own leading questions with explanations under
+ * the Pro offer. The backend authorizes only those answers, so removing the
+ * veil reveals nothing beyond the preview.
  */
 export async function TryoutReviewLocked({
   access,
@@ -83,10 +88,10 @@ export async function TryoutReviewLocked({
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none h-136 select-none overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_1.5rem,black_55%,transparent)] sm:h-152"
+        className="pointer-events-none h-160 select-none overflow-hidden sm:h-176"
         inert
       >
-        <div className="space-y-12 blur-[2px]">
+        <div className="space-y-12">
           {preview.map((question) => (
             <TryoutLockedQuestionShell
               key={question.questionOrder}
@@ -104,16 +109,22 @@ export async function TryoutReviewLocked({
               <TryoutReviewQuestionExplanation
                 questionOrder={question.questionOrder}
               >
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-11/12" />
-                  <Skeleton className="h-4 w-4/5" />
-                </div>
+                {question.answer}
               </TryoutReviewQuestionExplanation>
             </TryoutLockedQuestionShell>
           ))}
         </div>
       </div>
+
+      {/*
+       * The veil reaches through the article gutter so it spans the screen on
+       * phones and ends in plain background elsewhere; its blur and tint fade
+       * in from the top and settle into the page background at the bottom.
+       */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-x-6 inset-y-0 bg-linear-to-b from-transparent via-65% via-background/50 to-background backdrop-blur-[2px] [mask-image:linear-gradient(to_bottom,transparent,black_8rem)]"
+      />
 
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-full max-w-md">

@@ -2,7 +2,10 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { decodeArtifactJson } from "@repo/backend/confect/contentRelease/parse";
 import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
-import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
+import {
+  readTryoutSectionContentAccess,
+  TRYOUT_REVIEW_PREVIEW_QUESTIONS,
+} from "@repo/backend/confect/tryouts/runtime/content";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import {
   TryoutHistoryError,
@@ -11,6 +14,26 @@ import {
 import { Effect } from "effect";
 
 type TryoutHistorySelector = TryoutHistoryRequest["selectors"][number];
+
+/** Whether an answer selector belongs to its section's free preview questions. */
+const isPreviewAnswer = Effect.fn("tryouts.history.isPreviewAnswer")(function* (
+  attempt: Docs["tryoutAttempts"],
+  selector: TryoutHistorySelector
+) {
+  const database = yield* DatabaseReader;
+  const preview = yield* database
+    .table("tryoutAttemptPlacements")
+    .index("by_tryoutAttemptId_and_sectionKey_and_questionOrder", (query) =>
+      query
+        .eq("tryoutAttemptId", attempt._id)
+        .eq("sectionKey", selector.sectionKey)
+    )
+    .take(TRYOUT_REVIEW_PREVIEW_QUESTIONS)
+    .pipe(Effect.mapError(toTryoutRuntimeError));
+  return preview.some(
+    (placement) => placement.questionOrder === selector.questionOrder
+  );
+});
 
 /** Resolves exact frozen membership and section access without parsing old rows. */
 export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
@@ -56,10 +79,14 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
       attempt,
       section.status
     );
-    if (
-      !access.questions ||
-      (selector.delivery === "entitled" && !access.answers)
-    ) {
+    if (!access.questions) {
+      return null;
+    }
+    const entitled =
+      selector.delivery === "authenticated" ||
+      access.answers ||
+      (access.preview && (yield* isPreviewAnswer(attempt, selector)));
+    if (!entitled) {
       return null;
     }
     const frozen = yield* database
