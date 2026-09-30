@@ -2,7 +2,7 @@ import {
   DatabaseReader as ConfectDatabaseReader,
   RegisteredConvexFunction,
 } from "@confect/server";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, onTestFinished } from "@effect/vitest";
 import {
   ActiveAppLocaleListSchema,
   ActiveAppLocaleSchema,
@@ -292,11 +292,12 @@ describe("learningPreferences", () => {
       );
     })
   );
-  it("redacts unexpected auth provider failures for preference reads and writes", async () => {
+  it("redacts auth provider failures for preference writes, which reads never touch", async () => {
     const t = createConvexTestWithBetterAuth();
     const auth = vi
       .spyOn(authReader, "safeGetAuthUser")
       .mockRejectedValue(new Error("private auth provider details"));
+    onTestFinished(() => auth.mockRestore());
     await expect(
       t.mutation(api.learningPreferences.mutations.setPreferredCurriculum, {
         locale: "id",
@@ -325,18 +326,9 @@ describe("learningPreferences", () => {
       api.learningPreferences.queries.getCurrent,
       api.learningPreferences.queries.getCurrentTryout,
     ]) {
-      await expect(
-        t.query(query, {
-          locale: "id",
-        })
-      ).rejects.toMatchObject({
-        data: {
-          _tag: "AuthReadError",
-          code: "AUTH_READ_FAILED",
-        },
-      });
+      await t.query(query, { locale: "id" });
     }
-    auth.mockRestore();
+    expect(auth).toHaveBeenCalledTimes(2);
   });
   it.effect("redacts preference persistence failures", () =>
     Effect.gen(function* () {

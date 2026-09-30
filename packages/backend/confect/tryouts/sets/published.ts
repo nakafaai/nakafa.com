@@ -43,7 +43,7 @@ export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
     const joined = yield* readJoinedSets(catalog, args, auth?.appUser ?? null);
     const scope = {
       snapshotId: catalog.snapshotId,
-      viewerId: auth?.authUser._id ?? null,
+      viewerId: auth?.authId ?? null,
     };
     if (!joined) {
       return {

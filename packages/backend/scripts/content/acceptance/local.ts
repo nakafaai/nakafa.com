@@ -44,7 +44,8 @@ const localEnvironment = {
   AI_GATEWAY_API_KEY: "build-disabled",
   AUTH_GOOGLE_ID: "build-disabled",
   AUTH_GOOGLE_SECRET: "build-disabled",
-  BETTER_AUTH_SECRET: "build-inert-secret-00000000",
+  // Long and varied enough that Better Auth's secret checks stay quiet.
+  BETTER_AUTH_SECRET: "acceptance-inert-secret-9fK2qL7xVz4NbT6w",
   CONTENT_RUNTIME_TOKEN: LOCAL_RUNTIME_TOKEN,
   FIRECRAWL_API_KEY: "build-disabled",
   JWKS: "[]",
@@ -105,6 +106,29 @@ const directoryIdentity = Effect.fn("contentAcceptance.directoryIdentity")(
     return { directory, directoryInode: info.ino.value };
   }
 );
+
+/**
+ * Next reuses cached fetch responses across builds, but every runtime signs with
+ * a new random key, and any other build may write the same cache. Responses
+ * signed by another key can never verify, so every acceptance build starts
+ * without them and cleanup leaves none behind. A cache redirected outside the
+ * checkout is refused, so the removal never reaches a shared cache.
+ */
+export const discardSignedResponses = Effect.fn(
+  "contentAcceptance.discardSignedResponses"
+)(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const cache = `${root}/apps/www/.next/cache`;
+  if (!(yield* fs.exists(cache))) {
+    return;
+  }
+  if ((yield* fs.realPath(cache)) !== cache) {
+    return yield* acceptanceRuntimeError(
+      "The Next.js build cache must belong to this checkout."
+    );
+  }
+  yield* fs.remove(`${cache}/fetch-cache`, { force: true, recursive: true });
+});
 
 /** Reserves one private runtime without changing the checkout's Convex selection. */
 export const reserveLocalRuntime = Effect.fn(
@@ -330,5 +354,7 @@ export const cleanLocalRuntime = Effect.fn(
   }
   yield* leaseLocalRuntime(root);
   yield* assertLocalPortsFree(runtime);
+  // A failed cache removal leaves the runtime in place for a clean retry.
+  yield* discardSignedResponses(root);
   yield* releaseLocalRuntime(runtime);
 });
