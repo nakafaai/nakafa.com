@@ -52,7 +52,9 @@ Effect programs. Specialist agents use the same Vercel Gateway provider and
 Agent usage handler. Tool results retain progressive evidence cards and final
 model-facing evidence, which never exceeds the evidence token budget: a
 truncated output says what it omitted and how to ask for it, and Nakafa reads
-continue by heading section. Context compaction changes provider input only; it does
+continue by heading section, or by numbered part inside a section too long for
+one read, with the following sections listed first. Context compaction changes
+provider input only; it does
 not discard the stored transcript. Math uses deterministic computation, Nakafa
 uses authenticated signed content, and research admits retrieved sources.
 
@@ -78,7 +80,8 @@ cover, newest first, within 12,000 tokens, and the current turn's evidence
 within 16,000 tokens. Older evidence shortens with a visible note before a turn
 is dropped, and no budget fails a turn. After a completed turn, the follow-up
 action folds turns beyond the four newest into the chat's conversation summary
-with a fast model once four such turns accumulate. The summary, at most 1,200
+with a fast model once four such turns accumulate, at most 16 turns per refresh,
+so a longer backlog advances one bounded batch per turn. The summary, at most 1,200
 tokens, sits in the system prompt context and is deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
 rather than in a turn's usage ledger, which clients read. The learner profile

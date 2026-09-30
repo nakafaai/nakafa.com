@@ -1,6 +1,6 @@
 import { getNakafaContent } from "@repo/backend/agent/content";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import { formatRead } from "@repo/backend/confect/nina/nakafa/format";
+import { formatRead } from "@repo/backend/confect/nina/nakafa/sections";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { Effect, Option } from "effect";
 

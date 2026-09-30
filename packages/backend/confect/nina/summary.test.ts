@@ -75,6 +75,8 @@ describe("Nina rolling summary", () => {
     expect(nextSummaryTarget(RECENT_TURNS + 3, null)).toBe(3);
     expect(nextSummaryTarget(10, 3)).toBeNull();
     expect(nextSummaryTarget(11, 3)).toBe(7);
+    expect(nextSummaryTarget(55, null)).toBe(15);
+    expect(nextSummaryTarget(55, 15)).toBe(31);
   });
 
   it("summarizes the older turns and keeps the newest turns verbatim", async () => {
@@ -126,15 +128,25 @@ describe("Nina rolling summary", () => {
     expect(prompt).not.toContain("Question 9");
   });
 
-  it("pages through a long thread to reach every folded turn", async () => {
+  it("folds a long backlog one bounded batch per refresh, paging to its oldest turns", async () => {
     const model = summaryModel("- A long study session.");
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
     const f = await fixture(56);
     await f.refresh(55);
-    const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
-    expect(prompt).toContain("Question 0");
-    expect(prompt).toContain("Answer 51");
-    expect(prompt).not.toContain("Question 52");
+    await f.refresh(55);
+    const [first, second] = model.doGenerateCalls.map((call) =>
+      JSON.stringify(call.prompt)
+    );
+    expect(first).toContain("Question 0");
+    expect(first).toContain("Answer 15");
+    expect(first).not.toContain("Question 16");
+    expect(second).toContain("- A long study session.");
+    expect(second).toContain("Question 16");
+    expect(second).toContain("Answer 31");
+    expect(second).not.toContain("Question 32");
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: 31 }),
+    ]);
   });
 
   it("records zero tokens when the provider omits usage counters", async () => {
