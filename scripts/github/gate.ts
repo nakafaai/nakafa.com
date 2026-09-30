@@ -40,14 +40,14 @@ const requireOutcome = (
         })
       );
 
-/** Validates one terminal pull-request check without implicit skipping. */
+/** Validates one terminal check for a pull request or merge group without implicit skipping. */
 export const validateGate = Effect.fn("CiGate.validate")(function* (
   input: GateInput
 ) {
   yield* requireOutcome(input.scopeOutcome, "success", "Scope");
   if (!input.trusted && input.productionRequired) {
     return yield* new CiGateError({
-      message: "Untrusted pull request requested signed production acceptance.",
+      message: "Untrusted candidate requested signed production acceptance.",
     });
   }
 
@@ -57,7 +57,7 @@ export const validateGate = Effect.fn("CiGate.validate")(function* (
     input.role === "doctor" ? "React Doctor" : "Quality acceptance"
   );
   if (input.role === "doctor") {
-    return "React Doctor completed on the current pull-request head.";
+    return "React Doctor completed on the current candidate.";
   }
 
   const expectedProduction =
@@ -67,7 +67,7 @@ export const validateGate = Effect.fn("CiGate.validate")(function* (
     expectedProduction,
     "Production acceptance"
   );
-  return "Required acceptance completed on the current pull-request head.";
+  return "Required acceptance completed on the current candidate.";
 });
 
 const decodeConfig = <S extends Schema.Constraint>(name: string, schema: S) =>
