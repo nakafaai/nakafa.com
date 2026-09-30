@@ -39,7 +39,7 @@ const requireBoundedRows = Effect.fn("contentRelease.requireProgramRows")(
   }
 );
 /** Reads the complete verified parent chain for one curriculum route. */
-const readAncestors = Effect.fn("contentRelease.readProgramAncestors")(
+export const readAncestors = Effect.fn("contentRelease.readProgramAncestors")(
   function* (snapshotId: string, route: CurriculumRoute) {
     const source = yield* ProgramSource;
     const rows: PublicationRow<"curriculumRoutes">[] = [];

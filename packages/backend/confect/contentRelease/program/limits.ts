@@ -4,6 +4,9 @@ export const PROGRAM_CATALOG_LIMIT = 100;
 /** Maximum public subject links shown by the About feature catalog. */
 export const PROGRAM_FEATURED_SUBJECT_LIMIT = 4;
 
+/** Maximum public subject routes one locale may publish. */
+export const PROGRAM_SUBJECT_LIMIT = 100;
+
 /** Maximum parent depth supported by one curriculum route. */
 export const PROGRAM_ANCESTOR_LIMIT = 16;
 
