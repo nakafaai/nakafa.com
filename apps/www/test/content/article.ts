@@ -100,8 +100,6 @@ export const makeArticleRuntimeSource = Effect.fn(
       artifacts.push({
         artifactHash: artifact.artifactHash,
         artifactJson: JSON.stringify(artifact),
-        createdAt: 1,
-        retainUntil: 100,
       });
       const bucket = getHashBucket(projectionHash);
       catalog.push({

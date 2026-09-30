@@ -42,6 +42,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - New or touched app TypeScript modules use direct `@/` imports for same-app modules, including colocated modules and tests. Across workspaces use `@repo/*`. Prefer direct owning-file imports over new barrels.
 - New hand-written filenames use one domain word plus conventional suffixes such as `.client` or `.test`. Do not introduce hyphenated compound basenames.
 - Keep Tailwind class strings inside styling utilities or component boundaries. Use `cva` or existing variant helpers for reusable or variant-driven styling.
+- Use Tailwind's built-in classes. Never write an arbitrary value that a built-in class renders identically, such as a bracketed `4px` where `size-1` exists or a bracketed `50%` where `top-1/2` exists. `scripts/check/tailwind.ts` rejects them through `pnpm check:tests`; theme-dependent scales such as radius, font size and tracking are left to review.
 
 ## Effect V4 Standard
 
@@ -138,3 +139,4 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Production readiness requires the exact pull-request head, all required checks, reviews, mergeability, protected-branch policy, and cleanup evidence. Green results from another commit are not proof.
 - Never blindly trust automated review findings. Trace each claim through the current code and authoritative sources before changing anything.
 - Unresolved review threads, including automated reviewers', block merging. Fix each verified finding or reply with evidence, then resolve the thread.
+- `main` merges only through GitHub's merge queue. `gh pr merge` queues through auto-merge, which stays off, so once Required and Doctor pass on a pull request's exact head, enqueue that head directly with `gh api graphql -F id="$(gh pr view <number> --json id --jq .id)" -F head=<sha> -f query='mutation($id: ID!, $head: GitObjectID!) { enqueuePullRequest(input: {pullRequestId: $id, expectedHeadOid: $head}) { mergeQueueEntry { position } } }'`. The queue reruns Required and Doctor on the change combined with the latest `main` and every change queued ahead of it, then squash merges it, so the branch needs no update from `main` to merge. A pull request is merged once its state is `MERGED`, not when it enters the queue.

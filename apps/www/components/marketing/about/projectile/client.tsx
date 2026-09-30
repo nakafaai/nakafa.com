@@ -187,7 +187,7 @@ export function ProjectileClient({
   }
 
   return (
-    <div className="relative flex min-h-[42rem] flex-col overflow-hidden bg-background lg:col-span-7 lg:min-h-[44rem]">
+    <div className="relative flex min-h-168 flex-col overflow-hidden bg-background lg:col-span-7 lg:min-h-176">
       <div className="flex min-h-0 flex-1 flex-col gap-8 p-8 lg:p-10">
         <h3 className="max-w-2xl text-balance text-3xl tracking-tight sm:text-4xl">
           {title}

@@ -4,6 +4,12 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, edited, ready_for_review]
+  # The merge queue reruns every required check on each queued change combined
+  # with main and the changes queued ahead of it, so ready pull requests never
+  # update from main just to merge.
+  merge_group:
+    branches: [main]
+    types: [checks_requested]
 
 permissions:
   actions: read
@@ -12,8 +18,11 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  # A pull request supersedes its own earlier runs. Merge groups key on their
+  # immutable commit and are never cancelled, so a later change cannot cancel
+  # a run the queue is waiting for.
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Inert public values that the www typecheck and build validate while Next.js
 # loads its config. Never put deployment values here.
@@ -30,7 +39,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih' }}
+      # Signed acceptance trusts the owner's same-repository pull requests and
+      # the merge groups the owner enqueued. Only the owner can enqueue, and
+      # every queued pull request already passed Required, which rejects
+      # untrusted production changes.
+      TRUSTED_CANDIDATE: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') || (github.event_name == 'merge_group' && github.event.merge_group.base_ref == 'refs/heads/main' && github.actor == 'nabilfatih') }}
     outputs:
       required: ${{ steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}
       trusted: ${{ steps.trust.outputs.trusted }}
@@ -45,15 +58,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # An untrusted candidate is data for the classifier, never its code.
-          ref: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' && github.sha || github.event.pull_request.base.sha }}
+          ref: ${{ env.TRUSTED_CANDIDATE == 'true' && github.sha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
           fetch-depth: 0
 
       - name: Fetch exact candidate for classification
         env:
-          PULL_NUMBER: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CANDIDATE_REF: ${{ github.event.merge_group.head_ref || format('refs/pull/{0}/head', github.event.pull_request.number) }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
         run: |
-          git fetch --no-tags origin "refs/pull/$PULL_NUMBER/head"
+          git fetch --no-tags origin "$CANDIDATE_REF"
           test "$(git rev-parse FETCH_HEAD)" = "$HEAD_SHA"
 
       - name: Setup toolchain
@@ -67,16 +80,14 @@ jobs:
 
       - name: Export trusted candidate decision
         id: trust
-        env:
-          DIRECT_TRUST: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT }}
         run: |
-          echo "trusted=$DIRECT_TRUST" >> "$GITHUB_OUTPUT"
+          echo "trusted=$TRUSTED_CANDIDATE" >> "$GITHUB_OUTPUT"
 
       - name: Classify production acceptance
         id: classify
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
         run: pnpm ci:production-acceptance
 
   quality:
@@ -170,9 +181,12 @@ jobs:
       - name: Verify generated Convex bindings
         run: test -z "$(git status --porcelain -- packages/backend/convex/_generated)"
 
+      # Prepare already generated the bindings and the step above proved them
+      # unchanged, so build and start call the backend acceptance command
+      # directly instead of repeating the 44-second codegen twice.
       - name: Build production app
         id: production_build
-        run: pnpm acceptance:build
+        run: pnpm --dir packages/backend acceptance build
         env:
           NEXT_EXPOSE_TESTING_API: "true"
           NODE_ENV: production
@@ -187,7 +201,7 @@ jobs:
           web_pid="$RUNNER_TEMP/runtime-www.pid"
           : > "$web_log"
           chmod 600 "$web_log"
-          setsid pnpm acceptance:start > "$web_log" 2>&1 &
+          setsid pnpm --dir packages/backend acceptance start > "$web_log" 2>&1 &
           echo "$!" > "$web_pid"
 
       - name: Wait for web app
@@ -280,7 +294,8 @@ jobs:
       - name: Run changed React Doctor
         if: needs.scope.result == 'success'
         env:
-          DOCTOR_BASE: origin/main
+          # A merge group compares against its immutable queue base.
+          DOCTOR_BASE: ${{ github.event.merge_group.base_sha || 'origin/main' }}
         run: pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE" --include-untracked --blocking warning
 
       - name: Mark current-tree Doctor complete

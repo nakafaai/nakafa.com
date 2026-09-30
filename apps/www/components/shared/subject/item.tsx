@@ -21,7 +21,7 @@ export function SubjectItem({
     <IntentLink className="group block min-w-0" href={href} title={label}>
       <div className="relative overflow-hidden p-6 transition-colors ease-out group-hover:bg-accent group-hover:text-accent-foreground">
         <div className="flex items-center gap-2">
-          <HugeIcons className="size-5 shrink-0" icon={icon} />
+          <HugeIcons className="size-4 shrink-0" icon={icon} />
           <Label className="flex-1 truncate" title={label}>
             {label}
           </Label>

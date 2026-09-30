@@ -13,12 +13,19 @@ import { OpenContent } from "@/components/shared/content/actions";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { MaterialOutline } from "@/components/shared/material/toc";
 import {
+  SidebarRightFooter,
   SidebarRightHeader,
+  SidebarRightPanel,
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
+import { SidebarTree } from "@/components/shared/outline/tree";
 import { ComingSoon } from "@/components/shared/upcoming";
+import { CommentsButton } from "@/components/sidebar/actions/comments";
+import { GithubButton } from "@/components/sidebar/actions/github";
+import { ReferenceButton } from "@/components/sidebar/actions/reference";
+import { ReportButton } from "@/components/sidebar/actions/report";
+import { ShareButton } from "@/components/sidebar/actions/share";
 
 /** Renders a signed article body and its route-owned navigation. */
 export async function ArticleShell({
@@ -88,12 +95,23 @@ export async function ArticleShell({
         {footer ? <FooterContent>{footer}</FooterContent> : null}
         {toolbar}
       </LayoutMaterialContent>
-      <MaterialOutline
-        chapters={{
-          label: tCommon("on-this-page"),
-          data: headings,
-        }}
-        githubUrl={content.sourceUrl ?? undefined}
+      <SidebarRightPanel
+        footer={
+          <SidebarRightFooter>
+            {content.kind === "published" ? <CommentsButton /> : null}
+            <ReferenceButton
+              references={content.references.map((reference) => ({
+                ...reference,
+              }))}
+              title={metadata.title}
+            />
+            <ReportButton />
+            {content.sourceUrl ? (
+              <GithubButton githubUrl={content.sourceUrl} />
+            ) : null}
+            <ShareButton />
+          </SidebarRightFooter>
+        }
         header={
           <SidebarRightHeader
             description={metadata.description}
@@ -101,12 +119,9 @@ export async function ArticleShell({
             title={metadata.title}
           />
         }
-        references={{
-          title: metadata.title,
-          data: content.references.map((reference) => ({ ...reference })),
-        }}
-        showComments={content.kind === "published"}
-      />
+      >
+        <SidebarTree data={headings} title={tCommon("on-this-page")} />
+      </SidebarRightPanel>
     </SidebarRightProvider>
   );
 }

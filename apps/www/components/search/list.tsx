@@ -119,7 +119,7 @@ function ResultGroup({
               <span className="line-clamp-1">{result.title}</span>
             </div>
             <SearchExcerpt
-              className="line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground"
+              className="line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground group-hover:[&_mark]:text-accent-foreground"
               excerpt={result.excerpt}
               query={query}
             />

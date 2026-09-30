@@ -21,6 +21,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { slugify } from "@repo/utilities/slug";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { TocProvider, useToc } from "@/components/shared/outline/context";
 import { useVirtual } from "@/lib/content/virtual";
 
@@ -38,58 +39,11 @@ function SidebarTreeLabel({ label }: Pick<ParsedHeading, "label">) {
   );
 }
 
-/**
- * Recursive component to render nested headings
- */
+/** Renders one heading and its nested headings. */
 function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
-  const id = slugify(heading.label);
-  const virtualIndex = heading.index;
-  // Each heading selects only its own state, so an active-heading change
-  // re-renders the headings that change instead of the whole outline.
-  const isActive = useToc(
-    (context) =>
-      virtualIndex === undefined && context.activeHeadings.includes(id)
-  );
-  const scrollToIndex = useVirtual((context) => context.scrollToIndex);
-
   return (
-    <SidebarMenuItem key={heading.href}>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <SidebarMenuButton
-              isActive={isActive}
-              render={
-                virtualIndex === undefined ? (
-                  // In-page headings use native fragment navigation so an
-                  // existing hash never enters the route prefetch cache.
-                  <a href={heading.href} title={heading.label}>
-                    <SidebarTreeLabel label={heading.label} />
-                  </a>
-                ) : (
-                  <button
-                    aria-label={heading.label}
-                    onClick={() => {
-                      scrollToIndex(virtualIndex);
-                    }}
-                    type="button"
-                  >
-                    <SidebarTreeLabel label={heading.label} />
-                  </button>
-                )
-              }
-            />
-          }
-        />
-        <TooltipContent
-          align="center"
-          className="hidden max-w-xs sm:block"
-          side="left"
-        >
-          {heading.label}
-        </TooltipContent>
-      </Tooltip>
-
+    <SidebarMenuItem>
+      <SidebarTreeEntry heading={heading} />
       {!!heading.children && heading.children.length > 0 && (
         <SidebarMenuSub>
           {heading.children.map((child) => (
@@ -102,10 +56,67 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
 }
 
 /**
- * A component that displays a list of links to the sections of the page.
- * @param data - The data to display, typically generated from the `getHeadings` function.
+ * Links one heading: a fragment link for headings in the document, or a
+ * button that scrolls the page's virtualizer to a heading it has not rendered.
  */
-export function SidebarTree({ data, title }: Props) {
+export function SidebarTreeEntry({ heading }: { heading: ParsedHeading }) {
+  const id = slugify(heading.label);
+  const virtualIndex = heading.index;
+  // Each heading selects only its own state, so an active-heading change
+  // re-renders the headings that change instead of the whole outline.
+  const isActive = useToc(
+    (context) =>
+      virtualIndex === undefined && context.activeHeadings.includes(id)
+  );
+  const scrollToIndex = useVirtual((context) => context.scrollToIndex);
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <SidebarMenuButton
+            isActive={isActive}
+            render={
+              virtualIndex === undefined ? (
+                // In-page headings use native fragment navigation so an
+                // existing hash never enters the route prefetch cache.
+                <a href={heading.href} title={heading.label}>
+                  <SidebarTreeLabel label={heading.label} />
+                </a>
+              ) : (
+                <button
+                  aria-label={heading.label}
+                  onClick={() => {
+                    scrollToIndex(virtualIndex);
+                  }}
+                  type="button"
+                >
+                  <SidebarTreeLabel label={heading.label} />
+                </button>
+              )
+            }
+          />
+        }
+      />
+      <TooltipContent
+        align="center"
+        className="hidden max-w-xs sm:block"
+        side="left"
+      >
+        {heading.label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** Frames an outline under its labeled group heading. */
+export function SidebarTreeGroup({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title?: string | undefined;
+}) {
   const t = useTranslations("Common");
 
   return (
@@ -114,15 +125,25 @@ export function SidebarTree({ data, title }: Props) {
         <HugeIcons icon={Menu02Icon} />
         {title ?? t("on-this-page")}
       </SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          <TocProvider toc={data}>
-            {data.map((item) => (
-              <SidebarTreeItem heading={item} key={item.href} />
-            ))}
-          </TocProvider>
-        </SidebarMenu>
-      </SidebarGroupContent>
+      <SidebarGroupContent>{children}</SidebarGroupContent>
     </SidebarGroup>
+  );
+}
+
+/**
+ * Lists links to the sections of the page.
+ * @param data - The headings, typically generated from the `getHeadings` function.
+ */
+export function SidebarTree({ data, title }: Props) {
+  return (
+    <SidebarTreeGroup title={title}>
+      <SidebarMenu>
+        <TocProvider toc={data}>
+          {data.map((item) => (
+            <SidebarTreeItem heading={item} key={item.href} />
+          ))}
+        </TocProvider>
+      </SidebarMenu>
+    </SidebarTreeGroup>
   );
 }

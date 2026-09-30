@@ -24,6 +24,12 @@ export const THREE_DIAGRAM_MINIMUM_FONT_SIZE = 14;
 /** Upper reading size for diagram annotations while zoom remains interactive. */
 export const THREE_DIAGRAM_MAXIMUM_FONT_SIZE = 22;
 
+/**
+ * CSS pixels beyond the viewport within which canvases keep rendering, so a
+ * scene has already drawn its next frame when it scrolls back into view.
+ */
+export const THREE_RENDER_MARGIN = 400;
+
 const PARTICLE_LABEL_FONT_RATIO = 0.72;
 
 /**

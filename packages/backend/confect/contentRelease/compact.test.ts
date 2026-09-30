@@ -13,7 +13,6 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpe
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { insertTestArtifact } from "@repo/backend/test/content/artifact";
 import {
   COMPACTION_OLD_TIME,
   compactionIdentity,
@@ -204,57 +203,6 @@ describe("contentRelease/compact", () => {
       floor: 2,
     });
     expect(sequences.sort()).toEqual([2, 3, 4, 5]);
-  });
-  it("advances a cycle stored in the retired body scan without its cursor", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await ctx.db.insert("contentState", {
-        articleSlot: "blue",
-        compactCursor: "retired-body-scan-cursor",
-        compactFloor: 1,
-        compactFrom: 0,
-        compactPhase: "artifacts",
-        compactStartedAt: 1,
-        key: "primary",
-        materialSlot: "blue",
-        nextSequence: 2,
-        searchSlot: "blue",
-        updatedAt: 0,
-      });
-      await insertTestArtifact(ctx, {
-        artifactHash: `sha256:${"1".repeat(64)}`,
-        artifactJson: "{}",
-        retainUntil: 0,
-      });
-    });
-    const page = () =>
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          compactProgram().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      );
-
-    await expect(page()).resolves.toMatchObject({
-      complete: false,
-      deleted: 0,
-      phase: "facts",
-    });
-    const advanced = await t.run((ctx) =>
-      ctx.db.query("contentState").unique()
-    );
-    await expect(page()).resolves.toMatchObject({
-      complete: false,
-      deleted: 1,
-      phase: "snapshots",
-    });
-
-    expect(advanced?.compactPhase).toBe("facts");
-    expect(advanced?.compactCursor).toBeUndefined();
-    await expect(
-      t.run((ctx) => ctx.db.query("contentArtifactFacts").collect())
-    ).resolves.toEqual([]);
   });
   it("protects exact active bases and retained recovery slots", async () => {
     const t = convexTest(schema, convexModules);

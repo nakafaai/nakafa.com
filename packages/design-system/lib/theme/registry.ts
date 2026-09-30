@@ -34,17 +34,17 @@ export const themes = [
   {
     value: "darkmatter",
     appearance: "light",
-    shaderColor: "rgb(180, 88, 30)",
+    shaderColor: "rgb(177, 85, 26)",
   },
   {
     value: "bean",
     appearance: "light",
-    shaderColor: "rgb(137, 96, 78)",
+    shaderColor: "rgb(125, 85, 68)",
   },
   {
     value: "bubblegum",
     appearance: "light",
-    shaderColor: "rgb(179, 51, 128)",
+    shaderColor: "rgb(170, 41, 119)",
   },
   {
     value: "caffeine",
@@ -54,7 +54,7 @@ export const themes = [
   {
     value: "claude",
     appearance: "light",
-    shaderColor: "rgb(182, 81, 46)",
+    shaderColor: "rgb(173, 73, 38)",
   },
   {
     value: "cosmic",
@@ -69,12 +69,12 @@ export const themes = [
   {
     value: "dreamy",
     appearance: "light",
-    shaderColor: "rgb(120, 90, 197)",
+    shaderColor: "rgb(119, 88, 195)",
   },
   {
     value: "ghibli",
     appearance: "light",
-    shaderColor: "rgb(98, 101, 24)",
+    shaderColor: "rgb(90, 93, 12)",
   },
   {
     value: "luxury",
@@ -84,17 +84,17 @@ export const themes = [
   {
     value: "matcha",
     appearance: "light",
-    shaderColor: "rgb(96, 115, 102)",
+    shaderColor: "rgb(88, 107, 94)",
   },
   {
     value: "nature",
     appearance: "light",
-    shaderColor: "rgb(48, 123, 52)",
+    shaderColor: "rgb(45, 120, 49)",
   },
   {
     value: "neo",
     appearance: "light",
-    shaderColor: "rgb(231, 8, 28)",
+    shaderColor: "rgb(222, 1, 25)",
   },
   {
     value: "notebook",
@@ -104,17 +104,17 @@ export const themes = [
   {
     value: "pacman",
     appearance: "light",
-    shaderColor: "rgb(144, 106, 0)",
+    shaderColor: "rgb(143, 106, 0)",
   },
   {
     value: "perpetuity",
     appearance: "light",
-    shaderColor: "rgb(0, 117, 125)",
+    shaderColor: "rgb(1, 116, 124)",
   },
   {
     value: "pinky",
     appearance: "light",
-    shaderColor: "rgb(213, 0, 112)",
+    shaderColor: "rgb(205, 1, 108)",
   },
   {
     value: "popsicle",
@@ -124,7 +124,7 @@ export const themes = [
   {
     value: "retro",
     appearance: "light",
-    shaderColor: "rgb(190, 32, 113)",
+    shaderColor: "rgb(153, 1, 87)",
   },
   {
     value: "shell",
@@ -134,12 +134,12 @@ export const themes = [
   {
     value: "solar",
     appearance: "light",
-    shaderColor: "rgb(179, 81, 0)",
+    shaderColor: "rgb(173, 78, 1)",
   },
   {
     value: "sunset",
     appearance: "light",
-    shaderColor: "rgb(194, 74, 45)",
+    shaderColor: "rgb(192, 72, 44)",
   },
   {
     value: "tangerine",
@@ -149,22 +149,22 @@ export const themes = [
   {
     value: "tokyo",
     appearance: "light",
-    shaderColor: "rgb(97, 39, 205)",
+    shaderColor: "rgb(92, 29, 198)",
   },
   {
     value: "tree",
     appearance: "light",
-    shaderColor: "rgb(84, 97, 0)",
+    shaderColor: "rgb(80, 94, 0)",
   },
   {
     value: "twitter",
     appearance: "light",
-    shaderColor: "rgb(0, 116, 184)",
+    shaderColor: "rgb(1, 107, 169)",
   },
   {
     value: "vintage",
     appearance: "light",
-    shaderColor: "rgb(141, 99, 56)",
+    shaderColor: "rgb(134, 93, 50)",
   },
   {
     value: "windy",
@@ -174,7 +174,7 @@ export const themes = [
   {
     value: "zelda",
     appearance: "light",
-    shaderColor: "rgb(130, 102, 0)",
+    shaderColor: "rgb(126, 99, 0)",
   },
 ] as const satisfies readonly ThemeDefinition[];
 

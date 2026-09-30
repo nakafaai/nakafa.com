@@ -6,6 +6,7 @@ import {
 import { readRepositoryFiles } from "#scripts/check/files";
 import { inspectReactSource } from "#scripts/check/react";
 import { sourceViolations as inspectSources } from "#scripts/check/source";
+import { inspectTailwindSource } from "#scripts/check/tailwind";
 import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
@@ -110,13 +111,17 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       inspectEffectSource,
       inspectReactSource,
     ]);
+    const tailwindViolations = authoredSources.flatMap(({ file, sourceText }) =>
+      inspectTailwindSource(file, sourceText)
+    );
 
     if (
       orphanTests.length === 0 &&
       tsxTestFiles.length === 0 &&
       nestedTestFiles.length === 0 &&
       effectViolations.length === 0 &&
-      sourceViolations.length === 0
+      sourceViolations.length === 0 &&
+      tailwindViolations.length === 0
     ) {
       yield* writeOutput("Test ownership checks passed.\n");
       return 0;
@@ -148,6 +153,9 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     }
     if (sourceViolations.length > 0) {
       yield* writeError(`${sourceViolations.join("\n")}\n`);
+    }
+    if (tailwindViolations.length > 0) {
+      yield* writeError(`${tailwindViolations.join("\n")}\n`);
     }
 
     return 1;
