@@ -15,6 +15,7 @@ import {
   abortContentKey,
   seedAbortRelease,
 } from "@repo/backend/test/content/abort";
+import { insertTestArtifact } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import { TEST_DIGEST, testTextHash } from "@repo/backend/test/content/release";
 import {
@@ -270,10 +271,9 @@ describe("contentRelease/abort", () => {
           artifactHash,
           artifactReady: true,
         });
-        await ctx.db.insert("contentArtifacts", {
+        await insertTestArtifact(ctx, {
           artifactHash,
           artifactJson: "{}",
-          createdAt: 0,
           retainUntil: 0,
         });
         if (shared) {
@@ -308,13 +308,13 @@ describe("contentRelease/abort", () => {
       });
       const startedAt = Date.now();
       await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
-      const artifact = await t.run((ctx) =>
-        ctx.db.query("contentArtifacts").unique()
+      const facts = await t.run((ctx) =>
+        ctx.db.query("contentArtifactFacts").unique()
       );
       if (shared) {
-        expect(artifact?.retainUntil).toBe(0);
+        expect(facts?.retainUntil).toBe(0);
       } else {
-        expect(artifact?.retainUntil).toBeGreaterThanOrEqual(
+        expect(facts?.retainUntil).toBeGreaterThanOrEqual(
           startedAt + ROLLBACK_RETENTION_MS
         );
       }

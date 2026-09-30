@@ -4,6 +4,7 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import { compactRows } from "@repo/backend/confect/contentRelease/compact/rows";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
+import { insertTestArtifact } from "@repo/backend/test/content/artifact";
 import {
   compactionIdentity,
   insertCompletedRelease,
@@ -17,10 +18,9 @@ describe("contentRelease/compact/rows", () => {
     const hashes = ["obsolete-before-delete", "obsolete-before-update"];
     await t.mutation(async (ctx) => {
       for (const artifactHash of hashes) {
-        await ctx.db.insert("contentArtifacts", {
+        await insertTestArtifact(ctx, {
           artifactHash,
           artifactJson: "{}",
-          createdAt: 0,
           retainUntil: 0,
         });
       }
@@ -99,7 +99,7 @@ describe("contentRelease/compact/rows", () => {
     const remaining = await t.query(async (ctx) => ({
       heads: await ctx.db.query("contentHeads").collect(),
       bindings: await ctx.db.query("contentBindings").collect(),
-      artifacts: await ctx.db.query("contentArtifacts").collect(),
+      facts: await ctx.db.query("contentArtifactFacts").collect(),
     }));
     expect(remaining.heads).toMatchObject([
       {
@@ -115,9 +115,9 @@ describe("contentRelease/compact/rows", () => {
       },
     ]);
     expect(remaining.bindings.map(({ sequence }) => sequence)).toEqual([4, 4]);
-    expect(remaining.artifacts).toHaveLength(2);
+    expect(remaining.facts).toHaveLength(2);
     expect(
-      remaining.artifacts.every(({ retainUntil }) => retainUntil > Date.now())
+      remaining.facts.every(({ retainUntil }) => retainUntil > Date.now())
     ).toBe(true);
   });
   it("pages route anchors without dropping the last page", async () => {

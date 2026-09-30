@@ -12,7 +12,10 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
-import { testArtifactJson } from "@repo/backend/test/content/artifact";
+import {
+  insertTestArtifact,
+  testArtifactJson,
+} from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_ARTIFACT_HASH,
@@ -100,12 +103,21 @@ function largestBatch() {
   return batch(base + Math.floor(spare / MAX_ARTIFACT_BATCH_COUNT));
 }
 
-/** Inserts one staged upsert whose projection fills the head row ceiling. */
-function insertCeilingItem(ctx: MutationCtx, index: number) {
-  const artifactHash = batchArtifactHash(index);
+/** Pads one projection to the read-model ceiling that verified heads keep. */
+function ceilingProjectionJson(index: number) {
   const title = "T".repeat(
     READ_MODEL_DOCUMENT_LIMIT - testProjectionJson({ index }).length
   );
+  return testProjectionJson({ index, title });
+}
+
+/** Inserts one staged upsert that expects the batch artifact at an index. */
+function insertBatchItem(
+  ctx: MutationCtx,
+  index: number,
+  projectionJson: string
+) {
+  const artifactHash = batchArtifactHash(index);
   return ctx.db.insert("contentItems", {
     artifactHash,
     artifactLocale: "en",
@@ -115,13 +127,63 @@ function insertCeilingItem(ctx: MutationCtx, index: number) {
     itemBatchHash: TEST_ARTIFACT_HASH,
     itemBatchIndex: 0,
     itemJson: testUpsertJson({ artifactHash, index }),
-    projectionJson: testProjectionJson({ index, title }),
+    projectionJson,
     projectionReady: true,
     releaseId: TEST_RELEASE_ID,
     rollbackJson: testRollbackJson({ index }),
     sequence: 1,
     stagedAt: 1,
   });
+}
+
+type StoreArtifact = (
+  ctx: MutationCtx,
+  artifactHash: string,
+  artifactJson: string
+) => Promise<unknown>;
+
+/** Stores one artifact the way current staging does. */
+const storeWithFacts: StoreArtifact = (ctx, artifactHash, artifactJson) =>
+  insertTestArtifact(ctx, { artifactHash, artifactJson, retainUntil: 1 });
+
+/** Stores one artifact the way staging did before artifact facts. */
+const storeBeforeFacts: StoreArtifact = (ctx, artifactHash, artifactJson) =>
+  ctx.db.insert("contentArtifacts", {
+    artifactHash,
+    artifactJson,
+    createdAt: 1,
+    retainUntil: 1,
+  });
+
+/** Seeds one full staged batch whose artifacts are all stored already. */
+async function seedReusedBatch(
+  t: TestConvex<typeof schema>,
+  artifactJson: readonly string[],
+  store: StoreArtifact,
+  projectionJson: (index: number) => string
+) {
+  await t.mutation(async (ctx) => {
+    await insertTestRelease(ctx, {
+      itemCount: MAX_ARTIFACT_BATCH_COUNT,
+      stagedUpserts: MAX_ARTIFACT_BATCH_COUNT,
+    });
+    for (const [index, json] of artifactJson.entries()) {
+      await insertBatchItem(ctx, index, projectionJson(index));
+      await store(ctx, batchArtifactHash(index), json);
+    }
+  });
+}
+
+/** Stages one batch through its registered mutation and measures its reads. */
+function stageMeasured(t: TestConvex<typeof schema>, artifactJson: string[]) {
+  return t.mutation(async (ctx) => ({
+    receipt: await ctx.runMutation(stageArtifacts, {
+      artifactJson,
+      batchIndex: 0,
+      releaseId: TEST_RELEASE_ID,
+    }),
+    metrics: await ctx.meta.getTransactionMetrics(),
+  }));
 }
 
 describe("contentRelease/artifacts", () => {
@@ -137,13 +199,28 @@ describe("contentRelease/artifacts", () => {
     const repeated = await stage(t, [testArtifactJson()]);
     const state = await t.run(async (ctx) => ({
       artifact: await ctx.db.query("contentArtifacts").unique(),
+      facts: await ctx.db.query("contentArtifactFacts").unique(),
       item: await ctx.db.query("contentItems").unique(),
       release: await ctx.db.query("contentReleases").unique(),
     }));
 
     expect(created).toMatchObject({ created: 1, unchanged: 0 });
     expect(repeated).toMatchObject({ created: 0, unchanged: 1 });
-    expect(state.artifact?.artifactHash).toBe(TEST_ARTIFACT_HASH);
+    expect(state.artifact).toEqual({
+      _creationTime: expect.any(Number),
+      _id: expect.any(String),
+      artifactHash: TEST_ARTIFACT_HASH,
+      artifactJson: testArtifactJson(),
+    });
+    expect(state.facts).toEqual({
+      _creationTime: expect.any(Number),
+      _id: expect.any(String),
+      artifactHash: TEST_ARTIFACT_HASH,
+      artifactId: state.artifact?._id,
+      artifactJsonHash: testTextHash(testArtifactJson()),
+      retainUntil: expect.any(Number),
+    });
+    expect(state.facts?.retainUntil).toBeGreaterThan(Date.now());
     expect(state.item).toEqual({
       ...staged,
       artifactBatchHash: expect.any(String),
@@ -153,68 +230,72 @@ describe("contentRelease/artifacts", () => {
     expect(state.release?.stagedArtifacts).toBe(1);
   });
 
-  it("reuses identical stored bytes without rewriting the stored row", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertTestRelease(ctx);
-      await ctx.db.insert("contentArtifacts", {
-        artifactHash: TEST_ARTIFACT_HASH,
-        artifactJson: testArtifactJson(),
-        createdAt: 1,
-        retainUntil: 1,
+  it.each([
+    ["artifact facts", storeWithFacts],
+    ["a body stored before facts", storeBeforeFacts],
+  ] as const)(
+    "reuses identical bytes proven by %s without rewriting stored rows",
+    async (_, store) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation(async (ctx) => {
+        await insertTestRelease(ctx);
+        await store(ctx, TEST_ARTIFACT_HASH, testArtifactJson());
       });
-    });
-    await stageItem(t);
-    const stored = await t.run((ctx) =>
-      ctx.db.query("contentArtifacts").unique()
-    );
+      await stageItem(t);
+      const snapshot = () =>
+        t.run(async (ctx) => ({
+          artifacts: await ctx.db.query("contentArtifacts").collect(),
+          facts: await ctx.db.query("contentArtifactFacts").collect(),
+        }));
+      const stored = await snapshot();
 
-    const receipt = await stage(t, [testArtifactJson()]);
+      const receipt = await stage(t, [testArtifactJson()]);
 
-    expect(receipt).toMatchObject({ created: 0, unchanged: 1 });
-    await expect(
-      t.run((ctx) => ctx.db.query("contentArtifacts").unique())
-    ).resolves.toEqual(stored);
-  });
+      expect(receipt).toMatchObject({ created: 0, unchanged: 1 });
+      await expect(snapshot()).resolves.toEqual(stored);
+    }
+  );
 
-  it("stages the largest reused batch well under the transaction read limit", async () => {
+  it.each([
+    ["artifact facts", storeWithFacts],
+    ["bodies stored before facts", storeBeforeFacts],
+  ] as const)(
+    "stages the largest batch reused through %s well under the transaction read limit",
+    async (_, store) => {
+      const t = convexTest(schema, convexModules);
+      const artifactJson = largestBatch();
+      await seedReusedBatch(t, artifactJson, store, ceilingProjectionJson);
+
+      const { metrics, receipt } = await stageMeasured(t, artifactJson);
+
+      expect(batchSize(artifactJson)).toBeGreaterThan(
+        MAX_ARTIFACT_BATCH_BYTES - MAX_ARTIFACT_BATCH_COUNT
+      );
+      expect(receipt).toMatchObject({
+        created: 0,
+        unchanged: MAX_ARTIFACT_BATCH_COUNT,
+      });
+      expect(metrics.bytesRead.used).toBeLessThanOrEqual(
+        TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+      );
+    }
+  );
+
+  it("reuses a full batch from artifact facts without reading stored bodies", async () => {
     const t = convexTest(schema, convexModules);
     const artifactJson = largestBatch();
-    await t.mutation(async (ctx) => {
-      await insertTestRelease(ctx, {
-        itemCount: MAX_ARTIFACT_BATCH_COUNT,
-        stagedUpserts: MAX_ARTIFACT_BATCH_COUNT,
-      });
-      for (const [index, json] of artifactJson.entries()) {
-        await insertCeilingItem(ctx, index);
-        await ctx.db.insert("contentArtifacts", {
-          artifactHash: batchArtifactHash(index),
-          artifactJson: json,
-          createdAt: 1,
-          retainUntil: 1,
-        });
-      }
-    });
-
-    const { metrics, receipt } = await t.mutation(async (ctx) => ({
-      receipt: await ctx.runMutation(stageArtifacts, {
-        artifactJson,
-        batchIndex: 0,
-        releaseId: TEST_RELEASE_ID,
-      }),
-      metrics: await ctx.meta.getTransactionMetrics(),
-    }));
-
-    expect(batchSize(artifactJson)).toBeGreaterThan(
-      MAX_ARTIFACT_BATCH_BYTES - MAX_ARTIFACT_BATCH_COUNT
+    await seedReusedBatch(t, artifactJson, storeWithFacts, (index) =>
+      testProjectionJson({ index })
     );
+
+    const { metrics, receipt } = await stageMeasured(t, artifactJson);
+
     expect(receipt).toMatchObject({
       created: 0,
       unchanged: MAX_ARTIFACT_BATCH_COUNT,
     });
-    expect(metrics.bytesRead.used).toBeLessThanOrEqual(
-      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
-    );
+    // The stored bodies alone hold the batch's four mebibytes.
+    expect(metrics.bytesRead.used).toBeLessThan(MAX_ARTIFACT_BATCH_BYTES / 4);
   });
 
   it("rejects malformed, repeated, oversized, and over-count batches", async () => {
@@ -295,20 +376,21 @@ describe("contentRelease/artifacts", () => {
   });
 
   it("rejects immutable hash reuse and changed retry identity", async () => {
-    const reused = convexTest(schema, convexModules);
-    await reused.mutation(async (ctx) => {
-      await insertTestRelease(ctx);
-      await ctx.db.insert("contentArtifacts", {
-        artifactHash: TEST_ARTIFACT_HASH,
-        artifactJson: testArtifactJson({ plainText: "different" }),
-        createdAt: 1,
-        retainUntil: Number.MAX_SAFE_INTEGER,
+    for (const store of [storeWithFacts, storeBeforeFacts]) {
+      const reused = convexTest(schema, convexModules);
+      await reused.mutation(async (ctx) => {
+        await insertTestRelease(ctx);
+        await store(
+          ctx,
+          TEST_ARTIFACT_HASH,
+          testArtifactJson({ plainText: "different" })
+        );
       });
-    });
-    await stageItem(reused);
-    await expect(stage(reused, [testArtifactJson()])).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_CONFLICT" },
-    });
+      await stageItem(reused);
+      await expect(stage(reused, [testArtifactJson()])).rejects.toMatchObject({
+        data: { code: "CONTENT_RELEASE_CONFLICT" },
+      });
+    }
 
     const changed = convexTest(schema, convexModules);
     await changed.mutation((ctx) => insertTestRelease(ctx));

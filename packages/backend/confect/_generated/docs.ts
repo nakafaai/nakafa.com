@@ -16,6 +16,7 @@ export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
 export type CommentVotesDoc = Document.Document<typeof schemaDefinition, "commentVotes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
 export type ContentAnalyticsPartitionsDoc = Document.Document<typeof schemaDefinition, "contentAnalyticsPartitions">;
+export type ContentArtifactFactsDoc = Document.Document<typeof schemaDefinition, "contentArtifactFacts">;
 export type ContentArtifactsDoc = Document.Document<typeof schemaDefinition, "contentArtifacts">;
 export type ContentBindingsDoc = Document.Document<typeof schemaDefinition, "contentBindings">;
 export type ContentHeadsDoc = Document.Document<typeof schemaDefinition, "contentHeads">;
@@ -99,6 +100,7 @@ export interface Docs {
   commentVotes: CommentVotesDoc;
   comments: CommentsDoc;
   contentAnalyticsPartitions: ContentAnalyticsPartitionsDoc;
+  contentArtifactFacts: ContentArtifactFactsDoc;
   contentArtifacts: ContentArtifactsDoc;
   contentBindings: ContentBindingsDoc;
   contentHeads: ContentHeadsDoc;

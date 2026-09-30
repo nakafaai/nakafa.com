@@ -105,6 +105,12 @@ contract generation change must not be able to strand the cleaner that retires
 old history. Content readers stay strict, and an unprovable reachability fact
 protects all stored history instead of risking deletion.
 
+Artifact staging, retention, cleanup, and compaction likewise read only the
+small `contentArtifactFacts` row written beside each artifact body: its hash,
+the digest of its exact stored bytes, the body ID, and `retainUntil`. They never
+read or rewrite a signed artifact body to prove identity or extend retention;
+only deleting an artifact touches its body, together with its facts.
+
 Every public Convex function used by a deployed client is a rollout contract.
 Renames and removals use expand, switch, observe, contract: deploy the successor
 while the predecessor remains, switch every consumer, verify the predecessor

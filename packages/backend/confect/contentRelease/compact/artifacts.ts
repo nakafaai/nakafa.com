@@ -1,8 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { deleteStoredArtifact } from "@repo/backend/confect/contentRelease/artifact/facts";
 import { isArtifactReferenced } from "@repo/backend/confect/contentRelease/retention";
 import {
   ARTIFACT_PAGE_BYTES,
@@ -10,12 +8,17 @@ import {
 } from "@repo/backend/confect/contentRelease/spec";
 import { Effect } from "effect";
 
-/** Deletes one bounded expired artifact page after reference proof. */
+/**
+ * Deletes one bounded expired artifact page after reference proof.
+ *
+ * The page reads only small artifact facts, so still-referenced artifacts past
+ * their retention never load their bodies.
+ */
 export const compactArtifacts = Effect.fn("contentRelease.compactArtifacts")(
   function* (cursor: null | string, cutoff: number) {
     const database = yield* DatabaseReader;
     const page = yield* database
-      .table("contentArtifacts")
+      .table("contentArtifactFacts")
       .index("by_retainUntil_and_artifactHash", (query) =>
         query.lte("retainUntil", cutoff)
       )
@@ -27,8 +30,8 @@ export const compactArtifacts = Effect.fn("contentRelease.compactArtifacts")(
       })
       .pipe(Effect.orDie);
     let deleted = 0;
-    for (const artifact of page.page) {
-      deleted += yield* compactArtifact(artifact);
+    for (const facts of page.page) {
+      deleted += yield* compactArtifact(facts);
     }
     return {
       cursor: page.isDone ? null : page.continueCursor,
@@ -40,12 +43,11 @@ export const compactArtifacts = Effect.fn("contentRelease.compactArtifacts")(
 
 /** Deletes one unreferenced artifact without changing its retention owner. */
 const compactArtifact = Effect.fn("contentRelease.compactArtifact")(function* (
-  artifact: Docs["contentArtifacts"]
+  facts: Docs["contentArtifactFacts"]
 ) {
-  const writer = yield* DatabaseWriter;
-  if (yield* isArtifactReferenced(artifact.artifactHash)) {
+  if (yield* isArtifactReferenced(facts.artifactHash)) {
     return 0;
   }
-  yield* writer.table("contentArtifacts").delete(artifact._id);
+  yield* deleteStoredArtifact(facts);
   return 1;
 });

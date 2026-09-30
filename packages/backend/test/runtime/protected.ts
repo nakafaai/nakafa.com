@@ -12,6 +12,7 @@ import {
 } from "@nakafa/aksara-contracts/tryout/placement";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { insertTestArtifact } from "@repo/backend/test/content/artifact";
 import {
   TEST_PROOF_RENDERER,
   testSignedArtifact,
@@ -56,11 +57,9 @@ function insertArtifact(
   ctx: MutationCtx,
   artifact: ReturnType<typeof testSignedArtifact>
 ) {
-  return ctx.db.insert("contentArtifacts", {
+  return insertTestArtifact(ctx, {
     artifactHash: artifact.artifactHash,
     artifactJson: JSON.stringify(artifact),
-    createdAt: 1,
-    retainUntil: Number.MAX_SAFE_INTEGER,
   });
 }
 
