@@ -18,9 +18,7 @@ interface ToasterStyle extends React.CSSProperties {
   "--error-border": string;
   "--error-text": string;
   "--gray2": string;
-  "--gray4": string;
   "--gray5": string;
-  "--gray12": string;
   "--info-bg": string;
   "--info-border": string;
   "--info-text": string;
@@ -47,9 +45,7 @@ const toasterStyle: ToasterStyle = {
   "--error-border": "var(--destructive)",
   "--error-text": "var(--popover-foreground)",
   "--gray2": "var(--accent)",
-  "--gray4": "var(--input)",
   "--gray5": "var(--input)",
-  "--gray12": "var(--popover-foreground)",
   "--info-bg": "color-mix(in oklch, var(--info) 5%, var(--popover))",
   "--info-border": "var(--info)",
   "--info-text": "var(--popover-foreground)",
@@ -73,7 +69,7 @@ function Toaster({ ...props }: ToasterProps) {
 
   return (
     <Sonner
-      className="toaster group font-sans!"
+      className="font-sans!"
       closeButton
       icons={{
         success: <HugeIcons className="size-4" icon={Tick01Icon} />,
