@@ -392,14 +392,24 @@ const verifyQuranLayoutStability = Effect.fn(
     yield* Effect.sync(() => expect(layoutShift).toBeLessThan(0.01));
   }
 
-  // Verses past the document flow are virtualized, and the outline still
-  // scrolls one of them into view.
+  // Verses past the document flow are virtualized, and so is the long
+  // outline: scrolling the outline renders the entry for verse 200, which then
+  // scrolls its verse into view.
   const outline = page
     .locator(
       'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]'
     )
     .filter({ visible: true });
   yield* Effect.promise(() => outline.click());
+  const outlineBody = page.locator(
+    '[data-mobile="true"] [data-slot="sidebar-content"]'
+  );
+  yield* Effect.promise(() =>
+    outlineBody.evaluate((node) => {
+      const entry = node.querySelector('[data-slot="sidebar-menu-item"]');
+      node.scrollTop = (entry?.getBoundingClientRect().height ?? 0) * 199;
+    })
+  );
   yield* Effect.promise(() =>
     page.getByRole("button", { exact: true, name: "Verse 200" }).click()
   );

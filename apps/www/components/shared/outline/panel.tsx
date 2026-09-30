@@ -1,8 +1,6 @@
 import { Menu02Icon } from "@hugeicons/core-free-icons";
-import type { Reference } from "@repo/contents/content";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
-  SidebarContent,
   SidebarFooter,
   SidebarHeader,
 } from "@repo/design-system/components/ui/sidebar-content";
@@ -18,23 +16,13 @@ import {
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
 import type { ComponentProps, ReactNode } from "react";
-import { CommentsButton } from "@/components/sidebar/actions/comments";
-import { GithubButton } from "@/components/sidebar/actions/github";
-import { ReferenceButton } from "@/components/sidebar/actions/reference";
-import { ReportButton } from "@/components/sidebar/actions/report";
-import { ShareButton } from "@/components/sidebar/actions/share";
+import { OutlineContent } from "@/components/shared/outline/scroll";
 
+/** The outline panel: its heading slot, the outline, and the page's actions. */
 export type SidebarRightProps = {
   children: ReactNode;
+  footer: ReactNode;
   header?: ReactNode;
-  githubUrl?: string | undefined;
-  showComments?: boolean | undefined;
-  references?:
-    | {
-        title: string;
-        data: Reference[];
-      }
-    | undefined;
 } & ComponentProps<typeof Sidebar>;
 
 /** Outline heading slot, which can resolve independently from the panel. */
@@ -72,37 +60,17 @@ export function SidebarRightHeader({
   );
 }
 
-function SidebarRightFooter({
-  references,
-  githubUrl,
-  showComments = false,
-}: Pick<SidebarRightProps, "references" | "githubUrl" | "showComments">) {
+/** Frames the page actions composed below the outline. */
+export function SidebarRightFooter({ children }: { children: ReactNode }) {
   return (
     <SidebarFooter className="border-t">
-      <SidebarMenu>
-        {!!showComments && <CommentsButton />}
-        {!!references && (
-          <ReferenceButton
-            references={references.data}
-            title={references.title}
-          />
-        )}
-        <ReportButton />
-        {!!githubUrl && <GithubButton githubUrl={githubUrl} />}
-        <ShareButton />
-      </SidebarMenu>
+      <SidebarMenu>{children}</SidebarMenu>
     </SidebarFooter>
   );
 }
 
-export function SidebarRight({
-  children,
-  header,
-  references,
-  githubUrl,
-  showComments,
-  ...props
-}: SidebarRightProps) {
+/** The outline panel with its own provider and floating trigger. */
+export function SidebarRight(props: SidebarRightProps) {
   return (
     <div className="shrink-0">
       <SidebarRightProvider>
@@ -112,15 +80,7 @@ export function SidebarRight({
           size="icon"
           variant="outline"
         />
-        <SidebarRightPanel
-          githubUrl={githubUrl}
-          header={header}
-          references={references}
-          showComments={showComments}
-          {...props}
-        >
-          {children}
-        </SidebarRightPanel>
+        <SidebarRightPanel {...props} />
       </SidebarRightProvider>
     </div>
   );
@@ -143,22 +103,16 @@ export function SidebarRightProvider({ children }: { children: ReactNode }) {
 /** Renders the outline panel using the page's nearest sidebar provider. */
 export function SidebarRightPanel({
   children,
+  footer,
   header,
-  references,
-  githubUrl,
-  showComments,
   ...props
 }: SidebarRightProps) {
   return (
     <aside>
       <Sidebar containerClassName="lg:hidden xl:block" side="right" {...props}>
         {header}
-        <SidebarContent>{children}</SidebarContent>
-        <SidebarRightFooter
-          githubUrl={githubUrl}
-          references={references}
-          showComments={showComments}
-        />
+        <OutlineContent>{children}</OutlineContent>
+        {footer}
       </Sidebar>
     </aside>
   );

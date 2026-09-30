@@ -14,17 +14,22 @@ import { LayoutContent } from "@/components/shared/content/layout";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { MaterialOutline } from "@/components/shared/material/toc";
 import {
+  SidebarRightFooter,
   SidebarRightHeader,
+  SidebarRightPanel,
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
+import { SidebarVirtualTree } from "@/components/shared/outline/virtual";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import { QuranVersesProvider } from "@/components/shared/quran/verses/context";
 import { QURAN_FLOW_VERSES } from "@/components/shared/quran/verses/flow";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
+import { ReferenceButton } from "@/components/sidebar/actions/reference";
+import { ReportButton } from "@/components/sidebar/actions/report";
+import { ShareButton } from "@/components/sidebar/actions/share";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -283,11 +288,14 @@ async function CachedSurahShell({
             <PaginationContent pagination={pagination} />
             {toolbar}
           </LayoutMaterialContent>
-          <MaterialOutline
-            chapters={{
-              label: t("verse"),
-              data: headings,
-            }}
+          <SidebarRightPanel
+            footer={
+              <SidebarRightFooter>
+                <ReferenceButton references={references} title={title} />
+                <ReportButton />
+                <ShareButton />
+              </SidebarRightFooter>
+            }
             header={
               <SidebarRightHeader
                 description={description}
@@ -296,8 +304,9 @@ async function CachedSurahShell({
                 title={title}
               />
             }
-            references={{ title, data: references }}
-          />
+          >
+            <SidebarVirtualTree data={headings} title={t("verse")} />
+          </SidebarRightPanel>
         </SidebarRightProvider>
       </VirtualProvider>
     </>
