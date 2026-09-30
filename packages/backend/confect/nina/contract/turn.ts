@@ -2,7 +2,7 @@ import {
   type AgentContext,
   AgentCurriculumPreferenceSchema,
 } from "@repo/backend/confect/nina/contract/agent";
-import { NinaContextPackSchema } from "@repo/backend/confect/nina/memory/pack";
+import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/helper";

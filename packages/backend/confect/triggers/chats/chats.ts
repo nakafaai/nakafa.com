@@ -5,12 +5,16 @@ import {
   MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { forgetChat } from "@repo/backend/confect/nina/memory/store";
 import { settleTurn } from "@repo/backend/confect/nina/settlement";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
 import { Duration, Effect } from "effect";
 
-/** Cancels active generation and cascades journal deletion through Agent. */
+/**
+ * Cancels active generation, forgets the facts remembered from the chat, and
+ * cascades journal deletion through Agent.
+ */
 export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
   function* (change: Change<DataModel, "chats">) {
     const scheduler = yield* Scheduler;
@@ -29,6 +33,7 @@ export const chatsHandler = Effect.fn("triggers.chats.chats.chatsHandler")(
         yield* settleTurn(turn, "cancelled").pipe(Effect.orDie);
       }
     }
+    yield* forgetChat(change.oldDoc);
     const ctx = yield* MutationCtx;
     // Component-owned batched deletion includes messages, streams and file references.
     yield* Effect.promise(() =>

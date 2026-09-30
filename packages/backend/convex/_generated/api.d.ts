@@ -3265,6 +3265,27 @@ export declare const api: {
         null
       >;
     };
+    memory: {
+      disable: FunctionReference<"mutation", "public", {}, null>;
+      enable: FunctionReference<
+        "mutation",
+        "public",
+        {},
+        { facts: Array<{ key: number; savedAt: number; text: string }> }
+      >;
+      forget: FunctionReference<
+        "mutation",
+        "public",
+        { key: number },
+        { facts: Array<{ key: number; savedAt: number; text: string }> } | null
+      >;
+      get: FunctionReference<
+        "query",
+        "public",
+        {},
+        { facts: Array<{ key: number; savedAt: number; text: string }> } | null
+      >;
+    };
     messages: {
       list: FunctionReference<
         "query",
@@ -8580,6 +8601,57 @@ export declare const internal: {
           turnId: Id<"ninaTurns">;
         },
         null
+      >;
+    };
+    memory: {
+      apply: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          changes: {
+            forget: Array<number>;
+            remember: Array<string>;
+            update: Array<{ key: number; text: string }>;
+          };
+          chatId: Id<"chats">;
+          memory: { id: Id<"ninaMemories">; revision: number };
+          usage: { input: number; output: number };
+          userId: Id<"users">;
+        },
+        null
+      >;
+      read: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        {
+          memory: {
+            facts: Array<{ key: number; text: string }>;
+            id: Id<"ninaMemories">;
+            revision: number;
+          } | null;
+          profile: {
+            focus?: "learning" | "tryout";
+            region?:
+              | "indonesia"
+              | "singapore"
+              | "united-kingdom"
+              | "germany"
+              | "united-states"
+              | "international";
+            tryout?: {
+              correct: number;
+              exam: string;
+              finishedAt: number;
+              score: number;
+              sections: Array<{ correct: number; key: string; total: number }>;
+              set: string;
+              status: "provisional" | "official";
+              total: number;
+            };
+            tryoutCountry?: string;
+          };
+        }
       >;
     };
     presentation: {

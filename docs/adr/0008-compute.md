@@ -32,8 +32,9 @@ The scheduled generation action owns one stream deadline with time left for
 settlement within Convex's action limit. Cancellation settles the turn and
 aborts its Agent stream, which propagates through the main AI SDK stream,
 specialist agents, tool repair, and abortable HTTP clients. Titles, follow-up
-suggestions, and the rolling summary run later in a separate action with their
-own deadlines, so optional work never discards a completed answer. External
+suggestions, the rolling summary, and learner memory curation run later,
+concurrently, in a separate action with their own deadlines, so optional work
+never discards a completed answer. External
 services remain responsible for stopping work after cancellation; each remote
 calculation also has its own execution limit.
 

@@ -3,6 +3,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
+import { findMemory } from "@repo/backend/confect/nina/memory/store";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
 
@@ -155,6 +156,22 @@ const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
 
+/** Deletes the learner's Nina memory, which holds facts from their chats. */
+const cleanupNinaMemory = Effect.fn("auth.cleanup.ninaMemory")(
+  function* (userId: Id<"users">) {
+    const memory = yield* findMemory(userId);
+    if (!memory) {
+      return false;
+    }
+    yield* (yield* DatabaseWriter)
+      .table("ninaMemories")
+      .delete(memory._id)
+      .pipe(Effect.orDie);
+    return true;
+  },
+  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+);
+
 /** Deletes one bounded batch of user-authored social and saved content. */
 export const cleanupUserSocialData = Effect.fn(
   "auth.cleanup.cleanupUserSocialData"
@@ -166,6 +183,9 @@ export const cleanupUserSocialData = Effect.fn(
     return true;
   }
   if (yield* cleanupNinaUploads(userId)) {
+    return true;
+  }
+  if (yield* cleanupNinaMemory(userId)) {
     return true;
   }
   return yield* cleanupChats(userId);

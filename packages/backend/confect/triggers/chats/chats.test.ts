@@ -5,7 +5,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/memory/pack";
+import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -102,6 +102,49 @@ describe("native Nina deletion lifecycle", () => {
     expect(
       await t.query((ctx) => ctx.db.get("chats", receipt.chatId))
     ).toBeNull();
+  });
+  it("forgets the facts Nina remembered from a deleted chat", async () => {
+    const { t, owner, identity, receipt } = await fixture();
+    const chat = () =>
+      t.mutation(async (ctx) =>
+        ctx.db.insert("chats", {
+          threadId: await createThread(ctx, components.nina, {
+            userId: identity.userId,
+          }),
+          type: "study",
+          updatedAt: NOW,
+          userId: identity.userId,
+          visibility: "private",
+        })
+      );
+    const other = await chat();
+    const quiet = await chat();
+    const fact = (key: number, chatId: typeof other) => ({
+      chatId,
+      key,
+      savedAt: NOW,
+      text: `Fact ${key}.`,
+    });
+    await t.mutation((ctx) =>
+      ctx.db.insert("ninaMemories", {
+        facts: [fact(0, receipt.chatId), fact(1, other)],
+        next: 2,
+        updatedAt: NOW,
+        usage: { calls: 1, input: 300, output: 20 },
+        userId: identity.userId,
+      })
+    );
+    const facts = async () =>
+      (await t.query((ctx) => ctx.db.query("ninaMemories").collect())).map(
+        (memory) => memory.facts.map((kept) => kept.key)
+      );
+    await owner.mutation(remove, { chatId: receipt.chatId });
+    expect(await facts()).toEqual([[1]]);
+    await owner.mutation(remove, { chatId: quiet });
+    expect(await facts()).toEqual([[1]]);
+    await owner.mutation(remove, { chatId: other });
+    expect(await facts()).toEqual([[]]);
+    await t.finishAllScheduledFunctions(() => vi.runAllTimers());
   });
   it("cancels queued generation and removes the Agent journal before late writes can recreate it", async () => {
     const { t, owner, identity, receipt, fileId } = await fixture();

@@ -104,6 +104,42 @@ describe("Nina instructions", () => {
     }
   });
 
+  it("places the learner's account facts and remembered facts", async () => {
+    const f = await createNinaTest();
+    await f.t.mutation(async (ctx) => {
+      await ctx.db.insert("onboardingProfiles", {
+        focus: "tryout",
+        updatedAt: Date.now(),
+        userId: f.identity.userId,
+      });
+      await ctx.db.insert("ninaMemories", {
+        facts: [
+          {
+            chatId: f.chatId,
+            key: 0,
+            savedAt: Date.now(),
+            text: "Sulit di peluang.",
+          },
+        ],
+        next: 1,
+        updatedAt: Date.now(),
+        usage: { calls: 1, input: 300, output: 20 },
+        userId: f.identity.userId,
+      });
+    });
+    const result = await instructionsFor(f);
+    for (const expected of [
+      "# Learner",
+      "- Focus: preparing for try-outs",
+      "- Sulit di peluang.",
+    ]) {
+      expect(result).toHaveProperty(
+        "instructions",
+        expect.stringContaining(expected)
+      );
+    }
+  });
+
   it("reads a focused question from its signed body and official explanation", async () => {
     const f = await createFocusTest();
     await f.focusTurn();
