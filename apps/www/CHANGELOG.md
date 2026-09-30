@@ -1,5 +1,61 @@
 # www
 
+## 2.1.0
+
+### Minor Changes
+
+- [#736](https://github.com/nakafaai/nakafa.com/pull/736) [`5c0723a`](https://github.com/nakafaai/nakafa.com/commit/5c0723a1c4baabae0b897a00761e00533eec3db8) Thanks [@nabilfatih](https://github.com/nabilfatih)! - The locked try-out review previews real explanations for a finished section's
+  first two questions under one blur that melts into the page from the bottom,
+  fits the screen without scrolling, and offers Pro as a bottom sheet on phones
+  and as a dialog card on wider screens. Disabled Base UI triggers, such as an
+  active question's explanation button, now look disabled.
+
+### Patch Changes
+
+- [#662](https://github.com/nakafaai/nakafa.com/pull/662) [`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Classify the traffic behind server exceptions. Server captures carried no user agent, so PostHog filed every one under automated traffic and hid real visitor faults during triage. `captureServerException` now accepts the requesting user agent and sends it as `$raw_user_agent`. The request-scoped capture seam reads the user agent once through `next/headers`, so every route handler, metadata, and scheduled capture classifies without extra plumbing; the Next.js request-error hook and the chat stream error reporter pass the user agent from their own request headers. The redacted exception payload stays unchanged.
+
+- [#730](https://github.com/nakafaai/nakafa.com/pull/730) [`3b02457`](https://github.com/nakafaai/nakafa.com/commit/3b024573b36e69694be1f02187ce08f27a251f07) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Preload only the fonts each page renders. The unused Geist Pixel faces leave
+  the font set and theme, Amiri moves to the Quran routes that render it at its
+  regular weight, and the sidebar logo no longer preloads on every app page.
+
+- [#657](https://github.com/nakafaai/nakafa.com/pull/657) [`2ba4e84`](https://github.com/nakafaai/nakafa.com/commit/2ba4e84a7c557f22be317f95dddbde66bc4eed2a) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Render the product in Inter and give every rendered content heading a scannable
+  section rule. Inter replaces Geist Sans as the interface and reading face, the
+  serif reading title becomes Inter, the lesson and article title and summary move
+  to the start of the reading column at the larger display size, and lesson pages
+  drop the summary under the title while articles keep theirs.
+  
+  Markdown and MDX headings render their words in the theme `primary` accent and
+  draw the underline in the theme's validated chart mark, at Tailwind's own
+  `decoration-2` and `underline-offset-4` values. A new `heading-rule` color role
+  owns that pairing, so the words and the rule never repeat one color and the rule
+  stays at least 3:1 against the page in all 31 concrete themes.
+
+- [#652](https://github.com/nakafaai/nakafa.com/pull/652) [`25393e7`](https://github.com/nakafaai/nakafa.com/commit/25393e7a8a4257ddde8b4c12aef11de67b0eaa97) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Resolve social images without rendering the application shell. Open Graph routes read release metadata through a render-free seam and answer unknown slugs with translated brand artwork, so crawler traffic no longer throws client-manifest errors. Lesson and article pages keep their exact readers and failure behavior.
+
+- [#741](https://github.com/nakafaai/nakafa.com/pull/741) [`1c4cec0`](https://github.com/nakafaai/nakafa.com/commit/1c4cec0d8e6a593498b5548e9a54fcd8f25ec004) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Re-render only the outline headings whose active state changes while a learner
+  reads, instead of every heading in the outline.
+
+- [#752](https://github.com/nakafaai/nakafa.com/pull/752) [`9434fba`](https://github.com/nakafaai/nakafa.com/commit/9434fbaa3f75254c42d0b823c708a62286f6e614) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Render only the entries of a long outline that are in view, so surah pages ship
+  a few dozen outline entries instead of hundreds, and let each page compose the
+  outline panel's header, outline, and footer actions.
+
+- [#731](https://github.com/nakafaai/nakafa.com/pull/731) [`8be1c5e`](https://github.com/nakafaai/nakafa.com/commit/8be1c5e40641bbd18e7d9b9a50fbff682fe805b6) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Render a surah's leading verses in document flow so surah pages load without
+  layout shift, keep later verses virtualized below the fold, and send each verse
+  to the client once as data. Declare the Quran typeface on every page without
+  preloads, so prefetching a Quran route no longer downloads Amiri on other pages,
+  and show Quran text only once Amiri has loaded.
+
+- [#743](https://github.com/nakafaai/nakafa.com/pull/743) [`bb00999`](https://github.com/nakafaai/nakafa.com/commit/bb0099951bea056e9a120870e83030cce160d3d8) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Retry Convex queries that Convex refused or never answered, so a briefly
+  overloaded deployment or a dropped connection no longer fails a page render.
+
+- [#745](https://github.com/nakafaai/nakafa.com/pull/745) [`97a8d65`](https://github.com/nakafaai/nakafa.com/commit/97a8d652bb7adaa4f848d78629e8a6e11bd1d6f0) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Show a Nina answer's sources once its text has finished typing, so the last
+  lines of the answer never push them down.
+- Updated dependencies [[`7b066d6`](https://github.com/nakafaai/nakafa.com/commit/7b066d6be9f01dd87a0680c11a4235ef0423c632), [`3b02457`](https://github.com/nakafaai/nakafa.com/commit/3b024573b36e69694be1f02187ce08f27a251f07), [`2ba4e84`](https://github.com/nakafaai/nakafa.com/commit/2ba4e84a7c557f22be317f95dddbde66bc4eed2a), [`90805e1`](https://github.com/nakafaai/nakafa.com/commit/90805e1217179134d135bea0f683cb9df13159a8), [`bb9a7f8`](https://github.com/nakafaai/nakafa.com/commit/bb9a7f845e47eec2ab3bf8b1153a1baea5b86cc5), [`5c0723a`](https://github.com/nakafaai/nakafa.com/commit/5c0723a1c4baabae0b897a00761e00533eec3db8), [`07c4e15`](https://github.com/nakafaai/nakafa.com/commit/07c4e1587872de0b7c170dbe15cc154d99801f98), [`5c61637`](https://github.com/nakafaai/nakafa.com/commit/5c6163735674860a3bf942d9149880ef7aea4b4c)]:
+  - @repo/analytics@0.1.2
+  - @repo/design-system@1.1.0
+  - @repo/backend@3.1.0
+  - @repo/contents@2.0.2
+
 ## 2.0.4
 
 ### Patch Changes
