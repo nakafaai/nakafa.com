@@ -1,11 +1,23 @@
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { describe, expect, it } from "@effect/vitest";
+import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { compactProgram } from "@repo/backend/confect/contentRelease/compact";
-import { ARTIFACT_PAGE_COUNT } from "@repo/backend/confect/contentRelease/spec";
+import { compactArtifacts } from "@repo/backend/confect/contentRelease/compact/artifacts";
+import {
+  ARTIFACT_PAGE_COUNT,
+  TRANSACTION_READ_HEADROOM,
+  TRANSACTION_READ_LIMIT,
+} from "@repo/backend/confect/contentRelease/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { insertTestArtifact } from "@repo/backend/test/content/artifact";
+import {
+  ceilingArtifactJson,
+  insertCeilingReferences,
+  transactionBytes,
+} from "@repo/backend/test/content/budget";
+import { testTextHash } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -142,4 +154,47 @@ describe("contentRelease/compact/artifacts", () => {
       phase: "snapshots",
     });
   });
+  it.each([
+    ["referenced", 0],
+    ["unreferenced", ARTIFACT_PAGE_COUNT],
+  ] as const)(
+    "keeps a full page of expired %s artifacts under the read budget",
+    async (reach, deleted) => {
+      const t = convexTest(schema, convexModules);
+      const artifactHashes = Array.from(
+        { length: ARTIFACT_PAGE_COUNT },
+        (_, index) => testTextHash(`artifact-${index}`)
+      );
+      await t.mutation(async (ctx) => {
+        for (const artifactHash of artifactHashes) {
+          await insertTestArtifact(ctx, {
+            artifactHash,
+            artifactJson: ceilingArtifactJson(artifactHash),
+            retainUntil: 0,
+          });
+        }
+        if (reach === "referenced") {
+          await insertCeilingReferences(ctx, artifactHashes, 1);
+        }
+      });
+
+      const { bytesRead, result } = await t.mutation(async (ctx) => ({
+        result: await Effect.runPromise(
+          compactArtifacts(null, 0).pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        ),
+        bytesRead: await transactionBytes(ctx),
+      }));
+
+      expect(result.deleted).toBe(deleted);
+      // Each artifact read either its maximal item reference or its body.
+      expect(bytesRead).toBeGreaterThan(
+        ARTIFACT_PAGE_COUNT * MAX_SIGNED_ARTIFACT_BYTES
+      );
+      expect(bytesRead).toBeLessThanOrEqual(
+        TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+      );
+    }
+  );
 });
