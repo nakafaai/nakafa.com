@@ -64,13 +64,28 @@ describe("Tailwind built-in class policy", () => {
     ]);
   });
 
-  it("names integer, percentage, time, rotation, ratio and grid steps", () => {
+  it("names whole-number steps, including flex and grid placement", () => {
     expect(
       inspect(
-        "z-[60] opacity-[.35] scale-[102%] duration-[450ms] delay-[0.2s] rotate-[45deg] aspect-[40/21] aspect-[1/1] aspect-[16/9] grid-cols-[repeat(3,minmax(0,1fr))]"
+        "z-[60] grow-[0] shrink-[0] flex-[2] columns-[3] col-span-[2] row-start-[-1]"
       )
     ).toEqual([
       "view.tsx:1: use z-60 instead of z-[60].",
+      "view.tsx:1: use grow-0 instead of grow-[0].",
+      "view.tsx:1: use shrink-0 instead of shrink-[0].",
+      "view.tsx:1: use flex-2 instead of flex-[2].",
+      "view.tsx:1: use columns-3 instead of columns-[3].",
+      "view.tsx:1: use col-span-2 instead of col-span-[2].",
+      "view.tsx:1: use -row-start-1 instead of row-start-[-1].",
+    ]);
+  });
+
+  it("names percentage, time, rotation, ratio and grid track steps", () => {
+    expect(
+      inspect(
+        "opacity-[.35] scale-[102%] duration-[450ms] delay-[0.2s] rotate-[45deg] aspect-[40/21] aspect-[1/1] aspect-[16/9] grid-cols-[repeat(3,minmax(0,1fr))]"
+      )
+    ).toEqual([
       "view.tsx:1: use opacity-35 instead of opacity-[.35].",
       "view.tsx:1: use scale-102 instead of scale-[102%].",
       "view.tsx:1: use duration-450 instead of duration-[450ms].",
@@ -89,7 +104,7 @@ describe("Tailwind built-in class policy", () => {
         [
           "w-[calc(100%-2rem)] p-[1.5px] w-[33%] m-[50%] h-[50vh] size-[auto]",
           "w-[-2px] text-[8px] rounded-[3px] border-[#fff] ring-[1.5px]",
-          "z-[auto] opacity-[0.333] opacity-[half] scale-[1.005%] duration-[fast]",
+          "z-[auto] flex-[1_1_0%] opacity-[0.333] opacity-[half] scale-[1.005%] duration-[fast]",
           "delay-[0.0005s] rotate-[0.5turn] aspect-[1.45] grid-cols-[1fr_auto]",
           "data-[state=open]:bg-accent group-data-[collapsible=icon]/item:w-4",
         ].join(" ")

@@ -45,6 +45,13 @@ const DIVIDES = ["divide-x", "divide-y"];
 const LINE_WIDTHS = ["ring", "ring-offset", "outline", "outline-offset"];
 const TEXT_LINES = ["underline-offset", "decoration"];
 const SCALES = ["scale", "scale-x", "scale-y"];
+const GRID_LINES = ["col-start", "col-end", "row-start", "row-end"];
+/** Utilities whose value is a whole number without a unit. */
+const COUNTS = [
+  ...["z", "order", "line-clamp", "stroke", "columns"],
+  ...["grow", "shrink", "flex", "col-span", "row-span"],
+  ...GRID_LINES,
+];
 
 /** Sizes and positions also take fractions of their container. */
 const FRACTIONAL = new Set([...SIZES, ...INSETS, ...SIDES]);
@@ -63,6 +70,7 @@ const NEGATABLE = new Set([
   "order",
   "rotate",
   ...SCALES,
+  ...GRID_LINES,
 ]);
 const VIEWPORTS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   h: { "100vh": "screen", "100dvh": "dvh", "100svh": "svh", "100lvh": "lvh" },
@@ -200,9 +208,7 @@ const RESOLVERS = new Map<string, Resolve>([
     ...LINE_WIDTHS,
     ...TEXT_LINES,
   ].map((utility): [string, Resolve] => [utility, lineWidth(utility)]),
-  ...["z", "order", "line-clamp", "stroke"].map(
-    (utility): [string, Resolve] => [utility, integer]
-  ),
+  ...COUNTS.map((utility): [string, Resolve] => [utility, integer]),
   ...["opacity", ...SCALES].map((utility): [string, Resolve] => [
     utility,
     percentStep,
