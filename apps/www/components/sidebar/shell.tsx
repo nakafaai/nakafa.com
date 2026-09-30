@@ -39,7 +39,8 @@ export function AppShell({
             <DeferredAiSheet />
           </>
         )}
-        <div className="relative">
+        {/* Pages may fill the height left below the header. */}
+        <div className="relative flex flex-1 flex-col">
           <Suspense fallback={null}>{children}</Suspense>
         </div>
       </SidebarInset>

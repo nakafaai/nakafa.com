@@ -3850,6 +3850,20 @@ export declare const api: {
                       sourceRevision: string;
                     }>;
                     kind: "signed";
+                    previewAnswers: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "entitled";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
                     questions: Array<{
                       appLocale: "en" | "id" | "de";
                       artifactHash: string;
@@ -4079,6 +4093,20 @@ export declare const api: {
                       sourceRevision: string;
                     }>;
                     kind: "signed";
+                    previewAnswers: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "entitled";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
                     questions: Array<{
                       appLocale: "en" | "id" | "de";
                       artifactHash: string;
@@ -4302,6 +4330,20 @@ export declare const api: {
                       sourceRevision: string;
                     }>;
                     kind: "signed";
+                    previewAnswers: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "entitled";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
                     questions: Array<{
                       appLocale: "en" | "id" | "de";
                       artifactHash: string;
