@@ -140,8 +140,6 @@ export const makeTryoutRuntimeSource = Effect.fn(
     artifacts.map((artifact) => ({
       artifactHash: artifact.artifactHash,
       artifactJson: JSON.stringify(artifact),
-      createdAt: 1,
-      retainUntil: 100,
     }))
   );
   fixture.source.set("tryoutRuntimeBundles", [

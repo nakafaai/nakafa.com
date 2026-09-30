@@ -1,12 +1,36 @@
 import type { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
+  testTextHash,
 } from "@repo/backend/test/content/release";
 import type { Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
+
+/** Stores one artifact body with the facts that staging writes beside it. */
+export async function insertTestArtifact(
+  ctx: MutationCtx,
+  artifact: {
+    readonly artifactHash: string;
+    readonly artifactJson: string;
+    readonly retainUntil?: number | undefined;
+  }
+) {
+  const artifactId = await ctx.db.insert("contentArtifacts", {
+    artifactHash: artifact.artifactHash,
+    artifactJson: artifact.artifactJson,
+  });
+  await ctx.db.insert("contentArtifactFacts", {
+    artifactHash: artifact.artifactHash,
+    artifactId,
+    artifactJsonHash: testTextHash(artifact.artifactJson),
+    retainUntil: artifact.retainUntil ?? Number.MAX_SAFE_INTEGER,
+  });
+  return artifactId;
+}
 /** Creates one schema-valid technical signed artifact. */
 export function testArtifactJson(options?: {
   readonly artifactHash?: string | undefined;
