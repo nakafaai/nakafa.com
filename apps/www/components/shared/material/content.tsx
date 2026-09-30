@@ -5,7 +5,8 @@ import type { ReactNode } from "react";
  * Renders the main material column.
  *
  * `min-w-0` lets the flex item shrink below its content's min-content width,
- * while BlockMath and Mermaid keep their own internal horizontal scroll.
+ * while BlockMath keeps its own internal horizontal scroll and Mermaid scales
+ * each diagram to fit its card.
  *
  * @see https://developer.mozilla.org/en-US/docs/Web/CSS/flex
  */

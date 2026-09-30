@@ -3,116 +3,63 @@
 import {
   Copy01Icon,
   Download01Icon,
-  TerminalIcon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog/browser";
-import { CodeBlockContent } from "@repo/design-system/components/code-block/content";
-import { codeBlockDarkModeVariants } from "@repo/design-system/components/code-block/variants";
-import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { writeCodeToClipboard } from "@repo/design-system/lib/code-block/clipboard";
-import { languageIconMap } from "@repo/design-system/lib/code-block/icons";
 import { getCodeFileExtension } from "@repo/design-system/lib/code-block/language-extension";
 import { downloadFile } from "@repo/design-system/lib/files/download";
 import { cn } from "cn";
 import { Effect } from "effect";
 import {
   type ComponentProps,
-  createContext,
-  type HTMLAttributes,
-  use,
+  type ReactNode,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
-import type { BundledTheme } from "shiki";
+import { createContext, useContextSelector } from "use-context-selector";
 
-type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
+/** One code sample and the language it is written in. */
+interface CodeSource {
   code: string;
   language: string;
-  preClassName?: string;
-};
-
-interface CodeBlockContextType {
-  code: string;
 }
 
-/** Provides the light theme first and the dark theme second. */
-const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
-  "github-light",
-  "github-dark",
-]);
+const missingCodeSource = Symbol("missing-code-source");
 
-const CodeBlockContext = createContext<CodeBlockContextType>({
-  code: "",
-});
+const CodeSourceContext = createContext<CodeSource | typeof missingCodeSource>(
+  missingCodeSource
+);
 
-/** Renders highlighted code with paired light and dark Shiki themes. */
-export function CodeBlock({
+/**
+ * Shares one code sample with the copy and download controls composed in it.
+ * The controls stay apart from the syntax highlighter, so a Mermaid card can
+ * offer them without loading Shiki.
+ */
+export function CodeBlockSource({
+  children,
   code,
   language,
-  className,
-  children,
-  preClassName,
-  ...rest
-}: CodeBlockProps) {
-  const [lightTheme, darkTheme] = use(ShikiThemeContext);
-  const codeContextValue = useMemo(() => ({ code }), [code]);
-  const codeThemes = useMemo(
-    () => ({ dark: darkTheme, light: lightTheme }),
-    [darkTheme, lightTheme]
-  );
-
-  const icon = languageIconMap[language];
-
+}: CodeSource & { children: ReactNode }) {
   return (
-    <CodeBlockContext.Provider value={codeContextValue}>
-      <div
-        className="my-4 w-full overflow-hidden rounded-xl border"
-        data-code-block-container
-        data-language={language}
-      >
-        <div
-          className="flex items-center justify-between bg-muted/80 p-1 text-muted-foreground text-sm"
-          data-code-block-header
-          data-language={language}
-        >
-          <div className="flex items-center gap-2 px-4 py-1.5">
-            {icon ? (
-              <SimpleIcon className="size-4" icon={icon} />
-            ) : (
-              <HugeIcons className="size-4" icon={TerminalIcon} />
-            )}
-            <span className="font-mono lowercase">{language || "txt"}</span>
-          </div>
-          <div className="flex items-center">{children}</div>
-        </div>
-        <div className="w-full">
-          <div className="min-w-full">
-            <CodeBlockContent
-              className={cn(
-                codeBlockDarkModeVariants(),
-                "overflow-x-auto",
-                className
-              )}
-              data-code-block
-              data-language={language}
-              language={language}
-              preClassName={preClassName}
-              themes={codeThemes}
-              transparentBackground
-              {...rest}
-            >
-              {code}
-            </CodeBlockContent>
-          </div>
-        </div>
-      </div>
-    </CodeBlockContext.Provider>
+    <CodeSourceContext.Provider value={{ code, language }}>
+      {children}
+    </CodeSourceContext.Provider>
   );
+}
+
+/** Selects one part of the surrounding code sample. */
+function useCodeSource<T>(selector: (source: CodeSource) => T) {
+  const selected = useContextSelector(CodeSourceContext, (value) =>
+    value === missingCodeSource ? missingCodeSource : selector(value)
+  );
+  if (selected === missingCodeSource) {
+    throw new Error("Code controls must be used within CodeBlockSource.");
+  }
+  return selected;
 }
 
 /** Copy-button callbacks and duration for its transient success state. */
@@ -132,17 +79,12 @@ export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
 export function CodeBlockDownloadButton({
   onDownload,
   onError,
-  language,
   children,
   className,
-  code: propCode,
   ...props
-}: CodeBlockDownloadButtonProps & {
-  code?: string;
-  language?: string;
-}) {
-  const contextCode = use(CodeBlockContext).code;
-  const code = propCode ?? contextCode;
+}: CodeBlockDownloadButtonProps) {
+  const code = useCodeSource((source) => source.code);
+  const language = useCodeSource((source) => source.language);
   const extension = getCodeFileExtension(language);
   const filename = `file.${extension}`;
   const mimeType = "text/plain";
@@ -152,7 +94,7 @@ export function CodeBlockDownloadButton({
       Effect.match({
         onFailure: (error) => {
           captureException(error, {
-            language: language ?? "plain-text",
+            language,
             source: "ai-code-block-download",
           });
           onError?.(error);
@@ -187,13 +129,11 @@ export function CodeBlockCopyButton({
   timeout = 2000,
   children,
   className,
-  code: propCode,
   ...props
-}: CodeBlockCopyButtonProps & { code?: string }) {
+}: CodeBlockCopyButtonProps) {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
-  const contextCode = use(CodeBlockContext).code;
-  const code = propCode ?? contextCode;
+  const code = useCodeSource((source) => source.code);
 
   function copyToClipboard() {
     if (isCopied) {

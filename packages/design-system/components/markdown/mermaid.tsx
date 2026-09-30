@@ -4,9 +4,10 @@ import { Maximize02Icon } from "@hugeicons/core-free-icons";
 import {
   CodeBlockCopyButton,
   CodeBlockDownloadButton,
+  CodeBlockSource,
 } from "@repo/design-system/components/ai/code-block";
 import { Mermaid } from "@repo/design-system/components/ai/mermaid";
-import { SimpleIcon } from "@repo/design-system/components/icons/simple";
+import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
@@ -18,10 +19,8 @@ import {
   DialogTrigger,
 } from "@repo/design-system/components/ui/dialog";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { languageIconMap } from "@repo/design-system/lib/code-block/icons";
 import { normalizeMermaidChart } from "@repo/design-system/lib/markdown/mermaid";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
-import { cn } from "cn";
 
 interface Props {
   chart: string;
@@ -31,6 +30,10 @@ interface Props {
   title: string;
 }
 
+/**
+ * Shows a diagram in a frame whose size never depends on the diagram: the
+ * preview scales the diagram to fit, and the dialog shows it at full width.
+ */
 export function MermaidMdx({
   chart,
   className,
@@ -42,19 +45,9 @@ export function MermaidMdx({
 
   return (
     <Dialog>
-      <div
-        className={cn(
-          "my-4 w-full divide-y overflow-hidden rounded-xl border shadow-sm content-auto-card",
-          className
-        )}
-        data-nakafa="mermaid-card"
-      >
-        <div className="flex items-center justify-between gap-2 bg-muted/80 p-1 text-muted-foreground text-sm">
-          <div className="flex min-w-0 items-center gap-2 px-4 py-1.5">
-            <SimpleIcon className="size-4" icon={languageIconMap.mermaid} />
-            <span className="ml-1 truncate text-foreground">{title}</span>
-          </div>
-          <div className="flex items-center">
+      <DiagramFrame
+        actions={
+          <>
             <DialogTrigger
               render={
                 <Button
@@ -66,18 +59,22 @@ export function MermaidMdx({
                 </Button>
               }
             />
-            <CodeBlockDownloadButton code={renderableChart} />
-            <CodeBlockCopyButton code={renderableChart} />
-          </div>
-        </div>
-
+            <CodeBlockSource code={renderableChart} language="mermaid">
+              <CodeBlockDownloadButton />
+              <CodeBlockCopyButton />
+            </CodeBlockSource>
+          </>
+        }
+        className={className}
+        title={title}
+      >
         <Mermaid
           chart={renderableChart}
-          className="m-0 overflow-hidden bg-muted/40 p-4 text-base [&_svg]:h-auto [&_svg]:max-w-full"
+          className="size-full"
           config={config}
           label={title}
         />
-      </div>
+      </DiagramFrame>
 
       <DialogContent size="wide">
         <DialogHeader>
@@ -85,14 +82,13 @@ export function MermaidMdx({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogPanel>
-          <div className="grid min-h-[50dvh] place-items-center overflow-auto rounded-lg border bg-muted/40 p-4">
-            <Mermaid
-              chart={renderableChart}
-              className="m-0 w-full max-w-full text-base [&_svg]:h-auto [&_svg]:w-full [&_svg]:max-w-full"
-              config={config}
-              label={title}
-            />
-          </div>
+          <Mermaid
+            chart={renderableChart}
+            className="h-[60dvh] rounded-lg border bg-muted/40 p-4 text-base"
+            config={config}
+            fit="width"
+            label={title}
+          />
         </DialogPanel>
       </DialogContent>
     </Dialog>
