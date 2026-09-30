@@ -47,7 +47,7 @@ export function QuranSurahHeader({
       </div>
       <h1
         className="col-span-2 col-start-1 row-start-2 flex min-w-0 items-baseline gap-2 truncate font-medium text-base md:col-span-1 md:col-start-2 md:row-start-1 md:justify-center md:text-center"
-        title={`${title} — ${meaning}`}
+        title={`${title}: ${meaning}`}
       >
         <span
           className="sr-only"
