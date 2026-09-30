@@ -2,12 +2,14 @@ import { AllahIcon } from "@hugeicons/core-free-icons";
 import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { cn } from "cn";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { HeaderContent } from "@/components/shared/content/header";
 import { LayoutContent } from "@/components/shared/content/layout";
+import { quranFont } from "@/components/shared/quran/font";
 import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -106,7 +108,7 @@ function PageContent({
                     <h2>{title}</h2>
                   </div>
 
-                  <p className="font-quran text-xl" dir="rtl">
+                  <p className={cn(quranFont.className, "text-xl")} dir="rtl">
                     {surah.name.arabic}
                   </p>
                 </div>
