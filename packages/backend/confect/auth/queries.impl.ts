@@ -6,11 +6,30 @@ import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
 
+/**
+ * The app user holds a copy of the Better Auth profile that auth triggers keep
+ * current, so the account projection needs no component read.
+ */
 const getCurrentUser = FunctionImpl.make(
   databaseSchema,
   spec,
   "getCurrentUser",
-  getOptionalAppUserForRead
+  Effect.fn("auth.queries.getCurrentUser")(function* () {
+    const account = yield* getOptionalAppUserForRead();
+    if (!account) {
+      return null;
+    }
+    const { appUser, authId } = account;
+    return {
+      appUser,
+      authUser: {
+        _id: authId,
+        email: appUser.email,
+        name: appUser.name,
+        ...(appUser.image === undefined ? {} : { image: appUser.image }),
+      },
+    };
+  })
 );
 const getUserById = FunctionImpl.make(
   databaseSchema,
