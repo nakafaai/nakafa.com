@@ -1,4 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
+import {
+  MAX_ARTIFACT_BATCH_BYTES,
+  MAX_ARTIFACT_BATCH_COUNT,
+} from "@nakafa/aksara-contracts/transport/limits";
+import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
+import {
+  TRANSACTION_READ_HEADROOM,
+  TRANSACTION_READ_LIMIT,
+} from "@repo/backend/confect/contentRelease/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -10,9 +19,11 @@ import {
   TEST_RELEASE_ID,
   testDeleteJson,
   testRollbackJson,
+  testTextHash,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
+import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
@@ -59,6 +70,60 @@ function insertDeleteItem(ctx: MutationCtx) {
   });
 }
 
+/** Names one distinct artifact identity inside a full batch. */
+function batchArtifactHash(index: number) {
+  return testTextHash(`artifact-${index}`);
+}
+
+/** Measures one batch exactly as the staging transport contract does. */
+function batchSize(artifactJson: string[]) {
+  return getConvexSize({
+    artifactJson,
+    batchIndex: 0,
+    releaseId: TEST_RELEASE_ID,
+  });
+}
+
+/** Builds the largest artifact batch the Aksara transport contract accepts. */
+function largestBatch() {
+  const batch = (codeLength: number) =>
+    Array.from({ length: MAX_ARTIFACT_BATCH_COUNT }, (_, index) =>
+      testArtifactJson({
+        artifactHash: batchArtifactHash(index),
+        compiledCode: "x".repeat(codeLength),
+        contentKey: `test:head-${index}`,
+      })
+    );
+  // With five-digit code lengths, every extra code byte adds one wire byte.
+  const base = 10_000;
+  const spare = MAX_ARTIFACT_BATCH_BYTES - batchSize(batch(base));
+  return batch(base + Math.floor(spare / MAX_ARTIFACT_BATCH_COUNT));
+}
+
+/** Inserts one staged upsert whose projection fills the head row ceiling. */
+function insertCeilingItem(ctx: MutationCtx, index: number) {
+  const artifactHash = batchArtifactHash(index);
+  const title = "T".repeat(
+    READ_MODEL_DOCUMENT_LIMIT - testProjectionJson({ index }).length
+  );
+  return ctx.db.insert("contentItems", {
+    artifactHash,
+    artifactLocale: "en",
+    artifactReady: false,
+    contentKey: `test:head-${index}`,
+    index,
+    itemBatchHash: TEST_ARTIFACT_HASH,
+    itemBatchIndex: 0,
+    itemJson: testUpsertJson({ artifactHash, index }),
+    projectionJson: testProjectionJson({ index, title }),
+    projectionReady: true,
+    releaseId: TEST_RELEASE_ID,
+    rollbackJson: testRollbackJson({ index }),
+    sequence: 1,
+    stagedAt: 1,
+  });
+}
+
 describe("contentRelease/artifacts", () => {
   it("stages one rollback artifact and replays its exact batch", async () => {
     const t = convexTest(schema, convexModules);
@@ -66,6 +131,7 @@ describe("contentRelease/artifacts", () => {
       insertTestRelease(ctx, { originReleaseId: "release-base" })
     );
     await stageItem(t);
+    const staged = await t.run((ctx) => ctx.db.query("contentItems").unique());
 
     const created = await stage(t, [testArtifactJson()]);
     const repeated = await stage(t, [testArtifactJson()]);
@@ -78,34 +144,77 @@ describe("contentRelease/artifacts", () => {
     expect(created).toMatchObject({ created: 1, unchanged: 0 });
     expect(repeated).toMatchObject({ created: 0, unchanged: 1 });
     expect(state.artifact?.artifactHash).toBe(TEST_ARTIFACT_HASH);
-    expect(state.item).toMatchObject({
+    expect(state.item).toEqual({
+      ...staged,
+      artifactBatchHash: expect.any(String),
       artifactBatchIndex: 0,
       artifactReady: true,
     });
     expect(state.release?.stagedArtifacts).toBe(1);
   });
 
-  it("reuses identical stored bytes and only extends shorter retention", async () => {
-    for (const retainUntil of [0, Number.MAX_SAFE_INTEGER]) {
-      const t = convexTest(schema, convexModules);
-      await t.mutation(async (ctx) => {
-        await insertTestRelease(ctx);
-        await ctx.db.insert("contentArtifacts", {
-          artifactHash: TEST_ARTIFACT_HASH,
-          artifactJson: testArtifactJson(),
-          createdAt: 1,
-          retainUntil,
-        });
+  it("reuses identical stored bytes without rewriting the stored row", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertTestRelease(ctx);
+      await ctx.db.insert("contentArtifacts", {
+        artifactHash: TEST_ARTIFACT_HASH,
+        artifactJson: testArtifactJson(),
+        createdAt: 1,
+        retainUntil: 1,
       });
-      await stageItem(t);
+    });
+    await stageItem(t);
+    const stored = await t.run((ctx) =>
+      ctx.db.query("contentArtifacts").unique()
+    );
 
-      const receipt = await stage(t, [testArtifactJson()]);
-      const artifact = await t.run((ctx) =>
-        ctx.db.query("contentArtifacts").unique()
-      );
-      expect(receipt).toMatchObject({ created: 0, unchanged: 1 });
-      expect(artifact?.retainUntil).toBeGreaterThanOrEqual(retainUntil);
-    }
+    const receipt = await stage(t, [testArtifactJson()]);
+
+    expect(receipt).toMatchObject({ created: 0, unchanged: 1 });
+    await expect(
+      t.run((ctx) => ctx.db.query("contentArtifacts").unique())
+    ).resolves.toEqual(stored);
+  });
+
+  it("stages the largest reused batch well under the transaction read limit", async () => {
+    const t = convexTest(schema, convexModules);
+    const artifactJson = largestBatch();
+    await t.mutation(async (ctx) => {
+      await insertTestRelease(ctx, {
+        itemCount: MAX_ARTIFACT_BATCH_COUNT,
+        stagedUpserts: MAX_ARTIFACT_BATCH_COUNT,
+      });
+      for (const [index, json] of artifactJson.entries()) {
+        await insertCeilingItem(ctx, index);
+        await ctx.db.insert("contentArtifacts", {
+          artifactHash: batchArtifactHash(index),
+          artifactJson: json,
+          createdAt: 1,
+          retainUntil: 1,
+        });
+      }
+    });
+
+    const { metrics, receipt } = await t.mutation(async (ctx) => ({
+      receipt: await ctx.runMutation(stageArtifacts, {
+        artifactJson,
+        batchIndex: 0,
+        releaseId: TEST_RELEASE_ID,
+      }),
+      metrics: await ctx.meta.getTransactionMetrics(),
+    }));
+
+    expect(batchSize(artifactJson)).toBeGreaterThan(
+      MAX_ARTIFACT_BATCH_BYTES - MAX_ARTIFACT_BATCH_COUNT
+    );
+    expect(receipt).toMatchObject({
+      created: 0,
+      unchanged: MAX_ARTIFACT_BATCH_COUNT,
+    });
+    expect(metrics.bytesRead.used).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
   });
 
   it("rejects malformed, repeated, oversized, and over-count batches", async () => {
