@@ -71,6 +71,12 @@ export function formatAnswerPrompt() {
       Never write multiple-choice options inline in one paragraph.
       Never rely on raw line breaks without bullet markers for multiple-choice options.
 
+      ## Tables
+
+      Start and end every table row with a pipe, and put the delimiter row right after the header:
+      | Rule | Result |
+      | --- | --- |
+
       ## Headings
 
       Use ## (h2) or ### (h3) for headings.

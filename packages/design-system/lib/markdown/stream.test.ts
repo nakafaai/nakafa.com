@@ -83,12 +83,65 @@ describe("streamed markdown tail", () => {
     expect(trimIncompleteTail(prose)).toBe(prose);
   });
 
-  it("withholds an unclosed code span in its paragraph or link on its line", () => {
+  it("withholds an unclosed code span or link in its paragraph", () => {
     expect(trimIncompleteTail("Call `slope(")).toBe("Call ");
     expect(trimIncompleteTail("Call `slope(\n2")).toBe("Call ");
     for (const link of ["[Kemdik", "[Kemdikbud]", "[Kemdikbud](https://kem"]) {
       expect(trimIncompleteTail(`See ${link}`)).toBe("See ");
     }
+  });
+
+  it("withholds a table whose rows have no leading pipe", () => {
+    const header = "Compare:\n\nRule | Result";
+    expect(trimIncompleteTail(header)).toBe("Compare:\n\n");
+    const table = `${header}\n--- | ---\nPower | $$nx^{n-1}$$`;
+    expect(trimIncompleteTail(table)).toBe("Compare:\n\n");
+    const complete = `${table}\n\nAfter`;
+    expect(trimIncompleteTail(complete)).toBe(complete);
+    expect(trimIncompleteTail("a | b\nRule | Result")).toBe("a | b\n");
+  });
+
+  it("withholds a link until its label and balanced destination close", () => {
+    for (const link of [
+      "[first\nsecond",
+      "[first\nsecond](https://exa",
+      "[nested [label]",
+      "[article](https://en.wikipedia.org/wiki/Foo_(bar)",
+      "[path](<https://x.com/a)b>",
+    ]) {
+      expect(trimIncompleteTail(`See ${link}`)).toBe("See ");
+    }
+    for (const complete of [
+      "See [first\nsecond](https://example.com) now.",
+      "See [nested [label]](https://example.com) now.",
+      "See [article](https://en.wikipedia.org/wiki/Foo_(bar)) now.",
+      "See [path](<https://x.com/a)b>) now.",
+      "See [a \\] b](https://x.com/\\)) now.",
+    ]) {
+      expect(trimIncompleteTail(complete)).toBe(complete);
+    }
+  });
+
+  it("withholds single-marker emphasis until it closes", () => {
+    expect(trimIncompleteTail("The *important")).toBe("The ");
+    expect(trimIncompleteTail("The _important\ntext")).toBe("The ");
+    expect(trimIncompleteTail("And _")).toBe("And ");
+    for (const complete of [
+      "The *important text* now.",
+      "The _key idea_ now.",
+      "Use snake_case_names and my_",
+      "So 2 * 3 * 4 = 24.",
+      "An *unclosed\n\nstays literal once its paragraph ends.",
+      "* A list item\n* Another item",
+    ]) {
+      expect(trimIncompleteTail(complete)).toBe(complete);
+    }
+  });
+
+  it("closes a code span only at a backtick run of its opening length", () => {
+    expect(trimIncompleteTail("Use `a `` b")).toBe("Use ");
+    const complete = "Use `a `` b` and ``c ` d`` now.";
+    expect(trimIncompleteTail(complete)).toBe(complete);
   });
 
   it("drops a final character that may open the next delimiter", () => {

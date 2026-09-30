@@ -1,3 +1,10 @@
+import {
+  breakInline,
+  type InlineState,
+  openInline,
+  scanInline,
+} from "@repo/design-system/lib/markdown/inline";
+
 const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})[^`]*$/;
 /** Fences whose renderer needs the complete source. */
 const COMPLETE_SOURCE_FENCE =
@@ -7,30 +14,13 @@ const PARTIAL_BLOCK =
   /^ {0,3}(?:`{1,2}|~{1,2}|#{1,6}|-{1,2}|[*+>]|\d{1,9}[.)]?)$/;
 /** A line that starts a new block, which inline spans never cross. */
 const BLOCK_START = /^ {0,3}(?:[-*+]\s|\d{1,9}[.)]\s|#{1,6}\s|>|\|)/;
-const TABLE_ROW = /^ {0,3}\|/;
+/** A table row, with or without the optional leading pipe. */
+const TABLE_ROW = /\|/;
 const TABLE_DELIMITER = /^ {0,3}\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$/;
 const PARTIAL_TABLE_DELIMITER = /^ {0,3}\|?[\s:|-]*$/;
-const MATH_DELIMITERS = [
-  ["$$", "$$"],
-  ["\\[", "\\]"],
-  ["\\(", "\\)"],
-] as const;
-/** Final characters that may be the first half of a delimiter. */
-const DELIMITER_STARTS = new Set(["$", "*", "\\"]);
 
-/** A span whose source has no escapes, so only its closer ends it. */
-interface OpenSpan {
-  readonly closer: string;
-  readonly start: number;
-}
-
-interface TailState {
-  bold: number | undefined;
-  code: OpenSpan | undefined;
+interface TailState extends InlineState {
   fence: { marker: string; start: number; withheld: boolean } | undefined;
-  link: number | undefined;
-  math: OpenSpan | undefined;
-  opener: number | undefined;
   table: { confirmed: boolean; header: number } | undefined;
 }
 
@@ -41,46 +31,6 @@ function isMarkerLine(line: string, marker: string) {
     trimmed.length > 0 &&
     trimmed.split("").every((character) => character === marker[0])
   );
-}
-
-/** Opens a code span that the matching backtick run closes. */
-function stepCode(
-  line: string,
-  index: number,
-  lineStart: number,
-  state: TailState
-) {
-  let end = index;
-  while (line[end] === "`") {
-    end += 1;
-  }
-  state.code = { closer: line.slice(index, end), start: lineStart + index };
-  return end;
-}
-
-/**
- * Skips one link, recording it while its text or destination is unclosed, so
- * raw brackets never show before the link forms.
- */
-function stepLink(
-  line: string,
-  index: number,
-  lineStart: number,
-  state: TailState
-) {
-  const text = line.indexOf("]", index + 1);
-  const next = text === -1 ? undefined : line[text + 1];
-  if (next !== undefined && next !== "(") {
-    // Plain brackets, not a link.
-    return index + 1;
-  }
-  const url = next === "(" ? line.indexOf(")", text + 2) : -1;
-  if (url === -1) {
-    // The text or destination is still open, or "(" may still follow.
-    state.link ??= lineStart + index;
-    return index + 1;
-  }
-  return url + 1;
 }
 
 /**
@@ -103,49 +53,18 @@ function scanTable(
     if (last && PARTIAL_TABLE_DELIMITER.test(line)) {
       return;
     }
-    state.table =
-      TABLE_DELIMITER.test(line) && !last
-        ? { confirmed: true, header: table.header }
-        : undefined;
-    return;
+    if (TABLE_DELIMITER.test(line) && !last) {
+      state.table = { confirmed: true, header: table.header };
+      return;
+    }
+    // Not a delimiter row, so this line may start a table itself.
+    state.table = undefined;
   }
   if (!TABLE_ROW.test(line)) {
     state.table = undefined;
     return;
   }
   state.table ??= { confirmed: false, header: lineStart };
-}
-
-/** Advances through prose, tracking inline spans and math delimiters. */
-function stepProse(
-  line: string,
-  index: number,
-  lineStart: number,
-  length: number,
-  state: TailState
-) {
-  if (line[index] === "`") {
-    return stepCode(line, index, lineStart, state);
-  }
-  if (line.startsWith("**", index)) {
-    state.bold = state.bold === undefined ? lineStart + index : undefined;
-    return index + 2;
-  }
-  const delimiter = MATH_DELIMITERS.find(([open]) =>
-    line.startsWith(open, index)
-  );
-  if (delimiter) {
-    state.math = { closer: delimiter[1], start: lineStart + index };
-    return index + delimiter[0].length;
-  }
-  if (line[index] === "[") {
-    return stepLink(line, index, lineStart, state);
-  }
-  const character = line.charAt(index);
-  if (lineStart + index === length - 1 && DELIMITER_STARTS.has(character)) {
-    state.opener = lineStart + index;
-  }
-  return index + (character === "\\" ? 2 : 1);
 }
 
 /** Records fence, table, formula, and inline span state after one line. */
@@ -171,31 +90,10 @@ function scanLine(
   if (!state.math) {
     scanTable(line, lineStart, lineStart + line.length === length, state);
     if (!line.trim() || BLOCK_START.test(line)) {
-      // Bold and code spans may cross a soft line break but never a paragraph
-      // or block boundary; an unclosed marker there stays literal.
-      state.bold = undefined;
-      state.code = undefined;
+      breakInline(state);
     }
   }
-  // Links stay within their line.
-  state.link = undefined;
-  let index = 0;
-  while (index < line.length) {
-    const span = state.math ?? state.code;
-    if (span === undefined) {
-      index = stepProse(line, index, lineStart, length, state);
-    } else if (line.startsWith(span.closer, index)) {
-      // Math and code source have no escapes: the first closer ends the span.
-      if (state.math) {
-        state.math = undefined;
-      } else {
-        state.code = undefined;
-      }
-      index += span.closer.length;
-    } else {
-      index += 1;
-    }
-  }
+  scanInline(line, lineStart, length, state);
 }
 
 /** Returns where an unfinished block or fence marker starts on the final line. */
@@ -215,20 +113,15 @@ function partialMarker(markdown: string, state: TailState) {
 /**
  * Drops the tail of streamed markdown that would render differently once more
  * text arrives: a formula or diagram without its closing delimiter, since
- * KaTeX and Mermaid need complete source; an unclosed bold or code span in the
- * current paragraph; an unclosed link on the final line; a table that has not
- * ended; and a block marker, fence marker, or delimiter still being typed.
- * Code fences still render as they grow, and complete markdown returns
- * unchanged.
+ * KaTeX and Mermaid need complete source; an unclosed emphasis, code span, or
+ * link in the current paragraph; a table that has not ended; and a block
+ * marker, fence marker, or delimiter still being typed. Code fences still
+ * render as they grow, and complete markdown returns unchanged.
  */
 export function trimIncompleteTail(markdown: string) {
   const state: TailState = {
-    bold: undefined,
-    code: undefined,
+    ...openInline(),
     fence: undefined,
-    link: undefined,
-    math: undefined,
-    opener: undefined,
     table: undefined,
   };
   let lineStart = 0;
@@ -240,8 +133,9 @@ export function trimIncompleteTail(markdown: string) {
     state.fence?.withheld ? state.fence.start : undefined,
     state.math?.start,
     state.code?.start,
-    state.bold,
-    state.link,
+    state.strong,
+    state.emphasis?.start,
+    state.link?.start,
     state.opener,
     state.table?.header,
     partialMarker(markdown, state),
