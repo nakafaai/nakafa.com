@@ -2,6 +2,7 @@ import {
   DEPENDENCY_HOLDS,
   FORBIDDEN_EFFECT_DEPENDENCIES,
   SCRIPT_DEPENDENCY_HOLDS,
+  VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
 import type {
   FirstPartyManifest,
@@ -83,6 +84,44 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
   return problems;
 }
 
+/** Enforces the Effect, TypeScript, and Vitest cohorts the workspace pins. */
+function cohortProblems(workspace: WorkspaceManifest) {
+  const problems: string[] = [];
+  if (workspace.catalog?.effect !== "4.0.0-rc.117") {
+    problems.push("The Effect catalog must be exactly 4.0.0-rc.117.");
+  }
+  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.117") {
+    problems.push("The platform-node catalog must match Effect RC 117.");
+  }
+  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.117") {
+    problems.push("The Effect Vitest catalog must match Effect RC 117.");
+  }
+  // Transitive platform packages, such as the Confect CLI's, stay in the cohort.
+  for (const dependency of [
+    "@effect/platform-node",
+    "@effect/platform-node-shared",
+  ]) {
+    if (workspace.overrides?.[dependency] !== "4.0.0-rc.117") {
+      problems.push(`The ${dependency} override must match Effect RC 117.`);
+    }
+  }
+  if (workspace.catalog?.typescript !== "7.0.2") {
+    problems.push("The native TypeScript catalog must be exactly 7.0.2.");
+  }
+  for (const dependency of [
+    "vitest",
+    "@vitest/coverage-istanbul",
+    "@vitest/ui",
+  ]) {
+    if (workspace.catalog?.[dependency] !== VITEST_COHORT_VERSION) {
+      problems.push(
+        `${dependency} must match the supported Vitest ${VITEST_COHORT_VERSION} cohort.`
+      );
+    }
+  }
+  return problems;
+}
+
 /** Validates exact cohort declarations and the absence of v3 packages. */
 export function validateDependencyPolicy({
   manifests,
@@ -125,36 +164,7 @@ export function validateDependencyPolicy({
     );
   }
 
-  if (workspace.catalog?.effect !== "4.0.0-rc.117") {
-    problems.push("The Effect catalog must be exactly 4.0.0-rc.117.");
-  }
-  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.117") {
-    problems.push("The platform-node catalog must match Effect RC 117.");
-  }
-  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.117") {
-    problems.push("The Effect Vitest catalog must match Effect RC 117.");
-  }
-  if (
-    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.117"
-  ) {
-    problems.push(
-      "The platform-node-shared override must match Effect RC 117."
-    );
-  }
-  if (workspace.catalog?.typescript !== "7.0.2") {
-    problems.push("The native TypeScript catalog must be exactly 7.0.2.");
-  }
-  for (const dependency of [
-    "vitest",
-    "@vitest/coverage-istanbul",
-    "@vitest/ui",
-  ]) {
-    if (workspace.catalog?.[dependency] !== "5.0.1") {
-      problems.push(
-        `${dependency} must match the supported Vitest 5.0.1 cohort.`
-      );
-    }
-  }
+  problems.push(...cohortProblems(workspace));
   if (rootManifest.packageManager !== "pnpm@11.27.0") {
     problems.push("packageManager must be pnpm@11.27.0.");
   }

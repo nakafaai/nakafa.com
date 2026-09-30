@@ -4,7 +4,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { bumpDependencies } from "#scripts/dependencies/bump";
-import { DEPENDENCY_HOLDS } from "#scripts/dependencies/policy";
+import {
+  DEPENDENCY_HOLDS,
+  VITEST_COHORT_VERSION,
+} from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
@@ -56,13 +59,14 @@ function validInput() {
       catalog: {
         "@effect/platform-node": "4.0.0-rc.117",
         "@effect/vitest": "4.0.0-rc.117",
-        "@vitest/coverage-istanbul": "5.0.1",
-        "@vitest/ui": "5.0.1",
+        "@vitest/coverage-istanbul": VITEST_COHORT_VERSION,
+        "@vitest/ui": VITEST_COHORT_VERSION,
         effect: "4.0.0-rc.117",
         typescript: "7.0.2",
-        vitest: "5.0.1",
+        vitest: VITEST_COHORT_VERSION,
       },
       overrides: {
+        "@effect/platform-node": "4.0.0-rc.117",
         "@effect/platform-node-shared": "4.0.0-rc.117",
       },
       update: { ignoreDeps },
@@ -126,6 +130,7 @@ describe("dependency policy", () => {
       firstManifest.manifest.scripts.doctor = "pnpm dlx react-doctor@0.9.5";
     }
     input.manifests.splice(1);
+    input.workspace.overrides["@effect/platform-node"] = "4.0.0-rc.118";
     input.workspace.overrides["@effect/platform-node-shared"] = "4.0.0-rc.110";
     input.workspace.update.ignoreDeps = [];
 
@@ -139,9 +144,12 @@ describe("dependency policy", () => {
     expect(
       problems.some((problem) => problem.includes("obsolete Effect"))
     ).toBe(true);
-    expect(
-      problems.some((problem) => problem.includes("platform-node-shared"))
-    ).toBe(true);
+    expect(problems).toContain(
+      "The @effect/platform-node override must match Effect RC 117."
+    );
+    expect(problems).toContain(
+      "The @effect/platform-node-shared override must match Effect RC 117."
+    );
     expect(problems.some((problem) => problem.includes("react-doctor"))).toBe(
       true
     );
