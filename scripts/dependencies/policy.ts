@@ -264,7 +264,11 @@ export const REGISTRY_REVIEWS = [
 
 export const SCRIPT_DEPENDENCY_HOLDS = [
   {
-    approved: "pnpm dlx react-doctor@0.9.14",
+    // dlx honors the workspace's zero minimumReleaseAge, so React Doctor's
+    // throwaway install took versions npm was still propagating: a 4-minute-old
+    // electron-to-chromium tarball returned 404 and failed Doctor. The pnpm 11
+    // default of one day keeps that install on settled releases.
+    approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.14",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },
