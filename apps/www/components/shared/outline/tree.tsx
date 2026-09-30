@@ -42,12 +42,15 @@ function SidebarTreeLabel({ label }: Pick<ParsedHeading, "label">) {
  * Recursive component to render nested headings
  */
 function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
-  const activeHeadings = useToc((context) => context.activeHeadings);
-  const scrollToIndex = useVirtual((context) => context.scrollToIndex);
-
   const id = slugify(heading.label);
   const virtualIndex = heading.index;
-  const isActive = virtualIndex === undefined && activeHeadings.includes(id);
+  // Each heading selects only its own state, so an active-heading change
+  // re-renders the headings that change instead of the whole outline.
+  const isActive = useToc(
+    (context) =>
+      virtualIndex === undefined && context.activeHeadings.includes(id)
+  );
+  const scrollToIndex = useVirtual((context) => context.scrollToIndex);
 
   return (
     <SidebarMenuItem key={heading.href}>
