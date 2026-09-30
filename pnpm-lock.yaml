@@ -40,7 +40,7 @@ overrides:
   auth@1.6.33>@babel/core: 7.29.7
   convex-helpers: 0.1.124
   fast-uri: 3.1.8
-  ip-address: 10.7.1
+  ip-address: 10.7.2
   lodash: 4.18.1
   mermaid@11.17.2>dompurify: ^3.4.13
   next@16.3.6>postcss: 8.5.28
@@ -5558,8 +5558,8 @@ packages:
   intl-messageformat@11.2.15:
     resolution: {integrity: sha512-W4VNytsXyWgW5lvVchmsb9xgA5rSKqoflu3/IQ9UCtB0z4R+Bx9MoEkwFT/+30RCl/KzUoH0QGGe9lppF5SuvQ==}
 
-  ip-address@10.7.1:
-    resolution: {integrity: sha512-4OUAqU9Z1i3vCnS05hzGiFnEMDpQ+62pAD/MVQOp83fYyNC8GleCqaS0QikQBmcWCrKFiUs/B8ztRRiYOAXuCA==}
+  ip-address@10.7.2:
+    resolution: {integrity: sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w==}
     engines: {node: '>= 12'}
 
   ip-regex@5.0.0:
@@ -12119,7 +12119,7 @@ snapshots:
       '@formatjs/fast-memoize': 3.1.7
       '@formatjs/icu-messageformat-parser': 3.5.18
 
-  ip-address@10.7.1: {}
+  ip-address@10.7.2: {}
 
   ip-regex@5.0.0: {}
 
@@ -13928,7 +13928,7 @@ snapshots:
 
   socks@2.8.10:
     dependencies:
-      ip-address: 10.7.1
+      ip-address: 10.7.2
       smart-buffer: 4.2.0
 
   solid-js@1.9.15:
