@@ -72,6 +72,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
       attempt,
       appLocale,
       placements: loaded.placements,
+      preview: loaded.access.preview,
       totalQuestions: section.totalQuestions,
     });
     return {
