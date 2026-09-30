@@ -1,13 +1,15 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
 import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Card } from "@repo/design-system/components/ui/card";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import { type Locale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { HeaderContent } from "@/components/shared/content/header";
 import { LayoutContent } from "@/components/shared/content/layout";
+import { QuranSurahName } from "@/components/shared/quran/name";
 import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -86,34 +88,34 @@ function PageContent({
         title={t("quran")}
       />
       <LayoutContent>
-        <div className="overflow-hidden rounded-xl border shadow-sm">
-          {surahs.map((surah) => {
-            const title = getQuranSurahName(surah.name);
-            return (
-              <NavigationLink
-                className="group flex w-full scroll-mt-28 items-center gap-2 border-t px-6 py-4 transition-colors ease-out first:border-t-0 first:pt-5 last:pb-5 hover:bg-accent hover:text-accent-foreground"
-                href={`/quran/${surah.number}`}
-                key={surah.number}
-                title={title}
-              >
-                <div className="flex w-full items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-8 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
+        <Card className="pt-3 pb-0">
+          <CardLinks>
+            {surahs.map((surah) => {
+              const title = getQuranSurahName(surah.name);
+              return (
+                <CardLink
+                  href={`/quran/${surah.number}`}
+                  key={surah.number}
+                  title={title}
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
                       <span className="font-mono text-xs tracking-tighter">
                         {surah.number}
                       </span>
                     </div>
-                    <h2>{title}</h2>
+                    <h2 className="flex min-w-0 items-baseline gap-2">
+                      <QuranSurahName
+                        arabic={surah.name.arabic}
+                        title={title}
+                      />
+                    </h2>
                   </div>
-
-                  <p className="font-quran text-xl" dir="rtl">
-                    {surah.name.arabic}
-                  </p>
-                </div>
-              </NavigationLink>
-            );
-          })}
-        </div>
+                </CardLink>
+              );
+            })}
+          </CardLinks>
+        </Card>
       </LayoutContent>
     </>
   );

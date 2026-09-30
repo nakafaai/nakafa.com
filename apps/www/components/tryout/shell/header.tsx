@@ -46,8 +46,25 @@ export function TryoutPageHeader({
 }
 
 /**
+ * Fills the screen below the app header, so the page body can stretch to the
+ * screen edge. The header hides from the large breakpoint and while a section
+ * runs, when the shell sets its offset to zero.
+ */
+export function TryoutPage({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="flex min-h-[calc(100svh-var(--app-header-top))] flex-col lg:min-h-svh"
+      data-slot="tryout-page"
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
  * Owns the body width and spacing shared by sets and timed sections. It fills
- * the height below the header, so a locked review can end at the screen edge.
+ * the height TryoutPage leaves below the page header, so a locked review can
+ * end at the screen edge.
  */
 export function TryoutPageBody({ children }: { children: ReactNode }) {
   return (

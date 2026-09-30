@@ -13,6 +13,7 @@ import { TryoutResponsePreview } from "@/components/tryout/runtime/response/prev
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
 import {
+  TryoutPage,
   TryoutPageBody,
   TryoutPageHeader,
 } from "@/components/tryout/shell/header";
@@ -30,30 +31,35 @@ export async function TryoutQuestionPreview({
   const Question = content.Question;
   return (
     <AppShell articleNavigation={articleNavigation}>
-      <TryoutPageHeader
-        action={null}
-        items={[
-          { href: getTryoutPublicPathHref(exam.publicPath), label: exam.title },
-          {
-            href: getTryoutPublicPathHref(track.publicPath),
-            label: track.title,
-          },
-          ...(section.publicPath
-            ? [
-                {
-                  href: getTryoutPublicPathHref(set.publicPath),
-                  label: set.title,
-                },
-              ]
-            : []),
-        ]}
-        title={section.title}
-      />
-      <TryoutPageBody>
-        <QuestionPreviewBody content={content}>
-          <Question />
-        </QuestionPreviewBody>
-      </TryoutPageBody>
+      <TryoutPage>
+        <TryoutPageHeader
+          action={null}
+          items={[
+            {
+              href: getTryoutPublicPathHref(exam.publicPath),
+              label: exam.title,
+            },
+            {
+              href: getTryoutPublicPathHref(track.publicPath),
+              label: track.title,
+            },
+            ...(section.publicPath
+              ? [
+                  {
+                    href: getTryoutPublicPathHref(set.publicPath),
+                    label: set.title,
+                  },
+                ]
+              : []),
+          ]}
+          title={section.title}
+        />
+        <TryoutPageBody>
+          <QuestionPreviewBody content={content}>
+            <Question />
+          </QuestionPreviewBody>
+        </TryoutPageBody>
+      </TryoutPage>
     </AppShell>
   );
 }
