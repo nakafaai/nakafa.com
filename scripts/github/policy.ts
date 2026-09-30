@@ -34,7 +34,7 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 7,
+    expectedUsages: 6,
     reason: "Checkout is pinned to the latest reviewed stable release.",
   },
   {
@@ -42,16 +42,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     approvedSha: "fbda4c85fc2e1e08721cd8763afea8f48d60f024",
     expectedInputs: { cache: "false", install: "false" },
     expectedTag: "v3.0.0",
-    expectedUsages: 7,
+    expectedUsages: 6,
     reason:
       "The signed successor action owns Node and pnpm. The store stays uncached because a cold install beats restoring it on hosted runners.",
-  },
-  {
-    action: "changesets/action",
-    approvedSha: "ae32849d5ba541f9ae29e40e22a623bc13562f51",
-    expectedTag: "v2.1.2",
-    expectedUsages: 1,
-    reason: "The v2 release API and renamed inputs are migrated together.",
   },
   {
     action: "astral-sh/setup-uv",

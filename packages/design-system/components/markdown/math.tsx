@@ -1,11 +1,12 @@
+import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
 import {
   ScrollArea,
   ScrollBar,
 } from "@repo/design-system/components/ui/scroll-area";
-import { cva } from "class-variance-authority";
+import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import { cn } from "cn";
 import katex from "katex";
-import { Children, type HTMLAttributes, isValidElement } from "react";
+import type { HTMLAttributes } from "react";
 
 type MathComponentProps =
   | {
@@ -23,29 +24,6 @@ type KatexMarkupProps = MathComponentProps & {
   readonly displayMode: boolean;
 };
 
-const COMPACT_MATH_STACK_BLOCK_LIMIT = 2;
-const SPACIOUS_MATH_STACK_BLOCK_START = 5;
-
-const mathContainerVariants = cva(
-  "my-4 space-y-0 last:mb-0 *:data-math-block:rounded-none *:data-math-block:border-b-0 [&>[data-math-block]:first-child]:rounded-t-xl [&>[data-math-block]:last-child]:rounded-b-xl [&>[data-math-block]:last-child]:border-b",
-  {
-    variants: {
-      visibility: {
-        compact: "content-auto-math-stack-compact",
-        default: "content-auto-math-stack",
-        spacious: "content-auto-math-stack-spacious",
-      },
-    },
-    defaultVariants: {
-      visibility: "default",
-    },
-  }
-);
-
-const blockMathVariants = cva(
-  "overflow-hidden rounded-xl border bg-card text-card-foreground content-auto-formula"
-);
-
 function KatexMarkup({
   children,
   displayMode,
@@ -58,23 +36,30 @@ function KatexMarkup({
     throwOnError: false,
     trust: false,
   });
+  const fonts = readMathFonts(html);
 
   if (displayMode) {
     return (
-      <div
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
-        dangerouslySetInnerHTML={{ __html: html }}
-        data-testid="katex"
-      />
+      <>
+        <MathFontPreload fonts={fonts} />
+        <div
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
+          dangerouslySetInnerHTML={{ __html: html }}
+          data-testid="katex"
+        />
+      </>
     );
   }
 
   return (
-    <span
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
-      dangerouslySetInnerHTML={{ __html: html }}
-      data-testid="katex"
-    />
+    <>
+      <MathFontPreload fonts={fonts} />
+      <span
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
+        dangerouslySetInnerHTML={{ __html: html }}
+        data-testid="katex"
+      />
+    </>
   );
 }
 
@@ -95,49 +80,22 @@ export function BlockMathKatex(props: MathComponentProps) {
  *
  * Use this in MDX whenever multiple BlockMath rows are part of the same
  * derivation. The stack keeps one shared outer radius while each row remains
- * horizontally scrollable.
- *
- * @see https://web.dev/articles/content-visibility
- * @see https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility
- * @see https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-size
+ * horizontally scrollable. Math renders in full with the page: a skipped
+ * block would first take a placeholder height and move the text around it.
  */
 export function MathContainer({
   className,
   children,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  const blockCount = Children.toArray(children).filter(isValidElement).length;
-
-  if (blockCount <= COMPACT_MATH_STACK_BLOCK_LIMIT) {
-    return (
-      <div
-        className={cn(
-          mathContainerVariants({ visibility: "compact" }),
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-
-  if (blockCount >= SPACIOUS_MATH_STACK_BLOCK_START) {
-    return (
-      <div
-        className={cn(
-          mathContainerVariants({ visibility: "spacious" }),
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-
   return (
-    <div className={cn(mathContainerVariants(), className)} {...props}>
+    <div
+      className={cn(
+        "my-4 space-y-0 last:mb-0 *:data-math-block:rounded-none *:data-math-block:border-b-0 [&>[data-math-block]:first-child]:rounded-t-xl [&>[data-math-block]:last-child]:rounded-b-xl [&>[data-math-block]:last-child]:border-b",
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -157,7 +115,10 @@ export function BlockMath({
   // Empty string keeps this as a presence marker instead of data-math-block="true".
   return (
     <div
-      className={cn(blockMathVariants(), className)}
+      className={cn(
+        "overflow-hidden rounded-xl border bg-card text-card-foreground",
+        className
+      )}
       data-markdown-ignore=""
       data-math-block=""
     >

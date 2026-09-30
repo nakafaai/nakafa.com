@@ -81,7 +81,16 @@ describe("GitHub Action policy", () => {
                 branches: ["main"],
                 types: ["checks_requested"],
               },
-              pull_request: expect.any(Object),
+              // Edits never rerun CI, and stacked pull requests run on their
+              // own base before GitHub retargets them to main.
+              pull_request: {
+                types: [
+                  "opened",
+                  "synchronize",
+                  "reopened",
+                  "ready_for_review",
+                ],
+              },
             }),
           })
         );
@@ -245,7 +254,7 @@ describe("GitHub Action policy", () => {
 
   it("reports unpinned references, missing inputs, and unused reviews", () => {
     const actionUses = validActionUses().filter(
-      ({ reference }) => !reference.startsWith("changesets/action@")
+      ({ reference }) => !reference.startsWith("actions/download-artifact@")
     );
     const setupIndex = actionUses.findIndex(({ reference }) =>
       reference.startsWith("pnpm/setup@")
@@ -276,7 +285,7 @@ describe("GitHub Action policy", () => {
       `${setupUse.workflowPath} configures pnpm/setup cache as missing; approved ${cache}.`,
       ".github/workflows/example.yml has an unpinned external action actions/checkout.",
       ".github/workflows/example.yml has an unpinned external action actions/checkout@.",
-      "changesets/action has 0 workflow usages; expected 1.",
+      "actions/download-artifact has 0 workflow usages; expected 3.",
     ]);
   });
 
