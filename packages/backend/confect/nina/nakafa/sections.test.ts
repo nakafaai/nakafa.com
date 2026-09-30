@@ -137,6 +137,17 @@ describe("Nakafa sectioned reads", () => {
     expect(blocks.join("")).toBe(blob);
   });
 
+  it("stays within its budget when the description leaves no room", () => {
+    const read = formatRead({
+      ...readNakafaContentRefFixture("id", subjectRoute, "material"),
+      description: "Deskripsi yang sangat panjang. ".repeat(2000),
+      text: `## Definisi\n\n${"Fungsi memetakan anggota domain. ".repeat(400)}`,
+      title: "Fungsi",
+    });
+    expect(countTextTokens(read)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
+    expect(read).toContain("Request one of the listed sections.");
+  });
+
   it("lists the sections after a later read first in a capped outline", () => {
     const text = Array.from(
       { length: 40 },

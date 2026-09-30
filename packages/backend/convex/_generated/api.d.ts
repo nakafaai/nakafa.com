@@ -8609,6 +8609,12 @@ export declare const internal: {
       >;
     };
     summaries: {
+      anchor: FunctionReference<
+        "query",
+        "internal",
+        { chatId: Id<"chats">; order: number },
+        string | null
+      >;
       read: FunctionReference<
         "query",
         "internal",

@@ -203,11 +203,17 @@ export function formatRead(
     used += cost;
   }
   const end = from + included.length;
-  return [
-    header,
-    included.map(({ text }) => text).join("\n\n"),
-    formatOutline([...parts.slice(end), ...parts.slice(0, from)]),
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  // A long description or outline can leave no room for a part; the read
+  // still never exceeds its budget.
+  return boundText(
+    [
+      header,
+      included.map(({ text }) => text).join("\n\n"),
+      formatOutline([...parts.slice(end), ...parts.slice(0, from)]),
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+    budget,
+    "Request one of the listed sections."
+  );
 }

@@ -55,17 +55,21 @@ export function nextSummaryTarget(order: number, throughOrder: number | null) {
   return target - covered >= FOLD_TURNS ? target : null;
 }
 
-/** Reads learner and Nina text for the turns after `from` through `through`. */
+/**
+ * Reads learner and Nina text for the turns after `from` through `through`.
+ * Pages run newest first from `anchor`, the prompt of turn `through`, and stop
+ * at turns the summary already covers, so a refresh reads only its batch.
+ */
 const readTranscript = Effect.fn("nina.summary.transcript")(function* (
   threadId: string,
   from: number,
-  through: number
+  through: number,
+  anchor: string
 ) {
   const ctx = yield* ActionCtx;
   const lines: string[] = [];
   let cursor: string | null = null;
   let done = false;
-  // Pages run newest first and stop at turns the summary already covers.
   while (!done) {
     const page = yield* Effect.tryPromise({
       try: () =>
@@ -75,6 +79,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
           paginationOpts: { cursor, numItems: MESSAGE_PAGE },
           statuses: ["success"],
           threadId,
+          upToAndIncludingMessageId: anchor,
         }),
       catch: () => new NinaSummaryError({ operation: "read" }),
     });
@@ -100,18 +105,26 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (
     turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId" | "userId">
   ) {
-    const current = yield* (yield* QueryRunner)(
-      refs.internal.nina.summaries.read,
-      { chatId: turn.chatId }
-    ).pipe(Effect.orDie);
+    const query = yield* QueryRunner;
+    const current = yield* query(refs.internal.nina.summaries.read, {
+      chatId: turn.chatId,
+    }).pipe(Effect.orDie);
     const target = nextSummaryTarget(turn.order, current?.throughOrder ?? null);
     if (target === null) {
       return;
     }
+    const anchor = yield* query(refs.internal.nina.summaries.anchor, {
+      chatId: turn.chatId,
+      order: target,
+    }).pipe(Effect.orDie);
+    if (!anchor) {
+      return yield* new NinaSummaryError({ operation: "read" });
+    }
     const transcript = yield* readTranscript(
       turn.threadId,
       current?.throughOrder ?? -1,
-      target
+      target,
+      anchor
     );
     const ctx = yield* ActionCtx;
     const agent = new Agent(components.nina, {

@@ -8,7 +8,10 @@ import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capabil
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
 import { Schema } from "effect";
 
-/** Gemini's flat input cost for one image or file part. */
+/**
+ * Gemini's flat input cost for one image. Documents count the same, since only
+ * the current turn keeps them.
+ */
 const FILE_TOKENS = 300;
 /** Earlier evidence keeps this much text once its turn outgrows the budget. */
 const EXCERPT_TOKENS = 600;
@@ -130,6 +133,28 @@ function excerptMessage(message: ModelMessage): ModelMessage {
   };
 }
 
+/**
+ * Replaces an earlier turn's PDF and text attachments with a note. Their
+ * provider cost grows with their size, unlike an image's, and Nina already
+ * answered about them in that turn.
+ */
+function noteDocuments(message: ModelMessage): ModelMessage {
+  if (message.role !== "user" || typeof message.content === "string") {
+    return message;
+  }
+  return {
+    ...message,
+    content: message.content.map((part) =>
+      part.type === "file" && !part.mediaType.startsWith("image/")
+        ? {
+            type: "text" as const,
+            text: `[Attached earlier: ${part.filename ?? "a document"} (${part.mediaType}). Ask the learner to attach it again when its full content matters.]`,
+          }
+        : part
+    ),
+  };
+}
+
 /** Splits a conversation into whole turns; each turn opens with a user message. */
 function splitTurns(messages: readonly ModelMessage[]) {
   const turns: ModelMessage[][] = [];
@@ -186,7 +211,9 @@ export function assembleContext({
   readonly recent: readonly ModelMessage[];
   readonly throughOrder: number | null;
 }) {
-  const newestFirst = splitTurns(projectMessages(recent)).reverse();
+  const newestFirst = splitTurns(
+    projectMessages(recent).map(noteDocuments)
+  ).reverse();
   const covered = throughOrder ?? -1;
   const selected: ModelMessage[][] = [];
   let used = 0;
