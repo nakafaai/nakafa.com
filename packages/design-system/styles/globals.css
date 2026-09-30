@@ -79,7 +79,7 @@
   --secondary: oklch(0.77498 0.1318 224.26);
   --secondary-foreground: oklch(0.21033 0.00586 285.89);
   --muted: oklch(0.96844 0.00682 247.9);
-  --muted-foreground: oklch(0.535 0.04071 257.44);
+  --muted-foreground: oklch(0.5125 0.04071 257.44);
   --accent: oklch(0.92682 0.01559 248);
   --accent-foreground: oklch(0.20792 0.03991 265.73);
   --destructive: oklch(0.56 0.21808 17.703);
@@ -283,6 +283,12 @@
   body {
     @apply bg-background text-foreground selection:bg-primary selection:text-primary-foreground overscroll-y-none;
   }
+
+  /* Highlighted words: headline emphasis and search matches. A row painted
+   * with a fill recolors them with that fill's foreground. */
+  mark {
+    @apply bg-transparent text-primary;
+  }
 }
 
 @utility scrollbar-hide {
@@ -401,9 +407,4 @@
 
 .katex .katex-html > .newline {
   margin-block: 1rem;
-}
-
-/* Search result highlighting */
-mark {
-  @apply bg-transparent text-primary;
 }

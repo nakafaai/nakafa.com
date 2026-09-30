@@ -84,7 +84,7 @@ export function CatalogCardGradient({
   seed: string;
 }) {
   return (
-    <div className="relative flex aspect-[40/21] w-full items-center justify-center">
+    <div className="relative flex aspect-40/21 w-full items-center justify-center">
       <GradientBlock
         className="pointer-events-none absolute inset-0"
         colorScheme="vibrant"

@@ -112,7 +112,7 @@ export function AttachmentDescription({
   return (
     <span
       className={cn(
-        "mt-0.5 block min-w-0 max-w-full truncate text-muted-foreground text-xs group-data-[state=error]/attachment:text-destructive/80",
+        "mt-0.5 block min-w-0 max-w-full truncate text-muted-foreground text-xs group-data-[state=error]/attachment:text-destructive",
         className
       )}
       data-slot="attachment-description"

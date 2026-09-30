@@ -148,13 +148,9 @@ function LegendIndicator({
         />
       );
     case "vertical-bar":
-      return (
-        <div className="h-3 w-1 shrink-0 rounded-[2px]" style={fillStyle} />
-      );
+      return <div className="h-3 w-1 shrink-0 rounded-xs" style={fillStyle} />;
     case "horizontal-bar":
-      return (
-        <div className="h-1 w-3 shrink-0 rounded-[2px]" style={fillStyle} />
-      );
+      return <div className="h-1 w-3 shrink-0 rounded-xs" style={fillStyle} />;
     case "rounded-square-outline":
       return (
         <div
@@ -163,9 +159,7 @@ function LegendIndicator({
         />
       );
     default:
-      return (
-        <div className="h-2 w-2 shrink-0 rounded-[2px]" style={fillStyle} />
-      );
+      return <div className="h-2 w-2 shrink-0 rounded-xs" style={fillStyle} />;
   }
 }
 

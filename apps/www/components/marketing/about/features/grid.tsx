@@ -30,9 +30,9 @@ export function FeaturesBento({
 
   return (
     <div className="relative grid grid-cols-1 overflow-hidden border-t bg-background text-foreground lg:grid-cols-12">
-      <div className="relative min-h-[38rem] overflow-hidden border-b bg-background lg:col-span-7 lg:min-h-[40rem] lg:border-r">
+      <div className="relative min-h-152 overflow-hidden border-b bg-background lg:col-span-7 lg:min-h-160 lg:border-r">
         <SubjectsArt />
-        <div className="relative z-1 flex min-h-[38rem] flex-col gap-12 p-8 lg:min-h-[40rem] lg:p-10">
+        <div className="relative z-1 flex min-h-152 flex-col gap-12 p-8 lg:min-h-160 lg:p-10">
           <h3 className="max-w-2xl text-balance text-3xl tracking-tight sm:text-4xl">
             {t.rich("subjects-title", {
               mark: (chunks) => <mark>{chunks}</mark>,
