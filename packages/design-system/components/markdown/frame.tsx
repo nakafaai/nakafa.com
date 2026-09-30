@@ -10,7 +10,7 @@ const markdownFrameVariants = cva(
         document: "",
         // Chat text wraps greedily: pretty wrapping re-breaks earlier lines
         // every time a streamed answer grows, so words jump between lines.
-        chat: "text-chat [&_[data-math-block]]:[contain-intrinsic-size:none] [&_[data-math-block]]:[content-visibility:visible] [&_[data-nakafa^=heading-]]:text-wrap [&_[data-nakafa^=heading-]]:font-semibold [&_[data-nakafa^=heading-]]:text-chat [&_li]:text-wrap [&_p]:text-wrap",
+        chat: "text-chat [&_[data-nakafa^=heading-]]:text-wrap [&_[data-nakafa^=heading-]]:font-semibold [&_[data-nakafa^=heading-]]:text-chat [&_li]:text-wrap [&_p]:text-wrap",
       },
     },
     defaultVariants: { variant: "document" },

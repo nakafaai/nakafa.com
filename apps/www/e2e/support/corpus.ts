@@ -23,6 +23,11 @@ export const pinnedRoutes = {
     en: "/en/subjects/mathematics/exponential-logarithm/exponential-growth",
     id: "/id/materi/matematika/eksponen-dan-logaritma/pertumbuhan-eksponen",
   },
+  inverse: {
+    de: "/de/faecher/mathematik/funktionskomposition-und-umkehrfunktion/eigenschaften-der-umkehrfunktion",
+    en: "/en/subjects/mathematics/function-composition-inverse-function/properties-of-inverse-function",
+    id: "/id/materi/matematika/fungsi-komposisi-dan-fungsi-invers/sifat-fungsi-invers",
+  },
   material: {
     de: "/de/faecher/mathematik/analytische-geometrie/hyperbel",
     en: "/en/subjects/mathematics/analytic-geometry/hyperbola",
