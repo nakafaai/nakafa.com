@@ -155,16 +155,19 @@ describe("GitHub Action policy", () => {
     }
     actionUses[setupIndex] = {
       ...setupUse,
-      inputs: { cache: "unexpected", install: false },
+      inputs: { cache: true, install: false, "node-version-file": ".nvmrc" },
     };
     actionUses.splice(setupIndex + 1, 1);
 
     const problems = validateGithubActionPolicy(actionUses);
     expect(problems.some((problem) => problem.includes("approved"))).toBe(true);
-    expect(problems.some((problem) => problem.includes("unreviewed"))).toBe(
-      true
+    expect(problems).toEqual(
+      expect.arrayContaining([
+        ".github/workflows/example.yml uses unreviewed GitHub Action example/unreviewed.",
+        `${setupUse.workflowPath} configures pnpm/setup cache as true; approved false.`,
+        `${setupUse.workflowPath} configures unreviewed pnpm/setup input node-version-file.`,
+      ])
     );
-    expect(problems.some((problem) => problem.includes("cache"))).toBe(true);
     expect(
       problems.some((problem) =>
         problem.includes(`expected ${setupReview.expectedUsages}`)
