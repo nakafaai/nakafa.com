@@ -19,18 +19,14 @@ interface ReviewRuntimeQuestion extends ReviewContentIdentity {
   readonly responseSpec: TryoutRuntimeResponseSpec;
 }
 
-/** One question of a locked review: its signed body without any answer. */
-export interface TryoutPreviewQuestion {
-  readonly content: ReactNode;
-  readonly questionOrder: number;
-  readonly responseSpec: TryoutRuntimeResponseSpec;
-}
-
 /** One immutable reviewed question ready for read-only composition. */
-export interface TryoutReviewQuestion extends TryoutPreviewQuestion {
+export interface TryoutReviewQuestion {
   readonly answer: ReactNode;
+  readonly content: ReactNode;
   readonly placementId: TryoutRuntimeQuestion["placementId"];
+  readonly questionOrder: number;
   readonly response: TryoutRuntimeQuestion["response"];
+  readonly responseSpec: TryoutRuntimeResponseSpec;
 }
 
 /** Fails closed when signed review content no longer matches frozen runtime. */
@@ -114,38 +110,6 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
 
   return reviewQuestions;
 });
-
-/** Pairs locked-review questions with their signed bodies; no answer is read. */
-export const projectTryoutPreview = Effect.fn("TryoutReview.projectPreview")(
-  function* <Question extends ReviewRuntimeQuestion>(input: {
-    readonly content: Pick<TryoutRuntimeContent, "questions">;
-    readonly questions: readonly Question[];
-  }) {
-    const questionContent = new Map(
-      input.content.questions.map((question) => [
-        getContentIdentity(question),
-        question.content,
-      ])
-    );
-    const previewQuestions: TryoutPreviewQuestion[] = [];
-
-    for (const question of input.questions) {
-      const identity = getContentIdentity(question);
-      if (!questionContent.has(identity)) {
-        return yield* projectionError(
-          "Locked review content lost a frozen question."
-        );
-      }
-      previewQuestions.push({
-        content: questionContent.get(identity),
-        questionOrder: question.questionOrder,
-        responseSpec: question.responseSpec,
-      });
-    }
-
-    return previewQuestions;
-  }
-);
 
 /** Builds one collision-safe key from an already trusted content identity. */
 function getContentIdentity(identity: ReviewContentIdentity) {
