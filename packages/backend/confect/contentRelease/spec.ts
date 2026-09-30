@@ -86,19 +86,12 @@ export const releaseStatusValidator = Schema.Literals([
 /** Publication role controls which singleton state slot a release may own. */
 export const releaseRoleValidator = Schema.Literals(["candidate", "recovery"]);
 
-/**
- * Ordered durable phases for one crash-safe history compaction cycle.
- *
- * `artifacts` is the retired body scan. Its persisted cursor belongs to that
- * former query, so a cycle stored there advances straight to `facts`; the
- * artifact facts contract change removes it.
- */
+/** Ordered durable phases for one crash-safe history compaction cycle. */
 export const COMPACTION_PHASES = [
   "heads",
   "bindings",
   "items",
   "batches",
-  "artifacts",
   "facts",
   "snapshots",
   "releases",

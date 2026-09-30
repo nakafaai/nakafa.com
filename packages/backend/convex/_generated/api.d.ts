@@ -5759,34 +5759,6 @@ export declare const internal: {
         >;
       };
     };
-    artifact: {
-      backfill: {
-        page: FunctionReference<
-          "mutation",
-          "internal",
-          { cursor: string | null },
-          {
-            created: number;
-            cursor: string | null;
-            done: boolean;
-            scanned: number;
-            stripped: number;
-          }
-        >;
-        run: FunctionReference<
-          "action",
-          "internal",
-          { cursor: string | null },
-          {
-            created: number;
-            cursor: string | null;
-            done: boolean;
-            scanned: number;
-            stripped: number;
-          }
-        >;
-      };
-    };
     artifacts: {
       stageArtifactBatch: FunctionReference<
         "mutation",
@@ -5827,7 +5799,6 @@ export declare const internal: {
             | "bindings"
             | "items"
             | "batches"
-            | "artifacts"
             | "facts"
             | "snapshots"
             | "releases";
@@ -5846,7 +5817,6 @@ export declare const internal: {
             | "bindings"
             | "items"
             | "batches"
-            | "artifacts"
             | "facts"
             | "snapshots"
             | "releases";

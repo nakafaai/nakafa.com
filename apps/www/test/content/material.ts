@@ -96,8 +96,6 @@ export const makeMaterialRuntimeSource = Effect.fn(
     artifacts.push({
       artifactHash: artifact.artifactHash,
       artifactJson: JSON.stringify(artifact),
-      createdAt: 1,
-      retainUntil: 100,
     });
     const topic = yield* deriveMaterialTopicReference(projection);
     const bucket = getHashBucket(projectionHash);

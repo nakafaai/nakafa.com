@@ -272,31 +272,6 @@ describe("contentRelease/cleanup", () => {
     });
   });
 
-  it("leaves a body stored before artifact facts for the facts backfill", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertRelease(ctx);
-      await ctx.db.insert("contentArtifacts", {
-        artifactHash: TEST_ARTIFACT_HASH,
-        artifactJson: "{}",
-        createdAt: NOW,
-        retainUntil: 0,
-      });
-    });
-
-    await expect(
-      t.mutation(cleanup, { releaseId: RELEASE.releaseId })
-    ).resolves.toEqual({
-      complete: true,
-      deletedArtifacts: 0,
-      releaseId: RELEASE.releaseId,
-    });
-    await expect(storedArtifacts(t)).resolves.toMatchObject({
-      artifacts: [{ artifactHash: TEST_ARTIFACT_HASH }],
-      facts: [],
-    });
-  });
-
   it("returns an exact retry deadline for retained future artifacts", async () => {
     const t = convexTest(schema, convexModules);
     const retryAt = Date.now() + 60_000;
