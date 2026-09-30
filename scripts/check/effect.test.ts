@@ -1,10 +1,11 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { API, Checker, Program, Snapshot } from "typescript/unstable/sync";
+import { API, Checker, Snapshot } from "typescript/unstable/sync";
 import {
-  effectSourceViolations,
   effectTestViolations,
+  inspectEffectSource,
 } from "#scripts/check/effect";
+import { sourceViolations } from "#scripts/check/source";
 
 const FILE = "packages/example/src/program.test.ts";
 const VIOLATION =
@@ -79,57 +80,41 @@ describe("Effect test policy", () => {
 });
 
 describe("native compiler startup", () => {
-  it.effect("fails both policies with typed errors when it cannot start", () =>
-    Effect.gen(function* () {
-      const cause = new Error("native compiler unavailable");
-      vi.resetModules();
-      vi.doMock("typescript/unstable/sync", () => ({
-        API: class {
-          constructor() {
-            throw cause;
-          }
-        },
-      }));
-      const policy = yield* Effect.promise(
-        () => import("#scripts/check/effect")
-      );
-      const failures = [
-        yield* policy
+  it.effect(
+    "fails the test policy with a typed error when it cannot start",
+    () =>
+      Effect.gen(function* () {
+        const cause = new Error("native compiler unavailable");
+        vi.resetModules();
+        vi.doMock("typescript/unstable/sync", () => ({
+          API: class {
+            constructor() {
+              throw cause;
+            }
+          },
+        }));
+        const policy = yield* Effect.promise(
+          () => import("#scripts/check/effect")
+        );
+        const failure = yield* policy
           .effectTestViolations([{ file: FILE, sourceText: "export {};" }])
-          .pipe(Effect.flip),
-        yield* policy
-          .effectSourceViolations([
-            { file: "packages/example/src/program.ts", sourceText: "" },
-          ])
-          .pipe(Effect.flip),
-      ];
-      assert.deepStrictEqual(
-        failures.map((failure) => [
-          failure._tag,
-          failure.cause,
-          failure.message,
-        ]),
-        [
+          .pipe(Effect.flip);
+        assert.deepStrictEqual(
+          [failure._tag, failure.cause, failure.message],
           [
             "TestCompilerError",
             cause,
             "Unable to start the native test compiler.",
-          ],
-          [
-            "TestCompilerError",
-            cause,
-            "Unable to start the native source compiler.",
-          ],
-        ]
-      );
-    }).pipe(
-      Effect.ensuring(
-        Effect.sync(() => {
-          vi.doUnmock("typescript/unstable/sync");
-          vi.resetModules();
-        })
+          ]
+        );
+      }).pipe(
+        Effect.ensuring(
+          Effect.sync(() => {
+            vi.doUnmock("typescript/unstable/sync");
+            vi.resetModules();
+          })
+        )
       )
-    )
   );
 });
 
@@ -140,13 +125,16 @@ const NARROWING_VIOLATION = `${BACKEND_FILE}: narrow unknown input with Schema o
 describe("Effect source policy", () => {
   it.effect("rejects raw try statements and typeof-object narrowing", () =>
     Effect.gen(function* () {
-      const violations = yield* effectSourceViolations([
-        {
-          file: BACKEND_FILE,
-          sourceText:
-            'export function read(value: unknown) {\n  try {\n    JSON.parse("{}");\n  } catch {\n    return null;\n  }\n  return typeof value === "object" && value !== null;\n}',
-        },
-      ]);
+      const violations = yield* sourceViolations(
+        [
+          {
+            file: BACKEND_FILE,
+            sourceText:
+              'export function read(value: unknown) {\n  try {\n    JSON.parse("{}");\n  } catch {\n    return null;\n  }\n  return typeof value === "object" && value !== null;\n}',
+          },
+        ],
+        [inspectEffectSource]
+      );
       assert.deepStrictEqual(
         [...violations].sort(),
         [TRY_VIOLATION, NARROWING_VIOLATION].sort()
@@ -156,36 +144,42 @@ describe("Effect source policy", () => {
 
   it.effect("rejects typeof-object narrowing on either side", () =>
     Effect.gen(function* () {
-      const violations = yield* effectSourceViolations([
-        {
-          file: BACKEND_FILE,
-          sourceText:
-            'export const isRecord = (value: unknown) => "object" !== typeof value;',
-        },
-        {
-          file: "apps/www/lib/example.ts",
-          sourceText:
-            'export const isText = (value: unknown) => typeof value === "string" || typeof value === typeof input;',
-        },
-      ]);
+      const violations = yield* sourceViolations(
+        [
+          {
+            file: BACKEND_FILE,
+            sourceText:
+              'export const isRecord = (value: unknown) => "object" !== typeof value;',
+          },
+          {
+            file: "apps/www/lib/example.ts",
+            sourceText:
+              'export const isText = (value: unknown) => typeof value === "string" || typeof value === typeof input;',
+          },
+        ],
+        [inspectEffectSource]
+      );
       assert.deepStrictEqual(violations, [NARROWING_VIOLATION]);
     })
   );
 
   it.effect("allows Effect-native failure and narrowing", () =>
     Effect.gen(function* () {
-      const violations = yield* effectSourceViolations([
-        {
-          file: BACKEND_FILE,
-          sourceText:
-            'import { Effect, Predicate } from "effect";\nexport const read = Effect.fn("read")(function* (value: unknown) {\n  return Predicate.isObject(value) && Predicate.hasProperty(value, "code");\n});',
-        },
-        {
-          file: BACKEND_FILE,
-          sourceText:
-            "export async function clean() {\n  try {\n    await write();\n  } finally {\n    await erase();\n  }\n}",
-        },
-      ]);
+      const violations = yield* sourceViolations(
+        [
+          {
+            file: BACKEND_FILE,
+            sourceText:
+              'import { Effect, Predicate } from "effect";\nexport const read = Effect.fn("read")(function* (value: unknown) {\n  return Predicate.isObject(value) && Predicate.hasProperty(value, "code");\n});',
+          },
+          {
+            file: BACKEND_FILE,
+            sourceText:
+              "export async function clean() {\n  try {\n    await write();\n  } finally {\n    await erase();\n  }\n}",
+          },
+        ],
+        [inspectEffectSource]
+      );
       assert.deepStrictEqual(violations, []);
     })
   );
@@ -194,17 +188,20 @@ describe("Effect source policy", () => {
     Effect.gen(function* () {
       const appFile = "apps/www/lib/example.ts";
       const viewFile = "apps/www/components/example.tsx";
-      const violations = yield* effectSourceViolations([
-        {
-          file: appFile,
-          sourceText: 'export const value = typeof input === "object";',
-        },
-        {
-          file: viewFile,
-          sourceText:
-            'export const View = () => (typeof input === "object" ? null : <div />);',
-        },
-      ]);
+      const violations = yield* sourceViolations(
+        [
+          {
+            file: appFile,
+            sourceText: 'export const value = typeof input === "object";',
+          },
+          {
+            file: viewFile,
+            sourceText:
+              'export const View = () => (typeof input === "object" ? null : <div />);',
+          },
+        ],
+        [inspectEffectSource]
+      );
       assert.deepStrictEqual(
         [...violations].sort(),
         [
@@ -212,64 +209,6 @@ describe("Effect source policy", () => {
           `${viewFile}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`,
         ].sort()
       );
-    })
-  );
-
-  it.effect("ignores sources that are not authored modules", () =>
-    Effect.gen(function* () {
-      const violations = yield* effectSourceViolations([
-        {
-          file: "apps/www/content/example.md",
-          sourceText: 'export const value = typeof input === "object";',
-        },
-      ]);
-      assert.deepStrictEqual(violations, []);
-    })
-  );
-
-  it.effect("fails when the native compiler cannot open the sources", () =>
-    Effect.gen(function* () {
-      const cause = new Error("native snapshot unavailable");
-      vi.spyOn(API.prototype, "updateSnapshot").mockImplementationOnce(() => {
-        throw cause;
-      });
-      const snapshotFailure = yield* effectSourceViolations([
-        { file: BACKEND_FILE, sourceText: "export {};" },
-      ]).pipe(Effect.flip);
-      vi.spyOn(Snapshot.prototype, "getProject").mockReturnValueOnce(undefined);
-      const projectFailure = yield* effectSourceViolations([
-        { file: BACKEND_FILE, sourceText: "export {};" },
-      ]).pipe(Effect.flip);
-
-      assert.deepStrictEqual(
-        [snapshotFailure, projectFailure].map((failure) => [
-          failure._tag,
-          failure.cause,
-          failure.message,
-        ]),
-        [
-          ["TestCompilerError", cause, "Unable to inspect repository sources."],
-          [
-            "TestCompilerError",
-            "The native source project is missing.",
-            "Unable to inspect repository sources.",
-          ],
-        ]
-      );
-    })
-  );
-
-  it.effect("reports a source the native compiler does not expose", () =>
-    Effect.gen(function* () {
-      vi.spyOn(Program.prototype, "getSourceFile").mockReturnValueOnce(
-        undefined
-      );
-      const violations = yield* effectSourceViolations([
-        { file: BACKEND_FILE, sourceText: "export {};" },
-      ]);
-      assert.deepStrictEqual(violations, [
-        `${BACKEND_FILE}: the native compiler did not expose this source file.`,
-      ]);
     })
   );
 });
