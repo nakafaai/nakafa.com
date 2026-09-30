@@ -53,7 +53,7 @@ async function fixture(turns: number) {
   const refresh = (order: number) =>
     t.action((ctx) =>
       Effect.runPromise(
-        refreshSummary({ ...setup, order }, vi.fn()).pipe(
+        refreshSummary({ ...setup, order }).pipe(
           Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
         )
       )
@@ -87,6 +87,8 @@ describe("Nina rolling summary", () => {
         chatId: f.chatId,
         text: "- The learner studied limits.",
         throughOrder: 4,
+        // The fold's provider usage counts toward the chat's summary upkeep.
+        usage: { calls: 1, input: 12, output: 4 },
       }),
     ]);
     const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
@@ -106,6 +108,7 @@ describe("Nina rolling summary", () => {
         text: "- The learner studied limits.",
         throughOrder: 4,
         updatedAt: Date.now(),
+        usage: { calls: 1, input: 900, output: 120 },
       })
     );
     await f.refresh(12);
@@ -113,6 +116,7 @@ describe("Nina rolling summary", () => {
       expect.objectContaining({
         text: "- Limits, then derivatives.",
         throughOrder: 8,
+        usage: { calls: 2, input: 912, output: 124 },
       }),
     ]);
     const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
@@ -131,6 +135,42 @@ describe("Nina rolling summary", () => {
     expect(prompt).toContain("Question 0");
     expect(prompt).toContain("Answer 51");
     expect(prompt).not.toContain("Question 52");
+  });
+
+  it("records zero tokens when the provider omits usage counters", async () => {
+    vi.mocked(getGatewayModel).mockReturnValue(
+      Effect.succeed(
+        new MockLanguageModelV4({
+          doGenerate: () =>
+            Promise.resolve({
+              content: [{ type: "text", text: "- A counted fold." }],
+              finishReason: { unified: "stop", raw: "stop" },
+              usage: {
+                inputTokens: {
+                  total: undefined,
+                  noCache: undefined,
+                  cacheRead: undefined,
+                  cacheWrite: undefined,
+                },
+                outputTokens: {
+                  total: undefined,
+                  text: undefined,
+                  reasoning: undefined,
+                },
+              },
+              warnings: [],
+            }),
+        })
+      )
+    );
+    const f = await fixture(9);
+    await f.refresh(8);
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({
+        text: "- A counted fold.",
+        usage: { calls: 1, input: 0, output: 0 },
+      }),
+    ]);
   });
 
   it("makes no model call before a fold is due", async () => {
@@ -168,15 +208,12 @@ describe("Nina rolling summary", () => {
     const f = await fixture(1);
     await f.t.action((ctx) =>
       Effect.runPromise(
-        refreshSummary(
-          {
-            chatId: f.chatId,
-            order: 8,
-            threadId: "missing-thread",
-            userId: f.userId,
-          },
-          vi.fn()
-        ).pipe(Effect.provide(RegisteredFunction.actionLayer(schema, ctx)))
+        refreshSummary({
+          chatId: f.chatId,
+          order: 8,
+          threadId: "missing-thread",
+          userId: f.userId,
+        }).pipe(Effect.provide(RegisteredFunction.actionLayer(schema, ctx)))
       )
     );
     expect(await f.summary()).toEqual([]);

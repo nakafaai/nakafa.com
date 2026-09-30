@@ -37,7 +37,8 @@ export function boundText(text: string, limit: number, continuation: string) {
     return text;
   }
   const kept = decode(tokens.slice(0, Math.max(0, limit - NOTE_TOKENS)));
-  const boundary = Math.max(kept.lastIndexOf("\n\n"), kept.lastIndexOf("\n"));
+  // A paragraph break ends with a line break, so this also finds paragraphs.
+  const boundary = kept.lastIndexOf("\n");
   const cut = boundary > kept.length * 0.6 ? kept.slice(0, boundary) : kept;
   return `${cut.trimEnd()}\n\n[Shortened to about ${limit} of ${tokens.length} tokens. ${continuation}]`;
 }

@@ -14,6 +14,7 @@ import {
   createNinaTest,
   ninaModel,
   ninaStream,
+  ninaToolInput,
   ninaUsage,
 } from "@repo/backend/test/nina";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
@@ -477,6 +478,31 @@ describe("Nina generation through the real Agent component", () => {
     expect(languageModel.doGenerateCalls).toHaveLength(0);
   });
 
+  it("repairs invalid capability input through one accounted repair call", async () => {
+    vi.useRealTimers();
+    const languageModel = ninaModel(true, false, { request: 42 });
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    vi.mocked(runNakafaAgent).mockReturnValue(
+      Effect.succeed({ text: "Repaired evidence" })
+    );
+    const f = await fixture();
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => undefined);
+    const state = await f.inspect();
+    expect(state.turn?.state.status).toBe("complete");
+    expect(runNakafaAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: expect.stringContaining(ninaToolInput.request),
+      })
+    );
+    expect(JSON.stringify(languageModel.doGenerateCalls[0]?.prompt)).toContain(
+      "Repair the arguments for nakafa"
+    );
+    expect(state.turn?.usage.map((entry) => entry.agent)).toContain(
+      "nina-repair"
+    );
+  });
+
   it("sends the rolling summary and omits the turns it covers", async () => {
     const languageModel = ninaModel();
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
@@ -487,6 +513,7 @@ describe("Nina generation through the real Agent component", () => {
         text: "- The learner practiced limits.",
         throughOrder: 3,
         updatedAt: Date.now(),
+        usage: { calls: 1, input: 900, output: 120 },
       })
     );
     await f.t.action(run, { turnId: f.turnId });

@@ -59,12 +59,10 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   });
   const { focus, pageContent, summary } = yield* Effect.all(
     {
-      focus: turn.page.nina.focus
-        ? readFocus(turn._id)
-        : Effect.succeed(undefined),
+      focus: turn.page.nina.focus ? readFocus(turn._id) : Effect.undefined,
       pageContent: turn.page.needsFetch
         ? readPageContext(context.url)
-        : Effect.succeed(undefined),
+        : Effect.undefined,
       summary: (yield* QueryRunner)(refs.internal.nina.summaries.read, {
         chatId: turn.chatId,
       }).pipe(Effect.orDie),

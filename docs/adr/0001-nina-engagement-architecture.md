@@ -78,7 +78,9 @@ within 16,000 tokens. Older evidence shortens with a visible note before a turn
 is dropped, and no budget fails a turn. After a completed turn, the follow-up
 action folds turns beyond the four newest into the chat's conversation summary
 with a fast model once four such turns accumulate. The summary, at most 1,200
-tokens, sits in the system prompt context and is deleted with its chat. Old
+tokens, sits in the system prompt context and is deleted with its chat. Its
+refreshes are chat upkeep, so their provider usage accumulates on the summary
+rather than in a turn's usage ledger, which clients read. Old
 reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000

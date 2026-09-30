@@ -63,7 +63,7 @@ const present = FunctionImpl.make(
     const usageHandler = yield* createUsageHandler(turn._id);
     // Title, suggestions and the rolling summary are optional follow-up work.
     yield* generatePresentation(turn, usageHandler).pipe(
-      Effect.andThen(refreshSummary(turn, usageHandler)),
+      Effect.andThen(refreshSummary(turn)),
       Effect.catchTag("GatewayConfigurationError", () =>
         Effect.logWarning("Nina presentation configuration unavailable", {
           turnId: turn._id,

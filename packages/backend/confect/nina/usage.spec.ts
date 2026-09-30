@@ -10,7 +10,6 @@ export const NinaUsage = Schema.Struct({
     "math",
     "math-repair",
     "suggestions",
-    "summary",
     "title",
     "nina-repair",
   ]),

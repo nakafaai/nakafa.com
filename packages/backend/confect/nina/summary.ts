@@ -1,4 +1,4 @@
-import { Agent, type UsageHandler } from "@convex-dev/agent";
+import { Agent } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -91,8 +91,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
  */
 export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (
-    turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId" | "userId">,
-    usageHandler: UsageHandler
+    turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId" | "userId">
   ) {
     const current = yield* (yield* QueryRunner)(
       refs.internal.nina.summaries.read,
@@ -112,9 +111,8 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       instructions: INSTRUCTIONS,
       languageModel: yield* getGatewayModel(defaultModel),
       name: "summary",
-      usageHandler,
     });
-    const { text } = yield* Effect.tryPromise({
+    const { text, usage } = yield* Effect.tryPromise({
       try: (signal) =>
         agent.generateText(
           ctx,
@@ -143,6 +141,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       chatId: turn.chatId,
       text: boundText(summary, NINA_BUDGET.summary, "Summary shortened."),
       throughOrder: target,
+      usage: { input: usage.inputTokens ?? 0, output: usage.outputTokens ?? 0 },
     }).pipe(Effect.orDie);
   },
   Effect.catchTag("NinaSummaryError", (error) =>

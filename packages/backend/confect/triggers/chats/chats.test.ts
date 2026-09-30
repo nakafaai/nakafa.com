@@ -123,6 +123,7 @@ describe("native Nina deletion lifecycle", () => {
         text: "- The learner asked about limits.",
         throughOrder: 20,
         updatedAt: NOW,
+        usage: { calls: 1, input: 900, output: 120 },
       });
     });
     await owner.mutation(remove, { chatId: receipt.chatId });

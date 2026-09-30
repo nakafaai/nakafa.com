@@ -35,13 +35,19 @@ const read = FunctionImpl.make(
 
 /**
  * Stores a refreshed summary. Coverage only moves forward, so a slower refresh
- * never replaces a newer one, and a chat deleted meanwhile gets no orphan.
+ * never replaces a newer one, but its provider usage still counts; a chat
+ * deleted meanwhile gets no orphan.
  */
 const save = FunctionImpl.make(
   schema,
   spec,
   "save",
-  Effect.fn("nina.summaries.save")(function* ({ chatId, text, throughOrder }) {
+  Effect.fn("nina.summaries.save")(function* ({
+    chatId,
+    text,
+    throughOrder,
+    usage: call,
+  }) {
     const chat = yield* (yield* DatabaseReader)
       .table("chats")
       .get(chatId)
@@ -53,21 +59,30 @@ const save = FunctionImpl.make(
       return null;
     }
     const existing = yield* findSummary(chatId);
+    const usage = {
+      calls: (existing?.usage.calls ?? 0) + 1,
+      input: (existing?.usage.input ?? 0) + call.input,
+      output: (existing?.usage.output ?? 0) + call.output,
+    };
+    const writer = yield* DatabaseWriter;
     if (existing && existing.throughOrder >= throughOrder) {
+      yield* writer
+        .table("ninaSummaries")
+        .patch(existing._id, { usage })
+        .pipe(Effect.orDie);
       return null;
     }
-    const writer = yield* DatabaseWriter;
     const updatedAt = yield* Clock.currentTimeMillis;
     if (existing) {
       yield* writer
         .table("ninaSummaries")
-        .patch(existing._id, { text, throughOrder, updatedAt })
+        .patch(existing._id, { text, throughOrder, updatedAt, usage })
         .pipe(Effect.orDie);
       return null;
     }
     yield* writer
       .table("ninaSummaries")
-      .insert({ chatId, text, throughOrder, updatedAt })
+      .insert({ chatId, text, throughOrder, updatedAt, usage })
       .pipe(Effect.orDie);
     return null;
   })

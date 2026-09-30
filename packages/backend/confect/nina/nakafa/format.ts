@@ -71,7 +71,7 @@ function splitSections(markdown: string) {
     }
     close();
     title = heading[1];
-    const base = slugify(title) || "section";
+    const base = slugify(title);
     const seen = (counts.get(base) ?? 0) + 1;
     counts.set(base, seen);
     slug = seen === 1 ? base : `${base}-${seen}`;
