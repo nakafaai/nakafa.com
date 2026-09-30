@@ -1,8 +1,5 @@
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import type {
-  NinaLearner,
-  NinaLearnerProfile,
-} from "@repo/backend/confect/nina/memory.spec";
+import type { NinaLearnerProfile } from "@repo/backend/confect/nina/memory.spec";
 
 const FOCUS_LABELS = {
   learning: "learning lessons",
@@ -33,19 +30,23 @@ export function formatLearnerProfile(profile: typeof NinaLearnerProfile.Type) {
 
 /**
  * Formats what Nina knows about the learner: account facts and, while memory
- * is on, the facts remembered from earlier conversations. Returns nothing when
- * Nina knows nothing.
+ * is on, the facts remembered from earlier conversations, newest first so a
+ * bounded prompt keeps the latest corrections. Returns nothing when Nina knows
+ * nothing.
  */
 export function formatLearnerPrompt({
   facts,
   profile,
-}: typeof NinaLearner.Type) {
+}: {
+  readonly facts: readonly { readonly text: string }[];
+  readonly profile: typeof NinaLearnerProfile.Type;
+}) {
   const account = formatLearnerProfile(profile);
   const remembered =
-    facts && facts.length > 0
+    facts.length > 0
       ? [
-          "Remembered from earlier conversations (the learner can view and delete these in settings):",
-          ...facts.map((fact) => `- ${fact.text}`),
+          "Remembered from earlier conversations, newest first (the learner can view and delete these in settings):",
+          ...[...facts].reverse().map((fact) => `- ${fact.text}`),
         ].join("\n")
       : undefined;
   if (!(account || remembered)) {

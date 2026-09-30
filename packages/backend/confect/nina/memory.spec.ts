@@ -101,17 +101,29 @@ export const NinaLearnerProfile = Schema.Struct({
   tryoutCountry: Schema.optionalKey(tryoutRouteKeyValidator),
 });
 
-/** What generation and curation know about one learner. */
+/**
+ * The memory document and revision a curation read. Turning memory off and on
+ * creates a new document, and every write moves the revision.
+ */
+export const NinaMemoryRevision = Schema.Struct({
+  id: Id("ninaMemories"),
+  revision: Schema.Finite,
+});
+
+/** What instructions and curation know about one learner. */
 export const NinaLearner = Schema.Struct({
-  facts: Schema.NullOr(
-    Schema.mutable(
-      Schema.Array(
-        NinaMemoryFact.mapFields((fields) => ({
-          key: fields.key,
-          text: fields.text,
-        }))
-      )
-    )
+  memory: Schema.NullOr(
+    Schema.Struct({
+      ...NinaMemoryRevision.fields,
+      facts: Schema.mutable(
+        Schema.Array(
+          NinaMemoryFact.mapFields((fields) => ({
+            key: fields.key,
+            text: fields.text,
+          }))
+        )
+      ),
+    })
   ),
   profile: NinaLearnerProfile,
 });
@@ -158,6 +170,7 @@ export default GroupSpec.make()
       args: () => ({
         changes: NinaMemoryChanges,
         chatId: Id("chats"),
+        memory: NinaMemoryRevision,
         usage: NinaMemoryCall,
         userId: Id("users"),
       }),

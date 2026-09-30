@@ -8614,6 +8614,7 @@ export declare const internal: {
             update: Array<{ key: number; text: string }>;
           };
           chatId: Id<"chats">;
+          memory: { id: Id<"ninaMemories">; revision: number };
           usage: { input: number; output: number };
           userId: Id<"users">;
         },
@@ -8624,7 +8625,11 @@ export declare const internal: {
         "internal",
         { userId: Id<"users"> },
         {
-          facts: Array<{ key: number; text: string }> | null;
+          memory: {
+            facts: Array<{ key: number; text: string }>;
+            id: Id<"ninaMemories">;
+            revision: number;
+          } | null;
           profile: {
             focus?: "learning" | "tryout";
             region?:

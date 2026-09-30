@@ -39,24 +39,19 @@ describe("Nina learner prompt", () => {
     );
   });
 
-  it("adds remembered facts only while memory holds some", () => {
-    expect(formatLearnerPrompt({ facts: null, profile: {} })).toBeUndefined();
+  it("adds remembered facts, newest first, only while memory holds some", () => {
     expect(formatLearnerPrompt({ facts: [], profile: {} })).toBeUndefined();
     const prompt = formatLearnerPrompt({
-      facts: [{ key: 4, text: "Suka contoh soal." }],
+      facts: [{ text: "Kelas 11." }, { text: "Suka contoh soal." }],
       profile: { region: "germany" },
     });
     expect(prompt).toContain("# Learner");
     expect(prompt).toContain("- Region: germany");
     expect(prompt).toContain(
-      "Remembered from earlier conversations (the learner can view and delete these in settings):\n- Suka contoh soal."
+      "Remembered from earlier conversations, newest first (the learner can view and delete these in settings):\n- Suka contoh soal.\n- Kelas 11."
     );
-    expect(prompt).not.toContain("[4]");
     expect(
-      formatLearnerPrompt({
-        facts: [{ key: 0, text: "Kelas 12." }],
-        profile: {},
-      })
+      formatLearnerPrompt({ facts: [{ text: "Kelas 12." }], profile: {} })
     ).not.toContain("Account:");
   });
 });

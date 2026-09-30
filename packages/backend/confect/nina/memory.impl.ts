@@ -163,8 +163,12 @@ const read = FunctionImpl.make(
     const profile = yield* readLearnerProfile(userId);
     const memory = yield* findMemory(userId);
     return {
-      facts: memory
-        ? memory.facts.map(({ key, text }) => ({ key, text }))
+      memory: memory
+        ? {
+            facts: memory.facts.map(({ key, text }) => ({ key, text })),
+            id: memory._id,
+            revision: memory.updatedAt,
+          }
         : null,
       profile,
     };
@@ -172,8 +176,11 @@ const read = FunctionImpl.make(
 );
 
 /**
- * Stores one curation. Memory turned off meanwhile keeps nothing; a chat
- * deleted meanwhile leaves no facts behind, but the call's usage still counts.
+ * Stores one curation. Memory turned off meanwhile keeps nothing. The call's
+ * usage always counts, but its changes apply only to the memory and revision
+ * it read, so a curation that raced memory being reset, a newer curation, or
+ * a fact the learner forgot changes nothing, and a chat deleted meanwhile
+ * leaves no facts behind.
  */
 const apply = FunctionImpl.make(
   schema,
@@ -182,6 +189,7 @@ const apply = FunctionImpl.make(
   Effect.fn("nina.memory.apply")(function* ({
     changes,
     chatId,
+    memory: read,
     usage: call,
     userId,
   }) {
@@ -196,10 +204,13 @@ const apply = FunctionImpl.make(
         Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
         Effect.orDie
       );
+    const current =
+      memory._id === read.id && memory.updatedAt === read.revision;
     const savedAt = yield* Clock.currentTimeMillis;
-    const { facts, next } = chat
-      ? reviseFacts(memory, changes, { chatId, savedAt })
-      : memory;
+    const { facts, next } =
+      chat && current
+        ? reviseFacts(memory, changes, { chatId, savedAt })
+        : memory;
     yield* (yield* DatabaseWriter)
       .table("ninaMemories")
       .patch(memory._id, {

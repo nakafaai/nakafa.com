@@ -24,27 +24,44 @@ const none: typeof NinaMemoryChanges.Type = {
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
-/** A learner with a chat and a way to store one curation from it. */
+/**
+ * A learner with a chat and a way to store one curation from it, against the
+ * memory revision the curation read (the current one by default).
+ */
 async function fixture() {
   const f = await createNinaTest();
   const userId = f.identity.userId;
-  const curate = (changes: Partial<typeof NinaMemoryChanges.Type>) =>
+  const stored = () =>
+    f.t.query((ctx) => ctx.db.query("ninaMemories").collect());
+  const revision = async () => {
+    const [memory] = await stored();
+    if (!memory) {
+      throw new Error("Expected one memory document.");
+    }
+    return { id: memory._id, revision: memory.updatedAt };
+  };
+  const curate = async (
+    changes: Partial<typeof NinaMemoryChanges.Type>,
+    memory?: Awaited<ReturnType<typeof revision>>
+  ) =>
     f.t.mutation(apply, {
       changes: { ...none, ...changes },
       chatId: f.chatId,
+      memory: memory ?? (await revision()),
       usage: call,
       userId,
     });
-  const stored = () =>
-    f.t.query((ctx) => ctx.db.query("ninaMemories").collect());
-  return { ...f, curate, stored, userId };
+  return { ...f, curate, revision, stored, userId };
 }
 
 describe("Nina learner memory", () => {
   it("keeps nothing until the learner turns memory on and forgets it all when turned off", async () => {
     const f = await fixture();
     expect(await f.owner.query(get, {})).toBeNull();
-    await f.curate({ remember: ["Kelas 12."] });
+    expect(await f.owner.mutation(enable, {})).toEqual({ facts: [] });
+    const before = await f.revision();
+    await f.owner.mutation(disable, {});
+    await f.curate({ remember: ["Kelas 12."] }, before);
     expect(await f.stored()).toEqual([]);
     expect(await f.owner.mutation(enable, {})).toEqual({ facts: [] });
     vi.setSystemTime(1000);
@@ -96,6 +113,37 @@ describe("Nina learner memory", () => {
     expect(view?.facts.at(-1)?.text).toBe("Fakta 0-0.");
   });
 
+  it("changes nothing from a curation that raced a newer write, but counts it", async () => {
+    const f = await fixture();
+    await f.owner.mutation(enable, {});
+    const read = await f.revision();
+    vi.setSystemTime(1000);
+    await f.curate({ remember: ["Kelas 12."] }, read);
+    vi.setSystemTime(2000);
+    await f.curate({ update: [{ key: 0, text: "Kelas 11." }] }, read);
+    expect(await f.owner.query(get, {})).toEqual({
+      facts: [{ key: 0, savedAt: 1000, text: "Kelas 12." }],
+    });
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({ usage: { calls: 2, input: 600, output: 40 } }),
+    ]);
+  });
+
+  it("changes nothing from a curation read before memory was reset", async () => {
+    const f = await fixture();
+    await f.owner.mutation(enable, {});
+    const read = await f.revision();
+    await f.owner.mutation(disable, {});
+    await f.owner.mutation(enable, {});
+    await f.curate({ remember: ["Kelas 12."] }, read);
+    expect(await f.stored()).toEqual([
+      expect.objectContaining({
+        facts: [],
+        usage: { calls: 1, input: 300, output: 20 },
+      }),
+    ]);
+  });
+
   it("forgets one fact by key and ignores unknown keys", async () => {
     const f = await fixture();
     expect(await f.owner.mutation(forget, { key: 0 })).toBeNull();
@@ -131,13 +179,18 @@ describe("Nina learner memory", () => {
   it("reads remembered facts only while memory is on", async () => {
     const f = await fixture();
     expect(await f.t.query(read, { userId: f.userId })).toEqual({
-      facts: null,
+      memory: null,
       profile: {},
     });
     await f.owner.mutation(enable, {});
     await f.curate({ remember: ["Kelas 12."] });
+    const [memory] = await f.stored();
     expect(await f.t.query(read, { userId: f.userId })).toEqual({
-      facts: [{ key: 0, text: "Kelas 12." }],
+      memory: {
+        facts: [{ key: 0, text: "Kelas 12." }],
+        id: memory?._id,
+        revision: memory?.updatedAt,
+      },
       profile: {},
     });
   });
@@ -182,7 +235,7 @@ describe("Nina learner memory", () => {
       return owner;
     });
     expect(await f.t.query(read, { userId })).toEqual({
-      facts: null,
+      memory: null,
       profile: {
         focus: "tryout",
         region: "indonesia",
@@ -230,7 +283,7 @@ describe("Nina learner memory", () => {
       return runtime.identity.userId;
     });
     expect(await f.t.query(read, { userId })).toEqual({
-      facts: null,
+      memory: null,
       profile: {},
     });
   });

@@ -43,10 +43,13 @@ class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
 ) {}
 
 /** Lists what curation must not repeat: account facts and keyed known facts. */
-function formatKnown({ facts, profile }: typeof NinaLearner.Type) {
+function formatKnown(
+  profile: typeof NinaLearner.Type.profile,
+  facts: readonly { readonly key: number; readonly text: string }[]
+) {
   return [
     formatLearnerProfile(profile) ?? "Account: none",
-    facts && facts.length > 0
+    facts.length > 0
       ? [
           "Known facts:",
           ...facts.map((fact) => `- [${fact.key}] ${fact.text}`),
@@ -63,10 +66,14 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
   function* (
     turn: Pick<NinaTurnsDoc, "chatId" | "promptMessageId" | "userId">
   ) {
-    const learner = yield* (yield* QueryRunner)(refs.internal.nina.memory.read, {
-      userId: turn.userId,
-    }).pipe(Effect.orDie);
-    if (!learner.facts) {
+    const learner = yield* (yield* QueryRunner)(
+      refs.internal.nina.memory.read,
+      {
+        userId: turn.userId,
+      }
+    ).pipe(Effect.orDie);
+    const { memory } = learner;
+    if (!memory) {
       return;
     }
     const ctx = yield* ActionCtx;
@@ -82,7 +89,7 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
       return;
     }
     const agent = new Agent(components.nina, {
-      instructions: `${INSTRUCTIONS}\n\n${formatKnown(learner)}`,
+      instructions: `${INSTRUCTIONS}\n\n${formatKnown(learner.profile, memory.facts)}`,
       languageModel: yield* getGatewayModel(defaultModel),
       name: "memory",
     });
@@ -110,6 +117,7 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
     yield* (yield* MutationRunner)(refs.internal.nina.memory.apply, {
       changes: output,
       chatId: turn.chatId,
+      memory: { id: memory.id, revision: memory.revision },
       usage: { input: usage.inputTokens ?? 0, output: usage.outputTokens ?? 0 },
       userId: turn.userId,
     }).pipe(Effect.orDie);

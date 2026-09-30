@@ -52,8 +52,13 @@ ledger.
 - `nina/memory:get`, `enable`, `disable`, and `forget` are public, pass the
   session middleware, and act only on the signed-in learner. `nina/memory:read`
   and `nina/memory:apply` are internal.
-- `apply` keeps nothing when memory was turned off meanwhile and adds no facts
-  from a chat deleted meanwhile, but still counts the call's usage.
+- `apply` keeps nothing when memory was turned off meanwhile. It changes facts
+  only for the memory document and revision the curation read, so a curation
+  that raced a reset, a newer curation, or a fact the learner forgot changes
+  nothing, and it adds no facts from a chat deleted meanwhile. The call's usage
+  still counts.
+- The prompt lists remembered facts newest first, so a bounded Learner block
+  keeps the latest corrections.
 - The chats trigger forgets a deleted chat's facts in the deleting transaction.
   Account cleanup deletes the memory before the chats.
 - The settings route preloads memory so its card renders without layout shift,

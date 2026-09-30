@@ -43,7 +43,12 @@ export const readInstructions = Effect.fn("nina.instructions")(function* (
       focus: turn.page.nina.focus ? readFocus(turn._id) : Effect.undefined,
       learner: query(refs.internal.nina.memory.read, {
         userId: turn.userId,
-      }).pipe(Effect.map(formatLearnerPrompt), Effect.orDie),
+      }).pipe(
+        Effect.map(({ memory, profile }) =>
+          formatLearnerPrompt({ facts: memory?.facts ?? [], profile })
+        ),
+        Effect.orDie
+      ),
       pageContent: turn.page.needsFetch
         ? readPageContext(url)
         : Effect.undefined,
