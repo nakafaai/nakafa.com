@@ -348,6 +348,75 @@ const verifyQuranLocaleCoverage = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Escape"));
 });
 
+const verifyQuranLayoutStability = Effect.fn(
+  "NakafaE2E.verifyQuranLayoutStability"
+)(function* (page: Page) {
+  yield* seedDeniedAnalyticsConsent(page);
+
+  // A short surah keeps the pagination in the first viewport, where a list
+  // that grows after hydration would push it down.
+  for (const href of ["/en/quran/1", "/en/quran/2"]) {
+    const response = yield* Effect.promise(() =>
+      page.goto(href, { waitUntil: "domcontentloaded" })
+    );
+    yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+    yield* waitForCommittedAppRouter(
+      page,
+      href,
+      href,
+      readinessTimeoutMilliseconds
+    );
+    yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+    // Buffered entries replay every shift since navigation; a page with none
+    // never calls the observer back.
+    const layoutShift = yield* Effect.promise(() =>
+      page.evaluate(
+        () =>
+          new Promise<number>((resolve) => {
+            new PerformanceObserver((list) => {
+              let total = 0;
+              for (const entry of list.getEntries()) {
+                if ("value" in entry && typeof entry.value === "number") {
+                  total += entry.value;
+                }
+              }
+              resolve(total);
+            }).observe({ buffered: true, type: "layout-shift" });
+            setTimeout(() => resolve(0), 1000);
+          })
+      )
+    );
+    yield* Effect.sync(() => expect(layoutShift).toBeLessThan(0.01));
+  }
+
+  // Every verse stays in the document, so the outline reaches a far verse
+  // through its fragment link.
+  const outline = page
+    .locator(
+      'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]'
+    )
+    .filter({ visible: true });
+  yield* Effect.promise(() => outline.click());
+  yield* Effect.promise(() =>
+    page.getByRole("link", { exact: true, name: "Verse 200" }).click()
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator('[data-quran-verse="200"]')).toBeInViewport()
+  );
+});
+
+test.describe("Quran layout stability", () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
+  test("renders surahs without layout shift and reaches far verses", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyQuranLayoutStability(page))
+    );
+  });
+});
+
 test.describe("Quran source and tafsir coverage", () => {
   test.use({ viewport: { height: 844, width: 390 } });
 

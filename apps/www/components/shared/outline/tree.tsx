@@ -22,7 +22,6 @@ import {
 import { slugify } from "@repo/utilities/slug";
 import { useTranslations } from "next-intl";
 import { TocProvider, useToc } from "@/components/shared/outline/context";
-import { useVirtual } from "@/lib/content/virtual";
 
 interface Props {
   data: ParsedHeading[];
@@ -43,11 +42,8 @@ function SidebarTreeLabel({ label }: Pick<ParsedHeading, "label">) {
  */
 function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
   const activeHeadings = useToc((context) => context.activeHeadings);
-  const scrollToIndex = useVirtual((context) => context.scrollToIndex);
 
   const id = slugify(heading.label);
-  const virtualIndex = heading.index;
-  const isActive = virtualIndex === undefined && activeHeadings.includes(id);
 
   return (
     <SidebarMenuItem key={heading.href}>
@@ -55,25 +51,13 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
         <TooltipTrigger
           render={
             <SidebarMenuButton
-              isActive={isActive}
+              isActive={activeHeadings.includes(id)}
               render={
-                virtualIndex === undefined ? (
-                  // In-page headings use native fragment navigation so an
-                  // existing hash never enters the route prefetch cache.
-                  <a href={heading.href} title={heading.label}>
-                    <SidebarTreeLabel label={heading.label} />
-                  </a>
-                ) : (
-                  <button
-                    aria-label={heading.label}
-                    onClick={() => {
-                      scrollToIndex(virtualIndex);
-                    }}
-                    type="button"
-                  >
-                    <SidebarTreeLabel label={heading.label} />
-                  </button>
-                )
+                // In-page headings use native fragment navigation so an
+                // existing hash never enters the route prefetch cache.
+                <a href={heading.href} title={heading.label}>
+                  <SidebarTreeLabel label={heading.label} />
+                </a>
               }
             />
           }

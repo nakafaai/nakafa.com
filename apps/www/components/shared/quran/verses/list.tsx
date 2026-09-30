@@ -1,7 +1,6 @@
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import type { ReactNode } from "react";
 import { QuranVerseItem } from "@/components/shared/quran/verses/item";
-import { WindowVirtualized } from "@/components/shared/quran/verses/virtual";
 
 interface VerseItem {
   id: string;
@@ -15,18 +14,17 @@ interface Props {
   translationNotesLabel: string;
 }
 
-const QURAN_INITIAL_VERSE_SSR_COUNT = 80;
-
-/** Renders the virtualized, SEO-visible verses for one Quran surah. */
+/**
+ * Renders every verse in document flow, so the server markup already has its
+ * final height. Off-screen verses skip rendering work through content-visibility.
+ */
 export function QuranVerseList({
   items,
   renderAction,
   translationNotesLabel,
 }: Props) {
   return (
-    <WindowVirtualized
-      ssrCount={Math.min(items.length, QURAN_INITIAL_VERSE_SSR_COUNT)}
-    >
+    <div>
       {items.map(({ id, label, verse }, index) => (
         <QuranVerseItem
           action={renderAction?.(verse, label)}
@@ -38,6 +36,6 @@ export function QuranVerseList({
           verseLabel={label}
         />
       ))}
-    </WindowVirtualized>
+    </div>
   );
 }

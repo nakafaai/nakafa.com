@@ -33,7 +33,6 @@ import {
 } from "@/lib/content/quran/publication";
 import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import { getQuranReferences } from "@/lib/content/quran/references";
-import { VirtualProvider } from "@/lib/content/virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -196,10 +195,9 @@ async function CachedSurahShell({
       verse,
     };
   });
-  const headings = verseItems.map(({ id, label }, index) => ({
+  const headings = verseItems.map(({ id, label }) => ({
     label,
-    index,
-    href: `/quran/${surah}#${id}`,
+    href: `#${id}`,
     children: [],
   }));
 
@@ -231,83 +229,81 @@ async function CachedSurahShell({
         totalPages={surahData.numberOfVerses}
         url={`https://nakafa.com/${locale}/quran/${surah}`}
       />
-      <VirtualProvider>
-        <SidebarRightProvider>
-          <LayoutMaterialContent>
-            <QuranSurahHeader
-              arabic={surahData.name.arabic}
-              copySourceUrl={getLlmsMarkdownPath({
-                locale,
-                publicPath: `quran/${surah}`,
-              })}
-              meaning={description}
-              meaningLanguage={descriptionLanguage}
-              quranLabel={t("quran")}
-              slug={`/${locale}/quran/${surah}`}
-              title={title}
-            />
-            <LayoutContent className="pt-6">
-              {result.preBismillah === null ? null : (
-                <QuranBismillah
-                  bismillah={result.preBismillah}
-                  subjectLabel={title}
-                  translationNotesLabel={translationNotesLabel}
-                />
-              )}
-              {tafsirAccess.kind === "embedded" ? (
-                <QuranInterpretationControls
-                  appLocale={tafsirAccess.appLocale}
-                  errorMessage={t("interpretation-error")}
-                  label={interpretationLabel}
-                  recoverSnapshot={recoverSnapshot}
-                  refreshingMessage={t("interpretation-refreshing")}
-                  snapshotId={result.snapshotId}
-                  surahNumber={surahData.number}
-                >
-                  <QuranVerseList
-                    items={verseItems}
-                    renderAction={(verse, verseLabel) => (
-                      <QuranInterpretationButton
-                        label={`${interpretationLabel}: ${verseLabel}`}
-                        verseNumber={verse.number.inSurah}
-                      />
-                    )}
-                    translationNotesLabel={translationNotesLabel}
-                  />
-                </QuranInterpretationControls>
-              ) : (
+      <SidebarRightProvider>
+        <LayoutMaterialContent>
+          <QuranSurahHeader
+            arabic={surahData.name.arabic}
+            copySourceUrl={getLlmsMarkdownPath({
+              locale,
+              publicPath: `quran/${surah}`,
+            })}
+            meaning={description}
+            meaningLanguage={descriptionLanguage}
+            quranLabel={t("quran")}
+            slug={`/${locale}/quran/${surah}`}
+            title={title}
+          />
+          <LayoutContent className="pt-6">
+            {result.preBismillah === null ? null : (
+              <QuranBismillah
+                bismillah={result.preBismillah}
+                subjectLabel={title}
+                translationNotesLabel={translationNotesLabel}
+              />
+            )}
+            {tafsirAccess.kind === "embedded" ? (
+              <QuranInterpretationControls
+                appLocale={tafsirAccess.appLocale}
+                errorMessage={t("interpretation-error")}
+                label={interpretationLabel}
+                recoverSnapshot={recoverSnapshot}
+                refreshingMessage={t("interpretation-refreshing")}
+                snapshotId={result.snapshotId}
+                surahNumber={surahData.number}
+              >
                 <QuranVerseList
                   items={verseItems}
-                  renderAction={(_verse, verseLabel) => (
-                    <QuranInterpretationLink
-                      href={tafsirAccess.source.sourceUrl}
+                  renderAction={(verse, verseLabel) => (
+                    <QuranInterpretationButton
                       label={`${interpretationLabel}: ${verseLabel}`}
+                      verseNumber={verse.number.inSurah}
                     />
                   )}
                   translationNotesLabel={translationNotesLabel}
                 />
-              )}
-            </LayoutContent>
-            <PaginationContent pagination={pagination} />
-            {toolbar}
-          </LayoutMaterialContent>
-          <MaterialOutline
-            chapters={{
-              label: t("verse"),
-              data: headings,
-            }}
-            header={
-              <SidebarRightHeader
-                description={description}
-                descriptionLanguage={descriptionLanguage}
-                href={`/quran/${surah}`}
-                title={title}
+              </QuranInterpretationControls>
+            ) : (
+              <QuranVerseList
+                items={verseItems}
+                renderAction={(_verse, verseLabel) => (
+                  <QuranInterpretationLink
+                    href={tafsirAccess.source.sourceUrl}
+                    label={`${interpretationLabel}: ${verseLabel}`}
+                  />
+                )}
+                translationNotesLabel={translationNotesLabel}
               />
-            }
-            references={{ title, data: references }}
-          />
-        </SidebarRightProvider>
-      </VirtualProvider>
+            )}
+          </LayoutContent>
+          <PaginationContent pagination={pagination} />
+          {toolbar}
+        </LayoutMaterialContent>
+        <MaterialOutline
+          chapters={{
+            label: t("verse"),
+            data: headings,
+          }}
+          header={
+            <SidebarRightHeader
+              description={description}
+              descriptionLanguage={descriptionLanguage}
+              href={`/quran/${surah}`}
+              title={title}
+            />
+          }
+          references={{ title, data: references }}
+        />
+      </SidebarRightProvider>
     </>
   );
 }
