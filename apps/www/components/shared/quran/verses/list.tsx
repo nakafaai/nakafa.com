@@ -1,5 +1,11 @@
-import type { QuranViewVerse } from "@repo/backend/client/quran/view";
-import type { ReactNode } from "react";
+import type {
+  QuranViewTafsirAccess,
+  QuranViewVerse,
+} from "@repo/backend/client/quran/view";
+import {
+  QuranInterpretationButton,
+  QuranInterpretationLink,
+} from "@/components/shared/quran/interpretation/button";
 import { QuranVerseItem } from "@/components/shared/quran/verses/item";
 import { WindowVirtualized } from "@/components/shared/quran/verses/virtual";
 
@@ -10,8 +16,9 @@ interface VerseItem {
 }
 
 interface Props {
+  interpretationLabel: string;
   items: readonly VerseItem[];
-  renderAction?: (verse: QuranViewVerse, verseLabel: string) => ReactNode;
+  tafsirAccess: QuranViewTafsirAccess;
   translationNotesLabel: string;
 }
 
@@ -26,33 +33,74 @@ export const QURAN_FLOW_VERSES = 80;
  * its final height, and virtualizes any verses after them far below the fold.
  */
 export function QuranVerseList({
+  interpretationLabel,
   items,
-  renderAction,
+  tafsirAccess,
   translationNotesLabel,
 }: Props) {
-  const renderVerse = ({ id, label, verse }: VerseItem, index: number) => (
-    <QuranVerseItem
-      action={renderAction?.(verse, label)}
-      id={id}
-      isLast={index === items.length - 1}
-      key={verse.number.inQuran}
-      translationNotesLabel={translationNotesLabel}
-      verse={verse}
-      verseLabel={label}
-    />
-  );
+  const last = items.at(-1);
   const tail = items.slice(QURAN_FLOW_VERSES);
 
   return (
     <div>
-      {items.slice(0, QURAN_FLOW_VERSES).map(renderVerse)}
-      {tail.length > 0 && (
+      {items.slice(0, QURAN_FLOW_VERSES).map((item) => (
+        <QuranSurahVerse
+          interpretationLabel={interpretationLabel}
+          isLast={item === last}
+          item={item}
+          key={item.verse.number.inQuran}
+          tafsirAccess={tafsirAccess}
+          translationNotesLabel={translationNotesLabel}
+        />
+      ))}
+      {tail.length > 0 ? (
         <WindowVirtualized>
-          {tail.map((item, index) =>
-            renderVerse(item, QURAN_FLOW_VERSES + index)
-          )}
+          {tail.map((item) => (
+            <QuranSurahVerse
+              interpretationLabel={interpretationLabel}
+              isLast={item === last}
+              item={item}
+              key={item.verse.number.inQuran}
+              tafsirAccess={tafsirAccess}
+              translationNotesLabel={translationNotesLabel}
+            />
+          ))}
         </WindowVirtualized>
-      )}
+      ) : null}
     </div>
+  );
+}
+
+/** One verse with the interpretation control its Tafsir edition supports. */
+function QuranSurahVerse({
+  interpretationLabel,
+  isLast,
+  item,
+  tafsirAccess,
+  translationNotesLabel,
+}: Omit<Props, "items"> & { isLast: boolean; item: VerseItem }) {
+  const label = `${interpretationLabel}: ${item.label}`;
+
+  return (
+    <QuranVerseItem
+      action={
+        tafsirAccess.kind === "embedded" ? (
+          <QuranInterpretationButton
+            label={label}
+            verseNumber={item.verse.number.inSurah}
+          />
+        ) : (
+          <QuranInterpretationLink
+            href={tafsirAccess.source.sourceUrl}
+            label={label}
+          />
+        )
+      }
+      id={item.id}
+      isLast={isLast}
+      translationNotesLabel={translationNotesLabel}
+      verse={item.verse}
+      verseLabel={item.label}
+    />
   );
 }

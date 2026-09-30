@@ -21,10 +21,6 @@ import {
 } from "@/components/shared/outline/panel";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
-import {
-  QuranInterpretationButton,
-  QuranInterpretationLink,
-} from "@/components/shared/quran/interpretation/button";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import {
   QURAN_FLOW_VERSES,
@@ -274,25 +270,17 @@ async function CachedSurahShell({
                   surahNumber={surahData.number}
                 >
                   <QuranVerseList
+                    interpretationLabel={interpretationLabel}
                     items={verseItems}
-                    renderAction={(verse, verseLabel) => (
-                      <QuranInterpretationButton
-                        label={`${interpretationLabel}: ${verseLabel}`}
-                        verseNumber={verse.number.inSurah}
-                      />
-                    )}
+                    tafsirAccess={tafsirAccess}
                     translationNotesLabel={translationNotesLabel}
                   />
                 </QuranInterpretationControls>
               ) : (
                 <QuranVerseList
+                  interpretationLabel={interpretationLabel}
                   items={verseItems}
-                  renderAction={(_verse, verseLabel) => (
-                    <QuranInterpretationLink
-                      href={tafsirAccess.source.sourceUrl}
-                      label={`${interpretationLabel}: ${verseLabel}`}
-                    />
-                  )}
+                  tafsirAccess={tafsirAccess}
                   translationNotesLabel={translationNotesLabel}
                 />
               )}
