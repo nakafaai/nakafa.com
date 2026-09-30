@@ -90,6 +90,9 @@ describe("test ownership policy", () => {
         prefix: "test-policy-clean-",
       });
       yield* writeFixtures(root, {
+        "apps/web/style.test.ts":
+          'import { it } from "@effect/vitest";\nit("keeps size-[4px]", () => {});\n',
+        "apps/web/style.ts": 'export const style = "w-[calc(100%-2rem)]";\n',
         "apps/web/value.test.ts": CLEAN_TEST,
         "apps/web/value.ts": "export const value = 1;\n",
         "packages/core/_generated/api.ts":
@@ -117,6 +120,7 @@ describe("test ownership policy", () => {
         prefix: "test-policy-dirty-",
       });
       yield* writeFixtures(root, {
+        "apps/web/card.tsx": 'export const card = "size-[4px]";\n',
         "apps/web/orphan.test.ts": CLEAN_TEST,
         "apps/web/view.test.tsx": CLEAN_TEST,
         "apps/web/view.ts": "export const view = true;\n",
@@ -136,6 +140,7 @@ describe("test ownership policy", () => {
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
           `${path.join(root, "packages/core/runner.test.ts")}: return the Effect to @effect/vitest instead of running it.\n`,
           "scripts/raw.ts: model failure with Effect instead of a raw try/catch statement.\n",
+          "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
         stdout: [],
       });
@@ -165,6 +170,10 @@ describe("test ownership policy", () => {
           'import { Effect } from "effect";\nEffect.runSync(program);\n',
         "scripts/runner.ts": "export const runner = true;\n",
       },
+    },
+    {
+      category: "an arbitrary value a Tailwind class repeats",
+      files: { "apps/web/card.tsx": 'export const card = "ring-[3px]";\n' },
     },
     {
       category: "typeof-object narrowing",

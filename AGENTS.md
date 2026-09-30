@@ -42,6 +42,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - New or touched app TypeScript modules use direct `@/` imports for same-app modules, including colocated modules and tests. Across workspaces use `@repo/*`. Prefer direct owning-file imports over new barrels.
 - New hand-written filenames use one domain word plus conventional suffixes such as `.client` or `.test`. Do not introduce hyphenated compound basenames.
 - Keep Tailwind class strings inside styling utilities or component boundaries. Use `cva` or existing variant helpers for reusable or variant-driven styling.
+- Use Tailwind's built-in classes. Never write an arbitrary value that a built-in class renders identically, such as a bracketed `4px` where `size-1` exists or a bracketed `50%` where `top-1/2` exists. `scripts/check/tailwind.ts` rejects them through `pnpm check:tests`; theme-dependent scales such as radius, font size and tracking are left to review.
 
 ## Effect V4 Standard
 
