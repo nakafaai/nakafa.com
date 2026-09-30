@@ -26,7 +26,9 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   type ComponentProps,
+  createContext,
   type ReactNode,
+  use,
   useCallback,
   useId,
   useMemo,
@@ -39,7 +41,6 @@ import {
   XAxis as RechartsXAxis,
   YAxis as RechartsYAxis,
 } from "recharts";
-import { createContext, useContextSelector } from "use-context-selector";
 
 // Constants
 export const STROKE_WIDTH = 1;
@@ -72,17 +73,15 @@ const LineChartContext = createContext<
 
 // Selects one part of the chart context, throwing a helpful error when used outside <EvilLineChart />
 export function useLineChart<T>(selector: (chart: LineChartContextValue) => T) {
-  const selected = useContextSelector(LineChartContext, (value) =>
-    value === missingLineChart ? missingLineChart : selector(value)
-  );
+  const value = use(LineChartContext);
 
-  if (selected === missingLineChart) {
+  if (value === missingLineChart) {
     throw new Error(
       "Line chart parts (<Line />, <XAxis />, …) must be used within <EvilLineChart />"
     );
   }
 
-  return selected;
+  return selector(value);
 }
 
 // Root container
@@ -187,7 +186,7 @@ export function EvilLineChart<
   );
 
   return (
-    <LineChartContext.Provider value={contextValue}>
+    <LineChartContext value={contextValue}>
       <ChartContainer
         className={className}
         config={config}
@@ -230,7 +229,7 @@ export function EvilLineChart<
           )}
         </RechartsLineChart>
       </ChartContainer>
-    </LineChartContext.Provider>
+    </LineChartContext>
   );
 }
 

@@ -11,9 +11,16 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import {
+  type ComponentProps,
+  createContext,
+  memo,
+  use,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 interface ReasoningContextValue {
   duration: number;
@@ -30,13 +37,11 @@ const ReasoningContext = createContext<
 
 /** Selects one part of the surrounding reasoning state. */
 function useReasoning<T>(selector: (reasoning: ReasoningContextValue) => T) {
-  const selected = useContextSelector(ReasoningContext, (value) =>
-    value === missingReasoning ? missingReasoning : selector(value)
-  );
-  if (selected === missingReasoning) {
+  const value = use(ReasoningContext);
+  if (value === missingReasoning) {
     throw new Error("Reasoning components must be used within Reasoning");
   }
-  return selected;
+  return selector(value);
 }
 
 export type ReasoningProps = ComponentProps<typeof Collapsible> & {
@@ -119,7 +124,7 @@ export const Reasoning = memo(
     }
 
     return (
-      <ReasoningContext.Provider value={reasoning}>
+      <ReasoningContext value={reasoning}>
         <Collapsible
           className={cn("not-prose flex flex-col gap-2", className)}
           onOpenChange={handleOpenChange}
@@ -128,7 +133,7 @@ export const Reasoning = memo(
         >
           {children}
         </Collapsible>
-      </ReasoningContext.Provider>
+      </ReasoningContext>
     );
   }
 );

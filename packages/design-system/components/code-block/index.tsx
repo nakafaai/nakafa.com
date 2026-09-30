@@ -6,8 +6,7 @@ import {
   type CodeBlockData,
 } from "@repo/design-system/lib/code-block/context";
 import { cn } from "cn";
-import type { HTMLAttributes } from "react";
-import { useMemo } from "react";
+import { type HTMLAttributes, useMemo } from "react";
 
 /** Controlled or uncontrolled source selection for a composed code block. */
 export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
@@ -39,7 +38,7 @@ export function CodeBlock({
   );
 
   return (
-    <CodeBlockContext.Provider value={contextValue}>
+    <CodeBlockContext value={contextValue}>
       <div
         className={cn(
           "grid size-full grid-cols-1 overflow-hidden rounded-xl border shadow-sm",
@@ -47,6 +46,6 @@ export function CodeBlock({
         )}
         {...props}
       />
-    </CodeBlockContext.Provider>
+    </CodeBlockContext>
   );
 }

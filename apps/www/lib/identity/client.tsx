@@ -2,9 +2,7 @@
 
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
-
-import type { ReactNode } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type ReactNode, use } from "react";
 import { useAuthSession } from "@/components/auth/session";
 import {
   type AccountRecord,
@@ -90,11 +88,7 @@ function IdentityValueProvider({
   children: ReactNode;
   value: IdentityState;
 }) {
-  return (
-    <IdentityContext.Provider value={value}>
-      {children}
-    </IdentityContext.Provider>
-  );
+  return <IdentityContext value={value}>{children}</IdentityContext>;
 }
 
 /**
@@ -131,15 +125,14 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
 /**
  * Reads one slice of the identity state for the current subtree.
  *
- * Takes a selector so a consumer subscribes to a primitive instead of the
- * whole state, which would re-render it whenever any identity field changes.
+ * Identity comes from the session and account query during render, so it is
+ * shared through a plain context: readers re-render when it changes, which
+ * happens only as it resolves and when the account signs in or out.
  */
 export function useViewer<T>(selector: (state: IdentityState) => T): T {
-  const selected = useContextSelector(IdentityContext, (context) =>
-    context === missingIdentity ? missingIdentity : selector(context)
-  );
-  if (selected === missingIdentity) {
+  const context = use(IdentityContext);
+  if (context === missingIdentity) {
     throw new Error("useViewer must be used within an IdentityProvider");
   }
-  return selected;
+  return selector(context);
 }

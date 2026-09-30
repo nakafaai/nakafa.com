@@ -1,7 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type ReactNode, use } from "react";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 
 const missingPageNavigation = Symbol("PageNavigation");
@@ -18,9 +17,7 @@ export function PageNavigationProvider({
   readonly navigation: PageNavigation | null;
 }) {
   return (
-    <PageNavigationContext.Provider value={navigation}>
-      {children}
-    </PageNavigationContext.Provider>
+    <PageNavigationContext value={navigation}>{children}</PageNavigationContext>
   );
 }
 
@@ -28,15 +25,11 @@ export function PageNavigationProvider({
 export function usePageNavigation<T>(
   selector: (navigation: PageNavigation | null) => T
 ) {
-  const selected = useContextSelector(PageNavigationContext, (navigation) =>
-    navigation === missingPageNavigation
-      ? missingPageNavigation
-      : selector(navigation)
-  );
-  if (selected === missingPageNavigation) {
+  const navigation = use(PageNavigationContext);
+  if (navigation === missingPageNavigation) {
     throw new Error(
       "usePageNavigation must be used within PageNavigationProvider"
     );
   }
-  return selected;
+  return selector(navigation);
 }

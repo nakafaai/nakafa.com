@@ -38,7 +38,8 @@ export function AiChatMessageActions() {
   });
   const hasText = text.trim().length > 0;
 
-  const { retry, busy } = useChat((state) => state);
+  const retry = useChat((state) => state.retry);
+  const busy = useChat((state) => state.busy);
 
   const chat = useChat((s) => s.chat);
 

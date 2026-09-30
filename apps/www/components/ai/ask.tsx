@@ -1,8 +1,14 @@
 "use client";
 
 import { Effect } from "effect";
-import { type ReactNode, useEffect, useEffectEvent, useRef } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useEffect,
+  useEffectEvent,
+  useRef,
+} from "react";
 import { useAdmissionGate } from "@/components/ai/chat/admission";
 import { useAi } from "@/components/ai/context";
 import { preloadAiSheet } from "@/components/ai/sheet/module";
@@ -76,12 +82,12 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
   // Leaving the page before identity settles must not hold Nina's one ask slot.
   useEffect(() => () => settleWaiting(false), []);
 
-  return <AskContext.Provider value={ask}>{children}</AskContext.Provider>;
+  return <AskContext value={ask}>{children}</AskContext>;
 }
 
 /** Sends one prompt through the surrounding page's ask owner. */
 export function useNinaAsk() {
-  const ask = useContextSelector(AskContext, (value) => value);
+  const ask = use(AskContext);
   if (ask === missingAsk) {
     throw new Error("useNinaAsk must be used within NinaAskProvider");
   }

@@ -6,8 +6,7 @@ import { toggleVariants } from "@repo/design-system/lib/toggle/variants";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
-import { useMemo } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, use, useMemo } from "react";
 
 type ToggleGroupLayout = "default" | "grid";
 
@@ -32,11 +31,7 @@ function ToggleGroupStyle({
     () => ({ layout, size, variant }),
     [layout, size, variant]
   );
-  return (
-    <ToggleGroupContext.Provider value={style}>
-      {children}
-    </ToggleGroupContext.Provider>
-  );
+  return <ToggleGroupContext value={style}>{children}</ToggleGroupContext>;
 }
 
 const toggleGroupRootVariants = cva(
@@ -262,18 +257,11 @@ function ToggleGroupItem({
   ...props
 }: React.ComponentProps<typeof TogglePrimitive> &
   VariantProps<typeof toggleVariants>) {
-  const groupLayout = useContextSelector(
-    ToggleGroupContext,
-    (group) => group.layout
-  );
-  const groupSize = useContextSelector(
-    ToggleGroupContext,
-    (group) => group.size
-  );
-  const groupVariant = useContextSelector(
-    ToggleGroupContext,
-    (group) => group.variant
-  );
+  const {
+    layout: groupLayout,
+    size: groupSize,
+    variant: groupVariant,
+  } = use(ToggleGroupContext);
   const itemSize = groupSize || size;
   const itemVariant = groupVariant || variant;
 

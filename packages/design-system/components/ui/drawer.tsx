@@ -10,7 +10,7 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, use } from "react";
 
 type DrawerPosition = "bottom" | "left" | "right" | "top";
 
@@ -18,7 +18,7 @@ const DrawerContext = createContext<DrawerPosition>("bottom");
 
 /** Reads the edge the surrounding drawer opens from. */
 function useDrawerPosition() {
-  return useContextSelector(DrawerContext, (position) => position);
+  return use(DrawerContext);
 }
 
 const swipeDirectionByPosition: Record<
@@ -183,13 +183,13 @@ function Drawer<Payload = unknown>({
   position?: DrawerPosition;
 }) {
   return (
-    <DrawerContext.Provider value={position}>
+    <DrawerContext value={position}>
       <DrawerPrimitive.Root
         data-slot="drawer"
         swipeDirection={swipeDirection ?? swipeDirectionByPosition[position]}
         {...props}
       />
-    </DrawerContext.Provider>
+    </DrawerContext>
   );
 }
 

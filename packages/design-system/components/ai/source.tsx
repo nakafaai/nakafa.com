@@ -7,8 +7,7 @@ import {
 } from "@repo/design-system/components/ui/hover-card";
 import { cn } from "cn";
 import Image from "next/image";
-import { useMemo, useState } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, use, useMemo, useState } from "react";
 
 /** One cited link and the domain it is shown under. */
 interface SourceLink {
@@ -51,13 +50,11 @@ function getDomainLabel(domain: string) {
 
 /** Selects one part of the nearest Source link. */
 function useSource<T>(selector: (source: SourceLink) => T) {
-  const selected = useContextSelector(SourceContext, (value) =>
-    value === missingSource ? missingSource : selector(value)
-  );
-  if (selected === missingSource) {
+  const value = use(SourceContext);
+  if (value === missingSource) {
     throw new Error("Source.* must be used inside <Source>");
   }
-  return selected;
+  return selector(value);
 }
 
 export interface SourceProps {
@@ -70,9 +67,9 @@ export function Source({ href, children }: SourceProps) {
   const source = useMemo(() => ({ domain, href }), [domain, href]);
 
   return (
-    <SourceContext.Provider value={source}>
+    <SourceContext value={source}>
       <HoverCard>{children}</HoverCard>
-    </SourceContext.Provider>
+    </SourceContext>
   );
 }
 

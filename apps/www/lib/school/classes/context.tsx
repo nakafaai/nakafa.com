@@ -4,8 +4,7 @@ import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import { useConvexAuth } from "convex/react";
-
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, use } from "react";
 
 type ClassContextValue = Extract<
   Ref.Returns<typeof refs.public.classes.queries.getClassRoute>,
@@ -45,18 +44,14 @@ export function ClassContextProvider({
     return null;
   }
 
-  return (
-    <ClassContext.Provider value={route}>{children}</ClassContext.Provider>
-  );
+  return <ClassContext value={route}>{children}</ClassContext>;
 }
 
 /** Reads one selected value from the resolved class route snapshot. */
 export function useClass<T>(selector: (state: ClassContextValue) => T) {
-  const selected = useContextSelector(ClassContext, (value) =>
-    value === missingClass ? missingClass : selector(value)
-  );
-  if (selected === missingClass) {
+  const value = use(ClassContext);
+  if (value === missingClass) {
     throw new Error("useClass must be used within a ClassContextProvider");
   }
-  return selected;
+  return selector(value);
 }

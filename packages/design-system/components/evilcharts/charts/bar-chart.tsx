@@ -30,7 +30,9 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   type ComponentProps,
+  createContext,
   type ReactNode,
+  use,
   useCallback,
   useId,
   useMemo,
@@ -43,7 +45,6 @@ import {
   YAxis as RechartsYAxis,
   ReferenceLine,
 } from "recharts";
-import { createContext, useContextSelector } from "use-context-selector";
 
 // Constants
 export const DEFAULT_BAR_RADIUS = 2;
@@ -91,17 +92,15 @@ const BarChartContext = createContext<
 
 // Selects one part of the chart context, throwing a helpful error when used outside <EvilBarChart />
 export function useBarChart<T>(selector: (chart: BarChartContextValue) => T) {
-  const selected = useContextSelector(BarChartContext, (value) =>
-    value === missingBarChart ? missingBarChart : selector(value)
-  );
+  const value = use(BarChartContext);
 
-  if (selected === missingBarChart) {
+  if (value === missingBarChart) {
     throw new Error(
       "Bar chart parts (<Bar />, <XAxis />, …) must be used within <EvilBarChart />"
     );
   }
 
-  return selected;
+  return selector(value);
 }
 
 // Root container
@@ -227,7 +226,7 @@ export function EvilBarChart<
   );
 
   return (
-    <BarChartContext.Provider value={contextValue}>
+    <BarChartContext value={contextValue}>
       <ChartContainer
         className={className}
         config={config}
@@ -275,7 +274,7 @@ export function EvilBarChart<
           )}
         </RechartsBarChart>
       </ChartContainer>
-    </BarChartContext.Provider>
+    </BarChartContext>
   );
 }
 

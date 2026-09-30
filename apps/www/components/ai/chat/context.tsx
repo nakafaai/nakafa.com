@@ -21,13 +21,16 @@ import type {
 } from "convex/server";
 import { Effect, Option, Result } from "effect";
 import {
+  createContext,
   type PropsWithChildren,
+  use,
   useEffect,
+  useLayoutEffect,
   useOptimistic,
+  useRef,
   useState,
   useTransition,
 } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
@@ -49,24 +52,40 @@ const messagesQuery: MessagesQuery = Ref.getFunctionReference(
 type Conversation = Ref.Returns<typeof refs.public.nina.conversation.get>;
 type Submission = ReturnType<typeof useNinaSubmission>;
 
+/**
+ * The conversation's state and actions. It changes when a turn starts, ends
+ * or fails, never with a streamed token, so the controls that read it stay
+ * still while Nina writes.
+ */
 interface ChatContextValue {
   busy: boolean;
   cancel: () => void;
+  canLoadMore: boolean;
   canWrite: boolean;
   chat: Docs["chats"] | undefined;
   error:
     | Submission["error"]
     | Ref.Error<typeof refs.public.nina.lifecycle.cancel>;
+  /** Whether the assistant's reply to the current turn failed in the transcript. */
+  hasTurnFailure: boolean;
+  /** Whether the transcript already ends with the reply to the current turn. */
+  hasTurnResponse: boolean;
   isLoading: boolean;
   isPending: boolean;
-  messages: NinaMessage[];
-  pagination: ReturnType<typeof useUIMessages<MessagesQuery>>;
+  lastMessageId: string | undefined;
+  loadMore: () => void;
   retry: (order?: number) => void;
   send: (prompt: NinaDraft) => Promise<boolean>;
   turn: Conversation["turn"];
 }
 
+/** The transcript itself, which changes with every streamed token. */
+interface ChatMessagesValue {
+  messages: NinaMessage[];
+}
+
 const ChatContext = createContext<ChatContextValue | null>(null);
+const ChatMessagesContext = createContext<ChatMessagesValue | null>(null);
 
 const optimisticCancel: OptimisticUpdate<
   typeof refs.public.nina.lifecycle.cancel
@@ -222,6 +241,19 @@ export function ChatProvider({
         messages.at(-1)?.status === "pending") ||
       turn?.state.status === "queued" ||
       turn?.state.status === "running");
+  const lastMessage = messages.at(-1);
+  // Actions read the transcript when they run, so they stay the same functions
+  // while tokens stream instead of re-rendering every control that holds one.
+  const latestMessages = useRef(messages);
+  const latestPagination = useRef(pagination);
+  useLayoutEffect(() => {
+    latestMessages.current = messages;
+    latestPagination.current = pagination;
+  });
+
+  function loadMore() {
+    latestPagination.current.loadMore(NINA_MESSAGES_PAGE_SIZE);
+  }
 
   function send(prompt: NinaDraft) {
     if (busy || isLoading || isPending) {
@@ -235,7 +267,12 @@ export function ChatProvider({
     startTransition(async () => {
       showDraft({
         prompt,
-        order: 1 + Math.max(-1, ...messages.map((message) => message.order)),
+        order:
+          1 +
+          Math.max(
+            -1,
+            ...latestMessages.current.map((message) => message.order)
+          ),
         createdAt: Date.now(),
       });
       const receipt = await admission;
@@ -270,7 +307,7 @@ export function ChatProvider({
   }
 
   function retry(order?: number) {
-    const prompt = [...messages]
+    const prompt = [...latestMessages.current]
       .reverse()
       .find(
         (message) =>
@@ -292,24 +329,47 @@ export function ChatProvider({
     canWrite: !!viewer && (chat ? chat.userId === viewer.id : opening !== null),
     chat,
     turn,
-    messages,
-    pagination,
     busy,
     isLoading,
     isPending,
     error: submission.error ?? cancelError,
+    hasTurnFailure: messages.some(
+      (message) =>
+        message.role === "assistant" &&
+        message.order === turn?.order &&
+        message.status === "failed"
+    ),
+    hasTurnResponse:
+      lastMessage?.role === "assistant" && lastMessage.order === turn?.order,
+    lastMessageId: lastMessage?.id,
+    canLoadMore: pagination.status === "CanLoadMore",
+    loadMore,
     send,
     cancel,
     retry,
   };
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+  const feed = { messages };
+  return (
+    <ChatContext value={value}>
+      <ChatMessagesContext value={feed}>{children}</ChatMessagesContext>
+    </ChatContext>
+  );
 }
 
+/** Selects one part of the conversation's state and actions. */
 export function useChat<T>(selector: (state: ChatContextValue) => T) {
-  return useContextSelector(ChatContext, (value) => {
-    if (!value) {
-      throw new Error("useChat must be used within ChatProvider");
-    }
-    return selector(value);
-  });
+  const value = use(ChatContext);
+  if (!value) {
+    throw new Error("useChat must be used within ChatProvider");
+  }
+  return selector(value);
+}
+
+/** Selects one part of the streamed transcript; readers re-render per token. */
+export function useChatMessages<T>(selector: (feed: ChatMessagesValue) => T) {
+  const feed = use(ChatMessagesContext);
+  if (!feed) {
+    throw new Error("useChatMessages must be used within ChatProvider");
+  }
+  return selector(feed);
 }

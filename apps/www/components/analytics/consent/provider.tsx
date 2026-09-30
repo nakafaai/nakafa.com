@@ -187,8 +187,8 @@ export function AnalyticsConsentProvider({
   };
 
   return (
-    <AnalyticsConsentContext.Provider value={contextValue}>
+    <AnalyticsConsentContext value={contextValue}>
       {children}
-    </AnalyticsConsentContext.Provider>
+    </AnalyticsConsentContext>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
-import type { MouseEventHandler } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type MouseEventHandler, use } from "react";
 
 const missingQuranInterpretationContext = Symbol(
   "missing-quran-interpretation-context"
@@ -19,49 +18,32 @@ export const QuranInterpretationContext = createContext<
 
 /** Reads whether one tafsir trigger is inactive, idle, or loading. */
 export function useQuranInterpretationState(verseNumber: number) {
-  const state = useContextSelector(QuranInterpretationContext, (context) => {
-    if (context === missingQuranInterpretationContext) {
-      return missingQuranInterpretationContext;
-    }
-
-    if (!context.isActive) {
-      return "inactive";
-    }
-
-    if (context.pendingVerseNumber === verseNumber) {
-      return "loading";
-    }
-
-    return "idle";
-  });
-
-  if (state === missingQuranInterpretationContext) {
+  const context = use(QuranInterpretationContext);
+  if (context === missingQuranInterpretationContext) {
     throw new Error(
       "Quran tafsir button must be rendered within QuranInterpretationControls."
     );
   }
 
-  return state;
+  if (!context.isActive) {
+    return "inactive";
+  }
+
+  if (context.pendingVerseNumber === verseNumber) {
+    return "loading";
+  }
+
+  return "idle";
 }
 
 /** Reads the shared React event handler for selecting tafsir. */
 export function useQuranInterpretationSelection() {
-  const selectInterpretation = useContextSelector(
-    QuranInterpretationContext,
-    (context) => {
-      if (context === missingQuranInterpretationContext) {
-        return missingQuranInterpretationContext;
-      }
-
-      return context.selectInterpretation;
-    }
-  );
-
-  if (selectInterpretation === missingQuranInterpretationContext) {
+  const context = use(QuranInterpretationContext);
+  if (context === missingQuranInterpretationContext) {
     throw new Error(
       "Quran tafsir button must be rendered within QuranInterpretationControls."
     );
   }
 
-  return selectInterpretation;
+  return context.selectInterpretation;
 }

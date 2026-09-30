@@ -1,7 +1,6 @@
 "use client";
 
-import { type RefObject, useRef } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type RefObject, use, useRef } from "react";
 import type { WindowVirtualizerHandle } from "virtua";
 
 interface VirtualContextType {
@@ -32,11 +31,9 @@ export function VirtualProvider({ children }: { children: React.ReactNode }) {
     scrollToIndex,
   };
 
-  return (
-    <VirtualContext.Provider value={value}>{children}</VirtualContext.Provider>
-  );
+  return <VirtualContext value={value}>{children}</VirtualContext>;
 }
 
 export function useVirtual<T>(selector: (context: VirtualContextType) => T): T {
-  return useContextSelector(VirtualContext, selector);
+  return selector(use(VirtualContext));
 }

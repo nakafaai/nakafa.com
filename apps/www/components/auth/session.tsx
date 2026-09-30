@@ -1,7 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type ReactNode, use } from "react";
 import { env } from "@/env";
 import { authClient } from "@/lib/auth/client";
 
@@ -26,9 +25,9 @@ function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
   const { data, error, isPending } = authClient.useSession();
 
   return (
-    <AuthSessionContext.Provider value={{ data, error, isPending }}>
+    <AuthSessionContext value={{ data, error, isPending }}>
       {children}
-    </AuthSessionContext.Provider>
+    </AuthSessionContext>
   );
 }
 
@@ -36,9 +35,7 @@ function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
   if (env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true") {
     return (
-      <AuthSessionContext.Provider value={previewSession}>
-        {children}
-      </AuthSessionContext.Provider>
+      <AuthSessionContext value={previewSession}>{children}</AuthSessionContext>
     );
   }
   return <BetterAuthSessionProvider>{children}</BetterAuthSessionProvider>;
@@ -46,13 +43,11 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 
 /** Selects one part of the shared session and rejects a missing app provider. */
 export function useAuthSession<T>(selector: (session: AuthSession) => T) {
-  const selected = useContextSelector(AuthSessionContext, (value) =>
-    value === missingAuthSession ? missingAuthSession : selector(value)
-  );
-  if (selected === missingAuthSession) {
+  const value = use(AuthSessionContext);
+  if (value === missingAuthSession) {
     throw new TypeError(
       "useAuthSession must be used within AuthSessionProvider"
     );
   }
-  return selected;
+  return selector(value);
 }

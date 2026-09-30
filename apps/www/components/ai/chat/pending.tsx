@@ -8,18 +8,10 @@ import { useChat } from "@/components/ai/chat/context";
 
 export function AiChatPending() {
   const busy = useChat((state) => state.busy);
-  const turn = useChat((state) => state.turn);
-  const messages = useChat((state) => state.messages);
+  const hasTurnResponse = useChat((state) => state.hasTurnResponse);
 
-  // Only show when submitted and no assistant message exists yet
-  if (!busy) {
-    return null;
-  }
-
-  const lastMessage = messages.at(-1);
-
-  // If last message is already assistant, don't show pending
-  if (lastMessage?.role === "assistant" && lastMessage.order === turn?.order) {
+  // Only show while a turn runs and its reply has not started.
+  if (!busy || hasTurnResponse) {
     return null;
   }
 

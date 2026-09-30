@@ -1,8 +1,7 @@
 "use client";
 
 import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
-import type { RefObject } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type RefObject, use } from "react";
 
 /** Attachment state shared by prompt input composition components. */
 export interface AttachmentsContext {
@@ -25,13 +24,11 @@ export const LocalAttachmentsContext = createContext<
 export function usePromptInputAttachments<T>(
   selector: (attachments: AttachmentsContext) => T
 ) {
-  const selected = useContextSelector(LocalAttachmentsContext, (value) =>
-    value === missingAttachments ? missingAttachments : selector(value)
-  );
-  if (selected === missingAttachments) {
+  const value = use(LocalAttachmentsContext);
+  if (value === missingAttachments) {
     throw new Error(
       "usePromptInputAttachments must be used within PromptInput"
     );
   }
-  return selected;
+  return selector(value);
 }

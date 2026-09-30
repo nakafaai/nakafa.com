@@ -30,7 +30,8 @@ export function SuggestionsPart({ suggestions }: Props) {
 SuggestionsPart.displayName = "SuggestionsPart";
 
 function SuggestionsPartButton({ suggestion }: { suggestion: string }) {
-  const { send, busy } = useChat((state) => state);
+  const send = useChat((state) => state.send);
+  const busy = useChat((state) => state.busy);
 
   return (
     <button

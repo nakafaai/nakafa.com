@@ -5,8 +5,7 @@ import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
-import { useCallback, useMemo, useState } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, use, useCallback, useMemo, useState } from "react";
 
 interface StepperContextValue {
   activeStep: number;
@@ -34,24 +33,20 @@ const StepItemContext = createContext<
 
 /** Selects one part of the nearest Stepper state. */
 function useStepper<T>(selector: (stepper: StepperContextValue) => T) {
-  const selected = useContextSelector(StepperContext, (value) =>
-    value === missingStepper ? missingStepper : selector(value)
-  );
-  if (selected === missingStepper) {
+  const value = use(StepperContext);
+  if (value === missingStepper) {
     throw new Error("useStepper must be used within a Stepper");
   }
-  return selected;
+  return selector(value);
 }
 
 /** Selects one part of the nearest StepperItem state. */
 function useStepItem<T>(selector: (item: StepItemContextValue) => T) {
-  const selected = useContextSelector(StepItemContext, (value) =>
-    value === missingStepItem ? missingStepItem : selector(value)
-  );
-  if (selected === missingStepItem) {
+  const value = use(StepItemContext);
+  if (value === missingStepItem) {
     throw new Error("useStepItem must be used within a StepperItem");
   }
-  return selected;
+  return selector(value);
 }
 
 interface StepperProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -86,7 +81,7 @@ function Stepper({
   );
 
   return (
-    <StepperContext.Provider value={stepper}>
+    <StepperContext value={stepper}>
       <div
         className={cn(
           "group/stepper inline-flex data-[orientation=horizontal]:w-full data-[orientation=horizontal]:flex-row data-[orientation=vertical]:flex-col",
@@ -96,7 +91,7 @@ function Stepper({
         data-slot="stepper"
         {...props}
       />
-    </StepperContext.Provider>
+    </StepperContext>
   );
 }
 
@@ -134,7 +129,7 @@ function StepperItem({
   );
 
   return (
-    <StepItemContext.Provider value={item}>
+    <StepItemContext value={item}>
       <div
         className={cn(
           "group/step flex items-center group-data-[orientation=horizontal]/stepper:flex-row group-data-[orientation=vertical]/stepper:flex-col",
@@ -147,7 +142,7 @@ function StepperItem({
       >
         {children}
       </div>
-    </StepItemContext.Provider>
+    </StepItemContext>
   );
 }
 

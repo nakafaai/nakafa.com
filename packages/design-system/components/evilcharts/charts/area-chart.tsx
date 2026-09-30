@@ -27,7 +27,9 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   type ComponentProps,
+  createContext,
   type ReactNode,
+  use,
   useCallback,
   useId,
   useMemo,
@@ -40,7 +42,6 @@ import {
   XAxis as RechartsXAxis,
   YAxis as RechartsYAxis,
 } from "recharts";
-import { createContext, useContextSelector } from "use-context-selector";
 
 const STROKE_WIDTH = 0.8;
 export type CurveType = NonNullable<
@@ -67,17 +68,15 @@ const AreaChartContext = createContext<
 
 // Selects one part of the chart context, throwing a helpful error when used outside <EvilAreaChart />
 export function useAreaChart<T>(selector: (chart: AreaChartContextValue) => T) {
-  const selected = useContextSelector(AreaChartContext, (value) =>
-    value === missingAreaChart ? missingAreaChart : selector(value)
-  );
+  const value = use(AreaChartContext);
 
-  if (selected === missingAreaChart) {
+  if (value === missingAreaChart) {
     throw new Error(
       "Area chart parts (<Area />, <XAxis />, …) must be used within <EvilAreaChart />"
     );
   }
 
-  return selected;
+  return selector(value);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -192,7 +191,7 @@ export function EvilAreaChart<
   );
 
   return (
-    <AreaChartContext.Provider value={contextValue}>
+    <AreaChartContext value={contextValue}>
       <ChartContainer
         className={className}
         config={config}
@@ -231,7 +230,7 @@ export function EvilAreaChart<
           {isLoading && <LoadingArea chartId={chartId} curveType={curveType} />}
         </RechartsAreaChart>
       </ChartContainer>
-    </AreaChartContext.Provider>
+    </AreaChartContext>
   );
 }
 

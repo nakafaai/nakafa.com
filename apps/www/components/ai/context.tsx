@@ -1,8 +1,14 @@
 "use client";
 
 import { Effect } from "effect";
-import { type ReactNode, useEffect, useRef, useState } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { type AiStoreApi, createAiStore } from "@/components/ai/store/create";
@@ -102,12 +108,12 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
     previousDraftOwnerIdRef.current = ownerId;
   }, [ownerId, store]);
 
-  return <AiContext.Provider value={store}>{children}</AiContext.Provider>;
+  return <AiContext value={store}>{children}</AiContext>;
 }
 
 /** Reads the Nina store instance from context. */
 function useAiContext() {
-  const context = useContextSelector(AiContext, (value) => value);
+  const context = use(AiContext);
   if (!context) {
     throw new Error("useAi must be used within AiContextProvider");
   }

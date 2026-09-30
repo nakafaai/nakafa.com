@@ -137,7 +137,7 @@ export function PromptInput({
   };
 
   return (
-    <LocalAttachmentsContext.Provider value={attachments}>
+    <LocalAttachmentsContext value={attachments}>
       <input
         accept={accept}
         aria-label="Upload files"
@@ -156,7 +156,7 @@ export function PromptInput({
       >
         {children}
       </form>
-    </LocalAttachmentsContext.Provider>
+    </LocalAttachmentsContext>
   );
 }
 

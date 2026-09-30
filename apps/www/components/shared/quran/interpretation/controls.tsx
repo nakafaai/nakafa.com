@@ -209,7 +209,7 @@ export function QuranInterpretationControls({
     selectInterpretation,
   };
   return (
-    <QuranInterpretationContext.Provider value={contextValue}>
+    <QuranInterpretationContext value={contextValue}>
       {children}
       <Drawer onOpenChange={set} open={isOpen}>
         <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
@@ -226,6 +226,6 @@ export function QuranInterpretationControls({
           </DrawerPanel>
         </DrawerPopup>
       </Drawer>
-    </QuranInterpretationContext.Provider>
+    </QuranInterpretationContext>
   );
 }

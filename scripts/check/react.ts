@@ -149,67 +149,88 @@ export function inspectReactSource(file: string, sourceFile: SourceFile) {
   return violations;
 }
 
-/** React's context APIs and the use-context-selector API that replaces each. */
-const CONTEXT_APIS = new Map([
-  ["createContext", "createContext from use-context-selector"],
-  ["useContext", "useContextSelector from use-context-selector"],
+/** Shared-state APIs the codebase does not use, by module, with the rule that replaces each. */
+const STATE_APIS = new Map([
+  [
+    "react",
+    new Map([
+      ["useContext", "read contexts with use() instead of React's useContext"],
+    ]),
+  ],
+  [
+    "zustand",
+    new Map([
+      [
+        "create",
+        "create Zustand stores per provider with createStore and read them with useStore, instead of a module-level store from create",
+      ],
+    ]),
+  ],
 ]);
 
-/** The message for one use of a React context API. */
-function contextViolation(file: string, api: string, replacement: string) {
-  return `${file}: use ${replacement} instead of React's ${api}, so each consumer re-renders only for the value it selects.`;
-}
+/** A removed state library and the rule that replaces it. */
+const REMOVED_STATE_MODULE = "use-context-selector";
 
-/** Returns the import clause of an `import ... from "react"` statement. */
-function reactImportClause(statement: Statement) {
+const REMOVED_STATE_RULE =
+  "import nothing from use-context-selector. Read render values from a React context with use(), and keep state a provider owns in a Zustand store created per provider";
+
+/**
+ * Reports one import's replaced state APIs and records the default or
+ * namespace name it binds, so property access through it is checked too.
+ */
+function inspectStateImport(
+  file: string,
+  statement: Statement,
+  namespaces: Map<string, ReadonlyMap<string, string>>
+) {
   if (
     !(
       isImportDeclaration(statement) &&
-      isStringLiteral(statement.moduleSpecifier) &&
-      statement.moduleSpecifier.text === "react"
+      isStringLiteral(statement.moduleSpecifier)
     )
   ) {
-    return;
+    return [];
   }
-  return statement.importClause;
+  if (statement.moduleSpecifier.text === REMOVED_STATE_MODULE) {
+    return [`${file}: ${REMOVED_STATE_RULE}.`];
+  }
+  const apis = STATE_APIS.get(statement.moduleSpecifier.text);
+  const clause = statement.importClause;
+  if (!(apis && clause)) {
+    return [];
+  }
+  if (clause.name !== undefined) {
+    namespaces.set(clause.name.text, apis);
+  }
+  const bindings = clause.namedBindings;
+  if (bindings !== undefined && isNamespaceImport(bindings)) {
+    namespaces.set(bindings.name.text, apis);
+  }
+  if (!(bindings !== undefined && isNamedImports(bindings))) {
+    return [];
+  }
+  return bindings.elements.flatMap((element) => {
+    const rule = apis.get((element.propertyName ?? element.name).text);
+    return rule === undefined ? [] : [`${file}: ${rule}.`];
+  });
 }
 
 /**
- * Reports React's createContext and useContext, whether imported by name or
- * reached through a default or namespace import of react. Contexts come from
- * use-context-selector, so each consumer selects the slice it renders.
+ * Reports the shared-state APIs this codebase replaced: any use-context-selector
+ * import, React's useContext, and Zustand's module-level create, whether
+ * imported by name or reached through a default or namespace import.
  */
-export function inspectContextSource(file: string, sourceFile: SourceFile) {
+export function inspectStateSource(file: string, sourceFile: SourceFile) {
   const violations: string[] = [];
-  const namespaces = new Set<string>();
+  const namespaces = new Map<string, ReadonlyMap<string, string>>();
   for (const statement of sourceFile.statements) {
-    const clause = reactImportClause(statement);
-    if (clause?.name !== undefined) {
-      namespaces.add(clause.name.text);
-    }
-    const bindings = clause?.namedBindings;
-    if (bindings !== undefined && isNamespaceImport(bindings)) {
-      namespaces.add(bindings.name.text);
-    }
-    if (bindings !== undefined && isNamedImports(bindings)) {
-      for (const element of bindings.elements) {
-        const api = (element.propertyName ?? element.name).text;
-        const replacement = CONTEXT_APIS.get(api);
-        if (replacement !== undefined) {
-          violations.push(contextViolation(file, api, replacement));
-        }
-      }
-    }
+    violations.push(...inspectStateImport(file, statement, namespaces));
   }
   const visit = (node: Node) => {
-    if (
-      isPropertyAccessExpression(node) &&
-      isIdentifier(node.expression) &&
-      namespaces.has(node.expression.text)
-    ) {
-      const replacement = CONTEXT_APIS.get(node.name.text);
-      if (replacement !== undefined) {
-        violations.push(contextViolation(file, node.name.text, replacement));
+    if (isPropertyAccessExpression(node) && isIdentifier(node.expression)) {
+      const rule = namespaces.get(node.expression.text)?.get(node.name.text);
+      if (rule !== undefined) {
+        violations.push(`${file}: ${rule}.`);
       }
     }
     node.forEachChild(visit);

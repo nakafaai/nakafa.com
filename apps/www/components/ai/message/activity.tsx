@@ -17,8 +17,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type ReactNode, use } from "react";
 import type { Invocation } from "@/components/ai/message/invocation";
 
 const missingActivity = Symbol("missing-activity");
@@ -29,13 +28,11 @@ const ActivityContext = createContext<Invocation | typeof missingActivity>(
 
 /** Selects one part of the invocation for evidence rendered inside an activity. */
 export function useActivity<T>(selector: (invocation: Invocation) => T) {
-  const selected = useContextSelector(ActivityContext, (value) =>
-    value === missingActivity ? missingActivity : selector(value)
-  );
-  if (selected === missingActivity) {
+  const value = use(ActivityContext);
+  if (value === missingActivity) {
     throw new Error("Activity components must be used within Activity");
   }
-  return selected;
+  return selector(value);
 }
 
 /**
@@ -50,7 +47,7 @@ export function Activity({
   invocation: Invocation;
 }) {
   return (
-    <ActivityContext.Provider value={invocation}>
+    <ActivityContext value={invocation}>
       <Collapsible className="not-prose min-w-0" defaultOpen={false}>
         <ActivityTrigger />
         <CollapsibleContent className="motion-reduce:transition-none">
@@ -59,7 +56,7 @@ export function Activity({
           </div>
         </CollapsibleContent>
       </Collapsible>
-    </ActivityContext.Provider>
+    </ActivityContext>
   );
 }
 

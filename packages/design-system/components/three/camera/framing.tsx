@@ -7,14 +7,15 @@ import type {
   CameraSubjectBounds,
 } from "@repo/design-system/lib/geometry/camera/bounds";
 import {
+  createContext,
   type ReactNode,
   type RefObject,
+  use,
   useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import { Box3, type Group, type Object3D, Vector3 } from "three";
-import { createContext, useContextSelector } from "use-context-selector";
 
 function createFraming() {
   const listeners = new Set<() => void>();
@@ -72,16 +73,12 @@ export function CameraFraming({ children }: { children: ReactNode }) {
   }, [children, framing]);
   useLayoutEffect(() => () => framing.cancel(), [framing]);
 
-  return (
-    <FramingContext.Provider value={framing}>
-      {children}
-    </FramingContext.Provider>
-  );
+  return <FramingContext value={framing}>{children}</FramingContext>;
 }
 
 /** React boundary shared by camera controls, finite subjects, and HTML labels. */
 export function useCameraFraming() {
-  return useContextSelector(FramingContext, (framing) => framing);
+  return use(FramingContext);
 }
 
 /**

@@ -26,7 +26,9 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   type ComponentProps,
+  createContext,
   type ReactNode,
+  use,
   useCallback,
   useId,
   useMemo,
@@ -40,7 +42,6 @@ import {
   XAxis as RechartsXAxis,
   YAxis as RechartsYAxis,
 } from "recharts";
-import { createContext, useContextSelector } from "use-context-selector";
 
 // Constants
 export const STROKE_WIDTH = 2;
@@ -90,17 +91,15 @@ const ComposedChartContext = createContext<
 export function useComposedChart<T>(
   selector: (chart: ComposedChartContextValue) => T
 ) {
-  const selected = useContextSelector(ComposedChartContext, (value) =>
-    value === missingComposedChart ? missingComposedChart : selector(value)
-  );
+  const value = use(ComposedChartContext);
 
-  if (selected === missingComposedChart) {
+  if (value === missingComposedChart) {
     throw new Error(
       "Composed chart parts (<Bar />, <Line />, <XAxis />, …) must be used within <EvilComposedChart />"
     );
   }
 
-  return selected;
+  return selector(value);
 }
 
 // Root container
@@ -214,7 +213,7 @@ export function EvilComposedChart<
   );
 
   return (
-    <ComposedChartContext.Provider value={contextValue}>
+    <ComposedChartContext value={contextValue}>
       <ChartContainer
         className={className}
         config={config}
@@ -256,7 +255,7 @@ export function EvilComposedChart<
           )}
         </RechartsComposedChart>
       </ChartContainer>
-    </ComposedChartContext.Provider>
+    </ComposedChartContext>
   );
 }
 

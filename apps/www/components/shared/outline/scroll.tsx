@@ -1,8 +1,13 @@
 "use client";
 
 import { SidebarContent } from "@repo/design-system/components/ui/sidebar-content";
-import { type ReactNode, type RefObject, useRef } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import {
+  createContext,
+  type ReactNode,
+  type RefObject,
+  use,
+  useRef,
+} from "react";
 
 interface OutlineScrollValue {
   readonly scrollRef: RefObject<HTMLDivElement | null>;
@@ -19,9 +24,9 @@ export function OutlineContent({ children }: { children: ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
-    <OutlineScrollContext.Provider value={{ scrollRef }}>
+    <OutlineScrollContext value={{ scrollRef }}>
       <SidebarContent ref={scrollRef}>{children}</SidebarContent>
-    </OutlineScrollContext.Provider>
+    </OutlineScrollContext>
   );
 }
 
@@ -29,11 +34,9 @@ export function OutlineContent({ children }: { children: ReactNode }) {
 export function useOutlineScroll<T>(
   selector: (outline: OutlineScrollValue) => T
 ) {
-  const selected = useContextSelector(OutlineScrollContext, (value) =>
-    value === missingOutlineScroll ? missingOutlineScroll : selector(value)
-  );
-  if (selected === missingOutlineScroll) {
+  const value = use(OutlineScrollContext);
+  if (value === missingOutlineScroll) {
     throw new Error("Outline entries must render within OutlineContent.");
   }
-  return selected;
+  return selector(value);
 }

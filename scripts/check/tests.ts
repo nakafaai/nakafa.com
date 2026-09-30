@@ -4,7 +4,7 @@ import {
   inspectEffectSource,
 } from "#scripts/check/effect";
 import { readRepositoryFiles } from "#scripts/check/files";
-import { inspectContextSource, inspectReactSource } from "#scripts/check/react";
+import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { sourceViolations as inspectSources } from "#scripts/check/source";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
 import { runEntry } from "#scripts/entry";
@@ -108,9 +108,9 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       )
     );
     const sourceViolations = yield* inspectSources(authoredSources, [
-      inspectContextSource,
       inspectEffectSource,
       inspectReactSource,
+      inspectStateSource,
     ]);
     const tailwindViolations = authoredSources.flatMap(({ file, sourceText }) =>
       inspectTailwindSource(file, sourceText)

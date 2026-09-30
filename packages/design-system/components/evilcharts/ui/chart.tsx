@@ -7,9 +7,15 @@ import {
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import { cn } from "cn";
 import { domAnimation, LazyMotion } from "motion/react";
-import { type ComponentProps, type ReactNode, useId, useMemo } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  type ReactNode,
+  use,
+  useId,
+  useMemo,
+} from "react";
 import { ResponsiveContainer } from "recharts";
-import { createContext, useContextSelector } from "use-context-selector";
 
 interface ChartContextProps {
   config: ChartConfig;
@@ -22,15 +28,13 @@ const ChartContext = createContext<ChartContextProps | typeof missingChart>(
 );
 
 export function useChart<T>(selector: (chart: ChartContextProps) => T) {
-  const selected = useContextSelector(ChartContext, (value) =>
-    value === missingChart ? missingChart : selector(value)
-  );
+  const value = use(ChartContext);
 
-  if (selected === missingChart) {
+  if (value === missingChart) {
     throw new Error("useChart must be used within a <ChartContainer />");
   }
 
-  return selected;
+  return selector(value);
 }
 
 interface ChartContainerProps
@@ -73,7 +77,7 @@ function ChartContainer({
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <ChartContext.Provider value={contextValue}>
+      <ChartContext value={contextValue}>
         <div
           className={cn(
             "min-h-0 w-full flex-1",
@@ -94,7 +98,7 @@ function ChartContainer({
           </ResponsiveContainer>
           {footer}
         </div>
-      </ChartContext.Provider>
+      </ChartContext>
     </LazyMotion>
   );
 }

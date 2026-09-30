@@ -11,13 +11,13 @@ import { CardFooter } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import {
+  createContext,
   type ReactNode,
-  useCallback,
+  use,
   useLayoutEffect,
-  useMemo,
   useState,
 } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createStore, type StoreApi, useStore } from "zustand";
 
 interface Controls {
   play: boolean;
@@ -26,46 +26,40 @@ interface Controls {
   togglePlay: () => void;
 }
 
-const missingControls = Symbol("missing-coordinate-controls");
+const initialControls = { play: false, showGrid: true };
 
-const ControlsContext = createContext<Controls | typeof missingControls>(
-  missingControls
-);
+/** Creates one card's controls: whether its scene plays and shows the grid. */
+function createControlsStore() {
+  return createStore<Controls>()((set) => ({
+    ...initialControls,
+    toggleGrid: () => set((current) => ({ showGrid: !current.showGrid })),
+    togglePlay: () => set((current) => ({ play: !current.play })),
+  }));
+}
 
-/** Shares interaction state between the scene body and its owning card footer. */
+const ControlsContext = createContext<StoreApi<Controls> | null>(null);
+
+/**
+ * Shares one card's controls between its scene and its footer through a
+ * store, so each part re-renders only for the control it reads.
+ */
 export function CoordinateProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState({ play: false, showGrid: true });
-  const toggleGrid = useCallback(() => {
-    setState((current) => ({ ...current, showGrid: !current.showGrid }));
-  }, []);
-  const togglePlay = useCallback(() => {
-    setState((current) => ({ ...current, play: !current.play }));
-  }, []);
-  const controls = useMemo(
-    () => ({ ...state, toggleGrid, togglePlay }),
-    [state, toggleGrid, togglePlay]
-  );
+  const [store] = useState(createControlsStore);
 
   // Activity disconnects scene effects while preserving the card's React state.
-  useLayoutEffect(() => () => setState({ play: false, showGrid: true }), []);
+  useLayoutEffect(() => () => store.setState(initialControls), [store]);
 
-  return (
-    <ControlsContext.Provider value={controls}>
-      {children}
-    </ControlsContext.Provider>
-  );
+  return <ControlsContext value={store}>{children}</ControlsContext>;
 }
 
 /** Selects one part of the surrounding coordinate controls. */
 export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
-  const selected = useContextSelector(ControlsContext, (value) =>
-    value === missingControls ? missingControls : selector(value)
-  );
-  if (selected === missingControls) {
+  const store = use(ControlsContext);
+  if (!store) {
     // A missing provider is a programmer composition error at this React seam.
     throw new Error("Coordinate controls require CoordinateProvider.");
   }
-  return selected;
+  return useStore(store, selector);
 }
 
 /** The actual card footer, composed as a sibling of CardContent. */
