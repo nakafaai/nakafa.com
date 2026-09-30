@@ -66,6 +66,7 @@ function validInput() {
         vitest: VITEST_COHORT_VERSION,
       },
       overrides: {
+        "@effect/platform-node": "4.0.0-rc.117",
         "@effect/platform-node-shared": "4.0.0-rc.117",
       },
       update: { ignoreDeps },
@@ -129,6 +130,7 @@ describe("dependency policy", () => {
       firstManifest.manifest.scripts.doctor = "pnpm dlx react-doctor@0.9.5";
     }
     input.manifests.splice(1);
+    input.workspace.overrides["@effect/platform-node"] = "4.0.0-rc.118";
     input.workspace.overrides["@effect/platform-node-shared"] = "4.0.0-rc.110";
     input.workspace.update.ignoreDeps = [];
 
@@ -142,9 +144,12 @@ describe("dependency policy", () => {
     expect(
       problems.some((problem) => problem.includes("obsolete Effect"))
     ).toBe(true);
-    expect(
-      problems.some((problem) => problem.includes("platform-node-shared"))
-    ).toBe(true);
+    expect(problems).toContain(
+      "The @effect/platform-node override must match Effect RC 117."
+    );
+    expect(problems).toContain(
+      "The @effect/platform-node-shared override must match Effect RC 117."
+    );
     expect(problems.some((problem) => problem.includes("react-doctor"))).toBe(
       true
     );

@@ -135,12 +135,14 @@ export function validateDependencyPolicy({
   if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.117") {
     problems.push("The Effect Vitest catalog must match Effect RC 117.");
   }
-  if (
-    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.117"
-  ) {
-    problems.push(
-      "The platform-node-shared override must match Effect RC 117."
-    );
+  // Transitive platform packages, such as the Confect CLI's, stay in the cohort.
+  for (const dependency of [
+    "@effect/platform-node",
+    "@effect/platform-node-shared",
+  ]) {
+    if (workspace.overrides?.[dependency] !== "4.0.0-rc.117") {
+      problems.push(`The ${dependency} override must match Effect RC 117.`);
+    }
   }
   if (workspace.catalog?.typescript !== "7.0.2") {
     problems.push("The native TypeScript catalog must be exactly 7.0.2.");

@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@effect/platform-node':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
     '@effect/vitest':
       specifier: 4.0.0-rc.117
       version: 4.0.0-rc.117
@@ -33,6 +30,7 @@ overrides:
   react-dom: 19.2.8
   '@types/react': 19.2.18
   '@types/react-dom': 19.2.7
+  '@effect/platform-node': 4.0.0-rc.117
   '@effect/platform-node-shared': 4.0.0-rc.117
   '@react-email/ui@6.11.0>next': 16.3.7
   '@vercel/routing-utils@6.6.0>path-to-regexp': 6.3.0
@@ -61,7 +59,7 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       '@effect/platform-node':
-        specifier: 'catalog:'
+        specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1)
       '@effect/tsgo':
         specifier: 0.45.0
@@ -356,7 +354,7 @@ importers:
         version: 5.0.15(@types/react@19.2.18)(immer@11.1.18)(react@19.2.8)(use-sync-external-store@1.7.0(react@19.2.8))
     devDependencies:
       '@effect/platform-node':
-        specifier: 'catalog:'
+        specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1)
       '@effect/vitest':
         specifier: 'catalog:'
@@ -477,7 +475,7 @@ importers:
         specifier: ^0.4.12
         version: 0.4.12(convex-helpers@0.1.124(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.11)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
       '@effect/platform-node':
-        specifier: 'catalog:'
+        specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1)
       '@mendable/firecrawl-js':
         specifier: ^4.42.0
@@ -622,7 +620,7 @@ importers:
   packages/cli:
     devDependencies:
       '@effect/platform-node':
-        specifier: 'catalog:'
+        specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1)
       '@effect/vitest':
         specifier: 'catalog:'
@@ -882,7 +880,7 @@ importers:
         version: 0.52.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)
     devDependencies:
       '@effect/platform-node':
-        specifier: 'catalog:'
+        specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1)
       '@effect/vitest':
         specifier: 'catalog:'
@@ -1686,7 +1684,7 @@ packages:
     engines: {node: '>=24'}
     peerDependencies:
       '@confect/core': ^10.0.0-next.24
-      '@effect/platform-node': ^4.0.0-rc.117
+      '@effect/platform-node': 4.0.0-rc.117
       convex: ^1.45.0
       effect: ^4.0.0-rc.117
     peerDependenciesMeta:
@@ -1858,13 +1856,6 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       effect: ^4.0.0-rc.117
-      redis: '>=5.0.0 <7.0.0'
-
-  '@effect/platform-node@4.0.0-rc.118':
-    resolution: {integrity: sha512-qdAxPZ+5bKxVnzkwziqcHZTHRHz2hyfFX6NhwEmm75CBpmaIzXIZR2LRqGd1/8eI3J3cOrXcAYzByhln7T1/EA==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      effect: ^4.0.0-rc.118
       redis: '>=5.0.0 <7.0.0'
 
   '@effect/tsgo-darwin-arm64@0.45.0':
@@ -4068,9 +4059,6 @@ packages:
 
   '@types/webxr@0.5.24':
     resolution: {integrity: sha512-h8fgEd/DpoS9CBrjEQXR+dIDraopAEfu4wYVNY2tEPwk60stPWhvZMf4Foo5FakuQ7HFZoa8WceaWFervK2Ovg==}
-
-  '@types/ws@8.18.1':
-    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@types/ws@8.18.2':
     resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
@@ -7462,10 +7450,6 @@ packages:
     resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
     engines: {node: '>=20.18.1'}
 
-  undici@8.10.2:
-    resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
-    engines: {node: '>=22.19.0'}
-
   undici@8.11.2:
     resolution: {integrity: sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==}
     engines: {node: '>=22.19.0'}
@@ -8510,7 +8494,7 @@ snapshots:
     dependencies:
       '@confect/core': 10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)
       '@confect/server': 10.0.0-next.24(@confect/core@10.0.0-next.24(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117))(@effect/platform-node@4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.117)
-      '@effect/platform-node': 4.0.0-rc.118(effect@4.0.0-rc.117)(redis@6.2.1)
+      '@effect/platform-node': 4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1)
       bundle-require: 5.1.0(esbuild@0.28.2)
       code-block-writer: 13.0.3
       effect: 4.0.0-rc.117
@@ -8737,7 +8721,7 @@ snapshots:
 
   '@effect/platform-node-shared@4.0.0-rc.117(effect@4.0.0-rc.117)':
     dependencies:
-      '@types/ws': 8.18.1
+      '@types/ws': 8.18.2
       effect: 4.0.0-rc.117
       ws: 8.21.3
     transitivePeerDependencies:
@@ -8745,16 +8729,6 @@ snapshots:
       - utf-8-validate
 
   '@effect/platform-node@4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1)':
-    dependencies:
-      '@effect/platform-node-shared': 4.0.0-rc.117(effect@4.0.0-rc.117)
-      effect: 4.0.0-rc.117
-      redis: 6.2.1
-      undici: 8.10.2
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@effect/platform-node@4.0.0-rc.118(effect@4.0.0-rc.117)(redis@6.2.1)':
     dependencies:
       '@effect/platform-node-shared': 4.0.0-rc.117(effect@4.0.0-rc.117)
       effect: 4.0.0-rc.117
@@ -10561,10 +10535,6 @@ snapshots:
   '@types/use-sync-external-store@0.0.6': {}
 
   '@types/webxr@0.5.24': {}
-
-  '@types/ws@8.18.1':
-    dependencies:
-      '@types/node': 24.19.0
 
   '@types/ws@8.18.2':
     dependencies:
@@ -14324,8 +14294,6 @@ snapshots:
   undici-types@7.24.6: {}
 
   undici@7.29.1: {}
-
-  undici@8.10.2: {}
 
   undici@8.11.2: {}
 
