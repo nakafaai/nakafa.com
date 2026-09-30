@@ -31,7 +31,7 @@ export interface InlineState {
   math: OpenSpan | undefined;
   /** A final character that may be the first half of a delimiter. */
   opener: number | undefined;
-  strong: number | undefined;
+  strong: { readonly marker: string; readonly start: number } | undefined;
 }
 
 /** Returns the state before any inline span opens. */
@@ -103,6 +103,33 @@ function stepEmphasis(
 }
 
 /**
+ * Opens or closes `__` strong emphasis by the same flanking rules as a single
+ * underscore. A final `__` may still open a span, so it is withheld.
+ */
+function stepStrongUnderscore(
+  line: string,
+  index: number,
+  position: number,
+  length: number,
+  state: InlineState
+) {
+  const before = line.charAt(index - 1);
+  const after = line.charAt(index + 2);
+  if (state.strong?.marker === "__") {
+    if (before !== "" && !SPACE.test(before) && !WORD.test(after)) {
+      state.strong = undefined;
+    }
+  } else if (!(state.strong || WORD.test(before))) {
+    if (position + 1 === length - 1) {
+      state.opener = position;
+    } else if (after !== "" && !SPACE.test(after)) {
+      state.strong = { marker: "__", start: position };
+    }
+  }
+  return index + 2;
+}
+
+/**
  * Closes a link label. The destination must follow at once; a final `]` may
  * still get one, and anything else leaves plain brackets.
  */
@@ -161,18 +188,27 @@ function stepProse(
   line: string,
   index: number,
   position: number,
-  final: boolean,
+  length: number,
   state: InlineState
 ) {
   const character = line.charAt(index);
+  const final = position === length - 1;
   if (character === "`") {
     const end = runEnd(line, index);
     state.code = { closer: line.slice(index, end), start: position };
     return end;
   }
   if (line.startsWith("**", index)) {
-    state.strong = state.strong === undefined ? position : undefined;
+    // Asterisk strong emphasis toggles; an underscore span keeps it literal.
+    if (state.strong?.marker === "**") {
+      state.strong = undefined;
+    } else {
+      state.strong ??= { marker: "**", start: position };
+    }
     return index + 2;
+  }
+  if (line.startsWith("__", index)) {
+    return stepStrongUnderscore(line, index, position, length, state);
   }
   const delimiter = MATH_DELIMITERS.find(([open]) =>
     line.startsWith(open, index)
@@ -211,7 +247,7 @@ function stepInline(
   line: string,
   index: number,
   position: number,
-  final: boolean,
+  length: number,
   state: InlineState
 ) {
   const { code, link, math } = state;
@@ -237,7 +273,7 @@ function stepInline(
     }
     return end;
   }
-  return stepProse(line, index, position, final, state);
+  return stepProse(line, index, position, length, state);
 }
 
 /**
@@ -252,7 +288,6 @@ export function scanInline(
 ) {
   let index = 0;
   while (index < line.length) {
-    const position = lineStart + index;
-    index = stepInline(line, index, position, position === length - 1, state);
+    index = stepInline(line, index, lineStart + index, length, state);
   }
 }

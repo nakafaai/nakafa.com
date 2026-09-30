@@ -14,8 +14,10 @@ const PARTIAL_BLOCK =
   /^ {0,3}(?:`{1,2}|~{1,2}|#{1,6}|-{1,2}|[*+>]|\d{1,9}[.)]?)$/;
 /** A line that starts a new block, which inline spans never cross. */
 const BLOCK_START = /^ {0,3}(?:[-*+]\s|\d{1,9}[.)]\s|#{1,6}\s|>|\|)/;
-/** A table row, with or without the optional leading pipe. */
-const TABLE_ROW = /\|/;
+/** An escaped character, which never separates table cells. */
+const ESCAPED = /\\./g;
+/** A fence line with at most three spaces of indentation. */
+const FENCE_MARKER = /^ {0,3}(`+|~+)[ \t]*$/;
 const TABLE_DELIMITER = /^ {0,3}\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$/;
 const PARTIAL_TABLE_DELIMITER = /^ {0,3}\|?[\s:|-]*$/;
 
@@ -24,13 +26,18 @@ interface TailState extends InlineState {
   table: { confirmed: boolean; header: number } | undefined;
 }
 
-/** Returns whether a line consists only of `marker` characters. */
-function isMarkerLine(line: string, marker: string) {
-  const trimmed = line.trim();
-  return (
-    trimmed.length > 0 &&
-    trimmed.split("").every((character) => character === marker[0])
-  );
+/**
+ * Returns the run of a line holding only fence characters of `marker`'s kind,
+ * indented at most three spaces as CommonMark requires of a closing fence.
+ */
+function fenceRun(line: string, marker: string) {
+  const run = FENCE_MARKER.exec(line)?.[1];
+  return run?.[0] === marker[0] ? run : undefined;
+}
+
+/** A table row has an unescaped pipe, with or without the leading pipe. */
+function isTableRow(line: string) {
+  return line.replace(ESCAPED, "").includes("|");
 }
 
 /**
@@ -60,7 +67,7 @@ function scanTable(
     // Not a delimiter row, so this line may start a table itself.
     state.table = undefined;
   }
-  if (!TABLE_ROW.test(line)) {
+  if (!isTableRow(line)) {
     state.table = undefined;
     return;
   }
@@ -76,7 +83,7 @@ function scanLine(
 ) {
   if (state.fence) {
     const { marker } = state.fence;
-    if (isMarkerLine(line, marker) && line.trim().length >= marker.length) {
+    if ((fenceRun(line, marker)?.length ?? 0) >= marker.length) {
       state.fence = undefined;
     }
     return;
@@ -102,8 +109,7 @@ function partialMarker(markdown: string, state: TailState) {
   const line = markdown.slice(lineStart);
   if (state.fence) {
     // The marker line itself, or a closing marker still being typed.
-    return state.fence.start === lineStart ||
-      isMarkerLine(line, state.fence.marker)
+    return state.fence.start === lineStart || fenceRun(line, state.fence.marker)
       ? lineStart
       : undefined;
   }
@@ -133,7 +139,7 @@ export function trimIncompleteTail(markdown: string) {
     state.fence?.withheld ? state.fence.start : undefined,
     state.math?.start,
     state.code?.start,
-    state.strong,
+    state.strong?.start,
     state.emphasis?.start,
     state.link?.start,
     state.opener,

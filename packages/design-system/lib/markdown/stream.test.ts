@@ -99,6 +99,8 @@ describe("streamed markdown tail", () => {
     const complete = `${table}\n\nAfter`;
     expect(trimIncompleteTail(complete)).toBe(complete);
     expect(trimIncompleteTail("a | b\nRule | Result")).toBe("a | b\n");
+    const escaped = "Use \\| for an absolute value";
+    expect(trimIncompleteTail(escaped)).toBe(escaped);
   });
 
   it("withholds a link until its label and balanced destination close", () => {
@@ -136,6 +138,29 @@ describe("streamed markdown tail", () => {
     ]) {
       expect(trimIncompleteTail(complete)).toBe(complete);
     }
+  });
+
+  it("withholds underscore strong emphasis until it closes", () => {
+    expect(trimIncompleteTail("The __important")).toBe("The ");
+    expect(trimIncompleteTail("Wait __for it __ now")).toBe("Wait ");
+    expect(trimIncompleteTail("And __")).toBe("And ");
+    for (const complete of [
+      "The __important__ part.",
+      "Python calls __init__ first.",
+      "Keep snake__case__names and my__",
+      "Values __ between spaces stay literal.",
+      "Mixed __strong **inside**__ spans.",
+    ]) {
+      expect(trimIncompleteTail(complete)).toBe(complete);
+    }
+  });
+
+  it("closes a fence only at a marker indented at most three spaces", () => {
+    expect(trimIncompleteTail("Steps:\n\n```math\nx^2\n    ```")).toBe(
+      "Steps:\n\n"
+    );
+    const closed = "Steps:\n\n```math\nx^2\n   ```\n\nDone.";
+    expect(trimIncompleteTail(closed)).toBe(closed);
   });
 
   it("closes a code span only at a backtick run of its opening length", () => {
