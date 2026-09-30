@@ -1,9 +1,9 @@
 ---
-"@repo/contents": patch
 "www": patch
 ---
 
-Render surah verses in document flow so surah pages load without layout shift.
-The outline reaches any verse through its fragment link, parsed headings no
-longer carry a virtual list index, and Quran routes preload both Amiri subsets
-that verses render.
+Render a surah's leading verses in document flow so surah pages load without
+layout shift, and keep later verses virtualized below the fold. Declare the
+Quran typeface on every page without preloads, so prefetching a Quran route no
+longer downloads Amiri on other pages, and show Quran text only once Amiri has
+loaded.
