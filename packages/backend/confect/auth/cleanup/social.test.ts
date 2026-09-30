@@ -31,6 +31,29 @@ async function createDeletedOwner(suffix: string) {
   return { t, now, ...users };
 }
 
+it("deletes the learner's Nina memory and keeps another learner's", async () => {
+  const { t, now, owner, retained } = await createDeletedOwner("memory");
+  await t.mutation(async (ctx) => {
+    for (const userId of [owner, retained]) {
+      await ctx.db.insert("ninaMemories", {
+        facts: [],
+        next: 0,
+        updatedAt: now,
+        usage: { calls: 0, input: 0, output: 0 },
+        userId,
+      });
+    }
+  });
+  const cleanup = () =>
+    t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner });
+  await expect(cleanup()).resolves.toBe(true);
+  expect(
+    await t.query((ctx) => ctx.db.query("ninaMemories").collect())
+  ).toEqual([expect.objectContaining({ userId: retained })]);
+  await expect(cleanup()).resolves.toBe(false);
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+});
+
 it("deletes both directions of comment votes before their owning comment while keeping shared counters accurate", async () => {
   const { t, owner, retained } = await createDeletedOwner("votes");
   const seeded = await t.mutation(async (ctx) => {

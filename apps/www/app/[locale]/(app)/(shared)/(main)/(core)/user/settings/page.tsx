@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
+import { UserSettingsMemory } from "@/components/user/settings/memory";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile";
 import { env } from "@/env";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -46,6 +47,7 @@ async function AuthenticatedSettings({
         Effect.all(
           {
             account: client.query(refs.public.auth.queries.getCurrentUser, {}),
+            memory: client.query(refs.public.nina.memory.get, {}),
             preference: client.query(
               refs.public.learningPreferences.queries.getCurrent,
               { locale }
@@ -76,6 +78,7 @@ async function AuthenticatedSettings({
         initialPrograms={data.programs}
         locale={locale}
       />
+      <UserSettingsMemory initialMemory={data.memory} />
     </UserSettingsProfilePage>
   );
 }

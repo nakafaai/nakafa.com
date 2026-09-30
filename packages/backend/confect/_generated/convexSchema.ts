@@ -44,6 +44,7 @@ import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
+import ninaMemories from "./tables/ninaMemories";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
@@ -126,6 +127,7 @@ export default $defineSchema({
   learningViews: $Table.tableDefinition(learningViews),
   materialBuckets: $Table.tableDefinition(materialBuckets),
   materialCatalog: $Table.tableDefinition(materialCatalog),
+  ninaMemories: $Table.tableDefinition(ninaMemories),
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),

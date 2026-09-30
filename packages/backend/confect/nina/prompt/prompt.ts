@@ -16,11 +16,12 @@ import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import dedent from "dedent";
 import { Schema } from "effect";
 
-/** Runtime context, authenticated role, current page and question focus. */
+/** Runtime context, authenticated role, current page, learner, and focus. */
 const SystemPromptPropsSchema = RuntimePromptContextSchema.mapFields(
   (fields) => ({
     ...fields,
     focus: Schema.optional(Schema.String),
+    learner: Schema.optional(Schema.String),
     pageContent: Schema.optional(Schema.String),
     summary: Schema.optional(Schema.String),
     userRole: Schema.optional(PromptUserRoleSchema),
@@ -32,11 +33,12 @@ type SystemPromptProps = Schema.Schema.Type<typeof SystemPromptPropsSchema>;
 /**
  * Builds Nina's system prompt with internal LearningCapability policy. Stable
  * instructions lead so provider prompt caching reuses them across turns; the
- * page, question focus, conversation summary, and per-turn runtime facts
- * follow in that order.
+ * page, which learners share, the learner, question focus, conversation
+ * summary, and per-turn runtime facts follow in that order.
  */
 export function createNinaPrompt({
   focus,
+  learner,
   pageContent,
   summary,
   userRole,
@@ -55,6 +57,7 @@ export function createNinaPrompt({
   return [
     instructions,
     pageContent,
+    learner,
     focus,
     summary &&
       `# Conversation Summary\n\nEarlier turns of this conversation:\n\n${summary}`,

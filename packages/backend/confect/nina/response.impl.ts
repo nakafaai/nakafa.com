@@ -8,6 +8,7 @@ import {
 import { reportFailure } from "@repo/backend/confect/nina/diagnostics";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
 import { generateResponse } from "@repo/backend/confect/nina/generation";
+import { curateMemory } from "@repo/backend/confect/nina/memory/curate";
 import { generatePresentation } from "@repo/backend/confect/nina/presentation";
 import spec from "@repo/backend/confect/nina/response.spec";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
@@ -61,9 +62,16 @@ const present = FunctionImpl.make(
       return null;
     }
     const usageHandler = yield* createUsageHandler(turn._id);
-    // Title, suggestions and the rolling summary are optional follow-up work.
-    yield* generatePresentation(turn, usageHandler).pipe(
-      Effect.andThen(refreshSummary(turn)),
+    // Title, suggestions, the rolling summary and learner memory are optional,
+    // independent follow-up work.
+    yield* Effect.all(
+      [
+        generatePresentation(turn, usageHandler),
+        refreshSummary(turn),
+        curateMemory(turn),
+      ],
+      { concurrency: "unbounded", discard: true }
+    ).pipe(
       Effect.catchTag("GatewayConfigurationError", () =>
         Effect.logWarning("Nina presentation configuration unavailable", {
           turnId: turn._id,

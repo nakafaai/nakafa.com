@@ -7,6 +7,10 @@ import Session from "@repo/backend/confect/middleware/session.spec";
 import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
 import { NinaFocusInputSchema } from "@repo/backend/confect/nina/contract/focus";
 import {
+  NinaContextSnapshotSchema,
+  NinaContextTransitionSchema,
+} from "@repo/backend/confect/nina/contract/pack";
+import {
   NinaPageSchema,
   NinaUserSchema,
 } from "@repo/backend/confect/nina/contract/turn";
@@ -14,10 +18,6 @@ import {
   NinaCreditError,
   NinaCreditHold,
 } from "@repo/backend/confect/nina/credits/schema";
-import {
-  NinaContextSnapshotSchema,
-  NinaContextTransitionSchema,
-} from "@repo/backend/confect/nina/memory/pack";
 import { NinaSuggestions } from "@repo/backend/confect/nina/presentation.spec";
 import {
   NINA_FILE_COUNT,
