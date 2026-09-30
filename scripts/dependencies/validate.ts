@@ -51,7 +51,7 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
   const problems: string[] = [];
   for (const hold of DEPENDENCY_HOLDS) {
     const declarations = dependencyDeclarations(manifests, hold.dependency);
-    if (hold.declarationPaths) {
+    if ("declarationPaths" in hold) {
       const actualPaths = declarations
         .map(({ manifestPath }) => manifestPath)
         .sort();
@@ -61,18 +61,13 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
           `${hold.dependency} declarations are ${actualPaths.join(", ") || "missing"}; expected ${expectedPaths.join(", ")}.`
         );
       }
-    } else if (
-      hold.minimumDeclarations !== undefined &&
-      declarations.length < hold.minimumDeclarations
-    ) {
+    } else if (declarations.length < hold.minimumDeclarations) {
       problems.push(
         `${hold.dependency} has ${declarations.length} declarations; expected at least ${hold.minimumDeclarations}.`
       );
     }
 
-    const allowed = new Set(
-      hold.allowed ?? (hold.approved ? [hold.approved] : [])
-    );
+    const allowed = new Set("allowed" in hold ? hold.allowed : [hold.approved]);
     for (const declaration of declarations) {
       if (!allowed.has(declaration.spec)) {
         problems.push(

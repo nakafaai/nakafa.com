@@ -1,4 +1,3 @@
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import {
   Config,
   Effect,
@@ -8,6 +7,7 @@ import {
   Stream,
 } from "effect";
 import { ChildProcess } from "effect/unstable/process";
+import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
 
 const GIT_REVISION_PATTERN = /^[0-9a-f]{40}$/u;
@@ -212,19 +212,6 @@ export const writeProductionAcceptanceDecision = Effect.fn(
       ? `Production acceptance required for ${changes.length} changed paths.\n`
       : `Production acceptance skipped for ${changes.length} modified test modules.\n`
   );
-  return required;
 });
 
-/** Runs the production-scope adapter at the Node CLI boundary. */
-const runProductionAcceptanceMain = Effect.fn("ProductionAcceptance.runMain")(
-  function* () {
-    const repositoryRoot = yield* Effect.sync(() => process.cwd());
-    yield* writeProductionAcceptanceDecision(repositoryRoot);
-  }
-);
-
-if (import.meta.main) {
-  NodeRuntime.runMain(
-    runProductionAcceptanceMain().pipe(Effect.provide(NodeServices.layer))
-  );
-}
+runEntry(import.meta.main, writeProductionAcceptanceDecision(process.cwd()));
