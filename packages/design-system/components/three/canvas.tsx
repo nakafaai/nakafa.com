@@ -63,17 +63,15 @@ function ErrorFallback({
   );
 }
 
-/** Runs scene time before every other frame callback. */
-const SCENE_TIME_PRIORITY = Number.NEGATIVE_INFINITY;
-
 /**
  * Keeps scene time continuous while a canvas pauses.
  *
  * Fiber restarts `clock.elapsedTime` at zero whenever the frameloop changes,
- * and still draws frames invalidated just before a pause on manual-advance
- * time. Scenes animate from elapsed time, some from start times read from it,
- * so those paused frames hold the last rendered time and a resumed canvas
- * continues from it.
+ * and scenes animate from that time, some from start times read from it, so a
+ * resumed canvas restores the last rendered time. Fiber would also still draw
+ * frames invalidated just before a pause on manual-advance time, where a
+ * millisecond timestamp becomes the frame delta and throws every delta-driven
+ * animation forward, so pausing drops those frames.
  *
  * @see https://r3f.docs.pmnd.rs/api/canvas
  */
@@ -81,21 +79,18 @@ function SceneTime() {
   const store = useStore();
   const elapsed = useRef(0);
 
-  useFrame(({ clock, frameloop }) => {
-    if (frameloop === "never") {
-      clock.elapsedTime = elapsed.current;
-      return;
-    }
+  useFrame(({ clock }) => {
     elapsed.current = clock.elapsedTime;
-  }, SCENE_TIME_PRIORITY);
+  });
 
   useLayoutEffect(
     () =>
       store.subscribe((state, previous) => {
-        if (
-          state.frameloop === previous.frameloop ||
-          state.frameloop === "never"
-        ) {
+        if (state.frameloop === previous.frameloop) {
+          return;
+        }
+        if (state.frameloop === "never") {
+          state.internal.frames = 0;
           return;
         }
         state.clock.elapsedTime = elapsed.current;
