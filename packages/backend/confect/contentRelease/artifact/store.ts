@@ -8,7 +8,13 @@ import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/documen
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { Effect } from "effect";
 
-/** Stores one authenticated content-addressed artifact without release coupling. */
+/**
+ * Stores one authenticated content-addressed artifact without release coupling.
+ *
+ * A reused hash is proven byte-identical with one read and left untouched. Its
+ * staged item already references it, and retention starts only after the
+ * final reference is removed, so rewriting the row would only re-read its body.
+ */
 export const storeContentArtifact = Effect.fn(
   "contentRelease.storeContentArtifact"
 )(function* (
@@ -51,14 +57,6 @@ export const storeContentArtifact = Effect.fn(
   if (!stored) {
     yield* writer.table("contentArtifacts").insert(row).pipe(Effect.orDie);
     return false;
-  }
-  if (stored.retainUntil < retainUntil) {
-    yield* writer
-      .table("contentArtifacts")
-      .patch(stored._id, {
-        retainUntil,
-      })
-      .pipe(Effect.orDie);
   }
   return true;
 });
