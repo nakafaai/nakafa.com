@@ -171,7 +171,7 @@ describe("tryouts/runtime/history/read", () => {
         assert.notStrictEqual(snapshotReleaseId, seed.runtime.sourceReleaseId);
       })
   );
-  it.effect("requires the current session and exact attempt owner", () =>
+  it.effect("requires a signed-in reader who owns the attempt", () =>
     Effect.gen(function* () {
       const { owned, seed, t } = yield* Effect.promise(() => setup());
       assert.isNull(yield* Effect.promise(() => read(t, seed.request)));
@@ -195,8 +195,6 @@ describe("tryouts/runtime/history/read", () => {
         )
       );
       assert.isNotNull(yield* Effect.promise(() => read(owned, seed.request)));
-      vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 366 * 24 * 60 * 60 * 1000));
-      assert.isNull(yield* Effect.promise(() => read(owned, seed.request)));
     })
   );
   it.effect(

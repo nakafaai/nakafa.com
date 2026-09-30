@@ -1,5 +1,6 @@
 "use client";
 
+import { useSmoothText } from "@convex-dev/agent/react";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import {
   Reasoning,
@@ -11,7 +12,12 @@ import {
   Source,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
-import { type DynamicToolUIPart, isToolUIPart, type ToolUIPart } from "ai";
+import {
+  type DynamicToolUIPart,
+  isToolUIPart,
+  type TextUIPart,
+  type ToolUIPart,
+} from "ai";
 import { NinaAttachment } from "@/components/ai/attachment";
 import { Activity } from "@/components/ai/message/activity";
 import { useMessage } from "@/components/ai/message/context";
@@ -21,12 +27,14 @@ import { readInvocation } from "@/components/ai/message/invocation";
 /** Agent owns SDK parts; evidence card payloads obey Nina's runtime contract. */
 export function AiMessagePart({
   part,
-  partIndex,
+  partKey,
 }: {
   part: NinaMessage["parts"][number];
-  partIndex: number;
+  partKey: string;
 }) {
-  const messageId = useMessage((state) => state.message.id);
+  // The message key, unlike its id, survives the handoff from stream to saved.
+  const messageKey = useMessage((state) => state.message.key);
+  const id = `${messageKey}-${partKey}`;
   if (part.type === "file") {
     return <NinaAttachment file={part} />;
   }
@@ -46,9 +54,7 @@ export function AiMessagePart({
     );
   }
   if (part.type === "text") {
-    return (
-      <Response id={`${messageId}-part-${partIndex}`}>{part.text}</Response>
-    );
+    return <NinaText id={id} part={part} />;
   }
   if (part.type === "reasoning") {
     const hasContent = part.text.trim().length > 0;
@@ -62,7 +68,7 @@ export function AiMessagePart({
         <ReasoningTrigger />
         {hasContent ? (
           <ReasoningContent>
-            <Response id={`${messageId}-part-${partIndex}`}>
+            <Response id={id} isStreaming={part.state === "streaming"}>
               {part.text}
             </Response>
           </ReasoningContent>
@@ -74,6 +80,23 @@ export function AiMessagePart({
     return <NinaActivity part={part} />;
   }
   return null;
+}
+
+/**
+ * Paces streamed text at the rate it arrives, so throttled Agent deltas read as
+ * steady writing instead of bursts. Finished parts render at once, and a
+ * formula appears once its source is complete.
+ */
+function NinaText({ id, part }: { id: string; part: TextUIPart }) {
+  const streaming = part.state === "streaming";
+  const [text, { isStreaming }] = useSmoothText(part.text, {
+    startStreaming: streaming,
+  });
+  return (
+    <Response id={id} isStreaming={streaming || isStreaming}>
+      {text}
+    </Response>
+  );
 }
 
 /** One native Agent invocation owns its live progress and persisted evidence. */
