@@ -100,8 +100,10 @@ runtime verification, run `pnpm start` after a successful root build.
    conversation.
 6. Re-run affected checks after the final change.
 
-Protected `main` accepts linear squash or rebase merges and rejects merge
-commits, force pushes, and unresolved required checks.
+Protected `main` merges through a squash merge queue. Once a pull request's
+required checks pass, the maintainer adds it to the queue, which reruns them on
+the latest `main` together with the changes queued ahead of it before it lands.
+`main` rejects merge commits, force pushes, and unresolved required checks.
 
 ## Help
 
