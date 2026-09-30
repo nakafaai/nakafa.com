@@ -1,6 +1,5 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
@@ -19,6 +18,7 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
+import { httpLayer } from "@/lib/convex/http";
 
 type DiscoveryItem = Ref.Returns<
   typeof refs.public.contentRelease.article.latest
@@ -90,7 +90,7 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
         appLocale,
         bucket,
       })
-    ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+    ).pipe(Effect.provide(httpLayer()));
     const activeReleaseId = yield* decodeContentReleasePin(
       result.activeReleaseId,
       expectedActiveReleaseId,
@@ -133,7 +133,7 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
         appLocale,
         limit,
       })
-    ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+    ).pipe(Effect.provide(httpLayer()));
     const activeReleaseId = yield* decodeContentReleasePin(
       result.activeReleaseId,
       expectedActiveReleaseId,
@@ -173,7 +173,7 @@ export const readPublishedCategoryArticles = Effect.fn(
       category,
       limit,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,

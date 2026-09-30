@@ -1,7 +1,6 @@
 import { SchoolClassesPeopleHeader } from "@/components/school/classes/people/header";
 import { SchoolClassesPeopleList } from "@/components/school/classes/people/list";
 import { SchoolLayoutContent } from "@/components/school/content";
-import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getClassRouteSnapshot } from "@/lib/school/server";
@@ -28,11 +27,7 @@ export default async function Page(
         q,
         paginationOpts: { cursor: null, numItems: 50 },
       })
-    ).pipe(
-      Effect.provide(
-        HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, { auth: token })
-      )
-    )
+    ).pipe(Effect.provide(httpLayer({ auth: token })))
   );
 
   return (
@@ -47,3 +42,4 @@ import { HttpClient } from "@confect/js";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import { createLoader } from "nuqs/server";
+import { httpLayer } from "@/lib/convex/http";

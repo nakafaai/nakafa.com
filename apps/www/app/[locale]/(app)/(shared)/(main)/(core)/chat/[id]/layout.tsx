@@ -4,9 +4,9 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { cache } from "react";
-import { env } from "@/env";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { getToken } from "@/lib/auth/server";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Loads the current chat title once per request for metadata generation. */
 const getChatTitle = cache(async (id: Id<"chats">) => {
@@ -17,12 +17,7 @@ const getChatTitle = cache(async (id: Id<"chats">) => {
         chatId: id,
       })
     ).pipe(
-      Effect.provide(
-        HttpClient.layer(
-          env.NEXT_PUBLIC_CONVEX_URL,
-          token ? { auth: token } : {}
-        )
-      ),
+      Effect.provide(httpLayer(token ? { auth: token } : {})),
       Effect.withTracerTiming(false)
     )
   );

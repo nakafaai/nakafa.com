@@ -1,5 +1,4 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -10,6 +9,7 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Reads non-empty article sitemap partitions for one localized catalog. */
 export const readPublishedArticleBuckets = Effect.fn(
@@ -20,7 +20,7 @@ export const readPublishedArticleBuckets = Effect.fn(
     client.query(refs.public.contentRelease.article.sitemapBuckets, {
       appLocale,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,
@@ -52,5 +52,5 @@ export const readPublishedArticleSitemap = Effect.fn(
       appLocale,
       bucket,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
 });

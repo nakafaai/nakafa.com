@@ -6,7 +6,6 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { cache } from "react";
-import { env } from "@/env";
 import {
   makeArticleProjectionError,
   verifyArticlePublication,
@@ -18,6 +17,7 @@ import {
   renderArticleArtifact,
 } from "@/lib/content/published/article";
 import { decodePublishedDelivery } from "@/lib/content/published/exchange";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Verifies the signed query result without evaluating its immutable body.
  *
@@ -90,10 +90,7 @@ async function fetchArticleSource(locale: Locale, publicPath: string) {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
 

@@ -1,5 +1,4 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import {
   type GitCommitShaSchema,
@@ -20,6 +19,7 @@ import {
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
+import { httpLayer } from "@/lib/convex/http";
 /** Complete immutable data needed by one curriculum route page. */
 export interface PublishedProgramRoute {
   readonly activeReleaseId: null | typeof ReleaseIdSchema.Type;
@@ -53,7 +53,7 @@ export const readPublishedProgramRoute = Effect.fn(
       appLocale,
       publicPath,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
     publicPath,

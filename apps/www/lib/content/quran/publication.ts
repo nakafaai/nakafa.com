@@ -1,5 +1,4 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
@@ -12,6 +11,7 @@ import { Effect } from "effect";
 import { cacheTag } from "next/cache";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Reads and validates the active signed Quran identity without a catalog payload. */
 export const readPublishedQuranIdentity = Effect.fn(
@@ -19,7 +19,7 @@ export const readPublishedQuranIdentity = Effect.fn(
 )(function* () {
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(refs.public.contentRelease.quran.attribution, {})
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   return yield* decodePublishedQuranSource(result, "attribution");
 });
 
@@ -29,7 +29,7 @@ export const readPublishedQuranCatalog = Effect.fn(
 )(function* () {
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(refs.public.contentRelease.quran.surahs, {})
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   return yield* decodePublishedQuranCatalog(result);
 });
 
@@ -52,7 +52,7 @@ export const readPublishedQuranMarkdown = Effect.fn(
             verseLimit,
           }
     )
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   return yield* decodePublishedQuranMarkdown(result, {
     appLocale,
     surahNumber,
@@ -73,7 +73,7 @@ const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
         appLocale,
         surahNumber,
       })
-    ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+    ).pipe(Effect.provide(httpLayer()));
     return yield* decodePublishedQuranView(result, {
       appLocale,
       surahNumber,

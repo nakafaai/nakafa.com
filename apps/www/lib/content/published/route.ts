@@ -1,6 +1,5 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
@@ -16,6 +15,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
+import { httpLayer } from "@/lib/convex/http";
 
 type ContentRouteArgs = Ref.Args<
   typeof refs.public.contentRelease.ownership.resolve
@@ -84,7 +84,7 @@ export const readActiveContentRoute = Effect.fn(
   };
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(refs.public.contentRelease.ownership.resolve, args)
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   if (result.kind === "unmanaged") {
     const activeReleaseId = yield* Schema.decodeEffect(
       Schema.NullOr(ReleaseIdSchema)

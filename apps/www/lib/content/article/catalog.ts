@@ -1,6 +1,5 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import {
   type GitCommitShaSchema,
@@ -24,6 +23,7 @@ import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
+import { httpLayer } from "@/lib/convex/http";
 /** Stable source root for immutable Aksara article links. */
 export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
 type ArticlePageArgs = Ref.Args<
@@ -205,7 +205,7 @@ export const readPublishedArticlePage = Effect.fn(
   } satisfies ArticlePageArgs;
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(refs.public.contentRelease.article.publications, args)
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   const {
     activeManifestHash: rawManifestHash,
     activeReleaseId: rawReleaseId,
@@ -260,7 +260,7 @@ export const readPublishedCategories = Effect.fn(
   } satisfies CategoryPageArgs;
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(refs.public.contentRelease.article.categories, args)
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   const {
     activeManifestHash: rawManifestHash,
     activeReleaseId: rawReleaseId,

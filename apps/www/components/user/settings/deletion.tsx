@@ -29,7 +29,6 @@ import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { env } from "@/env";
 import {
   clearAccountDeletionAttempt,
   loadOrCreateAccountDeletionAttempt,
@@ -41,6 +40,7 @@ import {
   signOutAccountBrowserIdentity,
 } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { httpLayer } from "@/lib/convex/http";
 
 const dialogError = {
   generic: "generic",
@@ -94,9 +94,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
                     refs.public.auth.deletion.getAccountDeletionAttemptStatus,
                     { attemptId }
                   )
-                ).pipe(
-                  Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL))
-                ),
+                ).pipe(Effect.provide(httpLayer())),
             })
           ),
           Effect.andThen(clearDeletedAccountBrowserIdentity()),
