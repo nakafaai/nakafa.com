@@ -1,50 +1,12 @@
 "use client";
 
 import { captureException } from "@repo/analytics/posthog/browser";
+import { CodeBlockText } from "@repo/design-system/components/code-block/text";
 import { highlightCode } from "@repo/design-system/lib/code-block/highlight";
-import { cn } from "cn";
 import { Effect, Fiber } from "effect";
 import type { HTMLAttributes } from "react";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CodeOptionsMultipleThemes } from "shiki";
-
-type CodeBlockFallbackProps = HTMLAttributes<HTMLDivElement> & {
-  preClassName?: string | undefined;
-};
-
-/** Gives repeated code lines stable keys based on their source offsets. */
-function getCodeLines(code: string) {
-  let offset = 0;
-
-  return code.split("\n").map((line) => {
-    const key = `${offset}:${line}`;
-    offset += line.length + 1;
-    return { key, line };
-  });
-}
-
-function CodeBlockFallback({
-  children,
-  preClassName,
-  ...props
-}: CodeBlockFallbackProps) {
-  const lines = getCodeLines(children?.toString() ?? "");
-
-  return (
-    <div {...props}>
-      <pre className={cn("w-full", preClassName)}>
-        <code>
-          {lines.map(({ key, line }, index) => (
-            <Fragment key={key}>
-              <span className="line">{line}</span>
-              {index < lines.length - 1 ? "\n" : null}
-            </Fragment>
-          ))}
-        </code>
-      </pre>
-    </div>
-  );
-}
 
 /** Highlighting options plus the exact source used by the text fallback. */
 export type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
@@ -146,9 +108,9 @@ export function CodeBlockContent({
 
   if (!(request.syntaxHighlighting && html)) {
     return (
-      <CodeBlockFallback preClassName={request.preClassName} {...props}>
+      <CodeBlockText preClassName={request.preClassName} {...props}>
         {children}
-      </CodeBlockFallback>
+      </CodeBlockText>
     );
   }
 
