@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/memory/pack";
+import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   NINA_FILE_COUNT,
   NINA_FILE_SIZE,

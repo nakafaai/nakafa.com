@@ -3,6 +3,7 @@ import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec"
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { readCurrentCurriculumProgram } from "@repo/backend/confect/learningPreferences/program";
+import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import type {
   NinaPage,
   NinaUser,
@@ -11,7 +12,6 @@ import {
   resolveQuestionFocus,
   retainQuestionFocus,
 } from "@repo/backend/confect/nina/focus";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/memory/pack";
 import {
   type NinaPageInput,
   NinaTurnError,

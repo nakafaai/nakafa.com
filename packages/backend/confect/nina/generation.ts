@@ -19,6 +19,7 @@ import {
 import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
 import { readPageContext } from "@repo/backend/confect/nina/page";
 import { formatFocusPrompt } from "@repo/backend/confect/nina/prompt/focus";
+import { formatLearnerPrompt } from "@repo/backend/confect/nina/prompt/learner";
 import { createNinaSystemPrompt } from "@repo/backend/confect/nina/prompt/system";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { createNinaPrepareStep } from "@repo/backend/confect/nina/step";
@@ -57,13 +58,17 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     user: turn.user,
     runtime,
   });
-  const { focus, pageContent, summary } = yield* Effect.all(
+  const query = yield* QueryRunner;
+  const { focus, learner, pageContent, summary } = yield* Effect.all(
     {
       focus: turn.page.nina.focus ? readFocus(turn._id) : Effect.undefined,
+      learner: query(refs.internal.nina.memory.read, {
+        userId: turn.userId,
+      }).pipe(Effect.map(formatLearnerPrompt), Effect.orDie),
       pageContent: turn.page.needsFetch
         ? readPageContext(context.url)
         : Effect.undefined,
-      summary: (yield* QueryRunner)(refs.internal.nina.summaries.read, {
+      summary: query(refs.internal.nina.summaries.read, {
         chatId: turn.chatId,
       }).pipe(Effect.orDie),
     },
@@ -71,6 +76,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   );
   const instructions = createNinaSystemPrompt({
     ...(focus === undefined ? {} : { focus }),
+    ...(learner === undefined ? {} : { learner }),
     ...(pageContent === undefined ? {} : { pageContent }),
     ...(summary ? { summary: summary.text } : {}),
     page: turn.page,

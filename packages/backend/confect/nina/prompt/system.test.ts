@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
-import type { NinaContextPack } from "@repo/backend/confect/nina/memory/pack";
+import type { NinaContextPack } from "@repo/backend/confect/nina/contract/pack";
 import {
   createNinaSystemPrompt,
   formatNinaContextPackPrompt,

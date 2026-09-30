@@ -40,8 +40,9 @@ optimistic update contract. There is no Next.js AI transport route or separate A
 backend package.
 
 Nina's system prompt leads with stable instructions so provider prompt caching
-reuses them across turns. The current page, a question focus, and per-turn
-runtime facts follow in that order. On a verified learning page, generation
+reuses them across turns. The current page, which learners share, the learner
+block, a question focus, the conversation summary, and per-turn runtime facts
+follow in that order. On a verified learning page, generation
 reads the signed page once before the first model step and places it in that
 context within the page token budget. The model spends no forced tool step on
 it and asks Nakafa for other sections.
@@ -80,7 +81,8 @@ action folds turns beyond the four newest into the chat's conversation summary
 with a fast model once four such turns accumulate. The summary, at most 1,200
 tokens, sits in the system prompt context and is deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
-rather than in a turn's usage ledger, which clients read. Old
+rather than in a turn's usage ledger, which clients read. The learner profile
+and opt-in learner memory follow [ADR 0010](./0010-memory.md). Old
 reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000

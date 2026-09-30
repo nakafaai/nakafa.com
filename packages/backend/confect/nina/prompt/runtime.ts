@@ -1,5 +1,5 @@
 import { AgentCurriculumPreferenceSchema } from "@repo/backend/confect/nina/contract/agent";
-import { NinaContextPackSchema } from "@repo/backend/confect/nina/memory/pack";
+import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
 import { formatCurriculumPreferencePromptContext } from "@repo/backend/confect/nina/prompt/curriculum";
 import { formatNinaContextPackPrompt } from "@repo/backend/confect/nina/prompt/system";
 import { LocaleSchema } from "@repo/contents/content";

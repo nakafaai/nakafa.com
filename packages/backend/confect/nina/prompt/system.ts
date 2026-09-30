@@ -1,10 +1,10 @@
+import type { NinaContextPack } from "@repo/backend/confect/nina/contract/pack";
 import type {
   NinaPage,
   NinaRuntime,
   NinaUser,
 } from "@repo/backend/confect/nina/contract/turn";
 import { readNinaLearningPage } from "@repo/backend/confect/nina/contract/turn";
-import type { NinaContextPack } from "@repo/backend/confect/nina/memory/pack";
 import { createNinaPrompt } from "@repo/backend/confect/nina/prompt/prompt";
 import dedent from "dedent";
 
@@ -49,6 +49,7 @@ export function formatNinaContextPackPrompt(context: NinaContextPack) {
 /** Builds Nina's system prompt from validated runtime, page, and user context. */
 export function createNinaSystemPrompt({
   focus,
+  learner,
   page,
   pageContent,
   runtime,
@@ -56,6 +57,7 @@ export function createNinaSystemPrompt({
   user,
 }: {
   readonly focus?: string;
+  readonly learner?: string;
   readonly page: NinaPage;
   readonly pageContent?: string;
   readonly runtime: NinaRuntime;
@@ -66,6 +68,7 @@ export function createNinaSystemPrompt({
 
   return createNinaPrompt({
     ...(focus === undefined ? {} : { focus }),
+    ...(learner === undefined ? {} : { learner }),
     ...(pageContent === undefined ? {} : { pageContent }),
     ...(summary === undefined ? {} : { summary }),
     currentDate: runtime.currentDate,

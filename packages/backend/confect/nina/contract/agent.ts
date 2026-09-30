@@ -2,7 +2,7 @@ import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec"
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
-import { NinaContextPackSchema } from "@repo/backend/confect/nina/memory/pack";
+import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
 import { SourceReferenceSchema } from "@repo/backend/confect/nina/research/source";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { LocaleSchema } from "@repo/contents/content";

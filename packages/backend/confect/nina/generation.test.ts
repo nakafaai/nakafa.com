@@ -525,6 +525,38 @@ describe("Nina generation through the real Agent component", () => {
     expect(prompt).toContain("Earlier answer 5");
   });
 
+  it("places the learner's account facts and remembered facts in the prompt", async () => {
+    const languageModel = ninaModel();
+    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    const f = await createNinaTest();
+    await f.t.mutation(async (ctx) => {
+      await ctx.db.insert("onboardingProfiles", {
+        focus: "tryout",
+        updatedAt: Date.now(),
+        userId: f.identity.userId,
+      });
+      await ctx.db.insert("ninaMemories", {
+        facts: [
+          {
+            chatId: f.chatId,
+            key: 0,
+            savedAt: Date.now(),
+            text: "Sulit di peluang.",
+          },
+        ],
+        next: 1,
+        updatedAt: Date.now(),
+        usage: { calls: 1, input: 300, output: 20 },
+        userId: f.identity.userId,
+      });
+    });
+    await f.t.action(run, { turnId: f.turnId });
+    const prompt = JSON.stringify(languageModel.doStreamCalls[0]?.prompt);
+    expect(prompt).toContain("# Learner");
+    expect(prompt).toContain("- Focus: preparing for try-outs");
+    expect(prompt).toContain("- Sulit di peluang.");
+  });
+
   it("places the verified current page in the prompt without forcing a tool", async () => {
     const languageModel = ninaModel();
     vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
