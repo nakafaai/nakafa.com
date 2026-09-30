@@ -3,6 +3,7 @@ import { type ConsoleMessage, expect, type Page, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const readinessTimeoutMilliseconds = 15_000;
@@ -370,25 +371,7 @@ const verifyQuranLayoutStability = Effect.fn(
       readinessTimeoutMilliseconds
     );
     yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-    // Buffered entries replay every shift since navigation; a page with none
-    // never calls the observer back.
-    const layoutShift = yield* Effect.promise(() =>
-      page.evaluate(
-        () =>
-          new Promise<number>((resolve) => {
-            new PerformanceObserver((list) => {
-              let total = 0;
-              for (const entry of list.getEntries()) {
-                if ("value" in entry && typeof entry.value === "number") {
-                  total += entry.value;
-                }
-              }
-              resolve(total);
-            }).observe({ buffered: true, type: "layout-shift" });
-            setTimeout(() => resolve(0), 1000);
-          })
-      )
-    );
+    const layoutShift = yield* readLayoutShift(page);
     yield* Effect.sync(() => expect(layoutShift).toBeLessThan(0.01));
   }
 
