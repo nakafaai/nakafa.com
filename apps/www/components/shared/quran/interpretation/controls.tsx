@@ -30,8 +30,8 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { QuranInterpretationContext } from "@/components/shared/quran/interpretation/context";
-import { env } from "@/env";
 import { reportClientException } from "@/lib/analytics/client";
+import { httpLayer } from "@/lib/convex/http";
 
 interface Props {
   appLocale: Ref.Args<
@@ -165,7 +165,7 @@ export function QuranInterpretationControls({
         verseNumber,
       })
     ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.provide(httpLayer()),
       Effect.mapError(toQuranInterpretationRequestError),
       Effect.flatMap((result) =>
         decodePublishedQuranInterpretation(result, {

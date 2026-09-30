@@ -2,10 +2,10 @@ import { HttpClient } from "@confect/js";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Option, Schema } from "effect";
-import { env } from "@/env";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
+import { httpLayer } from "@/lib/convex/http";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
 const PREVIOUS_MATERIAL_LEVELS = new Set([
@@ -168,7 +168,7 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   }
   const redirect = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(refs.public.contentRelease.material.identity, identity.value)
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   if (!(redirect.activeReleaseId && redirect.managed && redirect.publicPath)) {
     return null;
   }

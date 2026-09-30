@@ -2,6 +2,11 @@
 @import "@repo/design-system/styles/theme.css";
 @import "@repo/design-system/styles/katex.css";
 
+/* The root layout sets the Quran typeface variable on every page. */
+@theme inline {
+  --font-quran: var(--font-amiri);
+}
+
 /* Smooth scrolling only on marketing pages */
 html:has([data-marketing-page]) {
   scroll-behavior: smooth;

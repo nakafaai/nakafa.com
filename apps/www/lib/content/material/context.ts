@@ -5,12 +5,12 @@ import refs from "@repo/backend/confect/_generated/refs";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
-import { env } from "@/env";
 import {
   decodePublishedMaterialContext,
   type PublishedMaterialIdentity,
 } from "@/lib/content/material/projection";
 import type { ContentReleasePin } from "@/lib/content/published/release";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Reads one exact published curriculum context for a material identity. */
 export const readPublishedMaterialContext = Effect.fn(
@@ -37,7 +37,7 @@ export const readPublishedMaterialContext = Effect.fn(
       programKey: context.programKey,
       publicPath: material.publicPath,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   return yield* decodePublishedMaterialContext(
     locale,
     material,

@@ -8,7 +8,7 @@ import { Suspense } from "react";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsMemory } from "@/components/user/settings/memory";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile";
-import { env } from "@/env";
+import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { admitUserSettingsRoute } from "@/lib/settings/server";
 
@@ -60,12 +60,7 @@ async function AuthenticatedSettings({
           { concurrency: "unbounded" }
         )
       ),
-      Effect.provide(
-        HttpClient.layer(
-          env.NEXT_PUBLIC_CONVEX_URL,
-          token ? { auth: token } : {}
-        )
-      )
+      Effect.provide(httpLayer(token ? { auth: token } : {}))
     )
   );
   if (!data.account) {

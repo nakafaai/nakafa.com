@@ -1,6 +1,18 @@
+"use client";
+
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
-import type { ReactNode } from "react";
-import { QuranVerseItem } from "@/components/shared/quran/verses/item";
+import {
+  QuranInterpretationButton,
+  QuranInterpretationLink,
+} from "@/components/shared/quran/interpretation/button";
+import { QuranText } from "@/components/shared/quran/text";
+import { useQuranVerses } from "@/components/shared/quran/verses/context";
+import { QURAN_FLOW_VERSES } from "@/components/shared/quran/verses/flow";
+import {
+  QuranVerse,
+  QuranVerseHeading,
+} from "@/components/shared/quran/verses/item";
+import { QuranTranslation } from "@/components/shared/quran/verses/translation";
 import { WindowVirtualized } from "@/components/shared/quran/verses/virtual";
 
 interface VerseItem {
@@ -9,35 +21,100 @@ interface VerseItem {
   verse: QuranViewVerse;
 }
 
-interface Props {
-  items: readonly VerseItem[];
-  renderAction?: (verse: QuranViewVerse, verseLabel: string) => ReactNode;
-  translationNotesLabel: string;
-}
+/**
+ * Renders a surah's leading verses in document flow, so the server markup has
+ * its final height, and virtualizes any verses after them far below the fold.
+ * Verses arrive once as data, so the page payload carries each verse's text
+ * rather than a rendered element tree for every verse.
+ */
+export function QuranVerseList({ items }: { items: readonly VerseItem[] }) {
+  const last = items.at(-1);
+  const tail = items.slice(QURAN_FLOW_VERSES);
 
-const QURAN_INITIAL_VERSE_SSR_COUNT = 80;
-
-/** Renders the virtualized, SEO-visible verses for one Quran surah. */
-export function QuranVerseList({
-  items,
-  renderAction,
-  translationNotesLabel,
-}: Props) {
   return (
-    <WindowVirtualized
-      ssrCount={Math.min(items.length, QURAN_INITIAL_VERSE_SSR_COUNT)}
-    >
-      {items.map(({ id, label, verse }, index) => (
-        <QuranVerseItem
-          action={renderAction?.(verse, label)}
-          id={id}
-          isLast={index === items.length - 1}
-          key={verse.number.inQuran}
-          translationNotesLabel={translationNotesLabel}
-          verse={verse}
-          verseLabel={label}
+    <div>
+      {items.slice(0, QURAN_FLOW_VERSES).map((item) => (
+        <QuranSurahVerse
+          isLast={item === last}
+          item={item}
+          key={item.verse.number.inQuran}
         />
       ))}
-    </WindowVirtualized>
+      {tail.length > 0 ? (
+        <WindowVirtualized data={tail}>
+          {(item) => (
+            <QuranSurahVerse
+              isLast={item === last}
+              item={item}
+              key={item.verse.number.inQuran}
+            />
+          )}
+        </WindowVirtualized>
+      ) : null}
+    </div>
+  );
+}
+
+/** One verse: its heading and interpretation control, Arabic, and translation. */
+function QuranSurahVerse({
+  isLast,
+  item,
+}: {
+  isLast: boolean;
+  item: VerseItem;
+}) {
+  const { id, label, verse } = item;
+
+  return (
+    <QuranVerse isLast={isLast} number={verse.number.inSurah}>
+      <QuranVerseHeading id={id} label={label} number={verse.number.inSurah}>
+        <QuranVerseInterpretation
+          verseLabel={label}
+          verseNumber={verse.number.inSurah}
+        />
+      </QuranVerseHeading>
+      <QuranText data-quran-arabic>{verse.arabic}</QuranText>
+      <QuranVerseTranslation item={item} />
+    </QuranVerse>
+  );
+}
+
+/** The interpretation control the surah's Tafsir edition supports. */
+function QuranVerseInterpretation({
+  verseLabel,
+  verseNumber,
+}: {
+  verseLabel: string;
+  verseNumber: number;
+}) {
+  const interpretationLabel = useQuranVerses(
+    (value) => value.interpretationLabel
+  );
+  const tafsirAccess = useQuranVerses((value) => value.tafsirAccess);
+  const label = `${interpretationLabel}: ${verseLabel}`;
+
+  return tafsirAccess.kind === "embedded" ? (
+    <QuranInterpretationButton label={label} verseNumber={verseNumber} />
+  ) : (
+    <QuranInterpretationLink
+      href={tafsirAccess.source.sourceUrl}
+      label={label}
+    />
+  );
+}
+
+/** A verse's translation with its source notes. */
+function QuranVerseTranslation({ item }: { item: VerseItem }) {
+  const translationNotesLabel = useQuranVerses(
+    (value) => value.translationNotesLabel
+  );
+
+  return (
+    <QuranTranslation
+      id={item.id}
+      label={translationNotesLabel}
+      subjectLabel={item.label}
+      translation={item.verse.translation}
+    />
   );
 }

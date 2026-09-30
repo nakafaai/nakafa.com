@@ -1,6 +1,5 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import {
   type AppLocale,
@@ -12,6 +11,7 @@ import type { Locale } from "next-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { applyContentCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
+import { httpLayer } from "@/lib/convex/http";
 
 type TryoutMetadataKind = Ref.Args<
   typeof refs.public.tryouts.queries.catalog.getMetadata
@@ -40,10 +40,7 @@ export async function readFeaturedTryout(locale: Locale) {
       client.query(refs.public.tryouts.queries.catalog.getFeaturedQuestion, {
         appLocale: AppLocaleSchema.make(locale),
       })
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
   return await Effect.runPromise(
     Effect.gen(function* () {
@@ -64,10 +61,7 @@ export async function readTryoutMetadata(args: TryoutMetadataArgs) {
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
       client.query(refs.public.tryouts.queries.catalog.getMetadata, args)
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
 
@@ -83,7 +77,7 @@ export async function readTryoutHubPage(locale: Locale) {
         appLocale,
       })
     ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.provide(httpLayer()),
       Effect.withTracerTiming(false),
       Effect.mapError(
         (cause) =>
@@ -122,7 +116,7 @@ export async function readTryoutCountryPage(
         publicPath,
       })
     ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
+      Effect.provide(httpLayer()),
       Effect.withTracerTiming(false),
       Effect.mapError(
         (cause) =>
@@ -159,10 +153,7 @@ export async function readTryoutExamPage(locale: Locale, publicPath: string) {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
 
@@ -177,10 +168,7 @@ export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
 
@@ -194,8 +182,7 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
       client.query(refs.public.tryouts.queries.sets.list, args)
     ).pipe(
       Effect.provide(
-        HttpClient.layer(
-          env.NEXT_PUBLIC_CONVEX_URL,
+        httpLayer(
           token
             ? {
                 auth: token,
@@ -225,10 +212,7 @@ export async function readTryoutSetPage(locale: Locale, publicPath: string) {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
 
@@ -247,7 +231,7 @@ export const readTryoutSetAttemptPage = Effect.fn(
     })
   ).pipe(
     Effect.provide(
-      HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, {
+      httpLayer({
         auth: token,
       })
     ),
@@ -275,10 +259,7 @@ export async function readTryoutSectionPage(
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
 
@@ -297,7 +278,7 @@ export const readTryoutSectionAttemptPage = Effect.fn(
     })
   ).pipe(
     Effect.provide(
-      HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, {
+      httpLayer({
         auth: token,
       })
     ),

@@ -3,8 +3,8 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Resolves the authenticated school landing redirects before rendering children. */
 export async function School({
@@ -21,7 +21,7 @@ export async function School({
         client.query(refs.public.schools.queries.getMySchoolLandingState, {})
       ).pipe(
         Effect.provide(
-          HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, {
+          httpLayer({
             auth: token,
           })
         ),

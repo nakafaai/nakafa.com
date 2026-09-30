@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { SchoolSelectList } from "@/components/school/selection";
-import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
+import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Render the school selection page for users who belong to many schools. */
@@ -45,7 +45,7 @@ async function AuthenticatedSchoolSelection({
         })
       ).pipe(
         Effect.provide(
-          HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL, {
+          httpLayer({
             auth: token,
           })
         ),

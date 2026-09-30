@@ -52,7 +52,7 @@
     "@tanstack/react-query-devtools": "^5.104.0",
     "@tanstack/react-table": "^9.2.4",
     "@vercel/functions": "^3.9.9",
-    "ai": "7.0.109",
+    "ai": "7.0.123",
     "any-ascii": "^0.3.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "1.6.33",

@@ -10,7 +10,7 @@ import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { MaterialRow } from "@/components/home/material";
-import { env } from "@/env";
+import { httpLayer } from "@/lib/convex/http";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /**
@@ -36,10 +36,7 @@ async function getHomeTrendingSubjects(locale: PublicAppLocale) {
         locale,
         windowKey: "7d",
       })
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
 

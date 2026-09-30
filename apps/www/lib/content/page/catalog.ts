@@ -1,5 +1,4 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import {
   type ActiveAppLocaleCode,
@@ -17,6 +16,7 @@ import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
 import { decodeContentReleasePin } from "@/lib/content/published/release";
+import { httpLayer } from "@/lib/convex/http";
 import { isReservedPagePath } from "@/lib/routing/public/ownership";
 
 /** Complete signed Page catalog selected from one active release. */
@@ -51,7 +51,7 @@ export const readPublishedPageCatalog = Effect.fn(
   };
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(refs.public.contentRelease.page.catalog, {})
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     undefined,

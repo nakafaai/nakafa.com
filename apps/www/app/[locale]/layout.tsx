@@ -8,6 +8,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
+import { cn } from "cn";
 import type { Metadata } from "next";
 import { io } from "next/cache";
 import Link from "next/link";
@@ -15,6 +16,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { PreviewRefresh } from "@/components/dev/refresh";
+import { quranFont } from "@/components/shared/quran/font";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readPreviewManifestForPrerender } from "@/lib/content/preview/manifest";
 import { readPreviewStaticLocaleParams } from "@/lib/content/preview/route";
@@ -157,7 +159,7 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
 
   return (
     <html
-      className={fonts}
+      className={cn(fonts, quranFont.variable)}
       data-scroll-behavior="smooth"
       lang={locale}
       suppressHydrationWarning
