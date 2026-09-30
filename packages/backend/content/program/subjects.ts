@@ -17,14 +17,25 @@ interface SubjectCandidate {
   readonly row: PublicationRow<"curriculumRoutes">;
 }
 
-/** Ancestor orders from the program root down, then the route path. */
-const authoredOrder = Order.combine(
+/**
+ * Ancestor orders from the program root down, then the program and node keys.
+ * Tied positions fall back to those keys rather than the translated public
+ * path, so every locale features the same subjects in the same order.
+ */
+const authoredOrder = Order.combineAll([
   Order.mapInput(
     Arr.makeOrder(Order.Number),
     (subject: SubjectCandidate) => subject.position
   ),
-  Order.mapInput(Order.String, (subject: SubjectCandidate) => subject.row.path)
-);
+  Order.mapInput(
+    Order.String,
+    (subject: SubjectCandidate) => subject.row.programKey
+  ),
+  Order.mapInput(
+    Order.String,
+    (subject: SubjectCandidate) => subject.row.nodeKey
+  ),
+]);
 
 /**
  * Reads the featured subjects of one active program snapshot: the first public

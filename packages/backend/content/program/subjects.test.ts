@@ -39,7 +39,10 @@ describe("bounded public program subjects", () => {
   });
   const root = "curriculum/technical-program-1";
 
-  /** One public or hidden curriculum route under the technical program. */
+  /**
+   * One public or hidden curriculum route under the technical program. The
+   * public path ends in the node key unless a translated slug replaces it.
+   */
   function route(input: {
     domain?: string;
     level: "class" | "subject";
@@ -47,6 +50,7 @@ describe("bounded public program subjects", () => {
     order: number;
     parentPath: string;
     sitemap?: boolean;
+    slug?: string;
   }) {
     return CurriculumRouteSchema.make({
       appLocale,
@@ -60,7 +64,9 @@ describe("bounded public program subjects", () => {
       order: input.order,
       parentPath: PublicPathSchema.make(input.parentPath),
       programKey: program.key,
-      publicPath: PublicPathSchema.make(`${input.parentPath}/${input.nodeKey}`),
+      publicPath: PublicPathSchema.make(
+        `${input.parentPath}/${input.slug ?? input.nodeKey}`
+      ),
       sitemap: input.sitemap ?? true,
       sourcePath: CorpusSourcePathSchema.make(
         "packages/corpus/curriculum/technical-program-1"
@@ -95,7 +101,7 @@ describe("bounded public program subjects", () => {
   });
 
   it.effect(
-    "features each material domain once, in authored order, and rejects damaged signed rows",
+    "features each material domain once, in authored order, breaks ties by key, and rejects damaged signed rows",
     () =>
       Effect.gen(function* () {
         // The second class is authored first even though its path sorts last.
@@ -149,32 +155,28 @@ describe("bounded public program subjects", () => {
             order: 10,
             parentPath: second,
           }),
+          // Physics and biology share an authored position. Their translated
+          // paths put physics first, but the node keys put biology first.
           route({
             domain: "physics",
             level: "subject",
             nodeKey: "a-physics",
             order: 20,
             parentPath: second,
+            slug: "fisika",
           }),
           route({
             domain: "biology",
             level: "subject",
             nodeKey: "a-biology",
-            order: 30,
+            order: 20,
             parentPath: second,
+            slug: "hayati",
           }),
           route({
             domain: "informatics",
             level: "subject",
             nodeKey: "a-informatics",
-            order: 40,
-            parentPath: second,
-          }),
-          // Shares its authored position with informatics, so the path decides.
-          route({
-            domain: "geography",
-            level: "subject",
-            nodeKey: "a-geography",
             order: 40,
             parentPath: second,
           }),
@@ -199,8 +201,8 @@ describe("bounded public program subjects", () => {
         expect(featured.map(({ publicPath }) => publicPath)).toEqual([
           `${first}/b-chemistry`,
           `${first}/b-mathematics`,
-          `${second}/a-physics`,
-          `${second}/a-biology`,
+          `${second}/hayati`,
+          `${second}/fisika`,
         ]);
         for (const row of featured) {
           expect(row).toMatchObject({
