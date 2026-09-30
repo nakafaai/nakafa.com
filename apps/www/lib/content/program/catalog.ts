@@ -101,7 +101,7 @@ export const readPublishedProgramPrerenderRoute = Effect.fn(
   return entry.route;
 });
 
-/** Reads only the authenticated public subjects needed by the About feature list. */
+/** Reads the authenticated featured subjects, one route per subject, for the About feature list. */
 export const readPublishedProgramSubjects = Effect.fn(
   "NakafaProgram.readPublishedSubjects"
 )(function* (locale: Locale) {
@@ -138,7 +138,7 @@ export const readPublishedProgramSubjects = Effect.fn(
   );
 });
 
-/** Caches the fixed-size subject sample under current publication invalidation. */
+/** Caches the featured subjects, one per subject, under current publication invalidation. */
 export async function getPublishedProgramSubjects(locale: Locale) {
   "use cache";
 
