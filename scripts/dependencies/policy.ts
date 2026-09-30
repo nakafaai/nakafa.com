@@ -64,14 +64,14 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   { approved: "1.46.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.109", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "7.0.123", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.76",
+    approved: "4.0.86",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.88",
+    approved: "4.0.101",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
@@ -205,15 +205,15 @@ export const REGISTRY_REVIEWS = [
     "1.46.0",
     "Additive validator `.optional()` and `FunctionReference_future`; acceptance uses an isolated deployment.",
   ],
-  ["ai@latest", "7.0.109", "AI SDK packages move as one reviewed cohort."],
+  ["ai@latest", "7.0.123", "AI SDK packages move as one reviewed cohort."],
   [
     "@ai-sdk/google@latest",
-    "4.0.76",
+    "4.0.86",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.88",
+    "4.0.101",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
