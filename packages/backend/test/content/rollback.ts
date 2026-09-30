@@ -16,7 +16,10 @@ import {
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { testArtifactJson } from "@repo/backend/test/content/artifact";
+import {
+  insertTestArtifact,
+  testArtifactJson,
+} from "@repo/backend/test/content/artifact";
 import {
   testMaterialPublicPath,
   testProjectionJson,
@@ -180,11 +183,9 @@ async function insertVersion(
     sourceHash: options.sourceHash ?? TEST_DIGEST,
     sourcePath: options.sourcePath,
   });
-  await ctx.db.insert("contentArtifacts", {
+  await insertTestArtifact(ctx, {
     artifactHash: options.artifactHash,
     artifactJson,
-    createdAt: NOW,
-    retainUntil: Number.MAX_SAFE_INTEGER,
   });
 }
 

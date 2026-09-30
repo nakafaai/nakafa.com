@@ -271,6 +271,14 @@ export const compactRows = Effect.fn("contentRelease.compactRows")(function* (
     return yield* compactBatches(from, floor, cursor);
   }
   if (phase === "artifacts") {
+    // The retired body scan's cursor cannot resume the facts query.
+    return {
+      cursor: null,
+      deleted: 0,
+      done: true,
+    } satisfies RowPage;
+  }
+  if (phase === "facts") {
     return yield* compactArtifacts(cursor, startedAt);
   }
   if (phase === "snapshots") {
