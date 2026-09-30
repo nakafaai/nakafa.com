@@ -1,5 +1,4 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
@@ -17,6 +16,7 @@ import {
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Complete bounded program catalog used by root curriculum navigation. */
 export interface PublishedProgramCatalog {
@@ -37,7 +37,7 @@ export const readPublishedProgramCatalog = Effect.fn(
     client.query(refs.public.contentRelease.program.catalog, {
       appLocale,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
     appLocale,
     publicPath: "curricula",
@@ -110,7 +110,7 @@ export const readPublishedProgramSubjects = Effect.fn(
     client.query(refs.public.contentRelease.program.subjects, {
       appLocale,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   if (
     !result.managed ||
     result.routeJson.length > PROGRAM_FEATURED_SUBJECT_LIMIT

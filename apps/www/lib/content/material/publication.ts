@@ -7,7 +7,6 @@ import { Effect, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { cache } from "react";
-import { env } from "@/env";
 import { applyContentCache } from "@/lib/content/cache";
 import {
   decodeMaterialJson,
@@ -20,6 +19,7 @@ import {
   decodeMaterialData,
   renderMaterialArtifact,
 } from "@/lib/content/published/material";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Verifies the signed query result without evaluating its immutable body.
  *
@@ -147,10 +147,7 @@ async function readMaterialNavigation(
         expectedActiveReleaseId,
         materialKey,
       })
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
 class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
@@ -169,10 +166,7 @@ async function fetchMaterialLesson(locale: Locale, publicPath: string) {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
-    ).pipe(
-      Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)),
-      Effect.withTracerTiming(false)
-    )
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
   );
 }
 const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(

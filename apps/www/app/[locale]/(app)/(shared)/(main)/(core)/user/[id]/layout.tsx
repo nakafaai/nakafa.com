@@ -6,8 +6,8 @@ import { Effect, Schema } from "effect";
 import { Suspense } from "react";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
-import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
+import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export default function Layout(props: LayoutProps<"/[locale]/user/[id]">) {
@@ -44,12 +44,7 @@ async function UserLayoutContent(props: LayoutProps<"/[locale]/user/[id]">) {
           )
         )
       ),
-      Effect.provide(
-        HttpClient.layer(
-          env.NEXT_PUBLIC_CONVEX_URL,
-          token ? { auth: token } : {}
-        )
-      )
+      Effect.provide(httpLayer(token ? { auth: token } : {}))
     )
   );
 

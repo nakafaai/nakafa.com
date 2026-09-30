@@ -1,10 +1,10 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import { httpLayer } from "@/lib/convex/http";
 
 /** Reads non-empty curriculum sitemap partitions for one locale. */
 export const readPublishedProgramBuckets = Effect.fn(
@@ -15,7 +15,7 @@ export const readPublishedProgramBuckets = Effect.fn(
     client.query(refs.public.contentRelease.program.sitemapBuckets, {
       appLocale,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
 });
 
 /** Reads one complete verified curriculum sitemap partition. */
@@ -28,5 +28,5 @@ export const readPublishedProgramSitemap = Effect.fn(
       appLocale,
       bucket,
     })
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
 });

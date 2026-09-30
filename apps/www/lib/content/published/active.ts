@@ -1,5 +1,4 @@
 import { HttpClient } from "@confect/js";
-import { env } from "@/env";
 import "server-only";
 import {
   ReleaseIdSchema,
@@ -7,6 +6,7 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
+import { httpLayer } from "@/lib/convex/http";
 
 const ActiveContentIdentitySchema = Schema.NullOr(
   Schema.Struct({
@@ -26,6 +26,6 @@ export const readActiveContentIdentity = Effect.fn(
 )(function* () {
   const identity = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(refs.public.contentRelease.runtime.active.read, {})
-  ).pipe(Effect.provide(HttpClient.layer(env.NEXT_PUBLIC_CONVEX_URL)));
+  ).pipe(Effect.provide(httpLayer()));
   return yield* Schema.decodeEffect(ActiveContentIdentitySchema)(identity);
 });
