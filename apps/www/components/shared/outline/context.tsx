@@ -11,6 +11,7 @@ interface TocContextType {
 }
 
 const TocContext = createContext<TocContextType | undefined>(undefined);
+const missingTocContext = Symbol("missing-toc-context");
 
 export function TocProvider({
   toc,
@@ -28,11 +29,16 @@ export function TocProvider({
   return <TocContext.Provider value={value}>{children}</TocContext.Provider>;
 }
 
-// Hook with selector for performance optimization
+/**
+ * Selects one value from the outline state, so a consumer re-renders only when
+ * its selection changes rather than whenever any heading becomes active.
+ */
 export function useToc<T>(selector: (context: TocContextType) => T): T {
-  const context = useContextSelector(TocContext, (value) => value);
-  if (context === undefined) {
+  const selected = useContextSelector(TocContext, (value) =>
+    value === undefined ? missingTocContext : selector(value)
+  );
+  if (selected === missingTocContext) {
     throw new Error("useToc must be used within a TocProvider.");
   }
-  return selector(context);
+  return selected;
 }
