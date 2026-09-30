@@ -269,7 +269,7 @@ function SearchListItem({
           <span className="line-clamp-1">{item.label}</span>
         </div>
         <SearchExcerpt
-          className="line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground"
+          className="line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground group-data-highlighted:[&_mark]:text-accent-foreground"
           excerpt={item.excerpt}
           query={item.query}
         />

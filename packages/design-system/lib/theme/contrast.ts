@@ -44,19 +44,27 @@ export const NON_TEXT_ROLE_PAIRS = [
     "focus indicator on a page-backed sidebar control",
   ],
   ["sidebar-ring", "sidebar-accent", "focus indicator on active sidebar"],
+  ["primary", "sidebar", "active indicator on the sidebar surface"],
 ];
 
-/** Semantic colors used directly as normal-sized text on common surfaces. */
+/**
+ * Semantic colors used directly as normal-sized text on the neutral surfaces.
+ * Fills such as `accent` carry their own `-foreground` text instead.
+ */
 export const STANDALONE_TEXT_ROLE_PAIRS = [
   ["foreground", "muted", "foreground text on a muted surface"],
+  ["foreground", "popover", "foreground text on a popover surface"],
   ["primary", "background", "primary-colored text on the page surface"],
   ["primary", "card", "primary-colored text on a card surface"],
+  ["primary", "popover", "primary-colored text on a popover surface"],
+  ["primary", "muted", "link text on a muted surface"],
   ["destructive", "background", "destructive text on the page surface"],
   ["destructive", "card", "destructive text on a card surface"],
   ["destructive", "popover", "destructive text on a popover surface"],
   ["muted-foreground", "background", "muted text on the page surface"],
   ["muted-foreground", "card", "muted text on a card surface"],
   ["muted-foreground", "popover", "muted text on a popover surface"],
+  ["muted-foreground", "sidebar", "muted text on the sidebar surface"],
 ];
 
 /** Calculates a full-precision WCAG 2.1 ratio through Color.js. */
