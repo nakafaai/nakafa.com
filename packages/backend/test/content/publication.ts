@@ -128,8 +128,6 @@ export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
     {
       artifactHash: artifact.artifactHash,
       artifactJson: JSON.stringify(artifact),
-      createdAt: 10,
-      retainUntil: 1000,
     },
   ]);
   fixture.source.set("contentKeys", [

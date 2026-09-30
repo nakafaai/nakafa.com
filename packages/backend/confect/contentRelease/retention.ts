@@ -2,6 +2,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { loadArtifactFacts } from "@repo/backend/confect/contentRelease/artifact/facts";
 import { hasSnapshotArtifactReference } from "@repo/backend/confect/contentRelease/snapshot/retention";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import { Clock, Effect, Option } from "effect";
@@ -31,11 +32,15 @@ export const isArtifactReferenced = Effect.fn(
   return head !== null || item !== null || snapshot;
 });
 
-/** Starts retention when deleting rows removes an artifact's final reference. */
+/**
+ * Starts retention when deleting rows removes an artifact's final reference.
+ *
+ * Retention lives only in the small artifact facts. A body stored before facts
+ * stays protected until the facts backfill grants it a full retention window.
+ */
 export const retainOrphanedArtifacts = Effect.fn(
   "contentRelease.retainOrphanedArtifacts"
 )(function* (artifactHashes: Iterable<string>, now?: number) {
-  const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const timestamp = now ?? (yield* Clock.currentTimeMillis);
   const hashes = [...new Set(artifactHashes)];
@@ -43,18 +48,12 @@ export const retainOrphanedArtifacts = Effect.fn(
     if (yield* isArtifactReferenced(artifactHash)) {
       continue;
     }
-    const artifact = yield* database
-      .table("contentArtifacts")
-      .get("by_artifactHash", artifactHash)
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
+    const facts = yield* loadArtifactFacts(artifactHash);
     const retainUntil = timestamp + ROLLBACK_RETENTION_MS;
-    if (artifact && artifact.retainUntil < retainUntil) {
+    if (facts && facts.retainUntil < retainUntil) {
       yield* writer
-        .table("contentArtifacts")
-        .patch(artifact._id, {
+        .table("contentArtifactFacts")
+        .patch(facts._id, {
           retainUntil,
         })
         .pipe(Effect.orDie);
