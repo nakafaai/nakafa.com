@@ -28,14 +28,29 @@ export const COMPACTION_PAGE_COUNT = 32;
 /** Maximum history bytes read by one compaction source query. */
 export const COMPACTION_PAGE_BYTES = 2 * 1024 * 1024;
 
-/** Maximum content versions inspected when each may release two artifacts. */
-export const COMPACTION_HEAD_COUNT = 2;
+/**
+ * Maximum content versions inspected by one compaction transaction.
+ *
+ * Each version reads at most seven heads and may release two artifacts, each
+ * proven against one head, one release item, and two try-out placements.
+ */
+export const COMPACTION_HEAD_COUNT = 8;
 
-/** Maximum release items inspected when each may release one artifact. */
-export const COMPACTION_ITEM_COUNT = 4;
+/**
+ * Maximum release items inspected by one compaction transaction.
+ *
+ * The page and its deletes each read at most one item past the page byte
+ * bound, and each item may release one artifact proven against its references.
+ */
+export const COMPACTION_ITEM_COUNT = 8;
 
-/** Maximum artifact rows inspected by one cleanup transaction. */
-export const ARTIFACT_PAGE_COUNT = 4;
+/**
+ * Maximum artifact facts inspected by one cleanup or compaction transaction.
+ *
+ * Each fact either proves its artifact against its references or deletes one
+ * signed body, leaving room for cleanup's release reads.
+ */
+export const ARTIFACT_PAGE_COUNT = 12;
 
 /** Maximum artifact bytes read before maintenance yields a continuation. */
 export const ARTIFACT_PAGE_BYTES = 2 * 1024 * 1024;

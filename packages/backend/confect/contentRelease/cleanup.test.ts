@@ -1,16 +1,29 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import { ARTIFACT_PAGE_COUNT } from "@repo/backend/confect/contentRelease/spec";
+import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
+import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
+import {
+  ARTIFACT_PAGE_COUNT,
+  TRANSACTION_READ_HEADROOM,
+  TRANSACTION_READ_LIMIT,
+} from "@repo/backend/confect/contentRelease/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { insertTestArtifact } from "@repo/backend/test/content/artifact";
+import {
+  ceilingArtifactJson,
+  ceilingPadding,
+  insertCeilingReferences,
+  transactionBytes,
+} from "@repo/backend/test/content/budget";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
   testRollbackJson,
+  testTextHash,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
 import {
@@ -37,6 +50,20 @@ function insertRelease(ctx: MutationCtx) {
     },
     role: "candidate",
     status: "aborted",
+  });
+}
+
+/** Fills the cleanup release to the content document ceiling. */
+async function fillRelease(ctx: MutationCtx) {
+  const release = await ctx.db.query("contentReleases").unique();
+  if (!release) {
+    throw new Error("Expected cleanup release.");
+  }
+  await ctx.db.patch("contentReleases", release._id, {
+    rendererJson: `${release.rendererJson}${ceilingPadding(
+      CONTENT_DOCUMENT_LIMIT,
+      release
+    )}`,
   });
 }
 
@@ -174,6 +201,50 @@ describe("contentRelease/cleanup", () => {
       facts: [],
     });
   });
+
+  it.each([
+    ["referenced", 0],
+    ["unreferenced", ARTIFACT_PAGE_COUNT],
+  ] as const)(
+    "keeps a full page of expired %s artifacts under the read budget",
+    async (reach, deleted) => {
+      const t = convexTest(schema, convexModules);
+      const artifactHashes = Array.from(
+        { length: ARTIFACT_PAGE_COUNT },
+        (_, index) => testTextHash(`cleanup-${index}`)
+      );
+      await t.mutation(async (ctx) => {
+        await insertRelease(ctx);
+        await fillRelease(ctx);
+        for (const artifactHash of artifactHashes) {
+          await insertTestArtifact(ctx, {
+            artifactHash,
+            artifactJson: ceilingArtifactJson(artifactHash),
+            retainUntil: 0,
+          });
+        }
+        if (reach === "referenced") {
+          await insertCeilingReferences(ctx, artifactHashes, 2);
+        }
+      });
+
+      const { bytesRead, result } = await t.mutation(async (ctx) => ({
+        result: await ctx.runMutation(cleanup, {
+          releaseId: RELEASE.releaseId,
+        }),
+        bytesRead: await transactionBytes(ctx),
+      }));
+
+      expect(result.deletedArtifacts).toBe(deleted);
+      // The release and each artifact's maximal item reference or body.
+      expect(bytesRead).toBeGreaterThan(
+        CONTENT_DOCUMENT_LIMIT + ARTIFACT_PAGE_COUNT * MAX_SIGNED_ARTIFACT_BYTES
+      );
+      expect(bytesRead).toBeLessThanOrEqual(
+        TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+      );
+    }
+  );
 
   it("retains every artifact referenced by immutable heads or items", async () => {
     const t = convexTest(schema, convexModules);
