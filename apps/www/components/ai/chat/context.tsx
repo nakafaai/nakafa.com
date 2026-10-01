@@ -51,6 +51,9 @@ const messagesQuery: MessagesQuery = Ref.getFunctionReference(
 );
 type Conversation = Ref.Returns<typeof refs.public.nina.conversation.get>;
 type Submission = ReturnType<typeof useNinaSubmission>;
+// Declared outside the provider: a type query naming `cancel` inside it
+// stops the React Compiler from memoizing the provider's `cancel` action.
+type CancelError = Ref.Error<typeof refs.public.nina.lifecycle.cancel>;
 
 /**
  * The conversation's state and actions. It changes when a turn starts, ends
@@ -63,9 +66,7 @@ interface ChatContextValue {
   canLoadMore: boolean;
   canWrite: boolean;
   chat: Docs["chats"] | undefined;
-  error:
-    | Submission["error"]
-    | Ref.Error<typeof refs.public.nina.lifecycle.cancel>;
+  error: Submission["error"] | CancelError;
   /** Whether the assistant's reply to the current turn failed in the transcript. */
   hasTurnFailure: boolean;
   /** Whether the transcript already ends with the reply to the current turn. */
@@ -223,9 +224,7 @@ export function ChatProvider({
     refs.public.nina.lifecycle.cancel
   ).withOptimisticUpdate(optimisticCancel);
   const [cancelError, setCancelError] = useState<
-    | Ref.Error<typeof refs.public.nina.lifecycle.cancel>
-    | NinaConnectionError
-    | null
+    CancelError | NinaConnectionError | null
   >(null);
 
   const { messages, showDraft, opening, isLoading } = useMessages(
