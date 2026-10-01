@@ -5,13 +5,14 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {
-  type TryoutResponseFieldLabel,
-  TryoutResponseFields,
-} from "@/components/tryout/runtime/response/fields.client";
+  type PlayerResponseLabel,
+  ResponseFields,
+} from "@/components/player/response";
 import {
   isPreviewComplete,
   isPreviewCorrect,
 } from "@/components/tryout/runtime/response/preview";
+import { tryoutResponses } from "@/components/tryout/runtime/response/registry";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
 
 /** Previews every authored response kind without creating attempt state. */
@@ -38,7 +39,8 @@ export function TryoutResponsePreview({
 
   return (
     <div className="space-y-4">
-      <TryoutResponseFields
+      <ResponseFields
+        registry={tryoutResponses}
         value={{
           id,
           locked: revealAnswers && !autoReveal,
@@ -48,10 +50,7 @@ export function TryoutResponsePreview({
               setRevealAnswers(true);
             }
           },
-          renderLabel: ({
-            correctness,
-            id: labelId,
-          }: TryoutResponseFieldLabel) => (
+          renderLabel: ({ correctness, id: labelId }: PlayerResponseLabel) => (
             <>
               {labels[labelId]}
               {correctness === undefined ? null : (

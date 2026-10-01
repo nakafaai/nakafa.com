@@ -2,6 +2,7 @@ import type { Ref } from "@confect/core";
 import type refs from "@repo/backend/confect/_generated/refs";
 
 import type { Locale } from "next-intl";
+import type { TryoutPlayerInput } from "@/components/tryout/player/model";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
 /** Convex query contract for the set discovery page. */
@@ -78,5 +79,7 @@ export interface TryoutSetView {
 /** Render model for sets whose only section is the set entry itself. */
 export interface TryoutInternalSetView extends TryoutSetView {
   entrySection: SetEntrySection;
+  /** Player inputs of a live attempt; `null` for static pages. */
+  player: TryoutPlayerInput | null;
   runtimeState: TryoutRuntimeState<LoadedRuntime>;
 }

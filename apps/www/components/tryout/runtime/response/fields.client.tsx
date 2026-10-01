@@ -2,7 +2,7 @@
 
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import type { PlayerResponseValue } from "@/components/player/response";
 import {
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
@@ -14,51 +14,16 @@ import {
 } from "@/components/tryout/runtime/response/id";
 import {
   assignCategorySelection,
-  type TryoutResponseSelection,
   toggleMultipleChoiceSelection,
 } from "@/components/tryout/runtime/response/state";
-import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 
-export interface TryoutResponseFieldLabel {
-  readonly correctness?: boolean | undefined;
-  readonly id: string;
-  readonly label: string;
-}
-
-interface TryoutResponseFieldsValue {
-  readonly id: string;
-  readonly locked: boolean;
-  readonly onChange: (selection: TryoutResponseSelection | null) => void;
-  readonly renderLabel: (value: TryoutResponseFieldLabel) => ReactNode;
-  readonly responseSpec: TryoutRenderableResponseSpec;
-  readonly revealAnswers?: boolean;
-  readonly selection: TryoutResponseSelection | null;
-}
-
-/** Renders every response kind through one persistence-neutral surface. */
-export function TryoutResponseFields({
+/** Renders one single-choice response as a radio group. */
+export function SingleChoiceFields({
   value,
 }: {
-  value: TryoutResponseFieldsValue;
+  readonly value: PlayerResponseValue;
 }) {
   const t = useTranslations("Exercises");
-  const answerLabel = t("answer");
-  if (value.responseSpec.kind === "single-choice") {
-    return <SingleChoiceFields answerLabel={answerLabel} value={value} />;
-  }
-  if (value.responseSpec.kind === "multiple-choice") {
-    return <MultipleChoiceFields answerLabel={answerLabel} value={value} />;
-  }
-  return <CategoryFields value={value} />;
-}
-
-function SingleChoiceFields({
-  answerLabel,
-  value,
-}: {
-  answerLabel: string;
-  value: TryoutResponseFieldsValue;
-}) {
   const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "single-choice") {
     return null;
@@ -69,7 +34,7 @@ function SingleChoiceFields({
   return (
     <fieldset className="min-w-0 border-0 p-0">
       <legend className="sr-only" id={labelId}>
-        {answerLabel}
+        {t("answer")}
       </legend>
       <RadioGroup
         aria-labelledby={labelId}
@@ -106,13 +71,13 @@ function SingleChoiceFields({
   );
 }
 
-function MultipleChoiceFields({
-  answerLabel,
+/** Renders one multiple-choice response as checkboxes. */
+export function MultipleChoiceFields({
   value,
 }: {
-  answerLabel: string;
-  value: TryoutResponseFieldsValue;
+  readonly value: PlayerResponseValue;
 }) {
+  const t = useTranslations("Exercises");
   const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "multiple-choice") {
     return null;
@@ -122,7 +87,7 @@ function MultipleChoiceFields({
   );
   return (
     <fieldset className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2">
-      <legend className="sr-only">{answerLabel}</legend>
+      <legend className="sr-only">{t("answer")}</legend>
       {responseSpec.options.map((option) => (
         <TryoutSelectableMultipleChoice
           appearance={previewAppearance(value.revealAnswers, option.isCorrect)}
@@ -152,7 +117,12 @@ function MultipleChoiceFields({
   );
 }
 
-function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
+/** Renders one category response as a radio group per statement. */
+export function CategoryFields({
+  value,
+}: {
+  readonly value: PlayerResponseValue;
+}) {
   const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "category") {
     return null;

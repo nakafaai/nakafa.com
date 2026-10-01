@@ -8,6 +8,7 @@ import type {
 } from "@repo/backend/confect/tryouts/start/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Data, Effect } from "effect";
+import type { TransitionStartFunction } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -18,6 +19,11 @@ class TryoutClientRequestError extends Data.TaggedError(
   readonly cause: unknown;
 }> {}
 
+/** The retry action a failure toast offers. */
+export interface TryoutRetry {
+  readonly label: string;
+  readonly run: () => void;
+}
 interface StartAttemptProgramInput {
   readonly args: StartAttemptArgs;
   readonly failureMessage: string;
@@ -25,6 +31,7 @@ interface StartAttemptProgramInput {
     args: StartAttemptArgs
   ) => InvokeReturn<typeof refs.public.tryouts.mutations.attempts.startAttempt>;
   readonly onSuccess: (result: StartAttemptResult) => Effect.Effect<void>;
+  readonly retry: TryoutRetry;
 }
 
 /** Runs the free start mutation and reports transport or source failures. */
@@ -41,13 +48,17 @@ export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
       ),
       Effect.tap((result) => input.onSuccess(result)),
       Effect.catchTag("TryoutClientRequestError", (error) =>
-        reportRequestFailure(error, "tryout-start", input.failureMessage)
+        reportRequestFailure(error, {
+          message: input.failureMessage,
+          retry: input.retry,
+          source: "tryout-start",
+        })
       ),
       Effect.asVoid
     )
 );
 
-/** Starts one section and preserves the existing success and fallback feedback. */
+/** Starts one section; the runtime appearing is the success feedback. */
 export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
   (input: {
     readonly attemptId: Id<"tryoutAttempts">;
@@ -56,8 +67,8 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
       attemptId: Id<"tryoutAttempts">;
       sectionKey: string;
     }) => InvokeReturn<typeof refs.public.tryouts.mutations.sections.start>;
+    readonly retry: TryoutRetry;
     readonly sectionKey: string;
-    readonly successMessage: string;
   }) =>
     Effect.tryPromise({
       try: () =>
@@ -72,32 +83,51 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
           Effect.mapError((cause) => new TryoutClientRequestError({ cause }))
         )
       ),
-      Effect.tap(() => showSuccess(input.successMessage)),
       Effect.catchTag("TryoutClientRequestError", (error) =>
-        reportRequestFailure(
-          error,
-          "tryout-start-section",
-          input.failureMessage
-        )
+        reportRequestFailure(error, {
+          message: input.failureMessage,
+          retry: input.retry,
+          source: "tryout-start-section",
+        })
       ),
       Effect.asVoid
     )
 );
 
-/** Reports one unexpected request failure and shows the localized fallback. */
-function reportRequestFailure(error: unknown, source: string, message: string) {
-  return reportClientException(error, { source }).pipe(
+/** Reports one unexpected request failure and offers a retry. */
+function reportRequestFailure(
+  error: unknown,
+  feedback: {
+    readonly message: string;
+    readonly retry: TryoutRetry;
+    readonly source: string;
+  }
+) {
+  return reportClientException(error, { source: feedback.source }).pipe(
     Effect.tap(() =>
       Effect.sync(() => {
-        toast.error(message, { position: "bottom-center" });
+        toast.error(feedback.message, {
+          action: { label: feedback.retry.label, onClick: feedback.retry.run },
+          id: feedback.source,
+          position: "bottom-center",
+        });
       })
     )
   );
 }
 
-/** Shows one successful try-out action at the established screen position. */
-function showSuccess(message: string) {
-  return Effect.sync(() => {
-    toast.success(message, { position: "bottom-center" });
-  });
+/** Runs one start program in a transition; a failure offers the same run. */
+export function runTryoutStart(input: {
+  readonly program: (retry: TryoutRetry) => Effect.Effect<void>;
+  readonly retryLabel: string;
+  readonly startTransition: TransitionStartFunction;
+}) {
+  input.startTransition(() =>
+    Effect.runPromise(
+      input.program({
+        label: input.retryLabel,
+        run: () => runTryoutStart(input),
+      })
+    )
+  );
 }

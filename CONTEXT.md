@@ -85,3 +85,12 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Snapshot**: A persisted restorable Viewport state for one Forum Conversation.
 - **Navigation History**: The ordered semantic Viewport positions a user can return to inside one Forum Conversation.
 - **Latest Affinity**: The user state where a Forum Conversation Viewport is attached to the newest Transcript edge.
+
+## Player
+
+- **Player**: The shared surface that runs one timed question set, used by try-outs now and School assessments later. A provider supplies the questions, actions, and meta; the player owns navigation.
+- **Player view**: How the player lays out questions: the list (every question, scrolling) or one question at a time. An assessment may lock it.
+- **Navigator**: The grid of question numbers showing answered, flagged, current, and empty questions. It is a sidebar on wide screens and a sheet on phones.
+- **Review flag**: A learner's mark on a question to revisit before finishing. It never affects the score.
+- **Finish review**: The confirmation before finishing a section, listing flagged and unanswered questions.
+- **Response registry**: The map from each response kind to the component that renders it in the player.

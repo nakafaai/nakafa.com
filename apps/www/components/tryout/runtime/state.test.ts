@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
+  isTryoutRuntimeRunning,
   isTryoutStateLive,
 } from "@/components/tryout/runtime/state";
 
@@ -83,3 +84,16 @@ function createAttempt(status: "in-progress" | "completed", expiresAt: number) {
 function createRuntime(status: "in-progress" | "completed", expiresAt: number) {
   return { expiresAt, section: { status } };
 }
+
+describe("isTryoutRuntimeRunning", () => {
+  it("counts active and locally expired runtimes as running", () => {
+    const runtime = {
+      expiresAt: 0,
+      section: { status: "in-progress" as const },
+    };
+    expect(isTryoutRuntimeRunning({ kind: "active", runtime })).toBe(true);
+    expect(isTryoutRuntimeRunning({ kind: "pending", runtime })).toBe(true);
+    expect(isTryoutRuntimeRunning({ kind: "review", runtime })).toBe(false);
+    expect(isTryoutRuntimeRunning({ kind: "none" })).toBe(false);
+  });
+});

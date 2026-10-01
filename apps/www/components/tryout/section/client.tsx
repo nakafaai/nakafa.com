@@ -5,25 +5,26 @@ import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useConvexAuth } from "convex/react";
 import { type Locale, useLocale } from "next-intl";
-import { type ReactNode, Suspense, use, useState } from "react";
+import { type ReactNode, Suspense, useState } from "react";
+import type { PlayerMode } from "@/components/player/mode";
 import { AppShell } from "@/components/sidebar/shell";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
+import { TryoutPlayer } from "@/components/tryout/player/client";
+import { useTryoutFinish } from "@/components/tryout/player/finish.client";
+import type { TryoutPlayerInput } from "@/components/tryout/player/model";
 import {
   getTryoutAttemptHref,
   getTryoutHref,
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
-import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
-import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
 import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
+  isTryoutRuntimeRunning,
   isTryoutStateLive,
-  type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
-import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import {
   type TryoutStartDestination,
   TryoutSummaryAction,
@@ -56,6 +57,8 @@ interface TryoutSectionPageClientProps {
 type TryoutSectionRouteBinding = {
   attemptId: Id<"tryoutAttempts">;
   initialState: TryoutSectionInitialState;
+  /** Player view the server resolved from the URL and cookie. */
+  mode: PlayerMode;
   startHref: string | null;
 } | null;
 
@@ -66,11 +69,6 @@ interface TryoutSectionRoute {
   section: string;
   set: string;
   track: string;
-}
-
-interface TryoutSectionBodyValue {
-  content: Promise<TryoutRuntimeContent> | null;
-  runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
 }
 
 /** Renders one stable page with an active-only mutable subscription. */
@@ -90,6 +88,7 @@ export function TryoutSectionPageClient({
         binding={null}
         content={content}
         page={page}
+        player={null}
         route={route}
         setHref={setHref}
         state={null}
@@ -106,6 +105,7 @@ export function TryoutSectionPageClient({
         binding={binding}
         content={content}
         page={page}
+        player={null}
         route={route}
         setHref={setHref}
         state={binding.initialState}
@@ -167,10 +167,6 @@ function LiveTryoutSectionPage({
     setTerminalState(liveState.value);
   }
 
-  if (QueryResult.isFailure(liveState)) {
-    throw liveState.error;
-  }
-
   let state: SectionState = binding.initialState;
   if (QueryResult.isSuccess(liveState)) {
     state = liveState.value;
@@ -178,15 +174,23 @@ function LiveTryoutSectionPage({
   if (terminalState !== undefined) {
     state = terminalState;
   }
+  const finish = useTryoutFinish({
+    returnHref: getTryoutAttemptHref(page.set.publicPath, binding.attemptId),
+    state,
+  });
+  if (QueryResult.isFailure(liveState)) {
+    throw liveState.error;
+  }
   return (
     <ResolvedTryoutSectionPage
       articleNavigation={articleNavigation}
       binding={binding}
       content={content}
       page={page}
+      player={{ finish, mode: binding.mode }}
       route={route}
       setHref={setHref}
-      state={state}
+      state={finish.shown}
     >
       {children}
     </ResolvedTryoutSectionPage>
@@ -200,10 +204,13 @@ function ResolvedTryoutSectionPage({
   children,
   content,
   page,
+  player,
   route,
   setHref,
   state,
 }: TryoutSectionPageClientProps & {
+  /** Player inputs of a live attempt; `null` for static pages. */
+  player: TryoutPlayerInput | null;
   state: SectionState;
 }) {
   const attempt = state?.attempt ?? null;
@@ -227,51 +234,64 @@ function ResolvedTryoutSectionPage({
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
-  const isRunning =
-    runtimeState.kind === "active" || runtimeState.kind === "pending";
   return (
     <AppShell
       articleNavigation={articleNavigation}
       locked={currentAttempt?.status === "in-progress"}
     >
       <TryoutPage>
-        <TryoutSectionHeader
-          actionAttempt={actionAttempt}
-          activeAttempt={activeAttempt}
-          binding={binding}
-          page={page}
-          route={route}
-          runtimeState={runtimeState}
-          sectionStatus={sectionStatus}
-          setHref={setHref}
-        />
-        <TryoutPageBody>
-          {!isRunning && (
-            <TryoutSectionSummary
-              value={{
-                score: actionAttempt?.section?.score ?? null,
-                section: page.section,
-                sectionStatus,
-              }}
+        {player && isTryoutRuntimeRunning(runtimeState) ? (
+          <TryoutPlayer
+            backHref={getTryoutAttemptHref(
+              page.set.publicPath,
+              runtimeState.runtime.attemptId
+            )}
+            content={content}
+            finish={player.finish}
+            locked={runtimeState.kind === "pending"}
+            mode={player.mode}
+            runtime={runtimeState.runtime}
+            title={page.section.title}
+          />
+        ) : (
+          <>
+            <TryoutSectionHeader
+              actionAttempt={actionAttempt}
+              activeAttempt={activeAttempt}
+              binding={binding}
+              page={page}
+              route={route}
+              sectionStatus={sectionStatus}
+              setHref={setHref}
             />
-          )}
-          <TryoutSectionBody value={{ content, runtimeState }}>
-            {children}
-          </TryoutSectionBody>
-        </TryoutPageBody>
+            <TryoutPageBody>
+              <TryoutSectionSummary
+                value={{
+                  score: actionAttempt?.section?.score ?? null,
+                  section: page.section,
+                  sectionStatus,
+                }}
+              />
+              {runtimeState.kind === "review" ? (
+                <Suspense fallback={null}>
+                  {children ?? <TryoutContentRefresh />}
+                </Suspense>
+              ) : null}
+            </TryoutPageBody>
+          </>
+        )}
       </TryoutPage>
     </AppShell>
   );
 }
 
-/** Switches the section header between runtime controls and the start or return action. */
+/** Renders the section header with its start or return action. */
 function TryoutSectionHeader({
   activeAttempt,
   actionAttempt,
   binding,
   page,
   route,
-  runtimeState,
   sectionStatus,
   setHref,
 }: Pick<
@@ -280,26 +300,11 @@ function TryoutSectionHeader({
 > & {
   activeAttempt: NonNullable<SectionState>["attempt"] | null;
   actionAttempt: NonNullable<SectionState>["attempt"] | null;
-  runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
   sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
 }) {
   const startDestination = getStartDestination(binding, route);
-  const runtimeReturnHref = binding
-    ? getTryoutAttemptHref(page.set.publicPath, binding.attemptId)
-    : setHref;
   const hasCurrentPath = !binding || binding.startHref === getTryoutHref(route);
-  const isRunning =
-    runtimeState.kind === "active" || runtimeState.kind === "pending";
-  return isRunning ? (
-    <TryoutRuntimeControls
-      title={page.section.title}
-      value={{
-        expired: runtimeState.kind === "pending",
-        runtime: runtimeState.runtime,
-        returnHref: runtimeReturnHref,
-      }}
-    />
-  ) : (
+  return (
     <TryoutPageHeader
       action={
         <TryoutSummaryAction
@@ -332,62 +337,6 @@ function TryoutSectionHeader({
         { href: setHref, label: page.set.title },
       ]}
       title={page.section.title}
-    />
-  );
-}
-
-/** Keeps signed content loading separate from stable page controls. */
-function TryoutSectionBody({
-  children,
-  value,
-}: {
-  children: ReactNode;
-  value: TryoutSectionBodyValue;
-}) {
-  if (value.runtimeState.kind === "none") {
-    return null;
-  }
-  if (value.runtimeState.kind === "review") {
-    return (
-      <Suspense fallback={null}>
-        {children ?? <TryoutContentRefresh />}
-      </Suspense>
-    );
-  }
-  return (
-    <Suspense fallback={null}>
-      <TryoutSectionRuntimeContent value={value} />
-    </Suspense>
-  );
-}
-
-/** Resolves signed content only inside the section runtime region. */
-function TryoutSectionRuntimeContent({
-  value,
-}: {
-  value: TryoutSectionBodyValue;
-}) {
-  if (!value.content) {
-    return <TryoutContentRefresh />;
-  }
-
-  const content = use(value.content);
-  if (content.questions.length === 0) {
-    return <TryoutContentRefresh />;
-  }
-  if (value.runtimeState.kind === "none") {
-    return null;
-  }
-  if (value.runtimeState.kind === "review") {
-    return <TryoutContentRefresh />;
-  }
-  return (
-    <TryoutRuntime
-      value={{
-        expired: value.runtimeState.kind !== "active",
-        questions: content.questions,
-        runtime: value.runtimeState.runtime,
-      }}
     />
   );
 }

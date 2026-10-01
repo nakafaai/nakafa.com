@@ -3,12 +3,11 @@
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import type { TryoutStartAccess } from "@repo/backend/confect/tryouts/start/spec";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
 
 interface TryoutStartDialogProps {
-  readonly busy: boolean;
   readonly directEntry: boolean;
   readonly finishedAttempt: boolean;
   readonly kind: TryoutStartAccess["kind"];
@@ -28,20 +27,11 @@ export function TryoutStartDialog(props: TryoutStartDialogProps) {
       description={copy.description}
       footer={
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            disabled={props.busy}
-            onClick={props.onCancel}
-            type="button"
-            variant="outline"
-          >
+          <Button onClick={props.onCancel} type="button" variant="outline">
             {t("cancel-cta")}
           </Button>
-          <Button disabled={props.busy} onClick={props.onPrimary} type="button">
-            <Spinner
-              data-icon="inline-start"
-              icon={Rocket01Icon}
-              isLoading={props.busy}
-            />
+          <Button onClick={props.onPrimary} type="button">
+            <HugeIcons data-icon="inline-start" icon={Rocket01Icon} />
             {copy.primary}
           </Button>
         </div>

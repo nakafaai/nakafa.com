@@ -27,6 +27,16 @@ export type TryoutRuntimeState<Runtime> =
   | { kind: "pending"; runtime: Runtime }
   | { kind: "review"; runtime: Runtime };
 
+/** A runtime the learner is still working in, before or past its deadline. */
+export function isTryoutRuntimeRunning<Runtime>(
+  state: TryoutRuntimeState<Runtime>
+): state is Extract<
+  TryoutRuntimeState<Runtime>,
+  { kind: "active" | "pending" }
+> {
+  return state.kind === "active" || state.kind === "pending";
+}
+
 /** Subscribes only while one exact attempt can still mutate. */
 export function isTryoutStateLive(state: TryoutReactiveState | null) {
   return state?.attempt.status === "in-progress";

@@ -114,7 +114,7 @@ function TryoutQuestionArticle({
 }
 
 /** Composes the stable question anchor with a variant-owned action. */
-function TryoutQuestionHeader({
+export function TryoutQuestionHeader({
   children,
   questionOrder,
 }: TryoutQuestionShellProps) {

@@ -14,12 +14,12 @@ import { useConvexAuth } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
 import {
+  runTryoutStart,
   startAttemptProgram,
   startEntrySectionProgram,
 } from "@/components/tryout/set/program";
@@ -67,6 +67,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     refs.public.tryouts.mutations.sections.start
   );
   const t = useTranslations("Tryouts");
+  const tPlayer = useTranslations("Player");
   const now = useTryoutClock(false);
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, dialog] = useDisclosure(false);
@@ -113,17 +114,18 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     }
     if (attempt?.status === "in-progress" && request.entrySectionKey) {
       const sectionKey = attempt.resumeSectionKey ?? request.entrySectionKey;
-      startTransition(() =>
-        Effect.runPromise(
+      runTryoutStart({
+        program: (retry) =>
           startEntrySectionProgram({
             attemptId: attempt.attemptId,
             failureMessage: t("start-part-error"),
             mutation: startSection,
+            retry,
             sectionKey,
-            successMessage: t("start-entry-success"),
-          })
-        )
-      );
+          }),
+        retryLabel: tPlayer("retry"),
+        startTransition,
+      });
       return;
     }
     dialog.open();
@@ -134,56 +136,55 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     if (busy) {
       return;
     }
-    const program = startAttemptProgram({
-      args: {
-        countryKey: request.countryKey,
-        ...(directEntry
-          ? {}
-          : {
-              destinationSectionKey: request.destinationSectionKey,
+    const args = {
+      countryKey: request.countryKey,
+      ...(directEntry
+        ? {}
+        : {
+            destinationSectionKey: request.destinationSectionKey,
+          }),
+      ...(request.entrySectionKey === undefined
+        ? {}
+        : {
+            entrySectionKey: request.entrySectionKey,
+          }),
+      examKey: request.examKey,
+      locale: request.locale,
+      setKey: request.setKey,
+      trackKey: request.trackKey,
+    };
+    runTryoutStart({
+      program: (retry) =>
+        startAttemptProgram({
+          args,
+          failureMessage: t("start-error"),
+          mutation: startAttempt,
+          onSuccess: (result) =>
+            Effect.sync(() => {
+              dialog.close();
+              const href = getTryoutAttemptHref(
+                result.navigation.publicPath,
+                result.attemptId
+              );
+              if (request.successNavigation === "stay") {
+                router.replace(href);
+                return;
+              }
+              router.push(href);
             }),
-        ...(request.entrySectionKey === undefined
-          ? {}
-          : {
-              entrySectionKey: request.entrySectionKey,
-            }),
-        examKey: request.examKey,
-        locale: request.locale,
-        setKey: request.setKey,
-        trackKey: request.trackKey,
-      },
-      failureMessage: t("start-error"),
-      mutation: startAttempt,
-      onSuccess: (result) =>
-        Effect.sync(() => {
-          dialog.close();
-          toast.success(
-            directEntry ? t("start-entry-success") : t("start-success"),
-            {
-              position: "bottom-center",
-            }
-          );
-          const href = getTryoutAttemptHref(
-            result.navigation.publicPath,
-            result.attemptId
-          );
-          if (request.successNavigation === "stay") {
-            router.replace(href);
-            return;
-          }
-          router.push(href);
+          retry,
         }),
+      retryLabel: tPlayer("retry"),
+      startTransition,
     });
-    startTransition(() => Effect.runPromise(program));
   }
   return (
     <>
-      <Button disabled={busy} onClick={onStart}>
-        <Spinner icon={Rocket01Icon} isLoading={isPending || resolvingAccess} />
+      <Button disabled={resolvingAccess} onClick={onStart}>
+        <Spinner icon={Rocket01Icon} isLoading={resolvingAccess} />
         {buttonLabel}
       </Button>
       <TryoutStartDialog
-        busy={isPending}
         directEntry={directEntry}
         finishedAttempt={finishedAttempt}
         kind={dialogKind}

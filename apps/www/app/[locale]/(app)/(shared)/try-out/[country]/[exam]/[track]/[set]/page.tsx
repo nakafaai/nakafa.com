@@ -3,6 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
 import {
+  type PlayerModeParam,
+  readPlayerModeParam,
+} from "@/components/player/mode";
+import { readPlayerMode } from "@/components/player/server";
+import {
   createRetainedTryoutMetadata,
   generateTryoutRouteMetadata,
 } from "@/components/tryout/catalog/metadata";
@@ -56,8 +61,10 @@ export async function generateMetadata({
   searchParams,
 }: TryoutSetPageProps) {
   const { country, exam, locale: localeParam, set, track } = await params;
-  const capability = readTryoutRouteAttemptCapability(await searchParams);
-  if (capability.kind === "invalid") {
+  const query = await searchParams;
+  const capability = readTryoutRouteAttemptCapability(query);
+  const view = readPlayerModeParam(query);
+  if (capability.kind === "invalid" || view.kind === "invalid") {
     notFound();
   }
   const attemptId =
@@ -116,8 +123,10 @@ export default function Page(props: TryoutSetPageProps) {
 /** Resolves one public or explicitly retained set inside its route boundary. */
 async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
   const { country, exam, locale: localeParam, set, track } = await params;
-  const capability = readTryoutRouteAttemptCapability(await searchParams);
-  if (capability.kind === "invalid") {
+  const query = await searchParams;
+  const capability = readTryoutRouteAttemptCapability(query);
+  const view = readPlayerModeParam(query);
+  if (capability.kind === "invalid" || view.kind === "invalid") {
     notFound();
   }
   const attemptId =
@@ -166,6 +175,7 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
       page={page}
       restartTarget={restartTarget}
       route={{ country, exam, locale, set, track }}
+      view={view}
     />
   );
 }
@@ -176,6 +186,7 @@ async function ResolvedTryoutSetRoute({
   page,
   restartTarget,
   route,
+  view,
 }: {
   attemptPage: Exclude<
     Awaited<ReturnType<typeof readRoutePage>>["attemptPage"],
@@ -184,6 +195,7 @@ async function ResolvedTryoutSetRoute({
   page: SetPage;
   restartTarget: TryoutSetRestartTarget | null;
   route: SetRoute;
+  view: PlayerModeParam;
 }) {
   const { locale } = route;
   const [articleNavigation, initialNow] = await Promise.all([
@@ -204,19 +216,20 @@ async function ResolvedTryoutSetRoute({
       ? attemptPage.initialState.runtime
       : null;
 
+  const binding = attemptPage
+    ? {
+        attemptId: attemptPage.attemptId,
+        initialState: attemptPage.initialState,
+        mode: await readPlayerMode({ lock: null, param: view }),
+        sectionRoutes: attemptPage.page.sections,
+      }
+    : null;
+
   return (
     <TryoutClockProvider initialNow={initialNow}>
       <TryoutSetPageClient
         articleNavigation={articleNavigation}
-        binding={
-          attemptPage
-            ? {
-                attemptId: attemptPage.attemptId,
-                initialState: attemptPage.initialState,
-                sectionRoutes: attemptPage.page.sections,
-              }
-            : null
-        }
+        binding={binding}
         content={reviewRuntime ? null : signedContent}
         page={page}
         restartTarget={restartTarget}

@@ -6,8 +6,10 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useConvexAuth } from "convex/react";
 import { useLocale } from "next-intl";
 import { type ReactNode, useState } from "react";
+import type { PlayerMode } from "@/components/player/mode";
 import { AppShell } from "@/components/sidebar/shell";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
+import { useTryoutFinish } from "@/components/tryout/player/finish.client";
 import { selectTryoutTrackReturnHref } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptHref,
@@ -25,6 +27,7 @@ import type {
   LoadedRuntime,
   SetEntrySection,
   SetPage,
+  TryoutInternalSetView,
   TryoutSetInitialState,
   TryoutSetRestartTarget,
   TryoutSetRoute,
@@ -38,6 +41,8 @@ type SetState = TryoutSetInitialState | null;
 interface TryoutSetPageBinding {
   attemptId: Id<"tryoutAttempts">;
   initialState: TryoutSetInitialState;
+  /** Player view the server resolved from the URL and cookie. */
+  mode: PlayerMode;
   sectionRoutes: readonly SetPage["sections"][number][];
 }
 
@@ -68,6 +73,7 @@ export function TryoutSetPageClient({
         binding={null}
         content={content}
         page={page}
+        player={null}
         restartTarget={restartTarget}
         route={route}
         state={null}
@@ -84,6 +90,7 @@ export function TryoutSetPageClient({
         binding={binding}
         content={content}
         page={page}
+        player={null}
         restartTarget={restartTarget}
         route={route}
         state={binding.initialState}
@@ -137,10 +144,6 @@ function LiveTryoutSetPage({
     setTerminalState(liveState.value);
   }
 
-  if (QueryResult.isFailure(liveState)) {
-    throw liveState.error;
-  }
-
   let state: SetState = binding.initialState;
   if (QueryResult.isSuccess(liveState)) {
     state = liveState.value;
@@ -148,15 +151,23 @@ function LiveTryoutSetPage({
   if (terminalState !== undefined) {
     state = terminalState;
   }
+  const finish = useTryoutFinish({
+    returnHref: getTryoutAttemptHref(page.set.publicPath, binding.attemptId),
+    state,
+  });
+  if (QueryResult.isFailure(liveState)) {
+    throw liveState.error;
+  }
   return (
     <ResolvedTryoutSetPage
       articleNavigation={articleNavigation}
       binding={binding}
       content={content}
       page={page}
+      player={{ finish, mode: binding.mode }}
       restartTarget={restartTarget}
       route={route}
-      state={state}
+      state={finish.shown}
     >
       {children}
     </ResolvedTryoutSetPage>
@@ -170,10 +181,15 @@ function ResolvedTryoutSetPage({
   children,
   content,
   page,
+  player,
   restartTarget,
   route,
   state,
-}: TryoutSetPageClientProps & { state: SetState }) {
+}: TryoutSetPageClientProps & {
+  /** Player inputs of a live attempt; `null` for static pages. */
+  player: TryoutInternalSetView["player"];
+  state: SetState;
+}) {
   const currentAttempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
   const entrySection = page.entrySection;
@@ -225,6 +241,7 @@ function ResolvedTryoutSetPage({
             content,
             entrySection,
             now,
+            player,
             runtime,
             view,
           }}
@@ -248,6 +265,7 @@ function TryoutInternalSet({
     content: Promise<TryoutRuntimeContent> | null;
     entrySection: SetEntrySection;
     now: number;
+    player: TryoutInternalSetView["player"];
     runtime: LoadedRuntime | null;
     view: TryoutSetView;
   };
@@ -264,6 +282,7 @@ function TryoutInternalSet({
       value={{
         ...value.view,
         entrySection: value.entrySection,
+        player: value.player,
         runtimeState,
       }}
     >

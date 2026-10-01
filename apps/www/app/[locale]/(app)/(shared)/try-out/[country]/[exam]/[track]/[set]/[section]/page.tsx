@@ -3,6 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
 import {
+  type PlayerModeParam,
+  readPlayerModeParam,
+} from "@/components/player/mode";
+import { readPlayerMode } from "@/components/player/server";
+import {
   createRetainedTryoutMetadata,
   generateTryoutRouteMetadata,
 } from "@/components/tryout/catalog/metadata";
@@ -57,8 +62,10 @@ export async function generateMetadata({
     set,
     track,
   } = await params;
-  const capability = readTryoutRouteAttemptCapability(await searchParams);
-  if (capability.kind === "invalid") {
+  const query = await searchParams;
+  const capability = readTryoutRouteAttemptCapability(query);
+  const view = readPlayerModeParam(query);
+  if (capability.kind === "invalid" || view.kind === "invalid") {
     notFound();
   }
   const attemptId =
@@ -135,8 +142,10 @@ async function TryoutSectionRoute({
     set,
     track,
   } = await params;
-  const capability = readTryoutRouteAttemptCapability(await searchParams);
-  if (capability.kind === "invalid") {
+  const query = await searchParams;
+  const capability = readTryoutRouteAttemptCapability(query);
+  const view = readPlayerModeParam(query);
+  if (capability.kind === "invalid" || view.kind === "invalid") {
     notFound();
   }
   const attemptId =
@@ -188,6 +197,7 @@ async function TryoutSectionRoute({
       page={page}
       route={{ country, exam, locale, section, set, track }}
       setHref={setHref}
+      view={view}
     />
   );
 }
@@ -198,6 +208,7 @@ async function ResolvedTryoutSectionRoute({
   page,
   route,
   setHref,
+  view,
 }: {
   attemptPage: Exclude<
     Awaited<ReturnType<typeof readRoutePage>>["attemptPage"],
@@ -208,6 +219,7 @@ async function ResolvedTryoutSectionRoute({
     locale: ReturnType<typeof getLocaleOrThrow>;
   };
   setHref: string;
+  view: PlayerModeParam;
 }) {
   const { locale } = route;
   const [articleNavigation, initialNow] = await Promise.all([
@@ -230,20 +242,20 @@ async function ResolvedTryoutSectionRoute({
   const startHref = attemptPage?.activeSectionPublicPath
     ? getTryoutPublicPathHref(attemptPage.activeSectionPublicPath)
     : null;
+  const binding = attemptPage
+    ? {
+        attemptId: attemptPage.attemptId,
+        initialState: attemptPage.initialState,
+        mode: await readPlayerMode({ lock: null, param: view }),
+        startHref,
+      }
+    : null;
 
   return (
     <TryoutClockProvider initialNow={initialNow}>
       <TryoutSectionPageClient
         articleNavigation={articleNavigation}
-        binding={
-          attemptPage
-            ? {
-                attemptId: attemptPage.attemptId,
-                initialState: attemptPage.initialState,
-                startHref,
-              }
-            : null
-        }
+        binding={binding}
         content={reviewRuntime ? null : signedContent}
         page={page}
         route={route}
