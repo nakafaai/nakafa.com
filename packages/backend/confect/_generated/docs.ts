@@ -74,6 +74,7 @@ export type SubscriptionsDoc = Document.Document<typeof schemaDefinition, "subsc
 export type TryoutAttemptPlacementsDoc = Document.Document<typeof schemaDefinition, "tryoutAttemptPlacements">;
 export type TryoutAttemptsDoc = Document.Document<typeof schemaDefinition, "tryoutAttempts">;
 export type TryoutCatalogDoc = Document.Document<typeof schemaDefinition, "tryoutCatalog">;
+export type TryoutFlagsDoc = Document.Document<typeof schemaDefinition, "tryoutFlags">;
 export type TryoutPlacementsDoc = Document.Document<typeof schemaDefinition, "tryoutPlacements">;
 export type TryoutResponsesDoc = Document.Document<typeof schemaDefinition, "tryoutResponses">;
 export type TryoutRuntimeBundlesDoc = Document.Document<typeof schemaDefinition, "tryoutRuntimeBundles">;
@@ -158,6 +159,7 @@ export interface Docs {
   tryoutAttemptPlacements: TryoutAttemptPlacementsDoc;
   tryoutAttempts: TryoutAttemptsDoc;
   tryoutCatalog: TryoutCatalogDoc;
+  tryoutFlags: TryoutFlagsDoc;
   tryoutPlacements: TryoutPlacementsDoc;
   tryoutResponses: TryoutResponsesDoc;
   tryoutRuntimeBundles: TryoutRuntimeBundlesDoc;

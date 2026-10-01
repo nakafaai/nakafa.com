@@ -41,6 +41,7 @@ const runtimeResponseValidator = Schema.Struct({
 });
 const runtimeQuestionValidator = Schema.Struct({
   contentHash: Schema.String,
+  flagged: Schema.Boolean,
   placementId: IdSchema("tryoutAttemptPlacements"),
   questionOrder: Schema.Finite,
   response: Schema.Union([runtimeResponseValidator, Schema.Null]),

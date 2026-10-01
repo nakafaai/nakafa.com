@@ -73,6 +73,7 @@ import subscriptions from "./tables/subscriptions";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
 import tryoutCatalog from "./tables/tryoutCatalog";
+import tryoutFlags from "./tables/tryoutFlags";
 import tryoutPlacements from "./tables/tryoutPlacements";
 import tryoutResponses from "./tables/tryoutResponses";
 import tryoutRuntimeBundles from "./tables/tryoutRuntimeBundles";
@@ -157,6 +158,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly tryoutAttemptPlacements: typeof tryoutAttemptPlacements;
   readonly tryoutAttempts: typeof tryoutAttempts;
   readonly tryoutCatalog: typeof tryoutCatalog;
+  readonly tryoutFlags: typeof tryoutFlags;
   readonly tryoutPlacements: typeof tryoutPlacements;
   readonly tryoutResponses: typeof tryoutResponses;
   readonly tryoutRuntimeBundles: typeof tryoutRuntimeBundles;
@@ -240,6 +242,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   tryoutAttemptPlacements,
   tryoutAttempts,
   tryoutCatalog,
+  tryoutFlags,
   tryoutPlacements,
   tryoutResponses,
   tryoutRuntimeBundles,

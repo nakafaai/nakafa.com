@@ -44,11 +44,14 @@ export class TryoutResponseSelectionError extends Schema.TaggedError<TryoutRespo
     message: Schema.String,
   }
 ) {}
-/** Stable corruption detected across response, placement, and attempt rows. */
+/** Stable corruption detected across response, flag, placement, and attempt rows. */
 export class TryoutResponseIntegrityError extends Schema.TaggedError<TryoutResponseIntegrityError>()(
   "TryoutResponseIntegrityError",
   {
     code: Schema.Literals([
+      "TRYOUT_FLAG_COUNT_EXCEEDED",
+      "TRYOUT_FLAG_LINK_MISMATCH",
+      "TRYOUT_FLAG_PLACEMENT_DUPLICATE",
       "TRYOUT_PLACEMENT_COUNT_MISMATCH",
       "TRYOUT_PLACEMENT_DUPLICATE",
       "TRYOUT_RESPONSE_SELECTION_MISMATCH",

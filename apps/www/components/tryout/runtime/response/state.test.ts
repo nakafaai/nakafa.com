@@ -219,6 +219,7 @@ describe("try-out response state", () => {
 function makeMultipleQuestion(): TryoutRuntimeQuestion {
   return {
     contentHash: "content-hash",
+    flagged: false,
     placementId: "placement" as TryoutRuntimeQuestion["placementId"],
     questionOrder: 1,
     response: null,

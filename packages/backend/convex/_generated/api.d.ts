@@ -3739,6 +3739,14 @@ export declare const api: {
           }
         >;
       };
+      flags: {
+        set: FunctionReference<
+          "mutation",
+          "public",
+          { flagged: boolean; placementId: Id<"tryoutAttemptPlacements"> },
+          null
+        >;
+      };
       responses: {
         save: FunctionReference<
           "mutation",
@@ -3926,6 +3934,7 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
+                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -4169,6 +4178,7 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
+                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -4406,6 +4416,7 @@ export declare const api: {
                   expiresAt: number;
                   questions: Array<{
                     contentHash: string;
+                    flagged: boolean;
                     placementId: Id<"tryoutAttemptPlacements">;
                     questionOrder: number;
                     response: {
@@ -4992,6 +5003,7 @@ export declare const api: {
               expiresAt: number;
               questions: Array<{
                 contentHash: string;
+                flagged: boolean;
                 placementId: Id<"tryoutAttemptPlacements">;
                 questionOrder: number;
                 response: {
@@ -5119,6 +5131,7 @@ export declare const api: {
               expiresAt: number;
               questions: Array<{
                 contentHash: string;
+                flagged: boolean;
                 placementId: Id<"tryoutAttemptPlacements">;
                 questionOrder: number;
                 response: {
