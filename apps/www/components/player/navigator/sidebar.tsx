@@ -24,21 +24,24 @@ export function PlayerSidebar() {
   const t = useTranslations("Player");
   const questions = usePlayer((session) => session.state.questions);
   const current = usePlayerView((view) => view.current);
-  const gridRef = useRef<HTMLElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (current === null) {
+    const aside = asideRef.current;
+    const cell = aside?.querySelector<HTMLElement>('[aria-current="step"]');
+    if (!(aside && cell) || current === null) {
       return;
     }
-    gridRef.current
-      ?.querySelector('[aria-current="step"]')
-      ?.scrollIntoView({ block: "nearest" });
+    keepCellVisible(aside, cell);
   }, [current]);
 
   return (
-    <aside className="sticky top-16 hidden h-[calc(100svh-8rem-env(safe-area-inset-bottom,0px))] w-64 shrink-0 flex-col gap-4 overflow-y-auto border-l p-4 lg:flex">
+    <aside
+      className="sticky top-16 hidden h-[calc(100svh-8rem-env(safe-area-inset-bottom,0px))] w-64 shrink-0 flex-col gap-4 overflow-y-auto border-l p-4 lg:flex"
+      ref={asideRef}
+    >
       <PlayerCounts />
-      <nav aria-label={t("navigator")} data-player-sidebar="" ref={gridRef}>
+      <nav aria-label={t("navigator")} data-player-sidebar="">
         <PlayerGrid questions={questions} />
       </nav>
       <PlayerViewToggle />
@@ -61,4 +64,18 @@ export function PlayerSidebar() {
       </section>
     </aside>
   );
+}
+
+/**
+ * Scrolls only the sidebar so the current cell stays visible on long grids;
+ * the page itself never moves.
+ */
+function keepCellVisible(aside: HTMLElement, cell: HTMLElement) {
+  const top = cell.offsetTop;
+  const bottom = top + cell.offsetHeight;
+  if (top < aside.scrollTop) {
+    aside.scrollTop = top;
+  } else if (bottom > aside.scrollTop + aside.clientHeight) {
+    aside.scrollTop = bottom - aside.clientHeight;
+  }
 }
