@@ -14,3 +14,8 @@ providers, so the lesson streams in once and stays.
 
 The sidebar keeps its open state and the phone layout in a store, so opening,
 closing, or resizing it no longer redraws streamed content either.
+
+A press that lands while a lesson's charts and visuals are still loading now
+works: the lesson no longer waits for their code before it responds, so its
+outline, links, and other controls answer the first tap instead of losing it.
+Only a visual whose own code is still loading waits for it.
