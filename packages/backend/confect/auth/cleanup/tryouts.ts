@@ -38,6 +38,19 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
       if (responses.length > 0) {
         return true;
       }
+      const flags = yield* database
+        .table("tryoutFlags")
+        .index("by_tryoutSectionAttemptId", (query) =>
+          query.eq("tryoutSectionAttemptId", section._id)
+        )
+        .take(ATTEMPT_CHILD_BATCH_SIZE)
+        .pipe(Effect.orDie);
+      for (const flag of flags) {
+        yield* writer.table("tryoutFlags").delete(flag._id);
+      }
+      if (flags.length > 0) {
+        return true;
+      }
       yield* writer.table("tryoutSectionAttempts").delete(section._id);
       return true;
     }

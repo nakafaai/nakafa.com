@@ -10,7 +10,7 @@ Aksara signed publication the only authored try-out source. Amended on
 on 2026-09-01 to define the structured response rollout, and on 2026-09-19
 to make attempts and scores free with Pro access to worked solutions. Amended on
 2026-09-27 to separate exam language from the application locale and retire the
-unused access-campaign storage.
+unused access-campaign storage. Amended on 2026-10-01 to store review flags.
 
 ## Context
 
@@ -90,6 +90,18 @@ learner responses persist one required `selection` and `isComplete` result, and
 the public mutation accepts only that stable contract. Single-choice,
 multiple-choice, and category responses share this model without rollout
 adapters or duplicate runtime projections.
+
+A learner may flag any placement of the active section for review. A flag is
+one small `tryoutFlags` row that exists only while the placement is flagged,
+linked to its attempt, section attempt, and placement. The public
+`tryouts/mutations/flags:set` mutation takes the placement ID and the intended
+state, so a retry or a race converges on the same result. It applies the same
+ownership, active timer, expiry, and frozen snapshot guards as a response,
+writes only the flag row, and never touches the attempt or section documents
+that responses update. The section runtime reads a section's flags through one
+bounded index read, rejects a count above the section's question count, a row
+linked to another attempt or section, or two rows for one placement, and
+reports `flagged` on every runtime question. Flags never affect scoring.
 
 The runtime exposes only exact attempt-ID
 state, response, history, and page operations. Public-path compatibility
@@ -180,8 +192,8 @@ flowchart TD
 ## Convex Reset Rule
 
 Content reset may delete only rebuildable Nakafa read models. It preserves
-signed snapshot state, attempts, progress, placements, responses, scores,
-access state, entitlements, calibration runs, and IRT scales.
+signed snapshot state, attempts, progress, placements, responses, review
+flags, scores, access state, entitlements, calibration runs, and IRT scales.
 Attempts and scales retain the exact signed snapshot needed for historical
 review and scoring.
 

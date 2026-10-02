@@ -129,4 +129,46 @@ describe("auth/cleanup/tryouts", () => {
       });
     })
   );
+  it.effect("deletes review flags before their section attempt", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const seeded = yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const runtime = await seedTryoutContentAccessState(ctx, {
+            attemptStatus: "completed",
+            sectionStatus: "completed",
+            suffix: "cleanup-flags",
+          });
+          await ctx.db.insert("tryoutFlags", {
+            flaggedAt: 1,
+            placementId: runtime.placementId,
+            tryoutAttemptId: runtime.attemptId,
+            tryoutSectionAttemptId: runtime.sectionAttemptId,
+          });
+          return runtime;
+        })
+      );
+      let progressed = true;
+      for (let page = 0; page < 16 && progressed; page += 1) {
+        progressed = yield* Effect.promise(() =>
+          t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
+            userId: seeded.identity.userId,
+          })
+        );
+      }
+      expect(progressed).toBe(false);
+      const state = yield* Effect.promise(() =>
+        t.query(async (ctx) => ({
+          attempt: await ctx.db.get(seeded.attemptId),
+          flags: await ctx.db.query("tryoutFlags").collect(),
+          section: await ctx.db.get(seeded.sectionAttemptId),
+        }))
+      );
+      expect(state).toEqual({
+        attempt: null,
+        flags: [],
+        section: null,
+      });
+    })
+  );
 });

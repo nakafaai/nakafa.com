@@ -1,5 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { loadSectionFlags } from "@repo/backend/confect/tryouts/flag/read";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
 import { projectTryoutResponseSpec } from "@repo/backend/confect/tryouts/response/model";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
@@ -12,6 +13,16 @@ import { Effect } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
+/** Verified mutable learner rows of one section, keyed by frozen placement. */
+interface SectionRows {
+  readonly access: {
+    readonly answers: boolean;
+    readonly questions: boolean;
+  };
+  readonly flags: ReadonlySet<TryoutPlacement["_id"]>;
+  readonly placements: readonly TryoutPlacement[];
+  readonly responses: ReadonlyMap<TryoutPlacement["_id"], TryoutResponse>;
+}
 
 /** Projects the public state shared by attempt and runtime responses. */
 export const readCurrentSection = Effect.fn(
@@ -45,10 +56,12 @@ const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
   );
   const placements = yield* loadSectionPlacements(attempt, snapshot);
   const loaded = yield* loadSectionResponseIndex(attempt, section, placements);
+  const flags = yield* loadSectionFlags(section, loaded.placements);
   const currentSection = yield* readCurrentSection(section);
   return {
     access,
     currentSection,
+    flags,
     ...loaded,
   };
 });
@@ -80,11 +93,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
       runtime: {
         attemptId: attempt._id,
         expiresAt: section.expiresAt,
-        questions: projectRuntimeQuestions(
-          loaded.placements,
-          loaded.responses,
-          loaded.access
-        ),
+        questions: projectRuntimeQuestions(loaded),
         section: loaded.currentSection,
       },
     };
@@ -92,29 +101,18 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
 );
 
 /** Projects mutable response state without repeating immutable page fields. */
-function projectRuntimeQuestions(
-  placements: readonly TryoutPlacement[],
-  responses: ReadonlyMap<TryoutPlacement["_id"], TryoutResponse>,
-  access: {
-    readonly answers: boolean;
-    readonly questions: boolean;
-  }
-) {
-  return placements.map((placement) =>
-    projectRuntimeQuestion(placement, responses, access)
+function projectRuntimeQuestions(section: SectionRows) {
+  return section.placements.map((placement) =>
+    projectRuntimeQuestion(placement, section)
   );
 }
 
-/** Projects one validated frozen placement and optional learner response. */
+/** Projects one validated frozen placement and its learner response and flag. */
 function projectRuntimeQuestion(
   placement: TryoutPlacement,
-  responses: ReadonlyMap<TryoutPlacement["_id"], TryoutResponse>,
-  access: {
-    readonly answers: boolean;
-    readonly questions: boolean;
-  }
+  section: SectionRows
 ) {
-  const response = responses.get(placement._id) ?? null;
+  const response = section.responses.get(placement._id) ?? null;
   const runtimeResponse = response
     ? {
         answeredAt: response.answeredAt,
@@ -125,12 +123,13 @@ function projectRuntimeQuestion(
     : null;
   return {
     contentHash: placement.contentHash,
+    flagged: section.flags.has(placement._id),
     placementId: placement._id,
     questionOrder: placement.questionOrder,
     response: runtimeResponse,
     responseSpec: projectTryoutResponseSpec(
       placement.responseSpec,
-      access.answers
+      section.access.answers
     ),
     sourcePath: placement.sourcePath,
     sourceRevision: placement.sourceRevision,

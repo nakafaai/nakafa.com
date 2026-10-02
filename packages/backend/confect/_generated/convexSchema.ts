@@ -74,6 +74,7 @@ import subscriptions from "./tables/subscriptions";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
 import tryoutCatalog from "./tables/tryoutCatalog";
+import tryoutFlags from "./tables/tryoutFlags";
 import tryoutPlacements from "./tables/tryoutPlacements";
 import tryoutResponses from "./tables/tryoutResponses";
 import tryoutRuntimeBundles from "./tables/tryoutRuntimeBundles";
@@ -158,6 +159,7 @@ export default $defineSchema({
   tryoutAttemptPlacements: $Table.tableDefinition(tryoutAttemptPlacements),
   tryoutAttempts: $Table.tableDefinition(tryoutAttempts),
   tryoutCatalog: $Table.tableDefinition(tryoutCatalog),
+  tryoutFlags: $Table.tableDefinition(tryoutFlags),
   tryoutPlacements: $Table.tableDefinition(tryoutPlacements),
   tryoutResponses: $Table.tableDefinition(tryoutResponses),
   tryoutRuntimeBundles: $Table.tableDefinition(tryoutRuntimeBundles),
