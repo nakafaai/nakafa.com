@@ -4,223 +4,38 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { Duration, Effect } from "effect";
+import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import {
   countCanvasFrames,
   expectCanvasToMove,
   expectFramesToAdvance,
   expectFramesToHold,
+  orbitCanvas,
+  readCanvasSize,
   waitForStableCanvas,
 } from "@/e2e/support/canvas";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
-import { readCumulativeLayoutShift } from "@/e2e/support/layout";
+import {
+  BACTERIA_SCENE,
+  expectNoLayoutShift,
+  expectReturned,
+  hideFullscreenApi,
+  hidePopoverApi,
+  LINE_SCENE,
+  openVisualLesson,
+  readPlacement,
+  readPresentation,
+  readSceneHeight,
+  readSettledLayoutShift,
+  revealAction,
+  revealCard,
+  revealScene,
+} from "@/e2e/support/visual";
 
 const SCENE_PROBE = "held";
-const REVEAL_TIMEOUT_MILLISECONDS = 30_000;
-/** The animated lab's scene, which names how many bacteria it draws. */
-const BACTERIA_SCENE = "[data-bacteria-count]";
-/** A deferred 3D line scene of a lesson card. */
-const LINE_SCENE = '[data-slot="line-scene"]';
 /** Room around two scenes shown at once, so neither sits at a viewport edge. */
 const SCENE_PAIR_MARGIN = 160;
-/** One rotation drag, in pixels. */
-const ORBIT_DRAG = { x: 96, y: -32 };
-/** Readings of the session's layout shift that must agree before a step. */
-const SETTLED_READINGS = 2;
-const SETTLE_ATTEMPTS = 10;
-
-/** Hides the Fullscreen API the way iPhone Safari does for everything but video. */
-function hideFullscreenApi() {
-  Object.defineProperty(Document.prototype, "fullscreenEnabled", {
-    configurable: true,
-    get: () => false,
-  });
-}
-
-/** Removes popovers the way Safari before version 17 lacks them. */
-function hidePopoverApi() {
-  Reflect.deleteProperty(HTMLElement.prototype, "showPopover");
-}
-
-/** Opens a lesson and proves every visual card on it carries the full screen action. */
-const openLesson = Effect.fn("NakafaE2E.openVisualLesson")(function* (
-  page: Page,
-  href: string,
-  fullscreen: string
-) {
-  yield* seedDeniedAnalyticsConsent(page);
-  const response = yield* Effect.promise(() =>
-    page.goto(href, { waitUntil: "domcontentloaded" })
-  );
-  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-  yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-  const cards = page.locator('[data-slot="visual-card"]');
-  const count = yield* Effect.promise(() => cards.count());
-  yield* Effect.promise(async () => {
-    expect(count).toBeGreaterThan(0);
-    // Cards far from the viewport skip rendering but keep their controls.
-    await expect(
-      cards.getByRole("button", {
-        exact: true,
-        includeHidden: true,
-        name: fullscreen,
-      })
-    ).toHaveCount(count);
-  });
-});
-
-/** Scrolls to the visual card that holds `content`, the first by default. */
-const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
-  page: Page,
-  content: string,
-  index = 0
-) {
-  const card = page
-    .locator('[data-slot="visual-card"] > [data-slot="card"]')
-    .filter({ has: page.locator(content) })
-    .nth(index);
-  // A content-visibility card lays out its content only near the viewport.
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await card.scrollIntoViewIfNeeded();
-      await expect(card.locator(content).first()).toBeVisible();
-    }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
-  );
-  return card;
-});
-
-/** Reveals a card's deferred 3D scene and waits for its canvas to settle. */
-const revealScene = Effect.fn("NakafaE2E.revealVisualScene")(function* (
-  page: Page,
-  index = 0
-) {
-  const card = yield* revealCard(page, LINE_SCENE, index);
-  const canvas = card.locator(`${LINE_SCENE} canvas`);
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await card.locator(LINE_SCENE).scrollIntoViewIfNeeded();
-      expect(await canvas.isVisible()).toBe(true);
-    }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
-  );
-  yield* waitForStableCanvas(canvas);
-  return { canvas, card };
-});
-
-/**
- * Centers the card's action in the viewport, clear of the sticky bar at the
- * bottom of a phone screen, so clicking it scrolls nothing, and returns it.
- */
-const revealAction = Effect.fn("NakafaE2E.revealVisualAction")(function* (
-  card: Locator,
-  fullscreen: string
-) {
-  const action = card.getByRole("button", { exact: true, name: fullscreen });
-  yield* Effect.promise(() =>
-    action.evaluate((element) =>
-      element.scrollIntoView({ behavior: "instant", block: "center" })
-    )
-  );
-  return action;
-});
-
-/** Reads where the card's slot and the lesson around it sit in the page. */
-function readPlacement(card: Locator) {
-  return card.evaluate((element) => ({
-    article: element.closest("article")?.getBoundingClientRect().height,
-    scrollY: window.scrollY,
-    slot: element
-      .closest('[data-slot="visual-card"]')
-      ?.getBoundingClientRect()
-      .toJSON(),
-  }));
-}
-
-/**
- * Reads how the card is presented. A card that fills the screen covers the
- * viewport, it is the topmost element at every corner and at its footer, and
- * its footer sits at the bottom because the scene took the free height, so
- * the card never scrolls. The page behind is inert when every link
- * and button outside the card sits in an inert subtree.
- */
-function readPresentation(card: Locator) {
-  return card.evaluate((element) => {
-    const bounds = element.getBoundingClientRect();
-    const footer = element.querySelector('[data-slot="card-footer"]');
-    const paddingBottom = Number.parseFloat(
-      getComputedStyle(element).paddingBottom
-    );
-    const footerGap =
-      bounds.bottom -
-      paddingBottom -
-      (footer?.getBoundingClientRect().bottom ?? 0);
-    const outside = Array.from(
-      document.querySelectorAll("a[href], button")
-    ).filter((control) => !element.contains(control));
-    const footerBounds = footer?.getBoundingClientRect();
-    // The corners, and the footer where a phone's sticky bar would sit.
-    const probes = [
-      [2, 2],
-      [window.innerWidth - 3, 2],
-      [2, window.innerHeight - 3],
-      [window.innerWidth - 3, window.innerHeight - 3],
-      ...(footerBounds
-        ? [
-            [
-              footerBounds.left + footerBounds.width / 2,
-              footerBounds.top + footerBounds.height / 2,
-            ],
-          ]
-        : []),
-    ];
-    return {
-      covers:
-        bounds.left === 0 &&
-        bounds.top === 0 &&
-        bounds.width === window.innerWidth &&
-        bounds.height === window.innerHeight,
-      fills:
-        Math.abs(footerGap) <= 1 &&
-        element.scrollHeight <= element.clientHeight,
-      focusInside: element.contains(document.activeElement),
-      fullscreen: document.fullscreenElement === element,
-      pageInert:
-        outside.length > 0 &&
-        outside.every((control) => control.closest("[inert]") !== null),
-      position: getComputedStyle(element).position,
-      scrollLocked: document.documentElement.style.overflow === "hidden",
-      topmost:
-        footerBounds !== undefined &&
-        probes.every(([x, y]) =>
-          element.contains(document.elementFromPoint(x, y))
-        ),
-    };
-  });
-}
-
-/** Reads the height of the card's scene frame. */
-function readSceneHeight(card: Locator) {
-  return card
-    .locator('[data-slot="visual-card-scene"]')
-    .first()
-    .evaluate((element) => element.getBoundingClientRect().height);
-}
-
-/** Reads a canvas's size on screen and the size of its drawing buffer. */
-function readCanvasSize(canvas: Locator) {
-  return canvas.evaluate((element) => {
-    const bounds = element.getBoundingClientRect();
-    return element instanceof HTMLCanvasElement
-      ? {
-          bufferHeight: element.height,
-          bufferWidth: element.width,
-          height: bounds.height,
-          width: bounds.width,
-        }
-      : undefined;
-  });
-}
 
 /**
  * Counts the scene's labels whose centers sit inside its canvas, so a test can
@@ -250,30 +65,6 @@ function countLabelsInView(card: Locator) {
   }, LINE_SCENE);
 }
 
-/**
- * Drags across the middle of the scene the way a learner rotates it. The drag
- * has one length at every size, so damping settles it as fast in full screen
- * as in the page.
- */
-const orbitScene = Effect.fn("NakafaE2E.orbitVisualScene")(function* (
-  page: Page,
-  canvas: Locator
-) {
-  const bounds = yield* Effect.promise(() => canvas.boundingBox());
-  yield* Effect.sync(() => expect(bounds).not.toBeNull());
-  if (!bounds) {
-    return;
-  }
-  const x = bounds.x + bounds.width / 2;
-  const y = bounds.y + bounds.height / 2;
-  yield* Effect.promise(async () => {
-    await page.mouse.move(x, y);
-    await page.mouse.down();
-    await page.mouse.move(x + ORBIT_DRAG.x, y + ORBIT_DRAG.y, { steps: 6 });
-    await page.mouse.up();
-  });
-});
-
 /** Proves playback still works: a reset replays the growth from its start. */
 const expectPlayback = Effect.fn("NakafaE2E.expectVisualPlayback")(function* (
   card: Locator
@@ -290,66 +81,12 @@ const expectPlayback = Effect.fn("NakafaE2E.expectVisualPlayback")(function* (
   });
 });
 
-/** Expects the card back in its slot, with focus on its action. */
-const expectReturned = Effect.fn("NakafaE2E.expectVisualReturned")(function* (
-  card: Locator,
-  action: Locator,
-  placement: Awaited<ReturnType<typeof readPlacement>>
-) {
-  yield* Effect.promise(async () => {
-    await expect(action).toHaveAttribute("aria-pressed", "false");
-    await expect(action).toBeFocused();
-    await expect
-      .poll(() => readPresentation(card))
-      .toMatchObject({
-        fullscreen: false,
-        pageInert: false,
-        position: "static",
-        scrollLocked: false,
-      });
-    expect(await readPlacement(card)).toEqual(placement);
-  });
-});
-
-/**
- * Reads the page's cumulative layout shift once it stops changing. Content
- * below the fold can still settle after load, so a session compares settled
- * readings taken around it.
- */
-const readSettledLayoutShift = Effect.fn(
-  "NakafaE2E.readSettledVisualLayoutShift"
-)(function* (page: Page) {
-  const readings = [yield* readCumulativeLayoutShift(page)];
-  for (
-    let attempt = 0;
-    attempt < SETTLE_ATTEMPTS &&
-    (readings.length < SETTLED_READINGS ||
-      readings.at(-1) !== readings.at(-SETTLED_READINGS));
-    attempt += 1
-  ) {
-    yield* Effect.sleep(Duration.millis(500));
-    readings.push(yield* readCumulativeLayoutShift(page));
-  }
-  return readings.at(-1) ?? 0;
-});
-
-/**
- * Expects the session since `before` to add no layout shift the learner did
- * not cause: the card's slot holds the page while the card is away.
- */
-const expectNoLayoutShift = Effect.fn("NakafaE2E.expectNoVisualLayoutShift")(
-  function* (page: Page, before: number) {
-    const after = yield* readSettledLayoutShift(page);
-    yield* Effect.sync(() => expect(after).toBe(before));
-  }
-);
-
 /** Opens the animated lab, shows it across the screen, and returns it with Escape. */
 const presentLab = Effect.fn("NakafaE2E.presentVisualLab")(function* (
   page: Page,
   presentation: "fullscreen" | "immersive"
 ) {
-  yield* openLesson(page, pinnedRoutes.exponent.en, en.Common.fullscreen);
+  yield* openVisualLesson(page, pinnedRoutes.exponent.en, en.Common.fullscreen);
   const card = yield* revealCard(page, BACTERIA_SCENE);
   yield* Effect.promise(() =>
     card.locator(BACTERIA_SCENE).evaluate((element, probe) => {
@@ -382,7 +119,8 @@ const presentLab = Effect.fn("NakafaE2E.presentVisualLab")(function* (
       });
     // The scene takes the height the screen frees for it.
     expect(await readSceneHeight(card)).toBeGreaterThan(inlineScene);
-    // The page behind keeps the card's slot while the card fills the screen.
+    // The page behind keeps its layout and the card's slot while the card
+    // fills the screen, also where the root's scrollbar gutters closed.
     expect(await readPlacement(card)).toEqual(placement);
     // A press on the scene focuses the page around the card, which keeps it.
     await card.locator(BACTERIA_SCENE).click();
@@ -409,7 +147,7 @@ const presentLab = Effect.fn("NakafaE2E.presentVisualLab")(function* (
 const presentChart = Effect.fn("NakafaE2E.presentVisualChart")(function* (
   page: Page
 ) {
-  yield* openLesson(page, pinnedRoutes.growth.en, en.Common.fullscreen);
+  yield* openVisualLesson(page, pinnedRoutes.growth.en, en.Common.fullscreen);
   const card = yield* revealCard(page, '[data-slot="chart"]');
   const surface = card.locator("svg.recharts-surface").first();
   yield* Effect.promise(() => expect(surface).toBeVisible());
@@ -451,7 +189,7 @@ const presentChart = Effect.fn("NakafaE2E.presentVisualChart")(function* (
 const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   page: Page
 ) {
-  yield* openLesson(page, pinnedRoutes.material.en, en.Common.fullscreen);
+  yield* openVisualLesson(page, pinnedRoutes.material.en, en.Common.fullscreen);
   const { canvas, card } = yield* revealScene(page);
   const controls = card.locator("[data-coordinate-controls]");
   const grid = controls.getByRole("button", {
@@ -523,7 +261,7 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   // A drag rotates the scene last: its damping can outlast a stability
   // window on a large software-rendered canvas, and nothing after it waits.
   const beforeOrbit = yield* Effect.promise(() => canvas.screenshot());
-  yield* orbitScene(page, canvas);
+  yield* orbitCanvas(page, canvas);
   yield* expectCanvasToMove(canvas, beforeOrbit);
   // The card is still across the screen after every control.
   yield* Effect.promise(() =>
@@ -547,7 +285,11 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
 const pauseScenesBehind = Effect.fn("NakafaE2E.pauseVisualScenesBehind")(
   function* (page: Page, presentation: "fullscreen" | "immersive") {
     yield* Effect.promise(() => page.addInitScript(countCanvasFrames));
-    yield* openLesson(page, pinnedRoutes.material.en, en.Common.fullscreen);
+    yield* openVisualLesson(
+      page,
+      pinnedRoutes.material.en,
+      en.Common.fullscreen
+    );
     const first = yield* revealScene(page, 0);
     const second = yield* revealScene(page, 1);
     // Show both cards at once, so only the presented card can pause the
@@ -615,7 +357,7 @@ const toggleInLocale = Effect.fn("NakafaE2E.toggleVisualInLocale")(function* (
   locale: AppLocaleCode
 ) {
   const messages = yield* Effect.promise(() => loadLocaleMessages(locale));
-  yield* openLesson(
+  yield* openVisualLesson(
     page,
     pinnedRoutes.exponent[locale],
     messages.Common.fullscreen
