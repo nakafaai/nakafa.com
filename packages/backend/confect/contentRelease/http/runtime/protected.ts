@@ -6,11 +6,7 @@ import { privateRuntimeResponse } from "@repo/backend/confect/contentRelease/htt
 import { failureResult } from "@repo/backend/confect/contentRelease/runtime/result";
 import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { Config, Effect, flow, Result, Schema } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** The isolated Node verifier could not return one sanitized response. */
 class ProtectedRuntimeActionError extends Schema.TaggedError<ProtectedRuntimeActionError>()(

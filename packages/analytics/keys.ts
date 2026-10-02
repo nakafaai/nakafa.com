@@ -2,7 +2,7 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
 const postHogKeySchema = Schema.toStandardSchemaV1(
-  Schema.String.check(Schema.isStartsWith("phc_"))
+  Schema.String.check(Schema.isStartingWith("phc_"))
 );
 const urlSchema = Schema.toStandardSchemaV1(
   Schema.String.pipe(

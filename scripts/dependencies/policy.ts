@@ -11,7 +11,9 @@ type DeclarationOwners =
 type DependencyHold = ApprovedSpecs &
   DeclarationOwners & { readonly dependency: string };
 
-export const CONTRACT_PACKAGE_VERSION = "0.42.0";
+export const CONTRACT_PACKAGE_VERSION = "0.43.0";
+/** Effect and its platform and test packages move as one exact cohort. */
+export const EFFECT_COHORT_VERSION = "4.0.0-rc.118";
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.0.2";
 
@@ -48,7 +50,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.46.1",
+    approved: "0.47.1",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -156,7 +158,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@rc",
     "4.0.0-rc.118",
-    "Signed content contracts require the exact RC117 cohort: @nakafa/aksara-contracts 0.42.0 peers on RC117 exactly.",
+    "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts 0.43.0 peers on RC118 exactly.",
   ],
   [
     "@effect/platform-node@rc",
@@ -175,10 +177,10 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.47.0",
-    "Compiler patching moves with TypeScript and Effect; 0.46.1 fixes diagnostics within the Effect RC117 cohort, and 0.47.0 targets the Effect RC118 cohort.",
+    "0.47.1",
+    "Compiler patching moves with TypeScript and Effect; 0.47.0 targets the Effect RC118 cohort, and 0.47.1 lets the prepare step run effect-tsgo patch without the deprecated --force flag.",
   ],
-  ["vitest@latest", "5.0.2", "The Effect RC117 adapter accepts Vitest 5."],
+  ["vitest@latest", "5.0.2", "The Effect RC118 adapter accepts Vitest 5."],
   [
     "@vitest/coverage-istanbul@latest",
     "5.0.2",

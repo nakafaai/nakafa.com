@@ -18,7 +18,7 @@ import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
 import { Effect, Schema } from "effect";
-import { FetchHttpClient } from "effect/unstable/http";
+import { FetchHttpClient } from "effect/http";
 import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";

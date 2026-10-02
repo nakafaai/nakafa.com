@@ -1,8 +1,8 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Ref, Result } from "effect";
+import { CliError, Command } from "effect/cli";
 import { TestConsole } from "effect/testing";
-import { CliError, Command } from "effect/unstable/cli";
 import type { CliRequest } from "#cli/command/spec";
 import { makeCliCommand } from "#cli/command/tree";
 import { InvocationError } from "#cli/error";

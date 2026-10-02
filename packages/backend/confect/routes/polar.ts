@@ -12,11 +12,7 @@ import {
   HTTP_INTERNAL_ERROR,
 } from "@repo/backend/confect/routes/constants";
 import { Config, Effect, Redacted, Schema } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 type PolarWebhookEvent = ReturnType<typeof validateEvent>;
 class PolarWebhookReadError extends Schema.TaggedError<PolarWebhookReadError>()(

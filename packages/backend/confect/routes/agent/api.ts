@@ -41,11 +41,7 @@ import {
 } from "@repo/contents/agent/schema/api";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/agent/schema/taxonomy";
 import { Clock, Effect, Layer } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** Registers the protected read-only API and its machine-readable contract. */
 const nonReadMethods = ["POST", "PUT", "PATCH", "DELETE", "HEAD"] as const;

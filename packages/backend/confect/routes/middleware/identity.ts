@@ -1,6 +1,6 @@
 import { generateId } from "@repo/backend/confect/utils/id";
 import { Context, Effect } from "effect";
-import { HttpRouter, HttpServerRequest } from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest } from "effect/http";
 export class RequestIdentity extends Context.Service<RequestIdentity, string>()(
   "@repo/backend/http/RequestIdentity"
 ) {}
