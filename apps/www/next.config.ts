@@ -225,6 +225,15 @@ const nextConfig = {
     // metadata can omit vary parameters and otherwise leak across lessons.
     // https://github.com/vercel/next.js/pull/97804
     varyParams: false,
+    // Lesson and curriculum URLs reach their routes through next-intl's
+    // localized pathnames (/en/subjects serves /[locale]/materials), so the
+    // client never learns their pattern. Once any legal page is prefetched,
+    // the client's route prediction maps every such URL to the root
+    // [...page] catch-all instead: their prefetches fetch nothing, and a
+    // navigation briefly renders the marketing layout. Route trees therefore
+    // come from the server, which resolves rewrites.
+    // https://github.com/vercel/next.js/blob/v16.3.7/packages/next/src/client/components/segment-cache/optimistic-routes.ts
+    optimisticRouting: false,
     // Cold builds must fit the 8 GB production builder without retaining the
     // persistent compiler graph for disk-cache serialization.
     // https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopackFileSystemCache

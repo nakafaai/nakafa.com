@@ -1,9 +1,9 @@
 import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/content";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 
@@ -12,52 +12,102 @@ interface Props {
   pagination: ContentPagination;
 }
 
-function PaginationButton({
-  href,
-  title,
-  label,
-  icon,
-  className,
-  iconPosition = "right",
-}: {
+interface PaginationButtonProps {
+  className: string;
   href: string;
-  title: string;
-  label: string;
   icon: IconSvgElement;
-  className?: string;
-  iconPosition?: "left" | "right";
-}) {
+  iconPosition: "left" | "right";
+  label: string;
+  title: string;
+}
+
+const paginationButtonClassName =
+  "group flex h-auto flex-col whitespace-normal py-3 shadow-xs";
+
+/**
+ * Links one neighbouring page, or keeps its column empty when there is none.
+ *
+ * A reader who reaches the pagination is likely to open the next page, so the
+ * link prefetches that page's own content as soon as it nears the viewport,
+ * not only the route's shared App Shell.
+ */
+function PaginationButton({
+  className,
+  href,
+  icon,
+  iconPosition,
+  label,
+  title,
+}: PaginationButtonProps) {
+  if (!href) {
+    return (
+      <div
+        aria-hidden="true"
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          paginationButtonClassName,
+          "pointer-events-none hidden opacity-50 sm:flex",
+          className
+        )}
+      >
+        <PaginationButtonLabel
+          icon={icon}
+          iconPosition={iconPosition}
+          label={label}
+          title={title}
+        />
+      </div>
+    );
+  }
+
   return (
-    <Button
+    <NavigationLink
       className={cn(
-        "group flex h-auto flex-col whitespace-normal py-3 shadow-xs",
-        !href && "pointer-events-none hidden opacity-50 sm:flex",
+        buttonVariants({ variant: "outline" }),
+        paginationButtonClassName,
         className
       )}
-      nativeButton={false}
-      render={
-        <NavigationLink href={href} title={title}>
-          <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
-            {iconPosition === "left" && (
-              <HugeIcons className="size-4 shrink-0" icon={icon} />
-            )}
-            {label}
-            {iconPosition === "right" && (
-              <HugeIcons className="size-4 shrink-0" icon={icon} />
-            )}
-          </div>
-          <p
-            className={cn(
-              "w-full text-foreground transition-colors group-hover:text-accent-foreground",
-              iconPosition === "right" ? "text-right" : ""
-            )}
-          >
-            {title}
-          </p>
-        </NavigationLink>
-      }
-      variant="outline"
-    />
+      href={href}
+      prefetch={true}
+      title={title}
+    >
+      <PaginationButtonLabel
+        icon={icon}
+        iconPosition={iconPosition}
+        label={label}
+        title={title}
+      />
+    </NavigationLink>
+  );
+}
+
+/** Renders the direction label above the neighbouring page's title. */
+function PaginationButtonLabel({
+  icon,
+  iconPosition,
+  label,
+  title,
+}: Omit<PaginationButtonProps, "className" | "href">) {
+  return (
+    <>
+      <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
+        {iconPosition === "left" && (
+          <HugeIcons className="size-4 shrink-0" icon={icon} />
+        )}
+        {label}
+        {iconPosition === "right" && (
+          <HugeIcons className="size-4 shrink-0" icon={icon} />
+        )}
+      </div>
+      <p
+        className={cn(
+          "w-full text-foreground transition-colors group-hover:text-accent-foreground",
+          iconPosition === "right" ? "text-right" : ""
+        )}
+      >
+        {title}
+      </p>
+    </>
   );
 }
 

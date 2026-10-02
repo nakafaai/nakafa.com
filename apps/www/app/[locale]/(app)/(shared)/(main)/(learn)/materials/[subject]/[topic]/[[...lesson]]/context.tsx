@@ -9,6 +9,7 @@ import {
 } from "@repo/contents/route/material/context";
 import { Effect } from "effect";
 import { useSearchParams } from "next/navigation";
+import type { ReactNode } from "react";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import {
   type MaterialNavigationPage,
@@ -74,16 +75,25 @@ function useMaterialNavigation({ page }: MaterialContextProps) {
   };
 }
 
-/** Resolves the return breadcrumb without delaying the static lesson body. */
+/**
+ * Marks navigation that carries the verified learning context. Its slot hides
+ * the static canonical navigation while this is mounted.
+ */
+function MaterialContextual({ children }: { children: ReactNode }) {
+  return (
+    <div className="contents" data-material-context="">
+      {children}
+    </div>
+  );
+}
+
+/** Replaces the lesson title with the return link once the context is verified. */
 export function MaterialBreadcrumb({
   context,
 }: {
   context: MaterialContextProps;
 }) {
-  const { navigation, pending } = useMaterialNavigation(context);
-  if (pending) {
-    return null;
-  }
+  const { navigation } = useMaterialNavigation(context);
   return (
     <BreadcrumbHeaderSegment
       item={navigation.link ?? { label: context.page.metadata.title }}
@@ -91,7 +101,7 @@ export function MaterialBreadcrumb({
   );
 }
 
-/** Preserves the verified context on the outline's current-lesson link. */
+/** Keeps the verified context on the outline's current-lesson link. */
 export function MaterialHeading({
   context,
 }: {
@@ -99,16 +109,21 @@ export function MaterialHeading({
 }) {
   const { navigation } = useMaterialNavigation(context);
   const { metadata } = context.page;
+  if (navigation.context === undefined) {
+    return null;
+  }
   return (
-    <SidebarRightHeader
-      description={metadata.description ?? metadata.subject}
-      href={navigation.currentHref}
-      title={metadata.title}
-    />
+    <MaterialContextual>
+      <SidebarRightHeader
+        description={metadata.description ?? metadata.subject}
+        href={navigation.currentHref}
+        title={metadata.title}
+      />
+    </MaterialContextual>
   );
 }
 
-/** Changes only pagination URLs and records the same verified learning context. */
+/** Records the lesson view and keeps the verified context on its pagination. */
 export function MaterialPagination({
   context,
 }: {
@@ -133,7 +148,11 @@ export function MaterialPagination({
         publicPath={page.route.publicPath}
         section="material"
       />
-      <PaginationContent pagination={navigation.pagination} />
+      {navigation.context === undefined ? null : (
+        <MaterialContextual>
+          <PaginationContent pagination={navigation.pagination} />
+        </MaterialContextual>
+      )}
     </>
   );
 }

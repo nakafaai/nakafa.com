@@ -3,7 +3,7 @@ import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import {
   MaterialBreadcrumb,
@@ -21,7 +21,10 @@ import { DeferredComments } from "@/components/comments/deferred";
 import { ContentDates } from "@/components/content/dates";
 import { ContentHeader } from "@/components/content/header";
 import { ContentTitle } from "@/components/content/title";
-import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
+import {
+  BreadcrumbHeaderPath,
+  BreadcrumbHeaderSegment,
+} from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/layout";
@@ -46,6 +49,33 @@ type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
 type ArticleJsonLdAuthor = ArrayItem<
   Parameters<typeof ArticleJsonLd>[0]["author"]
 >;
+
+/**
+ * Holds one piece of the lesson's static navigation beside its counterpart
+ * that carries a verified learning context.
+ *
+ * The static navigation is server HTML, so it hydrates with the page and
+ * answers a click from the first paint. The counterpart reads the URL's
+ * context hint, which a prerender cannot know, so it renders only in the
+ * browser, and only once the context is verified; while it is mounted, the
+ * static navigation it replaces stays hidden.
+ */
+function MaterialContextSlot({
+  children,
+  contextual,
+}: {
+  children: ReactNode;
+  contextual: ReactNode;
+}) {
+  return (
+    <div className="group/context contents">
+      <div className="contents group-has-[[data-material-context]]/context:hidden">
+        {children}
+      </div>
+      <Suspense fallback={null}>{contextual}</Suspense>
+    </div>
+  );
+}
 
 /** Prerenders the signed lesson; optional curriculum context lives in client controls. */
 export async function MaterialShell({ page }: { page: MaterialPageContent }) {
@@ -121,7 +151,11 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
                 items={[]}
                 menuLabel={tCommon("more")}
               >
-                <Suspense fallback={null}>
+                <Suspense
+                  fallback={
+                    <BreadcrumbHeaderSegment item={{ label: metadata.title }} />
+                  }
+                >
                   <MaterialBreadcrumb context={context} />
                 </Suspense>
               </BreadcrumbHeaderPath>
@@ -149,11 +183,11 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
             {headings.length === 0 && <ComingSoon />}
             {headings.length > 0 ? page.children : null}
           </LayoutContent>
-          <Suspense
-            fallback={<PaginationContent pagination={navigation.pagination} />}
+          <MaterialContextSlot
+            contextual={<MaterialPagination context={context} />}
           >
-            <MaterialPagination context={context} />
-          </Suspense>
+            <PaginationContent pagination={navigation.pagination} />
+          </MaterialContextSlot>
           {allowsInteractions ? (
             <FooterContent>
               <DeferredComments slug={route.contentKey} />
@@ -175,17 +209,15 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
             </SidebarRightFooter>
           }
           header={
-            <Suspense
-              fallback={
-                <SidebarRightHeader
-                  description={metadata.description ?? metadata.subject}
-                  href={navigation.currentHref}
-                  title={metadata.title}
-                />
-              }
+            <MaterialContextSlot
+              contextual={<MaterialHeading context={context} />}
             >
-              <MaterialHeading context={context} />
-            </Suspense>
+              <SidebarRightHeader
+                description={metadata.description ?? metadata.subject}
+                href={navigation.currentHref}
+                title={metadata.title}
+              />
+            </MaterialContextSlot>
           }
         >
           <SidebarTree data={headings} title={tCommon("on-this-page")} />
