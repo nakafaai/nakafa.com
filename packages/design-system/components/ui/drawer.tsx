@@ -16,11 +16,6 @@ type DrawerPosition = "bottom" | "left" | "right" | "top";
 
 const DrawerContext = createContext<DrawerPosition>("bottom");
 
-/** Reads the edge the surrounding drawer opens from. */
-function useDrawerPosition() {
-  return use(DrawerContext);
-}
-
 const swipeDirectionByPosition: Record<
   DrawerPosition,
   DrawerPrimitive.Root.Props["swipeDirection"]
@@ -212,7 +207,7 @@ function DrawerSwipeArea({
   className,
   ...props
 }: DrawerPrimitive.SwipeArea.Props) {
-  const position = useDrawerPosition();
+  const position = use(DrawerContext);
 
   return (
     <DrawerPrimitive.SwipeArea
@@ -254,7 +249,7 @@ function DrawerViewport({
   ...props
 }: DrawerPrimitive.Viewport.Props &
   Omit<VariantProps<typeof drawerViewportVariants>, "position">) {
-  const position = useDrawerPosition();
+  const position = use(DrawerContext);
 
   return (
     <DrawerPrimitive.Viewport
@@ -280,7 +275,7 @@ function DrawerPopup({
     showBar?: boolean;
     showCloseButton?: boolean;
   }) {
-  const position = useDrawerPosition();
+  const position = use(DrawerContext);
 
   return (
     <DrawerPortal {...portalProps}>
@@ -356,7 +351,7 @@ function DrawerPanel({
 
 /** Renders the drag handle for the active drawer edge. */
 function DrawerBar({ className, ...props }: React.ComponentProps<"div">) {
-  const position = useDrawerPosition();
+  const position = use(DrawerContext);
 
   return (
     <div

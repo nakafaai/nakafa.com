@@ -3,6 +3,7 @@
 import { createContext, type ReactNode, use } from "react";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 
+// A provider may share null navigation, so a missing provider needs its own marker.
 const missingPageNavigation = Symbol("PageNavigation");
 const PageNavigationContext = createContext<
   PageNavigation | null | typeof missingPageNavigation

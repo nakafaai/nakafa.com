@@ -15,11 +15,7 @@ interface SourceLink {
   href: string;
 }
 
-const missingSource = Symbol("missing-source");
-
-const SourceContext = createContext<SourceLink | typeof missingSource>(
-  missingSource
-);
+const SourceContext = createContext<SourceLink | null>(null);
 
 /**
  * Derive the readable domain label shown for one source link.
@@ -51,7 +47,7 @@ function getDomainLabel(domain: string) {
 /** Selects one part of the nearest Source link. */
 function useSource<T>(selector: (source: SourceLink) => T) {
   const value = use(SourceContext);
-  if (value === missingSource) {
+  if (!value) {
     throw new Error("Source.* must be used inside <Source>");
   }
   return selector(value);

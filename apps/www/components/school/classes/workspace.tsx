@@ -47,16 +47,14 @@ const SCHOOL_CLASSES_WORKSPACE_EMPTY_LAYOUT_STORAGE = {
 } as const;
 const COMPACT_WORKSPACE_MODE = { isCompact: true };
 const DESKTOP_WORKSPACE_MODE = { isCompact: false };
-const missingWorkspaceMode = Symbol("missing-school-classes-workspace-mode");
-const SchoolClassesWorkspaceModeContext = createContext<
-  SchoolClassesWorkspaceModeContextValue | typeof missingWorkspaceMode
->(missingWorkspaceMode);
+const SchoolClassesWorkspaceModeContext =
+  createContext<SchoolClassesWorkspaceModeContextValue | null>(null);
 
 /** Read whether the class workspace is currently in compact mode. */
 export function useSchoolClassesWorkspaceIsCompact() {
   const mode = use(SchoolClassesWorkspaceModeContext);
 
-  if (mode === missingWorkspaceMode) {
+  if (!mode) {
     throw new Error(
       "SchoolClassesWorkspaceShell context not found. Wrap panel content inside the class workspace shell."
     );

@@ -84,17 +84,13 @@ interface BarChartContextValue {
   selectedDataKey: string | null; // currently selected series, or null when none
 }
 
-const missingBarChart = Symbol("missing-bar-chart");
-
-const BarChartContext = createContext<
-  BarChartContextValue | typeof missingBarChart
->(missingBarChart);
+const BarChartContext = createContext<BarChartContextValue | null>(null);
 
 // Selects one part of the chart context, throwing a helpful error when used outside <EvilBarChart />
 export function useBarChart<T>(selector: (chart: BarChartContextValue) => T) {
   const value = use(BarChartContext);
 
-  if (value === missingBarChart) {
+  if (!value) {
     throw new Error(
       "Bar chart parts (<Bar />, <XAxis />, …) must be used within <EvilBarChart />"
     );

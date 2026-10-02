@@ -21,16 +21,12 @@ interface ChartContextProps {
   config: ChartConfig;
 }
 
-const missingChart = Symbol("missing-chart");
-
-const ChartContext = createContext<ChartContextProps | typeof missingChart>(
-  missingChart
-);
+const ChartContext = createContext<ChartContextProps | null>(null);
 
 export function useChart<T>(selector: (chart: ChartContextProps) => T) {
   const value = use(ChartContext);
 
-  if (value === missingChart) {
+  if (!value) {
     throw new Error("useChart must be used within a <ChartContainer />");
   }
 

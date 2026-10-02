@@ -9,11 +9,7 @@ interface QuranVersesValue {
   readonly translationNotesLabel: string;
 }
 
-const missingQuranVerses = Symbol("missing-quran-verses");
-
-const QuranVersesContext = createContext<
-  QuranVersesValue | typeof missingQuranVerses
->(missingQuranVerses);
+const QuranVersesContext = createContext<QuranVersesValue | null>(null);
 
 /** Shares a surah's Tafsir access and verse labels with every verse. */
 export function QuranVersesProvider({
@@ -34,7 +30,7 @@ export function QuranVersesProvider({
 /** Selects one of the surah's shared verse settings. */
 export function useQuranVerses<T>(selector: (value: QuranVersesValue) => T) {
   const value = use(QuranVersesContext);
-  if (value === missingQuranVerses) {
+  if (!value) {
     throw new Error("Quran verses must render within QuranVersesProvider.");
   }
   return selector(value);

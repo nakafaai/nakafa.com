@@ -29,11 +29,7 @@ interface CodeSource {
   language: string;
 }
 
-const missingCodeSource = Symbol("missing-code-source");
-
-const CodeSourceContext = createContext<CodeSource | typeof missingCodeSource>(
-  missingCodeSource
-);
+const CodeSourceContext = createContext<CodeSource | null>(null);
 
 /**
  * Shares one code sample with the copy and download controls composed in it.
@@ -53,7 +49,7 @@ export function CodeBlockSource({
 /** Selects one part of the surrounding code sample. */
 function useCodeSource<T>(selector: (source: CodeSource) => T) {
   const value = use(CodeSourceContext);
-  if (value === missingCodeSource) {
+  if (!value) {
     throw new Error("Code controls must be used within CodeBlockSource.");
   }
   return selector(value);

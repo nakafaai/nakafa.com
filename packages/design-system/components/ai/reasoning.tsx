@@ -29,16 +29,12 @@ interface ReasoningContextValue {
   isStreaming: boolean;
 }
 
-const missingReasoning = Symbol("missing-reasoning");
-
-const ReasoningContext = createContext<
-  ReasoningContextValue | typeof missingReasoning
->(missingReasoning);
+const ReasoningContext = createContext<ReasoningContextValue | null>(null);
 
 /** Selects one part of the surrounding reasoning state. */
 function useReasoning<T>(selector: (reasoning: ReasoningContextValue) => T) {
   const value = use(ReasoningContext);
-  if (value === missingReasoning) {
+  if (!value) {
     throw new Error("Reasoning components must be used within Reasoning");
   }
   return selector(value);

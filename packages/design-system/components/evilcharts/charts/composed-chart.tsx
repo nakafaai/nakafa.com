@@ -81,11 +81,9 @@ interface ComposedChartContextValue {
   selectedDataKey: string | null; // currently selected series, or null when none
 }
 
-const missingComposedChart = Symbol("missing-composed-chart");
-
-const ComposedChartContext = createContext<
-  ComposedChartContextValue | typeof missingComposedChart
->(missingComposedChart);
+const ComposedChartContext = createContext<ComposedChartContextValue | null>(
+  null
+);
 
 // Selects one part of the chart context, throwing a helpful error when used outside <EvilComposedChart />
 export function useComposedChart<T>(
@@ -93,7 +91,7 @@ export function useComposedChart<T>(
 ) {
   const value = use(ComposedChartContext);
 
-  if (value === missingComposedChart) {
+  if (!value) {
     throw new Error(
       "Composed chart parts (<Bar />, <Line />, <XAxis />, …) must be used within <EvilComposedChart />"
     );

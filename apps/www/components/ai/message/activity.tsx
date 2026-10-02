@@ -20,16 +20,12 @@ import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use } from "react";
 import type { Invocation } from "@/components/ai/message/invocation";
 
-const missingActivity = Symbol("missing-activity");
-
-const ActivityContext = createContext<Invocation | typeof missingActivity>(
-  missingActivity
-);
+const ActivityContext = createContext<Invocation | null>(null);
 
 /** Selects one part of the invocation for evidence rendered inside an activity. */
 export function useActivity<T>(selector: (invocation: Invocation) => T) {
   const value = use(ActivityContext);
-  if (value === missingActivity) {
+  if (!value) {
     throw new Error("Activity components must be used within Activity");
   }
   return selector(value);

@@ -65,17 +65,13 @@ interface LineChartContextValue {
   selectedDataKey: string | null; // currently selected series, or null when none
 }
 
-const missingLineChart = Symbol("missing-line-chart");
-
-const LineChartContext = createContext<
-  LineChartContextValue | typeof missingLineChart
->(missingLineChart);
+const LineChartContext = createContext<LineChartContextValue | null>(null);
 
 // Selects one part of the chart context, throwing a helpful error when used outside <EvilLineChart />
 export function useLineChart<T>(selector: (chart: LineChartContextValue) => T) {
   const value = use(LineChartContext);
 
-  if (value === missingLineChart) {
+  if (!value) {
     throw new Error(
       "Line chart parts (<Line />, <XAxis />, …) must be used within <EvilLineChart />"
     );

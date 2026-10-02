@@ -14,17 +14,13 @@ export interface SidebarContextValue {
   toggleSidebar: () => void;
 }
 
-const missingSidebar = Symbol("missing-sidebar");
-
 /** @internal Context consumed by SidebarProvider and sidebar controls. */
-export const SidebarContext = createContext<
-  SidebarContextValue | typeof missingSidebar
->(missingSidebar);
+export const SidebarContext = createContext<SidebarContextValue | null>(null);
 
 /** Selects one part of the sidebar state and actions of the nearest SidebarProvider. */
 export function useSidebar<T>(selector: (sidebar: SidebarContextValue) => T) {
   const value = use(SidebarContext);
-  if (value === missingSidebar) {
+  if (!value) {
     throw new Error("useSidebar must be used within a SidebarProvider.");
   }
 

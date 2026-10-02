@@ -13,19 +13,17 @@ export interface AttachmentsContext {
   remove: (id: string) => void;
 }
 
-const missingAttachments = Symbol("missing-prompt-input-attachments");
-
 /** Context consumed by the form and its composed attachment controls. */
-export const LocalAttachmentsContext = createContext<
-  AttachmentsContext | typeof missingAttachments
->(missingAttachments);
+export const LocalAttachmentsContext = createContext<AttachmentsContext | null>(
+  null
+);
 
 /** Selects one part of the locally owned attachment state of the nearest form. */
 export function usePromptInputAttachments<T>(
   selector: (attachments: AttachmentsContext) => T
 ) {
   const value = use(LocalAttachmentsContext);
-  if (value === missingAttachments) {
+  if (!value) {
     throw new Error(
       "usePromptInputAttachments must be used within PromptInput"
     );

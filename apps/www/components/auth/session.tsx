@@ -9,11 +9,7 @@ type AuthSession = Pick<
   "data" | "error" | "isPending"
 >;
 
-const missingAuthSession = Symbol("missing-auth-session");
-
-const AuthSessionContext = createContext<
-  AuthSession | typeof missingAuthSession
->(missingAuthSession);
+const AuthSessionContext = createContext<AuthSession | null>(null);
 const previewSession = {
   data: null,
   error: null,
@@ -44,7 +40,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 /** Selects one part of the shared session and rejects a missing app provider. */
 export function useAuthSession<T>(selector: (session: AuthSession) => T) {
   const value = use(AuthSessionContext);
-  if (value === missingAuthSession) {
+  if (!value) {
     throw new TypeError(
       "useAuthSession must be used within AuthSessionProvider"
     );

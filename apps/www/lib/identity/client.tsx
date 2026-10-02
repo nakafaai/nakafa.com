@@ -23,11 +23,7 @@ export interface IdentityState {
   readonly viewer: Viewer | null;
 }
 
-const missingIdentity = Symbol("missing-identity");
-
-const IdentityContext = createContext<IdentityState | typeof missingIdentity>(
-  missingIdentity
-);
+const IdentityContext = createContext<IdentityState | null>(null);
 
 const signedOutState: IdentityState = {
   account: null,
@@ -81,16 +77,6 @@ function resolveIdentityState({
   return signedOutState;
 }
 
-function IdentityValueProvider({
-  children,
-  value,
-}: {
-  children: ReactNode;
-  value: IdentityState;
-}) {
-  return <IdentityContext value={value}>{children}</IdentityContext>;
-}
-
 /**
  * Resolves the account from the shared Better Auth session.
  *
@@ -117,9 +103,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     isQueryPending: QueryResult.isLoading(query),
   });
 
-  return (
-    <IdentityValueProvider value={value}>{children}</IdentityValueProvider>
-  );
+  return <IdentityContext value={value}>{children}</IdentityContext>;
 }
 
 /**
@@ -131,7 +115,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
  */
 export function useViewer<T>(selector: (state: IdentityState) => T): T {
   const context = use(IdentityContext);
-  if (context === missingIdentity) {
+  if (!context) {
     throw new Error("useViewer must be used within an IdentityProvider");
   }
   return selector(context);

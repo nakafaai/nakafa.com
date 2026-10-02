@@ -21,20 +21,13 @@ interface StepItemContextValue {
 
 type StepState = "active" | "completed" | "inactive" | "loading";
 
-const missingStepper = Symbol("missing-stepper");
-const missingStepItem = Symbol("missing-step-item");
-
-const StepperContext = createContext<
-  StepperContextValue | typeof missingStepper
->(missingStepper);
-const StepItemContext = createContext<
-  StepItemContextValue | typeof missingStepItem
->(missingStepItem);
+const StepperContext = createContext<StepperContextValue | null>(null);
+const StepItemContext = createContext<StepItemContextValue | null>(null);
 
 /** Selects one part of the nearest Stepper state. */
 function useStepper<T>(selector: (stepper: StepperContextValue) => T) {
   const value = use(StepperContext);
-  if (value === missingStepper) {
+  if (!value) {
     throw new Error("useStepper must be used within a Stepper");
   }
   return selector(value);
@@ -43,7 +36,7 @@ function useStepper<T>(selector: (stepper: StepperContextValue) => T) {
 /** Selects one part of the nearest StepperItem state. */
 function useStepItem<T>(selector: (item: StepItemContextValue) => T) {
   const value = use(StepItemContext);
-  if (value === missingStepItem) {
+  if (!value) {
     throw new Error("useStepItem must be used within a StepperItem");
   }
   return selector(value);

@@ -60,17 +60,13 @@ interface AreaChartContextValue {
   selectedDataKey: string | null; // currently selected series, or null when none
 }
 
-const missingAreaChart = Symbol("missing-area-chart");
-
-const AreaChartContext = createContext<
-  AreaChartContextValue | typeof missingAreaChart
->(missingAreaChart);
+const AreaChartContext = createContext<AreaChartContextValue | null>(null);
 
 // Selects one part of the chart context, throwing a helpful error when used outside <EvilAreaChart />
 export function useAreaChart<T>(selector: (chart: AreaChartContextValue) => T) {
   const value = use(AreaChartContext);
 
-  if (value === missingAreaChart) {
+  if (!value) {
     throw new Error(
       "Area chart parts (<Area />, <XAxis />, …) must be used within <EvilAreaChart />"
     );

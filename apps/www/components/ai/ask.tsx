@@ -14,11 +14,7 @@ import { useAi } from "@/components/ai/context";
 import { preloadAiSheet } from "@/components/ai/sheet/module";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 
-const missingAsk = Symbol("missing-nina-ask");
-
-const AskContext = createContext<
-  ((prompt: NinaDraft) => void) | typeof missingAsk
->(missingAsk);
+const AskContext = createContext<((prompt: NinaDraft) => void) | null>(null);
 
 /**
  * Owns every one-tap ask on a page. Nina opens with the prompt already shown,
@@ -88,7 +84,7 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
 /** Sends one prompt through the surrounding page's ask owner. */
 export function useNinaAsk() {
   const ask = use(AskContext);
-  if (ask === missingAsk) {
+  if (!ask) {
     throw new Error("useNinaAsk must be used within NinaAskProvider");
   }
   return ask;

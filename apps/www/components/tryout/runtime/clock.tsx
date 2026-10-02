@@ -7,9 +7,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
-const missingClock = Symbol("missing-tryout-clock");
-
-const InitialClock = createContext<number | typeof missingClock>(missingClock);
+const InitialClock = createContext<number | null>(null);
 
 /** Transfers the request timestamp unchanged through server rendering and hydration. */
 export function TryoutClockProvider({
@@ -31,7 +29,7 @@ const listeners = new Set<() => void>();
 /** Returns a shared realtime clock for active try-out timer UI. */
 export function useTryoutClock(active: boolean) {
   const initialNow = use(InitialClock);
-  if (initialNow === missingClock) {
+  if (initialNow === null) {
     throw new Error("TryoutClockProvider is required for try-out controls.");
   }
   return useSyncExternalStore(
