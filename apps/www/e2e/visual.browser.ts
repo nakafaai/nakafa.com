@@ -65,10 +65,7 @@ function countLabelsInView(card: Locator) {
   }, LINE_SCENE);
 }
 
-/**
- * Proves playback works: a reset replays the growth from its start. Only React
- * redraws the growth, so a lab that replays it is one React drives.
- */
+/** Proves playback still works: a reset replays the growth from its start. */
 const expectPlayback = Effect.fn("NakafaE2E.expectVisualPlayback")(function* (
   card: Locator
 ) {
@@ -91,10 +88,6 @@ const presentLab = Effect.fn("NakafaE2E.presentVisualLab")(function* (
 ) {
   yield* openVisualLesson(page, pinnedRoutes.exponent.en, en.Common.fullscreen);
   const card = yield* revealCard(page, BACTERIA_SCENE);
-  // Mark the scene only once React drives it. React can still render a
-  // server-rendered lesson again on the client while it hydrates, which
-  // replaces the scene a mark set earlier; content React has hydrated stays.
-  yield* expectPlayback(card);
   yield* Effect.promise(() =>
     card.locator(BACTERIA_SCENE).evaluate((element, probe) => {
       element.setAttribute("data-visual-probe", probe);

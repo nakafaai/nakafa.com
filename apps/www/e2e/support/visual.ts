@@ -27,7 +27,38 @@ export function hidePopoverApi() {
   Reflect.deleteProperty(HTMLElement.prototype, "showPopover");
 }
 
-/** Opens a lesson and proves every visual card on it carries the full screen action. */
+/**
+ * Waits until React owns every visual card of the lesson. Until React has
+ * hydrated a server-rendered lesson, a provider above it that changes as the
+ * page starts, such as the session finishing loading, can make React render
+ * the whole lesson again on the client, which replaces every element a check
+ * has found, and a streamed copy of the lesson can wait hidden beside it.
+ * React keys each element it hydrates or creates to its own instance and
+ * never replaces those.
+ */
+function expectCardsOwnedByReact(cards: Locator) {
+  return expect
+    .poll(
+      () =>
+        cards.evaluateAll(
+          (elements) =>
+            elements.length > 0 &&
+            elements.every((element) =>
+              Reflect.ownKeys(element).some(
+                (key) =>
+                  typeof key === "string" && key.startsWith("__reactFiber$")
+              )
+            )
+        ),
+      { timeout: REVEAL_TIMEOUT_MILLISECONDS }
+    )
+    .toBe(true);
+}
+
+/**
+ * Opens a lesson, waits until React owns its visual cards, and proves every
+ * card carries the full screen action.
+ */
 export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
   function* (page: Page, href: string, fullscreen: string) {
     yield* seedDeniedAnalyticsConsent(page);
@@ -37,6 +68,7 @@ export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
     yield* Effect.sync(() => expect(response?.ok()).toBe(true));
     yield* Effect.promise(() => page.waitForLoadState("networkidle"));
     const cards = page.locator('[data-slot="visual-card"]');
+    yield* Effect.promise(() => expectCardsOwnedByReact(cards));
     const count = yield* Effect.promise(() => cards.count());
     yield* Effect.promise(async () => {
       expect(count).toBeGreaterThan(0);
