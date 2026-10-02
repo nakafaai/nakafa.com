@@ -53,15 +53,16 @@ export function NavForYou() {
             });
             const prefetchChat =
               item.id === "askNina" ? () => router.prefetch(href) : undefined;
-            const isActive = pathname.includes(href);
 
             return (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
-                  isActive={isActive}
+                  // The section stays highlighted on its nested pages; only
+                  // the page itself is the current one.
+                  isActive={pathname.includes(href)}
                   render={
                     <NavigationLink
-                      aria-current={isActive ? "page" : undefined}
+                      aria-current={pathname === href ? "page" : undefined}
                       href={href}
                       onFocus={prefetchChat}
                       onPointerEnter={prefetchChat}
