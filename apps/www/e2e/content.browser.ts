@@ -333,8 +333,8 @@ const readContentViewStorage = Effect.fn("NakafaE2E.readContentViewStorage")(
   }
 );
 
-/** Opens one content page and waits until hydration can record its view. */
-const openContentPage = Effect.fn("NakafaE2E.openContentPage")(function* (
+/** Opens one page and waits until hydration lets it record a view. */
+const openPage = Effect.fn("NakafaE2E.openPage")(function* (
   page: Page,
   href: string
 ) {
@@ -393,7 +393,7 @@ test("content views store no device identifier until analytics is allowed", asyn
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openContentPage(page, pinnedRoutes.article.en);
+              yield* openPage(page, pinnedRoutes.article.en);
               const prompt = page.getByRole("region", { name: "Usage data" });
               // The open prompt proves consent settled undecided.
               yield* Effect.promise(() => expect(prompt).toBeVisible());
@@ -413,12 +413,14 @@ test("content views store no device identifier until analytics is allowed", asyn
                 expect(allowed.deviceId).toMatch(STORED_DEVICE_PATTERN)
               );
 
-              yield* openContentPage(page, pinnedRoutes.material.en);
+              yield* openPage(page, pinnedRoutes.material.en);
               const nextPage = yield* waitForRecordedViews(page, 2);
               yield* Effect.sync(() =>
                 expect(nextPage.deviceId).toBe(allowed.deviceId)
               );
 
+              // Declining from a page without a content view still clears it.
+              yield* openPage(page, "/en");
               const preferences = page
                 .locator("footer")
                 .getByRole("button", { name: "Usage data" });
