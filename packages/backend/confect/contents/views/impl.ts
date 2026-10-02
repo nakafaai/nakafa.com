@@ -1,8 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { getOptionalActiveAppUser } from "@repo/backend/confect/auth/session";
 import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
 import { resolveLearningContext } from "@repo/backend/confect/contents/views/context";
@@ -19,102 +16,23 @@ import {
   type ContentViewTarget,
   validateIncomingContentTarget,
 } from "@repo/backend/confect/contents/views/target";
+import {
+  type ContentViewer,
+  loadViewerView,
+  resolveContentViewer,
+} from "@repo/backend/confect/contents/views/viewer";
 import { Clock, Effect, flow, Option } from "effect";
 
-/** Loads the latest view row recorded for a device/content/context tuple. */
-const loadLatestDeviceView = Effect.fn("contents.views.loadLatestDeviceView")(
-  function* (
-    contentId: ContentViewTarget["content_id"],
-    contextKey: string,
-    deviceId: string
-  ) {
-    const database = yield* DatabaseReader;
-    return yield* database
-      .table("learningViews")
-      .index(
-        "by_deviceId_and_content_id_and_contextKey_and_lastViewedAt",
-        (q) =>
-          q
-            .eq("deviceId", deviceId)
-            .eq("content_id", contentId)
-            .eq("contextKey", contextKey),
-        "desc"
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull), Effect.orDie);
-  },
-  Effect.catchDefect(flow(toContentViewIoError, Effect.fail))
-);
-
-/** Loads the view row owned by an authenticated user on the current device. */
-const loadSignedInDeviceView = Effect.fn(
-  "contents.views.loadSignedInDeviceView"
-)(
-  function* (
-    contentId: ContentViewTarget["content_id"],
-    contextKey: string,
-    input: {
-      readonly deviceId: string;
-      readonly userId: Docs["users"]["_id"];
-    }
-  ) {
-    const database = yield* DatabaseReader;
-    return yield* database
-      .table("learningViews")
-      .index("by_userId_and_deviceId_and_content_id_and_contextKey", (q) =>
-        q
-          .eq("userId", input.userId)
-          .eq("deviceId", input.deviceId)
-          .eq("content_id", contentId)
-          .eq("contextKey", contextKey)
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull), Effect.orDie);
-  },
-  Effect.catchDefect(flow(toContentViewIoError, Effect.fail))
-);
-
-/**
- * Loads the only existing view row this request may mutate.
- *
- * Signed-in requests can touch their exact user-device row or claim an
- * anonymous device row. They never mutate a row owned by another signed-in
- * learner or a row from another device.
- */
-const loadExistingView = Effect.fn("contents.views.loadExistingView")(
-  function* (
-    contentId: ContentViewTarget["content_id"],
-    contextKey: string,
-    input: {
-      readonly deviceId: string;
-      readonly userId?: Docs["users"]["_id"];
-    }
-  ) {
-    const existingByDevice = yield* loadLatestDeviceView(
-      contentId,
-      contextKey,
-      input.deviceId
-    );
-    if (!input.userId) {
-      return existingByDevice;
-    }
-    const existingBySignedInDevice = yield* loadSignedInDeviceView(
-      contentId,
-      contextKey,
-      {
-        deviceId: input.deviceId,
-        userId: input.userId,
-      }
-    );
-    if (existingBySignedInDevice) {
-      return existingBySignedInDevice;
-    }
-    if (!existingByDevice?.userId) {
-      return existingByDevice;
-    }
-    return null;
-  }
-);
+const notRecorded = {
+  alreadyViewed: false,
+  isNewView: false,
+  success: false,
+};
+const alreadyViewed = {
+  alreadyViewed: true,
+  isNewView: false,
+  success: true,
+};
 
 /** Writes the first durable view row for a viewer/content/context tuple. */
 const insertNewView = Effect.fn("contents.views.insertNewView")(
@@ -124,9 +42,10 @@ const insertNewView = Effect.fn("contents.views.insertNewView")(
     context: LearningContextStorage,
     input: {
       readonly now: number;
-      readonly userId?: Docs["users"]["_id"];
+      readonly viewer: ContentViewer;
     }
   ) {
+    const { viewer } = input;
     const writer = yield* DatabaseWriter;
     yield* writer
       .table("learningViews")
@@ -136,7 +55,7 @@ const insertNewView = Effect.fn("contents.views.insertNewView")(
         conceptId: route.conceptId,
         content_id: route.content_id,
         ...context,
-        deviceId: args.deviceId,
+        ...(viewer.deviceId === undefined ? {} : { deviceId: viewer.deviceId }),
         firstViewedAt: input.now,
         lastViewedAt: input.now,
         learningObjectId: route.learningObjectId,
@@ -144,11 +63,7 @@ const insertNewView = Effect.fn("contents.views.insertNewView")(
         locale: args.locale,
         route: route.route,
         section: route.section,
-        ...(input.userId
-          ? {
-              userId: input.userId,
-            }
-          : {}),
+        ...(viewer.kind === "account" ? { userId: viewer.userId } : {}),
       })
       .pipe(Effect.orDie);
   },
@@ -161,14 +76,14 @@ const updateExistingView = Effect.fn("contents.views.updateExistingView")(
     view: Docs["learningViews"],
     input: {
       readonly now: number;
-      readonly userId?: Docs["users"]["_id"];
+      readonly viewer: ContentViewer;
     }
   ) {
     const writer = yield* DatabaseWriter;
-    if (input.userId && !view.userId) {
+    if (input.viewer.kind === "account" && !view.userId) {
       yield* writer.table("learningViews").patch(view._id, {
         lastViewedAt: input.now,
-        userId: input.userId,
+        userId: input.viewer.userId,
       });
       return;
     }
@@ -182,8 +97,10 @@ const updateExistingView = Effect.fn("contents.views.updateExistingView")(
 /**
  * Records one unique content view and schedules derived analytics work.
  *
- * The primary write stays small and derived popularity work is deferred to a
- * scheduled mutation to keep the hot user-facing mutation bounded.
+ * A signed-out view without a device identifier comes from a browser without
+ * analytics consent, so nothing is recorded for it. The primary write stays
+ * small and derived popularity work is deferred to a scheduled mutation to
+ * keep the hot user-facing mutation bounded.
  * @see https://docs.convex.dev/understanding/best-practices/
  */
 export const recordUniqueContentView = Effect.fn(
@@ -192,102 +109,53 @@ export const recordUniqueContentView = Effect.fn(
   const authContext = yield* getOptionalActiveAppUser().pipe(
     Effect.mapError(toContentViewIoError)
   );
+  const viewer = resolveContentViewer({
+    ...(args.deviceId === undefined ? {} : { deviceId: args.deviceId }),
+    ...(authContext ? { userId: authContext.appUser._id } : {}),
+  });
+  if (Option.isNone(viewer)) {
+    return notRecorded;
+  }
   const target = yield* validateIncomingContentTarget(args);
   if (!target) {
-    return {
-      alreadyViewed: false,
-      isNewView: false,
-      success: false,
-    };
+    return notRecorded;
   }
   const now = yield* Clock.currentTimeMillis;
-  const userId = authContext?.appUser._id;
   const learningContext = yield* resolveLearningContext(target, args.context);
-  const existingView = yield* loadExistingView(
+  const existingView = yield* loadViewerView(
     target.content_id,
     learningContext.contextKey,
-    {
-      deviceId: args.deviceId,
-      ...(userId === undefined
-        ? {}
-        : {
-            userId,
-          }),
-    }
+    viewer.value
   );
-  if (existingView) {
-    // Unsigned repeats can prove device-level dedupe, but must not mutate or
-    // emit analytics from a row owned by a signed-in learner.
-    if (!userId && existingView.userId) {
-      return {
-        alreadyViewed: true,
-        isNewView: false,
-        success: true,
-      };
-    }
-    const popularityUserId = userId ?? existingView.userId;
-    yield* updateExistingView(existingView, {
-      now,
-      ...(userId === undefined
-        ? {}
-        : {
-            userId,
-          }),
-    });
-    if (userId) {
-      yield* upsertUserRecent(target, learningContext, {
-        lastViewedAt: now,
-        userId,
-      });
-    }
-    const partitions = yield* enqueuePopularitySignals(
-      target,
-      args,
-      learningContext,
-      {
-        now,
-        ...(popularityUserId === undefined
-          ? {}
-          : {
-              userId: popularityUserId,
-            }),
-      }
-    );
-    yield* schedulePopularityPartitions(partitions);
-    return {
-      alreadyViewed: true,
-      isNewView: false,
-      success: true,
-    };
+  // A device repeat can prove device-level dedupe, but must not mutate or
+  // emit analytics from a row owned by a signed-in learner.
+  if (viewer.value.kind === "device" && existingView?.userId) {
+    return alreadyViewed;
   }
-  yield* insertNewView(target, args, learningContext, {
-    now,
-    ...(userId === undefined
-      ? {}
-      : {
-          userId,
-        }),
-  });
-  if (userId) {
+  if (existingView) {
+    yield* updateExistingView(existingView, { now, viewer: viewer.value });
+  } else {
+    yield* insertNewView(target, args, learningContext, {
+      now,
+      viewer: viewer.value,
+    });
+  }
+  if (viewer.value.kind === "account") {
     yield* upsertUserRecent(target, learningContext, {
       lastViewedAt: now,
-      userId,
+      userId: viewer.value.userId,
     });
   }
   const partitions = yield* enqueuePopularitySignals(
     target,
     args,
     learningContext,
-    {
-      now,
-      ...(userId === undefined
-        ? {}
-        : {
-            userId,
-          }),
-    }
+    { now, viewer: viewer.value }
   );
   yield* schedulePopularityPartitions(partitions);
+  if (existingView) {
+    return alreadyViewed;
+  }
   return {
     alreadyViewed: false,
     isNewView: true,

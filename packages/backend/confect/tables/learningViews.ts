@@ -13,7 +13,8 @@ export default Table.make(() =>
     ...learningGraphIdentityValidator.fields,
     ...learningContextStorageFields,
     content_id: graphContentIdValidator,
-    deviceId: Schema.String,
+    /** Absent for a signed-in view recorded without analytics consent. */
+    deviceId: Schema.optionalKey(Schema.String),
     firstViewedAt: Schema.Finite,
     lastViewedAt: Schema.Finite,
     locale: localeValidator,
