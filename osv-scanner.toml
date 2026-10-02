@@ -1,0 +1,13 @@
+# Advisories with no patched release that reach only development tooling.
+# Each entry expires on its ignoreUntil date and the audit fails again, so it is reviewed
+# then; delete it as soon as a patched release ships.
+
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2026-10-17
+reason = "braces <=3.0.3 has no patched release. Only the lint toolchain reaches it (ultracite -> fast-glob and find-workspaces -> micromatch -> braces), and it expands glob patterns from this repository's own configuration, never untrusted input."
+
+[[IgnoredVulns]]
+id = "GHSA-ch52-4w7c-c8xp"
+ignoreUntil = 2026-10-17
+reason = "http-cache-semantics <=4.2.0 has no patched release. Only the Sigstore client reaches it (sigstore -> @sigstore/sign -> make-fetch-happen), in single-user CI and release scripts without a shared HTTP cache, so no response can be served across users."

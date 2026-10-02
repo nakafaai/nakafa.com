@@ -125,7 +125,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 - Run one test with `pnpm --filter <workspace> exec vitest run <relative-test-path>` and a workspace suite with `pnpm --filter <workspace> test`.
 - Run the smallest useful verification first, then expand based on risk. Format changed files, run `pnpm lint`, run affected tests and typechecks, and run `pnpm build` for build-critical changes.
 - Run `pnpm security:audit` after dependency or lockfile changes. Report any verification that could not run.
-- CI audits against live OSV advisories, so a new advisory can fail Quality with no code change. Bump the version-keyed override in `pnpm-workspace.yaml` in its own change, then merge `main` into waiting pull requests.
+- CI audits against live OSV advisories, so a new advisory can fail Quality with no code change. Bump the version-keyed override in `pnpm-workspace.yaml` in its own change, then merge `main` into waiting pull requests. When no patched release exists and only development tooling reaches the package, add a time-boxed `IgnoredVulns` entry to `osv-scanner.toml` in its own change instead: `ignoreUntil` at most 14 days out and a `reason` naming the dependency path and why it cannot be exploited. Delete the entry once a patched release ships; an expired entry fails the audit again.
 
 ## Vercel Cost And Deployment Policy
 
