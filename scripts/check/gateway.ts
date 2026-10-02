@@ -1,5 +1,8 @@
+import { Array as Arr, HashSet, Match, String as Str } from "effect";
 import {
+  type ExportSpecifier,
   type Expression,
+  type ImportSpecifier,
   isBinaryExpression,
   isCallExpression,
   isExportDeclaration,
@@ -19,13 +22,14 @@ import {
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
+import { descendants } from "#scripts/check/source";
 
 /** The one module that owns the AI Gateway client, its credentials, and routing. */
 const GATEWAY_MODULE = "packages/backend/confect/gateway/";
 const GATEWAY_PACKAGE = "@ai-sdk/gateway";
 /** The AI SDK's main entry re-exports the gateway client. */
 const SDK_MODULE = "ai";
-const CLIENT_EXPORTS = new Set(["createGateway", "gateway"]);
+const CLIENT_EXPORTS = HashSet.make("createGateway", "gateway");
 const TEST_MODULE_PATTERN = /\.test\.tsx?$/u;
 
 const PACKAGE_RULE = `import ${GATEWAY_PACKAGE} only inside ${GATEWAY_MODULE}; take model handles from its Gateway service`;
@@ -46,35 +50,57 @@ function namesModule(node: Node) {
   );
 }
 
-/**
- * Whether an import or re-export of the AI SDK reaches its gateway client,
- * recording the default and namespace names it binds.
- */
-function reachesClient(node: Node, namespaces: Set<string>) {
-  if (isExportDeclaration(node)) {
-    const clause = node.exportClause;
+/** Whether import or export specifiers name the AI SDK's gateway client. */
+function namesClient(
+  specifiers: readonly (ExportSpecifier | ImportSpecifier)[]
+) {
+  return Arr.some(specifiers, (specifier) =>
+    HashSet.has(CLIENT_EXPORTS, (specifier.propertyName ?? specifier.name).text)
+  );
+}
+
+/** Whether an import or re-export of the AI SDK reaches its gateway client. */
+function reachesClient(declaration: Node) {
+  if (isExportDeclaration(declaration)) {
+    const clause = declaration.exportClause;
     return (
       clause === undefined ||
       !isNamedExports(clause) ||
-      clause.elements.some((element) =>
-        CLIENT_EXPORTS.has((element.propertyName ?? element.name).text)
-      )
+      namesClient(clause.elements)
     );
   }
-  const clause = isImportDeclaration(node) ? node.importClause : undefined;
-  if (clause?.name !== undefined) {
-    namespaces.add(clause.name.text);
-  }
-  const bindings = clause?.namedBindings;
-  if (bindings !== undefined && isNamespaceImport(bindings)) {
-    namespaces.add(bindings.name.text);
-  }
+  const bindings = isImportDeclaration(declaration)
+    ? declaration.importClause?.namedBindings
+    : undefined;
   return (
     bindings !== undefined &&
     isNamedImports(bindings) &&
-    bindings.elements.some((element) =>
-      CLIENT_EXPORTS.has((element.propertyName ?? element.name).text)
-    )
+    namesClient(bindings.elements)
+  );
+}
+
+/** The default and namespace names that imports of the AI SDK bind. */
+function sdkNamespaces(nodes: readonly Node[]) {
+  return HashSet.fromIterable(
+    Arr.flatMap(nodes, (node) => {
+      if (
+        !(
+          isImportDeclaration(node) &&
+          isStringLiteralLikeNode(node.moduleSpecifier) &&
+          node.moduleSpecifier.text === SDK_MODULE
+        )
+      ) {
+        return [];
+      }
+      const clause = node.importClause;
+      const bindings = clause?.namedBindings;
+      return Arr.appendAll(
+        clause?.name === undefined ? [] : [clause.name.text],
+        bindings !== undefined && isNamespaceImport(bindings)
+          ? [bindings.name.text]
+          : []
+      );
+    })
   );
 }
 
@@ -88,6 +114,16 @@ function accessedName(node: Expression) {
   return isPropertyAccessExpression(node) ? node.name.text : nameText(node);
 }
 
+/** `ai.gateway` or `ai.createGateway` through a default or namespace import of the AI SDK. */
+function readsClient(node: Node, namespaces: HashSet.HashSet<string>) {
+  return (
+    isPropertyAccessExpression(node) &&
+    isIdentifier(node.expression) &&
+    HashSet.has(namespaces, node.expression.text) &&
+    HashSet.has(CLIENT_EXPORTS, node.name.text)
+  );
+}
+
 /** `providerOptions: { gateway }` in an object, or `providerOptions.gateway = ...`. */
 function buildsRouting(node: Node) {
   if (
@@ -95,7 +131,8 @@ function buildsRouting(node: Node) {
     nameText(node.name) === "providerOptions" &&
     isObjectLiteralExpression(node.initializer)
   ) {
-    return node.initializer.properties.some(
+    return Arr.some(
+      node.initializer.properties,
       (property) =>
         (isPropertyAssignment(property) ||
           isShorthandPropertyAssignment(property)) &&
@@ -111,40 +148,41 @@ function buildsRouting(node: Node) {
   );
 }
 
+/** The gateway rules one node breaks; `routes` is false in tests, which keep stored provider metadata. */
+function brokenRules(
+  node: Node,
+  namespaces: HashSet.HashSet<string>,
+  routes: boolean
+): readonly string[] {
+  if (isStringLiteralLikeNode(node) && namesModule(node)) {
+    return Match.value(node.text).pipe(
+      Match.when(GATEWAY_PACKAGE, () => [PACKAGE_RULE]),
+      Match.when(SDK_MODULE, () =>
+        reachesClient(node.parent) ? [CLIENT_RULE] : []
+      ),
+      Match.orElse(() => [])
+    );
+  }
+  if (readsClient(node, namespaces)) {
+    return [CLIENT_RULE];
+  }
+  return routes && buildsRouting(node) ? [ROUTING_RULE] : [];
+}
+
 /**
  * Reports gateway access outside confect/gateway: any @ai-sdk/gateway
  * import, the gateway client from the AI SDK, and, outside tests, call
  * options that build `providerOptions.gateway`.
  */
 export function inspectGatewaySource(file: string, sourceFile: SourceFile) {
-  if (file.startsWith(GATEWAY_MODULE)) {
+  if (Str.startsWith(GATEWAY_MODULE)(file)) {
     return [];
   }
-  const violations: string[] = [];
-  const namespaces = new Set<string>();
+  const nodes = descendants(sourceFile, false);
+  const namespaces = sdkNamespaces(nodes);
   const routes = !TEST_MODULE_PATTERN.test(file);
-  const visit = (node: Node) => {
-    if (isStringLiteralLikeNode(node) && namesModule(node)) {
-      if (node.text === GATEWAY_PACKAGE) {
-        violations.push(`${file}: ${PACKAGE_RULE}.`);
-      }
-      if (node.text === SDK_MODULE && reachesClient(node.parent, namespaces)) {
-        violations.push(`${file}: ${CLIENT_RULE}.`);
-      }
-    }
-    if (
-      isPropertyAccessExpression(node) &&
-      isIdentifier(node.expression) &&
-      namespaces.has(node.expression.text) &&
-      CLIENT_EXPORTS.has(node.name.text)
-    ) {
-      violations.push(`${file}: ${CLIENT_RULE}.`);
-    }
-    if (routes && buildsRouting(node)) {
-      violations.push(`${file}: ${ROUTING_RULE}.`);
-    }
-    node.forEachChild(visit);
-  };
-  visit(sourceFile);
-  return violations;
+  return Arr.map(
+    Arr.flatMap(nodes, (node) => brokenRules(node, namespaces, routes)),
+    (rule) => `${file}: ${rule}.`
+  );
 }

@@ -1,5 +1,4 @@
-import type { Effort } from "@repo/backend/confect/gateway/model";
-import type { TimeoutConfiguration, ToolSet } from "ai";
+import { Effort } from "@repo/backend/confect/gateway/model";
 import { Schema } from "effect";
 
 /** Why Nakafa calls a model. Spend reports split by it. */
@@ -13,15 +12,27 @@ export const Purpose = Schema.Literals([
 export type Purpose = typeof Purpose.Type;
 
 /**
- * Each purpose's reasoning effort and deadlines.
- *
- * AI SDK treats `stepMs` as a per-step abort timer and `chunkMs` as the
- * longest gap between streamed chunks, so the chat window allows slower Pro
- * reasoning and web-search steps within its request deadline. Specialists,
- * titles, repairs, summaries, memory, and follow-up suggestions are bounded so
- * a slow provider cannot hold the chat open.
+ * How long one call may run, in the AI SDK's timeout terms: `totalMs` bounds
+ * the call, `stepMs` each step, and `chunkMs` the longest gap between
+ * streamed chunks.
  *
  * @see https://ai-sdk.dev/docs/ai-sdk-core/settings#timeout
+ */
+export const Deadline = Schema.Struct({
+  totalMs: Schema.Int,
+  stepMs: Schema.Int,
+  chunkMs: Schema.optionalKey(Schema.Int),
+});
+export type Deadline = typeof Deadline.Type;
+
+/** How hard a purpose reasons and how long it may take. */
+const Budget = Schema.Struct({ effort: Effort, timeout: Deadline });
+
+/**
+ * Each purpose's reasoning effort and deadlines. The chat window allows
+ * slower Pro reasoning and web-search steps within its request deadline.
+ * Specialists, titles, repairs, summaries, memory, and follow-up suggestions
+ * are bounded so a slow provider cannot hold the chat open.
  */
 export const purposes = {
   chat: {
@@ -35,7 +46,4 @@ export const purposes = {
     effort: "fast",
     timeout: { stepMs: 15_000, totalMs: 45_000 },
   },
-} satisfies Record<
-  Purpose,
-  { effort: Effort; timeout: TimeoutConfiguration<ToolSet> }
->;
+} satisfies Record<Purpose, typeof Budget.Type>;

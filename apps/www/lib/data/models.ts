@@ -4,6 +4,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { ModelId, ModelKey } from "@repo/backend/confect/gateway/model";
+import { Array as Arr } from "effect";
 
 const modelIcons = {
   "nakafa-lite": LaurelWreathRight03Icon,
@@ -43,7 +44,10 @@ const aiModelsById = {
   }
 >;
 
-export const aiModels = ModelKey.literals.map((value) => aiModelsById[value]);
+export const aiModels = Arr.map(
+  ModelKey.literals,
+  (value) => aiModelsById[value]
+);
 
 /** Finds display metadata for one Nakafa model. */
 export function getAiModel(model: ModelKey) {

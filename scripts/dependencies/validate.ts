@@ -1,3 +1,4 @@
+import { Array as Arr, Record as Rec, Result } from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
@@ -124,12 +125,16 @@ function cohortProblems(workspace: WorkspaceManifest) {
       );
     }
   }
-  for (const [dependency, version] of Object.entries(AI_SDK_COHORT)) {
-    if (workspace.catalog?.[dependency] !== version) {
-      problems.push(`The ${dependency} catalog must be exactly ${version}.`);
-    }
-  }
-  return problems;
+  return Arr.appendAll(
+    problems,
+    Arr.filterMap(Rec.toEntries(AI_SDK_COHORT), ([dependency, version]) =>
+      workspace.catalog?.[dependency] === version
+        ? Result.failVoid
+        : Result.succeed(
+            `The ${dependency} catalog must be exactly ${version}.`
+          )
+    )
+  );
 }
 
 /** Validates exact cohort declarations and the absence of v3 packages. */

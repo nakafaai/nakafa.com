@@ -26,7 +26,7 @@ export const reportFailure = Effect.fn("nina.diagnostics.report")(function* (
     source: "nina-response",
     operation: error.reason,
     model_id: turn.modelId,
-    gateway_model_id: models[model].gateway,
+    gateway_model_id: models[model],
     gateway_error_type: error.gateway?.type,
     gateway_status_code: error.gateway?.status,
     gateway_retryable: error.gateway?.retryable,

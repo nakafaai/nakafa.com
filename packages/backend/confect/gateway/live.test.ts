@@ -81,7 +81,10 @@ describe("The production gateway", () => {
           "http-referer": "https://nakafa.com",
           "x-title": "nakafa.com",
         });
-        expect(JSON.parse(String(init?.body))).toMatchObject({
+        const body = yield* Schema.decodeUnknownEffect(
+          Schema.fromJsonString(Schema.Unknown)
+        )(init?.body);
+        expect(body).toMatchObject({
           providerOptions: {
             gateway: {
               disallowPromptTraining: true,

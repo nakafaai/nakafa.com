@@ -59,7 +59,6 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 ## AI Gateway
 
-- **Space**: Whose data a row or a model call belongs to. A personal space is one account's own data.
 - **Gateway handle**: A language model prepared for one purpose, model key, and space, with Nakafa's no-training routing, reasoning defaults, deadlines, and spend attribution. It is the only way Nakafa code reaches a model.
 - **Purpose**: Why Nakafa calls a model, such as chat, specialist, background, suggestion, or presentation. It sets a handle's deadlines and effort and splits spend reports.
 - **Gateway failure**: The one classification of a failed model call, carrying routing facts only and never the prompt, the answer, or a provider message.

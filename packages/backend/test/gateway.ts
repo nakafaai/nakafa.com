@@ -1,14 +1,12 @@
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
-import {
-  Gateway,
-  make,
-  type Provider,
-} from "@repo/backend/confect/gateway/handle";
+import { Gateway, make } from "@repo/backend/confect/gateway/handle";
 import type { GatewayConfigurationError } from "@repo/backend/confect/gateway/key";
 import { Effect, Layer } from "effect";
 
 /** The deterministic provider behind both test layers; each test programs its model. */
-export const provider = { languageModel: vi.fn<Provider["languageModel"]>() };
+export const provider = {
+  languageModel: vi.fn<Parameters<typeof make>[0]["languageModel"]>(),
+};
 
 /** The test adapter: production handles (defaults, routing, deadlines) over `provider`. */
 export const GatewayTest = Layer.succeed(Gateway, make(provider));

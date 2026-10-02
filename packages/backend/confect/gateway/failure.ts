@@ -5,9 +5,14 @@ import {
   NoOutputGeneratedError,
   RetryError,
 } from "ai";
-import { Predicate, Schema } from "effect";
+import { Match, Number as Num, Option, Predicate, Schema } from "effect";
 
-const RoutingFact = Schema.String.check(Schema.isMaxLength(128));
+/** Seconds the gateway asked to wait before retrying. */
+const Seconds = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0));
+/** A gateway generation ID: a bounded plain identifier, never free text. */
+const GenerationId = Schema.String.check(
+  Schema.isPattern(/^[a-zA-Z0-9_-]{1,128}$/)
+);
 
 /**
  * One classification of every AI SDK and gateway error a model call can
@@ -30,118 +35,145 @@ export class GatewayFailure extends Schema.TaggedError<GatewayFailure>()(
       "unknown",
     ]),
     status: Schema.optional(Schema.Finite),
-    /** Seconds the gateway asked to wait before retrying, when it said. */
-    retryAfter: Schema.optional(Schema.Finite),
+    retryAfter: Schema.optional(Seconds),
     retryable: Schema.optional(Schema.Boolean),
-    generation: Schema.optional(RoutingFact),
+    generation: Schema.optional(GenerationId),
     /** The gateway's own error type, such as `rate_limit_exceeded`. */
-    type: Schema.optional(RoutingFact),
+    type: Schema.optional(Schema.String.check(Schema.isMaxLength(128))),
   }
 ) {}
 type Reason = GatewayFailure["reason"];
 
-/** HTTP statuses with a reason of their own; any other 5xx is `unavailable`. */
-const statusReasons: Partial<Record<number, Reason>> = {
-  400: "invalid",
-  401: "auth",
-  402: "quota",
-  403: "auth",
-  404: "configuration",
-  408: "timeout",
-  413: "too-large",
-  422: "invalid",
-  424: "configuration",
-  429: "rate-limit",
-  504: "timeout",
-};
-const generationPattern = /^[a-zA-Z0-9_-]{1,128}$/;
-const envelopeDepth = 4;
+/** Envelopes followed before classifying, instead of an unbounded cause chain. */
+const ENVELOPE_DEPTH = 4;
+
+/** The error an SDK envelope wraps: the last retry's error, or an empty output's cause. */
+const wrapped = Match.type<unknown>().pipe(
+  Match.when(RetryError.isInstance, ({ lastError }) => Option.some(lastError)),
+  Match.when(NoOutputGeneratedError.isInstance, ({ cause }) =>
+    Option.fromUndefinedOr(cause)
+  ),
+  Match.orElse(() => Option.none())
+);
+
+/** The error behind at most `ENVELOPE_DEPTH` SDK envelopes. */
+function unwrap(error: unknown, depth: number): unknown {
+  return depth === ENVELOPE_DEPTH
+    ? error
+    : Option.match(wrapped(error), {
+        onNone: () => error,
+        onSome: (inner) => unwrap(inner, depth + 1),
+      });
+}
+
+/** The reason an HTTP status gives on its own; any other 5xx is `unavailable`. */
+const statusReason = Match.type<number>().pipe(
+  Match.withReturnType<Reason>(),
+  Match.when(429, () => "rate-limit"),
+  Match.when(402, () => "quota"),
+  Match.when(Match.is(401, 403), () => "auth"),
+  Match.when(Match.is(404, 424), () => "configuration"),
+  Match.when(Match.is(400, 422), () => "invalid"),
+  Match.when(413, () => "too-large"),
+  Match.when(Match.is(408, 504), () => "timeout"),
+  Match.when(Num.isGreaterThanOrEqualTo(500), () => "unavailable"),
+  Match.option
+);
+
+/** The reason an error's name gives once its SDK class is gone. */
+const namedReason = Match.type<string>().pipe(
+  Match.withReturnType<Reason>(),
+  Match.when("TimeoutError", () => "timeout"),
+  Match.when("AbortError", () => "interrupted"),
+  Match.when("GatewayAuthenticationError", () => "auth"),
+  Match.orElse(() => "unknown")
+);
+
+/** The reason an error gives by its class or name when no HTTP status classifies it. */
+const nameReason = Match.type<unknown>().pipe(
+  Match.withReturnType<Reason>(),
+  // AI SDK replaces GatewayAuthenticationError at its public model boundary.
+  Match.when(
+    (error: unknown) =>
+      AISDKError.isInstance(error) && error.name === "GatewayError",
+    () => "auth"
+  ),
+  Match.when(Predicate.isError, ({ name }) => namedReason(name)),
+  Match.orElse(() => "unknown")
+);
+
+/** An HTTP failure's reason: by its status, or by its name when the status says nothing. */
+function httpReason(status: number, error: unknown) {
+  return Option.getOrElse(statusReason(status), () => nameReason(error));
+}
+
+/** The `retry-after` seconds of the HTTP response behind an error, when it sent usable ones. */
+function retryAfter(error: unknown) {
+  return Option.liftPredicate(error, APICallError.isInstance).pipe(
+    Option.flatMapNullishOr(
+      ({ responseHeaders }) => responseHeaders?.["retry-after"]
+    ),
+    Option.flatMap(Num.parse),
+    Option.filter(Schema.is(Seconds)),
+    Option.match({
+      onNone: () => ({}),
+      onSome: (seconds) => ({ retryAfter: seconds }),
+    })
+  );
+}
+
+/** A gateway generation ID, kept only when it is a bounded plain identifier. */
+function generation(id: string | undefined) {
+  return Option.fromUndefinedOr(id).pipe(
+    Option.filter(Schema.is(GenerationId)),
+    Option.match({
+      onNone: () => ({}),
+      onSome: (kept) => ({ generation: kept }),
+    })
+  );
+}
+
+/** Classifies an unwrapped error by its SDK class; a classified failure stays as it is. */
+const failure = Match.type<unknown>().pipe(
+  Match.withReturnType<GatewayFailure>(),
+  Match.when(Schema.is(GatewayFailure), (classified) => classified),
+  Match.when(
+    GatewayError.isInstance,
+    (error) =>
+      new GatewayFailure({
+        reason: httpReason(error.statusCode, error),
+        status: error.statusCode,
+        retryable: error.isRetryable,
+        type: error.type,
+        ...retryAfter(error.cause),
+        ...generation(error.generationId),
+      })
+  ),
+  Match.when(APICallError.isInstance, (error) =>
+    Option.match(Option.fromUndefinedOr(error.statusCode), {
+      // No HTTP status: the request never reached a server.
+      onNone: () =>
+        new GatewayFailure({
+          reason: "network",
+          retryable: error.isRetryable,
+          ...retryAfter(error),
+        }),
+      onSome: (status) =>
+        new GatewayFailure({
+          reason: httpReason(status, error),
+          status,
+          retryable: error.isRetryable,
+          ...retryAfter(error),
+        }),
+    })
+  ),
+  Match.orElse((error) => new GatewayFailure({ reason: nameReason(error) }))
+);
 
 /**
  * Unwraps RetryError and NoOutputGeneratedError, then classifies by SDK
  * class, name, and status.
  */
 export function classify(cause: unknown): GatewayFailure {
-  const error = unwrap(cause, 0);
-  if (Schema.is(GatewayFailure)(error)) {
-    return error;
-  }
-  if (GatewayError.isInstance(error)) {
-    return new GatewayFailure({
-      reason: statusReason(error.statusCode) ?? nameReason(error),
-      status: error.statusCode,
-      retryable: error.isRetryable,
-      type: error.type,
-      ...retryAfter(error.cause),
-      ...generation(error.generationId),
-    });
-  }
-  if (APICallError.isInstance(error)) {
-    return new GatewayFailure({
-      reason:
-        error.statusCode === undefined
-          ? "network"
-          : (statusReason(error.statusCode) ?? nameReason(error)),
-      retryable: error.isRetryable,
-      ...(error.statusCode === undefined ? {} : { status: error.statusCode }),
-      ...retryAfter(error),
-    });
-  }
-  return new GatewayFailure({ reason: nameReason(error) });
-}
-
-/** Follows at most a few SDK envelopes instead of an unbounded cause chain. */
-function unwrap(error: unknown, depth: number): unknown {
-  if (depth === envelopeDepth) {
-    return error;
-  }
-  if (RetryError.isInstance(error)) {
-    return unwrap(error.lastError, depth + 1);
-  }
-  if (NoOutputGeneratedError.isInstance(error) && error.cause !== undefined) {
-    return unwrap(error.cause, depth + 1);
-  }
-  return error;
-}
-
-function statusReason(status: number): Reason | undefined {
-  return statusReasons[status] ?? (status >= 500 ? "unavailable" : undefined);
-}
-
-function nameReason(error: unknown): Reason {
-  // AI SDK replaces GatewayAuthenticationError at its public model boundary.
-  if (AISDKError.isInstance(error) && error.name === "GatewayError") {
-    return "auth";
-  }
-  if (!Predicate.isError(error)) {
-    return "unknown";
-  }
-  switch (error.name) {
-    case "TimeoutError":
-      return "timeout";
-    case "AbortError":
-      return "interrupted";
-    case "GatewayAuthenticationError":
-      return "auth";
-    default:
-      return "unknown";
-  }
-}
-
-/** The seconds from the `retry-after` header of the HTTP response behind an error. */
-function retryAfter(error: unknown) {
-  const header = APICallError.isInstance(error)
-    ? error.responseHeaders?.["retry-after"]
-    : undefined;
-  const seconds = Number.parseFloat(header ?? "");
-  return Number.isFinite(seconds) && seconds >= 0
-    ? { retryAfter: seconds }
-    : {};
-}
-
-/** A gateway generation ID, kept only when it is a bounded plain identifier. */
-function generation(id: string | undefined) {
-  return id !== undefined && generationPattern.test(id)
-    ? { generation: id }
-    : {};
+  return failure(unwrap(cause, 0));
 }

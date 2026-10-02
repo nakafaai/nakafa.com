@@ -18,6 +18,10 @@ import {
   NoOutputGeneratedError,
   RetryError,
 } from "ai";
+import { Schema } from "effect";
+
+/** A failure as it crosses into logs and analytics. */
+const encode = Schema.encodeSync(Schema.fromJsonString(GatewayFailure));
 
 /** A provider HTTP failure carrying details that must never survive. */
 function apiError(statusCode?: number, retryAfter?: string) {
@@ -207,8 +211,8 @@ describe("Gateway failure classification", () => {
             : {}),
         })
       );
-      expect(JSON.stringify(failure)).not.toContain("private");
+      expect(encode(failure)).not.toContain("private");
     }
-    expect(JSON.stringify(classify(apiError(400)))).not.toContain("private");
+    expect(encode(classify(apiError(400)))).not.toContain("private");
   });
 });

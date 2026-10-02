@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { sourceViolations } from "#scripts/check/source";
 
@@ -27,7 +27,7 @@ type Options = import("@ai-sdk/gateway").GatewayProviderOptions;
 const loaded = await import("@ai-sdk/gateway");`);
       assert.deepStrictEqual(
         violations,
-        Array.from({ length: 5 }, () => `${NINA}: ${PACKAGE}.`)
+        Arr.replicate(`${NINA}: ${PACKAGE}.`, 5)
       );
     })
   );
@@ -47,7 +47,7 @@ const lite = AI.gateway("google/gemini-3.5-flash-lite");
 const pro = SDK.createGateway({}).languageModel("google/gemini-3.7-flash");`);
       assert.deepStrictEqual(
         violations,
-        Array.from({ length: 8 }, () => `${NINA}: ${CLIENT}.`)
+        Arr.replicate(`${NINA}: ${CLIENT}.`, 8)
       );
     })
   );
@@ -62,7 +62,7 @@ options.providerOptions.gateway = {};
 providerOptions.gateway = {};`);
       assert.deepStrictEqual(
         violations,
-        Array.from({ length: 5 }, () => `${NINA}: ${ROUTING}.`)
+        Arr.replicate(`${NINA}: ${ROUTING}.`, 5)
       );
     })
   );

@@ -27,8 +27,9 @@ defaults for the purpose are outermost, so a call may still override them. The
 routing middleware is innermost and replaces whatever `providerOptions.gateway`
 a call sent: Gemini runs only on Google and Vertex, which do not train on
 prompts, ordered by time to first token. The same middleware attributes spend
-with the tags `space:<kind>` and `purpose:<purpose>`; a personal space sends no
-identifier for a person.
+with the tags `space:<kind>` and `purpose:<purpose>`. A tenant space also sends
+its tenant ID as the gateway `user`, so Vercel spend reports and budgets split
+by school; a personal space sends no identifier, and no call names a person.
 
 Every model error is classified once, by `classify`, into a `GatewayFailure`
 whose reason, status, retry hint, retryability, gateway error type, and bounded

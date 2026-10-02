@@ -16,24 +16,20 @@ export type ModelId = typeof ModelId.Type;
 
 export const defaultModel = ModelId.make("nakafa-lite");
 
-/** How much a model reasons: deeply for answers, briefly for supporting work. */
-export type Effort = "fast" | "interactive";
+/** The gateway model behind each key. */
+export const models = {
+  "nakafa-lite": "google/gemini-3.5-flash-lite",
+  "nakafa-pro": "google/gemini-3.7-flash",
+} satisfies Record<ModelKey, GatewayModelId>;
 
-const efforts = {
+/** How much a model reasons: deeply for answers, briefly for supporting work. */
+export const Effort = Schema.Literals(["fast", "interactive"]);
+export type Effort = typeof Effort.Type;
+
+/** Gemini's thinking options for each effort; every key runs a Gemini model. */
+export const thinking = {
   fast: { thinkingConfig: { thinkingLevel: "low" } },
   interactive: {
     thinkingConfig: { includeThoughts: true, thinkingLevel: "high" },
   },
 } satisfies Record<Effort, GoogleLanguageModelOptions>;
-
-/** The gateway model behind each key and its Gemini options for each effort. */
-export const models = {
-  "nakafa-lite": { gateway: "google/gemini-3.5-flash-lite", options: efforts },
-  "nakafa-pro": { gateway: "google/gemini-3.7-flash", options: efforts },
-} satisfies Record<
-  ModelKey,
-  {
-    gateway: GatewayModelId;
-    options: Record<Effort, GoogleLanguageModelOptions>;
-  }
->;
