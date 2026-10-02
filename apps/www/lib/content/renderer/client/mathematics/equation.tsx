@@ -8,12 +8,6 @@ export const Inequality = dynamic(() =>
   )
 );
 
-export const LineEquation = dynamic(() =>
-  import(
-    "@repo/design-system/components/contents/mathematics/line/equation"
-  ).then(({ LineEquation: Component }) => Component)
-);
-
 export const QuadraticEquationReadingRoomProblem = dynamic(() =>
   import(
     "@repo/design-system/components/contents/mathematics/quadratic/reading-room"

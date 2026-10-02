@@ -1,4 +1,5 @@
 import { FunctionChart } from "@repo/design-system/components/contents/mathematics/function-chart";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
 import { mathematicsComponentNames } from "@repo/design-system/lib/markdown/names";
 import {
@@ -9,7 +10,6 @@ import {
 } from "@/lib/content/renderer/client/mathematics/charts";
 import {
   Inequality,
-  LineEquation,
   QuadraticEquationReadingRoomProblem,
 } from "@/lib/content/renderer/client/mathematics/equation";
 import {

@@ -1,5 +1,5 @@
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { physicsComponentNames } from "@repo/design-system/lib/markdown/names";
-import { LineEquation } from "@/lib/content/renderer/client/mathematics/equation";
 import {
   AccelerationGraphCard,
   AccelerationLab,

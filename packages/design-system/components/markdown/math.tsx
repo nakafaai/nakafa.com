@@ -1,9 +1,9 @@
-import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
+import { Formula } from "@repo/design-system/components/markdown/formula";
 import {
   ScrollArea,
   ScrollBar,
 } from "@repo/design-system/components/ui/scroll-area";
-import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
+import { packMathMarkup } from "@repo/design-system/lib/markdown/markup";
 import { cn } from "cn";
 import katex from "katex";
 import type { HTMLAttributes } from "react";
@@ -20,58 +20,22 @@ type MathComponentProps =
       readonly math?: never;
     };
 
-type KatexMarkupProps = MathComponentProps & {
-  readonly displayMode: boolean;
-};
-
-function KatexMarkup({
-  children,
-  displayMode,
-  errorColor = "var(--color-muted-foreground)",
-  math,
-}: KatexMarkupProps) {
-  const html = katex.renderToString(math ?? children, {
-    displayMode,
-    errorColor,
-    throwOnError: false,
-    trust: false,
-  });
-  const fonts = readMathFonts(html);
-
-  if (displayMode) {
-    return (
-      <>
-        <MathFontPreload fonts={fonts} />
-        <div
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
-          dangerouslySetInnerHTML={{ __html: html }}
-          data-testid="katex"
-        />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <MathFontPreload fonts={fonts} />
-      <span
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
-        dangerouslySetInnerHTML={{ __html: html }}
-        data-testid="katex"
-      />
-    </>
-  );
-}
-
-/**
- * Renders one KaTeX block without the surrounding card shell.
- */
-
-export function BlockMathKatex(props: MathComponentProps) {
-  return (
-    <div data-markdown-ignore="">
-      <KatexMarkup displayMode={true} {...props} />
-    </div>
+/** Renders one formula with KaTeX and packs its markup for the leaf. */
+function packFormula(
+  {
+    children,
+    errorColor = "var(--color-muted-foreground)",
+    math,
+  }: MathComponentProps,
+  displayMode: boolean
+) {
+  return packMathMarkup(
+    katex.renderToString(math ?? children, {
+      displayMode,
+      errorColor,
+      throwOnError: false,
+      trust: false,
+    })
   );
 }
 
@@ -119,12 +83,11 @@ export function BlockMath({
         "overflow-hidden rounded-xl border bg-card text-card-foreground",
         className
       )}
-      data-markdown-ignore=""
       data-math-block=""
     >
       <ScrollArea className="grid">
         <div className="px-4">
-          <KatexMarkup displayMode={true} {...props} />
+          <Formula display="block" markup={packFormula(props, true)} />
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
@@ -136,9 +99,5 @@ export function BlockMath({
  * Renders one inline KaTeX expression.
  */
 export function InlineMath(props: MathComponentProps) {
-  return (
-    <span data-markdown-ignore="">
-      <KatexMarkup displayMode={false} {...props} />
-    </span>
-  );
+  return <Formula markup={packFormula(props, false)} />;
 }

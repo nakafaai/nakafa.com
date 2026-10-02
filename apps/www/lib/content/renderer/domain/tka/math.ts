@@ -1,7 +1,7 @@
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { tkaMathComponentNames } from "@repo/design-system/lib/markdown/names";
 import {
   HistogramChart,
-  LineEquation,
   NumberLine,
 } from "@/lib/content/renderer/client/tka/basics";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";

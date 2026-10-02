@@ -1,17 +1,6 @@
-import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
-import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineCard } from "@repo/design-system/components/contents/mathematics/line/card";
+import { packLines } from "@repo/design-system/components/contents/mathematics/line/pack";
 import type { AuthoredLine } from "@repo/design-system/components/contents/mathematics/line/spec";
-import {
-  CoordinateControls,
-  CoordinateProvider,
-} from "@repo/design-system/components/three/controls";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import type { ReactNode } from "react";
 
 const DEFAULT_CAMERA_POSITION_X = 10;
@@ -27,7 +16,10 @@ interface Props {
   title: ReactNode;
 }
 
-/** Renders one interactive line-equation card. */
+/**
+ * Renders one interactive line-equation card. The server render packs the
+ * authored points, so the RSC payload carries them compactly to the card.
+ */
 export function LineEquation({
   title,
   description,
@@ -40,25 +32,14 @@ export function LineEquation({
   cameraTarget,
   showZAxis = true,
 }: Props) {
-  const lines = resolveAuthoredLines(data);
-
   return (
-    <CoordinateProvider>
-      <Card className="content-auto-card">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DeferredLineScene
-            cameraPosition={cameraPosition}
-            {...(cameraTarget === undefined ? {} : { cameraTarget })}
-            lines={lines}
-            showZAxis={showZAxis}
-          />
-        </CardContent>
-        <CoordinateControls />
-      </Card>
-    </CoordinateProvider>
+    <LineCard
+      cameraPosition={cameraPosition}
+      {...(cameraTarget === undefined ? {} : { cameraTarget })}
+      description={description}
+      lines={packLines(data)}
+      showZAxis={showZAxis}
+      title={title}
+    />
   );
 }
