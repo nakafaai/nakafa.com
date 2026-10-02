@@ -361,6 +361,12 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
       "Pricing"
     )
   );
+  yield* Effect.promise(() =>
+    expect(page.locator('header nav [href="/en/pricing"]')).toHaveAttribute(
+      "aria-current",
+      "page"
+    )
+  );
 });
 
 const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
