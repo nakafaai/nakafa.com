@@ -24,7 +24,7 @@ export function TryoutResponsePreview({
   readonly labels: Readonly<Record<string, ReactNode>>;
   readonly responseSpec: QuestionResponse;
 }) {
-  const t = useTranslations("Exercises");
+  const t = useTranslations("Tryouts");
   const [selection, setSelection] = useState<TryoutResponseSelection | null>(
     null
   );
