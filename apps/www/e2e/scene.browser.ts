@@ -25,7 +25,7 @@ const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;
  *
  * Playwright's headless shell renders WebGL with SwiftShader through ANGLE's
  * Vulkan backend, which reports Chromium's copy of each presented frame as a
- * ReadPixels stall, at most four times per GPU process. `reportPixelReadbacks`
+ * ReadPixels stall, at most four times per GPU process. `recordPixelReadbacks`
  * proves page scripts read no pixels, and GPU-backed WebGL presents the same
  * frames without the notice.
  *
@@ -38,17 +38,26 @@ const KNOWN_SCENE_DIAGNOSTICS = [
   /^THREE\.Clock: This module has been deprecated\. Please use THREE\.Timer instead\.$/,
 ];
 
+/** The page global that collects page-script pixel readbacks. */
+const PIXEL_READBACKS = "nakafaPixelReadbacks";
+
 /**
- * Reports page-script pixel readbacks, which the headless shell's own
- * ReadPixels notice would otherwise hide.
+ * Records where each page-script pixel readback came from, which the
+ * headless shell's own ReadPixels notice would otherwise hide. Pass it to
+ * `page.addInitScript` with the global's name.
  */
-function reportPixelReadbacks() {
+function recordPixelReadbacks(key: string) {
+  const readbacks: string[] = [];
+  Reflect.set(window, key, readbacks);
   for (const { prototype } of [WebGLRenderingContext, WebGL2RenderingContext]) {
     const readPixels = prototype.readPixels;
     Object.defineProperty(prototype, "readPixels", {
       configurable: true,
       value(this: unknown, ...args: unknown[]) {
-        console.warn(new Error("WebGL readPixels from a page script").stack);
+        readbacks.push(
+          new Error("WebGL readPixels from a page script").stack ??
+            "WebGL readPixels from a page script"
+        );
         return Reflect.apply(readPixels, this, args);
       },
       writable: true,
@@ -124,15 +133,24 @@ const revealLineScene = Effect.fn("NakafaE2E.revealLineScene")(function* (
   return canvas;
 });
 
-/** Mounts and settles every deferred line scene of the pinned lesson. */
+/**
+ * Mounts and settles every deferred line scene of the pinned lesson, and
+ * proves no page script read pixels back from a scene meanwhile.
+ */
 const renderLessonScenes = Effect.fn("NakafaE2E.renderLessonScenes")(function* (
   page: Page
 ) {
-  yield* Effect.promise(() => page.addInitScript(reportPixelReadbacks));
+  yield* Effect.promise(() =>
+    page.addInitScript(recordPixelReadbacks, PIXEL_READBACKS)
+  );
   const { cards, count } = yield* openLessonScenes(page);
   for (let index = 0; index < count; index += 1) {
     yield* revealLineScene(cards.nth(index));
   }
+  const readbacks = yield* Effect.promise(() =>
+    page.evaluate((key) => Reflect.get(window, key), PIXEL_READBACKS)
+  );
+  yield* Effect.sync(() => expect(readbacks).toEqual([]));
 });
 
 /** Proves a rotating scene stops far from the viewport and resumes in view. */
