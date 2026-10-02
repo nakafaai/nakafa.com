@@ -1,12 +1,15 @@
-import type { CSSProperties } from "react";
+import { Schema } from "effect";
 
 /**
- * The space a card takes in the page: its height and vertical margins, as the
- * style its slot keeps while the card fills the screen.
+ * The space a card takes in the page: its height in pixels and its computed
+ * vertical margins, as the style its slot keeps while the card fills the
+ * screen.
  */
-export type VisualPlace = Required<
-  Pick<CSSProperties, "height" | "marginBottom" | "marginTop">
->;
+export const VisualPlaceSchema = Schema.Struct({
+  height: Schema.Finite,
+  marginBottom: Schema.String,
+  marginTop: Schema.String,
+});
 
 /** The root's padding that stands in for its scrollbar gutters. */
 type GutterPadding = Pick<CSSStyleDeclaration, "paddingLeft" | "paddingRight">;
@@ -16,7 +19,7 @@ type GutterPadding = Pick<CSSStyleDeclaration, "paddingLeft" | "paddingRight">;
  * its neighbours through the slot, and the slot's own margin collapses the
  * same way, so copying it keeps every neighbour where it was.
  */
-function measurePlace(card: HTMLElement): VisualPlace {
+function measurePlace(card: HTMLElement): typeof VisualPlaceSchema.Type {
   const { marginBottom, marginTop } = getComputedStyle(card);
   return {
     height: card.getBoundingClientRect().height,

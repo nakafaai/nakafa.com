@@ -31,34 +31,32 @@ const NUMBER_LINE_SEGMENT_EDGE = {
   startInfinity: "startInfinity",
 } as const;
 
-interface NumberLineSegment {
-  /** The background color of the segment */
-  backgroundColor?: string;
-  /** The end value of the segment */
-  end: number;
-  /** Whether the end value is inclusive */
-  endInclusive?: boolean;
-  /** Custom label for the end point (e.g., fraction in LaTeX) */
-  endLabel?: ReactNode;
-  /** The label of the segment */
-  label?: ReactNode;
-  /** Whether the segment is shaded */
-  shaded?: boolean;
-  /** Whether the segment should show points */
-  showPoints?: boolean;
-  /** The start value of the segment */
-  start: number;
-  /** Whether the start value is inclusive */
-  startInclusive?: boolean;
-  /** Custom label for the start point (e.g., fraction in LaTeX) */
-  startLabel?: ReactNode;
-}
-
 interface NumberLineProps {
   description: ReactNode;
   max?: number;
   min?: number;
-  segments: NumberLineSegment[];
+  segments: {
+    /** The background color of the segment */
+    backgroundColor?: string;
+    /** The end value of the segment */
+    end: number;
+    /** Whether the end value is inclusive */
+    endInclusive?: boolean;
+    /** Custom label for the end point (e.g., fraction in LaTeX) */
+    endLabel?: ReactNode;
+    /** The label of the segment */
+    label?: ReactNode;
+    /** Whether the segment is shaded */
+    shaded?: boolean;
+    /** Whether the segment should show points */
+    showPoints?: boolean;
+    /** The start value of the segment */
+    start: number;
+    /** Whether the start value is inclusive */
+    startInclusive?: boolean;
+    /** Custom label for the start point (e.g., fraction in LaTeX) */
+    startLabel?: ReactNode;
+  }[];
   title: ReactNode;
 }
 
@@ -88,7 +86,10 @@ function getSegmentEdge({
 }
 
 /** Returns the finite bounds that should contribute to the number-line range. */
-function getFiniteSegmentValues({ end, start }: NumberLineSegment) {
+function getFiniteSegmentValues({
+  end,
+  start,
+}: NumberLineProps["segments"][number]) {
   const hasFiniteStart = Number.isFinite(start);
   const hasFiniteEnd = Number.isFinite(end);
 

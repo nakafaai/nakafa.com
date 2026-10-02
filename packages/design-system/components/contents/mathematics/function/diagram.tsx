@@ -41,15 +41,13 @@ export function Diagram({ title, description, children }: DiagramProps) {
   );
 }
 
-interface Element {
-  id: string;
-  label: ReactNode;
-}
 interface RelationVisualizerProps {
   accessibilityLabel: string;
-  codomain: Element[];
+  /** The codomain's elements, each with the label shown beside it. */
+  codomain: { id: string; label: ReactNode }[];
   codomainLabel: ReactNode;
-  domain: Element[];
+  /** The domain's elements, in the same shape as the codomain's. */
+  domain: RelationVisualizerProps["codomain"];
   domainLabel: ReactNode;
   mappings: RelationMapping[];
 }

@@ -25,32 +25,25 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getPointSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { Record as Rec } from "effect";
 import type { ReactNode } from "react";
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-interface Dataset {
-  color: string;
-  name: string;
-  points: Point[];
-}
-
-interface RegressionLineStyle {
-  color?: string;
-  strokeDasharray?: string;
-}
 
 const REGRESSION_DATA_KEY = "regression";
 const DEFAULT_REGRESSION_COLOR = "var(--chart-5)";
 
 interface Props {
   calculateRegressionLine?: boolean;
-  datasets: Dataset[];
+  /** Each named series of points, drawn in its own color. */
+  datasets: {
+    color: string;
+    name: string;
+    points: { x: number; y: number }[];
+  }[];
   description: ReactNode;
-  regressionLineStyle?: RegressionLineStyle;
+  regressionLineStyle?: {
+    color?: string;
+    strokeDasharray?: string;
+  };
   showResiduals?: boolean;
   title: ReactNode;
   xAxisDomain?: "min-max";
@@ -69,7 +62,7 @@ export function ScatterDiagram({
   regressionLineStyle,
   showResiduals,
 }: Props) {
-  const datasetConfig = Object.fromEntries(
+  const datasetConfig = Rec.fromEntries(
     datasets.map((dataset, index) => [
       dataset.name,
       {
@@ -221,7 +214,7 @@ export function ScatterDiagram({
 
 /** Calculates the least-squares line for one set of scatter points. */
 function calculateLeastSquares(
-  points: Point[]
+  points: Props["datasets"][number]["points"]
 ): { m: number; b: number } | null {
   const n = points.length;
   if (n < 2) {

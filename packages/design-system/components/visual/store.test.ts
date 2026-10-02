@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { createVisualStore } from "@repo/design-system/components/visual/store";
+import { Duration, Effect } from "effect";
 
 /** The space the test card takes in the page, as its slot keeps it. */
 const CARD_PLACE = { height: 480, marginBottom: "24px", marginTop: "16px" };
@@ -77,9 +78,15 @@ function pressEscape(target: EventTarget = document, isComposing = false) {
   );
 }
 
-/** Lets the store's pending browser programs settle. */
-function settle() {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+/**
+ * Lets the store's pending browser programs run to their end: one turn of the
+ * event loop, after the browser's answers and the store's scheduled work.
+ */
+const settle = Effect.sleep(Duration.millis(1));
+
+/** Waits until `assertion` holds, as a browser answers in its own time. */
+function waitFor(assertion: () => void) {
+  return Effect.promise(() => vi.waitFor(assertion));
 }
 
 /** A promise whose settlement the test controls. */
@@ -139,19 +146,21 @@ function installFullscreenApi() {
 }
 
 /** Shows the card with the Fullscreen API the way a browser grants it. */
-async function enterFullscreen() {
-  const browser = installFullscreenApi();
-  const page = renderPage();
-  page.card.requestFullscreen = () => {
-    browser.change(page.card);
-    return Promise.resolve();
-  };
-  page.store.getState().enter(page.trigger);
-  await vi.waitFor(() =>
-    expect(page.store.getState().presentation).toBe("fullscreen")
-  );
-  return { ...page, browser };
-}
+const enterFullscreen = Effect.fn("VisualStoreTest.enterFullscreen")(
+  function* () {
+    const browser = installFullscreenApi();
+    const page = renderPage();
+    page.card.requestFullscreen = () => {
+      browser.change(page.card);
+      return Promise.resolve();
+    };
+    page.store.getState().enter(page.trigger);
+    yield* waitFor(() =>
+      expect(page.store.getState().presentation).toBe("fullscreen")
+    );
+    return { ...page, browser };
+  }
+);
 
 /** Starts a full screen request the browser answers when the test says. */
 function requestPendingFullscreen() {
@@ -165,11 +174,17 @@ function requestPendingFullscreen() {
 
 afterEach(async () => {
   // An open session keeps its document listeners, which would answer the
-  // next test's events.
-  for (const store of stores.splice(0)) {
+  // next test's events. A card in the browser's full screen returns once the
+  // browser has left it.
+  const ended = stores.splice(0);
+  for (const store of ended) {
     store.getState().exit();
   }
-  await settle();
+  await vi.waitFor(() => {
+    for (const store of ended) {
+      expect(store.getState().presentation).toBe("inline");
+    }
+  });
   for (const property of [
     "exitFullscreen",
     "fullscreenElement",
@@ -307,157 +322,182 @@ describe("visual card store without the Fullscreen API", () => {
 });
 
 describe("visual card store with the Fullscreen API", () => {
-  it("shows the card full screen and follows the browser out of it", async () => {
-    const browser = installFullscreenApi();
-    const { card, store, trigger } = renderPage();
-    const requestFullscreen = vi.fn(() => {
+  it.live("shows the card full screen and follows the browser out of it", () =>
+    Effect.gen(function* () {
+      const browser = installFullscreenApi();
+      const { card, store, trigger } = renderPage();
+      const requestFullscreen = vi.fn(() => {
+        browser.change(card);
+        return Promise.resolve();
+      });
+      card.requestFullscreen = requestFullscreen;
+
+      store.getState().enter(trigger);
+
+      yield* waitFor(() =>
+        expect(store.getState().presentation).toBe("fullscreen")
+      );
+      expect(requestFullscreen).toHaveBeenCalledExactlyOnceWith({
+        navigationUI: "hide",
+      });
+      expect(store.getState().place).toEqual(CARD_PLACE);
+      expect(inertIds()).toEqual(HELD_PAGE);
+      expect(document.activeElement).toBe(trigger);
+
+      // The browser's own controls leave full screen and report it as an
+      // event.
+      element("inside").focus();
+      browser.change(null);
+
+      expectInline(store);
+      expect(document.activeElement).toBe(trigger);
+    })
+  );
+
+  it.live("leaves full screen when the page receives Escape", () =>
+    Effect.gen(function* () {
+      const { browser, store } = yield* enterFullscreen();
+
+      pressEscape();
+
+      yield* waitFor(() =>
+        expect(store.getState().presentation).toBe("inline")
+      );
+      expect(browser.exitFullscreen).toHaveBeenCalledOnce();
+      expect(inertIds()).toEqual(["aside"]);
+    })
+  );
+
+  it.live("leaves full screen when a dialog behind the card takes focus", () =>
+    Effect.gen(function* () {
+      const { browser, store } = yield* enterFullscreen();
+
+      const dialog = openDialogBehind();
+      dialog.focus();
+
+      yield* waitFor(() =>
+        expect(store.getState().presentation).toBe("inline")
+      );
+      expect(browser.exitFullscreen).toHaveBeenCalledOnce();
+      expect(document.fullscreenElement).toBeNull();
+      expect(document.activeElement).toBe(dialog);
+    })
+  );
+
+  it.live("leaves full screen from the card's own action", () =>
+    Effect.gen(function* () {
+      const { browser, store, trigger } = yield* enterFullscreen();
+
+      store.getState().toggle(trigger);
+
+      yield* waitFor(() =>
+        expect(store.getState().presentation).toBe("inline")
+      );
+      expect(browser.exitFullscreen).toHaveBeenCalledOnce();
+      expect(inertIds()).toEqual(["aside"]);
+    })
+  );
+
+  it.live(
+    "returns once when a second exit meets a document that already left",
+    () =>
+      Effect.gen(function* () {
+        const { browser, store } = yield* enterFullscreen();
+        const removeListener = vi.spyOn(document, "removeEventListener");
+
+        store.getState().exit();
+        store.getState().exit();
+        yield* settle;
+
+        expect(browser.exitFullscreen).toHaveBeenCalledTimes(2);
+        expect(store.getState().presentation).toBe("inline");
+        expect(
+          removeListener.mock.calls.filter(
+            ([type]) => type === "fullscreenchange"
+          )
+        ).toHaveLength(1);
+      })
+  );
+
+  it.live(
+    "returns the card when the browser refuses to leave full screen",
+    () =>
+      Effect.gen(function* () {
+        const { browser, store } = yield* enterFullscreen();
+        browser.exitFullscreen.mockRejectedValueOnce(new TypeError("Refused."));
+
+        store.getState().exit();
+
+        yield* waitFor(() =>
+          expect(store.getState().presentation).toBe("inline")
+        );
+        expect(inertIds()).toEqual(["aside"]);
+      })
+  );
+
+  it.live("covers the viewport when the browser refuses full screen", () =>
+    Effect.gen(function* () {
+      installFullscreenApi();
+      const { card, store, trigger } = renderPage();
+      card.requestFullscreen = () =>
+        Promise.reject(new TypeError("Permissions check failed."));
+
+      store.getState().enter(trigger);
+
+      yield* waitFor(() =>
+        expect(store.getState().presentation).toBe("immersive")
+      );
+      expect(inertIds()).toEqual(HELD_PAGE);
+      expect(document.activeElement).toBe(trigger);
+    })
+  );
+
+  it.live("keeps the page usable until the browser shows the card", () =>
+    Effect.gen(function* () {
+      const { answer, browser, card, store } = requestPendingFullscreen();
+
+      // Another element entering and leaving full screen is not the answer.
+      browser.change(element("outside"));
+      browser.change(null);
+
+      // The slot keeps the card's place, but a browser that never answers
+      // leaves the page as it was.
+      expect(store.getState()).toMatchObject({
+        place: CARD_PLACE,
+        presentation: "inline",
+      });
+      expect(inertIds()).toEqual(["aside"]);
+      expect(document.documentElement.style.overflow).toBe("");
+
       browser.change(card);
-      return Promise.resolve();
-    });
-    card.requestFullscreen = requestFullscreen;
+      answer.resolve();
 
-    store.getState().enter(trigger);
+      expect(store.getState().presentation).toBe("fullscreen");
+      expect(inertIds()).toEqual(HELD_PAGE);
+      expect(document.documentElement.style.overflow).toBe("hidden");
+      yield* settle;
+      expect(store.getState().presentation).toBe("fullscreen");
+      expect(browser.exitFullscreen).not.toHaveBeenCalled();
+    })
+  );
 
-    await vi.waitFor(() =>
-      expect(store.getState().presentation).toBe("fullscreen")
-    );
-    expect(requestFullscreen).toHaveBeenCalledExactlyOnceWith({
-      navigationUI: "hide",
-    });
-    expect(store.getState().place).toEqual(CARD_PLACE);
-    expect(inertIds()).toEqual(HELD_PAGE);
-    expect(document.activeElement).toBe(trigger);
+  it.live(
+    "cancels an unanswered request from its action and leaves a late full screen",
+    () =>
+      Effect.gen(function* () {
+        const { answer, browser, card, store, trigger } =
+          requestPendingFullscreen();
 
-    // The browser's own controls leave full screen and report it as an event.
-    element("inside").focus();
-    browser.change(null);
+        store.getState().toggle(trigger);
 
-    expectInline(store);
-    expect(document.activeElement).toBe(trigger);
-  });
-
-  it("leaves full screen when the page receives Escape", async () => {
-    const { browser, store } = await enterFullscreen();
-
-    pressEscape();
-
-    await vi.waitFor(() =>
-      expect(store.getState().presentation).toBe("inline")
-    );
-    expect(browser.exitFullscreen).toHaveBeenCalledOnce();
-    expect(inertIds()).toEqual(["aside"]);
-  });
-
-  it("leaves full screen when a dialog behind the card takes focus", async () => {
-    const { browser, store } = await enterFullscreen();
-
-    const dialog = openDialogBehind();
-    dialog.focus();
-
-    await vi.waitFor(() =>
-      expect(store.getState().presentation).toBe("inline")
-    );
-    expect(browser.exitFullscreen).toHaveBeenCalledOnce();
-    expect(document.fullscreenElement).toBeNull();
-    expect(document.activeElement).toBe(dialog);
-  });
-
-  it("leaves full screen from the card's own action", async () => {
-    const { browser, store, trigger } = await enterFullscreen();
-
-    store.getState().toggle(trigger);
-
-    await vi.waitFor(() =>
-      expect(store.getState().presentation).toBe("inline")
-    );
-    expect(browser.exitFullscreen).toHaveBeenCalledOnce();
-    expect(inertIds()).toEqual(["aside"]);
-  });
-
-  it("returns once when a second exit meets a document that already left", async () => {
-    const { browser, store } = await enterFullscreen();
-    const removeListener = vi.spyOn(document, "removeEventListener");
-
-    store.getState().exit();
-    store.getState().exit();
-    await settle();
-
-    expect(browser.exitFullscreen).toHaveBeenCalledTimes(2);
-    expect(store.getState().presentation).toBe("inline");
-    expect(
-      removeListener.mock.calls.filter(([type]) => type === "fullscreenchange")
-    ).toHaveLength(1);
-  });
-
-  it("returns the card when the browser refuses to leave full screen", async () => {
-    const { browser, store } = await enterFullscreen();
-    browser.exitFullscreen.mockRejectedValueOnce(new TypeError("Refused."));
-
-    store.getState().exit();
-
-    await vi.waitFor(() =>
-      expect(store.getState().presentation).toBe("inline")
-    );
-    expect(inertIds()).toEqual(["aside"]);
-  });
-
-  it("covers the viewport when the browser refuses full screen", async () => {
-    installFullscreenApi();
-    const { card, store, trigger } = renderPage();
-    card.requestFullscreen = () =>
-      Promise.reject(new TypeError("Permissions check failed."));
-
-    store.getState().enter(trigger);
-
-    await vi.waitFor(() =>
-      expect(store.getState().presentation).toBe("immersive")
-    );
-    expect(inertIds()).toEqual(HELD_PAGE);
-    expect(document.activeElement).toBe(trigger);
-  });
-
-  it("keeps the page usable until the browser shows the card", async () => {
-    const { answer, browser, card, store } = requestPendingFullscreen();
-
-    // Another element entering and leaving full screen is not the answer.
-    browser.change(element("outside"));
-    browser.change(null);
-
-    // The slot keeps the card's place, but a browser that never answers
-    // leaves the page as it was.
-    expect(store.getState()).toMatchObject({
-      place: CARD_PLACE,
-      presentation: "inline",
-    });
-    expect(inertIds()).toEqual(["aside"]);
-    expect(document.documentElement.style.overflow).toBe("");
-
-    browser.change(card);
-    answer.resolve();
-
-    expect(store.getState().presentation).toBe("fullscreen");
-    expect(inertIds()).toEqual(HELD_PAGE);
-    expect(document.documentElement.style.overflow).toBe("hidden");
-    await settle();
-    expect(store.getState().presentation).toBe("fullscreen");
-  });
-
-  it("cancels an unanswered request from its action and leaves a late full screen", async () => {
-    const { answer, browser, card, store, trigger } =
-      requestPendingFullscreen();
-
-    store.getState().toggle(trigger);
-
-    expectInline(store);
-    browser.change(card);
-    answer.resolve();
-    await vi.waitFor(() =>
-      expect(browser.exitFullscreen).toHaveBeenCalledOnce()
-    );
-    await settle();
-    expect(store.getState().presentation).toBe("inline");
-    expect(document.fullscreenElement).toBeNull();
-  });
+        expectInline(store);
+        browser.change(card);
+        answer.resolve();
+        yield* waitFor(() => expect(document.fullscreenElement).toBeNull());
+        expect(browser.exitFullscreen).toHaveBeenCalledOnce();
+        expect(store.getState().presentation).toBe("inline");
+      })
+  );
 
   it("cancels an unanswered request with Escape", () => {
     const { store, trigger } = requestPendingFullscreen();
@@ -468,26 +508,32 @@ describe("visual card store with the Fullscreen API", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("needs nothing more when a late full screen already ended", async () => {
-    const { answer, browser, store } = requestPendingFullscreen();
-    store.getState().exit();
+  it.live("needs nothing more when a late full screen already ended", () =>
+    Effect.gen(function* () {
+      const { answer, browser, store } = requestPendingFullscreen();
+      store.getState().exit();
 
-    answer.resolve();
+      answer.resolve();
 
-    await vi.waitFor(() =>
-      expect(browser.exitFullscreen).toHaveBeenCalledOnce()
-    );
-    await settle();
-    expect(store.getState().presentation).toBe("inline");
-  });
+      yield* waitFor(() =>
+        expect(browser.exitFullscreen).toHaveBeenCalledOnce()
+      );
+      yield* settle;
+      expect(store.getState().presentation).toBe("inline");
+    })
+  );
 
-  it("stays in the page when a refusal arrives after the card returned", async () => {
-    const { answer, store } = requestPendingFullscreen();
-    store.getState().exit();
+  it.live(
+    "stays in the page when a refusal arrives after the card returned",
+    () =>
+      Effect.gen(function* () {
+        const { answer, store } = requestPendingFullscreen();
+        store.getState().exit();
 
-    answer.reject(new TypeError("Refused."));
-    await settle();
+        answer.reject(new TypeError("Refused."));
+        yield* settle;
 
-    expectInline(store);
-  });
+        expectInline(store);
+      })
+  );
 });

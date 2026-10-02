@@ -20,6 +20,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   createVisualStore,
   type VisualState,
+  type VisualStore,
 } from "@repo/design-system/components/visual/store";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
@@ -32,10 +33,10 @@ import {
   useLayoutEffect,
   useState,
 } from "react";
-import { type StoreApi, useStore } from "zustand";
+import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
-const VisualContext = createContext<StoreApi<VisualState> | null>(null);
+const VisualContext = createContext<VisualStore | null>(null);
 
 /** Selects part of the surrounding card's presentation and actions. */
 function useVisual<T>(selector: (state: VisualState) => T) {

@@ -37,6 +37,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
@@ -295,15 +296,14 @@ function TrafficCone({ x }: { x: number }) {
   );
 }
 
+/** Every point where the route starts, turns, or ends, each once in route order. */
 function getRouteWaypoints(motion: VelocitySpeedState) {
-  const waypointSet = new Set<number>();
-
-  for (const segment of motion.segments) {
-    waypointSet.add(roundWaypoint(segment.startX));
-    waypointSet.add(roundWaypoint(segment.endX));
-  }
-
-  return Array.from(waypointSet);
+  return Arr.dedupe(
+    Arr.flatMap(motion.segments, (segment) => [
+      roundWaypoint(segment.startX),
+      roundWaypoint(segment.endX),
+    ])
+  );
 }
 
 function DistanceGuide({ motion }: { motion: VelocitySpeedState }) {

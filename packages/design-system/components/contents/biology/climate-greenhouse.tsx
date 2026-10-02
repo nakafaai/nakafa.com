@@ -31,18 +31,16 @@ const HEAT_PARTICLE_IDS = Array.from(
   (_, index) => `heat-${index}`
 );
 
-interface GreenhouseLabels {
-  gasControl: string;
-  heatFlow: ReactNode;
-  heatFlowLabel: string;
-  meaning: ReactNode;
-  meaningLabel: string;
-  viewLabel: string;
-}
-
 interface GreenhouseEffectLabProps {
   description: ReactNode;
-  labels: GreenhouseLabels;
+  labels: {
+    gasControl: string;
+    heatFlow: ReactNode;
+    heatFlowLabel: string;
+    meaning: ReactNode;
+    meaningLabel: string;
+    viewLabel: string;
+  };
   title: ReactNode;
 }
 

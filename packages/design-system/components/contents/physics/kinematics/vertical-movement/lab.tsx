@@ -272,15 +272,10 @@ function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
   );
 }
 
-interface MotionState {
-  finalVelocity: number;
-  maxHeight: number;
-  motionTime: number;
-  startHeight: number;
-  startVelocity: number;
-}
+/** One mode's motion: its start, its peak, its time, and its final speed. */
+type MotionState = ReturnType<typeof getMotion>;
 
-function getMotion(mode: Mode): MotionState {
+function getMotion(mode: Mode) {
   const startHeight = mode === "throw" ? 0 : 20;
   const startVelocity = mode === "throw" ? 20 : 0;
   const motionTime =

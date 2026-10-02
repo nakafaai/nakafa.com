@@ -21,16 +21,15 @@ import { COLORS } from "@repo/design-system/lib/color";
 import { Effect } from "effect";
 import type { ReactNode } from "react";
 
-type Vector = typeof VectorGeometrySchema.Type & {
-  color?: string;
-  id: string;
-  name: ReactNode;
-};
-
 interface Props {
   description: ReactNode;
   title: ReactNode;
-  vectors: Vector[];
+  /** Each vector's geometry, with its name and an optional color. */
+  vectors: (typeof VectorGeometrySchema.Type & {
+    color?: string;
+    id: string;
+    name: ReactNode;
+  })[];
 }
 
 const VECTOR_COLORS = [COLORS.ORANGE, COLORS.PURPLE, COLORS.AMBER];

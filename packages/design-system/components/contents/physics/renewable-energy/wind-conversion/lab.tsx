@@ -36,19 +36,17 @@ const WIND_GUSTS = Array.from({ length: WIND_GUST_COUNT }, (_, index) => ({
   index,
 }));
 
-interface WindConversionLabels {
-  flow: ReactNode;
-  flowLabel: string;
-  meaning: ReactNode;
-  meaningLabel: string;
-  speedControl: string;
-  speedUnit: string;
-  viewLabel: string;
-}
-
 interface WindEnergyConversionLabProps {
   description: ReactNode;
-  labels: WindConversionLabels;
+  labels: {
+    flow: ReactNode;
+    flowLabel: string;
+    meaning: ReactNode;
+    meaningLabel: string;
+    speedControl: string;
+    speedUnit: string;
+    viewLabel: string;
+  };
   title: ReactNode;
 }
 

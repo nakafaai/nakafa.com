@@ -20,27 +20,29 @@ import {
   useLayoutEffect,
   useState,
 } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import { createStore, type ExtractState, useStore } from "zustand";
+import { combine } from "zustand/middleware";
 
-interface Controls {
-  play: boolean;
-  showGrid: boolean;
-  toggleGrid: () => void;
-  togglePlay: () => void;
-}
-
+/** A scene that stands still and shows its grid. */
 const initialControls = { play: false, showGrid: true };
 
 /** Creates one card's controls: whether its scene plays and shows the grid. */
 function createControlsStore() {
-  return createStore<Controls>()((set) => ({
-    ...initialControls,
-    toggleGrid: () => set((current) => ({ showGrid: !current.showGrid })),
-    togglePlay: () => set((current) => ({ play: !current.play })),
-  }));
+  return createStore(
+    combine(initialControls, (set) => ({
+      toggleGrid: () => set((current) => ({ showGrid: !current.showGrid })),
+      togglePlay: () => set((current) => ({ play: !current.play })),
+    }))
+  );
 }
 
-const ControlsContext = createContext<StoreApi<Controls> | null>(null);
+/** One card's controls store, shared by its scene and its footer. */
+type ControlsStore = ReturnType<typeof createControlsStore>;
+
+/** One card's controls and the actions that change them. */
+type Controls = ExtractState<ControlsStore>;
+
+const ControlsContext = createContext<ControlsStore | null>(null);
 
 /**
  * Shares one card's controls between its scene and its footer through a
