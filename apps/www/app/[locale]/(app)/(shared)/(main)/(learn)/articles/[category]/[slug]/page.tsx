@@ -1,9 +1,8 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
-import { ArticleJsonLd } from "@repo/seo/json-ld/article";
-import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
+import { JsonLd } from "@repo/seo/json-ld";
+import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { Effect, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -23,15 +22,9 @@ import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
 import type { SEOContext } from "@/lib/seo/contract";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-
-type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
-type ArticleJsonLdAuthor = ArrayItem<
-  Parameters<typeof ArticleJsonLd>[0]["author"]
->;
 
 /** Validates localized article route params before metadata and rendering touch content modules. */
 async function getResolvedParams(
@@ -155,15 +148,6 @@ async function ArticleRouteContent({
 
   const tCommon = await getTranslations("Common");
   const categoryLabel = article.categoryTitle;
-  const publishedAt = contentMetadata.datePublished;
-  const modifiedAt = contentMetadata.dateModified;
-  const authorJsonLd: ArticleJsonLdAuthor[] = contentMetadata.authors.map(
-    (author) => ({
-      "@type": "Person",
-      name: author.name,
-      url: `https://nakafa.com/${locale}/contributor`,
-    })
-  );
 
   return (
     <ContentViewTracker
@@ -173,30 +157,21 @@ async function ArticleRouteContent({
       publicPath={publicPath}
       section="articles"
     >
-      <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(locale, [
-          { name: tCommon("home"), path: "" },
-          { name: tCommon("articles"), path: "/articles" },
-          { name: categoryLabel, path: `/articles/${category}` },
-          { name: contentMetadata.title, path: filePath },
-        ])}
-      />
-      <ArticleJsonLd
-        author={authorJsonLd}
-        dateModified={modifiedAt}
-        datePublished={publishedAt}
-        description={contentMetadata.description}
-        headline={contentMetadata.title}
-        image={getOgUrl(locale, filePath)}
-        url={`/${locale}${filePath}`}
-      />
-      <LearningResourceJsonLd
-        author={authorJsonLd}
-        dateModified={modifiedAt}
-        datePublished={publishedAt}
-        description={contentMetadata.description}
-        educationalLevel={categoryLabel}
-        name={contentMetadata.title}
+      <JsonLd
+        jsonLd={makeArticleJsonLd({
+          authors: contentMetadata.authors,
+          dates: contentMetadata,
+          description: contentMetadata.description,
+          headline: contentMetadata.title,
+          image: getOgUrl(locale, filePath),
+          locale,
+          path: `/${locale}${filePath}`,
+          trail: [
+            { name: tCommon("home"), path: `/${locale}` },
+            { name: tCommon("articles"), path: `/${locale}/articles` },
+            { name: categoryLabel, path: `/${locale}/articles/${category}` },
+          ],
+        })}
       />
       <ArticleShell
         category={category}

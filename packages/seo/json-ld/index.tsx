@@ -1,14 +1,15 @@
 import { createStableId } from "@repo/utilities/helper";
 import type { Thing, WithContext } from "schema-dts";
 
-interface JsonLdProps<T extends Thing = Thing> {
-  jsonLd: WithContext<T>;
+interface JsonLdProps {
+  /** One node, or the independent nodes of one page as a JSON array. */
+  jsonLd: WithContext<Thing> | readonly WithContext<Thing>[];
 }
 
 /**
  * Renders escaped JSON-LD in the initial server HTML with a deterministic id.
  */
-export function JsonLd<T extends Thing>({ jsonLd }: JsonLdProps<T>) {
+export function JsonLd({ jsonLd }: JsonLdProps) {
   const serializedJsonLd = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
 
   return (

@@ -1,6 +1,7 @@
+import type { PublicationDates } from "@nakafa/aksara-contracts/date";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Predicate, Schedule, Schema } from "effect";
+import { Effect, Schedule, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -25,7 +26,6 @@ const ContentViewsRecord = Schema.fromJsonString(
   })
 );
 type DateLabels = Readonly<{ published: string; updated: string }>;
-type JsonLdType = "Article" | "LearningResource";
 const dateLabels = {
   de: { published: "Veröffentlicht", updated: "Aktualisiert" },
   en: { published: "Published", updated: "Updated" },
@@ -35,14 +35,12 @@ const dateLabels = {
 type LocalizedContentRoute = Readonly<{ href: string; locale: AppLocaleCode }>;
 
 interface ContentRouteGroup {
-  readonly jsonLdTypes: readonly JsonLdType[];
   readonly kind: "article" | "material";
   readonly routes: readonly LocalizedContentRoute[];
 }
 
 const contentRouteGroups = [
   {
-    jsonLdTypes: ["Article", "LearningResource"],
     kind: "article",
     routes: [
       { href: pinnedRoutes.article.en, locale: "en" },
@@ -51,7 +49,6 @@ const contentRouteGroups = [
     ],
   },
   {
-    jsonLdTypes: ["Article", "LearningResource"],
     kind: "material",
     routes: [
       { href: pinnedRoutes.material.en, locale: "en" },
@@ -61,64 +58,104 @@ const contentRouteGroups = [
   },
 ] satisfies readonly ContentRouteGroup[];
 
-/** A rendered content page lost its expected structured-date contract. */
-class ContentDateContractError extends Schema.TaggedError<ContentDateContractError>()(
-  "ContentDateContractError",
+/** A rendered content page broke one of its SEO contracts. */
+class ContentSeoContractError extends Schema.TaggedError<ContentSeoContractError>()(
+  "ContentSeoContractError",
   { href: Schema.String, surface: Schema.String }
 ) {}
 
-function contentDateError(href: string, surface: string) {
-  return new ContentDateContractError({ href, surface });
+function contentSeoError(href: string, surface: string) {
+  return new ContentSeoContractError({ href, surface });
 }
 
-/** Reads one date-bearing JSON-LD node selected by its public schema type. */
-const readJsonLdDates = Effect.fn("NakafaE2E.readJsonLdDates")(function* (
+const decodeJsonText = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(Schema.Unknown)
+);
+
+/** Selects the page's own document among the site-wide JSON-LD scripts. */
+const isArticleDocument = Schema.is(
+  Schema.Tuple([
+    Schema.Struct({ "@type": Schema.Literal("Article") }),
+    Schema.Unknown,
+  ])
+);
+
+/** Reads the page's one article document and holds it to the published contract. */
+const readArticleJsonLd = Effect.fn("NakafaE2E.readArticleJsonLd")(function* (
   page: Page,
-  href: string,
-  jsonLdType: JsonLdType
+  href: string
 ) {
-  const { PublicationDatesSchema } = yield* Effect.tryPromise({
-    catch: () => contentDateError(href, "publication date schema"),
-    try: () => import("@nakafa/aksara-contracts/date"),
+  const { ArticleJsonLdSchema } = yield* Effect.tryPromise({
+    catch: () => contentSeoError(href, "article JSON-LD contract"),
+    try: () => import("@repo/seo/json-ld/article"),
   });
-  const nodes = yield* Effect.tryPromise({
-    catch: () => contentDateError(href, `${jsonLdType} JSON-LD`),
+  const scripts = yield* Effect.tryPromise({
+    catch: () => contentSeoError(href, "JSON-LD scripts"),
     try: () =>
       page
         .locator('script[type="application/ld+json"]')
-        .evaluateAll((scripts) =>
-          scripts.map((script) => JSON.parse(script.textContent ?? "null"))
+        .evaluateAll((elements) =>
+          elements.map((element) => element.textContent ?? "")
         ),
   });
-
-  // The page context only exposes browser globals, so the narrow stays here.
-  const [node] = nodes.filter(
-    (value: unknown) =>
-      Predicate.isObject(value) && Reflect.get(value, "@type") === jsonLdType
+  const documents = yield* Effect.forEach(scripts, (text) =>
+    decodeJsonText(text).pipe(
+      Effect.mapError(() => contentSeoError(href, "JSON-LD syntax"))
+    )
   );
-
-  if (node === undefined) {
-    return yield* contentDateError(href, `${jsonLdType} JSON-LD dates`);
+  const [articleDocument, ...duplicates] = documents.filter(isArticleDocument);
+  if (articleDocument === undefined || duplicates.length > 0) {
+    return yield* contentSeoError(href, "one article JSON-LD document");
   }
 
-  const dateModified = Reflect.get(node, "dateModified");
-  const datePublished = Reflect.get(node, "datePublished");
-  const raw =
-    dateModified === undefined
-      ? { datePublished }
-      : { dateModified, datePublished };
-
-  return yield* Schema.decodeEffect(PublicationDatesSchema)(raw).pipe(
-    Effect.mapError(() => contentDateError(href, `${jsonLdType} JSON-LD dates`))
+  return yield* Schema.decodeUnknownEffect(ArticleJsonLdSchema)(
+    articleDocument,
+    { onExcessProperty: "error" }
+  ).pipe(
+    Effect.mapError(() => contentSeoError(href, "article JSON-LD contract"))
   );
 });
 
-/** Proves one page's screen-reader dates match every structured-data surface. */
+/** Proves the page's structured data names this page as its reader sees it. */
+const expectArticleJsonLd = Effect.fn("NakafaE2E.expectArticleJsonLd")(
+  function* (page: Page, route: LocalizedContentRoute) {
+    const [article, breadcrumb] = yield* readArticleJsonLd(page, route.href);
+    const heading = yield* Effect.promise(() =>
+      page.getByRole("heading", { level: 1 }).textContent()
+    );
+    const rendered = yield* Effect.promise(() =>
+      page.evaluate(() => ({
+        description: document
+          .querySelector('meta[name="description"]')
+          ?.getAttribute("content"),
+        image: document
+          .querySelector('meta[property="og:image"]')
+          ?.getAttribute("content"),
+        language: document.documentElement.lang,
+      }))
+    );
+    const [home] = breadcrumb.itemListElement;
+    const current = breadcrumb.itemListElement.at(-1);
+    yield* Effect.sync(() => {
+      expect(article.url).toBe(`${APP_ORIGIN}${route.href}`);
+      expect(article.headline).toBe(heading);
+      expect(article.description).toBe(rendered.description);
+      expect(article.image).toBe(rendered.image);
+      expect(article.inLanguage).toBe(route.locale);
+      expect(rendered.language).toBe(route.locale);
+      expect(home?.item).toBe(`${APP_ORIGIN}/${route.locale}`);
+      expect(current?.name).toBe(heading);
+    });
+    return article;
+  }
+);
+
+/** Proves one page's screen-reader dates match its structured data. */
 const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
   function* (
     page: Page,
     route: LocalizedContentRoute,
-    jsonLdTypes: readonly JsonLdType[]
+    structuredDates: PublicationDates
   ) {
     // Screen-reader prose stays accessible; pending streamed copies do not.
     const dateBlock = page
@@ -160,30 +197,19 @@ const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
       Schema.Array(Schema.String)
     )(rawTimeDates).pipe(
       Effect.mapError(() =>
-        contentDateError(route.href, "semantic time elements")
+        contentSeoError(route.href, "semantic time elements")
       )
     );
-    const expectedDates = yield* Effect.forEach(jsonLdTypes, (jsonLdType) =>
-      readJsonLdDates(page, route.href, jsonLdType)
-    );
-    const firstDates = expectedDates[0];
-    if (!firstDates) {
-      return yield* contentDateError(route.href, "structured date types");
-    }
-
     const blockText = yield* Effect.promise(() => dateBlock.textContent());
     const labels = dateLabels[route.locale];
     yield* Effect.sync(() => {
-      for (const dates of expectedDates) {
-        expect(dates).toEqual(firstDates);
-      }
       expect(blockText).toContain(labels.published);
       expect(timeDates).toEqual(
-        firstDates.dateModified === undefined
-          ? [firstDates.datePublished]
-          : [firstDates.datePublished, firstDates.dateModified]
+        structuredDates.dateModified === undefined
+          ? [structuredDates.datePublished]
+          : [structuredDates.datePublished, structuredDates.dateModified]
       );
-      if (firstDates.dateModified === undefined) {
+      if (structuredDates.dateModified === undefined) {
         expect(blockText).not.toContain(labels.updated);
       } else {
         expect(blockText).toContain(labels.updated);
@@ -223,7 +249,7 @@ const expectCanonicalAlternates = Effect.fn(
   }
   const englishRoute = routes.find((alternate) => alternate.locale === "en");
   if (!englishRoute) {
-    return yield* contentDateError(route.href, "x-default alternate");
+    return yield* contentSeoError(route.href, "x-default alternate");
   }
   yield* expectSingleLink(
     page,
@@ -241,7 +267,7 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
     page.goto(route.href, { waitUntil: "domcontentloaded" })
   );
   if (!response) {
-    return yield* contentDateError(route.href, "document response");
+    return yield* contentSeoError(route.href, "document response");
   }
   const html = yield* Effect.promise(() => response.text());
   yield* Effect.sync(() => {
@@ -250,7 +276,8 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
     expect(html).toMatch(DOCUMENT_SECTION_PATTERN);
   });
   yield* expectCanonicalAlternates(page, route, group.routes);
-  yield* expectTruthfulDates(page, route, group.jsonLdTypes);
+  const article = yield* expectArticleJsonLd(page, route);
+  yield* expectTruthfulDates(page, route, article);
 
   if (group.kind !== "material") {
     return;
