@@ -1,291 +1,386 @@
 import { describe, expect, it } from "@effect/vitest";
-import { api } from "@repo/backend/convex/_generated/api";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
-  createTenancyFixture,
-  slugOf,
-  type TenancyFixture,
-} from "@repo/backend/test/tenancy";
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
+import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
+const { assign, list, revoke } = refs.public.access.grants;
 const denied = (reason: "resource" | "role" | "condition") => ({
-  data: { _tag: "AccessDenied", code: "ACCESS_DENIED", reason },
+  _tag: "AccessDenied",
+  code: "ACCESS_DENIED",
+  reason,
 });
-const notMember = { data: { _tag: "NotMember", code: "NOT_MEMBER" } };
-const rejected = (code: string) => ({ data: { _tag: "GrantRejected", code } });
-
-const entries = (fixture: TenancyFixture) =>
-  fixture.t.run((ctx) => ctx.db.query("journalEntries").collect());
-const grantOf = (
-  fixture: TenancyFixture,
-  id: TenancyFixture["people"]["owner"]["grantId"]
-) => fixture.t.run((ctx) => ctx.db.get("tenantGrants", id));
+const notMember = { _tag: "NotMember", code: "NOT_MEMBER" };
+const rejected = (code: string) => ({ _tag: "GrantRejected", code });
 
 describe("access/grants list", () => {
-  it("shows a Person's grants to admins, unit admins of their unit, and themselves", async () => {
-    const fixture = await createTenancyFixture();
-    const teacher = { personId: fixture.people.teacher.personId, slug: nf };
-    const expected = [
-      {
-        id: fixture.people.teacher.grantId,
-        role: { key: "teacher", kind: "builtin" },
-        scope: { kind: "unit", unitId: fixture.units.smp },
-        term: { kind: "standing" },
-      },
-    ];
-    for (const account of ["admin", "unitAdmin", "teacher"] as const) {
-      await expect(
-        fixture.as(account).query(api.access.grants.list, teacher)
-      ).resolves.toEqual(expected);
-    }
-  });
+  it.effect(
+    "shows a Person's grants to admins, unit admins of their unit, and themselves",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const views = yield* Effect.forEach(
+          ["admin", "unitAdmin", "teacher"] as const,
+          (account) =>
+            fixture.as(account).query(list, {
+              personId: fixture.people.teacher.personId,
+              slug: nf,
+            })
+        );
+        expect(views).toEqual(
+          Arr.replicate(
+            [
+              {
+                id: fixture.people.teacher.grantId,
+                role: { key: "teacher", kind: "builtin" },
+                scope: { kind: "unit", unitId: fixture.units.smp },
+                term: { kind: "standing" },
+              },
+            ],
+            3
+          )
+        );
+      })
+  );
 
-  it("refuses roles that do not cover the Person", async () => {
-    const fixture = await createTenancyFixture();
-    await expect(
-      fixture.as("unitAdmin").query(api.access.grants.list, {
-        personId: fixture.people.principal.personId,
-        slug: nf,
-      })
-    ).rejects.toMatchObject(denied("role"));
-    await expect(
-      fixture.as("teacher").query(api.access.grants.list, {
-        personId: fixture.people.student.personId,
-        slug: nf,
-      })
-    ).rejects.toMatchObject(denied("role"));
-  });
+  it.effect("refuses roles that do not cover the Person", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const denials = [
+        yield* fixture
+          .as("unitAdmin")
+          .query(list, {
+            personId: fixture.people.principal.personId,
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+        yield* fixture
+          .as("teacher")
+          .query(list, { personId: fixture.people.student.personId, slug: nf })
+          .pipe(Effect.flip),
+      ];
+      expect(denials).toMatchObject([denied("role"), denied("role")]);
+    })
+  );
 
-  it("denies another tenant by slug and by Person ID", async () => {
-    const fixture = await createTenancyFixture();
-    await expect(
-      fixture.as("otherOwner").query(api.access.grants.list, {
-        personId: fixture.people.teacher.personId,
-        slug: nf,
-      })
-    ).rejects.toMatchObject(notMember);
-    await expect(
-      fixture.as("admin").query(api.access.grants.list, {
-        personId: fixture.people.otherOwner.personId,
-        slug: nf,
-      })
-    ).rejects.toMatchObject(denied("resource"));
-  });
+  it.effect("denies another tenant by slug and by Person ID", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const denials = [
+        yield* fixture
+          .as("otherOwner")
+          .query(list, { personId: fixture.people.teacher.personId, slug: nf })
+          .pipe(Effect.flip),
+        yield* fixture
+          .as("admin")
+          .query(list, {
+            personId: fixture.people.otherOwner.personId,
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+      ];
+      expect(denials).toMatchObject([notMember, denied("resource")]);
+    })
+  );
 });
 
 describe("access/grants assign", () => {
-  it("gives a role once, returns the same grant on retry, and records it under the Person", async () => {
-    const fixture = await createTenancyFixture();
-    const request = {
-      personId: fixture.people.student.personId,
-      role: "proctor",
-      scope: { kind: "unit", unitId: fixture.units.smp },
-      slug: nf,
-    } as const;
-    const owner = fixture.as("owner");
-    const grantId = await owner.mutation(api.access.grants.assign, request);
-    await expect(
-      owner.mutation(api.access.grants.assign, request)
-    ).resolves.toBe(grantId);
-    expect(await entries(fixture)).toMatchObject([
-      {
-        actor: { id: fixture.people.owner.personId, kind: "person" },
-        change: {
-          grant: grantId,
-          role: { key: "proctor", kind: "builtin" },
-          scope: request.scope,
-          term: { kind: "standing" },
-          type: "grant.created",
-        },
-        owner: { kind: "tenant", tenantId: fixture.tenants.nf },
-        subject: { id: fixture.people.student.personId, kind: "person" },
-      },
-    ]);
-  });
+  it.effect(
+    "gives a role once, returns the same grant on retry, and records it under the Person",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const request = {
+          personId: fixture.people.student.personId,
+          role: "proctor",
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+        } as const;
+        const owner = fixture.as("owner");
+        const grantId = yield* owner.mutation(assign, request);
+        expect(yield* owner.mutation(assign, request)).toBe(grantId);
+        const entries = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("journalEntries").index("by_creation_time").take(10)
+          )
+        );
+        expect(entries).toMatchObject([
+          {
+            actor: { id: fixture.people.owner.personId, kind: "person" },
+            change: {
+              grant: grantId,
+              role: { key: "proctor", kind: "builtin" },
+              scope: request.scope,
+              term: { kind: "standing" },
+              type: "grant.created",
+            },
+            owner: { kind: "tenant", tenantId: fixture.tenants.nf },
+            subject: { id: fixture.people.student.personId, kind: "person" },
+          },
+        ]);
+      })
+  );
 
-  it("lets a unit admin manage roles in their own unit only", async () => {
-    const fixture = await createTenancyFixture();
-    const unitAdmin = fixture.as("unitAdmin");
-    const assign = (unitId: typeof fixture.units.smp) =>
-      unitAdmin.mutation(api.access.grants.assign, {
+  it.effect("lets a unit admin manage roles in their own unit only", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const unitAdmin = fixture.as("unitAdmin");
+      const counselor = {
         personId: fixture.people.student.personId,
         role: "counselor",
-        scope: { kind: "unit", unitId },
         slug: nf,
+      } as const;
+      yield* unitAdmin.mutation(assign, {
+        ...counselor,
+        scope: { kind: "unit", unitId: fixture.units.smp },
       });
-    await expect(assign(fixture.units.smp)).resolves.toBeTypeOf("string");
-    await expect(assign(fixture.units.sma)).rejects.toMatchObject(
-      denied("role")
-    );
-    await expect(
-      unitAdmin.mutation(api.access.grants.assign, {
-        personId: fixture.people.student.personId,
-        role: "counselor",
-        scope: { kind: "tenant" },
-        slug: nf,
-      })
-    ).rejects.toMatchObject(denied("role"));
-  });
+      const denials = [
+        yield* unitAdmin
+          .mutation(assign, {
+            ...counselor,
+            scope: { kind: "unit", unitId: fixture.units.sma },
+          })
+          .pipe(Effect.flip),
+        yield* unitAdmin
+          .mutation(assign, { ...counselor, scope: { kind: "tenant" } })
+          .pipe(Effect.flip),
+      ];
+      expect(denials).toMatchObject([denied("role"), denied("role")]);
+    })
+  );
 
-  it("keeps Owner and Admin roles with Owners", async () => {
-    const fixture = await createTenancyFixture();
-    await expect(
-      fixture.as("admin").mutation(api.access.grants.assign, {
+  it.effect("keeps Owner and Admin roles with Owners", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const promote = {
         personId: fixture.people.teacher.personId,
         role: "admin",
         scope: { kind: "tenant" },
         slug: nf,
-      })
-    ).rejects.toMatchObject(denied("role"));
-    await expect(
-      fixture.as("owner").mutation(api.access.grants.assign, {
-        personId: fixture.people.teacher.personId,
-        role: "admin",
-        scope: { kind: "tenant" },
-        slug: nf,
-      })
-    ).resolves.toBeTypeOf("string");
-  });
+      } as const;
+      const denial = yield* fixture
+        .as("admin")
+        .mutation(assign, promote)
+        .pipe(Effect.flip);
+      expect(denial).toMatchObject(denied("role"));
+      expect(yield* fixture.as("owner").mutation(assign, promote)).toBeTypeOf(
+        "string"
+      );
+    })
+  );
 
-  it("refuses an archived unit and a suspended tenant", async () => {
-    const fixture = await createTenancyFixture();
-    const assign = (unitId: typeof fixture.units.smp) =>
-      fixture.as("owner").mutation(api.access.grants.assign, {
+  it.effect("refuses an archived unit and a suspended tenant", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const staff = {
         personId: fixture.people.student.personId,
         role: "staff",
-        scope: { kind: "unit", unitId },
         slug: nf,
-      });
-    await expect(assign(fixture.units.smk)).rejects.toMatchObject(
-      denied("condition")
-    );
-    await fixture.t.run((ctx) =>
-      ctx.db.patch("tenants", fixture.tenants.nf, { status: "suspended" })
-    );
-    await expect(assign(fixture.units.smp)).rejects.toMatchObject(
-      denied("condition")
-    );
-  });
+      } as const;
+      const archived = yield* fixture
+        .as("owner")
+        .mutation(assign, {
+          ...staff,
+          scope: { kind: "unit", unitId: fixture.units.smk },
+        })
+        .pipe(Effect.flip);
+      yield* fixture.run(
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer
+            .table("tenants")
+            .patch(fixture.tenants.nf, { status: "suspended" })
+        )
+      );
+      const suspended = yield* fixture
+        .as("owner")
+        .mutation(assign, {
+          ...staff,
+          scope: { kind: "unit", unitId: fixture.units.smp },
+        })
+        .pipe(Effect.flip);
+      expect([archived, suspended]).toMatchObject([
+        denied("condition"),
+        denied("condition"),
+      ]);
+    })
+  );
 
-  it("denies another tenant by slug, by Person ID, and by unit ID", async () => {
-    const fixture = await createTenancyFixture();
-    const request = {
-      personId: fixture.people.student.personId,
-      role: "teacher",
-      scope: { kind: "tenant" },
-      slug: nf,
-    } as const;
-    await expect(
-      fixture.as("otherOwner").mutation(api.access.grants.assign, request)
-    ).rejects.toMatchObject(notMember);
-    await expect(
-      fixture.as("owner").mutation(api.access.grants.assign, {
-        ...request,
-        personId: fixture.people.otherOwner.personId,
-      })
-    ).rejects.toMatchObject(denied("resource"));
-    await expect(
-      fixture.as("owner").mutation(api.access.grants.assign, {
-        ...request,
-        scope: { kind: "unit", unitId: fixture.units.sd },
-      })
-    ).rejects.toMatchObject(denied("resource"));
-  });
-
-  it("refuses roles the tenant's invariants forbid", async () => {
-    const fixture = await createTenancyFixture();
-    const owner = fixture.as("owner");
-    const assign = (
-      personId: typeof fixture.invited,
-      role: "integration" | "owner" | "teacher",
-      scope:
-        | { kind: "tenant" }
-        | { kind: "unit"; unitId: typeof fixture.units.smp }
-    ) =>
-      owner.mutation(api.access.grants.assign, {
-        personId,
-        role,
-        scope,
+  it.effect("denies another tenant by slug, by Person ID, and by unit ID", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const request = {
+        personId: fixture.people.student.personId,
+        role: "teacher",
+        scope: { kind: "tenant" },
         slug: nf,
-      });
-    const tenantWide = { kind: "tenant" } as const;
-    await expect(
-      assign(fixture.visitor, "teacher", tenantWide)
-    ).rejects.toMatchObject(rejected("PERSON_KIND"));
-    await expect(
-      assign(fixture.people.suspended.personId, "teacher", tenantWide)
-    ).rejects.toMatchObject(rejected("PERSON_INACTIVE"));
-    await expect(
-      assign(fixture.people.student.personId, "integration", tenantWide)
-    ).rejects.toMatchObject(rejected("GRANT_ROLE"));
-    await expect(
-      assign(fixture.people.student.personId, "owner", {
-        kind: "unit",
-        unitId: fixture.units.smp,
-      })
-    ).rejects.toMatchObject(rejected("GRANT_SCOPE"));
-  });
+      } as const;
+      const owner = fixture.as("owner");
+      const denials = [
+        yield* fixture
+          .as("otherOwner")
+          .mutation(assign, request)
+          .pipe(Effect.flip),
+        yield* owner
+          .mutation(assign, {
+            ...request,
+            personId: fixture.people.otherOwner.personId,
+          })
+          .pipe(Effect.flip),
+        yield* owner
+          .mutation(assign, {
+            ...request,
+            scope: { kind: "unit", unitId: fixture.units.sd },
+          })
+          .pipe(Effect.flip),
+      ];
+      expect(denials).toMatchObject([
+        notMember,
+        denied("resource"),
+        denied("resource"),
+      ]);
+    })
+  );
+
+  it.effect("refuses roles the tenant's invariants forbid", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const owner = fixture.as("owner");
+      const tenantWide = { kind: "tenant" } as const;
+      const refusals = [
+        yield* owner
+          .mutation(assign, {
+            personId: fixture.visitor,
+            role: "teacher",
+            scope: tenantWide,
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+        yield* owner
+          .mutation(assign, {
+            personId: fixture.people.suspended.personId,
+            role: "teacher",
+            scope: tenantWide,
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+        yield* owner
+          .mutation(assign, {
+            personId: fixture.people.student.personId,
+            role: "integration",
+            scope: tenantWide,
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+        yield* owner
+          .mutation(assign, {
+            personId: fixture.people.student.personId,
+            role: "owner",
+            scope: { kind: "unit", unitId: fixture.units.smp },
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+      ];
+      expect(refusals).toMatchObject([
+        rejected("PERSON_KIND"),
+        rejected("PERSON_INACTIVE"),
+        rejected("GRANT_ROLE"),
+        rejected("GRANT_SCOPE"),
+      ]);
+    })
+  );
 });
 
 describe("access/grants revoke", () => {
-  it("ends a grant once, records it, and treats a repeat as done", async () => {
-    const fixture = await createTenancyFixture();
-    const request = { grantId: fixture.people.teacher.grantId, slug: nf };
-    const owner = fixture.as("owner");
-    await expect(
-      owner.mutation(api.access.grants.revoke, request)
-    ).resolves.toBeNull();
-    await expect(
-      owner.mutation(api.access.grants.revoke, request)
-    ).resolves.toBeNull();
-    expect(
-      (await grantOf(fixture, fixture.people.teacher.grantId))?.status
-    ).toBe("revoked");
-    expect(await entries(fixture)).toMatchObject([
-      {
-        change: {
-          grant: fixture.people.teacher.grantId,
-          reason: "revoked",
-          type: "grant.ended",
+  it.effect("ends a grant once, records it, and treats a repeat as done", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const request = { grantId: fixture.people.teacher.grantId, slug: nf };
+      const owner = fixture.as("owner");
+      expect(yield* owner.mutation(revoke, request)).toBeNull();
+      expect(yield* owner.mutation(revoke, request)).toBeNull();
+      const { grant, entries } = yield* fixture.run(
+        Effect.gen(function* () {
+          const reader = yield* DatabaseReader;
+          return {
+            entries: yield* reader
+              .table("journalEntries")
+              .index("by_creation_time")
+              .take(10),
+            grant: yield* reader
+              .table("tenantGrants")
+              .get(fixture.people.teacher.grantId),
+          };
+        })
+      );
+      expect(grant.status).toBe("revoked");
+      expect(entries).toMatchObject([
+        {
+          change: {
+            grant: fixture.people.teacher.grantId,
+            reason: "revoked",
+            type: "grant.ended",
+          },
+          subject: { id: fixture.people.teacher.personId, kind: "person" },
         },
-        subject: { id: fixture.people.teacher.personId, kind: "person" },
-      },
-    ]);
-  });
+      ]);
+    })
+  );
 
-  it("keeps the last signed-in Owner and the Owner role with Owners", async () => {
-    const fixture = await createTenancyFixture();
-    const ownerGrant = { grantId: fixture.people.owner.grantId, slug: nf };
-    await expect(
-      fixture.as("admin").mutation(api.access.grants.revoke, ownerGrant)
-    ).rejects.toMatchObject(denied("role"));
-    await expect(
-      fixture.as("owner").mutation(api.access.grants.revoke, ownerGrant)
-    ).rejects.toMatchObject(rejected("LAST_OWNER"));
-  });
+  it.effect(
+    "keeps the last signed-in Owner and the Owner role with Owners",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const ownerGrant = { grantId: fixture.people.owner.grantId, slug: nf };
+        const denials = [
+          yield* fixture
+            .as("admin")
+            .mutation(revoke, ownerGrant)
+            .pipe(Effect.flip),
+          yield* fixture
+            .as("owner")
+            .mutation(revoke, ownerGrant)
+            .pipe(Effect.flip),
+        ];
+        expect(denials).toMatchObject([denied("role"), rejected("LAST_OWNER")]);
+      })
+  );
 
-  it("lets a holder see their grant but not end it", async () => {
-    const fixture = await createTenancyFixture();
-    await expect(
-      fixture.as("student").mutation(api.access.grants.revoke, {
-        grantId: fixture.people.student.grantId,
-        slug: nf,
-      })
-    ).rejects.toMatchObject(denied("role"));
-  });
+  it.effect("lets a holder see their grant but not end it", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const denial = yield* fixture
+        .as("student")
+        .mutation(revoke, { grantId: fixture.people.student.grantId, slug: nf })
+        .pipe(Effect.flip);
+      expect(denial).toMatchObject(denied("role"));
+    })
+  );
 
-  it("denies another tenant by slug and by grant ID", async () => {
-    const fixture = await createTenancyFixture();
-    await expect(
-      fixture.as("otherOwner").mutation(api.access.grants.revoke, {
-        grantId: fixture.people.teacher.grantId,
-        slug: nf,
-      })
-    ).rejects.toMatchObject(notMember);
-    await expect(
-      fixture.as("owner").mutation(api.access.grants.revoke, {
-        grantId: fixture.people.otherOwner.grantId,
-        slug: nf,
-      })
-    ).rejects.toMatchObject(denied("resource"));
-  });
+  it.effect("denies another tenant by slug and by grant ID", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const denials = [
+        yield* fixture
+          .as("otherOwner")
+          .mutation(revoke, {
+            grantId: fixture.people.teacher.grantId,
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+        yield* fixture
+          .as("owner")
+          .mutation(revoke, {
+            grantId: fixture.people.otherOwner.grantId,
+            slug: nf,
+          })
+          .pipe(Effect.flip),
+      ];
+      expect(denials).toMatchObject([notMember, denied("resource")]);
+    })
+  );
 });

@@ -19,20 +19,33 @@ act on an object its checks did not load.
 ### Kinds are declared once
 
 A resource kind is declared once, client-safe, in its lane's `kinds.ts` with
-`Kind.root` (the tenant itself) or `Kind.object`: its table, its relations, the
-`source.verb` actions evaluated on its subjects with their rules, and its
-audited change schemas with the published ones. `Kind.extend` adds actions or
-changes to another lane's kind; `grant.manage` extends both the tenant and the
-unit, so it is evaluated on the scope a grant covers.
+`Kind.make(kind, table, declaration)`: the table its subjects live in, the
+relations a Person can hold to them, the `source.verb` actions evaluated on
+them with their rules, and its audited change schemas with the published ones.
+`Kind.extend` adds actions or changes to another lane's kind; `grant.manage`
+extends both the tenant and the unit, so it is evaluated on the scope a grant
+covers. Rules, roles, and declarations are Effect Schemas, so a misspelled
+role or access mode does not compile, and the catalog test checks that every
+rule names only its kind's relations and every published type is a change of
+its kind.
 
-`confect/access/catalog.ts` lists every lane once and derives the rest:
-`ObjectRef`, the per-kind `ActionOf`, `SubjectOf`, `IdOf`, and `ChangeOf`
-types, `TenantAction` and the tolerant `TenantCapabilities`, and the journal's
-`Change` and `Published` (ADR 0016). `confect/access/registry.ts` maps every
-kind to its server authority, typed so a kind without an authority does not
-compile. `Authority.make` takes a kind's declaration and implements it: how its
-tenant is derived from a row, where a row sits (at most one indexed read), and
-exactly its declared relations; a missing or extra relation does not compile.
+`confect/access/catalog.ts` lists every lane's kinds and extensions once and
+derives the rest: `ObjectRef` (a tagged union over every kind, matched by
+kind), the journal's `Change`, `TenantAction`, and the tolerant
+`TenantCapabilities`. `Kind.actions(entries, kind)` and
+`Kind.changes(entries, kind)` join one kind's actions and changes from its
+declaration and every extension, so types follow from the Schemas instead of
+hand-written type aliases.
+
+Each lane implements its kinds in its `authority.ts` with
+`Authority.make(kind, Authority.load(kind), { place, relations, tenantOf })`:
+how a loaded row's tenant is derived, where a row sits (at most one indexed
+read), and exactly its declared relations; a missing or extra relation does
+not compile. The authority is the kind's whole server interface:
+`authorize(action, id)`, `check(action, row)`, `allowed(row)`,
+`record(actor, row, change)` (ADR 0016), and `middleware(Subject)` for its
+access spec. `Authority.make` accepts only kinds in the catalog, so a kind's
+actions always include every lane's extensions.
 
 ### Enforcement
 
@@ -61,14 +74,16 @@ Tenant functions take the route `slug` and attach the session middleware and
   inner one would shadow the first subject, so a kind middleware dies when its
   subject service is already provided. Handlers check every further object,
   including a second object of the same kind and parent IDs such as the unit a
-  grant is scoped to, with `authorize(kind, action, id)`, which reuses the
-  member's grants and returns the loaded row. `allowed(kind, row)` lists the
+  grant is scoped to, with the kind's `authorize(action, id)`, which reuses
+  the member's grants and returns the loaded row, or `check(action, row)` for a
+  row already loaded, such as the member's tenant. `allowed(row)` lists the
   caller's actions for `can`.
 
 ### Decisions
 
-For one action on one subject, decided by `decide`, which reads neither the
-clock nor the database:
+For one action on one subject, decided by `decide` (an Effect program), which
+reads neither the clock nor the database except through the subject's
+memoized relation checks:
 
 1. A write in a suspended tenant, or on a locked subject (ended, archived, or
    closed), is refused as `condition`, even for Owners.
@@ -135,22 +150,38 @@ grant revoked in between stops the write.
 ### Extending access in a lane
 
 1. Give the table `tenantId`, and `unitId` when the object lives in a unit.
-2. Declare the kinds in the lane's `kinds.ts` (`Kind.object`, with actions,
+2. Declare the kinds in the lane's `kinds.ts` (`Kind.make`, with actions,
    rules, relations, changes, and published types) and `Kind.extend` for
    actions or changes on another lane's kind; export `{ kinds, extensions }`.
 3. Declare each subject service and kind spec in the lane's client-safe
-   `access.ts` (`Kind.middleware(catalog, kind)`).
+   `access.ts` (`Kind.middleware(entries, kind)`).
 4. Implement the authorities in the lane's `authority.ts` with
-   `Authority.make`, and each spec with
-   `MiddlewareImpl.make(schema, Spec, Authority.middleware(Subject, authority))`.
-5. Add the lane object to `lanes` in `access/catalog.ts` and its authorities to
-   `access/registry.ts`, one line each.
+   `Authority.make(kind, Authority.load(kind), { place, relations, tenantOf })`,
+   and each spec with
+   `MiddlewareImpl.make(schema, Spec, authority.middleware(Subject))`.
+5. Spread the lane's kinds and extensions into `access/catalog.ts`, one line
+   each.
 6. Provide the impl of every spec a group attaches; codegen rejects a missing
    one.
-7. Write audited changes with `record` in the same mutation (ADR 0016).
+7. Write audited changes with the subject's `authority.record` in the same
+   mutation (ADR 0016).
 8. Test that an actor from another tenant gets `NotMember` (another slug) or
    `AccessDenied` with reason `resource` (another tenant's ID) from every public
    function, every typed failure, and the lane's rules.
+
+The first lane that reads stored `ObjectRef`s, such as the external-reference
+ledger, dispatches each reference to its kind's authority with
+`ObjectRef.match`, which the compiler requires to cover every kind.
+
+### Effect-native contracts
+
+Every data shape here is an Effect Schema with derived types, every decision
+and check is an `Effect.fn` program, and expected failures are
+`Schema.TaggedError` classes whose codes and messages are constructor
+defaults. The only TypeScript written by hand is the generic signatures of
+`Kind` and `Authority`, which keep each kind's literal names and select one
+kind's entries from the catalog, and the callback signatures of an authority's
+implementation, which Schema cannot describe because they are functions.
 
 ## Invariants
 

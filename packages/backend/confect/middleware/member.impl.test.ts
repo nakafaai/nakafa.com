@@ -26,7 +26,12 @@ describe("middleware/member", () => {
             .table("users")
             .get(userId);
           const exit = yield* member(Effect.die("the handler ran"), {
-            invocation: { args: { schoolSlug: "nf" } },
+            invocation: {
+              args: { schoolSlug: "nf" },
+              functionType: "query",
+              functionVisibility: "public",
+              name: "probe",
+            },
           }).pipe(
             Effect.provideService(Session, {
               appUser,

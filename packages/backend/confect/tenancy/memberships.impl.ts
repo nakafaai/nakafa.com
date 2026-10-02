@@ -4,7 +4,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/tenancy/memberships.spec";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Struct } from "effect";
 
 /** The caller's active member Persons; operator Persons never appear here. */
 const list = FunctionImpl.make(
@@ -32,16 +32,11 @@ const list = FunctionImpl.make(
           Effect.orDie,
           Effect.map((tenant) => ({
             person: { id: person._id, name: person.name },
-            tenant: {
-              kind: tenant.kind,
-              name: tenant.name,
-              slug: tenant.slug,
-              status: tenant.status,
-            },
+            tenant: Struct.pick(tenant, ["kind", "name", "slug", "status"]),
           }))
         )
     );
-    return { ...people, page };
+    return Struct.assign(people, { page });
   })
 );
 

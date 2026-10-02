@@ -9,25 +9,21 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { GrantRejected } from "@repo/backend/confect/access/errors";
 import { activeGrants, GRANT_LIMIT } from "@repo/backend/confect/access/policy";
-import type {
-  BuiltinRole,
-  GrantEndReason,
+import {
+  type BuiltinRole,
+  type GrantEndReason,
   GrantScope,
+  type GrantStatus,
 } from "@repo/backend/confect/access/schema";
-import { record } from "@repo/backend/confect/journal/record";
 import type { Actor } from "@repo/backend/confect/journal/schema";
-import { Effect } from "effect";
+import { personAuthority } from "@repo/backend/confect/tenancy/authority";
+import { Array as Arr, Effect, Option, Schema, Struct } from "effect";
 
 /** Active Owner grants one tenant may hold. */
 export const OWNER_LIMIT = 8;
 
-const rejected = (code: GrantRejected["code"], message: string) =>
-  new GrantRejected({ code, message });
-
-const sameScope = (left: GrantScope, right: GrantScope) =>
-  left.kind === "tenant"
-    ? right.kind === "tenant"
-    : right.kind === "unit" && left.unitId === right.unitId;
+/** Two grants hold the same scope when both cover the tenant or both cover one unit. */
+const sameScope = Schema.toEquivalence(GrantScope);
 
 /** The tenant's active Owner grants, bounded by the Owner limit plus one. */
 const activeOwners = Effect.fn("access.grant.owners")(function* (
@@ -51,89 +47,104 @@ const activeOwners = Effect.fn("access.grant.owners")(function* (
  * returned instead of duplicated, so a retried request stays idempotent.
  * Callers check that the actor may manage the role first.
  */
-export const assignRole = Effect.fn("access.grant.assign")(function* (input: {
-  readonly actor: Actor;
-  readonly person: TenantPeopleDoc;
-  readonly role: BuiltinRole;
-  readonly scope: GrantScope;
-}) {
-  const { person, role, scope } = input;
+export const assignRole = Effect.fn("access.grant.assign")(function* (
+  actor: typeof Actor.Type,
+  person: TenantPeopleDoc,
+  role: BuiltinRole,
+  scope: GrantScope
+) {
   if (person.kind !== "member") {
-    return yield* rejected(
-      "PERSON_KIND",
-      "Operators hold only temporary visit grants."
-    );
+    return yield* new GrantRejected({
+      code: "PERSON_KIND",
+      message: "Operators hold only temporary visit grants.",
+    });
   }
   if (person.status !== "active") {
-    return yield* rejected("PERSON_INACTIVE", "This person is not active.");
+    return yield* new GrantRejected({
+      code: "PERSON_INACTIVE",
+      message: "This person is not active.",
+    });
   }
   if (role === "integration") {
-    return yield* rejected("GRANT_ROLE", "Integrations are not people.");
+    return yield* new GrantRejected({
+      code: "GRANT_ROLE",
+      message: "Integrations are not people.",
+    });
   }
   if (role === "owner" && scope.kind !== "tenant") {
-    return yield* rejected("GRANT_SCOPE", "Owners cover the whole school.");
+    return yield* new GrantRejected({
+      code: "GRANT_SCOPE",
+      message: "Owners cover the whole school.",
+    });
   }
   const grants = yield* activeGrants(person._id);
-  const existing = grants.find(
+  const existing = Arr.findFirst(
+    grants,
     (grant) =>
       grant.role.key === role &&
       grant.term.kind === "standing" &&
       sameScope(grant.scope, scope)
   );
-  if (existing) {
-    return existing._id;
+  if (Option.isSome(existing)) {
+    return existing.value._id;
   }
   if (grants.length >= GRANT_LIMIT) {
-    return yield* rejected("GRANT_LIMIT", "This person has too many roles.");
+    return yield* new GrantRejected({
+      code: "GRANT_LIMIT",
+      message: "This person has too many roles.",
+    });
   }
   if (
     role === "owner" &&
     (yield* activeOwners(person.tenantId)).length >= OWNER_LIMIT
   ) {
-    return yield* rejected("GRANT_LIMIT", "This school has too many owners.");
+    return yield* new GrantRejected({
+      code: "GRANT_LIMIT",
+      message: "This school has too many owners.",
+    });
   }
-  const granted = {
-    role: { key: role, kind: "builtin" as const },
-    scope,
-    term: { kind: "standing" as const },
-  };
   const grantId = yield* (yield* DatabaseWriter)
     .table("tenantGrants")
     .insert({
-      ...granted,
-      grantedBy: input.actor,
+      grantedBy: actor,
       personId: person._id,
+      role: { key: role, kind: "builtin" },
+      scope,
       status: "active",
       tenantId: person.tenantId,
+      term: { kind: "standing" },
     })
     .pipe(Effect.orDie);
-  yield* record({
-    actor: input.actor,
-    change: { ...granted, grant: grantId, type: "grant.created" },
-    subject: { kind: "person", row: person },
+  yield* personAuthority.record(actor, person, {
+    grant: grantId,
+    role: { key: role, kind: "builtin" },
+    scope,
+    term: { kind: "standing" },
+    type: "grant.created",
   });
   return grantId;
 });
 
 /** Ends an active grant and records it under the Person who held it. */
-export const endGrant = Effect.fn("access.grant.end")(function* (input: {
-  readonly actor: Actor;
-  readonly grant: TenantGrantsDoc;
-  readonly holder: TenantPeopleDoc;
-  readonly reason: typeof GrantEndReason.Type;
-}) {
-  const { _creationTime, _id, ...fields } = input.grant;
+export const endGrant = Effect.fn("access.grant.end")(function* (
+  actor: typeof Actor.Type,
+  grant: TenantGrantsDoc,
+  holder: TenantPeopleDoc,
+  reason: typeof GrantEndReason.Type
+) {
+  const status: typeof GrantStatus.Type =
+    reason === "expired" ? "expired" : "revoked";
   yield* (yield* DatabaseWriter)
     .table("tenantGrants")
-    .replace(_id, {
-      ...fields,
-      status: input.reason === "expired" ? "expired" : "revoked",
-    })
+    .replace(
+      grant._id,
+      Struct.assign(Struct.omit(grant, ["_creationTime", "_id"]), { status })
+    )
     .pipe(Effect.orDie);
-  yield* record({
-    actor: input.actor,
-    change: { grant: _id, reason: input.reason, type: "grant.ended" },
-    subject: { kind: "person", row: input.holder },
+  yield* personAuthority.record(actor, holder, {
+    grant: grant._id,
+    reason,
+    type: "grant.ended",
   });
 });
 
@@ -144,22 +155,25 @@ export const ensureOwnerRemains = Effect.fn("access.grant.ownerRemains")(
       return;
     }
     const reader = yield* DatabaseReader;
-    const others = (yield* activeOwners(grant.tenantId)).filter(
-      (owner) => owner._id !== grant._id
-    );
-    const holders = yield* Effect.forEach(others, (owner) =>
-      reader.table("tenantPeople").get(owner.personId).pipe(Effect.orDie)
+    const holders = yield* Effect.forEach(
+      Arr.filter(
+        yield* activeOwners(grant.tenantId),
+        (owner) => owner._id !== grant._id
+      ),
+      (owner) =>
+        reader.table("tenantPeople").get(owner.personId).pipe(Effect.orDie)
     );
     if (
-      !holders.some(
+      !Arr.some(
+        holders,
         (holder) =>
           holder.status === "active" && holder.account.state === "claimed"
       )
     ) {
-      return yield* rejected(
-        "LAST_OWNER",
-        "A school keeps at least one owner who has signed in."
-      );
+      return yield* new GrantRejected({
+        code: "LAST_OWNER",
+        message: "A school keeps at least one owner who has signed in.",
+      });
     }
   }
 );

@@ -1,7 +1,8 @@
 import { MiddlewareSpec } from "@confect/core";
-import { catalog } from "@repo/backend/confect/access/catalog";
-import { Kind } from "@repo/backend/confect/access/kind";
+import { TenantAction } from "@repo/backend/confect/access/catalog";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import type { Member } from "@repo/backend/confect/middleware/member.spec";
+import { Schema } from "effect";
 
 /**
  * Checks a tenant-level action on the member's own tenant. No argument names
@@ -10,4 +11,8 @@ import type { Member } from "@repo/backend/confect/middleware/member.spec";
 export class TenantAccess extends MiddlewareSpec.MiddlewareSpec<
   TenantAccess,
   { requires: Member }
->()("TenantAccess", Kind.middleware(catalog, "tenant")) {}
+>()("TenantAccess", {
+  error: () => AccessDenied,
+  functionTypes: { action: false, mutation: true, query: true },
+  options: () => Schema.Struct({ action: TenantAction }),
+}) {}

@@ -1,69 +1,84 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   Change,
-  extensions,
+  entries,
   kinds,
   ObjectRef,
-  Published,
   TenantAction,
   TenantCapabilities,
 } from "@repo/backend/confect/access/catalog";
-import { Schema } from "effect";
-
-const sorted = (values: readonly string[]) => [...values].sort();
+import { Kind } from "@repo/backend/confect/access/kind";
+import type { Rule } from "@repo/backend/confect/access/schema";
+import { Array as Arr, Option, pipe, Record, Schema } from "effect";
 
 describe("access/catalog", () => {
   it("derives one object reference per declared kind", () => {
-    expect(
-      sorted(ObjectRef.members.map((ref) => ref.fields.kind.literal))
-    ).toEqual(["grant", "person", "tenant", "unit"]);
+    expect(ObjectRef.discriminants).toEqual([
+      "tenant",
+      "unit",
+      "person",
+      "grant",
+    ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "cohort" })).toBe(false);
   });
 
   it("derives every change of every kind and extension", () => {
     expect(
-      sorted(Change.members.map((change) => change.fields.type.literal))
+      Arr.map(Change.members, (change) => change.fields.type.literal)
     ).toEqual([
-      "grant.created",
-      "grant.ended",
-      "person.claimed",
-      "person.created",
-      "person.invited",
-      "person.released",
-      "person.removed",
       "tenant.provisioned",
       "unit.created",
+      "person.created",
+      "person.invited",
+      "person.claimed",
+      "person.released",
+      "person.removed",
+      "grant.created",
+      "grant.ended",
     ]);
   });
 
-  it("publishes only change types its own entry declares", () => {
-    for (const entry of [...kinds, ...extensions]) {
-      const declared = entry.changes.map(
+  it("names only its kind's declared relations in every rule", () => {
+    const undeclared = Arr.flatMap(entries, (entry) => {
+      const declared = pipe(
+        Arr.findFirst(kinds, (kind) => kind.kind === entry.kind),
+        Option.map((kind) => kind.relations),
+        Option.getOrElse(Arr.empty)
+      );
+      return pipe(
+        Record.values<string, Rule>(entry.actions),
+        Arr.flatMap((rule) => rule.relations),
+        Arr.filter((relation) => !Arr.contains(declared, relation))
+      );
+    });
+    expect(undeclared).toEqual([]);
+  });
+
+  it("publishes only change types its kind declares", () => {
+    const undeclared = Arr.flatMap(ObjectRef.discriminants, (kind) => {
+      const declared = Arr.map(
+        Kind.changes(entries, kind).members,
         (change) => change.fields.type.literal
       );
-      expect(declared).toEqual(expect.arrayContaining([...entry.published]));
-    }
-    expect(sorted(Published.literals)).toEqual([
-      "grant.created",
-      "grant.ended",
-      "person.claimed",
-      "person.created",
-      "person.released",
-      "person.removed",
-      "unit.created",
-    ]);
+      return pipe(
+        Kind.of(entries, kind),
+        Arr.flatMap((entry): readonly string[] => entry.published),
+        Arr.filter((type) => !Arr.some(declared, (known) => known === type))
+      );
+    });
+    expect(undeclared).toEqual([]);
   });
 
   it("joins tenant actions from the tenant kind and every extension of it", () => {
     expect(
-      sorted(TenantAction.members.flatMap((member) => member.literals))
+      Arr.flatMap(TenantAction.members, (member) => member.literals)
     ).toEqual([
       "audit.view",
-      "grant.manage",
-      "owner.manage",
       "tenant.manage",
       "tenant.view",
+      "grant.manage",
+      "owner.manage",
     ]);
   });
 

@@ -19,16 +19,17 @@ their own retention.
 `journalEntries` holds one immutable entry per audited change: its owner (a
 `Space`, one account or one tenant), its actor (an account in its personal
 space, a Person in a tenant, or scheduled work), its subject (an `ObjectRef`),
-and its change. `record` (`confect/journal/record.ts`) inserts it in the
-caller's transaction, so a failed or retried mutation leaves no entry. It only
-inserts: no reads, counters, or sequence documents, so concurrent mutations
-never conflict on the journal.
+and its change. The subject kind's authority writes it with
+`record(actor, row, change)` (ADR 0012) in the caller's transaction, so a
+failed or retried mutation leaves no entry. It only inserts: no reads,
+counters, or sequence documents, so concurrent mutations never conflict on the
+journal.
 
 `record` takes the subject as the loaded row, usually the one its kind's access
-middleware provided, and derives the entry's reference and owner from it
-through the kind's authority. No caller passes an owner, so an entry is filed
-only under its subject's space. The subject's kind fixes the allowed change
-types at compile time.
+middleware provided, and derives the entry's reference and owner from it. No
+caller passes an owner, so an entry is filed only under its subject's space.
+Each kind's authority accepts only that kind's change types, so a change of
+another kind does not compile.
 
 ### What is recorded
 
@@ -69,8 +70,9 @@ they hold Person IDs, not personal data. Nothing else deletes journal rows.
 
 ## Implementation Contract
 
-- `journalEntries` (`by_owner_tenantId`); `record`; `journal/audit:list`, the
-  tenant audit log for `audit.view`, newest first, at most 100 entries a page.
+- `journalEntries` (`by_owner_tenantId`); each authority's `record`;
+  `journal/audit:list`, the tenant audit log for `audit.view`, newest first,
+  at most 100 entries a page, with each Person named on a page read once.
 - Wire views `ChangeView` and `SubjectView` decode a change type or kind added
   after a client was built as `unknown`.
 

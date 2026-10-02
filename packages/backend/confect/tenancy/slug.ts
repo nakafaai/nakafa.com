@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { HashSet, Schema } from "effect";
 
 /** One DNS label of lowercase letters and digits with single inner hyphens, so never `xn--`. */
 const label = /^[a-z0-9](?:[a-z0-9]|-(?!-))*[a-z0-9]$/;
@@ -22,7 +22,7 @@ export type TenantSlug = typeof TenantSlug.Type;
  * Single-letter hosts such as the analytics proxy `t` already fail the length
  * rule. A new `*.nakafa.com` host or School route segment is added here first.
  */
-export const reservedSlugs: ReadonlySet<string> = new Set([
+export const reservedSlugs = HashSet.fromIterable([
   "api",
   "cas",
   "cdn",
@@ -85,6 +85,6 @@ export const reservedSlugs: ReadonlySet<string> = new Set([
  */
 export const NewTenantSlug = TenantSlug.check(
   Schema.makeFilter(
-    (slug: string) => !reservedSlugs.has(slug) || "This address is reserved."
+    (slug) => !HashSet.has(reservedSlugs, slug) || "This address is reserved."
   )
 );

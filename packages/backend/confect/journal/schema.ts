@@ -1,7 +1,7 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Change, ObjectRef } from "@repo/backend/confect/access/catalog";
 import { Space } from "@repo/backend/confect/space";
-import { Schema, SchemaTransformation } from "effect";
+import { Schema, SchemaGetter } from "effect";
 
 /** Who performed a change, in either data space. */
 export const Actor = Schema.Union([
@@ -11,12 +11,11 @@ export const Actor = Schema.Union([
   Schema.Struct({ id: Id("tenantPeople"), kind: Schema.Literal("person") }),
   /** Scheduled or cascading work. */
   Schema.Struct({ kind: Schema.Literal("system") }),
-]);
-export type Actor = typeof Actor.Type;
+]).pipe(Schema.toTaggedUnion("kind"));
 
 /**
  * One audited change, immutable once written. Its owner and subject come
- * from the subject's row, never from the caller.
+ * from the subject's row through its kind's authority, never from the caller.
  */
 export const JournalEntry = Schema.Struct({
   actor: Actor,
@@ -25,41 +24,26 @@ export const JournalEntry = Schema.Struct({
   subject: ObjectRef,
 });
 
+const unknown = Schema.Literal("unknown");
+
 /**
  * A change type another lane added after this client was built decodes as
  * `{ type: "unknown" }`, so an open tab renders a generic row instead of
  * failing to decode the whole page.
  */
 const UnknownChange = Schema.Struct({ type: Schema.String }).pipe(
-  Schema.decodeTo(
-    Schema.Struct({ type: Schema.Literal("unknown") }),
-    SchemaTransformation.transform({
-      decode: (_change: { readonly type: string }) => ({
-        type: "unknown" as const,
-      }),
-      encode: (change: {
-        readonly type: "unknown";
-      }): {
-        readonly type: string;
-      } => change,
-    })
-  )
+  Schema.decodeTo(Schema.Struct({ type: unknown }), {
+    decode: SchemaGetter.succeed({ type: unknown.literal }),
+    encode: SchemaGetter.passthroughSubtype(),
+  })
 );
+
 /** A kind added after this client was built decodes as `{ kind: "unknown" }`. */
 const UnknownSubject = Schema.Struct({ kind: Schema.String }).pipe(
-  Schema.decodeTo(
-    Schema.Struct({ kind: Schema.Literal("unknown") }),
-    SchemaTransformation.transform({
-      decode: (_subject: { readonly kind: string }) => ({
-        kind: "unknown" as const,
-      }),
-      encode: (subject: {
-        readonly kind: "unknown";
-      }): {
-        readonly kind: string;
-      } => subject,
-    })
-  )
+  Schema.decodeTo(Schema.Struct({ kind: unknown }), {
+    decode: SchemaGetter.succeed({ kind: unknown.literal }),
+    encode: SchemaGetter.passthroughSubtype(),
+  })
 );
 
 /** A change on the wire, tolerant of change types added later. */

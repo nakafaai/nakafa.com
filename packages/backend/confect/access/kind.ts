@@ -1,199 +1,138 @@
 import { Id, type TableNames } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import type { BuiltinRole } from "@repo/backend/confect/access/schema";
-import { Schema, Struct } from "effect";
-
-/** Action literals read `source.verb`; the source names the object the action concerns. */
-export type ActionName = `${string}.${string}`;
+import { Rule } from "@repo/backend/confect/access/schema";
+import { Array as Arr, type Record, Schema, Struct } from "effect";
 
 /**
- * How one action is granted. A `roles` rule allows its roles, every Owner,
- * and its relations. A `relations` rule allows its relations only: no role,
- * not even Owner, may record a guardian's consent or answer a student's exam.
+ * What a lane adds to a kind: the `source.verb` actions evaluated on its
+ * subjects with their rules, and its audited changes, each a struct whose
+ * `type` literal names the event and whose details hold IDs, enums, and
+ * reason codes only, with the change types consumers may subscribe to.
  */
-export type Rule<Relation extends string = string> =
-  | {
-      readonly access: "read" | "write";
-      readonly grantedBy: "roles";
-      readonly relations: readonly Relation[];
-      readonly roles: readonly Exclude<BuiltinRole, "owner">[];
-    }
-  | {
-      readonly access: "read" | "write";
-      readonly grantedBy: "relations";
-      readonly relations: readonly [Relation, ...Relation[]];
-    };
+const Extension = Schema.Struct({
+  actions: Schema.Record(Schema.String, Rule),
+  changes: Schema.Array(Schema.declare(Schema.isSchema)),
+  published: Schema.Array(Schema.String),
+});
+
+/** A kind's own declaration also names the relations a Person can hold to its subjects. */
+const Declaration = Extension.mapFields(
+  Struct.assign({ relations: Schema.Array(Schema.String) })
+);
+
+/** One catalog entry, a declaration or an extension: the kind it rules and its actions as one schema. */
+const Entry = Extension.mapFields(
+  Struct.assign({
+    action: Schema.declare(Schema.isSchema),
+    kind: Schema.String,
+  })
+);
+
+/** Declares one kind once, in its lane: the table its subjects live in and what is decided and recorded about them. */
+const make = <
+  const K extends string,
+  const T extends TableNames,
+  const D extends typeof Declaration.Type,
+>(
+  kind: K,
+  table: T,
+  declaration: D
+) => ({
+  ...declaration,
+  action: Schema.Literals(Struct.keys(Struct.get(declaration, "actions"))),
+  kind,
+  ref: Schema.Struct({ id: Id(table), kind: Schema.Literal(kind) }),
+  table,
+});
 
 /**
- * An audited change of one kind: `type` names the event, and details hold
- * IDs, enums, and reason codes only, so an entry never outlives personal data.
- */
-export type ChangeSchema = Schema.ConstraintCodec<
-  { readonly type: ActionName },
-  { readonly type: string }
->;
-
-interface Rules<Relation extends string> {
-  readonly [action: ActionName]: Rule<Relation>;
-}
-type ChangeType<Changes extends readonly ChangeSchema[]> =
-  Changes[number]["Type"]["type"];
-
-/** What every declaration and extension adds to the catalog for one kind. */
-interface Entry {
-  readonly actionSchema: Schema.Constraint;
-  readonly actions: Rules<string>;
-  readonly changes: readonly ChangeSchema[];
-  readonly name: string;
-  readonly published: readonly string[];
-}
-
-/** The declarations of every lane: what middleware options and the registry read. */
-export interface Catalog {
-  readonly extensions: readonly Entry[];
-  readonly kinds: readonly (Entry & {
-    readonly relations: readonly string[];
-    readonly scope: "root" | "object";
-  })[];
-}
-
-/**
- * Declares one kind: its table, its relations, the actions evaluated on its
- * subjects with their rules, and its audited changes. `root` is the tenant
- * itself; `object` kinds are named by a function argument.
- */
-const declare =
-  <const Scope extends "root" | "object">(scope: Scope) =>
-  <
-    const Name extends string,
-    const Table extends TableNames,
-    const Relation extends string,
-    const Actions extends Rules<Relation>,
-    const Changes extends readonly ChangeSchema[],
-  >(declaration: {
-    readonly actions: Actions;
-    readonly changes: Changes;
-    readonly name: Name;
-    readonly published: readonly NoInfer<ChangeType<Changes>>[];
-    readonly relations: readonly Relation[];
-    readonly table: Table;
-  }) => ({
-    ...declaration,
-    actionSchema: Schema.Literals(Struct.keys(declaration.actions)),
-    ref: Schema.Struct({
-      id: Id(declaration.table),
-      kind: Schema.Literal(declaration.name),
-    }),
-    scope,
-  });
-
-/**
- * Adds actions or changes to another lane's kind, ruled with that kind's
- * relations: `cohort.create` is evaluated on the parent unit, so the people
- * lane extends the unit kind.
+ * Adds actions or changes to another lane's kind, ruled by that kind's
+ * relations: `grant.manage` is evaluated on the unit a grant covers, so the
+ * access lane extends the unit kind.
  */
 const extend = <
-  const Base extends {
-    readonly name: string;
-    readonly relations: readonly string[];
-  },
-  const Actions extends Rules<Base["relations"][number]>,
-  const Changes extends readonly ChangeSchema[],
+  const B extends typeof Entry.Type,
+  const D extends typeof Extension.Type,
 >(
-  base: Base,
-  extension: {
-    readonly actions: Actions;
-    readonly changes: Changes;
-    readonly published: readonly NoInfer<ChangeType<Changes>>[];
-  }
-) => {
-  // Read bare, a value of a generic type with a string constraint widens to
-  // `string`; the annotation keeps the extended kind's literal name.
-  const name: Base["name"] = base.name;
-  return {
-    ...extension,
-    actionSchema: Schema.Literals(Struct.keys(extension.actions)),
-    name,
-  };
-};
+  base: B,
+  extension: D
+) => ({
+  ...extension,
+  action: Schema.Literals(Struct.keys(Struct.get(extension, "actions"))),
+  kind: Struct.get(base, "kind"),
+});
 
-type EntryOf<C extends Catalog> = C["kinds"][number] | C["extensions"][number];
-type NameOf<C extends Catalog, Scope extends "root" | "object"> = Extract<
-  C["kinds"][number],
-  { readonly scope: Scope }
->["name"];
-
-const named =
-  <K extends string>(name: K) =>
-  <E extends { readonly name: string }>(
-    entry: E
-  ): entry is Extract<E, { readonly name: K }> =>
-    entry.name === name;
-
-type ActionsSchema<C extends Catalog, K extends string> = Schema.Union<
-  Extract<EntryOf<C>, { readonly name: K }>["actionSchema"][]
->;
-
-/** Every action a kind's declaration and its extensions rule on, as one literal schema. */
-export const actionsOf = <C extends Catalog, K extends string>(
-  catalog: C,
-  name: K
-): ActionsSchema<C, K> =>
-  Schema.Union(
-    [...catalog.kinds, ...catalog.extensions]
-      .filter(named(name))
-      .map((entry) => entry.actionSchema)
+/** A kind's entries: its declaration and every lane's extension of it. */
+const of = <
+  const E extends readonly (typeof Entry.Type)[],
+  K extends E[number]["kind"],
+>(
+  entries: E,
+  kind: K
+) =>
+  Arr.filter(
+    entries,
+    (entry): entry is Extract<E[number], Record.ReadonlyRecord<"kind", K>> =>
+      entry.kind === kind
   );
-
-/** The client-safe half of a kind's access middleware spec. */
-interface AccessSpec<Options extends Schema.Top> {
-  readonly error: () => typeof AccessDenied;
-  readonly functionTypes: {
-    readonly action: false;
-    readonly mutation: true;
-    readonly query: true;
-  };
-  readonly options: () => Options;
-}
 
 /**
- * Options for a kind's access middleware, typed from the catalog: the root
- * kind takes `{ action }`, an object kind `{ action, arg }`, where `arg` names
- * the argument holding the subject's ID. An action of another kind does not
- * compile.
+ * Every action a kind's declaration and its extensions rule on. The return
+ * type spells the per-kind selection, which the compiler cannot infer from
+ * the filtered entries.
  */
-function middleware<C extends Catalog, K extends NameOf<C, "root">>(
-  catalog: C,
-  name: K
-): AccessSpec<Schema.Struct<{ readonly action: ActionsSchema<C, K> }>>;
-function middleware<C extends Catalog, K extends NameOf<C, "object">>(
-  catalog: C,
-  name: K
-): AccessSpec<
-  Schema.Struct<{
-    readonly action: ActionsSchema<C, K>;
-    readonly arg: Schema.String;
-  }>
->;
-function middleware(catalog: Catalog, name: string) {
-  const action = actionsOf(catalog, name);
-  const root = catalog.kinds.some(
-    (kind) => kind.name === name && kind.scope === "root"
-  );
-  return {
-    error: () => AccessDenied,
-    functionTypes: { action: false, mutation: true, query: true },
-    options: () =>
-      root
-        ? Schema.Struct({ action })
-        : Schema.Struct({ action, arg: Schema.String }),
-  } as const;
-}
+const actions = <
+  const E extends readonly (typeof Entry.Type)[],
+  K extends E[number]["kind"],
+>(
+  entries: E,
+  kind: K
+): Schema.Union<
+  readonly Extract<E[number], Record.ReadonlyRecord<"kind", K>>["action"][]
+> => Schema.Union(Arr.map(of(entries, kind), (entry) => entry.action));
 
-/** Declaration constructors for access kinds; each lane declares its kinds once. */
-export const Kind = {
-  extend,
-  middleware,
-  object: declare("object"),
-  root: declare("root"),
-} as const;
+/** Every change a kind's declaration and its extensions declare. */
+const changes = <
+  const E extends readonly (typeof Entry.Type)[],
+  K extends E[number]["kind"],
+>(
+  entries: E,
+  kind: K
+): Schema.Union<
+  readonly Extract<
+    E[number],
+    Record.ReadonlyRecord<"kind", K>
+  >["changes"][number][]
+> =>
+  Schema.Union(
+    Arr.flatten(Arr.map(of(entries, kind), (entry) => entry.changes))
+  );
+
+/**
+ * The options of an object kind's access spec: `action` is typed from the
+ * catalog, so an action of another kind does not compile, and `arg` names
+ * the argument holding the subject's ID.
+ */
+const options = <
+  const E extends readonly (typeof Entry.Type)[],
+  K extends E[number]["kind"],
+>(
+  entries: E,
+  kind: K
+) => Schema.Struct({ action: actions(entries, kind), arg: Schema.String });
+
+/** The client-safe half of an object kind's access spec. */
+const middleware = <
+  const E extends readonly (typeof Entry.Type)[],
+  K extends E[number]["kind"],
+>(
+  entries: E,
+  kind: K
+) => ({
+  error: () => AccessDenied,
+  functionTypes: { action: false, mutation: true, query: true } as const,
+  options: () => options(entries, kind),
+});
+
+/** Declares access kinds once per lane and derives each kind's schemas from every lane's entries. */
+export const Kind = { actions, changes, extend, make, middleware, of, options };

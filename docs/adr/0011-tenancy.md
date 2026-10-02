@@ -36,8 +36,8 @@ tenant from data (ADR 0012). Every tenant-owned table carries `tenantId`.
 the stored brand: one DNS label of 2 to 63 lowercase letters and digits with
 single inner hyphens, so never `xn--`. It holds only rules that never change,
 because Confect decodes stored documents and a stricter brand would make
-existing tenants unreadable. `reservedSlugs` lists labels that never name a
-tenant: every live `*.nakafa.com` host, product and account words, the
+existing tenants unreadable. `reservedSlugs`, an Effect `HashSet`, lists
+labels that never name a tenant: every live `*.nakafa.com` host, product and account words, the
 application locales, and static segments under `/[locale]/school`.
 `NewTenantSlug` is a `TenantSlug` outside that set: what operators may give a
 new tenant and what the proxy routes. A new host or School route segment is

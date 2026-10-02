@@ -1,10 +1,8 @@
-import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Grant } from "@repo/backend/confect/access/access";
 import { grantAccess } from "@repo/backend/confect/access/authority";
-import { authorize } from "@repo/backend/confect/access/check";
 import {
   assignRole,
   endGrant,
@@ -12,16 +10,21 @@ import {
 } from "@repo/backend/confect/access/grant";
 import spec from "@repo/backend/confect/access/grants.spec";
 import { activeGrants } from "@repo/backend/confect/access/policy";
-import type {
-  BuiltinRole,
+import {
+  type BuiltinRole,
   GrantScope,
+  OwnerRole,
 } from "@repo/backend/confect/access/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Person } from "@repo/backend/confect/tenancy/access";
-import { personAccess } from "@repo/backend/confect/tenancy/authority";
-import { Effect, Layer } from "effect";
+import {
+  personAccess,
+  tenantAuthority,
+  unitAuthority,
+} from "@repo/backend/confect/tenancy/authority";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 
 /**
  * Managing a grant needs `grant.manage` on the scope it covers, so a unit
@@ -29,18 +32,18 @@ import { Effect, Layer } from "effect";
  * arguments must belong to the member's tenant. Owner and Admin roles also
  * need `owner.manage`, which only Owners hold.
  */
-const authorizeManage = Effect.fnUntraced(function* (
+const authorizeManage = Effect.fn("access.grants.manage")(function* (
   scope: GrantScope,
-  role: BuiltinRole,
-  tenantId: GenericId.GenericId<"tenants">
+  role: BuiltinRole
 ) {
-  if (scope.kind === "unit") {
-    yield* authorize("unit", "grant.manage", scope.unitId);
-  } else {
-    yield* authorize("tenant", "grant.manage", tenantId);
-  }
-  if (role === "owner" || role === "admin") {
-    yield* authorize("tenant", "owner.manage", tenantId);
+  const { tenant } = yield* Member;
+  yield* GrantScope.match(scope, {
+    tenant: () => tenantAuthority.check("grant.manage", tenant),
+    unit: ({ unitId }) =>
+      Effect.asVoid(unitAuthority.authorize("grant.manage", unitId)),
+  });
+  if (Schema.is(OwnerRole)(role)) {
+    yield* tenantAuthority.check("owner.manage", tenant);
   }
 });
 
@@ -49,8 +52,7 @@ const list = FunctionImpl.make(
   spec,
   "list",
   Effect.fn("access.grants.list")(function* () {
-    const grants = yield* activeGrants((yield* Person)._id);
-    return grants.map((grant) => ({
+    return Arr.map(yield* activeGrants((yield* Person)._id), (grant) => ({
       id: grant._id,
       role: grant.role,
       scope: grant.scope,
@@ -64,14 +66,13 @@ const assign = FunctionImpl.make(
   spec,
   "assign",
   Effect.fn("access.grants.assign")(function* ({ role, scope }) {
-    const { person: caller, tenant } = yield* Member;
-    yield* authorizeManage(scope, role, tenant._id);
-    return yield* assignRole({
-      actor: { id: caller._id, kind: "person" },
-      person: yield* Person,
+    yield* authorizeManage(scope, role);
+    return yield* assignRole(
+      { id: (yield* Member).person._id, kind: "person" },
+      yield* Person,
       role,
-      scope,
-    });
+      scope
+    );
   })
 );
 
@@ -81,22 +82,21 @@ const revoke = FunctionImpl.make(
   spec,
   "revoke",
   Effect.fn("access.grants.revoke")(function* () {
-    const { person: caller, tenant } = yield* Member;
     const grant = yield* Grant;
     if (grant.status !== "active") {
       return null;
     }
-    yield* authorizeManage(grant.scope, grant.role.key, tenant._id);
+    yield* authorizeManage(grant.scope, grant.role.key);
     yield* ensureOwnerRemains(grant);
-    yield* endGrant({
-      actor: { id: caller._id, kind: "person" },
+    yield* endGrant(
+      { id: (yield* Member).person._id, kind: "person" },
       grant,
-      holder: yield* (yield* DatabaseReader)
+      yield* (yield* DatabaseReader)
         .table("tenantPeople")
         .get(grant.personId)
         .pipe(Effect.orDie),
-      reason: "revoked",
-    });
+      "revoked"
+    );
     return null;
   })
 );

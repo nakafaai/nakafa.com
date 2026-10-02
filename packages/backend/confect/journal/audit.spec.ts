@@ -32,7 +32,7 @@ export default GroupSpec.make()
           change: ChangeView,
           id: Id("journalEntries"),
           subject: SubjectView,
-          subjectName: Schema.NullOr(PersonName),
+          subjectName: Schema.OptionFromNullOr(PersonName),
         }),
     }).middleware(TenantAccess, { action: "audit.view" })
   );

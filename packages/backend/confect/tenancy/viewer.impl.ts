@@ -2,13 +2,13 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
-import { allowed } from "@repo/backend/confect/access/check";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
 import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import spec from "@repo/backend/confect/tenancy/viewer.spec";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 /** The member's tenant, active units, grants, and tenant capabilities: one indexed read past the member check. */
 const get = FunctionImpl.make(
@@ -25,8 +25,8 @@ const get = FunctionImpl.make(
       .take(UNIT_LIMIT)
       .pipe(Effect.orDie);
     return {
-      can: yield* allowed("tenant", tenant),
-      grants: grants.map((grant) => ({
+      can: yield* tenantAuthority.allowed(tenant),
+      grants: Arr.map(grants, (grant) => ({
         id: grant._id,
         role: grant.role,
         scope: grant.scope,
@@ -40,7 +40,7 @@ const get = FunctionImpl.make(
         slug: tenant.slug,
         status: tenant.status,
       },
-      units: units.map((unit) => ({
+      units: Arr.map(units, (unit) => ({
         id: unit._id,
         level: unit.level,
         name: unit.name,

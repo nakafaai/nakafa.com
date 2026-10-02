@@ -1,4 +1,6 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
+
+const accessDenied = Schema.Literal("ACCESS_DENIED");
 
 /**
  * The caller may not perform `action`. `resource` covers both a missing
@@ -10,8 +12,14 @@ export class AccessDenied extends Schema.TaggedError<AccessDenied>()(
   "AccessDenied",
   {
     action: Schema.String,
-    code: Schema.Literal("ACCESS_DENIED"),
-    message: Schema.String,
+    code: accessDenied.pipe(
+      Schema.withConstructorDefault(Effect.succeed(accessDenied.literal))
+    ),
+    message: Schema.String.pipe(
+      Schema.withConstructorDefault(
+        Effect.succeed("You do not have access to this.")
+      )
+    ),
     reason: Schema.Literals(["resource", "role", "condition"]),
   }
 ) {}

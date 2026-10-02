@@ -1,6 +1,6 @@
 import { MiddlewareSpec } from "@confect/core";
 import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
-import { catalog } from "@repo/backend/confect/access/catalog";
+import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Context } from "effect";
@@ -14,4 +14,4 @@ export class Person extends Context.Service<Person, TenantPeopleDoc>()(
 export class PersonAccess extends MiddlewareSpec.MiddlewareSpec<
   PersonAccess,
   { provides: Person; requires: Member }
->()("PersonAccess", Kind.middleware(catalog, "person")) {}
+>()("PersonAccess", Kind.middleware(entries, "person")) {}

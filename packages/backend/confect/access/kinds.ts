@@ -10,7 +10,7 @@ import { person, tenant, unit } from "@repo/backend/confect/tenancy/kinds";
 import { Schema } from "effect";
 
 /** One role a Person holds; its holder may always see it. */
-export const grant = Kind.object({
+export const grant = Kind.make("grant", "tenantGrants", {
   actions: {
     "grant.view": {
       access: "read",
@@ -20,10 +20,8 @@ export const grant = Kind.object({
     },
   },
   changes: [],
-  name: "grant",
   published: [],
   relations: ["holder"],
-  table: "tenantGrants",
 });
 
 /**

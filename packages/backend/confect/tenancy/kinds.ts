@@ -8,7 +8,7 @@ import { Schema } from "effect";
  * through the `member` relation; operator Persons act only through their
  * audited grants.
  */
-export const tenant = Kind.root({
+export const tenant = Kind.make("tenant", "tenants", {
   actions: {
     "audit.view": {
       access: "read",
@@ -30,14 +30,12 @@ export const tenant = Kind.root({
     },
   },
   changes: [Schema.Struct({ type: Schema.Literal("tenant.provisioned") })],
-  name: "tenant",
   published: [],
   relations: ["member"],
-  table: "tenants",
 });
 
 /** One school (SD, SMP, SMA) inside a tenant; unit grants cover its subjects. */
-export const unit = Kind.object({
+export const unit = Kind.make("unit", "tenantUnits", {
   actions: {
     "unit.view": {
       access: "read",
@@ -47,14 +45,12 @@ export const unit = Kind.object({
     },
   },
   changes: [Schema.Struct({ type: Schema.Literal("unit.created") })],
-  name: "unit",
   published: ["unit.created"],
   relations: ["member"],
-  table: "tenantUnits",
 });
 
 /** A Person: the school's record of someone, claimed by at most one account. */
-export const person = Kind.object({
+export const person = Kind.make("person", "tenantPeople", {
   actions: {
     "person.view": {
       access: "read",
@@ -76,7 +72,6 @@ export const person = Kind.object({
     Schema.Struct({ type: Schema.Literal("person.released") }),
     Schema.Struct({ type: Schema.Literal("person.removed") }),
   ],
-  name: "person",
   published: [
     "person.created",
     "person.claimed",
@@ -84,7 +79,6 @@ export const person = Kind.object({
     "person.removed",
   ],
   relations: ["self"],
-  table: "tenantPeople",
 });
 
 export const tenancy = {
