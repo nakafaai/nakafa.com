@@ -19,3 +19,12 @@ A press that lands while a lesson's charts and visuals are still loading now
 works: the lesson no longer waits for their code before it responds, so its
 outline, links, and other controls answer the first tap instead of losing it.
 Only a visual whose own code is still loading waits for it.
+
+Signed-out visitors keep their guest sidebar and sign-in prompts when they
+return to the tab. The sign-in session is checked again on every return, and
+during that check the page briefly treated the visitor as still loading, so
+those parts disappeared and came back. The page now keeps the settled session
+until the check answers. The try-out review's Ask Nina buttons also keep the
+review the server streamed when the sign-in resolves, and the Convex sign-in
+answers every token request that waits on a failed one instead of leaving one
+of them broken.
