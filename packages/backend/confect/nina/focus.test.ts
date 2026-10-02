@@ -100,7 +100,7 @@ describe("Nina question focus", () => {
           explanationMdx: "#### Technical answer",
           responseSpec: expect.objectContaining({ kind: "single-choice" }),
           selection: null,
-          isCorrect: null,
+          outcome: null,
         })
       )
     );
@@ -132,7 +132,7 @@ describe("Nina question focus", () => {
     await read((exit) =>
       expect(exit).toMatchObject({
         _tag: "Success",
-        value: { selection, isCorrect: false },
+        value: { selection, outcome: { status: "incorrect" } },
       })
     );
     await f.t.mutation((ctx) =>

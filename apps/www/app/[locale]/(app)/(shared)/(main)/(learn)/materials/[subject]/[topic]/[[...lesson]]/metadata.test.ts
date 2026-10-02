@@ -3,6 +3,17 @@ import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(le
 import { previewMetadata } from "@/test/content-preview";
 
 describe("material metadata", () => {
+  it("titles the page with the signed search title when the lesson has one", () => {
+    expect(
+      toMaterialMetadataCopy({
+        metadata: { ...previewMetadata, searchTitle: "Turunan Fungsi Aljabar" },
+      })
+    ).toEqual({
+      description: previewMetadata.description,
+      title: "Turunan Fungsi Aljabar",
+    });
+  });
+
   it("uses the signed title and description", () => {
     expect(toMaterialMetadataCopy({ metadata: previewMetadata })).toEqual({
       description: previewMetadata.description,

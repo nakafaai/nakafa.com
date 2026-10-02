@@ -45,7 +45,41 @@ const category = {
   ],
 } satisfies QuestionResponse;
 
+const label = { de: "Teil", en: "Part", id: "Bagian" };
+
+const shortAnswer = {
+  key: { acceptsFractions: false, kind: "number", value: "4" },
+  kind: "short-answer",
+} satisfies QuestionResponse;
+
+const rubric = {
+  criteria: [
+    {
+      criterionKey: "criterion-1",
+      label,
+      levels: [
+        { label, levelKey: "level-1", order: 1, points: 0 },
+        { label, levelKey: "level-2", order: 2, points: 1 },
+      ],
+      order: 1,
+    },
+  ],
+  kind: "rubric",
+} satisfies QuestionResponse;
+
 describe("try-out response preview", () => {
+  it("never completes short answers and rubrics, which render no preview fields", () => {
+    for (const responseSpec of [shortAnswer, rubric]) {
+      const selection: TryoutResponseSelection = {
+        kind: "short-answer",
+        text: "4",
+      };
+
+      expect(isPreviewComplete(responseSpec, selection)).toBe(false);
+      expect(isPreviewCorrect(responseSpec, selection)).toBe(false);
+    }
+  });
+
   it("evaluates single-choice selections", () => {
     expect(isPreviewComplete(single, null)).toBe(false);
     expect(isPreviewCorrect(single, null)).toBe(false);

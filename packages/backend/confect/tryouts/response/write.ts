@@ -3,18 +3,21 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { evaluate } from "@repo/backend/confect/response/evaluation";
+import type { Outcome } from "@repo/backend/confect/response/model";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
-import { evaluateTryoutResponse } from "@repo/backend/confect/tryouts/response/evaluation";
 import {
   indexTryoutResponses,
   requireTryoutResponseSectionSnapshot,
   validateTryoutResponsePlacements,
 } from "@repo/backend/confect/tryouts/response/integrity";
+import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
 import {
   type SaveTryoutResponseArgs,
   TryoutResponseError,
   TryoutResponseIntegrityError,
   toTryoutResponseError,
+  toTryoutSelectionError,
 } from "@repo/backend/confect/tryouts/response/spec";
 import type { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { requireOwnedAttempt } from "@repo/backend/confect/tryouts/runtime/score";
@@ -37,6 +40,11 @@ function toOwnedAttemptResponseError(
     });
   }
   return error;
+}
+
+/** Counts one outcome toward the correct-answer counters. */
+function correctCount(outcome: Outcome) {
+  return outcome.status === "correct" ? 1 : 0;
 }
 
 /** Returns elapsed section seconds from authoritative server timestamps. */
@@ -154,26 +162,27 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
       yield* updateResponseActivity({
         answeredDelta: -Number(existing.isComplete),
         attemptId: attempt._id,
-        correctDelta: existing.isCorrect ? -1 : 0,
+        correctDelta: -correctCount(readOutcome(existing)),
         now: input.now,
         section,
       });
       return null;
     }
-    const evaluated = yield* evaluateTryoutResponse(
-      placement.responseSpec,
-      selection
-    );
+    const evaluated = yield* Effect.fromResult(
+      evaluate(placement.responseSpec, selection)
+    ).pipe(Effect.mapError(toTryoutSelectionError));
+    const isCorrect = evaluated.outcome.status === "correct";
     if (existing) {
       const correctDelta =
-        (evaluated.isCorrect ? 1 : 0) - (existing.isCorrect ? 1 : 0);
+        correctCount(evaluated.outcome) - correctCount(readOutcome(existing));
       const answeredDelta =
         Number(evaluated.isComplete) - Number(existing.isComplete);
       yield* writer
         .table("tryoutResponses")
         .patch(existing._id, {
           isComplete: evaluated.isComplete,
-          isCorrect: evaluated.isCorrect,
+          isCorrect,
+          outcome: evaluated.outcome,
           selection: evaluated.selection,
           timeSpent,
           updatedAt: input.now,
@@ -193,7 +202,8 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
       .insert({
         answeredAt: input.now,
         isComplete: evaluated.isComplete,
-        isCorrect: evaluated.isCorrect,
+        isCorrect,
+        outcome: evaluated.outcome,
         placementId: placement._id,
         selection: evaluated.selection,
         timeSpent,
@@ -203,9 +213,9 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
       })
       .pipe(Effect.orDie);
     yield* updateResponseActivity({
-      answeredDelta: evaluated.isComplete ? 1 : 0,
+      answeredDelta: Number(evaluated.isComplete),
       attemptId: attempt._id,
-      correctDelta: evaluated.isCorrect ? 1 : 0,
+      correctDelta: correctCount(evaluated.outcome),
       now: input.now,
       section,
     });

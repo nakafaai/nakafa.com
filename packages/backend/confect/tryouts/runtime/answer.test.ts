@@ -3,7 +3,10 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
+import {
+  readConfectPlacement,
+  seedTryoutContentAccessState,
+} from "@repo/backend/test/tryout/runtime";
 import { Effect } from "effect";
 
 describe("retained explanation language", () => {
@@ -18,7 +21,7 @@ describe("retained explanation language", () => {
     );
     await t.query(async (ctx) => {
       const attempt = await ctx.db.get(seeded.attemptId);
-      const placement = await ctx.db.get(seeded.placementId);
+      const placement = await readConfectPlacement(ctx, seeded.placementId);
       assert.isNotNull(attempt);
       assert.isNotNull(placement);
       for (const locale of ["id", "en"] as const) {
@@ -72,7 +75,7 @@ describe("retained explanation language", () => {
     });
     await t.query(async (ctx) => {
       const attempt = await ctx.db.get(seeded.attemptId);
-      const placement = await ctx.db.get(seeded.placementId);
+      const placement = await readConfectPlacement(ctx, seeded.placementId);
       assert.isNotNull(attempt);
       assert.isNotNull(placement);
       await expect(

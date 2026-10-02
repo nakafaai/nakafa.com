@@ -3,7 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
-import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/hash/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { decodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/parse";

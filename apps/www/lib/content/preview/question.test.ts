@@ -174,7 +174,10 @@ describe("local question preview", () => {
     Effect.gen(function* () {
       const multipleManifest = makeQuestionReadyManifest(previewManifestHash);
       const response = questionPromptProjection.response;
-      if (response.kind === "category") {
+      if (
+        response.kind !== "single-choice" &&
+        response.kind !== "multiple-choice"
+      ) {
         return yield* Effect.die("Expected one option-based test response.");
       }
       provideManifest({

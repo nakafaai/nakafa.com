@@ -8,7 +8,7 @@ import {
   CurriculumNodeKeySchema,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
-import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import refs from "@repo/backend/confect/_generated/refs";

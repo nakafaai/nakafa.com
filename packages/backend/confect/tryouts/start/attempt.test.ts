@@ -18,6 +18,7 @@ import {
   TRYOUT_START_NOW as NOW,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
+  TRYOUT_START_MARKS,
   TRYOUT_START_SECTION,
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
@@ -25,6 +26,50 @@ import {
 import { Effect } from "effect";
 
 describe("tryouts/start/attempt", () => {
+  it("freezes the signed section marks that score a penalized set", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const attempt = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "penalized-marks",
+      });
+      await activateTryoutStartSource(ctx, "visible", "penalized");
+      const args = {
+        countryKey: TRYOUT_START_COUNTRY,
+        examKey: TRYOUT_START_EXAM,
+        locale: "id" as const,
+        setKey: TRYOUT_START_SET,
+        trackKey: TRYOUT_START_TRACK,
+      };
+      return await Effect.runPromise(
+        Effect.gen(function* () {
+          const source = yield* loadTryoutStartSource(args);
+          return yield* createTryoutAttempt({
+            access: {
+              accessEndsAt: NOW + 60_000,
+              accessSourceKind: tryoutAttemptAccessSourceKindFree,
+              countsForCompetition: false,
+            },
+            args,
+            attemptNumber: 1,
+            now: NOW,
+            scaleVersion: null,
+            source,
+            userId: user.userId,
+          });
+        }).pipe(
+          Effect.provide(
+            RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          )
+        )
+      );
+    });
+    expect(attempt).toMatchObject({
+      scoringStrategy: "penalized",
+      sectionSnapshots: [{ marks: TRYOUT_START_MARKS }],
+    });
+  });
+
   it.each([
     tryoutAttemptAccessSourceKindFree,
     tryoutAttemptAccessSourceKindSubscription,

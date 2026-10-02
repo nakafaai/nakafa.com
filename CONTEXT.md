@@ -27,6 +27,10 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Try-out section**: One timed question group inside a try-out set. Sections reference question bank source paths; visible sections have public routes, while internal-entry sections are runtime-only.
 - **Try-out attempt snapshot**: The immutable section configuration and question placements captured when an attempt starts. It remains valid for the life of that attempt even when the authored try-out catalog changes.
 - **IRT scale version**: An immutable scoring scale for one try-out set. Published attempts keep the exact scale version and item parameters used for scoring.
+- **Response**: One question's answer format: single choice, multiple choice, category (the Benar/Salah table), short answer, or rubric. The backend `confect/response` module owns its frozen spec, the learner's selection, and its outcome; try-outs and School assessments use it as peers.
+- **Outcome**: How one answer scores: correct, incorrect, partial with earned points, or pending until the grader decides. A pending answer never counts as zero and keeps its score provisional.
+- **Question worth**: The points one placed question is worth, read only through the contract's `questionPoints`: its authored points or one, and a rubric's derived total.
+- **Penalized scoring**: A set strategy that adds each section's signed marks for a correct, wrong, or blank answer, such as +4, -1, and 0, times each question's worth.
 - **Learning program**: A durable educational pathway such as a school curriculum, assessment preparation track, or institution program. Public curriculum pages present Learning programs through localized routes.
 - **Curriculum preference**: A signed-in learner's default school curriculum for browsing curriculum surfaces. It does not replace an explicit curriculum URL and it is not the source of generated learning plans.
 - **Curriculum index**: A public discovery surface that lists school curricula and links to their curriculum roots. It is not personalized.

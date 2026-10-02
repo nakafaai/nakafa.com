@@ -3,12 +3,12 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { QuestionResponseSchema } from "@nakafa/aksara-contracts/question/response";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
-import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/hash/catalog";
+import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/hash/placement";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   stageTryoutCatalog,
@@ -194,7 +194,10 @@ describe("contentRelease/snapshot/tryout", () => {
     };
     const placementSource = makeTryoutPlacementRow();
     const response = placementSource.record.row.response;
-    if (response.kind === "category") {
+    if (
+      response.kind !== "single-choice" &&
+      response.kind !== "multiple-choice"
+    ) {
       throw new Error("Expected one option-based technical response.");
     }
     const [firstOption, ...remainingOptions] = response.options;

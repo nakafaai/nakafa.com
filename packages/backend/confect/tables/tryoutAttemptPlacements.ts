@@ -1,7 +1,8 @@
 import { Table } from "@confect/core";
+import { AuthoredQuestionPointsSchema } from "@nakafa/aksara-contracts/question/points";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { rendererDomainValidator } from "@repo/backend/confect/contentRelease/spec";
-import { tryoutResponseSpecValidator } from "@repo/backend/confect/tryouts/response/model";
+import { ResponseSpec } from "@repo/backend/confect/response/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { Schema } from "effect";
 export default Table.make(() =>
@@ -18,7 +19,9 @@ export default Table.make(() =>
     tryoutAttemptId: IdSchema("tryoutAttempts"),
     questionOrder: Schema.Finite,
     sourcePath: Schema.String,
-    responseSpec: tryoutResponseSpecValidator,
+    responseSpec: ResponseSpec,
+    /** Authored worth above the default single point; read through `questionPoints`. */
+    points: Schema.optionalKey(AuthoredQuestionPointsSchema),
     sourceRevision: Schema.String,
     contentHash: Schema.String,
   })

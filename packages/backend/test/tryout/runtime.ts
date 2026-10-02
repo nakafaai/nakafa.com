@@ -1,9 +1,9 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import {
   type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import {
   TryoutCatalogRowSchema,
   type TryoutSet,
@@ -14,6 +14,9 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { freeze } from "@repo/backend/confect/response/projection";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import type {
   TryoutAnswerSelector,
@@ -21,7 +24,10 @@ import type {
 } from "@repo/backend/confect/tryouts/runtime/spec";
 import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import {
   TEST_RELEASE_ID,
   testTextHash,
@@ -43,7 +49,7 @@ import {
   TRYOUT_SECTION_PATH,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
-import { Schema, Struct } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
 /** Returns the coherent terminal reason for one fixture status. */
 function getEndReason(
@@ -59,6 +65,18 @@ function getEndReason(
 }
 
 /** Inserts one standard paid user for try-out runtime tests. */
+/** Reads one attempt placement decoded the way runtime code receives it. */
+export function readConfectPlacement(
+  ctx: Pick<QueryCtx, "db">,
+  placementId: Id<"tryoutAttemptPlacements">
+) {
+  return Effect.runPromise(
+    Effect.flatMap(DatabaseReader, (database) =>
+      database.table("tryoutAttemptPlacements").get(placementId)
+    ).pipe(Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db)))
+  );
+}
+
 export function insertTryoutUser(
   ctx: MutationCtx,
   identity: Pick<Doc<"users">, "authId" | "email" | "name">
@@ -188,7 +206,10 @@ export async function seedTryoutContentAccessState(
     tryoutAttemptId: attemptId,
   });
   const { row: placementRow, rowHash: placementRowHash } = signedPlacement;
-  const responseSpec = canonicalQuestionResponse(placementRow.response);
+  const responseSpec = freeze(
+    placementRow.response,
+    placementRow.deliveryLanguage
+  );
   if (responseSpec.kind !== "single-choice") {
     throw new Error("Expected one single-choice runtime fixture.");
   }

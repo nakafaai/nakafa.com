@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { replaceContentSnapshot } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   tryoutCatalogNodeIdentity,
@@ -12,6 +11,7 @@ import {
   decodeSnapshotRowJson,
   decodeTryoutRuntimeBundleJson,
 } from "@repo/backend/confect/contentRelease/parse";
+import { freeze } from "@repo/backend/confect/response/projection";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -257,7 +257,7 @@ export async function insertHistoryAttempt(
     questionContentKey: placement.questionContentKey,
     questionOrder: placement.questionOrder,
     rendererDomain: placement.rendererDomain,
-    responseSpec: canonicalQuestionResponse(placement.response),
+    responseSpec: freeze(placement.response, placement.deliveryLanguage),
     sectionIdentity,
     sectionKey: placement.sectionKey,
     sourcePath: placement.questionSourcePath,

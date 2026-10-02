@@ -83,6 +83,7 @@ function buildAttemptValues(
     appLocale: input.args.locale,
     scoringStrategy: signedSet.scoringStrategy,
     sectionSnapshots: input.source.snapshot.sections.map(({ section }) => ({
+      ...(section.row.marks === undefined ? {} : { marks: section.row.marks }),
       ...(section.row.publicPath === undefined
         ? {}
         : {
