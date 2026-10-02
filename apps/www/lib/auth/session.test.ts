@@ -1,5 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { previewAuthSession, readAuthSession } from "@/lib/auth/session";
+import {
+  followAuthSession,
+  previewAuthSession,
+  readAuthSession,
+} from "@/lib/auth/session";
 
 const signedIn = {
   session: { id: "session-1", token: "token", userId: "user-1" },
@@ -70,4 +74,54 @@ describe("Better Auth session", () => {
       });
     }
   );
+});
+
+describe("Following Better Auth's session", () => {
+  const refetch = {
+    data: null,
+    error: null,
+    isPending: true,
+    isRefetching: true,
+  };
+
+  it("keeps a settled signed-out session while Better Auth refetches it", () => {
+    expect(followAuthSession(previewAuthSession, refetch)).toBe(
+      previewAuthSession
+    );
+  });
+
+  it("stays pending through the first request of an unsettled session", () => {
+    expect(
+      followAuthSession(
+        readAuthSession({
+          data: null,
+          error: null,
+          isPending: true,
+          isRefetching: false,
+        }),
+        refetch
+      )
+    ).toStrictEqual({
+      hasError: false,
+      isPending: true,
+      sessionId: null,
+      userId: null,
+    });
+  });
+
+  it("takes the session the refetch answers with", () => {
+    expect(
+      followAuthSession(previewAuthSession, {
+        data: signedIn,
+        error: null,
+        isPending: false,
+        isRefetching: false,
+      })
+    ).toStrictEqual({
+      hasError: false,
+      isPending: false,
+      sessionId: "session-1",
+      userId: "user-1",
+    });
+  });
 });

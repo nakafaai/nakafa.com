@@ -32,6 +32,18 @@ const BetterAuthSession = Schema.Struct({
 
 const decodeBetterAuthSession = Schema.decodeUnknownOption(BetterAuthSession);
 
+/**
+ * The atom while Better Auth refetches a session it holds no data for. It
+ * marks such a session pending again, as on every return to the tab.
+ */
+const BetterAuthRefetch = Schema.Struct({
+  data: Schema.Null,
+  isPending: Schema.Literal(true),
+  isRefetching: Schema.Literal(true),
+});
+
+const isBetterAuthRefetch = Schema.is(BetterAuthRefetch);
+
 /** A signed-out session that never asks the backend, for authoring previews. */
 export const previewAuthSession = AuthSession.make({
   hasError: false,
@@ -65,4 +77,16 @@ export function readAuthSession(value: unknown) {
         }),
     })
   );
+}
+
+/**
+ * Follows Better Auth's session atom from the session readers already see.
+ *
+ * Once the session has settled, a refetch of a signed-out session keeps that
+ * session until Better Auth answers, so readers never fall back to loading.
+ */
+export function followAuthSession(previous: AuthSession, value: unknown) {
+  return !previous.isPending && isBetterAuthRefetch(value)
+    ? previous
+    : readAuthSession(value);
 }

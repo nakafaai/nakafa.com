@@ -6,6 +6,7 @@ import { env } from "@/env";
 import { authClient } from "@/lib/auth/client";
 import {
   type AuthSession,
+  followAuthSession,
   previewAuthSession,
   readAuthSession,
 } from "@/lib/auth/session";
@@ -19,7 +20,8 @@ const AuthSessionContext = createContext<StoreApi<AuthSession> | null>(null);
  * Suspense boundary that is still pending when an ancestor context changes,
  * discarding the HTML the server sent. The context therefore carries only the
  * store; readers subscribe with `useStore`, whose server snapshot is the
- * pending session the server rendered.
+ * pending session the server rendered. A settled session stays settled while
+ * Better Auth refetches it.
  * https://react.dev/reference/react/useSyncExternalStore#adding-support-for-server-rendering
  */
 function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
@@ -31,7 +33,7 @@ function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
   useEffect(
     () =>
       session.subscribe((value) => {
-        store.setState(readAuthSession(value), true);
+        store.setState((previous) => followAuthSession(previous, value), true);
       }),
     [session, store]
   );
