@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/error";
 import { localConvexEnvironment } from "@repo/backend/scripts/content/acceptance/process";
 import { Effect, FileSystem, Stream } from "effect";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess } from "effect/process";
 
 const SHARED_OUTPUT_REDIRECT =
   'output_path=$1; shift; exec "$@" >| "$output_path" 2>&1';

@@ -23,14 +23,14 @@ interface ChartContextProps {
 
 const ChartContext = createContext<ChartContextProps | null>(null);
 
-export function useChart() {
-  const context = use(ChartContext);
+export function useChart<T>(selector: (chart: ChartContextProps) => T) {
+  const value = use(ChartContext);
 
-  if (!context) {
+  if (!value) {
     throw new Error("useChart must be used within a <ChartContainer />");
   }
 
-  return context;
+  return selector(value);
 }
 
 interface ChartContainerProps
@@ -73,7 +73,7 @@ function ChartContainer({
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <ChartContext.Provider value={contextValue}>
+      <ChartContext value={contextValue}>
         <div
           className={cn(
             "min-h-0 w-full flex-1",
@@ -94,7 +94,7 @@ function ChartContainer({
           </ResponsiveContainer>
           {footer}
         </div>
-      </ChartContext.Provider>
+      </ChartContext>
     </LazyMotion>
   );
 }

@@ -7,7 +7,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
-const InitialClock = createContext<number | undefined>(undefined);
+const InitialClock = createContext<number | null>(null);
 
 /** Transfers the request timestamp unchanged through server rendering and hydration. */
 export function TryoutClockProvider({
@@ -29,7 +29,7 @@ const listeners = new Set<() => void>();
 /** Returns a shared realtime clock for active try-out timer UI. */
 export function useTryoutClock(active: boolean) {
   const initialNow = use(InitialClock);
-  if (initialNow === undefined) {
+  if (initialNow === null) {
     throw new Error("TryoutClockProvider is required for try-out controls.");
   }
   return useSyncExternalStore(

@@ -13,19 +13,16 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { useTranslations } from "next-intl";
-import type * as React from "react";
 import { SidebarPreferenceSubmenus } from "@/components/sidebar/menu/preference";
 
 /** Renders shared utilities inside the regular and school account menus. */
-export function SidebarUtilityMenuItems({
-  side,
-}: React.ComponentProps<typeof SidebarPreferenceSubmenus>) {
+export function SidebarUtilityMenuItems() {
   const router = useRouter();
   const t = useTranslations("Common");
 
   return (
     <>
-      <SidebarPreferenceSubmenus side={side} />
+      <SidebarPreferenceSubmenus />
       <DropdownMenuGroup>
         <DropdownMenuItem
           className="cursor-pointer"

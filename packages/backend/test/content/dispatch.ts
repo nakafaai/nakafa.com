@@ -25,7 +25,7 @@ import {
 import { completeContentProof } from "@repo/backend/test/content/verify";
 import type { TestConvex } from "convex-test";
 import { Effect, Layer, Schema } from "effect";
-import { FetchHttpClient } from "effect/unstable/http";
+import { FetchHttpClient } from "effect/http";
 
 /** Executes one request through the real Node dispatcher and technical key. */
 export async function sendPublication(

@@ -16,7 +16,7 @@ import {
   HttpRouter,
   HttpServerRequest,
   HttpServerResponse,
-} from "effect/unstable/http";
+} from "effect/http";
 
 const uploadPath = `${FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX}/:uploadId/:uploadToken`;
 class ForumAttachmentHttpError extends Schema.TaggedError<ForumAttachmentHttpError>()(

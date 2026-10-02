@@ -4,11 +4,7 @@ import { privateRuntimeResponse } from "@repo/backend/confect/contentRelease/htt
 import { dispatchProgram } from "@repo/backend/confect/contentRelease/runtime/publication/dispatch";
 import { PUBLIC_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { Config, Effect } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** Authenticates and forwards one bounded public runtime request. */
 const publicRuntimeRoute = Effect.fn("contentRelease.publicRuntimeRoute")(

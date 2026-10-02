@@ -7,11 +7,7 @@ import { mcpTransportErrorResponse } from "@repo/backend/confect/routes/agent/mc
 import { hasValidEdgeSecret } from "@repo/backend/confect/routes/agent/security";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Config, Effect, Option } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 const MAX_CONFIGURED_ORIGINS = 16;
 

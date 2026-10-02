@@ -113,11 +113,9 @@ export type CodeBlockSelectProps = ComponentProps<typeof Select>;
 
 /** Binds a language selector to the code block's active source. */
 export function CodeBlockSelect(props: CodeBlockSelectProps) {
-  const { data, value, onValueChange } = useCodeBlock((state) => ({
-    data: state.data,
-    value: state.value,
-    onValueChange: state.onValueChange,
-  }));
+  const data = useCodeBlock((state) => state.data);
+  const value = useCodeBlock((state) => state.value);
+  const onValueChange = useCodeBlock((state) => state.onValueChange);
   const items = data.map((item) => ({
     label: item.language,
     value: item.language,

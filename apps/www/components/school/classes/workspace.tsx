@@ -6,8 +6,7 @@ import {
   ResizablePanelGroup,
   useResizableDefaultLayout,
 } from "@repo/design-system/components/ui/resizable";
-import type { ReactNode } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type ReactNode, use } from "react";
 import { SCHOOL_CLASSES_DETAIL_PANEL_BREAKPOINT } from "@/components/school/classes/detail";
 
 interface SchoolClassesWorkspaceModeContextValue {
@@ -53,18 +52,15 @@ const SchoolClassesWorkspaceModeContext =
 
 /** Read whether the class workspace is currently in compact mode. */
 export function useSchoolClassesWorkspaceIsCompact() {
-  const context = useContextSelector(
-    SchoolClassesWorkspaceModeContext,
-    (value) => value
-  );
+  const mode = use(SchoolClassesWorkspaceModeContext);
 
-  if (!context) {
+  if (!mode) {
     throw new Error(
       "SchoolClassesWorkspaceShell context not found. Wrap panel content inside the class workspace shell."
     );
   }
 
-  return context.isCompact;
+  return mode.isCompact;
 }
 
 /**
@@ -85,7 +81,7 @@ export function SchoolClassesWorkspaceShell({
 
   if (isCompact) {
     return (
-      <SchoolClassesWorkspaceModeContext.Provider
+      <SchoolClassesWorkspaceModeContext
         key="compact"
         value={COMPACT_WORKSPACE_MODE}
       >
@@ -93,7 +89,7 @@ export function SchoolClassesWorkspaceShell({
           {children}
           {panel}
         </div>
-      </SchoolClassesWorkspaceModeContext.Provider>
+      </SchoolClassesWorkspaceModeContext>
     );
   }
 
@@ -109,24 +105,24 @@ export function SchoolClassesWorkspaceShell({
      * - node_modules/.pnpm/react-resizable-panels@4.10.0_react-dom@19.2.5_react@19.2.5__react@19.2.5/node_modules/react-resizable-panels/dist/react-resizable-panels.d.ts
      */
     return (
-      <SchoolClassesWorkspaceModeContext.Provider
+      <SchoolClassesWorkspaceModeContext
         key="desktop"
         value={DESKTOP_WORKSPACE_MODE}
       >
         <div className="flex min-w-0 flex-col">{children}</div>
-      </SchoolClassesWorkspaceModeContext.Provider>
+      </SchoolClassesWorkspaceModeContext>
     );
   }
 
   return (
-    <SchoolClassesWorkspaceModeContext.Provider
+    <SchoolClassesWorkspaceModeContext
       key="desktop"
       value={DESKTOP_WORKSPACE_MODE}
     >
       <SchoolClassesResizableWorkspaceShell panel={panel}>
         {children}
       </SchoolClassesResizableWorkspaceShell>
-    </SchoolClassesWorkspaceModeContext.Provider>
+    </SchoolClassesWorkspaceModeContext>
   );
 }
 

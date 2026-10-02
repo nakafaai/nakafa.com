@@ -4,9 +4,6 @@ import type { Ref } from "@confect/core";
 import {
   ArrowTurnBackwardIcon,
   ArrowTurnForwardIcon,
-  Delete02Icon,
-  ThumbsDownIcon,
-  ThumbsUpIcon,
 } from "@hugeicons/core-free-icons";
 import type refs from "@repo/backend/confect/_generated/refs";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
@@ -18,7 +15,6 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import {
   Tooltip,
   TooltipContent,
@@ -26,16 +22,16 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "cn";
 import { formatDistanceToNow } from "date-fns";
-import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, type ReactNode, useState, useTransition } from "react";
-import { toast } from "sonner";
-import { CommentsAdd } from "@/components/comments/add";
+import { Activity, type ReactNode, useState } from "react";
 import {
-  useDeleteCommentMutation,
-  useVoteCommentMutation,
-} from "@/components/comments/mutation.client";
-import { reportClientException } from "@/lib/analytics/client";
+  CommentActionsProvider,
+  CommentCount,
+  CommentDelete,
+  CommentVotes,
+  useCommentActions,
+} from "@/components/comments/actions";
+import { CommentsAdd } from "@/components/comments/add";
 import { useViewer } from "@/lib/identity/client";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
@@ -63,10 +59,16 @@ export function CommentItem({
   return (
     <div className="flex flex-col gap-2" id={comment._id}>
       <CommentContent comment={comment}>
-        <CommentActions
-          comment={comment}
-          onReplyToggle={() => setIsReplyOpen((prev) => !prev)}
-        />
+        <CommentActionsProvider comment={comment}>
+          <div className="flex -translate-x-2 flex-wrap items-center">
+            <CommentVotes />
+            <CommentReplyToggle
+              onReplyToggle={() => setIsReplyOpen((prev) => !prev)}
+              replyCount={comment.replyCount}
+            />
+            <CommentDelete />
+          </div>
+        </CommentActionsProvider>
       </CommentContent>
       <Activity mode={isReplyOpen ? "visible" : "hidden"}>
         <CommentsAdd
@@ -146,168 +148,36 @@ export function CommentContent({
   );
 }
 
-/** Render optimistic vote, reply, and owner deletion controls. */
-function CommentActions({
-  comment,
+/** Opens the reply editor; it disables while another action runs. */
+function CommentReplyToggle({
   onReplyToggle,
+  replyCount,
 }: {
-  comment: CommentWithUser;
   onReplyToggle: () => void;
+  replyCount: number;
 }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
-  const user = useViewer((s) => s.account);
-  const [isPending, startTransition] = useTransition();
-  const voteOnComment = useVoteCommentMutation();
-  const deleteComment = useDeleteCommentMutation();
+  const isPending = useCommentActions((actions) => actions.isPending);
 
-  /** Toggle the viewer's selected vote. */
-  function handleVote(vote: -1 | 1) {
-    if (!user) {
-      return;
-    }
-    startTransition(async () =>
-      Effect.runPromise(
-        Effect.asVoid(
-          Effect.tryPromise(() =>
-            voteOnComment({
-              commentId: comment._id,
-              vote: comment.viewerVote === vote ? 0 : vote,
-            })
-          ).pipe(Effect.flatMap(Effect.fromResult))
-        ).pipe(
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/comments/list",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(actionErrorMessage);
-                  })
-                )
-              ),
-          })
-        )
-      )
-    );
-  }
-
-  /** Delete the current user's comment. */
-  function handleDelete() {
-    if (!user) {
-      return;
-    }
-    startTransition(async () =>
-      Effect.runPromise(
-        Effect.asVoid(
-          Effect.tryPromise(() =>
-            deleteComment({
-              commentId: comment._id,
-            })
-          ).pipe(Effect.flatMap(Effect.fromResult))
-        ).pipe(
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/comments/list",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(actionErrorMessage);
-                  })
-                )
-              ),
-          })
-        )
-      )
-    );
-  }
   return (
-    <div className="flex -translate-x-2 flex-wrap items-center">
-      {([1, -1] as const).map((vote) => {
-        const positive = vote === 1;
-        const count = positive ? comment.upvoteCount : comment.downvoteCount;
-        const label = t(positive ? "like" : "dislike");
-        const selected = comment.viewerVote === vote;
-        return (
-          <Tooltip key={vote}>
-            <TooltipTrigger
-              render={
-                <Button
-                  aria-label={label}
-                  aria-pressed={selected}
-                  className="group w-16"
-                  disabled={isPending}
-                  onClick={() => handleVote(vote)}
-                  size="sm"
-                  variant={selected ? "secondary" : "ghost"}
-                >
-                  <HugeIcons icon={positive ? ThumbsUpIcon : ThumbsDownIcon} />
-                  <NumberFormat
-                    className={cn(
-                      "min-w-[3ch] text-xs tabular-nums tracking-tight",
-                      count === 0 && "invisible"
-                    )}
-                    format={{ notation: "compact", maximumFractionDigits: 1 }}
-                    isolate={true}
-                    value={count}
-                  />
-                </Button>
-              }
-            />
-            <TooltipContent side="bottom">{label}</TooltipContent>
-          </Tooltip>
-        );
-      })}
-
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              aria-label={t("reply")}
-              className="w-16"
-              disabled={isPending}
-              onClick={onReplyToggle}
-              size="sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={ArrowTurnBackwardIcon} />
-              <NumberFormat
-                className={cn(
-                  "min-w-[3ch] text-xs tabular-nums tracking-tight",
-                  comment.replyCount === 0 && "invisible"
-                )}
-                format={{ notation: "compact", maximumFractionDigits: 1 }}
-                isolate={true}
-                value={comment.replyCount}
-              />
-            </Button>
-          }
-        />
-        <TooltipContent side="bottom">{t("reply")}</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              className={cn(comment.userId !== user?.appUser._id && "hidden")}
-              disabled={isPending}
-              onClick={handleDelete}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={Delete02Icon} />
-              <span className="sr-only">{t("delete")}</span>
-            </Button>
-          }
-        />
-        <TooltipContent side="bottom">{t("delete")}</TooltipContent>
-      </Tooltip>
-    </div>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={t("reply")}
+            className="w-16"
+            disabled={isPending}
+            onClick={onReplyToggle}
+            size="sm"
+            variant="ghost"
+          >
+            <HugeIcons icon={ArrowTurnBackwardIcon} />
+            <CommentCount value={replyCount} />
+          </Button>
+        }
+      />
+      <TooltipContent side="bottom">{t("reply")}</TooltipContent>
+    </Tooltip>
   );
 }
 

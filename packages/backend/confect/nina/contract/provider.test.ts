@@ -207,12 +207,12 @@ describe("providerCompatibleObjectSchema", () => {
   });
   it("combines branch descriptions and relaxes shared array bounds", () => {
     const twoValues = Schema.Array(Schema.String)
-      .pipe(Schema.mutable, Schema.check(Schema.isLengthBetween(2, 2)))
+      .pipe(Schema.mutable, Schema.check(Schema.isBetweenLength(2, 2)))
       .annotate({
         description: "Exactly two values.",
       });
     const fourValues = Schema.Array(Schema.String)
-      .pipe(Schema.mutable, Schema.check(Schema.isLengthBetween(4, 4)))
+      .pipe(Schema.mutable, Schema.check(Schema.isBetweenLength(4, 4)))
       .annotate({
         description: "Exactly four values.",
       });

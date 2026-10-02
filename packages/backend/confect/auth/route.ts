@@ -1,4 +1,4 @@
-import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServerResponse } from "effect/http";
 
 // Register discovery explicitly: the SDK sees Confect's catch-all as an existing route.
 export const authDiscoveryRoutes = HttpRouter.add(

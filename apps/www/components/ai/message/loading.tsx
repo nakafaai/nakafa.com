@@ -8,7 +8,7 @@ import { useMessage } from "@/components/ai/message/context";
 
 export function AiChatMessageLoading() {
   const busy = useChat((state) => state.busy);
-  const messages = useChat((state) => state.messages);
+  const lastMessageId = useChat((state) => state.lastMessageId);
   const currentMessage = useMessage((state) => state.message);
 
   // Only show loading for assistant messages
@@ -16,7 +16,7 @@ export function AiChatMessageLoading() {
     return null;
   }
 
-  const isLastMessage = messages.at(-1)?.id === currentMessage.id;
+  const isLastMessage = lastMessageId === currentMessage.id;
 
   // Only show for the last assistant message
   if (!isLastMessage) {

@@ -1,9 +1,5 @@
 import { Effect, Schedule, Schema } from "effect";
-import {
-  HttpClient,
-  HttpClientResponse,
-  type UrlParams,
-} from "effect/unstable/http";
+import { HttpClient, HttpClientResponse, type UrlParams } from "effect/http";
 
 const WEATHER_REQUEST_TIMEOUT = "10 seconds";
 

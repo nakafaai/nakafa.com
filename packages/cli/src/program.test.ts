@@ -11,14 +11,14 @@ import {
   Stdio,
   Terminal,
 } from "effect";
-import { TestConsole } from "effect/testing";
 import {
   HttpClient,
   HttpClientError,
   type HttpClientRequest,
   HttpClientResponse,
-} from "effect/unstable/http";
-import { ChildProcessSpawner } from "effect/unstable/process";
+} from "effect/http";
+import { ChildProcessSpawner } from "effect/process";
+import { TestConsole } from "effect/testing";
 import { runCli } from "#cli/program";
 
 const problem = {

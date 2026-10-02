@@ -15,12 +15,13 @@ import { cn } from "cn";
 import { Effect } from "effect";
 import {
   type ComponentProps,
+  createContext,
   type ReactNode,
+  use,
   useEffect,
   useRef,
   useState,
 } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
 
 /** One code sample and the language it is written in. */
 interface CodeSource {
@@ -28,11 +29,7 @@ interface CodeSource {
   language: string;
 }
 
-const missingCodeSource = Symbol("missing-code-source");
-
-const CodeSourceContext = createContext<CodeSource | typeof missingCodeSource>(
-  missingCodeSource
-);
+const CodeSourceContext = createContext<CodeSource | null>(null);
 
 /**
  * Shares one code sample with the copy and download controls composed in it.
@@ -45,21 +42,17 @@ export function CodeBlockSource({
   language,
 }: CodeSource & { children: ReactNode }) {
   return (
-    <CodeSourceContext.Provider value={{ code, language }}>
-      {children}
-    </CodeSourceContext.Provider>
+    <CodeSourceContext value={{ code, language }}>{children}</CodeSourceContext>
   );
 }
 
 /** Selects one part of the surrounding code sample. */
 function useCodeSource<T>(selector: (source: CodeSource) => T) {
-  const selected = useContextSelector(CodeSourceContext, (value) =>
-    value === missingCodeSource ? missingCodeSource : selector(value)
-  );
-  if (selected === missingCodeSource) {
+  const value = use(CodeSourceContext);
+  if (!value) {
     throw new Error("Code controls must be used within CodeBlockSource.");
   }
-  return selected;
+  return selector(value);
 }
 
 /** Copy-button callbacks and duration for its transient success state. */

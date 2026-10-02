@@ -13,7 +13,7 @@ import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
 import { Effect, Fiber } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
-import { useChat } from "@/components/ai/chat/context";
+import { useChat, useChatMessages } from "@/components/ai/chat/context";
 import { AiChatError } from "@/components/ai/chat/error";
 import { AiChatPaginationTrigger } from "@/components/ai/chat/pagination";
 import { AiChatPending } from "@/components/ai/chat/pending";
@@ -21,7 +21,8 @@ import { AiChatMessage } from "@/components/ai/message/view";
 
 /** Agent supplies messages; shadcn preserves the reader's position. */
 export function NinaTranscript() {
-  const { messages, busy } = useChat((state) => state);
+  const messages = useChatMessages((feed) => feed.messages);
+  const busy = useChat((state) => state.busy);
   const t = useTranslations("Ai");
 
   // Answers render after the transcript, so their math would otherwise find

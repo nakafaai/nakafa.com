@@ -1,8 +1,7 @@
 "use client";
 
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import type { PropsWithChildren } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type PropsWithChildren, use } from "react";
 
 interface MessageContextValue {
   message: NinaMessage;
@@ -22,17 +21,14 @@ export function MessageProvider({
 }>) {
   const value = { message, turn: turn ?? message.metadata };
 
-  return (
-    <MessageContext.Provider value={value}>{children}</MessageContext.Provider>
-  );
+  return <MessageContext value={value}>{children}</MessageContext>;
 }
 
 /** Reads one selected slice of the current message. */
 export function useMessage<T>(selector: (state: MessageContextValue) => T) {
-  return useContextSelector(MessageContext, (context) => {
-    if (!context) {
-      throw new Error("useMessage must be used within MessageProvider");
-    }
-    return selector(context);
-  });
+  const context = use(MessageContext);
+  if (!context) {
+    throw new Error("useMessage must be used within MessageProvider");
+  }
+  return selector(context);
 }

@@ -111,11 +111,24 @@ const signGoogleAccessTokenAssertion = Effect.fn(
   });
   return `${signatureInput}.${Buffer.from(signature).toString("base64url")}`;
 });
+/** Reads a token endpoint response body, whether it grants or refuses. */
+const readGoogleTokenResponse = Effect.fn("scripts.google.auth.readResponse")(
+  (response: Response) =>
+    Effect.tryPromise({
+      try: () => response.text(),
+      catch: (cause) =>
+        new GoogleTokenRequestError({
+          cause,
+          message: "Google token response could not be read.",
+        }),
+    })
+);
+
 /** Exchanges a signed service-account assertion for a Google API access token. */
 export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
   function* () {
     const assertion = yield* signGoogleAccessTokenAssertion();
-    const tokenResponse = yield* Effect.tryPromise({
+    const response = yield* Effect.tryPromise({
       try: () =>
         fetch(GOOGLE_TOKEN_ENDPOINT, {
           body: new URLSearchParams({
@@ -123,25 +136,20 @@ export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
             grant_type: GOOGLE_JWT_GRANT_TYPE,
           }),
           method: "POST",
-        }).then((response) =>
-          response.text().then((responseText) => ({
-            ok: response.ok,
-            responseText,
-          }))
-        ),
+        }),
       catch: (cause) =>
         new GoogleTokenRequestError({
           cause,
           message: "Google token request transport failed.",
         }),
     });
-    if (!tokenResponse.ok) {
+    if (!response.ok) {
       return yield* new GoogleTokenRequestError({
         message: "Google token request failed.",
-        responseText: tokenResponse.responseText,
+        responseText: yield* readGoogleTokenResponse(response),
       });
     }
-    return (yield* decodeGoogleTokenResponse(tokenResponse.responseText))
-      .access_token;
+    const responseText = yield* readGoogleTokenResponse(response);
+    return (yield* decodeGoogleTokenResponse(responseText)).access_token;
   }
 );

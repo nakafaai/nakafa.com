@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Fiber, Layer, Result } from "effect";
-import { TestClock } from "effect/testing";
 import {
   HttpClient,
   type HttpClientRequest,
   HttpClientResponse,
-} from "effect/unstable/http";
+} from "effect/http";
+import { TestClock } from "effect/testing";
 import { requestWeatherJson } from "@/lib/weather/transport";
 
 interface TestClientInput {

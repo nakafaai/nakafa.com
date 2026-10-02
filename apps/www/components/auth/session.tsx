@@ -37,13 +37,13 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   return <BetterAuthSessionProvider>{children}</BetterAuthSessionProvider>;
 }
 
-/** Reads the shared session and rejects a missing app provider. */
-export function useAuthSession() {
-  const session = use(AuthSessionContext);
-  if (session === null) {
+/** Selects one part of the shared session and rejects a missing app provider. */
+export function useAuthSession<T>(selector: (session: AuthSession) => T) {
+  const value = use(AuthSessionContext);
+  if (!value) {
     throw new TypeError(
       "useAuthSession must be used within AuthSessionProvider"
     );
   }
-  return session;
+  return selector(value);
 }

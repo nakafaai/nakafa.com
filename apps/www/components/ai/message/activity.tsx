@@ -22,13 +22,13 @@ import type { Invocation } from "@/components/ai/message/invocation";
 
 const ActivityContext = createContext<Invocation | null>(null);
 
-/** Reads the invocation state for evidence rendered inside an activity. */
-export function useActivity() {
-  const context = use(ActivityContext);
-  if (!context) {
+/** Selects one part of the invocation for evidence rendered inside an activity. */
+export function useActivity<T>(selector: (invocation: Invocation) => T) {
+  const value = use(ActivityContext);
+  if (!value) {
     throw new Error("Activity components must be used within Activity");
   }
-  return context;
+  return selector(value);
 }
 
 /**
@@ -58,16 +58,16 @@ export function Activity({
 
 function ActivityTrigger() {
   const t = useTranslations("Ai");
-  const {
-    artifacts,
-    capability,
-    denied,
-    failed,
-    failures,
-    running,
-    stopped,
-    sourceLimit,
-  } = useActivity();
+  const artifactCount = useActivity(
+    (invocation) => invocation.artifacts.length
+  );
+  const capability = useActivity((invocation) => invocation.capability);
+  const denied = useActivity((invocation) => invocation.denied);
+  const failed = useActivity((invocation) => invocation.failed);
+  const failures = useActivity((invocation) => invocation.failures);
+  const running = useActivity((invocation) => invocation.running);
+  const sourceLimit = useActivity((invocation) => invocation.sourceLimit);
+  const stopped = useActivity((invocation) => invocation.stopped);
   const icon = {
     math: Calculator01Icon,
     nakafa: BookOpen02Icon,
@@ -92,7 +92,7 @@ function ActivityTrigger() {
           ? "text-destructive"
           : "text-muted-foreground hover:text-foreground"
       )}
-      disabled={artifacts.length === 0}
+      disabled={artifactCount === 0}
     >
       <Spinner
         aria-hidden="true"
@@ -111,7 +111,7 @@ function ActivityTrigger() {
       {stopped ? (
         <span className="shrink-0 text-xs">{t("activity.stopped")}</span>
       ) : null}
-      {artifacts.length > 0 ? (
+      {artifactCount > 0 ? (
         <HugeIcons
           className="size-4 shrink-0 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"
           icon={ArrowDown01Icon}

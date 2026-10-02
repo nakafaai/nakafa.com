@@ -1,7 +1,12 @@
 "use client";
 
-import { type ReactNode, useLayoutEffect, useState } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import {
@@ -46,18 +51,14 @@ export function ForumSessionProvider({
     return unsubscribe;
   }, [store]);
 
-  return (
-    <ForumSessionContext.Provider value={store}>
-      {children}
-    </ForumSessionContext.Provider>
-  );
+  return <ForumSessionContext value={store}>{children}</ForumSessionContext>;
 }
 
 /** Reads one selected slice from the session store. */
 export function useForumSession<T>(
   selector: (state: ForumSessionStore) => T
 ): T {
-  const store = useContextSelector(ForumSessionContext, (value) => value);
+  const store = use(ForumSessionContext);
 
   if (!store) {
     throw new Error(
@@ -70,7 +71,7 @@ export function useForumSession<T>(
 
 /** Reads the raw session store API without subscribing to its state. */
 export function useForumSessionStoreApi() {
-  const store = useContextSelector(ForumSessionContext, (value) => value);
+  const store = use(ForumSessionContext);
 
   if (!store) {
     throw new Error(

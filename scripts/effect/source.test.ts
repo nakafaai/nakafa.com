@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, PlatformError, Schema } from "effect";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
   type EffectSourceConfig,
   makeEffectSourceProgram,

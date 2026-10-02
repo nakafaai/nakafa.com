@@ -11,11 +11,7 @@ import {
   negotiateMediaType,
 } from "@repo/utilities/http/accept";
 import { Effect, Option } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 const JSON_MEDIA_TYPE = HttpMediaTypeSchema.make(
   "application/json; charset=utf-8"

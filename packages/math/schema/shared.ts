@@ -50,7 +50,7 @@ export const valueInputSchema = describedNonEmptyString(
 );
 export const coordinateInputSchema = valueInputSchema.pipe(
   Schema.check(
-    Schema.isPattern(/^[A-Za-z0-9_+\-*/^().\s]+$/, {
+    Schema.isPattern(/^[A-Za-z0-9_+\-*/^().\s]+$/u, {
       description:
         "A point coordinate written as one math value, for example 1, 4, x, or pi/2.",
     })
@@ -125,11 +125,11 @@ export const pointArraySchema = Schema.Array(MathPointSchema).pipe(
 );
 export const twoPointArraySchema = Schema.Array(MathPointSchema).pipe(
   Schema.mutable,
-  Schema.check(Schema.isLengthBetween(2, 2))
+  Schema.check(Schema.isBetweenLength(2, 2))
 );
 export const fourPointArraySchema = Schema.Array(MathPointSchema).pipe(
   Schema.mutable,
-  Schema.check(Schema.isLengthBetween(4, 4))
+  Schema.check(Schema.isBetweenLength(4, 4))
 );
 const matrixRowSchema = Schema.Array(valueInputSchema).pipe(
   Schema.mutable,

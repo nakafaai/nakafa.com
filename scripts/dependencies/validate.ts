@@ -1,5 +1,6 @@
 import {
   DEPENDENCY_HOLDS,
+  EFFECT_COHORT_VERSION,
   FORBIDDEN_EFFECT_DEPENDENCIES,
   SCRIPT_DEPENDENCY_HOLDS,
   VITEST_COHORT_VERSION,
@@ -82,22 +83,30 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
 /** Enforces the Effect, TypeScript, and Vitest cohorts the workspace pins. */
 function cohortProblems(workspace: WorkspaceManifest) {
   const problems: string[] = [];
-  if (workspace.catalog?.effect !== "4.0.0-rc.117") {
-    problems.push("The Effect catalog must be exactly 4.0.0-rc.117.");
+  if (workspace.catalog?.effect !== EFFECT_COHORT_VERSION) {
+    problems.push(
+      `The Effect catalog must be exactly ${EFFECT_COHORT_VERSION}.`
+    );
   }
-  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.117") {
-    problems.push("The platform-node catalog must match Effect RC 117.");
+  if (workspace.catalog?.["@effect/platform-node"] !== EFFECT_COHORT_VERSION) {
+    problems.push(
+      `The platform-node catalog must match Effect ${EFFECT_COHORT_VERSION}.`
+    );
   }
-  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.117") {
-    problems.push("The Effect Vitest catalog must match Effect RC 117.");
+  if (workspace.catalog?.["@effect/vitest"] !== EFFECT_COHORT_VERSION) {
+    problems.push(
+      `The Effect Vitest catalog must match Effect ${EFFECT_COHORT_VERSION}.`
+    );
   }
   // Transitive platform packages, such as the Confect CLI's, stay in the cohort.
   for (const dependency of [
     "@effect/platform-node",
     "@effect/platform-node-shared",
   ]) {
-    if (workspace.overrides?.[dependency] !== "4.0.0-rc.117") {
-      problems.push(`The ${dependency} override must match Effect RC 117.`);
+    if (workspace.overrides?.[dependency] !== EFFECT_COHORT_VERSION) {
+      problems.push(
+        `The ${dependency} override must match Effect ${EFFECT_COHORT_VERSION}.`
+      );
     }
   }
   if (workspace.catalog?.typescript !== "7.0.2") {

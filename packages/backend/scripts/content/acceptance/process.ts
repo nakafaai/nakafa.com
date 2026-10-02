@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { Effect, FileSystem, Schedule, Stream } from "effect";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess } from "effect/process";
 
 /** Keeps terminal hangup on NodeRuntime's graceful interruption path until cleanup finishes. */
 export const withTerminal = Effect.fn("contentAcceptance.withTerminal")(

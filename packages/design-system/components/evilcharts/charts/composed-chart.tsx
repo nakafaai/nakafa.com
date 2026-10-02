@@ -85,17 +85,19 @@ const ComposedChartContext = createContext<ComposedChartContextValue | null>(
   null
 );
 
-// Reads the chart context, throwing a helpful error when used outside <EvilComposedChart />
-export function useComposedChart() {
-  const context = use(ComposedChartContext);
+// Selects one part of the chart context, throwing a helpful error when used outside <EvilComposedChart />
+export function useComposedChart<T>(
+  selector: (chart: ComposedChartContextValue) => T
+) {
+  const value = use(ComposedChartContext);
 
-  if (!context) {
+  if (!value) {
     throw new Error(
       "Composed chart parts (<Bar />, <Line />, <XAxis />, …) must be used within <EvilComposedChart />"
     );
   }
 
-  return context;
+  return selector(value);
 }
 
 // Root container
@@ -262,7 +264,7 @@ type ReferenceLineProps = ComponentProps<typeof RechartsReferenceLine>;
  * pedagogical helpers such as residual distances on scatter diagrams.
  */
 export function ReferenceLine(props: ReferenceLineProps) {
-  const { isLoading } = useComposedChart();
+  const isLoading = useComposedChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -285,7 +287,7 @@ export function XAxis({
   minTickGap = 8,
   ...props
 }: XAxisProps) {
-  const { isLoading } = useComposedChart();
+  const isLoading = useComposedChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -316,7 +318,7 @@ export function YAxis({
   width = "auto",
   ...props
 }: YAxisProps) {
-  const { isLoading } = useComposedChart();
+  const isLoading = useComposedChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -373,7 +375,8 @@ export function Tooltip({
   hideContent = false,
   cursor = { strokeDasharray: "3 3", strokeWidth: STROKE_WIDTH },
 }: TooltipProps) {
-  const { isLoading, selectedDataKey } = useComposedChart();
+  const isLoading = useComposedChart((chart) => chart.isLoading);
+  const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
 
   if (isLoading) {
     return null;
@@ -413,7 +416,8 @@ export function Legend({
   verticalAlign = "top",
   isClickable = false,
 }: LegendProps) {
-  const { selectedDataKey, selectDataKey } = useComposedChart();
+  const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useComposedChart((chart) => chart.selectDataKey);
 
   return (
     <ChartLegend

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
 import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
 
-export interface FeaturesTryoutModel {
+interface FeaturesTryoutModel {
   readonly question: ReactNode;
   readonly response: QuestionResponse;
 }

@@ -84,7 +84,7 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
 ) {
   logger.progress(index, totalUrls, `Submitting URL ${index} of ${totalUrls}`);
 
-  const { responseText, status } = yield* Effect.tryPromise({
+  const response = yield* Effect.tryPromise({
     try: () =>
       fetch(GOOGLE_PUBLISH_ENDPOINT, {
         body: JSON.stringify({
@@ -96,23 +96,23 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
           "Content-Type": "application/json",
         },
         method: "POST",
-      }).then((response) =>
-        response.text().then((responseText) => ({
-          responseText,
-          status: response.status,
-        }))
-      ),
+      }),
     catch: (cause) =>
       new GoogleIndexSubmitError({
         cause,
         message: `Network error submitting ${url}.`,
       }),
   });
+  const { status } = response;
 
   if (status === HTTP_STATUS_CODE_OK) {
+    // Reading the acknowledgement releases the connection for the next URL.
+    yield* readSubmitResponse(response, url);
     logger.info(`Successfully submitted ${url}`);
     return { shouldStop: false, success: true };
   }
+
+  const responseText = yield* readSubmitResponse(response, url);
 
   logger.error(`Failed to submit ${url} - Status: ${status}`);
   logger.error(
@@ -142,3 +142,16 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
 
   return { shouldStop: false, success: false };
 });
+
+/** Reads the Indexing API response body for one submitted URL. */
+const readSubmitResponse = Effect.fn("scripts.google.submit.readResponse")(
+  (response: Response, url: string) =>
+    Effect.tryPromise({
+      try: () => response.text(),
+      catch: (cause) =>
+        new GoogleIndexSubmitError({
+          cause,
+          message: `Failed to read the Indexing API response for ${url}.`,
+        }),
+    })
+);

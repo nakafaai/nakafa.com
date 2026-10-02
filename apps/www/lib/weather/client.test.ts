@@ -4,7 +4,7 @@ import {
   HttpClient,
   type HttpClientRequest,
   HttpClientResponse,
-} from "effect/unstable/http";
+} from "effect/http";
 import { getCurrentWeather } from "@/lib/weather/client";
 
 const latitude = "-6.2088";

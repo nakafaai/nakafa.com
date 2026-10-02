@@ -40,7 +40,7 @@ export interface BreadcrumbHeaderValue {
 export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
   const { action, homeLabel, items, menuLabel, title } = value;
   return (
-    <BreadcrumbHeaderFrame contentClassName="flex-col items-stretch sm:flex-row sm:items-center sm:py-0">
+    <BreadcrumbHeaderFrame contentClassName="flex-col items-stretch justify-center sm:flex-row sm:items-center sm:justify-between sm:py-0">
       <h1 className="sr-only">{title}</h1>
       <BreadcrumbHeaderPath
         homeLabel={homeLabel}

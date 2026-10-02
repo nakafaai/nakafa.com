@@ -11,7 +11,7 @@ import {
   Stdio,
   Stream,
 } from "effect";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
   readProductionChanges,
   requiresProductionAcceptance,
