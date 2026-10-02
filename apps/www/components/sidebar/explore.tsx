@@ -50,16 +50,8 @@ export function NavExplore({
           {items.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
-                // The section stays highlighted on its nested pages; only the
-                // page itself is the current one.
                 isActive={pathname.includes(item.href)}
-                render={
-                  <NavigationLink
-                    aria-current={pathname === item.href ? "page" : undefined}
-                    href={item.href}
-                    title={item.label}
-                  />
-                }
+                render={<NavigationLink href={item.href} title={item.label} />}
                 tooltip={item.label}
               >
                 <HugeIcons icon={item.icon} />

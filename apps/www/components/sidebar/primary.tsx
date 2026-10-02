@@ -57,12 +57,9 @@ export function NavForYou() {
             return (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
-                  // The section stays highlighted on its nested pages; only
-                  // the page itself is the current one.
                   isActive={pathname.includes(href)}
                   render={
                     <NavigationLink
-                      aria-current={pathname === href ? "page" : undefined}
                       href={href}
                       onFocus={prefetchChat}
                       onPointerEnter={prefetchChat}
