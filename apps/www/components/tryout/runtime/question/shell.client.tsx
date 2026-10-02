@@ -41,14 +41,14 @@ export function TryoutReviewQuestionShell({
   children,
   questionOrder,
 }: TryoutQuestionShellProps & { readonly action?: ReactNode }) {
-  const tExercises = useTranslations("Exercises");
+  const tTryouts = useTranslations("Tryouts");
 
   return (
     <Collapsible>
       <TryoutQuestionArticle questionOrder={questionOrder}>
         <TryoutQuestionHeader questionOrder={questionOrder}>
           <ButtonGroup
-            aria-label={tExercises("number-count", { count: questionOrder })}
+            aria-label={tTryouts("number-count", { count: questionOrder })}
             className="shrink-0"
           >
             {action}
@@ -83,7 +83,7 @@ export function TryoutReviewQuestionExplanation({
   children,
   questionOrder,
 }: TryoutQuestionShellProps) {
-  const tExercises = useTranslations("Exercises");
+  const tTryouts = useTranslations("Tryouts");
   const explanationId = `question-${questionOrder}-explanation`;
 
   return (
@@ -91,7 +91,7 @@ export function TryoutReviewQuestionExplanation({
       <section aria-labelledby={explanationId} className="space-y-6 pb-8">
         <Separator />
         <h3 className="scroll-mt-44 font-medium text-lg" id={explanationId}>
-          {tExercises("explanation")}
+          {tTryouts("explanation")}
         </h3>
         {children}
       </section>
@@ -118,7 +118,7 @@ function TryoutQuestionHeader({
   children,
   questionOrder,
 }: TryoutQuestionShellProps) {
-  const tExercises = useTranslations("Exercises");
+  const tTryouts = useTranslations("Tryouts");
   const id = `question-${questionOrder}`;
 
   return (
@@ -133,7 +133,7 @@ function TryoutQuestionHeader({
             {questionOrder}
           </span>
           <h2 className="sr-only" id={`${id}-title`}>
-            {tExercises("number-count", { count: questionOrder })}
+            {tTryouts("number-count", { count: questionOrder })}
           </h2>
         </div>
       </a>
@@ -144,14 +144,14 @@ function TryoutQuestionHeader({
 
 /** Toggles the explanation; a disabled question disables it through its root. */
 function TryoutExplanationTrigger() {
-  const tExercises = useTranslations("Exercises");
+  const tTryouts = useTranslations("Tryouts");
 
   return (
     <CollapsibleTrigger
       className="group"
       render={<Button type="button" variant="outline" />}
     >
-      {tExercises("explanation")}
+      {tTryouts("explanation")}
       <HugeIcons
         className="transition-transform ease-out group-data-[panel-open]:rotate-180"
         icon={ArrowDown01Icon}

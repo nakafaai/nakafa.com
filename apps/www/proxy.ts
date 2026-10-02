@@ -126,6 +126,9 @@ export async function proxy(request: NextRequest) {
     readLlmsMarkdownPathname(pathname);
   const urlMigrationRedirect = await Effect.runPromise(
     readPublicUrlMigrationRedirect({
+      hasAttemptCapability: hasTryoutAttemptCapability(
+        request.nextUrl.searchParams
+      ),
       method: request.method,
       pathname: migrationPathname,
     })

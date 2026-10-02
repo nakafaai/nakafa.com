@@ -13,7 +13,7 @@ export function TryoutResponseLabel({
   readonly correctness?: boolean | undefined;
   readonly id: string;
 }) {
-  const t = useTranslations("Exercises");
+  const t = useTranslations("Tryouts");
 
   return (
     <>
