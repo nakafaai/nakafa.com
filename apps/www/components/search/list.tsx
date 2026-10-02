@@ -5,7 +5,7 @@ import {
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
@@ -104,7 +104,7 @@ function ResultGroup({
       </h2>
       <div className="flex flex-col gap-1">
         {group.items.map((result) => (
-          <IntentLink
+          <NavigationLink
             className={cn(
               "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
             )}
@@ -123,7 +123,7 @@ function ResultGroup({
               excerpt={result.excerpt}
               query={query}
             />
-          </IntentLink>
+          </NavigationLink>
         ))}
       </div>
     </div>

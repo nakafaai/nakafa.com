@@ -1,6 +1,7 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import {
   readMaterialMetadata,
   readMaterialPage,
@@ -74,16 +75,19 @@ export async function generateMetadata({
  * Topic rows are grouping data for curriculum card pages. They intentionally
  * do not render public pages, so the learner opens concrete material content
  * directly from a collapsible card.
- *
- * Nothing truthful can stand in for a lesson, so the page has no loading UI of
- * its own. A navigation that arrives before its link's prefetch keeps the
- * current page on screen until the lesson renders, instead of an empty one.
  */
-export default async function Page({ params }: MaterialPageProps) {
-  const page = await readMaterialPage(params);
+export default function Page(props: MaterialPageProps) {
   return (
     <LayoutMaterial>
-      <MaterialShell page={page} />
+      <Suspense fallback={null}>
+        <MaterialRouteContent {...props} />
+      </Suspense>
     </LayoutMaterial>
   );
+}
+
+/** Reads only route-owned content so the complete lesson can be prerendered. */
+async function MaterialRouteContent({ params }: MaterialPageProps) {
+  const page = await readMaterialPage(params);
+  return <MaterialShell page={page} />;
 }

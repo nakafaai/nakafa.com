@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import { DeferredAiSheetOpen } from "@/components/ai/sheet/trigger";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { PaginationContent } from "@/components/shared/content/pagination";
@@ -113,17 +113,13 @@ export async function generateStaticParams() {
   return [{ surah: surahs[0].number.toString() }];
 }
 
-/**
- * Renders one surah after the route validates its number.
- *
- * Nothing truthful can stand in for a surah, so the page has no loading UI of
- * its own. A navigation that arrives before its link's prefetch keeps the
- * current page on screen until the surah renders, instead of an empty one.
- */
+/** Keeps the public page export synchronous while the resolved shell owns async route validation. */
 export default function Page(props: PageProps<"/[locale]/quran/[surah]">) {
   return (
     <LayoutMaterial>
-      <ResolvedSurahPage params={props.params} />
+      <Suspense fallback={null}>
+        <ResolvedSurahPage params={props.params} />
+      </Suspense>
     </LayoutMaterial>
   );
 }

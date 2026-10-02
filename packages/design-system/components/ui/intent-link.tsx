@@ -2,7 +2,7 @@
 
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { Link } from "@repo/internationalization/src/navigation";
-import type { ComponentProps, FocusEvent, PointerEvent } from "react";
+import type { ComponentProps, FocusEvent, MouseEvent, TouchEvent } from "react";
 import { useMemo, useState } from "react";
 
 type LinkProps = ComponentProps<typeof Link>;
@@ -12,13 +12,13 @@ type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
 };
 
 /**
- * Prefetches the route's shared App Shell while the link is visible, and its
- * URL-specific content from the earliest sign the reader means to open it:
- * a hover, keyboard focus, or the start of a press or touch.
+ * Prefetches the route's shared App Shell while the link is visible, and the
+ * link's own cached content once the reader shows intent: a hover, keyboard
+ * focus, or a touch. Grids, lists, and links inside content use it, so only
+ * the links a reader is about to open cost a per-link prefetch.
  *
- * A click never changes the prefetch. The link already prefetches by the time
- * a press ends, and a click that comes first still navigates at once, with
- * whatever the prefetch has fetched so far, or none of it.
+ * A click adds nothing: hover, focus, or touch always comes first, and the
+ * navigation a click starts fetches whatever the prefetch has not.
  *
  * https://nextjs.org/docs/app/guides/optimizing-prefetching#trade-offs
  */
@@ -26,29 +26,29 @@ export function IntentLink({
   href,
   intentActive = false,
   onFocus,
-  onPointerDown,
-  onPointerEnter,
+  onMouseEnter,
+  onTouchStart,
   ...props
 }: IntentLinkProps) {
-  const [intentHref, setIntentHref] = useState<string | null>(null);
+  const [prefetchHref, setPrefetchHref] = useState<string | null>(null);
   const normalizedHref = useMemo(
     () => normalizeLocalizedInternalHref(href),
     [href]
   );
 
   function handleFocus(event: FocusEvent<HTMLAnchorElement>) {
-    setIntentHref(href);
+    setPrefetchHref(href);
     onFocus?.(event);
   }
 
-  function handlePointerDown(event: PointerEvent<HTMLAnchorElement>) {
-    setIntentHref(href);
-    onPointerDown?.(event);
+  function handleMouseEnter(event: MouseEvent<HTMLAnchorElement>) {
+    setPrefetchHref(href);
+    onMouseEnter?.(event);
   }
 
-  function handlePointerEnter(event: PointerEvent<HTMLAnchorElement>) {
-    setIntentHref(href);
-    onPointerEnter?.(event);
+  function handleTouchStart(event: TouchEvent<HTMLAnchorElement>) {
+    setPrefetchHref(href);
+    onTouchStart?.(event);
   }
 
   return (
@@ -56,9 +56,9 @@ export function IntentLink({
       {...props}
       href={normalizedHref}
       onFocus={handleFocus}
-      onPointerDown={handlePointerDown}
-      onPointerEnter={handlePointerEnter}
-      prefetch={intentActive || intentHref === href ? true : null}
+      onMouseEnter={handleMouseEnter}
+      onTouchStart={handleTouchStart}
+      prefetch={intentActive || prefetchHref === href ? true : null}
     />
   );
 }

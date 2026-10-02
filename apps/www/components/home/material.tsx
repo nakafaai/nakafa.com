@@ -6,7 +6,7 @@ import type refs from "@repo/backend/confect/_generated/refs";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 
 import type { ReactNode } from "react";
 
@@ -45,7 +45,7 @@ export function MaterialRow({
   trailing?: ReactNode;
 }) {
   return (
-    <IntentLink
+    <NavigationLink
       className="group grid gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
       href={material.href}
     >
@@ -78,6 +78,6 @@ export function MaterialRow({
           </span>
         </div>
       </div>
-    </IntentLink>
+    </NavigationLink>
   );
 }

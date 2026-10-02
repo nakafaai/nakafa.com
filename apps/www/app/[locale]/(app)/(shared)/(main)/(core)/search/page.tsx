@@ -32,9 +32,7 @@ export default function Page() {
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
       <div className="mx-auto w-full max-w-3xl px-6 py-24">
         <div className="relative space-y-12">
-          <Suspense fallback={<HomeHeader name={null} />}>
-            <SearchHeader />
-          </Suspense>
+          <SearchHeader />
 
           <div className="flex flex-col gap-2">
             <BackButton
@@ -59,10 +57,7 @@ export default function Page() {
   );
 }
 
-/**
- * Resolves the reader's name in the request stream. Until it arrives, the
- * header greets the reader without a name, which is true for every reader.
- */
+/** Resolves the greeting in the request stream before showing the search form. */
 async function SearchHeader() {
   const token = await getToken();
   const account = token

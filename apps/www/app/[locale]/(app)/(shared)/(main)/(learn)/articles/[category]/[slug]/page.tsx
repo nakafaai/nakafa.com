@@ -7,6 +7,7 @@ import { Effect, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import {
   readArticleMetadata,
   readArticlePage,
@@ -119,19 +120,15 @@ export async function generateStaticParams({
   return [route];
 }
 
-/**
- * Renders an article after Convex confirms the published route exists.
- *
- * Nothing truthful can stand in for an article, so the page has no loading UI
- * of its own. A navigation that arrives before its link's prefetch keeps the
- * current page on screen until the article renders, instead of an empty one.
- */
+/** Renders an article after Convex confirms the published route exists. */
 export default function Page(
   props: PageProps<"/[locale]/articles/[category]/[slug]">
 ) {
   return (
     <LayoutMaterial>
-      <ArticleRouteContent params={props.params} />
+      <Suspense fallback={null}>
+        <ArticleRouteContent params={props.params} />
+      </Suspense>
     </LayoutMaterial>
   );
 }
