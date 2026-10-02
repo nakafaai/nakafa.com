@@ -43,15 +43,8 @@ export const getEligibleGoogleIndexingUrls = Effect.fn(
 const readEligibleGoogleIndexingUrl = Effect.fn(
   "scripts.google.eligibility.readUrl"
 )(function* (url: string) {
-  const { html, ok, status } = yield* Effect.tryPromise({
-    try: () =>
-      fetch(url).then((response) =>
-        response.text().then((html) => ({
-          html,
-          ok: response.ok,
-          status: response.status,
-        }))
-      ),
+  const response = yield* Effect.tryPromise({
+    try: () => fetch(url),
     catch: (cause) =>
       new GoogleIndexPageFetchError({
         cause,
@@ -59,12 +52,21 @@ const readEligibleGoogleIndexingUrl = Effect.fn(
         url,
       }),
   });
-  if (!ok) {
+  if (!response.ok) {
     return yield* new GoogleIndexPageFetchError({
-      message: `Google Indexing API eligibility fetch returned HTTP ${status}.`,
+      message: `Google Indexing API eligibility fetch returned HTTP ${response.status}.`,
       url,
     });
   }
+  const html = yield* Effect.tryPromise({
+    try: () => response.text(),
+    catch: (cause) =>
+      new GoogleIndexPageFetchError({
+        cause,
+        message: `Failed to read ${url} for Google Indexing API eligibility.`,
+        url,
+      }),
+  });
   const blocks = readJsonLdScriptBodies(html);
   for (const block of blocks) {
     const data = yield* decodeStructuredDataJson(block).pipe(

@@ -122,7 +122,8 @@ export function SidebarMenuButton({
   isActive?: boolean;
   tooltip?: string | ComponentProps<typeof TooltipContent>;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
-  const { isMobile, state } = useSidebar();
+  const isMobile = useSidebar((sidebar) => sidebar.isMobile);
+  const state = useSidebar((sidebar) => sidebar.state);
   const button = useRender({
     defaultTagName: "button",
     render,

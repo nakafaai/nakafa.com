@@ -17,12 +17,12 @@ export interface SidebarContextValue {
 /** @internal Context consumed by SidebarProvider and sidebar controls. */
 export const SidebarContext = createContext<SidebarContextValue | null>(null);
 
-/** Reads sidebar state and actions from the nearest SidebarProvider. */
-export function useSidebar() {
-  const context = use(SidebarContext);
-  if (!context) {
+/** Selects one part of the sidebar state and actions of the nearest SidebarProvider. */
+export function useSidebar<T>(selector: (sidebar: SidebarContextValue) => T) {
+  const value = use(SidebarContext);
+  if (!value) {
     throw new Error("useSidebar must be used within a SidebarProvider.");
   }
 
-  return context;
+  return selector(value);
 }

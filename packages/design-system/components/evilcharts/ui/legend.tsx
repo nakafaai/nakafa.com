@@ -43,7 +43,7 @@ function ChartLegendContent({
   onSelectChange?: (selected: string | null) => void;
   variant?: ChartLegendVariant | undefined;
 } & DefaultLegendContentProps) {
-  const { config } = useChart();
+  const config = useChart((chart) => chart.config);
 
   if (!payload?.length) {
     return null;

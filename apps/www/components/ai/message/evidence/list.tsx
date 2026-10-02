@@ -14,7 +14,7 @@ import { WebSearchPart } from "@/components/ai/message/evidence/web";
 
 /** Renders every persisted artifact of the surrounding live activity. */
 export function EvidenceList() {
-  const { artifacts } = useActivity();
+  const artifacts = useActivity((invocation) => invocation.artifacts);
   return artifacts.map((artifact) => (
     <Evidence artifact={artifact} key={`${artifact.type}:${artifact.id}`} />
   ));
@@ -22,7 +22,9 @@ export function EvidenceList() {
 
 function Evidence({ artifact }: { artifact: CapabilityArtifact }) {
   const t = useTranslations("Ai");
-  const { denied, failed, running } = useActivity();
+  const denied = useActivity((invocation) => invocation.denied);
+  const failed = useActivity((invocation) => invocation.failed);
+  const running = useActivity((invocation) => invocation.running);
   if (artifact.data.status === "loading" && !running) {
     return (
       <p

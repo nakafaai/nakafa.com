@@ -40,17 +40,11 @@ export function AiChatError() {
   const authNavigation = useCurrentAuthNavigation();
   const error = useChat((state) => state.error);
   const turn = useChat((state) => state.turn);
-  const messages = useChat((state) => state.messages);
+  const hasTurnFailure = useChat((state) => state.hasTurnFailure);
   const retry = useChat((state) => state.retry);
   const canWrite = useChat((state) => state.canWrite);
   const busy = useChat((state) => state.busy);
-  const hasInlineFailure = messages.some(
-    (message) =>
-      message.role === "assistant" &&
-      message.order === turn?.order &&
-      message.status === "failed"
-  );
-  if (!error && (turn?.state.status !== "failed" || hasInlineFailure)) {
+  if (!error && (turn?.state.status !== "failed" || hasTurnFailure)) {
     return null;
   }
   const feedback = error

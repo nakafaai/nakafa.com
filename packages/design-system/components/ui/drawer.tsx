@@ -10,13 +10,11 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
-import { createContext, use, useMemo } from "react";
+import { createContext, use } from "react";
 
 type DrawerPosition = "bottom" | "left" | "right" | "top";
 
-const DrawerContext = createContext<{ position: DrawerPosition }>({
-  position: "bottom",
-});
+const DrawerContext = createContext<DrawerPosition>("bottom");
 
 const swipeDirectionByPosition: Record<
   DrawerPosition,
@@ -179,16 +177,14 @@ function Drawer<Payload = unknown>({
 }: DrawerPrimitive.Root.Props<Payload> & {
   position?: DrawerPosition;
 }) {
-  const contextValue = useMemo(() => ({ position }), [position]);
-
   return (
-    <DrawerContext.Provider value={contextValue}>
+    <DrawerContext value={position}>
       <DrawerPrimitive.Root
         data-slot="drawer"
         swipeDirection={swipeDirection ?? swipeDirectionByPosition[position]}
         {...props}
       />
-    </DrawerContext.Provider>
+    </DrawerContext>
   );
 }
 
@@ -209,13 +205,9 @@ function DrawerClose(props: DrawerPrimitive.Close.Props) {
 /** Renders the invisible swipe target for the active drawer edge. */
 function DrawerSwipeArea({
   className,
-  position: positionProp,
   ...props
-}: DrawerPrimitive.SwipeArea.Props & {
-  position?: DrawerPosition;
-}) {
-  const { position: contextPosition } = use(DrawerContext);
-  const position = positionProp ?? contextPosition;
+}: DrawerPrimitive.SwipeArea.Props) {
+  const position = use(DrawerContext);
 
   return (
     <DrawerPrimitive.SwipeArea
@@ -253,15 +245,11 @@ function DrawerBackdrop({
 /** Renders the drawer viewport for the active drawer edge. */
 function DrawerViewport({
   className,
-  position: positionProp,
   variant,
   ...props
 }: DrawerPrimitive.Viewport.Props &
-  VariantProps<typeof drawerViewportVariants> & {
-    position?: DrawerPosition;
-  }) {
-  const { position: contextPosition } = use(DrawerContext);
-  const position = positionProp ?? contextPosition;
+  Omit<VariantProps<typeof drawerViewportVariants>, "position">) {
+  const position = use(DrawerContext);
 
   return (
     <DrawerPrimitive.Viewport
@@ -277,25 +265,22 @@ function DrawerPopup({
   children,
   className,
   portalProps,
-  position: positionProp,
   showBar = false,
   showCloseButton = false,
   variant,
   ...props
 }: DrawerPrimitive.Popup.Props &
-  VariantProps<typeof drawerPopupVariants> & {
+  Omit<VariantProps<typeof drawerPopupVariants>, "position"> & {
     portalProps?: DrawerPrimitive.Portal.Props;
-    position?: DrawerPosition;
     showBar?: boolean;
     showCloseButton?: boolean;
   }) {
-  const { position: contextPosition } = use(DrawerContext);
-  const position = positionProp ?? contextPosition;
+  const position = use(DrawerContext);
 
   return (
     <DrawerPortal {...portalProps}>
       <DrawerBackdrop />
-      <DrawerViewport position={position} variant={variant}>
+      <DrawerViewport variant={variant}>
         <DrawerPrimitive.Popup
           className={cn(drawerPopupVariants({ position, variant }), className)}
           data-slot="drawer-popup"
@@ -311,7 +296,7 @@ function DrawerPopup({
               <HugeIcons icon={Cancel01Icon} />
             </DrawerClose>
           )}
-          {!!showBar && <DrawerBar position={position} />}
+          {!!showBar && <DrawerBar />}
         </DrawerPrimitive.Popup>
       </DrawerViewport>
     </DrawerPortal>
@@ -365,15 +350,8 @@ function DrawerPanel({
 }
 
 /** Renders the drag handle for the active drawer edge. */
-function DrawerBar({
-  className,
-  position: positionProp,
-  ...props
-}: React.ComponentProps<"div"> & {
-  position?: DrawerPosition;
-}) {
-  const { position: contextPosition } = use(DrawerContext);
-  const position = positionProp ?? contextPosition;
+function DrawerBar({ className, ...props }: React.ComponentProps<"div">) {
+  const position = use(DrawerContext);
 
   return (
     <div

@@ -22,11 +22,8 @@ import {
   Sink,
   Stream,
 } from "effect";
+import { type ChildProcess, ChildProcessSpawner } from "effect/process";
 import { TestClock } from "effect/testing";
-import {
-  type ChildProcess,
-  ChildProcessSpawner,
-} from "effect/unstable/process";
 
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -35,6 +32,7 @@ const fixture = Effect.gen(function* () {
     prefix: "acceptance-process-test-",
   });
   const runtime: LocalRuntime = {
+    analytics: "http://127.0.0.1:43312",
     backend: directory,
     configurationHash: "config",
     databaseInode: 1,

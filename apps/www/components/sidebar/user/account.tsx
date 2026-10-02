@@ -3,186 +3,72 @@
 import {
   FileValidationIcon,
   LockIcon,
-  Logout01Icon,
-  MoreVerticalIcon,
   Settings01Icon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
-import { useDisclosure } from "@mantine/hooks";
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/design-system/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  SidebarMenuButton,
-  SidebarMenuDescription,
-  SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar-menu";
-import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
-import { useLayoutEffect } from "react";
-import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
+import { AccountMenu } from "@/components/sidebar/menu/account";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
-import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/identity/client";
-import { getInitialName } from "@/lib/utils/helper";
 
-/** Renders the account-only user menu after authentication is confirmed. */
+/** Renders the app account menu, with the account and legal pages, once authentication is confirmed. */
 export function NavUserAccount({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const tLegal = useTranslations("Legal");
   const pageNavigation = usePageNavigation((navigation) => navigation);
   const router = useRouter();
-  const [open, { close, set }] = useDisclosure(false);
-  const { isMobile } = useSidebar();
-  const authNavigation = useCurrentAuthNavigation();
-  const dropdownSide = isMobile ? "bottom" : "right";
-  const submenuSide = isMobile ? "top" : "right";
-  const planLabelByPlan = {
-    free: t("plan-free"),
-    pro: t("plan-pro"),
-  };
-  const planLabel = planLabelByPlan[user.appUser.plan];
-
-  useLayoutEffect(() => close, [close]);
-
-  /** Signs the user out and leaves the shared authenticated app subtree on success. */
-  async function handleSignOut() {
-    const result = await Effect.runPromise(
-      Effect.result(signOutAccountBrowserIdentity())
-    );
-    if (Result.isSuccess(result)) {
-      Effect.runSync(clearAiDraftText);
-      router.replace(authNavigation.readHref());
-    }
-  }
 
   return (
-    <SidebarMenuItem>
-      <DropdownMenu onOpenChange={set} open={open}>
-        <DropdownMenuTrigger
-          render={
-            <SidebarMenuButton
-              className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
-              size="lg"
-            >
-              <Avatar>
-                <AvatarImage
-                  alt={user.authUser.name}
-                  role="presentation"
-                  src={user.authUser.image ?? ""}
-                />
-                <AvatarFallback className="text-xs">
-                  {getInitialName(user.authUser.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                <span className="truncate">{user.authUser.name}</span>
-                <SidebarMenuDescription>{planLabel}</SidebarMenuDescription>
-              </div>
-              <HugeIcons className="ml-auto" icon={MoreVerticalIcon} />
-            </SidebarMenuButton>
-          }
-        />
-        <DropdownMenuContent
-          align="end"
-          className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
-          side={dropdownSide}
-          sideOffset={4}
+    <AccountMenu user={user}>
+      <DropdownMenuGroup>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => router.push(`/user/${user.appUser._id}`)}
         >
-          <DropdownMenuGroup>
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar>
-                  <AvatarImage
-                    alt={user.authUser.name}
-                    role="presentation"
-                    src={user.authUser.image ?? ""}
-                  />
-                  <AvatarFallback>
-                    {getInitialName(user.authUser.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium text-foreground">
-                    {user.authUser.name}
-                  </span>
-                  <span className="truncate text-muted-foreground text-xs">
-                    {user.authUser.email}
-                  </span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
+          <HugeIcons icon={UserIcon} />
+          {t("profile")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => router.push("/user/settings")}
+        >
+          <HugeIcons icon={Settings01Icon} />
+          {t("settings")}
+        </DropdownMenuItem>
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      <SidebarUtilityMenuItems />
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        {pageNavigation ? (
+          <>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => router.push(`/user/${user.appUser._id}`)}
+              onClick={() => router.push(pageNavigation.termsOfServiceHref)}
             >
-              <HugeIcons icon={UserIcon} />
-              {t("profile")}
+              <HugeIcons icon={FileValidationIcon} />
+              {tLegal("terms-of-service")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => router.push("/user/settings")}
+              onClick={() => router.push(pageNavigation.privacyPolicyHref)}
             >
-              <HugeIcons icon={Settings01Icon} />
-              {t("settings")}
+              <HugeIcons icon={LockIcon} />
+              {tLegal("privacy-policy")}
             </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <SidebarUtilityMenuItems side={submenuSide} />
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            {pageNavigation ? (
-              <>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => router.push(pageNavigation.termsOfServiceHref)}
-                >
-                  <HugeIcons icon={FileValidationIcon} />
-                  {tLegal("terms-of-service")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => router.push(pageNavigation.privacyPolicyHref)}
-                >
-                  <HugeIcons icon={LockIcon} />
-                  {tLegal("privacy-policy")}
-                </DropdownMenuItem>
-              </>
-            ) : null}
-            <AnalyticsConsentMenuItem />
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={handleSignOut}
-            >
-              <HugeIcons icon={Logout01Icon} />
-              {t("logout")}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </SidebarMenuItem>
+          </>
+        ) : null}
+        <AnalyticsConsentMenuItem />
+      </DropdownMenuGroup>
+    </AccountMenu>
   );
 }

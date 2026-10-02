@@ -1,8 +1,7 @@
 "use client";
 
 import type { QuranViewTafsirAccess } from "@repo/backend/client/quran/view";
-import type { ReactNode } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type ReactNode, use } from "react";
 
 interface QuranVersesValue {
   readonly interpretationLabel: string;
@@ -10,11 +9,7 @@ interface QuranVersesValue {
   readonly translationNotesLabel: string;
 }
 
-const missingQuranVerses = Symbol("missing-quran-verses");
-
-const QuranVersesContext = createContext<
-  QuranVersesValue | typeof missingQuranVerses
->(missingQuranVerses);
+const QuranVersesContext = createContext<QuranVersesValue | null>(null);
 
 /** Shares a surah's Tafsir access and verse labels with every verse. */
 export function QuranVersesProvider({
@@ -24,21 +19,19 @@ export function QuranVersesProvider({
   translationNotesLabel,
 }: QuranVersesValue & { children: ReactNode }) {
   return (
-    <QuranVersesContext.Provider
+    <QuranVersesContext
       value={{ interpretationLabel, tafsirAccess, translationNotesLabel }}
     >
       {children}
-    </QuranVersesContext.Provider>
+    </QuranVersesContext>
   );
 }
 
 /** Selects one of the surah's shared verse settings. */
 export function useQuranVerses<T>(selector: (value: QuranVersesValue) => T) {
-  const selected = useContextSelector(QuranVersesContext, (value) =>
-    value === missingQuranVerses ? missingQuranVerses : selector(value)
-  );
-  if (selected === missingQuranVerses) {
+  const value = use(QuranVersesContext);
+  if (!value) {
     throw new Error("Quran verses must render within QuranVersesProvider.");
   }
-  return selected;
+  return selector(value);
 }

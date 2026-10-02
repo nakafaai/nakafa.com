@@ -11,8 +11,8 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
 import {
+  type ComponentProps,
   createContext,
   memo,
   use,
@@ -27,17 +27,17 @@ interface ReasoningContextValue {
   hasContent: boolean;
   isOpen: boolean;
   isStreaming: boolean;
-  setIsOpen: (open: boolean) => void;
 }
 
 const ReasoningContext = createContext<ReasoningContextValue | null>(null);
 
-function useReasoning() {
-  const context = use(ReasoningContext);
-  if (!context) {
+/** Selects one part of the surrounding reasoning state. */
+function useReasoning<T>(selector: (reasoning: ReasoningContextValue) => T) {
+  const value = use(ReasoningContext);
+  if (!value) {
     throw new Error("Reasoning components must be used within Reasoning");
   }
-  return context;
+  return selector(value);
 }
 
 export type ReasoningProps = ComponentProps<typeof Collapsible> & {
@@ -110,9 +110,9 @@ export const Reasoning = memo(
       }
     }, [isStreaming, isOpen, defaultOpen, setIsOpen]);
 
-    const contextValue = useMemo(
-      () => ({ hasContent, isStreaming, isOpen, setIsOpen, duration }),
-      [duration, hasContent, isOpen, isStreaming, setIsOpen]
+    const reasoning = useMemo(
+      () => ({ duration, hasContent, isOpen, isStreaming }),
+      [duration, hasContent, isOpen, isStreaming]
     );
 
     function handleOpenChange(newOpen: boolean) {
@@ -120,7 +120,7 @@ export const Reasoning = memo(
     }
 
     return (
-      <ReasoningContext.Provider value={contextValue}>
+      <ReasoningContext value={reasoning}>
         <Collapsible
           className={cn("not-prose flex flex-col gap-2", className)}
           onOpenChange={handleOpenChange}
@@ -129,30 +129,32 @@ export const Reasoning = memo(
         >
           {children}
         </Collapsible>
-      </ReasoningContext.Provider>
+      </ReasoningContext>
     );
   }
 );
 
 export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
 
-const ThinkingMessage = memo(
-  ({ isStreaming, duration }: { isStreaming: boolean; duration?: number }) => {
-    const t = useTranslations("Ai");
-    if (isStreaming) {
-      return <p>{t("thinking")}</p>;
-    }
-    if (duration === undefined || duration === 0) {
-      return <p>{t("thought-for-a-few-seconds")}</p>;
-    }
-    return <p>{t("thought-for", { duration })}</p>;
+const ThinkingMessage = memo(() => {
+  const t = useTranslations("Ai");
+  const duration = useReasoning((reasoning) => reasoning.duration);
+  const isStreaming = useReasoning((reasoning) => reasoning.isStreaming);
+  if (isStreaming) {
+    return <p>{t("thinking")}</p>;
   }
-);
+  if (duration === 0) {
+    return <p>{t("thought-for-a-few-seconds")}</p>;
+  }
+  return <p>{t("thought-for", { duration })}</p>;
+});
 ThinkingMessage.displayName = "ThinkingMessage";
 
 export const ReasoningTrigger = memo(
   ({ className, children, ...props }: ReasoningTriggerProps) => {
-    const { hasContent, isStreaming, isOpen, duration } = useReasoning();
+    const hasContent = useReasoning((reasoning) => reasoning.hasContent);
+    const isOpen = useReasoning((reasoning) => reasoning.isOpen);
+    const isStreaming = useReasoning((reasoning) => reasoning.isStreaming);
 
     return (
       <CollapsibleTrigger
@@ -170,7 +172,7 @@ export const ReasoningTrigger = memo(
               icon={BrainIcon}
               isLoading={isStreaming}
             />
-            <ThinkingMessage duration={duration} isStreaming={isStreaming} />
+            <ThinkingMessage />
             {hasContent ? (
               <HugeIcons
                 className={cn(

@@ -69,14 +69,12 @@ export function Line({
   children,
   lineProps,
 }: LineProps) {
-  const {
-    config,
-    curveType: defaultCurve,
-    animationType: defaultAnimation,
-    isLoading,
-    selectedDataKey,
-    selectDataKey,
-  } = useLineChart();
+  const config = useLineChart((chart) => chart.config);
+  const defaultCurve = useLineChart((chart) => chart.curveType);
+  const defaultAnimation = useLineChart((chart) => chart.animationType);
+  const isLoading = useLineChart((chart) => chart.isLoading);
+  const selectedDataKey = useLineChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useLineChart((chart) => chart.selectDataKey);
   const id = useId().replace(/:/g, ""); // unique id scopes this line's style defs
   // Devices set to "reduce motion" skip the intro reveal entirely
   const shouldReduceMotion = useReducedMotion();

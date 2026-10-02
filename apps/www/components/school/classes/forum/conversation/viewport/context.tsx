@@ -2,15 +2,17 @@ import { useReducedMotion } from "@mantine/hooks";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, Fiber, Stream } from "effect";
 import {
+  createContext,
   type ReactNode,
+  use,
   useEffect,
   useEffectEvent,
   useLayoutEffect,
   useRef,
   useState,
 } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
 import type { VirtualizerHandle } from "virtua";
+import { createStore, type StoreApi, useStore } from "zustand";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/transcript/unread";
 import { ConversationViewportAdapters } from "@/components/school/classes/forum/conversation/viewport/adapter";
@@ -58,10 +60,9 @@ interface ViewportActions {
 }
 interface ViewportContextValue {
   actions: ViewportActions;
-  state: ViewportState;
+  store: StoreApi<ViewportState>;
 }
 const ViewportContext = createContext<ViewportContextValue | null>(null);
-const missingViewportContext = Symbol("missing-viewport-context");
 /** Provides the React Interface for one Effect-owned Forum Conversation Viewport. */
 export function ConversationViewportProvider({
   acknowledgeUnreadCue,
@@ -88,7 +89,11 @@ export function ConversationViewportProvider({
   const scrollerRef = useRef<BrowserViewportScroller | null>(null);
   const virtualizerHandleRef = useRef<VirtualizerHandle | null>(null);
   const viewportRef = useRef<ConversationViewport | null>(null);
-  const [state, setState] = useState(initialViewportState);
+  // The Effect viewport publishes its state into this store, so a reader
+  // re-renders only when the slice it selects changes.
+  const [store] = useState(() =>
+    createStore<ViewportState>()(() => initialViewportState)
+  );
   const getOpeningTranscript = useEffectEvent(() => ({
     activeTranscript,
     savedSnapshot,
@@ -117,7 +122,7 @@ export function ConversationViewportProvider({
     const stateFiber = Effect.runFork(
       Stream.runForEach(viewport.changes, (nextState) =>
         Effect.sync(() => {
-          setState(nextState);
+          store.setState(nextState, true);
         })
       )
     );
@@ -155,6 +160,7 @@ export function ConversationViewportProvider({
     markForumRead,
     prefersReducedMotion,
     saveConversationScrollSnapshot,
+    store,
   ]);
   useLayoutEffect(() => {
     activeTranscriptRef.current = activeTranscript;
@@ -228,35 +234,23 @@ export function ConversationViewportProvider({
   } satisfies ViewportActions;
   const value = {
     actions,
-    state,
+    store,
   };
-  return (
-    <ViewportContext.Provider value={value}>
-      {children}
-    </ViewportContext.Provider>
-  );
+  return <ViewportContext value={value}>{children}</ViewportContext>;
 }
 /** Reads one selected state slice from the Effect-owned Viewport Interface. */
 export function useViewport<T>(selector: (state: ViewportState) => T) {
-  const selected = useContextSelector(ViewportContext, (context) => {
-    if (!context) {
-      return missingViewportContext;
-    }
-    return selector(context.state);
-  });
-  if (selected === missingViewportContext) {
+  const context = use(ViewportContext);
+  if (!context) {
     throw new Error("useViewport must be used within a ConversationProvider");
   }
-  return selected;
+  return useStore(context.store, selector);
 }
 /** Reads the semantic actions exposed by the Effect-owned Viewport Interface. */
 export function useControls() {
-  const actions = useContextSelector(
-    ViewportContext,
-    (context) => context?.actions
-  );
-  if (!actions) {
+  const context = use(ViewportContext);
+  if (!context) {
     throw new Error("useControls must be used within a ConversationProvider");
   }
-  return actions;
+  return context.actions;
 }

@@ -2986,7 +2986,7 @@ export declare const api: {
               nodeKey?: string;
               programKey?: string;
             };
-            deviceId: string;
+            deviceId?: string;
             locale: "en" | "id" | "de";
             publicPath: string;
             section: "articles" | "material";

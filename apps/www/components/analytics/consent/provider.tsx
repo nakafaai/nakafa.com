@@ -5,7 +5,7 @@ import { useNetwork } from "@mantine/hooks";
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import refs from "@repo/backend/confect/_generated/refs";
 import { useConvexAuth } from "convex/react";
-import { Option } from "effect";
+import { Effect, Option } from "effect";
 import { type ReactNode, useEffect, useState } from "react";
 import { useAnonymousAnalyticsConsent } from "@/lib/analytics/consent/browser";
 import { AnalyticsConsentContext } from "@/lib/analytics/consent/context";
@@ -29,6 +29,10 @@ import {
   resolveBrowserAnalyticsConsentState,
   shouldRevokeAccountAnalyticsGrant,
 } from "@/lib/analytics/consent/state";
+import {
+  clearContentViewDevice,
+  isContentViewDeviceRetained,
+} from "@/lib/content/views/device";
 import { useViewer } from "@/lib/identity/client";
 
 /** Owns the state that exclusively controls optional product analytics. */
@@ -90,6 +94,21 @@ export function AnalyticsConsentProvider({
     isUserPending,
     user,
   });
+
+  // The content-view identifier exists only under a durable grant; reading the
+  // durable status keeps it while a repeated choice is still saving.
+  useEffect(() => {
+    if (isContentViewDeviceRetained(state.status)) {
+      return;
+    }
+    Effect.runFork(
+      clearContentViewDevice().pipe(
+        // Blocked storage holds no identifier to remove.
+        Effect.catchTag("ContentViewDeviceStorageFailed", () => Effect.void)
+      )
+    );
+  }, [state.status]);
+
   const hasLoadError =
     QueryResult.isFailure(accountConsentQuery) ||
     (!isAuthenticated && hasStorageError);
@@ -187,8 +206,8 @@ export function AnalyticsConsentProvider({
   };
 
   return (
-    <AnalyticsConsentContext.Provider value={contextValue}>
+    <AnalyticsConsentContext value={contextValue}>
       {children}
-    </AnalyticsConsentContext.Provider>
+    </AnalyticsConsentContext>
   );
 }

@@ -86,17 +86,17 @@ interface BarChartContextValue {
 
 const BarChartContext = createContext<BarChartContextValue | null>(null);
 
-// Reads the chart context, throwing a helpful error when used outside <EvilBarChart />
-export function useBarChart() {
-  const context = use(BarChartContext);
+// Selects one part of the chart context, throwing a helpful error when used outside <EvilBarChart />
+export function useBarChart<T>(selector: (chart: BarChartContextValue) => T) {
+  const value = use(BarChartContext);
 
-  if (!context) {
+  if (!value) {
     throw new Error(
       "Bar chart parts (<Bar />, <XAxis />, …) must be used within <EvilBarChart />"
     );
   }
 
-  return context;
+  return selector(value);
 }
 
 // Root container
@@ -291,7 +291,8 @@ export function XAxis({
   type,
   ...props
 }: XAxisProps) {
-  const { isLoading, isHorizontal } = useBarChart();
+  const isLoading = useBarChart((chart) => chart.isLoading);
+  const isHorizontal = useBarChart((chart) => chart.isHorizontal);
 
   if (isLoading) {
     return null;
@@ -325,7 +326,8 @@ export function YAxis({
   type,
   ...props
 }: YAxisProps) {
-  const { isLoading, isHorizontal } = useBarChart();
+  const isLoading = useBarChart((chart) => chart.isLoading);
+  const isHorizontal = useBarChart((chart) => chart.isHorizontal);
 
   if (isLoading) {
     return null;
@@ -357,7 +359,7 @@ export function Grid({
   horizontal,
   ...props
 }: GridProps) {
-  const { isHorizontal } = useBarChart();
+  const isHorizontal = useBarChart((chart) => chart.isHorizontal);
 
   return (
     <CartesianGrid
@@ -380,7 +382,8 @@ interface TooltipProps {
  * dims unselected series. Hidden automatically while the chart is loading.
  */
 export function Tooltip({ variant, roundness, defaultIndex }: TooltipProps) {
-  const { isLoading, selectedDataKey } = useBarChart();
+  const isLoading = useBarChart((chart) => chart.isLoading);
+  const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
 
   if (isLoading) {
     return null;
@@ -418,7 +421,8 @@ export function Legend({
   verticalAlign = "top",
   isClickable = false,
 }: LegendProps) {
-  const { selectedDataKey, selectDataKey } = useBarChart();
+  const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useBarChart((chart) => chart.selectDataKey);
 
   return (
     <ChartLegend

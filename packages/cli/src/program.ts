@@ -10,7 +10,7 @@ import {
   CliOutput,
   Command,
   GlobalFlag,
-} from "effect/unstable/cli";
+} from "effect/cli";
 import { requestNakafaApi } from "#cli/client";
 import type { CliCommand, CliRequest } from "#cli/command/spec";
 import { makeCliCommand } from "#cli/command/tree";

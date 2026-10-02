@@ -33,11 +33,9 @@ export function CodeBlockCopyButton({
 }: CodeBlockCopyButtonProps) {
   const [isCopied, setIsCopied] = useState(false);
   const copyFiberRef = useRef<Fiber.Fiber<void, never> | null>(null);
-  const { data, value } = useCodeBlock((state) => ({
-    data: state.data,
-    value: state.value,
-  }));
-  const code = data.find((item) => item.language === value)?.code;
+  const code = useCodeBlock(
+    (state) => state.data.find((item) => item.language === state.value)?.code
+  );
 
   useEffect(
     () => () => {

@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import type { CliError } from "effect/unstable/cli";
+import type { CliError } from "effect/cli";
 
 export const ProblemDetailsSchema = Schema.Struct({
   code: Schema.String,

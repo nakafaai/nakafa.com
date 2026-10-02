@@ -24,7 +24,7 @@ function getErrorMessage(error: unknown) {
 /** Fetches translations for a dictionary namespace used by SEO metadata. */
 export function fetchSEOTranslationsNamespace(
   locale: Locale,
-  namespace: "Articles" | "Exercises" | "Metadata" | "SEO" | "Subject"
+  namespace: "Metadata" | "SEO" | "Subject"
 ) {
   return Effect.tryPromise({
     try: () => getTranslations({ locale, namespace }),

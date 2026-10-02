@@ -12,8 +12,8 @@ import {
   Schema,
   Stream,
 } from "effect";
-import { HttpServer, HttpServerResponse } from "effect/unstable/http";
-import { ChildProcess } from "effect/unstable/process";
+import { HttpServer, HttpServerResponse } from "effect/http";
+import { ChildProcess } from "effect/process";
 import {
   isAllowedPackedFile,
   REQUIRED_PACKED_FILES,

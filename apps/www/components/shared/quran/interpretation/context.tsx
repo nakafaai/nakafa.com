@@ -1,11 +1,6 @@
 "use client";
 
-import type { MouseEventHandler } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
-
-const missingQuranInterpretationContext = Symbol(
-  "missing-quran-interpretation-context"
-);
+import { createContext, type MouseEventHandler, use } from "react";
 
 interface QuranInterpretationContextValue {
   isActive: boolean;
@@ -13,55 +8,37 @@ interface QuranInterpretationContextValue {
   selectInterpretation: MouseEventHandler<HTMLButtonElement>;
 }
 
-export const QuranInterpretationContext = createContext<
-  QuranInterpretationContextValue | typeof missingQuranInterpretationContext
->(missingQuranInterpretationContext);
+export const QuranInterpretationContext =
+  createContext<QuranInterpretationContextValue | null>(null);
 
 /** Reads whether one tafsir trigger is inactive, idle, or loading. */
 export function useQuranInterpretationState(verseNumber: number) {
-  const state = useContextSelector(QuranInterpretationContext, (context) => {
-    if (context === missingQuranInterpretationContext) {
-      return missingQuranInterpretationContext;
-    }
-
-    if (!context.isActive) {
-      return "inactive";
-    }
-
-    if (context.pendingVerseNumber === verseNumber) {
-      return "loading";
-    }
-
-    return "idle";
-  });
-
-  if (state === missingQuranInterpretationContext) {
+  const context = use(QuranInterpretationContext);
+  if (!context) {
     throw new Error(
       "Quran tafsir button must be rendered within QuranInterpretationControls."
     );
   }
 
-  return state;
+  if (!context.isActive) {
+    return "inactive";
+  }
+
+  if (context.pendingVerseNumber === verseNumber) {
+    return "loading";
+  }
+
+  return "idle";
 }
 
 /** Reads the shared React event handler for selecting tafsir. */
 export function useQuranInterpretationSelection() {
-  const selectInterpretation = useContextSelector(
-    QuranInterpretationContext,
-    (context) => {
-      if (context === missingQuranInterpretationContext) {
-        return missingQuranInterpretationContext;
-      }
-
-      return context.selectInterpretation;
-    }
-  );
-
-  if (selectInterpretation === missingQuranInterpretationContext) {
+  const context = use(QuranInterpretationContext);
+  if (!context) {
     throw new Error(
       "Quran tafsir button must be rendered within QuranInterpretationControls."
     );
   }
 
-  return selectInterpretation;
+  return context.selectInterpretation;
 }

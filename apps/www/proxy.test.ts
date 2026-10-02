@@ -196,8 +196,18 @@ describe("proxy", () => {
     expect(response.status).toBe(308);
     expect(response.headers.get("location")).toBe(targetUrl.toString());
     expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
+      hasAttemptCapability: false,
       method: "GET",
       pathname: sourceUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""),
+    });
+  });
+  it("tells the migration resolver when a URL carries a try-out attempt", async () => {
+    const pathname = "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris";
+    await requestProxy(`${pathname}?attemptId=attempt-1`);
+    expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
+      hasAttemptCapability: true,
+      method: "GET",
+      pathname,
     });
   });
   it("matches localized PNG aliases without intercepting static assets", () => {

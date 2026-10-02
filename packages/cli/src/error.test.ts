@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { CliError } from "effect/unstable/cli";
+import { CliError } from "effect/cli";
 import { makeInvocationError } from "#cli/error";
 
 describe("Nakafa CLI error mapping", () => {

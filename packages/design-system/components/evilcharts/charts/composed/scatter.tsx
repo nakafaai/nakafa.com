@@ -41,7 +41,9 @@ interface ScatterProps
  * Recharts' native Scatter geometry instead of faking points with a line.
  */
 export function Scatter({ dataKey, children, ...scatterProps }: ScatterProps) {
-  const { config, isLoading, selectedDataKey } = useComposedChart();
+  const config = useComposedChart((chart) => chart.config);
+  const isLoading = useComposedChart((chart) => chart.isLoading);
+  const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
   const id = useId().replace(/:/g, "");
 
   if (isLoading) {

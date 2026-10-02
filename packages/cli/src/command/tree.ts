@@ -3,7 +3,7 @@ import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/sch
 import { NakafaAgentSectionSchema } from "@repo/contents/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Option, Schema } from "effect";
-import { Argument, Command, Flag } from "effect/unstable/cli";
+import { Argument, Command, Flag } from "effect/cli";
 import {
   ApiBaseSchema,
   type CliRequest,

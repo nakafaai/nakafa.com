@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import {
   DEPENDENCY_HOLDS,
+  EFFECT_COHORT_VERSION,
   VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
 import {
@@ -14,6 +15,7 @@ const CONTRACT_MANIFEST_PATHS = [
   "packages/contents/package.json",
   "packages/email/package.json",
   "packages/internationalization/package.json",
+  "packages/seo/package.json",
 ] as const;
 const CONTRACT_OWNERS = CONTRACT_MANIFEST_PATHS.join(", ");
 const WEB_MANIFEST = "apps/www/package.json";
@@ -68,17 +70,17 @@ function validInput(): PolicyInput {
     },
     workspace: {
       catalog: {
-        "@effect/platform-node": "4.0.0-rc.117",
-        "@effect/vitest": "4.0.0-rc.117",
+        "@effect/platform-node": EFFECT_COHORT_VERSION,
+        "@effect/vitest": EFFECT_COHORT_VERSION,
         "@vitest/coverage-istanbul": VITEST_COHORT_VERSION,
         "@vitest/ui": VITEST_COHORT_VERSION,
-        effect: "4.0.0-rc.117",
+        effect: EFFECT_COHORT_VERSION,
         typescript: "7.0.2",
         vitest: VITEST_COHORT_VERSION,
       },
       overrides: {
-        "@effect/platform-node": "4.0.0-rc.117",
-        "@effect/platform-node-shared": "4.0.0-rc.117",
+        "@effect/platform-node": EFFECT_COHORT_VERSION,
+        "@effect/platform-node-shared": EFFECT_COHORT_VERSION,
       },
       update: { ignoreDeps },
     },
@@ -163,14 +165,18 @@ describe("dependency policy validation", () => {
           ...input.manifests,
           {
             manifest: {
-              dependencies: { "@nakafa/aksara-contracts": "0.42.0" },
+              dependencies: {
+                "@nakafa/aksara-contracts": approvedSpec(
+                  "@nakafa/aksara-contracts"
+                ),
+              },
             },
             path: "packages/cli/package.json",
           },
         ],
       }),
       problem:
-        "@nakafa/aksara-contracts declarations are apps/www/package.json, packages/backend/package.json, packages/cli/package.json, packages/contents/package.json, packages/email/package.json, packages/internationalization/package.json; " +
+        "@nakafa/aksara-contracts declarations are apps/www/package.json, packages/backend/package.json, packages/cli/package.json, packages/contents/package.json, packages/email/package.json, packages/internationalization/package.json, packages/seo/package.json; " +
         `expected ${CONTRACT_OWNERS}.`,
     },
     {
@@ -250,7 +256,7 @@ describe("dependency policy validation", () => {
           catalog: { ...input.workspace.catalog, effect: "4.0.0-rc.116" },
         },
       }),
-      problem: "The Effect catalog must be exactly 4.0.0-rc.117.",
+      problem: `The Effect catalog must be exactly ${EFFECT_COHORT_VERSION}.`,
     },
     {
       name: "a platform-node catalog drift",
@@ -264,7 +270,7 @@ describe("dependency policy validation", () => {
           },
         },
       }),
-      problem: "The platform-node catalog must match Effect RC 117.",
+      problem: `The platform-node catalog must match Effect ${EFFECT_COHORT_VERSION}.`,
     },
     {
       name: "an Effect Vitest catalog drift",
@@ -278,7 +284,7 @@ describe("dependency policy validation", () => {
           },
         },
       }),
-      problem: "The Effect Vitest catalog must match Effect RC 117.",
+      problem: `The Effect Vitest catalog must match Effect ${EFFECT_COHORT_VERSION}.`,
     },
     ...["@effect/platform-node", "@effect/platform-node-shared"].map(
       (dependency) => ({
@@ -293,7 +299,7 @@ describe("dependency policy validation", () => {
             },
           },
         }),
-        problem: `The ${dependency} override must match Effect RC 117.`,
+        problem: `The ${dependency} override must match Effect ${EFFECT_COHORT_VERSION}.`,
       })
     ),
     {

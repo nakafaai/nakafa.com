@@ -11,7 +11,7 @@ import { api, internal } from "@repo/backend/convex/_generated/api";
 import { createPendingUpload } from "@repo/backend/test/forum/upload";
 import { getFunctionName } from "convex/server";
 import { Effect, Layer, Schema } from "effect";
-import { HttpRouter, HttpServer } from "effect/unstable/http";
+import { HttpRouter, HttpServer } from "effect/http";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
 const LEASE_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";

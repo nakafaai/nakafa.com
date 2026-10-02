@@ -103,8 +103,8 @@ describe("rankContentSearchDocuments", () => {
       title: "SNBT Mathematical Reasoning Set 1",
     });
     const genericRow = createSearchRow({
-      route: "try-out/indonesia/snbt/2027/set-1/indonesian-language",
-      sourcePath: "try-out/indonesia/snbt/2027/set-1/indonesian-language",
+      route: "try-out/indonesia/snbt/2027/set-1/literacy-in-indonesian",
+      sourcePath: "try-out/indonesia/snbt/2027/set-1/literacy-in-indonesian",
       text: "linear equations and arithmetic reasoning",
       title: "SNBT Indonesian Language Set 1",
     });

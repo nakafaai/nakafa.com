@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, use } from "react";
 
 /** One named language source rendered by a tabbed code block. */
 export interface CodeBlockData {
@@ -25,10 +25,10 @@ export const CodeBlockContext = createContext<CodeBlockContextValue | null>(
 export function useCodeBlock<T>(
   selector: (state: CodeBlockContextValue) => T
 ): T {
-  const context = useContextSelector(CodeBlockContext, (value) => value);
-  if (!context) {
+  const value = use(CodeBlockContext);
+  if (!value) {
     throw new Error("CodeBlock components must be used within CodeBlock.");
   }
 
-  return selector(context);
+  return selector(value);
 }

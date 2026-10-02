@@ -27,6 +27,10 @@ export const redirectCases: [
     "/de/articles/politics/regional-elections-turmoil.mdx?source=agent",
     "/de/articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen.mdx?source=agent",
   ],
+  [
+    "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris",
+    "/id/try-out/indonesia/snbt/2027/set-1/literasi-dalam-bahasa-inggris",
+  ],
 ];
 /** Resource patterns that still require routing checks. */
 export const matched =

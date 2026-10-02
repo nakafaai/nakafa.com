@@ -4,7 +4,7 @@ import {
   HttpClient,
   type HttpClientRequest,
   HttpClientResponse,
-} from "effect/unstable/http";
+} from "effect/http";
 import {
   fetchLatestGithubActionTag,
   githubActionReleaseReviews,

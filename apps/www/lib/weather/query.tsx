@@ -1,10 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Effect } from "effect";
-import {
-  FetchHttpClient,
-  HttpClient,
-  HttpClientResponse,
-} from "effect/unstable/http";
+import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 import { CurrentWeatherSummarySchema } from "@/lib/weather/schema";
 
 const WEATHER_REQUEST_TIMEOUT = "10 seconds";

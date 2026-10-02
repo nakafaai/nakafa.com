@@ -18,13 +18,15 @@ export const LocalAttachmentsContext = createContext<AttachmentsContext | null>(
   null
 );
 
-/** Reads the locally owned attachment state from the nearest form. */
-export function usePromptInputAttachments() {
-  const context = use(LocalAttachmentsContext);
-  if (!context) {
+/** Selects one part of the locally owned attachment state of the nearest form. */
+export function usePromptInputAttachments<T>(
+  selector: (attachments: AttachmentsContext) => T
+) {
+  const value = use(LocalAttachmentsContext);
+  if (!value) {
     throw new Error(
       "usePromptInputAttachments must be used within PromptInput"
     );
   }
-  return context;
+  return selector(value);
 }

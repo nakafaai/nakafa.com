@@ -8,8 +8,7 @@ import {
   readMaterialContextHint,
 } from "@repo/contents/route/material/context";
 import { Effect } from "effect";
-import { useSearchParams } from "next/navigation";
-import type { ReactNode } from "react";
+import { useSyncExternalStore } from "react";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import {
   type MaterialNavigationPage,
@@ -33,10 +32,37 @@ export interface MaterialContextProps {
     };
 }
 
+/** Reads the address again after back and forward navigation. */
+function subscribeToHistory(onChange: () => void) {
+  window.addEventListener("popstate", onChange);
+  return () => window.removeEventListener("popstate", onChange);
+}
+
+function readSearch() {
+  return window.location.search;
+}
+
+/**
+ * The prerendered shell and its hydration carry no context. Calling
+ * useSearchParams would make Next client-render each control, so readers would
+ * see an inert copy that React replaces on their first press, losing the click.
+ */
+function readServerSearch() {
+  return "";
+}
+
 /** Convex deduplicates these identical subscriptions across the three controls. */
 function useMaterialNavigation({ page }: MaterialContextProps) {
-  const searchParams = useSearchParams();
-  const hints = searchParams.getAll(MATERIAL_CONTEXT_QUERY_PARAM);
+  // React reads the address again after hydration, and after a navigation once
+  // Next has committed its URL, so a context link still applies its context.
+  const search = useSyncExternalStore(
+    subscribeToHistory,
+    readSearch,
+    readServerSearch
+  );
+  const hints = new URLSearchParams(search).getAll(
+    MATERIAL_CONTEXT_QUERY_PARAM
+  );
   const context = readMaterialContextHint(
     hints.length === 1 ? hints[0] : hints
   );
@@ -75,19 +101,7 @@ function useMaterialNavigation({ page }: MaterialContextProps) {
   };
 }
 
-/**
- * Marks navigation that carries the verified learning context. Its slot hides
- * the static canonical navigation while this is mounted.
- */
-function MaterialContextual({ children }: { children: ReactNode }) {
-  return (
-    <div className="contents" data-material-context="">
-      {children}
-    </div>
-  );
-}
-
-/** Replaces the lesson title with the return link once the context is verified. */
+/** Names the lesson, or links back to its verified context once that resolves. */
 export function MaterialBreadcrumb({
   context,
 }: {
@@ -101,7 +115,7 @@ export function MaterialBreadcrumb({
   );
 }
 
-/** Keeps the verified context on the outline's current-lesson link. */
+/** Preserves the verified context on the outline's current-lesson link. */
 export function MaterialHeading({
   context,
 }: {
@@ -109,21 +123,16 @@ export function MaterialHeading({
 }) {
   const { navigation } = useMaterialNavigation(context);
   const { metadata } = context.page;
-  if (navigation.context === undefined) {
-    return null;
-  }
   return (
-    <MaterialContextual>
-      <SidebarRightHeader
-        description={metadata.description ?? metadata.subject}
-        href={navigation.currentHref}
-        title={metadata.title}
-      />
-    </MaterialContextual>
+    <SidebarRightHeader
+      description={metadata.description ?? metadata.subject}
+      href={navigation.currentHref}
+      title={metadata.title}
+    />
   );
 }
 
-/** Records the lesson view and keeps the verified context on its pagination. */
+/** Changes only pagination URLs and records the same verified learning context. */
 export function MaterialPagination({
   context,
 }: {
@@ -148,11 +157,7 @@ export function MaterialPagination({
         publicPath={page.route.publicPath}
         section="material"
       />
-      {navigation.context === undefined ? null : (
-        <MaterialContextual>
-          <PaginationContent pagination={navigation.pagination} />
-        </MaterialContextual>
-      )}
+      <PaginationContent pagination={navigation.pagination} />
     </>
   );
 }

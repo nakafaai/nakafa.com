@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import { requestLogger } from "@repo/backend/confect/routes/middleware/logger";
 import { Effect, Layer, Logger } from "effect";
-import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
+import { HttpRouter, HttpServerResponse } from "effect/http";
 
 it.effect("logs request paths without OAuth query diagnostics", () =>
   Effect.gen(function* () {

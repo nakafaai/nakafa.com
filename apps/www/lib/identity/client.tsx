@@ -2,9 +2,7 @@
 
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
-
-import type { ReactNode } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type ReactNode, use } from "react";
 import { useAuthSession } from "@/components/auth/session";
 import {
   type AccountRecord,
@@ -79,20 +77,6 @@ function resolveIdentityState({
   return signedOutState;
 }
 
-function IdentityValueProvider({
-  children,
-  value,
-}: {
-  children: ReactNode;
-  value: IdentityState;
-}) {
-  return (
-    <IdentityContext.Provider value={value}>
-      {children}
-    </IdentityContext.Provider>
-  );
-}
-
 /**
  * Resolves the account from the shared Better Auth session.
  *
@@ -101,8 +85,10 @@ function IdentityValueProvider({
  * waiting forever. Mounted once at the app boundary.
  */
 export function IdentityProvider({ children }: { children: ReactNode }) {
-  const { data: session, isPending: isSessionPending } = useAuthSession();
-  const hasSession = session?.session !== undefined;
+  const hasSession = useAuthSession(
+    (session) => session.data?.session !== undefined
+  );
+  const isSessionPending = useAuthSession((session) => session.isPending);
   const query = useQuery(
     refs.public.auth.queries.getCurrentUser,
     hasSession ? {} : "skip"
@@ -117,21 +103,20 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
     isQueryPending: QueryResult.isLoading(query),
   });
 
-  return (
-    <IdentityValueProvider value={value}>{children}</IdentityValueProvider>
-  );
+  return <IdentityContext value={value}>{children}</IdentityContext>;
 }
 
 /**
  * Reads one slice of the identity state for the current subtree.
  *
- * Takes a selector so a consumer subscribes to a primitive instead of the
- * whole state, which would re-render it whenever any identity field changes.
+ * Identity comes from the session and account query during render, so it is
+ * shared through a plain context: readers re-render when it changes, which
+ * happens only as it resolves and when the account signs in or out.
  */
 export function useViewer<T>(selector: (state: IdentityState) => T): T {
-  const value = useContextSelector(IdentityContext, (context) => context);
-  if (value === null) {
+  const context = use(IdentityContext);
+  if (!context) {
     throw new Error("useViewer must be used within an IdentityProvider");
   }
-  return selector(value);
+  return selector(context);
 }

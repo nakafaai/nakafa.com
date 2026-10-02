@@ -14,11 +14,7 @@ import { predecodeFailure } from "@repo/backend/confect/contentRelease/ingress/f
 import { publicationFailure } from "@repo/backend/confect/contentRelease/ingress/response";
 import { getConvexSize } from "convex/values";
 import { Config, Effect, Result } from "effect";
-import {
-  HttpRouter,
-  HttpServerRequest,
-  HttpServerResponse,
-} from "effect/unstable/http";
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 const NODE_ACTION_ARGUMENT_BYTES = 5 * 1024 * 1024;
 /** Converts an oversized Node argument envelope into a sanitized response. */

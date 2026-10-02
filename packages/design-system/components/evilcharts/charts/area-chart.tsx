@@ -62,17 +62,17 @@ interface AreaChartContextValue {
 
 const AreaChartContext = createContext<AreaChartContextValue | null>(null);
 
-// Reads the chart context, throwing a helpful error when used outside <EvilAreaChart />
-export function useAreaChart() {
-  const context = use(AreaChartContext);
+// Selects one part of the chart context, throwing a helpful error when used outside <EvilAreaChart />
+export function useAreaChart<T>(selector: (chart: AreaChartContextValue) => T) {
+  const value = use(AreaChartContext);
 
-  if (!context) {
+  if (!value) {
     throw new Error(
       "Area chart parts (<Area />, <XAxis />, …) must be used within <EvilAreaChart />"
     );
   }
 
-  return context;
+  return selector(value);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ export function XAxis({
   minTickGap = 8,
   ...props
 }: XAxisProps) {
-  const { isLoading } = useAreaChart();
+  const isLoading = useAreaChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -277,7 +277,8 @@ export function YAxis({
   tickFormatter,
   ...props
 }: YAxisProps) {
-  const { isLoading, isExpanded } = useAreaChart();
+  const isLoading = useAreaChart((chart) => chart.isLoading);
+  const isExpanded = useAreaChart((chart) => chart.isExpanded);
 
   if (isLoading) {
     return null;
@@ -334,7 +335,8 @@ export function Tooltip({
   defaultIndex,
   cursor = true,
 }: TooltipProps) {
-  const { isLoading, selectedDataKey } = useAreaChart();
+  const isLoading = useAreaChart((chart) => chart.isLoading);
+  const selectedDataKey = useAreaChart((chart) => chart.selectedDataKey);
 
   if (isLoading) {
     return null;
@@ -374,7 +376,8 @@ export function Legend({
   verticalAlign = "top",
   isClickable = false,
 }: LegendProps) {
-  const { selectedDataKey, selectDataKey } = useAreaChart();
+  const selectedDataKey = useAreaChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useAreaChart((chart) => chart.selectDataKey);
 
   return (
     <ChartLegend
