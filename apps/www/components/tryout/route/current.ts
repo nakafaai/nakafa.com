@@ -1,20 +1,19 @@
-import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type {
+  currentSectionRequestValidator,
+  currentSetRequestValidator,
+} from "@repo/backend/confect/tryouts/attemptPage/spec";
 import { Effect } from "effect";
 import {
   readTryoutSectionAttemptPage,
   readTryoutSetAttemptPage,
 } from "@/components/tryout/catalog/server";
 
-type CurrentRequest<Request> = Omit<
-  Extract<Request, { readonly kind: "current" }>,
+/** The set a public URL names, as its current-attempt request takes it. */
+type CurrentSetRequest = Omit<typeof currentSetRequestValidator.Type, "kind">;
+/** The section a public URL names, as its current-attempt request takes it. */
+type CurrentSectionRequest = Omit<
+  typeof currentSectionRequestValidator.Type,
   "kind"
->;
-type CurrentSetRequest = CurrentRequest<
-  Ref.Args<typeof refs.public.tryouts.queries.attemptPage.getSet>["request"]
->;
-type CurrentSectionRequest = CurrentRequest<
-  Ref.Args<typeof refs.public.tryouts.queries.attemptPage.getSection>["request"]
 >;
 
 /**

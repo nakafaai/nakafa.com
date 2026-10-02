@@ -36,7 +36,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import type { FunctionArgs } from "convex/server";
-import { Effect, Schema, Struct } from "effect";
+import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 describe("tryouts/sets/published", () => {
   it.effect(
@@ -330,10 +330,10 @@ describe("tryouts/sets/published", () => {
     const activate = async (locales: readonly ("de" | "id")[]) =>
       await t.mutation(async (ctx) => {
         const snapshotId = await activateTryoutSnapshot(ctx, {
-          catalog: locales.flatMap((locale) =>
+          catalog: Arr.flatMap(locales, (locale) =>
             makeTryoutStartHierarchy(locale, "visible")
           ),
-          placements: locales.map(makeTryoutStartPlacement),
+          placements: Arr.map(locales, makeTryoutStartPlacement),
         });
         await insertTestTryoutRuntimeBundle(ctx, snapshotId);
       });
