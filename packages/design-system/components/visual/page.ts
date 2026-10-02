@@ -71,9 +71,6 @@ export const measurePage = Effect.fn("designSystem.visual.measurePage")(
   }
 );
 
-/** The padding `measurePage` read, for holding the page later. */
-export type VisualPadding = typeof VisualPaddingSchema.Type;
-
 /**
  * Makes every element outside the card inert, from its siblings up to the
  * children of `body`, until the scope closes. Elements that were already inert
@@ -119,7 +116,7 @@ const holdInert = Effect.fn("designSystem.visual.holdInert")(
  * keeps its layout behind the card.
  */
 const holdScroll = Effect.fn("designSystem.visual.holdScroll")(
-  (root: HTMLElement, padding: VisualPadding) =>
+  (root: HTMLElement, padding: typeof VisualPaddingSchema.Type) =>
     Effect.acquireRelease(
       Effect.sync(() => {
         const { style } = root;
@@ -152,7 +149,7 @@ const holdScroll = Effect.fn("designSystem.visual.holdScroll")(
  */
 export const holdPage = Effect.fn("designSystem.visual.holdPage")(function* (
   card: HTMLElement,
-  padding: VisualPadding
+  padding: typeof VisualPaddingSchema.Type
 ) {
   yield* holdInert(card);
   yield* holdScroll(document.documentElement, padding);
