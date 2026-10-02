@@ -8,7 +8,7 @@ import {
 } from "typescript/unstable/ast";
 import type { Binding } from "#scripts/check/source";
 
-/** Every Effect-native source rule, by the id the baseline counts. */
+/** Every Effect-native source rule, by the id each violation reports. */
 export const Rule = Schema.Literals([
   "array-check",
   "array-method",

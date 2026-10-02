@@ -1,14 +1,18 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import {
+  Array as Arr,
   Effect,
   FileSystem,
   Layer,
   Path,
   PlatformError,
+  Record as Rec,
+  Ref,
   Sink,
   Stdio,
 } from "effect";
+import { RULES } from "#scripts/check/rules";
 import { checkTestPolicy } from "#scripts/check/tests";
 
 const CLEAN_TEST =
@@ -17,44 +21,47 @@ const CLEAN_TEST =
 /** Writes fixture files below one repository root. */
 const writeFixtures = Effect.fn("TestPolicyTest.writeFixtures")(function* (
   root: string,
-  files: Record<string, string>
+  files: Readonly<Record<string, string>>
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  for (const [file, content] of Object.entries(files)) {
-    const filePath = path.join(root, file);
-    yield* fileSystem.makeDirectory(path.dirname(filePath), {
-      recursive: true,
-    });
-    yield* fileSystem.writeFileString(filePath, content);
-  }
+  yield* Effect.forEach(
+    Rec.toEntries(files),
+    ([file, content]) =>
+      Effect.andThen(
+        fileSystem.makeDirectory(path.dirname(path.join(root, file)), {
+          recursive: true,
+        }),
+        fileSystem.writeFileString(path.join(root, file), content)
+      ),
+    { discard: true }
+  );
 });
+
+/** Appends captured stream chunks to `chunks`. */
+function capture(chunks: Ref.Ref<readonly (string | Uint8Array)[]>) {
+  return () =>
+    Sink.forEachArray((written: readonly (string | Uint8Array)[]) =>
+      Ref.update(chunks, Arr.appendAll(written))
+    );
+}
 
 /** Runs the test policy against a fixture with captured standard streams. */
 const checkFixture = Effect.fn("TestPolicyTest.checkFixture")(function* (
   root: string
 ) {
-  const stdout: Array<string | Uint8Array> = [];
-  const stderr: Array<string | Uint8Array> = [];
+  const stdout = yield* Ref.make<readonly (string | Uint8Array)[]>([]);
+  const stderr = yield* Ref.make<readonly (string | Uint8Array)[]>([]);
   const status = yield* checkTestPolicy(root).pipe(
     Effect.provide(
-      Stdio.layerTest({
-        stderr: () =>
-          Sink.forEachArray((chunks) =>
-            Effect.sync(() => {
-              stderr.push(...chunks);
-            })
-          ),
-        stdout: () =>
-          Sink.forEachArray((chunks) =>
-            Effect.sync(() => {
-              stdout.push(...chunks);
-            })
-          ),
-      })
+      Stdio.layerTest({ stderr: capture(stderr), stdout: capture(stdout) })
     )
   );
-  return { status, stderr, stdout };
+  return {
+    status,
+    stderr: yield* Ref.get(stderr),
+    stdout: yield* Ref.get(stdout),
+  };
 });
 
 /** Delegates to the Node file system except for one unreadable file. */
@@ -100,8 +107,6 @@ describe("test ownership policy", () => {
         "packages/core/node_modules/dependency/view.test.tsx": CLEAN_TEST,
         "packages/core/types.d.ts":
           'export declare const narrowed: typeof value === "object";\n',
-        "apps/web/legacy.ts": "export const cache = new Map();\n",
-        "scripts/check/baseline.json": '{"apps/web/legacy.ts":{"map-set":1}}',
         "scripts/tool.test.ts": CLEAN_TEST,
         "scripts/tool.ts": "export const tool = true;\n",
       });
@@ -131,6 +136,7 @@ describe("test ownership policy", () => {
         "packages/core/runner.ts": "export const runner = true;\n",
         "scripts/raw.ts":
           "export function read() {\n  try {\n    return 1;\n  } catch {\n    return 0;\n  }\n}\n",
+        "apps/web/store.ts": "export const store = new Map();\n",
       });
 
       assert.deepStrictEqual(yield* checkFixture(root), {
@@ -140,7 +146,7 @@ describe("test ownership policy", () => {
           "Final code must not contain .test.tsx files:\n  - apps/web/view.test.tsx\n",
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
           "packages/core/runner.test.ts: return the Effect to @effect/vitest instead of running it.\n",
-          "scripts/raw.ts:2: model failure with Effect instead of a raw try/catch statement. (try-catch)\n",
+          `apps/web/store.ts:1: ${RULES["map-set"].message} (map-set)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
           "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
         stdout: [],
@@ -177,14 +183,8 @@ describe("test ownership policy", () => {
       files: { "apps/web/card.tsx": 'export const card = "ring-[3px]";\n' },
     },
     {
-      category: "an Effect-native finding beyond the baseline",
+      category: "an Effect-native violation",
       files: { "apps/web/store.ts": "export const store = new Map();\n" },
-    },
-    {
-      category: "a baseline count above the findings that remain",
-      files: {
-        "scripts/check/baseline.json": '{"apps/web/value.ts":{"json":1}}',
-      },
     },
     {
       category: "typeof-object narrowing",
@@ -241,11 +241,11 @@ describe("test ownership policy", () => {
       ];
 
       assert.deepStrictEqual(
-        failures.map(({ _tag, message }) => ({ _tag, message })),
+        Arr.map(failures, ({ _tag, message }) => [_tag, message]),
         [
-          `Unable to read ${unreadableTest}.`,
-          `Unable to read ${unreadableSource}.`,
-        ].map((message) => ({ _tag: "RepositoryReadError", message }))
+          ["RepositoryReadError", `Unable to read ${unreadableTest}.`],
+          ["RepositoryReadError", `Unable to read ${unreadableSource}.`],
+        ]
       );
     }).pipe(Effect.provide(NodeServices.layer))
   );
