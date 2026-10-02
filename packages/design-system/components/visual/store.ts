@@ -1,17 +1,12 @@
+import {
+  holdPage,
+  type VisualPlace,
+} from "@repo/design-system/components/visual/page";
 import { Effect, Predicate, Schema } from "effect";
-import type { CSSProperties } from "react";
 import { createStore } from "zustand";
 
 /** Where a visual card is shown: in the page, or across the whole screen. */
 type VisualPresentation = "fullscreen" | "immersive" | "inline";
-
-/**
- * The space a card takes in the page: its height and vertical margins, as the
- * style its slot keeps while the card fills the screen.
- */
-type VisualPlace = Required<
-  Pick<CSSProperties, "height" | "marginBottom" | "marginTop">
->;
 
 /** The browser refused to show or leave a visual card with the Fullscreen API. */
 class VisualFullscreenError extends Schema.TaggedError<VisualFullscreenError>()(
@@ -81,45 +76,6 @@ const exitFullscreen = Effect.fn("designSystem.visual.exitFullscreen")(
 );
 
 /**
- * Measures the card's place in the page. A margin of the card collapses with
- * its neighbours through the slot, and the slot's own margin collapses the
- * same way, so copying it keeps every neighbour where it was.
- */
-function measurePlace(card: HTMLElement): VisualPlace {
-  const { marginBottom, marginTop } = getComputedStyle(card);
-  return {
-    height: card.getBoundingClientRect().height,
-    marginBottom,
-    marginTop,
-  };
-}
-
-/**
- * Makes every element outside the card inert, from its siblings up to the
- * children of `body`, and returns the undo. Elements that were already inert
- * stay inert. Scenes in the inert page pause, because a scene that nobody can
- * see or reach needs no frames.
- */
-function inertOutside(card: HTMLElement) {
-  const inerted: Element[] = [];
-  let node: Element = card;
-  while (node !== document.body && node.parentElement) {
-    for (const sibling of node.parentElement.children) {
-      if (sibling !== node && !sibling.hasAttribute("inert")) {
-        sibling.setAttribute("inert", "");
-        inerted.push(sibling);
-      }
-    }
-    node = node.parentElement;
-  }
-  return () => {
-    for (const element of inerted) {
-      element.removeAttribute("inert");
-    }
-  };
-}
-
-/**
  * Whether focus left the card for another element, such as a dialog. A press
  * on the card's own content, such as its canvas, moves focus to the nearest
  * focusable element around it, which still holds the card.
@@ -127,16 +83,6 @@ function inertOutside(card: HTMLElement) {
 function hasFocusLeft(card: HTMLElement) {
   const active = document.activeElement;
   return !(active === null || card.contains(active) || active.contains(card));
-}
-
-/** Stops the page behind from scrolling and returns the undo. */
-function lockScroll() {
-  const { style } = document.documentElement;
-  const overflow = style.overflow;
-  style.overflow = "hidden";
-  return () => {
-    style.overflow = overflow;
-  };
 }
 
 /**
@@ -222,7 +168,10 @@ export function createVisualStore() {
       }
     }
 
-    /** Opens a session: the page behind turns inert and stops scrolling. */
+    /**
+     * Opens a session: the page behind holds still, and the card's slot keeps
+     * its place in the page.
+     */
     function open(element: HTMLElement, trigger: HTMLElement) {
       const onChange = () => follow(current);
       // Browsers usually keep Escape for leaving their own full screen, but
@@ -245,8 +194,8 @@ export function createVisualStore() {
           get().exit();
         }
       };
-      const restoreInert = inertOutside(element);
-      const unlockScroll = lockScroll();
+      const page = holdPage(element);
+      set({ place: page.place });
       document.addEventListener("fullscreenchange", onChange);
       document.addEventListener("keydown", onKeyDown);
       document.addEventListener("focusin", onFocusIn);
@@ -257,8 +206,7 @@ export function createVisualStore() {
           document.removeEventListener("keydown", onKeyDown);
           document.removeEventListener("fullscreenchange", onChange);
           lower(element);
-          unlockScroll();
-          restoreInert();
+          page.release();
         },
         trigger,
       };
@@ -295,7 +243,6 @@ export function createVisualStore() {
         if (!card?.isConnected || session) {
           return;
         }
-        set({ place: measurePlace(card) });
         const current = open(card, trigger);
         session = current;
         if (document.fullscreenEnabled) {

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { createVisualStore } from "@repo/design-system/components/visual/store";
 
 /** The space the test card takes in the page, as its slot keeps it. */
@@ -44,6 +44,15 @@ function element(id: string) {
 
 function inertIds() {
   return Array.from(document.querySelectorAll("[inert]"), (node) => node.id);
+}
+
+/** Expects the card back in the page, and the page behind released. */
+function expectInline(store: ReturnType<typeof createVisualStore>) {
+  expect(store.getState()).toMatchObject({
+    place: undefined,
+    presentation: "inline",
+  });
+  expect(inertIds()).toEqual(["aside"]);
 }
 
 /**
@@ -154,10 +163,6 @@ function requestPendingFullscreen() {
   return { ...page, answer, browser };
 }
 
-beforeEach(() => {
-  document.documentElement.style.overflow = "clip";
-});
-
 afterEach(async () => {
   // An open session keeps its document listeners, which would answer the
   // next test's events.
@@ -178,31 +183,17 @@ afterEach(async () => {
 });
 
 describe("visual card store without the Fullscreen API", () => {
-  it("stays in the page until its card is bound", () => {
+  it("stays in the page until its card is bound inside the document", () => {
     const { store, trigger } = renderPage();
     store.getState().bind(null);
-
     store.getState().enter(trigger);
+    expectInline(store);
 
-    expect(store.getState()).toMatchObject({
-      place: undefined,
-      presentation: "inline",
-    });
-    expect(inertIds()).toEqual(["aside"]);
-  });
-
-  it("stays in the page while its card is outside the document", () => {
-    const { store } = renderPage();
-    const card = document.createElement("div");
-    const trigger = document.createElement("button");
-    card.append(trigger);
-    store.getState().bind(card);
-
+    const detached = document.createElement("div");
+    detached.append(trigger);
+    store.getState().bind(detached);
     store.getState().enter(trigger);
-
-    expect(store.getState().presentation).toBe("inline");
-    expect(inertIds()).toEqual(["aside"]);
-    expect(document.documentElement.style.overflow).toBe("clip");
+    expectInline(store);
   });
 
   it("covers the viewport with the card and holds the page still behind it", () => {
@@ -215,7 +206,6 @@ describe("visual card store without the Fullscreen API", () => {
       presentation: "immersive",
     });
     expect(inertIds()).toEqual(HELD_PAGE);
-    expect(document.documentElement.style.overflow).toBe("hidden");
     expect(document.activeElement).toBe(trigger);
     // Without popovers the card stays fixed in the page's own stacking.
     expect(card.hasAttribute("popover")).toBe(false);
@@ -253,12 +243,7 @@ describe("visual card store without the Fullscreen API", () => {
 
     pressEscape();
 
-    expect(store.getState()).toMatchObject({
-      place: undefined,
-      presentation: "inline",
-    });
-    expect(inertIds()).toEqual(["aside"]);
-    expect(document.documentElement.style.overflow).toBe("clip");
+    expectInline(store);
     expect(document.activeElement).toBe(trigger);
   });
 
@@ -287,32 +272,22 @@ describe("visual card store without the Fullscreen API", () => {
     const dialog = openDialogBehind();
     dialog.focus();
 
-    expect(store.getState()).toMatchObject({
-      place: undefined,
-      presentation: "inline",
-    });
-    expect(inertIds()).toEqual(["aside"]);
+    expectInline(store);
     expect(document.activeElement).toBe(dialog);
   });
 
-  it("stays across the screen when a press on its scene focuses the page around it", () => {
+  it("stays across the screen when a press on its scene moves focus around it", () => {
     const { store, trigger } = renderPage();
     store.getState().enter(trigger);
 
-    // A press on non-focusable content focuses its nearest focusable ancestor.
+    // A press on non-focusable content focuses its nearest focusable
+    // ancestor, or drops focus to `body`.
     element("main").focus();
-
     expect(store.getState().presentation).toBe("immersive");
-    pressEscape();
-    expect(store.getState().presentation).toBe("inline");
-    expect(document.activeElement).toBe(trigger);
-  });
-
-  it("returns focus to its action after a click on the scene dropped it", () => {
-    const { store, trigger } = renderPage();
-    store.getState().enter(trigger);
+    trigger.focus();
     trigger.blur();
     expect(document.activeElement).toBe(document.body);
+    expect(store.getState().presentation).toBe("immersive");
 
     pressEscape();
 
@@ -327,10 +302,7 @@ describe("visual card store without the Fullscreen API", () => {
     expect(store.getState().presentation).toBe("immersive");
 
     store.getState().toggle(trigger);
-    expect(store.getState().presentation).toBe("inline");
-
-    store.getState().exit();
-    expect(inertIds()).toEqual(["aside"]);
+    expectInline(store);
   });
 });
 
@@ -354,19 +326,13 @@ describe("visual card store with the Fullscreen API", () => {
     });
     expect(store.getState().place).toEqual(CARD_PLACE);
     expect(inertIds()).toEqual(HELD_PAGE);
-    expect(document.documentElement.style.overflow).toBe("hidden");
     expect(document.activeElement).toBe(trigger);
 
     // The browser's own controls leave full screen and report it as an event.
     element("inside").focus();
     browser.change(null);
 
-    expect(store.getState()).toMatchObject({
-      place: undefined,
-      presentation: "inline",
-    });
-    expect(inertIds()).toEqual(["aside"]);
-    expect(document.documentElement.style.overflow).toBe("clip");
+    expectInline(store);
     expect(document.activeElement).toBe(trigger);
   });
 
@@ -469,12 +435,7 @@ describe("visual card store with the Fullscreen API", () => {
 
     store.getState().toggle(trigger);
 
-    expect(store.getState()).toMatchObject({
-      place: undefined,
-      presentation: "inline",
-    });
-    expect(inertIds()).toEqual(["aside"]);
-    expect(document.documentElement.style.overflow).toBe("clip");
+    expectInline(store);
     browser.change(card);
     answer.resolve();
     await vi.waitFor(() =>
@@ -490,11 +451,7 @@ describe("visual card store with the Fullscreen API", () => {
 
     pressEscape();
 
-    expect(store.getState()).toMatchObject({
-      place: undefined,
-      presentation: "inline",
-    });
-    expect(inertIds()).toEqual(["aside"]);
+    expectInline(store);
     expect(document.activeElement).toBe(trigger);
   });
 
@@ -518,10 +475,6 @@ describe("visual card store with the Fullscreen API", () => {
     answer.reject(new TypeError("Refused."));
     await settle();
 
-    expect(store.getState()).toMatchObject({
-      place: undefined,
-      presentation: "inline",
-    });
-    expect(inertIds()).toEqual(["aside"]);
+    expectInline(store);
   });
 });
