@@ -110,6 +110,7 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
     expect(observation.headinglessFrames).toBe(0);
     expect(observation.layoutShift).toBe(0);
     expect(observation.locks).toEqual([false]);
+    expect(observation.markedFrames).toBe(0);
   });
 });
 

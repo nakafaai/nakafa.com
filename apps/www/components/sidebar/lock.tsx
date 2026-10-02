@@ -4,32 +4,19 @@ import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provi
 import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
 import {
   createContext,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
   use,
   useLayoutEffect,
   useState,
+  useSyncExternalStore,
 } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
 
-/** The visible pages that currently hold the shell locked. */
-interface ShellLockState {
-  /** Holds the lock until the returned release runs. */
-  readonly lock: () => () => void;
-  readonly locks: number;
-}
-
-const ShellLockContext = createContext<StoreApi<ShellLockState> | null>(null);
-
-/** Creates the lock state owned by one shell instance. */
-function createShellLockStore() {
-  return createStore<ShellLockState>()((set) => ({
-    locks: 0,
-    lock: () => {
-      set((state) => ({ locks: state.locks + 1 }));
-      return () => set((state) => ({ locks: state.locks - 1 }));
-    },
-  }));
-}
+/** Changes the count of visible pages that hold the nearest shell locked. */
+const ShellLocksContext = createContext<Dispatch<
+  SetStateAction<number>
+> | null>(null);
 
 /**
  * Lays the app shell out around its page. While a page holds the lock, as a
@@ -43,11 +30,14 @@ function createShellLockStore() {
  * page inside it differs. The padding follows the sidebar's own slide when the
  * learner toggles it, while a lock change switches it at once.
  *
- * Two sources lock it. The lock store does once the shell has seen it: the
- * header unmounts, the sidebar ignores its toggles, and `data-locked` hides
- * the sidebar. Until then, a locked page renders a `data-shell-lock` marker
- * that the same styles read, so the page and the locked shell always paint
- * together, from the server markup on.
+ * The lock count is this shell's own state rather than a store. Pages change
+ * it from a layout effect, and React applies every update scheduled there
+ * before the browser paints, also in the commit that mounts or reveals this
+ * shell, where a store reader would still wait for its passive subscription
+ * and paint one frame unlocked around a locked page. While the count is above
+ * zero, the header unmounts, the sidebar ignores its toggles, and
+ * `data-locked` hides the sidebar. Before hydration the server markup carries
+ * the lock instead, as a `data-shell-lock` marker that the same styles read.
  */
 export function LockableShell({
   children,
@@ -58,11 +48,11 @@ export function LockableShell({
   header: ReactNode;
   sidebar: ReactNode;
 }) {
-  const [store] = useState(createShellLockStore);
-  const locked = useStore(store, (state) => state.locks > 0);
+  const [locks, setLocks] = useState(0);
+  const locked = locks > 0;
 
   return (
-    <ShellLockContext value={store}>
+    <ShellLocksContext value={setLocks}>
       <SidebarProvider
         className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] data-locked:[--app-header-top:0rem]"
         data-locked={locked ? "" : undefined}
@@ -87,35 +77,48 @@ export function LockableShell({
           {sidebar}
         </div>
       </SidebarProvider>
-    </ShellLockContext>
+    </ShellLocksContext>
   );
 }
 
-/** Selects from the lock state of the nearest shell. */
-function useShellLock<Selected>(selector: (state: ShellLockState) => Selected) {
-  const store = use(ShellLockContext);
-  if (!store) {
-    throw new Error("useShellLock must be used within a LockableShell");
+/** Reads the lock count setter of the nearest shell. */
+function useShellLocks() {
+  const setLocks = use(ShellLocksContext);
+  if (!setLocks) {
+    throw new Error("useShellLocks must be used within a LockableShell");
   }
 
-  return useStore(store, selector);
+  return setLocks;
+}
+
+/** Whether React is hydrating never changes once it is known. */
+function subscribeNever() {
+  return () => undefined;
 }
 
 /**
  * Locks the shell while this element is mounted and visible. The lock applies
- * in a layout effect and releases when the page unmounts or Next.js hides it
- * on navigation. Until the shell shows the lock, this element renders a marker
- * that applies it through the shell's styles: in the server markup, while the
- * page hydrates, and when a client render mounts the shell together with the
- * page, whose store subscription only sees the lock after the browser paints.
- * The marker leaves once the lock is shown, so a page Next.js keeps hidden
- * never holds the shell.
+ * in a layout effect, so it lands before the browser paints the page that
+ * rendered it, and it releases when that page unmounts or Next.js hides it on
+ * navigation.
+ *
+ * The server markup and the hydrating page carry the lock as a marker instead,
+ * so a running attempt paints locked before any script runs. The marker exists
+ * only until this page hydrates: Next.js keeps a page it navigates away from
+ * in the document, hidden, and a marker there would still lock the shell.
  */
 export function ShellLock() {
-  const lock = useShellLock((state) => state.lock);
-  const shown = useShellLock((state) => state.locks > 0);
+  const setLocks = useShellLocks();
+  const hydrating = useSyncExternalStore(
+    subscribeNever,
+    () => false,
+    () => true
+  );
 
-  useLayoutEffect(() => lock(), [lock]);
+  useLayoutEffect(() => {
+    setLocks((count) => count + 1);
+    return () => setLocks((count) => count - 1);
+  }, [setLocks]);
 
-  return shown ? null : <span data-shell-lock="" hidden />;
+  return hydrating ? <span data-shell-lock="" hidden /> : null;
 }

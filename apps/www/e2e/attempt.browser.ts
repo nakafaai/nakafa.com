@@ -73,6 +73,9 @@ const observeStep = Effect.fn("NakafaE2E.observeAttemptStep")(function* (
     expect(observation.shells).toBe(1);
     expect(observation.layoutShift).toBe(0);
     expect(observation.locks).toEqual(locks);
+    // A client render locks through the shell alone, so no page, hidden or
+    // not, may carry the server's lock marker.
+    expect(observation.markedFrames).toBe(0);
   });
   return urls;
 });
@@ -159,6 +162,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     expect(reloaded.shells).toBe(1);
     expect(reloaded.layoutShift).toBe(0);
     expect(reloaded.locks).toEqual([true]);
+    expect(reloaded.marked).toBe(false);
   });
 
   // Finishing the section returns to the attempt's set, still locked.
@@ -236,6 +240,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     expect(direct.headinglessFrames).toBe(0);
     expect(direct.shells).toBe(1);
     expect(direct.layoutShift).toBe(0);
+    expect(direct.marked).toBe(false);
     // Locked from the first painted frame, or after the catalog view once.
     expect([[true], [false, true]]).toContainEqual(direct.locks);
   });
