@@ -27,7 +27,8 @@ const highSchoolSubjects =
 
 /**
  * Composes the shared marketing footer from product, policy, and social links
- * without owning route generation itself.
+ * without owning route generation itself. Signed Page links never prefetch
+ * (see `PageNavigation`).
  */
 export function Footer({
   articleNavigation,
@@ -121,7 +122,7 @@ export function Footer({
                     <LinkItem
                       href={pageNavigation.developerItem.href}
                       label={pageNavigation.developerItem.title}
-                      prefetch
+                      prefetch={false}
                     />
                   </li>
                 ) : null}
@@ -135,7 +136,11 @@ export function Footer({
               <ul className="flex flex-col gap-2">
                 {pageNavigation?.legalItems.map((page) => (
                   <li key={page.pageKey}>
-                    <LinkItem href={page.href} label={page.title} prefetch />
+                    <LinkItem
+                      href={page.href}
+                      label={page.title}
+                      prefetch={false}
+                    />
                   </li>
                 ))}
                 <AnalyticsConsentFooterItem />

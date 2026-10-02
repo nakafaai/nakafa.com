@@ -9,21 +9,23 @@ type LinkProps = ComponentProps<typeof Link>;
 type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
   href: string;
   intentActive?: boolean;
-  onIntent?: (() => void) | undefined;
 };
 
 /**
- * Preserve the reusable route shell and resolve URL-specific data only after
- * pointer, keyboard, or touch intent.
+ * Prefetches the route's shared App Shell while the link is visible, and the
+ * link's own cached content once the reader shows intent: a hover, keyboard
+ * focus, or a touch. Grids, lists, and links inside content use it, so only
+ * the links a reader is about to open cost a per-link prefetch.
  *
- * https://nextjs.org/docs/app/guides/runtime-prefetching
+ * A click adds nothing: hover, focus, or touch always comes first, and the
+ * navigation a click starts fetches whatever the prefetch has not.
+ *
+ * https://nextjs.org/docs/app/guides/optimizing-prefetching#trade-offs
  */
 export function IntentLink({
   href,
   intentActive = false,
-  onClick,
   onFocus,
-  onIntent,
   onMouseEnter,
   onTouchStart,
   ...props
@@ -34,28 +36,18 @@ export function IntentLink({
     [href]
   );
 
-  function markIntent() {
-    setPrefetchHref(href);
-    onIntent?.();
-  }
-
-  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
-    markIntent();
-    onClick?.(event);
-  }
-
   function handleFocus(event: FocusEvent<HTMLAnchorElement>) {
-    markIntent();
+    setPrefetchHref(href);
     onFocus?.(event);
   }
 
   function handleMouseEnter(event: MouseEvent<HTMLAnchorElement>) {
-    markIntent();
+    setPrefetchHref(href);
     onMouseEnter?.(event);
   }
 
   function handleTouchStart(event: TouchEvent<HTMLAnchorElement>) {
-    markIntent();
+    setPrefetchHref(href);
     onTouchStart?.(event);
   }
 
@@ -63,7 +55,6 @@ export function IntentLink({
     <Link
       {...props}
       href={normalizedHref}
-      onClick={handleClick}
       onFocus={handleFocus}
       onMouseEnter={handleMouseEnter}
       onTouchStart={handleTouchStart}

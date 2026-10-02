@@ -109,6 +109,10 @@ function ConsentDetails() {
   );
 }
 
+/**
+ * Links the privacy policy without prefetching it, as every signed Page link
+ * must (see `PageNavigation`). This prompt opens on every first visit.
+ */
 function PrivacyPolicyLink() {
   const t = useTranslations("AnalyticsConsent");
   const href = usePageNavigation(
@@ -126,6 +130,7 @@ function PrivacyPolicyLink() {
           <NavigationLink
             className="text-foreground underline underline-offset-4"
             href={href}
+            prefetch={false}
           >
             {chunks}
           </NavigationLink>

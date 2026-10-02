@@ -1,9 +1,9 @@
 import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/content";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 
@@ -12,7 +12,17 @@ interface Props {
   pagination: ContentPagination;
 }
 
-function PaginationButton({
+/**
+ * Links one neighbouring page, or keeps its column without a link when there
+ * is none.
+ *
+ * A reader who reaches the pagination is likely to open the next page, and a
+ * phone gives no hover to prefetch on, so the link prefetches the page's own
+ * cached content as it nears the viewport, not only the route's App Shell.
+ *
+ * https://nextjs.org/docs/app/guides/optimizing-prefetching
+ */
+function PaginationItem({
   href,
   title,
   label,
@@ -27,37 +37,56 @@ function PaginationButton({
   className?: string;
   iconPosition?: "left" | "right";
 }) {
+  const itemClassName = cn(
+    buttonVariants({ variant: "outline" }),
+    "group flex h-auto flex-col whitespace-normal py-3 shadow-xs",
+    className
+  );
+  const content = (
+    <>
+      <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
+        {iconPosition === "left" && (
+          <HugeIcons className="size-4 shrink-0" icon={icon} />
+        )}
+        {label}
+        {iconPosition === "right" && (
+          <HugeIcons className="size-4 shrink-0" icon={icon} />
+        )}
+      </div>
+      <p
+        className={cn(
+          "w-full text-foreground transition-colors group-hover:text-accent-foreground",
+          iconPosition === "right" ? "text-right" : ""
+        )}
+      >
+        {title}
+      </p>
+    </>
+  );
+
+  if (!href) {
+    return (
+      <div
+        aria-hidden="true"
+        className={cn(
+          itemClassName,
+          "pointer-events-none hidden opacity-50 sm:flex"
+        )}
+      >
+        {content}
+      </div>
+    );
+  }
+
   return (
-    <Button
-      className={cn(
-        "group flex h-auto flex-col whitespace-normal py-3 shadow-xs",
-        !href && "pointer-events-none hidden opacity-50 sm:flex",
-        className
-      )}
-      nativeButton={false}
-      render={
-        <NavigationLink href={href} title={title}>
-          <div className="flex items-center gap-2 font-normal text-muted-foreground text-sm transition-colors group-hover:text-accent-foreground">
-            {iconPosition === "left" && (
-              <HugeIcons className="size-4 shrink-0" icon={icon} />
-            )}
-            {label}
-            {iconPosition === "right" && (
-              <HugeIcons className="size-4 shrink-0" icon={icon} />
-            )}
-          </div>
-          <p
-            className={cn(
-              "w-full text-foreground transition-colors group-hover:text-accent-foreground",
-              iconPosition === "right" ? "text-right" : ""
-            )}
-          >
-            {title}
-          </p>
-        </NavigationLink>
-      }
-      variant="outline"
-    />
+    <NavigationLink
+      className={itemClassName}
+      href={href}
+      prefetch={true}
+      title={title}
+    >
+      {content}
+    </NavigationLink>
   );
 }
 
@@ -70,7 +99,7 @@ export function PaginationContent({ pagination, className }: Props) {
       className={cn("mt-10 pt-10", className)}
     >
       <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">
-        <PaginationButton
+        <PaginationItem
           className="items-start"
           href={pagination.prev.href}
           icon={ArrowLeft02Icon}
@@ -79,7 +108,7 @@ export function PaginationContent({ pagination, className }: Props) {
           title={pagination.prev.title}
         />
 
-        <PaginationButton
+        <PaginationItem
           className="items-end"
           href={pagination.next.href}
           icon={ArrowRight02Icon}

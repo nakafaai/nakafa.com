@@ -18,7 +18,18 @@ export interface PageNavigationItem {
   readonly title: PageMetadata["title"];
 }
 
-/** Verified developer and legal destinations for one locale. */
+/**
+ * Verified developer and legal destinations for one locale.
+ *
+ * Links to these destinations never prefetch. Every signed Page shares the
+ * root `[...page]` route, and once the client router has prefetched one, its
+ * optimistic routing reads each lesson and curriculum URL that next-intl
+ * rewrites, such as `/en/subjects/...` for `/[locale]/materials/...`, as a
+ * Page: their prefetches load nothing, and opening one shows the marketing
+ * layout until the server corrects the route.
+ *
+ * https://github.com/vercel/next.js/blob/v16.3.7/packages/next/src/client/components/segment-cache/optimistic-routes.ts
+ */
 export interface PageNavigation {
   readonly developerItem: PageNavigationItem;
   readonly legalItems: readonly PageNavigationItem[];
