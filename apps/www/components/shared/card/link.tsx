@@ -10,8 +10,10 @@ export function CardLinks({ children }: { children: ReactNode }) {
 
 /**
  * One page link in a card: the row lights up on hover and shows an arrow
- * toward the page it opens. The last row reaches the card's bottom edge.
- * Rows prefetch on intent, since a card can list many pages.
+ * toward the page it opens. The last row takes the card's bottom spacing, so
+ * its highlight reaches the bottom edge, and the first row takes the card's
+ * top spacing when the list opens the card. Rows prefetch on intent, since a
+ * card can list many pages.
  */
 export function CardLink({
   children,
@@ -25,7 +27,7 @@ export function CardLink({
   return (
     <li className="group/list">
       <IntentLink
-        className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground group-last/list:pb-6"
+        className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground in-[[data-slot=card]>ul:first-child]:group-first/list:pt-(--card-spacing) group-last/list:pb-(--card-spacing)"
         href={href}
         title={title}
       >

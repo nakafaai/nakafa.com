@@ -5,7 +5,6 @@ import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { collectUnusedPreloads } from "@/e2e/support/preload";
 
 const readinessTimeoutMilliseconds = 15_000;
 const quranIndexUrlPattern = /\/id\/quran$/;
@@ -370,49 +369,65 @@ const verifyQuranLayoutStability = Effect.fn(
     );
     yield* Effect.promise(() => page.waitForLoadState("networkidle"));
     const layoutShift = yield* readLayoutShift(page);
-    yield* Effect.sync(() => expect(layoutShift).toBeLessThan(0.01));
+    yield* Effect.sync(() => expect(layoutShift).toBe(0));
   }
 });
 
-const verifyQuranTypefaceScope = Effect.fn(
-  "NakafaE2E.verifyQuranTypefaceScope"
-)(function* (page: Page) {
-  yield* seedDeniedAnalyticsConsent(page);
+/**
+ * The surah list fills its card: the first row's highlight reaches the top
+ * edge and the last row's the bottom edge, each with the card's spacing, and
+ * the page leaves room below the card.
+ */
+const verifyQuranIndexEdges = Effect.fn("NakafaE2E.verifyQuranIndexEdges")(
+  function* (page: Page) {
+    yield* seedDeniedAnalyticsConsent(page);
+    const href = "/en/quran";
+    yield* Effect.promise(() => page.goto(href));
+    yield* waitForCommittedAppRouter(
+      page,
+      href,
+      href,
+      readinessTimeoutMilliseconds
+    );
+    const edges = yield* Effect.promise(() =>
+      page
+        .locator('[data-slot="card"]')
+        .first()
+        .evaluate((card) => {
+          const rows = card.querySelectorAll("li > a");
+          const first = rows.item(0);
+          const last = rows.item(rows.length - 1);
+          const box = card.getBoundingClientRect();
+          return {
+            firstGap: first.getBoundingClientRect().top - box.top,
+            firstSpacing: getComputedStyle(first).paddingTop,
+            lastGap: box.bottom - last.getBoundingClientRect().bottom,
+            lastSpacing: getComputedStyle(last).paddingBottom,
+            roomBelow:
+              document.documentElement.scrollHeight - box.bottom - scrollY,
+          };
+        })
+    );
+    yield* Effect.sync(() =>
+      expect(edges).toMatchObject({
+        firstGap: 0,
+        firstSpacing: "24px",
+        lastGap: 0,
+        lastSpacing: "24px",
+      })
+    );
+    yield* Effect.sync(() =>
+      expect(edges.roomBelow).toBeGreaterThanOrEqual(80)
+    );
+  }
+);
 
-  const warnings = yield* collectUnusedPreloads(
-    page,
-    Effect.gen(function* () {
-      // The desktop sidebar links to the Quran, so this page prefetches its
-      // route; the prefetch must not preload the Quran typeface here.
-      const quranPrefetch = page.waitForRequest(
-        (request) =>
-          new URL(request.url()).pathname === "/en/quran" &&
-          request.headers()["next-router-prefetch"] !== undefined,
-        { timeout: readinessTimeoutMilliseconds }
-      );
-      const href = "/en/try-out";
-      yield* Effect.promise(() =>
-        page.goto(href, { waitUntil: "domcontentloaded" })
-      );
-      yield* waitForCommittedAppRouter(
-        page,
-        href,
-        href,
-        readinessTimeoutMilliseconds
-      );
-      yield* Effect.promise(() => quranPrefetch);
-      yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-    })
-  );
-  yield* Effect.sync(() => expect(warnings).toEqual([]));
-});
-
-test.describe("Quran typeface", () => {
+test.describe("Quran index", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
 
-  test("stays off the pages that only link to the Quran", async ({ page }) => {
+  test("fills its card from edge to edge", async ({ page }) => {
     await Effect.runPromise(
-      withObservedPageErrors(page, verifyQuranTypefaceScope(page))
+      withObservedPageErrors(page, verifyQuranIndexEdges(page))
     );
   });
 });
