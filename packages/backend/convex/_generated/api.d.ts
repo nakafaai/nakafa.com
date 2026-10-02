@@ -3200,7 +3200,7 @@ export declare const api: {
           page: Array<{
             actor:
               | { id: Id<"tenantPeople">; kind: "person"; name: string }
-              | { kind: "user" | "system" };
+              | { kind: "system" };
             at: number;
             change:
               | { type: "tenant.provisioned" }
