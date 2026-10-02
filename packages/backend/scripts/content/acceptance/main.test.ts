@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => {
     prepare: vi.fn(),
     run: vi.fn(),
     clean: vi.fn(),
+    learner: vi.fn(),
     getEntry: () => entry,
     runMain: vi.fn((program: Effect.Effect<unknown, unknown>) => {
       entry = program;
@@ -26,15 +27,19 @@ vi.mock("@repo/backend/scripts/content/acceptance/build", () => ({
 vi.mock("@repo/backend/scripts/content/acceptance/local", () => ({
   cleanLocalRuntime: mocks.clean,
 }));
+vi.mock("@repo/backend/scripts/content/acceptance/learner", () => ({
+  createAcceptanceLearner: mocks.learner,
+}));
 
 const originalArgv = process.argv;
 const execute = Effect.fn("AcceptanceCliTest.execute")(function* (
-  mode?: string
+  mode?: string,
+  args: readonly string[] = ["--filter=www"]
 ) {
   process.argv =
     mode === undefined
       ? ["node", "acceptance"]
-      : ["node", "acceptance", mode, "--filter=www"];
+      : ["node", "acceptance", mode, ...args];
   yield* Effect.promise(
     () => import("@repo/backend/scripts/content/acceptance/main")
   );
@@ -48,7 +53,7 @@ const execute = Effect.fn("AcceptanceCliTest.execute")(function* (
 describe("isolated acceptance CLI", () => {
   beforeEach(() => {
     vi.resetModules();
-    for (const mock of [mocks.prepare, mocks.run, mocks.clean]) {
+    for (const mock of [mocks.prepare, mocks.run, mocks.clean, mocks.learner]) {
       mock.mockReturnValue(Effect.void);
     }
   });
@@ -77,7 +82,7 @@ describe("isolated acceptance CLI", () => {
           stderrPath: outputPath,
         }).pipe(Effect.flip);
         expect(yield* fs.readFileString(outputPath)).toContain(
-          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean>"
+          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>>"
         );
       }).pipe(Effect.provide(nodeServicesLayer))
   );
@@ -222,7 +227,7 @@ finally:
     30_000
   );
 
-  for (const mode of ["prepare", "build", "start", "clean"]) {
+  for (const mode of ["prepare", "build", "start", "clean", "learner"]) {
     it.live(
       `runs ${mode} at the repository root with exact forwarded arguments`,
       () =>
@@ -239,24 +244,37 @@ finally:
           if (mode === "clean") {
             expect(mocks.clean).toHaveBeenCalledOnce();
           }
+          if (mode === "learner") {
+            expect(mocks.learner).toHaveBeenCalledWith(
+              expect.any(String),
+              "--filter=www"
+            );
+          }
           expect(
             mocks.prepare.mock.calls.length +
               mocks.run.mock.calls.length +
-              mocks.clean.mock.calls.length
+              mocks.clean.mock.calls.length +
+              mocks.learner.mock.calls.length
           ).toBe(1);
         })
     );
   }
-  for (const mode of [undefined, "unsupported"]) {
+  const rejected: readonly (readonly [string | undefined, string[]])[] = [
+    [undefined, []],
+    ["unsupported", []],
+    ["learner", []],
+  ];
+  for (const [mode, args] of rejected) {
     it.live(`rejects ${mode} before any acceptance operation`, () =>
       Effect.gen(function* () {
-        expect(yield* execute(mode).pipe(Effect.flip)).toMatchObject({
+        expect(yield* execute(mode, args).pipe(Effect.flip)).toMatchObject({
           _tag: "AcceptanceRuntimeError",
           message: expect.stringContaining("Usage: acceptance"),
         });
         expect(mocks.prepare).not.toHaveBeenCalled();
         expect(mocks.run).not.toHaveBeenCalled();
         expect(mocks.clean).not.toHaveBeenCalled();
+        expect(mocks.learner).not.toHaveBeenCalled();
       })
     );
   }

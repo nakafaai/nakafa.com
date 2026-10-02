@@ -16,7 +16,8 @@ import {
 } from "@repo/backend/confect/tryouts/runtime/spec";
 import { Schema } from "effect";
 
-const currentSetRequestValidator = Schema.Struct({
+/** Asks for the learner's current attempt on the set a public URL names. */
+export const currentSetRequestValidator = Schema.Struct({
   kind: Schema.Literal("current"),
   ...tryoutSetIdentityValidator.fields,
 });
@@ -34,7 +35,8 @@ export const tryoutSetAttemptPageRequestValidator = Schema.Union([
 export type TryoutSetAttemptPageRequest = Schema.Schema.Type<
   typeof tryoutSetAttemptPageRequestValidator
 >;
-const currentSectionRequestValidator = Schema.Struct({
+/** Asks for the learner's current attempt through the section a public URL names. */
+export const currentSectionRequestValidator = Schema.Struct({
   kind: Schema.Literal("current"),
   sectionKey: tryoutRouteKeyValidator,
   ...tryoutSetIdentityValidator.fields,

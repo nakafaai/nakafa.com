@@ -3,7 +3,10 @@ import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity"
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
-import type { ListArgs } from "@repo/backend/confect/tryouts/sets/spec";
+import type {
+  ListArgs,
+  RunningAttempt,
+} from "@repo/backend/confect/tryouts/sets/spec";
 import { PublishedSetPaginationError } from "@repo/backend/confect/tryouts/sets/spec";
 import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
 import { toPublicPublishedSet } from "@repo/backend/content/tryout/published";
@@ -14,6 +17,7 @@ const SIGNED_CURSOR_PREFIX = "signed:";
 export interface PublishedSetRow {
   readonly durationSeconds: number;
   readonly progress: Docs["tryoutSetProgress"] | null;
+  readonly runningAttempt: RunningAttempt | null;
   readonly set: TryoutSet;
 }
 /** Stable client failure for invalid signed-catalog pagination. */
@@ -64,6 +68,7 @@ const identifyRows = Effect.fn("tryouts.sets.identifyPublishedPage")(
 function projectPublishedSet({
   durationSeconds,
   progress,
+  runningAttempt,
   set,
 }: PublishedSetRow) {
   return {
@@ -71,6 +76,7 @@ function projectPublishedSet({
     attemptStatus: progress?.status ?? null,
     durationSeconds,
     publishedScore: progress?.publishedScore ?? null,
+    runningAttempt,
   };
 }
 /** Encodes an offset under its immutable catalog and mutable row revision. */

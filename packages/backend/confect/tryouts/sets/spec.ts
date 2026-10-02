@@ -1,5 +1,6 @@
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { publicTryoutSetValidator } from "@repo/backend/confect/tryouts/queries/catalogModel";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
@@ -33,12 +34,19 @@ export const listArgsValidator = Schema.Struct({
   paginationOpts: PaginationOptionsSchema,
   sort: setSortValidator,
 });
+/** The page a running attempt continues on, so a set row can open it directly. */
+export const runningAttemptValidator = Schema.Struct({
+  attemptId: IdSchema("tryoutAttempts"),
+  publicPath: Schema.String,
+});
 export const trackSetValidator = Schema.Struct({
   ...publicTryoutSetValidator.fields,
   attemptStatus: Schema.Union([Schema.Null, tryoutStatusValidator]),
   durationSeconds: Schema.Finite,
   publishedScore: Schema.Union([Schema.Finite, Schema.Null]),
+  runningAttempt: Schema.Union([Schema.Null, runningAttemptValidator]),
 });
+export type RunningAttempt = Schema.Schema.Type<typeof runningAttemptValidator>;
 export const trackSetPageValidator = Schema.Struct({
   ...PaginationResultSchema(trackSetValidator).fields,
   ...{

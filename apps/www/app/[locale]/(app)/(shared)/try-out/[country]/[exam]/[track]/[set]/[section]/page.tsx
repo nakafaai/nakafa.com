@@ -14,10 +14,10 @@ import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
 import { TryoutQuestionPreview } from "@/components/tryout/preview/server";
 import { TryoutReview } from "@/components/tryout/review/server";
+import { readCurrentTryoutSection } from "@/components/tryout/route/current";
 import { selectTryoutSectionReturnHref } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptAuthHref,
-  getTryoutAttemptHref,
   getTryoutHref,
   getTryoutPublicPathHref,
   readTryoutRouteAttemptCapability,
@@ -25,9 +25,12 @@ import {
 } from "@/components/tryout/route/path";
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
-import type { TryoutSectionPage } from "@/components/tryout/section/model";
+import type {
+  TryoutSectionPage,
+  TryoutSectionRoute,
+} from "@/components/tryout/section/model";
+import { TryoutSectionPending } from "@/components/tryout/section/pending";
 import { getToken } from "@/lib/auth/server";
-import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 interface TryoutSectionParams {
@@ -43,6 +46,28 @@ interface TryoutSectionPageProps {
   params: Promise<TryoutSectionParams>;
   searchParams: Promise<TryoutRouteSearchParams>;
 }
+
+/** The running attempt a section page renders, once it is known. */
+type SectionAttemptPage = Effect.Success<
+  ReturnType<typeof readCurrentTryoutSection>
+>;
+
+/** The one attempt a section URL is bound to, read for the request's learner. */
+type RetainedSectionPage = Effect.Success<
+  ReturnType<typeof readTryoutSectionAttemptPage>
+>;
+
+/**
+ * Lets a navigation into a section wait instead of showing an empty page.
+ * Section links prefetch on intent, which resolves the section's catalog view
+ * before the click, and the learner's attempt streams in below its heading. A
+ * link bound to an attempt waits for that attempt, so moving through a running
+ * attempt keeps the previous page on screen until the next one is ready.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ * @see https://nextjs.org/docs/app/guides/optimizing-prefetching#resolve-url-data-at-prefetch-time
+ */
+export const instant = false;
 
 /** Builds route-owned metadata for one localized try-out section. */
 export async function generateMetadata({
@@ -61,8 +86,6 @@ export async function generateMetadata({
   if (capability.kind === "invalid") {
     notFound();
   }
-  const attemptId =
-    capability.kind === "valid" ? capability.attemptId : undefined;
   const locale = getLocaleOrThrow(localeParam);
   const publicPath = getTryoutHref({
     country,
@@ -71,9 +94,32 @@ export async function generateMetadata({
     set,
     track,
   }).slice(1);
-  const preview = attemptId
-    ? Option.none()
-    : await readTryoutQuestionPreview(locale, publicPath);
+  if (capability.kind === "valid") {
+    const retained = await readRetainedSectionPage(
+      locale,
+      publicPath,
+      capability.attemptId
+    );
+    if (Option.isNone(retained)) {
+      const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
+      return createRetainedTryoutMetadata({
+        description: tTryouts("metadata-description"),
+        title: tTryouts("title"),
+      });
+    }
+    const attemptPage = retained.value;
+    if (attemptPage?.kind !== "retained") {
+      notFound();
+    }
+    const frozen = attemptPage.page.section;
+    return createRetainedTryoutMetadata({
+      ...(frozen.description === undefined
+        ? {}
+        : { description: frozen.description }),
+      title: frozen.title,
+    });
+  }
+  const preview = await readTryoutQuestionPreview(locale, publicPath);
   if (Option.isSome(preview)) {
     const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
     return createRetainedTryoutMetadata({
@@ -83,47 +129,15 @@ export async function generateMetadata({
       title: preview.value.target.section.title,
     });
   }
-  const resolved = await readRoutePage(locale, publicPath, attemptId);
-
-  if (resolved.authRequired) {
-    const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
-    return createRetainedTryoutMetadata({
-      description: tTryouts("metadata-description"),
-      title: tTryouts("title"),
-    });
-  }
-  if (resolved.attemptPage?.kind === "retained") {
-    return createRetainedTryoutMetadata({
-      ...(resolved.attemptPage.page.section.description === undefined
-        ? {}
-        : { description: resolved.attemptPage.page.section.description }),
-      title: resolved.attemptPage.page.section.title,
-    });
-  }
-  if (resolved.publicPage) {
-    return generateTryoutRouteMetadata({
-      kind: "section",
-      locale,
-      publicPath,
-    });
-  }
-  notFound();
+  return generateTryoutRouteMetadata({ kind: "section", locale, publicPath });
 }
 
-/** Renders one try-out section with public metadata and owned runtime content. */
-export default function Page(props: TryoutSectionPageProps) {
-  return (
-    <Suspense fallback={null}>
-      <TryoutSectionRoute
-        params={props.params}
-        searchParams={props.searchParams}
-      />
-    </Suspense>
-  );
-}
-
-/** Resolves one cached public section inside its route-owned boundary. */
-async function TryoutSectionRoute({
+/**
+ * Renders one try-out section. A public section paints its catalog view at
+ * once and streams the learner's attempt into it; a section bound to one
+ * attempt renders when that attempt is known.
+ */
+export default async function Page({
   params,
   searchParams,
 }: TryoutSectionPageProps) {
@@ -139,81 +153,142 @@ async function TryoutSectionRoute({
   if (capability.kind === "invalid") {
     notFound();
   }
-  const attemptId =
-    capability.kind === "valid" ? capability.attemptId : undefined;
-  const locale = getLocaleOrThrow(localeParam);
-  const sectionPath = getTryoutHref({
+  const route = {
     country,
     exam,
+    locale: getLocaleOrThrow(localeParam),
     section,
     set,
     track,
-  }).slice(1);
-  const preview = attemptId
-    ? Option.none()
-    : await readTryoutQuestionPreview(locale, sectionPath);
+  };
+  const sectionPath = getTryoutHref(route).slice(1);
+  const setHref = getTryoutHref({ country, exam, set, track });
+  if (capability.kind === "valid") {
+    return (
+      <RetainedTryoutSection
+        attemptId={capability.attemptId}
+        route={route}
+        sectionPath={sectionPath}
+        setHref={setHref}
+      />
+    );
+  }
+  const preview = await readTryoutQuestionPreview(route.locale, sectionPath);
   if (Option.isSome(preview)) {
     return <TryoutQuestionPreview content={preview.value} />;
   }
-  const resolved = await readRoutePage(locale, sectionPath, attemptId);
-  if (resolved.authRequired && attemptId) {
-    redirect(getTryoutAttemptAuthHref(locale, sectionPath, attemptId));
-  }
-  if (resolved.authRequired) {
-    notFound();
-  }
-  const { attemptPage } = resolved;
-  if (attemptPage?.kind === "redirect") {
-    redirect(
-      getTryoutAttemptHref(attemptPage.publicPath, attemptPage.attemptId)
-    );
-  }
-  if (attemptId && !attemptPage) {
-    notFound();
-  }
-  const page = attemptPage?.page ?? resolved.publicPage;
-
+  const page = await readTryoutSectionPage(route.locale, sectionPath);
   if (!page) {
     notFound();
   }
 
-  const setHref = selectTryoutSectionReturnHref({
-    attemptPage,
-    publicHref: getTryoutHref({ country, exam, set, track }),
-  });
+  return (
+    <Suspense
+      fallback={
+        <TryoutSectionPending
+          locale={route.locale}
+          page={page}
+          setHref={setHref}
+        />
+      }
+    >
+      <CurrentTryoutSection page={page} route={route} setHref={setHref} />
+    </Suspense>
+  );
+}
+
+/**
+ * Resolves the learner's attempt on a public section. A running attempt
+ * through this section renders here as its own page, so reaching it from a
+ * public link never passes an empty one.
+ */
+async function CurrentTryoutSection({
+  page,
+  route,
+  setHref,
+}: {
+  page: TryoutSectionPage;
+  route: TryoutSectionRoute;
+  setHref: string;
+}) {
+  const token = await getToken();
+  const attemptPage = token
+    ? await Effect.runPromise(
+        readCurrentTryoutSection(token, {
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          locale: route.locale,
+          sectionKey: page.section.sectionKey,
+          setKey: page.set.setKey,
+          trackKey: page.set.trackKey,
+        })
+      )
+    : null;
 
   return (
-    <ResolvedTryoutSectionRoute
+    <ResolvedTryoutSection
       attemptPage={attemptPage}
-      page={page}
-      route={{ country, exam, locale, section, set, track }}
-      setHref={setHref}
+      page={attemptPage ? attemptPage.page : page}
+      route={route}
+      setHref={selectTryoutSectionReturnHref({
+        attemptPage,
+        publicHref: setHref,
+      })}
+    />
+  );
+}
+
+/** Resolves the one attempt a section URL is bound to. */
+async function RetainedTryoutSection({
+  attemptId,
+  route,
+  sectionPath,
+  setHref,
+}: {
+  attemptId: string;
+  route: TryoutSectionRoute;
+  sectionPath: string;
+  setHref: string;
+}) {
+  const retained = await readRetainedSectionPage(
+    route.locale,
+    sectionPath,
+    attemptId
+  );
+  if (Option.isNone(retained)) {
+    redirect(getTryoutAttemptAuthHref(route.locale, sectionPath, attemptId));
+  }
+  const attemptPage = retained.value;
+  if (attemptPage?.kind !== "retained") {
+    notFound();
+  }
+
+  return (
+    <ResolvedTryoutSection
+      attemptPage={attemptPage}
+      page={attemptPage.page}
+      route={route}
+      setHref={selectTryoutSectionReturnHref({
+        attemptPage,
+        publicHref: setHref,
+      })}
     />
   );
 }
 
 /** Composes signed runtime or review content after route ownership is resolved. */
-async function ResolvedTryoutSectionRoute({
+async function ResolvedTryoutSection({
   attemptPage,
   page,
   route,
   setHref,
 }: {
-  attemptPage: Exclude<
-    Awaited<ReturnType<typeof readRoutePage>>["attemptPage"],
-    { kind: "redirect" }
-  >;
+  attemptPage: SectionAttemptPage;
   page: TryoutSectionPage;
-  route: Omit<TryoutSectionParams, "locale"> & {
-    locale: ReturnType<typeof getLocaleOrThrow>;
-  };
+  route: TryoutSectionRoute;
   setHref: string;
 }) {
-  const { locale } = route;
-  const [articleNavigation, initialNow] = await Promise.all([
-    getShellArticleNavigation(locale),
-    Effect.runPromise(Clock.currentTimeMillis),
-  ]);
+  const initialNow = await Effect.runPromise(Clock.currentTimeMillis);
 
   const signedContent =
     attemptPage?.content.kind === "signed" &&
@@ -234,7 +309,6 @@ async function ResolvedTryoutSectionRoute({
   return (
     <TryoutClockProvider initialNow={initialNow}>
       <TryoutSectionPageClient
-        articleNavigation={articleNavigation}
         binding={
           attemptPage
             ? {
@@ -261,67 +335,28 @@ async function ResolvedTryoutSectionRoute({
   );
 }
 
-/** Resolves active public content or one explicitly owned frozen attempt. */
-const readRoutePage = cache(
+/**
+ * Reads one attempt the request's learner owns, once per request, or nothing
+ * when the request has no learner to read it for.
+ */
+const readRetainedSectionPage = cache(
   async (
     locale: ReturnType<typeof getLocaleOrThrow>,
     publicPath: string,
-    attemptId?: string
-  ) => {
-    if (attemptId) {
-      const token = await getToken();
-      if (!token) {
-        return {
-          attemptPage: null,
-          authRequired: true,
-          publicPage: null,
-        };
-      }
-      const attemptPage = await Effect.runPromise(
-        readTryoutSectionAttemptPage(token, {
-          attemptId,
-          kind: "retained",
-          locale,
-          publicPath,
-        })
-      );
-      return {
-        attemptPage,
-        authRequired: false,
-        publicPage: null,
-      };
-    }
-
-    const [publicPage, token] = await Promise.all([
-      readTryoutSectionPage(locale, publicPath),
-      getToken(),
-    ]);
+    attemptId: string
+  ): Promise<Option.Option<RetainedSectionPage>> => {
+    const token = await getToken();
     if (!token) {
-      return {
-        attemptPage: null,
-        authRequired: false,
-        publicPage,
-      };
-    }
-
-    if (!publicPage) {
-      return {
-        attemptPage: null,
-        authRequired: false,
-        publicPage,
-      };
+      return Option.none();
     }
     const attemptPage = await Effect.runPromise(
       readTryoutSectionAttemptPage(token, {
-        countryKey: publicPage.set.countryKey,
-        examKey: publicPage.set.examKey,
-        kind: "current",
+        attemptId,
+        kind: "retained",
         locale,
-        sectionKey: publicPage.section.sectionKey,
-        setKey: publicPage.set.setKey,
-        trackKey: publicPage.set.trackKey,
+        publicPath,
       })
     );
-    return { attemptPage, authRequired: false, publicPage };
+    return Option.some(attemptPage);
   }
 );
