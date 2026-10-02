@@ -24,9 +24,10 @@ export default defineConfig({
     },
     // Visual cards take the whole screen through the Fullscreen API on
     // desktop, Android, and iPad, and cover the viewport on iPhone, so their
-    // suite also runs in WebKit, after the shared runtime frees the server.
+    // suite also runs in WebKit. It runs last, so no other browser shares the
+    // runner while the navigation suite measures timing.
     {
-      dependencies: ["shared-runtime"],
+      dependencies: ["isolated-navigation"],
       name: "webkit",
       testMatch: "**/visual.browser.ts",
       use: { browserName: "webkit" },
