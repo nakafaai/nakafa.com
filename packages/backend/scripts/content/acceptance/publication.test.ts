@@ -23,6 +23,7 @@ const fixture = Effect.gen(function* () {
     prefix: "acceptance-publication-test-",
   });
   const runtime: LocalRuntime = {
+    analytics: "http://127.0.0.1:43122",
     backend: `${directory}/backend`,
     directory,
     directoryInode: 1,
