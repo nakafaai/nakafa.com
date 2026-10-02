@@ -2,11 +2,15 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Grant } from "@repo/backend/confect/access/access";
-import { grantAccess } from "@repo/backend/confect/access/authority";
+import {
+  grantAccess,
+  grantAuthority,
+} from "@repo/backend/confect/access/authority";
 import {
   assignRole,
   endGrant,
   ensureOwnerRemains,
+  grantView,
 } from "@repo/backend/confect/access/grant";
 import spec from "@repo/backend/confect/access/grants.spec";
 import { activeGrants } from "@repo/backend/confect/access/policy";
@@ -27,12 +31,23 @@ import {
 import { Array as Arr, Effect, Layer, Schema } from "effect";
 
 /**
- * Managing a grant needs `grant.manage` on the scope it covers, so a unit
- * admin manages roles in their own unit only, and a unit named in the
- * arguments must belong to the member's tenant. Owner and Admin roles also
- * need `owner.manage`, which only Owners hold.
+ * Owner and Admin roles also need `owner.manage`, which only Owners hold, so
+ * an Admin can neither give nor end an Admin role.
  */
-const authorizeManage = Effect.fn("access.grants.manage")(function* (
+const authorizeOwnerRole = Effect.fn("access.grants.ownerRole")(function* (
+  role: BuiltinRole
+) {
+  if (Schema.is(OwnerRole)(role)) {
+    yield* tenantAuthority.check("owner.manage", (yield* Member).tenant);
+  }
+});
+
+/**
+ * Giving a role needs `grant.manage` on the scope the new grant covers, so a
+ * unit admin gives roles in their own unit only, and a unit named in the
+ * arguments must belong to the member's tenant.
+ */
+const authorizeAssign = Effect.fn("access.grants.authorizeAssign")(function* (
   scope: GrantScope,
   role: BuiltinRole
 ) {
@@ -42,9 +57,7 @@ const authorizeManage = Effect.fn("access.grants.manage")(function* (
     unit: ({ unitId }) =>
       Effect.asVoid(unitAuthority.authorize("grant.manage", unitId)),
   });
-  if (Schema.is(OwnerRole)(role)) {
-    yield* tenantAuthority.check("owner.manage", tenant);
-  }
+  yield* authorizeOwnerRole(role);
 });
 
 const list = FunctionImpl.make(
@@ -52,12 +65,7 @@ const list = FunctionImpl.make(
   spec,
   "list",
   Effect.fn("access.grants.list")(function* () {
-    return Arr.map(yield* activeGrants((yield* Person)._id), (grant) => ({
-      id: grant._id,
-      role: grant.role,
-      scope: grant.scope,
-      term: grant.term,
-    }));
+    return Arr.map(yield* activeGrants((yield* Person)._id), grantView);
   })
 );
 
@@ -66,7 +74,7 @@ const assign = FunctionImpl.make(
   spec,
   "assign",
   Effect.fn("access.grants.assign")(function* ({ role, scope }) {
-    yield* authorizeManage(scope, role);
+    yield* authorizeAssign(scope, role);
     return yield* assignRole(
       { id: (yield* Member).person._id, kind: "person" },
       yield* Person,
@@ -76,7 +84,11 @@ const assign = FunctionImpl.make(
   })
 );
 
-/** Ending an already ended grant is a no-op, so a retried request succeeds. */
+/**
+ * Ending a grant is decided on the grant (`grant.revoke`), so it works in an
+ * archived unit too. Ending an already ended grant is a no-op, so a retried
+ * request succeeds.
+ */
 const revoke = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -86,7 +98,8 @@ const revoke = FunctionImpl.make(
     if (grant.status !== "active") {
       return null;
     }
-    yield* authorizeManage(grant.scope, grant.role.key);
+    yield* grantAuthority.check("grant.revoke", grant);
+    yield* authorizeOwnerRole(grant.role.key);
     yield* ensureOwnerRemains(grant);
     yield* endGrant(
       { id: (yield* Member).person._id, kind: "person" },

@@ -6,11 +6,11 @@ import {
   GrantTerm,
   RoleRef,
 } from "@repo/backend/confect/access/schema";
-import { Actor } from "@repo/backend/confect/journal/schema";
+import { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Schema } from "effect";
 export default Table.make(() =>
   Schema.Struct({
-    grantedBy: Actor,
+    grantedBy: TenantActor,
     personId: Id("tenantPeople"),
     role: RoleRef,
     scope: GrantScope,

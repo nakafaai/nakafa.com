@@ -23,11 +23,15 @@ A resource kind is declared once, client-safe, in its lane's `kinds.ts` with
 relations a Person can hold to them, the `source.verb` actions evaluated on
 them with their rules, and its audited change schemas with the published ones.
 `Kind.extend` adds actions or changes to another lane's kind; `grant.manage`
-extends both the tenant and the unit, so it is evaluated on the scope a grant
-covers. Rules, roles, and declarations are Effect Schemas, so a misspelled
-role or access mode does not compile, and the catalog test checks that every
-rule names only its kind's relations and every published type is a change of
-its kind.
+extends both the tenant and the unit, so giving a role is evaluated on the
+scope the new grant covers. Ending a grant (`grant.revoke`) is decided on the
+grant itself, covered through its unit, so a grant in an archived unit can
+still be ended: only the grant's own status locks it. Rules, roles, and
+declarations are Effect Schemas, so a misspelled role or access mode does not
+compile, and the catalog test checks that every rule names only its kind's
+relations, that each action of a kind is ruled once (a later entry would
+silently replace an earlier rule, such as making `owner.manage` delegable),
+and that every published type is a change of its kind.
 
 `confect/access/catalog.ts` lists every lane's kinds and extensions once and
 derives the rest: `ObjectRef` (a tagged union over every kind, matched by
@@ -78,6 +82,11 @@ Tenant functions take the route `slug` and attach the session middleware and
   the member's grants and returns the loaded row, or `check(action, row)` for a
   row already loaded, such as the member's tenant. `allowed(row)` lists the
   caller's actions for `can`.
+- Tenant isolation lives in `check`: it derives the row's tenant from its data
+  and denies a row of another tenant with reason `resource`, whichever path
+  loaded the row, and `allowed` lists no actions on such a row. `authorize` is
+  a load followed by `check`, so a missing object and a foreign one get the
+  same denial on every entry point.
 
 ### Decisions
 
@@ -141,7 +150,8 @@ observe, and contract.
 ### Convex actions
 
 No function attaches these middlewares to a Convex action yet, so they declare
-`action: false`. The first lane that does switches the specs it uses to
+`action: false`, once for every access spec in `Kind.spec`. The first lane that
+does switches the specs it uses to
 `makeByFunctionType`: actions resolve the member and decide through internal
 queries that run the same code, and every write an action makes goes through an
 internal mutation that resolves and decides again in its own transaction, so a
@@ -204,6 +214,14 @@ specs (`PersonAccess`, later `SittingAccess` with
 `{ action: "sitting.proctor", arg }`) and `TenantAccess` instead, because a
 typed subject service per kind lets the compiler reject a handler that reads a
 subject no check loaded.
+
+Blueprint sections 1, 7, and 10 also derive a server registry, one authority
+per kind, from the declarations. No server registry exists yet, because no
+code reads a stored `ObjectRef`. Until then each kind's access spec and its
+`MiddlewareImpl` are what tie a kind to its authority. The first lane that
+reads stored references, such as the external-reference ledger, adds the
+dispatch with `ObjectRef.match`, which the compiler requires to cover every
+kind, so a declared kind without an authority fails to compile from then on.
 
 ## Rejected Alternatives
 

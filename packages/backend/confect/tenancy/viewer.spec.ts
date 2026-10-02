@@ -8,14 +8,12 @@ import Session from "@repo/backend/confect/middleware/session.spec";
 import {
   PersonKind,
   PersonName,
-  TenantKind,
-  TenantName,
-  TenantStatus,
+  TenantProfile,
   UnitLevel,
   UnitName,
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 /** Everything the School shell needs to render for the caller in one tenant. */
 export const ViewerView = Schema.Struct({
@@ -26,13 +24,7 @@ export const ViewerView = Schema.Struct({
     kind: PersonKind,
     name: PersonName,
   }),
-  tenant: Schema.Struct({
-    id: Id("tenants"),
-    kind: TenantKind,
-    name: TenantName,
-    slug: TenantSlug,
-    status: TenantStatus,
-  }),
+  tenant: TenantProfile.mapFields(Struct.assign({ id: Id("tenants") })),
   units: Schema.Array(
     Schema.Struct({ id: Id("tenantUnits"), level: UnitLevel, name: UnitName })
   ),

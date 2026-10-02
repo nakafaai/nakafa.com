@@ -4,7 +4,7 @@ import {
   reservedSlugs,
   TenantSlug,
 } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, HashSet, Schema } from "effect";
 
 const isSlug = Schema.is(TenantSlug);
 const isNewSlug = Schema.is(NewTenantSlug);
@@ -41,6 +41,28 @@ describe("tenancy/slug", () => {
     expect(Arr.every(reserved, isSlug)).toBe(true);
     expect(Arr.filter(reserved, isNewSlug)).toEqual([]);
     expect(isNewSlug("sma-nakafa")).toBe(true);
+  });
+
+  it("reserves every name the School plan keeps from tenants", () => {
+    expect(
+      Arr.filter(
+        [
+          "www",
+          "api",
+          "mcp",
+          "cas",
+          "app",
+          "admin",
+          "auth",
+          "docs",
+          "status",
+          "verify",
+          "school",
+          "parent",
+        ],
+        (label) => !HashSet.has(reservedSlugs, label)
+      )
+    ).toEqual([]);
   });
 
   it("explains a reserved address", () => {

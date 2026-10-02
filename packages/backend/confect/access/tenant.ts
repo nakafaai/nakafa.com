@@ -1,6 +1,6 @@
 import { MiddlewareSpec } from "@confect/core";
 import { TenantAction } from "@repo/backend/confect/access/catalog";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { Kind } from "@repo/backend/confect/access/kind";
 import type { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Schema } from "effect";
 
@@ -11,8 +11,7 @@ import { Schema } from "effect";
 export class TenantAccess extends MiddlewareSpec.MiddlewareSpec<
   TenantAccess,
   { requires: Member }
->()("TenantAccess", {
-  error: () => AccessDenied,
-  functionTypes: { action: false, mutation: true, query: true },
-  options: () => Schema.Struct({ action: TenantAction }),
-}) {}
+>()(
+  "TenantAccess",
+  Kind.spec(() => Schema.Struct({ action: TenantAction }))
+) {}

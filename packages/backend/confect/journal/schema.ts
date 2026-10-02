@@ -3,14 +3,22 @@ import { Change, ObjectRef } from "@repo/backend/confect/access/catalog";
 import { Space } from "@repo/backend/confect/space";
 import { Schema, SchemaGetter } from "effect";
 
-/** Who performed a change, in either data space. */
-export const Actor = Schema.Union([
-  /** An account acting in its personal space. */
-  Schema.Struct({ id: Id("users"), kind: Schema.Literal("user") }),
+/**
+ * Who performed a change inside a tenant. Tenant rows name Persons, never
+ * accounts, so they hold no account ID that would outlive a deleted account.
+ */
+export const TenantActor = Schema.Union([
   /** A member acting inside a tenant. */
   Schema.Struct({ id: Id("tenantPeople"), kind: Schema.Literal("person") }),
   /** Scheduled or cascading work. */
   Schema.Struct({ kind: Schema.Literal("system") }),
+]).pipe(Schema.toTaggedUnion("kind"));
+
+/** Who performed a change, in either data space. */
+export const Actor = Schema.Union([
+  /** An account acting in its personal space. */
+  Schema.Struct({ id: Id("users"), kind: Schema.Literal("user") }),
+  ...TenantActor.members,
 ]).pipe(Schema.toTaggedUnion("kind"));
 
 /**

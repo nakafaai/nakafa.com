@@ -95,8 +95,8 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Cohort**: A rombel, the administrative class group that rapor, promotion, and Dapodik use. It is separate from a Classroom.
 - **Classroom**: The learning space for one subject in one Cohort, or one per Cohort in SD.
 - **Person**: Someone in one tenant, separate from a User. A Person can exist before any account and is claimed later; an account holds at most one Person per tenant.
-- **Claim**: Binding a Person to the account that controls the Person's invite address. Claims are automatic only for verified Gmail addresses; other addresses need proof of current control.
-- **Invite**: A pending offer of one Person to whoever proves control of an email address.
+- **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the invite address.
+- **Invite**: A pending offer of one Person to the account whose verified email equals its address.
 - **Grant**: One role held by one Person over the whole tenant or one unit, standing or temporary.
 - **Built-in role**: One of the fixed roles every tenant shares: Owner, Admin, Principal, Deputy, Teacher, Counselor, Staff, Student, Guardian, Proctor, Auditor, and Integration.
 - **Owner**: The role that holds every roles-granted action and alone may appoint Owners and Admins. A tenant keeps at least one claimed Owner.

@@ -19,7 +19,9 @@ their own retention.
 `journalEntries` holds one immutable entry per audited change: its owner (a
 `Space`, one account or one tenant), its actor (an account in its personal
 space, a Person in a tenant, or scheduled work), its subject (an `ObjectRef`),
-and its change. The subject kind's authority writes it with
+and its change. A tenant entry takes only a `TenantActor`, a Person or
+scheduled work, and tenant grants record who gave them the same way, so no
+tenant row holds an account ID. The subject kind's authority writes it with
 `record(actor, row, change)` (ADR 0012) in the caller's transaction, so a
 failed or retried mutation leaves no entry. It only inserts: no reads,
 counters, or sequence documents, so concurrent mutations never conflict on the
@@ -72,7 +74,8 @@ they hold Person IDs, not personal data. Nothing else deletes journal rows.
 
 - `journalEntries` (`by_owner_tenantId`); each authority's `record`;
   `journal/audit:list`, the tenant audit log for `audit.view`, newest first,
-  at most 100 entries a page, with each Person named on a page read once.
+  at most 100 entries a page, with each Person named on a page read once and
+  all of them read concurrently.
 - Wire views `ChangeView` and `SubjectView` decode a change type or kind added
   after a client was built as `unknown`.
 

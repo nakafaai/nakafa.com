@@ -8,14 +8,14 @@ import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
-/** Who acted, resolved for display. Account identities never reach the school. */
+/** Who acted, resolved for display: a Person by name, or scheduled work. */
 const ActorView = Schema.Union([
   Schema.Struct({
     id: Id("tenantPeople"),
     kind: Schema.Literal("person"),
     name: PersonName,
   }),
-  Schema.Struct({ kind: Schema.Literals(["user", "system"]) }),
+  Schema.Struct({ kind: Schema.Literal("system") }),
 ]);
 
 export default GroupSpec.make()

@@ -9,10 +9,11 @@ import {
   type kinds,
   ObjectRef,
 } from "@repo/backend/confect/access/catalog";
+import { decide, type Placement } from "@repo/backend/confect/access/decision";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Kind } from "@repo/backend/confect/access/kind";
-import { GrantScope, Rule } from "@repo/backend/confect/access/schema";
-import type { Actor } from "@repo/backend/confect/journal/schema";
+import type { Rule } from "@repo/backend/confect/access/schema";
+import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   Array as Arr,
@@ -41,63 +42,6 @@ export const activeGrants = Effect.fn("access.grants.active")(function* (
     )
     .take(GRANT_LIMIT + 1)
     .pipe(Effect.orDie);
-});
-
-/** Where a subject sits and whether its state refuses writes. */
-export const Placement = Schema.Struct({
-  /** The subject or its container is ended, archived, or closed. */
-  locked: Schema.Boolean,
-  /** Units whose grants cover the subject; empty for tenant-level subjects. */
-  units: Schema.Array(Id("tenantUnits")),
-});
-
-/** One action on one subject: allowed, or refused by role or by condition. */
-export const Decision = Schema.Literals(["allow", "role", "condition"]);
-
-/**
- * Conditions come first, so no role or relation overrides a suspended tenant
- * or a locked subject. Relations decide only what roles leave open, so their
- * checks, the only reads a decision may make, run last. No rule reads the
- * clock.
- */
-export const decide = Effect.fn("access.decide")(function* (
-  rule: Rule,
-  placement: typeof Placement.Type,
-  member: Member["Service"],
-  relations: HashMap.HashMap<
-    string,
-    Effect.Effect<boolean, never, DatabaseReader>
-  >
-): Effect.fn.Return<typeof Decision.Type, never, DatabaseReader> {
-  if (
-    rule.access === "write" &&
-    (member.tenant.status === "suspended" || placement.locked)
-  ) {
-    return "condition";
-  }
-  const byRole = Rule.match(rule, {
-    relations: () => false,
-    roles: ({ roles }) =>
-      Arr.some(
-        member.grants,
-        (grant) =>
-          GrantScope.match(grant.scope, {
-            tenant: () => true,
-            unit: ({ unitId }) => Arr.contains(placement.units, unitId),
-          }) &&
-          (grant.role.key === "owner" ||
-            Arr.some(roles, (role) => role === grant.role.key))
-      ),
-  });
-  if (byRole) {
-    return "allow";
-  }
-  const related = yield* Effect.findFirst(rule.relations, (relation) =>
-    Option.getOrElse(HashMap.get(relations, relation), () =>
-      Effect.die(`Access rules name an undeclared relation ${relation}.`)
-    )
-  );
-  return Option.isSome(related) ? "allow" : "role";
 });
 
 /** Loads one subject of a kind by ID; a missing document is `None`, never an error. */
@@ -167,12 +111,33 @@ const make = <
     );
   });
 
-  /** Decides one action on a loaded subject of the member's tenant. */
+  /**
+   * Denies an action on a subject outside the member's tenant. A missing
+   * object and another tenant's object get the same denial, so an ID probe
+   * reveals nothing.
+   */
+  const unknownSubject = Effect.fnUntraced(function* (
+    action: typeof Action.Type
+  ) {
+    yield* Effect.logWarning("Access denied for an unknown subject.").pipe(
+      Effect.annotateLogs({ action, kind: name })
+    );
+    return yield* new AccessDenied({ action, reason: "resource" });
+  });
+
+  /**
+   * Decides one action on a loaded subject. The subject's tenant comes from
+   * its data, so a row of another tenant is denied here, whichever path
+   * loaded it.
+   */
   const check = Effect.fn("access.check")(function* (
     action: typeof Action.Type,
     row: Row
   ) {
     const member = yield* Member;
+    if (implementation.tenantOf(row) !== member.tenant._id) {
+      return yield* unknownSubject(action);
+    }
     const rule = yield* Option.match(HashMap.get(rules, action), {
       onNone: () =>
         Effect.die(`Access action ${action} has no rule on kind ${name}.`),
@@ -189,36 +154,29 @@ const make = <
     }
   });
 
-  /**
-   * Loads a subject, derives its tenant from its data, then decides. A
-   * missing object and another tenant's object get the same denial.
-   */
+  /** Loads a subject by ID, then decides; a missing subject is denied like a foreign one. */
   const authorize = Effect.fn("access.authorize")(function* (
     action: typeof Action.Type,
     id: GenericId.GenericId<K["table"]>
   ) {
-    const member = yield* Member;
     const row = yield* loadRow(id).pipe(
-      Effect.map(
-        Option.filter(
-          (loaded) => implementation.tenantOf(loaded) === member.tenant._id
-        )
-      ),
-      Effect.flatMap(Effect.fromOption),
-      Effect.mapError(() => new AccessDenied({ action, reason: "resource" })),
-      Effect.tapError(() =>
-        Effect.logWarning("Access denied for an unknown subject.").pipe(
-          Effect.annotateLogs({ action, kind: name })
-        )
+      Effect.flatMap(
+        Option.match({
+          onNone: () => unknownSubject(action),
+          onSome: Effect.succeed,
+        })
       )
     );
     yield* check(action, row);
     return row;
   });
 
-  /** The actions of this kind the caller may perform on a loaded subject. */
+  /** The actions of this kind the caller may perform on a loaded subject; none on another tenant's. */
   const allowed = Effect.fn("access.allowed")(function* (row: Row) {
     const member = yield* Member;
+    if (implementation.tenantOf(row) !== member.tenant._id) {
+      return [];
+    }
     const placement = yield* implementation.place(row);
     const relations = yield* relationsOf(row, member);
     const granted = yield* Effect.filter(HashMap.toEntries(rules), ([, rule]) =>
@@ -240,7 +198,7 @@ const make = <
    * mutations never conflict here.
    */
   const record = Effect.fn("journal.record")(function* (
-    actor: typeof Actor.Type,
+    actor: typeof TenantActor.Type,
     row: Row,
     change: typeof Change.Type
   ) {

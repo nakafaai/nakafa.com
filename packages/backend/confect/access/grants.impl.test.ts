@@ -350,6 +350,51 @@ describe("access/grants revoke", () => {
       })
   );
 
+  it.effect(
+    "ends a grant in an archived unit and refuses every revoke in a suspended tenant",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const archived = yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenantGrants").insert({
+              grantedBy: { kind: "system" },
+              personId: fixture.people.student.personId,
+              role: { key: "student", kind: "builtin" },
+              scope: { kind: "unit", unitId: fixture.units.smk },
+              status: "active",
+              tenantId: fixture.tenants.nf,
+              term: { kind: "standing" },
+            })
+          )
+        );
+        const owner = fixture.as("owner");
+        expect(
+          yield* owner.mutation(revoke, { grantId: archived, slug: nf })
+        ).toBeNull();
+        const ended = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantGrants").get(archived)
+          )
+        );
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("tenants")
+              .patch(fixture.tenants.nf, { status: "suspended" })
+          )
+        );
+        const suspended = yield* owner
+          .mutation(revoke, {
+            grantId: fixture.people.teacher.grantId,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(ended.status).toBe("revoked");
+        expect(suspended).toMatchObject(denied("condition"));
+      })
+  );
+
   it.effect("lets a holder see their grant but not end it", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

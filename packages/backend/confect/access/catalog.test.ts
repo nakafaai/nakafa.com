@@ -55,6 +55,20 @@ describe("access/catalog", () => {
     expect(undeclared).toEqual([]);
   });
 
+  it("rules each action of a kind once, so no lane redefines another lane's rule", () => {
+    const repeated = Arr.flatMap(ObjectRef.discriminants, (kind) => {
+      const actions = Arr.flatMap(Kind.of(entries, kind), (entry) =>
+        Record.keys<string, Rule>(entry.actions)
+      );
+      return Arr.filter(
+        Arr.dedupe(actions),
+        (action) =>
+          Arr.length(Arr.filter(actions, (other) => other === action)) > 1
+      );
+    });
+    expect(repeated).toEqual([]);
+  });
+
   it("publishes only change types its kind declares", () => {
     const undeclared = Arr.flatMap(ObjectRef.discriminants, (kind) => {
       const declared = Arr.map(

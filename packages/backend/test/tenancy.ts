@@ -2,7 +2,11 @@ import type { GenericId } from "@confect/core";
 import { Ref } from "@confect/core";
 import { RegisteredConvexFunction } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { activeGrants } from "@repo/backend/confect/access/policy";
 import type {
   BuiltinRole,
   GrantScope,
@@ -20,13 +24,39 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
 import type { FunctionReference } from "convex/server";
 import type { TestConvex } from "convex-test";
-import { DateTime, Effect, Schema, Struct } from "effect";
+import { Cause, DateTime, Effect, Exit, Schema, Struct } from "effect";
 
 export const TENANCY_NOW = DateTime.toEpochMillis(
   DateTime.makeUnsafe("2026-10-01T08:00:00Z")
 );
 
 export const slugOf = Schema.decodeSync(TenantSlug);
+
+/** The defect an exit died with, as text, so a test can name the wiring fault it expects. */
+export const defectOf = <A, E>(exit: Exit.Exit<A, E>) =>
+  Exit.hasDies(exit) ? String(Cause.squash(exit.cause)) : "no defect";
+
+/**
+ * The principal `RequireMember` provides for one seeded Person: its tenant,
+ * the Person, and the Person's active grants.
+ */
+export const principal = Effect.fn("test.tenancy.principal")(function* (
+  personId: GenericId.GenericId<"tenantPeople">
+) {
+  const reader = yield* DatabaseReader;
+  const person = yield* reader
+    .table("tenantPeople")
+    .get(personId)
+    .pipe(Effect.orDie);
+  return {
+    grants: yield* activeGrants(personId),
+    person,
+    tenant: yield* reader
+      .table("tenants")
+      .get(person.tenantId)
+      .pipe(Effect.orDie),
+  };
+});
 
 /** Runs a Confect program in one convex-test mutation, the way a Confect mutation runs it. */
 const inMutation =

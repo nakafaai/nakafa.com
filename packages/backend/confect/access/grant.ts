@@ -15,9 +15,15 @@ import {
   GrantScope,
   type GrantStatus,
 } from "@repo/backend/confect/access/schema";
-import type { Actor } from "@repo/backend/confect/journal/schema";
+import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
-import { Array as Arr, Effect, Option, Schema, Struct } from "effect";
+import { Array as Arr, Effect, Match, Option, Schema, Struct } from "effect";
+
+/** One grant as the wire shows it (`GrantView`). */
+export const grantView = (grant: TenantGrantsDoc) =>
+  Struct.renameKeys(Struct.pick(grant, ["_id", "role", "scope", "term"]), {
+    _id: "id",
+  });
 
 /** Active Owner grants one tenant may hold. */
 export const OWNER_LIMIT = 8;
@@ -42,41 +48,67 @@ const activeOwners = Effect.fn("access.grant.owners")(function* (
 });
 
 /**
+ * The first tenant invariant a new standing grant breaks, decided before any
+ * read: only member Persons hold standing grants, only active ones hold any,
+ * no person holds the integration role, and Owners cover the whole tenant.
+ */
+const refusal = (
+  person: TenantPeopleDoc,
+  role: BuiltinRole,
+  scope: GrantScope
+) =>
+  Match.value({ person, role, scope }).pipe(
+    Match.not(
+      { person: { kind: "member" } },
+      () =>
+        new GrantRejected({
+          code: "PERSON_KIND",
+          message: "Operators hold only temporary visit grants.",
+        })
+    ),
+    Match.not(
+      { person: { status: "active" } },
+      () =>
+        new GrantRejected({
+          code: "PERSON_INACTIVE",
+          message: "This person is not active.",
+        })
+    ),
+    Match.when(
+      { role: "integration" },
+      () =>
+        new GrantRejected({
+          code: "GRANT_ROLE",
+          message: "Integrations are not people.",
+        })
+    ),
+    Match.when(
+      { role: "owner", scope: { kind: "unit" } },
+      () =>
+        new GrantRejected({
+          code: "GRANT_SCOPE",
+          message: "Owners cover the whole school.",
+        })
+    ),
+    Match.option
+  );
+
+/**
  * Gives a member Person a standing built-in role under the tenant's
  * invariants and records it under the Person. An identical active grant is
  * returned instead of duplicated, so a retried request stays idempotent.
  * Callers check that the actor may manage the role first.
  */
 export const assignRole = Effect.fn("access.grant.assign")(function* (
-  actor: typeof Actor.Type,
+  actor: typeof TenantActor.Type,
   person: TenantPeopleDoc,
   role: BuiltinRole,
   scope: GrantScope
 ) {
-  if (person.kind !== "member") {
-    return yield* new GrantRejected({
-      code: "PERSON_KIND",
-      message: "Operators hold only temporary visit grants.",
-    });
-  }
-  if (person.status !== "active") {
-    return yield* new GrantRejected({
-      code: "PERSON_INACTIVE",
-      message: "This person is not active.",
-    });
-  }
-  if (role === "integration") {
-    return yield* new GrantRejected({
-      code: "GRANT_ROLE",
-      message: "Integrations are not people.",
-    });
-  }
-  if (role === "owner" && scope.kind !== "tenant") {
-    return yield* new GrantRejected({
-      code: "GRANT_SCOPE",
-      message: "Owners cover the whole school.",
-    });
-  }
+  yield* Option.match(refusal(person, role, scope), {
+    onNone: () => Effect.void,
+    onSome: Effect.fail,
+  });
   const grants = yield* activeGrants(person._id);
   const existing = Arr.findFirst(
     grants,
@@ -127,7 +159,7 @@ export const assignRole = Effect.fn("access.grant.assign")(function* (
 
 /** Ends an active grant and records it under the Person who held it. */
 export const endGrant = Effect.fn("access.grant.end")(function* (
-  actor: typeof Actor.Type,
+  actor: typeof TenantActor.Type,
   grant: TenantGrantsDoc,
   holder: TenantPeopleDoc,
   reason: typeof GrantEndReason.Type

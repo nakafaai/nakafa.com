@@ -72,17 +72,15 @@ Person and any change reruns that caller's subscriptions. Persons of kind
 `operator` exist only for audited Nakafa staff visits.
 
 An invite names a Person and an email address. A claim binds the Person to the
-account that controls the address and accepts the invite. Claims are automatic
-only for verified Gmail addresses: Google never reassigns or renames a Gmail
-address, so Google's verified flag proves the holder controls the mailbox now.
-For any other address the flag only says the address was verified once;
-Workspace administrators reissue addresses, other providers recycle them, and
-the stored account email never refreshes. Those invites stay pending until the
-invitee accepts with proof of current control, such as an emailed one-time
-code. Claims run in a scheduled mutation after sign-up, after Better Auth
+account that controls the address: an invite is claimed automatically when an
+account whose Better Auth email is verified and equal to the invite address
+exists. Claims run in a scheduled mutation after sign-up, after Better Auth
 verifies an address, and after an invite is created for an existing account,
-never inside the sign-in transaction. Later channels (belajar.id matches and
-login card codes) extend the invite channel and claim method values.
+never inside the sign-in transaction. An account that already holds a Person in
+the tenant leaves the invite pending for the school to resolve. A tenant's
+allowed email domains, one of its policies, limit the addresses its invites may
+name. Later channels (belajar.id matches and login card codes) extend the invite
+channel and claim method values.
 
 Account deletion releases the account's Persons instead of deleting them: the
 school controls its records, so each Person and its standing grants stay,
@@ -149,8 +147,10 @@ ADR 0005. The classroom lane owns the retirement.
 
 - One account reaches every school it belongs to and the consumer product with
   one sign-in.
-- Schools whose staff use non-Gmail addresses wait for acceptance by emailed
-  code before their invites are claimed.
+- An invite address works like a credential: whoever holds a verified account
+  with that address claims the Person, an Owner invite included. Schools invite
+  only addresses they or the invitee control, and a tenant's allowed email
+  domains keep its invites on the school's own domains.
 - A tenant whose only Owner deleted their account has no Owner until an
   operator replaces it.
 
@@ -162,5 +162,7 @@ ADR 0005. The classroom lane owns the retirement.
   scope.
 - A deployment per tenant would multiply cost and split one account across
   schools.
-- Automatic claims for every verified email would hand a school, including its
-  Owner role, to whoever holds a stale or recycled address.
+- Accepting every invite by hand, for example with an emailed one-time code,
+  would add a step before each invited teacher, student, and parent reaches
+  their school; automatic matching of verified addresses, limited by the
+  tenant's allowed email domains, keeps joining a school to one sign-in.

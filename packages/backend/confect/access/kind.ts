@@ -121,6 +121,17 @@ const options = <
   kind: K
 ) => Schema.Struct({ action: actions(entries, kind), arg: Schema.String });
 
+/**
+ * The client-safe half of every access spec: it refuses with `AccessDenied`,
+ * runs in queries and mutations (the first lane that attaches one to a Convex
+ * action turns `action` on here), and builds its options on first use.
+ */
+const spec = <S extends Schema.Top>(options: () => S) => ({
+  error: () => AccessDenied,
+  functionTypes: { action: false, mutation: true, query: true } as const,
+  options,
+});
+
 /** The client-safe half of an object kind's access spec. */
 const middleware = <
   const E extends readonly (typeof Entry.Type)[],
@@ -128,11 +139,16 @@ const middleware = <
 >(
   entries: E,
   kind: K
-) => ({
-  error: () => AccessDenied,
-  functionTypes: { action: false, mutation: true, query: true } as const,
-  options: () => options(entries, kind),
-});
+) => spec(() => options(entries, kind));
 
 /** Declares access kinds once per lane and derives each kind's schemas from every lane's entries. */
-export const Kind = { actions, changes, extend, make, middleware, of, options };
+export const Kind = {
+  actions,
+  changes,
+  extend,
+  make,
+  middleware,
+  of,
+  options,
+  spec,
+};

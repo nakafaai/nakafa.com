@@ -4,9 +4,10 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/tenancy/memberships.spec";
+import { tenantProfile } from "@repo/backend/confect/tenancy/schema";
 import { Effect, Layer, Struct } from "effect";
 
-/** The caller's active member Persons; operator Persons never appear here. */
+/** The caller's active member Persons, each tenant read concurrently; operator Persons never appear here. */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -24,17 +25,20 @@ const list = FunctionImpl.make(
       )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    const page = yield* Effect.forEach(people.page, (person) =>
-      reader
-        .table("tenants")
-        .get(person.tenantId)
-        .pipe(
-          Effect.orDie,
-          Effect.map((tenant) => ({
-            person: { id: person._id, name: person.name },
-            tenant: Struct.pick(tenant, ["kind", "name", "slug", "status"]),
-          }))
-        )
+    const page = yield* Effect.forEach(
+      people.page,
+      (person) =>
+        reader
+          .table("tenants")
+          .get(person.tenantId)
+          .pipe(
+            Effect.orDie,
+            Effect.map((tenant) => ({
+              person: { id: person._id, name: person.name },
+              tenant: tenantProfile(tenant),
+            }))
+          ),
+      { concurrency: "unbounded" }
     );
     return Struct.assign(people, { page });
   })

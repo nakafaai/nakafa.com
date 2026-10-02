@@ -3,12 +3,12 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
-  type Actor,
   ChangeView,
   SubjectView,
+  type TenantActor,
 } from "@repo/backend/confect/journal/schema";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Exit, Option, Schema } from "effect";
 
 const nf = slugOf("nf");
 const audit = refs.public.journal.audit.list;
@@ -21,7 +21,7 @@ const page = (numItems: number) => ({
 const provisioned = Effect.fn("test.audit.provisioned")(function* (
   tenantId: GenericId.GenericId<"tenants">,
   count: number,
-  actor: typeof Actor.Type
+  actor: typeof TenantActor.Type
 ) {
   const writer = yield* DatabaseWriter;
   return yield* Effect.forEach(Arr.range(1, count), () =>
@@ -45,12 +45,6 @@ describe("journal/audit list", () => {
         );
         yield* fixture.run(
           provisioned(fixture.tenants.nf, 1, { kind: "system" })
-        );
-        yield* fixture.run(
-          provisioned(fixture.tenants.nf, 1, {
-            id: fixture.users.owner.userId,
-            kind: "user",
-          })
         );
         const owner = fixture.as("owner");
         const grantId = yield* owner.mutation(
@@ -86,12 +80,6 @@ describe("journal/audit list", () => {
             change: { grant: grantId, type: "grant.created" },
             subject,
             subjectName: Option.some("Student"),
-          },
-          {
-            actor: { kind: "user" },
-            change: { type: "tenant.provisioned" },
-            subject: tenant,
-            subjectName: Option.none(),
           },
           {
             actor: { kind: "system" },
@@ -132,6 +120,27 @@ describe("journal/audit list", () => {
           { _tag: "NotMember" },
         ]);
       })
+  );
+
+  it.effect("treats an account named as a tenant actor as a defect", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* fixture.run(
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer.table("journalEntries").insert({
+            actor: { id: fixture.users.owner.userId, kind: "user" },
+            change: { type: "tenant.provisioned" },
+            owner: { kind: "tenant", tenantId: fixture.tenants.nf },
+            subject: { id: fixture.tenants.nf, kind: "tenant" },
+          })
+        )
+      );
+      const exit = yield* fixture
+        .as("owner")
+        .query(audit, page(10))
+        .pipe(Effect.exit);
+      expect(Exit.hasDies(exit)).toBe(true);
+    })
   );
 
   it("lets an older client read change types and kinds added after it was built", () => {

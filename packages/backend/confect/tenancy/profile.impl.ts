@@ -3,7 +3,8 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
 import spec from "@repo/backend/confect/tenancy/profile.spec";
-import { Effect, Layer, Struct } from "effect";
+import { tenantProfile } from "@repo/backend/confect/tenancy/schema";
+import { Effect, Layer } from "effect";
 
 /** One unique indexed read; no identity, so a signed-out visitor sees the school's name. */
 const get = FunctionImpl.make(
@@ -15,7 +16,7 @@ const get = FunctionImpl.make(
       .table("tenants")
       .get("by_slug", slug)
       .pipe(
-        Effect.map(Struct.pick(["kind", "name", "slug", "status"])),
+        Effect.map(tenantProfile),
         Effect.catchTags({
           DocumentDecodeError: Effect.die,
           GetByIndexFailure: () => Effect.fail(new TenantNotFound()),

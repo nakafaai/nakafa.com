@@ -9,9 +9,19 @@ import {
 import { person, tenant, unit } from "@repo/backend/confect/tenancy/kinds";
 import { Schema } from "effect";
 
-/** One role a Person holds; its holder may always see it. */
+/**
+ * One role a Person holds; its holder may always see it. Ending it is decided
+ * on the grant itself, covered by its unit, so a grant in an archived unit
+ * can still be ended: only the grant's own status locks it.
+ */
 export const grant = Kind.make("grant", "tenantGrants", {
   actions: {
+    "grant.revoke": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
     "grant.view": {
       access: "read",
       grantedBy: "roles",
@@ -25,9 +35,10 @@ export const grant = Kind.make("grant", "tenantGrants", {
 });
 
 /**
- * `grant.manage` is evaluated on the scope a grant covers: the tenant for
- * tenant-wide roles, the unit for unit roles. `owner.manage` additionally
- * gates every Owner and Admin grant and belongs to Owners alone.
+ * Giving a role (`grant.manage`) is evaluated on the scope the new grant
+ * covers: the tenant for tenant-wide roles, the unit for unit roles.
+ * `owner.manage` additionally gates giving or ending every Owner and Admin
+ * grant and belongs to Owners alone.
  */
 export const tenantGrants = Kind.extend(tenant, {
   actions: {

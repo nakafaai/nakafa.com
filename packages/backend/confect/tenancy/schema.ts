@@ -95,6 +95,9 @@ export const tenantValidator = Schema.Struct({
 export const TenantProfile = tenantValidator.mapFields(
   Struct.pick(["kind", "name", "slug", "status"])
 );
+/** Projects a stored tenant onto its public profile, with exactly the profile's fields. */
+export const tenantProfile = (tenant: typeof tenantValidator.Type) =>
+  Struct.pick(tenant, Struct.keys(TenantProfile.fields));
 export const tenantUnitValidator = Schema.Struct({
   level: UnitLevel,
   name: UnitName,
