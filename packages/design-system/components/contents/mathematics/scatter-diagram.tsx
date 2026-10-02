@@ -24,8 +24,12 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import {
+  fitRegressionLine,
+  predictY,
+} from "@repo/design-system/lib/charts/regression";
 import { getPointSeriesCue } from "@repo/design-system/lib/charts/series-cue";
-import { Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import type { ReactNode } from "react";
 
 const REGRESSION_DATA_KEY = "regression";
@@ -92,24 +96,9 @@ export function ScatterDiagram({
     }))
   );
 
-  let regressionLineData: { x: number; y: number }[] | undefined;
-  let regressionParams: { m: number; b: number } | null = null;
-
-  if (calculateRegressionLine) {
-    const allPoints = datasets.flatMap((d) => d.points);
-    regressionParams = calculateLeastSquares(allPoints);
-
-    if (regressionParams && allPoints.length > 0) {
-      const xValues = allPoints.map((p) => p.x);
-      const xMin = Math.min(...xValues);
-      const xMax = Math.max(...xValues);
-      const { m, b } = regressionParams;
-      regressionLineData = [
-        { x: xMin, y: m * xMin + b },
-        { x: xMax, y: m * xMax + b },
-      ];
-    }
-  }
+  const regressionLine = calculateRegressionLine
+    ? fitRegressionLine(Arr.flatMap(datasets, (dataset) => dataset.points))
+    : Option.none();
 
   return (
     <VisualCard>
@@ -159,15 +148,18 @@ export function ScatterDiagram({
                 </Scatter>
               );
             })}
-            {!!regressionLineData && !!calculateRegressionLine && (
+            {Option.isSome(regressionLine) && (
               <Line
                 dataKey={REGRESSION_DATA_KEY}
                 lineProps={{
                   activeDot: false,
-                  data: regressionLineData.map((point) => ({
-                    x: point.x,
-                    [REGRESSION_DATA_KEY]: point.y,
-                  })),
+                  data: Arr.map(
+                    [regressionLine.value.xMin, regressionLine.value.xMax],
+                    (x) => ({
+                      x,
+                      [REGRESSION_DATA_KEY]: predictY(regressionLine.value, x),
+                    })
+                  ),
                   dot: false,
                   legendType: "none",
                   ...(regressionLineStyle?.strokeDasharray === undefined
@@ -181,11 +173,10 @@ export function ScatterDiagram({
               />
             )}
             {!!showResiduals &&
-              !!regressionParams &&
+              Option.isSome(regressionLine) &&
               datasets.flatMap((dataset) =>
                 dataset.points.map((point) => {
-                  const yPredicted =
-                    regressionParams.m * point.x + regressionParams.b;
+                  const yPredicted = predictY(regressionLine.value, point.x);
 
                   return (
                     <ReferenceLine
@@ -210,36 +201,4 @@ export function ScatterDiagram({
       </VisualCardFooter>
     </VisualCard>
   );
-}
-
-/** Calculates the least-squares line for one set of scatter points. */
-function calculateLeastSquares(
-  points: Props["datasets"][number]["points"]
-): { m: number; b: number } | null {
-  const n = points.length;
-  if (n < 2) {
-    return null;
-  }
-
-  let sumX = 0;
-  let sumY = 0;
-  let sumXy = 0;
-  let sumX2 = 0;
-
-  for (const p of points) {
-    sumX += p.x;
-    sumY += p.y;
-    sumXy += p.x * p.y;
-    sumX2 += p.x * p.x;
-  }
-
-  const denominator = n * sumX2 - sumX * sumX;
-  if (denominator === 0) {
-    return null;
-  }
-
-  const m = (n * sumXy - sumX * sumY) / denominator;
-  const b = (sumY - m * sumX) / n;
-
-  return { m, b };
 }

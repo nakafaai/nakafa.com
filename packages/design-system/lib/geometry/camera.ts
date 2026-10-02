@@ -34,6 +34,16 @@ const CameraFramingSchema = Schema.Struct({
   target: ScenePointSchema,
 });
 
+/**
+ * A canvas an authored pose is framed on: its size in pixels and the pose's
+ * vertical field of view in degrees.
+ */
+const AuthoredViewSchema = Schema.Struct({
+  fov: Schema.Finite,
+  height: Schema.Finite,
+  width: Schema.Finite,
+});
+
 // Zooming out must retain at least two thirds of the scene's initial scale.
 const MINIMUM_INITIAL_SCALE = 2 / 3;
 const MAXIMUM_INITIAL_SCALE = 4;
@@ -91,11 +101,7 @@ export function resolveAuthoredView({
   fov,
   height,
   width,
-}: {
-  fov: number;
-  height: number;
-  width: number;
-}) {
+}: typeof AuthoredViewSchema.Type) {
   const aspect = width / height;
   if (aspect >= 1) {
     return { extent: height, fov };
