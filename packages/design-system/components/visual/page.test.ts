@@ -3,9 +3,12 @@ import {
   holdPage,
   measurePage,
 } from "@repo/design-system/components/visual/page";
+import { Effect } from "effect";
 
 /** The width the test viewport reports, scrollbars included. */
 const VIEWPORT_WIDTH = 390;
+/** The padding of a page whose scrollbars overlay its content. */
+const NO_PADDING = { paddingLeft: "0px", paddingRight: "0px" };
 
 /** Builds a page where the card sits two levels below `body`. */
 function renderPage() {
@@ -58,96 +61,126 @@ afterEach(() => {
 });
 
 describe("measuring the page around a visual card", () => {
-  it("keeps the card's height and margins for its slot", () => {
-    const card = renderPage();
-    layOutRoot(0, VIEWPORT_WIDTH);
+  it.effect("keeps the card's height and margins for its slot", () =>
+    Effect.gen(function* () {
+      const card = renderPage();
+      layOutRoot(0, VIEWPORT_WIDTH);
 
-    expect(measurePage(card).place).toEqual({
-      height: 480,
-      marginBottom: "24px",
-      marginTop: "16px",
-    });
-  });
+      const { place } = yield* measurePage(card);
 
-  it("turns both scrollbar gutters into padding on top of the root's own", () => {
-    const card = renderPage();
-    // Windows and Linux reserve `scrollbar-gutter: stable both-edges`.
-    layOutRoot(10, 380);
-    document.documentElement.style.paddingLeft = "4px";
+      expect(place).toEqual({
+        height: 480,
+        marginBottom: "24px",
+        marginTop: "16px",
+      });
+    })
+  );
 
-    expect(measurePage(card).padding).toEqual({
-      paddingLeft: "14px",
-      paddingRight: "10px",
-    });
-  });
+  it.effect(
+    "turns both scrollbar gutters into padding on top of the root's own",
+    () =>
+      Effect.gen(function* () {
+        const card = renderPage();
+        // Windows and Linux reserve `scrollbar-gutter: stable both-edges`.
+        layOutRoot(10, 380);
+        document.documentElement.style.paddingLeft = "4px";
 
-  it("counts the space of a scrollbar that hiding the overflow removes", () => {
-    const card = renderPage();
-    // macOS draws a styled scrollbar inside the viewport while it scrolls.
-    layOutRoot(0, 380);
+        const { padding } = yield* measurePage(card);
 
-    expect(measurePage(card).padding).toEqual({
-      paddingLeft: "0px",
-      paddingRight: "10px",
-    });
-  });
+        expect(padding).toEqual({ paddingLeft: "14px", paddingRight: "10px" });
+      })
+  );
 
-  it("counts a root margin as the page's own, not as a gutter", () => {
-    const card = renderPage();
-    document.documentElement.style.margin = "0 6px 0 8px";
-    layOutRoot(18, 374);
+  it.effect(
+    "counts the space of a scrollbar that hiding the overflow removes",
+    () =>
+      Effect.gen(function* () {
+        const card = renderPage();
+        // macOS draws a styled scrollbar inside the viewport while it scrolls.
+        layOutRoot(0, 380);
 
-    expect(measurePage(card).padding).toEqual({
-      paddingLeft: "10px",
-      paddingRight: "10px",
-    });
-  });
+        const { padding } = yield* measurePage(card);
 
-  it("adds no padding where scrollbars overlay a zoomed phone's page", () => {
-    const card = renderPage();
-    // A pinch-zoomed phone reports half its layout width as the viewport.
-    layOutRoot(0, VIEWPORT_WIDTH, VIEWPORT_WIDTH / 2);
+        expect(padding).toEqual({ paddingLeft: "0px", paddingRight: "10px" });
+      })
+  );
 
-    expect(measurePage(card).padding).toEqual({
-      paddingLeft: "0px",
-      paddingRight: "0px",
-    });
-  });
+  it.effect("counts a root margin as the page's own, not as a gutter", () =>
+    Effect.gen(function* () {
+      const card = renderPage();
+      document.documentElement.style.margin = "0 6px 0 8px";
+      layOutRoot(18, 374);
+
+      const { padding } = yield* measurePage(card);
+
+      expect(padding).toEqual({ paddingLeft: "10px", paddingRight: "10px" });
+    })
+  );
+
+  it.effect(
+    "adds no padding where scrollbars overlay a zoomed phone's page",
+    () =>
+      Effect.gen(function* () {
+        const card = renderPage();
+        // A pinch-zoomed phone reports half its layout width as the viewport.
+        layOutRoot(0, VIEWPORT_WIDTH, VIEWPORT_WIDTH / 2);
+
+        const { padding } = yield* measurePage(card);
+
+        expect(padding).toEqual(NO_PADDING);
+      })
+  );
 });
 
 describe("holding the page behind a visual card", () => {
-  it("makes everything outside the card inert and keeps what already was", () => {
-    const card = renderPage();
+  it.effect(
+    "makes everything outside the card inert and keeps what already was",
+    () =>
+      Effect.gen(function* () {
+        const card = renderPage();
 
-    const release = holdPage(card, { paddingLeft: "0px", paddingRight: "0px" });
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            yield* holdPage(card, NO_PADDING);
 
-    expect(inertIds()).toEqual(["header", "before", "aside", "footer"]);
-    release();
-    expect(inertIds()).toEqual(["aside"]);
-  });
+            expect(inertIds()).toEqual(["header", "before", "aside", "footer"]);
+          })
+        );
 
-  it("stops the page scrolling with its gutters closed into padding", () => {
-    const card = renderPage();
-    document.documentElement.style.overflow = "clip";
-    document.documentElement.style.paddingLeft = "4px";
+        expect(inertIds()).toEqual(["aside"]);
+      })
+  );
 
-    const release = holdPage(card, {
-      paddingLeft: "14px",
-      paddingRight: "10px",
-    });
+  it.effect(
+    "stops the page scrolling with its gutters closed into padding",
+    () =>
+      Effect.gen(function* () {
+        const card = renderPage();
+        document.documentElement.style.overflow = "clip";
+        document.documentElement.style.paddingLeft = "4px";
 
-    expect(readRoot()).toEqual({
-      overflow: "hidden",
-      paddingLeft: "14px",
-      paddingRight: "10px",
-      scrollbarGutter: "auto",
-    });
-    release();
-    expect(readRoot()).toEqual({
-      overflow: "clip",
-      paddingLeft: "4px",
-      paddingRight: "",
-      scrollbarGutter: "",
-    });
-  });
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            yield* holdPage(card, {
+              paddingLeft: "14px",
+              paddingRight: "10px",
+            });
+
+            expect(readRoot()).toEqual({
+              overflow: "hidden",
+              paddingLeft: "14px",
+              paddingRight: "10px",
+              scrollbarGutter: "auto",
+            });
+          })
+        );
+
+        expect(readRoot()).toEqual({
+          overflow: "clip",
+          paddingLeft: "4px",
+          paddingRight: "",
+          scrollbarGutter: "",
+        });
+      })
+  );
 });

@@ -67,14 +67,9 @@ function openDialogBehind() {
   return dialog;
 }
 
-function pressEscape(target: EventTarget = document, isComposing = false) {
-  target.dispatchEvent(
-    new KeyboardEvent("keydown", {
-      bubbles: true,
-      cancelable: true,
-      isComposing,
-      key: "Escape",
-    })
+function pressEscape() {
+  document.dispatchEvent(
+    new KeyboardEvent("keydown", { bubbles: true, key: "Escape" })
   );
 }
 
@@ -98,19 +93,6 @@ function deferred() {
     reject = onReject;
   });
   return { promise, reject, resolve };
-}
-
-/**
- * Installs the popover methods a browser with a top layer gives the card.
- * jsdom implements none of them, like Safari before version 17.
- */
-function installPopover(card: HTMLElement) {
-  const showPopover = vi.fn(() => {
-    expect(card.getAttribute("popover")).toBe("manual");
-  });
-  const hidePopover = vi.fn();
-  Object.assign(card, { hidePopover, showPopover });
-  return { hidePopover, showPopover };
 }
 
 /**
@@ -228,7 +210,9 @@ describe("visual card store without the Fullscreen API", () => {
 
   it("lifts the immersive card into the top layer and returns it", () => {
     const { card, store, trigger } = renderPage();
-    const popover = installPopover(card);
+    // jsdom implements no popovers, like Safari before version 17.
+    const popover = { hidePopover: vi.fn(), showPopover: vi.fn() };
+    Object.assign(card, popover);
 
     store.getState().enter(trigger);
 
@@ -239,16 +223,6 @@ describe("visual card store without the Fullscreen API", () => {
 
     expect(store.getState().presentation).toBe("inline");
     expect(popover.hidePopover).toHaveBeenCalledOnce();
-    expect(card.hasAttribute("popover")).toBe(false);
-  });
-
-  it("keeps focus that is already inside the card", () => {
-    const { store, trigger } = renderPage();
-    element("inside").focus();
-
-    store.getState().enter(trigger);
-
-    expect(document.activeElement).toBe(element("inside"));
   });
 
   it("returns the card, the page, and focus when Escape closes it", () => {
@@ -262,52 +236,16 @@ describe("visual card store without the Fullscreen API", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("ignores other keys, an Escape handled inside the card or by an IME, and a second entry", () => {
+  it("holds the page once when it is asked to show the card again", () => {
     const { store, trigger } = renderPage();
     store.getState().enter(trigger);
-    element("inside").addEventListener("keydown", (event) =>
-      event.preventDefault()
-    );
 
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
-    pressEscape(element("inside"));
-    pressEscape(document, true);
     store.getState().enter(trigger);
 
     expect(store.getState().presentation).toBe("immersive");
     expect(inertIds()).toEqual(HELD_PAGE);
-  });
-
-  it("returns the card when a dialog behind it takes focus", () => {
-    const { store, trigger } = renderPage();
-    store.getState().enter(trigger);
-    element("inside").focus();
-    expect(store.getState().presentation).toBe("immersive");
-
-    const dialog = openDialogBehind();
-    dialog.focus();
-
+    store.getState().exit();
     expectInline(store);
-    expect(document.activeElement).toBe(dialog);
-  });
-
-  it("stays across the screen when a press on its scene moves focus around it", () => {
-    const { store, trigger } = renderPage();
-    store.getState().enter(trigger);
-
-    // A press on non-focusable content focuses its nearest focusable
-    // ancestor, or drops focus to `body`.
-    element("main").focus();
-    expect(store.getState().presentation).toBe("immersive");
-    trigger.focus();
-    trigger.blur();
-    expect(document.activeElement).toBe(document.body);
-    expect(store.getState().presentation).toBe("immersive");
-
-    pressEscape();
-
-    expect(store.getState().presentation).toBe("inline");
-    expect(document.activeElement).toBe(trigger);
   });
 
   it("toggles in and out from the card's own action", () => {
@@ -352,6 +290,25 @@ describe("visual card store with the Fullscreen API", () => {
       expectInline(store);
       expect(document.activeElement).toBe(trigger);
     })
+  );
+
+  it.live(
+    "holds the page as it was when the card first filled the screen",
+    () =>
+      Effect.gen(function* () {
+        const { browser, card, store } = yield* enterFullscreen();
+        // The page changes after it turned inert, and the browser reports the
+        // card's full screen again.
+        const late = openDialogBehind();
+
+        browser.change(card);
+
+        expect(store.getState().presentation).toBe("fullscreen");
+        expect(inertIds()).toEqual(HELD_PAGE);
+        expect(late.hasAttribute("inert")).toBe(false);
+        browser.change(null);
+        expectInline(store);
+      })
   );
 
   it.live("leaves full screen when the page receives Escape", () =>

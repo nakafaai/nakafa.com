@@ -1,9 +1,14 @@
+import { VisualPlaceSchema } from "@repo/design-system/components/visual/page";
 import {
-  holdPage,
-  measurePage,
-  VisualPlaceSchema,
-} from "@repo/design-system/components/visual/page";
-import { Effect, Predicate, Schema } from "effect";
+  closeSession,
+  focusSession,
+  holdSession,
+  openSession,
+  raiseSession,
+  returnFocus,
+  type Session,
+} from "@repo/design-system/components/visual/session";
+import { Effect, Schema } from "effect";
 import { createStore, type ExtractState } from "zustand";
 import { combine } from "zustand/middleware";
 
@@ -72,102 +77,6 @@ const exitFullscreen = Effect.fn("designSystem.visual.exitFullscreen")(
 );
 
 /**
- * Whether focus left the card for another element, such as a dialog. A press
- * on the card's own content, such as its canvas, moves focus to the nearest
- * focusable element around it, which still holds the card.
- */
-function hasFocusLeft(card: HTMLElement) {
-  const active = document.activeElement;
-  return !(active === null || card.contains(active) || active.contains(card));
-}
-
-/**
- * Lifts the immersive card into the browser's top layer as a manual popover,
- * so no stacking context or sticky bar of the page can cover it. Browsers
- * without popovers keep the card fixed above the page's own layers.
- */
-function raise(card: HTMLElement) {
-  if (!Predicate.isFunction(card.showPopover)) {
-    return;
-  }
-  card.setAttribute("popover", "manual");
-  card.showPopover();
-}
-
-/** Returns a raised card from the top layer to the page. */
-function lower(card: HTMLElement) {
-  if (!card.hasAttribute("popover")) {
-    return;
-  }
-  card.hidePopover();
-  card.removeAttribute("popover");
-}
-
-/**
- * Opens one stay across the whole screen, from the card's request to its
- * return. It measures the page while the card is still in it and listens for
- * the ways a learner leaves: the browser's own full screen controls, which
- * report `fullscreenchange`, Escape, and focus that moves outside the card.
- */
-function openSession(
-  card: HTMLElement,
-  trigger: HTMLElement,
-  onExit: () => void,
-  onFullscreenChange: () => void
-) {
-  const page = measurePage(card);
-  let releasePage: () => void = () => undefined;
-  // Browsers usually keep Escape for leaving their own full screen, but the
-  // page may receive it too, and the immersive card has no browser full
-  // screen at all. Escape also cancels a request the browser has not
-  // answered yet. Escape that ends an IME composition stays there.
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (
-      event.key === "Escape" &&
-      !(event.defaultPrevented || event.isComposing)
-    ) {
-      onExit();
-    }
-  };
-  // A global shortcut can still open a dialog behind the card, which the
-  // browser's full screen would hide. Focus that moves there returns the card
-  // to the page.
-  const onFocusIn = () => {
-    if (hasFocusLeft(card)) {
-      onExit();
-    }
-  };
-  document.addEventListener("fullscreenchange", onFullscreenChange);
-  document.addEventListener("keydown", onKeyDown);
-  document.addEventListener("focusin", onFocusIn);
-
-  return {
-    card,
-    /**
-     * Holds the page behind the card once the card fills the screen. Showing
-     * the card replaces any earlier hold, so no hold outlives the session.
-     */
-    hold: () => {
-      releasePage();
-      releasePage = holdPage(card, page.padding);
-    },
-    place: page.place,
-    /** Stops listening, and returns the card and the page as they were. */
-    release: () => {
-      document.removeEventListener("focusin", onFocusIn);
-      document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-      lower(card);
-      releasePage();
-    },
-    trigger,
-  };
-}
-
-/** One stay across the whole screen, from its request to its return. */
-type Session = ReturnType<typeof openSession>;
-
-/**
  * Creates the store that shows one visual card across the whole screen.
  *
  * The card element itself changes presentation, so its scene never remounts:
@@ -179,21 +88,14 @@ type Session = ReturnType<typeof openSession>;
  * card when focus moves to anything outside it.
  *
  * The actions are the handlers of the card's action, Escape, focus, and
- * `fullscreenchange`, so they run the Fullscreen API programs at that browser
- * event boundary.
+ * `fullscreenchange`, so they run the session and Fullscreen API programs at
+ * that browser event boundary.
  */
 export function createVisualStore() {
   return createStore(
     combine(INLINE, (set, get) => {
       let card: HTMLElement | null = null;
       let session: Session | undefined;
-
-      /** Moves focus into the card unless it is already there. */
-      function focusCard(current: Session) {
-        if (!current.card.contains(document.activeElement)) {
-          current.trigger.focus({ preventScroll: true });
-        }
-      }
 
       /**
        * Returns the card to the page and releases the page. Focus returns to
@@ -204,34 +106,38 @@ export function createVisualStore() {
           return;
         }
         session = undefined;
-        current.release();
+        Effect.runSync(closeSession(current));
         set(INLINE);
-        if (!hasFocusLeft(current.card)) {
-          current.trigger.focus({ preventScroll: true });
-        }
+        Effect.runSync(returnFocus(current));
       }
 
-      /** Shows the card across the screen and holds the page behind it. */
+      /**
+       * Shows the card across the screen and holds the page behind it, once
+       * for the whole stay.
+       */
       function present(
         current: Session,
         presentation: Exclude<typeof VisualPresentationSchema.Type, "inline">
       ) {
-        current.hold();
+        if (get().presentation === "inline") {
+          Effect.runSync(holdSession(current));
+        }
         set({ presentation });
       }
 
       /** Covers the viewport with the card element itself. */
       function immerse(current: Session) {
         present(current, "immersive");
-        raise(current.card);
-        focusCard(current);
+        Effect.runSync(
+          raiseSession(current).pipe(Effect.andThen(focusSession(current)))
+        );
       }
 
       /** Follows the Fullscreen API into and out of full screen. */
       function follow(current: Session) {
         if (document.fullscreenElement === current.card) {
           present(current, "fullscreen");
-          focusCard(current);
+          Effect.runSync(focusSession(current));
           return;
         }
         if (get().presentation === "fullscreen") {
@@ -266,7 +172,9 @@ export function createVisualStore() {
         if (!card?.isConnected || session) {
           return;
         }
-        const current = openSession(card, trigger, exit, () => follow(current));
+        const current = Effect.runSync(
+          openSession(card, trigger, exit, () => follow(current))
+        );
         session = current;
         set({ place: current.place });
         if (document.fullscreenEnabled) {
