@@ -1,7 +1,6 @@
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/layout";
@@ -11,6 +10,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country.client";
 import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 import { buildTryoutCountryOptions } from "@/components/tryout/catalog/options";
+import { readTryoutCatalogRoutes } from "@/components/tryout/catalog/routes";
 import { TryoutCountrySelector } from "@/components/tryout/catalog/selector.client";
 import {
   readTryoutCountryPage,
@@ -20,6 +20,35 @@ import { getTryoutHref } from "@/components/tryout/route/path";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
+
+/**
+ * Lets a navigation into a country published after the build wait for its
+ * server render. Every country the catalog served at build time is prerendered
+ * whole below, but one published later has no page of its own until its first
+ * visit upgrades it, and try-out pages render together with the app shell, so
+ * no truthful fallback exists while it renders.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ * @see https://nextjs.org/docs/app/guides/incremental-static-regeneration-cache-components
+ */
+export const instant = false;
+
+/**
+ * Prerenders every country the published catalog serves, so a direct visit gets
+ * the whole page, app shell included, from the static cache.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/functions/generate-static-params#with-cache-components
+ */
+export async function generateStaticParams({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  const routes = await Effect.runPromise(
+    readTryoutCatalogRoutes(getLocaleOrThrow(params.locale))
+  );
+  return routes.countries;
+}
 
 /** Builds route-owned metadata for one localized try-out country. */
 export async function generateMetadata({
@@ -38,18 +67,7 @@ export async function generateMetadata({
 }
 
 /** Renders active exam families for one try-out country. */
-export default function Page(props: {
-  params: Promise<{ country: string; locale: string }>;
-}) {
-  return (
-    <Suspense fallback={null}>
-      <TryoutCountryRoute params={props.params} />
-    </Suspense>
-  );
-}
-
-/** Resolves one cached public country inside its route-owned boundary. */
-async function TryoutCountryRoute({
+export default async function Page({
   params,
 }: {
   params: Promise<{ country: string; locale: string }>;

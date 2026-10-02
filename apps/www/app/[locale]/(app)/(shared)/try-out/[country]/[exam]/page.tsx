@@ -1,12 +1,13 @@
+import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutExamPageClient } from "@/components/tryout/catalog/exam.client";
 import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 import { buildTryoutExamOptions } from "@/components/tryout/catalog/options";
+import { readTryoutCatalogRoutes } from "@/components/tryout/catalog/routes";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
 import {
   readTryoutCountryPage,
@@ -14,6 +15,35 @@ import {
 } from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+
+/**
+ * Lets a navigation into an exam published after the build wait for its
+ * server render. Every exam the catalog served at build time is prerendered
+ * whole below, but one published later has no page of its own until its first
+ * visit upgrades it, and try-out pages render together with the app shell, so
+ * no truthful fallback exists while it renders.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ * @see https://nextjs.org/docs/app/guides/incremental-static-regeneration-cache-components
+ */
+export const instant = false;
+
+/**
+ * Prerenders every exam the published catalog serves, so a direct visit gets
+ * the whole page, app shell included, from the static cache.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/functions/generate-static-params#with-cache-components
+ */
+export async function generateStaticParams({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  const routes = await Effect.runPromise(
+    readTryoutCatalogRoutes(getLocaleOrThrow(params.locale))
+  );
+  return routes.exams;
+}
 
 /** Builds route-owned metadata for one localized try-out exam. */
 export async function generateMetadata({
@@ -32,18 +62,7 @@ export async function generateMetadata({
 }
 
 /** Renders active try-out tracks for one country and exam family. */
-export default function Page(props: {
-  params: Promise<{ country: string; exam: string; locale: string }>;
-}) {
-  return (
-    <Suspense fallback={null}>
-      <TryoutExamRoute params={props.params} />
-    </Suspense>
-  );
-}
-
-/** Resolves one cached public exam inside its route-owned boundary. */
-async function TryoutExamRoute({
+export default async function Page({
   params,
 }: {
   params: Promise<{ country: string; exam: string; locale: string }>;

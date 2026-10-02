@@ -37,8 +37,10 @@ for (const viewport of targetViewports) {
             exact: true,
             name: "Log in",
           });
+          // The panel's inner surface paints on desktop and the sheet's on
+          // phones; the desktop wrapper itself takes no room beside the page.
           const footer = page
-            .locator('[data-slot="sidebar"]:visible')
+            .locator('[data-sidebar="sidebar"]:visible')
             .locator('[data-slot="sidebar-footer"]');
 
           if (viewport.name === "compact") {

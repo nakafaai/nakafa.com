@@ -128,11 +128,13 @@ describe("tryouts/sets/page", () => {
                   {
                     durationSeconds: 60,
                     progress: null,
+                    runningAttempt: null,
                     set: firstSet,
                   },
                   {
                     durationSeconds: 120,
                     progress: null,
+                    runningAttempt: null,
                     set: secondSet,
                   },
                 ];
@@ -198,11 +200,13 @@ describe("tryouts/sets/page", () => {
                   {
                     durationSeconds: 60,
                     progress,
+                    runningAttempt: null,
                     set: firstSet,
                   },
                   {
                     durationSeconds: 120,
                     progress: null,
+                    runningAttempt: null,
                     set: secondSet,
                   },
                 ];

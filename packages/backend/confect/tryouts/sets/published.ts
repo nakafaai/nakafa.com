@@ -1,4 +1,7 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  type AppLocaleCode,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
@@ -7,6 +10,8 @@ import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { TRYOUT_PROGRESS_IDENTITY_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { isTryoutProgressWithinReadBudget } from "@repo/backend/confect/tryouts/progress/size";
+import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
+import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
 import {
   type PublishedSetRow,
   paginatePublishedSets,
@@ -92,16 +97,39 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
       found.sets,
       Effect.fn("tryouts.sets.projectPublished")(function* (set) {
         const sections = yield* readPublishedSetSections(found.index, set);
+        const row = progress.get(tryoutCatalogIdentity(set)) ?? null;
         return {
           durationSeconds: sections.reduce(
             (total, section) => total + section.timeLimitSeconds,
             0
           ),
-          progress: progress.get(tryoutCatalogIdentity(set)) ?? null,
+          progress: row,
+          runningAttempt: yield* readRunningAttempt(row, identity.locale),
           set,
         };
       })
     );
+  }
+);
+
+/**
+ * Reads the page a set's running attempt continues on, the same one a public
+ * set URL would send the learner to, so its row can open it directly.
+ */
+const readRunningAttempt = Effect.fn("tryouts.sets.readRunningAttempt")(
+  function* (progress: Progress | null, locale: AppLocaleCode) {
+    if (progress?.status !== "in-progress") {
+      return null;
+    }
+    const attempt = yield* readOwnedAttemptById(
+      progress.latestAttemptId,
+      progress.userId
+    );
+    if (attempt?.status !== "in-progress") {
+      return null;
+    }
+    const publicPath = yield* readAttemptDestination(attempt, locale);
+    return publicPath ? { attemptId: attempt._id, publicPath } : null;
   }
 );
 

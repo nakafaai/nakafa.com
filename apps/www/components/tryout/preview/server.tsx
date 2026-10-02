@@ -1,7 +1,6 @@
 import "server-only";
 
 import type { ReactNode } from "react";
-import { AppShell } from "@/components/sidebar/shell";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import {
   TryoutActiveQuestionShell,
@@ -17,50 +16,46 @@ import {
   TryoutPageBody,
   TryoutPageHeader,
 } from "@/components/tryout/shell/header";
-import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import type { QuestionPreviewContent } from "@/lib/content/preview/question";
 
 /** Renders one authenticated prompt or full answer on its real public route. */
-export async function TryoutQuestionPreview({
+export function TryoutQuestionPreview({
   content,
 }: {
   readonly content: QuestionPreviewContent;
 }) {
-  const articleNavigation = await getShellArticleNavigation(content.appLocale);
   const { exam, section, set, track } = content.target;
   const Question = content.Question;
   return (
-    <AppShell articleNavigation={articleNavigation}>
-      <TryoutPage>
-        <TryoutPageHeader
-          action={null}
-          items={[
-            {
-              href: getTryoutPublicPathHref(exam.publicPath),
-              label: exam.title,
-            },
-            {
-              href: getTryoutPublicPathHref(track.publicPath),
-              label: track.title,
-            },
-            ...(section.publicPath
-              ? [
-                  {
-                    href: getTryoutPublicPathHref(set.publicPath),
-                    label: set.title,
-                  },
-                ]
-              : []),
-          ]}
-          title={section.title}
-        />
-        <TryoutPageBody>
-          <QuestionPreviewBody content={content}>
-            <Question />
-          </QuestionPreviewBody>
-        </TryoutPageBody>
-      </TryoutPage>
-    </AppShell>
+    <TryoutPage>
+      <TryoutPageHeader
+        action={null}
+        items={[
+          {
+            href: getTryoutPublicPathHref(exam.publicPath),
+            label: exam.title,
+          },
+          {
+            href: getTryoutPublicPathHref(track.publicPath),
+            label: track.title,
+          },
+          ...(section.publicPath
+            ? [
+                {
+                  href: getTryoutPublicPathHref(set.publicPath),
+                  label: set.title,
+                },
+              ]
+            : []),
+        ]}
+        title={section.title}
+      />
+      <TryoutPageBody>
+        <QuestionPreviewBody content={content}>
+          <Question />
+        </QuestionPreviewBody>
+      </TryoutPageBody>
+    </TryoutPage>
   );
 }
 

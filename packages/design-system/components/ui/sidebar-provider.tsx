@@ -30,7 +30,9 @@ const SIDEBAR_DESKTOP = TAILWIND_BREAKPOINT_PIXELS.lg;
 /**
  * Provides responsive, persistent sidebar state for an app shell.
  *
- * When `locked` is true, the sidebar stays hidden and ignores toggle actions.
+ * When `locked` is true, the sidebar ignores toggle actions and keeps the
+ * mobile sheet closed. The desktop panel keeps its state, so the shell that
+ * hides it while locked shows it unchanged once the lock ends.
  */
 export function SidebarProvider({
   defaultOpen = true,
@@ -62,13 +64,15 @@ export function SidebarProvider({
   const isLocked = locked;
 
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
-  const open = isLocked ? false : (openProp ?? uncontrolledOpen);
+  const open = openProp ?? uncontrolledOpen;
   const openMobile = isLocked ? false : mobileOpen;
   const setOpen = useCallback(
     (value: boolean | ((previous: boolean) => boolean)) => {
-      const nextOpen = typeof value === "function" ? value(open) : value;
-      const openState = isLocked ? false : nextOpen;
+      if (isLocked) {
+        return;
+      }
 
+      const openState = typeof value === "function" ? value(open) : value;
       if (setOpenProp) {
         setOpenProp(openState);
       } else {

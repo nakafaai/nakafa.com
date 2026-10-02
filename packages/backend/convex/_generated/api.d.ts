@@ -5484,6 +5484,10 @@ export declare const api: {
               publishedScore: number | null;
               readyQuestionCount: number;
               readyVisibleSectionCount: number;
+              runningAttempt: null | {
+                attemptId: Id<"tryoutAttempts">;
+                publicPath: string;
+              };
               scoringStrategy: "irt" | "raw" | "weighted";
               sectionCount: number;
               setKey: string;
