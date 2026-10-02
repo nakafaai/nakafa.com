@@ -52,15 +52,10 @@ type SectionAttemptPage = Effect.Success<
   ReturnType<typeof readCurrentTryoutSection>
 >;
 
-/** The one attempt a section URL is bound to, once its learner is known. */
-type RetainedSectionRead =
-  | { readonly kind: "auth-required" }
-  | {
-      readonly attemptPage: Effect.Success<
-        ReturnType<typeof readTryoutSectionAttemptPage>
-      >;
-      readonly kind: "owned";
-    };
+/** The one attempt a section URL is bound to, read for the request's learner. */
+type RetainedSectionPage = Effect.Success<
+  ReturnType<typeof readTryoutSectionAttemptPage>
+>;
 
 /**
  * Lets a navigation into a section wait instead of showing an empty page.
@@ -105,17 +100,18 @@ export async function generateMetadata({
       publicPath,
       capability.attemptId
     );
-    if (retained.kind === "auth-required") {
+    if (Option.isNone(retained)) {
       const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
       return createRetainedTryoutMetadata({
         description: tTryouts("metadata-description"),
         title: tTryouts("title"),
       });
     }
-    if (retained.attemptPage?.kind !== "retained") {
+    const attemptPage = retained.value;
+    if (attemptPage?.kind !== "retained") {
       notFound();
     }
-    const frozen = retained.attemptPage.page.section;
+    const frozen = attemptPage.page.section;
     return createRetainedTryoutMetadata({
       ...(frozen.description === undefined
         ? {}
@@ -259,20 +255,21 @@ async function RetainedTryoutSection({
     sectionPath,
     attemptId
   );
-  if (retained.kind === "auth-required") {
+  if (Option.isNone(retained)) {
     redirect(getTryoutAttemptAuthHref(route.locale, sectionPath, attemptId));
   }
-  if (retained.attemptPage?.kind !== "retained") {
+  const attemptPage = retained.value;
+  if (attemptPage?.kind !== "retained") {
     notFound();
   }
 
   return (
     <ResolvedTryoutSection
-      attemptPage={retained.attemptPage}
-      page={retained.attemptPage.page}
+      attemptPage={attemptPage}
+      page={attemptPage.page}
       route={route}
       setHref={selectTryoutSectionReturnHref({
-        attemptPage: retained.attemptPage,
+        attemptPage,
         publicHref: setHref,
       })}
     />
@@ -338,16 +335,19 @@ async function ResolvedTryoutSection({
   );
 }
 
-/** Reads one attempt the request's learner owns, once per request. */
+/**
+ * Reads one attempt the request's learner owns, once per request, or nothing
+ * when the request has no learner to read it for.
+ */
 const readRetainedSectionPage = cache(
   async (
     locale: ReturnType<typeof getLocaleOrThrow>,
     publicPath: string,
     attemptId: string
-  ): Promise<RetainedSectionRead> => {
+  ): Promise<Option.Option<RetainedSectionPage>> => {
     const token = await getToken();
     if (!token) {
-      return { kind: "auth-required" };
+      return Option.none();
     }
     const attemptPage = await Effect.runPromise(
       readTryoutSectionAttemptPage(token, {
@@ -357,6 +357,6 @@ const readRetainedSectionPage = cache(
         publicPath,
       })
     );
-    return { attemptPage, kind: "owned" };
+    return Option.some(attemptPage);
   }
 );

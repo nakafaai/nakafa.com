@@ -1,8 +1,8 @@
 import { createHmac } from "node:crypto";
-import { tmpdir } from "node:os";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
+import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import { Effect, FileSystem, Schema } from "effect";
 
@@ -20,13 +20,7 @@ vi.mock(
   })
 );
 
-interface CommandSpec {
-  readonly args: readonly string[];
-  readonly cwd: string;
-  readonly env: Readonly<Record<string, string | undefined>>;
-  readonly sensitiveValues: readonly string[];
-  readonly stdoutPath: string;
-}
+type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 
 const CommandInput = Schema.fromJsonString(
   Schema.Struct({
@@ -67,7 +61,6 @@ function answerCommands(createdUser = '{"_creationTime":1,"_id":"user-1"}') {
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const root = yield* fs.makeTempDirectoryScoped({
-    directory: tmpdir(),
     prefix: "acceptance-learner-test-",
   });
   mocks.read.mockReturnValue(Effect.succeed({ backend: `${root}/backend` }));
@@ -103,8 +96,8 @@ describe("synthetic acceptance learner", () => {
         for (const spec of specs) {
           expect(spec.args[0]).toBe("node_modules/convex/bin/main.js");
           expect(spec.cwd).toBe(`${root}/backend`);
-          expect(spec.env.TMPDIR).toEqual(expect.any(String));
-          expect(spec.env.CONVEX_DEPLOY_KEY).toBeUndefined();
+          expect(spec.env?.TMPDIR).toEqual(expect.any(String));
+          expect(spec.env?.CONVEX_DEPLOY_KEY).toBeUndefined();
         }
         const [account, profile, session, other] = yield* Effect.forEach(
           [specs[0], specs[1], specs[2], specs[3]],
