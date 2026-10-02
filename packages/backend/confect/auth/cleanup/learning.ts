@@ -88,10 +88,7 @@ const cleanupPopularityIdentity = Effect.fn(
   function* (userId: Id<"users">) {
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const viewerKey = createPopularityViewerKey({
-      deviceId: "",
-      userId,
-    });
+    const viewerKey = createPopularityViewerKey({ kind: "account", userId });
     const queueRows = yield* database
       .table("learningEngagementQueue")
       .index("by_viewerKey", (query) => query.eq("viewerKey", viewerKey))

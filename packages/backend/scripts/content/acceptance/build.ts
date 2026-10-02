@@ -1,3 +1,4 @@
+import { withAnalyticsSink } from "@repo/backend/scripts/content/acceptance/analytics";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
   discardSignedResponses,
@@ -62,12 +63,18 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
     [...applicationCommands[operation], ...args],
     localApplicationEnvironment(runtime)
   );
-  // The cache is cleared once the backend is ready, right before the build
-  // reads it, so nothing written while the backend started can survive.
-  yield* withLocalBackend(
-    runtime,
-    operation === "build"
-      ? discardSignedResponses(root).pipe(Effect.andThen(command))
-      : command
+  if (operation === "build") {
+    // The cache is cleared once the backend is ready, right before the build
+    // reads it, so nothing written while the backend started can survive.
+    return yield* withLocalBackend(
+      runtime,
+      discardSignedResponses(root).pipe(Effect.andThen(command))
+    );
+  }
+  // The served app proxies analytics to the stand-in reserved at prepare. It
+  // claims its port first, so an occupied port fails before Convex starts.
+  return yield* withAnalyticsSink(
+    runtime.analytics,
+    withLocalBackend(runtime, command)
   );
 }, Effect.scoped);

@@ -2,7 +2,8 @@ import { expect, type Page, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
-import { readLayoutShift } from "@/e2e/support/layout";
+import { pinnedRoutes } from "@/e2e/support/corpus";
+import { expectUncovered, readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const readinessTimeoutMilliseconds = 15_000;
@@ -50,6 +51,131 @@ test.describe("Desktop outline", () => {
   test("keeps its entries still while the page hydrates", async ({ page }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyOutlineHydration(page))
+    );
+  });
+});
+
+/**
+ * Below the desktop width the outline is a sheet over the lesson. Choosing a
+ * heading jumps to it with native fragment navigation and closes the sheet,
+ * so the reader lands on the heading instead of the sheet that covers it.
+ */
+const verifyPhoneOutlineJump = Effect.fn("NakafaE2E.verifyPhoneOutlineJump")(
+  function* (page: Page) {
+    const href = pinnedRoutes.material.en;
+    yield* seedDeniedAnalyticsConsent(page);
+    yield* Effect.promise(() => page.goto(href));
+    yield* waitForCommittedAppRouter(
+      page,
+      href,
+      href,
+      readinessTimeoutMilliseconds
+    );
+    yield* Effect.promise(() =>
+      page.getByRole("button", { name: "On this page" }).click()
+    );
+    const sheet = page.getByRole("dialog");
+    const heading = sheet.locator('a[href^="#"]').nth(2);
+    yield* Effect.promise(() => expect(heading).toBeVisible());
+    const fragment = yield* Effect.promise(() => heading.getAttribute("href"));
+    const label = yield* Effect.promise(() => heading.getAttribute("title"));
+    yield* Effect.promise(() => heading.click());
+    yield* Effect.promise(() => expect(sheet).toBeHidden());
+    yield* Effect.promise(() => expect(page).toHaveURL(`${href}${fragment}`));
+    yield* expectUncovered(
+      page.getByRole("heading", { exact: true, name: `Link to ${label}` }),
+      readinessTimeoutMilliseconds
+    );
+  }
+);
+
+/**
+ * Al-Baqarah virtualizes the verses past the document flow, and its long
+ * outline too: scrolling the outline renders the entry for verse 200, and
+ * choosing it closes the sheet and scrolls the verse in below the headers.
+ */
+const verifyPhoneVerseJump = Effect.fn("NakafaE2E.verifyPhoneVerseJump")(
+  function* (page: Page) {
+    const href = "/en/quran/2";
+    yield* seedDeniedAnalyticsConsent(page);
+    yield* Effect.promise(() => page.goto(href));
+    yield* waitForCommittedAppRouter(
+      page,
+      href,
+      href,
+      readinessTimeoutMilliseconds
+    );
+    yield* Effect.promise(() =>
+      page.getByRole("button", { name: "On this page" }).click()
+    );
+    const sheet = page.getByRole("dialog");
+    // On slow runners the outline can still move after a jump made while the
+    // sheet slides in, and a tap that lands mid-move reaches no entry. A
+    // reader taps a list that holds still, so the jump waits for the slide to
+    // finish and the tap waits for ten still frames after the jump.
+    yield* Effect.promise(() =>
+      sheet.evaluate(
+        (dialog) =>
+          new Promise<void>((resolve) => {
+            const settle = () => {
+              if (dialog.hasAttribute("data-starting-style")) {
+                requestAnimationFrame(settle);
+                return;
+              }
+              Promise.allSettled(
+                dialog
+                  .getAnimations({ subtree: true })
+                  .map((animation) => animation.finished)
+              ).then(() => resolve());
+            };
+            settle();
+          })
+      )
+    );
+    yield* Effect.promise(() =>
+      sheet.locator('[data-slot="sidebar-content"]').evaluate(
+        (node) =>
+          new Promise<void>((resolve) => {
+            const entry = node.querySelector('[data-slot="sidebar-menu-item"]');
+            node.scrollTop = (entry?.getBoundingClientRect().height ?? 0) * 199;
+            let lastTop = node.scrollTop;
+            let stillFrames = 0;
+            const check = () => {
+              stillFrames = node.scrollTop === lastTop ? stillFrames + 1 : 0;
+              lastTop = node.scrollTop;
+              if (stillFrames === 10) {
+                resolve();
+                return;
+              }
+              requestAnimationFrame(check);
+            };
+            requestAnimationFrame(check);
+          })
+      )
+    );
+    yield* Effect.promise(() =>
+      sheet.getByRole("button", { exact: true, name: "Verse 200" }).click()
+    );
+    yield* Effect.promise(() => expect(sheet).toBeHidden());
+    yield* expectUncovered(
+      page.locator("#verse-200"),
+      readinessTimeoutMilliseconds
+    );
+  }
+);
+
+test.describe("Phone outline", () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
+  test("closes after a heading is chosen", async ({ page }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyPhoneOutlineJump(page))
+    );
+  });
+
+  test("closes after a far verse is chosen", async ({ page }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyPhoneVerseJump(page))
     );
   });
 });

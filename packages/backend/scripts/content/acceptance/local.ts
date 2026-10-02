@@ -5,6 +5,7 @@ import {
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_MCP_EDGE_CONTRACT,
 } from "@repo/backend/agent/edge";
+import { reserveAnalyticsOrigin } from "@repo/backend/scripts/content/acceptance/analytics";
 import {
   createLocalJwks,
   LOCAL_AUTH_SECRET,
@@ -30,6 +31,7 @@ const LoopbackUrl = Schema.String.check(
   )
 );
 const RuntimeManifest = Schema.Struct({
+  analytics: LoopbackUrl,
   backend: Schema.String,
   configurationHash: Schema.String,
   databaseInode: Schema.Finite,
@@ -88,7 +90,7 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
     NEXT_PUBLIC_CONVEX_URL: runtime.query,
     NEXT_PUBLIC_POSTHOG_KEY: "phc_local_acceptance",
     NEXT_PUBLIC_POSTHOG_UI_HOST: "http://localhost:3000",
-    POSTHOG_PROXY_HOST: "https://localhost",
+    POSTHOG_PROXY_HOST: runtime.analytics,
     SITE_URL: localEnvironment.SITE_URL,
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
       localEnvironment[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],
@@ -268,6 +270,7 @@ export const initializeLocalRuntime = Effect.fn(
     ...identity,
     ...reserved,
     ...urls,
+    analytics: yield* reserveAnalyticsOrigin(),
     backend,
     databaseInode: database.ino.value,
     configurationHash: createHash("sha256")
@@ -299,7 +302,7 @@ export const readLocalRuntime = Effect.fn("contentAcceptance.readLocalRuntime")(
       ),
       Effect.mapError(() =>
         acceptanceRuntimeError(
-          "The build runtime manifest is missing or invalid; existing state is preserved."
+          "The build runtime manifest is missing or invalid; existing state is preserved. Stop its services, delete .cache/acceptance, and run pnpm acceptance:prepare."
         )
       )
     );

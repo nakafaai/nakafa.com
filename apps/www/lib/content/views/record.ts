@@ -1,25 +1,23 @@
 "use client";
 
 import { useMutation } from "@confect/react";
-import {
-  readLocalStorageValue,
-  useDocumentVisibility,
-  useLocalStorage,
-} from "@mantine/hooks";
+import { useDocumentVisibility } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { useConvexAuth } from "convex/react";
-import { Effect, Result } from "effect";
-import { nanoid } from "nanoid";
+import { Effect, Option, Result } from "effect";
 import { useEffect } from "react";
+import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
 import { useContentViews } from "@/lib/content/views/context";
+import {
+  readContentViewIdentity,
+  resolveContentViewAttribution,
+} from "@/lib/content/views/device";
 import { createContentViewKey } from "@/lib/content/views/key";
 import { useViewer } from "@/lib/identity/client";
-
-const DEVICE_STORAGE_KEY = "nakafa-device-id";
 
 /** Client-side graph content-view recording configuration. */
 interface UseRecordContentViewOptions {
@@ -32,11 +30,13 @@ interface UseRecordContentViewOptions {
 }
 
 /**
- * Records unique content views per user/device when a content identity exists.
+ * Records unique content views per account or consented device.
  *
  * Design: Backend tracks first and last view timestamps.
  * Local deduplication prevents rapid duplicate calls within session.
  * Uses tab visibility tracking with minimum engagement threshold.
+ * The device identifier is created only when a view that analytics consent
+ * lets count per device is recorded; see `readContentViewIdentity`.
  *
  * @param delay - Minimum engagement time before recording (default: 3000ms)
  */
@@ -57,6 +57,9 @@ export function useRecordContentView({
   const { isAuthenticated, isLoading } = useConvexAuth();
   const isUserPending = useViewer((state) => state.isPending);
   const signedInUserId = useViewer((state) => state.viewer?.id ?? null);
+  const attribution = useAnalyticsConsent((state) =>
+    resolveContentViewAttribution({ isAuthenticated, status: state.status })
+  );
 
   const documentState = useDocumentVisibility();
   const isVisible = documentState === "visible";
@@ -66,10 +69,6 @@ export function useRecordContentView({
     ...(contentId === undefined ? {} : { contentId }),
     ...(context === undefined ? {} : { context }),
     signedInUserId,
-  });
-  const [deviceId, setDeviceId] = useLocalStorage({
-    key: DEVICE_STORAGE_KEY,
-    defaultValue: "",
   });
 
   useEffect(() => {
@@ -85,6 +84,12 @@ export function useRecordContentView({
       return;
     }
 
+    // Pending consent cannot tell yet whether the device may count, and a
+    // signed-out view without a grant records and stores nothing.
+    if (attribution === "pending" || attribution === "none") {
+      return;
+    }
+
     if (isViewed(viewKey)) {
       return;
     }
@@ -93,39 +98,38 @@ export function useRecordContentView({
       return;
     }
 
-    // Browser identity must not make the surrounding reading page dynamic.
-    if (!deviceId) {
-      setDeviceId(
-        readLocalStorageValue<string>({ key: DEVICE_STORAGE_KEY }) ||
-          `${Date.now()}-${nanoid(9)}`
-      );
-      return;
-    }
-
     const timeoutId = window.setTimeout(() => {
       Effect.runFork(
-        Effect.tryPromise(() =>
-          recordView({
-            contentId,
-            ...(context ? { context } : {}),
-            locale,
-            deviceId,
-            publicPath,
-            section,
-          })
-        ).pipe(
-          Effect.flatMap((result) =>
-            Result.match(result, {
-              onSuccess: () => Effect.sync(() => markAsViewed(viewKey)),
-              onFailure: (error) =>
-                Effect.sync(() =>
-                  captureException(error, {
+        readContentViewIdentity(attribution).pipe(
+          Effect.flatMap(
+            Option.match({
+              onNone: () => Effect.void,
+              onSome: (identity) =>
+                Effect.tryPromise(() =>
+                  recordView({
                     contentId,
-                    contextMode: context?.mode ?? "canonical",
-                    convex_error_code: error.code,
+                    ...(context ? { context } : {}),
+                    ...identity,
                     locale,
-                    source: "record-content-view",
+                    publicPath,
+                    section,
                   })
+                ).pipe(
+                  Effect.flatMap((result) =>
+                    Result.match(result, {
+                      onSuccess: () => Effect.sync(() => markAsViewed(viewKey)),
+                      onFailure: (error) =>
+                        Effect.sync(() =>
+                          captureException(error, {
+                            contentId,
+                            contextMode: context?.mode ?? "canonical",
+                            convex_error_code: error.code,
+                            locale,
+                            source: "record-content-view",
+                          })
+                        ),
+                    })
+                  )
                 ),
             })
           ),
@@ -139,10 +143,10 @@ export function useRecordContentView({
       window.clearTimeout(timeoutId);
     };
   }, [
+    attribution,
     contentId,
     context,
     delay,
-    deviceId,
     isAuthenticated,
     isLoading,
     isViewed,
@@ -153,7 +157,6 @@ export function useRecordContentView({
     publicPath,
     recordView,
     section,
-    setDeviceId,
     signedInUserId,
     viewKey,
   ]);

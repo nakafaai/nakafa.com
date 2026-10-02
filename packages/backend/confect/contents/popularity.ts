@@ -1,3 +1,5 @@
+import type { ContentViewer } from "@repo/backend/confect/contents/views/viewer";
+
 export const learningPopularityFiniteWindowValues = [
   "1d",
   "7d",
@@ -39,14 +41,11 @@ export function getPopularitySignalDay(timestamp: number) {
 }
 
 /** Returns the stable popularity identity for one viewer event. */
-export function createPopularityViewerKey(input: {
-  readonly deviceId: string;
-  readonly userId?: string;
-}) {
-  if (input.userId) {
-    return `user:${input.userId}`;
+export function createPopularityViewerKey(viewer: ContentViewer) {
+  if (viewer.kind === "account") {
+    return `user:${viewer.userId}`;
   }
-  return `device:${input.deviceId}`;
+  return `device:${viewer.deviceId}`;
 }
 
 /** Returns the default popularity window used by homepage ranked reads. */
