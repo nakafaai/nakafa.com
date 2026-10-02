@@ -22,7 +22,7 @@ import {
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { slugify } from "@repo/utilities/slug";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { TocProvider, useToc } from "@/components/shared/outline/context";
 import { useVirtual } from "@/lib/content/virtual";
 
@@ -56,66 +56,100 @@ function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
   );
 }
 
-/**
- * Links one heading: a fragment link for headings in the document, or a
- * button that scrolls the page's virtualizer to a heading it has not rendered.
- */
-export function SidebarTreeEntry({ heading }: { heading: ParsedHeading }) {
-  const id = slugify(heading.label);
-  const virtualIndex = heading.index;
-  // Each heading selects only its own state, so an active-heading change
-  // re-renders the headings that change instead of the whole outline.
-  const isActive = useToc(
-    (context) =>
-      virtualIndex === undefined && context.activeHeadings.includes(id)
-  );
-  const scrollToIndex = useVirtual((context) => context.scrollToIndex);
-  // Below the desktop width the outline is a sheet over the page, so choosing
-  // an entry closes it and the reader sees where they jumped.
-  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
-
+/** Shows a heading's complete label beside its outline entry. */
+function SidebarTreeTooltip({
+  children,
+  label,
+}: {
+  children: ReactElement;
+  label: string;
+}) {
   return (
     <Tooltip>
-      <TooltipTrigger
-        render={
-          <SidebarMenuButton
-            isActive={isActive}
-            render={
-              virtualIndex === undefined ? (
-                // In-page headings use native fragment navigation so an
-                // existing hash never enters the route prefetch cache.
-                <a
-                  href={heading.href}
-                  onClick={() => setOpenMobile(false)}
-                  title={heading.label}
-                >
-                  <SidebarTreeLabel label={heading.label} />
-                </a>
-              ) : (
-                <button
-                  aria-label={heading.label}
-                  onClick={() => {
-                    scrollToIndex(virtualIndex);
-                    setOpenMobile(false);
-                  }}
-                  type="button"
-                >
-                  <SidebarTreeLabel label={heading.label} />
-                </button>
-              )
-            }
-          />
-        }
-      />
+      <TooltipTrigger render={children} />
       <TooltipContent
         align="center"
         className="hidden max-w-xs sm:block"
         side="left"
       >
-        {heading.label}
+        {label}
       </TooltipContent>
     </Tooltip>
   );
+}
+
+/**
+ * Links a heading in the document. Native fragment navigation reaches it, so
+ * an existing hash never enters the route prefetch cache.
+ */
+function SidebarTreeLink({ heading }: { heading: ParsedHeading }) {
+  const id = slugify(heading.label);
+  // Each heading selects only its own state, so an active-heading change
+  // re-renders the headings that change instead of the whole outline.
+  const isActive = useToc((context) => context.activeHeadings.includes(id));
+  // Below the desktop width the outline is a sheet over the page, so choosing
+  // an entry closes it and the reader sees where they jumped.
+  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
+
+  return (
+    <SidebarTreeTooltip label={heading.label}>
+      <SidebarMenuButton
+        isActive={isActive}
+        render={
+          <a
+            href={heading.href}
+            onClick={() => setOpenMobile(false)}
+            title={heading.label}
+          >
+            <SidebarTreeLabel label={heading.label} />
+          </a>
+        }
+      />
+    </SidebarTreeTooltip>
+  );
+}
+
+/** Scrolls the page's virtualizer to a heading it has not rendered. */
+function SidebarTreeJump({
+  heading,
+  index,
+}: {
+  heading: ParsedHeading;
+  index: number;
+}) {
+  const scrollToIndex = useVirtual((context) => context.scrollToIndex);
+  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
+
+  return (
+    <SidebarTreeTooltip label={heading.label}>
+      <SidebarMenuButton
+        render={
+          <button
+            aria-label={heading.label}
+            onClick={() => {
+              scrollToIndex(index);
+              setOpenMobile(false);
+            }}
+            type="button"
+          >
+            <SidebarTreeLabel label={heading.label} />
+          </button>
+        }
+      />
+    </SidebarTreeTooltip>
+  );
+}
+
+/**
+ * Links one heading: a fragment link for headings in the document, or a
+ * button that scrolls the page's virtualizer to a heading it has not rendered.
+ */
+export function SidebarTreeEntry({ heading }: { heading: ParsedHeading }) {
+  if (heading.index === undefined) {
+    return <SidebarTreeLink heading={heading} />;
+  }
+
+  return <SidebarTreeJump heading={heading} index={heading.index} />;
 }
 
 /** Frames an outline under its labeled group heading. */

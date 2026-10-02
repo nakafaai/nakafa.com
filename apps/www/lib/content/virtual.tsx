@@ -8,14 +8,7 @@ interface VirtualContextType {
   virtualRef: RefObject<WindowVirtualizerHandle | null>;
 }
 
-const fallbackVirtualRef = {
-  current: null,
-} satisfies RefObject<WindowVirtualizerHandle | null>;
-
-const VirtualContext = createContext<VirtualContextType>({
-  scrollToIndex: () => undefined,
-  virtualRef: fallbackVirtualRef,
-});
+const VirtualContext = createContext<VirtualContextType | null>(null);
 
 /**
  * The verse anchors' `scroll-mt-44` in rem, so a jump lands a verse where a
@@ -44,5 +37,9 @@ export function VirtualProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useVirtual<T>(selector: (context: VirtualContextType) => T): T {
-  return selector(use(VirtualContext));
+  const context = use(VirtualContext);
+  if (!context) {
+    throw new Error("useVirtual must be used within a VirtualProvider.");
+  }
+  return selector(context);
 }
