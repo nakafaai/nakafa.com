@@ -2,6 +2,7 @@
 
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
+import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
 import { getTableChairArrangement } from "@repo/design-system/components/contents/mathematics/sequence/arrangement";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -134,11 +135,9 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
   return (
     <VisualCard ref={ref}>
       <VisualCardHeader
-        description={
-          <>
-            {deferredTableCount} {labels.table} & {chairCount} {labels.chair}
-          </>
-        }
+        // One text node: a count that changes width would otherwise move the
+        // label beside it, a layout shift no learner caused.
+        description={`${deferredTableCount} ${labels.table} & ${chairCount} ${labels.chair}`}
         title={labels.title}
       />
 
@@ -247,15 +246,14 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
 
           <div className="flex flex-wrap justify-center gap-2">
             {SPEED_VALUES.map((speedValue) => (
-              <Button
+              <Choice
                 aria-label={`${labels.setSpeed} ${speedValue}x`}
                 key={speedValue}
                 onClick={() => setSpeed(speedValue)}
-                size="sm"
-                variant={speed === speedValue ? "default" : "outline"}
+                pressed={speed === speedValue}
               >
                 {speedValue}x
-              </Button>
+              </Choice>
             ))}
           </div>
         </div>
@@ -264,18 +262,17 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
           <div className="flex flex-wrap justify-center gap-2">
             {Array.from({ length: maxTables }, (_, index) => index + 1).map(
               (count) => (
-                <Button
+                <Choice
                   aria-label={`${labels.setTableCount} ${count}`}
                   key={`table-count-${count}`}
                   onClick={() => {
                     setTableCount(count);
                     setIsPlaying(false);
                   }}
-                  size="sm"
-                  variant={tableCount === count ? "default" : "outline"}
+                  pressed={tableCount === count}
                 >
                   {count} {labels.table}
-                </Button>
+                </Choice>
               )
             )}
           </div>

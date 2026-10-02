@@ -1,53 +1,17 @@
 "use client";
 
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
+import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { VisualCardFullscreen } from "@repo/design-system/components/visual/card";
-import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
 
 const SPEED_STEP = 0.25;
 const SPEED_VALUES = Array.from(
   { length: 5 },
   (_, index) => SPEED_STEP * (index + 1)
 );
-
-/**
- * The pressed option keeps a transparent border as wide as the others'
- * outline, so every option keeps its size whichever one is pressed.
- */
-const choiceVariants = cva("", {
-  variants: {
-    pressed: {
-      false: "",
-      true: "border border-transparent",
-    },
-  },
-});
-
-/**
- * One option of a set, filled when pressed and outlined otherwise. An option
- * that changes on its own, such as the generation the growth reaches, moves
- * none of the others.
- */
-function Choice({
-  pressed,
-  ...props
-}: Omit<ComponentProps<typeof Button>, "size" | "variant"> & {
-  pressed: boolean;
-}) {
-  return (
-    <Button
-      aria-pressed={pressed}
-      className={choiceVariants({ pressed })}
-      size="sm"
-      variant={pressed ? "default" : "outline"}
-      {...props}
-    />
-  );
-}
 
 /** Renders the reset, playback, full screen, and speed controls. */
 export function BacterialPlayback({
