@@ -101,7 +101,11 @@ isolated backend. They preserve your normal Convex selection and stop the owned
 backend when the operation ends. Production Convex runs functions on dedicated
 hosts, so the local backend runs at most one active isolate per core and the
 build runs below its CPU priority. Prerender bursts then queue for a core
-instead of spending Convex's one-second query limit waiting for one. Use the printed Portless HTTPS URL for browser
+instead of spending Convex's one-second query limit waiting for one. Start also
+serves a stand-in for PostHog ingestion on a loopback port that preparation
+reserves, because the build bakes that address into the app's analytics proxy.
+It accepts and discards every event, so analytics never leaves the machine and
+the proxy logs no failures. Use the printed Portless HTTPS URL for browser
 verification. `PORTLESS_APP_PORT` selects an internal port; `PORTLESS=0` uses the
 app port directly.
 
