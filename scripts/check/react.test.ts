@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { inspectReactSource } from "#scripts/check/react";
+import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { sourceViolations } from "#scripts/check/source";
 
 const VIEW = "apps/www/components/example.tsx";
@@ -124,5 +124,81 @@ declare function declared(): void;`);
       );
       assert.deepStrictEqual(violations, []);
     })
+  );
+});
+
+/** Inspects one module with the shared-state policy alone. */
+function inspectState(sourceText: string, file = VIEW) {
+  return sourceViolations([{ file, sourceText }], [inspectStateSource]);
+}
+
+const USE_CONTEXT = "read contexts with use() instead of React's useContext";
+const CREATE =
+  "create Zustand stores per provider with createStore and read them with useStore, instead of a module-level store from create";
+const REMOVED =
+  "import nothing from use-context-selector. Read render values from a React context with use(), and keep state a provider owns in a Zustand store created per provider";
+
+describe("Shared state policy", () => {
+  it.effect("rejects any use-context-selector import", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspectState(`
+import { createContext, useContextSelector } from "use-context-selector";
+import type { Context } from "use-context-selector";
+export const Theme = createContext("light");`);
+      assert.deepStrictEqual(violations, [
+        `${VIEW}: ${REMOVED}.`,
+        `${VIEW}: ${REMOVED}.`,
+      ]);
+    })
+  );
+
+  it.effect(
+    "rejects useContext and module-level stores in every import form",
+    () =>
+      Effect.gen(function* () {
+        const file = "apps/www/lib/theme.ts";
+        const violations = yield* inspectState(
+          `
+import React, { useContext as read } from "react";
+import * as Core from "react";
+import { create } from "zustand";
+import * as Zustand from "zustand";
+export const useTheme = () => read(Theme);
+export const useLegacy = () => React.useContext(Theme);
+export const useCore = () => Core.useContext(Theme);
+export const useCount = create(() => ({ count: 0 }));
+export const useOther = Zustand.create(() => ({ count: 0 }));`,
+          file
+        );
+        assert.deepStrictEqual(violations, [
+          `${file}: ${USE_CONTEXT}.`,
+          `${file}: ${CREATE}.`,
+          `${file}: ${USE_CONTEXT}.`,
+          `${file}: ${USE_CONTEXT}.`,
+          `${file}: ${CREATE}.`,
+        ]);
+      })
+  );
+
+  it.effect(
+    "allows React contexts read with use and stores created per provider",
+    () =>
+      Effect.gen(function* () {
+        const violations = yield* inspectState(`
+import "react";
+import React, { createContext, type ReactNode, use, useState } from "react";
+import { createStore, type StoreApi, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
+import { LibraryContext } from "library";
+const Theme = createContext("light");
+export const useTheme = () => use(Theme);
+export const useFlag = () => React.useState(false);
+export const useLibrary = () => use(LibraryContext);
+export const read = (store: { useContext: () => void }) => store.useContext();
+export function useCount(store: StoreApi<{ count: number }>) {
+  return useStore(store, useShallow((state) => state.count));
+}`);
+        assert.deepStrictEqual(violations, []);
+      })
   );
 });

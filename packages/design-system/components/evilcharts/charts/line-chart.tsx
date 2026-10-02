@@ -67,17 +67,17 @@ interface LineChartContextValue {
 
 const LineChartContext = createContext<LineChartContextValue | null>(null);
 
-// Reads the chart context, throwing a helpful error when used outside <EvilLineChart />
-export function useLineChart() {
-  const context = use(LineChartContext);
+// Selects one part of the chart context, throwing a helpful error when used outside <EvilLineChart />
+export function useLineChart<T>(selector: (chart: LineChartContextValue) => T) {
+  const value = use(LineChartContext);
 
-  if (!context) {
+  if (!value) {
     throw new Error(
       "Line chart parts (<Line />, <XAxis />, …) must be used within <EvilLineChart />"
     );
   }
 
-  return context;
+  return selector(value);
 }
 
 // Root container
@@ -243,7 +243,7 @@ export function XAxis({
   minTickGap = 8,
   ...props
 }: XAxisProps) {
-  const { isLoading } = useLineChart();
+  const isLoading = useLineChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -275,7 +275,7 @@ export function YAxis({
   width = "auto",
   ...props
 }: YAxisProps) {
-  const { isLoading } = useLineChart();
+  const isLoading = useLineChart((chart) => chart.isLoading);
 
   if (isLoading) {
     return null;
@@ -330,7 +330,8 @@ export function Tooltip({
   defaultIndex,
   cursor = true,
 }: TooltipProps) {
-  const { isLoading, selectedDataKey } = useLineChart();
+  const isLoading = useLineChart((chart) => chart.isLoading);
+  const selectedDataKey = useLineChart((chart) => chart.selectedDataKey);
 
   if (isLoading) {
     return null;
@@ -370,7 +371,8 @@ export function Legend({
   verticalAlign = "top",
   isClickable = false,
 }: LegendProps) {
-  const { selectedDataKey, selectDataKey } = useLineChart();
+  const selectedDataKey = useLineChart((chart) => chart.selectedDataKey);
+  const selectDataKey = useLineChart((chart) => chart.selectDataKey);
 
   return (
     <ChartLegend

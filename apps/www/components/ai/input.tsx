@@ -151,8 +151,10 @@ export function NinaSuggestions({
   const t = useTranslations("Ai");
   const contextTitle = useAi((state) => state.contextTitle);
   const text = useAi((state) => state.text);
-  const attachments = usePromptInputAttachments();
-  if (text.trim() || attachments.files.length > 0) {
+  const hasFiles = usePromptInputAttachments(
+    (attachments) => attachments.files.length > 0
+  );
+  if (text.trim() || hasFiles) {
     return null;
   }
   const title = contextTitle?.trim() || t("suggestion-current-material");

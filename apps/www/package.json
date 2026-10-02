@@ -75,7 +75,6 @@
     "server-only": "0.0.1",
     "sonner": "^2.0.8",
     "takumi-js": "^2.14.0",
-    "use-context-selector": "^2.0.0",
     "virtua": "^0.52.10",
     "zustand": "^5.0.15"
   },

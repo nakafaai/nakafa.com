@@ -20,6 +20,20 @@ const ToggleGroupContext = createContext<ToggleGroupContextValue>({
   variant: "default",
 });
 
+/** Shares a group's resolved layout and visual variants with its items. */
+function ToggleGroupStyle({
+  children,
+  layout,
+  size,
+  variant,
+}: ToggleGroupContextValue & { children: React.ReactNode }) {
+  const style = useMemo(
+    () => ({ layout, size, variant }),
+    [layout, size, variant]
+  );
+  return <ToggleGroupContext value={style}>{children}</ToggleGroupContext>;
+}
+
 const toggleGroupRootVariants = cva(
   "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:w-full data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
   {
@@ -118,10 +132,6 @@ function SingleToggleGroup({
   const groupValue =
     value === undefined ? undefined : toSingleValueArray(value);
   const resolvedLayout = getResolvedLayout(layout, gridColumns);
-  const contextValue = useMemo(
-    () => ({ layout: resolvedLayout, variant, size }),
-    [resolvedLayout, variant, size]
-  );
 
   /**
    * Publishes only the selected item instead of Base UI's single-item array.
@@ -152,9 +162,9 @@ function SingleToggleGroup({
       value={groupValue}
       {...props}
     >
-      <ToggleGroupContext.Provider value={contextValue}>
+      <ToggleGroupStyle layout={resolvedLayout} size={size} variant={variant}>
         {children}
-      </ToggleGroupContext.Provider>
+      </ToggleGroupStyle>
     </ToggleGroupPrimitive>
   );
 }
@@ -174,10 +184,6 @@ function MultipleToggleGroup({
   ...props
 }: ToggleGroupMultipleProps) {
   const resolvedLayout = getResolvedLayout(layout, gridColumns);
-  const contextValue = useMemo(
-    () => ({ layout: resolvedLayout, variant, size }),
-    [resolvedLayout, variant, size]
-  );
 
   return (
     <ToggleGroupPrimitive
@@ -199,9 +205,9 @@ function MultipleToggleGroup({
       orientation={orientation}
       {...props}
     >
-      <ToggleGroupContext.Provider value={contextValue}>
+      <ToggleGroupStyle layout={resolvedLayout} size={size} variant={variant}>
         {children}
-      </ToggleGroupContext.Provider>
+      </ToggleGroupStyle>
     </ToggleGroupPrimitive>
   );
 }
@@ -251,9 +257,13 @@ function ToggleGroupItem({
   ...props
 }: React.ComponentProps<typeof TogglePrimitive> &
   VariantProps<typeof toggleVariants>) {
-  const context = use(ToggleGroupContext);
-  const itemSize = context.size || size;
-  const itemVariant = context.variant || variant;
+  const {
+    layout: groupLayout,
+    size: groupSize,
+    variant: groupVariant,
+  } = use(ToggleGroupContext);
+  const itemSize = groupSize || size;
+  const itemVariant = groupVariant || variant;
 
   return (
     <TogglePrimitive
@@ -263,7 +273,7 @@ function ToggleGroupItem({
           size: itemSize,
         }),
         "relative min-w-0 flex-1 shrink-0 rounded-none shadow-none hover:z-10 focus:z-10 focus-visible:z-10 data-pressed:z-10",
-        toggleGroupItemLayoutVariants({ layout: context.layout }),
+        toggleGroupItemLayoutVariants({ layout: groupLayout }),
         className
       )}
       data-size={itemSize}

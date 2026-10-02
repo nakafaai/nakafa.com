@@ -1,22 +1,18 @@
 "use client";
 
-import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/nina/presentation.spec";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 
 import { useChat } from "@/components/ai/chat/context";
 
 export function AiChatPaginationTrigger() {
-  const pagination = useChat((state) => state.pagination);
+  const canLoadMore = useChat((state) => state.canLoadMore);
+  const loadMore = useChat((state) => state.loadMore);
 
-  if (pagination.status !== "CanLoadMore") {
+  if (!canLoadMore) {
     return null;
   }
 
-  return (
-    <Intersection
-      onIntersect={() => pagination.loadMore(NINA_MESSAGES_PAGE_SIZE)}
-    />
-  );
+  return <Intersection onIntersect={loadMore} />;
 }
 
 AiChatPaginationTrigger.displayName = "AiChatPaginationTrigger";

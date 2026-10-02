@@ -70,7 +70,7 @@ function ChartTooltipContent({
     DefaultTooltipContentProps<ValueType, NameType>,
     "accessibilityLayer"
   >) {
-  const { config } = useChart();
+  const config = useChart((chart) => chart.config);
 
   if (!(active && payload?.length)) {
     // Empty tooltip - to prevent position getting 0.0 so it doesnt animate tooltip every time from 0.0 origin

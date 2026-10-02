@@ -1,6 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { ReactNode } from "react";
-import { createContext, useContextSelector } from "use-context-selector";
+import { createContext, type ReactNode, use } from "react";
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
 
 interface DataValue {
@@ -19,16 +18,15 @@ export function DataProvider({
   children: ReactNode;
   value: DataValue;
 }) {
-  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+  return <DataContext value={value}>{children}</DataContext>;
 }
 
 /** Reads one selected value from immutable forum conversation data. */
 export function useData<T>(selector: (state: DataValue) => T) {
-  return useContextSelector(DataContext, (value) => {
-    if (!value) {
-      throw new Error("useData must be used within a ConversationProvider");
-    }
+  const value = use(DataContext);
+  if (!value) {
+    throw new Error("useData must be used within a ConversationProvider");
+  }
 
-    return selector(value);
-  });
+  return selector(value);
 }

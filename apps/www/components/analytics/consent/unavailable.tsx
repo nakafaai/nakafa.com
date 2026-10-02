@@ -31,8 +31,8 @@ export function AnalyticsUnavailableProvider({
   children: ReactNode;
 }) {
   return (
-    <AnalyticsConsentContext.Provider value={unavailableAnalyticsConsent}>
+    <AnalyticsConsentContext value={unavailableAnalyticsConsent}>
       {children}
-    </AnalyticsConsentContext.Provider>
+    </AnalyticsConsentContext>
   );
 }

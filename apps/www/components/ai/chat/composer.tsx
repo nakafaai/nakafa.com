@@ -17,9 +17,11 @@ export function ChatComposer(
 
   const isUserPending = useViewer((state) => state.isPending);
   const viewer = useViewer((state) => state.viewer);
-  const { send, busy, isPending, cancel, isLoading } = useChat(
-    (state) => state
-  );
+  const send = useChat((state) => state.send);
+  const busy = useChat((state) => state.busy);
+  const isPending = useChat((state) => state.isPending);
+  const cancel = useChat((state) => state.cancel);
+  const isLoading = useChat((state) => state.isLoading);
 
   function handleSubmit(message: PromptInputMessage) {
     if (isLoading || isPending) {

@@ -189,7 +189,9 @@ export function PromptInputTextarea({
   placeholder = "What would you like to know?",
   ...props
 }: PromptInputTextareaProps) {
-  const attachments = usePromptInputAttachments();
+  const addAttachments = usePromptInputAttachments(
+    (attachments) => attachments.add
+  );
 
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {
     const items = event.clipboardData?.items;
@@ -214,7 +216,7 @@ export function PromptInputTextarea({
     }
 
     event.preventDefault();
-    attachments.add(files);
+    addAttachments(files);
   };
 
   return (

@@ -90,7 +90,7 @@ function LanguageMenuItems() {
 /** Renders the shared language capability as a hoverable guest sidebar menu. */
 export function GuestLanguageMenu() {
   const t = useTranslations("Common");
-  const { isMobile } = useSidebar();
+  const isMobile = useSidebar((sidebar) => sidebar.isMobile);
   const label = t("language");
 
   return (
