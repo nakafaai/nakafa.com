@@ -4,19 +4,29 @@ import {
   ConvexProvider as ConvexClientProvider,
   ConvexReactClient,
 } from "convex/react";
-import { Effect, Fiber, Option } from "effect";
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import { Effect, Exit, Option, Scope } from "effect";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   AuthSessionProvider,
+  useAuthSession,
   useAuthSessionStore,
 } from "@/components/auth/session";
 import { authClient } from "@/lib/auth/client";
 import {
-  bindConvexAuth,
+  authenticateConvex,
   type ConvexAuth,
+  type ConvexAuthStore,
   ConvexTokenReadError,
-  readInitialConvexAuth,
+  createConvexAuthStore,
+  readConvexAuth,
+  readConvexSessionId,
 } from "@/lib/auth/convex";
 
 let sharedConvexClient: ConvexReactClient | undefined;
@@ -58,32 +68,64 @@ const readConvexToken = Effect.tryPromise({
   )
 );
 
-const ConvexAuthContext = createContext<StoreApi<ConvexAuth> | null>(null);
+const ConvexAuthContext = createContext<ConvexAuthStore | null>(null);
 
 /**
- * Binds the Convex client to the Better Auth session for its provider.
- *
- * It renders before the provider's children, so its effect runs before
- * theirs: a session that is already known authenticates the client before any
- * child subscribes to a query, as `ConvexProviderWithAuth` does.
+ * Hands Convex the signed-in session's credentials. It renders before the
+ * provider's children, so its effect runs before theirs and a known session
+ * authenticates the client before any child subscribes to a query, as the
+ * first child of `ConvexProviderWithAuth` does.
  */
-function ConvexAuthBinding({
-  auth,
+function ConvexSessionCredentials({
   client,
-  session,
+  store,
 }: {
-  auth: StoreApi<ConvexAuth>;
   client: ConvexReactClient;
-  session: ReturnType<typeof useAuthSessionStore>;
+  store: ConvexAuthStore;
 }) {
+  const sessionId = useAuthSession(readConvexSessionId);
+
   useEffect(() => {
-    const binding = Effect.runFork(
-      bindConvexAuth({ auth, client, readToken: readConvexToken, session })
+    if (sessionId === null) {
+      return;
+    }
+    const scope = Scope.makeUnsafe();
+    Effect.runSync(
+      Scope.provide(
+        authenticateConvex({
+          client,
+          readToken: readConvexToken,
+          sessionId,
+          store,
+        }),
+        scope
+      )
     );
     return () => {
-      Effect.runFork(Fiber.interrupt(binding));
+      Effect.runSync(Scope.close(scope, Exit.void));
     };
-  }, [auth, client, session]);
+  }, [client, sessionId, store]);
+
+  return null;
+}
+
+/**
+ * Clears Convex's credentials when the signed-in session ends. Like the last
+ * child of `ConvexProviderWithAuth`, it renders after the provider's children,
+ * so its cleanup runs after theirs and readers that unmount with the session
+ * release their queries before the credentials go.
+ */
+function ConvexSessionRelease({ client }: { client: ConvexReactClient }) {
+  const sessionId = useAuthSession(readConvexSessionId);
+
+  useEffect(() => {
+    if (sessionId === null) {
+      return;
+    }
+    return () => {
+      client.clearAuth();
+    };
+  }, [client, sessionId]);
 
   return null;
 }
@@ -94,8 +136,9 @@ function ConvexAuthBinding({
  * Convex's `ConvexProviderWithAuth` shares its state through a context whose
  * value changes when the session resolves, and React client-renders every
  * streamed Suspense boundary that is still pending at that moment. This
- * provider keeps that state in a store created once per provider, so the
- * context value never changes and readers hydrate with the server's state.
+ * provider keeps Convex's answers in a store created once per provider, so the
+ * context value never changes, and readers derive their state from it and the
+ * session store, hydrating with the server's state.
  * https://docs.convex.dev/auth/advanced/custom-auth
  */
 function ConvexAuthProvider({
@@ -105,15 +148,13 @@ function ConvexAuthProvider({
   children: ReactNode;
   client: ConvexReactClient;
 }) {
-  const session = useAuthSessionStore();
-  const [store] = useState(() =>
-    createStore(() => readInitialConvexAuth(session.getState()))
-  );
+  const [store] = useState(() => createConvexAuthStore());
 
   return (
     <ConvexAuthContext value={store}>
-      <ConvexAuthBinding auth={store} client={client} session={session} />
+      <ConvexSessionCredentials client={client} store={store} />
       {children}
+      <ConvexSessionRelease client={client} />
     </ConvexAuthContext>
   );
 }
@@ -139,11 +180,39 @@ export function ConvexProvider({
   );
 }
 
-/** Selects one part of the Convex authentication state. */
+/**
+ * Selects one part of the Convex authentication state.
+ *
+ * The state is derived from the session and Convex's latest answer inside one
+ * subscription to both stores, so a reader runs only when its selection
+ * changes, and the server snapshot is the state the server rendered.
+ */
 export function useConvexAuth<T>(selector: (auth: ConvexAuth) => T) {
   const store = use(ConvexAuthContext);
   if (!store) {
     throw new TypeError("useConvexAuth must be used within ConvexProvider");
   }
-  return useStore(store, selector);
+  const session = useAuthSessionStore();
+
+  return useSyncExternalStore(
+    (onChange) => {
+      const stopSession = session.subscribe(onChange);
+      const stopStore = store.subscribe(onChange);
+      return () => {
+        stopSession();
+        stopStore();
+      };
+    },
+    () =>
+      selector(
+        readConvexAuth(session.getState(), store.getState().confirmation)
+      ),
+    () =>
+      selector(
+        readConvexAuth(
+          session.getInitialState(),
+          store.getInitialState().confirmation
+        )
+      )
+  );
 }

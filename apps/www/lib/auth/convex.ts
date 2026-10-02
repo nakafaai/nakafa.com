@@ -2,15 +2,13 @@ import type { ConvexReactClient } from "convex/react";
 import {
   Duration,
   Effect,
-  Equal,
-  Exit,
   Match,
   MutableRef,
+  Option,
   Predicate,
   Schema,
-  Scope,
 } from "effect";
-import type { StoreApi } from "zustand";
+import { createStore } from "zustand";
 import type { AuthSession } from "@/lib/auth/session";
 
 /** Convex authentication as its readers see it. */
@@ -21,6 +19,26 @@ export const ConvexAuth = Schema.Struct({
 
 export type ConvexAuth = typeof ConvexAuth.Type;
 
+/** Convex's answer to the credentials of one Better Auth session. */
+export const ConvexAuthConfirmation = Schema.Struct({
+  isAuthenticated: Schema.Boolean,
+  sessionId: Schema.String,
+});
+
+export type ConvexAuthConfirmation = typeof ConvexAuthConfirmation.Type;
+
+/**
+ * Creates one provider's store of Convex's latest answer, empty as the server
+ * renders it. Only `authenticateConvex` writes it.
+ */
+export function createConvexAuthStore() {
+  return createStore(() => ({
+    confirmation: Option.none<ConvexAuthConfirmation>(),
+  }));
+}
+
+export type ConvexAuthStore = ReturnType<typeof createConvexAuthStore>;
+
 /** A Better Auth token request that produced no usable Convex credential. */
 export class ConvexTokenReadError extends Schema.TaggedError<ConvexTokenReadError>()(
   "ConvexTokenReadError",
@@ -28,7 +46,7 @@ export class ConvexTokenReadError extends Schema.TaggedError<ConvexTokenReadErro
 ) {}
 
 /** The part of Convex's React client that authentication drives. */
-type ConvexAuthClient = Pick<ConvexReactClient, "clearAuth" | "setAuth">;
+type ConvexAuthClient = Pick<ConvexReactClient, "setAuth">;
 
 /** Whom Convex authenticates, read from the Better Auth session. */
 const ConvexAuthTarget = Schema.TaggedUnion({
@@ -62,14 +80,43 @@ function readTarget(session: AuthSession): ConvexAuthTarget {
 }
 
 /**
- * Returns the Convex authentication a session starts with, before Convex has
- * answered: loading while a session is pending or awaits its token, settled
- * once the visitor is known to be signed out.
+ * Returns the session whose credentials Convex should hold: the signed-in
+ * session once Better Auth has settled on one, `null` while the session is
+ * pending or signed out.
  */
-export function readInitialConvexAuth(session: AuthSession) {
+export function readConvexSessionId(session: AuthSession) {
+  return ConvexAuthTarget.match(readTarget(session), {
+    Pending: () => null,
+    SignedIn: ({ sessionId }) => sessionId,
+    SignedOut: () => null,
+  });
+}
+
+/**
+ * Derives the Convex authentication a reader sees, the way
+ * `ConvexProviderWithAuth` does while it renders: loading while the session is
+ * pending or Convex has not answered for it, signed out without a session, and
+ * Convex's answer once it has confirmed this session's credentials.
+ *
+ * Because the session decides it during render, every reader switches its
+ * authenticated queries off in the same commit that ends a session.
+ * https://github.com/get-convex/convex-js/blob/main/src/react/ConvexAuthState.tsx
+ */
+export function readConvexAuth(
+  session: AuthSession,
+  confirmation: Option.Option<ConvexAuthConfirmation>
+) {
   return ConvexAuthTarget.match(readTarget(session), {
     Pending: () => loadingConvexAuth,
-    SignedIn: () => loadingConvexAuth,
+    SignedIn: ({ sessionId }) =>
+      confirmation.pipe(
+        Option.filter((answer) => answer.sessionId === sessionId),
+        Option.match({
+          onNone: () => loadingConvexAuth,
+          onSome: ({ isAuthenticated }) =>
+            ConvexAuth.make({ isAuthenticated, isLoading: false }),
+        })
+      ),
     SignedOut: () => signedOutConvexAuth,
   });
 }
@@ -101,91 +148,46 @@ const makeTokenFetcher = Effect.fnUntraced(function* (
 });
 
 /**
- * Keeps the Convex client authenticated as the current Better Auth session
- * and reports the result to the Convex authentication store.
+ * Hands Convex the credentials of one signed-in session for the life of the
+ * surrounding scope, and records Convex's answers in the provider's store.
  *
- * This follows the transitions of `ConvexProviderWithAuth`, whose context
- * changes would discard streamed Suspense boundaries during hydration: a
- * signed-in session binds a token fetcher in its own scope and waits for
- * Convex to confirm it, and closing that scope, when the session changes or
- * the binding stops, clears Convex's credentials and ignores the binding's
- * late confirmations.
- * https://github.com/get-convex/convex-js/blob/main/src/react/ConvexAuthState.tsx
+ * Closing the scope stops reporting and forgets the answer, so a session that
+ * returns later waits for Convex again. It leaves Convex's credentials in
+ * place: the provider clears them from its last child, as
+ * `ConvexProviderWithAuth` does.
  */
-export const bindConvexAuth = Effect.fn("NakafaAuth.bindConvexAuth")(
+export const authenticateConvex = Effect.fn("NakafaAuth.authenticateConvex")(
   function* ({
-    auth,
     client,
     readToken,
-    session,
+    sessionId,
+    store,
   }: {
-    readonly auth: StoreApi<ConvexAuth>;
     readonly client: ConvexAuthClient;
     readonly readToken: Effect.Effect<string, ConvexTokenReadError>;
-    readonly session: StoreApi<AuthSession>;
+    readonly sessionId: string;
+    readonly store: ConvexAuthStore;
   }) {
-    const services = yield* Effect.context<never>();
-    const authenticate = Effect.fnUntraced(function* () {
-      const fetchToken = yield* makeTokenFetcher(readToken);
-      yield* Effect.acquireRelease(
-        Effect.sync(() => {
-          const isCurrent = MutableRef.make(true);
-          auth.setState(loadingConvexAuth, true);
-          client.setAuth(fetchToken, (isAuthenticated) => {
-            if (MutableRef.get(isCurrent)) {
-              auth.setState(
-                ConvexAuth.make({ isAuthenticated, isLoading: false }),
-                true
-              );
-            }
-          });
-          return isCurrent;
-        }),
-        (isCurrent) =>
-          Effect.sync(() => {
-            MutableRef.set(isCurrent, false);
-            client.clearAuth();
-          })
-      );
-    });
-    const enter = (target: ConvexAuthTarget) =>
-      ConvexAuthTarget.match(target, {
-        Pending: () =>
-          Effect.sync(() => auth.setState(loadingConvexAuth, true)),
-        SignedIn: () => authenticate(),
-        SignedOut: () =>
-          Effect.sync(() => auth.setState(signedOutConvexAuth, true)),
-      });
-    const boundScope = MutableRef.make<Scope.Closeable>(yield* Scope.make());
-    const boundTarget = MutableRef.make<ConvexAuthTarget>(
-      ConvexAuthTarget.cases.Pending.make({})
-    );
-    const follow = Effect.fnUntraced(function* (state: AuthSession) {
-      const target = readTarget(state);
-      if (Equal.equals(MutableRef.get(boundTarget), target)) {
-        return;
-      }
-      yield* Scope.close(MutableRef.get(boundScope), Exit.void);
-      const scope = yield* Scope.make();
-      MutableRef.set(boundScope, scope);
-      MutableRef.set(boundTarget, target);
-      yield* Scope.provide(enter(target), scope);
-    });
-
+    const fetchToken = yield* makeTokenFetcher(readToken);
     yield* Effect.acquireRelease(
-      Effect.sync(() =>
-        session.subscribe((state) => {
-          Effect.runSyncWith(services)(follow(state));
-        })
-      ),
-      (unsubscribe) =>
-        Effect.suspend(() => {
-          unsubscribe();
-          return Scope.close(MutableRef.get(boundScope), Exit.void);
+      Effect.sync(() => {
+        const isCurrent = MutableRef.make(true);
+        client.setAuth(fetchToken, (isAuthenticated) => {
+          if (MutableRef.get(isCurrent)) {
+            store.setState({
+              confirmation: Option.some(
+                ConvexAuthConfirmation.make({ isAuthenticated, sessionId })
+              ),
+            });
+          }
+        });
+        return isCurrent;
+      }),
+      (isCurrent) =>
+        Effect.sync(() => {
+          MutableRef.set(isCurrent, false);
+          store.setState({ confirmation: Option.none() });
         })
     );
-    yield* follow(session.getState());
-    return yield* Effect.never;
-  },
-  Effect.scoped
+  }
 );

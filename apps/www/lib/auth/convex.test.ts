@@ -1,12 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ConvexReactClient } from "convex/react";
-import { Effect, Fiber } from "effect";
-import { createStore } from "zustand";
+import { Effect, Exit, Option, Scope } from "effect";
 import {
-  bindConvexAuth,
-  type ConvexAuth,
+  authenticateConvex,
+  ConvexAuthConfirmation,
   ConvexTokenReadError,
-  readInitialConvexAuth,
+  createConvexAuthStore,
+  readConvexAuth,
+  readConvexSessionId,
 } from "@/lib/auth/convex";
 import { type AuthSession, previewAuthSession } from "@/lib/auth/session";
 
@@ -26,128 +27,121 @@ function signedIn(sessionId: string) {
   } satisfies AuthSession;
 }
 
-function makeClient() {
-  return {
-    clearAuth: vi.fn<ConvexReactClient["clearAuth"]>(),
-    setAuth: vi.fn<ConvexReactClient["setAuth"]>(),
-  };
+function answer(sessionId: string, isAuthenticated: boolean) {
+  return Option.some(
+    ConvexAuthConfirmation.make({ isAuthenticated, sessionId })
+  );
 }
 
-/** Starts one binding over fresh stores and returns its handles. */
-const startBinding = Effect.fnUntraced(function* (
-  initial: AuthSession,
+function makeClient() {
+  return { setAuth: vi.fn<ConvexReactClient["setAuth"]>() };
+}
+
+/** Authenticates one session in a fresh scope and returns its handles. */
+const startSession = Effect.fnUntraced(function* (
   readToken: Effect.Effect<string, ConvexTokenReadError> = Effect.succeed(
     "token-1"
   )
 ) {
-  const session = createStore(() => initial);
-  const auth = createStore<ConvexAuth>(() => readInitialConvexAuth(initial));
   const client = makeClient();
-  const fiber = yield* Effect.forkChild(
-    bindConvexAuth({ auth, client, readToken, session })
+  const store = createConvexAuthStore();
+  const scope = yield* Scope.make();
+  yield* Scope.provide(
+    authenticateConvex({ client, readToken, sessionId: "session-1", store }),
+    scope
   );
-  yield* Effect.yieldNow;
-  return { auth, client, fiber, session };
+  return { client, scope, store };
 });
 
 /** Returns the token fetcher and status callback of one setAuth call. */
-function readBinding(client: ReturnType<typeof makeClient>, index: number) {
-  const call = client.setAuth.mock.calls[index];
+function readBinding(client: ReturnType<typeof makeClient>) {
+  const call = client.setAuth.mock.calls[0];
   if (call === undefined) {
-    return expect.unreachable(`setAuth call ${index} is missing`);
+    return expect.unreachable("setAuth was not called");
   }
   const [fetchToken, onChange] = call;
   if (onChange === undefined) {
-    return expect.unreachable(`setAuth call ${index} has no status callback`);
+    return expect.unreachable("setAuth has no status callback");
   }
   return { fetchToken, onChange };
 }
 
 describe("Convex authentication", () => {
   it.each([
-    [pending, { isAuthenticated: false, isLoading: true }],
-    [signedIn("session-1"), { isAuthenticated: false, isLoading: true }],
-    [previewAuthSession, { isAuthenticated: false, isLoading: false }],
-  ])("starts from the session the server rendered", (session, expected) => {
-    expect(readInitialConvexAuth(session)).toStrictEqual(expected);
+    [pending, null],
+    [signedIn("session-1"), "session-1"],
+    [previewAuthSession, null],
+  ])(
+    "holds credentials only for a settled signed-in session",
+    (session, id) => {
+      expect(readConvexSessionId(session)).toBe(id);
+    }
+  );
+
+  it.each([
+    [pending, Option.none(), { isAuthenticated: false, isLoading: true }],
+    [
+      previewAuthSession,
+      answer("session-1", true),
+      { isAuthenticated: false, isLoading: false },
+    ],
+    [
+      signedIn("session-1"),
+      Option.none(),
+      { isAuthenticated: false, isLoading: true },
+    ],
+    [
+      signedIn("session-2"),
+      answer("session-1", true),
+      { isAuthenticated: false, isLoading: true },
+    ],
+    [
+      signedIn("session-1"),
+      answer("session-1", true),
+      { isAuthenticated: true, isLoading: false },
+    ],
+    [
+      signedIn("session-1"),
+      answer("session-1", false),
+      { isAuthenticated: false, isLoading: false },
+    ],
+  ])(
+    "derives what readers see from the session and Convex's answer",
+    (session, confirmation, expected) => {
+      expect(readConvexAuth(session, confirmation)).toStrictEqual(expected);
+    }
+  );
+
+  it("starts without an answer, as the server renders it", () => {
+    expect(createConvexAuthStore().getState().confirmation).toStrictEqual(
+      Option.none()
+    );
   });
 
-  it.effect("settles a visitor without a session as signed out", () =>
+  it.effect("records Convex's answer for the session it authenticates", () =>
     Effect.gen(function* () {
-      const { auth, client, session } = yield* startBinding(pending);
-      expect(auth.getState()).toStrictEqual({
-        isAuthenticated: false,
-        isLoading: true,
-      });
-
-      session.setState(previewAuthSession, true);
-
-      expect(auth.getState()).toStrictEqual({
-        isAuthenticated: false,
-        isLoading: false,
-      });
-      expect(client.setAuth).not.toHaveBeenCalled();
-      expect(client.clearAuth).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("authenticates a session once and follows Convex's answer", () =>
-    Effect.gen(function* () {
-      const { auth, client, session } = yield* startBinding(pending);
-
-      session.setState(signedIn("session-1"), true);
-      session.setState({ ...signedIn("session-1"), hasError: true }, true);
+      const { client, store } = yield* startSession();
 
       expect(client.setAuth).toHaveBeenCalledTimes(1);
-      expect(auth.getState().isLoading).toBe(true);
-      readBinding(client, 0).onChange(true);
-      expect(auth.getState()).toStrictEqual({
-        isAuthenticated: true,
-        isLoading: false,
-      });
+      readBinding(client).onChange(true);
+
+      expect(store.getState().confirmation).toStrictEqual(
+        answer("session-1", true)
+      );
     })
   );
 
-  it.effect("clears a replaced session and ignores its late confirmation", () =>
+  it.effect("forgets the answer and ignores late ones once it ends", () =>
     Effect.gen(function* () {
-      const { auth, client, session } = yield* startBinding(
-        signedIn("session-1")
-      );
-      const first = readBinding(client, 0);
+      const { client, scope, store } = yield* startSession();
+      const { onChange } = readBinding(client);
+      onChange(true);
 
-      session.setState(signedIn("session-2"), true);
-      expect(client.clearAuth).toHaveBeenCalledTimes(1);
-      expect(client.setAuth).toHaveBeenCalledTimes(2);
+      yield* Scope.close(scope, Exit.void);
+      expect(store.getState().confirmation).toStrictEqual(Option.none());
 
-      first.onChange(true);
-      expect(auth.getState().isLoading).toBe(true);
-
-      session.setState(previewAuthSession, true);
-      expect(client.clearAuth).toHaveBeenCalledTimes(2);
-      readBinding(client, 1).onChange(true);
-      expect(auth.getState()).toStrictEqual({
-        isAuthenticated: false,
-        isLoading: false,
-      });
-
-      session.setState(pending, true);
-      expect(auth.getState()).toStrictEqual({
-        isAuthenticated: false,
-        isLoading: true,
-      });
-    })
-  );
-
-  it.effect("releases the session binding when it stops", () =>
-    Effect.gen(function* () {
-      const { client, fiber, session } = yield* startBinding(
-        signedIn("session-1")
-      );
-
-      yield* Fiber.interrupt(fiber);
-      expect(client.clearAuth).toHaveBeenCalledTimes(1);
-
-      session.setState(signedIn("session-2"), true);
+      onChange(true);
+      expect(store.getState().confirmation).toStrictEqual(Option.none());
       expect(client.setAuth).toHaveBeenCalledTimes(1);
     })
   );
@@ -163,11 +157,8 @@ describe("Convex authentication", () => {
             Effect.fail(new ConvexTokenReadError({ detail: "No token." }))
           )
           .mockReturnValueOnce(Effect.succeed("token-2"));
-        const { client } = yield* startBinding(
-          signedIn("session-1"),
-          Effect.suspend(read)
-        );
-        const { fetchToken } = readBinding(client, 0);
+        const { client } = yield* startSession(Effect.suspend(read));
+        const { fetchToken } = readBinding(client);
         const fetch = (forceRefreshToken: boolean) =>
           Effect.promise(() => fetchToken({ forceRefreshToken }));
 
