@@ -1,6 +1,6 @@
 "use client";
 
-import { getMaterialIcon } from "@repo/contents/curriculum/material";
+import { getTryoutSubjectIcon } from "@/components/tryout/catalog/icons";
 import { TryoutList } from "@/components/tryout/catalog/list";
 import {
   getTryoutAttemptHref,
@@ -58,7 +58,7 @@ export function TryoutSectionRows({
                 }),
             title: section.title,
             visual: {
-              icon: getMaterialIcon(section.sectionKey),
+              icon: getTryoutSubjectIcon(section.sectionKey),
               iconKey: section.sectionKey,
               kind: "icon",
             },

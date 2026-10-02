@@ -6,6 +6,7 @@ import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { httpLayer } from "@/lib/convex/http";
+import { readTryoutSectionRedirect } from "@/lib/routing/public/tryout";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
 const PREVIOUS_MATERIAL_LEVELS = new Set([
@@ -151,16 +152,33 @@ function readArticleMigrationRedirect(migration: ArticleMigration) {
   return readArticlePageRedirect(migration);
 }
 
-/** Resolves one retired public URL to its exact current successor. */
+/**
+ * Resolves one retired public URL to its exact current successor. A try-out
+ * URL that carries an attempt stays on the route its attempt was frozen to.
+ */
 export const readPublicUrlMigrationRedirect = Effect.fn(
   "www.routing.publicHtml.urlMigrationRedirect"
-)(function* ({ method, pathname }: { method: string; pathname: string }) {
+)(function* ({
+  hasAttemptCapability,
+  method,
+  pathname,
+}: {
+  hasAttemptCapability: boolean;
+  method: string;
+  pathname: string;
+}) {
   if (!REDIRECTABLE_METHODS.has(method)) {
     return null;
   }
   const articleMigration = readPreviousArticleMigration(pathname);
   if (articleMigration) {
     return yield* readArticleMigrationRedirect(articleMigration);
+  }
+  const tryoutRedirect = hasAttemptCapability
+    ? null
+    : yield* readTryoutSectionRedirect(pathname);
+  if (tryoutRedirect) {
+    return tryoutRedirect;
   }
   const identity = readPreviousMaterialIdentity(pathname);
   if (Option.isNone(identity)) {
