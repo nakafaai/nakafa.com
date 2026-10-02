@@ -35,6 +35,7 @@ import customers from "./tables/customers";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
 import learningPopularityCounters from "./tables/learningPopularityCounters";
 import learningPopularityCycles from "./tables/learningPopularityCycles";
@@ -70,6 +71,11 @@ import schoolMembers from "./tables/schoolMembers";
 import schools from "./tables/schools";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantGrants from "./tables/tenantGrants";
+import tenantInvites from "./tables/tenantInvites";
+import tenantPeople from "./tables/tenantPeople";
+import tenantUnits from "./tables/tenantUnits";
+import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
 import tryoutCatalog from "./tables/tryoutCatalog";
@@ -119,6 +125,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
+  readonly journalEntries: typeof journalEntries;
   readonly learningEngagementQueue: typeof learningEngagementQueue;
   readonly learningPopularityCounters: typeof learningPopularityCounters;
   readonly learningPopularityCycles: typeof learningPopularityCycles;
@@ -154,6 +161,11 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly schools: typeof schools;
   readonly snapshotBatches: typeof snapshotBatches;
   readonly subscriptions: typeof subscriptions;
+  readonly tenantGrants: typeof tenantGrants;
+  readonly tenantInvites: typeof tenantInvites;
+  readonly tenantPeople: typeof tenantPeople;
+  readonly tenantUnits: typeof tenantUnits;
+  readonly tenants: typeof tenants;
   readonly tryoutAttemptPlacements: typeof tryoutAttemptPlacements;
   readonly tryoutAttempts: typeof tryoutAttempts;
   readonly tryoutCatalog: typeof tryoutCatalog;
@@ -202,6 +214,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,
+  journalEntries,
   learningEngagementQueue,
   learningPopularityCounters,
   learningPopularityCycles,
@@ -237,6 +250,11 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   schools,
   snapshotBatches,
   subscriptions,
+  tenantGrants,
+  tenantInvites,
+  tenantPeople,
+  tenantUnits,
+  tenants,
   tryoutAttemptPlacements,
   tryoutAttempts,
   tryoutCatalog,

@@ -36,6 +36,7 @@ export type CustomersDoc = Document.Document<typeof schemaDefinition, "customers
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
+export type JournalEntriesDoc = Document.Document<typeof schemaDefinition, "journalEntries">;
 export type LearningEngagementQueueDoc = Document.Document<typeof schemaDefinition, "learningEngagementQueue">;
 export type LearningPopularityCountersDoc = Document.Document<typeof schemaDefinition, "learningPopularityCounters">;
 export type LearningPopularityCyclesDoc = Document.Document<typeof schemaDefinition, "learningPopularityCycles">;
@@ -71,6 +72,11 @@ export type SchoolMembersDoc = Document.Document<typeof schemaDefinition, "schoo
 export type SchoolsDoc = Document.Document<typeof schemaDefinition, "schools">;
 export type SnapshotBatchesDoc = Document.Document<typeof schemaDefinition, "snapshotBatches">;
 export type SubscriptionsDoc = Document.Document<typeof schemaDefinition, "subscriptions">;
+export type TenantGrantsDoc = Document.Document<typeof schemaDefinition, "tenantGrants">;
+export type TenantInvitesDoc = Document.Document<typeof schemaDefinition, "tenantInvites">;
+export type TenantPeopleDoc = Document.Document<typeof schemaDefinition, "tenantPeople">;
+export type TenantUnitsDoc = Document.Document<typeof schemaDefinition, "tenantUnits">;
+export type TenantsDoc = Document.Document<typeof schemaDefinition, "tenants">;
 export type TryoutAttemptPlacementsDoc = Document.Document<typeof schemaDefinition, "tryoutAttemptPlacements">;
 export type TryoutAttemptsDoc = Document.Document<typeof schemaDefinition, "tryoutAttempts">;
 export type TryoutCatalogDoc = Document.Document<typeof schemaDefinition, "tryoutCatalog">;
@@ -120,6 +126,7 @@ export interface Docs {
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;
+  journalEntries: JournalEntriesDoc;
   learningEngagementQueue: LearningEngagementQueueDoc;
   learningPopularityCounters: LearningPopularityCountersDoc;
   learningPopularityCycles: LearningPopularityCyclesDoc;
@@ -155,6 +162,11 @@ export interface Docs {
   schools: SchoolsDoc;
   snapshotBatches: SnapshotBatchesDoc;
   subscriptions: SubscriptionsDoc;
+  tenantGrants: TenantGrantsDoc;
+  tenantInvites: TenantInvitesDoc;
+  tenantPeople: TenantPeopleDoc;
+  tenantUnits: TenantUnitsDoc;
+  tenants: TenantsDoc;
   tryoutAttemptPlacements: TryoutAttemptPlacementsDoc;
   tryoutAttempts: TryoutAttemptsDoc;
   tryoutCatalog: TryoutCatalogDoc;
