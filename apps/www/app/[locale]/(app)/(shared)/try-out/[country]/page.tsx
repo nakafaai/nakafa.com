@@ -22,13 +22,13 @@ import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 
 /**
- * Lets a navigation into a country published after the build block on its first
- * render. Every country the catalog served at build time is prerendered whole
- * below. One published later has no static shell of its own until that first
- * visit upgrades it, because try-out pages render together with the app shell,
- * so static shell validation would reject its empty fallback.
+ * Lets a navigation into a country published after the build wait for its
+ * server render. Every country the catalog served at build time is prerendered
+ * whole below, but one published later has no page of its own until its first
+ * visit upgrades it, and try-out pages render together with the app shell, so
+ * no truthful fallback exists while it renders.
  *
- * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-static-shell-validation
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
  * @see https://nextjs.org/docs/app/guides/incremental-static-regeneration-cache-components
  */
 export const instant = false;
