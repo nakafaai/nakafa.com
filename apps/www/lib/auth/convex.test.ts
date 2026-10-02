@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ConvexReactClient } from "convex/react";
-import { Effect, Exit, Option, Scope } from "effect";
+import { Deferred, Effect, Exit, Option, Scope } from "effect";
 import {
   authenticateConvex,
   ConvexAuthConfirmation,
@@ -167,6 +167,92 @@ describe("Convex authentication", () => {
         expect(yield* fetch(true)).toBeNull();
         expect(yield* fetch(false)).toBe("token-2");
         expect(read).toHaveBeenCalledTimes(3);
+      })
+  );
+
+  it.effect("answers concurrent requests from the one read in flight", () =>
+    Effect.gen(function* () {
+      const release = yield* Deferred.make<void>();
+      const read = vi.fn(() =>
+        Deferred.await(release).pipe(Effect.as("token-1"))
+      );
+      const { client } = yield* startSession(Effect.suspend(read));
+      const { fetchToken } = readBinding(client);
+      const requests = Promise.all([
+        fetchToken({ forceRefreshToken: false }),
+        fetchToken({ forceRefreshToken: false }),
+        fetchToken({ forceRefreshToken: false }),
+      ]);
+      yield* Effect.yieldNow;
+      yield* Deferred.succeed(release, undefined);
+
+      expect(yield* Effect.promise(() => requests)).toStrictEqual([
+        "token-1",
+        "token-1",
+        "token-1",
+      ]);
+      expect(read).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it.effect("reads afresh when Convex asks during a read in flight", () =>
+    Effect.gen(function* () {
+      const release = yield* Deferred.make<void>();
+      const read = vi
+        .fn<() => Effect.Effect<string, ConvexTokenReadError>>()
+        .mockReturnValueOnce(Deferred.await(release).pipe(Effect.as("token-1")))
+        .mockReturnValueOnce(Effect.succeed("token-2"));
+      const { client } = yield* startSession(Effect.suspend(read));
+      const { fetchToken } = readBinding(client);
+      const stale = fetchToken({ forceRefreshToken: false });
+      yield* Effect.yieldNow;
+      const fresh = fetchToken({ forceRefreshToken: true });
+      yield* Deferred.succeed(release, undefined);
+
+      expect(
+        yield* Effect.promise(() => Promise.all([stale, fresh]))
+      ).toStrictEqual(["token-1", "token-2"]);
+      expect(
+        yield* Effect.promise(() => fetchToken({ forceRefreshToken: false }))
+      ).toBe("token-2");
+      expect(read).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect(
+    "answers every concurrent request when the read fails and retries after",
+    () =>
+      Effect.gen(function* () {
+        const release = yield* Deferred.make<void>();
+        const read = vi
+          .fn<() => Effect.Effect<string, ConvexTokenReadError>>()
+          .mockReturnValueOnce(
+            Deferred.await(release).pipe(
+              Effect.andThen(
+                Effect.fail(new ConvexTokenReadError({ detail: "No token." }))
+              )
+            )
+          )
+          .mockReturnValueOnce(Effect.succeed("token-2"));
+        const { client } = yield* startSession(Effect.suspend(read));
+        const { fetchToken } = readBinding(client);
+        const requests = Promise.all([
+          fetchToken({ forceRefreshToken: false }),
+          fetchToken({ forceRefreshToken: false }),
+          fetchToken({ forceRefreshToken: false }),
+        ]);
+        yield* Effect.yieldNow;
+        yield* Deferred.succeed(release, undefined);
+
+        expect(yield* Effect.promise(() => requests)).toStrictEqual([
+          null,
+          null,
+          null,
+        ]);
+        expect(
+          yield* Effect.promise(() => fetchToken({ forceRefreshToken: false }))
+        ).toBe("token-2");
+        expect(read).toHaveBeenCalledTimes(2);
       })
   );
 });

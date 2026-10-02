@@ -1,7 +1,9 @@
 import type { ConvexReactClient } from "convex/react";
 import {
+  Cache,
   Duration,
   Effect,
+  Exit,
   Match,
   MutableRef,
   Option,
@@ -124,24 +126,31 @@ export function readConvexAuth(
 /**
  * Builds Convex's token fetcher for one session.
  *
- * Concurrent requests share the first token, which is kept until Convex asks
- * for a fresh one; a failed request is dropped, so the next call retries it.
+ * Concurrent requests join the one read in flight, and its token is kept until
+ * Convex asks for a fresh one. A failed read is kept for no time, so every
+ * request waiting on it sees the failure and the next request reads again.
  * Convex receives `null` when no token can be read, as its contract requires.
  * https://docs.convex.dev/api/classes/react.ConvexReactClient#setauth
  */
 const makeTokenFetcher = Effect.fnUntraced(function* (
-  readToken: Effect.Effect<string, ConvexTokenReadError>
+  readToken: Effect.Effect<string, ConvexTokenReadError>,
+  sessionId: string
 ) {
   const services = yield* Effect.context<never>();
-  const [token, invalidate] = yield* Effect.cachedInvalidateWithTTL(
-    readToken,
-    Duration.infinity
-  );
+  const tokens = yield* Cache.makeWith(() => readToken, {
+    capacity: 1,
+    timeToLive: Exit.match({
+      onFailure: () => Duration.zero,
+      onSuccess: () => Duration.infinity,
+    }),
+  });
   return ({ forceRefreshToken }: { readonly forceRefreshToken: boolean }) =>
     Effect.runPromiseWith(services)(
-      (forceRefreshToken ? invalidate : Effect.void).pipe(
-        Effect.andThen(token),
-        Effect.tapError(() => invalidate),
+      (forceRefreshToken
+        ? Cache.invalidate(tokens, sessionId)
+        : Effect.void
+      ).pipe(
+        Effect.andThen(Cache.get(tokens, sessionId)),
         Effect.catchTag("ConvexTokenReadError", () => Effect.succeed(null))
       )
     );
@@ -168,7 +177,7 @@ export const authenticateConvex = Effect.fn("NakafaAuth.authenticateConvex")(
     readonly sessionId: string;
     readonly store: ConvexAuthStore;
   }) {
-    const fetchToken = yield* makeTokenFetcher(readToken);
+    const fetchToken = yield* makeTokenFetcher(readToken, sessionId);
     yield* Effect.acquireRelease(
       Effect.sync(() => {
         const isCurrent = MutableRef.make(true);
