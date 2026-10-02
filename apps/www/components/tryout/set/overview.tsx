@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import { TryoutSetAction } from "@/components/tryout/set/action.client";
@@ -9,7 +8,11 @@ import type { TryoutSetView } from "@/components/tryout/set/model";
 import { TryoutSectionRows } from "@/components/tryout/set/rows.client";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 
-/** Renders a set page that offers visible nested sections. */
+/**
+ * Renders a set page that offers visible nested sections. The section list
+ * comes first and the attempt's countdown or score follows it, so the list a
+ * pending page paints from the catalog never moves when the attempt arrives.
+ */
 export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
   return (
     <TryoutPage>
@@ -34,33 +37,15 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
         returnHref={value.returnHref}
       />
       <TryoutPageBody>
+        <TryoutSectionRows
+          {...(value.actionAttempt === undefined
+            ? {}
+            : { attempt: value.actionAttempt })}
+          sections={value.sectionRoutes}
+        />
         <TryoutSetResult value={value} />
-        <TryoutSetSections value={value} />
       </TryoutPageBody>
     </TryoutPage>
-  );
-}
-
-/** Renders nested section rows only for sets that expose them. */
-function TryoutSetSections({ value }: { value: TryoutSetView }) {
-  const tTryouts = useTranslations("Tryouts");
-
-  const sections = value.sectionRoutes;
-  if (sections.length === 0) {
-    return null;
-  }
-
-  return (
-    <TryoutSectionRows
-      value={{
-        ...(value.actionAttempt === undefined
-          ? {}
-          : { attempt: value.actionAttempt }),
-        emptyLabel: tTryouts("list-empty"),
-        questionUnitLabel: tTryouts("question-unit"),
-        sections,
-      }}
-    />
   );
 }
 

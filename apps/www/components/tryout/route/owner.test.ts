@@ -1,86 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   createTryoutSetRestartTarget,
-  selectTryoutFrozenPage,
   selectTryoutSectionReturnHref,
   selectTryoutSetLinks,
-  selectTryoutSetPages,
 } from "@/components/tryout/route/owner";
 
 describe("try-out route ownership", () => {
-  it("keeps a current terminal attempt on its verified frozen page", () => {
-    const frozenPage = { entrySection: "snapshot-section" };
-    const activePage = { entrySection: "active-section" };
-
-    expect(
-      selectTryoutSetPages({
-        attemptPage: {
-          kind: "current",
-          page: frozenPage,
-          restartTarget: "verified-target",
-        },
-        publicPage: activePage,
-        publicRestartTarget: "contradictory-public-target",
-      })
-    ).toEqual({ page: frozenPage, restartTarget: "verified-target" });
-    expect(
-      selectTryoutFrozenPage({
-        kind: "current",
-        page: frozenPage,
-      })
-    ).toBe(frozenPage);
-  });
-
-  it("keeps redirecting attempts on the canonical public page", () => {
-    expect(
-      selectTryoutSetPages({
-        attemptPage: { kind: "redirect" },
-        publicPage: "public",
-        publicRestartTarget: "public-target",
-      })
-    ).toEqual({ page: "public", restartTarget: "public-target" });
-    expect(selectTryoutFrozenPage({ kind: "redirect" })).toBeNull();
-  });
-
-  it("keeps retained display frozen and uses only its verified restart target", () => {
-    expect(
-      selectTryoutSetPages({
-        attemptPage: {
-          kind: "retained",
-          page: "frozen",
-          restartTarget: "current-target",
-        },
-        publicPage: null,
-        publicRestartTarget: null,
-      })
-    ).toEqual({ page: "frozen", restartTarget: "current-target" });
-    expect(
-      selectTryoutSetPages({
-        attemptPage: {
-          kind: "retained",
-          page: "frozen",
-          restartTarget: null,
-        },
-        publicPage: null,
-        publicRestartTarget: "untrusted-fallback",
-      })
-    ).toEqual({ page: "frozen", restartTarget: null });
-    expect(
-      selectTryoutSetPages({
-        attemptPage: null,
-        publicPage: "public",
-        publicRestartTarget: "public-target",
-      })
-    ).toEqual({ page: "public", restartTarget: "public-target" });
-    expect(
-      selectTryoutSetPages({
-        attemptPage: null,
-        publicPage: null,
-        publicRestartTarget: null,
-      })
-    ).toBeNull();
-  });
-
   it("derives a restart target only when the current set has an entry", () => {
     expect(
       createTryoutSetRestartTarget({

@@ -20,6 +20,8 @@ vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
 }));
 const environment =
   "VITE_CONVEX_URL=http://127.0.0.1:43120\nVITE_CONVEX_SITE_URL=http://127.0.0.1:43121\n";
+const LOCAL_JWKS_LINE =
+  /^JWKS='\[\{"alg":"RS256","createdAt":\d+,"id":"[^"]+","privateKey":"\\"[0-9a-f]+\\"","publicKey":"\{[^']+\}"\}\]'$/mu;
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({
@@ -107,6 +109,12 @@ describe("owned signed acceptance runtime", () => {
         expect(mocks.command).not.toHaveBeenCalledWith(
           expect.objectContaining({
             stdin: expect.stringContaining(privateKey),
+          })
+        );
+        // Each runtime signs its learners' sessions with a key of its own.
+        expect(mocks.command).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            stdin: expect.stringMatching(LOCAL_JWKS_LINE),
           })
         );
         expect(localApplicationEnvironment(runtime)).toMatchObject({

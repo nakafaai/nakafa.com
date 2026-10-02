@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
@@ -6,6 +7,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutExamPageClient } from "@/components/tryout/catalog/exam.client";
 import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 import { buildTryoutExamOptions } from "@/components/tryout/catalog/options";
+import { readTryoutCatalogRoutes } from "@/components/tryout/catalog/routes";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
 import {
   readTryoutCountryPage,
@@ -15,13 +17,33 @@ import { getTryoutHref } from "@/components/tryout/route/path";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /**
- * Lets a navigation into an exam wait for its cached catalog page instead of
- * showing an empty one. Exam links prefetch that page on intent, so it is
- * usually ready at the click.
+ * Lets a navigation into a exam published after the build block on its first
+ * render. Every exam the catalog served at build time is prerendered whole
+ * below. One published later has no static shell of its own until that first
+ * visit upgrades it, because try-out pages render together with the app shell,
+ * so static shell validation would reject its empty fallback.
  *
- * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-static-shell-validation
+ * @see https://nextjs.org/docs/app/guides/incremental-static-regeneration-cache-components
  */
 export const instant = false;
+
+/**
+ * Prerenders every exam the published catalog serves, so a direct visit gets
+ * the whole page, app shell included, from the static cache.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/functions/generate-static-params#with-cache-components
+ */
+export async function generateStaticParams({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  const routes = await Effect.runPromise(
+    readTryoutCatalogRoutes(getLocaleOrThrow(params.locale))
+  );
+  return routes.exams;
+}
 
 /** Builds route-owned metadata for one localized try-out exam. */
 export async function generateMetadata({

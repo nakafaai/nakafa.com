@@ -7,6 +7,7 @@ const ShellSamples = Schema.Struct({
   frames: Schema.Array(
     Schema.Struct({
       heading: Schema.Boolean,
+      locked: Schema.Boolean,
       mains: Schema.Array(Schema.Finite),
       time: Schema.Finite,
     })
@@ -28,14 +29,20 @@ export interface ShellObservation {
   readonly hiddenFrames: number;
   /** Summed layout shift, including shifts right after input. */
   readonly layoutShift: number;
+  /**
+   * The shell's lock state over the frames that show it, one entry per
+   * change, so `[false, true]` locks once and `[true]` never shows the
+   * unlocked shell.
+   */
+  readonly locks: readonly boolean[];
   /** Distinct `<main>` elements seen, so a remounted shell counts twice. */
   readonly shells: number;
 }
 
 /**
  * Records, from the first script on, every animation frame's visible `<main>`
- * elements by identity and whether the page inside shows a heading, and every
- * layout shift the browser reports.
+ * elements by identity, whether the page inside shows a heading, and whether
+ * the shell is locked, and every layout shift the browser reports.
  */
 export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
   page: Page
@@ -43,7 +50,12 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
   yield* Effect.promise(() =>
     page.addInitScript((key) => {
       const samples: {
-        frames: { heading: boolean; mains: number[]; time: number }[];
+        frames: {
+          heading: boolean;
+          locked: boolean;
+          mains: number[];
+          time: number;
+        }[];
         shifts: { time: number; value: number }[];
       } = { frames: [], shifts: [] };
       Object.defineProperty(window, key, { value: samples });
@@ -76,6 +88,12 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
               heading.checkVisibility(visibility)
             )
           ),
+          // The same state the shell's styles read: the lock store's attribute
+          // after hydration, the server marker before it.
+          locked:
+            document.querySelector(
+              "[data-slot=sidebar-wrapper][data-locked], [data-shell-lock]"
+            ) !== null,
           mains: mains.map(identify),
           time: performance.now(),
         });
@@ -93,6 +111,22 @@ export const readPageTime = Effect.fn("NakafaE2E.readPageTime")(function* (
   return yield* Effect.promise(() => page.evaluate(() => performance.now()));
 });
 
+/** Compresses the lock state of the frames that show the shell into its runs. */
+function readLockRuns(
+  frames: readonly {
+    readonly locked: boolean;
+    readonly mains: readonly number[];
+  }[]
+) {
+  const runs: boolean[] = [];
+  for (const frame of frames) {
+    if (frame.mains.length > 0 && runs.at(-1) !== frame.locked) {
+      runs.push(frame.locked);
+    }
+  }
+  return runs;
+}
+
 /** Summarizes the frames and layout shifts recorded since `since`. */
 export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
   function* (page: Page, since: number) {
@@ -109,6 +143,7 @@ export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
       layoutShift: samples.shifts
         .filter((shift) => shift.time >= since)
         .reduce((total, shift) => total + shift.value, 0),
+      locks: readLockRuns(frames),
       shells: new Set(frames.flatMap((frame) => frame.mains)).size,
     } satisfies ShellObservation;
   }

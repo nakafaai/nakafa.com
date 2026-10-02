@@ -10,6 +10,7 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country.client";
 import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
 import { buildTryoutCountryOptions } from "@/components/tryout/catalog/options";
+import { readTryoutCatalogRoutes } from "@/components/tryout/catalog/routes";
 import { TryoutCountrySelector } from "@/components/tryout/catalog/selector.client";
 import {
   readTryoutCountryPage,
@@ -21,13 +22,33 @@ import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 
 /**
- * Lets a navigation into a country wait for its cached catalog page instead of
- * showing an empty one. Country links prefetch that page on intent, so it is
- * usually ready at the click.
+ * Lets a navigation into a country published after the build block on its first
+ * render. Every country the catalog served at build time is prerendered whole
+ * below. One published later has no static shell of its own until that first
+ * visit upgrades it, because try-out pages render together with the app shell,
+ * so static shell validation would reject its empty fallback.
  *
- * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-static-shell-validation
+ * @see https://nextjs.org/docs/app/guides/incremental-static-regeneration-cache-components
  */
 export const instant = false;
+
+/**
+ * Prerenders every country the published catalog serves, so a direct visit gets
+ * the whole page, app shell included, from the static cache.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/functions/generate-static-params#with-cache-components
+ */
+export async function generateStaticParams({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  const routes = await Effect.runPromise(
+    readTryoutCatalogRoutes(getLocaleOrThrow(params.locale))
+  );
+  return routes.countries;
+}
 
 /** Builds route-owned metadata for one localized try-out country. */
 export async function generateMetadata({

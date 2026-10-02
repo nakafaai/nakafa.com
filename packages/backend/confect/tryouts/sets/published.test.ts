@@ -18,12 +18,17 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { getTryoutStatusRank } from "@repo/backend/confect/tryouts/status";
 import { api } from "@repo/backend/convex/_generated/api";
+import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import {
   activateTryoutSetCatalog,
   catalogListArgs,
 } from "@repo/backend/test/tryout/catalog";
+import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   activateTryoutStartSource,
+  clearActiveTryoutSnapshot,
+  makeTryoutStartHierarchy,
+  makeTryoutStartPlacement,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_NOW,
@@ -317,5 +322,67 @@ describe("tryouts/sets/published", () => {
     expect(inProgress.page).toEqual(list.page);
     expect(after.page).toEqual([]);
     expect(attempt.attemptId).toBeDefined();
+  });
+
+  it("links a running attempt's row to the page it continues on", async () => {
+    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    const t = createConvexTestWithBetterAuth();
+    const activate = async (locales: readonly ("de" | "id")[]) =>
+      await t.mutation(async (ctx) => {
+        const snapshotId = await activateTryoutSnapshot(ctx, {
+          catalog: locales.flatMap((locale) =>
+            makeTryoutStartHierarchy(locale, "visible")
+          ),
+          placements: locales.map(makeTryoutStartPlacement),
+        });
+        await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+      });
+    const identity = await t.mutation(
+      async (ctx) =>
+        await seedAuthenticatedUser(ctx, {
+          now: TRYOUT_START_NOW,
+          suffix: "running-set-row",
+        })
+    );
+    await activate(["id"]);
+    const authed = t.withIdentity({
+      sessionId: identity.sessionId,
+      subject: identity.authUserId,
+    });
+    const list = async (locale: "de" | "id") =>
+      (
+        await authed.query(api.tryouts.queries.sets.list, {
+          ...catalogListArgs,
+          locale,
+        })
+      ).page;
+    expect(await list("id")).toMatchObject([{ runningAttempt: null }]);
+    const started = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      {
+        countryKey: TRYOUT_START_COUNTRY,
+        examKey: TRYOUT_START_EXAM,
+        locale: "id",
+        setKey: TRYOUT_START_SET,
+        trackKey: TRYOUT_START_TRACK,
+      }
+    );
+    const [running] = await list("id");
+    expect(running?.runningAttempt).toEqual({
+      attemptId: started.attemptId,
+      publicPath: running?.publicPath,
+    });
+
+    // A later catalog adds German, which the attempt's own snapshot never had.
+    await t.mutation(clearActiveTryoutSnapshot);
+    await activate(["id", "de"]);
+    expect(await list("de")).toMatchObject([
+      { attemptStatus: "in-progress", runningAttempt: null },
+    ]);
+
+    await t.mutation((ctx) => ctx.db.delete(started.attemptId));
+    expect(await list("id")).toMatchObject([
+      { attemptStatus: "in-progress", runningAttempt: null },
+    ]);
   });
 });

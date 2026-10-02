@@ -4,7 +4,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useConvexAuth } from "convex/react";
-import { type Locale, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { type ReactNode, Suspense, use, useState } from "react";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
@@ -32,6 +32,7 @@ import { TryoutSectionPageHeader } from "@/components/tryout/section/header";
 import type {
   TryoutSectionInitialState,
   TryoutSectionPage,
+  TryoutSectionRoute,
 } from "@/components/tryout/section/model";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
@@ -52,15 +53,6 @@ type TryoutSectionRouteBinding = {
   initialState: TryoutSectionInitialState;
   startHref: string | null;
 } | null;
-
-interface TryoutSectionRoute {
-  country: string;
-  exam: string;
-  locale: Locale;
-  section: string;
-  set: string;
-  track: string;
-}
 
 interface TryoutSectionBodyValue {
   content: Promise<TryoutRuntimeContent> | null;
@@ -182,8 +174,9 @@ function LiveTryoutSectionPage({
 }
 
 /**
- * Renders the stable section UI from one cohesive reactive state, and locks the
- * app shell while the attempt runs.
+ * Renders the stable section UI from one cohesive reactive state. A page
+ * rendered for a running attempt locks the app shell until the learner leaves
+ * it, even once the attempt ends here, so the shell never changes under a page.
  */
 function ResolvedTryoutSectionPage({
   binding,
@@ -204,14 +197,20 @@ function ResolvedTryoutSectionPage({
   );
 
   const currentAttempt = attempt;
-  const locked = currentAttempt?.status === "in-progress";
+  const lock =
+    binding?.initialState.attempt.status === "in-progress" ? (
+      <ShellLock />
+    ) : null;
   const activeAttempt = getActiveTryoutAttempt(currentAttempt, now);
-  const actionAttempt = locked && !activeAttempt ? null : currentAttempt;
+  const actionAttempt =
+    currentAttempt?.status === "in-progress" && !activeAttempt
+      ? null
+      : currentAttempt;
   const sectionAttempt = actionAttempt?.section ?? null;
   const runtimeState = getTryoutRuntimeState({ activeAttempt, now, runtime });
   const hasActiveSection = currentAttempt?.section?.status === "in-progress";
   if (hasActiveSection && runtimeState.kind === "none") {
-    return locked ? <ShellLock /> : null;
+    return lock;
   }
 
   const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
@@ -219,7 +218,7 @@ function ResolvedTryoutSectionPage({
     runtimeState.kind === "active" || runtimeState.kind === "pending";
   return (
     <TryoutPage>
-      {locked ? <ShellLock /> : null}
+      {lock}
       <TryoutSectionHeader
         actionAttempt={actionAttempt}
         activeAttempt={activeAttempt}
@@ -268,9 +267,15 @@ function TryoutSectionHeader({
   sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
 }) {
   const startDestination = getStartDestination(binding, route);
-  const runtimeReturnHref = binding
+  const attemptSetHref = binding
     ? getTryoutAttemptHref(page.set.publicPath, binding.attemptId)
     : setHref;
+  // While this page's attempt runs, its set stays bound to that attempt: the
+  // public set would only lead back to it through a second page.
+  const returnHref =
+    binding?.initialState.attempt.status === "in-progress"
+      ? attemptSetHref
+      : setHref;
   const hasCurrentPath = !binding || binding.startHref === getTryoutHref(route);
   const isRunning =
     runtimeState.kind === "active" || runtimeState.kind === "pending";
@@ -280,7 +285,7 @@ function TryoutSectionHeader({
       value={{
         expired: runtimeState.kind === "pending",
         runtime: runtimeState.runtime,
-        returnHref: runtimeReturnHref,
+        returnHref: attemptSetHref,
       }}
     />
   ) : (
@@ -292,7 +297,7 @@ function TryoutSectionHeader({
             attempt: actionAttempt,
             completedAction: "return",
             locale: route.locale,
-            returnHref: setHref,
+            returnHref,
             section: page.section,
             sectionFinished: sectionStatus !== null,
             set: page.set,
@@ -302,7 +307,7 @@ function TryoutSectionHeader({
       }
       page={page}
       parents={hasCurrentPath ? "linked" : "unlinked"}
-      setHref={setHref}
+      setHref={returnHref}
     />
   );
 }

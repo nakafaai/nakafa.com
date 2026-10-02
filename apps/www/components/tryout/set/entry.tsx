@@ -58,46 +58,43 @@ export function TryoutSetEntry({
   );
 }
 
-/** Renders either the direct-entry facts or one terminal attempt result. */
+/**
+ * Renders the direct-entry facts from the catalog, followed by the attempt's
+ * score once it has one, so facts a pending page paints never move.
+ */
 function TryoutEntryResult({ value }: { value: TryoutInternalSetView }) {
-  const sectionAttempt =
-    value.runtimeState.kind === "none"
-      ? null
-      : value.runtimeState.runtime.section;
-  const sectionStatus = getTryoutFinishedSectionStatus(sectionAttempt);
   const attempt = value.actionAttempt;
 
-  if (!attempt?.score) {
-    return (
+  return (
+    <>
       <TryoutSectionSummary
         value={{
-          score: sectionAttempt?.score ?? null,
+          score: null,
           section: value.entrySection,
-          sectionStatus,
+          sectionStatus: null,
         }}
       />
-    );
-  }
-
-  return (
-    <TryoutAttemptResults
-      value={{
-        attempt: {
-          attemptId: attempt.attemptId,
-          attemptNumber: attempt.attemptNumber,
-          score: attempt.score,
-          startedAt: attempt.startedAt,
-          status: attempt.status,
-        },
-        identity: {
-          countryKey: value.page.set.countryKey,
-          examKey: value.page.set.examKey,
-          locale: value.route.locale,
-          setKey: value.page.set.setKey,
-          trackKey: value.page.set.trackKey,
-        },
-      }}
-    />
+      {attempt?.score ? (
+        <TryoutAttemptResults
+          value={{
+            attempt: {
+              attemptId: attempt.attemptId,
+              attemptNumber: attempt.attemptNumber,
+              score: attempt.score,
+              startedAt: attempt.startedAt,
+              status: attempt.status,
+            },
+            identity: {
+              countryKey: value.page.set.countryKey,
+              examKey: value.page.set.examKey,
+              locale: value.route.locale,
+              setKey: value.page.set.setKey,
+              trackKey: value.page.set.trackKey,
+            },
+          }}
+        />
+      ) : null}
+    </>
   );
 }
 

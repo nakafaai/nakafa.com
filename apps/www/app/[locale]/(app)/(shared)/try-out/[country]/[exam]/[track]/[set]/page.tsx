@@ -14,14 +14,10 @@ import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
 import { TryoutQuestionPreview } from "@/components/tryout/preview/server";
 import { TryoutReview } from "@/components/tryout/review/server";
-import {
-  createTryoutSetRestartTarget,
-  selectTryoutFrozenPage,
-  selectTryoutSetPages,
-} from "@/components/tryout/route/owner";
+import { readCurrentTryoutSet } from "@/components/tryout/route/current";
+import { createTryoutSetRestartTarget } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptAuthHref,
-  getTryoutAttemptHref,
   getTryoutHref,
   readTryoutRouteAttemptCapability,
   type TryoutRouteSearchParams,
@@ -30,8 +26,8 @@ import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import type {
   SetPage,
-  TryoutSetRoute as SetRoute,
   TryoutSetRestartTarget,
+  TryoutSetRoute,
 } from "@/components/tryout/set/model";
 import { TryoutSetPending } from "@/components/tryout/set/pending";
 import { getToken } from "@/lib/auth/server";
@@ -50,13 +46,25 @@ interface TryoutSetPageProps {
   searchParams: Promise<TryoutRouteSearchParams>;
 }
 
+/** The learner's attempt a set page renders, once it is known. */
+type SetAttemptPage = Effect.Success<ReturnType<typeof readCurrentTryoutSet>>;
+
+/** The one attempt a set URL is bound to, once the request's learner is known. */
+type RetainedSetRead =
+  | { readonly kind: "auth-required" }
+  | {
+      readonly attemptPage: Effect.Success<
+        ReturnType<typeof readTryoutSetAttemptPage>
+      >;
+      readonly kind: "owned";
+    };
+
 /**
- * Lets a navigation into a set wait for the set's heading instead of showing an
- * empty page. Set links prefetch on intent, which resolves the heading before
- * the click, and the learner's attempt streams in below it. A link bound to an
+ * Lets a navigation into a set wait instead of showing an empty page. Set links
+ * prefetch on intent, which resolves the set's catalog view before the click,
+ * and the learner's attempt streams in below its heading. A link bound to an
  * attempt waits for that attempt, so moving through a running attempt keeps
- * the previous page, and the locked shell, on screen until the next page is
- * ready.
+ * the previous page on screen until the next one is ready.
  *
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
  * @see https://nextjs.org/docs/app/guides/optimizing-prefetching#resolve-url-data-at-prefetch-time
@@ -73,13 +81,30 @@ export async function generateMetadata({
   if (capability.kind === "invalid") {
     notFound();
   }
-  const attemptId =
-    capability.kind === "valid" ? capability.attemptId : undefined;
   const locale = getLocaleOrThrow(localeParam);
   const publicPath = getTryoutHref({ country, exam, set, track }).slice(1);
-  const preview = attemptId
-    ? Option.none()
-    : await readTryoutQuestionPreview(locale, publicPath);
+  if (capability.kind === "valid") {
+    const [retained, tTryouts] = await Promise.all([
+      readRetainedSetPage(locale, publicPath, capability.attemptId),
+      getTranslations({ locale, namespace: "Tryouts" }),
+    ]);
+    if (retained.kind === "auth-required") {
+      return createRetainedTryoutMetadata({
+        description: tTryouts("metadata-description"),
+        title: tTryouts("title"),
+      });
+    }
+    if (retained.attemptPage?.kind !== "retained") {
+      notFound();
+    }
+    return createRetainedTryoutMetadata({
+      description:
+        retained.attemptPage.page.set.description ??
+        tTryouts("metadata-description"),
+      title: retained.attemptPage.page.set.title,
+    });
+  }
+  const preview = await readTryoutQuestionPreview(locale, publicPath);
   if (Option.isSome(preview)) {
     const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
     return createRetainedTryoutMetadata({
@@ -89,37 +114,12 @@ export async function generateMetadata({
       title: preview.value.target.section.title,
     });
   }
-  const resolved = await readRoutePage(locale, publicPath, attemptId);
-
-  if (resolved.authRequired) {
-    const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
-    return createRetainedTryoutMetadata({
-      description: tTryouts("metadata-description"),
-      title: tTryouts("title"),
-    });
-  }
-  const frozenPage = selectTryoutFrozenPage(resolved.attemptPage);
-  if (frozenPage) {
-    const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
-    return createRetainedTryoutMetadata({
-      description:
-        frozenPage.set.description ?? tTryouts("metadata-description"),
-      title: frozenPage.set.title,
-    });
-  }
-  if (resolved.publicPage) {
-    return generateTryoutRouteMetadata({
-      kind: "set",
-      locale,
-      publicPath,
-    });
-  }
-  notFound();
+  return generateTryoutRouteMetadata({ kind: "set", locale, publicPath });
 }
 
 /**
- * Renders one try-out set. A public set shows its catalog heading at once and
- * streams the learner's attempt below it; a set bound to one attempt renders
+ * Renders one try-out set. A public set paints its catalog view at once and
+ * streams the learner's attempt into it; a set bound to one attempt renders
  * when that attempt is known.
  */
 export default async function Page({
@@ -141,7 +141,7 @@ export default async function Page({
   const setPath = getTryoutHref(route).slice(1);
   if (capability.kind === "valid") {
     return (
-      <TryoutSetRoute
+      <RetainedTryoutSet
         attemptId={capability.attemptId}
         route={route}
         setPath={setPath}
@@ -152,84 +152,107 @@ export default async function Page({
   if (Option.isSome(preview)) {
     return <TryoutQuestionPreview content={preview.value} />;
   }
-  const publicPage = await readTryoutSetPage(route.locale, setPath);
-  if (!publicPage) {
+  const page = await readTryoutSetPage(route.locale, setPath);
+  if (!page) {
     notFound();
   }
 
   return (
-    <Suspense
-      fallback={<TryoutSetPending locale={route.locale} page={publicPage} />}
-    >
-      <TryoutSetRoute route={route} setPath={setPath} />
+    <Suspense fallback={<TryoutSetPending locale={route.locale} page={page} />}>
+      <CurrentTryoutSet page={page} route={route} />
     </Suspense>
   );
 }
 
-/** Resolves the current or retained attempt that decides the set view. */
-async function TryoutSetRoute({
+/**
+ * Resolves the learner's latest attempt on a public set. A finished attempt
+ * adds its score below the catalog view the pending page already showed and
+ * opens its own sections. A running attempt renders here as its own page, so
+ * reaching it from a public link never passes an empty one.
+ */
+async function CurrentTryoutSet({
+  page,
+  route,
+}: {
+  page: SetPage;
+  route: TryoutSetRoute;
+}) {
+  const token = await getToken();
+  const attemptPage = token
+    ? await Effect.runPromise(
+        readCurrentTryoutSet(token, {
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          locale: route.locale,
+          setKey: page.set.setKey,
+          trackKey: page.set.trackKey,
+        })
+      )
+    : null;
+  if (attemptPage?.kind === "retained") {
+    return (
+      <ResolvedTryoutSet
+        attemptPage={attemptPage}
+        page={attemptPage.page}
+        restartTarget={attemptPage.restartTarget}
+        route={route}
+      />
+    );
+  }
+
+  return (
+    <ResolvedTryoutSet
+      attemptPage={attemptPage}
+      page={page}
+      restartTarget={
+        attemptPage
+          ? attemptPage.restartTarget
+          : createTryoutSetRestartTarget(page)
+      }
+      route={route}
+    />
+  );
+}
+
+/** Resolves the one attempt a set URL is bound to. */
+async function RetainedTryoutSet({
   attemptId,
   route,
   setPath,
 }: {
-  attemptId?: string;
-  route: SetRoute;
+  attemptId: string;
+  route: TryoutSetRoute;
   setPath: string;
 }) {
-  const resolved = await readRoutePage(route.locale, setPath, attemptId);
-
-  if (resolved.authRequired && attemptId) {
+  const retained = await readRetainedSetPage(route.locale, setPath, attemptId);
+  if (retained.kind === "auth-required") {
     redirect(getTryoutAttemptAuthHref(route.locale, setPath, attemptId));
   }
-  if (resolved.authRequired) {
+  if (retained.attemptPage?.kind !== "retained") {
     notFound();
   }
-
-  const { attemptPage } = resolved;
-  if (attemptPage?.kind === "redirect") {
-    redirect(
-      getTryoutAttemptHref(attemptPage.publicPath, attemptPage.attemptId)
-    );
-  }
-  if (attemptId && !attemptPage) {
-    notFound();
-  }
-  const pages = selectTryoutSetPages({
-    attemptPage,
-    publicPage: resolved.publicPage,
-    publicRestartTarget: resolved.publicPage
-      ? createTryoutSetRestartTarget(resolved.publicPage)
-      : null,
-  });
-  if (!pages) {
-    notFound();
-  }
-  const { page, restartTarget } = pages;
 
   return (
-    <ResolvedTryoutSetRoute
-      attemptPage={attemptPage}
-      page={page}
-      restartTarget={restartTarget}
+    <ResolvedTryoutSet
+      attemptPage={retained.attemptPage}
+      page={retained.attemptPage.page}
+      restartTarget={retained.attemptPage.restartTarget}
       route={route}
     />
   );
 }
 
 /** Composes signed runtime or review content after route ownership is resolved. */
-async function ResolvedTryoutSetRoute({
+async function ResolvedTryoutSet({
   attemptPage,
   page,
   restartTarget,
   route,
 }: {
-  attemptPage: Exclude<
-    Awaited<ReturnType<typeof readRoutePage>>["attemptPage"],
-    { kind: "redirect" }
-  >;
+  attemptPage: SetAttemptPage;
   page: SetPage;
   restartTarget: TryoutSetRestartTarget | null;
-  route: SetRoute;
+  route: TryoutSetRoute;
 }) {
   const initialNow = await Effect.runPromise(Clock.currentTimeMillis);
 
@@ -275,66 +298,25 @@ async function ResolvedTryoutSetRoute({
   );
 }
 
-/** Resolves active public content or one explicitly owned frozen attempt. */
-const readRoutePage = cache(
+/** Reads one attempt the request's learner owns, once per request. */
+const readRetainedSetPage = cache(
   async (
     locale: ReturnType<typeof getLocaleOrThrow>,
     publicPath: string,
-    attemptId?: string
-  ) => {
-    if (attemptId) {
-      const token = await getToken();
-      if (!token) {
-        return {
-          attemptPage: null,
-          authRequired: true,
-          publicPage: null,
-        };
-      }
-      const attemptPage = await Effect.runPromise(
-        readTryoutSetAttemptPage(token, {
-          attemptId,
-          kind: "retained",
-          locale,
-          publicPath,
-        })
-      );
-      return {
-        attemptPage,
-        authRequired: false,
-        publicPage: null,
-      };
-    }
-
-    const [publicPage, token] = await Promise.all([
-      readTryoutSetPage(locale, publicPath),
-      getToken(),
-    ]);
+    attemptId: string
+  ): Promise<RetainedSetRead> => {
+    const token = await getToken();
     if (!token) {
-      return {
-        attemptPage: null,
-        authRequired: false,
-        publicPage,
-      };
-    }
-
-    if (!publicPage) {
-      return {
-        attemptPage: null,
-        authRequired: false,
-        publicPage,
-      };
+      return { kind: "auth-required" };
     }
     const attemptPage = await Effect.runPromise(
       readTryoutSetAttemptPage(token, {
-        countryKey: publicPage.set.countryKey,
-        examKey: publicPage.set.examKey,
-        kind: "current",
+        attemptId,
+        kind: "retained",
         locale,
-        setKey: publicPage.set.setKey,
-        trackKey: publicPage.set.trackKey,
+        publicPath,
       })
     );
-    return { attemptPage, authRequired: false, publicPage };
+    return { attemptPage, kind: "owned" };
   }
 );

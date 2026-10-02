@@ -203,15 +203,15 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
 }
 
 /**
- * Shows the start action loading while the attempt that decides its label and
- * target is still on its way, so the heading keeps its final height.
+ * Holds the action's place at its final height while the attempt that decides
+ * it is still on its way. It names no action, because only that attempt tells
+ * starting, continuing, and restarting apart.
  */
 export function PendingTryoutAction() {
   const t = useTranslations("Tryouts");
   return (
-    <Button disabled>
+    <Button aria-label={t("action-loading")} disabled>
       <Spinner icon={Rocket01Icon} isLoading />
-      {t("start-cta")}
     </Button>
   );
 }

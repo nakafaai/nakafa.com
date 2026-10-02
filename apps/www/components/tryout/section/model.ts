@@ -1,5 +1,6 @@
 import type { Ref } from "@confect/core";
 import type refs from "@repo/backend/confect/_generated/refs";
+import type { Locale } from "next-intl";
 
 type PublicSectionPage = NonNullable<
   Ref.Returns<typeof refs.public.tryouts.queries.catalog.getSectionPage>
@@ -20,3 +21,13 @@ export type TryoutSectionInitialState =
 
 /** Public or exact frozen page rendered by one section route. */
 export type TryoutSectionPage = PublicSectionPage | RetainedSectionPage;
+
+/** URL route coordinates for one try-out section page. */
+export interface TryoutSectionRoute {
+  country: string;
+  exam: string;
+  locale: Locale;
+  section: string;
+  set: string;
+  track: string;
+}

@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
 import {
   listArgsValidator,
   PublishedSetPaginationError,
@@ -16,6 +17,11 @@ export default GroupSpec.make().addFunction(
     args: () => listArgsValidator.fields,
     returns: () => trackSetPageValidator,
     error: () =>
-      Schema.Union([AuthFailure, ReleaseError, PublishedSetPaginationError]),
+      Schema.Union([
+        AuthFailure,
+        ReleaseError,
+        PublishedSetPaginationError,
+        TryoutRuntimeErrorWire,
+      ]),
   }).middleware(Session)
 );

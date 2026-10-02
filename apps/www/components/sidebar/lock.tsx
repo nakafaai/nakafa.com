@@ -38,6 +38,12 @@ function createShellLockStore() {
  * sidebar, and the page takes the whole screen. The shell itself stays
  * mounted, so locking and unlocking never replaces it.
  *
+ * Locking never moves `<main>`. The desktop sidebar overlays the page edge
+ * instead of sitting beside it, and `<main>` keeps the page clear of it with a
+ * padding, so `<main>` starts at the same point locked or not and only the new
+ * page inside it differs. The padding follows the sidebar's own slide when the
+ * learner toggles it, while a lock change switches it at once.
+ *
  * Two sources lock it. After hydration, the lock store does: the header
  * unmounts, the sidebar ignores its toggles, and `data-locked` hides the
  * sidebar. Before hydration only the server markup exists, so a locked page
@@ -59,22 +65,25 @@ export function LockableShell({
   return (
     <ShellLockContext value={store}>
       <SidebarProvider
-        className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0px] data-locked:[--app-header-top:0px]"
+        className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] data-locked:[--app-header-top:0rem]"
         data-locked={locked ? "" : undefined}
         locked={locked}
       >
-        <SidebarInset>
+        {/* Pages lay out in normal flow directly inside main: a flex column
+            would shrink every centered page column to its content, and a
+            wrapper of their own would move when a lock change drops the
+            header. */}
+        <SidebarInset className="block transition-[--app-sidebar-offset] duration-200 ease-out [--app-shell-inset:var(--app-sidebar-offset)] [--app-sidebar-offset:0rem] lg:pl-(--app-shell-inset) group-has-[[data-shell-lock]]/sidebar-wrapper:[--app-shell-inset:0rem] group-has-[[data-side=left][data-sidebar-state=expanded]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(64)] group-data-locked/sidebar-wrapper:[--app-shell-inset:0rem]">
           {locked ? null : (
             <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden">
               {header}
             </div>
           )}
-          {/* Pages lay out in normal flow. A flex column here would shrink every
-              centered page column to its content. */}
-          <div className="relative">{children}</div>
+          {children}
         </SidebarInset>
         {/* Hidden rather than collapsed, so locking and unlocking swap the
-            sidebar at once instead of animating its width. */}
+            sidebar at once and the learner's open or closed choice returns
+            unchanged when the lock ends. */}
         <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden">
           {sidebar}
         </div>
@@ -117,21 +126,4 @@ export function ShellLock() {
   useLayoutEffect(() => lock(), [lock]);
 
   return hydrating ? <span data-shell-lock="" hidden /> : null;
-}
-
-/**
- * Keeps the shell as locked or unlocked as it was while the page that decides
- * the lock is still loading. Moving from a running attempt to a page that
- * resolves the attempt again then keeps the shell locked instead of briefly
- * showing the sidebar and header. The state is read when this page first
- * renders, while the previous page still holds its lock.
- */
-export function ShellLockHold() {
-  const locked = useShellLock((state) => state.locks > 0);
-  const lock = useShellLock((state) => state.lock);
-  const [held] = useState(locked);
-
-  useLayoutEffect(() => (held ? lock() : undefined), [held, lock]);
-
-  return null;
 }

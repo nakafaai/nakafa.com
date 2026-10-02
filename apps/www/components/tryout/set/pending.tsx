@@ -1,20 +1,20 @@
 import type { Locale } from "next-intl";
-import { ShellLockHold } from "@/components/sidebar/lock";
 import {
   createTryoutSetRestartTarget,
   selectTryoutSetLinks,
 } from "@/components/tryout/route/owner";
+import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
 import type { SetPage } from "@/components/tryout/set/model";
+import { TryoutSectionRows } from "@/components/tryout/set/rows.client";
 import { PendingTryoutAction } from "@/components/tryout/set/start";
-import { TryoutPage } from "@/components/tryout/shell/header";
+import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /**
- * Shows the set heading from the catalog while the learner's attempt loads. The
- * attempt decides everything below the heading, such as the countdown or the
- * result above the sections, so that part waits instead of moving later. The
- * shell stays as locked or unlocked as the page before it.
+ * Paints the set from the cached catalog while the learner's attempt loads:
+ * its heading, and its section list or its single entry's facts, where the
+ * resolved page shows them. Only the action and the result wait.
  */
 export function TryoutSetPending({
   locale,
@@ -24,12 +24,12 @@ export function TryoutSetPending({
   page: SetPage;
 }) {
   const links = selectTryoutSetLinks(createTryoutSetRestartTarget(page));
+  const entrySection = page.entrySection;
   return (
     <TryoutPage>
-      <ShellLockHold />
       <TryoutSetPageHeader
         action={
-          isActiveLocale(locale) && page.entrySection ? (
+          isActiveLocale(locale) && entrySection ? (
             <PendingTryoutAction />
           ) : null
         }
@@ -37,6 +37,15 @@ export function TryoutSetPending({
         page={page}
         returnHref={links.returnHref}
       />
+      <TryoutPageBody>
+        {entrySection?.visibility === "internal-entry" ? (
+          <TryoutSectionSummary
+            value={{ score: null, section: entrySection, sectionStatus: null }}
+          />
+        ) : (
+          <TryoutSectionRows sections={page.sections} />
+        )}
+      </TryoutPageBody>
     </TryoutPage>
   );
 }

@@ -16,6 +16,9 @@ import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
  * navigation, so the panel and the route chooser never carry data they do not
  * render themselves. A page locks it by rendering `ShellLock`. The layout that
  * mounts the shell decides whether its pages stream inside it.
+ *
+ * The desktop sidebar keeps no gap in the page flow: the shell reserves its
+ * width inside `<main>`, so a page that locks the shell never moves `<main>`.
  */
 export function AppShell({
   articleNavigation,
@@ -35,7 +38,7 @@ export function AppShell({
       }
       sidebar={
         <AppSidebar
-          containerClassName="order-first"
+          containerClassName="[&>[data-slot=sidebar-gap]]:hidden"
           navigation={
             <SidebarNavigation
               browse={

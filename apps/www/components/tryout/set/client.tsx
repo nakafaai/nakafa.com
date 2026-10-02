@@ -156,8 +156,9 @@ function LiveTryoutSetPage({
 }
 
 /**
- * Renders one stable set view from its exact mutable state, and locks the app
- * shell while the attempt runs.
+ * Renders one stable set view from its exact mutable state. A page rendered
+ * for a running attempt locks the app shell until the learner leaves it, even
+ * once the attempt ends here, so the shell never changes under a page.
  */
 function ResolvedTryoutSetPage({
   binding,
@@ -208,7 +209,9 @@ function ResolvedTryoutSetPage({
 
   return (
     <>
-      {currentAttempt?.status === "in-progress" ? <ShellLock /> : null}
+      {binding?.initialState.attempt.status === "in-progress" ? (
+        <ShellLock />
+      ) : null}
       {isInternalEntry && entrySection ? (
         <TryoutInternalSet
           value={{

@@ -3,32 +3,6 @@ import {
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
 
-interface FrozenAttemptPage<FrozenPage> {
-  readonly kind: "current" | "retained";
-  readonly page: FrozenPage;
-}
-
-interface SetAttemptPage<FrozenPage, RestartTarget> {
-  readonly kind: "current" | "retained";
-  readonly page: FrozenPage;
-  readonly restartTarget: RestartTarget | null;
-}
-
-interface RedirectAttemptPage {
-  readonly kind: "redirect";
-}
-
-/** Selects the verified snapshot page carried by a current or retained attempt. */
-export function selectTryoutFrozenPage<FrozenPage>(
-  attemptPage: FrozenAttemptPage<FrozenPage> | RedirectAttemptPage | null
-) {
-  if (!attemptPage || attemptPage.kind === "redirect") {
-    return null;
-  }
-
-  return attemptPage.page;
-}
-
 /** Builds the current restart target exposed by one public set page. */
 export function createTryoutSetRestartTarget<EntrySection>(page: {
   readonly entrySection: EntrySection | null;
@@ -41,35 +15,6 @@ export function createTryoutSetRestartTarget<EntrySection>(page: {
   return {
     entrySection: page.entrySection,
     setPublicPath: page.set.publicPath,
-  };
-}
-
-/** Separates frozen attempt display from the verified current restart target. */
-export function selectTryoutSetPages<PublicPage, FrozenPage, RestartTarget>({
-  attemptPage,
-  publicPage,
-  publicRestartTarget,
-}: {
-  attemptPage:
-    | SetAttemptPage<FrozenPage, RestartTarget>
-    | RedirectAttemptPage
-    | null;
-  publicPage: PublicPage | null;
-  publicRestartTarget: RestartTarget | null;
-}) {
-  const page = selectTryoutFrozenPage(attemptPage) ?? publicPage;
-  if (page === null) {
-    return null;
-  }
-
-  const restartTarget =
-    attemptPage && attemptPage.kind !== "redirect"
-      ? attemptPage.restartTarget
-      : publicRestartTarget;
-
-  return {
-    page,
-    restartTarget,
   };
 }
 
