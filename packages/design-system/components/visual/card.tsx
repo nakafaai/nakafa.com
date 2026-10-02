@@ -61,16 +61,24 @@ const FULL_SCREEN =
  * layer where the browser has popovers, and above the page's own sticky bars
  * where it does not. Presentation classes come last, so a card's own classes
  * never undo them.
+ *
+ * The card is never a scroll anchor. WebKit can anchor the page to content
+ * inside the card while it sits in the page, and keeps following that anchor
+ * once the card fills the screen, so the page behind scrolls whenever a chart
+ * or scene in the card resizes.
  */
-const visualCardVariants = cva("group/visual content-auto-card", {
-  variants: {
-    presentation: {
-      fullscreen: FULL_SCREEN,
-      immersive: [FULL_SCREEN, "fixed inset-0 z-60 h-dvh w-auto border-0"],
-      inline: "",
+const visualCardVariants = cva(
+  "group/visual content-auto-card [overflow-anchor:none]",
+  {
+    variants: {
+      presentation: {
+        fullscreen: FULL_SCREEN,
+        immersive: [FULL_SCREEN, "fixed inset-0 z-60 h-dvh w-auto border-0"],
+        inline: "",
+      },
     },
-  },
-});
+  }
+);
 
 const visualBodyVariants = cva(
   "group-data-fullscreen/visual:flex-1 group-data-fullscreen/visual:justify-center"
