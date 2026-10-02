@@ -3,8 +3,8 @@ import {
   createTryoutSetRestartTarget,
   selectTryoutFrozenPage,
   selectTryoutSectionReturnHref,
+  selectTryoutSetLinks,
   selectTryoutSetPages,
-  selectTryoutTrackReturnHref,
 } from "@/components/tryout/route/owner";
 
 describe("try-out route ownership", () => {
@@ -99,16 +99,23 @@ describe("try-out route ownership", () => {
     ).toBeNull();
   });
 
-  it("uses the active parent track or the try-out root", () => {
+  it("links the active set and its parent track or the try-out root", () => {
     expect(
-      selectTryoutTrackReturnHref({
+      selectTryoutSetLinks({
         setPublicPath: "try-out/indonesia/tka/2027/renamed-set",
       })
-    ).toBe("/try-out/indonesia/tka/2027");
-    expect(selectTryoutTrackReturnHref(null)).toBe("/try-out");
-    expect(selectTryoutTrackReturnHref({ setPublicPath: "malformed" })).toBe(
-      "/try-out"
-    );
+    ).toEqual({
+      currentHref: "/try-out/indonesia/tka/2027/renamed-set",
+      returnHref: "/try-out/indonesia/tka/2027",
+    });
+    expect(selectTryoutSetLinks(null)).toEqual({
+      currentHref: "/try-out",
+      returnHref: "/try-out",
+    });
+    expect(selectTryoutSetLinks({ setPublicPath: "malformed" })).toEqual({
+      currentHref: "/malformed",
+      returnHref: "/try-out",
+    });
   });
 
   it("uses the active retained set destination or the try-out root", () => {

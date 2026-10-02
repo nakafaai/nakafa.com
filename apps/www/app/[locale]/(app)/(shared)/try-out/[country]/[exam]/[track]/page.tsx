@@ -16,6 +16,15 @@ import { TryoutTrackTable } from "@/components/tryout/catalog/track";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
+/**
+ * Lets a navigation into a track wait for its cached catalog page instead of
+ * showing an empty one. Track links prefetch that page on intent, so it is
+ * usually ready at the click. The learner's own set list still streams below.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ */
+export const instant = false;
+
 /** Builds route-owned metadata for one localized try-out track. */
 export async function generateMetadata({
   params,
@@ -38,27 +47,7 @@ export async function generateMetadata({
 }
 
 /** Renders active try-out sets for one exam track. */
-export default function Page(props: {
-  searchParams: Promise<SearchParams>;
-  params: Promise<{
-    country: string;
-    exam: string;
-    locale: string;
-    track: string;
-  }>;
-}) {
-  return (
-    <Suspense fallback={null}>
-      <TryoutTrackRoute
-        params={props.params}
-        searchParams={props.searchParams}
-      />
-    </Suspense>
-  );
-}
-
-/** Resolves one cached public track inside its route-owned boundary. */
-async function TryoutTrackRoute({
+export default async function Page({
   params,
   searchParams,
 }: {

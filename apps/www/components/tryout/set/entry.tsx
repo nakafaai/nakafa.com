@@ -3,22 +3,16 @@
 import { type ReactNode, Suspense, use } from "react";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
-import {
-  getTryoutAttemptHref,
-  getTryoutPublicPathHref,
-} from "@/components/tryout/route/path";
+import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import { TryoutSummaryAction } from "@/components/tryout/section/action.client";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
+import { TryoutSetPageHeader } from "@/components/tryout/set/header";
 import type { TryoutInternalSetView } from "@/components/tryout/set/model";
-import {
-  TryoutPage,
-  TryoutPageBody,
-  TryoutPageHeader,
-} from "@/components/tryout/shell/header";
+import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 
 /** Renders a no-nested-section set as the directly startable section surface. */
 export function TryoutSetEntry({
@@ -47,20 +41,11 @@ export function TryoutSetEntry({
           }}
         />
       ) : (
-        <TryoutPageHeader
+        <TryoutSetPageHeader
           action={<TryoutEntryAction value={value} />}
-          items={[
-            {
-              href:
-                value.currentHref ===
-                getTryoutPublicPathHref(value.page.set.publicPath)
-                  ? getTryoutPublicPathHref(value.page.exam.publicPath)
-                  : undefined,
-              label: value.page.exam.title,
-            },
-            { href: value.returnHref, label: value.page.track.title },
-          ]}
-          title={value.page.set.title}
+          currentHref={value.currentHref}
+          page={value.page}
+          returnHref={value.returnHref}
         />
       )}
       <TryoutPageBody>

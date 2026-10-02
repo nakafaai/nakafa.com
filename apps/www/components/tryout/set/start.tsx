@@ -202,6 +202,20 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   );
 }
 
+/**
+ * Shows the start action loading while the attempt that decides its label and
+ * target is still on its way, so the heading keeps its final height.
+ */
+export function PendingTryoutAction() {
+  const t = useTranslations("Tryouts");
+  return (
+    <Button disabled>
+      <Spinner icon={Rocket01Icon} isLoading />
+      {t("start-cta")}
+    </Button>
+  );
+}
+
 /** Links to the next section of the active attempt. */
 function ResumeTryoutLink({
   request,

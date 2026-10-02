@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
@@ -14,6 +13,15 @@ import {
 } from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+
+/**
+ * Lets a navigation into an exam wait for its cached catalog page instead of
+ * showing an empty one. Exam links prefetch that page on intent, so it is
+ * usually ready at the click.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ */
+export const instant = false;
 
 /** Builds route-owned metadata for one localized try-out exam. */
 export async function generateMetadata({
@@ -32,18 +40,7 @@ export async function generateMetadata({
 }
 
 /** Renders active try-out tracks for one country and exam family. */
-export default function Page(props: {
-  params: Promise<{ country: string; exam: string; locale: string }>;
-}) {
-  return (
-    <Suspense fallback={null}>
-      <TryoutExamRoute params={props.params} />
-    </Suspense>
-  );
-}
-
-/** Resolves one cached public exam inside its route-owned boundary. */
-async function TryoutExamRoute({
+export default async function Page({
   params,
 }: {
   params: Promise<{ country: string; exam: string; locale: string }>;

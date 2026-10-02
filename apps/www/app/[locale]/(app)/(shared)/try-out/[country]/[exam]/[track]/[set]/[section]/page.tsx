@@ -26,8 +26,8 @@ import {
 import { TryoutClockProvider } from "@/components/tryout/runtime/clock";
 import { TryoutSectionPageClient } from "@/components/tryout/section/client";
 import type { TryoutSectionPage } from "@/components/tryout/section/model";
+import { TryoutSectionPending } from "@/components/tryout/section/pending";
 import { getToken } from "@/lib/auth/server";
-import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 interface TryoutSectionParams {
@@ -43,6 +43,23 @@ interface TryoutSectionPageProps {
   params: Promise<TryoutSectionParams>;
   searchParams: Promise<TryoutRouteSearchParams>;
 }
+
+type TryoutSectionRoute = Omit<TryoutSectionParams, "locale"> & {
+  locale: ReturnType<typeof getLocaleOrThrow>;
+};
+
+/**
+ * Lets a navigation into a section wait for the section's heading instead of
+ * showing an empty page. Section links prefetch on intent, which resolves the
+ * heading before the click, and the learner's attempt streams in below it. A
+ * link bound to an attempt waits for that attempt, so moving through a running
+ * attempt keeps the previous page, and the locked shell, on screen until the
+ * next page is ready.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ * @see https://nextjs.org/docs/app/guides/optimizing-prefetching#resolve-url-data-at-prefetch-time
+ */
+export const instant = false;
 
 /** Builds route-owned metadata for one localized try-out section. */
 export async function generateMetadata({
@@ -110,20 +127,12 @@ export async function generateMetadata({
   notFound();
 }
 
-/** Renders one try-out section with public metadata and owned runtime content. */
-export default function Page(props: TryoutSectionPageProps) {
-  return (
-    <Suspense fallback={null}>
-      <TryoutSectionRoute
-        params={props.params}
-        searchParams={props.searchParams}
-      />
-    </Suspense>
-  );
-}
-
-/** Resolves one cached public section inside its route-owned boundary. */
-async function TryoutSectionRoute({
+/**
+ * Renders one try-out section. A public section shows its catalog heading at
+ * once and streams the learner's attempt below it; a section bound to one
+ * attempt renders when that attempt is known.
+ */
+export default async function Page({
   params,
   searchParams,
 }: TryoutSectionPageProps) {
@@ -139,25 +148,61 @@ async function TryoutSectionRoute({
   if (capability.kind === "invalid") {
     notFound();
   }
-  const attemptId =
-    capability.kind === "valid" ? capability.attemptId : undefined;
-  const locale = getLocaleOrThrow(localeParam);
-  const sectionPath = getTryoutHref({
+  const route = {
     country,
     exam,
+    locale: getLocaleOrThrow(localeParam),
     section,
     set,
     track,
-  }).slice(1);
-  const preview = attemptId
-    ? Option.none()
-    : await readTryoutQuestionPreview(locale, sectionPath);
+  };
+  const sectionPath = getTryoutHref(route).slice(1);
+  if (capability.kind === "valid") {
+    return (
+      <TryoutSectionRoute
+        attemptId={capability.attemptId}
+        route={route}
+        sectionPath={sectionPath}
+      />
+    );
+  }
+  const preview = await readTryoutQuestionPreview(route.locale, sectionPath);
   if (Option.isSome(preview)) {
     return <TryoutQuestionPreview content={preview.value} />;
   }
-  const resolved = await readRoutePage(locale, sectionPath, attemptId);
+  const publicPage = await readTryoutSectionPage(route.locale, sectionPath);
+  if (!publicPage) {
+    notFound();
+  }
+
+  return (
+    <Suspense
+      fallback={
+        <TryoutSectionPending
+          locale={route.locale}
+          page={publicPage}
+          setHref={getTryoutHref({ country, exam, set, track })}
+        />
+      }
+    >
+      <TryoutSectionRoute route={route} sectionPath={sectionPath} />
+    </Suspense>
+  );
+}
+
+/** Resolves the current or retained attempt that decides the section view. */
+async function TryoutSectionRoute({
+  attemptId,
+  route,
+  sectionPath,
+}: {
+  attemptId?: string;
+  route: TryoutSectionRoute;
+  sectionPath: string;
+}) {
+  const resolved = await readRoutePage(route.locale, sectionPath, attemptId);
   if (resolved.authRequired && attemptId) {
-    redirect(getTryoutAttemptAuthHref(locale, sectionPath, attemptId));
+    redirect(getTryoutAttemptAuthHref(route.locale, sectionPath, attemptId));
   }
   if (resolved.authRequired) {
     notFound();
@@ -179,14 +224,19 @@ async function TryoutSectionRoute({
 
   const setHref = selectTryoutSectionReturnHref({
     attemptPage,
-    publicHref: getTryoutHref({ country, exam, set, track }),
+    publicHref: getTryoutHref({
+      country: route.country,
+      exam: route.exam,
+      set: route.set,
+      track: route.track,
+    }),
   });
 
   return (
     <ResolvedTryoutSectionRoute
       attemptPage={attemptPage}
       page={page}
-      route={{ country, exam, locale, section, set, track }}
+      route={route}
       setHref={setHref}
     />
   );
@@ -204,16 +254,10 @@ async function ResolvedTryoutSectionRoute({
     { kind: "redirect" }
   >;
   page: TryoutSectionPage;
-  route: Omit<TryoutSectionParams, "locale"> & {
-    locale: ReturnType<typeof getLocaleOrThrow>;
-  };
+  route: TryoutSectionRoute;
   setHref: string;
 }) {
-  const { locale } = route;
-  const [articleNavigation, initialNow] = await Promise.all([
-    getShellArticleNavigation(locale),
-    Effect.runPromise(Clock.currentTimeMillis),
-  ]);
+  const initialNow = await Effect.runPromise(Clock.currentTimeMillis);
 
   const signedContent =
     attemptPage?.content.kind === "signed" &&
@@ -234,7 +278,6 @@ async function ResolvedTryoutSectionRoute({
   return (
     <TryoutClockProvider initialNow={initialNow}>
       <TryoutSectionPageClient
-        articleNavigation={articleNavigation}
         binding={
           attemptPage
             ? {

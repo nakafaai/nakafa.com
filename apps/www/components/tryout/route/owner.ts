@@ -73,24 +73,31 @@ export function selectTryoutSetPages<PublicPage, FrozenPage, RestartTarget>({
   };
 }
 
-/** Selects the active parent track for one current or retained set. */
-export function selectTryoutTrackReturnHref(
+/**
+ * Selects the active set route and its parent track for one current or
+ * retained set, or the try-out root when the set is no longer active.
+ */
+export function selectTryoutSetLinks(
   restartTarget: {
     readonly setPublicPath: string;
   } | null
 ) {
   if (!restartTarget) {
-    return getTryoutHref();
+    return { currentHref: getTryoutHref(), returnHref: getTryoutHref() };
   }
 
+  const currentHref = getTryoutPublicPathHref(restartTarget.setPublicPath);
   const separator = restartTarget.setPublicPath.lastIndexOf("/");
   if (separator <= 0) {
-    return getTryoutHref();
+    return { currentHref, returnHref: getTryoutHref() };
   }
 
-  return getTryoutPublicPathHref(
-    restartTarget.setPublicPath.slice(0, separator)
-  );
+  return {
+    currentHref,
+    returnHref: getTryoutPublicPathHref(
+      restartTarget.setPublicPath.slice(0, separator)
+    ),
+  };
 }
 
 /** Selects the active set destination for one retained section. */

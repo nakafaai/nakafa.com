@@ -1,7 +1,6 @@
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/layout";
@@ -21,6 +20,15 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 
+/**
+ * Lets a navigation into a country wait for its cached catalog page instead of
+ * showing an empty one. Country links prefetch that page on intent, so it is
+ * usually ready at the click.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ */
+export const instant = false;
+
 /** Builds route-owned metadata for one localized try-out country. */
 export async function generateMetadata({
   params,
@@ -38,18 +46,7 @@ export async function generateMetadata({
 }
 
 /** Renders active exam families for one try-out country. */
-export default function Page(props: {
-  params: Promise<{ country: string; locale: string }>;
-}) {
-  return (
-    <Suspense fallback={null}>
-      <TryoutCountryRoute params={props.params} />
-    </Suspense>
-  );
-}
-
-/** Resolves one cached public country inside its route-owned boundary. */
-async function TryoutCountryRoute({
+export default async function Page({
   params,
 }: {
   params: Promise<{ country: string; locale: string }>;

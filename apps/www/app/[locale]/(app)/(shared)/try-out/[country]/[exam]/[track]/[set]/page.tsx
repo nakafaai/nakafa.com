@@ -33,8 +33,8 @@ import type {
   TryoutSetRoute as SetRoute,
   TryoutSetRestartTarget,
 } from "@/components/tryout/set/model";
+import { TryoutSetPending } from "@/components/tryout/set/pending";
 import { getToken } from "@/lib/auth/server";
-import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 interface TryoutSetParams {
@@ -49,6 +49,19 @@ interface TryoutSetPageProps {
   params: Promise<TryoutSetParams>;
   searchParams: Promise<TryoutRouteSearchParams>;
 }
+
+/**
+ * Lets a navigation into a set wait for the set's heading instead of showing an
+ * empty page. Set links prefetch on intent, which resolves the heading before
+ * the click, and the learner's attempt streams in below it. A link bound to an
+ * attempt waits for that attempt, so moving through a running attempt keeps
+ * the previous page, and the locked shell, on screen until the next page is
+ * ready.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/instant#disabling-instant
+ * @see https://nextjs.org/docs/app/guides/optimizing-prefetching#resolve-url-data-at-prefetch-time
+ */
+export const instant = false;
 
 /** Builds route-owned metadata for one localized try-out set. */
 export async function generateMetadata({
@@ -104,36 +117,69 @@ export async function generateMetadata({
   notFound();
 }
 
-/** Renders one try-out set and its section list. */
-export default function Page(props: TryoutSetPageProps) {
-  return (
-    <Suspense fallback={null}>
-      <TryoutSetRoute params={props.params} searchParams={props.searchParams} />
-    </Suspense>
-  );
-}
-
-/** Resolves one public or explicitly retained set inside its route boundary. */
-async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
+/**
+ * Renders one try-out set. A public set shows its catalog heading at once and
+ * streams the learner's attempt below it; a set bound to one attempt renders
+ * when that attempt is known.
+ */
+export default async function Page({
+  params,
+  searchParams,
+}: TryoutSetPageProps) {
   const { country, exam, locale: localeParam, set, track } = await params;
   const capability = readTryoutRouteAttemptCapability(await searchParams);
   if (capability.kind === "invalid") {
     notFound();
   }
-  const attemptId =
-    capability.kind === "valid" ? capability.attemptId : undefined;
-  const locale = getLocaleOrThrow(localeParam);
-  const setPath = getTryoutHref({ country, exam, set, track }).slice(1);
-  if (!attemptId) {
-    const preview = await readTryoutQuestionPreview(locale, setPath);
-    if (Option.isSome(preview)) {
-      return <TryoutQuestionPreview content={preview.value} />;
-    }
+  const route = {
+    country,
+    exam,
+    locale: getLocaleOrThrow(localeParam),
+    set,
+    track,
+  };
+  const setPath = getTryoutHref(route).slice(1);
+  if (capability.kind === "valid") {
+    return (
+      <TryoutSetRoute
+        attemptId={capability.attemptId}
+        route={route}
+        setPath={setPath}
+      />
+    );
   }
-  const resolved = await readRoutePage(locale, setPath, attemptId);
+  const preview = await readTryoutQuestionPreview(route.locale, setPath);
+  if (Option.isSome(preview)) {
+    return <TryoutQuestionPreview content={preview.value} />;
+  }
+  const publicPage = await readTryoutSetPage(route.locale, setPath);
+  if (!publicPage) {
+    notFound();
+  }
+
+  return (
+    <Suspense
+      fallback={<TryoutSetPending locale={route.locale} page={publicPage} />}
+    >
+      <TryoutSetRoute route={route} setPath={setPath} />
+    </Suspense>
+  );
+}
+
+/** Resolves the current or retained attempt that decides the set view. */
+async function TryoutSetRoute({
+  attemptId,
+  route,
+  setPath,
+}: {
+  attemptId?: string;
+  route: SetRoute;
+  setPath: string;
+}) {
+  const resolved = await readRoutePage(route.locale, setPath, attemptId);
 
   if (resolved.authRequired && attemptId) {
-    redirect(getTryoutAttemptAuthHref(locale, setPath, attemptId));
+    redirect(getTryoutAttemptAuthHref(route.locale, setPath, attemptId));
   }
   if (resolved.authRequired) {
     notFound();
@@ -165,7 +211,7 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
       attemptPage={attemptPage}
       page={page}
       restartTarget={restartTarget}
-      route={{ country, exam, locale, set, track }}
+      route={route}
     />
   );
 }
@@ -185,11 +231,7 @@ async function ResolvedTryoutSetRoute({
   restartTarget: TryoutSetRestartTarget | null;
   route: SetRoute;
 }) {
-  const { locale } = route;
-  const [articleNavigation, initialNow] = await Promise.all([
-    getShellArticleNavigation(locale),
-    Effect.runPromise(Clock.currentTimeMillis),
-  ]);
+  const initialNow = await Effect.runPromise(Clock.currentTimeMillis);
 
   const signedContent =
     attemptPage?.content.kind === "signed" &&
@@ -207,7 +249,6 @@ async function ResolvedTryoutSetRoute({
   return (
     <TryoutClockProvider initialNow={initialNow}>
       <TryoutSetPageClient
-        articleNavigation={articleNavigation}
         binding={
           attemptPage
             ? {
