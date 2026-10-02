@@ -19,6 +19,10 @@ const mocks = vi.hoisted(() => ({
   backend: vi.fn(),
   command: vi.fn(),
   publish: vi.fn(),
+  sink: vi.fn(),
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/analytics", () => ({
+  withAnalyticsSink: mocks.sink,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/local", async (load) => ({
   ...(await load<
@@ -43,6 +47,7 @@ vi.mock("@repo/backend/scripts/content/acceptance/publication", () => ({
 }));
 
 const runtime: LocalRuntime = {
+  analytics: "http://127.0.0.1:43122",
   backend: "/test/.cache/acceptance/backend",
   directory: "/test/.cache/acceptance",
   directoryInode: 1,
@@ -80,6 +85,7 @@ layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
       mock.mockReturnValue(Effect.void);
     }
     mocks.backend.mockImplementation((_runtime, program) => program);
+    mocks.sink.mockImplementation((_origin, program) => program);
   });
   afterEach(() => vi.resetAllMocks());
 
@@ -164,14 +170,26 @@ layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
         mocks.backend.mockImplementation((_runtime, program) =>
           record("backend ready").pipe(Effect.andThen(program))
         );
+        mocks.sink.mockImplementation((_origin, program) =>
+          record("analytics stand-in").pipe(Effect.andThen(program))
+        );
         mocks.discard.mockReturnValue(record("discard"));
         mocks.command.mockReturnValue(record("command"));
         yield* runAcceptance("/test", "build", []);
         expect(mocks.discard).toHaveBeenCalledWith("/test");
+        expect(mocks.sink).not.toHaveBeenCalled();
         expect(steps).toEqual(["backend ready", "discard", "command"]);
         steps.length = 0;
         yield* runAcceptance("/test", "start", []);
-        expect(steps).toEqual(["backend ready", "command"]);
+        expect(mocks.sink).toHaveBeenCalledWith(
+          runtime.analytics,
+          expect.anything()
+        );
+        expect(steps).toEqual([
+          "analytics stand-in",
+          "backend ready",
+          "command",
+        ]);
         const failure = acceptanceRuntimeError("test cache failure");
         mocks.discard.mockReturnValue(Effect.fail(failure));
         steps.length = 0;

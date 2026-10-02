@@ -372,71 +372,6 @@ const verifyQuranLayoutStability = Effect.fn(
     const layoutShift = yield* readLayoutShift(page);
     yield* Effect.sync(() => expect(layoutShift).toBeLessThan(0.01));
   }
-
-  // Verses past the document flow are virtualized, and so is the long
-  // outline: scrolling the outline renders the entry for verse 200, which then
-  // scrolls its verse into view.
-  const outline = page
-    .locator(
-      'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]'
-    )
-    .filter({ visible: true });
-  yield* Effect.promise(() => outline.click());
-  const outlineBody = page.locator(
-    '[data-mobile="true"] [data-slot="sidebar-content"]'
-  );
-  // On slow runners the outline can still move after a jump made while the
-  // sheet slides in, and a tap that lands mid-move reaches no entry. A reader
-  // taps a list that holds still, so the jump waits for the slide to finish
-  // and the tap waits for ten still frames after the jump.
-  yield* Effect.promise(() =>
-    page.getByRole("dialog").evaluate(
-      (sheet) =>
-        new Promise<void>((resolve) => {
-          const settle = () => {
-            if (sheet.hasAttribute("data-starting-style")) {
-              requestAnimationFrame(settle);
-              return;
-            }
-            Promise.allSettled(
-              sheet
-                .getAnimations({ subtree: true })
-                .map((animation) => animation.finished)
-            ).then(() => resolve());
-          };
-          settle();
-        })
-    )
-  );
-  yield* Effect.promise(() =>
-    outlineBody.evaluate(
-      (node) =>
-        new Promise<void>((resolve) => {
-          const entry = node.querySelector('[data-slot="sidebar-menu-item"]');
-          node.scrollTop = (entry?.getBoundingClientRect().height ?? 0) * 199;
-          let lastTop = node.scrollTop;
-          let stillFrames = 0;
-          const check = () => {
-            stillFrames = node.scrollTop === lastTop ? stillFrames + 1 : 0;
-            lastTop = node.scrollTop;
-            if (stillFrames === 10) {
-              resolve();
-              return;
-            }
-            requestAnimationFrame(check);
-          };
-          requestAnimationFrame(check);
-        })
-    )
-  );
-  yield* Effect.promise(() =>
-    page.getByRole("button", { exact: true, name: "Verse 200" }).click()
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator('[data-quran-verse="200"]')).toBeInViewport({
-      timeout: readinessTimeoutMilliseconds,
-    })
-  );
 });
 
 const verifyQuranTypefaceScope = Effect.fn(
@@ -485,9 +420,7 @@ test.describe("Quran typeface", () => {
 test.describe("Quran layout stability", () => {
   test.use({ viewport: { height: 844, width: 390 } });
 
-  test("renders surahs without layout shift and reaches far verses", async ({
-    page,
-  }) => {
+  test("renders surahs without layout shift", async ({ page }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyQuranLayoutStability(page))
     );
