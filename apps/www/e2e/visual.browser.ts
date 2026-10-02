@@ -496,11 +496,6 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   });
   yield* waitForStableCanvas(canvas);
 
-  const beforeOrbit = yield* Effect.promise(() => canvas.screenshot());
-  yield* orbitScene(page, canvas);
-  yield* expectCanvasToMove(canvas, beforeOrbit);
-  yield* waitForStableCanvas(canvas);
-
   const beforeGrid = yield* Effect.promise(() => canvas.screenshot());
   yield* Effect.promise(async () => {
     await grid.click();
@@ -522,9 +517,18 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   yield* Effect.promise(async () => {
     await rotation.click();
     await expect(rotation).toHaveAttribute("aria-pressed", "false");
-    // The card is still across the screen after every control.
-    await expect(action).toHaveAttribute("aria-pressed", "true");
   });
+  yield* waitForStableCanvas(canvas);
+
+  // A drag rotates the scene last: its damping can outlast a stability
+  // window on a large software-rendered canvas, and nothing after it waits.
+  const beforeOrbit = yield* Effect.promise(() => canvas.screenshot());
+  yield* orbitScene(page, canvas);
+  yield* expectCanvasToMove(canvas, beforeOrbit);
+  // The card is still across the screen after every control.
+  yield* Effect.promise(() =>
+    expect(action).toHaveAttribute("aria-pressed", "true")
+  );
 
   yield* Effect.promise(() => action.click());
 
