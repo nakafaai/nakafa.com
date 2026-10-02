@@ -1,31 +1,46 @@
-import { Effect } from "effect";
 import {
-  isBinaryExpression,
+  Array as Arr,
+  Effect,
+  Order,
+  Record as Rec,
+  Result,
+  Schema,
+  String as Str,
+} from "effect";
+import {
   isIdentifier,
   isShorthandPropertyAssignment,
-  isStringLiteralLikeNode,
-  isTryStatement,
-  isTypeOfExpression,
-  type Node,
   type SourceFile,
-  SyntaxKind,
 } from "typescript/unstable/ast";
 import type { API } from "typescript/unstable/sync";
+import { globalCandidates } from "#scripts/check/globals";
+import { nativeCandidates } from "#scripts/check/native";
+import { covers, Rule } from "#scripts/check/rules";
 import { effectRunnerViolation } from "#scripts/check/runtime";
+import { shapeCandidates } from "#scripts/check/shapes";
 import {
   descendants,
   openCompiler,
+  type parseSources,
+  projectConfig,
   type RepositorySource,
   TestCompilerError,
 } from "#scripts/check/source";
 
+/** One construct that breaks an Effect-native rule at a line of an authored module. */
+export const Finding = Schema.Struct({
+  file: Schema.String,
+  line: Schema.Int,
+  rule: Rule,
+});
+
 const TEST_MODULE_PATTERN = /\.test\.ts$/u;
-const EQUALITY_OPERATORS: ReadonlySet<SyntaxKind> = new Set([
-  SyntaxKind.EqualsEqualsEqualsToken,
-  SyntaxKind.EqualsEqualsToken,
-  SyntaxKind.ExclamationEqualsEqualsToken,
-  SyntaxKind.ExclamationEqualsToken,
-]);
+const GENERATED_PATTERN = /\b(?:auto-?generated|@generated)\b/iu;
+const FINDING_ORDER = Order.Struct({
+  file: Order.String,
+  line: Order.Number,
+  rule: Order.String,
+});
 
 /** Keeps each test in its own native project so lexical bindings stay local. */
 const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
@@ -66,11 +81,12 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
   return yield* Effect.try({
     try: () => {
       const nodes = descendants(sourceFile);
-      const identifiers = descendants(sourceFile, false).filter(isIdentifier);
-      const symbols = project.checker.getSymbolAtLocation(identifiers);
-      const lexicalSymbols = new Map(
-        identifiers.map((node, offset) => [node, symbols[offset]])
+      const identifiers = Arr.filter(
+        descendants(sourceFile, false),
+        isIdentifier
       );
+      const symbols = project.checker.getSymbolAtLocation(identifiers);
+      const lexicalSymbols = new Map(Arr.zip(identifiers, symbols));
       for (const node of nodes) {
         if (isShorthandPropertyAssignment(node) && isIdentifier(node.name)) {
           lexicalSymbols.set(
@@ -79,8 +95,7 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
           );
         }
       }
-      const hasRunner = effectRunnerViolation(nodes, lexicalSymbols);
-      return hasRunner
+      return effectRunnerViolation(nodes, lexicalSymbols)
         ? [
             `${file}: return the Effect to @effect/vitest instead of running it.`,
           ]
@@ -93,75 +108,88 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
 /** Reports authored tests using one scoped, Effect-patched native compiler. */
 export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
   function* (sources: readonly (typeof RepositorySource.Type)[]) {
-    const tests = sources.filter(({ file }) => TEST_MODULE_PATTERN.test(file));
-    if (tests.length === 0) {
+    const tests = Arr.filter(sources, ({ file }) =>
+      TEST_MODULE_PATTERN.test(file)
+    );
+    if (Arr.isReadonlyArrayEmpty(tests)) {
       return [];
     }
-    const files = Object.fromEntries(
-      tests.flatMap(({ sourceText }, index) => [
-        [`/test-policy/${index}/case.test.ts`, sourceText],
-        [
-          `/test-policy/${index}/tsconfig.json`,
-          JSON.stringify({
-            compilerOptions: { noLib: true, noResolve: true },
-            files: ["case.test.ts"],
-          }),
-        ],
-      ])
-    );
+    const config = yield* projectConfig(["case.test.ts"]);
     const api = yield* openCompiler(
-      files,
+      Rec.fromEntries(
+        Arr.flatMap(tests, ({ sourceText }, index) => [
+          [`/test-policy/${index}/case.test.ts`, sourceText],
+          [`/test-policy/${index}/tsconfig.json`, config],
+        ])
+      ),
       "Unable to start the native test compiler."
     );
-    return (yield* Effect.forEach(
-      tests,
-      ({ file }, index) => inspectTest(api, index, file),
-      { concurrency: 1 }
-    )).flat();
+    return Arr.flatten(
+      yield* Effect.forEach(
+        tests,
+        ({ file }, index) => inspectTest(api, index, file),
+        { concurrency: 1 }
+      )
+    );
   },
   Effect.scoped
 );
 
-/** Returns whether one node compares a typeof result against the object tag. */
-function isTypeofObjectComparison(node: Node) {
-  if (
-    !(
-      isBinaryExpression(node) &&
-      EQUALITY_OPERATORS.has(node.operatorToken.kind)
-    )
-  ) {
-    return false;
-  }
-  for (const side of [node.left, node.right]) {
-    if (!isTypeOfExpression(side)) {
-      continue;
-    }
-    const other = side === node.left ? node.right : node.left;
-    if (isStringLiteralLikeNode(other) && other.text === "object") {
-      return true;
-    }
-  }
-  return false;
+/** Whether a module opens with a comment that marks it as generated by a tool. */
+function isGenerated(sourceFile: SourceFile) {
+  const [first] = sourceFile.statements;
+  const header =
+    first === undefined
+      ? sourceFile.text
+      : Str.slice(0, first.getStart(sourceFile))(sourceFile.text);
+  return GENERATED_PATTERN.test(header);
 }
 
 /**
- * Reports raw failure handling and hand-rolled narrowing in one authored
- * module. Expected failure belongs to typed Effect errors and unknown input
- * belongs to Schema or Predicate.
+ * Finds every Effect-native rule a parsed authored module breaks. A construct
+ * that names a platform global counts only when the compiler proves no import
+ * or local declaration shadows the name, and an array method counts only when
+ * its receiver is a value rather than an imported module.
  */
-export function inspectEffectSource(file: string, sourceFile: SourceFile) {
-  const violations: string[] = [];
-  for (const node of descendants(sourceFile)) {
-    if (isTryStatement(node) && node.catchClause !== undefined) {
-      violations.push(
-        `${file}: model failure with Effect instead of a raw try/catch statement.`
+export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
+  function* ({
+    bind,
+    modules,
+  }: Effect.Success<ReturnType<typeof parseSources>>) {
+    const candidates = Arr.flatMap(modules, ({ file, sourceFile }) => {
+      if (isGenerated(sourceFile)) {
+        return [];
+      }
+      const nodes = descendants(sourceFile);
+      return Arr.filterMap(
+        Arr.flatten([
+          globalCandidates(sourceFile, nodes),
+          nativeCandidates(sourceFile, nodes),
+          shapeCandidates(file, sourceFile, nodes),
+        ]),
+        (found) =>
+          covers(found.rule, file, sourceFile)
+            ? Result.succeed({ ...found, file })
+            : Result.failVoid
       );
-    }
-    if (isTypeofObjectComparison(node)) {
-      violations.push(
-        `${file}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`
-      );
-    }
+    });
+    const [unbound, bound] = Arr.partition(candidates, (found) =>
+      found.reference === undefined
+        ? Result.fail(found)
+        : Result.succeed({ ...found, reference: found.reference })
+    );
+    const bindings = yield* bind(Arr.map(bound, ({ reference }) => reference));
+    const kept = Arr.filterMap(Arr.zip(bound, bindings), ([found, binding]) =>
+      Arr.contains(found.accepts, binding)
+        ? Result.succeed(found)
+        : Result.failVoid
+    );
+    return Arr.sort(
+      Arr.map(
+        Arr.appendAll(unbound, kept),
+        ({ file, line, rule }): typeof Finding.Type => ({ file, line, rule })
+      ),
+      FINDING_ORDER
+    );
   }
-  return violations;
-}
+);

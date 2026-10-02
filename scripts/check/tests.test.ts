@@ -100,6 +100,8 @@ describe("test ownership policy", () => {
         "packages/core/node_modules/dependency/view.test.tsx": CLEAN_TEST,
         "packages/core/types.d.ts":
           'export declare const narrowed: typeof value === "object";\n',
+        "apps/web/legacy.ts": "export const cache = new Map();\n",
+        "scripts/check/baseline.json": '{"apps/web/legacy.ts":{"map-set":1}}',
         "scripts/tool.test.ts": CLEAN_TEST,
         "scripts/tool.ts": "export const tool = true;\n",
       });
@@ -115,7 +117,6 @@ describe("test ownership policy", () => {
   it.effect("reports ownership, layout, runner, and source violations", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
       const root = yield* fileSystem.makeTempDirectoryScoped({
         prefix: "test-policy-dirty-",
       });
@@ -138,8 +139,8 @@ describe("test ownership policy", () => {
           "Every final test must have a colocated .ts Module with the same name; React and TSX behavior belongs in Browser or E2E acceptance:\n  - apps/web/orphan.test.ts\n",
           "Final code must not contain .test.tsx files:\n  - apps/web/view.test.tsx\n",
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
-          `${path.join(root, "packages/core/runner.test.ts")}: return the Effect to @effect/vitest instead of running it.\n`,
-          "scripts/raw.ts: model failure with Effect instead of a raw try/catch statement.\n",
+          "packages/core/runner.test.ts: return the Effect to @effect/vitest instead of running it.\n",
+          "scripts/raw.ts:2: model failure with Effect instead of a raw try/catch statement. (try-catch)\n",
           "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
         stdout: [],
@@ -174,6 +175,16 @@ describe("test ownership policy", () => {
     {
       category: "an arbitrary value a Tailwind class repeats",
       files: { "apps/web/card.tsx": 'export const card = "ring-[3px]";\n' },
+    },
+    {
+      category: "an Effect-native finding beyond the baseline",
+      files: { "apps/web/store.ts": "export const store = new Map();\n" },
+    },
+    {
+      category: "a baseline count above the findings that remain",
+      files: {
+        "scripts/check/baseline.json": '{"apps/web/value.ts":{"json":1}}',
+      },
     },
     {
       category: "typeof-object narrowing",
@@ -234,7 +245,7 @@ describe("test ownership policy", () => {
         [
           `Unable to read ${unreadableTest}.`,
           `Unable to read ${unreadableSource}.`,
-        ].map((message) => ({ _tag: "TestPolicyReadError", message }))
+        ].map((message) => ({ _tag: "RepositoryReadError", message }))
       );
     }).pipe(Effect.provide(NodeServices.layer))
   );

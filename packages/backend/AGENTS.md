@@ -119,6 +119,31 @@ it and every temporary migration artifact. A promoted web deployment is not
 proof that older browser clients stopped calling the predecessor. Temporary
 compatibility needs an owner, exit criterion, and cleanup change.
 
+## Effect-Native Confect
+
+The root guide's Effect V4 Standard applies in full. In `confect/`:
+
+- Handlers are named `Effect.fn` programs over Confect services: `DatabaseReader`
+  and `DatabaseWriter` for decoded documents, `Auth`, `Scheduler`,
+  `StorageReader`, `StorageWriter`, `VectorSearch`, and the query, mutation,
+  and action runners. Confect installs `ConvexLogger` and
+  `ConvexConfigProvider` for every handler, so `Effect.log` reaches Convex logs
+  at its own severity and `Config` reads Convex environment variables.
+- When an SDK owns the callback contract, such as a Convex component handler,
+  a Better Auth hook, or an AI SDK tool, build the work as an Effect and hand
+  the SDK its Promise once at that callback through `Effect.runPromise` or
+  `Effect.runPromiseWith` over the captured context, as
+  `confect/nina/generation.ts` does. The program itself stays free of `async`,
+  `await`, and `new Promise`.
+- `pnpm check:tests` holds every `confect/` module to the Effect `Array` module
+  and its domain code to Effect composition. The `packages/backend` counts in
+  `scripts/check/baseline.json` are the backend sweep list.
+- In `confect/nina`, keep provider calls, tool execution, search, scraping,
+  repair, and orchestration explicit in Effect. Keep provider configuration in
+  config boundaries, make source scoping language-neutral, reflect actual
+  provider calls in UI data, and back final output with retrieved evidence,
+  deterministic math, or a stated limitation.
+
 ## Type And Convex Source Of Truth
 
 Convex is the typed transactional source for app state and graph read models.

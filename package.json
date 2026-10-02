@@ -22,6 +22,7 @@
     "bump-deps": "node scripts/dependencies/bump.ts && turbo run bump-deps --filter=cas",
     "bump-ui": "pnpm dlx shadcn@latest add --all --overwrite -c packages/design-system",
     "changeset": "changeset",
+    "check:baseline": "node scripts/check/baseline.ts",
     "check:patches": "node scripts/check/patches.ts",
     "check:site": "pnpm --filter www exec vitest run --config vitest.afdocs.mts --coverage.enabled=false",
     "check:tests": "node scripts/check/tests.ts",
