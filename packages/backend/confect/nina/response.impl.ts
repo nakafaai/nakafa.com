@@ -5,6 +5,7 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { reportFailure } from "@repo/backend/confect/nina/diagnostics";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
 import { generateResponse } from "@repo/backend/confect/nina/generation";
@@ -28,6 +29,12 @@ const run = FunctionImpl.make(
       return null;
     }
     yield* generateResponse(turn).pipe(
+      Effect.provide(GatewayLive),
+      Effect.catchTag("GatewayConfigurationError", () =>
+        Effect.fail(
+          new NinaGenerationError({ reason: "service-configuration" })
+        )
+      ),
       Effect.onExit((exit) => {
         const failure = Exit.isFailure(exit)
           ? Cause.findErrorOption(exit.cause).pipe(
@@ -72,6 +79,7 @@ const present = FunctionImpl.make(
       ],
       { concurrency: "unbounded", discard: true }
     ).pipe(
+      Effect.provide(GatewayLive),
       Effect.catchTag("GatewayConfigurationError", () =>
         Effect.logWarning("Nina presentation configuration unavailable", {
           turnId: turn._id,

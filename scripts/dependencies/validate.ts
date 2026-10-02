@@ -1,4 +1,6 @@
+import { Array as Arr, Record as Rec, Result } from "effect";
 import {
+  AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
   EFFECT_COHORT_VERSION,
   FORBIDDEN_EFFECT_DEPENDENCIES,
@@ -80,7 +82,7 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
   return problems;
 }
 
-/** Enforces the Effect, TypeScript, and Vitest cohorts the workspace pins. */
+/** Enforces the Effect, TypeScript, Vitest, and AI SDK cohorts the workspace pins. */
 function cohortProblems(workspace: WorkspaceManifest) {
   const problems: string[] = [];
   if (workspace.catalog?.effect !== EFFECT_COHORT_VERSION) {
@@ -123,7 +125,16 @@ function cohortProblems(workspace: WorkspaceManifest) {
       );
     }
   }
-  return problems;
+  return Arr.appendAll(
+    problems,
+    Arr.filterMap(Rec.toEntries(AI_SDK_COHORT), ([dependency, version]) =>
+      workspace.catalog?.[dependency] === version
+        ? Result.failVoid
+        : Result.succeed(
+            `The ${dependency} catalog must be exactly ${version}.`
+          )
+    )
+  );
 }
 
 /** Validates exact cohort declarations and the absence of v3 packages. */

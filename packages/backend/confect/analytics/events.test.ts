@@ -1,9 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
-import {
-  getModelCreditCost,
-  ModelIdSchema,
-} from "@repo/backend/confect/nina/config/model";
 import { Option, Schema } from "effect";
 
 const contentViewProperties = {
@@ -30,7 +26,6 @@ const checkoutStartedEvent = {
 };
 describe("analytics/events", () => {
   it("accepts only approved product event names and minimized properties", () => {
-    const liteModel = ModelIdSchema.make("nakafa-lite");
     expect(
       Option.isSome(
         Schema.decodeUnknownOption(productAnalyticsEventValidator)(
@@ -169,7 +164,7 @@ describe("analytics/events", () => {
             name: "chat response completed",
             properties: {
               chat_type: "study",
-              credits: getModelCreditCost(liteModel),
+              credits: 2,
               input_tokens: 10,
               model_id: "nakafa-lite",
               output_tokens: 20,

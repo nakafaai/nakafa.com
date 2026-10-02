@@ -6,16 +6,8 @@ import {
   ActionCtx,
   MutationRunner,
 } from "@repo/backend/confect/_generated/services";
-import {
-  defaultModel,
-  getFastModelProviderOptions,
-} from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import {
-  backgroundGenerationTimeout,
-  suggestionGenerationTimeout,
-} from "@repo/backend/confect/nina/config/timeouts";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { assembleContext } from "@repo/backend/confect/nina/history";
 import {
@@ -23,6 +15,7 @@ import {
   NinaTitle,
 } from "@repo/backend/confect/nina/presentation.spec";
 import { nakafaSuggestions } from "@repo/backend/confect/nina/prompt/suggestions";
+import type { Space } from "@repo/backend/confect/space";
 import { Output } from "ai";
 import { Effect, Schema } from "effect";
 
@@ -42,10 +35,16 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
     }
     const ctx = yield* ActionCtx;
     const mutate = yield* MutationRunner;
-    const model = yield* getGatewayModel(defaultModel);
+    const gateway = yield* Gateway;
+    const space: Space = { kind: "personal", userId: turn.userId };
+    const suggestion = gateway.language({
+      purpose: "suggestion",
+      model: defaultModel,
+      space,
+    });
     const suggestions = new Agent(components.nina, {
       name: "suggestions",
-      languageModel: model,
+      languageModel: suggestion.model,
       usageHandler,
       instructions: nakafaSuggestions({ locale: turn.page.locale }),
       contextOptions: { recentMessages: 50, excludeToolMessages: true },
@@ -70,10 +69,6 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
           })
         ),
     });
-    const providerOptions = {
-      gateway: gatewayProviderOptions,
-      google: getFastModelProviderOptions(defaultModel),
-    };
     const options = { storageOptions: { saveMessages: "none" as const } };
     yield* Effect.tryPromise({
       try: (signal) =>
@@ -84,13 +79,12 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
             {
               promptMessageId: turn.promptMessageId,
               abortSignal: signal,
-              providerOptions,
               output: Output.object({
                 schema: createEffectSchema(
                   Schema.Struct({ suggestions: NinaSuggestions })
                 ),
               }),
-              timeout: suggestionGenerationTimeout,
+              timeout: suggestion.timeout,
             },
             options
           )
@@ -113,9 +107,14 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
     if (turn.order !== 0) {
       return;
     }
+    const naming = gateway.language({
+      purpose: "presentation",
+      model: defaultModel,
+      space,
+    });
     const title = new Agent(components.nina, {
       name: "title",
-      languageModel: model,
+      languageModel: naming.model,
       usageHandler,
       instructions:
         "Summarize the user's opening request as a descriptive title of 3 to 5 words, at most 80 characters. Use the user's language. Return only the title, without quotes or colons. Do not mention internal tools or services.",
@@ -130,8 +129,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
           {
             promptMessageId: turn.promptMessageId,
             abortSignal: signal,
-            providerOptions,
-            timeout: backgroundGenerationTimeout,
+            timeout: naming.timeout,
           },
           options
         ),

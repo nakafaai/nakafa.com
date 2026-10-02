@@ -7,14 +7,9 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { boundText } from "@repo/backend/confect/nina/budget";
-import {
-  defaultModel,
-  getFastModelProviderOptions,
-} from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { backgroundGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
   type NinaLearner,
@@ -88,9 +83,14 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
     if (!text) {
       return;
     }
+    const handle = (yield* Gateway).language({
+      purpose: "background",
+      model: defaultModel,
+      space: { kind: "personal", userId: turn.userId },
+    });
     const agent = new Agent(components.nina, {
       instructions: `${INSTRUCTIONS}\n\n${formatKnown(learner.profile, memory.facts)}`,
-      languageModel: yield* getGatewayModel(defaultModel),
+      languageModel: handle.model,
       name: "memory",
     });
     const { output, usage } = yield* Effect.tryPromise({
@@ -104,11 +104,7 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
               schema: createEffectSchema(NinaMemoryChanges),
             }),
             prompt: `# Learner Message\n\n${boundText(text, MESSAGE_TOKENS, "Message shortened.")}`,
-            providerOptions: {
-              gateway: gatewayProviderOptions,
-              google: getFastModelProviderOptions(defaultModel),
-            },
-            timeout: backgroundGenerationTimeout,
+            timeout: handle.timeout,
           },
           { storageOptions: { saveMessages: "none" } }
         ),
