@@ -20,6 +20,67 @@ import type { GenericId as Id } from "convex/values";
  * ```
  */
 export declare const api: {
+  access: {
+    grants: {
+      assign: FunctionReference<
+        "mutation",
+        "public",
+        {
+          personId: Id<"tenantPeople">;
+          role:
+            | "owner"
+            | "admin"
+            | "principal"
+            | "deputy"
+            | "teacher"
+            | "counselor"
+            | "staff"
+            | "student"
+            | "guardian"
+            | "proctor"
+            | "auditor"
+            | "integration";
+          scope:
+            { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+          slug: string;
+        },
+        Id<"tenantGrants">
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        { personId: Id<"tenantPeople">; slug: string },
+        Array<{
+          id: Id<"tenantGrants">;
+          role: {
+            key:
+              | "owner"
+              | "admin"
+              | "principal"
+              | "deputy"
+              | "teacher"
+              | "counselor"
+              | "staff"
+              | "student"
+              | "guardian"
+              | "proctor"
+              | "auditor"
+              | "integration";
+            kind: "builtin";
+          };
+          scope:
+            { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+          term: { kind: "standing" } | { expiresAt: number; kind: "temporary" };
+        }>
+      >;
+      revoke: FunctionReference<
+        "mutation",
+        "public",
+        { grantId: Id<"tenantGrants">; slug: string },
+        null
+      >;
+    };
+  };
   auth: {
     deletion: {
       cancelAccountDeletionAttempt: FunctionReference<
@@ -3117,6 +3178,85 @@ export declare const api: {
       };
     };
   };
+  journal: {
+    audit: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            actor:
+              | { id: Id<"tenantPeople">; kind: "person"; name: string }
+              | { kind: "user" | "system" };
+            at: number;
+            change:
+              | { type: "tenant.provisioned" }
+              | { type: "unit.created" }
+              | { type: "person.created" }
+              | { invite: Id<"tenantInvites">; type: "person.invited" }
+              | { method: "invite" | "operator"; type: "person.claimed" }
+              | { type: "person.released" }
+              | { type: "person.removed" }
+              | {
+                  grant: Id<"tenantGrants">;
+                  role: {
+                    key:
+                      | "owner"
+                      | "admin"
+                      | "principal"
+                      | "deputy"
+                      | "teacher"
+                      | "counselor"
+                      | "staff"
+                      | "student"
+                      | "guardian"
+                      | "proctor"
+                      | "auditor"
+                      | "integration";
+                    kind: "builtin";
+                  };
+                  scope:
+                    | { kind: "tenant" }
+                    | { kind: "unit"; unitId: Id<"tenantUnits"> };
+                  term:
+                    | { kind: "standing" }
+                    | { expiresAt: number; kind: "temporary" };
+                  type: "grant.created";
+                }
+              | {
+                  grant: Id<"tenantGrants">;
+                  reason: "revoked" | "expired" | "replaced";
+                  type: "grant.ended";
+                }
+              | { type: string };
+            id: Id<"journalEntries">;
+            subject:
+              | { id: Id<"tenants">; kind: "tenant" }
+              | { id: Id<"tenantUnits">; kind: "unit" }
+              | { id: Id<"tenantPeople">; kind: "person" }
+              | { id: Id<"tenantGrants">; kind: "grant" }
+              | { kind: string };
+            subjectName: string | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+  };
   learningPreferences: {
     mutations: {
       setPreferredCurriculum: FunctionReference<
@@ -3707,6 +3847,112 @@ export declare const api: {
         "public",
         { productId: string },
         boolean
+      >;
+    };
+  };
+  tenancy: {
+    memberships: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            person: { id: Id<"tenantPeople">; name: string };
+            tenant: {
+              kind: "school" | "foundation";
+              name: string;
+              slug: string;
+              status: "active" | "suspended";
+            };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+    profile: {
+      get: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        {
+          kind: "school" | "foundation";
+          name: string;
+          slug: string;
+          status: "active" | "suspended";
+        }
+      >;
+    };
+    viewer: {
+      get: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        {
+          can: Array<string>;
+          grants: Array<{
+            id: Id<"tenantGrants">;
+            role: {
+              key:
+                | "owner"
+                | "admin"
+                | "principal"
+                | "deputy"
+                | "teacher"
+                | "counselor"
+                | "staff"
+                | "student"
+                | "guardian"
+                | "proctor"
+                | "auditor"
+                | "integration";
+              kind: "builtin";
+            };
+            scope:
+              { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+            term:
+              { kind: "standing" } | { expiresAt: number; kind: "temporary" };
+          }>;
+          person: {
+            id: Id<"tenantPeople">;
+            kind: "member" | "operator";
+            name: string;
+          };
+          tenant: {
+            id: Id<"tenants">;
+            kind: "school" | "foundation";
+            name: string;
+            slug: string;
+            status: "active" | "suspended";
+          };
+          units: Array<{
+            id: Id<"tenantUnits">;
+            level:
+              | "paud"
+              | "sd"
+              | "mi"
+              | "smp"
+              | "mts"
+              | "sma"
+              | "ma"
+              | "smk"
+              | "slb"
+              | "other";
+            name: string;
+          }>;
+        }
       >;
     };
   };

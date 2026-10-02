@@ -36,6 +36,7 @@ import customers from "./tables/customers";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
 import learningPopularityCounters from "./tables/learningPopularityCounters";
 import learningPopularityCycles from "./tables/learningPopularityCycles";
@@ -71,6 +72,11 @@ import schoolMembers from "./tables/schoolMembers";
 import schools from "./tables/schools";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantGrants from "./tables/tenantGrants";
+import tenantInvites from "./tables/tenantInvites";
+import tenantPeople from "./tables/tenantPeople";
+import tenantUnits from "./tables/tenantUnits";
+import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
 import tryoutCatalog from "./tables/tryoutCatalog";
@@ -120,6 +126,7 @@ export default $defineSchema({
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
+  journalEntries: $Table.tableDefinition(journalEntries),
   learningEngagementQueue: $Table.tableDefinition(learningEngagementQueue),
   learningPopularityCounters: $Table.tableDefinition(learningPopularityCounters),
   learningPopularityCycles: $Table.tableDefinition(learningPopularityCycles),
@@ -155,6 +162,11 @@ export default $defineSchema({
   schools: $Table.tableDefinition(schools),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
+  tenantGrants: $Table.tableDefinition(tenantGrants),
+  tenantInvites: $Table.tableDefinition(tenantInvites),
+  tenantPeople: $Table.tableDefinition(tenantPeople),
+  tenantUnits: $Table.tableDefinition(tenantUnits),
+  tenants: $Table.tableDefinition(tenants),
   tryoutAttemptPlacements: $Table.tableDefinition(tryoutAttemptPlacements),
   tryoutAttempts: $Table.tableDefinition(tryoutAttempts),
   tryoutCatalog: $Table.tableDefinition(tryoutCatalog),
