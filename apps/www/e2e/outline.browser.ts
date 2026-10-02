@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
@@ -45,8 +45,92 @@ const verifyOutlineHydration = Effect.fn("NakafaE2E.verifyOutlineHydration")(
   }
 );
 
+/**
+ * Scrolls a virtualized outline until it renders the entry for verse 200, and
+ * waits for ten still frames: a tap that lands while the list still moves
+ * reaches no entry. The scroll waits until the virtualizer positions the
+ * entries, which it does once it follows the outline's scrolling.
+ */
+const revealVerseEntry = Effect.fn("NakafaE2E.revealVerseEntry")(function* (
+  outline: Locator
+) {
+  yield* Effect.promise(() =>
+    expect(
+      outline.locator('[data-slot="sidebar-menu-item"]').first()
+    ).toHaveCSS("position", "absolute", {
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+  yield* Effect.promise(() =>
+    outline.evaluate(
+      (node) =>
+        new Promise<void>((resolve) => {
+          const entry = node.querySelector('[data-slot="sidebar-menu-item"]');
+          node.scrollTop = (entry?.getBoundingClientRect().height ?? 0) * 199;
+          let lastTop = node.scrollTop;
+          let stillFrames = 0;
+          const check = () => {
+            stillFrames = node.scrollTop === lastTop ? stillFrames + 1 : 0;
+            lastTop = node.scrollTop;
+            if (stillFrames === 10) {
+              resolve();
+              return;
+            }
+            requestAnimationFrame(check);
+          };
+          requestAnimationFrame(check);
+        })
+    )
+  );
+});
+
+/**
+ * Verses past the document flow mount only while the virtualizer renders
+ * them, and their outline entries still follow the reading position.
+ */
+const verifyVirtualVerseActive = Effect.fn(
+  "NakafaE2E.verifyVirtualVerseActive"
+)(function* (page: Page) {
+  const href = "/en/quran/2";
+  yield* seedDeniedAnalyticsConsent(page);
+  yield* Effect.promise(() => page.goto(href));
+  yield* waitForCommittedAppRouter(
+    page,
+    href,
+    href,
+    readinessTimeoutMilliseconds
+  );
+  const outline = page.locator(
+    '[data-side="right"] [data-slot="sidebar-content"]'
+  );
+  yield* revealVerseEntry(outline);
+  const entry = outline.getByRole("button", { exact: true, name: "Verse 200" });
+  yield* Effect.promise(() => entry.click());
+  yield* Effect.promise(() =>
+    expect(entry).toHaveAttribute("data-active", "true", {
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+  // Back at the top, the verse unmounts before it leaves the reading band,
+  // and its entry must not stay active.
+  yield* Effect.promise(() => page.evaluate(() => window.scrollTo(0, 0)));
+  yield* Effect.promise(() =>
+    expect(entry).toHaveAttribute("data-active", "false", {
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+});
+
 test.describe("Desktop outline", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("follows the reading verse past the leading verses", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyVirtualVerseActive(page))
+    );
+  });
 
   test("keeps its entries still while the page hydrates", async ({ page }) => {
     await Effect.runPromise(
@@ -110,9 +194,7 @@ const verifyPhoneVerseJump = Effect.fn("NakafaE2E.verifyPhoneVerseJump")(
     );
     const sheet = page.getByRole("dialog");
     // On slow runners the outline can still move after a jump made while the
-    // sheet slides in, and a tap that lands mid-move reaches no entry. A
-    // reader taps a list that holds still, so the jump waits for the slide to
-    // finish and the tap waits for ten still frames after the jump.
+    // sheet slides in, so the jump waits for the slide to finish.
     yield* Effect.promise(() =>
       sheet.evaluate(
         (dialog) =>
@@ -132,27 +214,7 @@ const verifyPhoneVerseJump = Effect.fn("NakafaE2E.verifyPhoneVerseJump")(
           })
       )
     );
-    yield* Effect.promise(() =>
-      sheet.locator('[data-slot="sidebar-content"]').evaluate(
-        (node) =>
-          new Promise<void>((resolve) => {
-            const entry = node.querySelector('[data-slot="sidebar-menu-item"]');
-            node.scrollTop = (entry?.getBoundingClientRect().height ?? 0) * 199;
-            let lastTop = node.scrollTop;
-            let stillFrames = 0;
-            const check = () => {
-              stillFrames = node.scrollTop === lastTop ? stillFrames + 1 : 0;
-              lastTop = node.scrollTop;
-              if (stillFrames === 10) {
-                resolve();
-                return;
-              }
-              requestAnimationFrame(check);
-            };
-            requestAnimationFrame(check);
-          })
-      )
-    );
+    yield* revealVerseEntry(sheet.locator('[data-slot="sidebar-content"]'));
     yield* Effect.promise(() =>
       sheet.getByRole("button", { exact: true, name: "Verse 200" }).click()
     );

@@ -87,8 +87,8 @@ function PageContent({
         icon={AllahIcon}
         title={t("quran")}
       />
-      <LayoutContent>
-        <Card className="pt-3 pb-0">
+      <LayoutContent className="pb-20">
+        <Card className="py-0">
           <CardLinks>
             {surahs.map((surah) => {
               const title = getQuranSurahName(surah.name);
