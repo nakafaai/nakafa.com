@@ -1037,9 +1037,9 @@ importers:
 
   packages/seo:
     dependencies:
-      '@repo/next-config':
-        specifier: workspace:*
-        version: link:../next-config
+      '@nakafa/aksara-contracts':
+        specifier: 0.43.0
+        version: 0.43.0(effect@4.0.0-rc.118)
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
