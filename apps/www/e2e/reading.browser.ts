@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -9,6 +9,12 @@ const NINA_DIALOG_NAME = /^Nina/;
 const INTER_FONT = /Inter/;
 
 const routes = [pinnedRoutes.material.en, pinnedRoutes.article.en];
+// Long enough that the server-rendered lesson paints before it hydrates.
+const heldScriptMilliseconds = 1000;
+const appScriptPattern = /\/_next\/static\/chunks\/.+\.js$/;
+// The lesson's pagination, breadcrumb and outline header, as the server sends them.
+const readingControls =
+  'nav[aria-label="Pagination navigation"] a, nav[aria-label="breadcrumb"] li, aside [data-sidebar="header"] a';
 
 /** Reads the first rendered section heading ink and its underline accent. */
 const readSectionHeadingInk = (span: HTMLElement) => {
@@ -333,5 +339,81 @@ test("reading outline replaces an existing fragment", async ({ page }) => {
         );
       })
     )
+  );
+});
+
+/**
+ * A reader can press a control as soon as the server paints it, before the
+ * page hydrates. Each control must be the element React hydrates, not a copy
+ * React replaces, because replacing the pressed element loses the click.
+ */
+const verifyReadingControlsHydrateInPlace = Effect.fn(
+  "NakafaE2E.verifyReadingControlsHydrateInPlace"
+)(function* (page: Page) {
+  const href = pinnedRoutes.material.en;
+  yield* seedDeniedAnalyticsConsent(page);
+  const services = yield* Effect.context<never>();
+  yield* Effect.promise(() =>
+    page.route(appScriptPattern, (route) =>
+      Effect.runPromiseWith(services)(
+        Effect.sleep(Duration.millis(heldScriptMilliseconds)).pipe(
+          Effect.andThen(() => Effect.promise(() => route.continue()))
+        )
+      )
+    )
+  );
+  yield* Effect.promise(() =>
+    page.goto(href, { waitUntil: "domcontentloaded" })
+  );
+  // Counted at once, while the scripts are held, so this reads the server HTML.
+  const servedLesson = yield* Effect.promise(() =>
+    page
+      .getByRole("navigation", { name: "breadcrumb" })
+      .locator('[aria-current="page"]')
+      .count()
+  );
+  yield* Effect.sync(() => expect(servedLesson).toBe(1));
+  const served = yield* Effect.promise(() =>
+    page.evaluateHandle(
+      (selector) => new WeakSet(document.querySelectorAll(selector)),
+      readingControls
+    )
+  );
+  yield* waitForCommittedAppRouter(page, href, href, 15_000);
+  yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+  const controls = yield* Effect.promise(() =>
+    page.evaluate(
+      ([set, selector]) => {
+        const current = [...document.querySelectorAll(selector)];
+        return {
+          count: current.length,
+          replaced: current.filter((element) => !set.has(element)).length,
+        };
+      },
+      [served, readingControls] as const
+    )
+  );
+  yield* Effect.sync(() => {
+    expect(controls.count).toBeGreaterThan(2);
+    expect(controls.replaced).toBe(0);
+  });
+
+  const pagination = page
+    .getByRole("navigation", { name: "Pagination navigation" })
+    .locator('a[href^="/en/subjects/"]')
+    .first();
+  const target = yield* Effect.promise(() => pagination.getAttribute("href"));
+  yield* Effect.promise(() => pagination.click());
+  yield* Effect.promise(() =>
+    page.waitForURL((url) => url.pathname === target)
+  );
+});
+
+test("reading controls hydrate where the server painted them", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await Effect.runPromise(
+    withObservedPageErrors(page, verifyReadingControlsHydrateInPlace(page))
   );
 });
