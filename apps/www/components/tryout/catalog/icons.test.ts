@@ -1,7 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
+import {
+  BulbIcon,
+  Calendar03Icon,
+  LanguageSkillIcon,
+} from "@hugeicons/core-free-icons";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import {
   getTryoutExamIcon,
+  getTryoutSubjectIcon,
   getTryoutTrackIcon,
 } from "@/components/tryout/catalog/icons";
 
@@ -9,6 +15,17 @@ import {
 function serializeIcon(icon: unknown) {
   return JSON.stringify(icon);
 }
+
+/** UTBK-SNBT subtests under their official names, in exam order. */
+const SNBT_SECTIONS = [
+  "general-reasoning",
+  "general-knowledge-and-understanding",
+  "reading-comprehension-and-writing",
+  "quantitative-knowledge",
+  "literacy-in-indonesian",
+  "literacy-in-english",
+  "mathematical-reasoning",
+];
 
 describe("try-out icons", () => {
   it("keeps visible exam selector options unique by icon", () => {
@@ -23,20 +40,29 @@ describe("try-out icons", () => {
     expect(getTryoutExamIcon("unknown-exam")).toBeTruthy();
   });
 
-  it("keeps subject track icons sourced from material icons", () => {
-    expect(getTryoutTrackIcon("subject", "compulsory-mathematics")).toEqual(
+  it("gives every UTBK-SNBT subtest its own icon", () => {
+    const icons = SNBT_SECTIONS.map((key) => getTryoutSubjectIcon(key));
+
+    expect(icons).not.toContain(BulbIcon);
+    expect(new Set(icons.map(serializeIcon)).size).toBe(SNBT_SECTIONS.length);
+  });
+
+  it("shares one icon between a subject track and its section", () => {
+    expect(getTryoutTrackIcon("subject", "english-language")).toBe(
+      getTryoutSubjectIcon("english-language")
+    );
+    expect(getTryoutSubjectIcon("english-language")).toBe(LanguageSkillIcon);
+  });
+
+  it("reuses curriculum material icons for curriculum subjects", () => {
+    expect(getTryoutSubjectIcon("compulsory-mathematics")).toBe(
       getMaterialIcon("mathematics")
     );
-    expect(getTryoutTrackIcon("subject", "english-language")).toEqual(
-      getMaterialIcon("english-language")
-    );
+    expect(getTryoutSubjectIcon("physics")).toBe(getMaterialIcon("physics"));
   });
 
-  it("gives year tracks a visible calendar identity", () => {
-    expect(getTryoutTrackIcon("year", "2027")).toBeTruthy();
-  });
-
-  it("returns a default track icon for future unsupported track keys", () => {
-    expect(getTryoutTrackIcon("subject", "unknown-track")).toBeTruthy();
+  it("gives year tracks a calendar and unknown subjects the default icon", () => {
+    expect(getTryoutTrackIcon("year", "2027")).toBe(Calendar03Icon);
+    expect(getTryoutTrackIcon("subject", "unknown-track")).toBe(BulbIcon);
   });
 });

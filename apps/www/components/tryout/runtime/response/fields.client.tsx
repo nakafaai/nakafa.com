@@ -41,7 +41,7 @@ export function TryoutResponseFields({
 }: {
   value: TryoutResponseFieldsValue;
 }) {
-  const t = useTranslations("Exercises");
+  const t = useTranslations("Tryouts");
   const answerLabel = t("answer");
   if (value.responseSpec.kind === "single-choice") {
     return <SingleChoiceFields answerLabel={answerLabel} value={value} />;

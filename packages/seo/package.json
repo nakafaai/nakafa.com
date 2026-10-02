@@ -2,13 +2,14 @@
   "name": "@repo/seo",
   "version": "1.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "test": "vitest run",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@repo/next-config": "workspace:*",
+    "@nakafa/aksara-contracts": "0.43.0",
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
     "next": "16.3.7",

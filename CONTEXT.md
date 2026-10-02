@@ -92,3 +92,32 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Snapshot**: A persisted restorable Viewport state for one Forum Conversation.
 - **Navigation History**: The ordered semantic Viewport positions a user can return to inside one Forum Conversation.
 - **Latest Affinity**: The user state where a Forum Conversation Viewport is attached to the newest Transcript edge.
+
+## Nakafa School
+
+- **Tenant**: One school or foundation (yayasan) using Nakafa School, served by the same deployments as every other tenant. Its data is isolated by every School function, never by the client.
+- **Tenant slug**: A tenant's public address, the `slug.nakafa.com` label and the `/[locale]/school/[slug]` route segment. It names the tenant context of a request; it never grants access.
+- **Unit**: One school level inside a tenant, such as the SD, SMP, or SMA of a foundation, with its own NPSN. An archived unit stays readable and refuses writes.
+- **Period**: One school year or semester of a tenant. Promotion archives a period and moves students into the next one.
+- **Cohort**: A rombel, the administrative class group that rapor, promotion, and Dapodik use. It is separate from a Classroom.
+- **Classroom**: The learning space for one subject in one Cohort, or one per Cohort in SD.
+- **Person**: Someone in one tenant, separate from a User. A Person can exist before any account and is claimed later; an account holds at most one Person per tenant.
+- **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the invite address.
+- **Invite**: A pending offer of one Person to the account whose verified email equals its address.
+- **Grant**: One role held by one Person over the whole tenant or one unit, standing or temporary.
+- **Built-in role**: One of the fixed roles every tenant shares: Owner, Admin, Principal, Deputy, Teacher, Counselor, Staff, Student, Guardian, Proctor, Auditor, and Integration.
+- **Owner**: The role that holds every roles-granted action and alone may appoint Owners and Admins. A tenant keeps at least one claimed Owner.
+- **Custom role**: A tenant's clone of a built-in role with a subset of the actions its editor holds.
+- **Kind**: One type of subject access is decided on, such as the tenant, a unit, a Person, or a grant, declared once with its actions, relations, and audited changes.
+- **Action**: One `source.verb` permission, such as `grant.manage`, evaluated against one kind of subject.
+- **Relation**: A link between the caller's Person and a subject that grants actions without a role, such as a classroom teacher or a verified guardian.
+- **Condition**: State that refuses an action whatever the roles, such as a suspended tenant, an archived unit, or a closed exam.
+- **Access decision**: The outcome of one action on one subject: allowed, or refused for the resource, a role, or a condition.
+- **Viewer capabilities**: The actions the server computed the caller may perform, returned with a query as `can` so the UI never guesses.
+- **Object reference**: A typed `{ kind, id }` pointer to an object of any declared kind, checked for access whenever it is read.
+- **Space**: Whose data a row or a model call belongs to: one account (personal) or one tenant.
+- **Journal**: The one record of audited changes for every space, written in the same transaction as the change and read by the audit log and by consumers.
+- **Journal entry**: One immutable audited change: its owner space, actor, subject, and change, holding IDs and codes only.
+- **Published change type**: A change type its kind exposes to journal consumers such as notifications, webhooks, and exports.
+- **Operator**: Nakafa staff who provision tenants. Not the school's Admin, whom Indonesian schools also call operator sekolah.
+- **Operator visit**: An operator's temporary, audited admin or auditor grant inside one tenant, ended on schedule.
