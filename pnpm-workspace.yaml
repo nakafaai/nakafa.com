@@ -43,10 +43,13 @@ update:
     - vitest
 
 catalog:
+  '@ai-sdk/gateway': 4.0.103
+  '@ai-sdk/google': 4.0.87
   '@effect/platform-node': 4.0.0-rc.118
   '@effect/vitest': 4.0.0-rc.118
   '@vitest/coverage-istanbul': 5.0.2
   '@vitest/ui': 5.0.2
+  ai: 7.0.127
   effect: 4.0.0-rc.118
   typescript: 7.0.2
   vitest: 5.0.2

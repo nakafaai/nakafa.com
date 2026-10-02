@@ -2,10 +2,7 @@ import { google } from "@ai-sdk/google";
 import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
-import { getFastModelProviderOptions } from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { subAgentGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
 import type { ResearchAgentParams } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
@@ -84,7 +81,11 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       });
     }
     const ctx = yield* ActionCtx;
-    const model = yield* getGatewayModel(modelId);
+    const { model, timeout } = (yield* Gateway).language({
+      purpose: "specialist",
+      model: modelId,
+      space: { kind: "personal", userId },
+    });
     const agent = new Agent(components.nina, {
       name: "research",
       languageModel: model,
@@ -172,12 +173,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 
               return prepareGoogleGroundingStep(messages);
             },
-            providerOptions: {
-              gateway: gatewayProviderOptions,
-              google: getFastModelProviderOptions(modelId),
-            },
             stopWhen: isStepCount(2),
-            timeout: subAgentGenerationTimeout,
+            timeout,
           }
         ),
       catch: (error) => makeResearchGenerationError(error, "evidence"),
@@ -230,11 +227,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                 name: "research_findings",
                 schema: researchOutputSchema,
               }),
-              providerOptions: {
-                gateway: gatewayProviderOptions,
-                google: getFastModelProviderOptions(modelId),
-              },
-              timeout: subAgentGenerationTimeout,
+              timeout,
             }
           )
           .then((result) => result.output),
