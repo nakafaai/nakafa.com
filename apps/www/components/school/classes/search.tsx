@@ -14,9 +14,9 @@ import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { searchParsers } from "@/lib/nuqs/search";
 
-export function SchoolClassesPeopleSearch() {
-  const t = useTranslations("School.Classes");
-
+/** Filters a class panel through the shared `q` search parameter. */
+export function SchoolClassesSearch({ placeholder }: { placeholder: string }) {
+  const t = useTranslations("Utils");
   const [{ q }, setSearch] = useQueryStates(searchParsers);
 
   return (
@@ -24,7 +24,7 @@ export function SchoolClassesPeopleSearch() {
       <InputGroup>
         <InputGroupInput
           onChange={(e) => setSearch({ q: e.target.value })}
-          placeholder={t("people-search-placeholder")}
+          placeholder={placeholder}
           value={q}
         />
         <InputGroupAddon>
@@ -39,7 +39,7 @@ export function SchoolClassesPeopleSearch() {
         >
           <InputGroupButton onClick={() => setSearch({ q: "" })} size="icon-xs">
             <HugeIcons icon={Cancel01Icon} />
-            <span className="sr-only">Clear search</span>
+            <span className="sr-only">{t("clear-search")}</span>
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>

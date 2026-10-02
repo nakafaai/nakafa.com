@@ -5,10 +5,8 @@ import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import {
-  CurriculumCatalogCards,
-  CurriculumIndexHeader,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
+import { CurriculumCatalogCards } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { RefContent } from "@/components/shared/content/references";
@@ -95,7 +93,14 @@ export default async function Page() {
       />
       <LayoutMaterial>
         <LayoutMaterialContent>
-          <CurriculumIndexHeader homeLabel={tCommon("home")} title={title} />
+          <BreadcrumbHeader
+            value={{
+              homeLabel: tCommon("home"),
+              items: [{ label: title }],
+              menuLabel: tCommon("more"),
+              title,
+            }}
+          />
           <LayoutContent>
             {catalog.entries.length > 0 ? (
               <CurriculumCatalogCards

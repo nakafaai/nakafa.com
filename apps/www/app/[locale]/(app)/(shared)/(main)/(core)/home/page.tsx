@@ -1,8 +1,6 @@
-import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import refs from "@repo/backend/confect/_generated/refs";
 import { redirect } from "@repo/internationalization/src/navigation";
-import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -15,10 +13,6 @@ import { httpLayer } from "@/lib/convex/http";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { readOnboardingStatus } from "@/lib/onboarding/server";
-
-type HomeRecentRows = Ref.Returns<
-  typeof refs.public.contents.queries.recent.getRecentlyViewed
->;
 
 /** Routes authenticated users through canonical learning selection. */
 export default function Page(props: PageProps<"/[locale]/home">) {
@@ -80,37 +74,18 @@ async function AuthenticatedHome({
 
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
-      <Feed
-        locale={locale}
-        name={account?.authUser.name ?? null}
-        recentRows={recentRows}
-      />
-    </div>
-  );
-}
+      <div className="mx-auto w-full max-w-3xl px-6 py-24">
+        <div className="relative flex flex-col gap-12">
+          <HomeHeader name={account?.authUser.name ?? null} />
 
-/** Renders the authenticated home feed in the existing Nakafa home order. */
-function Feed({
-  locale,
-  name,
-  recentRows,
-}: {
-  locale: PublicAppLocale;
-  name: string | null;
-  recentRows: HomeRecentRows;
-}) {
-  return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-24">
-      <div className="relative flex flex-col gap-12">
-        <HomeHeader name={name} />
+          <HomeExplore />
 
-        <HomeExplore />
+          <HomeContinueLearning subjects={recentRows} />
 
-        <HomeContinueLearning subjects={recentRows} />
-
-        <Suspense fallback={null}>
-          <HomeTrending locale={locale} />
-        </Suspense>
+          <Suspense fallback={null}>
+            <HomeTrending locale={locale} />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

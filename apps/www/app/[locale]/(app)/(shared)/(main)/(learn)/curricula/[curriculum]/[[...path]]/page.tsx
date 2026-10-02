@@ -5,11 +5,10 @@ import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { readMaterialCardChapters } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
-import {
-  CurriculumChildCards,
-  CurriculumRootHeader,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
+import { CurriculumChildCards } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
+import { CurriculumSelector } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/selector";
 import { readCurriculumSeoContext } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/seo";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { ContainerList } from "@/components/shared/card/list";
 import { CardMaterial } from "@/components/shared/card/material";
 import { FooterContent } from "@/components/shared/content/footer";
@@ -142,17 +141,21 @@ async function CurriculumTrackRoute({
   );
 
   return (
-    <CurriculumRouteFrame
-      actionLabel={tLearningPrograms("curriculum-route-action")}
-      breadcrumbs={breadcrumbs}
-      model={model}
-    >
-      <CurriculumRootHeader
-        currentRoute={route}
-        homeLabel={homeLabel}
-        options={readRuntimeCurriculumOptions(catalog, locale)}
-        selectorLabel={tLearningPrograms("kind.school-curriculum")}
-        subjectLabel={tCommon("subject")}
+    <CurriculumRouteFrame breadcrumbs={breadcrumbs} model={model}>
+      <BreadcrumbHeader
+        value={{
+          action: (
+            <CurriculumSelector
+              currentValue={route.publicPath}
+              label={tLearningPrograms("kind.school-curriculum")}
+              options={readRuntimeCurriculumOptions(catalog, locale)}
+            />
+          ),
+          homeLabel,
+          items: [{ label: tCommon("subject") }],
+          menuLabel: tCommon("more"),
+          title: route.title,
+        }}
       />
     </CurriculumRouteFrame>
   );
@@ -165,10 +168,7 @@ async function CurriculumNestedRoute({
   model: CurriculumRouteModel;
 }) {
   const { locale, route } = model;
-  const [tCommon, tLearningPrograms] = await Promise.all([
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "LearningPrograms" }),
-  ]);
+  const tCommon = await getTranslations({ locale, namespace: "Common" });
   const homeLabel = tCommon("home");
   const subjectLabel = tCommon("subject");
   const breadcrumbs = readRuntimeCurriculumBreadcrumbs(
@@ -178,11 +178,7 @@ async function CurriculumNestedRoute({
   );
 
   return (
-    <CurriculumRouteFrame
-      actionLabel={tLearningPrograms("curriculum-route-action")}
-      breadcrumbs={breadcrumbs}
-      model={model}
-    >
+    <CurriculumRouteFrame breadcrumbs={breadcrumbs} model={model}>
       <CurriculumNestedHeader
         ancestors={model.ancestors}
         currentRoute={route}
@@ -197,12 +193,10 @@ async function CurriculumNestedRoute({
 
 /** Composes the shared curriculum body around one explicit route header. */
 function CurriculumRouteFrame({
-  actionLabel,
   breadcrumbs,
   children,
   model,
 }: {
-  actionLabel: string;
   breadcrumbs: ReturnType<typeof readRuntimeCurriculumBreadcrumbs>;
   children: ReactNode;
   model: CurriculumRouteModel;
@@ -219,7 +213,7 @@ function CurriculumRouteFrame({
       <LayoutMaterialContent>
         {children}
         <LayoutContent>
-          <CurriculumRouteBody actionLabel={actionLabel} model={model} />
+          <CurriculumRouteBody model={model} />
         </LayoutContent>
         {sourceUrl ? (
           <FooterContent>
@@ -249,13 +243,7 @@ function CurriculumRouteFrame({
 }
 
 /** Renders the established curriculum chooser or material-card composition. */
-function CurriculumRouteBody({
-  actionLabel,
-  model,
-}: {
-  actionLabel: string;
-  model: CurriculumRouteModel;
-}) {
+async function CurriculumRouteBody({ model }: { model: CurriculumRouteModel }) {
   const { childRoutes, locale, materialCards } = model;
   if (materialCards.length > 0) {
     return (
@@ -271,9 +259,14 @@ function CurriculumRouteBody({
     return <ComingSoon />;
   }
 
+  const tLearningPrograms = await getTranslations({
+    locale,
+    namespace: "LearningPrograms",
+  });
+
   return (
     <CurriculumChildCards
-      actionLabel={actionLabel}
+      actionLabel={tLearningPrograms("curriculum-route-action")}
       locale={locale}
       routes={childRoutes}
     />

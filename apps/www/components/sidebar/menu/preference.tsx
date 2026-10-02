@@ -21,21 +21,25 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { useSidebar } from "@repo/design-system/lib/sidebar/context";
+import {
+  type SidebarContextValue,
+  useSidebar,
+} from "@repo/design-system/lib/sidebar/context";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { cn } from "cn";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import type * as React from "react";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 const BASE_THEMES_COUNT = 3;
 
-/** Dropdown side contract inherited from the design-system submenu content. */
-type SubmenuSide = React.ComponentProps<typeof DropdownMenuSubContent>["side"];
+/** Opens menus beside the sidebar, or above their trigger on phones, where the sidebar fills the screen. */
+function selectMenuSide(sidebar: SidebarContextValue) {
+  return sidebar.isMobile ? "top" : "right";
+}
 
 /** Shows the active menu option without changing the item label layout. */
 function ActiveBadge({ isActive }: { isActive: boolean }) {
@@ -90,7 +94,7 @@ function LanguageMenuItems() {
 /** Renders the shared language capability as a hoverable guest sidebar menu. */
 export function GuestLanguageMenu() {
   const t = useTranslations("Common");
-  const isMobile = useSidebar((sidebar) => sidebar.isMobile);
+  const side = useSidebar(selectMenuSide);
   const label = t("language");
 
   return (
@@ -112,7 +116,7 @@ export function GuestLanguageMenu() {
         <DropdownMenuContent
           align="start"
           className="w-max max-w-[calc(100vw-2rem)]"
-          side={isMobile ? "top" : "right"}
+          side={side}
           sideOffset={4}
         >
           <DropdownMenuGroup>
@@ -125,7 +129,9 @@ export function GuestLanguageMenu() {
 }
 
 /** Renders language options inside the account preference submenu. */
-function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
+function LanguageSubmenuContent() {
+  const side = useSidebar(selectMenuSide);
+
   return (
     <DropdownMenuSubContent
       className="w-max max-w-[calc(100vw-2rem)]"
@@ -139,7 +145,8 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
 }
 
 /** Renders the nested theme submenu while keeping theme state owned by next-themes. */
-function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
+function ThemeSubmenuContent() {
+  const side = useSidebar(selectMenuSide);
   const { theme: currentTheme, setTheme } = useTheme();
   const t = useTranslations("Common");
 
@@ -186,7 +193,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
 }
 
 /** Provides preference submenus that can be mounted from account menu surfaces. */
-export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
+export function SidebarPreferenceSubmenus() {
   const t = useTranslations("Common");
 
   return (
@@ -195,7 +202,7 @@ export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
         <DropdownMenuSubTrigger className="cursor-pointer">
           <LanguageMenuTriggerContent label={t("language")} />
         </DropdownMenuSubTrigger>
-        <LanguageSubmenuContent side={side} />
+        <LanguageSubmenuContent />
       </DropdownMenuSub>
 
       <DropdownMenuSub>
@@ -203,7 +210,7 @@ export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
           <HugeIcons icon={PaintBoardIcon} />
           <span className="truncate">{t("theme")}</span>
         </DropdownMenuSubTrigger>
-        <ThemeSubmenuContent side={side} />
+        <ThemeSubmenuContent />
       </DropdownMenuSub>
     </DropdownMenuGroup>
   );
