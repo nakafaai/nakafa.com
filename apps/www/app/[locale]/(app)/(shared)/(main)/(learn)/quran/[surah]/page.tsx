@@ -256,18 +256,17 @@ async function CachedSurahShell({
               title={title}
             />
             <LayoutContent className="pt-6">
-              {result.preBismillah === null ? null : (
-                <QuranBismillah
-                  bismillah={result.preBismillah}
-                  subjectLabel={title}
-                  translationNotesLabel={translationNotesLabel}
-                />
-              )}
               <QuranVersesProvider
                 interpretationLabel={interpretationLabel}
                 tafsirAccess={tafsirAccess}
                 translationNotesLabel={translationNotesLabel}
               >
+                {result.preBismillah === null ? null : (
+                  <QuranBismillah
+                    bismillah={result.preBismillah}
+                    subjectLabel={title}
+                  />
+                )}
                 {tafsirAccess.kind === "embedded" ? (
                   <QuranInterpretationControls
                     appLocale={tafsirAccess.appLocale}
