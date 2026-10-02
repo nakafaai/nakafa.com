@@ -19,6 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { slugify } from "@repo/utilities/slug";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -69,6 +70,9 @@ export function SidebarTreeEntry({ heading }: { heading: ParsedHeading }) {
       virtualIndex === undefined && context.activeHeadings.includes(id)
   );
   const scrollToIndex = useVirtual((context) => context.scrollToIndex);
+  // Below the desktop width the outline is a sheet over the page, so choosing
+  // an entry closes it and the reader sees where they jumped.
+  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
 
   return (
     <Tooltip>
@@ -80,7 +84,11 @@ export function SidebarTreeEntry({ heading }: { heading: ParsedHeading }) {
               virtualIndex === undefined ? (
                 // In-page headings use native fragment navigation so an
                 // existing hash never enters the route prefetch cache.
-                <a href={heading.href} title={heading.label}>
+                <a
+                  href={heading.href}
+                  onClick={() => setOpenMobile(false)}
+                  title={heading.label}
+                >
                   <SidebarTreeLabel label={heading.label} />
                 </a>
               ) : (
@@ -88,6 +96,7 @@ export function SidebarTreeEntry({ heading }: { heading: ParsedHeading }) {
                   aria-label={heading.label}
                   onClick={() => {
                     scrollToIndex(virtualIndex);
+                    setOpenMobile(false);
                   }}
                   type="button"
                 >

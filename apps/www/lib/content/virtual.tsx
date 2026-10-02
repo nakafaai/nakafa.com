@@ -17,12 +17,21 @@ const VirtualContext = createContext<VirtualContextType>({
   virtualRef: fallbackVirtualRef,
 });
 
+/**
+ * The verse anchors' `scroll-mt-44` in rem, so a jump lands a verse where a
+ * link to it would: clear of the sticky headers at every width and font size.
+ */
+const VERSE_SCROLL_MARGIN_REM = 11;
+
 export function VirtualProvider({ children }: { children: React.ReactNode }) {
   const virtualRef = useRef<WindowVirtualizerHandle>(null);
 
   const scrollToIndex = (index: number) => {
+    const rem = Number.parseFloat(
+      getComputedStyle(document.documentElement).fontSize
+    );
     virtualRef.current?.scrollToIndex(index, {
-      offset: -100,
+      offset: -VERSE_SCROLL_MARGIN_REM * rem,
     });
   };
 
