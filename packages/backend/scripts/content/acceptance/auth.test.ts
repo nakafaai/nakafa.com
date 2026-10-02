@@ -1,4 +1,5 @@
 import { createPrivateKey, createPublicKey, sign, verify } from "node:crypto";
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import {
   createLocalJwks,
@@ -84,7 +85,7 @@ describe("local session signing key", () => {
         );
         expect(next?.id).not.toBe(key.id);
         expect(next?.publicKey).not.toBe(key.publicKey);
-      })
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 
   it.effect("fails typed when the private key cannot be encrypted", () =>
@@ -97,6 +98,6 @@ describe("local session signing key", () => {
         _tag: "AcceptanceRuntimeError",
         message: "The local session signing key could not be encrypted.",
       });
-    })
+    }).pipe(Effect.provide(nodeServicesLayer))
   );
 });

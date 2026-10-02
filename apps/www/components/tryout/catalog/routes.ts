@@ -1,4 +1,4 @@
-import { Effect, Predicate, Schema } from "effect";
+import { Array as Arr, Effect, Predicate, Schema, String as Str } from "effect";
 import type { Locale } from "next-intl";
 import {
   readTryoutCountryPage,
@@ -40,7 +40,7 @@ function readListedPage<Page>(
 
 /** Reads the route segment that ends one published catalog path. */
 function readRouteSegment(publicPath: string) {
-  return publicPath.slice(publicPath.lastIndexOf("/") + 1);
+  return Arr.lastNonEmpty(Str.split(publicPath, "/"));
 }
 
 /**
@@ -57,8 +57,8 @@ export const readTryoutCatalogRoutes = Effect.fn(
   const countries = yield* Effect.forEach(hub.countries, ({ publicPath }) =>
     readListedPage(publicPath, () => readTryoutCountryPage(locale, publicPath))
   );
-  const exams = countries.flatMap((page) =>
-    page.exams.map((exam) => ({
+  const exams = Arr.flatMap(countries, (page) =>
+    Arr.map(page.exams, (exam) => ({
       country: readRouteSegment(page.country.publicPath),
       exam: readRouteSegment(exam.publicPath),
       publicPath: exam.publicPath,
@@ -69,7 +69,7 @@ export const readTryoutCatalogRoutes = Effect.fn(
       readTryoutExamPage(locale, publicPath)
     ).pipe(
       Effect.map((page) =>
-        page.tracks.map((track) => ({
+        Arr.map(page.tracks, (track) => ({
           country,
           exam,
           track: readRouteSegment(track.publicPath),
@@ -79,10 +79,10 @@ export const readTryoutCatalogRoutes = Effect.fn(
   );
 
   return {
-    countries: countries.map((page) => ({
+    countries: Arr.map(countries, (page) => ({
       country: readRouteSegment(page.country.publicPath),
     })),
-    exams: exams.map(({ country, exam }) => ({ country, exam })),
-    tracks: tracks.flat(),
+    exams: Arr.map(exams, ({ country, exam }) => ({ country, exam })),
+    tracks: Arr.flatten(tracks),
   };
 });
