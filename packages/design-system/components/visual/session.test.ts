@@ -7,7 +7,7 @@ import {
   raiseSession,
   returnFocus,
 } from "@repo/design-system/components/visual/session";
-import { Effect } from "effect";
+import { Effect, Exit } from "effect";
 
 /** The space the test card takes in the page, as its slot keeps it. */
 const CARD_PLACE = { height: 480, marginBottom: "24px", marginTop: "16px" };
@@ -238,6 +238,29 @@ describe("a stay across the screen", () => {
       // The card left the top layer while the page behind was still held.
       expect(lowered).toEqual([HELD_PAGE]);
       expect(inertIds()).toEqual(["aside"]);
+    })
+  );
+
+  it.effect("releases the page even when lowering the card fails", () =>
+    Effect.gen(function* () {
+      const { card, session } = yield* openTestSession();
+      Object.assign(card, {
+        hidePopover: () => {
+          throw new DOMException(
+            "The card is not showing.",
+            "InvalidStateError"
+          );
+        },
+        showPopover: () => undefined,
+      });
+      yield* holdSession(session);
+      yield* raiseSession(session);
+
+      const exit = yield* Effect.exit(closeSession(session));
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(inertIds()).toEqual(["aside"]);
+      expect(document.documentElement.style.overflow).toBe("");
     })
   );
 
