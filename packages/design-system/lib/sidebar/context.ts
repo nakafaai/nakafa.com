@@ -52,26 +52,32 @@ export const SidebarContext = createContext<
   | null
 >(null);
 
-/** Selects one part of the sidebar state and actions of the nearest SidebarProvider. */
+/**
+ * Selects one part of the sidebar state and actions of the nearest
+ * SidebarProvider.
+ *
+ * The selector runs inside the store subscription, so a reader runs only when
+ * its selection changes: one that selects an action never rerenders when the
+ * sidebar opens, closes, or measures the viewport.
+ */
 export function useSidebar<T>(selector: (sidebar: SidebarContextValue) => T) {
   const store = use(SidebarStoreContext);
   const controls = use(SidebarContext);
   if (!(store && controls)) {
     throw new Error("useSidebar must be used within a SidebarProvider.");
   }
-  const isMobile = useStore(store, (sidebar) => sidebar.isMobile);
-  const storedOpen = useStore(store, (sidebar) => sidebar.open);
-  const storedOpenMobile = useStore(store, (sidebar) => sidebar.openMobile);
-  const open = controls.open ?? storedOpen;
 
-  return selector({
-    isLocked: controls.isLocked,
-    isMobile,
-    open,
-    openMobile: controls.isLocked ? false : storedOpenMobile,
-    setOpen: controls.setOpen,
-    setOpenMobile: controls.setOpenMobile,
-    state: open ? "expanded" : "collapsed",
-    toggleSidebar: controls.toggleSidebar,
+  return useStore(store, (sidebar) => {
+    const open = controls.open ?? sidebar.open;
+    return selector({
+      isLocked: controls.isLocked,
+      isMobile: sidebar.isMobile,
+      open,
+      openMobile: controls.isLocked ? false : sidebar.openMobile,
+      setOpen: controls.setOpen,
+      setOpenMobile: controls.setOpenMobile,
+      state: open ? "expanded" : "collapsed",
+      toggleSidebar: controls.toggleSidebar,
+    });
   });
 }
