@@ -1,15 +1,20 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { API, Checker, Snapshot } from "typescript/unstable/sync";
-import {
-  effectTestViolations,
-  inspectEffectSource,
-} from "#scripts/check/effect";
-import { sourceViolations } from "#scripts/check/source";
+import { effectFindings, effectTestViolations } from "#scripts/check/effect";
+import { parseSources, type RepositorySource } from "#scripts/check/source";
 
 const FILE = "packages/example/src/program.test.ts";
 const VIOLATION =
   "packages/example/src/program.test.ts: return the Effect to @effect/vitest instead of running it.";
+
+/** Lists the Effect-native findings of sources as `file:line rule`. */
+const findings = Effect.fn("EffectPolicyTest.findings")(function* (
+  sources: readonly (typeof RepositorySource.Type)[]
+) {
+  const found = yield* effectFindings(yield* parseSources(sources));
+  return Arr.map(found, ({ file, line, rule }) => `${file}:${line} ${rule}`);
+}, Effect.scoped);
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -118,96 +123,64 @@ describe("native compiler startup", () => {
   );
 });
 
-const BACKEND_FILE = "packages/backend/convex/example/program.ts";
-const TRY_VIOLATION = `${BACKEND_FILE}: model failure with Effect instead of a raw try/catch statement.`;
-const NARROWING_VIOLATION = `${BACKEND_FILE}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`;
-
-describe("Effect source policy", () => {
-  it.effect("rejects raw try statements and typeof-object narrowing", () =>
+describe("Effect-native findings", () => {
+  it.effect("counts a platform global only where nothing shadows it", () =>
     Effect.gen(function* () {
-      const violations = yield* sourceViolations(
-        [
-          {
-            file: BACKEND_FILE,
-            sourceText:
-              'export function read(value: unknown) {\n  try {\n    JSON.parse("{}");\n  } catch {\n    return null;\n  }\n  return typeof value === "object" && value !== null;\n}',
-          },
-        ],
-        [inspectEffectSource]
-      );
       assert.deepStrictEqual(
-        [...violations].sort(),
-        [TRY_VIOLATION, NARROWING_VIOLATION].sort()
+        yield* findings([
+          {
+            file: "apps/www/lib/cache.ts",
+            sourceText: `import { Array } from "effect";
+export function read(text: string, JSON: { parse: (text: string) => unknown }) {
+  return [Array.isArray(text), JSON.parse(text)];
+}
+export const store = new Map();
+`,
+          },
+        ]),
+        ["apps/www/lib/cache.ts:5 map-set"]
       );
     })
   );
 
-  it.effect("rejects typeof-object narrowing on either side", () =>
+  it.effect("skips modules that a tool marks as generated", () =>
     Effect.gen(function* () {
-      const violations = yield* sourceViolations(
-        [
-          {
-            file: BACKEND_FILE,
-            sourceText:
-              'export const isRecord = (value: unknown) => "object" !== typeof value;',
-          },
-          {
-            file: "apps/www/lib/example.ts",
-            sourceText:
-              'export const isText = (value: unknown) => typeof value === "string" || typeof value === typeof input;',
-          },
-        ],
-        [inspectEffectSource]
-      );
-      assert.deepStrictEqual(violations, [NARROWING_VIOLATION]);
-    })
-  );
-
-  it.effect("allows Effect-native failure and narrowing", () =>
-    Effect.gen(function* () {
-      const violations = yield* sourceViolations(
-        [
-          {
-            file: BACKEND_FILE,
-            sourceText:
-              'import { Effect, Predicate } from "effect";\nexport const read = Effect.fn("read")(function* (value: unknown) {\n  return Predicate.isObject(value) && Predicate.hasProperty(value, "code");\n});',
-          },
-          {
-            file: BACKEND_FILE,
-            sourceText:
-              "export async function clean() {\n  try {\n    await write();\n  } finally {\n    await erase();\n  }\n}",
-          },
-        ],
-        [inspectEffectSource]
-      );
-      assert.deepStrictEqual(violations, []);
-    })
-  );
-
-  it.effect("covers every authored module, including JSX", () =>
-    Effect.gen(function* () {
-      const appFile = "apps/www/lib/example.ts";
-      const viewFile = "apps/www/components/example.tsx";
-      const violations = yield* sourceViolations(
-        [
-          {
-            file: appFile,
-            sourceText: 'export const value = typeof input === "object";',
-          },
-          {
-            file: viewFile,
-            sourceText:
-              'export const View = () => (typeof input === "object" ? null : <div />);',
-          },
-        ],
-        [inspectEffectSource]
-      );
       assert.deepStrictEqual(
-        [...violations].sort(),
+        yield* findings([
+          {
+            file: "packages/backend/components/auth/schema.ts",
+            sourceText:
+              "/**\n * This file is auto-generated. Do not edit this file manually.\n */\nexport const tables = new Map();\n",
+          },
+          {
+            file: "packages/backend/components/auth/empty.ts",
+            sourceText: "// @generated by the auth CLI\n",
+          },
+        ]),
+        []
+      );
+    })
+  );
+
+  it.effect("orders findings by file, line, and rule", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings([
+          {
+            file: "packages/example/b.ts",
+            sourceText: "JSON.parse(new Map());\n",
+          },
+          {
+            file: "packages/example/a.ts",
+            sourceText: "export const now = Date.now();\nconsole.log(now);\n",
+          },
+        ]),
         [
-          `${appFile}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`,
-          `${viewFile}: narrow unknown input with Schema or Predicate instead of a typeof-object check.`,
-        ].sort()
+          "packages/example/a.ts:1 clock",
+          "packages/example/a.ts:2 console",
+          "packages/example/b.ts:1 json",
+          "packages/example/b.ts:1 map-set",
+        ]
       );
     })
   );

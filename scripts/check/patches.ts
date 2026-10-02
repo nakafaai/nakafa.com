@@ -1,11 +1,20 @@
-import { Effect, FileSystem, Path } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  HashSet,
+  Order,
+  Path,
+  Result,
+} from "effect";
 import { readRepositoryFiles } from "#scripts/check/files";
 import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
+const PATCH_FILE_PATTERN = /\.patch$/u;
 const PATCHED_DEPENDENCIES_PATTERN = /^patchedDependencies:/mu;
 /** Directories that never hold application patches; `.cache` holds live runtime state. */
-const IGNORED_DIRECTORIES = new Set([
+const IGNORED_DIRECTORIES = HashSet.make(
   ".cache",
   ".git",
   ".next",
@@ -14,8 +23,8 @@ const IGNORED_DIRECTORIES = new Set([
   "coverage",
   "dist",
   "node_modules",
-  "repos",
-]);
+  "repos"
+);
 
 /** Collects application-owned patch files without entering generated source. */
 const readApplicationPatchFiles = Effect.fn(
@@ -23,10 +32,14 @@ const readApplicationPatchFiles = Effect.fn(
 )(function* (root: string) {
   const path = yield* Path.Path;
   const files = yield* readRepositoryFiles(root, IGNORED_DIRECTORIES);
-  return files
-    .filter((file) => file.endsWith(".patch"))
-    .map((file) => path.relative(root, file))
-    .sort();
+  return Arr.sort(
+    Arr.filterMap(files, (file) =>
+      PATCH_FILE_PATTERN.test(file)
+        ? Result.succeed(path.relative(root, file))
+        : Result.failVoid
+    ),
+    Order.String
+  );
 });
 
 /** Validates that application dependency patches remain absent. */
@@ -38,21 +51,19 @@ export const checkPatchPolicy = Effect.fn("RepositoryPolicy.checkPatches")(
       readApplicationPatchFiles(root),
       fileSystem.readFileString(path.join(root, "pnpm-workspace.yaml")),
     ]);
-    const failures: string[] = [];
+    const failures = Arr.appendAll(
+      Arr.isReadonlyArrayEmpty(patchFiles)
+        ? []
+        : [
+            `Application dependency patches require explicit review: ${Arr.join(patchFiles, ", ")}.`,
+          ],
+      PATCHED_DEPENDENCIES_PATTERN.test(workspace)
+        ? ["pnpm-workspace.yaml must not register dependency patches."]
+        : []
+    );
 
-    if (patchFiles.length > 0) {
-      failures.push(
-        `Application dependency patches require explicit review: ${patchFiles.join(", ")}.`
-      );
-    }
-    if (PATCHED_DEPENDENCIES_PATTERN.test(workspace)) {
-      failures.push(
-        "pnpm-workspace.yaml must not register dependency patches."
-      );
-    }
-
-    if (failures.length > 0) {
-      yield* writeError(`${failures.join("\n")}\n`);
+    if (!Arr.isReadonlyArrayEmpty(failures)) {
+      yield* writeError(`${Arr.join(failures, "\n")}\n`);
       return 1;
     }
 
