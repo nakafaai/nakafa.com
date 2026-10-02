@@ -350,9 +350,10 @@ test("guest sidebar marks only the page the reader is on", async ({ page }) => {
         yield* Effect.promise(() =>
           page.setViewportSize({ height: 900, width: 1440 })
         );
-        const currentLinks = page
-          .locator('[data-sidebar="sidebar"]:visible')
-          .locator('a[aria-current="page"]');
+        const appSidebar = page.locator(
+          '[data-side="left"] [data-sidebar="sidebar"]'
+        );
+        const currentLinks = appSidebar.locator('a[aria-current="page"]');
         const response = yield* Effect.promise(() =>
           page.goto("/en/quran", { waitUntil: "domcontentloaded" })
         );
@@ -364,18 +365,21 @@ test("guest sidebar marks only the page the reader is on", async ({ page }) => {
         );
 
         // A surah keeps the Quran section highlighted, but the index link is
-        // not the page the reader is on.
+        // not the page the reader is on; the outline's link to this surah is.
         yield* Effect.promise(() =>
           page.goto("/en/quran/2", { waitUntil: "domcontentloaded" })
         );
         yield* Effect.promise(() =>
           expect(
-            page
-              .locator('[data-sidebar="sidebar"]:visible')
-              .getByRole("link", { exact: true, name: en.Holy.quran })
+            appSidebar.getByRole("link", { exact: true, name: en.Holy.quran })
           ).toHaveAttribute("data-active", "true")
         );
         yield* Effect.promise(() => expect(currentLinks).toHaveCount(0));
+        yield* Effect.promise(() =>
+          expect(
+            page.locator('[data-side="right"] a[href="/en/quran/2"]')
+          ).toHaveAttribute("aria-current", "page")
+        );
       })
     )
   );
