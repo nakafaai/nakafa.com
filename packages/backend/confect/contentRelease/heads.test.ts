@@ -11,6 +11,7 @@ import {
   MAX_HEAD_PAGE_COUNT,
   MAX_PUBLICATION_RESPONSE_BYTES,
 } from "@nakafa/aksara-contracts/transport/limits";
+import { HEAD_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/heads";
 import { publicationSuccess } from "@repo/backend/confect/contentRelease/ingress/response";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -324,6 +325,30 @@ describe("contentRelease/heads", () => {
     expect(headKeys(second)).toEqual(["test:visible"]);
     expect(second.nextCursor).not.toBeNull();
     expect(third).toMatchObject({ done: true, heads: [], nextCursor: null });
+  });
+  it("stops a maximum request at the head budget and resumes from its cursor", async () => {
+    const t = convexTest(schema, convexModules);
+    const contentKeys = Array.from(
+      { length: HEAD_PAGE_LIMIT + 1 },
+      (_, index) => `test:budget-${index.toString().padStart(3, "0")}`
+    );
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 0, 0);
+      for (const contentKey of contentKeys) {
+        await insertTestHead(ctx, { contentKey });
+      }
+    });
+    const first = await readPage(t, null, undefined, MAX_HEAD_PAGE_COUNT);
+    const second = await readPage(
+      t,
+      first.nextCursor,
+      undefined,
+      MAX_HEAD_PAGE_COUNT
+    );
+    expect(first.done).toBe(false);
+    expect(headKeys(first)).toEqual(contentKeys.slice(0, HEAD_PAGE_LIMIT));
+    expect(second).toMatchObject({ done: true, nextCursor: null });
+    expect(headKeys(second)).toEqual(contentKeys.slice(HEAD_PAGE_LIMIT));
   });
   it.live(
     "keeps the exact maximum head page below Convex and HTTP ceilings",
