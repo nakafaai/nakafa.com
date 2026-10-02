@@ -1,8 +1,13 @@
 import { Array as Arr, Match, Schema } from "effect";
 import {
   type Identifier,
+  isExportAssignment,
+  isIdentifier,
   isImportDeclaration,
+  isNamedImports,
+  isSatisfiesExpression,
   isStringLiteral,
+  isTypeReferenceNode,
   type Node,
   type SourceFile,
 } from "typescript/unstable/ast";
@@ -143,6 +148,10 @@ const TEST_PATTERN = /(?:\.test\.tsx?|(?:^|\/)test\.[^/]+\.ts)$/u;
 const JSX_PATTERN = /\.tsx$/u;
 const REACT_PATTERN = /^react(?:-dom)?(?:\/|$)/u;
 const GLOBAL_ONLY: readonly (typeof Binding.Type)[] = ["global"];
+/** Framework configuration types name what they configure, such as `NextConfig` or Convex's `AuthConfig`. */
+const CONFIGURATION_TYPE_PATTERN = /Config$/u;
+/** Relative paths and app aliases name repository modules rather than framework packages. */
+const LOCAL_SPECIFIER_PATTERN = /^(?:\.|@\/|#)/u;
 
 /** Whether a module imports a module specifier that `pattern` matches. */
 function imports(sourceFile: SourceFile, pattern: RegExp) {
@@ -155,11 +164,62 @@ function imports(sourceFile: SourceFile, pattern: RegExp) {
   );
 }
 
-/** Whether a module configures a framework, by file name or through the Vitest configuration API. */
+/** Whether a module imports `name` by a named import from a framework package. */
+function importsFromPackage(sourceFile: SourceFile, name: string) {
+  return Arr.some(sourceFile.statements, (statement) => {
+    if (
+      !(
+        isImportDeclaration(statement) &&
+        isStringLiteral(statement.moduleSpecifier)
+      ) ||
+      LOCAL_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
+    ) {
+      return false;
+    }
+    const bindings = statement.importClause?.namedBindings;
+    return (
+      bindings !== undefined &&
+      isNamedImports(bindings) &&
+      Arr.some(bindings.elements, (element) => element.name.text === name)
+    );
+  });
+}
+
+/**
+ * Whether the default export `satisfies` a configuration type that a framework
+ * package defines, as the Confect source of `convex/auth.config.ts` does with
+ * Convex's `AuthConfig`.
+ */
+function exportsFrameworkConfiguration(sourceFile: SourceFile) {
+  return Arr.some(sourceFile.statements, (statement) => {
+    if (
+      !(
+        isExportAssignment(statement) &&
+        isSatisfiesExpression(statement.expression)
+      )
+    ) {
+      return false;
+    }
+    const { type } = statement.expression;
+    return (
+      isTypeReferenceNode(type) &&
+      isIdentifier(type.typeName) &&
+      CONFIGURATION_TYPE_PATTERN.test(type.typeName.text) &&
+      importsFromPackage(sourceFile, type.typeName.text)
+    );
+  });
+}
+
+/**
+ * Whether a module configures a framework: by file name, through the Vitest
+ * configuration API, or by a default export that satisfies a framework
+ * package's configuration type.
+ */
 function isConfiguration(file: string, sourceFile: SourceFile) {
   return (
     CONFIGURATION_FILE_PATTERN.test(file) ||
-    imports(sourceFile, CONFIGURATION_MODULE_PATTERN)
+    imports(sourceFile, CONFIGURATION_MODULE_PATTERN) ||
+    exportsFrameworkConfiguration(sourceFile)
   );
 }
 

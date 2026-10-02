@@ -37,6 +37,64 @@ describe("Effect-native rule scopes", () => {
     })
   );
 
+  it.effect(
+    "treats a default export that satisfies a framework configuration type as configuration",
+    () =>
+      Effect.gen(function* () {
+        const config = "{ jwks: process.env.JWKS }";
+        assert.deepStrictEqual(
+          yield* findings([
+            {
+              file: "packages/backend/confect/auth.ts",
+              sourceText: `import type { AuthConfig } from "convex/server";\nexport default ${config} satisfies AuthConfig;\n`,
+            },
+            {
+              file: "packages/a/local.ts",
+              sourceText: `import type { AuthConfig } from "./types";\nexport default ${config} satisfies AuthConfig;\n`,
+            },
+            {
+              file: "packages/a/options.ts",
+              sourceText: `import type { Options } from "convex/server";\nexport default ${config} satisfies Options;\n`,
+            },
+            {
+              file: "packages/a/qualified.ts",
+              sourceText: `import type * as server from "convex/server";\nexport default ${config} satisfies server.AuthConfig;\n`,
+            },
+            {
+              file: "packages/a/default.ts",
+              sourceText: `import AuthConfig from "convex/server";\nexport default ${config} satisfies AuthConfig;\n`,
+            },
+            {
+              file: "packages/a/namespace.ts",
+              sourceText: `import * as AuthConfig from "convex/server";\nexport default ${config} satisfies AuthConfig;\n`,
+            },
+            {
+              file: "packages/a/missing.ts",
+              sourceText: `import { other } from "convex/server";\nexport default ${config} satisfies AuthConfig;\n`,
+            },
+            {
+              file: "packages/a/plain.ts",
+              sourceText: `export default ${config};\n`,
+            },
+            {
+              file: "packages/a/literal.ts",
+              sourceText: `export default ${config} satisfies { jwks?: string };\n`,
+            },
+          ]),
+          [
+            "packages/a/default.ts env",
+            "packages/a/literal.ts env",
+            "packages/a/local.ts env",
+            "packages/a/missing.ts env",
+            "packages/a/namespace.ts env",
+            "packages/a/options.ts env",
+            "packages/a/plain.ts env",
+            "packages/a/qualified.ts env",
+          ]
+        );
+      })
+  );
+
   it.effect("keeps timers in React modules and reports them elsewhere", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
