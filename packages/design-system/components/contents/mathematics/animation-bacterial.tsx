@@ -1,7 +1,10 @@
 "use client";
 
 import { useIntersection } from "@mantine/hooks";
-import { BacterialControls } from "@repo/design-system/components/contents/mathematics/bacterial-controls";
+import {
+  BacterialGenerations,
+  BacterialPlayback,
+} from "@repo/design-system/components/contents/mathematics/bacterial-controls";
 import {
   type BacterialFormulaType,
   BacterialGrowthFrameInputSchema,
@@ -10,6 +13,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
@@ -214,18 +218,22 @@ export function BacterialGrowth({
         </VisualCardScene>
       </VisualCardBody>
 
-      <BacterialControls
-        generation={activeGeneration}
-        isPlaying={isEffectivelyPlaying}
-        maxGenerations={maxGenerations}
-        onGenerationChange={selectGeneration}
-        onReset={resetAnimation}
-        onSpeedChange={setSpeed}
-        onTogglePlaying={togglePlayPause}
-        speed={speed}
-        timeInterval={timeInterval}
-        timeUnit={timeUnit}
-      />
+      <VisualCardFooter className="flex-col items-stretch px-0">
+        <BacterialPlayback
+          isPlaying={isEffectivelyPlaying}
+          onReset={resetAnimation}
+          onSpeedChange={setSpeed}
+          onTogglePlaying={togglePlayPause}
+          speed={speed}
+        />
+        <BacterialGenerations
+          generation={activeGeneration}
+          maxGenerations={maxGenerations}
+          onGenerationChange={selectGeneration}
+          timeInterval={timeInterval}
+          timeUnit={timeUnit}
+        />
+      </VisualCardFooter>
     </VisualCard>
   );
 }
