@@ -57,6 +57,12 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Learner memory**: At most 30 short facts a learner shared about themself, kept only while the learner turns memory on. Each fact leaves with its source chat, and turning memory off forgets all of them.
 - **Question focus**: One finished try-out question a learner asks Nina about from their review. Admission freezes it into the NinaContextPack only for the attempt owner, a finished section, and a plan that grants review answers. Continued turns keep it while that entitlement holds.
 
+## AI Gateway
+
+- **Gateway handle**: A language model prepared for one purpose, model key, and space, with Nakafa's no-training routing, reasoning defaults, deadlines, and spend attribution. It is the only way Nakafa code reaches a model.
+- **Purpose**: Why Nakafa calls a model, such as chat, specialist, background, suggestion, or presentation. It sets a handle's deadlines and effort and splits spend reports.
+- **Gateway failure**: The one classification of a failed model call, carrying routing facts only and never the prompt, the answer, or a provider message.
+
 ## Evaluation
 
 - **EvalCase**: A schema-derived test input with deterministic expected evidence, routing, or trace assertions.

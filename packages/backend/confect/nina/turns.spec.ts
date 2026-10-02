@@ -2,9 +2,9 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
+import { ModelId } from "@repo/backend/confect/gateway/model";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
 import { NinaFocusInputSchema } from "@repo/backend/confect/nina/contract/focus";
 import {
   NinaContextSnapshotSchema,
@@ -105,7 +105,7 @@ export const NinaTurnFacts = Schema.Struct({
   promptMessageId: Schema.String,
   promptedAt: Schema.optionalKey(Schema.Finite),
   order: Schema.Finite,
-  modelId: Schema.optionalKey(ModelIdSchema),
+  modelId: Schema.optionalKey(ModelId),
   credits: Schema.optionalKey(Schema.Finite),
   requestId: Schema.optionalKey(NinaRequestId),
   fingerprint: Schema.optionalKey(Schema.String),
@@ -130,7 +130,7 @@ export const NinaActiveTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
   ...NinaCreditHold.fields,
   phase: Schema.Literal("active"),
-  modelId: ModelIdSchema,
+  modelId: ModelId,
   requestId: NinaRequestId,
   fingerprint: Schema.String,
   page: NinaPageSchema,
@@ -205,7 +205,7 @@ export default GroupSpec.make().addFunction(
     args: () => ({
       chatId: Schema.optionalKey(Id("chats")),
       requestId: NinaRequestId,
-      modelId: ModelIdSchema,
+      modelId: ModelId,
       input: NinaInput,
     }),
     returns: () => NinaReceipt,

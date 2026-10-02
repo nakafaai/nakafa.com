@@ -4,11 +4,12 @@ import type {
   ActionCtx,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import type { Gateway } from "@repo/backend/confect/gateway/handle";
+import type { ModelId } from "@repo/backend/confect/gateway/model";
 import {
   CapabilityOutputSchema,
   streamCapability,
 } from "@repo/backend/confect/nina/capability/progress";
-import type { ModelId } from "@repo/backend/confect/nina/config/model";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
@@ -38,7 +39,7 @@ export const createCapabilities = Effect.fn("nina.capabilities")(function* (
   modelId: ModelId,
   usageHandler: UsageHandler
 ) {
-  const services = yield* Effect.context<ActionCtx | QueryRunner>();
+  const services = yield* Effect.context<ActionCtx | Gateway | QueryRunner>();
   return {
     nakafa: createTool({
       description:

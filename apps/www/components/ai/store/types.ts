@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 import type refs from "@repo/backend/confect/_generated/refs";
-import type { ModelId } from "@repo/backend/confect/nina/config/model";
+import type { ModelId } from "@repo/backend/confect/gateway/model";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 /** A prompt Nina is admitting for the learner, shown before its chat exists. */

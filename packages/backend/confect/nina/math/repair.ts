@@ -2,13 +2,8 @@ import { Agent, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
-import {
-  getFastModelProviderOptions,
-  type ModelId,
-} from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { backgroundGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import type { ModelId } from "@repo/backend/confect/gateway/model";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import {
   NoSuchToolError,
@@ -75,10 +70,15 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     onSome: (input) => JSON.stringify(input, null, 2),
   });
   const ctx = yield* ActionCtx;
+  const handle = (yield* Gateway).language({
+    purpose: "background",
+    model: modelId,
+    space: { kind: "personal", userId },
+  });
   const agent = new Agent(components.nina, {
     name: "math-repair",
     usageHandler,
-    languageModel: yield* getGatewayModel(modelId),
+    languageModel: handle.model,
   });
   const repaired = yield* Effect.tryPromise((signal) =>
     agent
@@ -134,12 +134,8 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         ${error.message}
       `,
           }),
-          providerOptions: {
-            gateway: gatewayProviderOptions,
-            google: getFastModelProviderOptions(modelId),
-          },
           ...(instructions === undefined ? {} : { instructions }),
-          timeout: backgroundGenerationTimeout,
+          timeout: handle.timeout,
         }
       )
       .then((result) => result.output)
