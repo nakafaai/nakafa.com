@@ -2,14 +2,9 @@ import { Agent, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
-import {
-  defaultModel,
-  getFastModelProviderOptions,
-} from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { backgroundGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
 import type { NinaToolSet } from "@repo/backend/confect/nina/step";
 import { NoSuchToolError, Output, type ToolCallRepairFunction } from "ai";
 import { Effect, Schema } from "effect";
@@ -47,9 +42,14 @@ export const repairToolCall = Effect.fn("nina.repair")(
     });
     const tool = tools[toolCall.toolName];
     const ctx = yield* ActionCtx;
+    const handle = (yield* Gateway).language({
+      purpose: "background",
+      model: defaultModel,
+      space: { kind: "personal", userId },
+    });
     const agent = new Agent(components.nina, {
       name: "nina-repair",
-      languageModel: yield* getGatewayModel(defaultModel),
+      languageModel: handle.model,
       usageHandler,
     });
     const result = yield* Effect.tryPromise({
@@ -67,11 +67,7 @@ export const repairToolCall = Effect.fn("nina.repair")(
                 `Accepted schema: ${JSON.stringify(schema)}`,
                 `Validation error: ${error.message}`,
               ].join("\n\n"),
-              providerOptions: {
-                gateway: gatewayProviderOptions,
-                google: getFastModelProviderOptions(defaultModel),
-              },
-              timeout: backgroundGenerationTimeout,
+              timeout: handle.timeout,
             },
             { storageOptions: { saveMessages: "none" } }
           )

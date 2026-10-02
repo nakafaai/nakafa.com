@@ -3,13 +3,8 @@ import {
   LaurelWreathRight03Icon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import {
-  MODEL_IDS,
-  type ModelId,
-  ModelIdSchema,
-  type ModelKey,
-} from "@repo/backend/confect/nina/config/model";
-import { Function as EffectFunction } from "effect";
+import { ModelId, ModelKey } from "@repo/backend/confect/gateway/model";
+import { Array as Arr } from "effect";
 
 const modelIcons = {
   "nakafa-lite": LaurelWreathRight03Icon,
@@ -31,13 +26,13 @@ const aiModelsById = {
     icon: modelIcons["nakafa-lite"],
     label: modelLabels["nakafa-lite"],
     subtitleKey: modelSubtitleKeys["nakafa-lite"],
-    value: ModelIdSchema.make("nakafa-lite"),
+    value: ModelId.make("nakafa-lite"),
   },
   "nakafa-pro": {
     icon: modelIcons["nakafa-pro"],
     label: modelLabels["nakafa-pro"],
     subtitleKey: modelSubtitleKeys["nakafa-pro"],
-    value: ModelIdSchema.make("nakafa-pro"),
+    value: ModelId.make("nakafa-pro"),
   },
 } satisfies Record<
   ModelKey,
@@ -49,9 +44,12 @@ const aiModelsById = {
   }
 >;
 
-export const aiModels = MODEL_IDS.map((value) => aiModelsById[value]);
+export const aiModels = Arr.map(
+  ModelKey.literals,
+  (value) => aiModelsById[value]
+);
 
 /** Finds display metadata for one Nakafa model. */
-export function getAiModel(modelId: ModelId) {
-  return aiModelsById[EffectFunction.cast<ModelId, ModelKey>(modelId)];
+export function getAiModel(model: ModelKey) {
+  return aiModelsById[model];
 }

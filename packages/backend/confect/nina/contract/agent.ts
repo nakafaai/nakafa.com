@@ -1,7 +1,7 @@
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { ModelId } from "@repo/backend/confect/gateway/model";
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
-import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
 import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
 import { SourceReferenceSchema } from "@repo/backend/confect/nina/research/source";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
@@ -33,7 +33,7 @@ export const TaskAgentDataSchema = Schema.Struct({
   userId: Id("users"),
   context: AgentContextSchema,
   locale: LocaleSchema,
-  modelId: ModelIdSchema,
+  modelId: ModelId,
   task: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 type TaskAgentData = Schema.Schema.Type<typeof TaskAgentDataSchema>;

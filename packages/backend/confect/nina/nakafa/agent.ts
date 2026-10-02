@@ -4,10 +4,7 @@ import {
   ActionCtx,
   type QueryRunner,
 } from "@repo/backend/confect/_generated/services";
-import { getFastModelProviderOptions } from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { subAgentGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
 import type { NakafaAgentParams } from "@repo/backend/confect/nina/contract/agent";
 import { NinaReadOptionsSchema } from "@repo/backend/confect/nina/contract/data";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
@@ -60,7 +57,11 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   readonly usageHandler: UsageHandler;
 }) {
   const ctx = yield* ActionCtx;
-  const model = yield* getGatewayModel(modelId);
+  const { model, timeout } = (yield* Gateway).language({
+    purpose: "specialist",
+    model: modelId,
+    space: { kind: "personal", userId },
+  });
   const agent = new Agent(components.nina, {
     name: "nakafa",
     languageModel: model,
@@ -78,10 +79,6 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
         {
           abortSignal: signal,
           model,
-          providerOptions: {
-            gateway: gatewayProviderOptions,
-            google: getFastModelProviderOptions(modelId),
-          },
           instructions: nakafaAgentPrompt({ locale, context }),
           messages: [{ role: "user", content: task }],
           temperature: 0,
@@ -180,7 +177,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
             return prepareAnswerFromNakafaEvidenceStep(messages, steps);
           },
           stopWhen: isStepCount(10),
-          timeout: subAgentGenerationTimeout,
+          timeout,
         }
       ),
     catch: makeNakafaGenerationError,

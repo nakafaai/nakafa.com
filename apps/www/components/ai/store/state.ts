@@ -1,6 +1,6 @@
 "use client";
 
-import { defaultModel } from "@repo/backend/confect/nina/config/model";
+import { defaultModel } from "@repo/backend/confect/gateway/model";
 import type { AiState } from "@/components/ai/store/types";
 
 export const initialState = {

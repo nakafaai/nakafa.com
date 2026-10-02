@@ -1,10 +1,7 @@
 "use client";
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import {
-  isModelId,
-  type ModelId,
-} from "@repo/backend/confect/nina/config/model";
+import { ModelId } from "@repo/backend/confect/gateway/model";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +13,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
@@ -45,7 +43,7 @@ export function AiChatModel() {
   };
 
   const handleValueChange = (value: string) => {
-    if (!isModelId(value)) {
+    if (!Schema.is(ModelId)(value)) {
       return;
     }
 
