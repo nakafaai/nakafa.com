@@ -8,7 +8,7 @@ import {
   readMaterialContextHint,
 } from "@repo/contents/route/material/context";
 import { Effect } from "effect";
-import { useSearchParams } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import {
   type MaterialNavigationPage,
@@ -32,10 +32,37 @@ export interface MaterialContextProps {
     };
 }
 
+/** Reads the address again after back and forward navigation. */
+function subscribeToHistory(onChange: () => void) {
+  window.addEventListener("popstate", onChange);
+  return () => window.removeEventListener("popstate", onChange);
+}
+
+function readSearch() {
+  return window.location.search;
+}
+
+/**
+ * The prerendered shell and its hydration carry no context. Calling
+ * useSearchParams would make Next client-render each control, so readers would
+ * see an inert copy that React replaces on their first press, losing the click.
+ */
+function readServerSearch() {
+  return "";
+}
+
 /** Convex deduplicates these identical subscriptions across the three controls. */
 function useMaterialNavigation({ page }: MaterialContextProps) {
-  const searchParams = useSearchParams();
-  const hints = searchParams.getAll(MATERIAL_CONTEXT_QUERY_PARAM);
+  // React reads the address again after hydration, and after a navigation once
+  // Next has committed its URL, so a context link still applies its context.
+  const search = useSyncExternalStore(
+    subscribeToHistory,
+    readSearch,
+    readServerSearch
+  );
+  const hints = new URLSearchParams(search).getAll(
+    MATERIAL_CONTEXT_QUERY_PARAM
+  );
   const context = readMaterialContextHint(
     hints.length === 1 ? hints[0] : hints
   );
@@ -74,16 +101,13 @@ function useMaterialNavigation({ page }: MaterialContextProps) {
   };
 }
 
-/** Resolves the return breadcrumb without delaying the static lesson body. */
+/** Names the lesson, or links back to its verified context once that resolves. */
 export function MaterialBreadcrumb({
   context,
 }: {
   context: MaterialContextProps;
 }) {
-  const { navigation, pending } = useMaterialNavigation(context);
-  if (pending) {
-    return null;
-  }
+  const { navigation } = useMaterialNavigation(context);
   return (
     <BreadcrumbHeaderSegment
       item={navigation.link ?? { label: context.page.metadata.title }}

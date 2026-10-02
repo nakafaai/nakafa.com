@@ -3,7 +3,6 @@ import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import {
   MaterialBreadcrumb,
@@ -11,10 +10,7 @@ import {
   MaterialHeading,
   MaterialPagination,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/context";
-import {
-  readMaterialNavigation,
-  toMaterialHref,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
+import { toMaterialHref } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { DeferredAiSheetOpen } from "@/components/ai/sheet/trigger";
 import { DeferredComments } from "@/components/comments/deferred";
@@ -25,11 +21,9 @@ import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/layout";
-import { PaginationContent } from "@/components/shared/content/pagination";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import {
   SidebarRightFooter,
-  SidebarRightHeader,
   SidebarRightPanel,
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
@@ -79,7 +73,6 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
       })),
     },
   };
-  const navigation = readMaterialNavigation(page, null);
   const authorJsonLd: ArticleJsonLdAuthor[] = metadata.authors.map(
     (author) => ({
       "@type": "Person",
@@ -121,9 +114,7 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
                 items={[]}
                 menuLabel={tCommon("more")}
               >
-                <Suspense fallback={null}>
-                  <MaterialBreadcrumb context={context} />
-                </Suspense>
+                <MaterialBreadcrumb context={context} />
               </BreadcrumbHeaderPath>
             }
           >
@@ -149,11 +140,7 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
             {headings.length === 0 && <ComingSoon />}
             {headings.length > 0 ? page.children : null}
           </LayoutContent>
-          <Suspense
-            fallback={<PaginationContent pagination={navigation.pagination} />}
-          >
-            <MaterialPagination context={context} />
-          </Suspense>
+          <MaterialPagination context={context} />
           {allowsInteractions ? (
             <FooterContent>
               <DeferredComments slug={route.contentKey} />
@@ -174,19 +161,7 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
               <ShareButton />
             </SidebarRightFooter>
           }
-          header={
-            <Suspense
-              fallback={
-                <SidebarRightHeader
-                  description={metadata.description ?? metadata.subject}
-                  href={navigation.currentHref}
-                  title={metadata.title}
-                />
-              }
-            >
-              <MaterialHeading context={context} />
-            </Suspense>
-          }
+          header={<MaterialHeading context={context} />}
         >
           <SidebarTree data={headings} title={tCommon("on-this-page")} />
         </SidebarRightPanel>
