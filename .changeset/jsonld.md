@@ -1,5 +1,6 @@
 ---
 "@repo/seo": patch
+"@repo/typescript-config": patch
 "www": patch
 ---
 
@@ -10,3 +11,7 @@ URL, and a BreadcrumbList that ends at the page. The LearningResource node goes,
 because Google retired the learning video results that read it, and the
 Article names its publisher by the site's organization node instead of
 repeating the whole company record.
+
+`@repo/seo` is an ES module so its TypeScript loads as ESM wherever it runs,
+including the Playwright suite. The React library TypeScript config resolves
+modules the way its bundled consumers do, like every other shared config.
