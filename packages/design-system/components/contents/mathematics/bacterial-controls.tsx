@@ -2,8 +2,12 @@
 
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { CardFooter } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  VisualCardFooter,
+  VisualCardFullscreen,
+} from "@repo/design-system/components/visual/card";
+import { useTranslations } from "next-intl";
 
 const SPEED_STEP = 0.25;
 const SPEED_VALUES = Array.from(
@@ -49,8 +53,7 @@ function GenerationButtons({
         size="sm"
         variant={generation === index ? "default" : "outline"}
       >
-        {time}
-        {timeUnit}
+        {time} {timeUnit}
       </Button>
     );
   });
@@ -69,28 +72,25 @@ export function BacterialControls({
   timeInterval,
   timeUnit,
 }: BacterialControlsProps) {
+  const t = useTranslations("Common");
+
   return (
-    <CardFooter className="flex flex-col gap-4 px-0">
+    <VisualCardFooter className="flex-col items-stretch px-0">
       <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
         <div className="flex justify-between gap-2">
-          <Button
-            aria-label="Reset"
-            onClick={onReset}
-            size="icon"
-            variant="outline"
-          >
+          <Button onClick={onReset} size="icon" variant="outline">
             <HugeIcons icon={Clock04Icon} />
-            <span className="sr-only">Reset</span>
+            <span className="sr-only">{t("reset")}</span>
           </Button>
           <Button
-            aria-label={isPlaying ? "Pause" : "Play"}
             onClick={onTogglePlaying}
             size="icon"
             variant={isPlaying ? "outline" : "default"}
           >
             <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
-            <span className="sr-only">{isPlaying ? "Pause" : "Play"}</span>
+            <span className="sr-only">{t(isPlaying ? "pause" : "play")}</span>
           </Button>
+          <VisualCardFullscreen />
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">
@@ -118,6 +118,6 @@ export function BacterialControls({
           />
         </div>
       </div>
-    </CardFooter>
+    </VisualCardFooter>
   );
 }

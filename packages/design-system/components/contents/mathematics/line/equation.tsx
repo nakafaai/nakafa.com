@@ -6,12 +6,10 @@ import {
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 
 const DEFAULT_CAMERA_POSITION_X = 10;
@@ -44,21 +42,18 @@ export function LineEquation({
 
   return (
     <CoordinateProvider>
-      <Card className="content-auto-card">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody>
           <DeferredLineScene
             cameraPosition={cameraPosition}
             {...(cameraTarget === undefined ? {} : { cameraTarget })}
             lines={lines}
             showZAxis={showZAxis}
           />
-        </CardContent>
+        </VisualCardBody>
         <CoordinateControls />
-      </Card>
+      </VisualCard>
     </CoordinateProvider>
   );
 }

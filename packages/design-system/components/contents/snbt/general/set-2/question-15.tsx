@@ -15,12 +15,13 @@ import {
 } from "@repo/design-system/components/evilcharts/charts/line-chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { type ReactNode, useMemo } from "react";
 
@@ -84,69 +85,72 @@ export function SalesChart({
   );
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilLineChart
-          className="aspect-video"
-          config={chartConfig}
-          data={translatedData}
-        >
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="month"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis
-            axisLine={false}
-            domain={[3000, 6000]}
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-              offset: 0,
-            }}
-            tickFormatter={(value) => `${value / 1000}k`}
-            tickLine={false}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Legend />
-          <Line
-            curveType="monotone"
-            dataKey="grainPrice"
-            lineProps={{
-              ...(SALES_CUES.grainPrice.strokeDasharray === undefined
-                ? {}
-                : { strokeDasharray: SALES_CUES.grainPrice.strokeDasharray }),
-              strokeWidth: 2,
-            }}
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilLineChart
+            className="aspect-video"
+            config={chartConfig}
+            data={translatedData}
           >
-            <Dot variant={SALES_CUES.grainPrice.dot} />
-            <ActiveDot variant={SALES_CUES.grainPrice.activeDot} />
-          </Line>
-          <Line
-            curveType="monotone"
-            dataKey="governmentPrice"
-            lineProps={{
-              ...(SALES_CUES.governmentPrice.strokeDasharray === undefined
-                ? {}
-                : {
-                    strokeDasharray: SALES_CUES.governmentPrice.strokeDasharray,
-                  }),
-              strokeWidth: 2,
-            }}
-          >
-            <Dot variant={SALES_CUES.governmentPrice.dot} />
-            <ActiveDot variant={SALES_CUES.governmentPrice.activeDot} />
-          </Line>
-        </EvilLineChart>
-      </CardContent>
-    </Card>
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="month"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              axisLine={false}
+              domain={[3000, 6000]}
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+                offset: 0,
+              }}
+              tickFormatter={(value) => `${value / 1000}k`}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Legend />
+            <Line
+              curveType="monotone"
+              dataKey="grainPrice"
+              lineProps={{
+                ...(SALES_CUES.grainPrice.strokeDasharray === undefined
+                  ? {}
+                  : { strokeDasharray: SALES_CUES.grainPrice.strokeDasharray }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={SALES_CUES.grainPrice.dot} />
+              <ActiveDot variant={SALES_CUES.grainPrice.activeDot} />
+            </Line>
+            <Line
+              curveType="monotone"
+              dataKey="governmentPrice"
+              lineProps={{
+                ...(SALES_CUES.governmentPrice.strokeDasharray === undefined
+                  ? {}
+                  : {
+                      strokeDasharray:
+                        SALES_CUES.governmentPrice.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={SALES_CUES.governmentPrice.dot} />
+              <ActiveDot variant={SALES_CUES.governmentPrice.activeDot} />
+            </Line>
+          </EvilLineChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

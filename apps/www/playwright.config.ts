@@ -22,6 +22,16 @@ export default defineConfig({
       testMatch: "**/navigation.browser.ts",
       workers: 2,
     },
+    // Visual cards take the whole screen through the Fullscreen API on
+    // desktop, Android, and iPad, and cover the viewport on iPhone, so their
+    // suite also runs in WebKit, after the shared runtime frees the server.
+    {
+      dependencies: ["shared-runtime"],
+      name: "webkit",
+      testMatch: "**/visual.browser.ts",
+      use: { browserName: "webkit" },
+      workers: 1,
+    },
   ],
   reporter: "list",
   retries: process.env.CI ? 1 : 0,

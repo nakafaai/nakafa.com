@@ -8,12 +8,11 @@ import {
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial-growth";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { Schema } from "effect";
 import {
   AnimatePresence,
@@ -153,16 +152,18 @@ export function BacterialGrowth({
   }
 
   return (
-    <Card className="content-auto-card" ref={ref}>
-      <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription aria-live="polite">
-          {frame.bacteriaCount} {labels.bacterial}
-        </CardDescription>
-      </CardHeader>
+    <VisualCard ref={ref}>
+      <VisualCardHeader
+        description={
+          <span aria-live="polite">
+            {frame.bacteriaCount} {labels.bacterial}
+          </span>
+        }
+        title={labels.title}
+      />
 
-      <CardContent>
-        <div
+      <VisualCardBody>
+        <VisualCardScene
           aria-label={`${frame.bacteriaCount} ${labels.bacterial}`}
           className="relative aspect-square w-full overflow-hidden rounded-lg border bg-card sm:aspect-video"
           data-bacteria-count={frame.bacteriaCount}
@@ -210,8 +211,8 @@ export function BacterialGrowth({
               </LazyMotion>
             </MotionConfig>
           </div>
-        </div>
-      </CardContent>
+        </VisualCardScene>
+      </VisualCardBody>
 
       <BacterialControls
         generation={activeGeneration}
@@ -225,6 +226,6 @@ export function BacterialGrowth({
         timeInterval={timeInterval}
         timeUnit={timeUnit}
       />
-    </Card>
+    </VisualCard>
   );
 }

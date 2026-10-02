@@ -10,16 +10,17 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import { VelocityTimeGraph } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/graph";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -46,20 +47,22 @@ export function NonUniformLinearMotionGraphCard({
   }
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody className="flex flex-col gap-4">
         <GlbbScenarioToggle
           labels={labels}
           onScenarioChange={handleScenarioChange}
           scenarioId={scenarioId}
         />
-        <VelocityTimeGraph labels={labels} scenario={scenario} />
-      </CardContent>
-    </Card>
+        <VisualCardScene>
+          <VelocityTimeGraph labels={labels} scenario={scenario} />
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

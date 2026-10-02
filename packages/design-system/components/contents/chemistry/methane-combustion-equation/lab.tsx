@@ -12,12 +12,13 @@ import {
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
@@ -164,16 +165,14 @@ export function MethaneCombustionEquationLab({
   const colors = getCombustionColors(resolvedTheme);
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
 
-      <CardContent className="flex flex-col gap-4">
-        <section
+      <VisualCardBody className="flex flex-col gap-4">
+        <VisualCardScene
           aria-label={labels.moleculeView}
           className={threeSceneFrameVariants()}
+          render={<section />}
         >
           <ThreeCanvas frameloop="always">
             <Suspense>
@@ -184,11 +183,14 @@ export function MethaneCombustionEquationLab({
               <CombustionScene colors={colors} labels={labels} />
             </Suspense>
           </ThreeCanvas>
-        </section>
+        </VisualCardScene>
 
         <p className="text-muted-foreground text-sm">{labels.equation}</p>
-      </CardContent>
-    </Card>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

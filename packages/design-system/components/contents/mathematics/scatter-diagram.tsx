@@ -17,12 +17,13 @@ import {
 } from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getPointSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import type { ReactNode } from "react";
 
@@ -118,99 +119,103 @@ export function ScatterDiagram({
   }
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilComposedChart config={chartConfig} data={chartData}>
-          <Grid vertical={false} />
-          <XAxis
-            dataKey="x"
-            {...(xAxisDomain === "min-max"
-              ? { domain: ["dataMin", "dataMax"] }
-              : {})}
-            label={{
-              value: xAxisLabel || "X",
-              position: "bottom",
-              offset: 10,
-              style: { textAnchor: "middle" },
-            }}
-            tickFormatter={(value) => value.toString()}
-            tickMargin={8}
-            type="number"
-          />
-          <YAxis
-            dataKey="y"
-            label={{
-              value: yAxisLabel || "Y",
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
-            }}
-            tickMargin={8}
-            type="number"
-          />
-          <Tooltip hideContent />
-          {datasets.map((dataset, index) => {
-            const cue = getPointSeriesCue(index);
-
-            return (
-              <Scatter
-                data={dataset.points}
-                dataKey={dataset.name}
-                key={dataset.name}
-              >
-                <Dot variant={cue.dot} />
-                <ActiveDot variant={cue.activeDot} />
-              </Scatter>
-            );
-          })}
-          {!!regressionLineData && !!calculateRegressionLine && (
-            <Line
-              dataKey={REGRESSION_DATA_KEY}
-              lineProps={{
-                activeDot: false,
-                data: regressionLineData.map((point) => ({
-                  x: point.x,
-                  [REGRESSION_DATA_KEY]: point.y,
-                })),
-                dot: false,
-                legendType: "none",
-                ...(regressionLineStyle?.strokeDasharray === undefined
-                  ? {}
-                  : { strokeDasharray: regressionLineStyle?.strokeDasharray }),
-                strokeWidth: 2,
-                tooltipType: "none",
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilComposedChart config={chartConfig} data={chartData}>
+            <Grid vertical={false} />
+            <XAxis
+              dataKey="x"
+              {...(xAxisDomain === "min-max"
+                ? { domain: ["dataMin", "dataMax"] }
+                : {})}
+              label={{
+                value: xAxisLabel || "X",
+                position: "bottom",
+                offset: 10,
+                style: { textAnchor: "middle" },
               }}
+              tickFormatter={(value) => value.toString()}
+              tickMargin={8}
+              type="number"
             />
-          )}
-          {!!showResiduals &&
-            !!regressionParams &&
-            datasets.flatMap((dataset) =>
-              dataset.points.map((point) => {
-                const yPredicted =
-                  regressionParams.m * point.x + regressionParams.b;
+            <YAxis
+              dataKey="y"
+              label={{
+                value: yAxisLabel || "Y",
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" },
+              }}
+              tickMargin={8}
+              type="number"
+            />
+            <Tooltip hideContent />
+            {datasets.map((dataset, index) => {
+              const cue = getPointSeriesCue(index);
 
-                return (
-                  <ReferenceLine
-                    ifOverflow="visible"
-                    key={`${dataset.name}-residual-${point.x}-${point.y}-${yPredicted}`}
-                    segment={[
-                      { x: point.x, y: point.y },
-                      { x: point.x, y: yPredicted },
-                    ]}
-                    stroke={dataset.color}
-                    strokeDasharray="2 2"
-                  />
-                );
-              })
+              return (
+                <Scatter
+                  data={dataset.points}
+                  dataKey={dataset.name}
+                  key={dataset.name}
+                >
+                  <Dot variant={cue.dot} />
+                  <ActiveDot variant={cue.activeDot} />
+                </Scatter>
+              );
+            })}
+            {!!regressionLineData && !!calculateRegressionLine && (
+              <Line
+                dataKey={REGRESSION_DATA_KEY}
+                lineProps={{
+                  activeDot: false,
+                  data: regressionLineData.map((point) => ({
+                    x: point.x,
+                    [REGRESSION_DATA_KEY]: point.y,
+                  })),
+                  dot: false,
+                  legendType: "none",
+                  ...(regressionLineStyle?.strokeDasharray === undefined
+                    ? {}
+                    : {
+                        strokeDasharray: regressionLineStyle?.strokeDasharray,
+                      }),
+                  strokeWidth: 2,
+                  tooltipType: "none",
+                }}
+              />
             )}
-          <Legend variant="circle" />
-        </EvilComposedChart>
-      </CardContent>
-    </Card>
+            {!!showResiduals &&
+              !!regressionParams &&
+              datasets.flatMap((dataset) =>
+                dataset.points.map((point) => {
+                  const yPredicted =
+                    regressionParams.m * point.x + regressionParams.b;
+
+                  return (
+                    <ReferenceLine
+                      ifOverflow="visible"
+                      key={`${dataset.name}-residual-${point.x}-${point.y}-${yPredicted}`}
+                      segment={[
+                        { x: point.x, y: point.y },
+                        { x: point.x, y: yPredicted },
+                      ]}
+                      stroke={dataset.color}
+                      strokeDasharray="2 2"
+                    />
+                  );
+                })
+              )}
+            <Legend variant="circle" />
+          </EvilComposedChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

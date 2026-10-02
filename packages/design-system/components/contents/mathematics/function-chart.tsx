@@ -5,14 +5,6 @@ import {
 import { ExponentialPlot } from "@repo/design-system/components/contents/mathematics/exponential/client";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   Table,
   TableBody,
   TableCaption,
@@ -21,6 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { Effect } from "effect";
 import { getFormatter } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -55,13 +55,12 @@ export async function FunctionChart({
   const formula = `f(x)=${coefficientMath(p)}\\cdot(${coefficientMath(a)})^x`;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <ExponentialPlot {...plot} />
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody className="space-y-6">
+        <VisualCardScene>
+          <ExponentialPlot {...plot} />
+        </VisualCardScene>
         <Table>
           <TableCaption className="sr-only">
             <InlineMath math={formula} />
@@ -91,10 +90,13 @@ export async function FunctionChart({
             </TableRow>
           </TableBody>
         </Table>
-      </CardContent>
-      <CardFooter className="justify-center">
-        <InlineMath math={formula} />
-      </CardFooter>
-    </Card>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <div className="flex flex-1 justify-center self-center">
+          <InlineMath math={formula} />
+        </div>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

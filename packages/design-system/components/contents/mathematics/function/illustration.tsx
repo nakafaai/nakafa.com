@@ -1,13 +1,13 @@
 import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -28,12 +28,9 @@ export function FunctionIllustration({
   content,
 }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
         <div className="flex flex-col items-center justify-center gap-8 py-8 sm:flex-row">
           <Button className="pointer-events-none">{content.input}</Button>
 
@@ -63,7 +60,10 @@ export function FunctionIllustration({
             {content.output}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

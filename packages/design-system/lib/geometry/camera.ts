@@ -64,3 +64,33 @@ export function resolveOrthographicZoom(
     zoom,
   };
 }
+
+/**
+ * Frames an authored camera pose on a canvas of any shape. Authored poses are
+ * written for square or wider frames, so on a portrait canvas, such as a phone
+ * showing a scene full screen, the view keeps the horizontal extent a square
+ * frame shows and gains room above and below instead of losing its sides.
+ *
+ * Returns the vertical field of view in degrees for a perspective camera, and
+ * the canvas extent in pixels that an orthographic view height spans.
+ */
+export function resolveAuthoredView({
+  fov,
+  height,
+  width,
+}: {
+  fov: number;
+  height: number;
+  width: number;
+}) {
+  const aspect = width / height;
+  if (aspect >= 1) {
+    return { extent: height, fov };
+  }
+  const halfFov = (fov * Math.PI) / 360;
+
+  return {
+    extent: width,
+    fov: (Math.atan(Math.tan(halfFov) / aspect) * 360) / Math.PI,
+  };
+}

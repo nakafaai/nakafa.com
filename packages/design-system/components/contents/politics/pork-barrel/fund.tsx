@@ -11,13 +11,13 @@ import {
 } from "@repo/design-system/components/evilcharts/charts/bar-chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 
 const FUND_CHART_MARGIN = { right: 16 } as const;
@@ -67,39 +67,39 @@ export function FundChart({
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilBarChart
-          chartProps={{ margin: FUND_CHART_MARGIN }}
-          config={chartConfig}
-          data={fundChartData}
-        >
-          <Grid vertical={false} />
-          <XAxis dataKey="year" tickMargin={10} />
-          <YAxis
-            label={{
-              value: yLabel,
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
-            }}
-          />
-          <Tooltip />
-          <Bar
-            barProps={{ label: { position: "top", fontSize: 12 } }}
-            dataKey="fund"
-            radius={8}
-          />
-          <Legend />
-        </EvilBarChart>
-      </CardContent>
-      <CardFooter>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilBarChart
+            chartProps={{ margin: FUND_CHART_MARGIN }}
+            config={chartConfig}
+            data={fundChartData}
+          >
+            <Grid vertical={false} />
+            <XAxis dataKey="year" tickMargin={10} />
+            <YAxis
+              label={{
+                value: yLabel,
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" },
+              }}
+            />
+            <Tooltip />
+            <Bar
+              barProps={{ label: { position: "top", fontSize: 12 } }}
+              dataKey="fund"
+              radius={8}
+            />
+            <Legend />
+          </EvilBarChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

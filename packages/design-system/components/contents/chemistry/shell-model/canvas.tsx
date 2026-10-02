@@ -13,6 +13,7 @@ import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
+import { VisualCardScene } from "@repo/design-system/components/visual/card";
 import { useTheme } from "next-themes";
 import { Suspense } from "react";
 
@@ -43,7 +44,11 @@ export function ShellModelCanvas({
   const sceneColors = getShellModelSceneColors(resolvedTheme);
 
   return (
-    <section aria-label={ariaLabel} className={threeSceneFrameVariants()}>
+    <VisualCardScene
+      aria-label={ariaLabel}
+      className={threeSceneFrameVariants()}
+      render={<section />}
+    >
       <ThreeCanvas frameloop="always">
         <Suspense>
           <ResponsiveShellModelCamera />
@@ -70,7 +75,7 @@ export function ShellModelCanvas({
           />
         </Suspense>
       </ThreeCanvas>
-    </section>
+    </VisualCardScene>
   );
 }
 

@@ -10,16 +10,17 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { AccelerationGraph } from "@repo/design-system/components/contents/physics/kinematics/acceleration/graph";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -46,20 +47,22 @@ export function AccelerationGraphCard({
   }
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody className="flex flex-col gap-4">
         <AccelerationCaseToggle
           caseId={caseId}
           labels={labels}
           onCaseChange={handleCaseChange}
         />
-        <AccelerationGraph labels={labels} selectedCase={selectedCase} />
-      </CardContent>
-    </Card>
+        <VisualCardScene>
+          <AccelerationGraph labels={labels} selectedCase={selectedCase} />
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

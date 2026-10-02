@@ -11,15 +11,15 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { Slider } from "@repo/design-system/components/ui/slider";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
@@ -53,15 +53,13 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
   const colors = getBiologySceneColors(resolvedTheme);
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <section
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody className="flex flex-col gap-4">
+        <VisualCardScene
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
+          render={<section />}
         >
           <ThreeCanvas frameloop="always">
             <Suspense>
@@ -81,7 +79,7 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
               <GreenhouseScene colors={colors} gasLevel={gasLevel} />
             </Suspense>
           </ThreeCanvas>
-        </section>
+        </VisualCardScene>
 
         <div className="flex flex-col gap-3 pt-2">
           <div className="flex items-center justify-between gap-4 text-sm">
@@ -97,8 +95,8 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
             value={gasLevel}
           />
         </div>
-      </CardContent>
-      <CardFooter className="border-t">
+      </VisualCardBody>
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <GreenhouseFact
             label={labels.heatFlowLabel}
@@ -106,8 +104,9 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
           />
           <GreenhouseFact label={labels.meaningLabel} value={labels.meaning} />
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

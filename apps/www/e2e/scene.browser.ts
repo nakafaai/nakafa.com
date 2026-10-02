@@ -6,18 +6,20 @@ import {
   test,
 } from "@playwright/test";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
-import { Duration, Effect } from "effect";
+import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
-import { expectCanvasToMove, waitForStableCanvas } from "@/e2e/support/canvas";
+import {
+  countCanvasFrames,
+  expectCanvasToMove,
+  expectFramesToAdvance,
+  expectFramesToHold,
+  waitForStableCanvas,
+} from "@/e2e/support/canvas";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;
-/** A paused canvas clears no frame for this long. */
-const QUIET_WINDOW_MILLISECONDS = 1000;
-const QUIET_WINDOW_ATTEMPTS = 5;
-
 /**
  * Scene notices that come from the test browser or a held dependency.
  *
@@ -83,62 +85,6 @@ const withObservedSceneDiagnostics = Effect.fn(
     ({ recordDiagnostic }) =>
       Effect.sync(() => page.off("console", recordDiagnostic))
   );
-});
-
-/** Counts the frames each WebGL canvas clears on the canvas element. */
-function countCanvasFrames() {
-  for (const { prototype } of [WebGLRenderingContext, WebGL2RenderingContext]) {
-    const clear = prototype.clear;
-    Object.defineProperty(prototype, "clear", {
-      configurable: true,
-      value(
-        this: WebGLRenderingContext | WebGL2RenderingContext,
-        ...args: unknown[]
-      ) {
-        if (this.canvas instanceof HTMLCanvasElement) {
-          const frames = Number(this.canvas.dataset.frames ?? 0);
-          this.canvas.dataset.frames = String(frames + 1);
-        }
-        return Reflect.apply(clear, this, args);
-      },
-      writable: true,
-    });
-  }
-}
-
-/** Reads a canvas frame count without scrolling the canvas into view. */
-function readFrames(canvas: Locator) {
-  return canvas.evaluate((element) =>
-    Number(element.getAttribute("data-frames") ?? 0)
-  );
-}
-
-/** Waits until a canvas clears more frames than it has so far. */
-const expectFramesToAdvance = Effect.fn("NakafaE2E.expectFramesToAdvance")(
-  function* (canvas: Locator) {
-    const frames = yield* Effect.promise(() => readFrames(canvas));
-    yield* Effect.promise(() =>
-      expect.poll(() => readFrames(canvas)).toBeGreaterThan(frames)
-    );
-  }
-);
-
-/** Waits until a canvas clears no frame through one whole quiet window. */
-const expectFramesToHold = Effect.fn("NakafaE2E.expectFramesToHold")(function* (
-  canvas: Locator
-) {
-  let cleared = Number.POSITIVE_INFINITY;
-  // The pause lands once the observer reports, so allow a few windows.
-  for (
-    let attempt = 0;
-    attempt < QUIET_WINDOW_ATTEMPTS && cleared > 0;
-    attempt += 1
-  ) {
-    const before = yield* Effect.promise(() => readFrames(canvas));
-    yield* Effect.sleep(Duration.millis(QUIET_WINDOW_MILLISECONDS));
-    cleared = (yield* Effect.promise(() => readFrames(canvas))) - before;
-  }
-  yield* Effect.sync(() => expect(cleared).toBe(0));
 });
 
 /** Opens the pinned lesson and returns its deferred line-scene cards. */

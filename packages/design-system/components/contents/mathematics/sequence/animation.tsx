@@ -4,15 +4,15 @@ import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { getTableChairArrangement } from "@repo/design-system/components/contents/mathematics/sequence/arrangement";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import {
   AnimatePresence,
   domMax,
@@ -132,16 +132,18 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
   );
 
   return (
-    <Card className="content-auto-card" ref={ref}>
-      <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>
-          {deferredTableCount} {labels.table} & {chairCount} {labels.chair}
-        </CardDescription>
-      </CardHeader>
+    <VisualCard ref={ref}>
+      <VisualCardHeader
+        description={
+          <>
+            {deferredTableCount} {labels.table} & {chairCount} {labels.chair}
+          </>
+        }
+        title={labels.title}
+      />
 
-      <CardContent>
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 p-4 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950">
+      <VisualCardBody>
+        <VisualCardScene className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 p-4 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950">
           <div className="flex h-full flex-col items-center justify-center gap-8">
             {/* Table and chairs visualization */}
             <div className="relative flex w-full items-center justify-center">
@@ -214,10 +216,10 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
               </div>
             </div>
           </div>
-        </div>
-      </CardContent>
+        </VisualCardScene>
+      </VisualCardBody>
 
-      <CardFooter className="flex flex-col gap-4 px-0">
+      <VisualCardFooter className="flex-col items-stretch px-0">
         <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <div className="flex justify-between gap-2">
             <Button
@@ -240,6 +242,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                 {isPlaying ? labels.pause : labels.play}
               </span>
             </Button>
+            <VisualCardFullscreen />
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
@@ -277,7 +280,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             )}
           </div>
         </div>
-      </CardFooter>
-    </Card>
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

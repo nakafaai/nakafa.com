@@ -4,12 +4,11 @@ import {
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { type ReactNode, useId } from "react";
 
 import { DeferredMathScene } from "@/lib/content/renderer/client/base/visual/deferred";
@@ -36,22 +35,23 @@ export function MathVisual({
 
   return (
     <CoordinateProvider>
-      <Card className="content-auto-card">
-        <CardHeader>
-          <CardTitle id={titleId}>{title}</CardTitle>
-          <CardDescription id={descriptionId}>{description}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <figure
+      <VisualCard>
+        <VisualCardHeader
+          description={<span id={descriptionId}>{description}</span>}
+          title={<span id={titleId}>{title}</span>}
+        />
+        <VisualCardBody>
+          <VisualCardScene
             aria-describedby={descriptionId}
             aria-labelledby={titleId}
             className="m-0"
+            render={<figure />}
           >
             <DeferredMathScene labels={labels} scene={scene} />
-          </figure>
-        </CardContent>
+          </VisualCardScene>
+        </VisualCardBody>
         <CoordinateControls />
-      </Card>
+      </VisualCard>
     </CoordinateProvider>
   );
 }
