@@ -7,7 +7,10 @@ import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import {
+  getTryoutAttemptHref,
+  getTryoutPublicPathHref,
+} from "@/components/tryout/route/path";
 import { TryoutStatus } from "@/components/tryout/status";
 
 /** Renders a complete result while preserving row identity across updates. */
@@ -35,11 +38,24 @@ export function TryoutTableRows({
   ));
 }
 
+/**
+ * Opens a set, or the page its running attempt continues on directly: through
+ * the public set the learner would pass a second page on the way.
+ */
+function getTryoutSetRowHref(row: TryoutSetRow) {
+  return row.runningAttempt
+    ? getTryoutAttemptHref(
+        row.runningAttempt.publicPath,
+        row.runningAttempt.attemptId
+      )
+    : getTryoutPublicPathHref(row.publicPath);
+}
+
 /** Preserves the existing row-wide navigation and intent prefetch. */
 function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
   const router = useRouter();
   const [intentActive, setIntentActive] = useState(false);
-  const href = getTryoutPublicPathHref(row.publicPath);
+  const href = getTryoutSetRowHref(row);
   return (
     <TableRow
       className="cursor-pointer"
@@ -55,7 +71,7 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
       onTouchStart={() => setIntentActive(true)}
     >
       <TableCell className="px-2 sm:px-4">
-        <TryoutSetName intentActive={intentActive} row={row} />
+        <TryoutSetName href={href} intentActive={intentActive} row={row} />
       </TableCell>
       <TableCell className="px-2 text-center sm:px-4">
         <TryoutStatus status={row.attemptStatus} />
@@ -75,16 +91,18 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
 
 /** The completion mark and score both describe the latest persisted attempt. */
 function TryoutSetName({
+  href,
   row,
   intentActive,
 }: {
+  href: string;
   row: TryoutSetRow;
   intentActive: boolean;
 }) {
   return (
     <IntentLink
       className="flex min-w-0 items-center gap-2 underline-offset-4 hover:underline"
-      href={getTryoutPublicPathHref(row.publicPath)}
+      href={href}
       intentActive={intentActive}
     >
       <span

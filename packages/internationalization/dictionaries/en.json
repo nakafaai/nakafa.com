@@ -289,6 +289,7 @@
     "restart-cta": "Restart",
     "free-cta": "Start free",
     "continue-cta": "Continue",
+    "action-loading": "Loading",
     "cancel-cta": "Cancel",
     "start-dialog-title": "Start this tryout?",
     "start-dialog-description": "Your tryout stays active for up to 3 days. Once you start, you can choose which section to do first.",
