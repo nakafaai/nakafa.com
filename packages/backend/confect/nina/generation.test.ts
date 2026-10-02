@@ -19,7 +19,7 @@ import { MockLanguageModelV4 } from "ai/test";
 import { Effect } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
-  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayLive,
+  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
   runNakafaAgent: vi.fn(),
@@ -63,7 +63,7 @@ describe("Nina generation through the real Agent component", () => {
     ["too-large", failures["too-large"], "input-too-large"],
     ["timeout", failures.timeout, "response-timeout"],
     ["unavailable", failures.unavailable, "provider-unavailable"],
-    ["network", failures.network, "unknown"],
+    ["network", failures.network, "provider-unavailable"],
     ["interrupted", failures.interrupted, "interrupted"],
     ["unknown", failures.unknown, "unknown"],
     [
@@ -430,6 +430,9 @@ describe("Nina generation through the real Agent component", () => {
       })
     );
     await f.t.action(run, { turnId: f.turnId });
+    expect(
+      languageModel.doStreamCalls[0]?.providerOptions?.gateway?.tags
+    ).toEqual(["space:personal", "purpose:chat"]);
     const prompt = JSON.stringify(languageModel.doStreamCalls[0]?.prompt);
     expect(prompt).toContain("# Conversation Summary");
     expect(prompt).toContain("- The learner practiced limits.");

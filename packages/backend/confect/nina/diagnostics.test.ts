@@ -4,11 +4,12 @@ import { PostHog } from "@posthog/convex";
 import refs from "@repo/backend/confect/_generated/refs";
 import { failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
+import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
-  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayLive,
+  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 
 afterEach(() => {
@@ -16,18 +17,36 @@ afterEach(() => {
   provider.languageModel.mockReset();
 });
 
-it.effect(
-  "reports provider routing facts while redacting the prompt, response and credentials",
-  () =>
+it.effect.each([
+  [
+    "a classified failure",
+    failures["rate-limit"],
+    {
+      gateway_error_type: "rate_limit_exceeded",
+      gateway_generation_id: "gen_test-1",
+    },
+  ],
+  [
+    "a raw provider error",
+    new APICallError({
+      message: "private provider response",
+      url: "https://provider.example.invalid",
+      requestBodyValues: { prompt: "private prompt" },
+      responseBody: "private-secret",
+      statusCode: 429,
+    }),
+    {},
+  ],
+] as const)(
+  "reports the routing facts of %s while redacting the prompt, response and credentials",
+  ([, error, facts]) =>
     Effect.gen(function* () {
       const capture = vi
         .spyOn(PostHog.prototype, "captureException")
         .mockResolvedValue(undefined);
       provider.languageModel.mockReturnValue(
         new MockLanguageModelV4({
-          doStream: ninaStream([
-            { type: "error", error: failures["rate-limit"] },
-          ]),
+          doStream: ninaStream([{ type: "error", error }]),
         })
       );
       const f = yield* Effect.promise(() =>
@@ -44,10 +63,9 @@ it.effect(
         source: "nina-response",
         operation: "provider-busy",
         gateway_model_id: "google/gemini-3.5-flash-lite",
-        gateway_error_type: "rate_limit_exceeded",
         gateway_status_code: 429,
         gateway_retryable: true,
-        gateway_generation_id: "gen_test-1",
+        ...facts,
       });
       expect(report?.error).toMatchObject({
         name: "OperationalError(nina-response.provider-busy)",

@@ -14,7 +14,10 @@ export class NinaGenerationError extends Schema.TaggedError<NinaGenerationError>
   }
 ) {}
 
-/** The stored Nina reason for each gateway failure reason. */
+/**
+ * The stored Nina reason for each gateway failure reason. A connection that
+ * never reached the gateway reads as the provider being unavailable.
+ */
 const reasons = {
   "rate-limit": "provider-busy",
   quota: "service-configuration",
@@ -24,7 +27,7 @@ const reasons = {
   "too-large": "input-too-large",
   timeout: "response-timeout",
   unavailable: "provider-unavailable",
-  network: "unknown",
+  network: "provider-unavailable",
   interrupted: "interrupted",
   unknown: "unknown",
 } satisfies Record<GatewayFailure["reason"], typeof NinaFailureReason.Type>;

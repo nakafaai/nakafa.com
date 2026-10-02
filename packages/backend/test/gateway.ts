@@ -3,13 +3,10 @@ import { Gateway, make } from "@repo/backend/confect/gateway/handle";
 import type { GatewayConfigurationError } from "@repo/backend/confect/gateway/key";
 import { Effect, Layer } from "effect";
 
-/** The deterministic provider behind both test layers; each test programs its model. */
+/** The deterministic provider behind the test adapter; each test programs its model. */
 export const provider = {
   languageModel: vi.fn<Parameters<typeof make>[0]["languageModel"]>(),
 };
-
-/** The test adapter: production handles (defaults, routing, deadlines) over `provider`. */
-export const GatewayTest = Layer.succeed(Gateway, make(provider));
 
 /**
  * What the deployment's key check finds before the test adapter is built;
@@ -19,8 +16,12 @@ export const deployment = vi.fn<
   () => Effect.Effect<void, GatewayConfigurationError>
 >(() => Effect.void);
 
-/** Replaces `confect/gateway/live` for Confect functions under test. */
-export const GatewayLive = Layer.effect(
+/**
+ * The test adapter: production handles (defaults, routing, deadlines) over
+ * `provider`, behind the programmable key check. Confect functions under test
+ * get it by mocking `confect/gateway/live` with it.
+ */
+export const GatewayTest = Layer.effect(
   Gateway,
   Effect.as(Effect.suspend(deployment), make(provider))
 );

@@ -132,6 +132,10 @@ describe("math Agent execution", () => {
       );
       expect(usageHandler).toHaveBeenCalledTimes(2);
       expect(model.doGenerateCalls).toHaveLength(2);
+      expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
+        "space:personal",
+        "purpose:specialist",
+      ]);
       expect(JSON.stringify(model.doGenerateCalls[1]?.prompt)).toContain(
         "Deterministic evidence."
       );

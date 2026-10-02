@@ -10,7 +10,7 @@ import { providerStep } from "@repo/backend/test/nina/specialist";
 import { Effect } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
-  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayLive,
+  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -129,6 +129,14 @@ describe("Nina presentation after an answer", () => {
     );
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
     const [suggestions, title] = model.doGenerateCalls;
+    expect(suggestions?.providerOptions?.gateway?.tags).toEqual([
+      "space:personal",
+      "purpose:suggestion",
+    ]);
+    expect(title?.providerOptions?.gateway?.tags).toEqual([
+      "space:personal",
+      "purpose:presentation",
+    ]);
     expect(JSON.stringify(suggestions?.prompt)).toContain("Explain a limit.");
     expect(JSON.stringify(suggestions?.prompt)).toContain(
       "A limit describes the value approached."

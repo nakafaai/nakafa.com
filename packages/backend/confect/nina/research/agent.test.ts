@@ -171,6 +171,10 @@ describe("research Agent evidence boundary", () => {
         grounded ? 1 : researchMaxSources
       );
       expect(usageHandler).toHaveBeenCalledTimes(3);
+      expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
+        "space:personal",
+        "purpose:specialist",
+      ]);
       expect(model.doGenerateCalls[0]?.toolChoice).toEqual({
         type: "tool",
         toolName: "webSearch",

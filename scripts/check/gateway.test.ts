@@ -10,6 +10,8 @@ const CLIENT =
   "take model handles from the Gateway service in confect/gateway instead of the AI SDK's gateway client";
 const ROUTING =
   "leave providerOptions.gateway to the Gateway service, whose routing replaces it";
+const MODEL =
+  "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK sends to its default gateway without routing";
 
 /** Inspects one module with the gateway policy alone. */
 function inspect(sourceText: string, file = NINA) {
@@ -59,10 +61,28 @@ const options = { providerOptions: { gateway: { only: ["openai"] } } };
 const shorthand = { providerOptions: { google, gateway } };
 call({ "providerOptions": { "gateway": {} } });
 options.providerOptions.gateway = {};
-providerOptions.gateway = {};`);
+providerOptions.gateway = {};
+const providerOptions = { gateway: {} };
+options.providerOptions = { gateway };`);
       assert.deepStrictEqual(
         violations,
-        Arr.replicate(`${NINA}: ${ROUTING}.`, 5)
+        Arr.replicate(`${NINA}: ${ROUTING}.`, 7)
+      );
+    })
+  );
+
+  it.effect("rejects a gateway model ID where the AI SDK takes a model", () =>
+    Effect.gen(function* () {
+      const violations = yield* inspect(`
+await generateText({ model: "google/gemini-3.7-flash", prompt });
+const agent = new Agent(components.nina, { languageModel: 'google/gemini-3.5-flash-lite' });
+await embed({ model: \`google/\${name}\`, value });
+const search = { textEmbeddingModel: \`\${creator}/text-embedding\` };
+const model = "openai/gpt-5";
+options.embeddingModel = "google/gemini-embedding-001";`);
+      assert.deepStrictEqual(
+        violations,
+        Arr.replicate(`${NINA}: ${MODEL}.`, 6)
       );
     })
   );
@@ -97,7 +117,13 @@ const computed = { [key]: { gateway: {} } };
 providerOptions.google = {};
 options.gateway = {};
 call().gateway = {};
-const same = route === google;`);
+const same = route === google;
+const providerOptions = params.providerOptions;
+const handle = gateway.language({ purpose: "chat", model: "nakafa-pro", space });
+const { model, timeout } = handle;
+const chosen = { model: defaultModel, languageModel: handle.model };
+const typed = { model: \`\${key}\` };
+const label = { name: "google/gemini-3.7-flash" };`);
         assert.deepStrictEqual(module, []);
         assert.deepStrictEqual(caller, []);
       })
@@ -110,7 +136,8 @@ const same = route === google;`);
         const file = "packages/backend/confect/nina/messages.impl.test.ts";
         const violations = yield* inspect(
           `import { GatewayRateLimitError } from "@ai-sdk/gateway";
-const part = { providerOptions: { gateway: { signature: "continuation" } } };`,
+const part = { providerOptions: { gateway: { signature: "continuation" } } };
+const message = { model: "google/gemini-3.7-flash", provider: "gateway" };`,
           file
         );
         assert.deepStrictEqual(violations, [`${file}: ${PACKAGE}.`]);

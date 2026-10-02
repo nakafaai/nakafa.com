@@ -18,6 +18,8 @@ import {
   isPropertyAssignment,
   isShorthandPropertyAssignment,
   isStringLiteralLikeNode,
+  isTemplateExpression,
+  isVariableDeclaration,
   type Node,
   type SourceFile,
   SyntaxKind,
@@ -30,6 +32,15 @@ const GATEWAY_PACKAGE = "@ai-sdk/gateway";
 /** The AI SDK's main entry re-exports the gateway client. */
 const SDK_MODULE = "ai";
 const CLIENT_EXPORTS = HashSet.make("createGateway", "gateway");
+/** Where the AI SDK and Agent take a model, which they resolve from a string through the default gateway. */
+const MODEL_PROPERTIES = HashSet.make(
+  "model",
+  "languageModel",
+  "embeddingModel",
+  "textEmbeddingModel"
+);
+/** Every gateway model ID names its creator first, as in `google/gemini-3.7-flash`. */
+const MODEL_ID_SEPARATOR = "/";
 const TEST_MODULE_PATTERN = /\.test\.tsx?$/u;
 
 const PACKAGE_RULE = `import ${GATEWAY_PACKAGE} only inside ${GATEWAY_MODULE}; take model handles from its Gateway service`;
@@ -37,6 +48,8 @@ const CLIENT_RULE =
   "take model handles from the Gateway service in confect/gateway instead of the AI SDK's gateway client";
 const ROUTING_RULE =
   "leave providerOptions.gateway to the Gateway service, whose routing replaces it";
+const MODEL_RULE =
+  "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK sends to its default gateway without routing";
 
 /** Whether a string literal names the module of an import, a re-export, an import type, or a dynamic import. */
 function namesModule(node: Node) {
@@ -110,7 +123,8 @@ function nameText(node: Node) {
     : undefined;
 }
 
-function accessedName(node: Expression) {
+/** The name a node writes or reads: `name`, `"name"`, or `x.name`. */
+function accessedName(node: Node) {
   return isPropertyAccessExpression(node) ? node.name.text : nameText(node);
 }
 
@@ -124,35 +138,83 @@ function readsClient(node: Node, namespaces: HashSet.HashSet<string>) {
   );
 }
 
-/** `providerOptions: { gateway }` in an object, or `providerOptions.gateway = ...`. */
-function buildsRouting(node: Node) {
-  if (
-    isPropertyAssignment(node) &&
-    nameText(node.name) === "providerOptions" &&
-    isObjectLiteralExpression(node.initializer)
-  ) {
-    return Arr.some(
-      node.initializer.properties,
+/** Whether a value is an object literal with a `gateway` entry. */
+function setsGateway(value: Expression) {
+  return (
+    isObjectLiteralExpression(value) &&
+    Arr.some(
+      value.properties,
       (property) =>
         (isPropertyAssignment(property) ||
           isShorthandPropertyAssignment(property)) &&
         nameText(property.name) === "gateway"
-    );
-  }
-  return (
-    isBinaryExpression(node) &&
-    node.operatorToken.kind === SyntaxKind.EqualsToken &&
-    isPropertyAccessExpression(node.left) &&
-    node.left.name.text === "gateway" &&
-    accessedName(node.left.expression) === "providerOptions"
+    )
   );
 }
 
-/** The gateway rules one node breaks; `routes` is false in tests, which keep stored provider metadata. */
+/** `providerOptions` written with a `gateway` entry, or a write to `providerOptions.gateway`. */
+function buildsRouting(target: Node, value: Expression) {
+  return (
+    (accessedName(target) === "providerOptions" && setsGateway(value)) ||
+    (isPropertyAccessExpression(target) &&
+      target.name.text === "gateway" &&
+      accessedName(target.expression) === "providerOptions")
+  );
+}
+
+/** A string, or a template's literal text, in the `creator/model` form of a gateway model ID. */
+function namesGatewayModel(value: Expression) {
+  const separates = Str.includes(MODEL_ID_SEPARATOR);
+  if (isStringLiteralLikeNode(value)) {
+    return separates(value.text);
+  }
+  return (
+    isTemplateExpression(value) &&
+    (separates(value.head.text) ||
+      Arr.some(value.templateSpans, (span) => separates(span.literal.text)))
+  );
+}
+
+/** A gateway model ID written where the AI SDK or Agent takes a model. */
+function passesModelId(target: Node, value: Expression) {
+  const name = accessedName(target);
+  return (
+    name !== undefined &&
+    HashSet.has(MODEL_PROPERTIES, name) &&
+    namesGatewayModel(value)
+  );
+}
+
+/** The rules writing `value` to `target` breaks outside tests. */
+function writeRules(target: Node, value: Expression): readonly string[] {
+  if (buildsRouting(target, value)) {
+    return [ROUTING_RULE];
+  }
+  return passesModelId(target, value) ? [MODEL_RULE] : [];
+}
+
+/** The rules a property assignment, a variable declaration, or an `=` assignment breaks outside tests. */
+function brokenWriteRules(node: Node): readonly string[] {
+  if (
+    (isPropertyAssignment(node) || isVariableDeclaration(node)) &&
+    node.initializer !== undefined
+  ) {
+    return writeRules(node.name, node.initializer);
+  }
+  return isBinaryExpression(node) &&
+    node.operatorToken.kind === SyntaxKind.EqualsToken
+    ? writeRules(node.left, node.right)
+    : [];
+}
+
+/**
+ * The gateway rules one node breaks; `production` is false in tests, which
+ * keep stored provider metadata and the model IDs recorded with it.
+ */
 function brokenRules(
   node: Node,
   namespaces: HashSet.HashSet<string>,
-  routes: boolean
+  production: boolean
 ): readonly string[] {
   if (isStringLiteralLikeNode(node) && namesModule(node)) {
     return Match.value(node.text).pipe(
@@ -166,13 +228,14 @@ function brokenRules(
   if (readsClient(node, namespaces)) {
     return [CLIENT_RULE];
   }
-  return routes && buildsRouting(node) ? [ROUTING_RULE] : [];
+  return production ? brokenWriteRules(node) : [];
 }
 
 /**
  * Reports gateway access outside confect/gateway: any @ai-sdk/gateway
  * import, the gateway client from the AI SDK, and, outside tests, call
- * options that build `providerOptions.gateway`.
+ * options that build `providerOptions.gateway` or give a model as a gateway
+ * model ID.
  */
 export function inspectGatewaySource(file: string, sourceFile: SourceFile) {
   if (Str.startsWith(GATEWAY_MODULE)(file)) {
@@ -180,9 +243,9 @@ export function inspectGatewaySource(file: string, sourceFile: SourceFile) {
   }
   const nodes = descendants(sourceFile, false);
   const namespaces = sdkNamespaces(nodes);
-  const routes = !TEST_MODULE_PATTERN.test(file);
+  const production = !TEST_MODULE_PATTERN.test(file);
   return Arr.map(
-    Arr.flatMap(nodes, (node) => brokenRules(node, namespaces, routes)),
+    Arr.flatMap(nodes, (node) => brokenRules(node, namespaces, production)),
     (rule) => `${file}: ${rule}.`
   );
 }

@@ -1,4 +1,4 @@
-import { GatewayError } from "@ai-sdk/gateway";
+import { GatewayError, GatewayResponseError } from "@ai-sdk/gateway";
 import {
   AISDKError,
   APICallError,
@@ -47,11 +47,24 @@ type Reason = GatewayFailure["reason"];
 /** Envelopes followed before classifying, instead of an unbounded cause chain. */
 const ENVELOPE_DEPTH = 4;
 
-/** The error an SDK envelope wraps: the last retry's error, or an empty output's cause. */
+/** Whether an error came from an HTTP response, so its status is one a server sent. */
+function responded(error: unknown) {
+  return APICallError.isInstance(error) && error.statusCode !== undefined;
+}
+
+/**
+ * The error an SDK envelope wraps: the last retry's error, an empty output's
+ * cause, or the failure the gateway client reports as a response error with
+ * an invented status 500 when no HTTP response arrived (a refused connection,
+ * a deadline, or an abort before the response).
+ */
 const wrapped = Match.type<unknown>().pipe(
   Match.when(RetryError.isInstance, ({ lastError }) => Option.some(lastError)),
   Match.when(NoOutputGeneratedError.isInstance, ({ cause }) =>
     Option.fromUndefinedOr(cause)
+  ),
+  Match.when(GatewayResponseError.isInstance, ({ cause }) =>
+    Option.fromUndefinedOr(cause).pipe(Option.filter(Predicate.not(responded)))
   ),
   Match.orElse(() => Option.none())
 );
@@ -171,8 +184,9 @@ const failure = Match.type<unknown>().pipe(
 );
 
 /**
- * Unwraps RetryError and NoOutputGeneratedError, then classifies by SDK
- * class, name, and status.
+ * Unwraps RetryError, NoOutputGeneratedError, and the gateway client's
+ * response error around a failure that got no HTTP response, then classifies
+ * by SDK class, name, and status.
  */
 export function classify(cause: unknown): GatewayFailure {
   return failure(unwrap(cause, 0));

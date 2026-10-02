@@ -1,4 +1,5 @@
 import {
+  createGateway,
   GatewayAuthenticationError,
   GatewayFailedDependencyError,
   GatewayInternalServerError,
@@ -15,13 +16,30 @@ import {
 import {
   AISDKError,
   APICallError,
+  generateText,
   NoOutputGeneratedError,
   RetryError,
 } from "ai";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 /** A failure as it crosses into logs and analytics. */
 const encode = Schema.encodeSync(Schema.fromJsonString(GatewayFailure));
+
+/** The classified failure of one call through the real gateway client whose fetch settles as given. */
+function gatewayCall(fetch: () => Promise<Response>) {
+  const client = createGateway({ apiKey: "test-key", fetch });
+  return Effect.flip(
+    Effect.tryPromise({
+      try: () =>
+        generateText({
+          model: client.languageModel("google/gemini-3.7-flash"),
+          prompt: "private prompt",
+          maxRetries: 0,
+        }),
+      catch: classify,
+    })
+  );
+}
 
 /** A provider HTTP failure carrying details that must never survive. */
 function apiError(statusCode?: number, retryAfter?: string) {
@@ -62,18 +80,59 @@ describe("Gateway failure classification", () => {
     );
   });
 
-  it("classifies a request that never received a status as a network failure", () => {
-    const unreachable = new APICallError({
-      message: "Cannot connect to API: private",
-      url: "https://provider.example.invalid",
-      requestBodyValues: {},
-      cause: new TypeError("fetch failed"),
-      isRetryable: true,
-    });
-    expect(classify(unreachable)).toEqual(
-      new GatewayFailure({ reason: "network", retryable: true })
-    );
-  });
+  it.effect.each([
+    [
+      "a refused connection",
+      new TypeError("fetch failed", {
+        cause: new Error("connect ECONNREFUSED private"),
+      }),
+      new GatewayFailure({ reason: "network", retryable: true }),
+    ],
+    [
+      "a deadline",
+      new DOMException("private", "TimeoutError"),
+      new GatewayFailure({ reason: "timeout" }),
+    ],
+    [
+      "an abort",
+      new DOMException("private", "AbortError"),
+      new GatewayFailure({ reason: "interrupted" }),
+    ],
+    [
+      "an unexplained client error",
+      new Error("private"),
+      new GatewayFailure({ reason: "unknown" }),
+    ],
+  ] as const)(
+    "classifies %s before any response, not as the status 500 the client invents",
+    ([, failure, expected]) =>
+      Effect.gen(function* () {
+        const classified = yield* gatewayCall(() => Promise.reject(failure));
+        expect(classified).toEqual(expected);
+        expect(encode(classified)).not.toContain("private");
+      })
+  );
+
+  it.effect(
+    "keeps the status of a real response whose body the client cannot read",
+    () =>
+      Effect.gen(function* () {
+        const classified = yield* gatewayCall(() =>
+          Promise.resolve(
+            new Response("private upstream page", { status: 502 })
+          )
+        );
+        expect(classified).toEqual(
+          new GatewayFailure({
+            reason: "unavailable",
+            status: 502,
+            retryable: true,
+            type: "response_error",
+          })
+        );
+        expect(encode(classified)).not.toContain("private");
+      })
+  );
 
   it.each([
     ["2", 2],

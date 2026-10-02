@@ -109,6 +109,10 @@ describe("Nina rolling summary", () => {
         usage: { calls: 1, input: 12, output: 4 },
       }),
     ]);
+    expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
+      "space:personal",
+      "purpose:background",
+    ]);
     const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
     expect(prompt).toContain("None yet.");
     expect(prompt).toContain("Learner: Question 0");

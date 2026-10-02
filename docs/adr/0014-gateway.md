@@ -33,9 +33,15 @@ by school; a personal space sends no identifier, and no call names a person.
 
 Every model error is classified once, by `classify`, into a `GatewayFailure`
 whose reason, status, retry hint, retryability, gateway error type, and bounded
-generation ID are the only facts that survive. Nina maps those reasons onto its
-stored failure reasons and keeps the failure for diagnostics. No module outside
-the gateway inspects SDK error classes.
+generation ID are the only facts that survive. The gateway client reports a
+request that got no HTTP response (a refused connection, a deadline, an abort)
+as a response error with an invented status 500, so `classify` reads the
+failure inside it as `network`, `timeout`, or `interrupted` instead. Nina maps
+those reasons onto its stored failure reasons and keeps the failure for
+diagnostics. No module outside the gateway classifies a failed model call by
+SDK error class, name, or HTTP status; output-parsing and tool-repair errors
+(`NoObjectGeneratedError`, `NoSuchToolError`) stay with the code that parses
+or repairs them.
 
 `ModelKey` and the branded `ModelId` are declared once, in the client-safe
 `gateway/model.ts`; Nina keeps only the credit price of each key.
@@ -53,9 +59,15 @@ the gateway inspects SDK error classes.
   `presentation`, each with today's deadlines and reasoning effort. A new
   purpose, model kind, or route is added in this module together with its
   first consumer.
-- `scripts/check/gateway.ts` rejects any `@ai-sdk/gateway` import, the AI SDK's
-  `gateway` and `createGateway`, and, outside tests, call options that build
-  `providerOptions.gateway` anywhere outside this module.
+- Outside this module, `scripts/check/gateway.ts` rejects any `@ai-sdk/gateway`
+  import and any import, re-export, or namespace read of the AI SDK's `gateway`
+  and `createGateway`. Outside tests it also rejects a `providerOptions` object
+  with a `gateway` entry, whether written as a property, a variable, or an
+  assignment, any write to `providerOptions.gateway`, and a gateway model ID
+  string or template (`creator/model`) given as `model`, `languageModel`,
+  `embeddingModel`, or `textEmbeddingModel`, which the AI SDK would send to its
+  default gateway without routing. A value built elsewhere and passed by
+  reference is beyond a syntax check; review covers it.
 - `ai`, `@ai-sdk/gateway`, and `@ai-sdk/google` move as one exactly pinned
   catalog cohort (`AI_SDK_COHORT` in `scripts/dependencies/policy.ts`). Every
   bump rechecks the provider contracts this module relies on.

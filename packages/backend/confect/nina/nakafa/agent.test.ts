@@ -87,6 +87,10 @@ describe("Nakafa Agent execution", () => {
         })
       );
       expect(model.doGenerateCalls).toHaveLength(2);
+      expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
+        "space:personal",
+        "purpose:specialist",
+      ]);
     }
   );
 
