@@ -53,13 +53,15 @@ export function NavForYou() {
             });
             const prefetchChat =
               item.id === "askNina" ? () => router.prefetch(href) : undefined;
+            const isActive = pathname.includes(href);
 
             return (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
-                  isActive={pathname.includes(href)}
+                  isActive={isActive}
                   render={
                     <NavigationLink
+                      aria-current={isActive ? "page" : undefined}
                       href={href}
                       onFocus={prefetchChat}
                       onPointerEnter={prefetchChat}

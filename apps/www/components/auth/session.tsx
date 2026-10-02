@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode, use, useDeferredValue } from "react";
 import { env } from "@/env";
 import { authClient } from "@/lib/auth/client";
 
@@ -16,9 +16,18 @@ const previewSession = {
   isPending: false,
 } satisfies AuthSession;
 
-/** Reads the live session once for all app authentication consumers. */
+/**
+ * Reads the live session once for all app authentication consumers. The
+ * session settles while a streamed page may still be hydrating. A signed-out
+ * result is read deferred, so React applies it in a transition and finishes
+ * hydrating the page first instead of discarding the page's server HTML. A
+ * signed-in result applies at once: Convex authenticates only after it
+ * commits, and a transition would wait on surfaces that need that.
+ */
 function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
-  const { data, error, isPending } = authClient.useSession();
+  const session = authClient.useSession();
+  const settled = useDeferredValue(session);
+  const { data, error, isPending } = session.data ? session : settled;
 
   return (
     <AuthSessionContext value={{ data, error, isPending }}>
