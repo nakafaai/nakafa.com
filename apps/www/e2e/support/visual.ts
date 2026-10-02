@@ -52,6 +52,20 @@ export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
   }
 );
 
+/**
+ * Scrolls the page until the element sits at `block` in the viewport, the way
+ * the page's own scripts scroll. Playwright's scroll into view left a card
+ * just below the fold out of view in WebKit on Linux, so no reveal relies on
+ * it.
+ */
+function scrollToElement(locator: Locator, block: ScrollLogicalPosition) {
+  return locator.evaluate(
+    (element, position) =>
+      element.scrollIntoView({ behavior: "instant", block: position }),
+    block
+  );
+}
+
 /** Scrolls to the visual card that holds `content`, the first by default. */
 export const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
   page: Page,
@@ -65,7 +79,7 @@ export const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
   // A content-visibility card lays out its content only near the viewport.
   yield* Effect.promise(() =>
     expect(async () => {
-      await card.scrollIntoViewIfNeeded();
+      await scrollToElement(card, "start");
       await expect(card.locator(content).first()).toBeVisible();
     }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
   );
@@ -81,7 +95,7 @@ export const revealScene = Effect.fn("NakafaE2E.revealVisualScene")(function* (
   const canvas = card.locator(`${LINE_SCENE} canvas`);
   yield* Effect.promise(() =>
     expect(async () => {
-      await card.locator(LINE_SCENE).scrollIntoViewIfNeeded();
+      await scrollToElement(card.locator(LINE_SCENE), "start");
       expect(await canvas.isVisible()).toBe(true);
     }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
   );
@@ -96,11 +110,7 @@ export const revealScene = Effect.fn("NakafaE2E.revealVisualScene")(function* (
 export const revealAction = Effect.fn("NakafaE2E.revealVisualAction")(
   function* (card: Locator, fullscreen: string) {
     const action = card.getByRole("button", { exact: true, name: fullscreen });
-    yield* Effect.promise(() =>
-      action.evaluate((element) =>
-        element.scrollIntoView({ behavior: "instant", block: "center" })
-      )
-    );
+    yield* Effect.promise(() => scrollToElement(action, "center"));
     return action;
   }
 );
