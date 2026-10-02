@@ -1,4 +1,5 @@
 import {
+  AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
   EFFECT_COHORT_VERSION,
   FORBIDDEN_EFFECT_DEPENDENCIES,
@@ -80,7 +81,7 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
   return problems;
 }
 
-/** Enforces the Effect, TypeScript, and Vitest cohorts the workspace pins. */
+/** Enforces the Effect, TypeScript, Vitest, and AI SDK cohorts the workspace pins. */
 function cohortProblems(workspace: WorkspaceManifest) {
   const problems: string[] = [];
   if (workspace.catalog?.effect !== EFFECT_COHORT_VERSION) {
@@ -121,6 +122,11 @@ function cohortProblems(workspace: WorkspaceManifest) {
       problems.push(
         `${dependency} must match the supported Vitest ${VITEST_COHORT_VERSION} cohort.`
       );
+    }
+  }
+  for (const [dependency, version] of Object.entries(AI_SDK_COHORT)) {
+    if (workspace.catalog?.[dependency] !== version) {
+      problems.push(`The ${dependency} catalog must be exactly ${version}.`);
     }
   }
   return problems;

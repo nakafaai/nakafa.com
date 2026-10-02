@@ -1,14 +1,11 @@
-import { GatewayRateLimitError } from "@ai-sdk/gateway";
 import { Ref } from "@confect/core";
 import { Agent, listUIMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  GatewayConfigurationError,
-  getGatewayModel,
-} from "@repo/backend/confect/nina/config/provider";
+import { GatewayConfigurationError } from "@repo/backend/confect/gateway/key";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
+import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
   ninaModel,
@@ -17,20 +14,12 @@ import {
   ninaUsage,
 } from "@repo/backend/test/nina";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
-import {
-  AISDKError,
-  APICallError,
-  NoOutputGeneratedError,
-  RetryError,
-} from "ai";
+import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", async (original) => ({
-  ...(await original<
-    typeof import("@repo/backend/confect/nina/config/provider")
-  >()),
-  getGatewayModel: vi.fn(),
+vi.mock("@repo/backend/confect/gateway/live", async () => ({
+  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayLive,
 }));
 vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
   runNakafaAgent: vi.fn(),
@@ -54,87 +43,47 @@ async function fixture() {
 }
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
-const PRIVATE_DIAGNOSTIC = /private (provider|authentication) diagnostic/;
-
-/** A provider HTTP failure carrying a diagnostic that must never persist. */
-function apiError(statusCode?: number) {
-  return new APICallError({
-    message: "private provider diagnostic",
-    url: "https://provider.example.invalid",
-    requestBodyValues: {},
-    ...(statusCode === undefined ? {} : { statusCode }),
-  });
-}
+const PRIVATE_DIAGNOSTIC = /private provider diagnostic/;
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
   vi.restoreAllMocks();
+  deployment.mockReset();
+  provider.languageModel.mockReset();
   vi.useRealTimers();
 });
 
 describe("Nina generation through the real Agent component", () => {
   it.effect.each([
-    ["status 429", apiError(429), "provider-busy"],
-    ["status 503", apiError(503), "provider-unavailable"],
-    ["status 408", apiError(408), "response-timeout"],
-    ["status 504", apiError(504), "response-timeout"],
-    ["status 413", apiError(413), "input-too-large"],
-    ["status 400", apiError(400), "request-rejected"],
-    ["status 422", apiError(422), "request-rejected"],
-    ["status 401", apiError(401), "service-configuration"],
-    ["status 402", apiError(402), "service-configuration"],
-    ["status 403", apiError(403), "service-configuration"],
-    ["status 404", apiError(404), "service-configuration"],
-    ["status 424", apiError(424), "service-configuration"],
-    ["status 409", apiError(409), "unknown"],
-    ["statusless", apiError(), "unknown"],
+    ["rate-limit", failures["rate-limit"], "provider-busy"],
+    ["quota", failures.quota, "service-configuration"],
+    ["auth", failures.auth, "service-configuration"],
+    ["configuration", failures.configuration, "service-configuration"],
+    ["invalid", failures.invalid, "request-rejected"],
+    ["too-large", failures["too-large"], "input-too-large"],
+    ["timeout", failures.timeout, "response-timeout"],
+    ["unavailable", failures.unavailable, "provider-unavailable"],
+    ["network", failures.network, "unknown"],
+    ["interrupted", failures.interrupted, "interrupted"],
+    ["unknown", failures.unknown, "unknown"],
     [
-      "exhausted retry",
-      new RetryError({
-        message: "Retries exhausted",
-        reason: "maxRetriesExceeded",
-        errors: [new GatewayRateLimitError()],
+      "raw provider HTTP 429",
+      new APICallError({
+        message: "private provider diagnostic",
+        url: "https://provider.example.invalid",
+        requestBodyValues: {},
+        statusCode: 429,
       }),
       "provider-busy",
-    ],
-    [
-      "rate-limited empty output",
-      new NoOutputGeneratedError({ cause: new GatewayRateLimitError() }),
-      "provider-busy",
-    ],
-    [
-      "timeout",
-      new DOMException("Timed out", "TimeoutError"),
-      "response-timeout",
-    ],
-    ["abort", new DOMException("Aborted", "AbortError"), "interrupted"],
-    ["empty output", new NoOutputGeneratedError(), "unknown"],
-    ["unstructured", "unstructured provider failure", "unknown"],
-    [
-      "gateway",
-      new AISDKError({
-        name: "GatewayError",
-        message: "private authentication diagnostic",
-      }),
-      "service-configuration",
-    ],
-    [
-      "gateway authentication",
-      Object.assign(new Error("private authentication diagnostic"), {
-        name: "GatewayAuthenticationError",
-      }),
-      "service-configuration",
     ],
   ] as const)(
     "persists a safe reason for a %s stream failure",
     ([, error, reason]) =>
       Effect.gen(function* () {
-        vi.mocked(getGatewayModel).mockReturnValue(
-          Effect.succeed(
-            new MockLanguageModelV4({
-              doStream: ninaStream([{ type: "error", error }]),
-            })
-          )
+        provider.languageModel.mockReturnValue(
+          new MockLanguageModelV4({
+            doStream: ninaStream([{ type: "error", error }]),
+          })
         );
         const f = yield* Effect.promise(() => fixture());
         yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
@@ -177,19 +126,17 @@ describe("Nina generation through the real Agent component", () => {
     "classifies a %s response without final text",
     ([finishReason, reason]) =>
       Effect.gen(function* () {
-        vi.mocked(getGatewayModel).mockReturnValue(
-          Effect.succeed(
-            new MockLanguageModelV4({
-              doStream: ninaStream([
-                { type: "stream-start", warnings: [] },
-                {
-                  type: "finish",
-                  finishReason: { unified: finishReason, raw: finishReason },
-                  usage: ninaUsage,
-                },
-              ]),
-            })
-          )
+        provider.languageModel.mockReturnValue(
+          new MockLanguageModelV4({
+            doStream: ninaStream([
+              { type: "stream-start", warnings: [] },
+              {
+                type: "finish",
+                finishReason: { unified: finishReason, raw: finishReason },
+                usage: ninaUsage,
+              },
+            ]),
+          })
         );
         const f = yield* Effect.promise(() => fixture());
         yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
@@ -200,7 +147,7 @@ describe("Nina generation through the real Agent component", () => {
   );
 
   it("identifies missing Gateway configuration before a provider request", async () => {
-    vi.mocked(getGatewayModel).mockReturnValue(
+    deployment.mockReturnValue(
       Effect.fail(
         new GatewayConfigurationError({
           message: "AI Gateway is not configured.",
@@ -209,17 +156,20 @@ describe("Nina generation through the real Agent component", () => {
     );
     const f = await fixture();
     await f.t.action(run, { turnId: f.turnId });
-    expect((await f.inspect()).turn?.state).toMatchObject({
+    const state = await f.inspect();
+    expect(state.turn?.state).toMatchObject({
       status: "failed",
       reason: "service-configuration",
     });
+    expect(state.user?.credits).toBe(10);
+    expect(provider.languageModel).not.toHaveBeenCalled();
   });
 
   it.effect("refunds a failure before the Agent stream starts", () =>
     Effect.gen(function* () {
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(ninaModel()));
+      provider.languageModel.mockReturnValue(ninaModel());
       vi.spyOn(Agent.prototype, "streamText").mockRejectedValueOnce(
-        new GatewayRateLimitError()
+        failures["rate-limit"]
       );
       const f = yield* Effect.promise(() => fixture());
       yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
@@ -262,7 +212,7 @@ describe("Nina generation through the real Agent component", () => {
             },
           },
         ]);
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+      provider.languageModel.mockReturnValue(languageModel);
       const f = yield* Effect.promise(() => fixture());
       yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
       const state = yield* Effect.promise(f.inspect);
@@ -275,10 +225,10 @@ describe("Nina generation through the real Agent component", () => {
 
   it.effect("retains the first stream failure through abort cleanup", () =>
     Effect.gen(function* () {
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(ninaModel()));
+      provider.languageModel.mockReturnValue(ninaModel());
       vi.spyOn(Agent.prototype, "streamText").mockImplementationOnce(
         async (_ctx, _thread, options) => {
-          await options.onError?.({ error: new GatewayRateLimitError() });
+          await options.onError?.({ error: failures["rate-limit"] });
           await options.onError?.({ error: new Error("cleanup failure") });
           await options.onAbort?.({ callId: "cancelled", steps: [] });
           return Promise.reject(new Error("stream cleanup failed"));
@@ -295,7 +245,7 @@ describe("Nina generation through the real Agent component", () => {
 
   it.effect("records an Agent abort without exposing its diagnostic", () =>
     Effect.gen(function* () {
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(ninaModel()));
+      provider.languageModel.mockReturnValue(ninaModel());
       vi.spyOn(Agent.prototype, "streamText").mockImplementationOnce(
         async (_ctx, _thread, options) => {
           await options.onAbort?.({ callId: "cancelled", steps: [] });
@@ -315,7 +265,7 @@ describe("Nina generation through the real Agent component", () => {
 
   it("persists reasoning, sources and the final answer before optional presentation", async () => {
     const languageModel = ninaModel();
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    provider.languageModel.mockReturnValue(languageModel);
     const f = await fixture();
     await f.t.action(run, { turnId: f.turnId });
     const state = await f.inspect();
@@ -350,7 +300,7 @@ describe("Nina generation through the real Agent component", () => {
   it("keeps progressive tool cards in permanent messages after the live stream ends", async () => {
     vi.useRealTimers();
     const languageModel = ninaModel(true);
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    provider.languageModel.mockReturnValue(languageModel);
     const input = {
       content_ref: NakafaAgentContentRefInputSchema.make(
         "https://nakafa.com/en/home"
@@ -431,7 +381,7 @@ describe("Nina generation through the real Agent component", () => {
 
   it("refunds an interrupted provider without generating a title or follow-up", async () => {
     const languageModel = ninaModel(false, true);
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    provider.languageModel.mockReturnValue(languageModel);
     const f = await fixture();
     await f.t.action(run, { turnId: f.turnId });
     const state = await f.inspect();
@@ -444,7 +394,7 @@ describe("Nina generation through the real Agent component", () => {
   it("repairs invalid capability input through one accounted repair call", async () => {
     vi.useRealTimers();
     const languageModel = ninaModel(true, false, { request: 42 });
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    provider.languageModel.mockReturnValue(languageModel);
     vi.mocked(runNakafaAgent).mockReturnValue(
       Effect.succeed({ text: "Repaired evidence" })
     );
@@ -468,7 +418,7 @@ describe("Nina generation through the real Agent component", () => {
 
   it("sends the rolling summary and omits the turns it covers", async () => {
     const languageModel = ninaModel();
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(languageModel));
+    provider.languageModel.mockReturnValue(languageModel);
     const f = await createNinaTest({ history: 6 });
     await f.t.mutation((ctx) =>
       ctx.db.insert("ninaSummaries", {

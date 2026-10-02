@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import { researchMaxSources } from "@repo/backend/confect/nina/research/schema";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
+import { provider } from "@repo/backend/test/gateway";
 import {
   providerStep,
   recordProgress,
@@ -13,9 +13,6 @@ import {
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", () => ({
-  getGatewayModel: vi.fn(),
-}));
 vi.mock("@repo/backend/confect/nina/research/tools/search", () => ({
   searchWeb: vi.fn(),
 }));
@@ -28,7 +25,10 @@ vi.mock(
     scrapeUrl: vi.fn(),
   })
 );
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  provider.languageModel.mockReset();
+});
 const url = "https://ai-sdk.dev/docs/agents";
 const source = { href: url, hostname: "ai-sdk.dev", text: url };
 const output = {
@@ -146,7 +146,7 @@ describe("research Agent evidence boundary", () => {
       const model = new MockLanguageModelV4({
         doGenerate: [searchCall, evidence, final],
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const usageHandler = vi.fn();
       const { artifacts, publish } = recordProgress();
       const result = await runSpecialist((userId) =>
@@ -217,7 +217,7 @@ describe("research Agent evidence boundary", () => {
       maximum: researchMaxSources,
       received: researchMaxSources + 1,
     });
-    expect(getGatewayModel).not.toHaveBeenCalled();
+    expect(provider.languageModel).not.toHaveBeenCalled();
     expect(scrapeUrl).not.toHaveBeenCalled();
     expect(searchWeb).not.toHaveBeenCalled();
   });
@@ -242,7 +242,7 @@ describe("research Agent evidence boundary", () => {
         final,
       ],
     });
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     const result = await runSpecialist((userId) =>
       runResearchAgent({
         ...specialistRequest,
@@ -286,7 +286,7 @@ describe("research Agent evidence boundary", () => {
           );
         },
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const error = await runSpecialist((userId) =>
         runResearchAgent({
           ...specialistRequest,

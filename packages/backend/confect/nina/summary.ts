@@ -7,14 +7,9 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import {
-  defaultModel,
-  getFastModelProviderOptions,
-} from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { backgroundGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
 import { Effect, Schema } from "effect";
 
 /** Complete turns kept verbatim after the summary. */
@@ -127,9 +122,14 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       anchor
     );
     const ctx = yield* ActionCtx;
+    const handle = (yield* Gateway).language({
+      purpose: "background",
+      model: defaultModel,
+      space: { kind: "personal", userId: turn.userId },
+    });
     const agent = new Agent(components.nina, {
       instructions: INSTRUCTIONS,
-      languageModel: yield* getGatewayModel(defaultModel),
+      languageModel: handle.model,
       name: "summary",
     });
     const { text, usage } = yield* Effect.tryPromise({
@@ -143,11 +143,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
               `# Previous Summary\n\n${current?.text ?? "None yet."}`,
               `# New Turns\n\n${transcript}`,
             ].join("\n\n"),
-            providerOptions: {
-              gateway: gatewayProviderOptions,
-              google: getFastModelProviderOptions(defaultModel),
-            },
-            timeout: backgroundGenerationTimeout,
+            timeout: handle.timeout,
           },
           { storageOptions: { saveMessages: "none" } }
         ),

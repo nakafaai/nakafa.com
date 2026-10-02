@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
 import { compute } from "@repo/backend/confect/nina/math/tools/compute";
+import { provider } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
 import {
   runSpecialist,
@@ -10,13 +10,13 @@ import {
 import { MockLanguageModelV4 } from "ai/test";
 import { ConfigProvider, Effect } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", () => ({
-  getGatewayModel: vi.fn(),
-}));
 vi.mock("@repo/backend/confect/nina/math/tools/compute", () => ({
   compute: vi.fn(),
 }));
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  provider.languageModel.mockReset();
+});
 
 const cases = [
   ["algebra", { operation: "simplify", expression: "x + x" }],
@@ -59,7 +59,7 @@ const cases = [
 describe("math Agent execution", () => {
   it("rejects missing CAS configuration before spending tokens on unexecutable tools", async () => {
     const model = new MockLanguageModelV4();
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     const failure = await runSpecialist((userId) =>
       runMathAgent({
         ...specialistRequest,
@@ -106,7 +106,7 @@ describe("math Agent execution", () => {
           },
         ],
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       vi.mocked(compute).mockReturnValue(
         Effect.succeed("Deterministic evidence.")
       );
@@ -139,12 +139,10 @@ describe("math Agent execution", () => {
   );
 
   it("keeps provider failure typed at the specialist boundary", async () => {
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(
-        new MockLanguageModelV4({
-          doGenerate: () => Promise.reject(new Error("provider rejected")),
-        })
-      )
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doGenerate: () => Promise.reject(new Error("provider rejected")),
+      })
     );
     const error = await runSpecialist((userId) =>
       runMathAgent({
@@ -195,7 +193,7 @@ describe("math Agent execution", () => {
         },
       ],
     });
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     vi.mocked(compute).mockReturnValue(Effect.succeed("2x"));
     const result = await runSpecialist((userId) =>
       runMathAgent({

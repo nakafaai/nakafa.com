@@ -3,7 +3,6 @@ import { createThread, saveMessages } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import {
   nextSummaryTarget,
   RECENT_TURNS,
@@ -13,17 +12,15 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect, Predicate } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", async (original) => ({
-  ...(await original<
-    typeof import("@repo/backend/confect/nina/config/provider")
-  >()),
-  getGatewayModel: vi.fn(),
-}));
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  provider.languageModel.mockReset();
+});
 
 /**
  * A chat whose Agent thread holds `turns` complete learner and Nina turns,
@@ -70,7 +67,10 @@ async function fixture(turns: number) {
     t.action((ctx) =>
       Effect.runPromise(
         refreshSummary({ ...setup, order }).pipe(
-          Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
+          Effect.provide([
+            GatewayTest,
+            RegisteredFunction.actionLayer(schema, ctx),
+          ])
         )
       )
     );
@@ -97,7 +97,7 @@ describe("Nina rolling summary", () => {
 
   it("summarizes the older turns and keeps the newest turns verbatim", async () => {
     const model = summaryModel("- The learner studied limits.");
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     const f = await fixture(9);
     await f.refresh(8);
     expect(await f.summary()).toEqual([
@@ -118,7 +118,7 @@ describe("Nina rolling summary", () => {
 
   it("extends an existing summary with the next folded turns", async () => {
     const model = summaryModel("- Limits, then derivatives.");
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     const f = await fixture(13);
     await f.t.mutation((ctx) =>
       ctx.db.insert("ninaSummaries", {
@@ -146,7 +146,7 @@ describe("Nina rolling summary", () => {
 
   it("folds a long backlog one bounded batch per refresh, paging to its oldest turns", async () => {
     const model = summaryModel("- A long study session.");
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     const f = await fixture(56);
     await f.refresh(55);
     await f.refresh(55);
@@ -166,30 +166,28 @@ describe("Nina rolling summary", () => {
   });
 
   it("records zero tokens when the provider omits usage counters", async () => {
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(
-        new MockLanguageModelV4({
-          doGenerate: () =>
-            Promise.resolve({
-              content: [{ type: "text", text: "- A counted fold." }],
-              finishReason: { unified: "stop", raw: "stop" },
-              usage: {
-                inputTokens: {
-                  total: undefined,
-                  noCache: undefined,
-                  cacheRead: undefined,
-                  cacheWrite: undefined,
-                },
-                outputTokens: {
-                  total: undefined,
-                  text: undefined,
-                  reasoning: undefined,
-                },
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doGenerate: () =>
+          Promise.resolve({
+            content: [{ type: "text", text: "- A counted fold." }],
+            finishReason: { unified: "stop", raw: "stop" },
+            usage: {
+              inputTokens: {
+                total: undefined,
+                noCache: undefined,
+                cacheRead: undefined,
+                cacheWrite: undefined,
               },
-              warnings: [],
-            }),
-        })
-      )
+              outputTokens: {
+                total: undefined,
+                text: undefined,
+                reasoning: undefined,
+              },
+            },
+            warnings: [],
+          }),
+      })
     );
     const f = await fixture(9);
     await f.refresh(8);
@@ -202,26 +200,22 @@ describe("Nina rolling summary", () => {
   });
 
   it("makes no model call before a fold is due", async () => {
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(summaryModel("unused"))
-    );
+    provider.languageModel.mockReturnValue(summaryModel("unused"));
     const f = await fixture(6);
     await f.refresh(5);
-    expect(getGatewayModel).not.toHaveBeenCalled();
+    expect(provider.languageModel).not.toHaveBeenCalled();
     expect(await f.summary()).toEqual([]);
   });
 
   it.each(["provider", "empty"] as const)(
     "keeps the previous summary when the %s answer fails",
     async (failure) => {
-      vi.mocked(getGatewayModel).mockReturnValue(
-        Effect.succeed(
-          failure === "provider"
-            ? new MockLanguageModelV4({
-                doGenerate: () => Promise.reject(new Error("Provider down")),
-              })
-            : summaryModel("   ")
-        )
+      provider.languageModel.mockReturnValue(
+        failure === "provider"
+          ? new MockLanguageModelV4({
+              doGenerate: () => Promise.reject(new Error("Provider down")),
+            })
+          : summaryModel("   ")
       );
       const f = await fixture(9);
       await f.refresh(8);
@@ -230,15 +224,16 @@ describe("Nina rolling summary", () => {
   );
 
   it("reads back only from the prompt of the last folded turn", async () => {
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(summaryModel("- Folded."))
-    );
+    provider.languageModel.mockReturnValue(summaryModel("- Folded."));
     const f = await fixture(56);
     const anchors = await f.t.action(async (ctx) => {
       const runQuery = vi.spyOn(ctx, "runQuery");
       await Effect.runPromise(
         refreshSummary({ ...f, order: 55 }).pipe(
-          Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
+          Effect.provide([
+            GatewayTest,
+            RegisteredFunction.actionLayer(schema, ctx),
+          ])
         )
       );
       return runQuery.mock.calls.flatMap(([, args]) =>
@@ -252,7 +247,7 @@ describe("Nina rolling summary", () => {
 
   it("stops reading back once it reaches turns the summary covers", async () => {
     const model = summaryModel("- Later study.");
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     const f = await fixture(62);
     await f.t.mutation((ctx) =>
       ctx.db.insert("ninaSummaries", {
@@ -275,9 +270,7 @@ describe("Nina rolling summary", () => {
   });
 
   it("keeps the previous summary when the last folded turn is missing", async () => {
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(summaryModel("unused"))
-    );
+    provider.languageModel.mockReturnValue(summaryModel("unused"));
     const f = await fixture(9);
     await f.t.mutation(async (ctx) => {
       const turn = await ctx.db
@@ -291,14 +284,12 @@ describe("Nina rolling summary", () => {
       }
     });
     await f.refresh(8);
-    expect(getGatewayModel).not.toHaveBeenCalled();
+    expect(provider.languageModel).not.toHaveBeenCalled();
     expect(await f.summary()).toEqual([]);
   });
 
   it("keeps the previous summary when the thread cannot be read", async () => {
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(summaryModel("unused"))
-    );
+    provider.languageModel.mockReturnValue(summaryModel("unused"));
     const f = await fixture(9);
     await f.t.action((ctx) =>
       Effect.runPromise(
@@ -307,7 +298,12 @@ describe("Nina rolling summary", () => {
           order: 8,
           threadId: "missing-thread",
           userId: f.userId,
-        }).pipe(Effect.provide(RegisteredFunction.actionLayer(schema, ctx)))
+        }).pipe(
+          Effect.provide([
+            GatewayTest,
+            RegisteredFunction.actionLayer(schema, ctx),
+          ])
+        )
       )
     );
     expect(await f.summary()).toEqual([]);

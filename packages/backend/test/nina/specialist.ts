@@ -5,16 +5,18 @@ import type {
   ActionCtx,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import type { Gateway } from "@repo/backend/confect/gateway/handle";
+import { ModelId } from "@repo/backend/confect/gateway/model";
 import type {
   CapabilityArtifact,
   CapabilityProgress,
 } from "@repo/backend/confect/nina/capability/progress";
-import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
 import type { TaskAgentDataSchema } from "@repo/backend/confect/nina/contract/agent";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { GatewayTest } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
 import type { MockLanguageModelV4 } from "ai/test";
 import { Effect } from "effect";
@@ -27,15 +29,15 @@ export const specialistRequest = {
     verified: false,
   },
   locale: "en",
-  modelId: ModelIdSchema.make("nakafa-lite"),
+  modelId: ModelId.make("nakafa-lite"),
   task: "Verify the requested evidence.",
 } satisfies Omit<typeof TaskAgentDataSchema.Type, "userId">;
 
-/** Executes the real Agent component in its native action context. */
+/** Executes the real Agent component in its native action context over the test gateway. */
 export async function runSpecialist<A, E>(
   program: (
     userId: Docs["users"]["_id"]
-  ) => Effect.Effect<A, E, ActionCtx | QueryRunner>
+  ) => Effect.Effect<A, E, ActionCtx | Gateway | QueryRunner>
 ) {
   const t = createConvexTestWithBetterAuth();
   const { userId } = await t.mutation((ctx) =>
@@ -44,7 +46,10 @@ export async function runSpecialist<A, E>(
   return t.action((ctx) =>
     Effect.runPromise(
       program(userId).pipe(
-        Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
+        Effect.provide([
+          GatewayTest,
+          RegisteredFunction.actionLayer(schema, ctx),
+        ])
       )
     )
   );

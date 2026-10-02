@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { repairMathToolCall } from "@repo/backend/confect/nina/math/repair";
 import {
   mathAlgebraInput,
   mathEquationInput,
 } from "@repo/backend/confect/nina/math/schema";
+import { provider } from "@repo/backend/test/gateway";
 import {
   providerStep,
   runSpecialist,
@@ -13,12 +13,12 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { InvalidToolInputError, NoSuchToolError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect, Schema } from "effect";
+import { Schema } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", () => ({
-  getGatewayModel: vi.fn(),
-}));
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  provider.languageModel.mockReset();
+});
 const toolCall = {
   type: "tool-call" as const,
   toolCallId: "math",
@@ -54,7 +54,7 @@ describe("Math tool repair with the Agent component", () => {
           },
         ]),
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const usageHandler = vi.fn();
       const result = await runSpecialist((userId) =>
         repairMathToolCall({ ...options, userId, instructions, usageHandler })
@@ -85,7 +85,7 @@ describe("Math tool repair with the Agent component", () => {
           { type: "text", text: JSON.stringify(repaired) },
         ]),
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const result = await runSpecialist((userId) =>
         repairMathToolCall({
           ...options,
@@ -114,7 +114,7 @@ describe("Math tool repair with the Agent component", () => {
         { type: "text", text: JSON.stringify(bounded) },
       ]),
     });
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     const result = await runSpecialist((userId) =>
       repairMathToolCall({
         ...options,
@@ -151,7 +151,7 @@ describe("Math tool repair with the Agent component", () => {
         })
       );
       expect(result).toBeNull();
-      expect(getGatewayModel).not.toHaveBeenCalled();
+      expect(provider.languageModel).not.toHaveBeenCalled();
     }
   );
 
@@ -172,7 +172,7 @@ describe("Math tool repair with the Agent component", () => {
                 },
               ]),
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const result = await runSpecialist((userId) =>
         repairMathToolCall({
           ...options,

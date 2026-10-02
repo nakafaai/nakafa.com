@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import {
+  AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
   EFFECT_COHORT_VERSION,
   VITEST_COHORT_VERSION,
@@ -69,6 +70,7 @@ function validInput(): PolicyInput {
     },
     workspace: {
       catalog: {
+        ...AI_SDK_COHORT,
         "@effect/platform-node": EFFECT_COHORT_VERSION,
         "@effect/vitest": EFFECT_COHORT_VERSION,
         "@vitest/coverage-istanbul": VITEST_COHORT_VERSION,
@@ -322,6 +324,17 @@ describe("dependency policy validation", () => {
         },
       }),
       problem: `@vitest/ui must match the supported Vitest ${VITEST_COHORT_VERSION} cohort.`,
+    },
+    {
+      name: "an AI SDK cohort drift",
+      change: (input) => ({
+        ...input,
+        workspace: {
+          ...input.workspace,
+          catalog: { ...input.workspace.catalog, "@ai-sdk/gateway": "4.0.101" },
+        },
+      }),
+      problem: `The @ai-sdk/gateway catalog must be exactly ${AI_SDK_COHORT["@ai-sdk/gateway"]}.`,
     },
     {
       name: "a package manager drift",
