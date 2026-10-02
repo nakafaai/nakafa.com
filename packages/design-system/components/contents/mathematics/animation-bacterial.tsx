@@ -159,9 +159,9 @@ export function BacterialGrowth({
     <VisualCard ref={ref}>
       <VisualCardHeader
         description={
-          <span aria-live="polite">
-            {frame.bacteriaCount} {labels.bacterial}
-          </span>
+          // One text node: a count that grows a digit would otherwise move
+          // the label beside it, a layout shift no learner caused.
+          <span aria-live="polite">{`${frame.bacteriaCount} ${labels.bacterial}`}</span>
         }
         title={labels.title}
       />
