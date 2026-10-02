@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Duration, Effect } from "effect";
+import { Deferred, Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -9,8 +9,6 @@ const NINA_DIALOG_NAME = /^Nina/;
 const INTER_FONT = /Inter/;
 
 const routes = [pinnedRoutes.material.en, pinnedRoutes.article.en];
-// Long enough that the server-rendered lesson paints before it hydrates.
-const heldScriptMilliseconds = 1000;
 const appScriptPattern = /\/_next\/static\/chunks\/.+\.js$/;
 // The lesson's pagination, breadcrumb and outline header, as the server sends them.
 const readingControls =
@@ -352,11 +350,14 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
 )(function* (page: Page) {
   const href = pinnedRoutes.material.en;
   yield* seedDeniedAnalyticsConsent(page);
+  // The app's scripts wait until the served page has been read, as they would
+  // on a slow device, so React cannot hydrate or replace anything before then.
+  const released = yield* Deferred.make<void>();
   const services = yield* Effect.context<never>();
   yield* Effect.promise(() =>
     page.route(appScriptPattern, (route) =>
       Effect.runPromiseWith(services)(
-        Effect.sleep(Duration.millis(heldScriptMilliseconds)).pipe(
+        Deferred.await(released).pipe(
           Effect.andThen(() => Effect.promise(() => route.continue()))
         )
       )
@@ -365,7 +366,12 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
   yield* Effect.promise(() =>
     page.goto(href, { waitUntil: "domcontentloaded" })
   );
-  // Counted at once, while the scripts are held, so this reads the server HTML.
+  // React's inline streaming scripts reveal the served lesson on their own.
+  yield* Effect.promise(() =>
+    expect(
+      page.getByRole("navigation", { name: "Pagination navigation" })
+    ).toBeVisible()
+  );
   const servedLesson = yield* Effect.promise(() =>
     page
       .getByRole("navigation", { name: "breadcrumb" })
@@ -379,6 +385,7 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
       readingControls
     )
   );
+  yield* Deferred.succeed(released, undefined);
   yield* waitForCommittedAppRouter(page, href, href, 15_000);
   yield* Effect.promise(() => page.waitForLoadState("networkidle"));
   const controls = yield* Effect.promise(() =>
