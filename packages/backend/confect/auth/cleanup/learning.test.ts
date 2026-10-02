@@ -76,10 +76,7 @@ it("drains deleted-user credit history, keeps each batch bounded, and preserves 
         sourcePath: "math",
         title: "Math",
       };
-      const viewerKey = createPopularityViewerKey({
-        userId,
-        deviceId: "device",
-      });
+      const viewerKey = createPopularityViewerKey({ kind: "account", userId });
       await ctx.db.insert("learningViews", {
         ...graph,
         userId,
@@ -161,8 +158,8 @@ it("drains deleted-user credit history, keeps each batch bounded, and preserves 
           table === "learningPopularityViewerSignals"
           ? {
               viewerKey: createPopularityViewerKey({
+                kind: "account",
                 userId: identity.retained.userId,
-                deviceId: "device",
               }),
             }
           : {

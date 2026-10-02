@@ -24,14 +24,14 @@ export const canonicalViewContext = {
   contextMode: "canonical",
 } satisfies Pick<LearningContextStorage, "contextKey" | "contextMode">;
 
-/** Builds one canonical article-view mutation input. */
+/** Builds one canonical article-view mutation input, with a device only after consent. */
 export function makeArticleViewArgs(
   contentId: string,
-  deviceId: string
+  deviceId?: string
 ): RecordContentViewArgs {
   return {
     contentId,
-    deviceId,
+    ...(deviceId === undefined ? {} : { deviceId }),
     locale: "en",
     publicPath: ARTICLE_VIEW_ROUTE,
     section: "articles",

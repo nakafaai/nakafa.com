@@ -10,6 +10,16 @@ import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolveContentHead } from "@repo/backend/content/publication/projection";
 import { Effect, Schema } from "effect";
 
+/**
+ * Maximum content keys one head page resolves.
+ *
+ * A routed head decodes its projection and proves its route binding, about
+ * 2 ms of query execution in production, so the shared 500-head request
+ * maximum reaches Convex's one-second query limit. A page therefore stops
+ * early and the publisher follows its cursor.
+ */
+export const HEAD_PAGE_LIMIT = 128;
+
 /** Decodes one bounded active-head request into the exact shared contract. */
 export const decodeRequest = Effect.fn("contentRelease.decodeHeadPage")(
   function* (input: unknown) {
@@ -43,6 +53,7 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
     request.activeReleaseId,
     request.activeManifestHash
   );
+  const pageSize = Math.min(request.limit, HEAD_PAGE_LIMIT);
   const stored = yield* database
     .table("contentKeys")
     .index(
@@ -52,8 +63,8 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
     )
     .paginate({
       cursor: request.cursor,
-      maximumRowsRead: request.limit,
-      numItems: request.limit,
+      maximumRowsRead: pageSize,
+      numItems: pageSize,
     })
     .pipe(Effect.orDie);
   const heads: ContentHead[] = [];

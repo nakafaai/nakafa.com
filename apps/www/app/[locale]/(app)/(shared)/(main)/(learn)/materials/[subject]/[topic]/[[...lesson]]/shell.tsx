@@ -1,7 +1,6 @@
 import { getHeadings } from "@repo/contents/toc";
-import { ArticleJsonLd } from "@repo/seo/json-ld/article";
-import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
+import { JsonLd } from "@repo/seo/json-ld";
+import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { getTranslations } from "next-intl/server";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import {
@@ -10,6 +9,7 @@ import {
   MaterialHeading,
   MaterialPagination,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/context";
+import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
 import { toMaterialHref } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { DeferredAiSheetOpen } from "@/components/ai/sheet/trigger";
@@ -33,13 +33,7 @@ import { CommentsButton } from "@/components/sidebar/actions/comments";
 import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
-import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getOgUrl } from "@/lib/utils/metadata";
-
-type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
-type ArticleJsonLdAuthor = ArrayItem<
-  Parameters<typeof ArticleJsonLd>[0]["author"]
->;
 
 /** Prerenders the signed lesson; optional curriculum context lives in client controls. */
 export async function MaterialShell({ page }: { page: MaterialPageContent }) {
@@ -73,37 +67,20 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
       })),
     },
   };
-  const authorJsonLd: ArticleJsonLdAuthor[] = metadata.authors.map(
-    (author) => ({
-      "@type": "Person",
-      name: author.name,
-      url: `https://nakafa.com/${locale}/contributor`,
-    })
-  );
+  const copy = toMaterialMetadataCopy(page);
   return (
     <>
-      <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(locale, [
-          { name: tCommon("home"), path: "" },
-          { name: metadata.title, path: toMaterialHref(route) },
-        ])}
-      />
-      <ArticleJsonLd
-        author={authorJsonLd}
-        dateModified={metadata.dateModified}
-        datePublished={metadata.datePublished}
-        description={metadata.description ?? metadata.subject}
-        headline={metadata.title}
-        image={getOgUrl(locale, route.publicPath)}
-        url={toMaterialHref(route)}
-      />
-      <LearningResourceJsonLd
-        author={authorJsonLd}
-        dateModified={metadata.dateModified}
-        datePublished={metadata.datePublished}
-        description={metadata.description ?? metadata.subject}
-        educationalLevel={route.topicTitle}
-        name={metadata.title}
+      <JsonLd
+        jsonLd={makeArticleJsonLd({
+          authors: metadata.authors,
+          dates: metadata,
+          description: copy.description,
+          headline: copy.title,
+          image: getOgUrl(locale, route.publicPath),
+          locale,
+          path: toMaterialHref(route),
+          trail: [{ name: tCommon("home"), path: `/${locale}` }],
+        })}
       />
       <SidebarRightProvider>
         <LayoutMaterialContent>

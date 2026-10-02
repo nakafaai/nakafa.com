@@ -32,6 +32,7 @@ const fixture = Effect.gen(function* () {
     prefix: "acceptance-process-test-",
   });
   const runtime: LocalRuntime = {
+    analytics: "http://127.0.0.1:43312",
     backend: directory,
     configurationHash: "config",
     databaseInode: 1,

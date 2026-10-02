@@ -1,4 +1,3 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -20,6 +19,7 @@ import {
   toContentViewIoError,
 } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
+import type { ContentViewer } from "@repo/backend/confect/contents/views/viewer";
 import { Duration, Effect, flow, Struct } from "effect";
 
 /** Creates one popularity signal scope from verified learning-context storage. */
@@ -81,18 +81,12 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
     scope: ReturnType<typeof createSignalScopes>[number],
     input: {
       readonly now: number;
-      readonly userId?: Docs["users"]["_id"];
+      readonly viewer: ContentViewer;
     }
   ) {
     const writer = yield* DatabaseWriter;
     const signalDay = getPopularitySignalDay(input.now);
-    const deviceViewerKey = createPopularityViewerKey({
-      deviceId: args.deviceId,
-    });
-    const viewerKey = createPopularityViewerKey({
-      deviceId: args.deviceId,
-      ...Struct.pick(input, ["userId"]),
-    });
+    const viewerKey = createPopularityViewerKey(input.viewer);
     const existingSignal = yield* loadViewerSignal(scope, {
       contentId: route.content_id,
       signalDay,
@@ -101,11 +95,19 @@ const enqueueSignalScope = Effect.fn("contents.views.enqueueSignalScope")(
     if (existingSignal) {
       return null;
     }
-    if (input.userId) {
+    // An account view from a consented device already counted anonymously
+    // today must not count again under the account.
+    if (
+      input.viewer.kind === "account" &&
+      input.viewer.deviceId !== undefined
+    ) {
       const existingDeviceSignal = yield* loadViewerSignal(scope, {
         contentId: route.content_id,
         signalDay,
-        viewerKey: deviceViewerKey,
+        viewerKey: createPopularityViewerKey({
+          deviceId: input.viewer.deviceId,
+          kind: "device",
+        }),
       });
       if (existingDeviceSignal) {
         return null;
@@ -174,7 +176,7 @@ export const enqueuePopularitySignals = Effect.fn(
   context: LearningContextStorage,
   input: {
     readonly now: number;
-    readonly userId?: Docs["users"]["_id"];
+    readonly viewer: ContentViewer;
   }
 ) {
   const partitions = new Set<number>();

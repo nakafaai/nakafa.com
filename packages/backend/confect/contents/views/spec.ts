@@ -11,7 +11,8 @@ export const contentViewIoFailedCode = "CONTENT_VIEW_IO_FAILED";
 export const recordContentViewArgs = {
   contentId: graphContentIdValidator,
   context: Schema.optionalKey(learningContextInputValidator),
-  deviceId: Schema.String,
+  /** Present only after the browser granted analytics consent. */
+  deviceId: Schema.optionalKey(Schema.String),
   locale: localeValidator,
   publicPath: Schema.String,
   section: contentViewSectionValidator,
