@@ -47,18 +47,28 @@ export function NavExplore({
       <SidebarGroupLabel>{tCommon("explore")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                isActive={pathname.includes(item.href)}
-                render={<NavigationLink href={item.href} title={item.label} />}
-                tooltip={item.label}
-              >
-                <HugeIcons icon={item.icon} />
-                <span className="truncate">{item.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map((item) => {
+            const isActive = pathname.includes(item.href);
+
+            return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  isActive={isActive}
+                  render={
+                    <NavigationLink
+                      aria-current={isActive ? "page" : undefined}
+                      href={item.href}
+                      title={item.label}
+                    />
+                  }
+                  tooltip={item.label}
+                >
+                  <HugeIcons icon={item.icon} />
+                  <span className="truncate">{item.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

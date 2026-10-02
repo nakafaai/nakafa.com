@@ -340,3 +340,30 @@ test("guest reaches authentication only when starting a public tryout", async ({
     )
   );
 });
+
+test("guest sidebar marks only the page the reader is on", async ({ page }) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        yield* Effect.promise(() =>
+          page.setViewportSize({ height: 900, width: 1440 })
+        );
+        const response = yield* Effect.promise(() =>
+          page.goto("/en/quran", { waitUntil: "domcontentloaded" })
+        );
+        yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+        // The link to the page on screen is the only current one; the brand
+        // link home never claims it.
+        yield* Effect.promise(() =>
+          expect(
+            page
+              .locator('[data-sidebar="sidebar"]:visible')
+              .locator('a[aria-current="page"]')
+          ).toHaveText([en.Holy.quran])
+        );
+      })
+    )
+  );
+});
