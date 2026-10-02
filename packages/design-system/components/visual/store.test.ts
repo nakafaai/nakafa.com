@@ -416,17 +416,30 @@ describe("visual card store with the Fullscreen API", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("holds its own request while another element changes full screen", () => {
-    const { browser, store } = requestPendingFullscreen();
+  it("keeps the page usable until the browser shows the card", async () => {
+    const { answer, browser, card, store } = requestPendingFullscreen();
 
+    // Another element entering and leaving full screen is not the answer.
     browser.change(element("outside"));
     browser.change(null);
 
+    // The slot keeps the card's place, but a browser that never answers
+    // leaves the page as it was.
     expect(store.getState()).toMatchObject({
       place: CARD_PLACE,
       presentation: "inline",
     });
+    expect(inertIds()).toEqual(["aside"]);
+    expect(document.documentElement.style.overflow).toBe("");
+
+    browser.change(card);
+    answer.resolve();
+
+    expect(store.getState().presentation).toBe("fullscreen");
     expect(inertIds()).toEqual(HELD_PAGE);
+    expect(document.documentElement.style.overflow).toBe("hidden");
+    await settle();
+    expect(store.getState().presentation).toBe("fullscreen");
   });
 
   it("cancels an unanswered request from its action and leaves a late full screen", async () => {

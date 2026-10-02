@@ -1,5 +1,6 @@
 import {
   holdPage,
+  measurePage,
   type VisualPlace,
 } from "@repo/design-system/components/visual/page";
 import { Effect, Predicate, Schema } from "effect";
@@ -26,8 +27,8 @@ export interface VisualState {
   /** Returns the card to its place in the page, or cancels a pending request. */
   readonly exit: () => void;
   /**
-   * The card's place in the page while it fills the screen. Its slot keeps
-   * it, so nothing behind the card moves.
+   * The card's place in the page from the card's request for the screen until
+   * it returns. Its slot keeps it, so nothing behind the card moves.
    */
   readonly place: VisualPlace | undefined;
   /**
@@ -43,6 +44,8 @@ export interface VisualState {
 /** One stay across the whole screen, from its request to its return. */
 interface Session {
   readonly card: HTMLElement;
+  /** Holds the page behind the card once the card fills the screen. */
+  readonly hold: () => void;
   readonly release: () => void;
   readonly trigger: HTMLElement;
 }
@@ -111,11 +114,12 @@ function lower(card: HTMLElement) {
  * Creates the store that shows one visual card across the whole screen.
  *
  * The card element itself changes presentation, so its scene never remounts:
- * a WebGL canvas keeps its context and camera. While the card fills the
- * screen, the page behind is inert and still, and its slot keeps the card's
- * place. The store follows `fullscreenchange`, because the user can also
- * leave with Escape or the browser's own controls, and it returns the card
- * when focus moves to anything outside it.
+ * a WebGL canvas keeps its context and camera. Its slot keeps the card's
+ * place from the request on, and while the card fills the screen the page
+ * behind is inert and still. A browser that never answers a request leaves
+ * the page as it was. The store follows `fullscreenchange`, because the user
+ * can also leave with Escape or the browser's own controls, and it returns the
+ * card when focus moves to anything outside it.
  *
  * The actions are the handlers of the card's action, Escape, focus, and
  * `fullscreenchange`, so they run the Fullscreen API programs at that browser
@@ -149,9 +153,18 @@ export function createVisualStore() {
       }
     }
 
+    /** Shows the card across the screen and holds the page behind it. */
+    function present(
+      current: Session,
+      presentation: Exclude<VisualPresentation, "inline">
+    ) {
+      current.hold();
+      set({ presentation });
+    }
+
     /** Covers the viewport with the card element itself. */
     function immerse(current: Session) {
-      set({ presentation: "immersive" });
+      present(current, "immersive");
       raise(current.card);
       focusCard(current);
     }
@@ -159,7 +172,7 @@ export function createVisualStore() {
     /** Follows the Fullscreen API into and out of full screen. */
     function follow(current: Session) {
       if (document.fullscreenElement === current.card) {
-        set({ presentation: "fullscreen" });
+        present(current, "fullscreen");
         focusCard(current);
         return;
       }
@@ -169,8 +182,8 @@ export function createVisualStore() {
     }
 
     /**
-     * Opens a session: the page behind holds still, and the card's slot keeps
-     * its place in the page.
+     * Opens a session: the card's slot keeps its place in the page, and the
+     * page is measured while the card is still in it.
      */
     function open(element: HTMLElement, trigger: HTMLElement) {
       const onChange = () => follow(current);
@@ -194,19 +207,26 @@ export function createVisualStore() {
           get().exit();
         }
       };
-      const page = holdPage(element);
+      const page = measurePage(element);
+      let releasePage: () => void = () => undefined;
       set({ place: page.place });
       document.addEventListener("fullscreenchange", onChange);
       document.addEventListener("keydown", onKeyDown);
       document.addEventListener("focusin", onFocusIn);
       const current: Session = {
         card: element,
+        hold: () => {
+          // Showing the card replaces any earlier hold, so no hold outlives
+          // the session.
+          releasePage();
+          releasePage = holdPage(element, page.padding);
+        },
         release: () => {
           document.removeEventListener("focusin", onFocusIn);
           document.removeEventListener("keydown", onKeyDown);
           document.removeEventListener("fullscreenchange", onChange);
           lower(element);
-          page.release();
+          releasePage();
         },
         trigger,
       };

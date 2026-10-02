@@ -8,6 +8,9 @@ export type VisualPlace = Required<
   Pick<CSSProperties, "height" | "marginBottom" | "marginTop">
 >;
 
+/** The root's padding that stands in for its scrollbar gutters. */
+type GutterPadding = Pick<CSSStyleDeclaration, "paddingLeft" | "paddingRight">;
+
 /**
  * Measures the card's place in the page. A margin of the card collapses with
  * its neighbours through the slot, and the slot's own margin collapses the
@@ -29,7 +32,7 @@ function measurePlace(card: HTMLElement): VisualPlace {
  * scroll. Overlay scrollbars, on phones and by default on macOS, take none,
  * and a pinch-zoomed phone can report a viewport narrower than the page.
  */
-function measureGutterPadding(root: HTMLElement) {
+function measureGutterPadding(root: HTMLElement): GutterPadding {
   const { left, right } = root.getBoundingClientRect();
   const style = getComputedStyle(root);
   const start = Math.max(0, left - Number.parseFloat(style.marginLeft));
@@ -74,10 +77,7 @@ function inertOutside(card: HTMLElement) {
  * its edges. The root takes the gutters' width as padding instead, so the
  * page keeps its layout behind the card.
  */
-function lockScroll(
-  root: HTMLElement,
-  padding: Pick<CSSStyleDeclaration, "paddingLeft" | "paddingRight">
-) {
+function lockScroll(root: HTMLElement, padding: GutterPadding) {
   const { style } = root;
   const saved = {
     overflow: style.overflow,
@@ -96,24 +96,29 @@ function lockScroll(
 }
 
 /**
- * Holds the page still behind a card shown across the whole screen. Its
- * `place` is the card's place in the page, which the card's slot keeps, so
- * nothing behind the card moves. Everything outside the card turns inert and
- * the page stops scrolling. Scenes in the inert page pause, because a scene
- * that nobody can see or reach needs no frames. `release` returns the page.
+ * Reads the page around a card while the card is still in it: the card's
+ * place, which its slot keeps while the card fills the screen, and the root's
+ * scrollbar gutters. It writes nothing, so it lays the page out at most once.
  */
-export function holdPage(card: HTMLElement) {
-  const root = document.documentElement;
-  // Every read comes before the first write, so the page lays out once.
-  const place = measurePlace(card);
-  const padding = measureGutterPadding(root);
-  const restoreInert = inertOutside(card);
-  const unlockScroll = lockScroll(root, padding);
+export function measurePage(card: HTMLElement) {
   return {
-    place,
-    release: () => {
-      unlockScroll();
-      restoreInert();
-    },
+    padding: measureGutterPadding(document.documentElement),
+    place: measurePlace(card),
+  };
+}
+
+/**
+ * Holds the page still behind a card that fills the screen, and returns the
+ * release. Everything outside the card turns inert and the page stops
+ * scrolling. Scenes in the inert page pause, because a scene that nobody can
+ * see or reach needs no frames. It reads no layout, so holding the page at
+ * the moment the browser shows the card lays nothing out early.
+ */
+export function holdPage(card: HTMLElement, padding: GutterPadding) {
+  const restoreInert = inertOutside(card);
+  const unlockScroll = lockScroll(document.documentElement, padding);
+  return () => {
+    unlockScroll();
+    restoreInert();
   };
 }
