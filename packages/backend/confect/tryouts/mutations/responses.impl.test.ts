@@ -13,7 +13,10 @@ import {
   setResponseClock,
 } from "@repo/backend/test/tryout/response";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
-import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import {
+  TRYOUT_SECTION_KEY,
+  TRYOUT_TEST_NOW,
+} from "@repo/backend/test/tryouts";
 import { Effect, Option } from "effect";
 
 const saveAnswer = Effect.fn("test.tryout.response.saveAnswer")(
@@ -233,6 +236,20 @@ describe("tryouts/mutations/responses outcomes", () => {
           isCorrect: true,
           outcome: { status: "correct" },
           selection: { kind: "short-answer", number: "0.5", text: "0,50" },
+        });
+        const running = yield* Effect.promise(() =>
+          seeded.client.query(
+            api.tryouts.queries.runtime.getSectionAttemptState,
+            {
+              attemptId: seeded.attemptId,
+              locale: "id",
+              sectionKey: TRYOUT_SECTION_KEY,
+            }
+          )
+        );
+        expect(running?.runtime?.questions.at(0)?.response?.selection).toEqual({
+          kind: "short-answer",
+          text: "0,50",
         });
         yield* expectConvexFailure(
           () =>

@@ -1,6 +1,9 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { project } from "@repo/backend/confect/response/projection";
+import {
+  project,
+  projectSelection,
+} from "@repo/backend/confect/response/projection";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
 import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
@@ -121,7 +124,7 @@ function projectRuntimeQuestion(
         answeredAt: response.answeredAt,
         isComplete: response.isComplete,
         ...(access.answers ? { outcome: readOutcome(response) } : {}),
-        selection: response.selection,
+        selection: projectSelection(response.selection, access.answers),
         updatedAt: response.updatedAt,
       }
     : null;

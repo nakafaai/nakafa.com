@@ -6,8 +6,9 @@ import {
 import {
   type RenderableSpec,
   ResponseSpec,
+  Selection,
 } from "@repo/backend/confect/response/model";
-import { Array as Arr } from "effect";
+import { Array as Arr, Struct } from "effect";
 
 type Options = (typeof ResponseSpec.cases)["single-choice"]["Type"]["options"];
 
@@ -69,6 +70,32 @@ export function project(spec: ResponseSpec, reveal: boolean): RenderableSpec {
       kind: spec.kind,
       options: projectOptions(spec.options, reveal),
     }),
+  });
+}
+
+/**
+ * Removes the number each typed answer was read as unless the learner may
+ * review answers. Only a numeric key reads a number, so a stored reading would
+ * show the key's kind while the attempt runs.
+ */
+export function projectSelection(
+  selection: Selection,
+  reveal: boolean
+): Selection {
+  if (reveal) {
+    return selection;
+  }
+  return Selection.match(selection, {
+    category: (selection) => selection,
+    "multiple-choice": (selection) => selection,
+    rubric: (selection) => ({
+      ...selection,
+      finalAnswers: Arr.map(selection.finalAnswers, (answer) =>
+        Struct.omit(answer, ["number"])
+      ),
+    }),
+    "short-answer": (selection) => Struct.omit(selection, ["number"]),
+    "single-choice": (selection) => selection,
   });
 }
 

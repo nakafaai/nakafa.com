@@ -14,18 +14,18 @@ import { Array as Arr, Effect, HashMap, Option, Tuple } from "effect";
  * IRT observes correct or not correct: a pending answer enters the estimate as
  * not correct and keeps the score provisional until the grader decides it.
  */
-export const scoreIrt = Effect.fn("tryouts.runtime.scoreIrt")(function* (args: {
-  answers: readonly ScoredAnswer[];
-  source: TryoutIrtSource;
-  totalQuestions: number;
-}) {
-  const answers = HashMap.fromIterable(
-    Arr.map(args.answers, (answer) => Tuple.make(answer.placementId, answer))
+export const scoreIrt = Effect.fn("tryouts.runtime.scoreIrt")(function* (
+  answers: readonly ScoredAnswer[],
+  source: TryoutIrtSource,
+  totalQuestions: number
+) {
+  const byPlacement = HashMap.fromIterable(
+    Arr.map(answers, (answer) => Tuple.make(answer.placementId, answer))
   );
   const estimate = yield* estimateIrtScore(
     Arr.getSomes(
-      Arr.map(args.source.items, ({ item, placementId }) =>
-        Option.map(HashMap.get(answers, placementId), ({ outcome }) => ({
+      Arr.map(source.items, ({ item, placementId }) =>
+        Option.map(HashMap.get(byPlacement, placementId), ({ outcome }) => ({
           isCorrect: outcome?.status === "correct",
           item,
         }))
@@ -34,13 +34,13 @@ export const scoreIrt = Effect.fn("tryouts.runtime.scoreIrt")(function* (args: {
   );
   return {
     publishedScore: estimate.publishedScore,
-    rawScore: getRawPercentage(args.answers),
-    scaleVersionId: args.source.scale._id,
-    scoreStatus: getScoreStatus(args.answers, args.source.scale.status),
+    rawScore: getRawPercentage(answers),
+    scaleVersionId: source.scale._id,
+    scoreStatus: getScoreStatus(answers, source.scale.status),
     scoringStrategy: "irt",
     theta: estimate.theta,
     thetaSE: estimate.thetaSE,
-    totalCorrect: countCorrect(args.answers),
-    totalQuestions: args.totalQuestions,
+    totalCorrect: countCorrect(answers),
+    totalQuestions,
   } satisfies AttemptScore;
 });

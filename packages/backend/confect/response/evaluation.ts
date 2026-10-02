@@ -258,9 +258,28 @@ function typedAnswer(
   );
 }
 
+/** Spells one reading as a canonical decimal, or `n/d` for a typed fraction. */
 function spellNumber(answer: QuestionNumberAnswer) {
-  const numerator = BigDecimal.format(answer.numerator);
+  const numerator = spellDecimal(answer.numerator);
   return answer.fraction
-    ? `${numerator}/${BigDecimal.format(answer.denominator)}`
+    ? `${numerator}/${spellDecimal(answer.denominator)}`
     : numerator;
+}
+
+/**
+ * Writes one exact decimal as the contract's canonical `QuestionDecimal`. It
+ * places the decimal point by scale, because `BigDecimal.format` switches to
+ * exponent notation once the normalized scale reaches 16, which no canonical
+ * decimal allows.
+ */
+function spellDecimal(decimal: BigDecimal.BigDecimal) {
+  const normalized = BigDecimal.normalize(decimal);
+  const sign = BigDecimal.isNegative(normalized) ? "-" : "";
+  const digits = `${BigDecimal.abs(normalized).value}`;
+  if (normalized.scale <= 0) {
+    return `${sign}${Str.padEnd(digits.length - normalized.scale, "0")(digits)}`;
+  }
+  const padded = Str.padStart(normalized.scale + 1, "0")(digits);
+  const whole = Str.takeLeft(padded, padded.length - normalized.scale);
+  return `${sign}${whole}.${Str.takeRight(padded, normalized.scale)}`;
 }

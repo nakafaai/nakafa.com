@@ -64,7 +64,6 @@ function getEndReason(
   return "submitted";
 }
 
-/** Inserts one standard paid user for try-out runtime tests. */
 /** Reads one attempt placement decoded the way runtime code receives it. */
 export function readConfectPlacement(
   ctx: Pick<QueryCtx, "db">,
@@ -77,6 +76,7 @@ export function readConfectPlacement(
   );
 }
 
+/** Inserts one standard paid user for try-out runtime tests. */
 export function insertTryoutUser(
   ctx: MutationCtx,
   identity: Pick<Doc<"users">, "authId" | "email" | "name">

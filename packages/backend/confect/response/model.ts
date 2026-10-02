@@ -1,5 +1,8 @@
 import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
-import { QuestionAnswerKeySchema } from "@nakafa/aksara-contracts/question/answer";
+import {
+  QuestionAnswerKeySchema,
+  QuestionDecimalSchema,
+} from "@nakafa/aksara-contracts/question/answer";
 import {
   QuestionRubricLabelSchema,
   QuestionRubricResponseSchema,
@@ -122,11 +125,24 @@ const TypedAnswer = Schema.String.check(
   Schema.isMaxLength(TYPED_ANSWER_LENGTH)
 );
 
+/** A typed fraction as read: a canonical integer over a positive integer. */
+const FRACTION_READING = /^(?:0|-?[1-9]\d*)\/[1-9]\d*$/u;
+
+const isDecimal = Schema.is(QuestionDecimalSchema);
+
 /**
  * Exact number a numeric key read from a typed answer in its delivery
- * language, such as `0.5` or `3/4`; absent for text keys and unreadable text.
+ * language: the contract's canonical decimal, such as `0.5`, or a typed
+ * fraction, such as `3/4`. It is absent for text keys and unreadable text.
  */
-const Reading = Schema.optionalKey(Schema.String);
+const Reading = Schema.optionalKey(
+  Schema.String.check(
+    Schema.makeFilter(
+      (reading) => isDecimal(reading) || FRACTION_READING.test(reading),
+      { message: "Expected a canonical decimal or an integer fraction." }
+    )
+  )
+);
 
 /**
  * Learner-owned answer in canonical form. Typed answers keep the raw text; the

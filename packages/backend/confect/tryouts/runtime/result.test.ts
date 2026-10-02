@@ -128,27 +128,16 @@ describe("tryouts/runtime/result", () => {
         answer(null, 4),
       ];
 
-      assert.deepStrictEqual(
-        yield* scoreAnswers({
-          answers,
-          scoringStrategy: "raw",
-          totalQuestions: 4,
-        }),
-        {
-          publishedScore: 40,
-          rawScore: 40,
-          scoreStatus: "official",
-          scoringStrategy: "raw",
-          totalCorrect: 1,
-          totalQuestions: 4,
-        }
-      );
+      assert.deepStrictEqual(yield* scoreAnswers(answers, "raw", 4), {
+        publishedScore: 40,
+        rawScore: 40,
+        scoreStatus: "official",
+        scoringStrategy: "raw",
+        totalCorrect: 1,
+        totalQuestions: 4,
+      });
       assert.strictEqual(
-        (yield* scoreAnswers({
-          answers,
-          scoringStrategy: "weighted",
-          totalQuestions: 4,
-        })).publishedScore,
+        (yield* scoreAnswers(answers, "weighted", 4)).publishedScore,
         40
       );
     })
@@ -156,8 +145,8 @@ describe("tryouts/runtime/result", () => {
 
   it.effect("adds signed section marks times worth for penalized sets", () =>
     Effect.gen(function* () {
-      const score = yield* scoreAnswers({
-        answers: [
+      const score = yield* scoreAnswers(
+        [
           answer({ status: "correct" }, 3),
           answer({ status: "incorrect" }, 2),
           answer({ points: 1, status: "partial" }, 2),
@@ -165,9 +154,9 @@ describe("tryouts/runtime/result", () => {
           answer({ status: "incorrect" }, 1, false),
           answer({ status: "pending" }, 5),
         ],
-        scoringStrategy: "penalized",
-        totalQuestions: 6,
-      });
+        "penalized",
+        6
+      );
 
       assert.deepStrictEqual(score, {
         publishedScore: 14,
@@ -182,11 +171,11 @@ describe("tryouts/runtime/result", () => {
 
   it.effect("rejects a penalized section that lost its signed marks", () =>
     Effect.gen(function* () {
-      const failure = yield* scoreAnswers({
-        answers: [Struct.omit(answer({ status: "correct" }), ["marks"])],
-        scoringStrategy: "penalized",
-        totalQuestions: 1,
-      }).pipe(Effect.flip);
+      const failure = yield* scoreAnswers(
+        [Struct.omit(answer({ status: "correct" }), ["marks"])],
+        "penalized",
+        1
+      ).pipe(Effect.flip);
 
       assert.ok(failure instanceof TryoutRuntimeError);
       assert.strictEqual(failure.code, "TRYOUT_SCORE_SOURCE_MISMATCH");

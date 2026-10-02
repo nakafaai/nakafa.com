@@ -272,6 +272,23 @@ describe("response/evaluation", () => {
     });
   });
 
+  it("stores long readings as canonical decimals, never in exponent form", () => {
+    const fractions = shortAnswer({ ...half, acceptsFractions: true }, english);
+
+    expect(
+      settle(evaluate(shortAnswer(half, english), typed("10000000000000000")))
+    ).toMatchObject({ selection: { number: "10000000000000000" } });
+    expect(
+      settle(evaluate(shortAnswer(half), typed("-0,0000000000000001")))
+    ).toMatchObject({ selection: { number: "-0.0000000000000001" } });
+    expect(
+      settle(evaluate(fractions, typed("5000000000000000/10000000000000000")))
+    ).toMatchObject({
+      outcome: { status: "correct" },
+      selection: { number: "5000000000000000/10000000000000000" },
+    });
+  });
+
   it("grades absolute and relative tolerances inclusively", () => {
     const pi = shortAnswer({
       acceptsFractions: false,

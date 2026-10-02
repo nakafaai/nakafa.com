@@ -145,17 +145,13 @@ export const scoreTryoutSection = Effect.fn("tryouts.runtime.scoreSection")(
       args.responses
     );
     if (args.source.kind === "irt") {
-      return yield* scoreIrt({
-        answers,
-        source: args.source.irt,
-        totalQuestions: args.totalQuestions,
-      });
+      return yield* scoreIrt(answers, args.source.irt, args.totalQuestions);
     }
-    return yield* scoreAnswers({
+    return yield* scoreAnswers(
       answers,
-      scoringStrategy: args.source.scoringStrategy,
-      totalQuestions: args.totalQuestions,
-    });
+      args.source.scoringStrategy,
+      args.totalQuestions
+    );
   }
 );
 

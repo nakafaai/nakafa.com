@@ -110,22 +110,20 @@ export function readScoredAnswers(
  * worth. A pending answer earns nothing yet and keeps the score provisional.
  */
 export const scoreAnswers = Effect.fn("tryouts.runtime.scoreAnswers")(
-  function* (args: {
-    answers: readonly ScoredAnswer[];
-    scoringStrategy: Exclude<TryoutScoringStrategy, "irt">;
-    totalQuestions: number;
-  }) {
-    const rawScore = getRawPercentage(args.answers);
+  function* (
+    answers: readonly ScoredAnswer[],
+    scoringStrategy: Exclude<TryoutScoringStrategy, "irt">,
+    totalQuestions: number
+  ) {
+    const rawScore = getRawPercentage(answers);
     return {
       publishedScore:
-        args.scoringStrategy === "penalized"
-          ? yield* sumMarks(args.answers)
-          : rawScore,
+        scoringStrategy === "penalized" ? yield* sumMarks(answers) : rawScore,
       rawScore,
-      scoreStatus: getScoreStatus(args.answers, "official"),
-      scoringStrategy: args.scoringStrategy,
-      totalCorrect: countCorrect(args.answers),
-      totalQuestions: args.totalQuestions,
+      scoreStatus: getScoreStatus(answers, "official"),
+      scoringStrategy,
+      totalCorrect: countCorrect(answers),
+      totalQuestions,
     } satisfies AttemptScore;
   }
 );

@@ -1,8 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
-import type { ResponseSpec } from "@repo/backend/confect/response/model";
-import { freeze, project } from "@repo/backend/confect/response/projection";
+import type {
+  ResponseSpec,
+  Selection,
+} from "@repo/backend/confect/response/model";
+import {
+  freeze,
+  project,
+  projectSelection,
+} from "@repo/backend/confect/response/projection";
+import { Array as Arr } from "effect";
 
 const indonesian = DeliveryLanguageSchema.make("id");
 const label = { de: "Ergebnis", en: "Result", id: "Hasil" };
@@ -139,5 +147,49 @@ describe("response/projection", () => {
       kind: "rubric",
       language: "id",
     });
+  });
+
+  it("hides the number each typed answer was read as until review", () => {
+    const choices = [
+      { kind: "single-choice", optionKey: "option-1" },
+      { kind: "multiple-choice", optionKeys: ["option-1", "option-2"] },
+      {
+        assignments: [
+          { categoryKey: "category-1", statementKey: "statement-1" },
+        ],
+        kind: "category",
+      },
+    ] satisfies Selection[];
+    const typed = {
+      kind: "short-answer",
+      number: "0.5",
+      text: "0,5",
+    } satisfies Selection;
+    const written = {
+      finalAnswers: [
+        { criterionKey: "criterion-1", number: "4", text: "4,0" },
+        { criterionKey: "criterion-2", text: "Paris" },
+      ],
+      kind: "rubric",
+      text: "Work",
+    } satisfies Selection;
+
+    expect(
+      Arr.map(choices, (selection) => projectSelection(selection, false))
+    ).toEqual(choices);
+    expect(projectSelection(typed, false)).toEqual({
+      kind: "short-answer",
+      text: "0,5",
+    });
+    expect(projectSelection(written, false)).toEqual({
+      finalAnswers: [
+        { criterionKey: "criterion-1", text: "4,0" },
+        { criterionKey: "criterion-2", text: "Paris" },
+      ],
+      kind: "rubric",
+      text: "Work",
+    });
+    expect(projectSelection(typed, true)).toBe(typed);
+    expect(projectSelection(written, true)).toBe(written);
   });
 });
