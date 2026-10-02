@@ -1,23 +1,22 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import { TryoutSetAction } from "@/components/tryout/set/action.client";
+import { TryoutSetPageHeader } from "@/components/tryout/set/header";
 import type { TryoutSetView } from "@/components/tryout/set/model";
 import { TryoutSectionRows } from "@/components/tryout/set/rows.client";
-import {
-  TryoutPage,
-  TryoutPageBody,
-  TryoutPageHeader,
-} from "@/components/tryout/shell/header";
+import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 
-/** Renders a set page that offers visible nested sections. */
+/**
+ * Renders a set page that offers visible nested sections. The section list
+ * comes first and the attempt's countdown or score follows it, so the list a
+ * pending page paints from the catalog never moves when the attempt arrives.
+ */
 export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
   return (
     <TryoutPage>
-      <TryoutPageHeader
+      <TryoutSetPageHeader
         action={
           <TryoutSetAction
             value={{
@@ -33,47 +32,20 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
             }}
           />
         }
-        items={[
-          {
-            href:
-              value.currentHref ===
-              getTryoutPublicPathHref(value.page.set.publicPath)
-                ? getTryoutPublicPathHref(value.page.exam.publicPath)
-                : undefined,
-            label: value.page.exam.title,
-          },
-          { href: value.returnHref, label: value.page.track.title },
-        ]}
-        title={value.page.set.title}
+        currentHref={value.currentHref}
+        page={value.page}
+        returnHref={value.returnHref}
       />
       <TryoutPageBody>
+        <TryoutSectionRows
+          {...(value.actionAttempt === undefined
+            ? {}
+            : { attempt: value.actionAttempt })}
+          sections={value.sectionRoutes}
+        />
         <TryoutSetResult value={value} />
-        <TryoutSetSections value={value} />
       </TryoutPageBody>
     </TryoutPage>
-  );
-}
-
-/** Renders nested section rows only for sets that expose them. */
-function TryoutSetSections({ value }: { value: TryoutSetView }) {
-  const tTryouts = useTranslations("Tryouts");
-
-  const sections = value.sectionRoutes;
-  if (sections.length === 0) {
-    return null;
-  }
-
-  return (
-    <TryoutSectionRows
-      value={{
-        ...(value.actionAttempt === undefined
-          ? {}
-          : { attempt: value.actionAttempt }),
-        emptyLabel: tTryouts("list-empty"),
-        questionUnitLabel: tTryouts("question-unit"),
-        sections,
-      }}
-    />
   );
 }
 

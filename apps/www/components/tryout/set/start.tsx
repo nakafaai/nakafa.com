@@ -202,6 +202,20 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   );
 }
 
+/**
+ * Holds the action's place at its final height while the attempt that decides
+ * it is still on its way. It names no action, because only that attempt tells
+ * starting, continuing, and restarting apart.
+ */
+export function PendingTryoutAction() {
+  const t = useTranslations("Tryouts");
+  return (
+    <Button aria-label={t("action-loading")} disabled>
+      <Spinner icon={Rocket01Icon} isLoading />
+    </Button>
+  );
+}
+
 /** Links to the next section of the active attempt. */
 function ResumeTryoutLink({
   request,

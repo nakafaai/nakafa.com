@@ -3,32 +3,6 @@ import {
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
 
-interface FrozenAttemptPage<FrozenPage> {
-  readonly kind: "current" | "retained";
-  readonly page: FrozenPage;
-}
-
-interface SetAttemptPage<FrozenPage, RestartTarget> {
-  readonly kind: "current" | "retained";
-  readonly page: FrozenPage;
-  readonly restartTarget: RestartTarget | null;
-}
-
-interface RedirectAttemptPage {
-  readonly kind: "redirect";
-}
-
-/** Selects the verified snapshot page carried by a current or retained attempt. */
-export function selectTryoutFrozenPage<FrozenPage>(
-  attemptPage: FrozenAttemptPage<FrozenPage> | RedirectAttemptPage | null
-) {
-  if (!attemptPage || attemptPage.kind === "redirect") {
-    return null;
-  }
-
-  return attemptPage.page;
-}
-
 /** Builds the current restart target exposed by one public set page. */
 export function createTryoutSetRestartTarget<EntrySection>(page: {
   readonly entrySection: EntrySection | null;
@@ -44,53 +18,31 @@ export function createTryoutSetRestartTarget<EntrySection>(page: {
   };
 }
 
-/** Separates frozen attempt display from the verified current restart target. */
-export function selectTryoutSetPages<PublicPage, FrozenPage, RestartTarget>({
-  attemptPage,
-  publicPage,
-  publicRestartTarget,
-}: {
-  attemptPage:
-    | SetAttemptPage<FrozenPage, RestartTarget>
-    | RedirectAttemptPage
-    | null;
-  publicPage: PublicPage | null;
-  publicRestartTarget: RestartTarget | null;
-}) {
-  const page = selectTryoutFrozenPage(attemptPage) ?? publicPage;
-  if (page === null) {
-    return null;
-  }
-
-  const restartTarget =
-    attemptPage && attemptPage.kind !== "redirect"
-      ? attemptPage.restartTarget
-      : publicRestartTarget;
-
-  return {
-    page,
-    restartTarget,
-  };
-}
-
-/** Selects the active parent track for one current or retained set. */
-export function selectTryoutTrackReturnHref(
+/**
+ * Selects the active set route and its parent track for one current or
+ * retained set, or the try-out root when the set is no longer active.
+ */
+export function selectTryoutSetLinks(
   restartTarget: {
     readonly setPublicPath: string;
   } | null
 ) {
   if (!restartTarget) {
-    return getTryoutHref();
+    return { currentHref: getTryoutHref(), returnHref: getTryoutHref() };
   }
 
+  const currentHref = getTryoutPublicPathHref(restartTarget.setPublicPath);
   const separator = restartTarget.setPublicPath.lastIndexOf("/");
   if (separator <= 0) {
-    return getTryoutHref();
+    return { currentHref, returnHref: getTryoutHref() };
   }
 
-  return getTryoutPublicPathHref(
-    restartTarget.setPublicPath.slice(0, separator)
-  );
+  return {
+    currentHref,
+    returnHref: getTryoutPublicPathHref(
+      restartTarget.setPublicPath.slice(0, separator)
+    ),
+  };
 }
 
 /** Selects the active set destination for one retained section. */

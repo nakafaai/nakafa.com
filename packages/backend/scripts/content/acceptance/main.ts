@@ -6,6 +6,7 @@ import {
   runAcceptance,
 } from "@repo/backend/scripts/content/acceptance/build";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { Effect, FileSystem } from "effect";
@@ -25,8 +26,12 @@ const main = Effect.gen(function* () {
   if (mode === "clean") {
     return yield* cleanLocalRuntime(root);
   }
+  const output = process.argv[3];
+  if (mode === "learner" && output !== undefined) {
+    return yield* createAcceptanceLearner(root, output);
+  }
   return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean>"
+    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>>"
   );
 });
 

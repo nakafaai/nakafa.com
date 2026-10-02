@@ -6,9 +6,9 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useConvexAuth } from "convex/react";
 import { useLocale } from "next-intl";
 import { type ReactNode, useState } from "react";
-import { AppShell } from "@/components/sidebar/shell";
+import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
-import { selectTryoutTrackReturnHref } from "@/components/tryout/route/owner";
+import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptHref,
   getTryoutHref,
@@ -31,7 +31,6 @@ import type {
   TryoutSetView,
 } from "@/components/tryout/set/model";
 import { TryoutSetOverview } from "@/components/tryout/set/overview";
-import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 type SetState = TryoutSetInitialState | null;
 
@@ -42,7 +41,6 @@ interface TryoutSetPageBinding {
 }
 
 interface TryoutSetPageClientProps {
-  articleNavigation: readonly ArticleNavigationItem[];
   binding: TryoutSetPageBinding | null;
   children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
@@ -53,7 +51,6 @@ interface TryoutSetPageClientProps {
 
 /** Renders one stable page with an active-only mutable subscription. */
 export function TryoutSetPageClient({
-  articleNavigation,
   binding,
   children,
   content,
@@ -64,7 +61,6 @@ export function TryoutSetPageClient({
   if (!binding) {
     return (
       <ResolvedTryoutSetPage
-        articleNavigation={articleNavigation}
         binding={null}
         content={content}
         page={page}
@@ -80,7 +76,6 @@ export function TryoutSetPageClient({
   if (!isTryoutStateLive(binding.initialState)) {
     return (
       <ResolvedTryoutSetPage
-        articleNavigation={articleNavigation}
         binding={binding}
         content={content}
         page={page}
@@ -95,7 +90,6 @@ export function TryoutSetPageClient({
 
   return (
     <LiveTryoutSetPage
-      articleNavigation={articleNavigation}
       binding={binding}
       content={content}
       key={binding.attemptId}
@@ -110,7 +104,6 @@ export function TryoutSetPageClient({
 
 /** Owns one active subscription and skips it after a terminal update. */
 function LiveTryoutSetPage({
-  articleNavigation,
   binding,
   children,
   content,
@@ -150,7 +143,6 @@ function LiveTryoutSetPage({
   }
   return (
     <ResolvedTryoutSetPage
-      articleNavigation={articleNavigation}
       binding={binding}
       content={content}
       page={page}
@@ -163,9 +155,12 @@ function LiveTryoutSetPage({
   );
 }
 
-/** Renders one stable set view from its exact mutable state. */
+/**
+ * Renders one stable set view from its exact mutable state. A page rendered
+ * for a running attempt locks the app shell until the learner leaves it, even
+ * once the attempt ends here, so the shell never changes under a page.
+ */
 function ResolvedTryoutSetPage({
-  articleNavigation,
   binding,
   children,
   content,
@@ -189,22 +184,20 @@ function ResolvedTryoutSetPage({
   const startEntrySection = activeAttempt
     ? entrySection
     : (restartTarget?.entrySection ?? null);
-  const currentSetHref = restartTarget
-    ? getTryoutPublicPathHref(restartTarget.setPublicPath)
-    : getTryoutHref();
+  const links = selectTryoutSetLinks(restartTarget);
   const destination = getStartDestination({
     activeAttempt,
     page,
     startEntrySection,
-    setHref: activeAttempt ? getTryoutHref(route) : currentSetHref,
+    setHref: activeAttempt ? getTryoutHref(route) : links.currentHref,
   });
   const view: TryoutSetView = {
     actionAttempt,
     activeAttempt,
-    currentHref: currentSetHref,
+    currentHref: links.currentHref,
     entrySection,
     page,
-    returnHref: selectTryoutTrackReturnHref(restartTarget),
+    returnHref: links.returnHref,
     route,
     sectionRoutes: binding?.sectionRoutes ?? page.sections,
     start: {
@@ -215,10 +208,10 @@ function ResolvedTryoutSetPage({
   };
 
   return (
-    <AppShell
-      articleNavigation={articleNavigation}
-      locked={currentAttempt?.status === "in-progress"}
-    >
+    <>
+      {binding?.initialState.attempt.status === "in-progress" ? (
+        <ShellLock />
+      ) : null}
       {isInternalEntry && entrySection ? (
         <TryoutInternalSet
           value={{
@@ -234,7 +227,7 @@ function ResolvedTryoutSetPage({
       ) : (
         <TryoutSetOverview value={view} />
       )}
-    </AppShell>
+    </>
   );
 }
 

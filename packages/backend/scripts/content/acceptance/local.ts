@@ -6,6 +6,10 @@ import {
   NAKAFA_MCP_EDGE_CONTRACT,
 } from "@repo/backend/agent/edge";
 import { reserveAnalyticsOrigin } from "@repo/backend/scripts/content/acceptance/analytics";
+import {
+  createLocalJwks,
+  LOCAL_AUTH_SECRET,
+} from "@repo/backend/scripts/content/acceptance/auth";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
@@ -42,16 +46,18 @@ const RuntimeManifest = Schema.Struct({
 export type LocalRuntime = typeof RuntimeManifest.Type;
 export const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
 
-/** One inert backend environment for signed reads in local production builds. */
+/**
+ * One inert backend environment for signed reads in local production builds.
+ * Google sign-in stays disabled; each runtime adds its own session signing key
+ * as `JWKS`, so synthetic learners can sign in locally.
+ */
 const localEnvironment = {
   AI_GATEWAY_API_KEY: "build-disabled",
   AUTH_GOOGLE_ID: "build-disabled",
   AUTH_GOOGLE_SECRET: "build-disabled",
-  // Long and varied enough that Better Auth's secret checks stay quiet.
-  BETTER_AUTH_SECRET: "acceptance-inert-secret-9fK2qL7xVz4NbT6w",
+  BETTER_AUTH_SECRET: LOCAL_AUTH_SECRET,
   CONTENT_RUNTIME_TOKEN: LOCAL_RUNTIME_TOKEN,
   FIRECRAWL_API_KEY: "build-disabled",
-  JWKS: "[]",
   [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: "build-api-edge-secret",
   [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: "build-mcp-edge-secret",
   NEXT_PUBLIC_POLAR_SERVER: "sandbox",
@@ -239,16 +245,20 @@ export const initializeLocalRuntime = Effect.fn(
       "Anonymous Convex query and HTTP ports must differ."
     );
   }
+  const jwks = yield* createLocalJwks();
   yield* command(
     ["env", "set", "--force"],
-    Object.entries({
-      ...localEnvironment,
-      AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
-      AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
-      AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
-    })
-      .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
-      .join("\n")
+    [
+      ...Object.entries({
+        ...localEnvironment,
+        AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
+        AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
+        AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
+      }).map(([key, value]) => `${key}=${JSON.stringify(value)}`),
+      // Convex reads these lines with dotenv, which keeps a double-quoted
+      // value's escaped quotes but takes a single-quoted one literally.
+      `JWKS='${jwks}'`,
+    ].join("\n")
   );
   const database = yield* fs.stat(`${backend}/.convex`);
   if (Option.isNone(database.ino)) {

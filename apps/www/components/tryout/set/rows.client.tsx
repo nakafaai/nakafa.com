@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { getTryoutSubjectIcon } from "@/components/tryout/catalog/icons";
 import { TryoutList } from "@/components/tryout/catalog/list";
 import {
@@ -8,54 +9,59 @@ import {
 } from "@/components/tryout/route/path";
 import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
 
-type SetSection = SetPage["sections"][number];
+type SetSection = Pick<
+  SetPage["sections"][number],
+  "publicPath" | "questionCount" | "sectionKey" | "timeLimitSeconds" | "title"
+>;
 type SectionStatus = CurrentAttempt["status"];
-export interface TryoutSectionRowsValue {
-  attempt?: CurrentAttempt | null;
-  emptyLabel: string;
-  questionUnitLabel: string;
-  sections: readonly SetSection[];
-}
 
-/** Renders the production-style divided visible section list for one set page. */
+/**
+ * Renders the divided list of a set's visible sections with their size and
+ * time, or nothing for a set without them. Rows open the sections of the
+ * learner's attempt once it is known, and mark progress only while that attempt
+ * runs, so a list painted from the catalog keeps every row in place when the
+ * attempt arrives.
+ */
 export function TryoutSectionRows({
-  value,
+  attempt,
+  sections,
 }: {
-  value: TryoutSectionRowsValue;
+  attempt?: CurrentAttempt | null;
+  sections: readonly SetSection[];
 }) {
-  const activeAttempt =
-    value.attempt?.status === "in-progress" ? value.attempt : null;
-  const boundAttempt = value.attempt ?? null;
-  const activeSectionKey = activeAttempt?.activeSectionKey ?? null;
-  const completedSections = new Set(value.attempt?.completedSectionKeys ?? []);
-  const currentSectionKey = activeAttempt?.resumeSectionKey ?? null;
-  const sections: readonly SectionRow[] = value.sections;
+  const tTryouts = useTranslations("Tryouts");
+  if (sections.length === 0) {
+    return null;
+  }
+
+  const runningAttempt = attempt?.status === "in-progress" ? attempt : null;
+  const completedSections = new Set(runningAttempt?.completedSectionKeys ?? []);
+  const currentSectionKey = runningAttempt?.resumeSectionKey ?? null;
   return (
     <TryoutList
-      emptyLabel={value.emptyLabel}
+      emptyLabel={tTryouts("list-empty")}
       rows={sections.flatMap((section) => {
         const publicPath = section.publicPath;
         if (!publicPath) {
           return [];
         }
         const status = getSectionStatus({
-          activeSectionKey,
+          activeSectionKey: runningAttempt?.activeSectionKey ?? null,
           completedSections,
           sectionKey: section.sectionKey,
         });
         return [
           {
             current: section.sectionKey === currentSectionKey,
-            description: `${section.questionCount} ${value.questionUnitLabel}`,
-            href: boundAttempt
-              ? getTryoutAttemptHref(publicPath, boundAttempt.attemptId)
+            description: `${section.questionCount} ${tTryouts("question-unit")} · ${tTryouts(
+              "set-duration-minutes",
+              { minutes: section.timeLimitSeconds / 60 }
+            )}`,
+            href: attempt
+              ? getTryoutAttemptHref(publicPath, attempt.attemptId)
               : getTryoutPublicPathHref(publicPath),
             key: section.sectionKey,
-            ...(status === undefined
-              ? {}
-              : {
-                  status,
-                }),
+            ...(status === undefined ? {} : { status }),
             title: section.title,
             visual: {
               icon: getTryoutSubjectIcon(section.sectionKey),
@@ -68,12 +74,8 @@ export function TryoutSectionRows({
     />
   );
 }
-type SectionRow = Pick<
-  SetSection,
-  "publicPath" | "questionCount" | "sectionKey" | "title"
->;
 
-/** Resolves one nested section's canonical workflow status. */
+/** Resolves one nested section's progress inside a running attempt. */
 function getSectionStatus({
   activeSectionKey,
   completedSections,

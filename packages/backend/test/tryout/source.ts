@@ -414,7 +414,8 @@ function makeReusedTryoutStartPlacement(appLocale: ActiveAppLocaleCode) {
 }
 
 /** Clears only the active release pointer before activating another fixture. */
-async function clearActiveTryoutSnapshot(ctx: MutationCtx) {
+/** Retires the active signed snapshot so a test can activate the next one. */
+export async function clearActiveTryoutSnapshot(ctx: MutationCtx) {
   const state = await ctx.db.query("contentState").unique();
   if (!state) {
     throw new Error("Expected active content state before source replacement.");
