@@ -15,6 +15,7 @@ const CONTRACT_MANIFEST_PATHS = [
   "packages/contents/package.json",
   "packages/email/package.json",
   "packages/internationalization/package.json",
+  "packages/seo/package.json",
 ] as const;
 const CONTRACT_OWNERS = CONTRACT_MANIFEST_PATHS.join(", ");
 const WEB_MANIFEST = "apps/www/package.json";
@@ -175,7 +176,7 @@ describe("dependency policy validation", () => {
         ],
       }),
       problem:
-        "@nakafa/aksara-contracts declarations are apps/www/package.json, packages/backend/package.json, packages/cli/package.json, packages/contents/package.json, packages/email/package.json, packages/internationalization/package.json; " +
+        "@nakafa/aksara-contracts declarations are apps/www/package.json, packages/backend/package.json, packages/cli/package.json, packages/contents/package.json, packages/email/package.json, packages/internationalization/package.json, packages/seo/package.json; " +
         `expected ${CONTRACT_OWNERS}.`,
     },
     {
