@@ -7,9 +7,9 @@ import refs from "@repo/backend/confect/_generated/refs";
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
-import { useConvexAuth } from "convex/react";
 import { Effect, Option, Result } from "effect";
 import { useEffect } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
 import { useContentViews } from "@/lib/content/views/context";
 import {
@@ -54,7 +54,8 @@ export function useRecordContentView({
 
   const markAsViewed = useContentViews((s) => s.markAsViewed);
   const isViewed = useContentViews((s) => s.isViewed);
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const isUserPending = useViewer((state) => state.isPending);
   const signedInUserId = useViewer((state) => state.viewer?.id ?? null);
   const attribution = useAnalyticsConsent((state) =>

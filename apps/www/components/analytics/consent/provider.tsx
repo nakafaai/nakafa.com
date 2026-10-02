@@ -1,41 +1,33 @@
 "use client";
 
-import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { useNetwork } from "@mantine/hooks";
-import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
-import refs from "@repo/backend/confect/_generated/refs";
-import { useConvexAuth } from "convex/react";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { type ReactNode, useEffect, useState } from "react";
-import { useAnonymousAnalyticsConsent } from "@/lib/analytics/consent/browser";
+import { useStore } from "zustand";
+import {
+  useAnonymousDenialPersistence,
+  useBrowserConsentSync,
+} from "@/lib/analytics/consent/browser";
 import { AnalyticsConsentContext } from "@/lib/analytics/consent/context";
-import {
-  resolveConsentAffordances,
-  resolveConsentError,
-} from "@/lib/analytics/consent/decision";
-import {
-  initialConsentPreferences,
-  updateConsentPreferences,
-} from "@/lib/analytics/consent/preferences";
+import { useAnalyticsConsentModel } from "@/lib/analytics/consent/model";
 import { useAccountAnalyticsConsentRevocation } from "@/lib/analytics/consent/revocation";
 import { useAnalyticsRuntimeAlignment } from "@/lib/analytics/consent/runtime";
-import { useAnalyticsConsentDecision } from "@/lib/analytics/consent/saves";
 import {
-  type AnalyticsConsentSessionOverrides,
-  createAnalyticsConsentPromptIdentity,
-  resolveAnalyticsConsentSessionPolicy,
-} from "@/lib/analytics/consent/session";
-import {
-  resolveBrowserAnalyticsConsentState,
-  shouldRevokeAccountAnalyticsGrant,
-} from "@/lib/analytics/consent/state";
+  type AnalyticsConsentStore,
+  createAnalyticsConsentStore,
+} from "@/lib/analytics/consent/store";
 import {
   clearContentViewDevice,
   isContentViewDeviceRetained,
 } from "@/lib/content/views/device";
-import { useViewer } from "@/lib/identity/client";
 
-/** Owns the state that exclusively controls optional product analytics. */
+/**
+ * Owns the state that exclusively controls optional product analytics.
+ *
+ * The context carries only the consent store, so its value never changes
+ * after hydration; readers derive the consent state with
+ * `useAnalyticsConsent`, and the controller below runs the effects once.
+ */
 export function AnalyticsConsentProvider({
   children,
   isPreviewChild,
@@ -43,62 +35,57 @@ export function AnalyticsConsentProvider({
   children: ReactNode;
   isPreviewChild: boolean;
 }) {
-  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-  const isUserPending = useViewer((state) => state.isPending);
-  const user = useViewer((state) => state.account);
-  const [sessionOverrides, setSessionOverrides] =
-    useState<AnalyticsConsentSessionOverrides>(() => new Map());
-  const [preferences, setPreferences] = useState(initialConsentPreferences);
-  const { online: isOnline } = useNetwork();
-  const setAccountConsent = useMutation(refs.public.consents.current.set);
-  const shouldLoadAccountConsent =
-    !isPreviewChild && isAuthenticated && !isAuthLoading && !!user;
-  const accountConsentQuery = useQuery(
-    refs.public.consents.current.get,
-    shouldLoadAccountConsent ? { category: ANALYTICS_CONSENT_CATEGORY } : "skip"
+  const [store] = useState(() =>
+    createAnalyticsConsentStore(isPreviewChild ? "preview" : "live")
   );
-  const accountConsent = QueryResult.isSuccess(accountConsentQuery)
-    ? accountConsentQuery.value.decision
-    : null;
-  const {
-    browserConsent,
-    currentBrowserPrivacySignal,
-    hasStorageError,
-    saveDecision,
-  } = useAnonymousAnalyticsConsent({
-    accountConsent,
-    isAuthenticated,
-    isPreviewChild,
-  });
-  const promptIdentity = createAnalyticsConsentPromptIdentity({
-    isAuthenticated,
-    user,
-  });
-  const anonymousConsent = Option.getOrNull(browserConsent.anonymousConsent);
-  const durableConsent = isAuthenticated ? accountConsent : anonymousConsent;
-  const currentAccountUserId = user?.appUser._id ?? null;
-  const shouldRevokeAccountGrant = shouldRevokeAccountAnalyticsGrant({
-    accountConsent,
-    browserConsent,
-    isAccountConsentResolved: QueryResult.isSuccess(accountConsentQuery),
-    isAuthenticated,
-  });
 
-  const state = resolveBrowserAnalyticsConsentState({
-    accountConsent,
-    browserConsent,
-    isAccountConsentResolved: QueryResult.isSuccess(accountConsentQuery),
-    isAuthenticated,
-    isAuthLoading,
-    isPreviewChild,
-    isUserPending,
-    user,
+  return (
+    <AnalyticsConsentContext value={store}>
+      {children}
+      <AnalyticsConsentController store={store} />
+    </AnalyticsConsentContext>
+  );
+}
+
+/**
+ * Keeps the browser consent, the analytics runtime, the content-view
+ * identifier, and account revocations aligned with the derived consent state.
+ */
+function AnalyticsConsentController({
+  store,
+}: {
+  store: AnalyticsConsentStore;
+}) {
+  const consent = useAnalyticsConsentModel(store);
+  const setBrowserConsent = useStore(store, (state) => state.setBrowserConsent);
+  const setHasRuntimeError = useStore(
+    store,
+    (state) => state.setHasRuntimeError
+  );
+  const setHasStorageError = useStore(
+    store,
+    (state) => state.setHasStorageError
+  );
+  const { online: isOnline } = useNetwork();
+  const { durableStatus, interruptDepartedSave, promptIdentity } = consent;
+
+  useBrowserConsentSync({
+    isPreviewChild: consent.isPreviewChild,
+    setBrowserConsent,
+    setHasStorageError,
+  });
+  useAnonymousDenialPersistence({
+    accountConsent: consent.accountConsent,
+    browserConsent: consent.browserConsent,
+    isAuthenticated: consent.isAuthenticated,
+    setBrowserConsent,
+    setHasStorageError,
   });
 
   // The content-view identifier exists only under a durable grant; reading the
   // durable status keeps it while a repeated choice is still saving.
   useEffect(() => {
-    if (isContentViewDeviceRetained(state.status)) {
+    if (isContentViewDeviceRetained(durableStatus)) {
       return;
     }
     Effect.runFork(
@@ -107,68 +94,18 @@ export function AnalyticsConsentProvider({
         Effect.catchTag("ContentViewDeviceStorageFailed", () => Effect.void)
       )
     );
-  }, [state.status]);
+  }, [durableStatus]);
 
-  const hasLoadError =
-    QueryResult.isFailure(accountConsentQuery) ||
-    (!isAuthenticated && hasStorageError);
-  const sessionPolicy = resolveAnalyticsConsentSessionPolicy({
-    durableConsent,
-    hasLoadError,
-    overrides: sessionOverrides,
-    promptIdentity,
-    status: state.status,
+  useAnalyticsRuntimeAlignment({
+    accountConsent: consent.accountConsent,
+    anonymousConsent: consent.browserConsent.anonymousConsent,
+    isAuthenticated: consent.isAuthenticated,
+    isPreviewChild: consent.isPreviewChild,
+    isRuntimeSuppressed: consent.isRuntimeSuppressed,
+    setHasRuntimeError,
+    status: durableStatus,
+    user: consent.user,
   });
-  const hasRuntimeError = useAnalyticsRuntimeAlignment({
-    accountConsent,
-    anonymousConsent: browserConsent.anonymousConsent,
-    isAuthenticated,
-    isPreviewChild,
-    isRuntimeSuppressed: sessionPolicy.isRuntimeSuppressed,
-    status: state.status,
-    user,
-  });
-
-  const { canDecline, canGrant } = resolveConsentAffordances({
-    hasBrowserPrivacySignal: browserConsent.hasBrowserPrivacySignal,
-    isAccountResolved:
-      !!user &&
-      (QueryResult.isSuccess(accountConsentQuery) ||
-        QueryResult.isFailure(accountConsentQuery)),
-    isAnonymousResolved: browserConsent.isResolved,
-    isAuthenticated,
-    isBlocked: isPreviewChild || isAuthLoading || isUserPending,
-  });
-  const error = resolveConsentError({
-    hasLoadError,
-    hasRuntimeError,
-    hasSaveError: sessionPolicy.hasSaveError,
-  });
-
-  function setPreferencesOpen(isOpen: boolean) {
-    setPreferences((current) =>
-      updateConsentPreferences({
-        current,
-        isOpen,
-        status: sessionPolicy.status,
-      })
-    );
-  }
-
-  const { decide, interruptDepartedSave, readLatestSave } =
-    useAnalyticsConsentDecision({
-      canDecline,
-      canGrant,
-      currentBrowserPrivacySignal,
-      isAuthenticated,
-      isSaving: sessionPolicy.isSaving,
-      promptIdentity,
-      saveDecision,
-      setAccountConsent,
-      setPreferencesOpen,
-      setSessionOverrides,
-      user,
-    });
 
   useEffect(() => {
     if (!promptIdentity) {
@@ -182,32 +119,15 @@ export function AnalyticsConsentProvider({
   }, [interruptDepartedSave, promptIdentity]);
 
   useAccountAnalyticsConsentRevocation({
-    currentAccountUserId,
-    currentBrowserPrivacySignal,
+    currentAccountUserId: consent.currentAccountUserId,
+    currentBrowserPrivacySignal: consent.currentBrowserPrivacySignal,
     isOnline,
     promptIdentity,
-    readLatestSave,
-    setAccountConsent,
-    setSessionOverrides,
-    shouldRevokeAccountGrant,
+    readLatestSave: consent.readLatestSave,
+    setAccountConsent: consent.setAccountConsent,
+    setSessionOverrides: consent.setSessionOverrides,
+    shouldRevokeAccountGrant: consent.shouldRevokeAccountGrant,
   });
 
-  const contextValue = {
-    canDecline,
-    canGrant,
-    decide,
-    error,
-    isAvailable: !isPreviewChild,
-    isPromptOpen: sessionPolicy.isPromptOpen,
-    isSaving: sessionPolicy.isSaving,
-    preferences,
-    setPreferencesOpen,
-    status: sessionPolicy.status,
-  };
-
-  return (
-    <AnalyticsConsentContext value={contextValue}>
-      {children}
-    </AnalyticsConsentContext>
-  );
+  return null;
 }

@@ -8,7 +8,7 @@ import {
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
 import { Clock, Effect, Fiber, Option } from "effect";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   type BrowserPrivacySignalSource,
   readBrowserPrivacySignal,
@@ -22,6 +22,7 @@ import {
   loadAnonymousAnalyticsConsent,
   saveAnonymousAnalyticsConsent,
 } from "@/lib/analytics/consent/storage";
+import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
 const navigatorPrivacySignalSource = {
   read() {
@@ -41,10 +42,12 @@ const browserPrivacySignal = readBrowserPrivacySignal(
   navigatorPrivacySignalSource
 );
 
-function refreshBrowserPrivacySignal(
-  setBrowserConsent: (
-    update: (current: BrowserConsentSnapshot) => BrowserConsentSnapshot
-  ) => void
+type SetBrowserConsent = AnalyticsConsentStoreState["setBrowserConsent"];
+type SetHasStorageError = AnalyticsConsentStoreState["setHasStorageError"];
+
+/** Rereads the browser privacy signal into the consent store and returns it. */
+export function refreshBrowserPrivacySignal(
+  setBrowserConsent: SetBrowserConsent
 ) {
   return browserPrivacySignal.pipe(
     Effect.tap((hasBrowserPrivacySignal) =>
@@ -61,29 +64,57 @@ function refreshBrowserPrivacySignal(
   );
 }
 
-/** Owns the browser-local source, privacy signal, and cross-tab consent state. */
-export function useAnonymousAnalyticsConsent({
-  accountConsent,
-  isAuthenticated,
-  isPreviewChild,
+/**
+ * Builds the anonymous save for one consent store: a browser privacy signal
+ * always stores a denial, otherwise the visitor's choice is stored.
+ */
+export function createAnonymousConsentSave({
+  setBrowserConsent,
+  setHasStorageError,
 }: {
-  readonly accountConsent: AccountConsentDecision | null;
-  readonly isAuthenticated: boolean;
-  readonly isPreviewChild: boolean;
+  readonly setBrowserConsent: SetBrowserConsent;
+  readonly setHasStorageError: SetHasStorageError;
 }) {
-  const [browserConsent, setBrowserConsent] = useState<BrowserConsentSnapshot>(
-    () => ({
-      anonymousConsent: Option.none(),
-      hasBrowserPrivacySignal: false,
-      isResolved: isPreviewChild,
-    })
-  );
-  const [hasStorageError, setHasStorageError] = useState(false);
-  // One stable Effect identity owns each bounded revocation lifetime.
-  const [currentBrowserPrivacySignal] = useState(() =>
-    refreshBrowserPrivacySignal(setBrowserConsent)
-  );
+  return (granted: boolean) =>
+    refreshBrowserPrivacySignal(setBrowserConsent).pipe(
+      Effect.flatMap((hasBrowserPrivacySignal) =>
+        Clock.currentTimeMillis.pipe(
+          Effect.map((decidedAt) =>
+            hasBrowserPrivacySignal
+              ? createAnonymousAnalyticsBrowserSignalDenial(decidedAt)
+              : createAnonymousAnalyticsConsent(
+                  granted ? "granted" : "denied",
+                  decidedAt
+                )
+          )
+        )
+      ),
+      Effect.tap(saveAnonymousAnalyticsConsent),
+      Effect.tap((consent) =>
+        Effect.sync(() => {
+          setBrowserConsent((current) => ({
+            ...current,
+            anonymousConsent: Option.some(consent),
+          }));
+          setHasStorageError(false);
+        })
+      )
+    );
+}
 
+/**
+ * Loads the browser-local consent and privacy signal into the consent store
+ * and reloads them when another tab or a restored page may have changed them.
+ */
+export function useBrowserConsentSync({
+  isPreviewChild,
+  setBrowserConsent,
+  setHasStorageError,
+}: {
+  readonly isPreviewChild: boolean;
+  readonly setBrowserConsent: SetBrowserConsent;
+  readonly setHasStorageError: SetHasStorageError;
+}) {
   useEffect(() => {
     if (isPreviewChild) {
       return;
@@ -102,11 +133,11 @@ export function useAnonymousAnalyticsConsent({
                       return;
                     }
 
-                    setBrowserConsent({
+                    setBrowserConsent(() => ({
                       anonymousConsent: Option.none(),
                       hasBrowserPrivacySignal,
                       isResolved: true,
-                    });
+                    }));
                     setHasStorageError(true);
                   }),
                 onSuccess: (anonymousConsent) =>
@@ -115,11 +146,11 @@ export function useAnonymousAnalyticsConsent({
                       return;
                     }
 
-                    setBrowserConsent({
+                    setBrowserConsent(() => ({
                       anonymousConsent,
                       hasBrowserPrivacySignal,
                       isResolved: true,
-                    });
+                    }));
                     setHasStorageError(false);
                   }),
               })
@@ -157,8 +188,26 @@ export function useAnonymousAnalyticsConsent({
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       Effect.runFork(Fiber.interrupt(loadFiber));
     };
-  }, [isPreviewChild]);
+  }, [isPreviewChild, setBrowserConsent, setHasStorageError]);
+}
 
+/**
+ * Stores the anonymous denial a browser privacy signal requires, so the
+ * decision survives the signal being turned off later.
+ */
+export function useAnonymousDenialPersistence({
+  accountConsent,
+  browserConsent,
+  isAuthenticated,
+  setBrowserConsent,
+  setHasStorageError,
+}: {
+  readonly accountConsent: AccountConsentDecision | null;
+  readonly browserConsent: BrowserConsentSnapshot;
+  readonly isAuthenticated: boolean;
+  readonly setBrowserConsent: SetBrowserConsent;
+  readonly setHasStorageError: SetHasStorageError;
+}) {
   const shouldPersistDenial = shouldPersistAnonymousAnalyticsDenial({
     accountConsent,
     browserConsent,
@@ -216,38 +265,12 @@ export function useAnonymousAnalyticsConsent({
     return () => {
       Effect.runFork(Fiber.interrupt(denialFiber));
     };
-  }, [accountConsent, browserConsent, isAuthenticated, shouldPersistDenial]);
-
-  const saveDecision = (granted: boolean) =>
-    refreshBrowserPrivacySignal(setBrowserConsent).pipe(
-      Effect.flatMap((hasBrowserPrivacySignal) =>
-        Clock.currentTimeMillis.pipe(
-          Effect.map((decidedAt) =>
-            hasBrowserPrivacySignal
-              ? createAnonymousAnalyticsBrowserSignalDenial(decidedAt)
-              : createAnonymousAnalyticsConsent(
-                  granted ? "granted" : "denied",
-                  decidedAt
-                )
-          )
-        )
-      ),
-      Effect.tap(saveAnonymousAnalyticsConsent),
-      Effect.tap((consent) =>
-        Effect.sync(() => {
-          setBrowserConsent((current) => ({
-            ...current,
-            anonymousConsent: Option.some(consent),
-          }));
-          setHasStorageError(false);
-        })
-      )
-    );
-
-  return {
+  }, [
+    accountConsent,
     browserConsent,
-    currentBrowserPrivacySignal,
-    hasStorageError,
-    saveDecision,
-  };
+    isAuthenticated,
+    setBrowserConsent,
+    setHasStorageError,
+    shouldPersistDenial,
+  ]);
 }

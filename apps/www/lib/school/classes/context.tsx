@@ -3,8 +3,8 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
-import { useConvexAuth } from "convex/react";
 import { createContext, use } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 
 type ClassContextValue = Extract<
   Ref.Returns<typeof refs.public.classes.queries.getClassRoute>,
@@ -23,7 +23,8 @@ export function ClassContextProvider({
   children: React.ReactNode;
   initialRoute: ClassContextValue;
 }) {
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const query = useQuery(
     refs.public.classes.queries.getClassRoute,
     isAuthenticated ? { classId: initialRoute.class._id } : "skip"

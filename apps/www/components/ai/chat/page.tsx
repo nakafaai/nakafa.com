@@ -12,11 +12,10 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Unauthenticated } from "convex/react";
-
 import { useTranslations } from "next-intl";
 import { ChatProvider, useChat } from "@/components/ai/chat/context";
 import { AiChat } from "@/components/ai/chat/view";
+import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
 
 export function AiChatPage({ chatId }: { chatId: Id<"chats"> }) {

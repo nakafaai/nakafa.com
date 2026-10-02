@@ -15,11 +15,10 @@ import {
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { useConvexAuth } from "convex/react";
-
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
@@ -60,7 +59,8 @@ export function CurriculumSelector({
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations("LearningPrograms");
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(
     options.flatMap((option) =>
       option.publicSlug

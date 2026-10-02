@@ -3,16 +3,17 @@
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
-import { useConvexAuth, useConvexConnectionState } from "convex/react";
+import { useConvexConnectionState } from "convex/react";
 
 import { useState } from "react";
+import { useAuthSession } from "@/components/auth/session";
+import { useConvexAuth } from "@/components/providers/convex";
 import type {
   TryoutCatalogBootstrap,
   TryoutSetListArgs,
   TryoutSetRow,
 } from "@/components/tryout/catalog/table/types";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
-import { authClient } from "@/lib/auth/client";
 
 const EMPTY_ROWS: TryoutSetRow[] = [];
 
@@ -67,11 +68,12 @@ function useCommittedResult(
 
 /** Better Auth identifies the principal; Convex must finish switching before subscribing. */
 function useViewer(initial: string | null) {
-  const session = authClient.useSession();
-  const auth = useConvexAuth();
+  const sessionViewer = useAuthSession((session) =>
+    session.isPending ? undefined : session.userId
+  );
+  const isAuthLoading = useConvexAuth((auth) => auth.isLoading);
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const [viewer, setViewer] = useState(initial);
-  const sessionViewer =
-    session.data?.user.id ?? (session.isPending ? undefined : null);
   const id = sessionViewer === undefined ? viewer : sessionViewer;
   if (sessionViewer !== undefined && sessionViewer !== viewer) {
     setViewer(sessionViewer);
@@ -79,8 +81,9 @@ function useViewer(initial: string | null) {
   return {
     id,
     ready:
-      !(session.isPending || auth.isLoading) &&
-      auth.isAuthenticated === (id !== null),
+      sessionViewer !== undefined &&
+      !isAuthLoading &&
+      isAuthenticated === (id !== null),
   };
 }
 

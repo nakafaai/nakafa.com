@@ -10,10 +10,9 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
-import { useConvexAuth } from "convex/react";
-
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
+import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
 import type {
@@ -35,7 +34,8 @@ export function TryoutCountrySelector({
 }) {
   const locale = useLocale();
   const tTryouts = useTranslations("Tryouts");
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredTryout = useSetPreferredTryoutMutation(options);
   const items = options.map((option) => ({
     label: option.title,
