@@ -88,12 +88,14 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
               heading.checkVisibility(visibility)
             )
           ),
-          // The same state the shell's styles read: the lock store's attribute
-          // after hydration, the server marker before it.
+          // Exactly what the shell's styles read on its wrapper: the lock
+          // store's attribute after hydration, or the server marker inside it
+          // before then. A streamed marker still parked outside the wrapper
+          // locks nothing yet.
           locked:
-            document.querySelector(
-              "[data-slot=sidebar-wrapper][data-locked], [data-shell-lock]"
-            ) !== null,
+            document
+              .querySelector("[data-slot=sidebar-wrapper]")
+              ?.matches("[data-locked], :has([data-shell-lock])") ?? false,
           mains: mains.map(identify),
           time: performance.now(),
         });

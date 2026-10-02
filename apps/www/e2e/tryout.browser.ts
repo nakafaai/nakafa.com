@@ -137,8 +137,14 @@ const verifyPrefetchedHeadings = Effect.fn(
     title: setTitle,
   });
 
+  // The resolved set replaces the catalog view's rows, so the section link
+  // whose prefetch is measured must be the one that stays.
   const section = sectionLink(page);
-  yield* arrive(page, setHref, section);
+  yield* arrive(
+    page,
+    setHref,
+    page.getByRole("button", { exact: true, name: "Start" })
+  );
   const sectionHref = yield* readSectionHref(section);
   const sectionTitle = yield* Effect.promise(() =>
     section.locator("h3").innerText()

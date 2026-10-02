@@ -8,7 +8,6 @@ import {
   use,
   useLayoutEffect,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 
@@ -44,11 +43,11 @@ function createShellLockStore() {
  * page inside it differs. The padding follows the sidebar's own slide when the
  * learner toggles it, while a lock change switches it at once.
  *
- * Two sources lock it. After hydration, the lock store does: the header
- * unmounts, the sidebar ignores its toggles, and `data-locked` hides the
- * sidebar. Before hydration only the server markup exists, so a locked page
- * renders a `data-shell-lock` marker that the same styles read, and the first
- * paint of a running attempt already shows the locked shell.
+ * Two sources lock it. The lock store does once the shell has seen it: the
+ * header unmounts, the sidebar ignores its toggles, and `data-locked` hides
+ * the sidebar. Until then, a locked page renders a `data-shell-lock` marker
+ * that the same styles read, so the page and the locked shell always paint
+ * together, from the server markup on.
  */
 export function LockableShell({
   children,
@@ -102,28 +101,21 @@ function useShellLock<Selected>(selector: (state: ShellLockState) => Selected) {
   return useStore(store, selector);
 }
 
-/** Whether React is hydrating never changes once it is known. */
-function subscribeNever() {
-  return () => undefined;
-}
-
 /**
  * Locks the shell while this element is mounted and visible. The lock applies
- * in a layout effect, so it lands before the browser paints the page that
- * rendered it, and it releases when that page unmounts or Next.js hides it on
- * navigation. Until then, the server markup carries the lock as a marker that
- * leaves the document once this page hydrates, so a page Next.js keeps hidden
+ * in a layout effect and releases when the page unmounts or Next.js hides it
+ * on navigation. Until the shell shows the lock, this element renders a marker
+ * that applies it through the shell's styles: in the server markup, while the
+ * page hydrates, and when a client render mounts the shell together with the
+ * page, whose store subscription only sees the lock after the browser paints.
+ * The marker leaves once the lock is shown, so a page Next.js keeps hidden
  * never holds the shell.
  */
 export function ShellLock() {
   const lock = useShellLock((state) => state.lock);
-  const hydrating = useSyncExternalStore(
-    subscribeNever,
-    () => false,
-    () => true
-  );
+  const shown = useShellLock((state) => state.locks > 0);
 
   useLayoutEffect(() => lock(), [lock]);
 
-  return hydrating ? <span data-shell-lock="" hidden /> : null;
+  return shown ? null : <span data-shell-lock="" hidden />;
 }

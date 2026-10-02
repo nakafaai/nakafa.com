@@ -236,8 +236,8 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     expect(direct.headinglessFrames).toBe(0);
     expect(direct.shells).toBe(1);
     expect(direct.layoutShift).toBe(0);
-    expect(direct.locks.at(-1)).toBe(true);
-    expect(direct.locks.length).toBeLessThanOrEqual(2);
+    // Locked from the first painted frame, or after the catalog view once.
+    expect([[true], [false, true]]).toContainEqual(direct.locks);
   });
 });
 
