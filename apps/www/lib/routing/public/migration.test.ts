@@ -35,12 +35,45 @@ vi.mock("@/lib/content/article/category", () => ({
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: articleMocks.readActiveRoute,
 }));
+const readTryoutSectionRedirectMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/routing/public/tryout", () => ({
+  readTryoutSectionRedirect: readTryoutSectionRedirectMock,
+}));
 describe("public URL migration redirects", () => {
   beforeEach(() => {
     readNakafaRuntimeQueryMock.mockReset();
     articleMocks.hasCategory.mockReset();
     articleMocks.readActiveRoute.mockReset();
+    readTryoutSectionRedirectMock.mockReset();
+    readTryoutSectionRedirectMock.mockReturnValue(Effect.succeed(null));
   });
+  it.effect("redirects a retired try-out section to its live successor", () =>
+    Effect.gen(function* () {
+      const successor =
+        "/id/try-out/indonesia/snbt/2027/set-1/literasi-dalam-bahasa-inggris";
+      readTryoutSectionRedirectMock.mockReturnValueOnce(
+        Effect.succeed(successor)
+      );
+      const redirect = yield* readPublicUrlMigrationRedirect({
+        hasAttemptCapability: false,
+        method: "GET",
+        pathname: "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris",
+      });
+      expect(redirect).toBe(successor);
+      expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("keeps a try-out attempt on the route it was frozen to", () =>
+    Effect.gen(function* () {
+      const redirect = yield* readPublicUrlMigrationRedirect({
+        hasAttemptCapability: true,
+        method: "GET",
+        pathname: "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris",
+      });
+      expect(redirect).toBeNull();
+      expect(readTryoutSectionRedirectMock).not.toHaveBeenCalled();
+    })
+  );
   it.effect("redirects a retired URL to its authenticated current route", () =>
     Effect.gen(function* () {
       readNakafaRuntimeQueryMock.mockReturnValueOnce(
@@ -52,6 +85,7 @@ describe("public URL migration redirects", () => {
         })
       );
       const redirect = yield* readPublicUrlMigrationRedirect({
+        hasAttemptCapability: false,
         method: "GET",
         pathname:
           "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
@@ -80,6 +114,7 @@ describe("public URL migration redirects", () => {
         readNakafaRuntimeQueryMock.mockImplementation(context.query);
         expect(
           yield* readPublicUrlMigrationRedirect({
+            hasAttemptCapability: false,
             method: "GET",
             pathname:
               "/id/subject/high-school/11/mathematics/technical-topic/section-1",
@@ -87,6 +122,7 @@ describe("public URL migration redirects", () => {
         ).toBe("/id/materi/mathematics/teknis-topic/section-1");
         expect(
           yield* readPublicUrlMigrationRedirect({
+            hasAttemptCapability: false,
             method: "GET",
             pathname:
               "/id/subject/high-school/11/mathematics/technical-topic/missing-section",
@@ -130,6 +166,7 @@ describe("public URL migration redirects", () => {
           })
         );
         const redirect = yield* readPublicUrlMigrationRedirect({
+          hasAttemptCapability: false,
           method: "GET",
           pathname,
         });
@@ -189,6 +226,7 @@ describe("public URL migration redirects", () => {
           })
         );
       const redirect = yield* readPublicUrlMigrationRedirect({
+        hasAttemptCapability: false,
         method: "GET",
         pathname,
       });
@@ -202,6 +240,7 @@ describe("public URL migration redirects", () => {
         .mockReturnValueOnce(Effect.succeed(false))
         .mockReturnValueOnce(Effect.succeed(true));
       const redirect = yield* readPublicUrlMigrationRedirect({
+        hasAttemptCapability: false,
         method: "HEAD",
         pathname: "/de/articles/politics",
       });
@@ -224,6 +263,7 @@ describe("public URL migration redirects", () => {
           })
         );
       const redirect = yield* readPublicUrlMigrationRedirect({
+        hasAttemptCapability: false,
         method: "GET",
         pathname: "/de/articles/politics/regional-elections-turmoil",
       });
@@ -236,6 +276,7 @@ describe("public URL migration redirects", () => {
         .mockReturnValueOnce(Effect.succeed(true))
         .mockReturnValueOnce(Effect.succeed(false));
       const redirect = yield* readPublicUrlMigrationRedirect({
+        hasAttemptCapability: false,
         method: "HEAD",
         pathname: "/de/articles/politics",
       });
@@ -253,6 +294,7 @@ describe("public URL migration redirects", () => {
           })
         );
         const redirect = yield* readPublicUrlMigrationRedirect({
+          hasAttemptCapability: false,
           method: "GET",
           pathname: "/de/articles/politics/regional-elections-turmoil",
         });
@@ -296,6 +338,7 @@ describe("public URL migration redirects", () => {
         );
       expect(
         yield* readPublicUrlMigrationRedirect({
+          hasAttemptCapability: false,
           method: "GET",
           pathname: "/de/articles/politics/regional-elections-turmoil",
         }).pipe(Effect.flip)
@@ -327,6 +370,7 @@ describe("public URL migration redirects", () => {
     Effect.gen(function* () {
       readNakafaRuntimeQueryMock.mockReturnValueOnce(Effect.succeed(decision));
       const redirect = yield* readPublicUrlMigrationRedirect({
+        hasAttemptCapability: false,
         method: "HEAD",
         pathname:
           "/en/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
@@ -336,39 +380,47 @@ describe("public URL migration redirects", () => {
   );
   it.effect.each([
     {
+      hasAttemptCapability: false,
       method: "POST",
       pathname:
         "/en/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
     },
     {
+      hasAttemptCapability: false,
       method: "POST",
       pathname: "/de/articles/politics",
     },
     {
+      hasAttemptCapability: false,
       method: "GET",
       pathname:
         "/fr/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
     },
     {
+      hasAttemptCapability: false,
       method: "GET",
       pathname:
         "/de/subject/high-school/11/mathematics/statistics/scatter-diagram",
     },
     {
+      hasAttemptCapability: false,
       method: "GET",
       pathname:
         "/en/subject/high-school/9/mathematics/statistics/scatter-diagram",
     },
     {
+      hasAttemptCapability: false,
       method: "GET",
       pathname: "/en/subject/high-school/11/mathematics/circle",
     },
     {
+      hasAttemptCapability: false,
       method: "GET",
       pathname:
         "/en/subject/high-school/11/mathematics/circle/central-angle/extra",
     },
     {
+      hasAttemptCapability: false,
       method: "GET",
       pathname: "/en/subject/high-school/11/mathematics/circle/NotAContentKey",
     },

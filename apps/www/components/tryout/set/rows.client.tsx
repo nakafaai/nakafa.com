@@ -1,7 +1,7 @@
 "use client";
 
-import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import { useTranslations } from "next-intl";
+import { getTryoutSubjectIcon } from "@/components/tryout/catalog/icons";
 import { TryoutList } from "@/components/tryout/catalog/list";
 import {
   getTryoutAttemptHref,
@@ -64,7 +64,7 @@ export function TryoutSectionRows({
             ...(status === undefined ? {} : { status }),
             title: section.title,
             visual: {
-              icon: getMaterialIcon(section.sectionKey),
+              icon: getTryoutSubjectIcon(section.sectionKey),
               iconKey: section.sectionKey,
               kind: "icon",
             },

@@ -32,7 +32,7 @@ export function useTryoutResponseSubmit() {
       selectedAt
     );
   });
-  const tExercises = useTranslations("Exercises");
+  const tTryouts = useTranslations("Tryouts");
   return (
     question: TryoutRuntimeQuestion,
     selection: TryoutResponseSelection | null
@@ -48,11 +48,11 @@ export function useTryoutResponseSubmit() {
           Result.match(result, {
             onSuccess: () => Effect.void,
             onFailure: (error) =>
-              handleSubmitError(error, tExercises, error.code),
+              handleSubmitError(error, tTryouts, error.code),
           })
         ),
         Effect.catchTag("UnknownError", ({ cause }) =>
-          handleSubmitError(cause, tExercises)
+          handleSubmitError(cause, tTryouts)
         )
       )
     );
@@ -100,7 +100,7 @@ function updateRuntimeQueries<
 }
 function handleSubmitError(
   error: unknown,
-  tExercises: ReturnType<typeof useTranslations>,
+  tTryouts: ReturnType<typeof useTranslations>,
   errorCode?: Ref.Error<
     typeof refs.public.tryouts.mutations.responses.save
   >["code"]
@@ -111,7 +111,7 @@ function handleSubmitError(
     errorCode === "TRYOUT_SECTION_NOT_ACTIVE"
   ) {
     return Effect.sync(() => {
-      toast.info(tExercises("attempt-not-in-progress"), {
+      toast.info(tTryouts("attempt-not-in-progress"), {
         position: "bottom-center",
       });
     });
@@ -126,7 +126,7 @@ function handleSubmitError(
   }).pipe(
     Effect.andThen(
       Effect.sync(() => {
-        toast.error(tExercises("submit-answer-error"), {
+        toast.error(tTryouts("submit-answer-error"), {
           position: "bottom-center",
         });
       })
