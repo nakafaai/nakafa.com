@@ -5,7 +5,7 @@ import { Array as Arr, Exit, Schema } from "effect";
 /** Reports whether one short answer carrying this reading decodes. */
 function decodes(number: string) {
   return Exit.isSuccess(
-    Schema.decodeUnknownExit(Selection)({
+    Schema.decodeExit(Selection)({
       kind: "short-answer",
       number,
       text: "typed",

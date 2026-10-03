@@ -1,3 +1,4 @@
+import { isBlankAnswer } from "@nakafa/aksara-contracts/question/answer";
 import {
   RenderableSpec,
   ResponseRejected,
@@ -9,9 +10,9 @@ import {
   HashMap,
   HashSet,
   Option,
+  Predicate,
   pipe,
   Result,
-  String as Str,
   Tuple,
 } from "effect";
 
@@ -25,10 +26,12 @@ function reject(reason: ResponseRejected["reason"]) {
   return Result.fail(new ResponseRejected({ reason }));
 }
 
-/** Reports whether a learner typed anything besides whitespace. */
-function isWritten(text: string) {
-  return Str.isNonEmpty(Str.trim(text));
-}
+/**
+ * Reports whether a learner wrote anything visible, through the contract's
+ * `isBlankAnswer`, so whitespace and invisible format characters alone are no
+ * answer.
+ */
+const isWritten = Predicate.not(isBlankAnswer);
 
 /**
  * Checks that one learner selection belongs to its response and returns it in

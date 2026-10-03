@@ -11,7 +11,7 @@ type DeclarationOwners =
 type DependencyHold = ApprovedSpecs &
   DeclarationOwners & { readonly dependency: string };
 
-export const CONTRACT_PACKAGE_VERSION = "0.44.0";
+export const CONTRACT_PACKAGE_VERSION = "0.45.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.0-rc.118";
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
@@ -169,7 +169,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@rc",
     "4.0.0-rc.118",
-    "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts 0.44.0 peers on RC118 exactly.",
+    "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts 0.45.0 peers on RC118 exactly.",
   ],
   [
     "@effect/platform-node@rc",

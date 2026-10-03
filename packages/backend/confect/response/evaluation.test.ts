@@ -342,6 +342,38 @@ describe("response/evaluation", () => {
     ).toMatchObject({ outcome: { status: "pending" } });
   });
 
+  it("treats an answer of invisible characters as blank", () => {
+    expect(settle(evaluate(shortAnswer(capital), typed("\u200b")))).toBe(
+      "selection"
+    );
+    expect(settle(evaluate(shortAnswer(half), typed("\u2060")))).toBe(
+      "selection"
+    );
+    expect(
+      settle(
+        evaluate(
+          rubric,
+          finalAnswers(
+            "\u200b\u2060",
+            ["criterion-2", "Paris"],
+            ["criterion-3", "4"]
+          )
+        )
+      )
+    ).toEqual({
+      isComplete: false,
+      outcome: { points: 4, status: "partial" },
+      selection: {
+        finalAnswers: [
+          { criterionKey: "criterion-2", text: "Paris" },
+          { criterionKey: "criterion-3", number: "4", text: "4" },
+        ],
+        kind: "rubric",
+        text: "\u200b\u2060",
+      },
+    });
+  });
+
   it("leaves a written rubric response pending and records typed readings", () => {
     expect(
       settle(

@@ -173,9 +173,11 @@ describe("response/selection", () => {
   });
 
   it("keeps typed short-answer text and rejects blank text", () => {
-    expect(
-      settle(select(shortAnswer, { kind: "short-answer", text: "  \t " }))
-    ).toBe("selection");
+    for (const text of ["  \t ", "\u200b", "\u2060\u00ad "]) {
+      expect(settle(select(shortAnswer, { kind: "short-answer", text }))).toBe(
+        "selection"
+      );
+    }
     expect(
       settle(
         select(shortAnswer, {
@@ -200,20 +202,23 @@ describe("response/selection", () => {
       [answer("criterion-1")],
       [answer("missing")],
       [answer("criterion-2", " ")],
+      [answer("criterion-2", "\u2060")],
     ]) {
       expect(
         settle(select(rubric, { finalAnswers, kind: "rubric", text: "Work" }))
       ).toBe("selection");
     }
-    expect(
-      settle(select(rubric, { finalAnswers: [], kind: "rubric", text: " " }))
-    ).toBe("selection");
+    for (const text of [" ", "\u200b"]) {
+      expect(
+        settle(select(rubric, { finalAnswers: [], kind: "rubric", text }))
+      ).toBe("selection");
+    }
     expect(
       settle(
         select(rubric, {
           finalAnswers: [answer("criterion-3", "x"), answer("criterion-2")],
           kind: "rubric",
-          text: "",
+          text: "\u200b",
         })
       )
     ).toEqual({
@@ -221,7 +226,7 @@ describe("response/selection", () => {
       selection: {
         finalAnswers: [answer("criterion-2"), answer("criterion-3", "x")],
         kind: "rubric",
-        text: "",
+        text: "\u200b",
       },
     });
     expect(

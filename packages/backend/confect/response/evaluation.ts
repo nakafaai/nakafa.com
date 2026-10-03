@@ -1,5 +1,6 @@
 import type { DeliveryLanguage } from "@nakafa/aksara-contracts/locale";
 import {
+  isBlankAnswer,
   matchesAnswerKey,
   type QuestionAnswerKey,
   type QuestionNumberAnswer,
@@ -172,7 +173,7 @@ function evaluateRubric(
   );
   return Result.map(select(project(spec, true), selection), (selected) => ({
     isComplete: selected.isComplete,
-    outcome: gradeRubric(spec, typed, Str.isNonEmpty(Str.trim(selection.text))),
+    outcome: gradeRubric(spec, typed, !isBlankAnswer(selection.text)),
     selection: {
       finalAnswers: Arr.getSomes(
         Arr.map(spec.criteria, ({ criterionKey, finalAnswer }) =>

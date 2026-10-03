@@ -8,9 +8,10 @@
 ---
 
 Score short answers, rubrics, and penalized try-outs from one response module.
-Try-outs read @nakafa/aksara-contracts 0.44.0. Short answers are graded against
+Try-outs read @nakafa/aksara-contracts 0.45.0. Short answers are graded against
 their answer keys in the question's language, with a comma decimal in Indonesian
-and German, a dot in English, and fractions only where the key accepts them.
+and German, a dot in English, and fractions only where the key accepts them. An
+answer made only of spaces or invisible characters counts as unanswered.
 Rubric final answers are graded on the spot, while written work waits for the
 grader. Every answer now records whether it is correct, incorrect, partially
 correct, or awaiting grading, and an answer awaiting grading keeps the score
