@@ -2,15 +2,22 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { Duration, Effect } from "effect";
 import { waitForStableCanvas } from "@/e2e/support/canvas";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
-import { readCumulativeLayoutShift } from "@/e2e/support/layout";
+import {
+  readCumulativeLayoutShift,
+  readPageLayoutShift,
+} from "@/e2e/support/layout";
 
 const REVEAL_TIMEOUT_MILLISECONDS = 30_000;
+/** How long one attempt of a retried check waits before the next one. */
+const ATTEMPT_TIMEOUT_MILLISECONDS = 1000;
 /** Readings of the session's layout shift that must agree before a step. */
 const SETTLED_READINGS = 2;
 const SETTLE_ATTEMPTS = 10;
 
 /** The animated lab's scene, which names how many bacteria it draws. */
 export const BACTERIA_SCENE = "[data-bacteria-count]";
+/** The animated lab's generation option that names the start, such as "0 h". */
+const FIRST_GENERATION = /^0\s/;
 /** A deferred 3D line scene of a lesson card. */
 export const LINE_SCENE = '[data-slot="line-scene"]';
 
@@ -28,36 +35,18 @@ export function hidePopoverApi() {
 }
 
 /**
- * Waits until React owns every visual card of the lesson. Until React has
- * hydrated a server-rendered lesson, a provider above it that changes as the
- * page starts, such as the session finishing loading, can make React render
- * the whole lesson again on the client, which replaces every element a check
- * has found, and a streamed copy of the lesson can wait hidden beside it.
- * React keys each element it hydrates or creates to its own instance and
- * never replaces those.
- */
-function expectCardsOwnedByReact(cards: Locator) {
-  return expect
-    .poll(
-      () =>
-        cards.evaluateAll(
-          (elements) =>
-            elements.length > 0 &&
-            elements.every((element) =>
-              Reflect.ownKeys(element).some(
-                (key) =>
-                  typeof key === "string" && key.startsWith("__reactFiber$")
-              )
-            )
-        ),
-      { timeout: REVEAL_TIMEOUT_MILLISECONDS }
-    )
-    .toBe(true);
-}
-
-/**
- * Opens a lesson, waits until React owns its visual cards, and proves every
- * card carries the full screen action.
+ * Opens a lesson and proves every visual card carries the full screen action.
+ *
+ * A server-rendered lesson belongs to React only once React commits its
+ * hydration. Until then a provider above it that changes as the page starts,
+ * such as the session finishing loading, can make React render the whole
+ * lesson again on the client, and so can a press that reaches the lesson
+ * first. Both replace every element a check has found. The key React puts on
+ * an element does not show a commit, because React writes it while it renders
+ * a hydration it can still drop. A check therefore presses or marks a card
+ * only after the card shows a sign that only a committed tree gives: the lab's
+ * autoplay, a scene's canvas, or a chart's plot, which the server never
+ * renders.
  */
 export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
   function* (page: Page, href: string, fullscreen: string) {
@@ -68,19 +57,22 @@ export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
     yield* Effect.sync(() => expect(response?.ok()).toBe(true));
     yield* Effect.promise(() => page.waitForLoadState("networkidle"));
     const cards = page.locator('[data-slot="visual-card"]');
-    yield* Effect.promise(() => expectCardsOwnedByReact(cards));
-    const count = yield* Effect.promise(() => cards.count());
-    yield* Effect.promise(async () => {
-      expect(count).toBeGreaterThan(0);
-      // Cards far from the viewport skip rendering but keep their controls.
-      await expect(
-        cards.getByRole("button", {
-          exact: true,
-          includeHidden: true,
-          name: fullscreen,
-        })
-      ).toHaveCount(count);
-    });
+    // A card the server streamed can wait hidden beside the lesson React
+    // renders, so each attempt counts the cards again.
+    yield* Effect.promise(() =>
+      expect(async () => {
+        const count = await cards.count();
+        expect(count).toBeGreaterThan(0);
+        // Cards far from the viewport skip rendering but keep their controls.
+        await expect(
+          cards.getByRole("button", {
+            exact: true,
+            includeHidden: true,
+            name: fullscreen,
+          })
+        ).toHaveCount(count, { timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
+      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+    );
   }
 );
 
@@ -113,6 +105,28 @@ export const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
     expect(async () => {
       await scrollToElement(card, "start");
       await expect(card.locator(content).first()).toBeVisible();
+    }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+  );
+  return card;
+});
+
+/**
+ * Reveals the animated lab and waits until its own autoplay has moved it past
+ * its first generation. The server renders the first generation, and only a
+ * committed React tree runs the effect that advances it, so from then on the
+ * lab and the lesson around it are the elements React keeps. The lab advances
+ * only while it is in view, so each attempt scrolls to it first.
+ */
+export const revealLab = Effect.fn("NakafaE2E.revealVisualLab")(function* (
+  page: Page
+) {
+  const card = yield* revealCard(page, BACTERIA_SCENE);
+  yield* Effect.promise(() =>
+    expect(async () => {
+      await scrollToElement(card, "start");
+      await expect(
+        card.getByRole("button", { name: FIRST_GENERATION, pressed: false })
+      ).toBeVisible({ timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
     }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
   );
   return card;
@@ -254,34 +268,74 @@ export const expectReturned = Effect.fn("NakafaE2E.expectVisualReturned")(
 );
 
 /**
- * Reads the page's cumulative layout shift once it stops changing. Content
- * below the fold can still settle after load, so a session compares settled
- * readings taken around it.
+ * Reads a layout shift once it stops changing. Content below the fold can
+ * still settle after load, so a session compares settled readings taken
+ * around it.
  */
+function settleLayoutShift(
+  page: Page,
+  read: (page: Page) => ReturnType<typeof readCumulativeLayoutShift>
+) {
+  return Effect.gen(function* () {
+    const readings = [yield* read(page)];
+    for (
+      let attempt = 0;
+      attempt < SETTLE_ATTEMPTS &&
+      (readings.length < SETTLED_READINGS ||
+        readings.at(-1) !== readings.at(-SETTLED_READINGS));
+      attempt += 1
+    ) {
+      yield* Effect.sleep(Duration.millis(500));
+      readings.push(yield* read(page));
+    }
+    return readings.at(-1) ?? 0;
+  });
+}
+
+/** Reads the cumulative layout shift of the whole page once it stops changing. */
 export const readSettledLayoutShift = Effect.fn(
   "NakafaE2E.readSettledVisualLayoutShift"
-)(function* (page: Page) {
-  const readings = [yield* readCumulativeLayoutShift(page)];
-  for (
-    let attempt = 0;
-    attempt < SETTLE_ATTEMPTS &&
-    (readings.length < SETTLED_READINGS ||
-      readings.at(-1) !== readings.at(-SETTLED_READINGS));
-    attempt += 1
-  ) {
-    yield* Effect.sleep(Duration.millis(500));
-    readings.push(yield* readCumulativeLayoutShift(page));
-  }
-  return readings.at(-1) ?? 0;
-});
+)((page: Page) => settleLayoutShift(page, readCumulativeLayoutShift));
 
 /**
- * Expects the session since `before` to add no layout shift the learner did
- * not cause: the card's slot holds the page while the card is away.
+ * Reads the layout shift of the page around its visual cards once it stops
+ * changing. The card's own contents move when it changes presentation, so
+ * they are not the page's.
  */
-export const expectNoLayoutShift = Effect.fn(
-  "NakafaE2E.expectNoVisualLayoutShift"
-)(function* (page: Page, before: number) {
-  const after = yield* readSettledLayoutShift(page);
-  yield* Effect.sync(() => expect(after).toBe(before));
-});
+export const readSettledPageShift = Effect.fn(
+  "NakafaE2E.readSettledVisualPageShift"
+)((page: Page) => settleLayoutShift(page, readPageLayoutShift));
+
+/**
+ * Expects the session since `before` to add no layout shift to the page around
+ * the card that the learner did not cause: the card's slot holds the page
+ * while the card is away.
+ */
+export const expectNoPageShift = Effect.fn("NakafaE2E.expectNoVisualPageShift")(
+  function* (page: Page, before: number) {
+    const after = yield* readSettledPageShift(page);
+    yield* Effect.sync(() => expect(after).toBe(before));
+  }
+);
+
+/**
+ * Lets the animated lab grow through every generation without a press and
+ * expects it to move nothing on the page: a count that gets wider, or the
+ * option the growth reaches, would shift the layout with no input to explain
+ * it. The lab stops at its last generation and offers `play`.
+ */
+export const expectLabStill = Effect.fn("NakafaE2E.expectVisualLabStill")(
+  function* (page: Page, card: Locator, play: string) {
+    const before = yield* readSettledLayoutShift(page);
+    yield* Effect.promise(() =>
+      expect(async () => {
+        await scrollToElement(card, "start");
+        await expect(
+          card.getByRole("button", { exact: true, name: play })
+        ).toBeVisible({ timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
+      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+    );
+    const after = yield* readSettledLayoutShift(page);
+    yield* Effect.sync(() => expect(after).toBe(before));
+  }
+);

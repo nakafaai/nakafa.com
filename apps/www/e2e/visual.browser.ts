@@ -18,7 +18,8 @@ import {
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
   BACTERIA_SCENE,
-  expectNoLayoutShift,
+  expectLabStill,
+  expectNoPageShift,
   expectReturned,
   hideFullscreenApi,
   hidePopoverApi,
@@ -27,9 +28,10 @@ import {
   readPlacement,
   readPresentation,
   readSceneHeight,
-  readSettledLayoutShift,
+  readSettledPageShift,
   revealAction,
   revealCard,
+  revealLab,
   revealScene,
 } from "@/e2e/support/visual";
 
@@ -87,7 +89,7 @@ const presentLab = Effect.fn("NakafaE2E.presentVisualLab")(function* (
   presentation: "fullscreen" | "immersive"
 ) {
   yield* openVisualLesson(page, pinnedRoutes.exponent.en, en.Common.fullscreen);
-  const card = yield* revealCard(page, BACTERIA_SCENE);
+  const card = yield* revealLab(page);
   yield* Effect.promise(() =>
     card.locator(BACTERIA_SCENE).evaluate((element, probe) => {
       element.setAttribute("data-visual-probe", probe);
@@ -96,7 +98,7 @@ const presentLab = Effect.fn("NakafaE2E.presentVisualLab")(function* (
   const action = yield* revealAction(card, en.Common.fullscreen);
   const placement = yield* Effect.promise(() => readPlacement(card));
   const inlineScene = yield* Effect.promise(() => readSceneHeight(card));
-  const layoutShift = yield* readSettledLayoutShift(page);
+  const layoutShift = yield* readSettledPageShift(page);
 
   yield* Effect.promise(() => action.click());
 
@@ -139,8 +141,19 @@ const presentLab = Effect.fn("NakafaE2E.presentVisualLab")(function* (
       card.locator(`[data-visual-probe="${SCENE_PROBE}"]`)
     ).toHaveCount(1);
   });
-  yield* expectNoLayoutShift(page, layoutShift);
+  yield* expectNoPageShift(page, layoutShift);
   yield* expectPlayback(card);
+});
+
+/**
+ * Lets the animated lab grow through every generation without a press. Nothing
+ * is pressed while it advances on its own, so any shift it records is one no
+ * input explains.
+ */
+const growLab = Effect.fn("NakafaE2E.growVisualLab")(function* (page: Page) {
+  yield* openVisualLesson(page, pinnedRoutes.exponent.en, en.Common.fullscreen);
+  const card = yield* revealLab(page);
+  yield* expectLabStill(page, card, en.Common.play);
 });
 
 /** Shows a lesson chart across the screen and returns it with its action. */
@@ -154,7 +167,7 @@ const presentChart = Effect.fn("NakafaE2E.presentVisualChart")(function* (
   const action = yield* revealAction(card, en.Common.fullscreen);
   const inline = yield* Effect.promise(() => surface.boundingBox());
   const placement = yield* Effect.promise(() => readPlacement(card));
-  const layoutShift = yield* readSettledLayoutShift(page);
+  const layoutShift = yield* readSettledPageShift(page);
 
   yield* Effect.promise(() => action.click());
 
@@ -178,7 +191,7 @@ const presentChart = Effect.fn("NakafaE2E.presentVisualChart")(function* (
       .poll(async () => (await surface.boundingBox())?.height)
       .toBe(inline?.height);
   });
-  yield* expectNoLayoutShift(page, layoutShift);
+  yield* expectNoPageShift(page, layoutShift);
 });
 
 /**
@@ -204,7 +217,7 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   const inline = yield* Effect.promise(() => readCanvasSize(canvas));
   const labels = yield* Effect.promise(() => countLabelsInView(card));
   const placement = yield* Effect.promise(() => readPlacement(card));
-  const layoutShift = yield* readSettledLayoutShift(page);
+  const layoutShift = yield* readSettledPageShift(page);
 
   yield* Effect.promise(() => action.click());
 
@@ -274,7 +287,7 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   yield* Effect.promise(async () => {
     await expect.poll(() => readCanvasSize(canvas)).toEqual(inline);
   });
-  yield* expectNoLayoutShift(page, layoutShift);
+  yield* expectNoPageShift(page, layoutShift);
 });
 
 /**
@@ -362,7 +375,7 @@ const toggleInLocale = Effect.fn("NakafaE2E.toggleVisualInLocale")(function* (
     pinnedRoutes.exponent[locale],
     messages.Common.fullscreen
   );
-  const card = yield* revealCard(page, BACTERIA_SCENE);
+  const card = yield* revealLab(page);
   const action = yield* revealAction(card, messages.Common.fullscreen);
 
   yield* Effect.promise(async () => {
@@ -415,6 +428,12 @@ for (const viewport of [
       await Effect.runPromise(
         withObservedPageErrors(page, presentLab(page, "immersive"))
       );
+    });
+
+    test("let an animated lab grow without shifting the page", async ({
+      page,
+    }) => {
+      await Effect.runPromise(withObservedPageErrors(page, growLab(page)));
     });
 
     test("show a chart full screen and return it to its slot", async ({

@@ -2,11 +2,11 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Number as Num } from "effect";
 
 /**
- * Reads every layout shift the page has recorded since navigation. A buffered
- * observer holds every recorded shift as soon as it observes, so taking its
- * records reads them at once. WebKit has no Layout Instability API, so there
- * it reads none and a suite proves stability through the placement of the
- * page instead.
+ * Reads every layout shift the page has recorded since navigation, and whether
+ * it moved something outside every visual card. A buffered observer holds
+ * every recorded shift as soon as it observes, so taking its records reads
+ * them at once. WebKit has no Layout Instability API, so there it reads none
+ * and a suite proves stability through the placement of the page instead.
  */
 const readLayoutShifts = Effect.fn("NakafaE2E.readLayoutShifts")(function* (
   page: Page
@@ -17,12 +17,33 @@ const readLayoutShifts = Effect.fn("NakafaE2E.readLayoutShifts")(function* (
       observer.observe({ buffered: true, type: "layout-shift" });
       const entries = observer.takeRecords();
       observer.disconnect();
-      return entries.map((entry) => ({
-        hadRecentInput:
-          "hadRecentInput" in entry && entry.hadRecentInput === true,
-        value:
-          "value" in entry && typeof entry.value === "number" ? entry.value : 0,
-      }));
+      // The element a source names, or the parent of the text it names.
+      const elementOf = (node: unknown) => {
+        if (node instanceof Element) {
+          return node;
+        }
+        return node instanceof Node ? node.parentElement : null;
+      };
+      const insideCard = (node: unknown) =>
+        elementOf(node)?.closest('[data-slot="visual-card"]') != null;
+      return entries.map((entry) => {
+        const sources =
+          "sources" in entry && entry.sources instanceof Array
+            ? entry.sources
+            : [];
+        return {
+          hadRecentInput:
+            "hadRecentInput" in entry && entry.hadRecentInput === true,
+          // A shift with no source to name counts as the page's.
+          outside:
+            sources.length === 0 ||
+            sources.some((source) => !insideCard(source?.node)),
+          value:
+            "value" in entry && typeof entry.value === "number"
+              ? entry.value
+              : 0,
+        };
+      });
     })
   );
 });
@@ -51,6 +72,29 @@ export const readCumulativeLayoutShift = Effect.fn(
     )
   );
 });
+
+/**
+ * Reads the cumulative layout shift of the page around its visual cards: the
+ * shifts that moved something outside every card. A card that changes
+ * presentation moves its own contents, and the browser answers that to the
+ * press only within half a second of it, so a loaded machine that draws the
+ * card later records the move as a shift nobody caused. The page behind the
+ * card is the part a card must never move.
+ */
+export const readPageLayoutShift = Effect.fn("NakafaE2E.readPageLayoutShift")(
+  function* (page: Page) {
+    const shifts = yield* readLayoutShifts(page);
+    return Num.sumAll(
+      Arr.map(
+        Arr.filter(
+          shifts,
+          ({ hadRecentInput, outside }) => outside && !hadRecentInput
+        ),
+        ({ value }) => value
+      )
+    );
+  }
+);
 
 /**
  * Waits until a reader sees the element rather than a sticky header over it:
