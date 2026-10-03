@@ -1,7 +1,7 @@
 import {
-  holdPage,
-  measurePage,
-} from "@repo/design-system/components/visual/page";
+  holdBackdrop,
+  measureBackdrop,
+} from "@repo/design-system/components/visual/backdrop";
 import { Effect, Exit, Predicate, Scope } from "effect";
 
 /**
@@ -43,7 +43,7 @@ export const openSession = Effect.fn("designSystem.visual.openSession")(
     onFullscreenChange: () => void
   ) {
     const scope = yield* Scope.make();
-    const { padding, place } = yield* measurePage(card);
+    const { padding, place } = yield* measureBackdrop(card);
     yield* Effect.all(
       [
         listen("fullscreenchange", onFullscreenChange),
@@ -83,7 +83,7 @@ export type Session = Effect.Success<ReturnType<typeof openSession>>;
  */
 export const holdSession = Effect.fn("designSystem.visual.holdSession")(
   ({ card, padding, scope }: Session) =>
-    holdPage(card, padding).pipe(Scope.provide(scope))
+    holdBackdrop(card, padding).pipe(Scope.provide(scope))
 );
 
 /**

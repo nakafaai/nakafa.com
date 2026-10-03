@@ -59,11 +59,12 @@ const measurePadding = Effect.fn("designSystem.visual.measurePadding")(
 );
 
 /**
- * Reads the page around a card while the card is still in it: the card's
- * place, which its slot keeps while the card fills the screen, and the root's
- * scrollbar gutters. It writes nothing, so it lays the page out at most once.
+ * Reads the backdrop of a card, the page around it, while the card is still in
+ * it: the card's place, which its slot keeps while the card fills the screen,
+ * and the root's scrollbar gutters. It writes nothing, so it lays the page out
+ * at most once.
  */
-export const measurePage = Effect.fn("designSystem.visual.measurePage")(
+export const measureBackdrop = Effect.fn("designSystem.visual.measureBackdrop")(
   function* (card: HTMLElement) {
     const padding = yield* measurePadding(document.documentElement);
     const place = yield* measurePlace(card);
@@ -141,16 +142,15 @@ const holdScroll = Effect.fn("designSystem.visual.holdScroll")(
 );
 
 /**
- * Holds the page still behind a card that fills the screen until the scope
+ * Holds the backdrop still behind a card that fills the screen until the scope
  * closes. Everything outside the card turns inert and the page stops
  * scrolling. Scenes in the inert page pause, because a scene that nobody can
  * see or reach needs no frames. It reads no layout, so holding the page at
  * the moment the browser shows the card lays nothing out early.
  */
-export const holdPage = Effect.fn("designSystem.visual.holdPage")(function* (
-  card: HTMLElement,
-  padding: typeof VisualPaddingSchema.Type
-) {
-  yield* holdInert(card);
-  yield* holdScroll(document.documentElement, padding);
-});
+export const holdBackdrop = Effect.fn("designSystem.visual.holdBackdrop")(
+  function* (card: HTMLElement, padding: typeof VisualPaddingSchema.Type) {
+    yield* holdInert(card);
+    yield* holdScroll(document.documentElement, padding);
+  }
+);

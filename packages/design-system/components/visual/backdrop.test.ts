@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
-  holdPage,
-  measurePage,
-} from "@repo/design-system/components/visual/page";
+  holdBackdrop,
+  measureBackdrop,
+} from "@repo/design-system/components/visual/backdrop";
 import { Effect } from "effect";
 
 /** The width the test viewport reports, scrollbars included. */
@@ -66,7 +66,7 @@ describe("measuring the page around a visual card", () => {
       const card = renderPage();
       layOutRoot(0, VIEWPORT_WIDTH);
 
-      const { place } = yield* measurePage(card);
+      const { place } = yield* measureBackdrop(card);
 
       expect(place).toEqual({
         height: 480,
@@ -85,7 +85,7 @@ describe("measuring the page around a visual card", () => {
         layOutRoot(10, 380);
         document.documentElement.style.paddingLeft = "4px";
 
-        const { padding } = yield* measurePage(card);
+        const { padding } = yield* measureBackdrop(card);
 
         expect(padding).toEqual({ paddingLeft: "14px", paddingRight: "10px" });
       })
@@ -99,7 +99,7 @@ describe("measuring the page around a visual card", () => {
         // macOS draws a styled scrollbar inside the viewport while it scrolls.
         layOutRoot(0, 380);
 
-        const { padding } = yield* measurePage(card);
+        const { padding } = yield* measureBackdrop(card);
 
         expect(padding).toEqual({ paddingLeft: "0px", paddingRight: "10px" });
       })
@@ -111,7 +111,7 @@ describe("measuring the page around a visual card", () => {
       document.documentElement.style.margin = "0 6px 0 8px";
       layOutRoot(18, 374);
 
-      const { padding } = yield* measurePage(card);
+      const { padding } = yield* measureBackdrop(card);
 
       expect(padding).toEqual({ paddingLeft: "10px", paddingRight: "10px" });
     })
@@ -125,7 +125,7 @@ describe("measuring the page around a visual card", () => {
         // A pinch-zoomed phone reports half its layout width as the viewport.
         layOutRoot(0, VIEWPORT_WIDTH, VIEWPORT_WIDTH / 2);
 
-        const { padding } = yield* measurePage(card);
+        const { padding } = yield* measureBackdrop(card);
 
         expect(padding).toEqual(NO_PADDING);
       })
@@ -141,7 +141,7 @@ describe("holding the page behind a visual card", () => {
 
         yield* Effect.scoped(
           Effect.gen(function* () {
-            yield* holdPage(card, NO_PADDING);
+            yield* holdBackdrop(card, NO_PADDING);
 
             expect(inertIds()).toEqual(["header", "before", "aside", "footer"]);
           })
@@ -161,7 +161,7 @@ describe("holding the page behind a visual card", () => {
 
         yield* Effect.scoped(
           Effect.gen(function* () {
-            yield* holdPage(card, {
+            yield* holdBackdrop(card, {
               paddingLeft: "14px",
               paddingRight: "10px",
             });

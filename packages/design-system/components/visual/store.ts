@@ -1,4 +1,4 @@
-import { VisualPlaceSchema } from "@repo/design-system/components/visual/page";
+import { VisualPlaceSchema } from "@repo/design-system/components/visual/backdrop";
 import {
   closeSession,
   focusSession,
