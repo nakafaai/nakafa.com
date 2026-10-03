@@ -25,19 +25,19 @@ const readLayoutShifts = Effect.fn("NakafaE2E.readLayoutShifts")(function* (
         return node instanceof Node ? node.parentElement : null;
       };
       const insideCard = (node: unknown) =>
-        elementOf(node)?.closest('[data-slot="visual-card"]') != null;
+        elementOf(node)?.closest('[data-slot="visual-card"]') instanceof
+        Element;
       return entries.map((entry) => {
-        const sources =
-          "sources" in entry && entry.sources instanceof Array
-            ? entry.sources
-            : [];
+        const sources = Array.from<{ node: unknown }>(
+          Reflect.get(entry, "sources") ?? []
+        );
         return {
           hadRecentInput:
             "hadRecentInput" in entry && entry.hadRecentInput === true,
           // A shift with no source to name counts as the page's.
           outside:
             sources.length === 0 ||
-            sources.some((source) => !insideCard(source?.node)),
+            sources.some((source) => !insideCard(source.node)),
           value:
             "value" in entry && typeof entry.value === "number"
               ? entry.value
