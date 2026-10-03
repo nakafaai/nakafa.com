@@ -13,7 +13,6 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/nina/presentation.spec";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useConvexAuth } from "convex/react";
 import type {
   FunctionArgs,
   FunctionReference,
@@ -34,6 +33,7 @@ import {
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
+import { useConvexAuth } from "@/components/providers/convex";
 import { useViewer } from "@/lib/identity/client";
 
 // Agent owns delta decoding, reconnection and pagination. Confect registers
@@ -191,7 +191,7 @@ function useMessages(
 
 /** Combines authorized conversation facts with the official Agent stream. */
 function useConversation(chatId: Id<"chats">) {
-  const { isLoading: authenticating } = useConvexAuth();
+  const authenticating = useConvexAuth((auth) => auth.isLoading);
   const result = useQuery(
     refs.public.nina.conversation.get,
     authenticating ? "skip" : { chatId }

@@ -2,7 +2,6 @@
 
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
-import { createContext, type ReactNode, use } from "react";
 import { useAuthSession } from "@/components/auth/session";
 import {
   type AccountRecord,
@@ -22,8 +21,6 @@ export interface IdentityState {
   readonly isPending: boolean;
   readonly viewer: Viewer | null;
 }
-
-const IdentityContext = createContext<IdentityState | null>(null);
 
 const signedOutState: IdentityState = {
   account: null,
@@ -78,45 +75,32 @@ function resolveIdentityState({
 }
 
 /**
- * Resolves the account from the shared Better Auth session.
+ * Reads one slice of the viewer's identity.
  *
- * The session is the one source of authentication truth, so the account query
- * runs only once a session exists and a signed-out visitor settles instead of
- * waiting forever. Mounted once at the app boundary.
+ * Each reader derives identity from the shared session store and the account
+ * query, which Convex serves from one subscription for every reader. No
+ * provider shares the result: a provider value that changes after hydration
+ * makes React discard streamed Suspense boundaries that are still pending,
+ * and the session store gives a reader that hydrates late the pending
+ * identity the server rendered. A visitor with no session settles as signed
+ * out instead of waiting on a query that will never run.
  */
-export function IdentityProvider({ children }: { children: ReactNode }) {
-  const hasSession = useAuthSession(
-    (session) => session.data?.session !== undefined
-  );
+export function useViewer<T>(selector: (state: IdentityState) => T): T {
+  const sessionId = useAuthSession((session) => session.sessionId);
   const isSessionPending = useAuthSession((session) => session.isPending);
   const query = useQuery(
     refs.public.auth.queries.getCurrentUser,
-    hasSession ? {} : "skip"
+    sessionId === null ? "skip" : {}
   );
   if (QueryResult.isFailure(query)) {
     throw query.error;
   }
-  const value = resolveIdentityState({
-    account: QueryResult.isSuccess(query) ? query.value : null,
-    hasSession,
-    isSessionPending,
-    isQueryPending: QueryResult.isLoading(query),
-  });
-
-  return <IdentityContext value={value}>{children}</IdentityContext>;
-}
-
-/**
- * Reads one slice of the identity state for the current subtree.
- *
- * Identity comes from the session and account query during render, so it is
- * shared through a plain context: readers re-render when it changes, which
- * happens only as it resolves and when the account signs in or out.
- */
-export function useViewer<T>(selector: (state: IdentityState) => T): T {
-  const context = use(IdentityContext);
-  if (!context) {
-    throw new Error("useViewer must be used within an IdentityProvider");
-  }
-  return selector(context);
+  return selector(
+    resolveIdentityState({
+      account: QueryResult.isSuccess(query) ? query.value : null,
+      hasSession: sessionId !== null,
+      isSessionPending,
+      isQueryPending: QueryResult.isLoading(query),
+    })
+  );
 }

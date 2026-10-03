@@ -3,9 +3,9 @@
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useConvexAuth } from "convex/react";
 import { useLocale } from "next-intl";
 import { type ReactNode, Suspense, use, useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
@@ -123,7 +123,7 @@ function LiveTryoutSectionPage({
 }: TryoutSectionPageClientProps & {
   binding: NonNullable<TryoutSectionRouteBinding>;
 }) {
-  const { isLoading } = useConvexAuth();
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const locale = useLocale();
   const [terminalState, setTerminalState] = useState<
     SectionState | undefined

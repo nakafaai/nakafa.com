@@ -27,11 +27,10 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
-import { useConvexAuth } from "convex/react";
-
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { TryoutScoreCard } from "@/components/tryout/score/card";
 import { getLocale } from "@/lib/utils/date";
@@ -217,7 +216,7 @@ export function TryoutAttemptResults({
 }: {
   value: TryoutAttemptResultsValue;
 }) {
-  const { isAuthenticated } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const [selectedAttemptId, setSelectedAttemptId] = useState<
     HistoryRow["attemptId"] | null
   >(null);

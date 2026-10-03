@@ -4,12 +4,13 @@ import {
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
+import { HashMap, Option } from "effect";
 import {
-  type AnalyticsConsentSessionOverrides,
   canCommitAnalyticsConsentRevocation,
   cancelAnalyticsConsentSessionSave,
   completeAnalyticsConsentSessionSave,
   createAnalyticsConsentPromptIdentity,
+  emptyAnalyticsConsentSessionOverrides,
   resolveAnalyticsConsentSessionPolicy,
   setAnalyticsConsentSessionOverride,
 } from "@/lib/analytics/consent/session";
@@ -53,7 +54,7 @@ describe("analytics consent session", () => {
 
     let overrides = setAnalyticsConsentSessionOverride({
       override: { persistence: "failed" },
-      overrides: new Map(),
+      overrides: emptyAnalyticsConsentSessionOverrides,
       promptIdentity: anonymous,
     });
     overrides = setAnalyticsConsentSessionOverride({
@@ -121,7 +122,7 @@ describe("analytics consent session", () => {
     const unresolved = resolveAnalyticsConsentSessionPolicy({
       durableConsent: null,
       hasLoadError: true,
-      overrides: new Map(),
+      overrides: emptyAnalyticsConsentSessionOverrides,
       promptIdentity,
       status: "pending",
     });
@@ -129,9 +130,11 @@ describe("analytics consent session", () => {
     const pending = resolveAnalyticsConsentSessionPolicy({
       durableConsent: null,
       hasLoadError: true,
-      overrides: new Map([
-        [promptIdentity, { owner: pendingOwner, persistence: "pending" }],
-      ]),
+      overrides: setAnalyticsConsentSessionOverride({
+        override: { owner: pendingOwner, persistence: "pending" },
+        overrides: emptyAnalyticsConsentSessionOverrides,
+        promptIdentity,
+      }),
       promptIdentity,
       status: "pending",
     });
@@ -146,7 +149,7 @@ describe("analytics consent session", () => {
       resolveAnalyticsConsentSessionPolicy({
         durableConsent: null,
         hasLoadError: false,
-        overrides: new Map(),
+        overrides: emptyAnalyticsConsentSessionOverrides,
         promptIdentity,
         status: "prompt",
       })
@@ -155,7 +158,7 @@ describe("analytics consent session", () => {
       resolveAnalyticsConsentSessionPolicy({
         durableConsent: null,
         hasLoadError: true,
-        overrides: new Map(),
+        overrides: emptyAnalyticsConsentSessionOverrides,
         promptIdentity: null,
         status: "pending",
       }).isPromptOpen
@@ -173,9 +176,11 @@ describe("analytics consent session", () => {
 
     const currentOwner = Symbol("current save");
     const staleOwner = Symbol("stale save");
-    const pending: AnalyticsConsentSessionOverrides = new Map([
-      [promptIdentity, { owner: currentOwner, persistence: "pending" }],
-    ]);
+    const pending = setAnalyticsConsentSessionOverride({
+      override: { owner: currentOwner, persistence: "pending" },
+      overrides: emptyAnalyticsConsentSessionOverrides,
+      promptIdentity,
+    });
     const staleCompletion = completeAnalyticsConsentSessionSave({
       nextOverride: { persistence: "failed" },
       overrides: pending,
@@ -201,11 +206,10 @@ describe("analytics consent session", () => {
 
     expect(staleCompletion).toBe(pending);
     expect(staleCancellation).toBe(pending);
-    expect(completed.get(promptIdentity)).toEqual({
-      decidedAt: 300,
-      persistence: "saved",
-    });
-    expect(canceled.has(promptIdentity)).toBe(false);
+    expect(HashMap.get(completed, promptIdentity)).toEqual(
+      Option.some({ decidedAt: 300, persistence: "saved" })
+    );
+    expect(HashMap.has(canceled, promptIdentity)).toBe(false);
   });
 
   it("commits only the latest revocation without a newer explicit save", () => {

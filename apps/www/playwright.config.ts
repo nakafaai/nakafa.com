@@ -12,8 +12,16 @@ export default defineConfig({
   outputDir: "../../.cache/playwright/www",
   projects: [
     {
+      // The hydration checks need pages that still stream on demand, so they
+      // run before any other suite opens, and caches, those pages.
+      name: "cold-runtime",
+      testMatch: "**/hydration.browser.ts",
+      workers: 1,
+    },
+    {
+      dependencies: ["cold-runtime"],
       name: "shared-runtime",
-      testIgnore: "**/navigation.browser.ts",
+      testIgnore: ["**/hydration.browser.ts", "**/navigation.browser.ts"],
       workers: 1,
     },
     {

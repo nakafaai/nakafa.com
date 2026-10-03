@@ -2,7 +2,9 @@
 
 import type { AnalyticsConsentState } from "@repo/analytics/consent";
 import { createContext, use } from "react";
+import { useAnalyticsConsentModel } from "@/lib/analytics/consent/model";
 import type { AnalyticsConsentPreferences } from "@/lib/analytics/consent/preferences";
+import type { AnalyticsConsentStore } from "@/lib/analytics/consent/store";
 
 export type AnalyticsConsentError = "load" | "runtime" | "save";
 
@@ -19,18 +21,30 @@ export interface AnalyticsConsentContextValue {
   readonly status: AnalyticsConsentState["status"];
 }
 
+/** Carries one provider's consent store, which never changes after mount. */
 export const AnalyticsConsentContext =
-  createContext<AnalyticsConsentContextValue | null>(null);
+  createContext<AnalyticsConsentStore | null>(null);
 
-/** Reads one derived slice of the optional analytics consent controller. */
-export function useAnalyticsConsent<T>(
-  selector: (state: AnalyticsConsentContextValue) => T
-) {
-  const context = use(AnalyticsConsentContext);
-  if (!context) {
+/** Returns the consent store and rejects a missing provider. */
+export function useAnalyticsConsentStore() {
+  const store = use(AnalyticsConsentContext);
+  if (!store) {
     throw new Error(
       "useAnalyticsConsent must be used within AnalyticsConsentProvider"
     );
   }
-  return selector(context);
+  return store;
+}
+
+/**
+ * Reads one derived slice of the optional analytics consent controller.
+ *
+ * The slice is derived in the reading component from the consent store, the
+ * session and Convex authentication stores, and the account consent query,
+ * so a reader that hydrates late renders the consent state the server did.
+ */
+export function useAnalyticsConsent<T>(
+  selector: (state: AnalyticsConsentContextValue) => T
+) {
+  return selector(useAnalyticsConsentModel(useAnalyticsConsentStore()).value);
 }

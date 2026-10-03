@@ -4,14 +4,13 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
-import { Authenticated, Unauthenticated } from "convex/react";
-
 import { Activity } from "react";
 import { ChatProvider } from "@/components/ai/chat/context";
 import { useAi } from "@/components/ai/context";
 import { SheetMain } from "@/components/ai/sheet/conversation";
 import { AiSheetHeader } from "@/components/ai/sheet/header";
 import { SheetNew } from "@/components/ai/sheet/new";
+import { Authenticated, Unauthenticated } from "@/components/auth/gate";
 
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;

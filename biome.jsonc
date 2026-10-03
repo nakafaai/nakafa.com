@@ -41,7 +41,22 @@
                   "@effect/vitest": {
                     "importNames": ["vi"],
                     "message": "Use the configured global vi for mocks. Import the remaining test APIs from @effect/vitest."
-                  }
+                  },
+                  // Convex's auth context changes its value after hydration;
+                  // Nakafa keeps Convex auth in a store instead.
+                  "convex/react": {
+                    "importNames": [
+                      "Authenticated",
+                      "AuthLoading",
+                      "AuthRefreshing",
+                      "ConvexProviderWithAuth",
+                      "Unauthenticated",
+                      "useConvexAuth"
+                    ],
+                    "message": "These read ConvexProviderWithAuth's context, which changes after hydration. Read Convex auth with useConvexAuth from @/components/providers/convex and the gates from @/components/auth/gate."
+                  },
+                  "@convex-dev/better-auth/react": "This module needs ConvexProviderWithAuth, whose context changes after hydration. Use ConvexProvider from @/components/providers/convex and the gates from @/components/auth/gate.",
+                  "@convex-dev/better-auth/nextjs/client": "This module reads useConvexAuth from convex/react, which throws without ConvexProviderWithAuth. Gate the query with useConvexAuth from @/components/providers/convex."
                 },
                 "patterns": [
                   {

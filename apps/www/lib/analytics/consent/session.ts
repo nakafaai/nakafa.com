@@ -2,6 +2,7 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   type AnalyticsConsentState,
 } from "@repo/analytics/consent";
+import { HashMap, Option } from "effect";
 
 export type AnalyticsConsentPromptIdentity =
   | `account:${string}:${typeof ANALYTICS_CONSENT_NOTICE_VERSION}`
@@ -12,10 +13,14 @@ export type AnalyticsConsentSessionOverride =
   | { readonly persistence: "failed" }
   | { readonly decidedAt: number; readonly persistence: "saved" };
 
-export type AnalyticsConsentSessionOverrides = ReadonlyMap<
+export type AnalyticsConsentSessionOverrides = HashMap.HashMap<
   AnalyticsConsentPromptIdentity,
   AnalyticsConsentSessionOverride
 >;
+
+/** A session without any visitor-scoped choice yet. */
+export const emptyAnalyticsConsentSessionOverrides: AnalyticsConsentSessionOverrides =
+  HashMap.empty();
 
 export interface AnalyticsConsentSessionOperation {
   readonly owner: symbol;
@@ -51,9 +56,7 @@ export function setAnalyticsConsentSessionOverride({
   readonly overrides: AnalyticsConsentSessionOverrides;
   readonly promptIdentity: AnalyticsConsentPromptIdentity;
 }): AnalyticsConsentSessionOverrides {
-  const nextOverrides = new Map(overrides);
-  nextOverrides.set(promptIdentity, override);
-  return nextOverrides;
+  return HashMap.set(overrides, promptIdentity, override);
 }
 
 /** Completes only the pending save that still owns this visitor scope. */
@@ -71,7 +74,9 @@ export function completeAnalyticsConsentSessionSave({
   readonly owner: symbol;
   readonly promptIdentity: AnalyticsConsentPromptIdentity;
 }): AnalyticsConsentSessionOverrides {
-  const currentOverride = overrides.get(promptIdentity);
+  const currentOverride = Option.getOrUndefined(
+    HashMap.get(overrides, promptIdentity)
+  );
   if (
     currentOverride?.persistence !== "pending" ||
     currentOverride.owner !== owner
@@ -96,7 +101,9 @@ export function cancelAnalyticsConsentSessionSave({
   readonly owner: symbol;
   readonly promptIdentity: AnalyticsConsentPromptIdentity;
 }): AnalyticsConsentSessionOverrides {
-  const currentOverride = overrides.get(promptIdentity);
+  const currentOverride = Option.getOrUndefined(
+    HashMap.get(overrides, promptIdentity)
+  );
   if (
     currentOverride?.persistence !== "pending" ||
     currentOverride.owner !== owner
@@ -104,9 +111,7 @@ export function cancelAnalyticsConsentSessionSave({
     return overrides;
   }
 
-  const nextOverrides = new Map(overrides);
-  nextOverrides.delete(promptIdentity);
-  return nextOverrides;
+  return HashMap.remove(overrides, promptIdentity);
 }
 
 /** Allows only the latest revocation without a superseding explicit save. */
@@ -154,7 +159,7 @@ export function resolveAnalyticsConsentSessionPolicy({
   readonly status: AnalyticsConsentState["status"];
 }) {
   const storedOverride = promptIdentity
-    ? overrides.get(promptIdentity)
+    ? Option.getOrUndefined(HashMap.get(overrides, promptIdentity))
     : undefined;
   const isSavedChoiceSynchronized =
     storedOverride?.persistence === "saved" &&

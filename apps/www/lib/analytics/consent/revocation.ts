@@ -1,15 +1,15 @@
 "use client";
 
 import { Effect, Fiber, Option } from "effect";
-import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   type AnalyticsConsentPromptIdentity,
   type AnalyticsConsentSessionOperation,
-  type AnalyticsConsentSessionOverrides,
   canCommitAnalyticsConsentRevocation,
   setAnalyticsConsentSessionOverride,
 } from "@/lib/analytics/consent/session";
 import { revokeAccountAnalyticsGrant } from "@/lib/analytics/consent/signal";
+import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
 interface AccountAnalyticsConsentRevocationOptions {
   readonly currentAccountUserId:
@@ -20,9 +20,7 @@ interface AccountAnalyticsConsentRevocationOptions {
   readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
   readonly readLatestSave: () => AnalyticsConsentSessionOperation | null;
   readonly setAccountConsent: Parameters<typeof revokeAccountAnalyticsGrant>[0];
-  readonly setSessionOverrides: Dispatch<
-    SetStateAction<AnalyticsConsentSessionOverrides>
-  >;
+  readonly setSessionOverrides: AnalyticsConsentStoreState["setSessionOverrides"];
   readonly shouldRevokeAccountGrant: boolean;
 }
 

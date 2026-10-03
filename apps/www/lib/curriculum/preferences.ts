@@ -2,15 +2,15 @@
 
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
-import { useConvexAuth } from "convex/react";
-
 import type { Locale } from "next-intl";
+import { useConvexAuth } from "@/components/providers/convex";
 import { getCurriculumProgramHref } from "@/lib/curriculum/routes";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Reads the current user's preferred curriculum href for client navigation. */
 export function usePreferredCurriculumHref(locale: Locale) {
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const activeLocale = isActiveLocale(locale);
   const queryArgs =
     isAuthenticated && !isLoading && activeLocale ? { locale } : "skip";

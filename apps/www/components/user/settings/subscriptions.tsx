@@ -13,10 +13,9 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useConvexAuth } from "convex/react";
-
 import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { CardSection } from "@/components/shared/card/section";
 import { useBillingNavigation } from "@/lib/billing/navigation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
@@ -39,7 +38,7 @@ export function UserSettingsSubscriptions({
 
   const billing = useBillingNavigation();
 
-  const { isAuthenticated } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const subscription = useQuery(
     refs.public.subscriptions.queries.hasActiveSubscription,
     isAuthenticated ? { productId: products.pro.id } : "skip"

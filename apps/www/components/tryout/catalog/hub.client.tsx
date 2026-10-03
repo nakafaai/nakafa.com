@@ -4,11 +4,10 @@ import type { Ref } from "@confect/core";
 
 import type refs from "@repo/backend/confect/_generated/refs";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { useConvexAuth } from "convex/react";
-
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   CatalogCard,
   CatalogCardGradient,
@@ -37,7 +36,8 @@ type HubCountry = Ref.Returns<
 /** Renders the realtime country-first try-out hub from Convex. */
 export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
   const tTryouts = useTranslations("Tryouts");
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredTryout = useSetPreferredTryoutMutation(page.countries);
 
   if (!page) {
