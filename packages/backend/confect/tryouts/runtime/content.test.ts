@@ -43,9 +43,21 @@ describe("try-out review entitlement", () => {
               "tryoutSectionAttempts",
               fixture.sectionAttemptId,
               {
+                answeredCount: 1,
                 score,
               }
             );
+            await ctx.db.insert("tryoutResponses", {
+              answeredAt: TRYOUT_TEST_NOW,
+              isComplete: true,
+              isCorrect: false,
+              placementId: fixture.placementId,
+              selection: { kind: "single-choice", optionKey: "option-2" },
+              timeSpent: 0,
+              tryoutAttemptId: fixture.attemptId,
+              tryoutSectionAttemptId: fixture.sectionAttemptId,
+              updatedAt: TRYOUT_TEST_NOW,
+            });
             await ctx.db.insert("tryoutScores", {
               ...score,
               finalizedAt: TRYOUT_TEST_NOW,
@@ -76,6 +88,9 @@ describe("try-out review entitlement", () => {
         );
         const proQuestion = pro?.runtime?.questions.at(0);
         assert.isDefined(proQuestion);
+        assert.deepStrictEqual(proQuestion.response?.outcome, {
+          status: "incorrect",
+        });
         assert.strictEqual(proQuestion.responseSpec.kind, "single-choice");
         if (proQuestion.responseSpec.kind === "single-choice") {
           assert.isTrue(
@@ -104,6 +119,8 @@ describe("try-out review entitlement", () => {
         );
         const freeQuestion = free?.runtime?.questions.at(0);
         assert.isDefined(freeQuestion);
+        assert.isDefined(freeQuestion.response);
+        assert.notProperty(freeQuestion.response, "outcome");
         assert.strictEqual(freeQuestion.responseSpec.kind, "single-choice");
         if (freeQuestion.responseSpec.kind === "single-choice") {
           for (const option of freeQuestion.responseSpec.options) {

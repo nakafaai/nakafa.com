@@ -1,4 +1,3 @@
-import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
@@ -9,6 +8,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { freeze } from "@repo/backend/confect/response/projection";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
   TryoutRuntimeError,
@@ -94,7 +94,6 @@ export const createAttemptPlacements = Effect.fn(
       );
     }
     for (const placement of source.placements) {
-      const responseSpec = canonicalQuestionResponse(placement.row.response);
       const frozenPlacement = {
         answerArtifactHash: placement.row.answerArtifactHash,
         answerContentKey: placement.row.answerContentKey,
@@ -105,7 +104,13 @@ export const createAttemptPlacements = Effect.fn(
         questionContentKey: placement.row.questionContentKey,
         questionOrder: placement.row.questionOrder,
         rendererDomain: placement.row.rendererDomain,
-        responseSpec,
+        responseSpec: freeze(
+          placement.row.response,
+          placement.row.deliveryLanguage
+        ),
+        ...(placement.row.points === undefined
+          ? {}
+          : { points: placement.row.points }),
         sectionIdentity,
         sectionKey: placement.row.sectionKey,
         sourcePath: placement.row.questionSourcePath,

@@ -1,40 +1,46 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { estimateIrtScore } from "@repo/backend/confect/tryouts/runtime/estimate";
 import type { TryoutIrtSource } from "@repo/backend/confect/tryouts/runtime/irt/items";
 import {
   type AttemptScore,
+  countCorrect,
   getRawPercentage,
+  getScoreStatus,
+  type ScoredAnswer,
 } from "@repo/backend/confect/tryouts/runtime/result";
-import { Effect } from "effect";
+import { Array as Arr, Effect, HashMap, Option, Tuple } from "effect";
 
-/** Scores a section or complete attempt from its validated calibration links. */
-export const scoreIrt = Effect.fn("tryouts.runtime.scoreIrt")(function* (args: {
-  placements: readonly Docs["tryoutAttemptPlacements"][];
-  responses: readonly Docs["tryoutResponses"][];
-  source: TryoutIrtSource;
-  totalQuestions: number;
-}) {
-  const placementIds = new Set(args.placements.map(({ _id }) => _id));
-  const responses = new Map(
-    args.responses.map((response) => [response.placementId, response])
+/**
+ * Scores a section or complete attempt from its validated calibration links.
+ * IRT observes correct or not correct: a pending answer enters the estimate as
+ * not correct and keeps the score provisional until the grader decides it.
+ */
+export const scoreIrt = Effect.fn("tryouts.runtime.scoreIrt")(function* (
+  answers: readonly ScoredAnswer[],
+  source: TryoutIrtSource,
+  totalQuestions: number
+) {
+  const byPlacement = HashMap.fromIterable(
+    Arr.map(answers, (answer) => Tuple.make(answer.placementId, answer))
   );
-  const answers = args.source.items
-    .filter(({ placementId }) => placementIds.has(placementId))
-    .map(({ item, placementId }) => ({
-      item,
-      isCorrect: responses.get(placementId)?.isCorrect ?? false,
-    }));
-  const estimate = yield* estimateIrtScore(answers);
-  const correctAnswers = answers.filter(({ isCorrect }) => isCorrect).length;
+  const estimate = yield* estimateIrtScore(
+    Arr.getSomes(
+      Arr.map(source.items, ({ item, placementId }) =>
+        Option.map(HashMap.get(byPlacement, placementId), ({ outcome }) => ({
+          isCorrect: outcome?.status === "correct",
+          item,
+        }))
+      )
+    )
+  );
   return {
     publishedScore: estimate.publishedScore,
-    rawScore: getRawPercentage(correctAnswers, args.totalQuestions),
-    scaleVersionId: args.source.scale._id,
-    scoreStatus: args.source.scale.status,
+    rawScore: getRawPercentage(answers),
+    scaleVersionId: source.scale._id,
+    scoreStatus: getScoreStatus(answers, source.scale.status),
     scoringStrategy: "irt",
     theta: estimate.theta,
     thetaSE: estimate.thetaSE,
-    totalCorrect: correctAnswers,
-    totalQuestions: args.totalQuestions,
+    totalCorrect: countCorrect(answers),
+    totalQuestions,
   } satisfies AttemptScore;
 });

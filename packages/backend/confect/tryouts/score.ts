@@ -1,11 +1,15 @@
+import { TryoutScoringSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import { Schema } from "effect";
 export const tryoutScoreStatusValidator = Schema.Literals([
   "provisional",
   "official",
 ]);
+/**
+ * Strategy stored on an attempt or score: the signed set's strategy, or
+ * `weighted` on attempts started before signed try-outs, scored like `raw`.
+ */
 export const tryoutScoringStrategyValidator = Schema.Literals([
-  "irt",
-  "raw",
+  ...TryoutScoringSchema.literals,
   "weighted",
 ]);
 export type TryoutScoringStrategy = Schema.Schema.Type<

@@ -1,10 +1,13 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { publicFailure } from "@repo/backend/confect/failure";
-import { tryoutResponseSelectionValidator } from "@repo/backend/confect/tryouts/response/model";
+import {
+  type ResponseRejected,
+  Selection,
+} from "@repo/backend/confect/response/model";
 import { Schema } from "effect";
 export const saveTryoutResponseArgsValidator = Schema.Struct({
   placementId: IdSchema("tryoutAttemptPlacements"),
-  selection: Schema.Union([tryoutResponseSelectionValidator, Schema.Null]),
+  selection: Schema.Union([Selection, Schema.Null]),
 });
 export type SaveTryoutResponseArgs = Schema.Schema.Type<
   typeof saveTryoutResponseArgsValidator
@@ -44,6 +47,19 @@ export class TryoutResponseSelectionError extends Schema.TaggedError<TryoutRespo
     message: Schema.String,
   }
 ) {}
+
+/** Maps one rejected selection onto the deployed try-out selection error. */
+export function toTryoutSelectionError(rejected: ResponseRejected) {
+  return rejected.reason === "kind"
+    ? new TryoutResponseSelectionError({
+        code: "TRYOUT_RESPONSE_KIND_MISMATCH",
+        message: "Try-out response kind does not match its frozen question.",
+      })
+    : new TryoutResponseSelectionError({
+        code: "TRYOUT_RESPONSE_SELECTION_INVALID",
+        message: "Try-out selection does not belong to this frozen question.",
+      });
+}
 /** Stable corruption detected across response, placement, and attempt rows. */
 export class TryoutResponseIntegrityError extends Schema.TaggedError<TryoutResponseIntegrityError>()(
   "TryoutResponseIntegrityError",

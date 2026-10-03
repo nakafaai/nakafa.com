@@ -4001,6 +4001,16 @@ export declare const api: {
                   }>;
                   kind: "category";
                 }
+              | { kind: "short-answer"; number?: string; text: string }
+              | {
+                  finalAnswers: Array<{
+                    criterionKey: string;
+                    number?: string;
+                    text: string;
+                  }>;
+                  kind: "rubric";
+                  text: string;
+                }
               | null;
           },
           null
@@ -4138,7 +4148,7 @@ export declare const api: {
                     publishedScore: number;
                     rawScore: number;
                     scoreStatus: "provisional" | "official";
-                    scoringStrategy: "irt" | "raw" | "weighted";
+                    scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                     theta?: number;
                     thetaSE?: number;
                     totalCorrect: number;
@@ -4153,7 +4163,7 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "raw" | "weighted";
+                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -4177,6 +4187,11 @@ export declare const api: {
                     response: {
                       answeredAt: number;
                       isComplete: boolean;
+                      outcome?:
+                        | { status: "correct" }
+                        | { status: "incorrect" }
+                        | { points: number; status: "partial" }
+                        | { status: "pending" };
                       selection:
                         | { kind: "single-choice"; optionKey: string }
                         | { kind: "multiple-choice"; optionKeys: Array<string> }
@@ -4186,6 +4201,20 @@ export declare const api: {
                               statementKey: string;
                             }>;
                             kind: "category";
+                          }
+                        | {
+                            kind: "short-answer";
+                            number?: string;
+                            text: string;
+                          }
+                        | {
+                            finalAnswers: Array<{
+                              criterionKey: string;
+                              number?: string;
+                              text: string;
+                            }>;
+                            kind: "rubric";
+                            text: string;
                           };
                       updatedAt: number;
                     } | null;
@@ -4221,6 +4250,58 @@ export declare const api: {
                             order: number;
                             statementKey: string;
                           }>;
+                        }
+                      | {
+                          key?:
+                            | {
+                                acceptsFractions: boolean;
+                                kind: "number";
+                                tolerance?: {
+                                  kind: "absolute" | "relative";
+                                  value: string;
+                                };
+                                value: string;
+                              }
+                            | {
+                                acceptedAnswers: Array<string>;
+                                collapseWhitespace: boolean;
+                                ignoreCase: boolean;
+                                kind: "text";
+                              };
+                          kind: "short-answer";
+                          language: "en" | "id" | "de";
+                        }
+                      | {
+                          criteria: Array<{
+                            criterionKey: string;
+                            final: boolean;
+                            finalAnswer?:
+                              | {
+                                  acceptsFractions: boolean;
+                                  kind: "number";
+                                  tolerance?: {
+                                    kind: "absolute" | "relative";
+                                    value: string;
+                                  };
+                                  value: string;
+                                }
+                              | {
+                                  acceptedAnswers: Array<string>;
+                                  collapseWhitespace: boolean;
+                                  ignoreCase: boolean;
+                                  kind: "text";
+                                };
+                            label?: { de: string; en: string; id: string };
+                            levels?: Array<{
+                              label: { de: string; en: string; id: string };
+                              levelKey: string;
+                              order: number;
+                              points: number;
+                            }>;
+                            order: number;
+                          }>;
+                          kind: "rubric";
+                          language: "en" | "id" | "de";
                         };
                     sourcePath: string;
                     sourceRevision: string;
@@ -4234,7 +4315,7 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "raw" | "weighted";
+                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -4253,7 +4334,7 @@ export declare const api: {
                   description?: string;
                   examKey: string;
                   publicPath: string;
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw";
                   title: string;
                 };
                 section: {
@@ -4272,7 +4353,7 @@ export declare const api: {
                   publicPath: string;
                   readyQuestionCount: number;
                   readyVisibleSectionCount: number;
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw";
                   sectionCount: number;
                   setKey: string;
                   title: string;
@@ -4288,7 +4369,7 @@ export declare const api: {
                   readyVisibleSectionCount: number;
                   title: string;
                   trackKey: string;
-                  trackKind: "subject" | "year";
+                  trackKind: "institution" | "subject" | "year";
                 };
               };
             }
@@ -4381,7 +4462,7 @@ export declare const api: {
                     publishedScore: number;
                     rawScore: number;
                     scoreStatus: "provisional" | "official";
-                    scoringStrategy: "irt" | "raw" | "weighted";
+                    scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                     theta?: number;
                     thetaSE?: number;
                     totalCorrect: number;
@@ -4396,7 +4477,7 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "raw" | "weighted";
+                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -4420,6 +4501,11 @@ export declare const api: {
                     response: {
                       answeredAt: number;
                       isComplete: boolean;
+                      outcome?:
+                        | { status: "correct" }
+                        | { status: "incorrect" }
+                        | { points: number; status: "partial" }
+                        | { status: "pending" };
                       selection:
                         | { kind: "single-choice"; optionKey: string }
                         | { kind: "multiple-choice"; optionKeys: Array<string> }
@@ -4429,6 +4515,20 @@ export declare const api: {
                               statementKey: string;
                             }>;
                             kind: "category";
+                          }
+                        | {
+                            kind: "short-answer";
+                            number?: string;
+                            text: string;
+                          }
+                        | {
+                            finalAnswers: Array<{
+                              criterionKey: string;
+                              number?: string;
+                              text: string;
+                            }>;
+                            kind: "rubric";
+                            text: string;
                           };
                       updatedAt: number;
                     } | null;
@@ -4464,6 +4564,58 @@ export declare const api: {
                             order: number;
                             statementKey: string;
                           }>;
+                        }
+                      | {
+                          key?:
+                            | {
+                                acceptsFractions: boolean;
+                                kind: "number";
+                                tolerance?: {
+                                  kind: "absolute" | "relative";
+                                  value: string;
+                                };
+                                value: string;
+                              }
+                            | {
+                                acceptedAnswers: Array<string>;
+                                collapseWhitespace: boolean;
+                                ignoreCase: boolean;
+                                kind: "text";
+                              };
+                          kind: "short-answer";
+                          language: "en" | "id" | "de";
+                        }
+                      | {
+                          criteria: Array<{
+                            criterionKey: string;
+                            final: boolean;
+                            finalAnswer?:
+                              | {
+                                  acceptsFractions: boolean;
+                                  kind: "number";
+                                  tolerance?: {
+                                    kind: "absolute" | "relative";
+                                    value: string;
+                                  };
+                                  value: string;
+                                }
+                              | {
+                                  acceptedAnswers: Array<string>;
+                                  collapseWhitespace: boolean;
+                                  ignoreCase: boolean;
+                                  kind: "text";
+                                };
+                            label?: { de: string; en: string; id: string };
+                            levels?: Array<{
+                              label: { de: string; en: string; id: string };
+                              levelKey: string;
+                              order: number;
+                              points: number;
+                            }>;
+                            order: number;
+                          }>;
+                          kind: "rubric";
+                          language: "en" | "id" | "de";
                         };
                     sourcePath: string;
                     sourceRevision: string;
@@ -4477,7 +4629,7 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "raw" | "weighted";
+                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -4505,7 +4657,7 @@ export declare const api: {
                   description?: string;
                   examKey: string;
                   publicPath: string;
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw";
                   title: string;
                 };
                 sections: Array<{
@@ -4524,7 +4676,7 @@ export declare const api: {
                   publicPath: string;
                   readyQuestionCount: number;
                   readyVisibleSectionCount: number;
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw";
                   sectionCount: number;
                   setKey: string;
                   title: string;
@@ -4540,7 +4692,7 @@ export declare const api: {
                   readyVisibleSectionCount: number;
                   title: string;
                   trackKey: string;
-                  trackKind: "subject" | "year";
+                  trackKind: "institution" | "subject" | "year";
                 };
               };
               restartTarget: {
@@ -4618,7 +4770,7 @@ export declare const api: {
                     publishedScore: number;
                     rawScore: number;
                     scoreStatus: "provisional" | "official";
-                    scoringStrategy: "irt" | "raw" | "weighted";
+                    scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                     theta?: number;
                     thetaSE?: number;
                     totalCorrect: number;
@@ -4633,7 +4785,7 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "raw" | "weighted";
+                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -4657,6 +4809,11 @@ export declare const api: {
                     response: {
                       answeredAt: number;
                       isComplete: boolean;
+                      outcome?:
+                        | { status: "correct" }
+                        | { status: "incorrect" }
+                        | { points: number; status: "partial" }
+                        | { status: "pending" };
                       selection:
                         | { kind: "single-choice"; optionKey: string }
                         | { kind: "multiple-choice"; optionKeys: Array<string> }
@@ -4666,6 +4823,20 @@ export declare const api: {
                               statementKey: string;
                             }>;
                             kind: "category";
+                          }
+                        | {
+                            kind: "short-answer";
+                            number?: string;
+                            text: string;
+                          }
+                        | {
+                            finalAnswers: Array<{
+                              criterionKey: string;
+                              number?: string;
+                              text: string;
+                            }>;
+                            kind: "rubric";
+                            text: string;
                           };
                       updatedAt: number;
                     } | null;
@@ -4701,6 +4872,58 @@ export declare const api: {
                             order: number;
                             statementKey: string;
                           }>;
+                        }
+                      | {
+                          key?:
+                            | {
+                                acceptsFractions: boolean;
+                                kind: "number";
+                                tolerance?: {
+                                  kind: "absolute" | "relative";
+                                  value: string;
+                                };
+                                value: string;
+                              }
+                            | {
+                                acceptedAnswers: Array<string>;
+                                collapseWhitespace: boolean;
+                                ignoreCase: boolean;
+                                kind: "text";
+                              };
+                          kind: "short-answer";
+                          language: "en" | "id" | "de";
+                        }
+                      | {
+                          criteria: Array<{
+                            criterionKey: string;
+                            final: boolean;
+                            finalAnswer?:
+                              | {
+                                  acceptsFractions: boolean;
+                                  kind: "number";
+                                  tolerance?: {
+                                    kind: "absolute" | "relative";
+                                    value: string;
+                                  };
+                                  value: string;
+                                }
+                              | {
+                                  acceptedAnswers: Array<string>;
+                                  collapseWhitespace: boolean;
+                                  ignoreCase: boolean;
+                                  kind: "text";
+                                };
+                            label?: { de: string; en: string; id: string };
+                            levels?: Array<{
+                              label: { de: string; en: string; id: string };
+                              levelKey: string;
+                              order: number;
+                              points: number;
+                            }>;
+                            order: number;
+                          }>;
+                          kind: "rubric";
+                          language: "en" | "id" | "de";
                         };
                     sourcePath: string;
                     sourceRevision: string;
@@ -4714,7 +4937,7 @@ export declare const api: {
                       publishedScore: number;
                       rawScore: number;
                       scoreStatus: "provisional" | "official";
-                      scoringStrategy: "irt" | "raw" | "weighted";
+                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                       theta?: number;
                       thetaSE?: number;
                       totalCorrect: number;
@@ -4742,7 +4965,7 @@ export declare const api: {
                   description?: string;
                   examKey: string;
                   publicPath: string;
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw";
                   title: string;
                 };
                 sections: Array<{
@@ -4761,7 +4984,7 @@ export declare const api: {
                   publicPath: string;
                   readyQuestionCount: number;
                   readyVisibleSectionCount: number;
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw";
                   sectionCount: number;
                   setKey: string;
                   title: string;
@@ -4777,7 +5000,7 @@ export declare const api: {
                   readyVisibleSectionCount: number;
                   title: string;
                   trackKey: string;
-                  trackKind: "subject" | "year";
+                  trackKind: "institution" | "subject" | "year";
                 };
               };
               restartTarget: {
@@ -4812,7 +5035,7 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "raw" | "weighted";
+              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             }>;
             sourceRevision: string | null;
@@ -4834,7 +5057,7 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "raw" | "weighted";
+              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             };
             tracks: Array<{
@@ -4845,7 +5068,7 @@ export declare const api: {
               readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
-              trackKind: "subject" | "year";
+              trackKind: "institution" | "subject" | "year";
             }>;
           }
         >;
@@ -4900,6 +5123,57 @@ export declare const api: {
                     order: number;
                     statementKey: string;
                   }>;
+                }
+              | {
+                  key:
+                    | {
+                        acceptsFractions: boolean;
+                        kind: "number";
+                        tolerance?: {
+                          kind: "absolute" | "relative";
+                          value: string;
+                        };
+                        value: string;
+                      }
+                    | {
+                        acceptedAnswers: Array<string>;
+                        collapseWhitespace: boolean;
+                        ignoreCase: boolean;
+                        kind: "text";
+                      };
+                  kind: "short-answer";
+                  language: "en" | "id" | "de";
+                }
+              | {
+                  criteria: Array<{
+                    criterionKey: string;
+                    finalAnswer?:
+                      | {
+                          acceptsFractions: boolean;
+                          kind: "number";
+                          tolerance?: {
+                            kind: "absolute" | "relative";
+                            value: string;
+                          };
+                          value: string;
+                        }
+                      | {
+                          acceptedAnswers: Array<string>;
+                          collapseWhitespace: boolean;
+                          ignoreCase: boolean;
+                          kind: "text";
+                        };
+                    label: { de: string; en: string; id: string };
+                    levels: Array<{
+                      label: { de: string; en: string; id: string };
+                      levelKey: string;
+                      order: number;
+                      points: number;
+                    }>;
+                    order: number;
+                  }>;
+                  kind: "rubric";
+                  language: "en" | "id" | "de";
                 };
           }
         >;
@@ -4962,7 +5236,7 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "raw" | "weighted";
+              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             };
             section: {
@@ -4981,7 +5255,7 @@ export declare const api: {
               publicPath: string;
               readyQuestionCount: number;
               readyVisibleSectionCount: number;
-              scoringStrategy: "irt" | "raw" | "weighted";
+              scoringStrategy: "irt" | "penalized" | "raw";
               sectionCount: number;
               setKey: string;
               title: string;
@@ -4997,7 +5271,7 @@ export declare const api: {
               readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
-              trackKind: "subject" | "year";
+              trackKind: "institution" | "subject" | "year";
             };
           }
         >;
@@ -5019,7 +5293,7 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "raw" | "weighted";
+              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             };
             sections: Array<{
@@ -5038,7 +5312,7 @@ export declare const api: {
               publicPath: string;
               readyQuestionCount: number;
               readyVisibleSectionCount: number;
-              scoringStrategy: "irt" | "raw" | "weighted";
+              scoringStrategy: "irt" | "penalized" | "raw";
               sectionCount: number;
               setKey: string;
               title: string;
@@ -5054,7 +5328,7 @@ export declare const api: {
               readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
-              trackKind: "subject" | "year";
+              trackKind: "institution" | "subject" | "year";
             };
           }
         >;
@@ -5074,7 +5348,7 @@ export declare const api: {
               description?: string;
               examKey: string;
               publicPath: string;
-              scoringStrategy: "irt" | "raw" | "weighted";
+              scoringStrategy: "irt" | "penalized" | "raw";
               title: string;
             };
             track: {
@@ -5085,7 +5359,7 @@ export declare const api: {
               readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
-              trackKind: "subject" | "year";
+              trackKind: "institution" | "subject" | "year";
             };
           }
         >;
@@ -5168,7 +5442,7 @@ export declare const api: {
                 publishedScore: number;
                 rawScore: number;
                 scoreStatus: "provisional" | "official";
-                scoringStrategy: "irt" | "raw" | "weighted";
+                scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                 theta?: number;
                 thetaSE?: number;
                 totalCorrect: number;
@@ -5204,7 +5478,7 @@ export declare const api: {
                 publishedScore: number;
                 rawScore: number;
                 scoreStatus: "provisional" | "official";
-                scoringStrategy: "irt" | "raw" | "weighted";
+                scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                 theta?: number;
                 thetaSE?: number;
                 totalCorrect: number;
@@ -5219,7 +5493,7 @@ export declare const api: {
                   publishedScore: number;
                   rawScore: number;
                   scoreStatus: "provisional" | "official";
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                   theta?: number;
                   thetaSE?: number;
                   totalCorrect: number;
@@ -5243,6 +5517,11 @@ export declare const api: {
                 response: {
                   answeredAt: number;
                   isComplete: boolean;
+                  outcome?:
+                    | { status: "correct" }
+                    | { status: "incorrect" }
+                    | { points: number; status: "partial" }
+                    | { status: "pending" };
                   selection:
                     | { kind: "single-choice"; optionKey: string }
                     | { kind: "multiple-choice"; optionKeys: Array<string> }
@@ -5252,6 +5531,16 @@ export declare const api: {
                           statementKey: string;
                         }>;
                         kind: "category";
+                      }
+                    | { kind: "short-answer"; number?: string; text: string }
+                    | {
+                        finalAnswers: Array<{
+                          criterionKey: string;
+                          number?: string;
+                          text: string;
+                        }>;
+                        kind: "rubric";
+                        text: string;
                       };
                   updatedAt: number;
                 } | null;
@@ -5287,6 +5576,58 @@ export declare const api: {
                         order: number;
                         statementKey: string;
                       }>;
+                    }
+                  | {
+                      key?:
+                        | {
+                            acceptsFractions: boolean;
+                            kind: "number";
+                            tolerance?: {
+                              kind: "absolute" | "relative";
+                              value: string;
+                            };
+                            value: string;
+                          }
+                        | {
+                            acceptedAnswers: Array<string>;
+                            collapseWhitespace: boolean;
+                            ignoreCase: boolean;
+                            kind: "text";
+                          };
+                      kind: "short-answer";
+                      language: "en" | "id" | "de";
+                    }
+                  | {
+                      criteria: Array<{
+                        criterionKey: string;
+                        final: boolean;
+                        finalAnswer?:
+                          | {
+                              acceptsFractions: boolean;
+                              kind: "number";
+                              tolerance?: {
+                                kind: "absolute" | "relative";
+                                value: string;
+                              };
+                              value: string;
+                            }
+                          | {
+                              acceptedAnswers: Array<string>;
+                              collapseWhitespace: boolean;
+                              ignoreCase: boolean;
+                              kind: "text";
+                            };
+                        label?: { de: string; en: string; id: string };
+                        levels?: Array<{
+                          label: { de: string; en: string; id: string };
+                          levelKey: string;
+                          order: number;
+                          points: number;
+                        }>;
+                        order: number;
+                      }>;
+                      kind: "rubric";
+                      language: "en" | "id" | "de";
                     };
                 sourcePath: string;
                 sourceRevision: string;
@@ -5300,7 +5641,7 @@ export declare const api: {
                   publishedScore: number;
                   rawScore: number;
                   scoreStatus: "provisional" | "official";
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                   theta?: number;
                   thetaSE?: number;
                   totalCorrect: number;
@@ -5331,7 +5672,7 @@ export declare const api: {
                 publishedScore: number;
                 rawScore: number;
                 scoreStatus: "provisional" | "official";
-                scoringStrategy: "irt" | "raw" | "weighted";
+                scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                 theta?: number;
                 thetaSE?: number;
                 totalCorrect: number;
@@ -5346,7 +5687,7 @@ export declare const api: {
                   publishedScore: number;
                   rawScore: number;
                   scoreStatus: "provisional" | "official";
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                   theta?: number;
                   thetaSE?: number;
                   totalCorrect: number;
@@ -5370,6 +5711,11 @@ export declare const api: {
                 response: {
                   answeredAt: number;
                   isComplete: boolean;
+                  outcome?:
+                    | { status: "correct" }
+                    | { status: "incorrect" }
+                    | { points: number; status: "partial" }
+                    | { status: "pending" };
                   selection:
                     | { kind: "single-choice"; optionKey: string }
                     | { kind: "multiple-choice"; optionKeys: Array<string> }
@@ -5379,6 +5725,16 @@ export declare const api: {
                           statementKey: string;
                         }>;
                         kind: "category";
+                      }
+                    | { kind: "short-answer"; number?: string; text: string }
+                    | {
+                        finalAnswers: Array<{
+                          criterionKey: string;
+                          number?: string;
+                          text: string;
+                        }>;
+                        kind: "rubric";
+                        text: string;
                       };
                   updatedAt: number;
                 } | null;
@@ -5414,6 +5770,58 @@ export declare const api: {
                         order: number;
                         statementKey: string;
                       }>;
+                    }
+                  | {
+                      key?:
+                        | {
+                            acceptsFractions: boolean;
+                            kind: "number";
+                            tolerance?: {
+                              kind: "absolute" | "relative";
+                              value: string;
+                            };
+                            value: string;
+                          }
+                        | {
+                            acceptedAnswers: Array<string>;
+                            collapseWhitespace: boolean;
+                            ignoreCase: boolean;
+                            kind: "text";
+                          };
+                      kind: "short-answer";
+                      language: "en" | "id" | "de";
+                    }
+                  | {
+                      criteria: Array<{
+                        criterionKey: string;
+                        final: boolean;
+                        finalAnswer?:
+                          | {
+                              acceptsFractions: boolean;
+                              kind: "number";
+                              tolerance?: {
+                                kind: "absolute" | "relative";
+                                value: string;
+                              };
+                              value: string;
+                            }
+                          | {
+                              acceptedAnswers: Array<string>;
+                              collapseWhitespace: boolean;
+                              ignoreCase: boolean;
+                              kind: "text";
+                            };
+                        label?: { de: string; en: string; id: string };
+                        levels?: Array<{
+                          label: { de: string; en: string; id: string };
+                          levelKey: string;
+                          order: number;
+                          points: number;
+                        }>;
+                        order: number;
+                      }>;
+                      kind: "rubric";
+                      language: "en" | "id" | "de";
                     };
                 sourcePath: string;
                 sourceRevision: string;
@@ -5427,7 +5835,7 @@ export declare const api: {
                   publishedScore: number;
                   rawScore: number;
                   scoreStatus: "provisional" | "official";
-                  scoringStrategy: "irt" | "raw" | "weighted";
+                  scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
                   theta?: number;
                   thetaSE?: number;
                   totalCorrect: number;
@@ -5488,7 +5896,7 @@ export declare const api: {
                 attemptId: Id<"tryoutAttempts">;
                 publicPath: string;
               };
-              scoringStrategy: "irt" | "raw" | "weighted";
+              scoringStrategy: "irt" | "penalized" | "raw";
               sectionCount: number;
               setKey: string;
               title: string;
@@ -7853,7 +8261,12 @@ export declare const internal: {
         { turnId: Id<"ninaTurns"> },
         {
           explanationMdx: string;
-          isCorrect: boolean | null;
+          outcome:
+            | { status: "correct" }
+            | { status: "incorrect" }
+            | { points: number; status: "partial" }
+            | { status: "pending" }
+            | null;
           questionLocale: "en" | "id" | "de";
           questionMdx: string;
           questionOrder: number;
@@ -7889,6 +8302,57 @@ export declare const internal: {
                   order: number;
                   statementKey: string;
                 }>;
+              }
+            | {
+                key:
+                  | {
+                      acceptsFractions: boolean;
+                      kind: "number";
+                      tolerance?: {
+                        kind: "absolute" | "relative";
+                        value: string;
+                      };
+                      value: string;
+                    }
+                  | {
+                      acceptedAnswers: Array<string>;
+                      collapseWhitespace: boolean;
+                      ignoreCase: boolean;
+                      kind: "text";
+                    };
+                kind: "short-answer";
+                language: "en" | "id" | "de";
+              }
+            | {
+                criteria: Array<{
+                  criterionKey: string;
+                  finalAnswer?:
+                    | {
+                        acceptsFractions: boolean;
+                        kind: "number";
+                        tolerance?: {
+                          kind: "absolute" | "relative";
+                          value: string;
+                        };
+                        value: string;
+                      }
+                    | {
+                        acceptedAnswers: Array<string>;
+                        collapseWhitespace: boolean;
+                        ignoreCase: boolean;
+                        kind: "text";
+                      };
+                  label: { de: string; en: string; id: string };
+                  levels: Array<{
+                    label: { de: string; en: string; id: string };
+                    levelKey: string;
+                    order: number;
+                    points: number;
+                  }>;
+                  order: number;
+                }>;
+                kind: "rubric";
+                language: "en" | "id" | "de";
               };
           selection:
             | { kind: "single-choice"; optionKey: string }
@@ -7899,6 +8363,16 @@ export declare const internal: {
                   statementKey: string;
                 }>;
                 kind: "category";
+              }
+            | { kind: "short-answer"; number?: string; text: string }
+            | {
+                finalAnswers: Array<{
+                  criterionKey: string;
+                  number?: string;
+                  text: string;
+                }>;
+                kind: "rubric";
+                text: string;
               }
             | null;
         } | null

@@ -1,5 +1,5 @@
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
-import { tryoutResponseSpecValidator } from "@repo/backend/confect/tryouts/response/model";
+import { ResponseSpec } from "@repo/backend/confect/response/model";
 import { tryoutBodyBatchValidator } from "@repo/backend/confect/tryouts/runtime/body";
 import { tryoutQuestionSelectorValidator } from "@repo/backend/confect/tryouts/runtime/spec";
 import { Schema } from "effect";
@@ -7,7 +7,7 @@ import { Schema } from "effect";
 /** Public model for the signed landing demo, including its visible answer feedback. */
 export const featuredTryoutValidator = Schema.Struct({
   question: tryoutQuestionSelectorValidator,
-  response: tryoutResponseSpecValidator,
+  response: ResponseSpec,
 });
 export const tryoutMetadataArgsValidator = {
   appLocale: appLocaleValidator,

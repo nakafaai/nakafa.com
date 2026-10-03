@@ -1,9 +1,10 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import {
-  tryoutResponseSelectionValidator,
-  tryoutResponseSpecValidator,
-} from "@repo/backend/confect/tryouts/response/model";
+  Outcome,
+  ResponseSpec,
+  Selection,
+} from "@repo/backend/confect/response/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { Schema, Struct } from "effect";
 
@@ -27,9 +28,9 @@ export const NinaFocusSourceSchema = Schema.Struct({
   questionLocale: appLocaleValidator,
   questionMdx: Schema.String,
   explanationMdx: Schema.String,
-  responseSpec: tryoutResponseSpecValidator,
-  selection: Schema.NullOr(tryoutResponseSelectionValidator),
-  isCorrect: Schema.NullOr(Schema.Boolean),
+  responseSpec: ResponseSpec,
+  selection: Schema.NullOr(Selection),
+  outcome: Schema.NullOr(Outcome),
 });
 
 export type NinaFocusInput = Schema.Schema.Type<typeof NinaFocusInputSchema>;

@@ -3,6 +3,7 @@ import {
   BulbIcon,
   Calendar03Icon,
   LanguageSkillIcon,
+  Mortarboard02Icon,
 } from "@hugeicons/core-free-icons";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import {
@@ -64,5 +65,14 @@ describe("try-out icons", () => {
   it("gives year tracks a calendar and unknown subjects the default icon", () => {
     expect(getTryoutTrackIcon("year", "2027")).toBe(Calendar03Icon);
     expect(getTryoutTrackIcon("subject", "unknown-track")).toBe(BulbIcon);
+  });
+
+  it("gives institution tracks a mortarboard whatever their key", () => {
+    expect(getTryoutTrackIcon("institution", "studienkolleg")).toBe(
+      Mortarboard02Icon
+    );
+    expect(getTryoutTrackIcon("institution", "physics")).toBe(
+      Mortarboard02Icon
+    );
   });
 });

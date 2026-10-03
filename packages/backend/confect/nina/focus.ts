@@ -8,6 +8,7 @@ import type {
   NinaFocusSource,
 } from "@repo/backend/confect/nina/contract/focus";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
+import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
 import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
@@ -82,7 +83,7 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
     explanationMdx: explanation.payload.rawMdx,
     responseSpec: placement.responseSpec,
     selection: response?.selection ?? null,
-    isCorrect: response?.isCorrect ?? null,
+    outcome: response === null ? null : readOutcome(response),
   } satisfies NinaFocusSource;
 });
 

@@ -1,11 +1,11 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
 import { digestProgramRows } from "@nakafa/aksara-contracts/program/snapshot/digest";
-import { makeProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import {
   makeCurriculumSnapshotRow,
+  makeProgramSnapshot,
   makeProgramSnapshotRow,
-} from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+} from "@nakafa/aksara-contracts/program/snapshot/hash";
 import {
   type ContentSnapshotManifest,
   canonicalizeContentSnapshotRow,

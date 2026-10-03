@@ -10,7 +10,9 @@ Aksara signed publication the only authored try-out source. Amended on
 on 2026-09-01 to define the structured response rollout, and on 2026-09-19
 to make attempts and scores free with Pro access to worked solutions. Amended on
 2026-09-27 to separate exam language from the application locale and retire the
-unused access-campaign storage.
+unused access-campaign storage. Amended on 2026-10-02 to give responses one
+module outside try-out, with short answers, rubrics, stored outcomes, question
+worth, and penalized scoring.
 
 ## Context
 
@@ -77,9 +79,9 @@ content or automatically inherit its exam questions.
 ### Runtime Integrity
 
 One domain response transaction receives one frozen placement ID and exactly one
-learner selection. A selection is empty, one option, an ordered option set, or an
-ordered category assignment, according to the placement's frozen
-`responseSpec`. The server derives elapsed time from the active section timer and
+learner selection. A selection is empty, one option, an ordered option set, an
+ordered category assignment, a typed short answer, or a rubric answer, according
+to the placement's frozen `responseSpec`. The server derives elapsed time from the active section timer and
 evaluates correctness from that immutable specification. The transaction
 validates attempt, section, placement, response kind, and response ownership
 before it updates the response and parent activity counters.
@@ -90,6 +92,47 @@ learner responses persist one required `selection` and `isComplete` result, and
 the public mutation accepts only that stable contract. Single-choice,
 multiple-choice, and category responses share this model without rollout
 adapters or duplicate runtime projections.
+
+### Response Module And Scoring
+
+`packages/backend/confect/response` owns every response format apart from
+try-out: the frozen `ResponseSpec`, the learner-facing `RenderableSpec`, the
+canonical `Selection`, and the `Outcome` of an answer. `freeze` captures a signed
+response at attempt start, `project` hides answer keys until review, `select`
+checks that a selection belongs to its response, and `evaluate` decides its
+outcome. They are synchronous and deterministic, so the answer mutation,
+optimistic updates, and rendering share them; Effect programs lift their typed
+`ResponseRejected` failure, which try-out maps onto its deployed selection error
+codes. Try-out keeps attempt and placement integrity in `tryouts/response`.
+
+Choice and category answers are correct or incorrect. A short answer is graded
+only through the contract's `matchesAnswerKey` and `readNumberAnswer` in the
+question's delivery language, which `freeze` stores in the spec: a comma
+decimal in Indonesian and German, a dot in English, and fractions only when the
+key accepts them. A numeric key decides the answer. A text answer that matches
+no accepted answer stays `pending` until the grader judges text variants. A
+rubric earns the upper level of each final-answer criterion whose typed final
+answer matches its key; a written response leaves its judged criteria, and so
+the answer, `pending`. A selection keeps the learner's raw text beside the exact
+number the grader read. A deterministic integrity check defers to the stored
+outcome only where its own evaluation is `pending`.
+
+Responses store their outcome beside the legacy `isCorrect` flag, which stays
+true only for `correct`; readers map rows written before outcomes through one
+read function. A later migration fills every outcome, then the flag and the read
+function are removed. Counters count complete answers and correct outcomes, so a
+pending answer is answered but never correct.
+
+Every strategy reads a question's worth only through the contract's
+`questionPoints`: its authored points or one, and a rubric's derived total.
+Placements freeze authored points, and section snapshots freeze the signed
+marks of penalized sets. `rawScore` is the percentage of attainable worth
+earned, where a correct answer earns its worth and a partial answer its points;
+raw sets publish it. Penalized sets publish the sum of each section's marks for
+a correct, wrong, or blank answer times the question's worth; an incomplete
+answer counts as blank. IRT sets keep the estimate, where only a correct answer
+is correct. A pending answer earns nothing yet and keeps the score provisional
+instead of counting as zero.
 
 The runtime exposes only exact attempt-ID
 state, response, history, and page operations. Public-path compatibility
@@ -165,7 +208,7 @@ flowchart TD
   Attempt["Frozen attempt snapshot"]
   Score["Scoring strategy"]
   IRT["IRT scale version"]
-  Raw["Raw or weighted score"]
+  Raw["Raw or penalized score"]
 
   Source --> Release
   Release --> Verify

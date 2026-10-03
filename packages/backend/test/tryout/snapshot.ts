@@ -22,16 +22,16 @@ import {
   compareTryoutCatalog,
   digestTryoutCatalog,
   makeTryoutCatalogRecord,
-} from "@nakafa/aksara-contracts/tryout/catalog-hash";
+} from "@nakafa/aksara-contracts/tryout/hash/catalog";
+import {
+  digestTryoutPlacements,
+  makeTryoutPlacementRecord,
+} from "@nakafa/aksara-contracts/tryout/hash/placement";
 import { compareTryoutPlacements } from "@nakafa/aksara-contracts/tryout/identity";
 import {
   type TryoutPlacement,
   TryoutPlacementSchema,
 } from "@nakafa/aksara-contracts/tryout/placement";
-import {
-  digestTryoutPlacements,
-  makeTryoutPlacementRecord,
-} from "@nakafa/aksara-contracts/tryout/placement-hash";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import { TryoutContentHashSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import {
