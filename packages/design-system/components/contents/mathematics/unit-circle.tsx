@@ -9,15 +9,13 @@ import {
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { UnitCircle as UnitCircle3D } from "@repo/design-system/components/three/unit-circle";
 import { Badge } from "@repo/design-system/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
@@ -55,15 +53,12 @@ export function UnitCircle({
 
   return (
     <CoordinateProvider>
-      <Card className="content-auto-card">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
         <I18nProvider locale={locale}>
           <Content angle={angle} trigValues={trigValues} />
         </I18nProvider>
-      </Card>
+      </VisualCard>
     </CoordinateProvider>
   );
 }
@@ -113,7 +108,7 @@ function Content({
 
   return (
     <>
-      <CardContent>
+      <VisualCardBody>
         <CoordinateSystem
           cameraPosition={[0, 0, CAMERA_Z_POSITION]}
           cameraProjection={{ kind: "orthographic" }}
@@ -121,7 +116,7 @@ function Content({
         >
           <UnitCircle3D angle={angleValue} />
         </CoordinateSystem>
-      </CardContent>
+      </VisualCardBody>
       <CoordinateControls>
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">

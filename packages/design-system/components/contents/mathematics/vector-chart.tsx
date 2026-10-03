@@ -13,26 +13,23 @@ import { CoordinateSystem } from "@repo/design-system/components/three/coordinat
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import { Effect } from "effect";
 import type { ReactNode } from "react";
 
-type Vector = typeof VectorGeometrySchema.Type & {
-  color?: string;
-  id: string;
-  name: ReactNode;
-};
-
 interface Props {
   description: ReactNode;
   title: ReactNode;
-  vectors: Vector[];
+  /** Each vector's geometry, with its name and an optional color. */
+  vectors: (typeof VectorGeometrySchema.Type & {
+    color?: string;
+    id: string;
+    name: ReactNode;
+  })[];
 }
 
 const VECTOR_COLORS = [COLORS.ORANGE, COLORS.PURPLE, COLORS.AMBER];
@@ -53,12 +50,9 @@ const VECTOR_NOTATION = {
 export function VectorChart({ title, description, vectors }: Props) {
   return (
     <CoordinateProvider>
-      <Card className="content-auto-card">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody>
           <CoordinateSystem
             cameraFraming="content"
             cameraPosition={[0, 0, 15]}
@@ -117,9 +111,9 @@ export function VectorChart({ title, description, vectors }: Props) {
               </p>
             ))}
           </div>
-        </CardContent>
+        </VisualCardBody>
         <CoordinateControls />
-      </Card>
+      </VisualCard>
     </CoordinateProvider>
   );
 }

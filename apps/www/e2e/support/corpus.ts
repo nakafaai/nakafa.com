@@ -18,6 +18,11 @@ export const pinnedRoutes = {
     en: "/en/articles/politics/merah-putih-cabinet-analysis",
     id: "/id/articles/politics/merah-putih-cabinet-analysis",
   },
+  exponent: {
+    de: "/de/faecher/mathematik/potenzen-und-logarithmen/grundlagen",
+    en: "/en/subjects/mathematics/exponential-logarithm/basic-concept",
+    id: "/id/materi/matematika/eksponen-dan-logaritma/konsep-eksponen",
+  },
   growth: {
     de: "/de/faecher/mathematik/potenzen-und-logarithmen/exponentielles-wachstum",
     en: "/en/subjects/mathematics/exponential-logarithm/exponential-growth",

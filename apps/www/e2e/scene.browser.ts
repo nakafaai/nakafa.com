@@ -6,24 +6,26 @@ import {
   test,
 } from "@playwright/test";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
-import { Duration, Effect } from "effect";
+import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
-import { expectCanvasToMove, waitForStableCanvas } from "@/e2e/support/canvas";
+import {
+  countCanvasFrames,
+  expectCanvasToMove,
+  expectFramesToAdvance,
+  expectFramesToHold,
+  waitForStableCanvas,
+} from "@/e2e/support/canvas";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;
-/** A paused canvas clears no frame for this long. */
-const QUIET_WINDOW_MILLISECONDS = 1000;
-const QUIET_WINDOW_ATTEMPTS = 5;
-
 /**
  * Scene notices that come from the test browser or a held dependency.
  *
  * Playwright's headless shell renders WebGL with SwiftShader through ANGLE's
  * Vulkan backend, which reports Chromium's copy of each presented frame as a
- * ReadPixels stall, at most four times per GPU process. `reportPixelReadbacks`
+ * ReadPixels stall, at most four times per GPU process. `recordPixelReadbacks`
  * proves page scripts read no pixels, and GPU-backed WebGL presents the same
  * frames without the notice.
  *
@@ -36,17 +38,26 @@ const KNOWN_SCENE_DIAGNOSTICS = [
   /^THREE\.Clock: This module has been deprecated\. Please use THREE\.Timer instead\.$/,
 ];
 
+/** The page global that collects page-script pixel readbacks. */
+const PIXEL_READBACKS = "nakafaPixelReadbacks";
+
 /**
- * Reports page-script pixel readbacks, which the headless shell's own
- * ReadPixels notice would otherwise hide.
+ * Records where each page-script pixel readback came from, which the
+ * headless shell's own ReadPixels notice would otherwise hide. Pass it to
+ * `page.addInitScript` with the global's name.
  */
-function reportPixelReadbacks() {
+function recordPixelReadbacks(key: string) {
+  const readbacks: string[] = [];
+  Reflect.set(window, key, readbacks);
   for (const { prototype } of [WebGLRenderingContext, WebGL2RenderingContext]) {
     const readPixels = prototype.readPixels;
     Object.defineProperty(prototype, "readPixels", {
       configurable: true,
       value(this: unknown, ...args: unknown[]) {
-        console.warn(new Error("WebGL readPixels from a page script").stack);
+        readbacks.push(
+          new Error("WebGL readPixels from a page script").stack ??
+            "WebGL readPixels from a page script"
+        );
         return Reflect.apply(readPixels, this, args);
       },
       writable: true,
@@ -83,62 +94,6 @@ const withObservedSceneDiagnostics = Effect.fn(
     ({ recordDiagnostic }) =>
       Effect.sync(() => page.off("console", recordDiagnostic))
   );
-});
-
-/** Counts the frames each WebGL canvas clears on the canvas element. */
-function countCanvasFrames() {
-  for (const { prototype } of [WebGLRenderingContext, WebGL2RenderingContext]) {
-    const clear = prototype.clear;
-    Object.defineProperty(prototype, "clear", {
-      configurable: true,
-      value(
-        this: WebGLRenderingContext | WebGL2RenderingContext,
-        ...args: unknown[]
-      ) {
-        if (this.canvas instanceof HTMLCanvasElement) {
-          const frames = Number(this.canvas.dataset.frames ?? 0);
-          this.canvas.dataset.frames = String(frames + 1);
-        }
-        return Reflect.apply(clear, this, args);
-      },
-      writable: true,
-    });
-  }
-}
-
-/** Reads a canvas frame count without scrolling the canvas into view. */
-function readFrames(canvas: Locator) {
-  return canvas.evaluate((element) =>
-    Number(element.getAttribute("data-frames") ?? 0)
-  );
-}
-
-/** Waits until a canvas clears more frames than it has so far. */
-const expectFramesToAdvance = Effect.fn("NakafaE2E.expectFramesToAdvance")(
-  function* (canvas: Locator) {
-    const frames = yield* Effect.promise(() => readFrames(canvas));
-    yield* Effect.promise(() =>
-      expect.poll(() => readFrames(canvas)).toBeGreaterThan(frames)
-    );
-  }
-);
-
-/** Waits until a canvas clears no frame through one whole quiet window. */
-const expectFramesToHold = Effect.fn("NakafaE2E.expectFramesToHold")(function* (
-  canvas: Locator
-) {
-  let cleared = Number.POSITIVE_INFINITY;
-  // The pause lands once the observer reports, so allow a few windows.
-  for (
-    let attempt = 0;
-    attempt < QUIET_WINDOW_ATTEMPTS && cleared > 0;
-    attempt += 1
-  ) {
-    const before = yield* Effect.promise(() => readFrames(canvas));
-    yield* Effect.sleep(Duration.millis(QUIET_WINDOW_MILLISECONDS));
-    cleared = (yield* Effect.promise(() => readFrames(canvas))) - before;
-  }
-  yield* Effect.sync(() => expect(cleared).toBe(0));
 });
 
 /** Opens the pinned lesson and returns its deferred line-scene cards. */
@@ -178,15 +133,24 @@ const revealLineScene = Effect.fn("NakafaE2E.revealLineScene")(function* (
   return canvas;
 });
 
-/** Mounts and settles every deferred line scene of the pinned lesson. */
+/**
+ * Mounts and settles every deferred line scene of the pinned lesson, and
+ * proves no page script read pixels back from a scene meanwhile.
+ */
 const renderLessonScenes = Effect.fn("NakafaE2E.renderLessonScenes")(function* (
   page: Page
 ) {
-  yield* Effect.promise(() => page.addInitScript(reportPixelReadbacks));
+  yield* Effect.promise(() =>
+    page.addInitScript(recordPixelReadbacks, PIXEL_READBACKS)
+  );
   const { cards, count } = yield* openLessonScenes(page);
   for (let index = 0; index < count; index += 1) {
     yield* revealLineScene(cards.nth(index));
   }
+  const readbacks = yield* Effect.promise(() =>
+    page.evaluate((key) => Reflect.get(window, key), PIXEL_READBACKS)
+  );
+  yield* Effect.sync(() => expect(readbacks).toEqual([]));
 });
 
 /** Proves a rotating scene stops far from the viewport and resumes in view. */

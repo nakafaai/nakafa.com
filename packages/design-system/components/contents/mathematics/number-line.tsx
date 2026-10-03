@@ -1,11 +1,11 @@
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ReactNode } from "react";
@@ -31,34 +31,32 @@ const NUMBER_LINE_SEGMENT_EDGE = {
   startInfinity: "startInfinity",
 } as const;
 
-interface NumberLineSegment {
-  /** The background color of the segment */
-  backgroundColor?: string;
-  /** The end value of the segment */
-  end: number;
-  /** Whether the end value is inclusive */
-  endInclusive?: boolean;
-  /** Custom label for the end point (e.g., fraction in LaTeX) */
-  endLabel?: ReactNode;
-  /** The label of the segment */
-  label?: ReactNode;
-  /** Whether the segment is shaded */
-  shaded?: boolean;
-  /** Whether the segment should show points */
-  showPoints?: boolean;
-  /** The start value of the segment */
-  start: number;
-  /** Whether the start value is inclusive */
-  startInclusive?: boolean;
-  /** Custom label for the start point (e.g., fraction in LaTeX) */
-  startLabel?: ReactNode;
-}
-
 interface NumberLineProps {
   description: ReactNode;
   max?: number;
   min?: number;
-  segments: NumberLineSegment[];
+  segments: {
+    /** The background color of the segment */
+    backgroundColor?: string;
+    /** The end value of the segment */
+    end: number;
+    /** Whether the end value is inclusive */
+    endInclusive?: boolean;
+    /** Custom label for the end point (e.g., fraction in LaTeX) */
+    endLabel?: ReactNode;
+    /** The label of the segment */
+    label?: ReactNode;
+    /** Whether the segment is shaded */
+    shaded?: boolean;
+    /** Whether the segment should show points */
+    showPoints?: boolean;
+    /** The start value of the segment */
+    start: number;
+    /** Whether the start value is inclusive */
+    startInclusive?: boolean;
+    /** Custom label for the start point (e.g., fraction in LaTeX) */
+    startLabel?: ReactNode;
+  }[];
   title: ReactNode;
 }
 
@@ -88,7 +86,10 @@ function getSegmentEdge({
 }
 
 /** Returns the finite bounds that should contribute to the number-line range. */
-function getFiniteSegmentValues({ end, start }: NumberLineSegment) {
+function getFiniteSegmentValues({
+  end,
+  start,
+}: NumberLineProps["segments"][number]) {
   const hasFiniteStart = Number.isFinite(start);
   const hasFiniteEnd = Number.isFinite(end);
 
@@ -163,12 +164,9 @@ export function NumberLine({
   });
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
         <div className="w-full">
           <div className="relative h-20 w-full">
             {processedSegments.map((segment) => (
@@ -263,7 +261,10 @@ export function NumberLine({
             ))}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

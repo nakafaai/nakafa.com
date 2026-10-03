@@ -177,13 +177,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Chromium needs only the installed Playwright package, so it installs
+      # The browsers need only the installed Playwright package, so they install
       # while acceptance prepares and builds instead of after them. Idle CPU and
       # disk priority leave the local backend's queries within Convex's limits.
-      - name: Start Chromium install
+      # WebKit runs the visual card suite, whose full screen and immersive
+      # presentations serve Safari on iPad and iPhone.
+      - name: Start browser install
         run: |
-          setsid bash -c "nice -n 19 ionice -c 3 pnpm --filter www exec playwright install --with-deps chromium; echo \$? > '$RUNNER_TEMP/chromium.exit'" \
-            > "$RUNNER_TEMP/chromium.log" 2>&1 &
+          setsid bash -c "nice -n 19 ionice -c 3 pnpm --filter www exec playwright install --with-deps chromium webkit; echo \$? > '$RUNNER_TEMP/browsers.exit'" \
+            > "$RUNNER_TEMP/browsers.log" 2>&1 &
 
       - name: Prepare signed acceptance publication
         run: pnpm acceptance:prepare
@@ -226,17 +228,17 @@ jobs:
           echo "The local production app did not become ready." >&2
           exit 1
 
-      - name: Wait for Chromium
+      - name: Wait for browsers
         run: |
           for _attempt in {1..300}; do
-            if [ -s "$RUNNER_TEMP/chromium.exit" ]; then
-              cat "$RUNNER_TEMP/chromium.log"
-              exit "$(cat "$RUNNER_TEMP/chromium.exit")"
+            if [ -s "$RUNNER_TEMP/browsers.exit" ]; then
+              cat "$RUNNER_TEMP/browsers.log"
+              exit "$(cat "$RUNNER_TEMP/browsers.exit")"
             fi
             sleep 2
           done
-          cat "$RUNNER_TEMP/chromium.log"
-          echo "Chromium did not finish installing." >&2
+          cat "$RUNNER_TEMP/browsers.log"
+          echo "The browsers did not finish installing." >&2
           exit 1
 
       - name: Run production browser checks

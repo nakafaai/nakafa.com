@@ -12,14 +12,16 @@ import {
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Array as Arr, Option } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
@@ -27,31 +29,14 @@ import { Suspense } from "react";
 type Point = readonly [number, number, number];
 type ElementSymbol = "C" | "H" | "O";
 type MoleculeId = "carbonDioxide" | "methane" | "oxygen" | "water";
-
-interface AtomData {
-  element: ElementSymbol;
-  id: string;
-  position: Point;
-}
-
-interface BondData {
-  end: string;
-  order?: 1 | 2;
-  start: string;
-}
-
-interface MoleculeModel {
-  atoms: readonly AtomData[];
-  bonds: readonly BondData[];
-  formula: string;
-}
-
-interface MoleculeInstance {
-  id: string;
-  modelId: MoleculeId;
-  position: Point;
-  rotation?: Point;
-}
+/** One atom of a molecule model, placed in the molecule's own space. */
+type AtomData = ReturnType<typeof atom>;
+/** A single or double bond between two atoms of one molecule. */
+type BondData = ReturnType<typeof bond>;
+/** A molecule's formula, its atoms, and the bonds between them. */
+type MoleculeModel = ReturnType<typeof molecule>;
+/** One molecule of a model, placed and turned in the equation. */
+type MoleculeInstance = ReturnType<typeof instance>;
 
 export interface MethaneCombustionEquationLabProps {
   description: ReactNode;
@@ -164,16 +149,14 @@ export function MethaneCombustionEquationLab({
   const colors = getCombustionColors(resolvedTheme);
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
 
-      <CardContent className="flex flex-col gap-4">
-        <section
+      <VisualCardBody className="flex flex-col gap-4">
+        <VisualCardScene
           aria-label={labels.moleculeView}
           className={threeSceneFrameVariants()}
+          render={<section />}
         >
           <ThreeCanvas frameloop="always">
             <Suspense>
@@ -184,11 +167,14 @@ export function MethaneCombustionEquationLab({
               <CombustionScene colors={colors} labels={labels} />
             </Suspense>
           </ThreeCanvas>
-        </section>
+        </VisualCardScene>
 
         <p className="text-muted-foreground text-sm">{labels.equation}</p>
-      </CardContent>
-    </Card>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 
@@ -252,9 +238,6 @@ function Molecule({
   instance: MoleculeInstance;
 }) {
   const model = MODELS[item.modelId];
-  const atomsById = new Map(
-    model.atoms.map((atomData) => [atomData.id, atomData])
-  );
 
   return (
     <group
@@ -267,12 +250,15 @@ function Molecule({
     >
       <group scale={MOLECULE_SCALE}>
         {model.bonds.map((bondData) => {
-          const start = atomsById.get(bondData.start);
-          const end = atomsById.get(bondData.end);
+          const atoms = Option.all([
+            Arr.findFirst(model.atoms, ({ id }) => id === bondData.start),
+            Arr.findFirst(model.atoms, ({ id }) => id === bondData.end),
+          ]);
 
-          if (!(start && end)) {
+          if (Option.isNone(atoms)) {
             return null;
           }
+          const [start, end] = atoms.value;
 
           return (
             <Bond
@@ -360,7 +346,7 @@ function CombustionCamera() {
   );
 }
 
-function atom(id: string, element: ElementSymbol, position: Point): AtomData {
+function atom(id: string, element: ElementSymbol, position: Point) {
   return { element, id, position };
 }
 
@@ -380,7 +366,7 @@ function atomRadius(element: ElementSymbol) {
   return element === "H" ? 0.24 : 0.34;
 }
 
-function bond(start: string, end: string, order: 1 | 2 = 1): BondData {
+function bond(start: string, end: string, order: 1 | 2 = 1) {
   return { end, order, start };
 }
 
@@ -389,7 +375,7 @@ function instance(
   modelId: MoleculeId,
   position: Point,
   rotation?: Point
-): MoleculeInstance {
+) {
   return {
     id,
     modelId,
@@ -402,7 +388,7 @@ function molecule(
   formula: string,
   atoms: readonly AtomData[],
   bonds: readonly BondData[]
-): MoleculeModel {
+) {
   return { atoms, bonds, formula };
 }
 

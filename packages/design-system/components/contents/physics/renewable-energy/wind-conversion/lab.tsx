@@ -6,15 +6,15 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { Slider } from "@repo/design-system/components/ui/slider";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
@@ -36,19 +36,17 @@ const WIND_GUSTS = Array.from({ length: WIND_GUST_COUNT }, (_, index) => ({
   index,
 }));
 
-interface WindConversionLabels {
-  flow: ReactNode;
-  flowLabel: string;
-  meaning: ReactNode;
-  meaningLabel: string;
-  speedControl: string;
-  speedUnit: string;
-  viewLabel: string;
-}
-
 interface WindEnergyConversionLabProps {
   description: ReactNode;
-  labels: WindConversionLabels;
+  labels: {
+    flow: ReactNode;
+    flowLabel: string;
+    meaning: ReactNode;
+    meaningLabel: string;
+    speedControl: string;
+    speedUnit: string;
+    viewLabel: string;
+  };
   title: ReactNode;
 }
 
@@ -70,15 +68,13 @@ export function WindEnergyConversionLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <section
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody className="flex flex-col gap-4">
+        <VisualCardScene
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
+          render={<section />}
         >
           <ThreeCanvas frameloop="always">
             <Suspense>
@@ -106,7 +102,7 @@ export function WindEnergyConversionLab({
               <WindConversionScene colors={colors} windSpeed={windSpeed} />
             </Suspense>
           </ThreeCanvas>
-        </section>
+        </VisualCardScene>
 
         <div className="flex flex-col gap-3 pt-2">
           <div className="flex items-center justify-between gap-4 text-sm">
@@ -124,14 +120,15 @@ export function WindEnergyConversionLab({
             value={windSpeed}
           />
         </div>
-      </CardContent>
-      <CardFooter className="border-t">
+      </VisualCardBody>
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <WindFact label={labels.flowLabel} value={labels.flow} />
           <WindFact label={labels.meaningLabel} value={labels.meaning} />
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

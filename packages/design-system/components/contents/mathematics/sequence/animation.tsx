@@ -2,17 +2,18 @@
 
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
+import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
 import { getTableChairArrangement } from "@repo/design-system/components/contents/mathematics/sequence/arrangement";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import {
   AnimatePresence,
   domMax,
@@ -132,16 +133,16 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
   );
 
   return (
-    <Card className="content-auto-card" ref={ref}>
-      <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>
-          {deferredTableCount} {labels.table} & {chairCount} {labels.chair}
-        </CardDescription>
-      </CardHeader>
+    <VisualCard ref={ref}>
+      <VisualCardHeader
+        // One text node: a count that changes width would otherwise move the
+        // label beside it, a layout shift no learner caused.
+        description={`${deferredTableCount} ${labels.table} & ${chairCount} ${labels.chair}`}
+        title={labels.title}
+      />
 
-      <CardContent>
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 p-4 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950">
+      <VisualCardBody>
+        <VisualCardScene className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 p-4 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950">
           <div className="flex h-full flex-col items-center justify-center gap-8">
             {/* Table and chairs visualization */}
             <div className="relative flex w-full items-center justify-center">
@@ -214,10 +215,10 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
               </div>
             </div>
           </div>
-        </div>
-      </CardContent>
+        </VisualCardScene>
+      </VisualCardBody>
 
-      <CardFooter className="flex flex-col gap-4 px-0">
+      <VisualCardFooter className="flex-col items-stretch px-0">
         <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <div className="flex justify-between gap-2">
             <Button
@@ -240,19 +241,19 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                 {isPlaying ? labels.pause : labels.play}
               </span>
             </Button>
+            <VisualCardFullscreen />
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
             {SPEED_VALUES.map((speedValue) => (
-              <Button
+              <Choice
                 aria-label={`${labels.setSpeed} ${speedValue}x`}
                 key={speedValue}
                 onClick={() => setSpeed(speedValue)}
-                size="sm"
-                variant={speed === speedValue ? "default" : "outline"}
+                pressed={speed === speedValue}
               >
                 {speedValue}x
-              </Button>
+              </Choice>
             ))}
           </div>
         </div>
@@ -261,23 +262,22 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
           <div className="flex flex-wrap justify-center gap-2">
             {Array.from({ length: maxTables }, (_, index) => index + 1).map(
               (count) => (
-                <Button
+                <Choice
                   aria-label={`${labels.setTableCount} ${count}`}
                   key={`table-count-${count}`}
                   onClick={() => {
                     setTableCount(count);
                     setIsPlaying(false);
                   }}
-                  size="sm"
-                  variant={tableCount === count ? "default" : "outline"}
+                  pressed={tableCount === count}
                 >
                   {count} {labels.table}
-                </Button>
+                </Choice>
               )
             )}
           </div>
         </div>
-      </CardFooter>
-    </Card>
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

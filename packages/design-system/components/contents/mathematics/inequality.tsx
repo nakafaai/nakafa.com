@@ -7,12 +7,10 @@ import {
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { Inequality as Inequality3D } from "@repo/design-system/components/three/inequality";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
@@ -43,12 +41,9 @@ export function Inequality({
 
   return (
     <CoordinateProvider>
-      <Card className="content-auto-card">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody>
           <CoordinateSystem
             cameraPosition={position}
             cameraProjection={
@@ -63,9 +58,9 @@ export function Inequality({
               />
             ))}
           </CoordinateSystem>
-        </CardContent>
+        </VisualCardBody>
         <CoordinateControls />
-      </Card>
+      </VisualCard>
     </CoordinateProvider>
   );
 }

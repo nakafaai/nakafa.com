@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import {
+  resolveAuthoredView,
   resolveCameraDistanceLimits,
   resolveOrthographicZoom,
 } from "@repo/design-system/lib/geometry/camera";
@@ -86,4 +87,52 @@ describe("scene camera limits", () => {
       expect((camera.top - camera.bottom) / minZoom).toBeCloseTo(36);
     }
   );
+});
+
+describe("authored camera views", () => {
+  it.each([
+    { height: 320, width: 320 },
+    { height: 320, width: 458 },
+  ])(
+    "keeps the authored view on a $width by $height canvas",
+    ({ height, width }) => {
+      expect(resolveAuthoredView({ fov: 50, height, width })).toEqual({
+        extent: height,
+        fov: 50,
+      });
+    }
+  );
+
+  it("keeps a square frame's sides on a portrait perspective canvas", () => {
+    const { fov } = resolveAuthoredView({ fov: 50, height: 640, width: 342 });
+    const square = new PerspectiveCamera(50, 1);
+    const portrait = new PerspectiveCamera(fov, 342 / 640);
+    for (const camera of [square, portrait]) {
+      camera.position.set(0, 0, 10);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld();
+      camera.updateProjectionMatrix();
+    }
+    // The right edge of the square view on the plane the camera looks at.
+    const edge = new Vector3(10 * Math.tan((50 * Math.PI) / 360), 0, 0);
+
+    expect(edge.clone().project(square).x).toBeCloseTo(1);
+    expect(edge.clone().project(portrait).x).toBeCloseTo(1);
+    expect(fov).toBeGreaterThan(50);
+  });
+
+  it("spans an orthographic view height across a portrait canvas's width", () => {
+    const { extent } = resolveAuthoredView({
+      fov: 50,
+      height: 640,
+      width: 342,
+    });
+    const { zoom } = resolveOrthographicZoom(24, extent);
+    const camera = new OrthographicCamera(-171, 171, 320, -320);
+    camera.zoom = zoom;
+    camera.updateProjectionMatrix();
+
+    expect(extent).toBe(342);
+    expect((camera.right - camera.left) / zoom).toBeCloseTo(24);
+  });
 });
