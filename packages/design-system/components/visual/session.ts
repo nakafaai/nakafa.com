@@ -69,7 +69,11 @@ export const openSession = Effect.fn("designSystem.visual.openSession")(
         }),
       ],
       { discard: true }
-    ).pipe(Scope.provide(scope));
+    ).pipe(
+      Scope.provide(scope),
+      // A listener the browser refuses leaves none of the others behind.
+      Effect.onError(() => Scope.close(scope, Exit.void))
+    );
     return { card, padding, place, scope, trigger };
   }
 );

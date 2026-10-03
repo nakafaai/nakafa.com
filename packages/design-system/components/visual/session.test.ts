@@ -125,6 +125,28 @@ describe("opening a stay across the screen", () => {
     })
   );
 
+  it.effect("leaves no listener behind when the browser refuses one", () =>
+    Effect.gen(function* () {
+      const { card, trigger } = renderPage();
+      const addListener = document.addEventListener.bind(document);
+      vi.spyOn(document, "addEventListener")
+        .mockImplementationOnce(addListener)
+        .mockImplementationOnce(() => {
+          throw new DOMException("The listener is refused.", "NotAllowedError");
+        });
+      const removed = vi.spyOn(document, "removeEventListener");
+
+      const exit = yield* Effect.exit(
+        openSession(card, trigger, vi.fn(), vi.fn())
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(removed.mock.calls.map(([type]) => type)).toEqual([
+        "fullscreenchange",
+      ]);
+    })
+  );
+
   it.effect("reports the browser's own full screen changes", () =>
     Effect.gen(function* () {
       const { onFullscreenChange, session } = yield* openTestSession();
