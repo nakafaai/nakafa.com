@@ -22,3 +22,6 @@ visual is full screen. A 3D canvas also follows its frame when the frame
 shrinks, such as a phone turned to a narrower width. The bacterial growth
 controls now name their play, pause, and reset buttons in the learner's
 language, and put a space between each time and its unit, as in "30 minutes".
+The bacterial growth lab and the table and chairs animation no longer shift the
+page as they advance: each writes its counts as one piece of text, and the
+option each reaches keeps the size of the others.
