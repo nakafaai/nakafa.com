@@ -58,5 +58,6 @@ fi
 
 chmod 700 "${osv_binary}"
 "${osv_binary}" scan source \
+  --config=osv.toml \
   --lockfile=pnpm-lock.yaml \
   --lockfile=apps/cas/uv.lock
