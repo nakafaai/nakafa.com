@@ -182,7 +182,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
             : Result.failVoid
       );
     });
-    const [unbound, bound] = Arr.partition(candidates, (found) =>
+    const [bound, unbound] = Arr.partition(candidates, (found) =>
       found.reference === undefined
         ? Result.fail(found)
         : Result.succeed({ ...found, reference: found.reference })
