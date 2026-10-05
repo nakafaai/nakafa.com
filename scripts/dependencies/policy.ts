@@ -11,7 +11,7 @@ type DeclarationOwners =
 type DependencyHold = ApprovedSpecs &
   DeclarationOwners & { readonly dependency: string };
 
-export const CONTRACT_PACKAGE_VERSION = "0.45.0";
+export const CONTRACT_PACKAGE_VERSION = "0.46.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.1";
 /**
