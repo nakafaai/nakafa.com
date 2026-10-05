@@ -39,6 +39,8 @@ overrides:
   react-dom: 19.2.8
   '@types/react': 19.2.18
   '@types/react-dom': 19.2.7
+  '@effect/ai-openai-compat': 4.0.1
+  '@effect/ai-openrouter': 4.0.1
   '@effect/platform-node': 4.0.1
   '@effect/platform-node-shared': 4.0.1
   '@react-email/ui@6.11.0>next': 16.3.7
@@ -1847,15 +1849,15 @@ packages:
     resolution: {integrity: sha512-NKBGBSIKUG584qrS1tyxVpX/AKJKQw5HgjYEnPLC0QsTw79JrGn+qUr8CXFb955Iy7GUdiiUv1rJ6JBGvaKb6w==}
     engines: {node: '>=18'}
 
-  '@effect/ai-openai-compat@4.0.0':
-    resolution: {integrity: sha512-zoFwI5M7pUEj4UMHMbPsQGaVRxirIAIqzfVZAtpjJPXWwd/acwxN4kI1nS9gfn/lCHvFIc9xPEMstforcODesw==}
+  '@effect/ai-openai-compat@4.0.1':
+    resolution: {integrity: sha512-PuFYB/Gd+2YB3zJAlivFUrvEHOg9p6DP93/c1kPH+IGqtBp8oVBS6qNWPWfEkD7+JX8qOWOlwwk5Mqe7X1jvQg==}
     peerDependencies:
-      effect: ^4.0.0
+      effect: ^4.0.1
 
-  '@effect/ai-openrouter@4.0.0':
-    resolution: {integrity: sha512-FlQHomqreGlC/Fj1vfTyk3kZ5MD+Be5rjEumFshtnGsmi+bE1uRDbHjdbAbVitpDQJGQKRxqwhPMOfgF6J3Gfw==}
+  '@effect/ai-openrouter@4.0.1':
+    resolution: {integrity: sha512-l9vVp3ag8/N+OmPD/SP86MKuJrLxpZ5U2ItM6jPO/Al8njQZ4uEWRQZ72byVH7qumaWsN7cSd7wTCR8C9epBAw==}
     peerDependencies:
-      effect: ^4.0.0
+      effect: ^4.0.1
 
   '@effect/platform-node-shared@4.0.1':
     resolution: {integrity: sha512-VanaejudEhKJ4mpmqnEzdncVUhN6sGSO9ZDND54mRxAlZxj+4dYAWjDTYAy9o4tJo9aALeP2U8cVcOFzEdSeLg==}
@@ -8519,8 +8521,8 @@ snapshots:
   '@confect/server@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)':
     dependencies:
       '@confect/core': 10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
-      '@effect/ai-openai-compat': 4.0.0(effect@4.0.1)
-      '@effect/ai-openrouter': 4.0.0(effect@4.0.1)
+      '@effect/ai-openai-compat': 4.0.1(effect@4.0.1)
+      '@effect/ai-openrouter': 4.0.1(effect@4.0.1)
       convex: 1.46.0(react@19.2.8)
       effect: 4.0.1
     optionalDependencies:
@@ -8709,11 +8711,11 @@ snapshots:
     dependencies:
       '@edge-runtime/primitives': 6.0.0
 
-  '@effect/ai-openai-compat@4.0.0(effect@4.0.1)':
+  '@effect/ai-openai-compat@4.0.1(effect@4.0.1)':
     dependencies:
       effect: 4.0.1
 
-  '@effect/ai-openrouter@4.0.0(effect@4.0.1)':
+  '@effect/ai-openrouter@4.0.1(effect@4.0.1)':
     dependencies:
       effect: 4.0.1
 

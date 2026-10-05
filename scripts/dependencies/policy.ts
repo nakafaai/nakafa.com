@@ -14,6 +14,17 @@ type DependencyHold = ApprovedSpecs &
 export const CONTRACT_PACKAGE_VERSION = "0.45.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.1";
+/**
+ * Effect packages that only dependencies declare: the Confect CLI's platform
+ * packages and the Confect server's AI providers. An override keeps each one
+ * in the exact cohort.
+ */
+export const EFFECT_COHORT_OVERRIDES = [
+  "@effect/ai-openai-compat",
+  "@effect/ai-openrouter",
+  "@effect/platform-node",
+  "@effect/platform-node-shared",
+] as const;
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.0.2";
 /**
@@ -185,6 +196,16 @@ export const REGISTRY_REVIEWS = [
     "@effect/vitest@latest",
     EFFECT_COHORT_VERSION,
     "The test adapter must match the Effect cohort.",
+  ],
+  [
+    "@effect/ai-openai-compat@latest",
+    EFFECT_COHORT_VERSION,
+    "The Confect server's transitive AI provider must match the Effect cohort.",
+  ],
+  [
+    "@effect/ai-openrouter@latest",
+    EFFECT_COHORT_VERSION,
+    "The Confect server's transitive AI provider must match the Effect cohort.",
   ],
   [
     "@effect/tsgo@latest",

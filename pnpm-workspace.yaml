@@ -59,6 +59,8 @@ overrides:
   "react-dom": "19.2.8"
   "@types/react": "19.2.18"
   "@types/react-dom": "19.2.7"
+  "@effect/ai-openai-compat": "4.0.1"
+  "@effect/ai-openrouter": "4.0.1"
   "@effect/platform-node": "4.0.1"
   "@effect/platform-node-shared": "4.0.1"
   "@react-email/ui@6.11.0>next": "16.3.7"

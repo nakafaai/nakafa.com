@@ -2,6 +2,7 @@ import { Array as Arr, Record as Rec, Result } from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
+  EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
   FORBIDDEN_EFFECT_DEPENDENCIES,
   SCRIPT_DEPENDENCY_HOLDS,
@@ -100,11 +101,8 @@ function cohortProblems(workspace: WorkspaceManifest) {
       `The Effect Vitest catalog must match Effect ${EFFECT_COHORT_VERSION}.`
     );
   }
-  // Transitive platform packages, such as the Confect CLI's, stay in the cohort.
-  for (const dependency of [
-    "@effect/platform-node",
-    "@effect/platform-node-shared",
-  ]) {
+  // Effect packages that only dependencies declare stay in the cohort.
+  for (const dependency of EFFECT_COHORT_OVERRIDES) {
     if (workspace.overrides?.[dependency] !== EFFECT_COHORT_VERSION) {
       problems.push(
         `The ${dependency} override must match Effect ${EFFECT_COHORT_VERSION}.`
