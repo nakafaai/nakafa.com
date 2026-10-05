@@ -114,13 +114,12 @@ describe("program route relationship integrity", () => {
               );
             });
             expect(
-              yield* (yield* QueryRunner)(
-                refs.public.contentRelease.program.route,
-                {
+              yield* (yield* QueryRunner)
+                .runQuery(refs.public.contentRelease.program.route, {
                   appLocale: "en",
                   publicPath: root,
-                }
-              ).pipe(Effect.flip)
+                })
+                .pipe(Effect.flip)
             ).toMatchObject({
               code: "CONTENT_RELEASE_INTEGRITY",
             });
@@ -154,13 +153,12 @@ describe("program route relationship integrity", () => {
             yield* activateProgramSnapshot(data);
             yield* stageRoutes(data.snapshotId, [context]);
             expect(
-              yield* (yield* QueryRunner)(
-                refs.public.contentRelease.program.route,
-                {
+              yield* (yield* QueryRunner)
+                .runQuery(refs.public.contentRelease.program.route, {
                   appLocale: "en",
                   publicPath: root,
-                }
-              ).pipe(Effect.flip)
+                })
+                .pipe(Effect.flip)
             ).toMatchObject({
               code: "CONTENT_RELEASE_INTEGRITY",
             });
@@ -181,7 +179,7 @@ describe("program route relationship integrity", () => {
           const child = nestedRoute(`${subject.publicPath}/child`, "child");
           yield* activateProgramSnapshot(data);
           yield* stageRoutes(data.snapshotId, [subject, child]);
-          const result = yield* (yield* QueryRunner)(
+          const result = yield* (yield* QueryRunner).runQuery(
             refs.public.contentRelease.program.route,
             {
               appLocale: "en",
@@ -230,13 +228,12 @@ describe("program route relationship integrity", () => {
           yield* activateProgramSnapshot(data);
           yield* stageRoutes(data.snapshotId, [child]);
           expect(
-            yield* (yield* QueryRunner)(
-              refs.public.contentRelease.program.route,
-              {
+            yield* (yield* QueryRunner)
+              .runQuery(refs.public.contentRelease.program.route, {
                 appLocale: "en",
                 publicPath: child.publicPath,
-              }
-            ).pipe(Effect.flip)
+              })
+              .pipe(Effect.flip)
           ).toMatchObject({
             code: "CONTENT_RELEASE_INTEGRITY",
           });
@@ -275,13 +272,12 @@ describe("program route relationship integrity", () => {
             yield* activateProgramSnapshot(data);
             yield* stageRoutes(data.snapshotId, routes);
             expect(
-              yield* (yield* QueryRunner)(
-                refs.public.contentRelease.program.route,
-                {
+              yield* (yield* QueryRunner)
+                .runQuery(refs.public.contentRelease.program.route, {
                   appLocale: "en",
                   publicPath: requested.publicPath,
-                }
-              ).pipe(Effect.flip)
+                })
+                .pipe(Effect.flip)
             ).toMatchObject({
               code: "CONTENT_RELEASE_LIMIT",
             });
@@ -312,13 +308,12 @@ describe("program route relationship integrity", () => {
               )
             );
             expect(
-              yield* (yield* QueryRunner)(
-                refs.public.contentRelease.program.route,
-                {
+              yield* (yield* QueryRunner)
+                .runQuery(refs.public.contentRelease.program.route, {
                   appLocale: "en",
                   publicPath: root,
-                }
-              ).pipe(Effect.flip)
+                })
+                .pipe(Effect.flip)
             ).toMatchObject({
               code: "CONTENT_RELEASE_LIMIT",
             });
@@ -351,13 +346,12 @@ describe("program route relationship integrity", () => {
               );
             });
             expect(
-              yield* (yield* QueryRunner)(
-                refs.public.contentRelease.program.route,
-                {
+              yield* (yield* QueryRunner)
+                .runQuery(refs.public.contentRelease.program.route, {
                   appLocale: "en",
                   publicPath: root,
-                }
-              ).pipe(Effect.flip)
+                })
+                .pipe(Effect.flip)
             ).toMatchObject({
               code: "CONTENT_RELEASE_INTEGRITY",
             });

@@ -34,7 +34,7 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
       return;
     }
     const ctx = yield* ActionCtx;
-    const mutate = yield* MutationRunner;
+    const { runMutation: mutate } = yield* MutationRunner;
     const gateway = yield* Gateway;
     const space: Space = { kind: "personal", userId: turn.userId };
     const suggestion = gateway.language({

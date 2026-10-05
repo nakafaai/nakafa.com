@@ -31,7 +31,7 @@ function replacementFamilies(release: SignedContentRelease) {
 /** Loads and rechecks one manifest before the shared proof consumes it. */
 const readManifest = Effect.fn("contentRelease.readProofSnapshotManifest")(
   function* (releaseId: string, family: ContentSnapshotKind) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const source = yield* runQuery(
       refs.internal.contentRelease.snapshot.read.manifest,
       {
@@ -66,7 +66,7 @@ function manifestStream(release: SignedContentRelease) {
 function familyRows(releaseId: string, family: ContentSnapshotKind) {
   return Stream.paginate(-1, (afterBatchIndex) =>
     QueryRunner.pipe(
-      Effect.flatMap((runQuery) =>
+      Effect.flatMap(({ runQuery }) =>
         runQuery(refs.internal.contentRelease.snapshot.read.rows, {
           afterBatchIndex,
           family,
@@ -94,7 +94,7 @@ function rowStream(release: SignedContentRelease) {
 /** Loads the exact signed base snapshot set or the empty genesis identity. */
 const loadPrevious = Effect.fn("contentRelease.loadPreviousSnapshots")(
   function* (release: SignedContentRelease) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const baseId = release.manifest.baseReleaseId;
     if (baseId === null) {
       return null;

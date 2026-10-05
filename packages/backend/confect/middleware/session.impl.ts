@@ -79,7 +79,7 @@ export default MiddlewareImpl.makeByFunctionType(schema, SessionMiddleware, {
   }),
   action: Effect.fn("auth.actionSession")(function* (effect) {
     const authId = yield* readSessionAuthId(yield* ActionCtx);
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const appUser = authId
       ? yield* runQuery(refs.internal.users.queries.getUserByAuthId, {
           authId,

@@ -48,7 +48,7 @@ const deliverProductEvent = FunctionImpl.make(
   "deliverProductEvent",
   Effect.fn("analytics.capture.deliverProductEvent")(function* (args) {
     const ctx = yield* ActionCtxService;
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     yield* deliverProductAnalyticsProgram({
       capture: Effect.tryPromise({
         try: () =>

@@ -219,7 +219,7 @@ export type ProgramSnapshotData = Effect.Success<
 export const stageProgramSnapshot = Effect.fn("TestProgram.stageSnapshot")(
   function* (data: ProgramSnapshotData, batchSize = data.rowJson.length) {
     const ctx = yield* MutationCtx;
-    const mutate = yield* MutationRunner;
+    const { runMutation: mutate } = yield* MutationRunner;
     yield* Effect.promise(() =>
       insertTestRelease(ctx, {
         activeAppLocales: data.snapshot.manifest.activeAppLocales,

@@ -162,7 +162,7 @@ export const completeCustomerDeletionCheckpointProgram = Effect.fn(
 export const deleteLocalCustomer = Effect.fn(
   "customers.deletion.deleteLocalCustomer"
 )(function* (polarCustomerId: string) {
-  const runMutation = yield* MutationRunner;
+  const { runMutation } = yield* MutationRunner;
   let hasMore = true;
   while (hasMore) {
     hasMore = yield* runMutation(

@@ -61,7 +61,7 @@ function publicationAuthFailure() {
 /** Reads one bounded request and invokes the isolated Node verifier. */
 const publicationRoute = Effect.fn("contentRelease.publicationRoute")(
   function* (request: Request) {
-    const runAction = yield* ActionRunner;
+    const { runAction } = yield* ActionRunner;
     const authenticated = yield* matchesHttpSecret(
       bearerToken(request.headers.get("authorization") ?? ""),
       yield* Config.String("AKSARA_PUBLICATION_TOKEN").pipe(Effect.orDie)

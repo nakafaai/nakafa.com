@@ -44,7 +44,7 @@ const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
 /** Reads one active public artifact for Nakafa verification. */
 const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
   function* (request: PublicContentRuntimeRequest) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const row = yield* runQuery(
       refs.internal.contentRelease.runtime.publication.internal.read,
       {

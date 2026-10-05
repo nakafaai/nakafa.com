@@ -89,8 +89,8 @@ const stageRelease = Effect.fn("contentRelease.stageSignedRelease")(function* (
   request: ReleaseRequest,
   activeKeyId: string
 ) {
-  const runMutation = yield* MutationRunner;
-  const runQuery = yield* QueryRunner;
+  const { runMutation } = yield* MutationRunner;
+  const { runQuery } = yield* QueryRunner;
   const { renderer, signed } = yield* validateReleaseRenderer(
     request.release,
     request.rendererManifest
@@ -124,7 +124,7 @@ const stageRelease = Effect.fn("contentRelease.stageSignedRelease")(function* (
 /** Executes one authenticated bounded idempotent staging operation. */
 export const stagePublication = Effect.fn("contentRelease.stagePublication")(
   function* (request: StageRequest, activeKeyId = ACTIVE_SIGNING_KEY_ID) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     if (
       request.operation === "stageRelease" ||
       request.operation === "stageRecovery"

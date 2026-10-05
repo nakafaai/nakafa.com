@@ -18,8 +18,8 @@ export const cleanupDeletedUserBilling = Effect.fn(
   "customers.deletion.cleanupDeletedUserBilling"
 )(
   function* (userId: Id<"users">, authId: string) {
-    const runQuery = yield* QueryRunner;
-    const runMutation = yield* MutationRunner;
+    const { runQuery } = yield* QueryRunner;
+    const { runMutation } = yield* MutationRunner;
     const [customer, checkpointPolarCustomerId] = yield* Effect.all(
       [
         runQuery(

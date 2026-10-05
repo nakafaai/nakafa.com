@@ -19,7 +19,7 @@ import { Effect, Option, Schema, Stream } from "effect";
 export function readProofStream(releaseId: string) {
   return Stream.paginate(-1, (afterIndex) =>
     QueryRunner.pipe(
-      Effect.flatMap((runQuery) =>
+      Effect.flatMap(({ runQuery }) =>
         runQuery(refs.internal.contentRelease.proof.read.page, {
           afterIndex,
           releaseId,
@@ -40,7 +40,7 @@ export function readProofStream(releaseId: string) {
 export function readResultStream(releaseId: string) {
   return Stream.paginate(null, (cursor: CatalogCursor | null) =>
     QueryRunner.pipe(
-      Effect.flatMap((runQuery) =>
+      Effect.flatMap(({ runQuery }) =>
         runQuery(refs.internal.contentRelease.proof.catalog.page, {
           cursor,
           releaseId,
@@ -80,7 +80,7 @@ export function readResultStream(releaseId: string) {
 export function readRouteStream(releaseId: string) {
   return Stream.paginate(-1, (afterIndex) =>
     QueryRunner.pipe(
-      Effect.flatMap((runQuery) =>
+      Effect.flatMap(({ runQuery }) =>
         runQuery(refs.internal.contentRelease.proof.read.routePage, {
           afterIndex,
           releaseId,

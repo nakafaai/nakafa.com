@@ -33,8 +33,8 @@ export class ModelBuildCoordinator extends Context.Service<
 export const modelBuildCoordinatorLayer = Layer.effect(
   ModelBuildCoordinator,
   Effect.gen(function* () {
-    const runMutation = yield* MutationRunner;
-    const runQuery = yield* QueryRunner;
+    const { runMutation } = yield* MutationRunner;
+    const { runQuery } = yield* QueryRunner;
     return ModelBuildCoordinator.of({
       restart: Effect.fn("contentRelease.restartModelBuild")((args) =>
         runMutation(refs.internal.contentRelease.models.restart, args).pipe(

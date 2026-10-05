@@ -19,7 +19,7 @@ const searchReference = refs.public.contents.queries.search.search;
 /** Searches the signed Nakafa read model without a network hop. */
 export const searchNakafaContent = Effect.fn("agent.searchNakafaContent")(
   function* (input: unknown) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const options = yield* decodeAgentInput(
       NakafaAgentSearchOptionsSchema,
       input,

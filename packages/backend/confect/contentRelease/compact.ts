@@ -131,7 +131,7 @@ export const compactProgram = Effect.fn("contentRelease.compactPage")(
 /** Executes a bounded number of persisted pages for one scheduled run. */
 export const runProgram = Effect.fn("contentRelease.runCompaction")(
   function* () {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     let deleted = 0;
     let latest: {
       readonly complete: boolean;
