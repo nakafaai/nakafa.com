@@ -1264,8 +1264,9 @@ function makeResultFn<Arg, E, A>(
           Effect.forkDetach(eff, { startImmediately: true }),
           (fiber) => {
             fibers.add(fiber)
+            const runningFibers = Array.from(fibers)
             fiber.addObserver(() => fibers.delete(fiber))
-            return Effect.map(Fiber.joinAll(fibers), (arr) => arr[0])
+            return Effect.map(Fiber.joinAll(runningFibers), (arr) => arr[0])
           }
         )
       }
@@ -1430,7 +1431,10 @@ export const family = typeof WeakRef === "undefined" || typeof FinalizationRegis
   ): (arg: Arg) => T => {
     const atoms = MutableHashMap.empty<Arg, WeakRef<T>>()
     const registry = new FinalizationRegistry<Arg>((arg) => {
-      MutableHashMap.remove(atoms, arg)
+      const entry = MutableHashMap.get(atoms, arg)
+      if (entry._tag === "Some" && entry.value.deref() === undefined) {
+        MutableHashMap.remove(atoms, arg)
+      }
     })
     return function(arg) {
       const atomEntry = MutableHashMap.get(atoms, arg).pipe(
