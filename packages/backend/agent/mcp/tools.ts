@@ -38,7 +38,7 @@ const READ_ONLY_TOOL = {
 export const registerNakafaMcpTools = Effect.fn(
   "agent.mcp.registerNakafaMcpTools"
 )(function* (server: McpServer, requestId: string) {
-  const runQuery = yield* QueryRunner;
+  const queryRunner = yield* QueryRunner;
   server.registerTool(
     "nakafa_search_content",
     {
@@ -54,7 +54,7 @@ export const registerNakafaMcpTools = Effect.fn(
     (input) =>
       runMcpTool(
         searchNakafaContent(input).pipe(
-          Effect.provideService(QueryRunner, runQuery)
+          Effect.provideService(QueryRunner, queryRunner)
         ),
         requestId
       )
@@ -92,7 +92,7 @@ export const registerNakafaMcpTools = Effect.fn(
               onSome: Effect.succeed,
             })
           ),
-          Effect.provideService(QueryRunner, runQuery)
+          Effect.provideService(QueryRunner, queryRunner)
         ),
         requestId
       )
@@ -117,7 +117,7 @@ export const registerNakafaMcpTools = Effect.fn(
           "Invalid Nakafa taxonomy options."
         ).pipe(
           Effect.flatMap(({ locale }) => getNakafaTaxonomy(locale)),
-          Effect.provideService(QueryRunner, runQuery)
+          Effect.provideService(QueryRunner, queryRunner)
         ),
         requestId
       )
@@ -137,7 +137,7 @@ export const registerNakafaMcpTools = Effect.fn(
     (input) =>
       runMcpTool(
         getNakafaQuranReference(input).pipe(
-          Effect.provideService(QueryRunner, runQuery)
+          Effect.provideService(QueryRunner, queryRunner)
         ),
         requestId
       )

@@ -37,7 +37,7 @@ export type RequiredCustomer = WithoutSystemFields<Docs["customers"]> & {
 /** Loads the app user and any already-linked local customer row. */
 const loadCustomerSyncState = Effect.fn("customers.sync.loadCustomerSyncState")(
   function* (userId: Id<"users">) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     return yield* Effect.all([
       runQuery(refs.internal.users.queries.getUserById, {
         userId,
@@ -69,7 +69,7 @@ const loadCustomerSyncState = Effect.fn("customers.sync.loadCustomerSyncState")(
 /** Upserts the local customer row after Polar has been reconciled. */
 const saveLocalCustomer = Effect.fn("customers.sync.saveLocalCustomer")(
   function* (customer: WithoutSystemFields<Docs["customers"]>) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     return yield* runMutation(
       refs.internal.customers.mutations.internal.upsertCustomer,
       {

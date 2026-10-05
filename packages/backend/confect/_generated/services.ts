@@ -8,10 +8,13 @@ import {
   ExecutionMetadata as ExecutionMetadata_,
   MutationCtx as MutationCtx_,
   MutationRunner as MutationRunner_,
+  MutationTransactionContext as MutationTransactionContext_,
   QueryCtx as QueryCtx_,
   QueryRunner as QueryRunner_,
+  QueryTransactionContext as QueryTransactionContext_,
   RequestMetadata as RequestMetadata_,
   Scheduler as Scheduler_,
+  Storage as Storage_,
   StorageActionWriter as StorageActionWriter_,
   StorageReader as StorageReader_,
   StorageWriter as StorageWriter_,
@@ -35,6 +38,9 @@ export type TransactionMetadata = typeof TransactionMetadata.Identifier;
 
 export const Scheduler = Scheduler_.Scheduler;
 export type Scheduler = typeof Scheduler.Identifier;
+
+export const Storage = Storage_.Storage;
+export type Storage = typeof Storage.Identifier;
 
 export const StorageReader = StorageReader_.StorageReader;
 export type StorageReader = typeof StorageReader.Identifier;
@@ -61,6 +67,12 @@ export const DatabaseWriter: DatabaseWriter_.DatabaseWriterTag<
   Docs
 > = DatabaseWriter_.DatabaseWriter<typeof schemaDefinition, Docs>();
 export type DatabaseWriter = typeof DatabaseWriter.Identifier;
+
+export const QueryTransactionContext = QueryTransactionContext_.QueryTransactionContext;
+export type QueryTransactionContext = typeof QueryTransactionContext.Identifier;
+
+export const MutationTransactionContext = MutationTransactionContext_.MutationTransactionContext;
+export type MutationTransactionContext = typeof MutationTransactionContext.Identifier;
 
 export const QueryRunner = QueryRunner_.QueryRunner;
 export type QueryRunner = typeof QueryRunner.Identifier;

@@ -202,7 +202,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
     >,
     total: number
   ) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     if (request.afterIndex >= total) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
@@ -276,7 +276,7 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
     >,
     total: number
   ) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     if (request.afterIndex >= total) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",

@@ -49,7 +49,7 @@ const publicRuntimeReference =
 export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
   input: string
 ) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const lookup = getAgentContentReferenceInput(input);
   if (Option.isNone(lookup)) {
     return Option.none<NakafaAgentMarkdown>();
@@ -86,7 +86,7 @@ export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
 /** Reads one current article or lesson from its verified runtime row. */
 const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
   function* (ref: PublishedRef) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const appLocale = yield* Schema.decodeEffect(AppLocaleSchema)(
       ref.locale
     ).pipe(Effect.mapError(contentReadError));

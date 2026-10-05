@@ -14,7 +14,7 @@ describe("emails/retention", () => {
       yield* test.run(
         Effect.gen(function* () {
           const testCtx = yield* MutationCtx;
-          yield* (yield* MutationRunner)(
+          yield* (yield* MutationRunner).runMutation(
             refs.internal.emails.retention.cleanupRetainedEmailData,
             {}
           );

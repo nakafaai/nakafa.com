@@ -52,7 +52,7 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
 const resolvePublicRuntimeBatch = Effect.fn(
   "contentRelease.resolvePublicRuntimeBatch"
 )(function* (requests: readonly PublicContentRuntimeRequest[]) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const rows = yield* runQuery(
     refs.internal.contentRelease.runtime.publication.internal.readBatch,
     {

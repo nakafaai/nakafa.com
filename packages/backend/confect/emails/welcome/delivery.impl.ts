@@ -17,8 +17,8 @@ const sendWelcomeEmail = FunctionImpl.make(
   Effect.fn("emails.welcome.delivery.sendWelcomeEmail")(function* ({
     intentId,
   }) {
-    const runQuery = yield* QueryRunner;
-    const runMutation = yield* MutationRunner;
+    const { runQuery } = yield* QueryRunner;
+    const { runMutation } = yield* MutationRunner;
     return yield* deliverWelcomeEmailProgram(
       runQuery(refs.internal.emails.welcome.internal.readIntentInput, {
         intentId,

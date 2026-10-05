@@ -9,7 +9,7 @@ import { Effect, Schema } from "effect";
 export const createUsageHandler = Effect.fn("nina.usage.handler")(function* (
   turnId: NinaTurnsDoc["_id"]
 ) {
-  const mutate = yield* MutationRunner;
+  const { runMutation: mutate } = yield* MutationRunner;
   const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
   const handler: UsageHandler = (_ctx, event) =>
     runPromise(

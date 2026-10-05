@@ -18,7 +18,7 @@ class ProtectedRuntimeActionError extends Schema.TaggedError<ProtectedRuntimeAct
 const dispatchProtectedRuntime = Effect.fn(
   "contentRelease.dispatchProtectedRuntime"
 )(function* (input: { readonly byteLength: number; readonly source: string }) {
-  const runAction = yield* ActionRunner;
+  const { runAction } = yield* ActionRunner;
   const result = yield* runAction(
     refs.internal.contentRelease.runtime.tryout.dispatch.dispatch,
     input

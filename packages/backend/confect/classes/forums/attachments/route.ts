@@ -53,7 +53,7 @@ function uploadError(
 const releaseUploadLease = Effect.fn(
   "classes.forums.attachments.releaseUploadLease"
 )(function* (uploadId: string, leaseId: string) {
-  const runMutation = yield* MutationRunner;
+  const { runMutation } = yield* MutationRunner;
   const release = yield* Effect.result(
     runMutation(refs.internal.classes.forums.attachments.upload.release, {
       leaseId,
@@ -121,7 +121,7 @@ const readUploadBody = Effect.fn("classes.forums.attachments.readUploadBody")(
 /** Stores and binds one upload while cleaning every failed storage write. */
 const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
   function* (request: Request, uploadId: string, uploadToken: string) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     const leaseId = yield* Effect.try({
       try: generateId,
       catch: () => uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "claim", 500),
@@ -155,7 +155,7 @@ const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
       Effect.gen(function* () {
         const storageActionWriter = yield* StorageActionWriter;
         const storageWriter = yield* StorageWriter;
-        const runMutation = yield* MutationRunner;
+        const { runMutation } = yield* MutationRunner;
         const { bytes, contentType } = yield* readUploadBody(request);
         const storageId = yield* storageActionWriter
           .store(

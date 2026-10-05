@@ -170,7 +170,7 @@ export const verifySnapshotBatch = Effect.fn(
 /** Verifies and stages one immutable structured-family manifest. */
 export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
   function* (request: SnapshotRequest) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     yield* verifySnapshotManifest(request.snapshot);
     return yield* runMutation(
       refs.internal.contentRelease.snapshot.manifest.stageSnapshot,
@@ -186,7 +186,7 @@ export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
 export const stageSnapshotBatch = Effect.fn(
   "contentRelease.stageSnapshotBatch"
 )(function* (request: SnapshotBatchRequest) {
-  const runMutation = yield* MutationRunner;
+  const { runMutation } = yield* MutationRunner;
   yield* verifySnapshotBatch(request.family, request.snapshotId, request.rows);
   return yield* runMutation(
     refs.internal.contentRelease.snapshot.batch.stageSnapshotBatch,

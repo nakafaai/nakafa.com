@@ -35,7 +35,7 @@ export type Status = Schema.Schema.Type<typeof statusValidator>;
 /** Authenticates the frozen release and renderer identity shared by proof steps. */
 export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
   function* (manifestHash: string, releaseId: string) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const state = yield* runQuery(
       refs.internal.contentRelease.proof.read.state,
       {
@@ -68,7 +68,7 @@ export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
 /** Advances exact item verification from the durable server cursor. */
 export const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
   function* (releaseId: string, afterIndex: number) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     let cursor = afterIndex;
     while (true) {
       const page = yield* runMutation(
@@ -90,7 +90,7 @@ export const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
 export const verifyRouteCatalog = Effect.fn(
   "contentRelease.verifyRouteCatalog"
 )(function* (releaseId: string) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   let cursor: null | string = null;
   while (true) {
     const page: RouteCatalogPage = yield* runQuery(
@@ -117,7 +117,7 @@ export const verifyRouteCatalog = Effect.fn(
 export const verifyArtifactBatchProgram = Effect.fn(
   "contentRelease.verifyArtifactProofBatch"
 )(function* (manifestHash: string, releaseId: string, batchIndex: number) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const { renderer } = yield* loadProofIdentity(manifestHash, releaseId);
   const page = yield* runQuery(
     refs.internal.contentRelease.proof.read.artifactBatch,
@@ -144,7 +144,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
     releaseId: string,
     verifiedArtifacts: number
   ) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     const { release, state } = yield* loadProofIdentity(
       manifestHash,
       releaseId

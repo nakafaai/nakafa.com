@@ -100,7 +100,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (
     turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId" | "userId">
   ) {
-    const query = yield* QueryRunner;
+    const { runQuery: query } = yield* QueryRunner;
     const current = yield* query(refs.internal.nina.summaries.read, {
       chatId: turn.chatId,
     }).pipe(Effect.orDie);
@@ -153,12 +153,17 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     if (!summary) {
       return yield* new NinaSummaryError({ operation: "generate" });
     }
-    yield* (yield* MutationRunner)(refs.internal.nina.summaries.save, {
-      chatId: turn.chatId,
-      text: boundText(summary, NINA_BUDGET.summary, "Summary shortened."),
-      throughOrder: target,
-      usage: { input: usage.inputTokens ?? 0, output: usage.outputTokens ?? 0 },
-    }).pipe(Effect.orDie);
+    yield* (yield* MutationRunner)
+      .runMutation(refs.internal.nina.summaries.save, {
+        chatId: turn.chatId,
+        text: boundText(summary, NINA_BUDGET.summary, "Summary shortened."),
+        throughOrder: target,
+        usage: {
+          input: usage.inputTokens ?? 0,
+          output: usage.outputTokens ?? 0,
+        },
+      })
+      .pipe(Effect.orDie);
   },
   Effect.catchTag("NinaSummaryError", (error) =>
     Effect.logWarning("Nina summary unavailable", {

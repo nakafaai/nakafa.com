@@ -12,9 +12,12 @@ import { Effect } from "effect";
 /** A focused turn never answers without its rechecked, signed question. */
 const readFocus = Effect.fn("nina.instructions.focus")(
   function* (turnId: NinaTurnsDoc["_id"]) {
-    const source = yield* (yield* QueryRunner)(refs.internal.nina.focus.read, {
-      turnId,
-    });
+    const source = yield* (yield* QueryRunner).runQuery(
+      refs.internal.nina.focus.read,
+      {
+        turnId,
+      }
+    );
     if (!source) {
       return yield* new NinaGenerationError({ reason: "unknown" });
     }
@@ -37,7 +40,7 @@ export const readInstructions = Effect.fn("nina.instructions")(function* (
   url: string,
   runtime: NinaRuntime
 ) {
-  const query = yield* QueryRunner;
+  const { runQuery: query } = yield* QueryRunner;
   const { focus, learner, pageContent, summary } = yield* Effect.all(
     {
       focus: turn.page.nina.focus ? readFocus(turn._id) : Effect.undefined,
