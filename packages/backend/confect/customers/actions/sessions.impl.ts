@@ -25,7 +25,7 @@ const generateCheckoutLink = FunctionImpl.make(
       const { appUser } = yield* requireAuth();
       const appUserId = appUser._id;
       return yield* Effect.gen(function* () {
-        const runMutation = yield* MutationRunner;
+        const { runMutation } = yield* MutationRunner;
         const request = yield* validateCheckoutRequest(args);
         const requestMetadata = yield* Effect.tryPromise({
           try: () => ctx.meta.getRequestMetadata(),

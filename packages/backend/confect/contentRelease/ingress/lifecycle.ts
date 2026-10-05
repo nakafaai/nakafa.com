@@ -48,7 +48,7 @@ function verifyRequest(request: SignedRequest) {
 const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   release: SignedRequest["release"]
 ) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const envelope = yield* runQuery(refs.internal.contentRelease.envelope.get, {
     manifestHash: release.manifestHash,
     releaseId: release.manifest.releaseId,
@@ -70,7 +70,7 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
 export const advancePublication = Effect.fn(
   "contentRelease.advancePublication"
 )(function* (request: LifecycleRequest) {
-  const runMutation = yield* MutationRunner;
+  const { runMutation } = yield* MutationRunner;
   if (request.operation === "accept") {
     const value = yield* runMutation(
       refs.internal.contentRelease.accept.accept,

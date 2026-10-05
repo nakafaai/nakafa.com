@@ -35,7 +35,7 @@ const activeReleaseReference = refs.public.contentRelease.runtime.active.read;
 /** Reads public taxonomy from one release-pinned signed publication. */
 export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
   function* (locale: Locale = ACTIVE_APP_LOCALE_CODES[0]) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const before = yield* readReleasePin();
     const [articleCategories, inventories, quranResult] = yield* Effect.all([
       readArticleCategories(locale),
@@ -94,7 +94,7 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
 /** Reads every authenticated article category in one stable generation. */
 const readArticleCategories = Effect.fn("agent.readArticleCategories")(
   function* (locale: Locale) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const taxonomy = yield* runQuery(articleCategoriesReference, {
       appLocale: locale,
     }).pipe(
@@ -145,7 +145,7 @@ const readInventories = Effect.fn("agent.readInventories")(function* (
 const readLocaleInventory = Effect.fn("agent.readLocaleInventory")(function* (
   locale: Locale
 ) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const [articles, materials, tryout] = yield* Effect.all([
     runQuery(articleBucketsReference, {
       appLocale: locale,
@@ -199,7 +199,7 @@ const readLocaleInventory = Effect.fn("agent.readLocaleInventory")(function* (
 
 /** Reads the immutable active publication identity for pinning. */
 const readReleasePin = Effect.fn("agent.readReleasePin")(function* () {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   return yield* runQuery(activeReleaseReference, {}).pipe(
     Effect.mapError(
       (cause) =>

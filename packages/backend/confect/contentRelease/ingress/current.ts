@@ -36,7 +36,7 @@ export const decodeStoredBundle = Effect.fn(
 export const loadVerifiedRelease = Effect.fn(
   "contentRelease.loadVerifiedRelease"
 )(function* (releaseId: string) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const envelope = yield* runQuery(
     refs.internal.contentRelease.envelope.byRelease,
     {
@@ -98,7 +98,7 @@ const decodeCurrentRuntimeBundle = Effect.fn(
 export const readCurrentPublication = Effect.fn(
   "contentRelease.readCurrentPublication"
 )(function* () {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const stored = yield* runQuery(
     refs.internal.contentRelease.status.current,
     {}
@@ -160,7 +160,7 @@ export const readRecovery = Effect.fn("contentRelease.readRecovery")(
     readonly recoveryId: string;
     readonly releaseId: string;
   }) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const stored = yield* runQuery(
       refs.internal.contentRelease.recovery.lookup,
       request

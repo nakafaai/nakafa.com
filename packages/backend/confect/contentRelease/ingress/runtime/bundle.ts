@@ -24,7 +24,7 @@ type RuntimeBundleRequest = Extract<
 export const stageTryoutRuntimeBundle = Effect.fn(
   "contentRelease.stageTryoutRuntimeBundle"
 )(function* (request: RuntimeBundleRequest, activeKeyId: string) {
-  const runMutation = yield* MutationRunner;
+  const { runMutation } = yield* MutationRunner;
   const verified = yield* loadStageEnvelope(request.releaseId);
   const bundle = yield* verifySignedTryoutRuntimeBundle({
     bundle: request.bundle,

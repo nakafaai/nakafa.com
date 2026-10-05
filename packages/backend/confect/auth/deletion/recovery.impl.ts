@@ -46,7 +46,7 @@ const recoverAccountDeletion = FunctionImpl.make(
   "recoverAccountDeletion",
   Effect.fn("auth.deletion.recovery.recoverAccountDeletion")(function* (args) {
     const ctx = yield* ActionCtxService;
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     yield* recoverAccountDeletionProgram({
       authUserExists: tryUserCleanup(() =>
         authReader.getAnyUserById(ctx, args.authId)

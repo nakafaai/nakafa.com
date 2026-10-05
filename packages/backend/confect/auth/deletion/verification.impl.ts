@@ -70,8 +70,8 @@ const drainDeletedUserVerifications = FunctionImpl.make(
   Effect.fn("auth.deletion.verification.drainDeletedUserVerifications")(
     function* (args) {
       const ctx = yield* ActionCtxService;
-      const runMutation = yield* MutationRunner;
-      const runQuery = yield* QueryRunner;
+      const { runMutation } = yield* MutationRunner;
+      const { runQuery } = yield* QueryRunner;
       yield* drainDeletedUserVerificationsProgram({
         deletePage: (cursor) =>
           tryUserCleanup(() =>

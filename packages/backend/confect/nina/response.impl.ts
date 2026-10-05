@@ -21,7 +21,7 @@ const run = FunctionImpl.make(
   spec,
   "run",
   Effect.fn("nina.response.run")(function* (args) {
-    const mutate = yield* MutationRunner;
+    const { runMutation: mutate } = yield* MutationRunner;
     const turn = yield* mutate(refs.internal.nina.lifecycle.claim, args).pipe(
       Effect.orDie
     );
@@ -61,10 +61,9 @@ const present = FunctionImpl.make(
   spec,
   "present",
   Effect.fn("nina.response.present")(function* (args) {
-    const turn = yield* (yield* QueryRunner)(
-      refs.internal.nina.lifecycle.presentation,
-      args
-    ).pipe(Effect.orDie);
+    const turn = yield* (yield* QueryRunner)
+      .runQuery(refs.internal.nina.lifecycle.presentation, args)
+      .pipe(Effect.orDie);
     if (!turn) {
       return null;
     }

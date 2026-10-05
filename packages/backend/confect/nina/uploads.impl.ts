@@ -51,7 +51,7 @@ const save = FunctionImpl.make(
           message: "Choose a nonempty attachment no larger than 8 MiB.",
         });
       }
-      const mutate = yield* MutationRunner;
+      const { runMutation: mutate } = yield* MutationRunner;
       const uploadId = yield* mutate(refs.internal.nina.uploads.reserve, {});
       const ctx = yield* ActionCtx;
       yield* Effect.gen(function* () {

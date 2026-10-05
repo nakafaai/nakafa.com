@@ -13,7 +13,18 @@ type DependencyHold = ApprovedSpecs &
 
 export const CONTRACT_PACKAGE_VERSION = "0.45.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.0.0-rc.118";
+export const EFFECT_COHORT_VERSION = "4.0.1";
+/**
+ * Effect packages that only dependencies declare: the Confect CLI's platform
+ * packages and the Confect server's AI providers. An override keeps each one
+ * in the exact cohort.
+ */
+export const EFFECT_COHORT_OVERRIDES = [
+  "@effect/ai-openai-compat",
+  "@effect/ai-openrouter",
+  "@effect/platform-node",
+  "@effect/platform-node-shared",
+] as const;
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.0.2";
 /**
@@ -60,7 +71,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.47.1",
+    approved: "0.48.1",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -167,31 +178,41 @@ export const REGISTRY_REVIEWS = [
     "Mermaid 12 requires Safari 17.4 while Nakafa supports the Next.js Safari 16.4 browser floor.",
   ],
   [
-    "effect@rc",
-    "4.0.0-rc.118",
-    "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts 0.45.0 peers on RC118 exactly.",
+    "effect@latest",
+    EFFECT_COHORT_VERSION,
+    "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts peers on one exact Effect version.",
   ],
   [
-    "@effect/platform-node@rc",
-    "4.0.0-rc.118",
+    "@effect/platform-node@latest",
+    EFFECT_COHORT_VERSION,
     "The platform package must match the Effect cohort.",
   ],
   [
-    "@effect/platform-node-shared@rc",
-    "4.0.0-rc.118",
+    "@effect/platform-node-shared@latest",
+    EFFECT_COHORT_VERSION,
     "The transitive platform package must match the Effect cohort.",
   ],
   [
-    "@effect/vitest@rc",
-    "4.0.0-rc.118",
+    "@effect/vitest@latest",
+    EFFECT_COHORT_VERSION,
     "The test adapter must match the Effect cohort.",
   ],
   [
-    "@effect/tsgo@latest",
-    "0.47.1",
-    "Compiler patching moves with TypeScript and Effect; 0.47.0 targets the Effect RC118 cohort, and 0.47.1 lets the prepare step run effect-tsgo patch without the deprecated --force flag.",
+    "@effect/ai-openai-compat@latest",
+    EFFECT_COHORT_VERSION,
+    "The Confect server's transitive AI provider must match the Effect cohort.",
   ],
-  ["vitest@latest", "5.0.2", "The Effect RC118 adapter accepts Vitest 5."],
+  [
+    "@effect/ai-openrouter@latest",
+    EFFECT_COHORT_VERSION,
+    "The Confect server's transitive AI provider must match the Effect cohort.",
+  ],
+  [
+    "@effect/tsgo@latest",
+    "0.48.1",
+    "Compiler patching moves with TypeScript and Effect; 0.48 ships the standard libraries beside the patched compiler and adds per-export allow lists for unstable APIs.",
+  ],
+  ["vitest@latest", "5.0.2", "The Effect 4 test adapter requires Vitest 5."],
   [
     "@vitest/coverage-istanbul@latest",
     "5.0.2",

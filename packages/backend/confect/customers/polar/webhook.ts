@@ -45,8 +45,8 @@ function toPolarWebhookIoError(error: unknown) {
 export const upsertPolarCustomerWebhook = Effect.fn(
   "customers.polar.upsertWebhookCustomer"
 )(function* (customer: PolarCustomerSource) {
-  const runQuery = yield* QueryRunner;
-  const runMutation = yield* MutationRunner;
+  const { runQuery } = yield* QueryRunner;
+  const { runMutation } = yield* MutationRunner;
   const normalizedCustomer = yield* normalizeStoredCustomer(customer);
   const target = yield* runQuery(
     refs.internal.customers.queries.internal.customer.resolveWebhookTarget,
@@ -100,7 +100,7 @@ export const upsertPolarSubscriptionWebhook = Effect.fn(
   subscription: SubscriptionRecord,
   operation: SubscriptionWebhookOperation
 ) {
-  const runMutation = yield* MutationRunner;
+  const { runMutation } = yield* MutationRunner;
   const customer = yield* polarGateway.getCustomerById(subscription.customerId);
   if (!customer) {
     return "discarded";
@@ -133,7 +133,7 @@ export const upsertPolarSubscriptionWebhook = Effect.fn(
 const deletePolarCustomerWebhook = Effect.fn(
   "customers.polar.deleteWebhookCustomer"
 )(function* (polarCustomerId: string) {
-  const runMutation = yield* MutationRunner;
+  const { runMutation } = yield* MutationRunner;
   let hasMore = true;
   while (hasMore) {
     hasMore = yield* runMutation(

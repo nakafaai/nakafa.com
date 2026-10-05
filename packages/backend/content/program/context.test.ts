@@ -158,7 +158,7 @@ describe("contentRelease/program/context", () => {
       const t = yield* Confect.pipe(Effect.provide(confectLayer));
       yield* t.run(
         Effect.gen(function* () {
-          const result = yield* (yield* QueryRunner)(
+          const result = yield* (yield* QueryRunner).runQuery(
             refs.public.contentRelease.program.context,
             {
               appLocale: "en",
@@ -191,7 +191,7 @@ describe("contentRelease/program/context", () => {
               mappingRoute(),
             ]);
             expect(
-              yield* (yield* QueryRunner)(
+              yield* (yield* QueryRunner).runQuery(
                 refs.public.contentRelease.program.context,
                 {
                   appLocale: "en",

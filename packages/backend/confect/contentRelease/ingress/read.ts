@@ -31,8 +31,8 @@ type ReadRequest = Extract<
 /** Executes one authenticated bounded publication read or cleanup request. */
 export const readPublication = Effect.fn("contentRelease.readPublication")(
   function* (request: ReadRequest) {
-    const runQuery = yield* QueryRunner;
-    const runMutation = yield* MutationRunner;
+    const { runQuery } = yield* QueryRunner;
+    const { runMutation } = yield* MutationRunner;
     if (request.operation === "current") {
       return {
         ok: true,

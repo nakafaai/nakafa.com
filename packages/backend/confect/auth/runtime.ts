@@ -158,7 +158,7 @@ const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
     const attemptId = yield* Schema.decodeUnknownEffect(
       Schema.String.check(Schema.isUUID())
     )(rawAttemptId).pipe(Effect.mapError(deletionUnavailableError));
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     yield* verifyAccountDeletionPreparation(
       runMutation(refs.internal.auth.deletion.claimAccountDeletion, {
         attemptId,

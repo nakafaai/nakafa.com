@@ -23,9 +23,9 @@
     "verify:featured-renderer": "node --env-file-if-exists=.env.local --import tsx --conditions=import --conditions=react-server e2e/featured/renderer.mts"
   },
   "dependencies": {
-    "@confect/core": "10.0.0-next.25",
-    "@confect/js": "10.0.0-next.25",
-    "@confect/react": "10.0.0-next.25",
+    "@confect/core": "10.0.0",
+    "@confect/js": "10.0.0",
+    "@confect/react": "10.0.0",
     "@convex-dev/agent": "0.7.3",
     "@convex-dev/better-auth": "0.12.5",
     "@hugeicons/core-free-icons": "^4.3.5",

@@ -41,7 +41,7 @@ export const validateReleaseRenderer = Effect.fn(
 /** Loads and verifies the release envelope owning one staged batch. */
 export const loadStageEnvelope = Effect.fn("contentRelease.loadStageEnvelope")(
   function* (releaseId: string) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const stored = yield* runQuery(
       refs.internal.contentRelease.envelope.byRelease,
       {

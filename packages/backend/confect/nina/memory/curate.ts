@@ -61,12 +61,11 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
   function* (
     turn: Pick<NinaTurnsDoc, "chatId" | "promptMessageId" | "userId">
   ) {
-    const learner = yield* (yield* QueryRunner)(
-      refs.internal.nina.memory.read,
-      {
+    const learner = yield* (yield* QueryRunner)
+      .runQuery(refs.internal.nina.memory.read, {
         userId: turn.userId,
-      }
-    ).pipe(Effect.orDie);
+      })
+      .pipe(Effect.orDie);
     const { memory } = learner;
     if (!memory) {
       return;
@@ -110,13 +109,18 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
         ),
       catch: () => new NinaMemoryError({ operation: "generate" }),
     });
-    yield* (yield* MutationRunner)(refs.internal.nina.memory.apply, {
-      changes: output,
-      chatId: turn.chatId,
-      memory: { id: memory.id, revision: memory.revision },
-      usage: { input: usage.inputTokens ?? 0, output: usage.outputTokens ?? 0 },
-      userId: turn.userId,
-    }).pipe(Effect.orDie);
+    yield* (yield* MutationRunner)
+      .runMutation(refs.internal.nina.memory.apply, {
+        changes: output,
+        chatId: turn.chatId,
+        memory: { id: memory.id, revision: memory.revision },
+        usage: {
+          input: usage.inputTokens ?? 0,
+          output: usage.outputTokens ?? 0,
+        },
+        userId: turn.userId,
+      })
+      .pipe(Effect.orDie);
   },
   Effect.catchTag("NinaMemoryError", (error) =>
     Effect.logWarning("Nina memory unavailable", {

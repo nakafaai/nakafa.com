@@ -46,7 +46,7 @@ export const decodeProtectedRequest = Effect.fn(
 export const resolveProtectedRuntime = Effect.fn(
   "contentRelease.resolveProtectedRuntime"
 )(function* (request: ProtectedContentRuntimeRequest) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const row = yield* runQuery(
     refs.internal.contentRelease.runtime.tryout.internal.read,
     {

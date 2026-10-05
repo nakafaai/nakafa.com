@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
+  EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
   VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
@@ -81,6 +82,8 @@ function validInput(): PolicyInput {
         vitest: VITEST_COHORT_VERSION,
       },
       overrides: {
+        "@effect/ai-openai-compat": EFFECT_COHORT_VERSION,
+        "@effect/ai-openrouter": EFFECT_COHORT_VERSION,
         "@effect/platform-node": EFFECT_COHORT_VERSION,
         "@effect/platform-node-shared": EFFECT_COHORT_VERSION,
       },
@@ -288,22 +291,20 @@ describe("dependency policy validation", () => {
       }),
       problem: `The Effect Vitest catalog must match Effect ${EFFECT_COHORT_VERSION}.`,
     },
-    ...["@effect/platform-node", "@effect/platform-node-shared"].map(
-      (dependency) => ({
-        name: `a ${dependency} override drift`,
-        change: (input: PolicyInput) => ({
-          ...input,
-          workspace: {
-            ...input.workspace,
-            overrides: {
-              ...input.workspace.overrides,
-              [dependency]: "4.0.0-rc.110",
-            },
+    ...EFFECT_COHORT_OVERRIDES.map((dependency) => ({
+      name: `a ${dependency} override drift`,
+      change: (input: PolicyInput) => ({
+        ...input,
+        workspace: {
+          ...input.workspace,
+          overrides: {
+            ...input.workspace.overrides,
+            [dependency]: "4.0.0-rc.110",
           },
-        }),
-        problem: `The ${dependency} override must match Effect ${EFFECT_COHORT_VERSION}.`,
-      })
-    ),
+        },
+      }),
+      problem: `The ${dependency} override must match Effect ${EFFECT_COHORT_VERSION}.`,
+    })),
     {
       name: "a TypeScript catalog drift",
       change: (input) => ({

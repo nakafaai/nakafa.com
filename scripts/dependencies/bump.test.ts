@@ -168,7 +168,7 @@ describe("dependency updates", () => {
   it.effect("reports registry failures and unresolved updates together", () =>
     Effect.gen(function* () {
       const sharedPlatformReview = REGISTRY_REVIEWS.find(
-        ([registry]) => registry === "@effect/platform-node-shared@rc"
+        ([registry]) => registry === "@effect/platform-node-shared@latest"
       );
       assert.isDefined(sharedPlatformReview);
       const result = yield* runScenario({
@@ -183,13 +183,13 @@ describe("dependency updates", () => {
           if (args[1] === "react@latest") {
             return { exitCode: 1, stderr: "", stdout: "" };
           }
-          if (args[1] === "effect@rc") {
+          if (args[1] === "effect@latest") {
             return { exitCode: 2, stderr: "registry unavailable", stdout: "" };
           }
-          if (args[1] === "@effect/platform-node@rc") {
+          if (args[1] === "@effect/platform-node@latest") {
             return { exitCode: 0, stderr: "", stdout: "{" };
           }
-          if (args[1] === "@effect/platform-node-shared@rc") {
+          if (args[1] === "@effect/platform-node-shared@latest") {
             return { exitCode: 0, stderr: "", stdout: '"99.0.0"' };
           }
           return reviewedDependencies(args);
@@ -200,13 +200,13 @@ describe("dependency updates", () => {
       assert.deepStrictEqual(result.errors, [
         "Unable to inspect reviewed dependency react@latest.\n" +
           "registry unavailable\n" +
-          "@effect/platform-node@rc returned invalid registry metadata.\n" +
-          `@effect/platform-node-shared@rc is now 99.0.0; last reviewed ${sharedPlatformReview[1]}.\n` +
+          "@effect/platform-node@latest returned invalid registry metadata.\n" +
+          `@effect/platform-node-shared@latest is now 99.0.0; last reviewed ${sharedPlatformReview[1]}.\n` +
           "Routine dependencies remain outdated: unreviewed-library.\n",
       ]);
       assert.ok(
         result.output.some((message) =>
-          message.startsWith("@effect/platform-node-shared@rc: reviewed")
+          message.startsWith("@effect/platform-node-shared@latest: reviewed")
         )
       );
     })

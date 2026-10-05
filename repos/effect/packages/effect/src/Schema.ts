@@ -77,7 +77,7 @@ import * as SchemaTransformation from "./SchemaTransformation.ts"
 import type { StandardJSONSchemaV1, StandardSchemaV1 } from "./StandardSchema.ts"
 import type { Assign, Lambda, Mutable, Simplify } from "./Struct.ts"
 import * as Struct_ from "./Struct.ts"
-import type { RequiredKeys, UnionToIntersection } from "./Types.ts"
+import type { IsUnion, RequiredKeys } from "./Types.ts"
 import type { Unify } from "./Unify.ts"
 
 const TypeId = InternalMake.TypeId
@@ -5057,14 +5057,19 @@ export function refine<S extends Constraint, T extends S["Type"]>(
   return (schema: S): refine<T, S> =>
     make(SchemaAST.appendChecks(schema.ast, [SchemaAST.makeFilterByGuard(refinement, annotations)]), { schema })
 }
-type DistributeBrands<B> = UnionToIntersection<B extends infer U extends string ? Brand.Brand<U> : never>
+// A concrete key requires a property; broad and open template keys do not.
+type EnsureSingleBrandKey<K extends PropertyKey> = IsUnion<K> extends false
+  ? {} extends Record<K, unknown> ? never : unknown
+  : never
+// Collect all keys, including those not shared by every union member.
+type FromBrandKeys<A extends Brand.Brand<any>> = A extends unknown ? Brand.Brand.Keys<A> : never
 /**
  * Type-level representation returned by {@link brand}.
  *
  * @category branding
  * @since 3.10.0
  */
-export interface brand<S extends Constraint, B> extends
+export interface brand<S extends Constraint, B extends string> extends
   BottomLazy<
     S["ast"],
     brand<S, B>,
@@ -5076,19 +5081,19 @@ export interface brand<S extends Constraint, B> extends
     S["~encoded.optionality"]
   >
 {
-  readonly "Type": S["Type"] & DistributeBrands<B>
+  readonly "Type": S["Type"] & Brand.Brand<B>
   readonly "Encoded": S["Encoded"]
   readonly "DecodingServices": S["DecodingServices"]
   readonly "EncodingServices": S["EncodingServices"]
   readonly "~type.make.in": S["~type.make.in"]
-  readonly "~type.make": S["Type"] & DistributeBrands<B>
-  readonly "Iso": S["Type"] & DistributeBrands<B>
+  readonly "~type.make": S["Type"] & Brand.Brand<B>
+  readonly "Iso": S["Type"] & Brand.Brand<B>
   readonly schema: S
   readonly identifier: string
 }
 /**
- * Adds a nominal brand to a schema, intersecting the output type with
- * `Brand.Brand<B>` to prevent accidental mixing of structurally identical types.
+ * Intersects a schema's output type with `Brand.Brand<B>` to prevent accidental
+ * mixing of structurally identical types.
  *
  * **When to use**
  *
@@ -5097,31 +5102,52 @@ export interface brand<S extends Constraint, B> extends
  *
  * **Gotchas**
  *
- * `brand` adds brand metadata and narrows the TypeScript output type, but it
- * does not add runtime checks.
+ * - `identifier` must be a single concrete string literal. Widened strings,
+ *   unions, and open template literal types are rejected.
+ * - `brand` only narrows the TypeScript output type. It does not change the
+ *   schema's runtime AST or add runtime checks.
+ * - Schema representations and generated schema code omit the brand. Reapply
+ *   `brand` after rebuilding or generating a schema when the nominal type is
+ *   still required.
  *
- * @see {@link fromBrand} for applying a Brand constructor's checks along with the brand tag
+ * @see {@link fromBrand} for applying a Brand constructor's checks along with its branded type
  *
  * @category branding
  * @since 3.10.0
  */
-export function brand<B extends string>(identifier: B) {
+export function brand<B extends string>(identifier: B & EnsureSingleBrandKey<B>) {
   return <S extends ConstraintRebuildable>(schema: S): brand<S["Rebuild"], B> =>
-    make(SchemaAST.brand(schema.ast, identifier), { schema, identifier })
+    make(schema.ast, { schema, identifier })
 }
 /**
  * Creates a branded schema from a {@link Brand.Constructor}, applying the
- * constructor's checks and brand tag to the underlying schema.
+ * constructor's checks and branded type to the underlying schema.
+ *
+ * **When to use**
+ *
+ * Use to reuse the checks from a constructor with one concrete brand key.
+ *
+ * **Gotchas**
+ *
+ * `identifier` must match the constructor's only brand key. Apply `fromBrand`
+ * repeatedly to compose distinct brands, and use {@link Union} to represent
+ * alternatives.
+ *
+ * @see {@link brand} for adding a brand without constructor checks
  *
  * @category branding
  * @since 3.10.0
  */
-export function fromBrand<A extends Brand.Brand<any>>(identifier: string, ctor: Brand.Constructor<A>) {
+export function fromBrand<A extends Brand.Brand<any>>(
+  identifier: Brand.Brand.Keys<A> & string,
+  ctor: Brand.Constructor<A> & EnsureSingleBrandKey<FromBrandKeys<A>>
+) {
+  type B = Brand.Brand.Keys<A> & string
   return <S extends Top & { readonly "Type": Brand.Brand.Unbranded<A> }>(
     self: S
-  ): brand<S["Rebuild"], Brand.Brand.Keys<A>> => {
-    return (ctor.checks ? self.check(...ctor.checks) : self).pipe(brand(identifier))
-  }
+  ): brand<S["Rebuild"], B> =>
+    // The constructor already guarantees a single concrete brand key.
+    (ctor.checks ? self.check(...ctor.checks) : self).pipe(brand<B>(identifier as B & EnsureSingleBrandKey<B>))
 }
 /**
  * Type-level representation returned by {@link middlewareDecoding}.
@@ -15242,6 +15268,8 @@ export function toEquivalence<T>(schema: Schema<T>): Equivalence.Equivalence<T> 
  * Use {@link toType} before this function to represent the type side instead.
  * The optional reference policy controls which candidates are extracted into the document's reference table. By
  * default, only candidates with a resolved identifier become references; recursive candidates always require one.
+ * TypeScript-only distinctions such as those added by {@link brand} are not
+ * part of the schema AST and are therefore omitted.
  *
  * @see {@link SchemaRepresentation.toRepresentation} for converting a `SchemaAST.AST` directly
  *
@@ -16045,8 +16073,8 @@ export declare namespace Annotations {
   }
   /**
    * Base annotations shared by all composite schema nodes. Extends
-   * {@link Documentation} with error messages, branding, and arbitrary
-   * generation hooks. {@link Declaration} and other annotation
+   * {@link Documentation} with error messages and arbitrary generation hooks.
+   * {@link Declaration} and other annotation
    * interfaces build on top of this.
    *
    * @category models
@@ -16084,10 +16112,6 @@ export declare namespace Annotations {
      * filter/refinement instead.
      */
     readonly identifier?: string | undefined
-    /**
-     * Accumulated brands when multiple brands are added with `Schema.brand`.
-     */
-    readonly brands?: ReadonlyArray<string> | undefined
   }
   /**
    * Helpers for projecting declaration type-parameter schemas into decoded or

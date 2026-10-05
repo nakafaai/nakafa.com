@@ -97,7 +97,7 @@ describe("customer synchronization", () => {
     const decoded = await t.action((ctx) =>
       Effect.runPromise(
         Effect.gen(function* () {
-          const runAction = yield* ActionRunner.ActionRunner;
+          const { runAction } = yield* ActionRunner.ActionRunner;
           return yield* runAction(
             refs.internal.customers.actions.internal.syncCustomer,
             {

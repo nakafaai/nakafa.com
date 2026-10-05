@@ -22,7 +22,7 @@ const drainDeletedUserData = FunctionImpl.make(
   spec,
   "drainDeletedUserData",
   Effect.fn("auth.cleanup.drainDeletedUserData")(function* (args) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     yield* drainDeletedUserDataProgram(
       runMutation(refs.internal.auth.cleanup.cleanupDeletedUser, {
         userId: args.userId,

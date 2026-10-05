@@ -922,7 +922,7 @@ describe("Effect.partition", () => {
       [1, 2, 3],
       (n) => n % 2 === 0 ? Effect.fail(`${n}`) : Effect.succeed(n)
     )
-    expect(result).type.toBe<Effect.Effect<[excluded: Array<string>, satisfying: Array<number>], never, never>>()
+    expect(result).type.toBe<Effect.Effect<[passes: Array<number>, fails: Array<string>], never, never>>()
   })
 
   it("data-last", () => {
@@ -930,7 +930,7 @@ describe("Effect.partition", () => {
       [1, 2, 3],
       Effect.partition((n) => n % 2 === 0 ? Effect.fail(n) : Effect.succeed(`${n}`))
     )
-    expect(result).type.toBe<Effect.Effect<[excluded: Array<number>, satisfying: Array<string>], never, never>>()
+    expect(result).type.toBe<Effect.Effect<[passes: Array<string>, fails: Array<number>], never, never>>()
   })
 })
 
@@ -1458,6 +1458,26 @@ describe("Effect.cachedWithTTL", () => {
     }))
 
     expect(cached).type.toBe<Effect.Effect<Effect.Effect<number, "err-2", "dep-2">>>()
+  })
+})
+
+describe("Effect.cachedInvalidateWithTTL", () => {
+  it("data-first", () => {
+    const cached = Effect.cachedInvalidateWithTTL(number, (exit) => {
+      expect(exit).type.toBe<Exit.Exit<number, "err-2">>()
+      return Exit.isSuccess(exit) ? Duration.seconds(exit.value) : 0
+    })
+
+    expect(cached).type.toBe<Effect.Effect<[Effect.Effect<number, "err-2", "dep-2">, Effect.Effect<void>]>>()
+  })
+
+  it("data-last", () => {
+    const cached = number.pipe(Effect.cachedInvalidateWithTTL((exit) => {
+      expect(exit).type.toBe<Exit.Exit<number, "err-2">>()
+      return Exit.isSuccess(exit) ? "1 second" : 0
+    }))
+
+    expect(cached).type.toBe<Effect.Effect<[Effect.Effect<number, "err-2", "dep-2">, Effect.Effect<void>]>>()
   })
 })
 
