@@ -1,10 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
+import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import type { NinaFocusSource } from "@repo/backend/confect/nina/contract/focus";
 import {
   formatFocusPrompt,
   formatFocusTaskPrompt,
 } from "@repo/backend/confect/nina/prompt/focus";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const choice = {
   questionOrder: 3,
@@ -20,7 +21,54 @@ const choice = {
     ],
   },
   selection: { kind: "single-choice", optionKey: "b" },
-  isCorrect: false,
+  outcome: { status: "incorrect" },
+} satisfies NinaFocusSource;
+
+const indonesian = DeliveryLanguageSchema.make("id");
+const label = (id: string) => ({ de: `${id} (de)`, en: `${id} (en)`, id });
+const rubric = {
+  ...choice,
+  responseSpec: {
+    criteria: [
+      {
+        criterionKey: "criterion-1",
+        label: label("Langkah lengkap"),
+        levels: [
+          {
+            label: label("Tidak ada"),
+            levelKey: "level-1",
+            order: 1,
+            points: 0,
+          },
+          { label: label("Lengkap"), levelKey: "level-2", order: 2, points: 2 },
+        ],
+        order: 1,
+      },
+      {
+        criterionKey: "criterion-2",
+        finalAnswer: {
+          acceptedAnswers: ["4", "empat"],
+          collapseWhitespace: true,
+          ignoreCase: true,
+          kind: "text",
+        },
+        label: label("Hasil akhir"),
+        levels: [
+          { label: label("Salah"), levelKey: "level-1", order: 1, points: 0 },
+          { label: label("Benar"), levelKey: "level-2", order: 2, points: 1 },
+        ],
+        order: 2,
+      },
+    ],
+    kind: "rubric",
+    language: indonesian,
+  },
+  selection: {
+    finalAnswers: [{ criterionKey: "criterion-2", text: "4" }],
+    kind: "rubric",
+    text: "Dua ditambah dua.",
+  },
+  outcome: { status: "pending" },
 } satisfies NinaFocusSource;
 
 describe("formatFocusPrompt", () => {
@@ -59,7 +107,7 @@ describe("formatFocusPrompt", () => {
             ],
           },
           selection: { kind: "multiple-choice", optionKeys: ["a", "b"] },
-          isCorrect: true,
+          outcome: { status: "correct" },
         });
 
         expect(prompt).toContain("- learner result: answered correctly");
@@ -103,14 +151,17 @@ describe("formatFocusPrompt", () => {
         });
 
         expect(prompt).toContain(
-          [
-            "- Dua ditambah dua adalah empat.",
-            "  - correct category: Benar",
-            "  - learner's category: Benar",
-            "- Dua kali dua adalah lima.",
-            "  - correct category: Salah",
-            "  - learner's category: no answer",
-          ].join("\n")
+          Arr.join(
+            [
+              "- Dua ditambah dua adalah empat.",
+              "  - correct category: Benar",
+              "  - learner's category: Benar",
+              "- Dua kali dua adalah lima.",
+              "  - correct category: Salah",
+              "  - learner's category: no answer",
+            ],
+            "\n"
+          )
         );
       })
   );
@@ -132,16 +183,19 @@ describe("formatFocusPrompt", () => {
           ],
         },
         selection: null,
-        isCorrect: null,
+        outcome: null,
       });
 
       expect(prompt).toContain("- learner result: not answered");
       expect(prompt).toContain(
-        [
-          "- Dua ditambah dua adalah empat.",
-          "  - correct category: Benar",
-          "  - learner's category: no answer",
-        ].join("\n")
+        Arr.join(
+          [
+            "- Dua ditambah dua adalah empat.",
+            "  - correct category: Benar",
+            "  - learner's category: no answer",
+          ],
+          "\n"
+        )
       );
     })
   );
@@ -151,11 +205,107 @@ describe("formatFocusPrompt", () => {
       const prompt = yield* formatFocusPrompt({
         ...choice,
         selection: null,
-        isCorrect: null,
+        outcome: null,
       });
 
       expect(prompt).toContain("- learner result: not answered");
       expect(prompt).not.toContain("learner's choice");
+    })
+  );
+
+  it.effect("states a short-answer key beside the learner's typed answer", () =>
+    Effect.gen(function* () {
+      const numeric = yield* formatFocusPrompt({
+        ...choice,
+        responseSpec: {
+          key: {
+            acceptsFractions: false,
+            kind: "number",
+            tolerance: { kind: "absolute", value: "0.1" },
+            value: "4",
+          },
+          kind: "short-answer",
+          language: indonesian,
+        },
+        selection: { kind: "short-answer", number: "4.5", text: "4,5" },
+        outcome: { status: "incorrect" },
+      });
+      const blank = yield* formatFocusPrompt({
+        ...choice,
+        responseSpec: {
+          key: {
+            acceptsFractions: false,
+            kind: "number",
+            value: "4",
+          },
+          kind: "short-answer",
+          language: indonesian,
+        },
+        selection: null,
+        outcome: null,
+      });
+
+      expect(numeric).toContain(
+        "## Answer Key\n\n- correct number: 4 (absolute tolerance 0.1)\n- learner's answer: 4,5"
+      );
+      expect(blank).toContain(
+        "- correct number: 4\n- learner's answer: no answer"
+      );
+    })
+  );
+
+  it.effect(
+    "lists rubric criteria, final-answer keys, and the written answer",
+    () =>
+      Effect.gen(function* () {
+        const prompt = yield* formatFocusPrompt(rubric);
+
+        expect(prompt).toContain(
+          "- learner result: answered, awaiting grading"
+        );
+        expect(prompt).toContain(
+          Arr.join(
+            [
+              "## Rubric",
+              "",
+              "- Langkah lengkap",
+              "  - 0 points: Tidak ada",
+              "  - 2 points: Lengkap",
+              "- Hasil akhir",
+              "  - 0 points: Salah",
+              "  - 1 points: Benar",
+              "  - accepted answers: 4; empat",
+              "  - learner's final answer: 4",
+              "",
+              "## Learner's Written Answer",
+              "",
+              "Dua ditambah dua.",
+            ],
+            "\n"
+          )
+        );
+      })
+  );
+
+  it.effect("reports partial credit and an unanswered rubric", () =>
+    Effect.gen(function* () {
+      const partial = yield* formatFocusPrompt({
+        ...rubric,
+        selection: { finalAnswers: [], kind: "rubric", text: " " },
+        outcome: { points: 1, status: "partial" },
+      });
+      const unanswered = yield* formatFocusPrompt({
+        ...rubric,
+        selection: null,
+        outcome: null,
+      });
+
+      expect(partial).toContain(
+        "- learner result: partially correct, earning 1 points"
+      );
+      expect(partial).toContain("  - learner's final answer: no answer");
+      expect(partial).toContain("no written answer");
+      expect(unanswered).toContain("no written answer");
     })
   );
 });

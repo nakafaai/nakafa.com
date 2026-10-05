@@ -187,6 +187,13 @@ describe("test ownership policy", () => {
       files: { "apps/web/store.ts": "export const store = new Map();\n" },
     },
     {
+      category: "a gateway client outside its module",
+      files: {
+        "packages/core/model.ts":
+          'import { createGateway } from "@ai-sdk/gateway";\n',
+      },
+    },
+    {
       category: "typeof-object narrowing",
       files: {
         "packages/core/guard.ts":

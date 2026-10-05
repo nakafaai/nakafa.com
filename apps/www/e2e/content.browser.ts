@@ -7,6 +7,11 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/browser-context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import {
+  expectSingleLink,
+  readServerDocument,
+  type ServerDocument,
+} from "@/e2e/support/crawler";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const APP_ORIGIN = "https://nakafa.com";
@@ -82,23 +87,14 @@ const isArticleDocument = Schema.is(
 
 /** Reads the page's one article document and holds it to the published contract. */
 const readArticleJsonLd = Effect.fn("NakafaE2E.readArticleJsonLd")(function* (
-  page: Page,
+  served: ServerDocument,
   href: string
 ) {
   const { ArticleJsonLdSchema } = yield* Effect.tryPromise({
     catch: () => contentSeoError(href, "article JSON-LD contract"),
     try: () => import("@repo/seo/json-ld/article"),
   });
-  const scripts = yield* Effect.tryPromise({
-    catch: () => contentSeoError(href, "JSON-LD scripts"),
-    try: () =>
-      page
-        .locator('script[type="application/ld+json"]')
-        .evaluateAll((elements) =>
-          elements.map((element) => element.textContent ?? "")
-        ),
-  });
-  const documents = yield* Effect.forEach(scripts, (text) =>
+  const documents = yield* Effect.forEach(served.jsonLd, (text) =>
     decodeJsonText(text).pipe(
       Effect.mapError(() => contentSeoError(href, "JSON-LD syntax"))
     )
@@ -118,31 +114,21 @@ const readArticleJsonLd = Effect.fn("NakafaE2E.readArticleJsonLd")(function* (
 
 /** Proves the page's structured data names this page as its reader sees it. */
 const expectArticleJsonLd = Effect.fn("NakafaE2E.expectArticleJsonLd")(
-  function* (page: Page, route: LocalizedContentRoute) {
-    const [article, breadcrumb] = yield* readArticleJsonLd(page, route.href);
+  function* (page: Page, route: LocalizedContentRoute, served: ServerDocument) {
+    const [article, breadcrumb] = yield* readArticleJsonLd(served, route.href);
+    // The headline must name the page as its reader sees it.
     const heading = yield* Effect.promise(() =>
       page.getByRole("heading", { level: 1 }).textContent()
-    );
-    const rendered = yield* Effect.promise(() =>
-      page.evaluate(() => ({
-        description: document
-          .querySelector('meta[name="description"]')
-          ?.getAttribute("content"),
-        image: document
-          .querySelector('meta[property="og:image"]')
-          ?.getAttribute("content"),
-        language: document.documentElement.lang,
-      }))
     );
     const [home] = breadcrumb.itemListElement;
     const current = breadcrumb.itemListElement.at(-1);
     yield* Effect.sync(() => {
       expect(article.url).toBe(`${APP_ORIGIN}${route.href}`);
       expect(article.headline).toBe(heading);
-      expect(article.description).toBe(rendered.description);
-      expect(article.image).toBe(rendered.image);
+      expect(article.description).toBe(served.description);
+      expect(article.image).toBe(served.image);
       expect(article.inLanguage).toBe(route.locale);
-      expect(rendered.language).toBe(route.locale);
+      expect(served.language).toBe(route.locale);
       expect(home?.item).toBe(`${APP_ORIGIN}/${route.locale}`);
       expect(current?.name).toBe(heading);
     });
@@ -218,44 +204,34 @@ const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
   }
 );
 
-const expectSingleLink = Effect.fn("NakafaE2E.expectSingleLink")(function* (
-  page: Page,
-  selector: string,
-  href: string
-) {
-  const link = page.locator(selector);
-  yield* Effect.promise(() => expect(link).toHaveCount(1));
-  yield* Effect.promise(() => expect(link).toHaveAttribute("href", href));
-});
-
 const expectCanonicalAlternates = Effect.fn(
   "NakafaE2E.expectCanonicalAlternates"
 )(function* (
-  page: Page,
+  served: ServerDocument,
   route: LocalizedContentRoute,
   routes: readonly LocalizedContentRoute[]
 ) {
-  yield* expectSingleLink(
-    page,
-    'link[rel="canonical"]',
-    `${APP_ORIGIN}${route.href}`
-  );
-  for (const alternate of routes) {
-    yield* expectSingleLink(
-      page,
-      `link[rel="alternate"][hreflang="${alternate.locale}"]`,
-      `${APP_ORIGIN}${alternate.href}`
-    );
-  }
   const englishRoute = routes.find((alternate) => alternate.locale === "en");
   if (!englishRoute) {
     return yield* contentSeoError(route.href, "x-default alternate");
   }
-  yield* expectSingleLink(
-    page,
-    'link[rel="alternate"][hreflang="x-default"]',
-    `${APP_ORIGIN}${englishRoute.href}`
-  );
+  yield* Effect.sync(() => {
+    expectSingleLink(served, "canonical", null, `${APP_ORIGIN}${route.href}`);
+    for (const alternate of routes) {
+      expectSingleLink(
+        served,
+        "alternate",
+        alternate.locale,
+        `${APP_ORIGIN}${alternate.href}`
+      );
+    }
+    expectSingleLink(
+      served,
+      "alternate",
+      "x-default",
+      `${APP_ORIGIN}${englishRoute.href}`
+    );
+  });
 });
 
 const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
@@ -275,8 +251,11 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
     expect(html).toMatch(DOCUMENT_TITLE_PATTERN);
     expect(html).toMatch(DOCUMENT_SECTION_PATTERN);
   });
-  yield* expectCanonicalAlternates(page, route, group.routes);
-  const article = yield* expectArticleJsonLd(page, route);
+  // Crawlers read the HTML the server returns, so the head links and the
+  // structured data are held to that document, not to the hydrating page.
+  const served = yield* readServerDocument(page, html);
+  yield* expectCanonicalAlternates(served, route, group.routes);
+  const article = yield* expectArticleJsonLd(page, route, served);
   yield* expectTruthfulDates(page, route, article);
 
   if (group.kind !== "material") {

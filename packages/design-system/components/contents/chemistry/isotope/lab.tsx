@@ -10,17 +10,16 @@ import {
 } from "@repo/design-system/components/contents/chemistry/isotope/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -65,13 +64,10 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
 
-      <CardContent className="flex flex-col gap-4">
+      <VisualCardBody className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseIsotope}
           gridColumns="3"
@@ -137,9 +133,9 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
             />
           </dl>
         </div>
-      </CardContent>
+      </VisualCardBody>
 
-      <CardFooter className="border-t">
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <IsotopeCount
             label={labels.protons}
@@ -151,8 +147,9 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
           />
           <IsotopeCount label={labels.neutrons} value={selectedLabels.note} />
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

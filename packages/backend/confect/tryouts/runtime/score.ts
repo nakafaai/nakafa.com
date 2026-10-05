@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/lib/attempts";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
+import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
 import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
@@ -22,7 +23,8 @@ import {
 import type { TryoutResponseIndex } from "@repo/backend/confect/tryouts/runtime/response";
 import {
   type AttemptScore,
-  scoreRawAnswers,
+  readScoredAnswers,
+  scoreAnswers,
 } from "@repo/backend/confect/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/confect/tryouts/score";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -106,7 +108,7 @@ export const requireOwnedAttempt = Effect.fn(
   return attempt;
 });
 
-/** Counts response answers and correctness for a section or attempt. */
+/** Counts complete answers and correct outcomes for a section or attempt. */
 export function summarizeResponses(responses: readonly TryoutResponse[]) {
   return responses.reduce(
     (summary, response) => {
@@ -115,7 +117,9 @@ export function summarizeResponses(responses: readonly TryoutResponse[]) {
       }
       return {
         answeredCount: summary.answeredCount + 1,
-        correctAnswers: summary.correctAnswers + (response.isCorrect ? 1 : 0),
+        correctAnswers:
+          summary.correctAnswers +
+          (readOutcome(response).status === "correct" ? 1 : 0),
       };
     },
     {
@@ -125,7 +129,7 @@ export function summarizeResponses(responses: readonly TryoutResponse[]) {
   );
 }
 
-/** Scores one terminal section with its parent attempt's frozen strategy. */
+/** Scores the placements of one section or attempt with its frozen strategy. */
 export const scoreTryoutSection = Effect.fn("tryouts.runtime.scoreSection")(
   function* (args: {
     attempt: TryoutAttempt;
@@ -135,20 +139,19 @@ export const scoreTryoutSection = Effect.fn("tryouts.runtime.scoreSection")(
     totalQuestions: number;
   }) {
     yield* validateScoreSource(args.attempt, args.source);
+    const answers = readScoredAnswers(
+      args.attempt.sectionSnapshots,
+      args.placements,
+      args.responses
+    );
     if (args.source.kind === "irt") {
-      return yield* scoreIrt({
-        placements: args.placements,
-        responses: args.responses,
-        source: args.source.irt,
-        totalQuestions: args.totalQuestions,
-      });
+      return yield* scoreIrt(answers, args.source.irt, args.totalQuestions);
     }
-    const { correctAnswers } = summarizeResponses(args.responses);
-    return scoreRawAnswers({
-      correctAnswers,
-      scoringStrategy: args.source.scoringStrategy,
-      totalQuestions: args.totalQuestions,
-    });
+    return yield* scoreAnswers(
+      answers,
+      args.source.scoringStrategy,
+      args.totalQuestions
+    );
   }
 );
 
@@ -182,12 +185,12 @@ export const finalizeAttemptScore = Effect.fn(
       message: "Try-out attempt is not active.",
     });
   }
-  const responses = [...args.responseIndex.responses.values()];
-  const score = yield* scoreAttempt({
+  const score = yield* scoreTryoutSection({
     attempt: args.attempt,
     placements: args.responseIndex.placements,
-    responses,
+    responses: [...args.responseIndex.responses.values()],
     source: args.source,
+    totalQuestions: args.attempt.totalQuestions,
   });
   const owner = readAttemptScoreOwner(args.attempt);
   const scoreId = yield* writer
@@ -230,45 +233,6 @@ function readAttemptScoreOwner(attempt: TryoutAttempt): AttemptScoreOwner {
     setIdentity: attempt.setIdentity,
     tryoutSnapshotId: attempt.tryoutSnapshotId,
   };
-}
-
-/** Scores one attempt with the scoring strategy declared by its set. */
-const scoreAttempt = Effect.fn("tryouts.runtime.scoreAttempt")(
-  function* (args: {
-    attempt: TryoutAttempt;
-    placements: readonly TryoutPlacement[];
-    responses: readonly TryoutResponse[];
-    source: TryoutScoreSource;
-  }) {
-    yield* validateScoreSource(args.attempt, args.source);
-    if (args.source.kind === "irt") {
-      return yield* scoreIrt({
-        placements: args.placements,
-        responses: args.responses,
-        source: args.source.irt,
-        totalQuestions: args.attempt.totalQuestions,
-      });
-    }
-    return scoreRawAttempt({
-      attempt: args.attempt,
-      responses: args.responses,
-      scoringStrategy: args.source.scoringStrategy,
-    });
-  }
-);
-
-/** Scores raw and weighted sets from correctness snapshots. */
-function scoreRawAttempt(args: {
-  attempt: TryoutAttempt;
-  responses: readonly TryoutResponse[];
-  scoringStrategy: TryoutScoringStrategy;
-}): AttemptScore {
-  const { correctAnswers } = summarizeResponses(args.responses);
-  return scoreRawAnswers({
-    correctAnswers,
-    scoringStrategy: args.scoringStrategy,
-    totalQuestions: args.attempt.totalQuestions,
-  });
 }
 
 /** Persists one public score; Convex omits undefined optional fields. */

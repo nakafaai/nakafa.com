@@ -107,6 +107,74 @@ describe("tryouts/runtime/placement", () => {
       expect(placement).not.toHaveProperty("questionId");
     })
   );
+  it.effect(
+    "freezes item worth and the language typed answers are read in",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const t = convexTest(schema, convexModules);
+        const placement = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              Effect.gen(function* () {
+                const runtime = yield* insertRuntime(ctx);
+                const section = runtime.source.snapshot.sections[0];
+                const signed = section?.placements[0];
+                if (!(section && signed)) {
+                  return yield* Effect.die("Expected one signed placement.");
+                }
+                yield* createAttemptPlacements({
+                  attempt: runtime.attempt,
+                  source: {
+                    ...runtime.source,
+                    snapshot: {
+                      ...runtime.source.snapshot,
+                      sections: [
+                        {
+                          ...section,
+                          placements: [
+                            {
+                              ...signed,
+                              row: {
+                                ...signed.row,
+                                points: 3,
+                                response: {
+                                  key: {
+                                    acceptsFractions: true,
+                                    kind: "number",
+                                    value: "0.5",
+                                  },
+                                  kind: "short-answer",
+                                },
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                });
+                return yield* Effect.promise(() =>
+                  ctx.db.query("tryoutAttemptPlacements").unique()
+                );
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
+        expect(placement).toMatchObject({
+          points: 3,
+          responseSpec: {
+            key: { acceptsFractions: true, kind: "number", value: "0.5" },
+            kind: "short-answer",
+            language: "id",
+          },
+        });
+      })
+  );
   it.effect("rejects an incomplete signed placement snapshot", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();

@@ -1,19 +1,22 @@
 "use client";
 
 import { useIntersection } from "@mantine/hooks";
-import { BacterialControls } from "@repo/design-system/components/contents/mathematics/bacterial-controls";
+import {
+  BacterialGenerations,
+  BacterialPlayback,
+} from "@repo/design-system/components/contents/mathematics/bacterial-controls";
 import {
   type BacterialFormulaType,
   BacterialGrowthFrameInputSchema,
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial-growth";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { Schema } from "effect";
 import {
   AnimatePresence,
@@ -153,16 +156,18 @@ export function BacterialGrowth({
   }
 
   return (
-    <Card className="content-auto-card" ref={ref}>
-      <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription aria-live="polite">
-          {frame.bacteriaCount} {labels.bacterial}
-        </CardDescription>
-      </CardHeader>
+    <VisualCard ref={ref}>
+      <VisualCardHeader
+        description={
+          // One text node: a count that grows a digit would otherwise move
+          // the label beside it, a layout shift no learner caused.
+          <span aria-live="polite">{`${frame.bacteriaCount} ${labels.bacterial}`}</span>
+        }
+        title={labels.title}
+      />
 
-      <CardContent>
-        <div
+      <VisualCardBody>
+        <VisualCardScene
           aria-label={`${frame.bacteriaCount} ${labels.bacterial}`}
           className="relative aspect-square w-full overflow-hidden rounded-lg border bg-card sm:aspect-video"
           data-bacteria-count={frame.bacteriaCount}
@@ -210,21 +215,25 @@ export function BacterialGrowth({
               </LazyMotion>
             </MotionConfig>
           </div>
-        </div>
-      </CardContent>
+        </VisualCardScene>
+      </VisualCardBody>
 
-      <BacterialControls
-        generation={activeGeneration}
-        isPlaying={isEffectivelyPlaying}
-        maxGenerations={maxGenerations}
-        onGenerationChange={selectGeneration}
-        onReset={resetAnimation}
-        onSpeedChange={setSpeed}
-        onTogglePlaying={togglePlayPause}
-        speed={speed}
-        timeInterval={timeInterval}
-        timeUnit={timeUnit}
-      />
-    </Card>
+      <VisualCardFooter className="flex-col items-stretch px-0">
+        <BacterialPlayback
+          isPlaying={isEffectivelyPlaying}
+          onReset={resetAnimation}
+          onSpeedChange={setSpeed}
+          onTogglePlaying={togglePlayPause}
+          speed={speed}
+        />
+        <BacterialGenerations
+          generation={activeGeneration}
+          maxGenerations={maxGenerations}
+          onGenerationChange={selectGeneration}
+          timeInterval={timeInterval}
+          timeUnit={timeUnit}
+        />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

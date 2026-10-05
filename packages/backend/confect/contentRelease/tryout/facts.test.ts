@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
-import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/hash/catalog";
 import { tryoutCatalogFacts } from "@repo/backend/confect/contentRelease/tryout/facts";
 import { makeTryoutCatalogRow } from "@repo/backend/test/tryout/snapshot";
 import { Schema } from "effect";

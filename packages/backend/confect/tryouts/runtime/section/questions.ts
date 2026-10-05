@@ -1,7 +1,11 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  project,
+  projectSelection,
+} from "@repo/backend/confect/response/projection";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
-import { projectTryoutResponseSpec } from "@repo/backend/confect/tryouts/response/model";
+import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { loadSectionPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import { loadSectionResponseIndex } from "@repo/backend/confect/tryouts/runtime/response";
@@ -119,7 +123,8 @@ function projectRuntimeQuestion(
     ? {
         answeredAt: response.answeredAt,
         isComplete: response.isComplete,
-        selection: response.selection,
+        ...(access.answers ? { outcome: readOutcome(response) } : {}),
+        selection: projectSelection(response.selection, access.answers),
         updatedAt: response.updatedAt,
       }
     : null;
@@ -128,10 +133,7 @@ function projectRuntimeQuestion(
     placementId: placement._id,
     questionOrder: placement.questionOrder,
     response: runtimeResponse,
-    responseSpec: projectTryoutResponseSpec(
-      placement.responseSpec,
-      access.answers
-    ),
+    responseSpec: project(placement.responseSpec, access.answers),
     sourcePath: placement.sourcePath,
     sourceRevision: placement.sourceRevision,
   };

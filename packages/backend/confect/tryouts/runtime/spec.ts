@@ -2,9 +2,10 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/confect/lib/attempts";
 import {
-  tryoutResponseSelectionValidator,
-  tryoutRuntimeResponseSpecValidator,
-} from "@repo/backend/confect/tryouts/response/model";
+  Outcome,
+  RenderableSpec,
+  Selection,
+} from "@repo/backend/confect/response/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoreResultValidator } from "@repo/backend/confect/tryouts/score";
 import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
@@ -36,7 +37,9 @@ export const tryoutAttemptStateValidator = Schema.Struct({
 const runtimeResponseValidator = Schema.Struct({
   answeredAt: Schema.Finite,
   isComplete: Schema.Boolean,
-  selection: tryoutResponseSelectionValidator,
+  /** How the answer scored, present only once answers may be reviewed. */
+  outcome: Schema.optionalKey(Outcome),
+  selection: Selection,
   updatedAt: Schema.Finite,
 });
 const runtimeQuestionValidator = Schema.Struct({
@@ -44,7 +47,7 @@ const runtimeQuestionValidator = Schema.Struct({
   placementId: IdSchema("tryoutAttemptPlacements"),
   questionOrder: Schema.Finite,
   response: Schema.Union([runtimeResponseValidator, Schema.Null]),
-  responseSpec: tryoutRuntimeResponseSpecValidator,
+  responseSpec: RenderableSpec,
   sourcePath: Schema.String,
   sourceRevision: Schema.String,
 });

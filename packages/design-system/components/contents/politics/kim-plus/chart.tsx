@@ -11,13 +11,13 @@ import {
 } from "@repo/design-system/components/evilcharts/charts/bar-chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 
 const VALUE_AXIS_PADDING_RATIO = 0.12;
@@ -85,34 +85,34 @@ export function ElectabilityChart({
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilBarChart
-          chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
-          className="min-h-80"
-          config={chartConfig}
-          data={electabilityData}
-          layout="horizontal"
-        >
-          <Grid horizontal={false} />
-          <YAxis dataKey="name" tickMargin={10} />
-          <XAxis dataKey="value" domain={[0, valueAxisMax]} hide />
-          <Tooltip />
-          <Bar
-            barProps={{ label: { position: "right", fontSize: 12 } }}
-            dataKey="value"
-            radius={8}
-          />
-          <Legend />
-        </EvilBarChart>
-      </CardContent>
-      <CardFooter>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilBarChart
+            chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
+            className="min-h-80"
+            config={chartConfig}
+            data={electabilityData}
+            layout="horizontal"
+          >
+            <Grid horizontal={false} />
+            <YAxis dataKey="name" tickMargin={10} />
+            <XAxis dataKey="value" domain={[0, valueAxisMax]} hide />
+            <Tooltip />
+            <Bar
+              barProps={{ label: { position: "right", fontSize: 12 } }}
+              dataKey="value"
+              radius={8}
+            />
+            <Legend />
+          </EvilBarChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

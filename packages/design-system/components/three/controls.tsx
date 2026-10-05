@@ -7,8 +7,11 @@ import {
   PlayIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import { CardFooter } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  VisualCardFooter,
+  VisualCardFullscreen,
+} from "@repo/design-system/components/visual/card";
 import { useTranslations } from "next-intl";
 import {
   createContext,
@@ -17,27 +20,29 @@ import {
   useLayoutEffect,
   useState,
 } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import { createStore, type ExtractState, useStore } from "zustand";
+import { combine } from "zustand/middleware";
 
-interface Controls {
-  play: boolean;
-  showGrid: boolean;
-  toggleGrid: () => void;
-  togglePlay: () => void;
-}
-
+/** A scene that stands still and shows its grid. */
 const initialControls = { play: false, showGrid: true };
 
 /** Creates one card's controls: whether its scene plays and shows the grid. */
 function createControlsStore() {
-  return createStore<Controls>()((set) => ({
-    ...initialControls,
-    toggleGrid: () => set((current) => ({ showGrid: !current.showGrid })),
-    togglePlay: () => set((current) => ({ play: !current.play })),
-  }));
+  return createStore(
+    combine(initialControls, (set) => ({
+      toggleGrid: () => set((current) => ({ showGrid: !current.showGrid })),
+      togglePlay: () => set((current) => ({ play: !current.play })),
+    }))
+  );
 }
 
-const ControlsContext = createContext<StoreApi<Controls> | null>(null);
+/** One card's controls store, shared by its scene and its footer. */
+type ControlsStore = ReturnType<typeof createControlsStore>;
+
+/** One card's controls and the actions that change them. */
+type Controls = ExtractState<ControlsStore>;
+
+const ControlsContext = createContext<ControlsStore | null>(null);
 
 /**
  * Shares one card's controls between its scene and its footer through a
@@ -62,7 +67,12 @@ export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
   return useStore(store, selector);
 }
 
-/** The actual card footer, composed as a sibling of CardContent. */
+/**
+ * The footer of a coordinate scene's visual card: the grid and automatic
+ * rotation beside the card's full screen action, above any readout the scene
+ * adds. The coordinate store owns the grid and rotation, and the visual card
+ * owns where the card is shown.
+ */
 export function CoordinateControls({ children }: { children?: ReactNode }) {
   const t = useTranslations("Common");
   const play = useCoordinateControls((controls) => controls.play);
@@ -71,8 +81,8 @@ export function CoordinateControls({ children }: { children?: ReactNode }) {
   const togglePlay = useCoordinateControls((controls) => controls.togglePlay);
 
   return (
-    <CardFooter
-      className="flex-col items-stretch gap-4 border-t px-0"
+    <VisualCardFooter
+      className="flex-col items-stretch px-0"
       data-coordinate-controls=""
     >
       <div className="flex gap-2 px-(--card-spacing)">
@@ -94,8 +104,9 @@ export function CoordinateControls({ children }: { children?: ReactNode }) {
           <HugeIcons icon={play ? PauseIcon : PlayIcon} />
           <span className="sr-only">{t("automatic-rotation")}</span>
         </Button>
+        <VisualCardFullscreen />
       </div>
       {children}
-    </CardFooter>
+    </VisualCardFooter>
   );
 }

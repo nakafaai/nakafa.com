@@ -12,6 +12,7 @@ import {
   findingMessages,
 } from "#scripts/check/effect";
 import { readAuthoredSources, readAuthoredTree } from "#scripts/check/files";
+import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { parseSources } from "#scripts/check/source";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
@@ -38,7 +39,7 @@ function lineReport(lines: readonly string[]) {
 }
 
 /**
- * Applies the Effect-native, React, and state source policies to authored
+ * Applies the Effect-native, gateway, React, and state source policies to authored
  * modules through one native compiler batch. Every Effect-native finding is a
  * violation: no baseline or allowlist holds one back.
  */
@@ -49,10 +50,11 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
   return Arr.appendAll(
     findingMessages(yield* effectFindings(parsed)),
     Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
-      Arr.appendAll(
+      Arr.flatten([
+        inspectGatewaySource(file, sourceFile),
         inspectReactSource(file, sourceFile),
-        inspectStateSource(file, sourceFile)
-      )
+        inspectStateSource(file, sourceFile),
+      ])
     )
   );
 }, Effect.scoped);

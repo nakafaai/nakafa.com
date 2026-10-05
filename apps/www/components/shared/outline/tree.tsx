@@ -79,14 +79,21 @@ function SidebarTreeTooltip({
 }
 
 /**
+ * Whether the reading band holds a heading. Each entry selects only its own
+ * state, so an active-heading change re-renders the entries that change
+ * instead of the whole outline.
+ */
+function useActiveHeading({ label }: Pick<ParsedHeading, "label">) {
+  const id = slugify(label);
+  return useToc((context) => context.activeHeadings.includes(id));
+}
+
+/**
  * Links a heading in the document. Native fragment navigation reaches it, so
  * an existing hash never enters the route prefetch cache.
  */
 function SidebarTreeLink({ heading }: { heading: ParsedHeading }) {
-  const id = slugify(heading.label);
-  // Each heading selects only its own state, so an active-heading change
-  // re-renders the headings that change instead of the whole outline.
-  const isActive = useToc((context) => context.activeHeadings.includes(id));
+  const isActive = useActiveHeading(heading);
   // Below the desktop width the outline is a sheet over the page, so choosing
   // an entry closes it and the reader sees where they jumped.
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
@@ -117,12 +124,14 @@ function SidebarTreeJump({
   heading: ParsedHeading;
   index: number;
 }) {
+  const isActive = useActiveHeading(heading);
   const scrollToIndex = useVirtual((context) => context.scrollToIndex);
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
 
   return (
     <SidebarTreeTooltip label={heading.label}>
       <SidebarMenuButton
+        isActive={isActive}
         render={
           <button
             aria-label={heading.label}

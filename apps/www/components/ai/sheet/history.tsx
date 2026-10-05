@@ -20,9 +20,9 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
-import { Authenticated } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context";
+import { Authenticated } from "@/components/auth/gate";
 import { useViewer } from "@/lib/identity/client";
 
 /** Opens the recent Nina chat list when a user is signed in. */

@@ -4,7 +4,6 @@ import {
   type AppLocaleCode,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import {
   type TryoutSection,
   type TryoutSet,
@@ -14,6 +13,7 @@ import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/ident
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
+import { freeze } from "@repo/backend/confect/response/projection";
 import type { TryoutQuestionSelector } from "@repo/backend/confect/tryouts/runtime/spec";
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
@@ -89,7 +89,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     };
     return {
       question,
-      response: canonicalQuestionResponse(placement.response),
+      response: freeze(placement.response, placement.deliveryLanguage),
     };
   }
 );

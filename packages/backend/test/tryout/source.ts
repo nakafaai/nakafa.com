@@ -208,6 +208,9 @@ export async function activateReusedTryoutStartPath(ctx: MutationCtx) {
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
 }
 
+/** Signed marks of the start fixture's section when its set is penalized. */
+export const TRYOUT_START_MARKS = { blank: 0, correct: 4, wrong: -1 } as const;
+
 /** Builds the complete localized hierarchy around the signed start fixture. */
 export function makeTryoutStartHierarchy(
   appLocale: ActiveAppLocaleCode,
@@ -298,6 +301,7 @@ export function makeTryoutStartCatalog(
       appLocale,
       graph: makeGraph(appLocale, "section"),
       kind: "section",
+      ...(scoringStrategy === "penalized" ? { marks: TRYOUT_START_MARKS } : {}),
       order: 1,
       publicPath: internalEntry
         ? undefined
@@ -414,7 +418,8 @@ function makeReusedTryoutStartPlacement(appLocale: ActiveAppLocaleCode) {
 }
 
 /** Clears only the active release pointer before activating another fixture. */
-async function clearActiveTryoutSnapshot(ctx: MutationCtx) {
+/** Retires the active signed snapshot so a test can activate the next one. */
+export async function clearActiveTryoutSnapshot(ctx: MutationCtx) {
   const state = await ctx.db.query("contentState").unique();
   if (!state) {
     throw new Error("Expected active content state before source replacement.");

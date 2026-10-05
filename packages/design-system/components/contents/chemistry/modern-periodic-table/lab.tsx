@@ -15,17 +15,16 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -60,13 +59,10 @@ export function ModernPeriodicTableLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
 
-      <CardContent className="flex flex-col gap-4">
+      <VisualCardBody className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseFocus}
           gridColumns="3"
@@ -97,9 +93,9 @@ export function ModernPeriodicTableLab({
         </p>
 
         <Legend colors={colors} labels={labels} />
-      </CardContent>
+      </VisualCardBody>
 
-      <CardFooter className="border-t">
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <LabFact label={labels.focusLabel} value={selectedLabels.name} />
           <LabFact label={labels.group} value="1–18" />
@@ -109,8 +105,9 @@ export function ModernPeriodicTableLab({
             value={<InlineMath math="Z" />}
           />
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

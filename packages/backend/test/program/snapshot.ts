@@ -15,11 +15,11 @@ import {
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
 import { digestProgramRows } from "@nakafa/aksara-contracts/program/snapshot/digest";
-import { makeProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import {
   makeCurriculumSnapshotRow,
+  makeProgramSnapshot,
   makeProgramSnapshotRow,
-} from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+} from "@nakafa/aksara-contracts/program/snapshot/hash";
 import {
   type LearningProgram,
   LearningProgramKeySchema,

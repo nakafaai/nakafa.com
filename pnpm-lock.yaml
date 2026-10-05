@@ -6,6 +6,12 @@ settings:
 
 catalogs:
   default:
+    '@ai-sdk/gateway':
+      specifier: 4.0.103
+      version: 4.0.103
+    '@ai-sdk/google':
+      specifier: 4.0.87
+      version: 4.0.87
     '@effect/vitest':
       specifier: 4.0.0-rc.118
       version: 4.0.0-rc.118
@@ -15,6 +21,9 @@ catalogs:
     '@vitest/ui':
       specifier: 5.0.2
       version: 5.0.2
+    ai:
+      specifier: 7.0.127
+      version: 7.0.127
     effect:
       specifier: 4.0.0-rc.118
       version: 4.0.0-rc.118
@@ -199,7 +208,7 @@ importers:
         version: 10.0.0-next.25(@confect/core@10.0.0-next.25(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.118))(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.118)(react@19.2.8)
       '@convex-dev/agent':
         specifier: 0.7.3
-        version: 0.7.3(@ai-sdk/provider-utils@5.0.52(zod@4.6.5))(@ai-sdk/provider@4.0.20)(ai@7.0.123(zod@4.6.5))(convex-helpers@0.1.124(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.11)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
+        version: 0.7.3(@ai-sdk/provider-utils@5.0.53(zod@4.6.5))(@ai-sdk/provider@4.0.21)(ai@7.0.127(zod@4.6.5))(convex-helpers@0.1.124(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.11)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/better-auth':
         specifier: 0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.33(next@16.3.7(@babel/core@8.0.5)(@playwright/test@1.63.0)(@types/node@24.19.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@5.0.2))(convex@1.46.0(react@19.2.8))(hono@4.13.11)(next@16.3.7(@babel/core@8.0.5)(@playwright/test@1.63.0)(@types/node@24.19.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
@@ -216,8 +225,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1(supports-color@7.2.0)
       '@nakafa/aksara-contracts':
-        specifier: 0.43.0
-        version: 0.43.0(effect@4.0.0-rc.118)
+        specifier: 0.45.0
+        version: 0.45.0(effect@4.0.0-rc.118)
       '@paper-design/shaders-react':
         specifier: ^0.0.81
         version: 0.0.81(@types/react@19.2.18)(react@19.2.8)
@@ -276,8 +285,8 @@ importers:
         specifier: ^3.9.9
         version: 3.9.9(ws@8.21.3)
       ai:
-        specifier: 7.0.123
-        version: 7.0.123(zod@4.6.5)
+        specifier: 'catalog:'
+        version: 7.0.127(zod@4.6.5)
       any-ascii:
         specifier: ^0.3.3
         version: 0.3.3
@@ -440,11 +449,11 @@ importers:
   packages/backend:
     dependencies:
       '@ai-sdk/gateway':
-        specifier: 4.0.101
-        version: 4.0.101(zod@4.6.5)
+        specifier: 'catalog:'
+        version: 4.0.103(zod@4.6.5)
       '@ai-sdk/google':
-        specifier: 4.0.86
-        version: 4.0.86(zod@4.6.5)
+        specifier: 'catalog:'
+        version: 4.0.87(zod@4.6.5)
       '@confect/core':
         specifier: 10.0.0-next.25
         version: 10.0.0-next.25(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.118)
@@ -453,7 +462,7 @@ importers:
         version: 10.0.0-next.25(@confect/core@10.0.0-next.25(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.118))(@effect/platform-node@4.0.0-rc.118(effect@4.0.0-rc.118)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.0-rc.118)
       '@convex-dev/agent':
         specifier: 0.7.3
-        version: 0.7.3(@ai-sdk/provider-utils@5.0.52(zod@4.6.5))(@ai-sdk/provider@4.0.20)(ai@7.0.123(zod@4.6.5))(convex-helpers@0.1.124(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.11)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
+        version: 0.7.3(@ai-sdk/provider-utils@5.0.53(zod@4.6.5))(@ai-sdk/provider@4.0.21)(ai@7.0.127(zod@4.6.5))(convex-helpers@0.1.124(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.11)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/aggregate':
         specifier: ^0.3.1
         version: 0.3.1(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.11)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5)
@@ -482,8 +491,8 @@ importers:
         specifier: 2.2.0
         version: 2.2.0
       '@nakafa/aksara-contracts':
-        specifier: 0.43.0
-        version: 0.43.0(effect@4.0.0-rc.118)
+        specifier: 0.45.0
+        version: 0.45.0(effect@4.0.0-rc.118)
       '@polar-sh/sdk':
         specifier: ^0.49.0
         version: 0.49.0
@@ -515,8 +524,8 @@ importers:
         specifier: ^0.7.2
         version: 0.7.2
       ai:
-        specifier: 7.0.123
-        version: 7.0.123(zod@4.6.5)
+        specifier: 'catalog:'
+        version: 7.0.127(zod@4.6.5)
       better-auth:
         specifier: 1.6.33
         version: 1.6.33(next@16.3.7(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.63.0)(@types/node@24.19.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@5.0.2)
@@ -657,8 +666,8 @@ importers:
         specifier: ^4.3.5
         version: 4.3.5
       '@nakafa/aksara-contracts':
-        specifier: 0.43.0
-        version: 0.43.0(effect@4.0.0-rc.118)
+        specifier: 0.45.0
+        version: 0.45.0(effect@4.0.0-rc.118)
       '@repo/design-system':
         specifier: workspace:*
         version: link:../design-system
@@ -757,8 +766,8 @@ importers:
         specifier: ^2.0.14
         version: 2.0.14
       ai:
-        specifier: 7.0.123
-        version: 7.0.123(zod@4.6.5)
+        specifier: 'catalog:'
+        version: 7.0.127(zod@4.6.5)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -908,8 +917,8 @@ importers:
   packages/email:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: 0.43.0
-        version: 0.43.0(effect@4.0.0-rc.118)
+        specifier: 0.45.0
+        version: 0.45.0(effect@4.0.0-rc.118)
       '@react-email/render':
         specifier: 2.1.0
         version: 2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -957,8 +966,8 @@ importers:
   packages/internationalization:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: 0.43.0
-        version: 0.43.0(effect@4.0.0-rc.118)
+        specifier: 0.45.0
+        version: 0.45.0(effect@4.0.0-rc.118)
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -1038,8 +1047,8 @@ importers:
   packages/seo:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: 0.43.0
-        version: 0.43.0(effect@4.0.0-rc.118)
+        specifier: 0.45.0
+        version: 0.45.0(effect@4.0.0-rc.118)
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -1116,26 +1125,26 @@ importers:
 
 packages:
 
-  '@ai-sdk/gateway@4.0.101':
-    resolution: {integrity: sha512-lBMXWbNSAb3eQD/F8ja9Egi32PsL9lLajC4DUvionnWO8V+X0nYw9hWJVBJdZ0SftfE/OyKySkoHRfIg/UafYg==}
+  '@ai-sdk/gateway@4.0.103':
+    resolution: {integrity: sha512-nnGTUHzPRQ14jhv9CL4OQrzcRBIFTBMIPKGIi9Z9u/4GtwSRxa/nxUX6np2Iwp5phOzO0a0njj/j9Jolf5AEaA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google@4.0.86':
-    resolution: {integrity: sha512-LfYXASE06h7u0WWI9G5Zb6/7HscVg3+V+0UHZUTgrD17lZi6R5LfsHHJiPRO9aiAd1DbbIvXRvHr/dL9eKbf4g==}
+  '@ai-sdk/google@4.0.87':
+    resolution: {integrity: sha512-s0tWc+QeSce7O2ZLm+VWSRQy16dGfqEcMIUxEWh+LFvXX3h0TLH8jxCQ2H1qhiBgTta+6A97eHPhBlRFu1xy+g==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.52':
-    resolution: {integrity: sha512-PWWa14kVJlBj/G4E85D+IMM28H9W9SC3cQ/yyRHTMzRmtLkNgmDOLhSYBJ9ZT+w83a+DQ9+QIcCaY36iuD89mw==}
+  '@ai-sdk/provider-utils@5.0.53':
+    resolution: {integrity: sha512-VVe6UDd0y0/B4TfauuKKzcppqvhTmSluwwUVT4WG2/8h7gFbyFm7PM4UGM+ZXe3/RI6bv+Vl1cw/7aiBoQqdxg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider@4.0.20':
-    resolution: {integrity: sha512-daWW1Jxnvcn6+VhUuPqR7i5DtbdontcPCC5pH3QYU2r/x0hl31AIGiejWThGU499pJYA9DzwnBm+tc3EMKQeLQ==}
+  '@ai-sdk/provider@4.0.21':
+    resolution: {integrity: sha512-UpbC9C1oht8dhfKPbVXSLRZS3DI8uk8n5v2uMjBPNIYGsC2kL045ywq7D8Hh9KgnH9rP5W/GxQdYtWScRouqlA==}
     engines: {node: '>=22'}
 
   '@alloc/quick-lru@5.3.0':
@@ -2834,8 +2843,8 @@ packages:
     resolution: {integrity: sha512-XyroGQXcHrZdvmrGJvsA9KNeOOgGMg1Vg9OlheUsBOSKznLMDl+YChxbkboRHvtFYJEMRYmlV3uoo/njCw05iw==}
     engines: {node: '>=16'}
 
-  '@nakafa/aksara-contracts@0.43.0':
-    resolution: {integrity: sha512-7vbz0PlRhs/xLSWnr+6wDkh1OCLatmTN9Mrl55FFoWh2SQYw+BsiDhih+LXjq+fZj2V+QLRvTbgsFLqnPYaCPQ==}
+  '@nakafa/aksara-contracts@0.45.0':
+    resolution: {integrity: sha512-pRa19rOgXEsivBuVOpIs+x7R0TpEqtF+forSVLnm4NSZhc4Fj6lDJzI/TmfnEVwuRLCYDPcoW2whj7qwaEAtGw==}
     engines: {node: '>=24.0.0 <25.0.0'}
     peerDependencies:
       effect: 4.0.0-rc.118
@@ -4326,8 +4335,8 @@ packages:
     resolution: {integrity: sha512-TQf59BsZnytt8GdJKLPfUZ54g/iaUL2OWDSFCCvMOhsHduDQxO8xC4PNeyIkVcA5KwL2phPSv0douC0fgWzmnA==}
     engines: {node: '>= 20'}
 
-  ai@7.0.123:
-    resolution: {integrity: sha512-blyApVMNpQfendoGLAQRjQgh0EdbwhAI4SJYBTS4Dw+BygPzdj/Pcgt6AaClvy5+ibV8v+d+k8PABam0QxORtw==}
+  ai@7.0.127:
+    resolution: {integrity: sha512-JNsNPk4ZvRGEJuqdVo2lYFkm7uAuf3p/RwKFWn1Wh/+IK3U1RyFWw2GXoFnhzqNfxEuj7XJB4WpIUhl1sHToWg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -7837,29 +7846,29 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/gateway@4.0.101(zod@4.6.5)':
+  '@ai-sdk/gateway@4.0.103(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/provider': 4.0.20
-      '@ai-sdk/provider-utils': 5.0.52(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.21
+      '@ai-sdk/provider-utils': 5.0.53(zod@4.6.5)
       '@vercel/oidc': 3.2.0
       zod: 4.6.5
 
-  '@ai-sdk/google@4.0.86(zod@4.6.5)':
+  '@ai-sdk/google@4.0.87(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/provider': 4.0.20
-      '@ai-sdk/provider-utils': 5.0.52(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.21
+      '@ai-sdk/provider-utils': 5.0.53(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/provider-utils@5.0.52(zod@4.6.5)':
+  '@ai-sdk/provider-utils@5.0.53(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/provider': 4.0.20
+      '@ai-sdk/provider': 4.0.21
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.1
       undici: 7.29.1
       zod: 4.6.5
 
-  '@ai-sdk/provider@4.0.20':
+  '@ai-sdk/provider@4.0.21':
     dependencies:
       json-schema: 0.4.0
 
@@ -8525,11 +8534,11 @@ snapshots:
       convex-test: 0.0.60(convex@1.46.0(react@19.2.8))
       effect: 4.0.0-rc.118
 
-  '@convex-dev/agent@0.7.3(@ai-sdk/provider-utils@5.0.52(zod@4.6.5))(@ai-sdk/provider@4.0.20)(ai@7.0.123(zod@4.6.5))(convex-helpers@0.1.124(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.11)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)':
+  '@convex-dev/agent@0.7.3(@ai-sdk/provider-utils@5.0.53(zod@4.6.5))(@ai-sdk/provider@4.0.21)(ai@7.0.127(zod@4.6.5))(convex-helpers@0.1.124(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.11)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@ai-sdk/provider': 4.0.20
-      '@ai-sdk/provider-utils': 5.0.52(zod@4.6.5)
-      ai: 7.0.123(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.21
+      '@ai-sdk/provider-utils': 5.0.53(zod@4.6.5)
+      ai: 7.0.127(zod@4.6.5)
       convex: 1.46.0(react@19.2.8)
       convex-helpers: 0.1.124(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.11)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5)
     optionalDependencies:
@@ -9447,7 +9456,7 @@ snapshots:
       chevrotain: 10.5.0
       lilconfig: 2.1.0
 
-  '@nakafa/aksara-contracts@0.43.0(effect@4.0.0-rc.118)':
+  '@nakafa/aksara-contracts@0.45.0(effect@4.0.0-rc.118)':
     dependencies:
       effect: 4.0.0-rc.118
 
@@ -10741,11 +10750,11 @@ snapshots:
 
   agent-base@9.0.0: {}
 
-  ai@7.0.123(zod@4.6.5):
+  ai@7.0.127(zod@4.6.5):
     dependencies:
-      '@ai-sdk/gateway': 4.0.101(zod@4.6.5)
-      '@ai-sdk/provider': 4.0.20
-      '@ai-sdk/provider-utils': 5.0.52(zod@4.6.5)
+      '@ai-sdk/gateway': 4.0.103(zod@4.6.5)
+      '@ai-sdk/provider': 4.0.21
+      '@ai-sdk/provider-utils': 5.0.53(zod@4.6.5)
       zod: 4.6.5
 
   ajv-draft-04@1.0.0(ajv@8.20.0):

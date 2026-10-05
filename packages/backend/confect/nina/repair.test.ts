@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import {
   mathToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
+import { provider } from "@repo/backend/test/gateway";
 import { ninaToolInput } from "@repo/backend/test/nina";
 import {
   providerStep,
@@ -13,12 +13,11 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { InvalidToolInputError, NoSuchToolError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", () => ({
-  getGatewayModel: vi.fn(),
-}));
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  provider.languageModel.mockReset();
+});
 const tools = {
   nakafa: { inputSchema: nakafaToolInputSchema },
   math: { inputSchema: mathToolInputSchema },
@@ -58,7 +57,7 @@ describe("Nina tool repair with the Agent component", () => {
         })
       );
       expect(result).toBeNull();
-      expect(getGatewayModel).not.toHaveBeenCalled();
+      expect(provider.languageModel).not.toHaveBeenCalled();
     }
   );
 
@@ -68,7 +67,7 @@ describe("Nina tool repair with the Agent component", () => {
         { type: "text", text: JSON.stringify(ninaToolInput) },
       ]),
     });
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     const usageHandler = vi.fn();
     const result = await runSpecialist((userId) =>
       repairToolCall({ ...options, userId, usageHandler })
@@ -84,6 +83,10 @@ describe("Nina tool repair with the Agent component", () => {
         userId: expect.any(String),
       })
     );
+    expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
+      "space:personal",
+      "purpose:background",
+    ]);
     expect(JSON.stringify(model.doGenerateCalls[0]?.prompt)).toContain(
       "Keep the original task and source constraints"
     );
@@ -98,7 +101,7 @@ describe("Nina tool repair with the Agent component", () => {
             ? () => Promise.reject(new Error("Private provider failure"))
             : providerStep([{ type: "text", text: "not JSON" }]),
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const result = await runSpecialist((userId) =>
         repairToolCall({
           ...options,
@@ -111,7 +114,7 @@ describe("Nina tool repair with the Agent component", () => {
       );
       expect(result).toBeNull();
       if (phase === "schema") {
-        expect(getGatewayModel).not.toHaveBeenCalled();
+        expect(provider.languageModel).not.toHaveBeenCalled();
       }
     }
   );

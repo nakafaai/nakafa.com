@@ -1,10 +1,7 @@
 import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
-import { getFastModelProviderOptions } from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { subAgentGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
 import type { MathAgentParams } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
 import {
@@ -59,7 +56,11 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   usageHandler,
 }: MathAgentParams & { readonly usageHandler: UsageHandler }) {
   const ctx = yield* ActionCtx;
-  const model = yield* getGatewayModel(modelId);
+  const { model, timeout } = (yield* Gateway).language({
+    purpose: "specialist",
+    model: modelId,
+    space: { kind: "personal", userId },
+  });
   const math = yield* MathService.make.pipe(
     Effect.mapError(makeMathGenerationError)
   );
@@ -68,7 +69,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
     languageModel: model,
     usageHandler,
   });
-  const services = yield* Effect.context<ActionCtx>();
+  const services = yield* Effect.context<ActionCtx | Gateway>();
   const runPromise = Effect.runPromiseWith(services);
   const result = yield* Effect.tryPromise({
     try: (signal) =>
@@ -79,10 +80,6 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           abortSignal: signal,
           messages: [{ role: "user", content: task }],
           model,
-          providerOptions: {
-            gateway: gatewayProviderOptions,
-            google: getFastModelProviderOptions(modelId),
-          },
           repairToolCall: (options) =>
             runPromise(
               repairMathToolCall({
@@ -97,7 +94,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           prepareStep: prepareMathStep,
           stopWhen: isStepCount(MAX_MATH_STEPS),
           temperature: 0,
-          timeout: subAgentGenerationTimeout,
+          timeout,
           tools: {
             algebra: createTool({
               description: mathAlgebra,

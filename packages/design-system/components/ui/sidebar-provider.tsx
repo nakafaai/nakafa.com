@@ -1,6 +1,6 @@
 "use client";
 
-import { useHotkeys, useMediaQuery } from "@mantine/hooks";
+import { useHotkeys } from "@mantine/hooks";
 import { TooltipProvider } from "@repo/design-system/components/ui/tooltip";
 import {
   createMaxWidthInclusiveMediaQuery,
@@ -9,8 +9,9 @@ import {
 } from "@repo/design-system/lib/breakpoints";
 import { runSidebarStateProgram } from "@repo/design-system/lib/sidebar/boundary";
 import {
+  createSidebarStore,
   SidebarContext,
-  type SidebarContextValue,
+  SidebarStoreContext,
 } from "@repo/design-system/lib/sidebar/context";
 import {
   BrowserSidebarCookieWriterLive,
@@ -19,7 +20,13 @@ import {
 } from "@repo/design-system/lib/sidebar/persistence";
 import { cn } from "cn";
 import { Effect } from "effect";
-import { type ComponentProps, useCallback, useMemo, useState } from "react";
+import {
+  type ComponentProps,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 /** Default modifier-key shortcut used to toggle the sidebar. */
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
@@ -30,7 +37,16 @@ const SIDEBAR_DESKTOP = TAILWIND_BREAKPOINT_PIXELS.lg;
 /**
  * Provides responsive, persistent sidebar state for an app shell.
  *
- * When `locked` is true, the sidebar stays hidden and ignores toggle actions.
+ * When `locked` is true, the sidebar ignores toggle actions and keeps the
+ * mobile sheet closed. The desktop panel keeps its state, so the shell that
+ * hides it while locked shows it unchanged once the lock ends.
+ *
+ * The open state and the measured viewport live in a store created once per
+ * provider. The context carries only the memoized actions, the lock, and the
+ * controlled `open` prop, so toggling or resizing never changes a context
+ * value: React client-renders streamed Suspense boundaries that are still
+ * pending when an ancestor context changes, discarding the HTML the server
+ * sent.
  */
 export function SidebarProvider({
   defaultOpen = true,
@@ -57,22 +73,35 @@ export function SidebarProvider({
     sidebarDesktop === undefined
       ? createMaxWidthMediaQuery(SIDEBAR_DESKTOP)
       : createMaxWidthInclusiveMediaQuery(sidebarDesktop);
-  const isMobile = useMediaQuery(mobileMediaQuery);
-  const [mobileOpen, setMobileOpenState] = useState(false);
+  const [store] = useState(() => createSidebarStore(defaultOpen));
   const isLocked = locked;
 
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
-  const open = isLocked ? false : (openProp ?? uncontrolledOpen);
-  const openMobile = isLocked ? false : mobileOpen;
+  // The viewport is known only in the browser; the server renders the
+  // desktop layout and the store follows the media query once mounted.
+  useEffect(() => {
+    const query = window.matchMedia(mobileMediaQuery);
+    const follow = () => {
+      store.setState({ isMobile: query.matches });
+    };
+    follow();
+    query.addEventListener("change", follow);
+    return () => {
+      query.removeEventListener("change", follow);
+    };
+  }, [mobileMediaQuery, store]);
+
   const setOpen = useCallback(
     (value: boolean | ((previous: boolean) => boolean)) => {
-      const nextOpen = typeof value === "function" ? value(open) : value;
-      const openState = isLocked ? false : nextOpen;
+      if (isLocked) {
+        return;
+      }
 
+      const open = openProp ?? store.getState().open;
+      const openState = typeof value === "function" ? value(open) : value;
       if (setOpenProp) {
         setOpenProp(openState);
       } else {
-        setUncontrolledOpen(openState);
+        store.setState({ open: openState });
       }
 
       runSidebarStateProgram(
@@ -82,25 +111,27 @@ export function SidebarProvider({
         }).pipe(Effect.provide(BrowserSidebarCookieWriterLive))
       );
     },
-    [setOpenProp, open, cookieName, isLocked]
+    [cookieName, isLocked, openProp, setOpenProp, store]
   );
   const setOpenMobile = useCallback(
     (value: boolean | ((previous: boolean) => boolean)) => {
-      const nextOpen = typeof value === "function" ? value(mobileOpen) : value;
-      setMobileOpenState(isLocked ? false : nextOpen);
+      const { openMobile } = store.getState();
+      const nextOpen =
+        typeof value === "function"
+          ? value(isLocked ? false : openMobile)
+          : value;
+      store.setState({ openMobile: isLocked ? false : nextOpen });
     },
-    [isLocked, mobileOpen]
+    [isLocked, store]
   );
-
   const toggleSidebar = useCallback(() => {
     if (isLocked) {
       return;
     }
 
-    // Mantine updates its SSR-safe media value in useEffect. Read the current
-    // viewport at the interaction boundary so the first toggle routes correctly.
-    const mobileViewportMatches = window.matchMedia(mobileMediaQuery).matches;
-    if (mobileViewportMatches) {
+    // Read the current viewport at the interaction boundary so a toggle
+    // during the first frames routes to the right surface.
+    if (window.matchMedia(mobileMediaQuery).matches) {
       setOpenMobile((previous) => !previous);
       return;
     }
@@ -119,46 +150,35 @@ export function SidebarProvider({
         ]
   );
 
-  const state = open ? "expanded" : "collapsed";
-  const contextValue = useMemo<SidebarContextValue>(
+  const controls = useMemo(
     () => ({
-      state,
-      open,
-      setOpen,
-      isMobile,
       isLocked,
-      openMobile,
+      setOpen,
       setOpenMobile,
       toggleSidebar,
+      ...(openProp === undefined ? {} : { open: openProp }),
     }),
-    [
-      state,
-      open,
-      setOpen,
-      isMobile,
-      isLocked,
-      openMobile,
-      setOpenMobile,
-      toggleSidebar,
-    ]
+    [isLocked, openProp, setOpen, setOpenMobile, toggleSidebar]
   );
 
   return (
-    <SidebarContext value={contextValue}>
-      <TooltipProvider>
-        <div
-          className={cn(
-            "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
-            className
-          )}
-          data-slot="sidebar-wrapper"
-          style={style}
-          tabIndex={-1}
-          {...props}
-        >
-          {children}
-        </div>
-      </TooltipProvider>
-    </SidebarContext>
+    <SidebarStoreContext value={store}>
+      <SidebarContext value={controls}>
+        <TooltipProvider>
+          <div
+            className={cn(
+              "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
+              className
+            )}
+            data-slot="sidebar-wrapper"
+            style={style}
+            tabIndex={-1}
+            {...props}
+          >
+            {children}
+          </div>
+        </TooltipProvider>
+      </SidebarContext>
+    </SidebarStoreContext>
   );
 }

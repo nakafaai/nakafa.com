@@ -14,12 +14,9 @@ import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
 /** Adds a permanent privacy preference action to the marketing footer. */
 export function AnalyticsConsentFooterItem() {
   const t = useTranslations("AnalyticsConsent");
-  const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
-  const setPreferencesOpen = useAnalyticsConsent(
-    (state) => state.setPreferencesOpen
-  );
+  const consent = useAnalyticsConsent((state) => state);
 
-  if (!isAvailable) {
+  if (!consent.isAvailable) {
     return null;
   }
 
@@ -27,7 +24,7 @@ export function AnalyticsConsentFooterItem() {
     <li>
       <Button
         className="h-auto justify-start p-0 text-foreground no-underline transition-colors ease-out hover:text-primary"
-        onClick={() => setPreferencesOpen(true)}
+        onClick={() => consent.setPreferencesOpen(true)}
         type="button"
         variant="link"
       >
@@ -40,19 +37,16 @@ export function AnalyticsConsentFooterItem() {
 /** Adds the privacy preference action to account menus. */
 export function AnalyticsConsentMenuItem() {
   const t = useTranslations("AnalyticsConsent");
-  const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
-  const setPreferencesOpen = useAnalyticsConsent(
-    (state) => state.setPreferencesOpen
-  );
+  const consent = useAnalyticsConsent((state) => state);
 
-  if (!isAvailable) {
+  if (!consent.isAvailable) {
     return null;
   }
 
   return (
     <DropdownMenuItem
       className="cursor-pointer"
-      onClick={() => setPreferencesOpen(true)}
+      onClick={() => consent.setPreferencesOpen(true)}
     >
       <HugeIcons icon={Analytics01Icon} />
       {t("manage")}
@@ -63,18 +57,15 @@ export function AnalyticsConsentMenuItem() {
 /** Keeps privacy preferences reachable for signed-out sidebar visitors. */
 export function AnalyticsConsentSidebarItem() {
   const t = useTranslations("AnalyticsConsent");
-  const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
-  const setPreferencesOpen = useAnalyticsConsent(
-    (state) => state.setPreferencesOpen
-  );
+  const consent = useAnalyticsConsent((state) => state);
 
-  if (!isAvailable) {
+  if (!consent.isAvailable) {
     return null;
   }
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton onClick={() => setPreferencesOpen(true)}>
+      <SidebarMenuButton onClick={() => consent.setPreferencesOpen(true)}>
         <HugeIcons icon={Analytics01Icon} />
         {t("manage")}
       </SidebarMenuButton>

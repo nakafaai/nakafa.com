@@ -1,11 +1,11 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
+import { ModelId } from "@repo/backend/confect/gateway/model";
 import { Schema } from "effect";
 
 /** The active Agent turn owns its refundable credit reservation. */
 export const NinaCreditHold = Schema.Struct({
   userId: Id("users"),
-  modelId: ModelIdSchema,
+  modelId: ModelId,
   credits: Schema.Finite,
   creditsResetAt: Schema.Finite,
   planCreditGrantId: Schema.optionalKey(Id("creditTransactions")),

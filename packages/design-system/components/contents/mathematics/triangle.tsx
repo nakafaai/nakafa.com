@@ -6,16 +6,15 @@ import {
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
@@ -87,15 +86,12 @@ export function Triangle({
 
   return (
     <CoordinateProvider>
-      <Card className="content-auto-card">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
         <I18nProvider locale={locale}>
           <Content angle={angle} labels={labels} size={size} />
         </I18nProvider>
-      </Card>
+      </VisualCard>
     </CoordinateProvider>
   );
 }
@@ -116,20 +112,21 @@ function Content({
 
   return (
     <>
-      <CardContent>
-        <Intersection
-          className="relative"
-          data-slot="triangle-scene"
-          once
-          onIntersect={() => setIsNearViewport(true)}
-        >
+      <VisualCardBody>
+        <VisualCardScene className="relative" data-slot="triangle-scene">
+          <Intersection
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            once
+            onIntersect={() => setIsNearViewport(true)}
+          />
           {isNearViewport ? (
             <TriangleScene angle={angleValue} size={size} />
           ) : (
             <ScenePlaceholder />
           )}
-        </Intersection>
-      </CardContent>
+        </VisualCardScene>
+      </VisualCardBody>
       <CoordinateControls>
         <div className="flex w-full flex-col gap-4">
           {isNearViewport ? (

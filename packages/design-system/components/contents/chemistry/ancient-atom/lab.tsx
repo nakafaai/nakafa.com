@@ -7,17 +7,17 @@ import {
   WHOLE_MATTER_LEVEL_ID,
 } from "@repo/design-system/components/contents/chemistry/ancient-atom/data";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import {
   AnimatePresence,
   domMax,
@@ -81,13 +81,10 @@ export function AncientAtomLab({
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={domMax} strict>
-        <Card className="overflow-hidden content-auto-card">
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </CardHeader>
+        <VisualCard>
+          <VisualCardHeader description={description} title={title} />
 
-          <CardContent className="flex flex-col gap-5">
+          <VisualCardBody className="flex flex-col gap-5">
             <ToggleGroup
               aria-label={labels.chooseLevel}
               gridColumns="4"
@@ -103,7 +100,7 @@ export function AncientAtomLab({
               ))}
             </ToggleGroup>
 
-            <div className="aspect-video">
+            <VisualCardScene className="aspect-video">
               <div
                 className="grid h-full items-stretch gap-2"
                 style={{
@@ -128,10 +125,10 @@ export function AncientAtomLab({
                   ))}
                 </AnimatePresence>
               </div>
-            </div>
-          </CardContent>
+            </VisualCardScene>
+          </VisualCardBody>
 
-          <CardFooter className="border-t">
+          <VisualCardFooter>
             <dl className="flex w-full flex-col gap-4 text-sm sm:flex-row">
               <Perspective
                 label={labels.aristotleLabel}
@@ -142,8 +139,9 @@ export function AncientAtomLab({
                 value={labels.democritusBody}
               />
             </dl>
-          </CardFooter>
-        </Card>
+            <VisualCardFullscreen />
+          </VisualCardFooter>
+        </VisualCard>
       </LazyMotion>
     </MotionConfig>
   );

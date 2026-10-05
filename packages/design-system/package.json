@@ -26,7 +26,7 @@
     "@shikijs/transformers": "^4.4.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/mdx": "^2.0.14",
-    "ai": "7.0.123",
+    "ai": "catalog:",
     "class-variance-authority": "^0.7.1",
     "cn": "0.4.0",
     "country-code-lookup": "^0.1.5",

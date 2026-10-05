@@ -23,17 +23,17 @@ import { CameraControls } from "@repo/design-system/components/three/camera-cont
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
@@ -67,13 +67,10 @@ export function UniformCircularMotionLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
 
-      <CardContent className="flex flex-col gap-4">
+      <VisualCardBody className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.choosePeriod}
           gridColumns="3"
@@ -89,9 +86,10 @@ export function UniformCircularMotionLab({
           ))}
         </ToggleGroup>
 
-        <section
+        <VisualCardScene
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
+          render={<section />}
         >
           <ThreeCanvas frameloop="always">
             <Suspense>
@@ -118,10 +116,10 @@ export function UniformCircularMotionLab({
               <CircularMotionScene motion={motion} />
             </Suspense>
           </ThreeCanvas>
-        </section>
-      </CardContent>
+        </VisualCardScene>
+      </VisualCardBody>
 
-      <CardFooter className="border-t">
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
           <LabFact
             label={labels.period}
@@ -154,8 +152,9 @@ export function UniformCircularMotionLab({
             }
           />
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

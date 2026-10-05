@@ -3,7 +3,7 @@ import {
   RegisteredConvexFunction,
 } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import { makeProgramSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+import { makeProgramSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import confectSchema from "@repo/backend/confect/_generated/schema";

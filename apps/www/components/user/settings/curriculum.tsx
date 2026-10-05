@@ -22,10 +22,9 @@ import {
 } from "@repo/design-system/components/ui/select";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useForm } from "@tanstack/react-form";
-import { useConvexAuth } from "convex/react";
-
 import { Effect, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionFooter,
@@ -83,7 +82,7 @@ export function UserSettingsCurriculum({
   initialPreference,
   initialPrograms,
 }: UserSettingsCurriculumProps) {
-  const { isAuthenticated } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const preferenceQuery = useQuery(
     refs.public.learningPreferences.queries.getCurrent,
     isAuthenticated ? { locale } : "skip"

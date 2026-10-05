@@ -2,11 +2,6 @@
 @import "@repo/design-system/styles/theme.css";
 @import "@repo/design-system/styles/katex.css";
 
-/* The root layout sets the Quran typeface variable on every page. */
-@theme inline {
-  --font-quran: var(--font-amiri);
-}
-
 /* Smooth scrolling only on marketing pages */
 html:has([data-marketing-page]) {
   scroll-behavior: smooth;
@@ -16,4 +11,15 @@ html:has([data-marketing-page]) {
   html:has([data-marketing-page]) {
     scroll-behavior: auto;
   }
+}
+
+/*
+ * The app shell keeps its page clear of the desktop sidebar with this offset.
+ * It is registered as a length so it can slide with the sidebar when the
+ * learner opens or closes it; a lock change bypasses it and never animates.
+ */
+@property --app-sidebar-offset {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0rem;
 }

@@ -13,11 +13,11 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useConvexAuth } from "convex/react";
 import { Effect, type Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionFooter,
@@ -42,7 +42,7 @@ export function UserSettingsMemory({
 }) {
   const t = useTranslations("Auth");
   const actionErrorMessage = useTranslations("Common")("action-error");
-  const { isAuthenticated } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const query = useQuery(
     refs.public.nina.memory.get,
     isAuthenticated ? {} : "skip"

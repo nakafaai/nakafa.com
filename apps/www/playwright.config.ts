@@ -12,8 +12,16 @@ export default defineConfig({
   outputDir: "../../.cache/playwright/www",
   projects: [
     {
+      // The hydration checks need pages that still stream on demand, so they
+      // run before any other suite opens, and caches, those pages.
+      name: "cold-runtime",
+      testMatch: "**/hydration.browser.ts",
+      workers: 1,
+    },
+    {
+      dependencies: ["cold-runtime"],
       name: "shared-runtime",
-      testIgnore: "**/navigation.browser.ts",
+      testIgnore: ["**/hydration.browser.ts", "**/navigation.browser.ts"],
       workers: 1,
     },
     {
@@ -21,6 +29,17 @@ export default defineConfig({
       name: "isolated-navigation",
       testMatch: "**/navigation.browser.ts",
       workers: 2,
+    },
+    // Visual cards take the whole screen through the Fullscreen API on
+    // desktop, Android, and iPad, and cover the viewport on iPhone, so their
+    // suite also runs in WebKit. It runs last, so no other browser shares the
+    // runner while the navigation suite measures timing.
+    {
+      dependencies: ["isolated-navigation"],
+      name: "webkit",
+      testMatch: "**/visual.browser.ts",
+      use: { browserName: "webkit" },
+      workers: 1,
     },
   ],
   reporter: "list",

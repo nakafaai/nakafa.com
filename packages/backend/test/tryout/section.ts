@@ -2,7 +2,8 @@ import type {
   TryoutSection,
   TryoutSet,
 } from "@nakafa/aksara-contracts/tryout/catalog";
-import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/hash/catalog";
+import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/hash/placement";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import {
   deliveryLanguageForPolicy,
@@ -12,7 +13,6 @@ import {
   type TryoutPlacement,
   TryoutPlacementSchema,
 } from "@nakafa/aksara-contracts/tryout/placement";
-import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
 import { TryoutContentHashSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import type { TryoutSnapshotSource } from "@repo/backend/confect/tryouts/start/source";
 import { testTextHash } from "@repo/backend/test/content/release";

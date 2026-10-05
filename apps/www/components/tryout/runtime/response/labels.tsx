@@ -16,32 +16,8 @@ export function renderTryoutResponseLabels(
   responseId: string,
   response: QuestionResponse
 ): Readonly<Record<string, ReactNode>> {
-  const entries: readonly LabelEntry[] =
-    response.kind === "category"
-      ? response.statements.flatMap((statement) => [
-          [
-            statementLabelId(responseId, statement.statementKey),
-            statement.label,
-          ] as const,
-          ...response.categories.map(
-            (category) =>
-              [
-                categoryLabelId(
-                  responseId,
-                  statement.statementKey,
-                  category.categoryKey
-                ),
-                category.label,
-              ] as const
-          ),
-        ])
-      : response.options.map(
-          (option) =>
-            [optionLabelId(responseId, option.optionKey), option.label] as const
-        );
-
   return Object.fromEntries(
-    entries.map(([id, label]) => [
+    readLabelEntries(responseId, response).map(([id, label]) => [
       id,
       <MarkdownContent
         className="wrap-anywhere h-auto whitespace-normal"
@@ -51,5 +27,38 @@ export function renderTryoutResponseLabels(
         {label}
       </MarkdownContent>,
     ])
+  );
+}
+
+/** Lists the option, statement, and category labels the fields render. */
+function readLabelEntries(
+  responseId: string,
+  response: QuestionResponse
+): readonly LabelEntry[] {
+  if (response.kind === "category") {
+    return response.statements.flatMap((statement) => [
+      [
+        statementLabelId(responseId, statement.statementKey),
+        statement.label,
+      ] as const,
+      ...response.categories.map(
+        (category) =>
+          [
+            categoryLabelId(
+              responseId,
+              statement.statementKey,
+              category.categoryKey
+            ),
+            category.label,
+          ] as const
+      ),
+    ]);
+  }
+  if (response.kind === "short-answer" || response.kind === "rubric") {
+    return [];
+  }
+  return response.options.map(
+    (option) =>
+      [optionLabelId(responseId, option.optionKey), option.label] as const
   );
 }

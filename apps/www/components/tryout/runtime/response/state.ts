@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import type refs from "@repo/backend/confect/_generated/refs";
-import { validateTryoutResponseSelection } from "@repo/backend/confect/tryouts/response/selection";
+import { select } from "@repo/backend/confect/response/selection";
+import { Result } from "effect";
 
 import type {
   TryoutRenderableResponseSpec,
@@ -39,22 +40,19 @@ export function applyOptimisticTryoutResponse(
       answeredDelta = -Number(wasComplete);
       return { ...question, response: null };
     }
-    const validated = validateTryoutResponseSelection(
-      question.responseSpec,
-      args.selection
-    );
-    if (!validated.valid) {
+    const selected = select(question.responseSpec, args.selection);
+    if (Result.isFailure(selected)) {
       validSelection = false;
       return question;
     }
-    const isComplete = validated.isComplete;
+    const { isComplete, selection } = selected.success;
     answeredDelta = Number(isComplete) - Number(wasComplete);
     return {
       ...question,
       response: {
         answeredAt: question.response?.answeredAt ?? selectedAt,
         isComplete,
-        selection: validated.selection,
+        selection,
         updatedAt: selectedAt,
       },
     };

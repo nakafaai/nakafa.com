@@ -11,11 +11,21 @@ type DeclarationOwners =
 type DependencyHold = ApprovedSpecs &
   DeclarationOwners & { readonly dependency: string };
 
-export const CONTRACT_PACKAGE_VERSION = "0.43.0";
+export const CONTRACT_PACKAGE_VERSION = "0.45.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.0-rc.118";
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.0.2";
+/**
+ * The AI SDK core, its gateway, and the Google provider pin the same exact
+ * provider packages, so they move as one catalog cohort. Each bump rechecks
+ * the gateway module's provider contracts (confect/gateway).
+ */
+export const AI_SDK_COHORT = {
+  "@ai-sdk/gateway": "4.0.103",
+  "@ai-sdk/google": "4.0.87",
+  ai: "7.0.127",
+} as const;
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "19.2.8", dependency: "react", minimumDeclarations: 1 },
@@ -66,14 +76,14 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   { approved: "1.46.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.123", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.86",
+    approved: "catalog:",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.101",
+    approved: "catalog:",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
@@ -159,7 +169,7 @@ export const REGISTRY_REVIEWS = [
   [
     "effect@rc",
     "4.0.0-rc.118",
-    "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts 0.43.0 peers on RC118 exactly.",
+    "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts 0.45.0 peers on RC118 exactly.",
   ],
   [
     "@effect/platform-node@rc",
@@ -208,15 +218,19 @@ export const REGISTRY_REVIEWS = [
     "1.46.0",
     "Additive validator `.optional()` and `FunctionReference_future`; acceptance uses an isolated deployment.",
   ],
-  ["ai@latest", "7.0.123", "AI SDK packages move as one reviewed cohort."],
+  [
+    "ai@latest",
+    AI_SDK_COHORT.ai,
+    "AI SDK packages move as one reviewed cohort.",
+  ],
   [
     "@ai-sdk/google@latest",
-    "4.0.86",
+    AI_SDK_COHORT["@ai-sdk/google"],
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.101",
+    AI_SDK_COHORT["@ai-sdk/gateway"],
     "AI SDK packages move as one reviewed cohort.",
   ],
   [

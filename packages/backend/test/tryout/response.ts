@@ -1,8 +1,44 @@
+import { expect } from "@effect/vitest";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import type { TryoutStatus } from "@repo/backend/confect/tryouts/status";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
-import { Effect } from "effect";
+import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import { Effect, Schema } from "effect";
 export type ConvexTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+export type ResponseFixture = Effect.Success<
+  ReturnType<typeof seedResponseFixture>
+>;
+/** The public failure a Convex call is expected to reject with. */
+export const ExpectedConvexFailure = Schema.Struct({
+  code: Schema.String,
+  message: Schema.optionalKey(Schema.String),
+});
+export type ExpectedConvexFailure = typeof ExpectedConvexFailure.Type;
+export const setResponseClock = Effect.fn("test.tryout.response.setClock")(
+  (offset: number) =>
+    Effect.sync(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW + offset)))
+);
+export const readResponseState = Effect.fn("test.tryout.response.readState")(
+  (t: ConvexTest, fixture: ResponseFixture) =>
+    Effect.promise(() =>
+      t.query(async (ctx) => ({
+        attempt: await ctx.db.get(fixture.attemptId),
+        responses: await ctx.db.query("tryoutResponses").collect(),
+        section: await ctx.db.get(fixture.sectionAttemptId),
+      }))
+    )
+);
+export const expectConvexFailure = Effect.fn(
+  "test.tryout.response.expectFailure"
+)(function* (
+  operation: () => Promise<unknown>,
+  expected: ExpectedConvexFailure
+) {
+  const failure = yield* Effect.tryPromise(operation).pipe(Effect.flip);
+  expect(failure.cause).toMatchObject({
+    data: expected,
+  });
+});
 export const seedResponseFixture = Effect.fn(
   "test.tryout.response.seedFixture"
 )(function* (

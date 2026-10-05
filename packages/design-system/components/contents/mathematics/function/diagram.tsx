@@ -13,12 +13,11 @@ import { CoordinateSystem } from "@repo/design-system/components/three/coordinat
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import { Effect } from "effect";
 import type { ReactNode } from "react";
@@ -33,27 +32,22 @@ interface DiagramProps {
 export function Diagram({ title, description, children }: DiagramProps) {
   return (
     <CoordinateProvider>
-      <Card className="content-auto-card">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent>{children}</CardContent>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody>{children}</VisualCardBody>
         <CoordinateControls />
-      </Card>
+      </VisualCard>
     </CoordinateProvider>
   );
 }
 
-interface Element {
-  id: string;
-  label: ReactNode;
-}
 interface RelationVisualizerProps {
   accessibilityLabel: string;
-  codomain: Element[];
+  /** The codomain's elements, each with the label shown beside it. */
+  codomain: { id: string; label: ReactNode }[];
   codomainLabel: ReactNode;
-  domain: Element[];
+  /** The domain's elements, in the same shape as the codomain's. */
+  domain: RelationVisualizerProps["codomain"];
   domainLabel: ReactNode;
   mappings: RelationMapping[];
 }
@@ -98,7 +92,7 @@ export function RelationVisualizer({
     },
   ];
   return (
-    <figure aria-label={accessibilityLabel}>
+    <VisualCardScene aria-label={accessibilityLabel} render={<figure />}>
       <CoordinateSystem
         cameraPosition={[0, 3, 11]}
         cameraProjection={{ kind: "orthographic" }}
@@ -159,6 +153,6 @@ export function RelationVisualizer({
           </li>
         ))}
       </ul>
-    </figure>
+    </VisualCardScene>
   );
 }

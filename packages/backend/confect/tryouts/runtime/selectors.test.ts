@@ -3,7 +3,10 @@ import { assert, beforeEach, describe, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
+import {
+  readConfectPlacement,
+  seedTryoutContentAccessState,
+} from "@repo/backend/test/tryout/runtime";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { Effect } from "effect";
 
@@ -37,8 +40,8 @@ describe("tryouts/runtime/selectors", () => {
                 "tryoutAttempts",
                 seeded.attemptId
               );
-              const placement = await ctx.db.get(
-                "tryoutAttemptPlacements",
+              const placement = await readConfectPlacement(
+                ctx,
                 seeded.placementId
               );
               assert.isNotNull(attempt);
@@ -89,8 +92,8 @@ describe("tryouts/runtime/selectors", () => {
               "tryoutAttempts",
               seeded.attemptId
             );
-            const placement = await ctx.db.get(
-              "tryoutAttemptPlacements",
+            const placement = await readConfectPlacement(
+              ctx,
               seeded.placementId
             );
             assert.isNotNull(attempt);
@@ -155,8 +158,8 @@ describe("tryouts/runtime/selectors", () => {
                 "tryoutAttempts",
                 seeded.attemptId
               );
-              const placement = await ctx.db.get(
-                "tryoutAttemptPlacements",
+              const placement = await readConfectPlacement(
+                ctx,
                 seeded.placementId
               );
               assert.isNotNull(attempt);

@@ -22,6 +22,9 @@ export function TryoutReviewedResponse({
       />
     );
   }
+  if (responseSpec.kind === "short-answer" || responseSpec.kind === "rubric") {
+    return null;
+  }
   const selected = new Set(readSelectedOptionKeys(selection));
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">

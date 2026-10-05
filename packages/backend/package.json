@@ -29,8 +29,8 @@
     "typecheck": "pnpm codegen && tsc --project tsconfig.json --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "4.0.101",
-    "@ai-sdk/google": "4.0.86",
+    "@ai-sdk/gateway": "catalog:",
+    "@ai-sdk/google": "catalog:",
     "@confect/core": "10.0.0-next.25",
     "@confect/server": "10.0.0-next.25",
     "@convex-dev/agent": "0.7.3",
@@ -43,7 +43,7 @@
     "@effect/platform-node": "catalog:",
     "@mendable/firecrawl-js": "^4.42.0",
     "@modelcontextprotocol/server": "2.2.0",
-    "@nakafa/aksara-contracts": "0.43.0",
+    "@nakafa/aksara-contracts": "0.45.0",
     "@polar-sh/sdk": "^0.49.0",
     "@posthog/convex": "2.1.5",
     "@react-email/render": "2.1.0",
@@ -54,7 +54,7 @@
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "@vercel/config": "^0.7.2",
-    "ai": "7.0.123",
+    "ai": "catalog:",
     "better-auth": "1.6.33",
     "buffer": "^6.0.3",
     "convex": "1.46.0",

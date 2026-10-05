@@ -11,13 +11,13 @@ import {
 } from "@repo/design-system/components/evilcharts/charts/bar-chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import type { ReactNode } from "react";
 
@@ -86,35 +86,35 @@ export function CabinetChart({
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilBarChart
-          chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
-          className="min-h-80"
-          config={chartConfig}
-          data={CabinetChartData}
-          layout="horizontal"
-        >
-          <Grid horizontal={false} />
-          <YAxis dataKey="name" tickMargin={10} />
-          <XAxis dataKey="cabinet" domain={[0, cabinetAxisMax]} hide />
-          <Tooltip />
-          <Bar
-            barProps={{ label: { position: "right", fontSize: 12 } }}
-            dataKey="cabinet"
-            radius={8}
-          />
-          <Legend />
-        </EvilBarChart>
-      </CardContent>
-      <CardFooter>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilBarChart
+            chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
+            className="min-h-80"
+            config={chartConfig}
+            data={CabinetChartData}
+            layout="horizontal"
+          >
+            <Grid horizontal={false} />
+            <YAxis dataKey="name" tickMargin={10} />
+            <XAxis dataKey="cabinet" domain={[0, cabinetAxisMax]} hide />
+            <Tooltip />
+            <Bar
+              barProps={{ label: { position: "right", fontSize: 12 } }}
+              dataKey="cabinet"
+              radius={8}
+            />
+            <Legend />
+          </EvilBarChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 
@@ -175,12 +175,9 @@ export function CompositionChart({
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
         <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <EvilBarChart
             className="aspect-square"
@@ -245,10 +242,11 @@ export function CompositionChart({
             <Legend />
           </EvilBarChart>
         </div>
-      </CardContent>
-      <CardFooter>
+      </VisualCardBody>
+      <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

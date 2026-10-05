@@ -23,17 +23,17 @@ import {
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -76,12 +76,9 @@ export function DimensionLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseMode}
           gridColumns="3"
@@ -101,7 +98,7 @@ export function DimensionLab({
           </ToggleGroupItem>
         </ToggleGroup>
 
-        <div className={threeSceneFrameVariants()}>
+        <VisualCardScene className={threeSceneFrameVariants()}>
           <ThreeCanvas frameloop="demand">
             <Suspense>
               <ResponsiveDimensionCamera />
@@ -127,9 +124,9 @@ export function DimensionLab({
               />
             </Suspense>
           </ThreeCanvas>
-        </div>
-      </CardContent>
-      <CardFooter className="border-t">
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <DimensionFact
             label={labels.formula}
@@ -144,8 +141,9 @@ export function DimensionLab({
             value={<InlineMath math={selectedMode.dimension} />}
           />
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

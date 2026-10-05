@@ -22,9 +22,11 @@ const WATCH_SEPARATOR = "\n";
 
 /**
  * Tracks the headings in the reading band with one observer for the whole
- * outline and publishes them to the store only when they change. At the end
- * of the page, the headings still in view stay active, or the last heading
- * when none is.
+ * outline and publishes them to the store only when they change. Headings a
+ * virtualized list mounts later, such as the verses after a surah's leading
+ * ones, join the observer when they mount and leave it when they unmount. At
+ * the end of the page, the headings still in view stay active, or the last
+ * heading when none is.
  */
 function observeHeadings(store: TocStore, watch: readonly string[]) {
   const watched = new Set(watch);
@@ -41,6 +43,13 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     store.setState({ activeHeadings });
   }
 
+  /** Publishes the headings in the band, keeping the last ones between them. */
+  function publishVisible() {
+    if (visible.size > 0) {
+      publish(Array.from(visible, (element) => element.id));
+    }
+  }
+
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
@@ -50,16 +59,38 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
           visible.delete(entry.target);
         }
       }
-      if (visible.size > 0) {
-        publish(
-          Array.from(visible, (element) => element.id).filter((id) =>
-            watched.has(id)
-          )
-        );
-      }
+      publishVisible();
     },
     { rootMargin: "-20px 0% -40% 0%", threshold: 1 }
   );
+
+  /** The watched headings in a mounted or unmounted subtree. */
+  function headingsWithin(node: Node) {
+    if (!(node instanceof Element)) {
+      return [];
+    }
+    return [node, ...node.querySelectorAll("[id]")].filter((element) =>
+      watched.has(element.id)
+    );
+  }
+
+  const mounts = new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        for (const heading of headingsWithin(node)) {
+          observer.observe(heading);
+        }
+      }
+      for (const node of record.removedNodes) {
+        for (const heading of headingsWithin(node)) {
+          observer.unobserve(heading);
+          visible.delete(heading);
+        }
+      }
+    }
+    // A heading can unmount before the observer reports it leaving the band.
+    publishVisible();
+  });
 
   function onScroll() {
     const element = document.scrollingElement;
@@ -87,10 +118,12 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
       observer.observe(heading);
     }
   }
+  mounts.observe(document.body, { childList: true, subtree: true });
   window.addEventListener("scroll", onScroll, { passive: true });
 
   return () => {
     window.removeEventListener("scroll", onScroll);
+    mounts.disconnect();
     observer.disconnect();
   };
 }

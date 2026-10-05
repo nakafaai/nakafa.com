@@ -5,7 +5,7 @@ import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curricul
 import {
   makeCurriculumSnapshotRow,
   makeProgramSnapshotRow,
-} from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+} from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   type ContentSnapshotRow,
