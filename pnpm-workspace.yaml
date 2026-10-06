@@ -73,7 +73,12 @@ overrides:
   "ip-address": "10.7.2"
   "lodash": "4.18.1"
   "mermaid@11.17.2>dompurify": "^3.4.16"
+  "mermaid@11.17.2>katex": "0.18.9"
+  "micromark-extension-math@3.1.0>katex": "0.18.9"
   "next@16.3.7>postcss": "8.5.28"
+  "solid-js@1.9.15>seroval": "1.6.8"
+  "solid-js@1.9.15>seroval-plugins": "1.6.8"
+  "source-map-js": "1.2.2"
 
 # The tested test-utils-only exception is recorded in scripts/dependencies/policy.ts.
 peerDependencyRules:
