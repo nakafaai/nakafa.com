@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
 import { slugify } from "@repo/utilities/slug";
-import { Array as Arr, Option, pipe } from "effect";
+import { Array as Arr, Option, Order, pipe } from "effect";
 
 /** The implicit section before a document's first heading. */
 const READ_START_SECTION = "top";
@@ -22,7 +22,7 @@ interface ReadSection {
 
 /** Splits agent markdown at level-two and level-three headings. */
 function splitSections(markdown: string) {
-  const sections: ReadSection[] = [];
+  let sections: ReadSection[] = [];
   const counts = new Map<string, number>();
   let title = "Start";
   let slug = READ_START_SECTION;
@@ -30,13 +30,13 @@ function splitSections(markdown: string) {
   const close = () => {
     const text = Arr.join(lines, "\n").trim();
     if (text) {
-      sections.push({ slug, text, title });
+      sections = Arr.append(sections, { slug, text, title });
     }
   };
   for (const line of markdown.split("\n")) {
     const heading = HEADING.exec(line);
     if (!heading?.[1]) {
-      lines.push(line);
+      lines = Arr.append(lines, line);
       continue;
     }
     close();
@@ -80,11 +80,11 @@ function splitParts(section: ReadSection, limit: number): ReadSection[] {
   if (countTextTokens(section.text) <= limit) {
     return [section];
   }
-  const parts: string[] = [];
+  let parts: string[] = [];
   let lines: string[] = [];
   let used = 0;
   const close = () => {
-    parts.push(Arr.join(lines, "\n"));
+    parts = Arr.append(parts, Arr.join(lines, "\n"));
     lines = [];
     used = 0;
   };
@@ -99,11 +99,11 @@ function splitParts(section: ReadSection, limit: number): ReadSection[] {
         continue;
       }
       const head = headWithin(rest, room);
-      lines.push(head);
+      lines = Arr.append(lines, head);
       close();
       rest = rest.slice(head.length);
     }
-    lines.push(rest);
+    lines = Arr.append(lines, rest);
     used += countTextTokens(rest) + 1;
   }
   close();
@@ -146,12 +146,10 @@ function formatOutline(sections: readonly ReadSection[]) {
  * that join it to the read.
  */
 function outlineReserve(sections: readonly ReadSection[]) {
-  const entries = Arr.map(
-    sections,
-    (section) => countTextTokens(formatEntry(section)) + 1
-  )
-    .sort((first, second) => second - first)
-    .slice(0, OUTLINE_LIMIT);
+  const entries = Arr.sort(
+    Arr.map(sections, (section) => countTextTokens(formatEntry(section)) + 1),
+    Order.flip(Order.Number)
+  ).slice(0, OUTLINE_LIMIT);
   const frame = countTextTokens(
     `\n\n## Other Sections\n- ${sections.length} more sections\n\n`
   );
@@ -205,14 +203,14 @@ export function formatRead(
   }
   const bodyBudget = budget - countTextTokens(header) - outlineReserve(parts);
   const from = Math.max(start, 0);
-  const included: ReadSection[] = [];
+  let included: ReadSection[] = [];
   let used = 0;
   for (const candidate of parts.slice(from)) {
     const cost = countTextTokens(candidate.text);
     if (included.length > 0 && used + cost > bodyBudget) {
       break;
     }
-    included.push(candidate);
+    included = Arr.append(included, candidate);
     used += cost;
   }
   const end = from + included.length;

@@ -109,9 +109,9 @@ describe("Nakafa sectioned reads", () => {
     const steps = (read: string) => read.split(step).length - 1;
     let read = formatRead(content);
     let seen = steps(read);
-    const continued: string[] = [];
+    let continued: string[] = [];
     for (let slug = next(read); slug?.startsWith("bukti:"); slug = next(read)) {
-      continued.push(slug);
+      continued = Arr.append(continued, slug);
       read = formatRead(content, { section: slug });
       expect(countTextTokens(read)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
       expect(read).not.toContain("## Bukti");
@@ -135,11 +135,11 @@ describe("Nakafa sectioned reads", () => {
     const body = (read: string) =>
       Arr.filter(read.split("\n\n"), (block) => DIGITS.test(block));
     let read = formatRead(content);
-    const blocks = body(read);
+    let blocks = body(read);
     for (let slug = NEXT_SECTION.exec(read)?.[1]; slug; ) {
       read = formatRead(content, { section: slug });
       expect(countTextTokens(read)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
-      blocks.push(...body(read));
+      blocks = Arr.appendAll(blocks, body(read));
       const following = NEXT_SECTION.exec(read)?.[1];
       slug = following === "data" ? undefined : following;
     }

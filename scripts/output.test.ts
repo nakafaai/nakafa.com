@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, PlatformError, Sink, Stdio } from "effect";
+import { Effect, PlatformError, Ref, Sink, Stdio } from "effect";
+import { capture, makeCapture } from "#scripts/capture";
 import { writeError, writeOutput } from "#scripts/output";
 
 const closedStream = PlatformError.systemError({
@@ -11,28 +12,18 @@ const closedStream = PlatformError.systemError({
 describe("repository output", () => {
   it.effect("writes messages to their own standard stream", () =>
     Effect.gen(function* () {
-      const stdout: Array<string | Uint8Array> = [];
-      const stderr: Array<string | Uint8Array> = [];
+      const stdout = yield* makeCapture;
+      const stderr = yield* makeCapture;
       yield* Effect.all([writeOutput("passed\n"), writeError("failed\n")]).pipe(
         Effect.provide(
           Stdio.layerTest({
-            stderr: () =>
-              Sink.forEachArray((chunks) =>
-                Effect.sync(() => {
-                  stderr.push(...chunks);
-                })
-              ),
-            stdout: () =>
-              Sink.forEachArray((chunks) =>
-                Effect.sync(() => {
-                  stdout.push(...chunks);
-                })
-              ),
+            stderr: capture(stderr),
+            stdout: capture(stdout),
           })
         )
       );
-      assert.deepStrictEqual(stdout, ["passed\n"]);
-      assert.deepStrictEqual(stderr, ["failed\n"]);
+      assert.deepStrictEqual(yield* Ref.get(stdout), ["passed\n"]);
+      assert.deepStrictEqual(yield* Ref.get(stderr), ["failed\n"]);
     })
   );
 

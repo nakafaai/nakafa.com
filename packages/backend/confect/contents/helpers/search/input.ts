@@ -4,7 +4,7 @@ import {
   NAKAFA_AGENT_MAX_OFFSET,
   NAKAFA_AGENT_MAX_QUERIES,
 } from "@repo/contents/agent/search";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 export class ContentSearchInputError extends Schema.TaggedError<ContentSearchInputError>()(
   "ContentSearchInputError",
   {
@@ -46,28 +46,12 @@ export const validateContentSearchInput = Effect.fn(
 
 /** Normalizes unique query texts without changing wording. */
 function getQueryTexts({ queries }: ContentSearchInput) {
-  const texts: string[] = [];
-  const seen = new Set<string>();
-  for (const queryText of queries ?? []) {
-    appendQueryText(texts, seen, queryText);
-  }
-  return texts;
-}
-
-/** Appends one unique, non-empty query text. */
-function appendQueryText(
-  texts: string[],
-  seen: Set<string>,
-  queryText: string | undefined
-) {
-  const text = queryText?.trim();
-  if (!text) {
-    return;
-  }
-  const key = text.toLocaleLowerCase();
-  if (seen.has(key)) {
-    return;
-  }
-  texts.push(text);
-  seen.add(key);
+  const texts = Arr.flatMap(queries ?? [], (queryText) => {
+    const text = queryText?.trim();
+    return text ? [text] : [];
+  });
+  return Arr.dedupeWith(
+    texts,
+    (left, right) => left.toLocaleLowerCase() === right.toLocaleLowerCase()
+  );
 }

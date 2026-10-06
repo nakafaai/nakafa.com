@@ -65,7 +65,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
   anchor: string
 ) {
   const ctx = yield* ActionCtx;
-  const lines: string[] = [];
+  let lines: string[] = [];
   let cursor: string | null = null;
   let done = false;
   while (!done) {
@@ -84,7 +84,8 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
     for (const message of page.page) {
       if (message.order > from && message.order <= through && message.text) {
         const speaker = message.message?.role === "user" ? "Learner" : "Nina";
-        lines.push(
+        lines = Arr.append(
+          lines,
           `${speaker}: ${boundText(message.text, MESSAGE_TOKENS, "Message shortened.")}`
         );
       }
@@ -93,7 +94,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
       page.isDone || Arr.some(page.page, (message) => message.order <= from);
     cursor = page.continueCursor;
   }
-  return Arr.join(lines.reverse(), "\n\n");
+  return Arr.join(Arr.reverse(lines), "\n\n");
 });
 
 /**

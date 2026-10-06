@@ -140,24 +140,24 @@ function partitionQuranQueries(
   appLocale: ContentSearchInput["locale"],
   queryTexts: readonly string[]
 ) {
-  const exactSurahNumbers: number[] = [];
+  let exactSurahNumbers: number[] = [];
   const seenExact = new Set<number>();
-  const textQueries: string[] = [];
+  let textQueries: string[] = [];
   for (const queryText of queryTexts) {
     const route = getExactRouteQuery(appLocale, queryText);
     if (!route) {
-      textQueries.push(queryText);
+      textQueries = Arr.append(textQueries, queryText);
       continue;
     }
     const surahNumber = getExactQuranSurah(route);
     if (Option.isNone(surahNumber)) {
-      textQueries.push(getRouteSearchText(queryText));
+      textQueries = Arr.append(textQueries, getRouteSearchText(queryText));
       continue;
     }
     if (seenExact.has(surahNumber.value)) {
       continue;
     }
-    exactSurahNumbers.push(surahNumber.value);
+    exactSurahNumbers = Arr.append(exactSurahNumbers, surahNumber.value);
     seenExact.add(surahNumber.value);
   }
   return {

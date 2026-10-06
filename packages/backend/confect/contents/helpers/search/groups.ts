@@ -12,7 +12,7 @@ export function interleaveSearchGroups<Item>(
   if (limit <= 0) {
     return [];
   }
-  const ranked: Item[] = [];
+  let ranked: Item[] = [];
   const seen = new Set<string>();
   const maxLength = Math.max(
     0,
@@ -28,7 +28,7 @@ export function interleaveSearchGroups<Item>(
       if (seen.has(identity)) {
         continue;
       }
-      ranked.push(document);
+      ranked = Arr.append(ranked, document);
       seen.add(identity);
       if (ranked.length >= limit) {
         return ranked;

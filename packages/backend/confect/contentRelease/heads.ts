@@ -67,7 +67,7 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
       numItems: pageSize,
     })
     .pipe(Effect.orDie);
-  const heads: ContentHead[] = [];
+  let heads: ContentHead[] = [];
   for (const key of stored.page) {
     const head = yield* resolveContentHead(
       key.contentKey,
@@ -75,7 +75,7 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
       sequence
     ).pipe(Effect.provide(publicationLayer));
     if (head) {
-      heads.push(head);
+      heads = Arr.append(heads, head);
     }
   }
   const page = {

@@ -398,7 +398,7 @@ describe("contentRelease/snapshot/batch", () => {
               batchIndex: 0,
               family: "program",
               releaseId: TEST_RELEASE_ID,
-              rowJson: [...data.rowJson].reverse(),
+              rowJson: Arr.reverse(data.rowJson),
               snapshotId: data.snapshotId,
             })
           ).rejects.toMatchObject({

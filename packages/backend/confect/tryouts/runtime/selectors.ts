@@ -9,7 +9,7 @@ import type {
   TryoutQuestionSelector,
   TryoutSectionContentAccess,
 } from "@repo/backend/confect/tryouts/runtime/spec";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Order, pipe } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -49,9 +49,12 @@ export const projectTryoutSignedContent = Effect.fn(
     : [];
   const previewAnswers = input.preview
     ? yield* Effect.forEach(
-        Arr.filter(input.placements, (placement) =>
-          isTryoutReviewPreviewQuestion(placement.questionOrder)
-        ).sort((left, right) => left.questionOrder - right.questionOrder),
+        pipe(
+          Arr.filter(input.placements, (placement) =>
+            isTryoutReviewPreviewQuestion(placement.questionOrder)
+          ),
+          Arr.sortWith((placement) => placement.questionOrder, Order.Number)
+        ),
         answerSelector
       )
     : [];

@@ -70,12 +70,12 @@ export function groupMetricsQueueItems(
     ]);
     const groups = identities.get(key) ?? [];
     const current = groups.at(-1);
-    if (current && current.length < groupSize) {
-      current.push(queueItem);
-    } else {
-      groups.push([queueItem]);
-    }
-    identities.set(key, groups);
+    identities.set(
+      key,
+      current && current.length < groupSize
+        ? Arr.append(Arr.dropRight(groups, 1), Arr.append(current, queueItem))
+        : Arr.append(groups, [queueItem])
+    );
   }
   return Arr.flatten([...identities.values()]);
 }

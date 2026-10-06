@@ -27,6 +27,7 @@ import {
   type SourceFile,
   type Statement,
 } from "typescript/unstable/ast";
+import { children } from "#scripts/check/source";
 
 type RenderFunction = ArrowFunction | FunctionDeclaration | FunctionExpression;
 
@@ -71,18 +72,16 @@ function returnsJsx(fn: RenderFunction) {
   if (!isBlock(body)) {
     return isJsxValue(body);
   }
-  const statements: Node[] = [body];
-  for (const node of statements) {
-    if (isReturnStatement(node) && isJsxValue(node.expression)) {
-      return true;
-    }
-    node.forEachChild((child) => {
-      if (!(isFunctionValue(child) || isFunctionDeclaration(child))) {
-        statements.push(child);
-      }
-    });
-  }
-  return false;
+  /** Whether a node returns JSX outside the functions nested in it. */
+  const returnsValue = (node: Node): boolean =>
+    (isReturnStatement(node) && isJsxValue(node.expression)) ||
+    Arr.some(
+      children(node),
+      (child) =>
+        !(isFunctionValue(child) || isFunctionDeclaration(child)) &&
+        returnsValue(child)
+    );
+  return returnsValue(body);
 }
 
 /** Returns the callee name of a wrapper call such as `memo` or `React.memo`. */
@@ -135,21 +134,20 @@ export function inspectReactSource(file: string, sourceFile: SourceFile) {
   if (!JSX_MODULE_PATTERN.test(file)) {
     return [];
   }
-  const violations: string[] = [];
-  const visit = (node: Node, component: string | undefined) => {
+  /** Returns the nested render functions below one node, in source order. */
+  const visit = (node: Node, component: string | undefined): string[] => {
     const declaration = renderDeclaration(node);
-    if (declaration !== undefined && component !== undefined) {
-      violations.push(
-        `${file}: declare ${declaration.name} as a named module-level component instead of a function that returns JSX inside ${component}.`
-      );
-    }
     const owner = component ?? declaration?.name;
-    node.forEachChild((child) => {
-      visit(child, owner);
-    });
+    return Arr.appendAll(
+      declaration !== undefined && component !== undefined
+        ? [
+            `${file}: declare ${declaration.name} as a named module-level component instead of a function that returns JSX inside ${component}.`,
+          ]
+        : [],
+      Arr.flatMap(children(node), (child) => visit(child, owner))
+    );
   };
-  visit(sourceFile, undefined);
-  return violations;
+  return visit(sourceFile, undefined);
 }
 
 /** Shared-state APIs the codebase does not use, by module, with the rule that replaces each. */
@@ -224,20 +222,20 @@ function inspectStateImport(
  * imported by name or reached through a default or namespace import.
  */
 export function inspectStateSource(file: string, sourceFile: SourceFile) {
-  const violations: string[] = [];
   const namespaces = new Map<string, ReadonlyMap<string, string>>();
-  for (const statement of sourceFile.statements) {
-    violations.push(...inspectStateImport(file, statement, namespaces));
-  }
-  const visit = (node: Node) => {
-    if (isPropertyAccessExpression(node) && isIdentifier(node.expression)) {
-      const rule = namespaces.get(node.expression.text)?.get(node.name.text);
-      if (rule !== undefined) {
-        violations.push(`${file}: ${rule}.`);
-      }
-    }
-    node.forEachChild(visit);
+  const imports = Arr.flatMap(sourceFile.statements, (statement) =>
+    inspectStateImport(file, statement, namespaces)
+  );
+  /** Returns the replaced APIs read through a namespace below one node. */
+  const visit = (node: Node): string[] => {
+    const rule =
+      isPropertyAccessExpression(node) && isIdentifier(node.expression)
+        ? namespaces.get(node.expression.text)?.get(node.name.text)
+        : undefined;
+    return Arr.appendAll(
+      rule === undefined ? [] : [`${file}: ${rule}.`],
+      Arr.flatMap(children(node), visit)
+    );
   };
-  visit(sourceFile);
-  return violations;
+  return Arr.appendAll(imports, visit(sourceFile));
 }

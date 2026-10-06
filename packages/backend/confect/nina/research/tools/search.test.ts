@@ -4,7 +4,7 @@ import type {
   CapabilityProgress,
 } from "@repo/backend/confect/nina/capability/progress";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, MutableRef } from "effect";
 
 const firecrawlApp = vi.hoisted(() => ({
   search: vi.fn(),
@@ -40,18 +40,18 @@ type WrittenPart = CapabilityArtifact;
 
 /** Creates a stream publish harness that records web-search data parts for assertions. */
 function createProgress() {
-  const parts: WrittenPart[] = [];
+  const written = MutableRef.make<readonly WrittenPart[]>([]);
   const publish: CapabilityProgress = Effect.fn("test.publish")((part) =>
     Effect.sync(() => {
-      parts.push(part);
+      MutableRef.update(written, Arr.append(part));
     })
   );
 
-  return { parts, publish };
+  return { parts: () => MutableRef.get(written), publish };
 }
 
 /** Extracts web-search data parts from a recorded test publish stream. */
-function getWebSearchParts(parts: WrittenPart[]) {
+function getWebSearchParts(parts: readonly WrittenPart[]) {
   return Arr.flatMap(parts, (part) => {
     if (part.type !== "data-web-search") {
       return [];
@@ -152,7 +152,7 @@ describe("research web search tool", () => {
         expect(output.text).toContain(
           "- Inline citation: [example.com](https://example.com/research)"
         );
-        expect(parts).toEqual([
+        expect(parts()).toEqual([
           expect.objectContaining({
             type: "data-web-search",
             data: expect.objectContaining({ status: "loading" }),
@@ -205,7 +205,7 @@ describe("research web search tool", () => {
           }),
         })
       );
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           data: expect.objectContaining({
             queries: ["AI SDK docs"],
@@ -253,7 +253,10 @@ describe("research web search tool", () => {
         );
         expect(output.result.sources).toHaveLength(2);
         expect(
-          Arr.filter(getWebSearchParts(parts), (part) => part.status === "done")
+          Arr.filter(
+            getWebSearchParts(parts()),
+            (part) => part.status === "done"
+          )
         ).toEqual([
           expect.objectContaining({
             queries: ["AI SDK DevTools official docs"],
@@ -307,7 +310,7 @@ describe("research web search tool", () => {
       expect(Arr.map(output.result.sources, (source) => source.url)).toEqual([
         "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
       ]);
-      expect(getWebSearchParts(parts)).toEqual(
+      expect(getWebSearchParts(parts())).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             queries: ["AI SDK DevTools"],
@@ -343,7 +346,7 @@ describe("research web search tool", () => {
 
         expect(output.result.sources).toEqual([]);
         expect(output.text).toContain("# Web Search Results");
-        expect(parts.at(-1)).toEqual(
+        expect(parts().at(-1)).toEqual(
           expect.objectContaining({
             type: "data-web-search",
             data: expect.objectContaining({
@@ -371,7 +374,7 @@ describe("research web search tool", () => {
       expect(output.result.sources).toEqual([]);
       expect(output.result.error).toContain("Failed to search");
       expect(output.text).toContain("Failed to search");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           type: "data-web-search",
           data: expect.objectContaining({

@@ -9,9 +9,9 @@ import {
   PlatformError,
   Record as Rec,
   Ref,
-  Sink,
   Stdio,
 } from "effect";
+import { capture, makeCapture } from "#scripts/capture";
 import { RULES } from "#scripts/check/rules";
 import { checkTestPolicy } from "#scripts/check/tests";
 
@@ -38,20 +38,12 @@ const writeFixtures = Effect.fn("TestPolicyTest.writeFixtures")(function* (
   );
 });
 
-/** Appends captured stream chunks to `chunks`. */
-function capture(chunks: Ref.Ref<readonly (string | Uint8Array)[]>) {
-  return () =>
-    Sink.forEachArray((written: readonly (string | Uint8Array)[]) =>
-      Ref.update(chunks, Arr.appendAll(written))
-    );
-}
-
 /** Runs the test policy against a fixture with captured standard streams. */
 const checkFixture = Effect.fn("TestPolicyTest.checkFixture")(function* (
   root: string
 ) {
-  const stdout = yield* Ref.make<readonly (string | Uint8Array)[]>([]);
-  const stderr = yield* Ref.make<readonly (string | Uint8Array)[]>([]);
+  const stdout = yield* makeCapture;
+  const stderr = yield* makeCapture;
   const status = yield* checkTestPolicy(root).pipe(
     Effect.provide(
       Stdio.layerTest({ stderr: capture(stderr), stdout: capture(stdout) })

@@ -33,13 +33,17 @@ items.find(Boolean);
 items["map"](String);
 items[name](String);
 run();
+items.sort();
+Arr.sort(items, order);
 `;
       assert.deepStrictEqual(yield* findings(source, SCRIPT), [
         "3 array-method",
         "5 array-method",
         "6 array-method",
+        "9 array-mutation",
         "10 array-search",
         "11 array-method",
+        "14 array-mutation",
       ]);
       assert.deepStrictEqual(yield* findings(source), []);
     })

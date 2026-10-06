@@ -124,13 +124,13 @@ export const loadAttemptResponses = Effect.fn(
     sections,
     sectionCoverage
   );
-  const links: ResponsePlacementLink[] = [];
+  let links: ResponsePlacementLink[] = [];
   for (const placement of validatedPlacements) {
     const section = sectionsByIdentity.get(placement.sectionIdentity);
     if (!section) {
       continue;
     }
-    links.push({
+    links = Arr.append(links, {
       placement,
       sectionAttemptId: section._id,
     });

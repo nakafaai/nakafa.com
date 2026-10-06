@@ -204,11 +204,11 @@ describe("contents/mutations/analytics", () => {
   it("drains 64 dense identities through bounded production pages", async () => {
     const target = createTarget();
     await seedDrain(target);
-    const pages: Awaited<ReturnType<typeof runDrainPage>>[] = [];
+    let pages: Awaited<ReturnType<typeof runDrainPage>>[] = [];
 
     while (true) {
       const page = await runDrainPage(target);
-      pages.push(page);
+      pages = Arr.append(pages, page);
       if (!page.result.hasMore) {
         break;
       }

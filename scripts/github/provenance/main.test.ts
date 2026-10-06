@@ -1,6 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Effect, FileSystem, Layer, Sink, Stdio } from "effect";
+import { Array as Arr, Effect, FileSystem, Layer, Ref, Stdio } from "effect";
+import { capture, makeCapture } from "#scripts/capture";
 import { ProvenanceBundleVerifier } from "#scripts/github/provenance/bundle";
 import { verifyProvenanceAudit } from "#scripts/github/provenance/main";
 
@@ -77,31 +78,30 @@ const cliArguments = (auditPath: string) => [
 const runVerifier = Effect.fn("ProvenanceMainTest.runVerifier")(function* (
   argv: readonly string[]
 ) {
-  const signed: unknown[] = [];
-  const stdout: Array<string | Uint8Array> = [];
+  const signed = yield* Ref.make<readonly unknown[]>([]);
+  const stdout = yield* makeCapture;
   const result = yield* verifyProvenanceAudit(argv).pipe(
     Effect.provide(
       Layer.mergeAll(
         Layer.succeed(ProvenanceBundleVerifier, {
           verify: (bundle, identity) =>
-            Effect.sync(() => {
-              signed.push([bundle, identity]);
-              return STATEMENT;
-            }),
+            Effect.as(
+              Ref.update(signed, Arr.append<unknown>([bundle, identity])),
+              STATEMENT
+            ),
         }),
         Stdio.layerTest({
-          stdout: () =>
-            Sink.forEachArray((chunks) =>
-              Effect.sync(() => {
-                stdout.push(...chunks);
-              })
-            ),
+          stdout: capture(stdout),
         })
       )
     ),
     Effect.result
   );
-  return { result, signed, stdout };
+  return {
+    result,
+    signed: yield* Ref.get(signed),
+    stdout: yield* Ref.get(stdout),
+  };
 });
 
 describe("provenance verifier CLI", () => {

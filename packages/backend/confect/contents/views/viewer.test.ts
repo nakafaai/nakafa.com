@@ -13,7 +13,7 @@ import {
   readContentViewState as readViewState,
   seedArticleViewer,
 } from "@repo/backend/test/content/view";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Order } from "effect";
 
 describe("contents/views/viewer", () => {
   beforeEach(() => {
@@ -383,7 +383,10 @@ describe("contents/views/viewer", () => {
       { lastViewedAt: NOW + 2000, userId: identity.userId },
     ]);
     expect(
-      Arr.map(state.viewerSignals, (signal) => signal.viewerKey).sort()
+      Arr.sort(
+        Arr.map(state.viewerSignals, (signal) => signal.viewerKey),
+        Order.String
+      )
     ).toEqual(["device:device-1", `user:${identity.userId}`]);
   });
 

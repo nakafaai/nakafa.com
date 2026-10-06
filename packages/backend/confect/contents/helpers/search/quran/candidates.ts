@@ -12,7 +12,7 @@ interface TextQueryState {
   exhausted: boolean;
   readonly query: string;
   requested: number;
-  readonly rows: Docs["quranSearch"][];
+  rows: readonly Docs["quranSearch"][];
 }
 
 /** Reads fair per-query prefixes while reserving repeated and signed reads. */
@@ -179,11 +179,7 @@ function replaceRows(
 ) {
   state.exhausted = rows.length < requested;
   state.requested = requested;
-  state.rows.splice(
-    0,
-    state.rows.length,
-    ...Arr.filter(rows, (row) => !exactIdentities.has(row.identity))
-  );
+  state.rows = Arr.filter(rows, (row) => !exactIdentities.has(row.identity));
 }
 
 /** Selects unique candidates fairly across independently ranked indexes. */

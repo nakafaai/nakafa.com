@@ -9,7 +9,7 @@ import {
   makeTryoutStartHierarchy,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, pipe } from "effect";
+import { Array as Arr, Effect, Order, pipe } from "effect";
 
 describe("public signed try-out publication", () => {
   it.effect(
@@ -48,7 +48,12 @@ describe("public signed try-out publication", () => {
               })
             )
           ).toEqual({
-            paths: Arr.map(expected, ({ publicPath }) => publicPath).sort(),
+            paths: Arr.sort(
+              Arr.flatMap(expected, ({ publicPath }) =>
+                Arr.fromNullishOr(publicPath)
+              ),
+              Order.String
+            ),
           });
           expect(
             yield* Effect.promise(() =>

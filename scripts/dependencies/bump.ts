@@ -2,6 +2,7 @@ import {
   Array as Arr,
   Config,
   Effect,
+  Order,
   Record as Rec,
   Result,
   Schema,
@@ -17,6 +18,7 @@ import {
   githubActionReleaseReviews,
 } from "#scripts/github/release";
 import { writeError, writeOutput } from "#scripts/output";
+import { problemWhen } from "#scripts/problem";
 
 interface BumpDependenciesOptions {
   readonly inspectPolicy?: typeof inspectRepositoryPolicy;
@@ -85,7 +87,9 @@ function decodeOutdatedDependencies(source: string) {
     Effect.flatMap(
       Schema.decodeUnknownEffect(Schema.Record(Schema.String, Schema.Unknown))
     ),
-    Effect.map((dependencies) => Rec.keys(dependencies).sort()),
+    Effect.map((dependencies) =>
+      Arr.sort(Rec.keys(dependencies), Order.String)
+    ),
     Effect.mapError(
       (cause) =>
         new DependencyMetadataError({
@@ -103,37 +107,39 @@ const reviewRegistryDependencies = Effect.fn("RepositoryPolicy.reviewRegistry")(
     run: typeof runPnpm,
     writeOutputMessage: typeof writeOutput
   ) {
-    const problems: string[] = [];
-    for (const [registry, reviewedLatest, reason] of REGISTRY_REVIEWS) {
-      const result = yield* run(root, ["view", registry, "version", "--json"], {
-        capture: true,
-      });
-      if (result.exitCode !== 0) {
-        problems.push(
-          result.stderr.trim() ||
-            `Unable to inspect reviewed dependency ${registry}.`
+    const problems = yield* Effect.forEach(
+      REGISTRY_REVIEWS,
+      Effect.fnUntraced(function* ([registry, reviewedLatest, reason]) {
+        const result = yield* run(
+          root,
+          ["view", registry, "version", "--json"],
+          { capture: true }
         );
-        continue;
-      }
+        if (result.exitCode !== 0) {
+          return [
+            result.stderr.trim() ||
+              `Unable to inspect reviewed dependency ${registry}.`,
+          ];
+        }
 
-      const latest = yield* decodeRegistryVersion(registry, result.stdout).pipe(
-        Effect.result
-      );
-      if (Result.isFailure(latest)) {
-        problems.push(latest.failure.message);
-        continue;
-      }
+        const latest = yield* decodeRegistryVersion(
+          registry,
+          result.stdout
+        ).pipe(Effect.result);
+        if (Result.isFailure(latest)) {
+          return [latest.failure.message];
+        }
 
-      if (latest.success !== reviewedLatest) {
-        problems.push(
+        yield* writeOutputMessage(
+          `${registry}: reviewed ${reviewedLatest}. ${reason}\n`
+        );
+        return problemWhen(
+          latest.success !== reviewedLatest,
           `${registry} is now ${latest.success}; last reviewed ${reviewedLatest}.`
         );
-      }
-      yield* writeOutputMessage(
-        `${registry}: reviewed ${reviewedLatest}. ${reason}\n`
-      );
-    }
-    return problems;
+      })
+    );
+    return Arr.flatten(problems);
   }
 );
 
@@ -157,10 +163,11 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
       return update.exitCode;
     }
 
-    const problems = [...(yield* inspectPolicy(root))];
-
-    problems.push(
-      ...(yield* reviewRegistryDependencies(root, run, writeOutputMessage))
+    const policyProblems = yield* inspectPolicy(root);
+    const registryProblems = yield* reviewRegistryDependencies(
+      root,
+      run,
+      writeOutputMessage
     );
 
     const token = yield* Config.option(Config.Redacted("GITHUB_TOKEN"));
@@ -175,41 +182,47 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
       { concurrency: "unbounded" }
     );
 
-    for (const check of actionChecks) {
-      if (Result.isFailure(check)) {
-        problems.push(check.failure.message);
-        continue;
-      }
-      const { latest, review } = check.success;
-      if (latest !== review.expectedTag) {
-        problems.push(
+    const actionProblems = yield* Effect.forEach(
+      actionChecks,
+      Effect.fnUntraced(function* (check) {
+        if (Result.isFailure(check)) {
+          return [check.failure.message];
+        }
+        const { latest, review } = check.success;
+        yield* writeOutputMessage(
+          `${review.repository}: reviewed ${review.expectedTag}. ${review.reason}\n`
+        );
+        return problemWhen(
+          latest !== review.expectedTag,
           `${review.repository} is now ${latest}; last reviewed ${review.expectedTag}.`
         );
-      }
-      yield* writeOutputMessage(
-        `${review.repository}: reviewed ${review.expectedTag}. ${review.reason}\n`
-      );
-    }
+      })
+    );
 
     const outdated = yield* run(
       root,
       ["outdated", "--recursive", "--format", "json"],
       { capture: true }
     );
-    if (outdated.exitCode === 0 || outdated.exitCode === 1) {
-      const unresolved = yield* decodeOutdatedDependencies(
-        outdated.stdout
-      ).pipe(Effect.result);
-      if (Result.isFailure(unresolved)) {
-        problems.push(unresolved.failure.message);
-      } else if (unresolved.success.length > 0) {
-        problems.push(
-          `Routine dependencies remain outdated: ${Arr.join(unresolved.success, ", ")}.`
-        );
-      }
-    } else {
-      problems.push(outdated.stderr.trim() || "pnpm outdated failed.");
-    }
+    const outdatedProblems =
+      outdated.exitCode === 0 || outdated.exitCode === 1
+        ? yield* decodeOutdatedDependencies(outdated.stdout).pipe(
+            Effect.match({
+              onFailure: (failure) => [failure.message],
+              onSuccess: (unresolved) =>
+                problemWhen(
+                  unresolved.length > 0,
+                  `Routine dependencies remain outdated: ${Arr.join(unresolved, ", ")}.`
+                ),
+            })
+          )
+        : [outdated.stderr.trim() || "pnpm outdated failed."];
+    const problems = Arr.flatten([
+      policyProblems,
+      registryProblems,
+      Arr.flatten(actionProblems),
+      outdatedProblems,
+    ]);
 
     if (problems.length > 0) {
       yield* writeErrorMessage(`${Arr.join(problems, "\n")}\n`);

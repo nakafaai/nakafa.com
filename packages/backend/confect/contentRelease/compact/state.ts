@@ -187,12 +187,12 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
   const completedSequences = yield* Effect.forEach(completed, (release) =>
     protectedRelease(release)
   );
-  const sequences: number[] = [];
+  let sequences: number[] = [];
   for (const entry of [...slotSequences, ...completedSequences]) {
     if (entry === null) {
       return yield* earliestStoredSequence(state);
     }
-    sequences.push(...entry);
+    sequences = Arr.appendAll(sequences, entry);
   }
   return sequences.length === 0 ? state.nextSequence : Math.min(...sequences);
 });

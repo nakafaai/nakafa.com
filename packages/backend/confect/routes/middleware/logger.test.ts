@@ -5,9 +5,9 @@ import { HttpRouter, HttpServerResponse } from "effect/http";
 
 it.effect("logs request paths without OAuth query diagnostics", () =>
   Effect.gen(function* () {
-    const messages: string[] = [];
+    let messages: string[] = [];
     const capture = Logger.map(Logger.formatStructured, (entry) => {
-      messages.push(JSON.stringify(entry));
+      messages = Arr.append(messages, JSON.stringify(entry));
     });
     const routes = HttpRouter.add(
       "GET",

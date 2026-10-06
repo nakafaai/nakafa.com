@@ -98,28 +98,28 @@ export const readProductionChanges = Effect.fn(
         });
       }
 
-      const fields = stdout.split("\0");
-      if (fields.at(-1) === "") {
-        fields.pop();
-      }
+      const split = stdout.split("\0");
+      const fields = split.at(-1) === "" ? Arr.dropRight(split, 1) : split;
       if (fields.length % 2 !== 0) {
         return yield* new ProductionAcceptanceError({
           message: "Git returned an invalid changed-path record.",
         });
       }
 
-      const changes: ProductionChange[] = [];
-      for (let index = 0; index < fields.length; index += 2) {
-        const status = fields[index];
-        const path = fields[index + 1];
-        if (!(status && path)) {
-          return yield* new ProductionAcceptanceError({
-            message: "Git returned an incomplete changed-path record.",
-          });
-        }
-        changes.push({ path, status });
-      }
-      return changes;
+      return yield* Effect.forEach(
+        Arr.chunksOf(fields, 2),
+        ([status, path]): Effect.Effect<
+          ProductionChange,
+          ProductionAcceptanceError
+        > =>
+          status && path
+            ? Effect.succeed({ path, status })
+            : Effect.fail(
+                new ProductionAcceptanceError({
+                  message: "Git returned an incomplete changed-path record.",
+                })
+              )
+      );
     })
   )
 );

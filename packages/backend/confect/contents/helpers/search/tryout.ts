@@ -15,7 +15,7 @@ import {
 import { findTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Order, pipe } from "effect";
 
 type ContentSearchInput = typeof contentSearchInputValidator.Type;
 type TryoutCatalog = Option.Option.Value<
@@ -44,7 +44,10 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
     return [];
   }
   const documents = Arr.flatMap(
-    [...catalog.value.entries].sort((left, right) => left.index - right.index),
+    pipe(
+      catalog.value.entries,
+      Arr.sortWith((entry) => entry.index, Order.Number)
+    ),
     (entry) => toTryoutSearchDocument(entry, args.locale)
   );
   if (queryTexts.length === 0) {

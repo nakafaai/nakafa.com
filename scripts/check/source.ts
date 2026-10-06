@@ -75,6 +75,15 @@ export function projectConfig(files: readonly string[]) {
   }).pipe(Effect.orDie);
 }
 
+/** Returns the direct children of one node, in source order. */
+export function children(node: Node) {
+  const nodes = MutableList.make<Node>();
+  node.forEachChild((child) => {
+    MutableList.append(nodes, child);
+  });
+  return MutableList.takeAll(nodes);
+}
+
 /** Returns value-position descendants in breadth-first order, excluding type-only subtrees. */
 export function descendants(sourceFile: SourceFile, skipTypes = true) {
   const pending = MutableList.make<Node>();

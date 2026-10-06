@@ -9,7 +9,7 @@ const FOCUS_LABELS = {
 
 /** Formats the account facts Nina reads for a turn, when there are any. */
 export function formatLearnerProfile(profile: typeof NinaLearnerProfile.Type) {
-  const lines = Arr.filter(
+  let lines = Arr.filter(
     [
       profile.focus && `- Focus: ${FOCUS_LABELS[profile.focus]}`,
       profile.region && `- Region: ${profile.region}`,
@@ -21,14 +21,14 @@ export function formatLearnerProfile(profile: typeof NinaLearnerProfile.Type) {
   const { tryout } = profile;
   if (tryout) {
     const date = new Date(tryout.finishedAt).toISOString().slice(0, 10);
-    lines.push(
+    lines = Arr.appendAll(lines, [
       `- Latest finished try-out: ${tryout.exam} ${tryout.set} on ${date}, score ${tryout.score} (${tryout.status}), ${tryout.correct} of ${tryout.total} correct`,
       ...Arr.map(
         tryout.sections,
         (section) =>
           `  - ${section.key}: ${section.correct} of ${section.total} correct`
-      )
-    );
+      ),
+    ]);
   }
   return lines.length > 0 ? Arr.join(["Account:", ...lines], "\n") : undefined;
 }
@@ -52,7 +52,7 @@ export function formatLearnerPrompt({
       ? Arr.join(
           [
             "Remembered from earlier conversations, newest first (the learner can view and delete these in settings):",
-            ...Arr.map([...facts].reverse(), (fact) => `- ${fact.text}`),
+            ...Arr.map(Arr.reverse(facts), (fact) => `- ${fact.text}`),
           ],
           "\n"
         )

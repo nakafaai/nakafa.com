@@ -4,7 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Array as Arr } from "effect";
+import { Array as Arr, Order } from "effect";
 
 const NOW = Date.UTC(2026, 4, 13, 12, 0, 0);
 
@@ -142,10 +142,12 @@ describe("chats/queries", () => {
     expect(Arr.map(defaultChats.page, (chat) => chat.visibility)).toEqual([
       "public",
     ]);
-    expect(Arr.map(ownerChats.page, (chat) => chat.visibility).sort()).toEqual([
-      "private",
-      "public",
-    ]);
+    expect(
+      Arr.sort(
+        Arr.map(ownerChats.page, (chat) => chat.visibility),
+        Order.String
+      )
+    ).toEqual(["private", "public"]);
   });
 
   it("does not expose private chats through public chat lists", async () => {

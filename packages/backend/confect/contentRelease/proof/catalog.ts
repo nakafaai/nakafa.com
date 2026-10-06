@@ -22,7 +22,7 @@ import {
 } from "@repo/backend/confect/contentRelease/spec";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolveContentHead } from "@repo/backend/content/publication/projection";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 export type CatalogCursor = typeof catalogCursorValidator.Type;
 export interface CatalogPage {
   readonly done: boolean;
@@ -146,7 +146,7 @@ export const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(
     const release = yield* catalogRelease(releaseId);
     const stored = yield* loadCatalogKeys(cursor);
     const keys = stored.slice(0, PROOF_PAGE_LIMIT);
-    const heads: (ContentHead & typeof contentHeadValidator.Type)[] = [];
+    let heads: (ContentHead & typeof contentHeadValidator.Type)[] = [];
     let nextCursor = cursor;
     let processed = 0;
     for (const key of keys) {
@@ -158,7 +158,7 @@ export const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(
       if (head) {
         // 128 schema-bounded heads fit below 652 KiB, within the proof ceiling.
         const { publicPath, ...fields } = head;
-        heads.push({
+        heads = Arr.append(heads, {
           ...fields,
           ...(publicPath === undefined
             ? {}

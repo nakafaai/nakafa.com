@@ -31,6 +31,16 @@ const ARRAY_METHODS = HashSet.make(
   "some",
   "toReversed"
 );
+/** Array methods that change their array in place. */
+const MUTATION_METHODS = HashSet.make(
+  "pop",
+  "push",
+  "reverse",
+  "shift",
+  "sort",
+  "splice",
+  "unshift"
+);
 /** Array methods that search for one element, which Effect returns as an Option. */
 const SEARCH_METHODS = HashSet.make(
   "find",
@@ -85,7 +95,7 @@ function calledMethod(node: Node) {
 
 /**
  * Returns the receiver of a call to an array method and the rule it breaks:
- * a method that transforms its array, or one that searches it. `join` counts
+ * a method that transforms its array, changes it in place, or searches it. `join` counts
  * with at most one argument, which tells it from the path helper of the same
  * name.
  */
@@ -99,6 +109,9 @@ function arrayCall(node: Node) {
     (call.method === "join" && call.count <= 1)
   ) {
     return { receiver: call.receiver, rule: "array-method" as const };
+  }
+  if (HashSet.has(MUTATION_METHODS, call.method)) {
+    return { receiver: call.receiver, rule: "array-mutation" as const };
   }
   return HashSet.has(SEARCH_METHODS, call.method)
     ? { receiver: call.receiver, rule: "array-search" as const }

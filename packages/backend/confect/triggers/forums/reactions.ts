@@ -27,7 +27,7 @@ export const forumReactionsHandler = Effect.fn(
       const forum = yield* database
         .table("schoolClassForums")
         .get(reaction.forumId);
-      const reactionCounts = [...forum.reactionCounts];
+      let reactionCounts = [...forum.reactionCounts];
       const existingIndex = Option.getOrElse(
         Arr.findFirstIndex(reactionCounts, (r) => r.emoji === reaction.emoji),
         () => -1
@@ -38,7 +38,7 @@ export const forumReactionsHandler = Effect.fn(
           count: reactionCounts[existingIndex].count + 1,
         };
       } else {
-        reactionCounts.push({
+        reactionCounts = Arr.append(reactionCounts, {
           emoji: reaction.emoji,
           count: 1,
         });
@@ -65,16 +65,20 @@ export const forumReactionsHandler = Effect.fn(
         );
         if (existingIndex >= 0) {
           const newCount = reactionCounts[existingIndex].count - 1;
-          if (newCount <= 0) {
-            reactionCounts.splice(existingIndex, 1);
-          } else {
-            reactionCounts[existingIndex] = {
-              emoji: oldReaction.emoji,
-              count: newCount,
-            };
-          }
+          const before = Arr.take(reactionCounts, existingIndex);
+          const after = Arr.drop(reactionCounts, existingIndex + 1);
+          const remaining =
+            newCount <= 0
+              ? Arr.appendAll(before, after)
+              : Arr.appendAll(
+                  Arr.append(before, {
+                    emoji: oldReaction.emoji,
+                    count: newCount,
+                  }),
+                  after
+                );
           yield* writer.table("schoolClassForums").patch(oldReaction.forumId, {
-            reactionCounts,
+            reactionCounts: remaining,
           });
         }
       }

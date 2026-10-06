@@ -345,7 +345,7 @@ describe("tryouts/queries/sets", () => {
           if (section?.kind !== "section") {
             return yield* Effect.die("Expected the technical section fixture.");
           }
-          const catalog = Arr.map(source, (row) => {
+          let catalog = Arr.map(source, (row) => {
             if (row.kind === "section") {
               return {
                 ...row,
@@ -367,7 +367,8 @@ describe("tryouts/queries/sets", () => {
             return row;
           });
           if (visibility === "visible") {
-            catalog.push(
+            catalog = Arr.append(
+              catalog,
               yield* Schema.decodeEffect(TryoutCatalogRowSchema)({
                 ...section,
                 graph: {

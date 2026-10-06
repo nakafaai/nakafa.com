@@ -8,7 +8,7 @@ import type { MathRequest } from "@repo/math/schema/request";
 import type { MathResult } from "@repo/math/schema/result";
 import type { MathToolInput } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
-import { ConfigProvider, Effect } from "effect";
+import { Array as Arr, ConfigProvider, Effect, MutableRef } from "effect";
 
 type WrittenPart = CapabilityArtifact;
 const input = {
@@ -61,13 +61,13 @@ const provider = ConfigProvider.fromEnvRecord({
 });
 /** Creates a stream publish harness that records math data parts for assertions. */
 function createProgress() {
-  const parts: WrittenPart[] = [];
+  const written = MutableRef.make<readonly WrittenPart[]>([]);
   const publish: CapabilityProgress = Effect.fn("test.publish")((part) =>
     Effect.sync(() => {
-      parts.push(part);
+      MutableRef.update(written, Arr.append(part));
     })
   );
-  return { parts, publish };
+  return { parts: () => MutableRef.get(written), publish };
 }
 afterEach(() => {
   vi.restoreAllMocks();
@@ -87,7 +87,7 @@ describe("math compute tool", () => {
       );
       expect(output).toContain("# Checked Math Work");
       expect(output).toContain("- Status: verified");
-      expect(parts).toEqual([
+      expect(parts()).toEqual([
         expect.objectContaining({
           data: expect.objectContaining({
             input: request,
@@ -135,7 +135,7 @@ describe("math compute tool", () => {
       expect(output).toContain(
         "Retry the same operation if the task gives omitted variables"
       );
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           data: expect.objectContaining({
             error: "math_check_unavailable",
@@ -165,7 +165,7 @@ describe("math compute tool", () => {
       );
       expect(output).toContain("- Status: error");
       expect(output).toContain("- Error code: math_check_unavailable");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           data: expect.objectContaining({
             error: "math_check_unavailable",
@@ -209,7 +209,7 @@ describe("math compute tool", () => {
         expect(output).toContain(
           "Retry the same operation with the explicit variable"
         );
-        expect(parts.at(-1)).toEqual(
+        expect(parts().at(-1)).toEqual(
           expect.objectContaining({
             data: expect.objectContaining({
               error: "math_check_unavailable",
@@ -239,7 +239,7 @@ describe("math compute tool", () => {
           "Ask the user for the exact missing expression"
         );
         expect(fetch).not.toHaveBeenCalled();
-        expect(parts).toEqual([]);
+        expect(parts()).toEqual([]);
       })
   );
   it.effect(
@@ -270,7 +270,7 @@ describe("math compute tool", () => {
           "Set variables to the unknowns that should be solved"
         );
         expect(fetch).not.toHaveBeenCalled();
-        expect(parts).toEqual([]);
+        expect(parts()).toEqual([]);
       })
   );
   it.effect(
@@ -300,7 +300,7 @@ describe("math compute tool", () => {
           "Every expression must involve at least one selected unknown"
         );
         expect(fetch).not.toHaveBeenCalled();
-        expect(parts).toEqual([]);
+        expect(parts()).toEqual([]);
       })
   );
   it.effect("keeps invalid input errors locale-free", () =>
@@ -317,7 +317,7 @@ describe("math compute tool", () => {
       );
       expect(output).toContain("- Error code: invalid_math_input");
       expect(fetch).not.toHaveBeenCalled();
-      expect(parts).toEqual([]);
+      expect(parts()).toEqual([]);
     })
   );
   it.effect("writes locale-free error data for math service failures", () =>
@@ -333,7 +333,7 @@ describe("math compute tool", () => {
         Effect.provideService(ConfigProvider.ConfigProvider, provider)
       );
       expect(output).toContain("- Error code: math_check_unavailable");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           data: expect.objectContaining({
             error: "math_check_unavailable",

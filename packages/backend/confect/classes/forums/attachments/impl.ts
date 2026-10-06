@@ -236,7 +236,7 @@ export const resolveForumAttachmentUploads = Effect.fn(
   const uploads = yield* Effect.forEach(uploadIds, (uploadId) =>
     getPendingUpload(uploadId)
   );
-  const finalizedUploads: ForumAttachmentUpload[] = [];
+  let finalizedUploads: ForumAttachmentUpload[] = [];
   for (const upload of uploads) {
     if (!upload || upload.uploadedBy !== userId || upload.forumId !== forumId) {
       return yield* failForumAttachment(
@@ -253,7 +253,7 @@ export const resolveForumAttachmentUploads = Effect.fn(
     const finalizedUpload: ForumAttachmentUpload = upload;
     yield* validateForumAttachmentPolicy(finalizedUpload);
     yield* validateStoredForumAttachmentMetadata(finalizedUpload);
-    finalizedUploads.push(finalizedUpload);
+    finalizedUploads = Arr.append(finalizedUploads, finalizedUpload);
   }
   return finalizedUploads;
 });

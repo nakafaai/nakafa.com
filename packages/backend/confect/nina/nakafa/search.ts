@@ -3,7 +3,7 @@ import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
 } from "@repo/contents/agent/schema/search";
-import { Array as Arr } from "effect";
+import { Array as Arr, Order } from "effect";
 
 type SearchResultInput = Pick<NakafaAgentSearchInput, "queries">;
 
@@ -66,16 +66,11 @@ function rankSearchItems(
     return items;
   }
 
-  return [...items].sort((left, right) => {
-    const scoreDelta =
-      getSearchScore(right, tokens) - getSearchScore(left, tokens);
-
-    if (scoreDelta !== 0) {
-      return scoreDelta;
-    }
-
-    return 0;
-  });
+  return Arr.sortWith(
+    items,
+    (item) => getSearchScore(item, tokens),
+    Order.flip(Order.Number)
+  );
 }
 
 /** Scores searchable metadata by exact normalized query-token matches. */

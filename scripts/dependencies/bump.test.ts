@@ -8,11 +8,12 @@ import {
   Layer,
   Option,
   PlatformError,
-  Sink,
+  Ref,
   Stdio,
 } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
+import { capture, makeCapture } from "#scripts/capture";
 import { bumpDependencies } from "#scripts/dependencies/bump";
 import type { runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
@@ -82,9 +83,9 @@ const runScenario = Effect.fn("DependencyBumpTest.runScenario")(function* ({
   inspectPolicy = () => [],
   release = reviewedRelease,
 }: Scenario) {
-  const commands: string[][] = [];
-  const errors: string[] = [];
-  const output: string[] = [];
+  const commands = yield* Ref.make<readonly string[][]>([]);
+  const errors = yield* Ref.make<readonly string[]>([]);
+  const output = yield* Ref.make<readonly string[]>([]);
   let inspections = 0;
   const status = yield* bumpDependencies({
     root: "/repository",
@@ -94,18 +95,12 @@ const runScenario = Effect.fn("DependencyBumpTest.runScenario")(function* ({
         return inspectPolicy();
       }),
     run: (_root, args) =>
-      Effect.sync(() => {
-        commands.push([...args]);
-        return command(args);
-      }),
-    writeError: (message) =>
-      Effect.sync(() => {
-        errors.push(message);
-      }),
-    writeOutput: (message) =>
-      Effect.sync(() => {
-        output.push(message);
-      }),
+      Effect.andThen(
+        Ref.update(commands, Arr.append([...args])),
+        Effect.sync(() => command(args))
+      ),
+    writeError: (message) => Ref.update(errors, Arr.append(message)),
+    writeOutput: (message) => Ref.update(output, Arr.append(message)),
   }).pipe(
     Effect.provide(
       Layer.mergeAll(NodeServices.layer, yield* releaseClient(release))
@@ -115,7 +110,13 @@ const runScenario = Effect.fn("DependencyBumpTest.runScenario")(function* ({
       ConfigProvider.fromEnvRecord({})
     )
   );
-  return { commands, errors, inspections, output, status };
+  return {
+    commands: yield* Ref.get(commands),
+    errors: yield* Ref.get(errors),
+    inspections,
+    output: yield* Ref.get(output),
+    status,
+  };
 });
 
 describe("dependency updates", () => {
@@ -256,16 +257,17 @@ describe("dependency updates", () => {
 
   it.effect("reports failed outdated checks with their diagnostics", () =>
     Effect.gen(function* () {
-      const failures: [number, readonly string[]][] = [];
-      for (const stderr of ["network down\n", ""]) {
-        const result = yield* runScenario({
-          command: (args) =>
-            args[0] === "outdated"
-              ? { exitCode: 2, stderr, stdout: "" }
-              : reviewedDependencies(args),
-        });
-        failures.push([result.status, result.errors]);
-      }
+      const failures = yield* Effect.forEach(["network down\n", ""], (stderr) =>
+        Effect.map(
+          runScenario({
+            command: (args) =>
+              args[0] === "outdated"
+                ? { exitCode: 2, stderr, stdout: "" }
+                : reviewedDependencies(args),
+          }),
+          (result) => [result.status, result.errors]
+        )
+      );
       assert.deepStrictEqual(failures, [
         [1, ["network down\n"]],
         [1, ["pnpm outdated failed.\n"]],
@@ -279,8 +281,8 @@ describe("dependency updates", () => {
       const root = yield* fileSystem.makeTempDirectoryScoped({
         prefix: "dependency-bump-",
       });
-      const spawned: unknown[] = [];
-      const stderr: Array<string | Uint8Array> = [];
+      const spawned = yield* Ref.make<readonly unknown[]>([]);
+      const stderr = yield* makeCapture;
       const status = yield* bumpDependencies({ root }).pipe(
         Effect.provide(
           Layer.mergeAll(
@@ -288,7 +290,7 @@ describe("dependency updates", () => {
             Layer.succeed(
               ChildProcessSpawner.ChildProcessSpawner,
               ChildProcessSpawner.make((command) =>
-                Effect.sync(() => spawned.push(command)).pipe(
+                Ref.update(spawned, Arr.append<unknown>(command)).pipe(
                   Effect.andThen(
                     Effect.fail(
                       PlatformError.systemError({
@@ -302,20 +304,15 @@ describe("dependency updates", () => {
               )
             ),
             Stdio.layerTest({
-              stderr: () =>
-                Sink.forEachArray((chunks) =>
-                  Effect.sync(() => {
-                    stderr.push(...chunks);
-                  })
-                ),
+              stderr: capture(stderr),
             })
           )
         )
       );
 
       assert.strictEqual(status, 1);
-      assert.deepStrictEqual(spawned, []);
-      assert.deepStrictEqual(stderr, [
+      assert.deepStrictEqual(yield* Ref.get(spawned), []);
+      assert.deepStrictEqual(yield* Ref.get(stderr), [
         `Unable to inspect dependencies: Unable to read ${root}/package.json.\n` +
           "Unable to inspect GitHub Actions: Unable to read GitHub workflow files.\n",
       ]);

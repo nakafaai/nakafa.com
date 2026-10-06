@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/test/material/catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 /** Reads one published article window through the production owner boundary. */
 function readArticles(
@@ -187,9 +187,10 @@ describe("readPublishedSearchDocuments", () => {
         )
       );
     });
-    const expected = Arr.map(projections, ({ publicPath }) => publicPath)
-      .sort()
-      .slice(0, 2);
+    const expected = Arr.sort(
+      Arr.map(projections, ({ publicPath }) => publicPath),
+      Order.String
+    ).slice(0, 2);
     expect(Arr.map(documents, ({ route }) => route)).toEqual(expected);
   });
 });

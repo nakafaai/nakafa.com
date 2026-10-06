@@ -4,6 +4,7 @@ import {
   Effect,
   Layer,
   PlatformError,
+  Ref,
   Sink,
   Stream,
 } from "effect";
@@ -25,15 +26,13 @@ const brokenPipe = PlatformError.systemError({
 
 /** Answers every spawn with one scripted process and records its command. */
 function scriptedSpawner(
-  spawned: ChildProcess.Command[],
+  spawned: Ref.Ref<readonly ChildProcess.Command[]>,
   process: Effect.Effect<ScriptedProcess, PlatformError.PlatformError>
 ) {
   return Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) =>
-      Effect.sync(() => {
-        spawned.push(command);
-      }).pipe(
+      Ref.update(spawned, Arr.append(command)).pipe(
         Effect.andThen(process),
         Effect.map(({ exitCode, stderr, stdout }) =>
           ChildProcessSpawner.makeHandle({
@@ -73,7 +72,7 @@ function startedOptions(spawned: readonly ChildProcess.Command[]) {
 describe("pnpm command", () => {
   it.effect("captures exact output without a shell", () =>
     Effect.gen(function* () {
-      const spawned: ChildProcess.Command[] = [];
+      const spawned = yield* Ref.make<readonly ChildProcess.Command[]>([]);
       const result = yield* runPnpm(
         "/repository",
         ["view", "effect@rc", "version", "--json"],
@@ -99,7 +98,7 @@ describe("pnpm command", () => {
         stderr: "warn\n",
         stdout: '"4.0.0-rc.117"\n',
       });
-      assert.deepStrictEqual(startedOptions(spawned), [
+      assert.deepStrictEqual(startedOptions(yield* Ref.get(spawned)), [
         {
           args: ["view", "effect@rc", "version", "--json"],
           command: "pnpm",
@@ -113,7 +112,7 @@ describe("pnpm command", () => {
 
   it.effect("inherits the terminal and preserves the exit code", () =>
     Effect.gen(function* () {
-      const spawned: ChildProcess.Command[] = [];
+      const spawned = yield* Ref.make<readonly ChildProcess.Command[]>([]);
       const result = yield* runPnpm("/repository", [
         "update",
         "--recursive",
@@ -132,7 +131,7 @@ describe("pnpm command", () => {
       );
 
       assert.deepStrictEqual(result, { exitCode: 23, stderr: "", stdout: "" });
-      assert.deepStrictEqual(startedOptions(spawned), [
+      assert.deepStrictEqual(startedOptions(yield* Ref.get(spawned)), [
         {
           args: ["update", "--recursive", "--latest"],
           command: "pnpm",
@@ -146,16 +145,17 @@ describe("pnpm command", () => {
 
   it.effect("reports processes that cannot start or finish", () =>
     Effect.gen(function* () {
+      const spawned = yield* Ref.make<readonly ChildProcess.Command[]>([]);
       const spawnFailure = yield* runPnpm("/repository", ["install"], {
         capture: true,
       }).pipe(
-        Effect.provide(scriptedSpawner([], Effect.fail(brokenPipe))),
+        Effect.provide(scriptedSpawner(spawned, Effect.fail(brokenPipe))),
         Effect.flip
       );
       const exitFailure = yield* runPnpm("/repository", ["update"]).pipe(
         Effect.provide(
           scriptedSpawner(
-            [],
+            spawned,
             Effect.succeed({
               exitCode: Effect.fail(brokenPipe),
               stderr: Stream.empty,
@@ -170,7 +170,7 @@ describe("pnpm command", () => {
       }).pipe(
         Effect.provide(
           scriptedSpawner(
-            [],
+            spawned,
             Effect.succeed({
               exitCode: Effect.succeed(0),
               stderr: Stream.empty,

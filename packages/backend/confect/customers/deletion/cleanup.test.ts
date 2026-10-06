@@ -16,12 +16,12 @@ it("drains all four deletion workflows and their delayed reconciliation before r
   vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
   vi.setSystemTime(Date.UTC(2026, 8, 27));
   vi.stubEnv("POSTHOG_HOST", "https://eu.i.posthog.com");
-  const requests: { method: string; url: string; body: string }[] = [];
+  let requests: { method: string; url: string; body: string }[] = [];
   vi.stubGlobal(
     "fetch",
     vi.fn<typeof fetch>(async (input, init) => {
       const request = new Request(input, init);
-      requests.push({
+      requests = Arr.append(requests, {
         method: request.method,
         url: request.url,
         body: await request.text(),

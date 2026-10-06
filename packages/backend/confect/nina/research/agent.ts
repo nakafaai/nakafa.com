@@ -99,7 +99,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       toolCallId,
       publish,
     });
-    const collectedEvidence = Arr.map(sourceOutputs, (output) => output.text);
+    let collectedEvidence = Arr.map(sourceOutputs, (output) => output.text);
     const eligibleCitationUrls = new Set<string>();
 
     for (const sourceOutput of sourceOutputs) {
@@ -139,7 +139,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                     }).pipe(
                       Effect.tap((output) =>
                         Effect.sync(() => {
-                          collectedEvidence.push(output.text);
+                          collectedEvidence = Arr.append(
+                            collectedEvidence,
+                            output.text
+                          );
                           addEligibleSourceUrls(
                             eligibleCitationUrls,
                             output.result.sources
@@ -189,7 +192,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     if (groundedSearchData) {
       const groundingEvidence = createGroundingEvidence(groundedSearchData);
 
-      collectedEvidence.push(groundingEvidence);
+      collectedEvidence = Arr.append(collectedEvidence, groundingEvidence);
       addEligibleSourceUrls(eligibleCitationUrls, groundedSearchData.sources);
       yield* publish({
         id: `${toolCallId}-grounding`,
