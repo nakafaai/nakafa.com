@@ -8,6 +8,7 @@ import {
   Schema,
 } from "effect";
 import { parseDocument } from "yaml";
+import { problemWhen } from "#scripts/problem";
 
 const WorkflowStepSchema = Schema.StructWithRest(
   Schema.Struct({
@@ -170,54 +171,53 @@ function decodeWorkflow(source: string) {
   return Schema.decodeUnknownOption(CliWorkflowSchema)(document.toJS());
 }
 
-function requireSource(
-  problems: string[],
+/** Reports each required source fragment a job no longer contains. */
+function missingSource(
   owner: "build" | "publish" | "verify",
   source: string,
   fragments: readonly string[]
-): void {
-  for (const fragment of fragments) {
-    if (!source.includes(fragment)) {
-      problems.push(
-        `CLI ${owner} job is missing required contract: ${fragment}`
-      );
-    }
-  }
+) {
+  return Arr.flatMap(fragments, (fragment) =>
+    problemWhen(
+      !source.includes(fragment),
+      `CLI ${owner} job is missing required contract: ${fragment}`
+    )
+  );
 }
 
 function trustedPublishProblems(publish: WorkflowJob, source: string) {
-  const problems: string[] = [];
   const commands = pipe(
     publish.steps,
     Arr.flatMap(({ run }) => (run === undefined ? [] : [run])),
     Arr.map(executableSource),
     Arr.join("\n")
   );
-  if (commands.split('npx --yes "$NPM_CLI" publish "$TARBALL"').length !== 2) {
-    problems.push("CLI publication may execute only one npm publish command.");
-  }
   const sha256 = createHash("sha256")
     .update(JSON.stringify(publish))
     .digest("hex");
-  if (sha256 !== TRUSTED_PUBLISH_SHA256) {
-    problems.push("CLI publication must match the exact trusted job.");
-  }
-  if (
-    source.includes("cli-verifier") ||
-    source.includes("provenance.mjs") ||
-    source.includes("VERIFIER")
-  ) {
-    problems.push("CLI publication must not receive the verifier artifact.");
-  }
-  if (
-    Arr.some(
-      publish.steps,
-      ({ uses }) => uses?.startsWith("actions/checkout@") === true
-    )
-  ) {
-    problems.push("CLI publication must not checkout repository code.");
-  }
-  return problems;
+  return Arr.flatten([
+    problemWhen(
+      commands.split('npx --yes "$NPM_CLI" publish "$TARBALL"').length !== 2,
+      "CLI publication may execute only one npm publish command."
+    ),
+    problemWhen(
+      sha256 !== TRUSTED_PUBLISH_SHA256,
+      "CLI publication must match the exact trusted job."
+    ),
+    problemWhen(
+      source.includes("cli-verifier") ||
+        source.includes("provenance.mjs") ||
+        source.includes("VERIFIER"),
+      "CLI publication must not receive the verifier artifact."
+    ),
+    problemWhen(
+      Arr.some(
+        publish.steps,
+        ({ uses }) => uses?.startsWith("actions/checkout@") === true
+      ),
+      "CLI publication must not checkout repository code."
+    ),
+  ]);
 }
 
 function trustedVerifyProblems(verify: WorkflowJob) {
@@ -229,154 +229,172 @@ function trustedVerifyProblems(verify: WorkflowJob) {
     : ["CLI verification must match the exact trusted job."];
 }
 
+/** Reports a publication or verification job that leaves the repository runtime. */
+function runtimeProblems(
+  owner: "publication" | "verification",
+  job: WorkflowJob
+) {
+  const setup = Option.getOrUndefined(
+    Arr.findFirst(job.steps, ({ uses }) => uses === SETUP_NODE_ACTION)
+  );
+  return Arr.appendAll(
+    problemWhen(
+      setup?.with?.["node-version"] !== "24.21.0",
+      `CLI ${owner} must use the repository Node runtime.`
+    ),
+    problemWhen(
+      setup?.with?.["package-manager-cache"] !== false,
+      `CLI ${owner} must disable package-manager caching.`
+    )
+  );
+}
+
 /** Keeps OIDC publication isolated from build and transported verification. */
 function executionBoundaryProblems(
   jobs: (typeof CliWorkflowSchema.Type)["jobs"],
   publish: WorkflowJob,
   verify: WorkflowJob
 ) {
-  const problems: string[] = [];
-  if (publish.permissions?.["id-token"] !== "write") {
-    problems.push("Only the publish job must receive npm OIDC identity.");
-  }
-  if (publish.environment !== "npm-production") {
-    problems.push(
-      "CLI publication must use the protected npm-production environment."
-    );
-  }
-  if (verify.environment !== undefined) {
-    problems.push("CLI verification must not use a protected environment.");
-  }
-  if (Rec.keys(verify.permissions ?? {}).length > 0) {
-    problems.push("CLI verification permissions must remain empty.");
-  }
-  for (const [name, job] of Rec.toEntries(jobs)) {
-    if (name !== "publish" && job.permissions?.["id-token"] !== undefined) {
-      problems.push(`${name} must not receive npm OIDC identity.`);
-    }
-  }
-
   const publishNeeds = publish.needs;
   const consumesBuild =
     publishNeeds === "build" ||
     (Arr.isArray(publishNeeds) && publishNeeds.includes("build"));
-  if (!consumesBuild) {
-    problems.push("CLI publication must consume the verified build job.");
-  }
-
   const verifyNeeds = Arr.isArray(verify.needs)
     ? verify.needs
     : Arr.filter([verify.needs], (need) => need !== undefined);
-  if (
-    verifyNeeds.length !== 2 ||
-    !verifyNeeds.includes("build") ||
-    !verifyNeeds.includes("publish")
-  ) {
-    problems.push("CLI verification must consume build and publication.");
-  }
-
-  for (const [owner, job] of [
-    ["publication", publish],
-    ["verification", verify],
-  ] as const) {
-    const setup = Option.getOrUndefined(
-      Arr.findFirst(job.steps, ({ uses }) => uses === SETUP_NODE_ACTION)
-    );
-    if (setup?.with?.["node-version"] !== "24.21.0") {
-      problems.push(`CLI ${owner} must use the repository Node runtime.`);
-    }
-    if (setup?.with?.["package-manager-cache"] !== false) {
-      problems.push(`CLI ${owner} must disable package-manager caching.`);
-    }
-  }
-  return problems;
+  return Arr.flatten([
+    problemWhen(
+      publish.permissions?.["id-token"] !== "write",
+      "Only the publish job must receive npm OIDC identity."
+    ),
+    problemWhen(
+      publish.environment !== "npm-production",
+      "CLI publication must use the protected npm-production environment."
+    ),
+    problemWhen(
+      verify.environment !== undefined,
+      "CLI verification must not use a protected environment."
+    ),
+    problemWhen(
+      Rec.keys(verify.permissions ?? {}).length > 0,
+      "CLI verification permissions must remain empty."
+    ),
+    Arr.flatMap(Rec.toEntries(jobs), ([name, job]) =>
+      problemWhen(
+        name !== "publish" && job.permissions?.["id-token"] !== undefined,
+        `${name} must not receive npm OIDC identity.`
+      )
+    ),
+    problemWhen(
+      !consumesBuild,
+      "CLI publication must consume the verified build job."
+    ),
+    problemWhen(
+      verifyNeeds.length !== 2 ||
+        !verifyNeeds.includes("build") ||
+        !verifyNeeds.includes("publish"),
+      "CLI verification must consume build and publication."
+    ),
+    runtimeProblems("publication", publish),
+    runtimeProblems("verification", verify),
+  ]);
 }
 
-export function validateCliWorkflow(source: string): string[] {
-  const problems: string[] = [];
-  for (const snippet of FORBIDDEN_CREDENTIALS) {
-    if (source.includes(snippet)) {
-      problems.push(`CLI workflow contains forbidden credential: ${snippet}`);
-    }
-  }
-  for (const snippet of FORBIDDEN_PROVENANCE) {
-    if (source.includes(snippet)) {
-      problems.push(
+/** Reports forbidden credentials and unauthenticated provenance parsing in the workflow text. */
+function forbiddenSourceProblems(source: string) {
+  return Arr.appendAll(
+    Arr.flatMap(FORBIDDEN_CREDENTIALS, (snippet) =>
+      problemWhen(
+        source.includes(snippet),
+        `CLI workflow contains forbidden credential: ${snippet}`
+      )
+    ),
+    Arr.flatMap(FORBIDDEN_PROVENANCE, (snippet) =>
+      problemWhen(
+        source.includes(snippet),
         `CLI workflow contains unauthenticated provenance parsing: ${snippet}`
-      );
-    }
-  }
+      )
+    )
+  );
+}
 
+const BUILD_OUTPUTS = [
+  "archive",
+  "sha256",
+  "size",
+  "verifier_sha256",
+  "verifier_size",
+];
+
+export function validateCliWorkflow(source: string): string[] {
+  const sourceProblems = forbiddenSourceProblems(source);
   const decoded = decodeWorkflow(source);
   if (Option.isNone(decoded)) {
-    problems.push("CLI workflow must contain a valid jobs mapping.");
-    return problems;
+    return Arr.append(
+      sourceProblems,
+      "CLI workflow must contain a valid jobs mapping."
+    );
   }
 
   const { defaults, env, jobs, permissions } = decoded.value;
-  if (Rec.keys(permissions).length > 0) {
-    problems.push("CLI workflow root permissions must remain empty.");
-  }
-  if (defaults !== undefined) {
-    problems.push("CLI workflow must not inherit root run defaults.");
-  }
-  if (env !== undefined) {
-    problems.push("CLI workflow must not inherit root environment values.");
-  }
+  const rootProblems = Arr.flatten([
+    sourceProblems,
+    problemWhen(
+      Rec.keys(permissions).length > 0,
+      "CLI workflow root permissions must remain empty."
+    ),
+    problemWhen(
+      defaults !== undefined,
+      "CLI workflow must not inherit root run defaults."
+    ),
+    problemWhen(
+      env !== undefined,
+      "CLI workflow must not inherit root environment values."
+    ),
+  ]);
   const { build, publish, verify } = jobs;
   if (!(build && publish && verify)) {
-    problems.push(
+    return Arr.append(
+      rootProblems,
       "CLI workflow requires separate build, publish, and verify jobs."
     );
-    return problems;
   }
 
-  if (
-    build.if !==
-    "github.ref == 'refs/heads/main' && github.repository == 'nakafaai/nakafa.com'"
-  ) {
-    problems.push("CLI build must target protected Nakafa main.");
-  }
-  for (const name of [
-    "archive",
-    "sha256",
-    "size",
-    "verifier_sha256",
-    "verifier_size",
-  ]) {
-    const value = `\${{ steps.archive.outputs.${name} }}`;
-    if (build.outputs?.[name] !== value) {
-      problems.push(`CLI build must export exact output: ${name}`);
-    }
-  }
-
-  const buildSource = jobSource(build);
   const publishSource = jobSource(publish);
-  const verifySource = jobSource(verify);
-  requireSource(problems, "build", buildSource, REQUIRED_BUILD_SOURCE);
-  requireSource(problems, "publish", publishSource, REQUIRED_PUBLISH_SOURCE);
-  requireSource(problems, "verify", verifySource, REQUIRED_VERIFY_SOURCE);
-
-  if (!hasRerunnableArtifacts(build)) {
-    problems.push("CLI build artifacts must be replaceable on rerun.");
-  }
-
-  problems.push(...executionBoundaryProblems(jobs, publish, verify));
-
-  problems.push(...trustedPublishProblems(publish, publishSource));
-
   const verifyCommands = pipe(
     verify.steps,
     Arr.flatMap(({ run }) => (run === undefined ? [] : [run])),
     Arr.map(executableSource),
     Arr.join("\n")
   );
-  if (verifyCommands.split('node "$VERIFIER"').length !== 2) {
-    problems.push("CLI verification must execute one transported verifier.");
-  }
-  problems.push(...trustedVerifyProblems(verify));
-
-  return problems;
+  return Arr.flatten([
+    rootProblems,
+    problemWhen(
+      build.if !==
+        "github.ref == 'refs/heads/main' && github.repository == 'nakafaai/nakafa.com'",
+      "CLI build must target protected Nakafa main."
+    ),
+    Arr.flatMap(BUILD_OUTPUTS, (name) =>
+      problemWhen(
+        build.outputs?.[name] !== `\${{ steps.archive.outputs.${name} }}`,
+        `CLI build must export exact output: ${name}`
+      )
+    ),
+    missingSource("build", jobSource(build), REQUIRED_BUILD_SOURCE),
+    missingSource("publish", publishSource, REQUIRED_PUBLISH_SOURCE),
+    missingSource("verify", jobSource(verify), REQUIRED_VERIFY_SOURCE),
+    problemWhen(
+      !hasRerunnableArtifacts(build),
+      "CLI build artifacts must be replaceable on rerun."
+    ),
+    executionBoundaryProblems(jobs, publish, verify),
+    trustedPublishProblems(publish, publishSource),
+    problemWhen(
+      verifyCommands.split('node "$VERIFIER"').length !== 2,
+      "CLI verification must execute one transported verifier."
+    ),
+    trustedVerifyProblems(verify),
+  ]);
 }
 
 export const verifyCliWorkflow = Effect.fn("GithubCli.verify")(function* (

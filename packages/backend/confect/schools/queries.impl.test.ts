@@ -6,7 +6,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { Array as Arr } from "effect";
+import { Array as Arr, Order } from "effect";
 
 const NOW = Date.UTC(2026, 3, 15, 9, 0, 0);
 
@@ -314,10 +314,12 @@ describe("schools/queries:getMySchoolsPage", () => {
           numItems: 10,
         },
       });
-    expect(Arr.map(result.page, (school) => school.slug).sort()).toEqual([
-      "nakafa",
-      "nakafa-2",
-    ]);
+    expect(
+      Arr.sort(
+        Arr.map(result.page, (school) => school.slug),
+        Order.String
+      )
+    ).toEqual(["nakafa", "nakafa-2"]);
     expect(result.page[0]).toEqual(
       expect.objectContaining({
         _id: expect.any(String),

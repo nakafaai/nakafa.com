@@ -156,54 +156,32 @@ function getTaskAnchorQuery(
 }
 
 /** Extracts exact named phrases that should keep search variants scoped. */
-function getNamedSearchPhrases(task: string) {
-  const tokens = getSearchTokens(getSearchableText(task));
-  const phrases: NamedSearchPhrase[] = [];
-  const seen = new Set<string>();
-  let run: string[] = [];
-
-  for (const token of tokens) {
-    if (isNamedPhraseToken(token)) {
-      run.push(token);
-      continue;
-    }
-
-    appendNamedSearchPhrase({ phrases, run, seen });
-    run = [];
-  }
-
-  appendNamedSearchPhrase({ phrases, run, seen });
-
-  return phrases;
+function getNamedSearchPhrases(task: string): NamedSearchPhrase[] {
+  const runs = Arr.chop(getSearchTokens(getSearchableText(task)), (tokens) => {
+    const [run, later] = Arr.splitWhere(
+      tokens,
+      (token) => !isNamedPhraseToken(token)
+    );
+    // An empty run starts at a separator token, which the next run skips.
+    return [run, Arr.isReadonlyArrayEmpty(run) ? Arr.drop(later, 1) : later];
+  });
+  const phrases = Arr.filter(
+    Arr.flatMap(runs, namedSearchPhrase),
+    (phrase) => phrase.normalized !== ""
+  );
+  return Arr.dedupeWith(
+    phrases,
+    (left, right) => left.normalized === right.normalized
+  );
 }
 
-/** Adds a named phrase run when it has enough signal to be source-scoping. */
-function appendNamedSearchPhrase({
-  phrases,
-  run,
-  seen,
-}: {
-  phrases: NamedSearchPhrase[];
-  run: string[];
-  seen: Set<string>;
-}) {
-  if (run.length < 2) {
-    return;
+/** Returns a named phrase run when it has enough signal to be source-scoping. */
+function namedSearchPhrase(run: readonly string[]): NamedSearchPhrase[] {
+  if (run.length < 2 || !Arr.some(run, isSpecificTextToken)) {
+    return [];
   }
-
-  if (!Arr.some(run, isSpecificTextToken)) {
-    return;
-  }
-
   const text = Arr.join(run, " ");
-  const normalized = normalizeSearchTerm(text);
-
-  if (!(normalized && !seen.has(normalized))) {
-    return;
-  }
-
-  seen.add(normalized);
-  phrases.push({ normalized, text });
+  return [{ normalized: normalizeSearchTerm(text), text }];
 }
 
 /** Checks whether a query preserves at least one task-level named phrase. */

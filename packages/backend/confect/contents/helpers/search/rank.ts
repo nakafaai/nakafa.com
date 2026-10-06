@@ -1,5 +1,5 @@
 import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
-import { Array as Arr } from "effect";
+import { Array as Arr, Order, pipe } from "effect";
 
 /** Minimal persisted search fields required by deterministic reranking. */
 export type ContentSearchRankDocument = Pick<
@@ -55,7 +55,7 @@ export function rankContentSearchDocuments<
   if (queryTokens.length === 0) {
     return documents;
   }
-  const ranked = Arr.filter(
+  const ranked = pipe(
     Arr.map(documents, (document, index) => ({
       bodyNumericScore: scoreSearchText(document.text, numericTokens),
       bodySemanticScore: scoreSearchText(document.text, semanticTokens),
@@ -69,24 +69,25 @@ export function rankContentSearchDocuments<
         getDocumentMetadataSearchText(document),
         semanticTokens
       ),
-    })).sort((left, right) => {
-      if (left.metadataSemanticScore !== right.metadataSemanticScore) {
-        return right.metadataSemanticScore - left.metadataSemanticScore;
-      }
-      if (left.bodySemanticScore !== right.bodySemanticScore) {
-        return right.bodySemanticScore - left.bodySemanticScore;
-      }
-      if (left.metadataNumericScore !== right.metadataNumericScore) {
-        return right.metadataNumericScore - left.metadataNumericScore;
-      }
-      if (left.bodyNumericScore !== right.bodyNumericScore) {
-        return right.bodyNumericScore - left.bodyNumericScore;
-      }
-      return left.index - right.index;
-    }),
-    (ranked) =>
-      semanticTokens.length <= 1 ||
-      ranked.metadataSemanticScore + ranked.bodySemanticScore >= 2
+    })),
+    Arr.sortBy(
+      Order.mapInput(
+        Order.flip(Order.Number),
+        (row) => row.metadataSemanticScore
+      ),
+      Order.mapInput(Order.flip(Order.Number), (row) => row.bodySemanticScore),
+      Order.mapInput(
+        Order.flip(Order.Number),
+        (row) => row.metadataNumericScore
+      ),
+      Order.mapInput(Order.flip(Order.Number), (row) => row.bodyNumericScore),
+      Order.mapInput(Order.Number, (row) => row.index)
+    ),
+    Arr.filter(
+      (row) =>
+        semanticTokens.length <= 1 ||
+        row.metadataSemanticScore + row.bodySemanticScore >= 2
+    )
   );
   return Arr.map(ranked, (item) => item.document);
 }

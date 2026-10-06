@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Option, Record as Rec } from "effect";
+import { Array as Arr, Option, Order, Record as Rec } from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
@@ -65,13 +65,14 @@ function validInput(): PolicyInput {
     },
     path,
   }));
-  const ignoreDeps = [
-    ...new Set([
+  const ignoreDeps = Arr.sort(
+    new Set([
       ...Arr.map(DEPENDENCY_HOLDS, ({ dependency }) => dependency),
       "node",
       "pnpm",
     ]),
-  ].sort();
+    Order.String
+  );
   return {
     manifests,
     rootManifest: {

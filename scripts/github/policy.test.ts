@@ -249,11 +249,11 @@ describe("GitHub Action policy", () => {
       );
       const invalid = yield* makeWorkflows({ "invalid.yml": "jobs: [\n" });
 
-      const problems: string[] = [];
-      for (const root of [missing, unreadable, invalid]) {
-        problems.push(...(yield* inspectGithubActionPolicy(root)));
-      }
-      expect(problems).toEqual([
+      const problems = yield* Effect.forEach(
+        [missing, unreadable, invalid],
+        inspectGithubActionPolicy
+      );
+      expect(Arr.flatten(problems)).toEqual([
         "Unable to inspect GitHub Actions: Unable to read GitHub workflow files.",
         "Unable to inspect GitHub Actions: Unable to read .github/workflows/broken.yml.",
         "Unable to inspect GitHub Actions: Unable to decode .github/workflows/invalid.yml.",
@@ -284,21 +284,25 @@ describe("GitHub Action policy", () => {
     if (!setupUse) {
       return;
     }
-    actionUses[setupIndex] = { ...setupUse, inputs: reviewedInputs };
-    actionUses.push(
-      {
-        inputs: {},
-        reference: "actions/checkout",
-        workflowPath: ".github/workflows/example.yml",
-      },
-      {
-        inputs: {},
-        reference: "actions/checkout@",
-        workflowPath: ".github/workflows/example.yml",
-      }
+    const candidateUses = Arr.appendAll(
+      Arr.map(actionUses, (use, index) =>
+        index === setupIndex ? { ...setupUse, inputs: reviewedInputs } : use
+      ),
+      [
+        {
+          inputs: {},
+          reference: "actions/checkout",
+          workflowPath: ".github/workflows/example.yml",
+        },
+        {
+          inputs: {},
+          reference: "actions/checkout@",
+          workflowPath: ".github/workflows/example.yml",
+        },
+      ]
     );
 
-    expect(validateGithubActionPolicy(actionUses)).toEqual([
+    expect(validateGithubActionPolicy(candidateUses)).toEqual([
       `${setupUse.workflowPath} configures pnpm/setup cache as missing; approved ${cache}.`,
       ".github/workflows/example.yml has an unpinned external action actions/checkout.",
       ".github/workflows/example.yml has an unpinned external action actions/checkout@.",
@@ -307,18 +311,22 @@ describe("GitHub Action policy", () => {
   });
 
   it("reports mutable, unreviewed, missing, and misconfigured actions", () => {
-    const actionUses = validActionUses();
-    const firstUse = actionUses[0];
+    const validUses = validActionUses();
+    const firstUse = validUses[0];
     expect(firstUse).toBeDefined();
     if (!firstUse) {
       return;
     }
-    actionUses[0] = { ...firstUse, reference: "actions/checkout@v7" };
-    actionUses.push({
-      inputs: {},
-      reference: "example/unreviewed@0123456789abcdef",
-      workflowPath: ".github/workflows/example.yml",
-    });
+    const actionUses = Arr.append(
+      Arr.map(validUses, (use, index) =>
+        index === 0 ? { ...firstUse, reference: "actions/checkout@v7" } : use
+      ),
+      {
+        inputs: {},
+        reference: "example/unreviewed@0123456789abcdef",
+        workflowPath: ".github/workflows/example.yml",
+      }
+    );
 
     const setupIndex = Option.getOrElse(
       Arr.findFirstIndex(actionUses, ({ reference }) =>
@@ -338,13 +346,23 @@ describe("GitHub Action policy", () => {
     if (!(setupReview && setupUse)) {
       return;
     }
-    actionUses[setupIndex] = {
-      ...setupUse,
-      inputs: { cache: true, install: false, "node-version-file": ".nvmrc" },
-    };
-    actionUses.splice(setupIndex + 1, 1);
+    const candidateUses = Arr.remove(
+      Arr.map(actionUses, (use, index) =>
+        index === setupIndex
+          ? {
+              ...setupUse,
+              inputs: {
+                cache: true,
+                install: false,
+                "node-version-file": ".nvmrc",
+              },
+            }
+          : use
+      ),
+      setupIndex + 1
+    );
 
-    const problems = validateGithubActionPolicy(actionUses);
+    const problems = validateGithubActionPolicy(candidateUses);
     expect(Arr.some(problems, (problem) => problem.includes("approved"))).toBe(
       true
     );

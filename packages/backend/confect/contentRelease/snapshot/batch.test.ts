@@ -379,9 +379,7 @@ describe("contentRelease/snapshot/batch", () => {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
         const [firstRow] = data.rowJson;
-        if (!firstRow) {
-          throw new Error("Expected one program snapshot row.");
-        }
+        assert(firstRow, "Expected one program snapshot row.");
         const changed = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           changed.mutation((ctx) =>
@@ -398,7 +396,7 @@ describe("contentRelease/snapshot/batch", () => {
               batchIndex: 0,
               family: "program",
               releaseId: TEST_RELEASE_ID,
-              rowJson: [...data.rowJson].reverse(),
+              rowJson: Arr.reverse(data.rowJson),
               snapshotId: data.snapshotId,
             })
           ).rejects.toMatchObject({

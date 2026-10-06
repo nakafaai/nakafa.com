@@ -31,7 +31,7 @@ import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 type RollbackRequest = Extract<
   PublicationRequest,
@@ -209,7 +209,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
         `Rollback cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
       );
     }
-    const records: RollbackRecord[] = [];
+    let records: RollbackRecord[] = [];
     let afterIndex = request.afterIndex;
     let recordBytes = 0;
     while (records.length < request.limit && afterIndex < total - 1) {
@@ -236,13 +236,12 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
         const encodedBytes = textEncoder.encode(
           canonicalizeRollbackRecord(record)
         ).byteLength;
-        records.push(record);
-        const candidate = makeRollbackPage(request, total, records);
+        const extended = Arr.append(records, record);
+        const candidate = makeRollbackPage(request, total, extended);
         const candidateBytes = recordBytes + encodedBytes;
         if (
           rollbackPageBytes(candidate, candidateBytes) > MAX_ROLLBACK_PAGE_BYTES
         ) {
-          records.pop();
           if (records.length === 0) {
             return yield* releaseFail(
               "CONTENT_RELEASE_LIMIT",
@@ -253,6 +252,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
             makeRollbackPage(request, total, records)
           );
         }
+        records = extended;
         recordBytes = candidateBytes;
         afterIndex = record.index;
       }
@@ -283,7 +283,7 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
         `Route cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
       );
     }
-    const records: RouteRollbackRecord[] = [];
+    let records: RouteRollbackRecord[] = [];
     let afterIndex = request.afterIndex;
     while (records.length < request.limit && afterIndex < total - 1) {
       const limit = Math.min(
@@ -305,7 +305,7 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
         "Route rollback query page"
       );
       yield* validateRouteChunk(chunk, request, afterIndex, limit, total);
-      records.push(...chunk.records);
+      records = Arr.appendAll(records, chunk.records);
       afterIndex = chunk.nextIndex;
       if (chunk.done) {
         break;

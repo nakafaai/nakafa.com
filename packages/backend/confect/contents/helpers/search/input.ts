@@ -4,7 +4,7 @@ import {
   NAKAFA_AGENT_MAX_OFFSET,
   NAKAFA_AGENT_MAX_QUERIES,
 } from "@repo/contents/agent/search";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Schema } from "effect";
 export class ContentSearchInputError extends Schema.TaggedError<ContentSearchInputError>()(
   "ContentSearchInputError",
   {
@@ -44,30 +44,25 @@ export const validateContentSearchInput = Effect.fn(
   return queryTexts;
 });
 
-/** Normalizes unique query texts without changing wording. */
+/**
+ * Normalizes unique query texts without changing wording. The scan stops one
+ * text past the limit, which is all the caller needs to reject the request,
+ * so an oversized list costs one pass and at most that many comparisons.
+ */
 function getQueryTexts({ queries }: ContentSearchInput) {
-  const texts: string[] = [];
-  const seen = new Set<string>();
+  let seen = HashSet.empty<string>();
+  let texts: readonly string[] = [];
   for (const queryText of queries ?? []) {
-    appendQueryText(texts, seen, queryText);
+    const text = queryText?.trim();
+    const key = text?.toLocaleLowerCase();
+    if (!(text && key) || HashSet.has(seen, key)) {
+      continue;
+    }
+    seen = HashSet.add(seen, key);
+    texts = Arr.append(texts, text);
+    if (texts.length > NAKAFA_AGENT_MAX_QUERIES) {
+      break;
+    }
   }
   return texts;
-}
-
-/** Appends one unique, non-empty query text. */
-function appendQueryText(
-  texts: string[],
-  seen: Set<string>,
-  queryText: string | undefined
-) {
-  const text = queryText?.trim();
-  if (!text) {
-    return;
-  }
-  const key = text.toLocaleLowerCase();
-  if (seen.has(key)) {
-    return;
-  }
-  texts.push(text);
-  seen.add(key);
 }

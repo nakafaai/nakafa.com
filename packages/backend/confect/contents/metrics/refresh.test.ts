@@ -15,7 +15,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest, type TestConvex } from "convex-test";
-import { Array as Arr } from "effect";
+import { Array as Arr, Order, pipe } from "effect";
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
@@ -204,10 +204,10 @@ async function readBoundedState(target: TestConvex<typeof schema>) {
     );
 
     return {
-      counters: Arr.map(
-        counters,
-        ({ _creationTime, _id, ...counter }) => counter
-      ).sort((left, right) => left.windowKey.localeCompare(right.windowKey)),
+      counters: pipe(
+        Arr.map(counters, ({ _creationTime, _id, ...counter }) => counter),
+        Arr.sortWith((counter) => counter.windowKey, Order.String)
+      ),
       rankings,
     };
   });

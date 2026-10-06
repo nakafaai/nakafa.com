@@ -23,7 +23,7 @@ const record = FunctionImpl.make(
     if (!turn) {
       return null;
     }
-    const totals = [...turn.usage];
+    let totals = [...turn.usage];
     const index = Option.getOrElse(
       Arr.findFirstIndex(
         totals,
@@ -43,7 +43,7 @@ const record = FunctionImpl.make(
         calls: previous.calls + 1,
       };
     } else {
-      totals.push({ ...usage, calls: 1 });
+      totals = Arr.append(totals, { ...usage, calls: 1 });
     }
     const input = Arr.reduce(totals, 0, (total, row) => total + row.input);
     const output = Arr.reduce(totals, 0, (total, row) => total + row.output);

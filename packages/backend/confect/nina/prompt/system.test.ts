@@ -5,7 +5,7 @@ import {
   createNinaSystemPrompt,
   formatNinaContextPackPrompt,
 } from "@repo/backend/confect/nina/prompt/system";
-import { Array as Arr } from "effect";
+import { Array as Arr, Order } from "effect";
 
 const placementProgramKey = LearningProgramKeySchema.make(
   "cambridge-lower-secondary"
@@ -184,7 +184,7 @@ describe("createNinaSystemPrompt", () => {
     );
 
     expect(Arr.every(order, (index) => index >= 0)).toBe(true);
-    expect(order).toEqual([...order].sort((left, right) => left - right));
+    expect(order).toEqual(Arr.sort(order, Order.Number));
     expect(prompt.slice(prompt.indexOf("# Runtime Context"))).toContain(
       "- date: 2026-09-29T00:00:00.000Z"
     );

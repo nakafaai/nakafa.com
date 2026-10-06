@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import {
   type BindingElement,
   type Identifier,
@@ -34,6 +35,7 @@ import {
   type VariableDeclaration,
 } from "typescript/unstable/ast";
 import type { Symbol as NativeSymbol } from "typescript/unstable/sync";
+import { children } from "#scripts/check/source";
 
 type Origin = "client" | ReadonlyMap<string, Origin>;
 type Symbols = ReadonlyMap<Node, NativeSymbol | undefined>;
@@ -319,21 +321,19 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
     if (!body) {
       return;
     }
-    const returns: Node[] = [];
-    const visit = (child: Node): void => {
+    /** Returns the expressions a statement returns, outside nested callbacks. */
+    const returned = (child: Node): Node[] => {
       if (callbacks(child)) {
-        return;
+        return [];
       }
-      if (isReturnStatement(child) && child.expression) {
-        returns.push(child.expression);
-      } else {
-        child.forEachChild(visit);
-      }
+      return isReturnStatement(child) && child.expression
+        ? [child.expression]
+        : Arr.flatMap(children(child), returned);
     };
     if (isArrowFunction(node) && !isBlock(body)) {
       return resolve(body, next);
     }
-    body.forEachChild(visit);
+    const returns = Arr.flatMap(children(body), returned);
     if (returns.length !== 1) {
       return;
     }

@@ -4,7 +4,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { loadSnapshot } from "@repo/backend/confect/contentRelease/snapshot/manifest";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 export interface StoredRow {
   readonly index: number;
   readonly rowJson: string;
@@ -64,8 +64,10 @@ export const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
         .take(rowCount + 1)
         .pipe(Effect.orDie),
     ]);
-    const rows = [...catalog, ...curriculum].sort(
-      (left, right) => left.index - right.index
+    const rows = Arr.sortWith(
+      [...catalog, ...curriculum],
+      (left) => left.index,
+      Order.Number
     );
     return yield* exactRowJson(rows, family, snapshotId, firstIndex, rowCount);
   }
@@ -104,8 +106,10 @@ export const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
       .take(rowCount + 1)
       .pipe(Effect.orDie),
   ]);
-  const rows = [...catalog, ...placements].sort(
-    (left, right) => left.index - right.index
+  const rows = Arr.sortWith(
+    [...catalog, ...placements],
+    (left) => left.index,
+    Order.Number
   );
   return yield* exactRowJson(rows, family, snapshotId, firstIndex, rowCount);
 });

@@ -23,7 +23,7 @@ type Memory = Docs["ninaMemories"];
 /** Lists facts for settings, most recently saved first. */
 function toView(facts: Memory["facts"]) {
   return {
-    facts: Arr.map([...facts].reverse(), ({ key, savedAt, text }) => ({
+    facts: Arr.map(Arr.reverse(facts), ({ key, savedAt, text }) => ({
       key,
       savedAt,
       text,
@@ -48,27 +48,31 @@ function reviseFacts(
   const updates = new Map(
     Arr.map(changes.update, ({ key, text }) => [key, text])
   );
-  const kept: Memory["facts"] = [];
-  const rewritten: Memory["facts"] = [];
+  let kept: Memory["facts"] = [];
+  let rewritten: Memory["facts"] = [];
   for (const fact of memory.facts) {
     if (forgotten.has(fact.key)) {
       continue;
     }
     const text = updates.get(fact.key);
     if (text === undefined) {
-      kept.push(fact);
+      kept = Arr.append(kept, fact);
     } else {
-      rewritten.push({ ...source, key: fact.key, text });
+      rewritten = Arr.append(rewritten, { ...source, key: fact.key, text });
     }
   }
   const known = new Set(
     Arr.map([...kept, ...rewritten], (fact) => fact.text.toLowerCase())
   );
-  const added: Memory["facts"] = [];
+  let added: Memory["facts"] = [];
   for (const text of changes.remember) {
     if (!known.has(text.toLowerCase())) {
       known.add(text.toLowerCase());
-      added.push({ ...source, key: memory.next + added.length, text });
+      added = Arr.append(added, {
+        ...source,
+        key: memory.next + added.length,
+        text,
+      });
     }
   }
   return {

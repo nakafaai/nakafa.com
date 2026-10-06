@@ -1,4 +1,4 @@
-import { Array as Arr, pipe } from "effect";
+import { Array as Arr, Order, pipe } from "effect";
 
 const DEFAULT_MAX_LENGTH = 2000;
 const MIN_KEYWORD_LENGTH = 3;
@@ -178,7 +178,7 @@ export function selectRelevantContent(
   );
 
   const intro = analyzedParagraphs[0];
-  const selectedParts = preserveStructure ? [intro.text] : [];
+  let selectedParts = preserveStructure ? [intro.text] : [];
   let currentLength = preserveStructure ? intro.length + 2 : 0;
   const targetLength = maxLength * TARGET_LENGTH_BUFFER;
   const candidates = preserveStructure
@@ -187,19 +187,20 @@ export function selectRelevantContent(
   const paragraphLimit = preserveStructure
     ? maxRelevantParagraphs
     : Math.max(minRelevantParagraphs, maxRelevantParagraphs);
-  const selectedParagraphs = Arr.filter(
-    candidates,
-    (paragraph) => paragraph.score > 0
-  )
-    .sort((left, right) => right.score - left.score)
-    .slice(0, paragraphLimit);
-
-  if (preserveStructure) {
-    selectedParagraphs.sort((left, right) => left.index - right.index);
-  }
+  const topParagraphs = pipe(
+    Arr.filter(candidates, (paragraph) => paragraph.score > 0),
+    Arr.sortWith((paragraph) => paragraph.score, Order.flip(Order.Number)),
+    Arr.take(paragraphLimit)
+  );
+  const selectedParagraphs = preserveStructure
+    ? pipe(
+        topParagraphs,
+        Arr.sortWith((paragraph) => paragraph.index, Order.Number)
+      )
+    : topParagraphs;
   for (const paragraph of selectedParagraphs) {
     if (currentLength + paragraph.length + 2 < targetLength) {
-      selectedParts.push(paragraph.text);
+      selectedParts = Arr.append(selectedParts, paragraph.text);
       currentLength += paragraph.length + 2;
     }
   }
@@ -210,7 +211,7 @@ export function selectRelevantContent(
     conclusion &&
     currentLength + conclusion.length + 2 < targetLength
   ) {
-    selectedParts.push(conclusion.text);
+    selectedParts = Arr.append(selectedParts, conclusion.text);
   }
 
   if (selectedParts.length === 0) {

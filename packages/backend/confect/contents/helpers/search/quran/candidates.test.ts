@@ -188,12 +188,12 @@ describe("contents/helpers/search/quran/candidates", () => {
             length: QURAN_SEARCH_RESULT_LIMIT,
           },
           (_, index) => {
-            const terms = ["primary"];
+            let terms = ["primary"];
             if (index === 0 || index === 1 || index === 3) {
-              terms.push("secondary");
+              terms = Arr.append(terms, "secondary");
             }
             if (index === 0 || index === 1) {
-              terms.push("tertiary", "quaternary");
+              terms = Arr.appendAll(terms, ["tertiary", "quaternary"]);
             }
             return makeQuranSearch("en", index + 1, Arr.join(terms, " "));
           }

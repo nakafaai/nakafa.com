@@ -24,6 +24,7 @@ import type { Binding } from "#scripts/check/source";
 export const Rule = Schema.Literals([
   "array-check",
   "array-method",
+  "array-mutation",
   "array-search",
   "object-helper",
   "try-catch",
@@ -52,6 +53,11 @@ export const RULES = {
   "array-method": {
     message:
       "transform arrays with the Array module from effect, such as Array.map, Array.filter, and Array.join, instead of a native array method.",
+    scope: "strict",
+  },
+  "array-mutation": {
+    message:
+      "build a new array with the Array module from effect, such as Array.append, Array.sort, and Array.reverse, or collect into a MutableList, instead of changing an array in place.",
     scope: "strict",
   },
   "array-search": {

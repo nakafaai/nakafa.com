@@ -48,7 +48,7 @@ import {
 import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
-import { Array as Arr, Data, Effect, Schema } from "effect";
+import { Array as Arr, Data, Effect, Order, Schema } from "effect";
 
 const PROGRAM_KEY = LearningProgramKeySchema.make("technical-program-1");
 const GROUP_KEY = CurriculumNodeKeySchema.make("test-group");
@@ -487,6 +487,6 @@ it.effect("records canonical and verified placement popularity scopes", () =>
         )
       )
     );
-    expect(scopes.sort()).toEqual(["global", "placement"]);
+    expect(Arr.sort(scopes, Order.String)).toEqual(["global", "placement"]);
   })
 );

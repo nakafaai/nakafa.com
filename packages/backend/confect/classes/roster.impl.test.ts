@@ -15,7 +15,7 @@ async function seedPeople(
   count: number
 ) {
   return await fixture.t.mutation(async (ctx) => {
-    const rows: {
+    let rows: {
       userId: Id<"users">;
       memberId: Id<"schoolClassMembers">;
     }[] = [];
@@ -35,7 +35,7 @@ async function seedPeople(
         role: index % 20 === 0 ? "teacher" : "student",
         updatedAt: now,
       });
-      rows.push({
+      rows = Arr.append(rows, {
         userId,
         memberId,
       });
@@ -51,7 +51,7 @@ describe("class roster stream", () => {
     const removed = seeded[0];
     assert(removed);
     await fixture.t.mutation((ctx) => ctx.db.delete("users", removed.userId));
-    const people: Ref.Returns<typeof refs.public.classes.roster.list>["page"] =
+    let people: Ref.Returns<typeof refs.public.classes.roster.list>["page"] =
       [];
     let cursor: string | null = null;
     for (let pageIndex = 0; pageIndex < 10; pageIndex += 1) {
@@ -67,7 +67,7 @@ describe("class roster stream", () => {
           .then((value) =>
             Ref.decodeReturnsSync(refs.public.classes.roster.list, value)
           );
-      people.push(...page.page);
+      people = Arr.appendAll(people, page.page);
       if (page.isDone) {
         break;
       }
@@ -103,9 +103,8 @@ describe("class roster stream", () => {
       let cursor: string | null = null;
       let done = false;
       let emptyPages = 0;
-      const people: Ref.Returns<
-        typeof refs.public.classes.roster.list
-      >["page"] = [];
+      let people: Ref.Returns<typeof refs.public.classes.roster.list>["page"] =
+        [];
       for (let pageIndex = 0; pageIndex < 40 && !done; pageIndex += 1) {
         const page: Ref.Returns<typeof refs.public.classes.roster.list> =
           await fixture.admin
@@ -121,7 +120,7 @@ describe("class roster stream", () => {
             .then((value) =>
               Ref.decodeReturnsSync(refs.public.classes.roster.list, value)
             );
-        people.push(...page.page);
+        people = Arr.appendAll(people, page.page);
         if (page.page.length === 0 && !page.isDone) {
           emptyPages += 1;
         }

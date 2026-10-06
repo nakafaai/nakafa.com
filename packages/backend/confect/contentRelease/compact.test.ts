@@ -27,7 +27,7 @@ import {
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Order } from "effect";
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
@@ -118,9 +118,12 @@ describe("contentRelease/compact", () => {
     ).toMatchObject({
       sequence: 3,
     });
-    expect(Arr.map(stored.bindings, (row) => row.sequence).sort()).toEqual([
-      1, 3, 4,
-    ]);
+    expect(
+      Arr.sort(
+        Arr.map(stored.bindings, (row) => row.sequence),
+        Order.Number
+      )
+    ).toEqual([1, 3, 4]);
     expect(stored.items).toHaveLength(0);
     expect(stored.search).toMatchObject([
       {
@@ -128,20 +131,29 @@ describe("contentRelease/compact", () => {
         sequence: 4,
       },
     ]);
-    expect(Arr.map(stored.releases, (row) => row.sequence).sort()).toEqual([
-      3, 4, 5,
-    ]);
+    expect(
+      Arr.sort(
+        Arr.map(stored.releases, (row) => row.sequence),
+        Order.Number
+      )
+    ).toEqual([3, 4, 5]);
     const retained = [
       `sha256:${"c".repeat(64)}`,
       `sha256:${"d".repeat(64)}`,
       `sha256:${"f".repeat(64)}`,
     ];
-    expect(Arr.map(stored.artifacts, (row) => row.artifactHash).sort()).toEqual(
-      retained
-    );
-    expect(Arr.map(stored.facts, (row) => row.artifactHash).sort()).toEqual(
-      retained
-    );
+    expect(
+      Arr.sort(
+        Arr.map(stored.artifacts, (row) => row.artifactHash),
+        Order.String
+      )
+    ).toEqual(retained);
+    expect(
+      Arr.sort(
+        Arr.map(stored.facts, (row) => row.artifactHash),
+        Order.String
+      )
+    ).toEqual(retained);
     expect(
       Option.getOrUndefined(
         Arr.findFirst(
@@ -208,7 +220,7 @@ describe("contentRelease/compact", () => {
       complete: true,
       floor: 2,
     });
-    expect(sequences.sort()).toEqual([2, 3, 4, 5]);
+    expect(Arr.sort(sequences, Order.Number)).toEqual([2, 3, 4, 5]);
   });
   it("protects exact active bases and retained recovery slots", async () => {
     const t = convexTest(schema, convexModules);
@@ -266,7 +278,7 @@ describe("contentRelease/compact", () => {
       complete: true,
       floor: 2,
     });
-    expect(sequences.sort()).toEqual([2, 4, 5, 6, 7]);
+    expect(Arr.sort(sequences, Order.Number)).toEqual([2, 4, 5, 6, 7]);
   });
 });
 describe("contentRelease/compact permanent history", () => {

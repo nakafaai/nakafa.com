@@ -1,4 +1,4 @@
-import { Effect, FileSystem, Path, Schema } from "effect";
+import { Array as Arr, Effect, FileSystem, Path, Schema } from "effect";
 import { parse } from "yaml";
 import { validateDependencyPolicy } from "#scripts/dependencies/validate";
 
@@ -99,33 +99,37 @@ export const readFirstPartyManifests = Effect.fn(
 )(function* (root: string) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const manifestPaths = [path.join(root, "package.json")];
-
-  for (const workspaceDirectory of ["apps", "packages"]) {
-    const workspaceRoot = path.join(root, workspaceDirectory);
-    const entries = yield* fileSystem
-      .readDirectory(workspaceRoot)
-      .pipe(
-        Effect.mapError((cause) =>
-          readError(`Unable to read ${workspaceRoot}.`, cause)
-        )
-      );
-
-    for (const entry of entries) {
-      const entryPath = path.join(workspaceRoot, entry);
-      const info = yield* fileSystem
-        .stat(entryPath)
+  const workspaceManifestPaths = yield* Effect.forEach(
+    ["apps", "packages"],
+    Effect.fnUntraced(function* (workspaceDirectory) {
+      const workspaceRoot = path.join(root, workspaceDirectory);
+      const entries = yield* fileSystem
+        .readDirectory(workspaceRoot)
         .pipe(
           Effect.mapError((cause) =>
-            readError(`Unable to inspect ${entryPath}.`, cause)
+            readError(`Unable to read ${workspaceRoot}.`, cause)
           )
         );
-      if (info.type !== "Directory") {
-        continue;
-      }
-      manifestPaths.push(path.join(entryPath, "package.json"));
-    }
-  }
+      const directories = yield* Effect.filter(entries, (entry) =>
+        fileSystem.stat(path.join(workspaceRoot, entry)).pipe(
+          Effect.map((info) => info.type === "Directory"),
+          Effect.mapError((cause) =>
+            readError(
+              `Unable to inspect ${path.join(workspaceRoot, entry)}.`,
+              cause
+            )
+          )
+        )
+      );
+      return Arr.map(directories, (entry) =>
+        path.join(workspaceRoot, entry, "package.json")
+      );
+    })
+  );
+  const manifestPaths = Arr.prepend(
+    Arr.flatten(workspaceManifestPaths),
+    path.join(root, "package.json")
+  );
 
   return yield* Effect.forEach(manifestPaths, (manifestPath) =>
     readPackageManifest(manifestPath).pipe(

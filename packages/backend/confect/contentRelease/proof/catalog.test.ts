@@ -31,7 +31,7 @@ import {
   insertTestRelease,
 } from "@repo/backend/test/content/stage";
 import { convexTest } from "convex-test";
-import { Array as Arr, Schema, Struct } from "effect";
+import { Array as Arr, Order, Schema, Struct } from "effect";
 
 const readCatalog = internal.contentRelease.proof.catalog.page;
 
@@ -180,7 +180,7 @@ describe("contentRelease/proof/catalog", () => {
     expect(second).toMatchObject({ done: true, nextCursor: null });
     expect(second.heads).toHaveLength(1);
     expect(new Set(keys).size).toBe(itemCount);
-    expect(keys).toEqual([...keys].sort());
+    expect(keys).toEqual(Arr.sort(keys, Order.String));
     expect(keys).toContain(`test:head-${itemCount - 1}`);
   });
 

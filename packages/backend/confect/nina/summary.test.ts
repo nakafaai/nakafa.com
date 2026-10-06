@@ -38,7 +38,7 @@ async function fixture(turns: number) {
       visibility: "private",
       updatedAt: Date.now(),
     });
-    const prompts: string[] = [];
+    let prompts: string[] = [];
     for (let order = 0; order < turns; order += 1) {
       const { messages } = await saveMessages(ctx, components.nina, {
         threadId,
@@ -49,7 +49,7 @@ async function fixture(turns: number) {
         ],
       });
       const promptMessageId = messages[0]?._id ?? "";
-      prompts.push(promptMessageId);
+      prompts = Arr.append(prompts, promptMessageId);
       await ctx.db.insert("ninaTurns", {
         chatId,
         order,

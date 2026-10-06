@@ -27,18 +27,18 @@ export function getPublishedSearchFamilies(
   if (!owner) {
     return [];
   }
-  const families: PublishedFamily[] = [];
+  let families: PublishedFamily[] = [];
   if (
     owner.families.includes("article") &&
     (section === undefined || section === "articles")
   ) {
-    families.push("article");
+    families = Arr.append(families, "article");
   }
   if (
     owner.families.includes("material") &&
     (section === undefined || section === "material")
   ) {
-    families.push("material");
+    families = Arr.append(families, "material");
   }
   return families;
 }
@@ -106,11 +106,11 @@ export const readPublishedSearchDocuments = Effect.fn(
     Arr.map(authenticated, ({ document, row }) => [row._id, document])
   );
   const rankedGroups = Arr.map(groups, ({ queryText, rows: queryRows }) => {
-    const documents: ContentSearchDocument[] = [];
+    let documents: ContentSearchDocument[] = [];
     for (const row of queryRows) {
       const document = documentsByRow.get(row._id);
       if (document) {
-        documents.push(document);
+        documents = Arr.append(documents, document);
       }
     }
     return rankContentSearchDocuments(documents, queryText);

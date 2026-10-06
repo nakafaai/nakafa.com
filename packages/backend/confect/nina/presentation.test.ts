@@ -7,7 +7,7 @@ import { GatewayConfigurationError } from "@repo/backend/confect/gateway/key";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -155,9 +155,12 @@ describe("Nina presentation after an answer", () => {
       ledger: await ctx.db.query("creditTransactions").collect(),
     }));
     expect(state.turn?.tokens).toEqual({ input: 36, output: 12, total: 48 });
-    expect(Arr.map(state.turn?.usage ?? [], (row) => row.agent).sort()).toEqual(
-      ["nina", "suggestions", "title"]
-    );
+    expect(
+      Arr.sort(
+        Arr.map(state.turn?.usage ?? [], (row) => row.agent),
+        Order.String
+      )
+    ).toEqual(["nina", "suggestions", "title"]);
     expect(state.turn?.suggestions).toEqual([
       "How does this relate to continuity?",
     ]);

@@ -8,7 +8,7 @@ import {
   isSuccessfulScrapeOutput,
   scrapeUrl,
 } from "@repo/backend/confect/nina/research/tools/scrape";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, MutableRef } from "effect";
 
 const firecrawlApp = vi.hoisted(() => ({
   scrape: vi.fn(),
@@ -34,14 +34,14 @@ type WrittenPart = CapabilityArtifact;
 
 /** Creates a stream publish harness that records scrape data parts for assertions. */
 function createProgress() {
-  const parts: WrittenPart[] = [];
+  const written = MutableRef.make<readonly WrittenPart[]>([]);
   const publish: CapabilityProgress = Effect.fn("test.publish")((part) =>
     Effect.sync(() => {
-      parts.push(part);
+      MutableRef.update(written, Arr.append(part));
     })
   );
 
-  return { parts, publish };
+  return { parts: () => MutableRef.get(written), publish };
 }
 
 describe("research scrape tool", () => {
@@ -88,7 +88,7 @@ describe("research scrape tool", () => {
         "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
         expect.objectContaining({ formats: ["markdown"] })
       );
-      expect(parts).toEqual([
+      expect(parts()).toEqual([
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({ status: "loading" }),
@@ -121,7 +121,7 @@ describe("research scrape tool", () => {
       expect(text).toContain("Only public http(s) URLs can be scraped");
       expect(fetch).not.toHaveBeenCalled();
       expect(firecrawlApp.scrape).not.toHaveBeenCalled();
-      expect(parts).toEqual([
+      expect(parts()).toEqual([
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({ status: "loading" }),
@@ -205,7 +205,7 @@ describe("research scrape tool", () => {
 
       expect(text).toContain("full visibility over your AI SDK calls");
       expect(text).not.toContain("Sign Up");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({
@@ -244,7 +244,7 @@ describe("research scrape tool", () => {
 
       expect(output.error).toBeUndefined();
       expect(output.data.content).toContain("Direct markdown evidence.");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({
@@ -278,7 +278,7 @@ describe("research scrape tool", () => {
         expect(text).toContain("- Title: Fallback title");
         expect(text).toContain("- Description: Fallback description");
         expect(text).toContain("- Error: No content found.");
-        expect(parts.at(-1)).toEqual(
+        expect(parts().at(-1)).toEqual(
           expect.objectContaining({
             type: "data-scrape-url",
             data: expect.objectContaining({
@@ -308,7 +308,7 @@ describe("research scrape tool", () => {
 
       expect(text).not.toContain("- Title:");
       expect(text).not.toContain("- Description:");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: {
@@ -384,7 +384,7 @@ describe("research scrape tool", () => {
         "The page could not be retrieved. Please try again."
       );
       expect(text).not.toContain("- Title:");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({ status: "error" }),

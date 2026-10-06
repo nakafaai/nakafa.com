@@ -84,7 +84,7 @@ function projectMessages(messages: readonly ModelMessage[]) {
     if (message.role !== "tool") {
       return [message];
     }
-    const retained: ModelMessage[] = [];
+    let retained: ModelMessage[] = [];
     const content = Arr.map(message.content, (part) => {
       if (part.type !== "tool-result") {
         return part;
@@ -97,7 +97,7 @@ function projectMessages(messages: readonly ModelMessage[]) {
       if (!Schema.is(LearningCapabilityNameSchema)(part.toolName)) {
         unavailableTools.add(part.toolName);
         if (capabilityText(part) !== undefined) {
-          retained.push({ role: "assistant", content: text });
+          retained = Arr.append(retained, { role: "assistant", content: text });
         }
       }
       return { ...part, output: { type: "text" as const, value: text } };
@@ -160,17 +160,19 @@ function noteDocuments(message: ModelMessage): ModelMessage {
 }
 
 /** Splits a conversation into whole turns; each turn opens with a user message. */
-function splitTurns(messages: readonly ModelMessage[]) {
-  const turns: ModelMessage[][] = [];
-  for (const message of messages) {
-    if (message.role === "user") {
-      turns.push([message]);
-      continue;
-    }
-    // Messages before the first prompt belong to a turn cut by the fetch window.
-    turns.at(-1)?.push(message);
-  }
-  return turns;
+function splitTurns(messages: readonly ModelMessage[]): ModelMessage[][] {
+  // Messages before the first prompt belong to a turn cut by the fetch window.
+  const fromFirstPrompt = Arr.dropWhile(
+    messages,
+    (message) => message.role !== "user"
+  );
+  return Arr.chop(fromFirstPrompt, ([prompt, ...rest]) => {
+    const [replies, later] = Arr.splitWhere(
+      rest,
+      (message) => message.role === "user"
+    );
+    return [[prompt, ...replies], later];
+  });
 }
 
 /**
@@ -215,11 +217,11 @@ export function assembleContext({
   readonly recent: readonly ModelMessage[];
   readonly throughOrder: number | null;
 }) {
-  const newestFirst = splitTurns(
-    Arr.map(projectMessages(recent), noteDocuments)
-  ).reverse();
+  const newestFirst = Arr.reverse(
+    splitTurns(Arr.map(projectMessages(recent), noteDocuments))
+  );
   const covered = throughOrder ?? -1;
-  const selected: ModelMessage[][] = [];
+  let selected: ModelMessage[][] = [];
   let used = 0;
   for (const [offset, turn] of newestFirst.entries()) {
     const cost = turnTokens(turn);
@@ -231,7 +233,7 @@ export function assembleContext({
     }
     const kept =
       cost > NINA_BUDGET.history ? Arr.map(turn, excerptMessage) : turn;
-    selected.unshift(kept);
+    selected = Arr.prepend(selected, kept);
     used += turnTokens(kept);
   }
   return [...Arr.flatten(selected), ...boundStep(current)];

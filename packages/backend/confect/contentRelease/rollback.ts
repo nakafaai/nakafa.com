@@ -27,7 +27,7 @@ import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Proves one release is an exact active or verified-candidate rollback source. */
 export const rollbackSource = Effect.fn("contentRelease.rollbackSource")(
@@ -97,7 +97,7 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
         numItems: request.limit,
       })
       .pipe(Effect.orDie);
-    const records: RollbackRecord[] = [];
+    let records: RollbackRecord[] = [];
     for (const [offset, row] of rowPage.page.entries()) {
       if (row.index !== request.afterIndex + offset + 1) {
         return yield* releaseFail(
@@ -119,7 +119,7 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
         }
         break;
       }
-      records.push(record);
+      records = Arr.append(records, record);
     }
     return canonicalizeRollbackPage(makeRollbackPage(request, total, records));
   }
@@ -189,7 +189,7 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
       )
       .take(request.limit)
       .pipe(Effect.orDie);
-    const records: RouteRollbackRecord[] = [];
+    let records: RouteRollbackRecord[] = [];
     for (const [offset, row] of rows.entries()) {
       if (row.index !== request.afterIndex + offset + 1) {
         return yield* releaseFail(
@@ -197,7 +197,7 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
           `Route rollback source ${request.rollbackOf} is not contiguous.`
         );
       }
-      records.push({
+      records = Arr.append(records, {
         current: yield* decodeRouteJson(row.routeJson),
         priorContentKey: yield* priorRouteOwner(row, baseSequence),
       });

@@ -12,7 +12,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Array as Arr } from "effect";
+import { Array as Arr, Order, pipe } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const SHORT_ID = "asset:en:material:lesson";
@@ -88,10 +88,13 @@ describe("contents/metrics/batch", () => {
       2 * learningPopularityWindowValues.length
     );
     expect(
-      Arr.map([...batch.signals.values()], ({ ref, viewCount }) => ({
-        contentId: ref.content_id,
-        viewCount,
-      })).sort((left, right) => left.contentId.localeCompare(right.contentId))
+      pipe(
+        Arr.map([...batch.signals.values()], ({ ref, viewCount }) => ({
+          contentId: ref.content_id,
+          viewCount,
+        })),
+        Arr.sortWith((row) => row.contentId, Order.String)
+      )
     ).toEqual([
       { contentId: SHORT_ID, viewCount: 1 },
       { contentId: LONG_ID, viewCount: 3 },

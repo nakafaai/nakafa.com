@@ -22,7 +22,7 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpe
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { registerWorkflow } from "@repo/backend/test/workflow";
-import { Array as Arr, Data, Effect } from "effect";
+import { Array as Arr, Data, Effect, MutableRef } from "effect";
 
 const NOW = Date.UTC(2026, 8, 27);
 class WorkflowUnavailable extends Data.TaggedError("WorkflowUnavailable")<{
@@ -44,20 +44,18 @@ afterEach(() => {
   vi.useRealTimers();
 });
 async function admit() {
-  const requests: {
-    body: string;
-    method: string;
-    url: string;
-  }[] = [];
+  const sent = MutableRef.make<
+    readonly { body: string; method: string; url: string }[]
+  >([]);
   vi.stubGlobal(
     "fetch",
     vi.fn<typeof fetch>(async (input, init) => {
       const request = new Request(input, init);
-      requests.push({
-        body: await request.text(),
-        method: request.method,
-        url: request.url,
-      });
+      const body = await request.text();
+      MutableRef.update(
+        sent,
+        Arr.append({ body, method: request.method, url: request.url })
+      );
       return Response.json({
         deletion_errors: [],
         events_queued_for_deletion: true,
@@ -91,7 +89,7 @@ async function admit() {
   assert(journal);
   return {
     t,
-    requests,
+    requests: () => MutableRef.get(sent),
     userId,
     workflowId: journal.workflowId,
   };
@@ -126,7 +124,7 @@ async function readJobs(
   );
 }
 async function expectErased(fixture: Awaited<ReturnType<typeof admit>>) {
-  expect(fixture.requests).toEqual([
+  expect(fixture.requests()).toEqual([
     {
       body: JSON.stringify({
         delete_events: true,

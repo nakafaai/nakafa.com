@@ -23,7 +23,7 @@ import {
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
 import { getConvexSize } from "convex/values";
-import { Array as Arr, Effect, Option, Struct } from "effect";
+import { Array as Arr, Effect, Option, Order, Struct } from "effect";
 export type ProofPage = typeof proofPageValidator.Type;
 export type ProofState = typeof proofStateValidator.Type;
 export type ArtifactProofPage = typeof artifactProofPageValidator.Type;
@@ -221,7 +221,7 @@ export const artifactBatchProgram = Effect.fn(
       `Content release ${releaseId} has an invalid artifact batch ${batchIndex}.`
     );
   }
-  const rows = yield* Effect.forEach(stored, (row) =>
+  const loaded = yield* Effect.forEach(stored, (row) =>
     loadArtifactJson(row).pipe(
       Effect.map((artifactJson) => ({
         artifactJson,
@@ -230,7 +230,7 @@ export const artifactBatchProgram = Effect.fn(
       }))
     )
   );
-  rows.sort((left, right) => left.index - right.index);
+  const rows = Arr.sortWith(loaded, (row) => row.index, Order.Number);
   const result = {
     batchIndex,
     rows,
@@ -279,7 +279,7 @@ export const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       numItems: PROOF_PAGE_LIMIT,
     })
     .pipe(Effect.orDie);
-  const rows: ProofPage["rows"] = [];
+  let rows: ProofPage["rows"] = [];
   for (const row of stored.page) {
     const next = {
       index: row.index,
@@ -301,7 +301,7 @@ export const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       }
       break;
     }
-    rows.push(next);
+    rows = Arr.append(rows, next);
     const metrics = yield* Effect.promise(() =>
       ctx.meta.getTransactionMetrics()
     );

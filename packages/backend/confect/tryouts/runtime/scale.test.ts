@@ -6,7 +6,7 @@ import { cleanupAttemptScale } from "@repo/backend/confect/tryouts/runtime/scale
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
-import { Data, Effect } from "effect";
+import { Array as Arr, Data, Effect } from "effect";
 
 class ScaleStorageUnavailable extends Data.TaggedError(
   "ScaleStorageUnavailable"
@@ -41,9 +41,10 @@ function seedAttemptScale(
       status: "official",
       tryoutSnapshotId: `snapshot:${suffix}`,
     });
-    const runIds: Id<"irtCalibrationRuns">[] = [];
+    let runIds: Id<"irtCalibrationRuns">[] = [];
     for (let index = 0; index < counts.runs; index += 1) {
-      runIds.push(
+      runIds = Arr.append(
+        runIds,
         await ctx.db.insert("irtCalibrationRuns", {
           attemptCount: 1,
           iterationCount: 1,
@@ -149,7 +150,7 @@ describe("tryouts/runtime/scale", () => {
           })
         )
       );
-      const progress: boolean[] = [];
+      let progress: boolean[] = [];
       for (let page = 0; page < 8; page += 1) {
         const attempt = yield* Effect.promise(() =>
           t.query((ctx) => ctx.db.get(seeded.attempt._id))
@@ -166,7 +167,7 @@ describe("tryouts/runtime/scale", () => {
             )
           )
         );
-        progress.push(changed);
+        progress = Arr.append(progress, changed);
         if (!changed) {
           break;
         }

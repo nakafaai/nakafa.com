@@ -28,7 +28,7 @@ import {
   readPublishedSetSections,
   readPublishedTrackSets,
 } from "@repo/backend/content/tryout/hierarchy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 type Progress = Docs["tryoutSetProgress"];
 type User = Docs["users"];
@@ -220,8 +220,8 @@ function sortJoinedSets(
   rows: readonly PublishedSetRow[],
   sort: ListArgs["sort"]
 ) {
-  const result = [...rows];
-  result.sort((left, right) => {
+  /** Compares two rows by the requested field, then by authored order. */
+  const compare = (left: PublishedSetRow, right: PublishedSetRow) => {
     const authoredOrder =
       left.set.order - right.set.order ||
       tryoutCatalogIdentity(left.set).localeCompare(
@@ -258,6 +258,11 @@ function sortJoinedSets(
     }
     const directed = sort.direction === "desc" ? -comparison : comparison;
     return directed || authoredOrder;
-  });
-  return result;
+  };
+  return Arr.sort(
+    rows,
+    Order.make<PublishedSetRow>((left, right) =>
+      Order.Number(compare(left, right), 0)
+    )
+  );
 }
