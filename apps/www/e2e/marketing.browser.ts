@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import {
@@ -242,7 +242,9 @@ const verifyContributorPayloads = Effect.fn(
           links.map((link) => link.getAttribute("href")).sort()
         )
     );
-    const expectedSocialLinks = Object.values(contributor.social ?? {})
+    const expectedSocialLinks = Rec.values<string, string | undefined>(
+      contributor.social ?? {}
+    )
       .filter((href) => href !== undefined)
       .sort();
     yield* Effect.sync(() =>

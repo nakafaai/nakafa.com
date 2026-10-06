@@ -27,7 +27,7 @@ import {
   testTextHash,
 } from "@repo/backend/test/content/release";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
-import { Array as Arr, Effect, Struct } from "effect";
+import { Array as Arr, Effect, Record as Rec, Struct } from "effect";
 import {
   testArticleProjection,
   testArticleSourcePath,
@@ -142,7 +142,7 @@ export const makeArticleRuntimeSource = Effect.fn(
         category: 1,
       })),
     ];
-    const buckets: PublicationRow<"articleBuckets">[] = Object.values(
+    const buckets: PublicationRow<"articleBuckets">[] = Rec.values(
       Arr.groupBy(partitionRows, ({ row }) => `${row.appLocale}/${row.bucket}`)
     ).map((rows) => ({
       appLocale: rows[0].row.appLocale,

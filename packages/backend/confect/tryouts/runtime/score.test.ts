@@ -24,7 +24,7 @@ import {
   seedFrozenTryoutScoreState,
 } from "@repo/backend/test/tryout/score";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 
 describe("tryouts/runtime/score", () => {
   it("masks unexpected owned attempt lookup failures", async () => {
@@ -375,7 +375,7 @@ describe("tryouts/runtime/score", () => {
       })
   );
   it.each(
-    Object.entries({
+    Rec.toEntries({
       inactive: "TRYOUT_ATTEMPT_NOT_ACTIVE",
       "foreign source": "TRYOUT_SCORE_SOURCE_MISMATCH",
       "wrong strategy": "TRYOUT_SCORE_SOURCE_MISMATCH",

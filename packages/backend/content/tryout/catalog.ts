@@ -9,7 +9,7 @@ import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout
 import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
 import { findTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { Effect, Option } from "effect";
+import { Effect, Option, Record as Rec } from "effect";
 
 /** Counts each hierarchy kind in one verified localized catalog. */
 function countCatalog(rows: readonly TryoutCatalogRow[]) {
@@ -27,7 +27,7 @@ function localizedCounts(
   counts: TryoutCatalogCounts,
   localeCount: number
 ): TryoutCatalogCounts | undefined {
-  const entries = Object.entries(counts);
+  const entries = Rec.toEntries(counts);
   if (entries.some(([, count]) => count % localeCount !== 0)) {
     return;
   }
@@ -142,10 +142,7 @@ const loadStoredTryoutCatalog = Effect.fn(
       "Active try-out catalog counts do not divide across its locales."
     );
   }
-  const total = Object.values(expected).reduce(
-    (count, value) => count + value,
-    0
-  );
+  const total = Rec.values(expected).reduce((count, value) => count + value, 0);
   if (total > TRYOUT_CATALOG_LIMIT) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",

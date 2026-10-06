@@ -1,6 +1,7 @@
 "use client";
 
 import { useGLTF } from "@react-three/drei";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { Box3, Color, type Material, Mesh, Vector3 } from "three";
 
@@ -41,7 +42,7 @@ export function PhysicsTrainModel({
 }
 
 function tintMaterial(material: Mesh["material"], color: string) {
-  if (Array.isArray(material)) {
+  if (Arr.isArray(material)) {
     return material.map((item) => tintSingleMaterial(item, color));
   }
 

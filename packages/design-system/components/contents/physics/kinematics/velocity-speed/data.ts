@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import { Record as Rec } from "effect";
 import type { ReactNode } from "react";
 
 export const VELOCITY_SPEED_CAR_MODEL_PATH =
@@ -94,7 +95,7 @@ const MOTION_CONFIGS: Record<VelocitySpeedCaseId, MotionConfig> = {
   },
 };
 
-const ROUTE_BOUNDS = getRouteBounds(Object.values(MOTION_CONFIGS));
+const ROUTE_BOUNDS = getRouteBounds(Rec.values(MOTION_CONFIGS));
 const SCENE_BOUNDS = getPaddedRouteBounds(ROUTE_BOUNDS);
 const CAMERA_TARGET = getCameraTarget(SCENE_BOUNDS);
 const CAMERA_POSITION = getCameraPosition(SCENE_BOUNDS, CAMERA_TARGET);

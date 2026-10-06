@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import { GoogleIndexSubmitError } from "@/scripts/indexing/errors";
 import { getGoogleAccessToken } from "@/scripts/indexing/google/auth";
 import { getEligibleGoogleIndexingUrls } from "@/scripts/indexing/google/eligibility";
@@ -61,7 +61,7 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
 
         logger.stats(
           "Previously submitted eligible URLs to Google",
-          Object.keys(history.googleIndexingApi).length
+          Rec.keys(history.googleIndexingApi).length
         );
         logger.stats(
           `New eligible URLs to submit to Google in batch ${batch.batchIndex}`,

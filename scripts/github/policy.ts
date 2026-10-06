@@ -1,4 +1,12 @@
-import { Effect, FileSystem, Option, Path, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  Option,
+  Path,
+  Record as Rec,
+  Schema,
+} from "effect";
 import { parse as yamlParse } from "yaml";
 
 const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
@@ -94,7 +102,7 @@ function collectActionUses(
   workflowPath: string,
   uses: GithubActionUse[]
 ) {
-  if (Array.isArray(value)) {
+  if (Arr.isArray(value)) {
     for (const item of value) {
       collectActionUses(item, workflowPath, uses);
     }
@@ -115,7 +123,7 @@ function collectActionUses(
     });
   }
 
-  for (const child of Object.values(record.value)) {
+  for (const child of Rec.values(record.value)) {
     collectActionUses(child, workflowPath, uses);
   }
 }
@@ -138,14 +146,14 @@ function inputProblems(
   expectedInputs: Readonly<Record<string, string>>
 ) {
   const problems: string[] = [];
-  for (const [input, expected] of Object.entries(expectedInputs)) {
+  for (const [input, expected] of Rec.toEntries(expectedInputs)) {
     if (String(use.inputs[input] ?? "") !== expected) {
       problems.push(
         `${use.workflowPath} configures ${action} ${input} as ${String(use.inputs[input] ?? "missing")}; approved ${expected}.`
       );
     }
   }
-  for (const input of Object.keys(use.inputs)) {
+  for (const input of Rec.keys(use.inputs)) {
     if (!Object.hasOwn(expectedInputs, input)) {
       problems.push(
         `${use.workflowPath} configures unreviewed ${action} input ${input}.`

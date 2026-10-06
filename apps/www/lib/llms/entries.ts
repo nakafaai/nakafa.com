@@ -1,5 +1,5 @@
 import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
-import { Option } from "effect";
+import { Option, Record as Rec } from "effect";
 import type { Locale } from "next-intl";
 import {
   BASE_URL,
@@ -43,7 +43,7 @@ export function isLlmsSection(
 
 /** Returns the configured llms sections in display order. */
 export function getLlmsSections() {
-  return Object.keys(SECTION_LABELS).filter(isLlmsSection);
+  return Rec.keys(SECTION_LABELS).filter(isLlmsSection);
 }
 
 /** Builds site entries from derived indexes and signed Page projections. */

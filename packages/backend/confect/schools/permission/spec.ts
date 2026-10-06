@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Record as Rec, Schema } from "effect";
 
 /**
  * Role-based permission system.
@@ -30,7 +30,7 @@ export const PERMISSIONS = {
   FORUM_WRITE: "forum:write",
   FORUM_MODERATE: "forum:moderate",
 } as const;
-export const PermissionSchema = Schema.Literals(Object.values(PERMISSIONS));
+export const PermissionSchema = Schema.Literals(Rec.values(PERMISSIONS));
 export type Permission = typeof PermissionSchema.Type;
 
 /** The stable access-control failure returned by school and class mutations. */

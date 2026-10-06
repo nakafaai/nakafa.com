@@ -27,7 +27,7 @@ import {
   testUpsertJson,
 } from "@repo/backend/test/content/release";
 import { makeTryoutSnapshotManifest } from "@repo/backend/test/tryout/snapshot";
-import { Cause, Effect, Exit, Result, Schema } from "effect";
+import { Cause, Effect, Exit, Record as Rec, Result, Schema } from "effect";
 
 /** Strictly decodes one technical request through the shared contract. */
 function request(input: unknown) {
@@ -180,7 +180,7 @@ describe("content publication failure mapping", () => {
       expect(requestReleaseId(requests.stageRecovery)).toBe(recoveryId);
       expect(requestReleaseId(requests.activateRecovery)).toBe(recoveryId);
       for (const publicationRequest of [
-        ...Object.values(requests),
+        ...Rec.values(requests),
         runtimeBundleRequest,
       ]) {
         if (
@@ -223,7 +223,7 @@ describe("content publication failure mapping", () => {
     Effect.gen(function* () {
       const runtimeBundleRequest = yield* makeRuntimeBundleRequest();
       for (const publicationRequest of [
-        ...Object.values(requests),
+        ...Rec.values(requests),
         runtimeBundleRequest,
       ]) {
         const exit = yield* failure(

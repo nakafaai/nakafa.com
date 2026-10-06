@@ -13,6 +13,7 @@ import {
   snbtQuantComponentNames,
   tkaMathComponentNames,
 } from "@repo/design-system/lib/markdown/names";
+import { Record as Rec } from "effect";
 
 const domainComponentNames = {
   "ai-ds": aiDsComponentNames,
@@ -31,7 +32,7 @@ const domainComponentNames = {
 
 describe("route-domain component names", () => {
   it("keeps exactly the finite route-domain registry contract", () => {
-    expect(Object.keys(domainComponentNames)).toEqual([
+    expect(Rec.keys(domainComponentNames)).toEqual([
       "ai-ds",
       "biology",
       "chemistry",
@@ -56,10 +57,10 @@ describe("route-domain component names", () => {
     );
   });
 
-  it.each(Object.entries(domainComponentNames))(
+  it.each(Rec.toEntries(domainComponentNames))(
     "keeps %s component names unique",
     (_domain, componentNames) => {
-      const values = Object.values(componentNames);
+      const values = Rec.values<string, string>(componentNames);
 
       expect(new Set(values)).toHaveLength(values.length);
     }

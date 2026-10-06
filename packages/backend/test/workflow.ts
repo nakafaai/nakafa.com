@@ -1,6 +1,7 @@
 import workflowTest from "@convex-dev/workflow/test";
 import type schema from "@repo/backend/convex/schema";
 import type { TestConvex } from "convex-test";
+import { Record as Rec } from "effect";
 
 /**
  * Loads Workflow modules before its deterministic handler disables process.
@@ -10,7 +11,7 @@ import type { TestConvex } from "convex-test";
  */
 export async function registerWorkflow(t: TestConvex<typeof schema>) {
   workflowTest.register(t);
-  const runtimeModules = Object.entries(workflowTest.modules).filter(
+  const runtimeModules = Rec.toEntries(workflowTest.modules).filter(
     ([path]) =>
       !(path.endsWith(".test.ts") || path.endsWith("/convex.config.ts"))
   );
@@ -20,6 +21,6 @@ export async function registerWorkflow(t: TestConvex<typeof schema>) {
       return [path, () => Promise.resolve(loaded)] as const;
     })
   );
-  const modules = Object.fromEntries(entries);
+  const modules = Rec.fromEntries(entries);
   t.registerComponent("workflow", workflowTest.schema, modules);
 }

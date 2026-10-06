@@ -1,4 +1,10 @@
-import { JsonSchema, Predicate, Schema } from "effect";
+import {
+  Array as Arr,
+  JsonSchema,
+  Predicate,
+  Record as Rec,
+  Schema,
+} from "effect";
 
 interface ObjectJsonSchema extends JsonSchema.JsonSchema {
   readonly properties: Readonly<Record<string, unknown>>;
@@ -26,7 +32,7 @@ function isObjectSchema(schema: unknown): schema is ObjectJsonSchema {
   if (!Predicate.isReadonlyObject(schema.properties)) {
     return false;
   }
-  return Array.isArray(schema.required);
+  return Arr.isArray(schema.required);
 }
 
 /** Narrows generated JSON Schema to array-shaped properties. */
@@ -36,7 +42,7 @@ function isArraySchema(schema: unknown): schema is ArrayJsonSchema {
 
 /** Requires every top-level Effect union branch to define object parameters. */
 function objectVariants(schema: JsonSchema.JsonSchema) {
-  if (!Array.isArray(schema.anyOf)) {
+  if (!Arr.isArray(schema.anyOf)) {
     return [];
   }
   return schema.anyOf.map((variant) => {
@@ -76,7 +82,7 @@ function readArrayMetadata(schema: JsonSchema.JsonSchema): ArrayMetadata {
   let minItems =
     typeof schema.minItems === "number" ? schema.minItems : undefined;
 
-  if (!Array.isArray(schema.allOf)) {
+  if (!Arr.isArray(schema.allOf)) {
     return { description, maxItems, minItems };
   }
 
@@ -131,7 +137,7 @@ function mergePropertySchema(
   right: JsonSchema.JsonSchema
 ): JsonSchema.JsonSchema {
   const description = mergeDescription(left.description, right.description);
-  if (Array.isArray(left.enum) && Array.isArray(right.enum)) {
+  if (Arr.isArray(left.enum) && Arr.isArray(right.enum)) {
     return {
       ...right,
       ...(description ? { description } : {}),
@@ -178,7 +184,7 @@ function requirePropertySchema(value: unknown, name: string) {
 function mergeVariantProperties(variants: readonly ObjectJsonSchema[]) {
   const properties: Record<string, JsonSchema.JsonSchema> = {};
   for (const variant of variants) {
-    for (const [name, value] of Object.entries(variant.properties)) {
+    for (const [name, value] of Rec.toEntries(variant.properties)) {
       const property = requirePropertySchema(value, name);
       const existing = properties[name];
       properties[name] = existing
@@ -204,7 +210,7 @@ function toDraft07Document(schema: Schema.Constraint) {
 
 /** Attaches local definitions to one provider-facing Draft-07 schema. */
 function withDefinitions(document: JsonSchema.Document<"draft-07">) {
-  if (Object.keys(document.definitions).length === 0) {
+  if (Rec.keys(document.definitions).length === 0) {
     return document.schema;
   }
   return {

@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import {
   ensureSubmissionHistoryFolder,
   listUnsubmittedUrls,
@@ -80,7 +80,7 @@ const runIndexNowSubmission = Effect.fn(
 
   logger.stats(
     "Previously submitted URLs to IndexNow",
-    Object.keys(history.indexNow).length
+    Rec.keys(history.indexNow).length
   );
   logger.stats(
     `New URLs to submit to IndexNow in batch ${batchIndex}`,
@@ -170,7 +170,7 @@ const submitBingBatch = Effect.fn("scripts.indexing.indexNow.runBingBatch")(
 
     logger.stats(
       "Previously submitted URLs to Bing",
-      Object.keys(history.bing).length
+      Rec.keys(history.bing).length
     );
     logger.stats(
       `New URLs to submit to Bing in batch ${batchIndex}`,

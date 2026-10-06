@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem } from "effect";
+import { Effect, FileSystem, Record as Rec } from "effect";
 import { parse as yamlParse } from "yaml";
 import {
   GITHUB_ACTION_REVIEWS,
@@ -40,7 +40,7 @@ const makeWorkflows = Effect.fn("GithubPolicyTest.makeWorkflows")(function* (
   yield* fileSystem.makeDirectory(`${root}/.github/workflows`, {
     recursive: true,
   });
-  for (const [file, content] of Object.entries(files)) {
+  for (const [file, content] of Rec.toEntries(files)) {
     yield* fileSystem.writeFileString(
       `${root}/.github/workflows/${file}`,
       content

@@ -1,7 +1,7 @@
 import { MAX_PLAIN_TEXT_BYTES } from "@nakafa/aksara-contracts/limits";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { getDocumentSize, type Value } from "convex/values";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 
 /** Application ceiling that leaves headroom below Convex's 1 MiB limit. */
 export const CONTENT_DOCUMENT_LIMIT = 512 * 1024;
@@ -17,7 +17,7 @@ function compactDocument(
   document: Readonly<Record<string, Value | undefined>>
 ) {
   const compact: Record<string, Value> = {};
-  for (const [key, value] of Object.entries(document)) {
+  for (const [key, value] of Rec.toEntries(document)) {
     if (value !== undefined) {
       compact[key] = value;
     }

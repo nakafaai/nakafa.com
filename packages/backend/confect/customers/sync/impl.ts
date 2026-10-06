@@ -24,7 +24,7 @@ import {
 } from "@repo/backend/confect/customers/sync/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { WithoutSystemFields } from "convex/server";
-import { Effect, flow } from "effect";
+import { Effect, flow, Record as Rec } from "effect";
 
 type CustomerSyncUser = Pick<
   Docs["users"],
@@ -114,7 +114,7 @@ export const syncCustomerForUser = Effect.fn(
     metadata,
   });
   let syncedPolarCustomer = polarCustomer;
-  if (Object.keys(polarCustomer.metadata).length === 0) {
+  if (Rec.keys(polarCustomer.metadata).length === 0) {
     const updatedCustomer = yield* polarGateway.updateCustomerMetadata({
       polarCustomerId: polarCustomer.id,
       metadata,

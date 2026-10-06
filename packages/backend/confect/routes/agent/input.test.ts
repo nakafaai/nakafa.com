@@ -8,7 +8,7 @@ import {
   readSearchInput,
   readTaxonomyInput,
 } from "@repo/backend/confect/routes/agent/input";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 
 function url(path: string) {
   return new URL(path, "https://api.nakafa.com");
@@ -89,7 +89,7 @@ describe("agent HTTP input", () => {
           Effect.flip
         ),
       });
-      for (const failure of Object.values(failures)) {
+      for (const failure of Rec.values(failures)) {
         expect(failure).toMatchObject({
           _tag: "AgentHttpInputError",
         });
