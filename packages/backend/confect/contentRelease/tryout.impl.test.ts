@@ -9,7 +9,7 @@ import {
   makeTryoutStartHierarchy,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, pipe } from "effect";
 
 describe("public signed try-out publication", () => {
   it.effect(
@@ -31,7 +31,7 @@ describe("public signed try-out publication", () => {
           });
           expect(catalog.rowJson).toHaveLength(expected.length);
           expect(
-            catalog.rowJson.every((row) =>
+            Arr.every(catalog.rowJson, (row) =>
               row.includes(`"appLocale":"${appLocale}"`)
             )
           ).toBe(true);
@@ -48,7 +48,7 @@ describe("public signed try-out publication", () => {
               })
             )
           ).toEqual({
-            paths: expected.map(({ publicPath }) => publicPath).sort(),
+            paths: Arr.map(expected, ({ publicPath }) => publicPath).sort(),
           });
           expect(
             yield* Effect.promise(() =>
@@ -63,21 +63,25 @@ describe("public signed try-out publication", () => {
               t.query(api.contentRelease.tryout.taxonomy, { appLocale })
             )
           ).toEqual({
-            countries: expected
-              .filter((row) => row.kind === "country")
-              .map((row) => ({ id: row.countryKey, label: row.title })),
-            exams: expected
-              .filter((row) => row.kind === "exam")
-              .map((row) => ({ id: row.examKey, label: row.title })),
+            countries: pipe(
+              expected,
+              Arr.filter((row) => row.kind === "country"),
+              Arr.map((row) => ({ id: row.countryKey, label: row.title }))
+            ),
+            exams: pipe(
+              expected,
+              Arr.filter((row) => row.kind === "exam"),
+              Arr.map((row) => ({ id: row.examKey, label: row.title }))
+            ),
             routeCount: 5,
           });
         }
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
-            const row = await ctx.db
-              .query("tryoutCatalog")
-              .filter((q) => q.eq(q.field("appLocale"), "id"))
-              .first();
+            const [row] = Arr.filter(
+              await ctx.db.query("tryoutCatalog").collect(),
+              (candidate) => candidate.appLocale === "id"
+            );
             assert(row);
             await ctx.db.patch(row._id, {
               rowHash: `sha256:${"f".repeat(64)}`,

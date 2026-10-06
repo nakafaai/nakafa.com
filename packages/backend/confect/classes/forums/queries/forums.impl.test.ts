@@ -16,6 +16,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { Array as Arr } from "effect";
 
 const FORUM_CREATED_AT = Date.UTC(2026, 3, 18, 8, 0, 0);
 const READ_AT = Date.UTC(2026, 3, 18, 8, 5, 0);
@@ -223,7 +224,7 @@ describe("classes/forums/queries/forums:getForums", () => {
       }
     );
     expect(
-      mixed.page.map(({ _id, unreadCount }) => ({ _id, unreadCount }))
+      Arr.map(mixed.page, ({ _id, unreadCount }) => ({ _id, unreadCount }))
     ).toEqual([
       { _id: emptyForumId, unreadCount: 0 },
       { _id: result.page[0]._id, unreadCount: 1 },

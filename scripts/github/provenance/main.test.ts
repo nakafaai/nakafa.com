@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Sink, Stdio } from "effect";
+import { Array as Arr, Effect, FileSystem, Layer, Sink, Stdio } from "effect";
 import { ProvenanceBundleVerifier } from "#scripts/github/provenance/bundle";
 import { verifyProvenanceAudit } from "#scripts/github/provenance/main";
 
@@ -154,7 +154,7 @@ describe("provenance verifier CLI", () => {
       );
 
       assert.deepStrictEqual(
-        [invalid, missing].map(({ result, signed, stdout }) => [
+        Arr.map([invalid, missing], ({ result, signed, stdout }) => [
           result._tag === "Failure" ? result.failure.message : result._tag,
           signed,
           stdout,

@@ -26,7 +26,7 @@ import {
 } from "@repo/backend/test/content/compact";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Provides one persisted compaction page with a mutation transaction. */
 function compactPage(
@@ -123,10 +123,12 @@ describe("contentRelease/compact/rows", () => {
         sequence: 4,
       },
     ]);
-    expect(remaining.bindings.map(({ sequence }) => sequence)).toEqual([4, 4]);
+    expect(Arr.map(remaining.bindings, ({ sequence }) => sequence)).toEqual([
+      4, 4,
+    ]);
     expect(remaining.facts).toHaveLength(2);
     expect(
-      remaining.facts.every(({ retainUntil }) => retainUntil > Date.now())
+      Arr.every(remaining.facts, ({ retainUntil }) => retainUntil > Date.now())
     ).toBe(true);
   });
   it("keeps a full heads page proving maximal references under the read budget", async () => {
@@ -139,7 +141,7 @@ describe("contentRelease/compact/rows", () => {
       testTextHash(`${contentKey}@${sequence}`);
     // Each paged version and its predecessor below the window release one
     // artifact that a maximal head, item, and placement still name.
-    const released = keys.flatMap((contentKey) => [
+    const released = Arr.flatMap(keys, (contentKey) => [
       artifact(contentKey, 1),
       artifact(contentKey, 2),
     ]);
@@ -338,7 +340,7 @@ describe("contentRelease/compact/rows", () => {
           phase === "releases"
             ? await ctx.db.query("contentReleases").collect()
             : await ctx.db.query("snapshotBatches").collect();
-        return rows.map(({ sequence }) => sequence);
+        return Arr.map(rows, ({ sequence }) => sequence);
       });
       expect(remaining).toEqual([34, 35]);
     }

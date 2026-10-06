@@ -4,18 +4,23 @@ import {
   ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
 } from "@repo/backend/confect/auth/deletion/constants";
 import { WELCOME_EMAIL_RETRY } from "@repo/backend/confect/emails/welcome/spec";
+import { Array as Arr } from "effect";
 
 /** @see @convex-dev/workpool/src/component/loop.ts withJitter */
 const WORKPOOL_MINIMUM_JITTER_FACTOR = 0.5;
 
 function minimumCoveredRetryWindow(maxAttempts: number) {
-  return Array.from(
-    { length: maxAttempts - 1 },
-    (_, retry) =>
-      WELCOME_EMAIL_RETRY.initialBackoffMs *
-      WELCOME_EMAIL_RETRY.base ** retry *
-      WORKPOOL_MINIMUM_JITTER_FACTOR
-  ).reduce((total, delay) => total + delay, 0);
+  return Arr.reduce(
+    Array.from(
+      { length: maxAttempts - 1 },
+      (_, retry) =>
+        WELCOME_EMAIL_RETRY.initialBackoffMs *
+        WELCOME_EMAIL_RETRY.base ** retry *
+        WORKPOOL_MINIMUM_JITTER_FACTOR
+    ),
+    0,
+    (total, delay) => total + delay
+  );
 }
 
 describe("emails/welcome/spec", () => {

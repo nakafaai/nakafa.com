@@ -16,7 +16,7 @@ import {
   COMPACTION_PAGE_BYTES,
   COMPACTION_PAGE_COUNT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Effect, flow } from "effect";
+import { Array as Arr, Effect, flow } from "effect";
 
 const compactionPage = {
   maximumBytesRead: COMPACTION_PAGE_BYTES,
@@ -185,7 +185,7 @@ const compactItems = Effect.fn("contentRelease.compactItems")(function* (
     yield* writer.table("contentItems").delete(row._id);
   }
   yield* retainOrphanedArtifacts(
-    page.page.flatMap(({ artifactHash }) =>
+    Arr.flatMap(page.page, ({ artifactHash }) =>
       artifactHash === undefined ? [] : [artifactHash]
     )
   );

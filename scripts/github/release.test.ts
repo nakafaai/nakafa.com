@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Option, Redacted, Result } from "effect";
+import { Array as Arr, Effect, Layer, Option, Redacted, Result } from "effect";
 import {
   HttpClient,
   type HttpClientRequest,
@@ -27,7 +27,7 @@ describe("GitHub Action releases", () => {
   it.effect("deduplicates reviews by upstream repository", () =>
     Effect.gen(function* () {
       const reviews = yield* githubActionReleaseReviews();
-      const repositories = reviews.map(({ repository }) => repository);
+      const repositories = Arr.map(reviews, ({ repository }) => repository);
 
       expect(new Set(repositories).size).toBe(repositories.length);
       expect(repositories).not.toContain("actions/cache");

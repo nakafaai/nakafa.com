@@ -1,6 +1,6 @@
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const BatchKindSchema = Schema.Literals([
   "artifact",
@@ -32,7 +32,7 @@ export function validateStoredBatch(
 ) {
   if (
     actualRows === expectedRows &&
-    hashes.every((hash) => hash === expectedHash)
+    Arr.every(hashes, (hash) => hash === expectedHash)
   ) {
     return Effect.void;
   }

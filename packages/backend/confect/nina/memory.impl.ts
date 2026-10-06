@@ -16,14 +16,14 @@ import spec, {
   MEMORY_FACTS,
   type NinaMemoryChanges,
 } from "@repo/backend/confect/nina/memory.spec";
-import { Clock, Effect, Layer } from "effect";
+import { Array as Arr, Clock, Effect, Layer } from "effect";
 
 type Memory = Docs["ninaMemories"];
 
 /** Lists facts for settings, most recently saved first. */
 function toView(facts: Memory["facts"]) {
   return {
-    facts: [...facts].reverse().map(({ key, savedAt, text }) => ({
+    facts: Arr.map([...facts].reverse(), ({ key, savedAt, text }) => ({
       key,
       savedAt,
       text,
@@ -45,7 +45,9 @@ function reviseFacts(
   }
 ) {
   const forgotten = new Set(changes.forget);
-  const updates = new Map(changes.update.map(({ key, text }) => [key, text]));
+  const updates = new Map(
+    Arr.map(changes.update, ({ key, text }) => [key, text])
+  );
   const kept: Memory["facts"] = [];
   const rewritten: Memory["facts"] = [];
   for (const fact of memory.facts) {
@@ -60,7 +62,7 @@ function reviseFacts(
     }
   }
   const known = new Set(
-    [...kept, ...rewritten].map((fact) => fact.text.toLowerCase())
+    Arr.map([...kept, ...rewritten], (fact) => fact.text.toLowerCase())
   );
   const added: Memory["facts"] = [];
   for (const text of changes.remember) {
@@ -141,7 +143,7 @@ const forget = FunctionImpl.make(
     if (!memory) {
       return null;
     }
-    const facts = memory.facts.filter((fact) => fact.key !== key);
+    const facts = Arr.filter(memory.facts, (fact) => fact.key !== key);
     if (facts.length < memory.facts.length) {
       yield* (yield* DatabaseWriter)
         .table("ninaMemories")
@@ -165,7 +167,7 @@ const read = FunctionImpl.make(
     return {
       memory: memory
         ? {
-            facts: memory.facts.map(({ key, text }) => ({ key, text })),
+            facts: Arr.map(memory.facts, ({ key, text }) => ({ key, text })),
             id: memory._id,
             revision: memory.updatedAt,
           }

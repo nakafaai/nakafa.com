@@ -10,7 +10,7 @@ import { MAX_FORUM_ATTACHMENT_BYTES } from "@repo/backend/confect/classes/forums
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { createPendingUpload } from "@repo/backend/test/forum/upload";
 import { getFunctionName } from "convex/server";
-import { Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 import { HttpRouter, HttpServer } from "effect/http";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
@@ -275,33 +275,35 @@ describe("classes/forums/attachments/route", () => {
       })
   );
   it.effect.each(
-    [
-      "claim",
-      "uuid",
-      "store",
-      "settle",
-      "cleanup",
-      "release",
-      "deletion",
-      "expiry",
-    ].flatMap((failure) =>
-      ["claim", "settle", "release"].includes(failure)
-        ? [
-            {
-              failure,
-              invalid: false,
-            },
-            {
-              failure,
-              invalid: true,
-            },
-          ]
-        : [
-            {
-              failure,
-              invalid: false,
-            },
-          ]
+    Arr.flatMap(
+      [
+        "claim",
+        "uuid",
+        "store",
+        "settle",
+        "cleanup",
+        "release",
+        "deletion",
+        "expiry",
+      ],
+      (failure) =>
+        ["claim", "settle", "release"].includes(failure)
+          ? [
+              {
+                failure,
+                invalid: false,
+              },
+              {
+                failure,
+                invalid: true,
+              },
+            ]
+          : [
+              {
+                failure,
+                invalid: false,
+              },
+            ]
     )
   )(
     "preserves upload safety for $failure (invalid: $invalid)",

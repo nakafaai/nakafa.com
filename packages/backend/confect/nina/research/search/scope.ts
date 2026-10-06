@@ -8,6 +8,7 @@ import {
 import type { WebSearchInput } from "@repo/backend/confect/nina/research/schema";
 import type { SearchSource } from "@repo/backend/confect/nina/research/search/source";
 import { getSourceReferences } from "@repo/backend/confect/nina/research/source";
+import { Array as Arr } from "effect";
 
 const sourceKeyTokenPattern = /[\p{L}\p{N}][\p{L}\p{N}._-]*/gu;
 const sourceKeyWhitespacePattern = /\s+/gu;
@@ -44,7 +45,7 @@ export function scopeSources({
   }
 
   if (hasSearchableTerms(taskTerms)) {
-    return sources.filter((source) => sourceHasTerms(source, terms));
+    return Arr.filter(sources, (source) => sourceHasTerms(source, terms));
   }
 
   const firstSource = sources.at(0);
@@ -53,7 +54,7 @@ export function scopeSources({
     return sources;
   }
 
-  return sources.filter((source) => sourceHasTerms(source, terms));
+  return Arr.filter(sources, (source) => sourceHasTerms(source, terms));
 }
 
 /** Prefers first-party product domains when the model detected a primary-source constraint. */
@@ -78,7 +79,7 @@ function getPrimarySources({
     return;
   }
 
-  const primarySources = sources.filter((source) =>
+  const primarySources = Arr.filter(sources, (source) =>
     sourceDomainMatchesKeys(source.url, domainKeys)
   );
 
@@ -91,10 +92,10 @@ function getPrimarySources({
 
 /** Builds compact product keys that can match first-party domains. */
 function getPrimaryDomainKeys(text: string) {
-  const domainKeys = getSourceReferences(text).map((source) =>
+  const domainKeys = Arr.map(getSourceReferences(text), (source) =>
     normalizeSourceKey(extractDomain(source.href))
   );
-  const productKeys = getDistinctiveSearchTerms(text).flatMap((term) => {
+  const productKeys = Arr.flatMap(getDistinctiveSearchTerms(text), (term) => {
     if (sourceKeyNumericPattern.test(term.text)) {
       return [];
     }
@@ -104,7 +105,8 @@ function getPrimaryDomainKeys(text: string) {
   const versionAdjacentKeys = getVersionAdjacentKeys(text);
   const seen = new Set<string>();
 
-  return [...domainKeys, ...productKeys, ...versionAdjacentKeys].flatMap(
+  return Arr.flatMap(
+    [...domainKeys, ...productKeys, ...versionAdjacentKeys],
     (token) => {
       if (token.length < 3) {
         return [];
@@ -122,22 +124,26 @@ function getPrimaryDomainKeys(text: string) {
 
 /** Finds product names that sit next to version numbers such as `React 19`. */
 function getVersionAdjacentKeys(text: string) {
-  const tokens = [...text.matchAll(sourceKeyTokenPattern)].map(
+  const tokens = Arr.map(
+    [...text.matchAll(sourceKeyTokenPattern)],
     (match) => match[0]
   );
 
-  return tokens.flatMap((token, index) => {
+  return Arr.flatMap(tokens, (token, index) => {
     if (!sourceKeyNumericPattern.test(token) || token.length < 2) {
       return [];
     }
 
-    return [tokens.at(index - 1), tokens.at(index + 1)].flatMap((candidate) => {
-      if (!candidate || sourceKeyNumericPattern.test(candidate)) {
-        return [];
-      }
+    return Arr.flatMap(
+      [tokens.at(index - 1), tokens.at(index + 1)],
+      (candidate) => {
+        if (!candidate || sourceKeyNumericPattern.test(candidate)) {
+          return [];
+        }
 
-      return [normalizeSourceKey(candidate)];
-    });
+        return [normalizeSourceKey(candidate)];
+      }
+    );
   });
 }
 
@@ -155,7 +161,7 @@ function sourceDomainMatchesKeys(url: string, keys: string[]) {
   }
 
   const domain = normalizeSourceKey(sourceDomain);
-  return keys.some((key) => domain.includes(key));
+  return Arr.some(keys, (key) => domain.includes(key));
 }
 
 /** Prefers source scoping by the original task over generated query variants. */
@@ -179,8 +185,11 @@ function sourceHasTerms(
   terms: ReturnType<typeof getDistinctiveSearchTerms>
 ) {
   const text = normalizeSearchTerm(
-    [source.title, source.description, source.url, source.content].join(" ")
+    Arr.join(
+      [source.title, source.description, source.url, source.content],
+      " "
+    )
   );
 
-  return terms.every((term) => normalizedSearchTextHasTerm(text, term));
+  return Arr.every(terms, (term) => normalizedSearchTextHasTerm(text, term));
 }

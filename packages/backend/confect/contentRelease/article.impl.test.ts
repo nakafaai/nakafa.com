@@ -13,7 +13,7 @@ import {
   encodeArticlePublicationCursor,
 } from "@repo/contents/publication";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const categories = api.contentRelease.article.categories;
 const page = api.contentRelease.article.publications;
@@ -50,7 +50,7 @@ describe("contentRelease/article", () => {
         );
         const sitemap = yield* Effect.promise(() =>
           Promise.all(
-            buckets.buckets.map((bucket) =>
+            Arr.map(buckets.buckets, (bucket) =>
               t.query(api.contentRelease.article.sitemapPage, {
                 appLocale: "en",
                 bucket,
@@ -59,7 +59,7 @@ describe("contentRelease/article", () => {
           )
         );
         expect(
-          sitemap.flatMap((result) => result?.routes ?? [])
+          Arr.flatMap(sitemap, (result) => result?.routes ?? [])
         ).toContainEqual({
           lastModified: dateModified,
           publicPath: projection.publicPath,
@@ -216,7 +216,7 @@ describe("contentRelease/article", () => {
       ...second.result.page,
       ...third.result.page,
     ]).toMatchObject(
-      [2, 1, 0].map((index) => ({
+      Arr.map([2, 1, 0], (index) => ({
         contentKey: testArticleProjection(index).contentKey,
       }))
     );

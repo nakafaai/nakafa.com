@@ -23,7 +23,7 @@ import {
 } from "@repo/backend/test/content/proof";
 import { makeRuntimeIngressFixture } from "@repo/backend/test/runtime/ingress";
 import { convexTest } from "convex-test";
-import { Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Record as Rec } from "effect";
 
 /** Builds exact receipt counters for a signed query response under test. */
 function completed(release: SignedContentRelease) {
@@ -46,10 +46,11 @@ function completed(release: SignedContentRelease) {
       stagedItems: m.itemCount,
       stagedProjections: m.projectionCount,
       stagedRoutes: m.routeCount,
-      stagedSnapshotRows: Rec.values(m.snapshots).reduce(
+      stagedSnapshotRows: Arr.reduce(
+        Rec.values(m.snapshots),
+        0,
         (count, snapshot) =>
-          count + (snapshot.mode === "replace" ? snapshot.rowCount : 0),
-        0
+          count + (snapshot.mode === "replace" ? snapshot.rowCount : 0)
       ),
     },
   };

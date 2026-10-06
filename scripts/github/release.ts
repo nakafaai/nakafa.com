@@ -1,4 +1,4 @@
-import { Effect, Option, Redacted, Schema } from "effect";
+import { Array as Arr, Effect, Option, Redacted, Schema } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import {
   GITHUB_ACTION_REVIEWS,
@@ -25,7 +25,7 @@ export class GithubActionReleaseError extends Schema.TaggedError<GithubActionRel
 ) {}
 
 function actionRepository(action: string) {
-  return action.split("/").slice(0, 2).join("/");
+  return Arr.join(action.split("/").slice(0, 2), "/");
 }
 
 /** Returns one consistent latest-release review for each upstream repository. */

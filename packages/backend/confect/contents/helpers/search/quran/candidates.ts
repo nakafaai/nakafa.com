@@ -6,7 +6,7 @@ import {
   QURAN_SEARCH_RESULT_LIMIT,
 } from "@repo/backend/confect/contentRelease/quran/limits";
 import { interleaveSearchGroups } from "@repo/backend/confect/contents/helpers/search/groups";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 interface TextQueryState {
   exhausted: boolean;
@@ -27,7 +27,7 @@ export const readTextCandidates = Effect.fn(
   resultLimit: number
 ) {
   const initialReadCount = Math.max(resultLimit, queries.length);
-  const states: TextQueryState[] = queries.map((query, index) => ({
+  const states: TextQueryState[] = Arr.map(queries, (query, index) => ({
     exhausted: false,
     query,
     requested:
@@ -59,7 +59,8 @@ export const readTextCandidates = Effect.fn(
   let candidates = selectCandidates(states, resultLimit);
   let expansionStart = 0;
   while (candidates.length < resultLimit) {
-    const active = states.filter(
+    const active = Arr.filter(
+      states,
       (state) => !state.exhausted && state.requested < QURAN_SEARCH_RESULT_LIMIT
     );
     if (active.length === 0) {
@@ -91,7 +92,7 @@ export const readTextCandidates = Effect.fn(
     expansionStart = expansion.nextStart;
   }
   return {
-    groups: states.map(({ query, rows }) => ({
+    groups: Arr.map(states, ({ query, rows }) => ({
       query,
       rows,
     })),
@@ -181,14 +182,14 @@ function replaceRows(
   state.rows.splice(
     0,
     state.rows.length,
-    ...rows.filter((row) => !exactIdentities.has(row.identity))
+    ...Arr.filter(rows, (row) => !exactIdentities.has(row.identity))
   );
 }
 
 /** Selects unique candidates fairly across independently ranked indexes. */
 function selectCandidates(states: readonly TextQueryState[], limit: number) {
   return interleaveSearchGroups(
-    states.map(({ rows }) => rows),
+    Arr.map(states, ({ rows }) => rows),
     limit,
     (row) => row.identity
   );

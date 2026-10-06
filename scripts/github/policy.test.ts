@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Record as Rec } from "effect";
+import { Array as Arr, Effect, FileSystem, Record as Rec } from "effect";
 import { parse as yamlParse } from "yaml";
 import {
   GITHUB_ACTION_REVIEWS,
@@ -192,17 +192,20 @@ describe("GitHub Action policy", () => {
     Effect.gen(function* () {
       const root = yield* makeWorkflows({
         "README.md": "uses: example/ignored@0123456789abcdef\n",
-        "ci.yml": [
-          "jobs:",
-          "  build:",
-          "    steps:",
-          "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
-          "      - uses: ./.github/actions/local",
-          "      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
-          "        with:",
-          "          cache: true",
-          "",
-        ].join("\n"),
+        "ci.yml": Arr.join(
+          [
+            "jobs:",
+            "  build:",
+            "    steps:",
+            "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "      - uses: ./.github/actions/local",
+            "      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
+            "        with:",
+            "          cache: true",
+            "",
+          ],
+          "\n"
+        ),
         "release.yaml":
           "jobs:\n  release:\n    uses: example/reusable/.github/workflows/release.yml@main\n",
       });
@@ -253,7 +256,8 @@ describe("GitHub Action policy", () => {
   );
 
   it("reports unpinned references, missing inputs, and unused reviews", () => {
-    const actionUses = validActionUses().filter(
+    const actionUses = Arr.filter(
+      validActionUses(),
       ({ reference }) => !reference.startsWith("actions/download-artifact@")
     );
     const setupIndex = actionUses.findIndex(({ reference }) =>
@@ -322,7 +326,9 @@ describe("GitHub Action policy", () => {
     actionUses.splice(setupIndex + 1, 1);
 
     const problems = validateGithubActionPolicy(actionUses);
-    expect(problems.some((problem) => problem.includes("approved"))).toBe(true);
+    expect(Arr.some(problems, (problem) => problem.includes("approved"))).toBe(
+      true
+    );
     expect(problems).toEqual(
       expect.arrayContaining([
         ".github/workflows/example.yml uses unreviewed GitHub Action example/unreviewed.",
@@ -331,7 +337,7 @@ describe("GitHub Action policy", () => {
       ])
     );
     expect(
-      problems.some((problem) =>
+      Arr.some(problems, (problem) =>
         problem.includes(`expected ${setupReview.expectedUsages}`)
       )
     ).toBe(true);

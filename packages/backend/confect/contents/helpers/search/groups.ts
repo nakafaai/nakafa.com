@@ -1,4 +1,5 @@
 import type { contentSearchDocumentValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import { Array as Arr } from "effect";
 /** Search document shape shared by source-owned and release-owned read models. */
 export type ContentSearchDocument = typeof contentSearchDocumentValidator.Type;
 
@@ -13,7 +14,10 @@ export function interleaveSearchGroups<Item>(
   }
   const ranked: Item[] = [];
   const seen = new Set<string>();
-  const maxLength = Math.max(0, ...groups.map((documents) => documents.length));
+  const maxLength = Math.max(
+    0,
+    ...Arr.map(groups, (documents) => documents.length)
+  );
   for (let index = 0; index < maxLength; index += 1) {
     for (const documents of groups) {
       const document = documents[index];

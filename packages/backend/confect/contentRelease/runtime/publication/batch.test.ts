@@ -1,6 +1,6 @@
 import { RegisteredFunction } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
@@ -68,7 +68,12 @@ describe("contentRelease/runtime/publication/batch", () => {
     expect(result.status).toBe(200);
     const responses = JSON.parse(result.body).responses;
     expect(responses).toHaveLength(8);
-    expect(responses.map(({ kind }: { kind: string }) => kind)).toEqual([
+    expect(
+      Arr.map<readonly { kind: string }[], string>(
+        responses,
+        ({ kind }) => kind
+      )
+    ).toEqual([
       "found",
       "missing",
       "found",

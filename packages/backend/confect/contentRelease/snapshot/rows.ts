@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const CLEANUP_PAGE_COUNT = 2;
 const CLEANUP_PAGE_BYTES = CONTENT_DOCUMENT_LIMIT * CLEANUP_PAGE_COUNT;
@@ -91,7 +91,8 @@ export const loadSnapshotChildren = Effect.fn(
         .paginate(cleanupPage())
         .pipe(Effect.orDie);
       return {
-        children: page.page.map(
+        children: Arr.map(
+          page.page,
           (row): SnapshotChild => ({
             row,
             table: "programCatalog",
@@ -110,7 +111,8 @@ export const loadSnapshotChildren = Effect.fn(
         .paginate(cleanupPage())
         .pipe(Effect.orDie);
       return {
-        children: page.page.map(
+        children: Arr.map(
+          page.page,
           (row): SnapshotChild => ({
             row,
             table: "curriculumRoutes",
@@ -128,7 +130,8 @@ export const loadSnapshotChildren = Effect.fn(
       .paginate(cleanupPage())
       .pipe(Effect.orDie);
     return {
-      children: page.page.map(
+      children: Arr.map(
+        page.page,
         (row): SnapshotChild => ({
           row,
           table: "programBuckets",
@@ -155,7 +158,8 @@ export const loadSnapshotChildren = Effect.fn(
         .paginate(cleanupPage())
         .pipe(Effect.orDie);
       return {
-        children: page.page.map(
+        children: Arr.map(
+          page.page,
           (row): SnapshotChild => ({
             row,
             table: "quranRows",
@@ -173,7 +177,8 @@ export const loadSnapshotChildren = Effect.fn(
       .paginate(cleanupPage())
       .pipe(Effect.orDie);
     return {
-      children: page.page.map(
+      children: Arr.map(
+        page.page,
         (row): SnapshotChild => ({
           row,
           table: "quranSearch",
@@ -193,7 +198,8 @@ export const loadSnapshotChildren = Effect.fn(
       .paginate(cleanupPage())
       .pipe(Effect.orDie);
     return {
-      children: page.page.map(
+      children: Arr.map(
+        page.page,
         (row): SnapshotChild => ({
           row,
           table: "tryoutCatalog",
@@ -212,7 +218,8 @@ export const loadSnapshotChildren = Effect.fn(
       .paginate(cleanupPage())
       .pipe(Effect.orDie);
     return {
-      children: page.page.map(
+      children: Arr.map(
+        page.page,
         (row): SnapshotChild => ({
           row,
           table: "tryoutPlacements",
@@ -236,7 +243,8 @@ export const loadSnapshotChildren = Effect.fn(
     .paginate(cleanupPage())
     .pipe(Effect.orDie);
   return {
-    children: page.page.map(
+    children: Arr.map(
+      page.page,
       (row): SnapshotChild => ({
         row,
         table: "tryoutRuntimeBundles",

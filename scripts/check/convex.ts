@@ -275,9 +275,9 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
       if (isSpreadAssignment(field)) {
         const spread = resolve(field.expression, next);
         if (spread && spread !== "client") {
-          spread.forEach((value, key) => {
+          for (const [key, value] of spread) {
             fields.set(key, value);
-          });
+          }
         }
         continue;
       }

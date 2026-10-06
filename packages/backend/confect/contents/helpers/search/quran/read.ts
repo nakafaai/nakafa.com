@@ -18,7 +18,7 @@ import { quranLayer } from "@repo/backend/content/quran/confect";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { readQuranRow } from "@repo/backend/content/quran/row";
 import { authenticateQuranSearchHit } from "@repo/backend/content/quran/search";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type ContentSearchInput = typeof contentSearchInputValidator.Type;
 interface SignedQuranSearch {
@@ -54,7 +54,7 @@ export const readSignedQuranSearchDocuments = Effect.fn(
       rows,
       args.locale
     );
-    return authenticated.map(({ document }) => document);
+    return Arr.map(authenticated, ({ document }) => document);
   }
   const { exactSurahNumbers, textQueries } = partitionQuranQueries(
     args.locale,
@@ -80,7 +80,7 @@ export const readSignedQuranSearchDocuments = Effect.fn(
     }
   );
   const exactIdentities = new Set(
-    exactSurahNumbers.map((surahNumber) =>
+    Arr.map(exactSurahNumbers, (surahNumber) =>
       quranSearchIdentity(args.locale, surahNumber)
     )
   );
@@ -98,11 +98,11 @@ export const readSignedQuranSearchDocuments = Effect.fn(
     args.locale
   );
   const documentsByIdentity = new Map(
-    authenticated.map(({ document, row }) => [row.identity, document])
+    Arr.map(authenticated, ({ document, row }) => [row.identity, document])
   );
-  const rankedGroups = groups.map(({ query, rows: queryRows }) =>
+  const rankedGroups = Arr.map(groups, ({ query, rows: queryRows }) =>
     rankContentSearchDocuments(
-      queryRows.flatMap((row) => {
+      Arr.flatMap(queryRows, (row) => {
         const document = documentsByIdentity.get(row.identity);
         return document ? [document] : [];
       }),

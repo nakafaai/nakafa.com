@@ -12,19 +12,23 @@ import {
   mathStatistics,
 } from "@repo/backend/confect/nina/math/descriptions";
 import { mathOperations } from "@repo/math/schema/operations";
+import { Array as Arr } from "effect";
 
-const mathToolDescriptions = [
-  mathAlgebra,
-  mathArithmetic,
-  mathCalculus,
-  mathDiscrete,
-  mathEquation,
-  mathGeometry,
-  mathMatrix,
-  mathProbability,
-  mathSeries,
-  mathStatistics,
-].join("\n");
+const mathToolDescriptions = Arr.join(
+  [
+    mathAlgebra,
+    mathArithmetic,
+    mathCalculus,
+    mathDiscrete,
+    mathEquation,
+    mathGeometry,
+    mathMatrix,
+    mathProbability,
+    mathSeries,
+    mathStatistics,
+  ],
+  "\n"
+);
 
 describe("math tool descriptions", () => {
   it("keeps every math operation literal visible in tool descriptions", () => {

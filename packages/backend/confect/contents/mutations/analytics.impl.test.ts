@@ -19,7 +19,7 @@ import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import type { TransactionMetrics } from "convex/server";
 import { convexTest, type TestConvex } from "convex-test";
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const SIGNAL_DAY = getPopularitySignalDay(NOW);
@@ -176,7 +176,7 @@ async function readDrainState(target: TestConvex<typeof schema>) {
           order: "asc",
           pageSize: IDENTITY_COUNT,
         });
-        return page.page.map((item) => item.key);
+        return Arr.map(page.page, (item) => item.key);
       })
     );
 
@@ -219,7 +219,7 @@ describe("contents/mutations/analytics", () => {
 
     expect(pages.length).toBeGreaterThan(1);
     expect(
-      pages.reduce((total, page) => total + page.result.processed, 0)
+      Arr.reduce(pages, 0, (total, page) => total + page.result.processed)
     ).toBe(IDENTITY_COUNT + CONTENT_ANALYTICS_GROUP_SIZE - 1);
     for (const { metrics, result } of pages) {
       expect(result).toMatchObject({ partition: 0, skipped: false });
@@ -234,7 +234,7 @@ describe("contents/mutations/analytics", () => {
       async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
     );
     expect(scheduled).toHaveLength(pages.length - 1);
-    expect(scheduled.map((job) => job.args[0])).toEqual(
+    expect(Arr.map(scheduled, (job) => job.args[0])).toEqual(
       Array.from({ length: pages.length - 1 }, () => ({
         leaseVersion: 1,
         partition: 0,
@@ -252,7 +252,8 @@ describe("contents/mutations/analytics", () => {
     });
     expect(state.signals).toHaveLength(IDENTITY_COUNT);
     expect(
-      state.signals.filter(
+      Arr.filter(
+        state.signals,
         (signal) =>
           signal.viewCount === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
           signal.applied.d1 === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
@@ -260,7 +261,8 @@ describe("contents/mutations/analytics", () => {
       )
     ).toHaveLength(1);
     expect(
-      state.signals.filter(
+      Arr.filter(
+        state.signals,
         (signal) =>
           signal.viewCount === 2 &&
           signal.applied.d1 === 2 &&
@@ -268,46 +270,52 @@ describe("contents/mutations/analytics", () => {
       )
     ).toHaveLength(IDENTITY_COUNT - 1);
     expect(
-      state.signals.every((signal) => signal.title.startsWith("Current title "))
+      Arr.every(state.signals, (signal) =>
+        signal.title.startsWith("Current title ")
+      )
     ).toBe(true);
     expect(state.counters).toHaveLength(
       IDENTITY_COUNT * learningPopularityWindowValues.length
     );
     expect(
-      state.counters.filter(
+      Arr.filter(
+        state.counters,
         (counter) =>
           counter.score === CONTENT_ANALYTICS_GROUP_SIZE + 1 &&
           counter.latestDay === SIGNAL_DAY
       )
     ).toHaveLength(learningPopularityWindowValues.length);
     expect(
-      state.counters.filter(
+      Arr.filter(
+        state.counters,
         (counter) => counter.score === 2 && counter.latestDay === SIGNAL_DAY
       )
     ).toHaveLength(
       (IDENTITY_COUNT - 1) * learningPopularityWindowValues.length
     );
     expect(
-      state.counters.every((counter) =>
+      Arr.every(state.counters, (counter) =>
         counter.title.startsWith("Current title ")
       )
     ).toBe(true);
     expect(
-      state.rankings.every(
+      Arr.every(
+        state.rankings,
         (ranking) =>
           ranking.length === IDENTITY_COUNT &&
-          ranking.filter(
+          Arr.filter(
+            ranking,
             ([score]) => score === -(CONTENT_ANALYTICS_GROUP_SIZE + 1)
           ).length === 1 &&
-          ranking.filter(([score]) => score === -2).length ===
+          Arr.filter(ranking, ([score]) => score === -2).length ===
             IDENTITY_COUNT - 1
       )
     ).toBe(true);
 
     const minimumRemaining = Rec.fromEntries(
-      METRIC_KEYS.map((key) => [
+      Arr.map(METRIC_KEYS, (key) => [
         key,
-        Math.min(...pages.map((page) => page.metrics[key].remaining)),
+        Math.min(...Arr.map(pages, (page) => page.metrics[key].remaining)),
       ])
     );
     for (const key of METRIC_KEYS) {

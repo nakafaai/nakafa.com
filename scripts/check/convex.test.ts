@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { effectTestViolations } from "#scripts/check/effect";
 
 const file = "packages/backend/example.test.ts";
@@ -22,7 +22,7 @@ describe("Convex transaction test boundaries", () => {
         ];
         assert.deepStrictEqual(
           yield* effectTestViolations(
-            programs.map((source) => ({
+            Arr.map(programs, (source) => ({
               file,
               sourceText: `${imports}\n${source}`,
             }))
@@ -47,7 +47,7 @@ describe("Convex transaction test boundaries", () => {
           "const t = convexTest(schema); t.query(ctx => { const read = (ctx) => Effect.runPromise(program(ctx)); return read(fakeContext); });",
         ];
         const violations = yield* effectTestViolations(
-          programs.map((source) => ({
+          Arr.map(programs, (source) => ({
             file,
             sourceText: `${imports}\n${source}`,
           }))
@@ -70,7 +70,7 @@ describe("Convex transaction test boundaries", () => {
         ];
         assert.deepStrictEqual(
           yield* effectTestViolations(
-            programs.map((source) => ({
+            Arr.map(programs, (source) => ({
               file,
               sourceText: `${imports}\n${source}`,
             }))
@@ -96,7 +96,7 @@ describe("Convex transaction test boundaries", () => {
         "declare function setup(): TestConvex<typeof schema>; const t = setup(); t.query(ctx => Effect.runPromise(read(ctx)));",
       ];
       const violations = yield* effectTestViolations(
-        programs.map((source) => ({
+        Arr.map(programs, (source) => ({
           file,
           sourceText: `${imports}\n${source}`,
         }))
@@ -113,7 +113,7 @@ describe("Convex transaction test boundaries", () => {
         "const t = convexTest(schema); t.query(() => Effect.runPromise(read()));",
       ];
       const violations = yield* effectTestViolations(
-        programs.map((source) => ({
+        Arr.map(programs, (source) => ({
           file,
           sourceText: `${imports}\n${source}`,
         }))

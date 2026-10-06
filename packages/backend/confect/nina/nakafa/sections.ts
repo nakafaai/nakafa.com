@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
 import { slugify } from "@repo/utilities/slug";
+import { Array as Arr, pipe } from "effect";
 
 /** The implicit section before a document's first heading. */
 const READ_START_SECTION = "top";
@@ -27,7 +28,7 @@ function splitSections(markdown: string) {
   let slug = READ_START_SECTION;
   let lines: string[] = [];
   const close = () => {
-    const text = lines.join("\n").trim();
+    const text = Arr.join(lines, "\n").trim();
     if (text) {
       sections.push({ slug, text, title });
     }
@@ -83,7 +84,7 @@ function splitParts(section: ReadSection, limit: number): ReadSection[] {
   let lines: string[] = [];
   let used = 0;
   const close = () => {
-    parts.push(lines.join("\n"));
+    parts.push(Arr.join(lines, "\n"));
     lines = [];
     used = 0;
   };
@@ -106,7 +107,7 @@ function splitParts(section: ReadSection, limit: number): ReadSection[] {
     used += countTextTokens(rest) + 1;
   }
   close();
-  return parts.map((text, index) =>
+  return Arr.map(parts, (text, index) =>
     index === 0
       ? { ...section, text }
       : {
@@ -127,13 +128,16 @@ function formatOutline(sections: readonly ReadSection[]) {
   if (sections.length === 0) {
     return "";
   }
-  const listed = sections.slice(0, OUTLINE_LIMIT).map(formatEntry);
+  const listed = Arr.map(sections.slice(0, OUTLINE_LIMIT), formatEntry);
   const more = sections.length - listed.length;
-  return [
-    "## Other Sections",
-    ...listed,
-    ...(more > 0 ? [`- ${more} more sections`] : []),
-  ].join("\n");
+  return Arr.join(
+    [
+      "## Other Sections",
+      ...listed,
+      ...(more > 0 ? [`- ${more} more sections`] : []),
+    ],
+    "\n"
+  );
 }
 
 /**
@@ -142,14 +146,16 @@ function formatOutline(sections: readonly ReadSection[]) {
  * that join it to the read.
  */
 function outlineReserve(sections: readonly ReadSection[]) {
-  const entries = sections
-    .map((section) => countTextTokens(formatEntry(section)) + 1)
+  const entries = Arr.map(
+    sections,
+    (section) => countTextTokens(formatEntry(section)) + 1
+  )
     .sort((first, second) => second - first)
     .slice(0, OUTLINE_LIMIT);
   const frame = countTextTokens(
     `\n\n## Other Sections\n- ${sections.length} more sections\n\n`
   );
-  return entries.reduce((total, cost) => total + cost, frame);
+  return Arr.reduce(entries, frame, (total, cost) => total + cost);
 }
 
 /**
@@ -173,7 +179,7 @@ export function formatRead(
     : "";
   const header = `# Nakafa Content\n- Title: ${result.title}${description}\n- Content ID: ${result.content_id}`;
   // Half the budget per part leaves room for the header and the outline.
-  const parts = splitSections(result.text).flatMap((candidate) =>
+  const parts = Arr.flatMap(splitSections(result.text), (candidate) =>
     splitParts(candidate, Math.floor(budget / 2))
   );
   const start = parts.findIndex(
@@ -181,11 +187,14 @@ export function formatRead(
   );
   if (section !== undefined && start < 0) {
     return boundText(
-      [
-        header,
-        `Section ${section} was not found in this content.`,
-        formatOutline(parts),
-      ].join("\n\n"),
+      Arr.join(
+        [
+          header,
+          `Section ${section} was not found in this content.`,
+          formatOutline(parts),
+        ],
+        "\n\n"
+      ),
       budget,
       "Request one of the listed sections."
     );
@@ -206,13 +215,19 @@ export function formatRead(
   // A long description or outline can leave no room for a part; the read
   // still never exceeds its budget.
   return boundText(
-    [
-      header,
-      included.map(({ text }) => text).join("\n\n"),
-      formatOutline([...parts.slice(end), ...parts.slice(0, from)]),
-    ]
-      .filter(Boolean)
-      .join("\n\n"),
+    pipe(
+      [
+        header,
+        pipe(
+          included,
+          Arr.map(({ text }) => text),
+          Arr.join("\n\n")
+        ),
+        formatOutline([...parts.slice(end), ...parts.slice(0, from)]),
+      ],
+      Arr.filter(Boolean),
+      Arr.join("\n\n")
+    ),
     budget,
     "Request one of the listed sections."
   );

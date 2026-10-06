@@ -15,7 +15,7 @@ import {
 import { findTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type ContentSearchInput = typeof contentSearchInputValidator.Type;
 type TryoutCatalog = Option.Option.Value<
@@ -43,13 +43,14 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
   if (Option.isNone(catalog)) {
     return [];
   }
-  const documents = [...catalog.value.entries]
-    .sort((left, right) => left.index - right.index)
-    .flatMap((entry) => toTryoutSearchDocument(entry, args.locale));
+  const documents = Arr.flatMap(
+    [...catalog.value.entries].sort((left, right) => left.index - right.index),
+    (entry) => toTryoutSearchDocument(entry, args.locale)
+  );
   if (queryTexts.length === 0) {
     return documents.slice(0, scanLimit);
   }
-  const groups = queryTexts.map((queryText) =>
+  const groups = Arr.map(queryTexts, (queryText) =>
     searchTryoutQuery(documents, args.locale, queryText, scanLimit)
   );
   return interleaveSearchGroups(
@@ -98,22 +99,24 @@ function searchTryoutQuery(
   const exact = exactRoute
     ? documents.find(({ route }) => route === exactRoute)
     : undefined;
-  const hits = documents.filter((document) =>
+  const hits = Arr.filter(documents, (document) =>
     matchesContentSearchQuery(getTryoutSearchText(document), queryText)
   );
   const candidates = exact
     ? [
         exact,
-        ...hits.filter((document) => document.content_id !== exact.content_id),
+        ...Arr.filter(
+          hits,
+          (document) => document.content_id !== exact.content_id
+        ),
       ]
     : hits;
   return rankContentSearchDocuments(candidates, queryText).slice(0, scanLimit);
 }
 /** Combines signed display metadata with route tokens for in-memory search. */
 function getTryoutSearchText(document: ContentSearchDocument) {
-  return [
-    document.title,
-    document.description,
-    getRouteSearchText(document.route),
-  ].join(" ");
+  return Arr.join(
+    [document.title, document.description, getRouteSearchText(document.route)],
+    " "
+  );
 }

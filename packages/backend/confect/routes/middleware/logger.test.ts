@@ -1,6 +1,6 @@
 import { expect, it } from "@effect/vitest";
 import { requestLogger } from "@repo/backend/confect/routes/middleware/logger";
-import { Effect, Layer, Logger } from "effect";
+import { Array as Arr, Effect, Layer, Logger } from "effect";
 import { HttpRouter, HttpServerResponse } from "effect/http";
 
 it.effect("logs request paths without OAuth query diagnostics", () =>
@@ -42,7 +42,7 @@ it.effect("logs request paths without OAuth query diagnostics", () =>
       "state=",
       "private-state",
     ]) {
-      expect(messages.join("\n")).not.toContain(secret);
+      expect(Arr.join(messages, "\n")).not.toContain(secret);
     }
   })
 );

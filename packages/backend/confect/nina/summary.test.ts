@@ -15,7 +15,7 @@ import {
 import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect, Predicate } from "effect";
+import { Array as Arr, Effect, Predicate } from "effect";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -154,7 +154,7 @@ describe("Nina rolling summary", () => {
     const f = await fixture(56);
     await f.refresh(55);
     await f.refresh(55);
-    const [first, second] = model.doGenerateCalls.map((call) =>
+    const [first, second] = Arr.map(model.doGenerateCalls, (call) =>
       JSON.stringify(call.prompt)
     );
     expect(first).toContain("Question 0");
@@ -240,7 +240,7 @@ describe("Nina rolling summary", () => {
           ])
         )
       );
-      return runQuery.mock.calls.flatMap(([, args]) =>
+      return Arr.flatMap(runQuery.mock.calls, ([, args]) =>
         Predicate.hasProperty(args, "upToAndIncludingMessageId")
           ? [String(args.upToAndIncludingMessageId)]
           : []

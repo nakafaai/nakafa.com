@@ -27,7 +27,7 @@ import {
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
@@ -116,7 +116,7 @@ describe("contentRelease/compact", () => {
     ).toMatchObject({
       sequence: 3,
     });
-    expect(stored.bindings.map((row) => row.sequence).sort()).toEqual([
+    expect(Arr.map(stored.bindings, (row) => row.sequence).sort()).toEqual([
       1, 3, 4,
     ]);
     expect(stored.items).toHaveLength(0);
@@ -126,7 +126,7 @@ describe("contentRelease/compact", () => {
         sequence: 4,
       },
     ]);
-    expect(stored.releases.map((row) => row.sequence).sort()).toEqual([
+    expect(Arr.map(stored.releases, (row) => row.sequence).sort()).toEqual([
       3, 4, 5,
     ]);
     const retained = [
@@ -134,10 +134,10 @@ describe("contentRelease/compact", () => {
       `sha256:${"d".repeat(64)}`,
       `sha256:${"f".repeat(64)}`,
     ];
-    expect(stored.artifacts.map((row) => row.artifactHash).sort()).toEqual(
+    expect(Arr.map(stored.artifacts, (row) => row.artifactHash).sort()).toEqual(
       retained
     );
-    expect(stored.facts.map((row) => row.artifactHash).sort()).toEqual(
+    expect(Arr.map(stored.facts, (row) => row.artifactHash).sort()).toEqual(
       retained
     );
     expect(
@@ -194,7 +194,8 @@ describe("contentRelease/compact", () => {
       )
     );
     const sequences = await t.run(async (ctx) =>
-      (await ctx.db.query("contentReleases").collect()).map(
+      Arr.map(
+        await ctx.db.query("contentReleases").collect(),
         (release) => release.sequence
       )
     );
@@ -251,7 +252,8 @@ describe("contentRelease/compact", () => {
       )
     );
     const sequences = await t.run(async (ctx) =>
-      (await ctx.db.query("contentReleases").collect()).map(
+      Arr.map(
+        await ctx.db.query("contentReleases").collect(),
         (release) => release.sequence
       )
     );
@@ -346,12 +348,13 @@ describe("contentRelease/compact permanent history", () => {
     );
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.query("contentReleases").collect()).map(
+        Arr.map(
+          await ctx.db.query("contentReleases").collect(),
           ({ sequence }) => sequence
         )
       )
     ).toEqual([3, 4, 5]);
-    expect(before.items.map(({ delivery }) => delivery)).toEqual([
+    expect(Arr.map(before.items, ({ delivery }) => delivery)).toEqual([
       "authenticated",
       "entitled",
     ]);

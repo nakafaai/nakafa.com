@@ -1,4 +1,5 @@
 import {
+  Array as Arr,
   Effect,
   FileSystem,
   Path,
@@ -88,7 +89,7 @@ const runGit = Effect.fn("EffectSource.runGit")(
         if (exitCode !== 0) {
           const diagnostic = stderr.trim() || stdout.trim() || "Git failed.";
           return yield* new EffectSourceGitError({
-            message: `git ${args.join(" ")}: ${diagnostic}`,
+            message: `git ${Arr.join(args, " ")}: ${diagnostic}`,
           });
         }
         return stdout;

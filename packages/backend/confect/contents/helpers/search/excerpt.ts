@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 const EXCERPT_CONTEXT_RADIUS = 90;
 const EXCERPT_MAX_LENGTH = 220;
 const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
@@ -23,11 +25,11 @@ export function buildContentSearchExcerpt(
 
 /** Only the final term in each query variant may match a word prefix. */
 function getQueryTokens(queryTexts: readonly string[]) {
-  return queryTexts.flatMap((queryText) => {
+  return Arr.flatMap(queryTexts, (queryText) => {
     const tokens = Array.from(queryText.matchAll(TOKEN_PATTERN), (match) =>
       match[0].toLowerCase()
     );
-    return tokens.map((value, index) => ({
+    return Arr.map(tokens, (value, index) => ({
       value,
       prefix: index === tokens.length - 1,
     }));
@@ -48,7 +50,7 @@ function getFirstTokenIndex(
   for (const match of text.matchAll(TOKEN_PATTERN)) {
     const word = match[0].toLowerCase();
     if (
-      tokens.some(({ value, prefix }) =>
+      Arr.some(tokens, ({ value, prefix }) =>
         prefix ? word.startsWith(value) : word === value
       )
     ) {

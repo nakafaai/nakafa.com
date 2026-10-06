@@ -3,7 +3,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { Clock, Effect } from "effect";
+import { Array as Arr, Clock, Effect } from "effect";
 
 /** Finds a learner's memory, which exists only while memory is on. */
 export const findMemory = Effect.fn("nina.memory.find")(function* (
@@ -26,7 +26,7 @@ export const forgetChat = Effect.fn("nina.memory.forgetChat")(function* (
   if (!memory) {
     return;
   }
-  const facts = memory.facts.filter((fact) => fact.chatId !== chat._id);
+  const facts = Arr.filter(memory.facts, (fact) => fact.chatId !== chat._id);
   if (facts.length === memory.facts.length) {
     return;
   }

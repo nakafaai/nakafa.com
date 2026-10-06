@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
+import { Array as Arr } from "effect";
 
 const groups = api.classes.materials.queries.getMaterialGroups;
 describe("class material group query contracts", () => {
@@ -41,7 +42,10 @@ describe("class material group query contracts", () => {
     ).toMatchObject({ page: [], isDone: true });
     const all = await admin.query(groups, args);
     expect(all.isDone).toBe(true);
-    expect(all.page.map((group) => group._id)).toEqual([draftId, publishedId]);
+    expect(Arr.map(all.page, (group) => group._id)).toEqual([
+      draftId,
+      publishedId,
+    ]);
     expect(all.page[0]).toMatchObject({
       user: {
         _id: users.admin.userId,
@@ -57,7 +61,7 @@ describe("class material group query contracts", () => {
       },
     });
     const visible = await student.query(groups, args);
-    expect(visible.page.map((group) => group._id)).toEqual([publishedId]);
+    expect(Arr.map(visible.page, (group) => group._id)).toEqual([publishedId]);
     expect(
       await admin.query(groups, {
         ...args,

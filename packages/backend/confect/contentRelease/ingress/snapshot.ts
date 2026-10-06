@@ -23,7 +23,7 @@ import {
   encodeSnapshotJson,
   encodeSnapshotRowJson,
 } from "@repo/backend/confect/contentRelease/wire";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type SnapshotRequest = Extract<
   PublicationRequest,
@@ -194,7 +194,7 @@ export const stageSnapshotBatch = Effect.fn(
       batchIndex: request.batchIndex,
       family: request.family,
       releaseId: request.releaseId,
-      rowJson: request.rows.map(encodeSnapshotRowJson),
+      rowJson: Arr.map(request.rows, encodeSnapshotRowJson),
       snapshotId: request.snapshotId,
     }
   ).pipe(Effect.catchTag("SchemaError", Effect.die));

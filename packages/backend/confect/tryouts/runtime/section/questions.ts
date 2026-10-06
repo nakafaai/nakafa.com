@@ -12,7 +12,7 @@ import { loadSectionResponseIndex } from "@repo/backend/confect/tryouts/runtime/
 import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
 import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
@@ -104,7 +104,7 @@ function projectRuntimeQuestions(
     readonly questions: boolean;
   }
 ) {
-  return placements.map((placement) =>
+  return Arr.map(placements, (placement) =>
     projectRuntimeQuestion(placement, responses, access)
   );
 }

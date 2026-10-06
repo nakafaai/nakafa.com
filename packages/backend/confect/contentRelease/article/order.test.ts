@@ -17,7 +17,7 @@ import {
 import { ARTICLE_PUBLICATION_CURSOR_PREFIX } from "@repo/contents/publication";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("contentRelease/article/order", () => {
   it("fails closed for an exhausted budget or an invalid stored numeric value", async () => {
@@ -139,7 +139,7 @@ describe("contentRelease/article/order", () => {
           pageStatus: "SplitRequired",
           splitCursor: articlePublicationCursor(row),
         });
-        expect(first.page.map((article) => article.contentKey)).toEqual([
+        expect(Arr.map(first.page, (article) => article.contentKey)).toEqual([
           testArticleProjection(2).contentKey,
         ]);
         const next = yield* Effect.promise(() =>
@@ -158,7 +158,7 @@ describe("contentRelease/article/order", () => {
             )
           )
         );
-        expect(next.page.map((article) => article.contentKey)).toEqual([
+        expect(Arr.map(next.page, (article) => article.contentKey)).toEqual([
           testArticleProjection(1).contentKey,
           testArticleProjection(0).contentKey,
         ]);
@@ -198,7 +198,7 @@ describe("contentRelease/article/order", () => {
         )
       )
     );
-    expect(result.page.map(({ contentKey }) => contentKey)).toEqual([
+    expect(Arr.map(result.page, ({ contentKey }) => contentKey)).toEqual([
       testArticleProjection(1).contentKey,
     ]);
     const position: unknown = JSON.parse(
@@ -265,7 +265,8 @@ describe("contentRelease/article/order", () => {
     expect(second.metrics.documentsRead.used).toBeLessThanOrEqual(
       PUBLICATION_SCAN_LIMIT
     );
-    const contentKeys = [...first.result.page, ...second.result.page].map(
+    const contentKeys = Arr.map(
+      [...first.result.page, ...second.result.page],
       (article) => article.contentKey
     );
     expect(new Set(contentKeys)).toHaveProperty("size", articleCount);

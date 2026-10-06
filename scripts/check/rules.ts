@@ -23,13 +23,17 @@ import type { Binding } from "#scripts/check/source";
 /** Every Effect-native source rule, by the id each violation reports. */
 export const Rule = Schema.Literals([
   "array-check",
+  "array-method",
   "object-helper",
   "try-catch",
   "typeof-object",
 ]);
 
-/** The authored modules a rule inspects: every module, or code outside framework configuration. */
-const RuleScope = Schema.Literals(["every", "code"]);
+/**
+ * The authored modules a rule inspects: every module, code outside framework
+ * configuration, or the strict Confect and script modules.
+ */
+const RuleScope = Schema.Literals(["every", "code", "strict"]);
 
 /** One rule's scope and the Effect-native replacement it names. */
 const RuleDefinition = Schema.Struct({
@@ -43,6 +47,11 @@ export const RULES = {
     message:
       "narrow with Array.isArray from effect, Predicate, or Schema instead of the global Array.isArray.",
     scope: "code",
+  },
+  "array-method": {
+    message:
+      "transform arrays with the Array module from effect, such as Array.map, Array.filter, and Array.join, instead of a native array method.",
+    scope: "strict",
   },
   "object-helper": {
     message:
@@ -75,6 +84,7 @@ const PAGE_METHODS = HashSet.make(
   "evaluateHandle",
   "waitForFunction"
 );
+const STRICT_PATTERN = /^(?:packages\/backend\/confect|scripts)\//u;
 const GLOBAL_ONLY: readonly (typeof Binding.Type)[] = ["global"];
 /** Framework configuration types name what they configure, such as `NextConfig` or Convex's `AuthConfig`. */
 const CONFIGURATION_TYPE_PATTERN = /Config$/u;
@@ -337,6 +347,7 @@ export function covers(
   return Match.value(RULES[rule].scope).pipe(
     Match.when("every", () => true),
     Match.when("code", () => !isConfiguration(file, sourceFile)),
+    Match.when("strict", () => STRICT_PATTERN.test(file)),
     Match.exhaustive
   );
 }

@@ -14,6 +14,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { Array as Arr } from "effect";
 
 vi.mock("@convex-dev/agent", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@convex-dev/agent")>();
@@ -137,7 +138,7 @@ describe("Nina message boundary", () => {
       ])
     );
     expect(
-      page.page.some((message) => message.text === "Explain a limit.")
+      Arr.some(page.page, (message) => message.text === "Explain a limit.")
     ).toBe(true);
   });
 

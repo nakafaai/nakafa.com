@@ -1,5 +1,12 @@
 import { createHash } from "node:crypto";
-import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Option,
+  pipe,
+  Record as Rec,
+  Schema,
+} from "effect";
 import { parseDocument } from "yaml";
 
 const WorkflowStepSchema = Schema.StructWithRest(
@@ -118,35 +125,39 @@ export class CliWorkflowPolicyError extends Schema.TaggedError<CliWorkflowPolicy
 ) {}
 
 function executableSource(run: string | undefined) {
-  return (run ?? "")
-    .split("\n")
-    .map((line) => line.replace(SHELL_COMMENT, "$1").trimEnd())
-    .filter((line) => line.trim().length > 0)
-    .join("\n");
+  return pipe(
+    (run ?? "").split("\n"),
+    Arr.map((line) => line.replace(SHELL_COMMENT, "$1").trimEnd()),
+    Arr.filter((line) => line.trim().length > 0),
+    Arr.join("\n")
+  );
 }
 
 function stepSource(step: WorkflowJob["steps"][number]) {
-  return [
-    executableSource(step.run),
-    step.uses,
-    ...Rec.toEntries(step.env ?? {}).flat(),
-    ...Rec.toEntries(step.with ?? {}).flat(),
-  ]
-    .filter((value) => value !== undefined)
-    .join("\n");
+  return pipe(
+    [
+      executableSource(step.run),
+      step.uses,
+      ...Arr.flatten(Rec.toEntries(step.env ?? {})),
+      ...Arr.flatten(Rec.toEntries(step.with ?? {})),
+    ],
+    Arr.filter((value) => value !== undefined),
+    Arr.map(String),
+    Arr.join("\n")
+  );
 }
 
 function jobSource(job: WorkflowJob) {
-  return job.steps.map(stepSource).join("\n");
+  return pipe(job.steps, Arr.map(stepSource), Arr.join("\n"));
 }
 
 function hasRerunnableArtifacts(build: WorkflowJob) {
-  const uploads = build.steps.filter(({ uses }) => uses === UPLOAD_ACTION);
+  const uploads = Arr.filter(build.steps, ({ uses }) => uses === UPLOAD_ACTION);
   return (
     uploads.length === 2 &&
-    uploads.every(({ with: inputs }) => inputs?.overwrite === true) &&
-    ["cli-package", "cli-verifier"].every((name) =>
-      uploads.some(({ with: inputs }) => inputs?.name === name)
+    Arr.every(uploads, ({ with: inputs }) => inputs?.overwrite === true) &&
+    Arr.every(["cli-package", "cli-verifier"], (name) =>
+      Arr.some(uploads, ({ with: inputs }) => inputs?.name === name)
     )
   );
 }
@@ -176,10 +187,12 @@ function requireSource(
 
 function trustedPublishProblems(publish: WorkflowJob, source: string) {
   const problems: string[] = [];
-  const commands = publish.steps
-    .flatMap(({ run }) => (run === undefined ? [] : [run]))
-    .map(executableSource)
-    .join("\n");
+  const commands = pipe(
+    publish.steps,
+    Arr.flatMap(({ run }) => (run === undefined ? [] : [run])),
+    Arr.map(executableSource),
+    Arr.join("\n")
+  );
   if (commands.split('npx --yes "$NPM_CLI" publish "$TARBALL"').length !== 2) {
     problems.push("CLI publication may execute only one npm publish command.");
   }
@@ -196,7 +209,12 @@ function trustedPublishProblems(publish: WorkflowJob, source: string) {
   ) {
     problems.push("CLI publication must not receive the verifier artifact.");
   }
-  if (publish.steps.some(({ uses }) => uses?.startsWith("actions/checkout@"))) {
+  if (
+    Arr.some(
+      publish.steps,
+      ({ uses }) => uses?.startsWith("actions/checkout@") === true
+    )
+  ) {
     problems.push("CLI publication must not checkout repository code.");
   }
   return problems;
@@ -248,7 +266,7 @@ function executionBoundaryProblems(
 
   const verifyNeeds = Arr.isArray(verify.needs)
     ? verify.needs
-    : [verify.needs].filter((need) => need !== undefined);
+    : Arr.filter([verify.needs], (need) => need !== undefined);
   if (
     verifyNeeds.length !== 2 ||
     !verifyNeeds.includes("build") ||
@@ -345,10 +363,12 @@ export function validateCliWorkflow(source: string): string[] {
 
   problems.push(...trustedPublishProblems(publish, publishSource));
 
-  const verifyCommands = verify.steps
-    .flatMap(({ run }) => (run === undefined ? [] : [run]))
-    .map(executableSource)
-    .join("\n");
+  const verifyCommands = pipe(
+    verify.steps,
+    Arr.flatMap(({ run }) => (run === undefined ? [] : [run])),
+    Arr.map(executableSource),
+    Arr.join("\n")
+  );
   if (verifyCommands.split('node "$VERIFIER"').length !== 2) {
     problems.push("CLI verification must execute one transported verifier.");
   }

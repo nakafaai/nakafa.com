@@ -5,7 +5,7 @@ import {
   MAX_MCP_REQUEST_BYTES,
   readMcpRequest,
 } from "@repo/backend/confect/routes/agent/mcp/input";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Creates one Node request whose stream has no declared byte length. */
 function streamRequest(
@@ -68,7 +68,8 @@ describe("MCP request input", () => {
   it.effect("stops every unbounded POST stream after the ceiling", () =>
     Effect.gen(function* () {
       const cancelled = [false, false, false];
-      const requests = ["application/json", "text/plain", undefined].map(
+      const requests = Arr.map(
+        ["application/json", "text/plain", undefined],
         (contentType, index) =>
           streamRequest(
             new ReadableStream({

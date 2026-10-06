@@ -7,6 +7,7 @@ import {
   createGroundingEvidence,
   createGroundingWebSearchData,
 } from "@repo/backend/confect/nina/research/grounding";
+import { Array as Arr } from "effect";
 
 describe("research Google Search grounding", () => {
   it("drops query-only Google grounding when redirect sources are unusable", () => {
@@ -88,7 +89,9 @@ describe("research Google Search grounding", () => {
         },
       ],
     });
-    expect(data?.sources.map(({ url, title }) => ({ url, title }))).toEqual([
+    expect(
+      Arr.map(data?.sources ?? [], ({ url, title }) => ({ url, title }))
+    ).toEqual([
       { url: "https://example.com/guide", title: "First title" },
       { url: "https://example.com/reference", title: "Another source" },
     ]);

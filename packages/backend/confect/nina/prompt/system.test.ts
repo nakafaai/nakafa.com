@@ -5,6 +5,7 @@ import {
   createNinaSystemPrompt,
   formatNinaContextPackPrompt,
 } from "@repo/backend/confect/nina/prompt/system";
+import { Array as Arr } from "effect";
 
 const placementProgramKey = LearningProgramKeySchema.make(
   "cambridge-lower-secondary"
@@ -161,7 +162,7 @@ describe("createNinaSystemPrompt", () => {
     expect(focused).toContain("## Question\n\nWhat is 2 + 2?");
     expect(focused).toContain("# Focused Question Instructions");
     expect(
-      focused.split("\n").every((line) => !line.startsWith("      "))
+      Arr.every(focused.split("\n"), (line) => !line.startsWith("      "))
     ).toBe(true);
   });
 
@@ -171,15 +172,18 @@ describe("createNinaSystemPrompt", () => {
       focus: "# Focused Try-out Question\n\n## Question\n\nWhat is 2 + 2?",
       pageContent: "# Current Page\n\nThe learner is viewing a lesson.",
     });
-    const order = [
-      "# Task Instructions",
-      "# Output Formatting Guidelines",
-      "# Current Page",
-      "# Focused Try-out Question",
-      "# Runtime Context",
-    ].map((heading) => prompt.indexOf(heading));
+    const order = Arr.map(
+      [
+        "# Task Instructions",
+        "# Output Formatting Guidelines",
+        "# Current Page",
+        "# Focused Try-out Question",
+        "# Runtime Context",
+      ],
+      (heading) => prompt.indexOf(heading)
+    );
 
-    expect(order.every((index) => index >= 0)).toBe(true);
+    expect(Arr.every(order, (index) => index >= 0)).toBe(true);
     expect(order).toEqual([...order].sort((left, right) => left - right));
     expect(prompt.slice(prompt.indexOf("# Runtime Context"))).toContain(
       "- date: 2026-09-29T00:00:00.000Z"

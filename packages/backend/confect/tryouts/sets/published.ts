@@ -28,7 +28,7 @@ import {
   readPublishedSetSections,
   readPublishedTrackSets,
 } from "@repo/backend/content/tryout/hierarchy";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type Progress = Docs["tryoutSetProgress"];
 type User = Docs["users"];
@@ -57,7 +57,7 @@ export const listPublishedSets = Effect.fn("tryouts.sets.listPublished")(
       };
     }
     const filter = args.filter;
-    const filtered = joined.filter(({ progress }) => {
+    const filtered = Arr.filter(joined, ({ progress }) => {
       if (filter === "all") {
         return true;
       }
@@ -99,9 +99,10 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
         const sections = yield* readPublishedSetSections(found.index, set);
         const row = progress.get(tryoutCatalogIdentity(set)) ?? null;
         return {
-          durationSeconds: sections.reduce(
-            (total, section) => total + section.timeLimitSeconds,
-            0
+          durationSeconds: Arr.reduce(
+            sections,
+            0,
+            (total, section) => total + section.timeLimitSeconds
           ),
           progress: row,
           runningAttempt: yield* readRunningAttempt(row, identity.locale),

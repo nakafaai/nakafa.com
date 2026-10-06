@@ -7,7 +7,7 @@ import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
-import { Effect, flow, Option } from "effect";
+import { Array as Arr, Effect, flow, Option } from "effect";
 
 const SCALE_CHILD_PAGE_SIZE = 32;
 type TryoutAttempt = Docs["tryoutAttempts"];
@@ -53,7 +53,10 @@ export const cleanupAttemptScale = Effect.fn("tryouts.runtime.cleanupScale")(
         .first()
         .pipe(Effect.map(Option.getOrNull), Effect.orDie),
     ]);
-    if (score !== null || attempts.some(({ _id }) => _id !== attempt._id)) {
+    if (
+      score !== null ||
+      Arr.some(attempts, ({ _id }) => _id !== attempt._id)
+    ) {
       return false;
     }
     const items = yield* database

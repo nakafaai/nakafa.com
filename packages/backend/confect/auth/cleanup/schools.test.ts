@@ -1,6 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
+import { Array as Arr } from "effect";
 
 it("removes memberships before all account-linked activity while preserving other members", async () => {
   const { t, admin, student, users, schoolId, classId } =
@@ -71,7 +72,7 @@ it("removes memberships before all account-linked activity while preserving othe
   expect(hasMore).toBe(false);
   const state = await t.query(async (ctx) => ({
     deletedLogs: await Promise.all(
-      logs.deleted.map((id) => ctx.db.get("schoolActivityLogs", id))
+      Arr.map(logs.deleted, (id) => ctx.db.get("schoolActivityLogs", id))
     ),
     retainedLog: await ctx.db.get("schoolActivityLogs", logs.retained),
     classes: await ctx.db.query("schoolClassMembers").collect(),

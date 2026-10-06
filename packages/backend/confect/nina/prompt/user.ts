@@ -1,4 +1,5 @@
 import type { ModelMessage, UserModelMessage } from "ai";
+import { Array as Arr, pipe } from "effect";
 
 /**
  * Reads the latest user-authored text from AI SDK model messages.
@@ -23,13 +24,15 @@ function getUserMessageText(message: UserModelMessage) {
     return message.content;
   }
 
-  return message.content
-    .flatMap((part) => {
+  return pipe(
+    message.content,
+    Arr.flatMap((part) => {
       if (part.type !== "text") {
         return [];
       }
 
       return [part.text];
-    })
-    .join(" ");
+    }),
+    Arr.join(" ")
+  );
 }

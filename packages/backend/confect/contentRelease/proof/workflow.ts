@@ -1,6 +1,7 @@
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { v } from "convex/values";
+import { Array as Arr } from "effect";
 
 const ARTIFACT_PROOF_PARALLELISM = 4;
 const PROOF_RETRY = {
@@ -31,7 +32,7 @@ export const verifyRelease = workflow.define({
       const length = Math.min(ARTIFACT_PROOF_PARALLELISM, remaining);
       const batchIndexes = Array.from({ length }, (_, index) => start + index);
       const receipts = await Promise.all(
-        batchIndexes.map((batchIndex) =>
+        Arr.map(batchIndexes, (batchIndex) =>
           step.runAction(
             internal.contentRelease.proof.verify.verifyArtifacts,
             { ...args, batchIndex },
@@ -42,9 +43,10 @@ export const verifyRelease = workflow.define({
           )
         )
       );
-      verifiedArtifacts += receipts.reduce(
-        (count, receipt) => count + receipt.verifiedArtifacts,
-        0
+      verifiedArtifacts += Arr.reduce(
+        receipts,
+        0,
+        (count, receipt) => count + receipt.verifiedArtifacts
       );
     }
     await step.runAction(

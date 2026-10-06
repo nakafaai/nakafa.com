@@ -23,7 +23,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { User } from "better-auth";
-import { Effect } from "effect";
+import { Array as Arr, Effect, pipe } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -208,10 +208,11 @@ describe("auth/runtime", () => {
         const state = yield* Effect.fromNullishOr(
           new URL(authorizationLocation).searchParams.get("state")
         ).pipe(Effect.orDie);
-        const cookie = signInResponse.headers
-          .getSetCookie()
-          .map((value) => value.split(";", 1)[0])
-          .join("; ");
+        const cookie = pipe(
+          signInResponse.headers.getSetCookie(),
+          Arr.map((value) => value.split(";", 1)[0]),
+          Arr.join("; ")
+        );
         const providerResponse = yield* Effect.promise(() =>
           test.fetch(
             `/api/auth/callback/google?${new URLSearchParams({
@@ -482,7 +483,7 @@ it("publishes only public key material from configured Better Auth signing keys"
   expect(JSON.stringify(keys)).not.toContain("private-material");
   const t = createConvexTestWithBetterAuth();
   const ids = await t.action(async (ctx) =>
-    createAuthOptions(ctx).plugins.map((plugin) => plugin.id)
+    Arr.map(createAuthOptions(ctx).plugins, (plugin) => plugin.id)
   );
   expect(ids).toContain("convex");
 });

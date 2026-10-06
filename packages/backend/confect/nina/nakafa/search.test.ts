@@ -9,7 +9,7 @@ import {
   type NakafaAgentSearchResult,
   NakafaAgentSearchResultSchema,
 } from "@repo/contents/agent/schema/search";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** Builds one schema-decoded search result for ranking tests. */
 function searchResult(
@@ -72,7 +72,10 @@ describe("Nakafa search results", () => {
     const result = searchResult([first, exact, tie]);
 
     expect(
-      rankSearchResult(result, ["quantitative"]).items.map((item) => item.title)
+      Arr.map(
+        rankSearchResult(result, ["quantitative"]).items,
+        (item) => item.title
+      )
     ).toEqual(["Quantitative Knowledge", "Quantitative Practice", "General"]);
     expect(rankSearchResult(result, []).items).toBe(result.items);
   });

@@ -11,7 +11,7 @@ import {
 } from "@repo/backend/confect/classes/forums/postReactions";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 export type PostAttachment = Pick<
   Docs["schoolClassForumPostAttachments"],
   "_id" | "mimeType" | "name" | "size"
@@ -32,8 +32,8 @@ export const enrichForumPosts = Effect.fn(
   if (posts.length === 0) {
     return [];
   }
-  const postIds = posts.map((post) => post._id);
-  const postUserIds = posts.flatMap((post) =>
+  const postIds = Arr.map(posts, (post) => post._id);
+  const postUserIds = Arr.flatMap(posts, (post) =>
     post.replyToUserId ? [post.createdBy, post.replyToUserId] : [post.createdBy]
   );
   const [reactionPreviews, myReactions, allAttachments] = yield* Effect.all([
@@ -77,7 +77,7 @@ export const enrichForumPosts = Effect.fn(
       )
     ),
   ]);
-  return posts.map((post, index) => ({
+  return Arr.map(posts, (post, index) => ({
     ...post,
     attachments: attachmentLists[index],
     myReactions: myReactions[index],

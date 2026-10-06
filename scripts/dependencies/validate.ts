@@ -57,13 +57,14 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
   for (const hold of DEPENDENCY_HOLDS) {
     const declarations = dependencyDeclarations(manifests, hold.dependency);
     if ("declarationPaths" in hold) {
-      const actualPaths = declarations
-        .map(({ manifestPath }) => manifestPath)
-        .sort();
+      const actualPaths = Arr.map(
+        declarations,
+        ({ manifestPath }) => manifestPath
+      ).sort();
       const expectedPaths = [...hold.declarationPaths].sort();
       if (JSON.stringify(actualPaths) !== JSON.stringify(expectedPaths)) {
         problems.push(
-          `${hold.dependency} declarations are ${actualPaths.join(", ") || "missing"}; expected ${expectedPaths.join(", ")}.`
+          `${hold.dependency} declarations are ${Arr.join(actualPaths, ", ") || "missing"}; expected ${Arr.join(expectedPaths, ", ")}.`
         );
       }
     } else if (declarations.length < hold.minimumDeclarations) {
@@ -76,7 +77,7 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
     for (const declaration of declarations) {
       if (!allowed.has(declaration.spec)) {
         problems.push(
-          `${declaration.manifestPath} declares ${hold.dependency} as ${declaration.spec}; approved ${[...allowed].join(" or ")}.`
+          `${declaration.manifestPath} declares ${hold.dependency} as ${declaration.spec}; approved ${Arr.join([...allowed], " or ")}.`
         );
       }
     }

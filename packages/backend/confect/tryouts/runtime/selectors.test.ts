@@ -8,7 +8,7 @@ import {
   seedTryoutContentAccessState,
 } from "@repo/backend/test/tryout/runtime";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 beforeEach(() => {
   vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
@@ -103,7 +103,7 @@ describe("tryouts/runtime/selectors", () => {
                 answers: false,
                 appLocale: "id",
                 attempt,
-                placements: [3, 1, 2].map((questionOrder) => ({
+                placements: Arr.map([3, 1, 2], (questionOrder) => ({
                   ...placement,
                   questionOrder,
                 })),
@@ -119,7 +119,7 @@ describe("tryouts/runtime/selectors", () => {
         );
         assert.deepStrictEqual(
           content.kind === "signed"
-            ? content.previewAnswers.map((answer) => answer.questionOrder)
+            ? Arr.map(content.previewAnswers, (answer) => answer.questionOrder)
             : [],
           [1, 2]
         );

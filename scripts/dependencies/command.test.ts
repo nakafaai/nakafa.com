@@ -1,5 +1,12 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, PlatformError, Sink, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Layer,
+  PlatformError,
+  Sink,
+  Stream,
+} from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { runPnpm } from "#scripts/dependencies/command";
 
@@ -50,7 +57,7 @@ function scriptedSpawner(
 
 /** Returns the options pnpm was started with. */
 function startedOptions(spawned: readonly ChildProcess.Command[]) {
-  return spawned.map((command) =>
+  return Arr.map(spawned, (command) =>
     ChildProcess.isStandardCommand(command)
       ? {
           args: command.args,
@@ -175,7 +182,7 @@ describe("pnpm command", () => {
       );
 
       assert.deepStrictEqual(
-        [spawnFailure, exitFailure, outputFailure].map((failure) => [
+        Arr.map([spawnFailure, exitFailure, outputFailure], (failure) => [
           failure._tag,
           failure.cause,
           failure.message,

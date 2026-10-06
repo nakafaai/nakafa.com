@@ -1,3 +1,4 @@
+import { Array as Arr, pipe } from "effect";
 import {
   type Expression,
   isAwaitExpression,
@@ -108,16 +109,18 @@ function runtimeImports(
     }
     const candidates = isNamespaceImport(namedBindings)
       ? [{ name: namedBindings.name, kind, runner: false }]
-      : namedBindings.elements
-          .filter((binding) => !binding.isTypeOnly)
-          .map((binding) => {
+      : pipe(
+          namedBindings.elements,
+          Arr.filter((binding) => !binding.isTypeOnly),
+          Arr.map((binding) => {
             const name = binding.propertyName?.text ?? binding.name.text;
             return {
               name: binding.name,
               kind: runtimeMemberKind(kind, name),
               runner: kind === "effect" && EFFECT_RUNNERS.has(name),
             };
-          });
+          })
+        );
     for (const candidate of candidates) {
       const symbol = symbols.get(candidate.name);
       if (candidate.kind !== undefined && symbol !== undefined) {
@@ -231,7 +234,8 @@ function collectVariableAlias(
 function collectAliases(nodes: readonly Node[], imports: RuntimeImports) {
   let changed = true;
   while (changed) {
-    changed = nodes.some(
+    changed = Arr.some(
+      nodes,
       (node) =>
         isVariableDeclaration(node) && collectVariableAlias(node, imports)
     );
@@ -276,7 +280,7 @@ function destructuresRunner(node: Node, imports: RuntimeImports) {
   const runners = runtimeRunners(node.initializer, imports);
   return (
     runners !== undefined &&
-    node.name.elements.some((element) => {
+    Arr.some(node.name.elements, (element) => {
       const member = staticProperty(element.propertyName ?? element.name);
       return (
         element.dotDotDotToken !== undefined ||
@@ -296,7 +300,8 @@ export function effectRunnerViolation(
   collectAliases(nodes, imports);
   return (
     imports.directRunner ||
-    nodes.some(
+    Arr.some(
+      nodes,
       (node) =>
         (isRunnerMember(node, imports) &&
           !convexTestBoundary(node, nodes, symbols)) ||

@@ -3,6 +3,7 @@ import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createClassFixture } from "@repo/backend/test/classes";
+import { Array as Arr } from "effect";
 
 const roster = Ref.getFunctionReference(refs.public.classes.roster.list);
 const now = Date.UTC(2026, 8, 1);
@@ -74,15 +75,18 @@ describe("class roster stream", () => {
       cursor = page.continueCursor;
     }
     expect(people).toHaveLength(66);
-    expect(new Set(people.map((row) => row._id)).size).toBe(people.length);
-    expect(people.map((row) => row.userId)).not.toContain(removed.userId);
-    const teacherCount = people.filter((row) => row.role === "teacher").length;
+    expect(new Set(Arr.map(people, (row) => row._id)).size).toBe(people.length);
+    expect(Arr.map(people, (row) => row.userId)).not.toContain(removed.userId);
+    const teacherCount = Arr.filter(
+      people,
+      (row) => row.role === "teacher"
+    ).length;
     expect(teacherCount).toBe(4);
     expect(
-      people.slice(0, teacherCount).every((row) => row.role === "teacher")
+      Arr.every(people.slice(0, teacherCount), (row) => row.role === "teacher")
     ).toBe(true);
     expect(
-      people.slice(teacherCount).every((row) => row.role === "student")
+      Arr.every(people.slice(teacherCount), (row) => row.role === "student")
     ).toBe(true);
   });
   it("continues bounded sparse searches through empty pages beyond 500 members", async () => {
@@ -129,7 +133,7 @@ describe("class roster stream", () => {
       }
       expect(done).toBe(true);
       expect(emptyPages).toBeGreaterThan(0);
-      expect(people.map((row) => row.userId)).toEqual(
+      expect(Arr.map(people, (row) => row.userId)).toEqual(
         q === "absent-name" ? [] : [selected.userId]
       );
     }
@@ -197,8 +201,8 @@ describe("class roster stream", () => {
       .then((value) =>
         Ref.decodeReturnsSync(refs.public.classes.roster.list, value)
       );
-    expect([...pinned.page, ...rest.page].map((row) => row._id)).toEqual(
-      complete.page.map((row) => row._id)
+    expect(Arr.map([...pinned.page, ...rest.page], (row) => row._id)).toEqual(
+      Arr.map(complete.page, (row) => row._id)
     );
     expect(complete.page).toHaveLength(13);
   });

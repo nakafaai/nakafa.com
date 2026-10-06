@@ -15,7 +15,7 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 11, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -163,9 +163,8 @@ describe("auth/deletion/recovery", () => {
       expect(
         yield* Effect.promise(() =>
           t.query(async (ctx) =>
-            (
-              await ctx.db.system.query("_scheduled_functions").collect()
-            ).filter(
+            Arr.filter(
+              await ctx.db.system.query("_scheduled_functions").collect(),
               (job) =>
                 job.name ===
                 Ref.getConvexFunctionName(
@@ -237,9 +236,8 @@ describe("auth/deletion/recovery", () => {
       expect(
         yield* Effect.promise(() =>
           t.query(async (ctx) =>
-            (
-              await ctx.db.system.query("_scheduled_functions").collect()
-            ).filter(
+            Arr.filter(
+              await ctx.db.system.query("_scheduled_functions").collect(),
               (job) =>
                 job.name ===
                 Ref.getConvexFunctionName(
@@ -350,9 +348,8 @@ describe("auth/deletion/recovery", () => {
       expect(
         yield* Effect.promise(() =>
           t.query(async (ctx) =>
-            (
-              await ctx.db.system.query("_scheduled_functions").collect()
-            ).filter(
+            Arr.filter(
+              await ctx.db.system.query("_scheduled_functions").collect(),
               (job) =>
                 job.name ===
                 Ref.getConvexFunctionName(

@@ -10,7 +10,7 @@ import {
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const MCP_SECRET = "technical-mcp-edge-secret";
 const MCP_PATH = NAKAFA_MCP_EDGE_CONTRACT.originPath;
@@ -146,8 +146,10 @@ describe("Nakafa MCP transport", () => {
             "nakafa_find_lesson"
           ),
         ]);
-        const bodies = yield* allConcurrently(responses.map(json));
-        expect(responses.map(({ status }) => status)).toEqual([200, 200, 200]);
+        const bodies = yield* allConcurrently(Arr.map(responses, json));
+        expect(Arr.map(responses, ({ status }) => status)).toEqual([
+          200, 200, 200,
+        ]);
         expect(bodies[0].result.messages[0].content.text).toContain(
           "What is the key idea?"
         );
@@ -228,8 +230,8 @@ describe("Nakafa MCP transport", () => {
           "nakafa_get_quran_reference"
         ),
       ]);
-      const bodies = yield* allConcurrently(responses.map(json));
-      expect(responses.every(({ status }) => status === 200)).toBe(true);
+      const bodies = yield* allConcurrently(Arr.map(responses, json));
+      expect(Arr.every(responses, ({ status }) => status === 200)).toBe(true);
       expect(bodies[0]).toMatchObject({
         result: {
           structuredContent: {
@@ -424,7 +426,7 @@ describe("Nakafa MCP transport", () => {
           },
           method: "POST",
         });
-        expect(allowed.every(({ status }) => status === 200)).toBe(true);
+        expect(Arr.every(allowed, ({ status }) => status === 200)).toBe(true);
         expect(rejected.status).toBe(413);
         expect([throttled.status, unavailable.status]).toEqual([429, 503]);
         expect(throttled.headers.get("content-type")).toBeNull();

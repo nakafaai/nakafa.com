@@ -31,7 +31,7 @@ import {
   insertTestRelease,
 } from "@repo/backend/test/content/stage";
 import { convexTest } from "convex-test";
-import { Schema, Struct } from "effect";
+import { Array as Arr, Schema, Struct } from "effect";
 
 const readCatalog = internal.contentRelease.proof.catalog.page;
 
@@ -169,7 +169,8 @@ describe("contentRelease/proof/catalog", () => {
       cursor: first.nextCursor,
       releaseId: TEST_RELEASE_ID,
     });
-    const keys = [...first.heads, ...second.heads].map(
+    const keys = Arr.map(
+      [...first.heads, ...second.heads],
       ({ contentKey }) => contentKey
     );
 
@@ -197,7 +198,7 @@ describe("contentRelease/proof/catalog", () => {
     });
     expect(second).toMatchObject({ done: true, nextCursor: null });
     expect(
-      [...first.heads, ...second.heads].map((head) => head.contentKey)
+      Arr.map([...first.heads, ...second.heads], (head) => head.contentKey)
     ).toEqual(["test:head-0", "test:head-1", "test:head-2"]);
   });
 
@@ -241,7 +242,7 @@ describe("contentRelease/proof/catalog", () => {
     });
     expect(page).toMatchObject({ done: true, nextCursor: null });
     expect(
-      page.heads.map(({ contentKey, artifactLocale }) => [
+      Arr.map(page.heads, ({ contentKey, artifactLocale }) => [
         contentKey,
         artifactLocale,
       ])

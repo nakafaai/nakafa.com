@@ -12,6 +12,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
+import { Array as Arr } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const SHORT_ID = "asset:en:material:lesson";
@@ -80,19 +81,17 @@ describe("contents/metrics/batch", () => {
     const batch = buildMetricsBatch({ queueItems, updatedAt: NOW });
     const groups = groupMetricsQueueItems(queueItems, 2);
 
-    expect(groups.map((group) => group.length)).toEqual([2, 1, 1]);
+    expect(Arr.map(groups, (group) => group.length)).toEqual([2, 1, 1]);
     expect(batch.signals).toHaveProperty("size", 2);
     expect(batch.counters).toHaveProperty(
       "size",
       2 * learningPopularityWindowValues.length
     );
     expect(
-      [...batch.signals.values()]
-        .map(({ ref, viewCount }) => ({
-          contentId: ref.content_id,
-          viewCount,
-        }))
-        .sort((left, right) => left.contentId.localeCompare(right.contentId))
+      Arr.map([...batch.signals.values()], ({ ref, viewCount }) => ({
+        contentId: ref.content_id,
+        viewCount,
+      })).sort((left, right) => left.contentId.localeCompare(right.contentId))
     ).toEqual([
       { contentId: SHORT_ID, viewCount: 1 },
       { contentId: LONG_ID, viewCount: 3 },
@@ -122,10 +121,10 @@ describe("contents/metrics/batch", () => {
     const batch = buildMetricsBatch({ queueItems, updatedAt: NOW });
 
     expect(
-      [...batch.signals.values()].map((signal) => signal.ref.content_id)
+      Arr.map([...batch.signals.values()], (signal) => signal.ref.content_id)
     ).toEqual(["retained"]);
     expect(
-      [...batch.counters.values()].map(({ ref, windowKey }) => ({
+      Arr.map([...batch.counters.values()], ({ ref, windowKey }) => ({
         contentId: ref.content_id,
         windowKey,
       }))

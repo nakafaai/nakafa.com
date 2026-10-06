@@ -1,5 +1,6 @@
 import type { WebSearchOutput } from "@repo/backend/confect/nina/research/schema";
 import dedent from "dedent";
+import { Array as Arr, pipe } from "effect";
 
 /** Formats web search output as markdown for the research agent. */
 export function formatWebSearchOutput(output: WebSearchOutput) {
@@ -15,8 +16,9 @@ export function formatWebSearchOutput(output: WebSearchOutput) {
   return dedent(`
     # Web Search Results
 
-    ${output.sources
-      .map(
+    ${pipe(
+      output.sources,
+      Arr.map(
         (source, index) => `
     ## Source ${index + 1}: ${source.title}
     - URL: ${source.url}
@@ -25,7 +27,8 @@ export function formatWebSearchOutput(output: WebSearchOutput) {
 
     ### Content
     ${source.content}`
-      )
-      .join("\n\n")}
+      ),
+      Arr.join("\n\n")
+    )}
   `);
 }

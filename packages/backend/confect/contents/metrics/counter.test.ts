@@ -13,7 +13,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const ROUTE = "material/lesson/mathematics/vector/addition";
@@ -141,7 +141,7 @@ describe("contents/metrics/counter", () => {
     });
     expect(state.counter).not.toHaveProperty("description");
     expect(state.counter).not.toHaveProperty("materialDomain");
-    expect(state.ranking.page.map(({ key }) => key)).toEqual([
+    expect(Arr.map(state.ranking.page, ({ key }) => key)).toEqual([
       [-2, graph.content_id],
     ]);
   });

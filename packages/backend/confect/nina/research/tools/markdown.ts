@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const markdownHeaders = {
   accept: "text/markdown,text/plain;q=0.9,text/html;q=0.1",
@@ -100,7 +100,7 @@ function isReadableMarkdown(content: string, contentType: string) {
     return false;
   }
 
-  if (textContentTypes.some((type) => contentType.includes(type))) {
+  if (Arr.some(textContentTypes, (type) => contentType.includes(type))) {
     return true;
   }
 

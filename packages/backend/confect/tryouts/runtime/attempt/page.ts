@@ -19,7 +19,7 @@ import {
   type TryoutSetSelection,
 } from "@repo/backend/content/tryout/selection";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 interface AttemptPath {
@@ -142,7 +142,7 @@ function matchesAttemptSelection(
   ) {
     return false;
   }
-  return attempt.sectionSnapshots.every((snapshot) => {
+  return Arr.every(attempt.sectionSnapshots, (snapshot) => {
     const record = selection.sectionRecords.find(
       ({ row }) => tryoutCatalogIdentity(row) === snapshot.sectionIdentity
     );

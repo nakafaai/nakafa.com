@@ -8,7 +8,7 @@ import {
   isSuccessfulScrapeOutput,
   scrapeUrl,
 } from "@repo/backend/confect/nina/research/tools/scrape";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const firecrawlApp = vi.hoisted(() => ({
   scrape: vi.fn(),
@@ -165,11 +165,14 @@ describe("research scrape tool", () => {
           ) {
             return Promise.resolve(
               new Response(
-                [
-                  "# DevTools",
-                  "",
-                  "AI SDK DevTools gives you full visibility over your AI SDK calls with generateText, streamText, and ToolLoopAgent.",
-                ].join("\n"),
+                Arr.join(
+                  [
+                    "# DevTools",
+                    "",
+                    "AI SDK DevTools gives you full visibility over your AI SDK calls with generateText, streamText, and ToolLoopAgent.",
+                  ],
+                  "\n"
+                ),
                 {
                   headers: { "content-type": "text/markdown" },
                 }

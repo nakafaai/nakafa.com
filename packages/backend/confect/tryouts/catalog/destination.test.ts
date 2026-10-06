@@ -16,7 +16,7 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const identity = {
   countryKey: TRYOUT_START_COUNTRY,
@@ -122,14 +122,16 @@ describe("signed try-out attempt destinations", () => {
             const tCtx = yield* MutationCtx;
             yield* Effect.promise(() =>
               activateTryoutSnapshot(tCtx, {
-                catalog: makeTryoutStartHierarchy("id", "visible").map((row) =>
-                  row.kind === "section"
-                    ? {
-                        ...row,
-                        publicPath: undefined,
-                        visibility: "internal-entry",
-                      }
-                    : row
+                catalog: Arr.map(
+                  makeTryoutStartHierarchy("id", "visible"),
+                  (row) =>
+                    row.kind === "section"
+                      ? {
+                          ...row,
+                          publicPath: undefined,
+                          visibility: "internal-entry",
+                        }
+                      : row
                 ),
                 placements: [makeTryoutStartPlacement("id")],
               })

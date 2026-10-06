@@ -1,5 +1,6 @@
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import type { ModelMessage } from "ai";
+import { Array as Arr } from "effect";
 
 /**
  * Adds pre-fetched source evidence without disabling normal research tools.
@@ -12,24 +13,27 @@ export function createResearchMessages(task: string, sourceOutputs: string[]) {
   return [
     {
       role: "user",
-      content: [
-        task,
-        createPrompt({
-          taskContext: `
+      content: Arr.join(
+        [
+          task,
+          createPrompt({
+            taskContext: `
             # Source Evidence Notice
 
             User-provided source evidence has already been retrieved.
             Use it for source-specific claims.
           `,
-          toolUsageGuidelines: `
+            toolUsageGuidelines: `
             # Tool Usage
 
             - Use the search tools before producing findings when the task also needs current, external, or corroborating evidence.
           `,
-        }),
-        "# User-Provided Source Evidence",
-        sourceOutputs.join("\n\n"),
-      ].join("\n\n"),
+          }),
+          "# User-Provided Source Evidence",
+          Arr.join(sourceOutputs, "\n\n"),
+        ],
+        "\n\n"
+      ),
     },
   ] satisfies ModelMessage[];
 }
@@ -49,21 +53,24 @@ export function createResearchSynthesisMessages({
   return [
     {
       role: "user",
-      content: [
-        "# Research Task",
-        task,
-        "# Research Notes",
-        evidence ||
-          createPrompt({
-            taskContext: `
+      content: Arr.join(
+        [
+          "# Research Task",
+          task,
+          "# Research Notes",
+          evidence ||
+            createPrompt({
+              taskContext: `
               No source-backed direct evidence was collected.
             `,
-            detailedTaskInstructions: `
+              detailedTaskInstructions: `
               Do not infer absence or nonexistence from failed or empty search results.
             `,
-          }),
-        ...formatSourceEvidence(collectedEvidence),
-      ].join("\n\n"),
+            }),
+          ...formatSourceEvidence(collectedEvidence),
+        ],
+        "\n\n"
+      ),
     },
   ] satisfies ModelMessage[];
 }
@@ -76,5 +83,5 @@ function formatSourceEvidence(collectedEvidence: string[]) {
     return [];
   }
 
-  return ["# Source Evidence With URLs", collectedEvidence.join("\n\n")];
+  return ["# Source Evidence With URLs", Arr.join(collectedEvidence, "\n\n")];
 }

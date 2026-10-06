@@ -16,7 +16,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
@@ -162,7 +162,8 @@ describe("contents/analytics/impl", () => {
     });
     await expect(
       populated.query(async (ctx) =>
-        (await ctx.db.system.query("_scheduled_functions").collect()).map(
+        Arr.map(
+          await ctx.db.system.query("_scheduled_functions").collect(),
           (job) => job.args[0]
         )
       )
@@ -281,7 +282,7 @@ describe("contents/analytics/impl", () => {
       leaseExpiresAt: NOW + CONTENT_ANALYTICS_LEASE_DURATION_MS,
       leaseVersion: 1,
     });
-    expect(state.jobs.map((job) => job.args[0])).toEqual([
+    expect(Arr.map(state.jobs, (job) => job.args[0])).toEqual([
       {
         leaseVersion: 1,
         partition: 0,

@@ -8,7 +8,7 @@ import {
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -62,7 +62,7 @@ export const loadSectionResponseIndex = Effect.fn(
     placements,
     snapshots: [snapshot],
   });
-  const links = validatedPlacements.map((placement) => ({
+  const links = Arr.map(validatedPlacements, (placement) => ({
     placement,
     sectionAttemptId: section._id,
   }));

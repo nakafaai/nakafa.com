@@ -1,4 +1,5 @@
 import {
+  Array as Arr,
   Config,
   Effect,
   FileSystem,
@@ -129,7 +130,8 @@ export function requiresProductionAcceptance(
 ) {
   return (
     changes.length === 0 ||
-    changes.some(
+    Arr.some(
+      changes,
       (change) => change.status !== "M" || !change.path.endsWith(".test.ts")
     )
   );

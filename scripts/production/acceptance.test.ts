@@ -1,6 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
 import {
+  Array as Arr,
   ConfigProvider,
   Effect,
   FileSystem,
@@ -35,17 +36,19 @@ const runGit = Effect.fn("ProductionAcceptanceTest.runGit")(function* (
     stdout: "ignore",
   }).pipe(
     Effect.mapError(
-      () => new GitFixtureError({ message: `git ${args.join(" ")} failed.` })
+      () =>
+        new GitFixtureError({ message: `git ${Arr.join(args, " ")} failed.` })
     )
   );
   const exitCode = yield* command.exitCode.pipe(
     Effect.mapError(
-      () => new GitFixtureError({ message: `git ${args.join(" ")} failed.` })
+      () =>
+        new GitFixtureError({ message: `git ${Arr.join(args, " ")} failed.` })
     )
   );
   if (exitCode !== 0) {
     return yield* new GitFixtureError({
-      message: `git ${args.join(" ")} exited with ${exitCode}.`,
+      message: `git ${Arr.join(args, " ")} exited with ${exitCode}.`,
     });
   }
 });
@@ -296,7 +299,7 @@ describe("production acceptance scope", () => {
       );
       assert.match(badRevision.message, UNKNOWN_REVISION);
       assert.deepStrictEqual(
-        failures.map(({ message }) => message),
+        Arr.map(failures, ({ message }) => message),
         [
           "Unable to finish inspecting the pull request changes.",
           "usage",

@@ -22,7 +22,7 @@ import {
 } from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 type SourceCorruption = "duplicate" | "none" | "stale";
@@ -159,10 +159,12 @@ describe("tryouts/runtime/irt/items", () => {
           )
         )
       );
-      const calibrationRunQueries = query.mock.calls.filter(
+      const calibrationRunQueries = Arr.filter(
+        query.mock.calls,
         ([tableName]) => tableName === "irtCalibrationRuns"
       ).length;
-      const scaleItemQueries = query.mock.calls.filter(
+      const scaleItemQueries = Arr.filter(
+        query.mock.calls,
         ([tableName]) => tableName === "irtScaleItems"
       ).length;
       query.mockRestore();

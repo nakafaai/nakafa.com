@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
+import { Array as Arr } from "effect";
 
 describe("buildContentSearchDocument", () => {
   it("keeps route identity separate from display search text", () => {
@@ -23,15 +24,18 @@ describe("buildContentSearchDocument", () => {
       section: "material",
       sourcePath: route,
       syncedAt: 1,
-      text: [
-        'import { getColor } from "@repo/design-system/lib/color";',
-        "## Pengertian Logaritma",
-        "Logaritma menjawab pangkat yang dibutuhkan.",
-        "Baca [sifat logaritma](/material/lesson/mathematics/exponential-logarithm/logarithm-properties).",
-        "```sh",
-        "# source-visible comment",
-        "```",
-      ].join("\n"),
+      text: Arr.join(
+        [
+          'import { getColor } from "@repo/design-system/lib/color";',
+          "## Pengertian Logaritma",
+          "Logaritma menjawab pangkat yang dibutuhkan.",
+          "Baca [sifat logaritma](/material/lesson/mathematics/exponential-logarithm/logarithm-properties).",
+          "```sh",
+          "# source-visible comment",
+          "```",
+        ],
+        "\n"
+      ),
       title: "Definisi Logaritma",
     });
 

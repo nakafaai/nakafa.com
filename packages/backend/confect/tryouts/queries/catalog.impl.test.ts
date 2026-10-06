@@ -21,7 +21,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
 const landingExamPath = "try-out/indonesia/snbt";
@@ -123,17 +123,19 @@ describe("public try-out catalog queries", () => {
           )
         ).toBeNull();
         const oversized = convexTest(schema, convexModules);
-        const catalog = makeTryoutStartHierarchy("id", "visible").map((row) =>
-          Schema.decodeSync(TryoutCatalogRowSchema)(
-            row.kind === "set"
-              ? {
-                  ...row,
-                  sectionCount: TRYOUT_CATALOG_LIMIT + 1,
-                  visibleSectionCount: TRYOUT_CATALOG_LIMIT + 1,
-                  questionCount: TRYOUT_CATALOG_LIMIT + 1,
-                }
-              : row
-          )
+        const catalog = Arr.map(
+          makeTryoutStartHierarchy("id", "visible"),
+          (row) =>
+            Schema.decodeSync(TryoutCatalogRowSchema)(
+              row.kind === "set"
+                ? {
+                    ...row,
+                    sectionCount: TRYOUT_CATALOG_LIMIT + 1,
+                    visibleSectionCount: TRYOUT_CATALOG_LIMIT + 1,
+                    questionCount: TRYOUT_CATALOG_LIMIT + 1,
+                  }
+                : row
+            )
         );
         yield* Effect.promise(() =>
           oversized.mutation((ctx) =>
@@ -189,7 +191,10 @@ describe("public try-out catalog queries", () => {
           title: "Set 1",
         });
         expect(
-          metadata.route?.alternates.map(({ appLocale }) => appLocale)
+          Arr.map(
+            metadata.route?.alternates ?? [],
+            ({ appLocale }) => appLocale
+          )
         ).toEqual(["en", "id", "de"]);
         expect(
           yield* Effect.promise(() =>
@@ -211,7 +216,8 @@ describe("public try-out catalog queries", () => {
           yield* Effect.promise(() =>
             t.mutation((ctx) =>
               activateTryoutSnapshot(ctx, {
-                catalog: makeLandingHierarchy("id", "visible").filter(
+                catalog: Arr.filter(
+                  makeLandingHierarchy("id", "visible"),
                   (row) => row.kind !== kind
                 ),
                 placements: [makeLandingPlacement("id")],
@@ -285,7 +291,8 @@ describe("public try-out catalog queries", () => {
           yield* Effect.promise(() =>
             t.mutation((ctx) =>
               activateTryoutSnapshot(ctx, {
-                catalog: makeTryoutStartHierarchy("id", "visible").filter(
+                catalog: Arr.filter(
+                  makeTryoutStartHierarchy("id", "visible"),
                   (row) => row.kind !== kind
                 ),
                 placements: [makeTryoutStartPlacement("id")],
@@ -313,7 +320,7 @@ describe("public try-out catalog queries", () => {
 it("preserves optional signed descriptions across every public catalog level", async () => {
   const t = convexTest(schema, convexModules);
   const description = "Signed catalog description";
-  const catalog = makeTryoutStartHierarchy("en", "visible").map((row) => ({
+  const catalog = Arr.map(makeTryoutStartHierarchy("en", "visible"), (row) => ({
     ...row,
     description,
   }));

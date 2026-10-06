@@ -23,7 +23,7 @@ import {
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
 import { getConvexSize } from "convex/values";
-import { Effect, Option, Struct } from "effect";
+import { Array as Arr, Effect, Option, Struct } from "effect";
 export type ProofPage = typeof proofPageValidator.Type;
 export type ProofState = typeof proofStateValidator.Type;
 export type ArtifactProofPage = typeof artifactProofPageValidator.Type;
@@ -97,7 +97,7 @@ export const routePageProgram = Effect.fn("contentRelease.routeProofPage")(
         numItems: PROOF_PAGE_LIMIT,
       })
       .pipe(Effect.orDie);
-    const rows = stored.page.map((row) => ({
+    const rows = Arr.map(stored.page, (row) => ({
       index: row.index,
       routeJson: row.routeJson,
     }));

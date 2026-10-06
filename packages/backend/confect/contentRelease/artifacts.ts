@@ -28,7 +28,7 @@ import {
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
 import { getConvexSize } from "convex/values";
-import { Clock, Effect, Schema, Struct } from "effect";
+import { Array as Arr, Clock, Effect, Schema, Struct } from "effect";
 
 /** Decodes one bounded artifact batch through the shared wire contract. */
 export const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(
@@ -135,13 +135,13 @@ export const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const { artifacts } = yield* decodeBatch(releaseId, batchIndex, sources);
-    const entries = artifacts.map((artifact) => ({
+    const entries = Arr.map(artifacts, (artifact) => ({
       artifact,
       artifactJson: encodeArtifactJson(artifact),
     }));
-    const values = entries.map(({ artifactJson }) => artifactJson);
+    const values = Arr.map(entries, ({ artifactJson }) => artifactJson);
     const identities = new Set(
-      artifacts.map(({ artifactHash }) => artifactHash)
+      Arr.map(artifacts, ({ artifactHash }) => artifactHash)
     );
     if (identities.size !== artifacts.length) {
       return yield* releaseFail(
@@ -173,7 +173,7 @@ export const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(
       yield* validateStoredBatch(
         existing.length,
         values.length,
-        existing.map(({ artifactBatchHash }) => artifactBatchHash),
+        Arr.map(existing, ({ artifactBatchHash }) => artifactBatchHash),
         batchHash,
         releaseId,
         batchIndex

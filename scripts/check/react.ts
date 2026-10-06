@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import {
   type ArrowFunction,
   type Expression,
@@ -209,7 +210,7 @@ function inspectStateImport(
   if (!(bindings !== undefined && isNamedImports(bindings))) {
     return [];
   }
-  return bindings.elements.flatMap((element) => {
+  return Arr.flatMap(bindings.elements, (element) => {
     const rule = apis.get((element.propertyName ?? element.name).text);
     return rule === undefined ? [] : [`${file}: ${rule}.`];
   });

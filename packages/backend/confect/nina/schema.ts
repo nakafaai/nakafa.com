@@ -2,7 +2,7 @@ import { PaginationResult } from "@confect/core";
 import type { UIMessage } from "@convex-dev/agent/react";
 import { vMessageStatus, vStreamMessage } from "@convex-dev/agent/validators";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/conversation.spec";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export type NinaMessage = UIMessage<typeof NinaTurnSummary.Type>;
 
@@ -14,7 +14,7 @@ export const AgentMessage = Schema.Struct({
   stepOrder: Schema.Finite,
   status: Schema.Literals([
     "streaming",
-    ...vMessageStatus.members.map((status) => status.value),
+    ...Arr.map(vMessageStatus.members, (status) => status.value),
   ]),
   role: Schema.Literals(["user", "assistant", "system"]),
   text: Schema.String,
@@ -48,11 +48,11 @@ export const StreamRequest = Schema.Union([
 const StreamMessage = Schema.Struct({
   streamId: Schema.String,
   status: Schema.Literals(
-    vStreamMessage.fields.status.members.map((status) => status.value)
+    Arr.map(vStreamMessage.fields.status.members, (status) => status.value)
   ),
   format: Schema.optional(
     Schema.Literals(
-      vStreamMessage.fields.format.members.map((format) => format.value)
+      Arr.map(vStreamMessage.fields.format.members, (format) => format.value)
     )
   ),
   order: Schema.Finite,

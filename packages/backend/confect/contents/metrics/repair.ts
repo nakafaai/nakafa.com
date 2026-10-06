@@ -12,7 +12,7 @@ import {
   type LearningPopularityFiniteWindow,
 } from "@repo/backend/confect/contents/popularity";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
-import { Effect, flow, Struct } from "effect";
+import { Array as Arr, Effect, flow, Struct } from "effect";
 
 type PopularityCounter = Docs["learningPopularityCounters"];
 type PopularitySignal = Docs["learningPopularitySignals"];
@@ -203,7 +203,8 @@ export const repairPopularityCounter = Effect.fn(
         refreshed: true,
       };
     }
-    const changed = refreshFields.some(
+    const changed = Arr.some(
+      refreshFields,
       (field) => counter[field] !== update[field]
     );
     if (!changed) {

@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { effectTestViolations } from "#scripts/check/effect";
 
 const caseFile = (index: number) => `packages/example/src/case${index}.test.ts`;
@@ -11,7 +11,10 @@ const inspect = Effect.fn("RuntimePolicyTest.inspect")(function* (
   sources: readonly string[]
 ) {
   return yield* effectTestViolations(
-    sources.map((sourceText, index) => ({ file: caseFile(index), sourceText }))
+    Arr.map(sources, (sourceText, index) => ({
+      file: caseFile(index),
+      sourceText,
+    }))
   );
 });
 
@@ -33,7 +36,7 @@ describe("Effect runtime detection", () => {
       ];
       assert.deepStrictEqual(
         yield* inspect(sources),
-        sources.map((_, index) => violation(index))
+        Arr.map(sources, (_, index) => violation(index))
       );
     })
   );
@@ -49,7 +52,7 @@ describe("Effect runtime detection", () => {
       ];
       assert.deepStrictEqual(
         yield* inspect(sources),
-        sources.map((_, index) => violation(index))
+        Arr.map(sources, (_, index) => violation(index))
       );
     })
   );

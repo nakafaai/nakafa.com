@@ -10,13 +10,14 @@ import {
   polarCustomerErrorCode,
   type StoredPolarCustomer,
 } from "@repo/backend/confect/customers/polar/spec";
-import { Effect, Record as Rec, Result } from "effect";
+import { Array as Arr, Effect, Record as Rec, Result } from "effect";
 
 /** Keep only Polar metadata values that can be persisted in Convex. */
 function normalizeMetadata(
   metadata: Record<string, unknown> | null | undefined
 ) {
-  const entries = Rec.toEntries(metadata ?? {}).filter(
+  const entries = Arr.filter(
+    Rec.toEntries(metadata ?? {}),
     (entry): entry is [string, PolarMetadata[string]] => {
       const value = entry[1];
       return (

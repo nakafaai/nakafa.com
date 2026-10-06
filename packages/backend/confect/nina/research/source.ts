@@ -1,6 +1,6 @@
 import { getLatestUserText } from "@repo/backend/confect/nina/prompt/user";
 import type { ModelMessage } from "ai";
-import { Schema, Struct } from "effect";
+import { Array as Arr, Schema, Struct } from "effect";
 import { ParseResultType, parseDomain } from "parse-domain";
 
 const whitespacePattern = /\s+/;
@@ -41,8 +41,8 @@ export type SourceReference = typeof SourceReferenceSchema.Type;
  */
 export function getSourceReferences(text: string) {
   const seen = new Set<string>();
-  return text.split(whitespacePattern).flatMap((token) =>
-    splitSourceToken(token).flatMap((segment) => {
+  return Arr.flatMap(text.split(whitespacePattern), (token) =>
+    Arr.flatMap(splitSourceToken(token), (segment) => {
       const reference = parseSourceReference(segment);
       if (!reference) {
         return [];

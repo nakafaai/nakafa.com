@@ -6,6 +6,7 @@ import {
   normalizeSearchTerm,
   planSearchQueries,
 } from "@repo/backend/confect/nina/research/query";
+import { Array as Arr } from "effect";
 
 describe("search query planning", () => {
   it("keeps generated queries as executable search text", () => {
@@ -68,12 +69,15 @@ describe("search query planning", () => {
   it("does not execute internal markdown section labels as fallback terms", () => {
     expect(
       planSearchQueries({
-        task: [
-          "# User Request",
-          "Untuk migrasi Next.js 16, Cache Components berubah apa menurut pihak pembuat Next.js sendiri?",
-          "# Task",
-          "Find official Next.js 16 Cache Components changes.",
-        ].join("\n\n"),
+        task: Arr.join(
+          [
+            "# User Request",
+            "Untuk migrasi Next.js 16, Cache Components berubah apa menurut pihak pembuat Next.js sendiri?",
+            "# Task",
+            "Find official Next.js 16 Cache Components changes.",
+          ],
+          "\n\n"
+        ),
         maxQueries: 2,
         queries: [],
       })

@@ -1,5 +1,6 @@
 import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
+import { Array as Arr } from "effect";
 
 /** Normalizes public research URLs before citation eligibility checks. */
 export function normalizeResearchCitationUrl(url: string) {
@@ -40,8 +41,8 @@ export function filterResearchOutputCitations(
   eligibleUrls: ReadonlySet<string>
 ) {
   let changed = false;
-  const findings = output.findings.flatMap((finding) => {
-    const citations = finding.citations.filter((citation) => {
+  const findings = Arr.flatMap(output.findings, (finding) => {
+    const citations = Arr.filter(finding.citations, (citation) => {
       const normalized = normalizeResearchCitationUrl(citation.url);
 
       return normalized ? eligibleUrls.has(normalized) : false;
