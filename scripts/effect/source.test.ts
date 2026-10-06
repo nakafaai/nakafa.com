@@ -75,6 +75,11 @@ const initRepository = Effect.fn("EffectSourceTest.initRepository")(function* (
 ) {
   yield* writeFiles(repository, files);
   yield* runGit(repository, ["init", "--initial-branch=main"]);
+  // Git starts detached maintenance after a commit. A fixture repository lives
+  // in a scoped temporary folder, so nothing may still write into it when the
+  // scope removes that folder.
+  yield* runGit(repository, ["config", "gc.auto", "0"]);
+  yield* runGit(repository, ["config", "maintenance.auto", "false"]);
   yield* runGit(repository, ["config", "user.name", "Source Fixture"]);
   yield* runGit(repository, [
     "config",
