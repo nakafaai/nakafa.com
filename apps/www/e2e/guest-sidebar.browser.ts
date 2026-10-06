@@ -199,7 +199,7 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
 
         const nativeUrl = new URL(exactHref, page.url()).toString();
         // Background document responses can precede Playwright's page event.
-        const [nativeResponse] = yield* Effect.all(
+        const [nativeResponse, nativePage] = yield* Effect.all(
           [
             Effect.promise(() =>
               page
@@ -211,6 +211,7 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
                     candidate.url() === nativeUrl
                 )
             ),
+            Effect.promise(() => page.context().waitForEvent("page")),
             Effect.promise(() => loginLink.click({ button: "middle" })),
           ],
           { concurrency: "unbounded" }
@@ -222,7 +223,7 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
         // The middle click opened the auth page in a background tab. Its
         // animated shader competes for a small runner's CPU and delays this
         // page's hydration past the assertion timeout, so the tab closes first.
-        yield* Effect.promise(() => nativeResponse.frame().page().close());
+        yield* Effect.promise(() => nativePage.close());
 
         yield* Effect.promise(() =>
           page.reload({ waitUntil: "domcontentloaded" })
