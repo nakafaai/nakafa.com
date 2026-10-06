@@ -10,18 +10,11 @@ export const readTryoutTaxonomy = Effect.fn(
   const catalog = yield* loadTryoutCatalog(locale).pipe(
     Effect.provide(tryoutLayer)
   );
-  let countries: Array<{
-    id: string;
-    label: string;
-  }> = [];
+  const countries = Arr.flatMap(catalog.entries, ({ row }) =>
+    row.kind === "country" ? [{ id: row.countryKey, label: row.title }] : []
+  );
   const exams = new Map<string, string>();
   for (const { row } of catalog.entries) {
-    if (row.kind === "country") {
-      countries = Arr.append(countries, {
-        id: row.countryKey,
-        label: row.title,
-      });
-    }
     if (row.kind === "exam") {
       exams.set(row.examKey, row.title);
     }

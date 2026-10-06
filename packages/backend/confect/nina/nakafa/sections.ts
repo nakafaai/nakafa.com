@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
 import { slugify } from "@repo/utilities/slug";
-import { Array as Arr, Option, Order, pipe } from "effect";
+import { Array as Arr, MutableList, Option, Order, pipe } from "effect";
 
 /** The implicit section before a document's first heading. */
 const READ_START_SECTION = "top";
@@ -22,21 +22,22 @@ interface ReadSection {
 
 /** Splits agent markdown at level-two and level-three headings. */
 function splitSections(markdown: string) {
-  let sections: ReadSection[] = [];
+  const sections = MutableList.make<ReadSection>();
   const counts = new Map<string, number>();
   let title = "Start";
   let slug = READ_START_SECTION;
-  let lines: string[] = [];
+  const lines = MutableList.make<string>();
+  /** Ends the open section, taking its lines. */
   const close = () => {
-    const text = Arr.join(lines, "\n").trim();
+    const text = Arr.join(MutableList.takeAll(lines), "\n").trim();
     if (text) {
-      sections = Arr.append(sections, { slug, text, title });
+      MutableList.append(sections, { slug, text, title });
     }
   };
   for (const line of markdown.split("\n")) {
     const heading = HEADING.exec(line);
     if (!heading?.[1]) {
-      lines = Arr.append(lines, line);
+      MutableList.append(lines, line);
       continue;
     }
     close();
@@ -45,10 +46,10 @@ function splitSections(markdown: string) {
     const seen = (counts.get(base) ?? 0) + 1;
     counts.set(base, seen);
     slug = seen === 1 ? base : `${base}-${seen}`;
-    lines = [line];
+    MutableList.append(lines, line);
   }
   close();
-  return sections;
+  return MutableList.takeAll(sections);
 }
 
 /**
@@ -80,12 +81,12 @@ function splitParts(section: ReadSection, limit: number): ReadSection[] {
   if (countTextTokens(section.text) <= limit) {
     return [section];
   }
-  let parts: string[] = [];
-  let lines: string[] = [];
+  const parts = MutableList.make<string>();
+  const lines = MutableList.make<string>();
   let used = 0;
+  /** Ends the open part, taking its lines. */
   const close = () => {
-    parts = Arr.append(parts, Arr.join(lines, "\n"));
-    lines = [];
+    MutableList.append(parts, Arr.join(MutableList.takeAll(lines), "\n"));
     used = 0;
   };
   for (const line of section.text.split("\n")) {
@@ -99,15 +100,15 @@ function splitParts(section: ReadSection, limit: number): ReadSection[] {
         continue;
       }
       const head = headWithin(rest, room);
-      lines = Arr.append(lines, head);
+      MutableList.append(lines, head);
       close();
       rest = rest.slice(head.length);
     }
-    lines = Arr.append(lines, rest);
+    MutableList.append(lines, rest);
     used += countTextTokens(rest) + 1;
   }
   close();
-  return Arr.map(parts, (text, index) =>
+  return Arr.map(MutableList.takeAll(parts), (text, index) =>
     index === 0
       ? { ...section, text }
       : {
@@ -203,16 +204,18 @@ export function formatRead(
   }
   const bodyBudget = budget - countTextTokens(header) - outlineReserve(parts);
   const from = Math.max(start, 0);
-  let included: ReadSection[] = [];
+  const candidates = parts.slice(from);
+  let count = 0;
   let used = 0;
-  for (const candidate of parts.slice(from)) {
+  for (const candidate of candidates) {
     const cost = countTextTokens(candidate.text);
-    if (included.length > 0 && used + cost > bodyBudget) {
+    if (count > 0 && used + cost > bodyBudget) {
       break;
     }
-    included = Arr.append(included, candidate);
+    count += 1;
     used += cost;
   }
+  const included = Arr.take(candidates, count);
   const end = from + included.length;
   // A long description or outline can leave no room for a part; the read
   // still never exceeds its budget.

@@ -67,17 +67,14 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
       numItems: pageSize,
     })
     .pipe(Effect.orDie);
-  let heads: ContentHead[] = [];
-  for (const key of stored.page) {
-    const head = yield* resolveContentHead(
-      key.contentKey,
-      key.artifactLocale,
-      sequence
-    ).pipe(Effect.provide(publicationLayer));
-    if (head) {
-      heads = Arr.append(heads, head);
-    }
-  }
+  const resolved = yield* Effect.forEach(stored.page, (key) =>
+    resolveContentHead(key.contentKey, key.artifactLocale, sequence).pipe(
+      Effect.provide(publicationLayer)
+    )
+  );
+  const heads: ContentHead[] = Arr.flatMap(resolved, (head) =>
+    head ? [head] : []
+  );
   const page = {
     activeManifestHash: request.activeManifestHash,
     activeReleaseId: request.activeReleaseId,

@@ -236,26 +236,31 @@ export const resolveForumAttachmentUploads = Effect.fn(
   const uploads = yield* Effect.forEach(uploadIds, (uploadId) =>
     getPendingUpload(uploadId)
   );
-  let finalizedUploads: ForumAttachmentUpload[] = [];
-  for (const upload of uploads) {
-    if (!upload || upload.uploadedBy !== userId || upload.forumId !== forumId) {
-      return yield* failForumAttachment(
-        forumAttachmentUploadNotFoundCode,
-        "Forum post attachment upload not found."
-      );
-    }
-    if (!isForumAttachmentUpload(upload)) {
-      return yield* failForumAttachment(
-        forumAttachmentIncompleteCode,
-        "Forum post attachment upload has not finished yet."
-      );
-    }
-    const finalizedUpload: ForumAttachmentUpload = upload;
-    yield* validateForumAttachmentPolicy(finalizedUpload);
-    yield* validateStoredForumAttachmentMetadata(finalizedUpload);
-    finalizedUploads = Arr.append(finalizedUploads, finalizedUpload);
-  }
-  return finalizedUploads;
+  return yield* Effect.forEach(
+    uploads,
+    Effect.fnUntraced(function* (upload) {
+      if (
+        !upload ||
+        upload.uploadedBy !== userId ||
+        upload.forumId !== forumId
+      ) {
+        return yield* failForumAttachment(
+          forumAttachmentUploadNotFoundCode,
+          "Forum post attachment upload not found."
+        );
+      }
+      if (!isForumAttachmentUpload(upload)) {
+        return yield* failForumAttachment(
+          forumAttachmentIncompleteCode,
+          "Forum post attachment upload has not finished yet."
+        );
+      }
+      const finalizedUpload: ForumAttachmentUpload = upload;
+      yield* validateForumAttachmentPolicy(finalizedUpload);
+      yield* validateStoredForumAttachmentMetadata(finalizedUpload);
+      return finalizedUpload;
+    })
+  );
 });
 
 /**

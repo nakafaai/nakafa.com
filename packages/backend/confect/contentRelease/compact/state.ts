@@ -15,7 +15,7 @@ import {
   COMPACTION_PAGE_BYTES,
   ROLLBACK_RETENTION_MS,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Array as Arr, Clock, Effect, Option } from "effect";
+import { Array as Arr, Clock, Effect, Option, Predicate } from "effect";
 
 const RELEASE_SCAN_COUNT = 32;
 interface SlotIdentity {
@@ -187,13 +187,11 @@ const protectedFloor = Effect.fn("contentRelease.protectedFloor")(function* (
   const completedSequences = yield* Effect.forEach(completed, (release) =>
     protectedRelease(release)
   );
-  let sequences: number[] = [];
-  for (const entry of [...slotSequences, ...completedSequences]) {
-    if (entry === null) {
-      return yield* earliestStoredSequence(state);
-    }
-    sequences = Arr.appendAll(sequences, entry);
+  const entries = Arr.appendAll(slotSequences, completedSequences);
+  if (!Arr.every(entries, Predicate.isNotNull)) {
+    return yield* earliestStoredSequence(state);
   }
+  const sequences = Arr.flatten(entries);
   return sequences.length === 0 ? state.nextSequence : Math.min(...sequences);
 });
 
