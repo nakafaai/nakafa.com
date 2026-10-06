@@ -273,7 +273,7 @@ export const REGISTRY_REVIEWS = [
   [
     "pnpm@latest",
     "12.9.1",
-    "OSV Scanner skipped the application graph after pnpm 12 added a package-manager YAML document (seen with 2.5.1), and the 2.6.0 release notes do not address it; pnpm 12 moves in its own change once a scan of its lockfile is proven complete.",
+    "pnpm 12 records its own packages in a second YAML document at the top of the lockfile. OSV Scanner 2.6.0 reads both documents and Turborepo hashes each workspace as before, but GitHub's dependency graph reads only the first (dependabot/dependabot-core#15904), so it would report no application dependencies and close Aksara's Dependabot alerts. The one setting that keeps a single document, `pmOnFail: ignore`, also stops pnpm from enforcing the pinned version. pnpm 12 moves in both repositories once GitHub reads both documents.",
   ],
   [
     "react-doctor@latest",
