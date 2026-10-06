@@ -379,9 +379,7 @@ describe("contentRelease/snapshot/batch", () => {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
         const [firstRow] = data.rowJson;
-        if (!firstRow) {
-          throw new Error("Expected one program snapshot row.");
-        }
+        assert(firstRow, "Expected one program snapshot row.");
         const changed = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           changed.mutation((ctx) =>
