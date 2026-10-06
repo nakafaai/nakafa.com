@@ -5,7 +5,6 @@ import {
   INDEXING_STATE_FOLDER,
   SUBMISSION_HISTORY_FILE,
 } from "@/scripts/indexing/paths";
-import { logger } from "@/scripts/utils";
 
 const SubmissionServiceSchema = Schema.Literals([
   "bing",
@@ -57,9 +56,11 @@ export const ensureSubmissionHistoryFolder = Effect.fn(
       }),
     try: () => {
       fs.mkdirSync(INDEXING_STATE_FOLDER, { recursive: true });
-      logger.info(`Created script state folder at: ${INDEXING_STATE_FOLDER}`);
     },
   });
+  yield* Effect.logInfo(
+    `Created script state folder at: ${INDEXING_STATE_FOLDER}`
+  );
 });
 /**
  * Loads ignored submission history for IndexNow, Bing, and Google adapters.

@@ -22,7 +22,6 @@ import {
   INDEXNOW_KEY,
   INDEXNOW_KEY_LOCATION,
 } from "@/scripts/indexing/paths";
-import { logger } from "@/scripts/utils";
 
 /**
  * Runs sitemap-derived URL notifications for IndexNow and Bing.
@@ -33,11 +32,13 @@ import { logger } from "@/scripts/utils";
  */
 export const runIndexNow = Effect.fn("scripts.indexing.indexNow.run")(
   function* () {
-    logger.header("Starting URL Submission Process");
+    yield* Effect.logInfo("Starting URL Submission Process");
 
-    logger.stats("Website URL", INDEXING_HOST);
-    logger.stats("Host URL", INDEXING_HOSTNAME);
-    logger.stats("IndexNow key file location", INDEXNOW_KEY_LOCATION);
+    yield* Effect.logInfo(`Website URL: ${INDEXING_HOST}`);
+    yield* Effect.logInfo(`Host URL: ${INDEXING_HOSTNAME}`);
+    yield* Effect.logInfo(
+      `IndexNow key file location: ${INDEXNOW_KEY_LOCATION}`
+    );
 
     yield* ensureSubmissionHistoryFolder();
     let history = yield* loadSubmissionHistory();
@@ -51,10 +52,10 @@ export const runIndexNow = Effect.fn("scripts.indexing.indexNow.run")(
       })
     );
 
-    logManifestSummary("IndexNow", indexNowSummary);
+    yield* logManifestSummary("IndexNow", indexNowSummary);
     yield* runBingSubmission(history);
 
-    logger.header("Submission Process Completed");
+    yield* Effect.logInfo("Submission Process Completed");
   }
 );
 
@@ -70,7 +71,7 @@ const runIndexNowSubmission = Effect.fn(
   history: SubmissionHistory;
   urls: readonly string[];
 }) {
-  logger.header("IndexNow Submission");
+  yield* Effect.logInfo("IndexNow Submission");
 
   const unsubmittedUrls = listUnsubmittedUrls({
     history,
@@ -78,17 +79,15 @@ const runIndexNowSubmission = Effect.fn(
     urls,
   });
 
-  logger.stats(
-    "Previously submitted URLs to IndexNow",
-    Rec.keys(history.indexNow).length
+  yield* Effect.logInfo(
+    `Previously submitted URLs to IndexNow: ${Rec.keys(history.indexNow).length}`
   );
-  logger.stats(
-    `New URLs to submit to IndexNow in batch ${batchIndex}`,
-    unsubmittedUrls.length
+  yield* Effect.logInfo(
+    `New URLs to submit to IndexNow in batch ${batchIndex}: ${unsubmittedUrls.length}`
   );
 
   if (unsubmittedUrls.length === 0) {
-    logger.info(
+    yield* Effect.logInfo(
       "No new URLs to submit to IndexNow. All canonical URLs have been previously submitted."
     );
     return history;
@@ -109,7 +108,7 @@ const runIndexNowSubmission = Effect.fn(
     urls: successfulUrls,
   });
   yield* saveSubmissionHistory(updatedHistory);
-  logger.success(
+  yield* Effect.logInfo(
     `Submission history updated for IndexNow with ${successfulUrls.length} successfully submitted URLs.`
   );
 
@@ -119,15 +118,15 @@ const runIndexNowSubmission = Effect.fn(
 /** Submits canonical URLs to Bing when the optional Webmaster API key exists. */
 const runBingSubmission = Effect.fn("scripts.indexing.indexNow.runBing")(
   function* (history: SubmissionHistory) {
-    logger.header("Bing URL Submission API");
+    yield* Effect.logInfo("Bing URL Submission API");
 
     const apiKey = yield* readBingWebmasterApiKey();
 
     if (apiKey === undefined) {
-      logger.warn(
+      yield* Effect.logWarning(
         "Bing Webmaster API key not configured. Skipping Bing URL Submission."
       );
-      logger.info(
+      yield* Effect.logInfo(
         "To enable Bing URL Submission, add BING_WEBMASTER_API_KEY to the local environment."
       );
       return;
@@ -145,7 +144,7 @@ const runBingSubmission = Effect.fn("scripts.indexing.indexNow.runBing")(
       })
     );
 
-    logManifestSummary("Bing", summary);
+    yield* logManifestSummary("Bing", summary);
   }
 );
 
@@ -168,17 +167,15 @@ const submitBingBatch = Effect.fn("scripts.indexing.indexNow.runBingBatch")(
       urls,
     });
 
-    logger.stats(
-      "Previously submitted URLs to Bing",
-      Rec.keys(history.bing).length
+    yield* Effect.logInfo(
+      `Previously submitted URLs to Bing: ${Rec.keys(history.bing).length}`
     );
-    logger.stats(
-      `New URLs to submit to Bing in batch ${batchIndex}`,
-      unsubmittedUrls.length
+    yield* Effect.logInfo(
+      `New URLs to submit to Bing in batch ${batchIndex}: ${unsubmittedUrls.length}`
     );
 
     if (unsubmittedUrls.length === 0) {
-      logger.info(
+      yield* Effect.logInfo(
         "No new URLs to submit to Bing. All canonical URLs have been previously submitted."
       );
       return history;
@@ -196,7 +193,7 @@ const submitBingBatch = Effect.fn("scripts.indexing.indexNow.runBingBatch")(
       urls: successfulUrls,
     });
     yield* saveSubmissionHistory(updatedHistory);
-    logger.success(
+    yield* Effect.logInfo(
       `Submission history updated for Bing with ${successfulUrls.length} successfully submitted URLs.`
     );
 
@@ -209,9 +206,13 @@ function logManifestSummary(
   service: string,
   summary: SiteIndexManifestSummary
 ) {
-  logger.stats(`${service} sitemap batches processed`, summary.batchCount);
-  logger.stats(
-    `${service} canonical URLs inspected`,
-    summary.canonicalUrlCount
+  return Effect.logInfo(
+    `${service} sitemap batches processed: ${summary.batchCount}`
+  ).pipe(
+    Effect.andThen(
+      Effect.logInfo(
+        `${service} canonical URLs inspected: ${summary.canonicalUrlCount}`
+      )
+    )
   );
 }
