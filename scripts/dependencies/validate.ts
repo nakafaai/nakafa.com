@@ -170,7 +170,7 @@ export function validateDependencyPolicy({
 
   const expectedIgnores = [
     ...new Set([
-      ...DEPENDENCY_HOLDS.map(({ dependency }) => dependency),
+      ...Arr.map(DEPENDENCY_HOLDS, ({ dependency }) => dependency),
       "node",
       "pnpm",
     ]),

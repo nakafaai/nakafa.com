@@ -170,7 +170,7 @@ async function runDrainPage(target: TestConvex<typeof schema>) {
 async function readDrainState(target: TestConvex<typeof schema>) {
   return await target.query(async (ctx) => {
     const rankings = await Promise.all(
-      learningPopularityWindowValues.map(async (windowKey) => {
+      Arr.map(learningPopularityWindowValues, async (windowKey) => {
         const page = await learningPopularityRankings.paginate(ctx, {
           namespace: ["material", "en", "global", windowKey],
           order: "asc",

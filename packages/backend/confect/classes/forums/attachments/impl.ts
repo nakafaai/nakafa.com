@@ -36,13 +36,14 @@ function hasAllowedForumAttachmentMimeType(mimeType: string) {
   if (mimeType.startsWith("image/")) {
     return true;
   }
-  return FORUM_ATTACHMENT_ALLOWED_MIME_TYPES.some(
+  return Arr.some(
+    FORUM_ATTACHMENT_ALLOWED_MIME_TYPES,
     (allowedMimeType) => allowedMimeType === mimeType
   );
 }
 function hasAllowedForumAttachmentExtension(fileName: string) {
   const normalizedFileName = fileName.trim().toLowerCase();
-  return FORUM_ATTACHMENT_ALLOWED_EXTENSIONS.some((extension) =>
+  return Arr.some(FORUM_ATTACHMENT_ALLOWED_EXTENSIONS, (extension) =>
     normalizedFileName.endsWith(extension)
   );
 }

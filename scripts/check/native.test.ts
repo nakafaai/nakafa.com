@@ -45,6 +45,39 @@ run();
     })
   );
 
+  it.effect(
+    "reports array methods on values imported from repository modules",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { Chunk } from "some-package";
+import { rows, other as renamed } from "#scripts/data";
+import list from "./list";
+import * as space from "./space";
+import type { Shape } from "@repo/backend/shape";
+import "./setup";
+rows.map(String);
+renamed.filter(Boolean);
+list.find(Boolean);
+space.map(String);
+Chunk.map(String);
+function local(rows: Shape) {
+  return rows.map(String);
+}
+`,
+            SCRIPT
+          ),
+          [
+            "7 array-method",
+            "8 array-method",
+            "9 array-search",
+            "13 array-method",
+          ]
+        );
+      })
+  );
+
   it.effect("reports raw failure handling and typeof-object narrowing", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

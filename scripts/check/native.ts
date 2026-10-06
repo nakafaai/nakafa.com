@@ -4,7 +4,10 @@ import {
   isCallExpression,
   isElementAccessExpression,
   isIdentifier,
+  isImportDeclaration,
+  isNamedImports,
   isPropertyAccessExpression,
+  isStringLiteral,
   isStringLiteralLikeNode,
   isTryStatement,
   isTypeOfExpression,
@@ -37,6 +40,14 @@ const SEARCH_METHODS = HashSet.make(
 );
 /** Receivers that are not module imports, so an array method transforms a value. */
 const VALUE_BINDINGS: readonly (typeof Binding.Type)[] = ["global", "local"];
+/** Every binding, for a receiver that a repository module exports as a value. */
+const ANY_BINDING: readonly (typeof Binding.Type)[] = [
+  "global",
+  "import",
+  "local",
+];
+/** Relative paths, app and script aliases, and workspace packages name repository modules. */
+const REPOSITORY_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;
 
 const EQUALITY_OPERATORS = HashSet.make(
   SyntaxKind.EqualsEqualsEqualsToken,
@@ -94,6 +105,34 @@ function arrayCall(node: Node) {
     : undefined;
 }
 
+/**
+ * Whether a module imports `name` as a value from a repository module, by a
+ * default or a named import. Such an import is a value like any local one,
+ * while a namespace import or a package import may be a module of functions,
+ * such as `Arr` from `effect`.
+ */
+function importsRepositoryValue(sourceFile: SourceFile, name: string) {
+  return Arr.some(sourceFile.statements, (statement) => {
+    if (
+      !(
+        isImportDeclaration(statement) &&
+        isStringLiteral(statement.moduleSpecifier) &&
+        REPOSITORY_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
+      )
+    ) {
+      return false;
+    }
+    const clause = statement.importClause;
+    const bindings = clause?.namedBindings;
+    return (
+      clause?.name?.text === name ||
+      (bindings !== undefined &&
+        isNamedImports(bindings) &&
+        Arr.some(bindings.elements, (element) => element.name.text === name))
+    );
+  });
+}
+
 /** Whether a node compares a typeof result against the object tag. */
 function isTypeofObjectComparison(node: Node) {
   if (
@@ -121,7 +160,15 @@ function syntaxCandidates(sourceFile: SourceFile, node: Node) {
   if (call !== undefined) {
     return [
       isIdentifier(call.receiver)
-        ? candidate(call.rule, sourceFile, node, call.receiver, VALUE_BINDINGS)
+        ? candidate(
+            call.rule,
+            sourceFile,
+            node,
+            call.receiver,
+            importsRepositoryValue(sourceFile, call.receiver.text)
+              ? ANY_BINDING
+              : VALUE_BINDINGS
+          )
         : candidate(call.rule, sourceFile, node),
     ];
   }

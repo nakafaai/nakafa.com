@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
@@ -29,8 +29,11 @@ type Manifest = PolicyInput["manifests"][number]["manifest"];
 
 /** Returns the reviewed spec of one exact hold. */
 function approvedSpec(dependency: string) {
-  const hold = DEPENDENCY_HOLDS.find(
-    (candidate) => candidate.dependency === dependency
+  const hold = Option.getOrUndefined(
+    Arr.findFirst(
+      DEPENDENCY_HOLDS,
+      (candidate) => candidate.dependency === dependency
+    )
   );
   return hold !== undefined && "approved" in hold ? hold.approved : "";
 }
@@ -41,7 +44,7 @@ function validInput(): PolicyInput {
     manifest: {
       dependencies: Rec.fromEntries(
         Arr.map(
-          DEPENDENCY_HOLDS.filter((hold) =>
+          Arr.filter(DEPENDENCY_HOLDS, (hold) =>
             "declarationPaths" in hold
               ? hold.declarationPaths.includes(path)
               : index === 0
@@ -64,7 +67,7 @@ function validInput(): PolicyInput {
   }));
   const ignoreDeps = [
     ...new Set([
-      ...DEPENDENCY_HOLDS.map(({ dependency }) => dependency),
+      ...Arr.map(DEPENDENCY_HOLDS, ({ dependency }) => dependency),
       "node",
       "pnpm",
     ]),
@@ -297,7 +300,7 @@ describe("dependency policy validation", () => {
       }),
       problem: `The Effect Vitest catalog must match Effect ${EFFECT_COHORT_VERSION}.`,
     },
-    ...EFFECT_COHORT_OVERRIDES.map((dependency) => ({
+    ...Arr.map(EFFECT_COHORT_OVERRIDES, (dependency) => ({
       name: `a ${dependency} override drift`,
       change: (input: PolicyInput) => ({
         ...input,

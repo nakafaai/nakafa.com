@@ -35,15 +35,18 @@ function reviewedDependencies(args: readonly string[]): CommandResult {
     return { exitCode: 0, stderr: "", stdout: "" };
   }
   assert.strictEqual(args[0], "view");
-  const review = REGISTRY_REVIEWS.find(([registry]) => registry === args[1]);
+  const review = Option.getOrUndefined(
+    Arr.findFirst(REGISTRY_REVIEWS, ([registry]) => registry === args[1])
+  );
   assert.isDefined(review);
   return { exitCode: 0, stderr: "", stdout: JSON.stringify(review[1]) };
 }
 
 /** Returns the release tag last reviewed for one action. */
 function reviewedTag(action: string) {
-  return GITHUB_ACTION_REVIEWS.find((review) => review.action === action)
-    ?.expectedTag;
+  return Option.getOrUndefined(
+    Arr.findFirst(GITHUB_ACTION_REVIEWS, (review) => review.action === action)
+  )?.expectedTag;
 }
 
 function reviewedRelease(review: GithubActionReleaseReview) {
@@ -172,8 +175,11 @@ describe("dependency updates", () => {
 
   it.effect("reports registry failures and unresolved updates together", () =>
     Effect.gen(function* () {
-      const sharedPlatformReview = REGISTRY_REVIEWS.find(
-        ([registry]) => registry === "@effect/platform-node-shared@latest"
+      const sharedPlatformReview = Option.getOrUndefined(
+        Arr.findFirst(
+          REGISTRY_REVIEWS,
+          ([registry]) => registry === "@effect/platform-node-shared@latest"
+        )
       );
       assert.isDefined(sharedPlatformReview);
       const result = yield* runScenario({
