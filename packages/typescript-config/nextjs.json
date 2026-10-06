@@ -11,6 +11,10 @@
         "diagnosticSeverity": {
           "experimentalApiUsage": "off",
           "extendsNativeError": "error",
+          "globalConsole": "error",
+          "globalConsoleInEffect": "error",
+          "globalRandom": "error",
+          "globalRandomInEffect": "error",
           "instanceOfSchema": "error",
           "preferSchemaTypeProperty": "error",
           "unstableApiUsage": "off"

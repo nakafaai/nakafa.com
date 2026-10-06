@@ -100,6 +100,7 @@ describe("test ownership policy", () => {
         "apps/web/style.test.ts":
           'import { it } from "@effect/vitest";\nit("keeps size-[4px]", () => {});\n',
         "apps/web/style.ts": 'export const style = "w-[calc(100%-2rem)]";\n',
+        "apps/web/tsconfig.json": '{"extends":"shared"}\n',
         "apps/web/value.test.ts": CLEAN_TEST,
         "apps/web/value.ts": "export const value = 1;\n",
         "packages/core/_generated/api.ts":
@@ -137,6 +138,8 @@ describe("test ownership policy", () => {
         "scripts/raw.ts":
           "export function read() {\n  try {\n    return 1;\n  } catch {\n    return 0;\n  }\n}\n",
         "apps/web/store.ts": "export const store = Object.keys(value);\n",
+        "apps/web/tsconfig.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
       });
 
       assert.deepStrictEqual(yield* checkFixture(root), {
@@ -147,6 +150,7 @@ describe("test ownership policy", () => {
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
           "packages/core/runner.test.ts: return the Effect to @effect/vitest instead of running it.\n",
           `apps/web/store.ts:1: ${RULES["object-helper"].message} (object-helper)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
+          "apps/web/tsconfig.json: remove the @effect/language-service block and inherit it from the shared configuration, because a plugins array replaces the one it extends.\n",
           "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
         stdout: [],

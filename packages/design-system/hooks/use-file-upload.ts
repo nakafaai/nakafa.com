@@ -14,10 +14,6 @@ import {
   useState,
 } from "react";
 
-const BASE36_RADIX = 36;
-const RANDOM_STRING_START = 2;
-const RANDOM_STRING_END = 9;
-
 /** Describes a file that is already stored outside the browser. */
 export interface FileMetadata {
   id: string;
@@ -102,6 +98,7 @@ export const useFileUpload = (
   const inputRef = useRef<HTMLInputElement>(null);
   const filesRef = useRef(state.files);
   const objectUrlsRef = useRef(new Set<string>());
+  const pickedCountRef = useRef(0);
 
   /** Keeps imperative file actions aligned with the next rendered file list. */
   const updateFiles = useCallback(
@@ -162,7 +159,9 @@ export const useFileUpload = (
 
   const generateUniqueId = useCallback((file: File | FileMetadata): string => {
     if (file instanceof File) {
-      return `${file.name}-${Date.now()}-${Math.random().toString(BASE36_RADIX).slice(RANDOM_STRING_START, RANDOM_STRING_END)}`;
+      // Picked files only need an id that is unique within this hook.
+      pickedCountRef.current += 1;
+      return `${file.name}-${pickedCountRef.current}`;
     }
     return file.id;
   }, []);

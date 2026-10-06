@@ -15,15 +15,17 @@
 // Environment variables loaded via Node.js --env-file flag.
 import { Effect } from "effect";
 import { runGoogleIndexing } from "@/scripts/indexing/google/run";
-import { logger } from "@/scripts/utils";
 
 Effect.runPromise(
   runGoogleIndexing().pipe(
     Effect.catch((error) =>
-      Effect.sync(() => {
-        logger.error(`Error running Google indexing script: ${error}`);
-        process.exitCode = 1;
-      })
+      Effect.logError(`Error running Google indexing script: ${error}`).pipe(
+        Effect.andThen(
+          Effect.sync(() => {
+            process.exitCode = 1;
+          })
+        )
+      )
     )
   )
 );

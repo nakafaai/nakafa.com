@@ -40,6 +40,7 @@ curl \
   --connect-timeout 10 \
   --fail \
   --location \
+  --max-filesize 134217728 \
   --max-time 120 \
   --output "${osv_binary}" \
   --proto '=https' \

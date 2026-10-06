@@ -16,7 +16,6 @@ import {
   type SiteIndexManifestSummary,
 } from "@/scripts/indexing/manifest";
 import { INDEXING_HOST } from "@/scripts/indexing/paths";
-import { logger } from "@/scripts/utils";
 
 const RATE_LIMIT_DELAY = 1000;
 const PERCENTAGE_MULTIPLIER = 100;
@@ -32,9 +31,7 @@ const SUCCESS_RATE_THRESHOLD = 50;
  */
 export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
   function* () {
-    yield* Effect.sync(() => {
-      logger.header("Starting Google Indexing API Eligibility Check");
-    });
+    yield* Effect.logInfo("Starting Google Indexing API Eligibility Check");
 
     let accessToken: string | undefined;
     let history: SubmissionHistory | undefined;
@@ -59,13 +56,11 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
           urls: eligibleUrls,
         });
 
-        logger.stats(
-          "Previously submitted eligible URLs to Google",
-          Rec.keys(history.googleIndexingApi).length
+        yield* Effect.logInfo(
+          `Previously submitted eligible URLs to Google: ${Rec.keys(history.googleIndexingApi).length}`
         );
-        logger.stats(
-          `New eligible URLs to submit to Google in batch ${batch.batchIndex}`,
-          urls.length
+        yield* Effect.logInfo(
+          `New eligible URLs to submit to Google in batch ${batch.batchIndex}: ${urls.length}`
         );
 
         if (urls.length === 0) {
@@ -74,9 +69,11 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
 
         if (!accessToken) {
           accessToken = yield* getGoogleAccessToken();
-          logger.stats("Google service account", "Authenticated successfully");
-          logger.stats("Website URL", INDEXING_HOST);
-          logger.stats("Rate limit delay", `${RATE_LIMIT_DELAY}ms`);
+          yield* Effect.logInfo(
+            "Google service account: Authenticated successfully"
+          );
+          yield* Effect.logInfo(`Website URL: ${INDEXING_HOST}`);
+          yield* Effect.logInfo(`Rate limit delay: ${RATE_LIMIT_DELAY}ms`);
         }
 
         queuedCount += urls.length;
@@ -100,24 +97,24 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
       })
     );
 
-    logManifestSummary(summary);
+    yield* logManifestSummary(summary);
 
     if (!history) {
-      logger.info(
+      yield* Effect.logInfo(
         "No Google Indexing API eligible URLs were found in current sitemap pages."
       );
-      logger.info(
+      yield* Effect.logInfo(
         "This does not reduce Google discoverability: Nakafa's general public pages remain discoverable through sitemap.xml, sitemap shards, robots.txt, canonical metadata, and Search Console."
       );
-      logger.header("Google Indexing API Eligibility Check Completed");
+      yield* Effect.logInfo("Google Indexing API Eligibility Check Completed");
       return;
     }
 
     if (queuedCount === 0) {
-      logger.info(
+      yield* Effect.logInfo(
         "All Google Indexing API eligible URLs were already submitted."
       );
-      logger.header("Google Indexing API Eligibility Check Completed");
+      yield* Effect.logInfo("Google Indexing API Eligibility Check Completed");
       return;
     }
 
@@ -125,16 +122,18 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
       (successfullySubmittedCount / queuedCount) * PERCENTAGE_MULTIPLIER
     );
 
-    logger.info("Final Google Indexing API results:");
-    logger.info(`Total eligible URLs queued: ${queuedCount}`);
-    logger.info(`Successfully submitted: ${successfullySubmittedCount}`);
-    logger.info(
+    yield* Effect.logInfo("Final Google Indexing API results:");
+    yield* Effect.logInfo(`Total eligible URLs queued: ${queuedCount}`);
+    yield* Effect.logInfo(
+      `Successfully submitted: ${successfullySubmittedCount}`
+    );
+    yield* Effect.logInfo(
       `Rejected or skipped: ${queuedCount - successfullySubmittedCount}`
     );
-    logger.info(`Success rate: ${successRate}%`);
+    yield* Effect.logInfo(`Success rate: ${successRate}%`);
 
     if (successRate < SUCCESS_RATE_THRESHOLD) {
-      logger.warn(
+      yield* Effect.logWarning(
         "Low success rate indicates Google API rate limiting or errors."
       );
     }
@@ -146,12 +145,19 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
       });
     }
 
-    logger.header("Google Indexing API Submission Process Completed");
+    yield* Effect.logInfo("Google Indexing API Submission Process Completed");
   }
 );
 
 /** Reports sitemap coverage processed before Google API eligibility checks. */
 function logManifestSummary(summary: SiteIndexManifestSummary) {
-  logger.stats("Google sitemap batches processed", summary.batchCount);
-  logger.stats("Google canonical URLs inspected", summary.canonicalUrlCount);
+  return Effect.logInfo(
+    `Google sitemap batches processed: ${summary.batchCount}`
+  ).pipe(
+    Effect.andThen(
+      Effect.logInfo(
+        `Google canonical URLs inspected: ${summary.canonicalUrlCount}`
+      )
+    )
+  );
 }
