@@ -219,6 +219,10 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
         yield* Effect.promise(() =>
           expect(page).toHaveURL(new URL(intent, page.url()).toString())
         );
+        // The middle click opened the auth page in a background tab. Its
+        // animated shader competes for a small runner's CPU and delays this
+        // page's hydration past the assertion timeout, so the tab closes first.
+        yield* Effect.promise(() => nativeResponse.frame().page().close());
 
         yield* Effect.promise(() =>
           page.reload({ waitUntil: "domcontentloaded" })
