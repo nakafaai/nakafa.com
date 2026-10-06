@@ -121,9 +121,11 @@ describe("sitemap entries", () => {
       expect(
         entries.every(
           (entry) =>
-            entry.changeFrequency === undefined &&
-            entry.priority === undefined &&
-            entry.alternates === undefined
+            !(
+              "changeFrequency" in entry ||
+              "priority" in entry ||
+              "alternates" in entry
+            )
         )
       ).toBe(true);
     })
@@ -215,9 +217,7 @@ describe("sitemap entries", () => {
         "https://nakafa.com/id/search",
         "https://nakafa.com/de/search",
       ]);
-      expect(entries.every((entry) => entry.alternates === undefined)).toBe(
-        true
-      );
+      expect(entries.every((entry) => !("alternates" in entry))).toBe(true);
     })
   );
 
@@ -326,13 +326,13 @@ describe("sitemap entries", () => {
     expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
   });
 
-  it("normalizes cached dates to serializable strings", async () => {
+  it("caches a route's modification date as the text the route carries", async () => {
     mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
     mockReadSitemapRoutePage.mockReturnValueOnce(
       Effect.succeed({
         routes: [
           {
-            lastModified: new Date("2024-01-02T00:00:00.000Z"),
+            lastModified: "2024-01-02T00:00:00.000Z",
             path: "/search",
           },
         ],
@@ -346,6 +346,22 @@ describe("sitemap entries", () => {
       lastModified: "2024-01-02T00:00:00.000Z",
       url: "https://nakafa.com/en/search",
     });
+  });
+
+  it("fails the read when a route's date is not text, instead of caching it", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+    mockReadSitemapRoutePage.mockReturnValueOnce(
+      Effect.succeed({
+        routes: [
+          {
+            lastModified: new Date("2024-01-02T00:00:00.000Z"),
+            path: "/search",
+          },
+        ],
+      })
+    );
+
+    await expect(getCachedSitemapEntries({ pageId: "base" })).rejects.toThrow();
   });
 
   it("returns a missing page as data, because the cache boundary drops the error's class", async () => {
