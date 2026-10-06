@@ -178,7 +178,7 @@ export function validateDependencyPolicy({
   }
 
   problems.push(...cohortProblems(workspace));
-  if (rootManifest.packageManager !== "pnpm@11.27.0") {
+  if (rootManifest.packageManager !== "pnpm@11.28.2") {
     problems.push("packageManager must be pnpm@11.27.0.");
   }
   if (rootManifest.devEngines?.runtime?.version !== "24.21.0") {

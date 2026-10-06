@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@vitejs/plugin-react": "^6.1.1",
+    "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-istanbul": "catalog:",
     "vitest": "catalog:"
   }

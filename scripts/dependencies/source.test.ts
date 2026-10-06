@@ -41,12 +41,12 @@ describe("dependency policy sources", () => {
       const root = yield* makeRepository({
         "apps/README.md": "Workspace notes.\n",
         "apps/web/package.json": '{ "dependencies": { "next": "16.3.6" } }',
-        "package.json": '{ "packageManager": "pnpm@11.27.0" }',
+        "package.json": '{ "packageManager": "pnpm@11.28.2" }',
         "packages/core/package.json": '{ "scripts": { "test": "vitest" } }',
       });
 
       assert.deepStrictEqual(yield* readFirstPartyManifests(root), [
-        { manifest: { packageManager: "pnpm@11.27.0" }, path: "package.json" },
+        { manifest: { packageManager: "pnpm@11.28.2" }, path: "package.json" },
         {
           manifest: { dependencies: { next: "16.3.6" } },
           path: "apps/web/package.json",
