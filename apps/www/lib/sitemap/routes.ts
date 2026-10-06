@@ -87,12 +87,13 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     }
 
     if (isTryoutSitemapPage(page)) {
+      const { missing } = yield* pinSitemapRelease(pageId, page.locale);
       const artifact = yield* readPublishedTryoutSitemap(
         page.locale,
         page.page
       );
       if (!artifact) {
-        return yield* new SitemapPageNotFoundError({ pageId });
+        return yield* missing;
       }
       return {
         routes: artifact.paths
@@ -102,12 +103,13 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     }
 
     if (isPageSitemapPage(page)) {
+      const { missing } = yield* pinSitemapRelease(pageId, page.locale);
       const catalog = yield* readPublishedPageCatalog();
       const projections = catalog.projections.filter(
         (projection) => projection.appLocale === page.locale
       );
       if (projections.length === 0) {
-        return yield* new SitemapPageNotFoundError({ pageId });
+        return yield* missing;
       }
       const routes = projections.map((projection) => ({
         lastModified:
@@ -153,6 +155,37 @@ function mapFamilyRoute(route: {
   };
 }
 
+/**
+ * Pins the active release for one sitemap page read.
+ *
+ * `verify` fails once another release is active. `missing` reports the page as
+ * missing only while the pinned release is still the active one: a missing
+ * page is cached behind the long origin-cache lifetime, so a page the landing
+ * publication just added must fail the read instead of being cached as
+ * missing.
+ */
+const pinSitemapRelease = Effect.fn("www.sitemap.routePage.pin")(function* (
+  pageId: string,
+  locale: Locale
+) {
+  const identity = {
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath: `sitemap/${pageId}.xml`,
+  };
+  const active = yield* readActiveContentIdentity();
+  if (!active) {
+    return yield* new PublishedProjectionError(identity);
+  }
+  const verify = verifyContentReleasePin(active.releaseId, identity);
+  return {
+    identity,
+    missing: verify.pipe(
+      Effect.andThen(new SitemapPageNotFoundError({ pageId }))
+    ),
+    verify,
+  };
+});
+
 /** Reads one capacity-owned family partition across its bucket group.
  *
  * Pins the active release before the fan-out and re-verifies it after, so a
@@ -165,19 +198,14 @@ const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
     locale: Locale,
     partition: number
   ) {
-    const identity = {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath: `sitemap/${pageId}.xml`,
-    };
-    const active = yield* readActiveContentIdentity();
-    if (!active) {
-      return yield* new PublishedProjectionError(identity);
-    }
-    const activeReleaseId = active.releaseId;
+    const { identity, missing, verify } = yield* pinSitemapRelease(
+      pageId,
+      locale
+    );
     const inventory = yield* familyBucketInventories[family](locale);
     const buckets = selectSitemapPartition(inventory.buckets, partition);
     if (buckets.length === 0) {
-      return yield* new SitemapPageNotFoundError({ pageId });
+      return yield* missing;
     }
     const pages =
       family === "material"
@@ -199,9 +227,9 @@ const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
       .flat()
       .sort((left, right) => compareSitemapPaths(left.path, right.path));
     if (routes.length === 0) {
-      return yield* new SitemapPageNotFoundError({ pageId });
+      return yield* missing;
     }
-    yield* verifyContentReleasePin(activeReleaseId, identity);
+    yield* verify;
     return { routes };
   }
 );

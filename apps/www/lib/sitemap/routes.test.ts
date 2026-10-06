@@ -352,6 +352,58 @@ describe("sitemap route pages", () => {
     })
   );
 
+  it.effect(
+    "rejects a missing partition read across publication releases, so a just published partition is never cached as missing",
+    () =>
+      Effect.gen(function* () {
+        activeMocks.readActiveContentIdentity
+          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-before" }))
+          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-after" }));
+
+        expect(yield* readFailure("material_en_p7")).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-after",
+          expectedReleaseId: "release-before",
+        });
+
+        materialMocks.readPublishedMaterialBuckets.mockReturnValue(
+          Effect.succeed({
+            activeReleaseId: "release-materials",
+            buckets: ["001"],
+            materialCount: 1,
+          })
+        );
+        materialMocks.readPublishedMaterialSitemap.mockReturnValue(
+          Effect.succeed({ routes: [] })
+        );
+        activeMocks.readActiveContentIdentity
+          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-before" }))
+          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-after" }));
+
+        expect(yield* readFailure("material_en_p0")).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-after",
+          expectedReleaseId: "release-before",
+        });
+      })
+  );
+
+  it.effect.each(["tryout_en_0", "page_en"])(
+    "rejects a missing %s read across publication releases",
+    (pageId) =>
+      Effect.gen(function* () {
+        activeMocks.readActiveContentIdentity
+          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-before" }))
+          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-after" }));
+
+        expect(yield* readFailure(pageId)).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-after",
+          expectedReleaseId: "release-before",
+        });
+      })
+  );
+
   it.effect("rejects partitions without an active publication", () =>
     Effect.gen(function* () {
       activeMocks.readActiveContentIdentity.mockReturnValue(
