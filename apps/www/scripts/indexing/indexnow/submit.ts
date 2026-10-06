@@ -4,7 +4,6 @@ import {
   INDEXING_HOSTNAME,
   INDEXNOW_KEY_LOCATION,
 } from "@/scripts/indexing/paths";
-import { logger } from "@/scripts/utils";
 
 const BATCH_SIZE = 100;
 const RATE_LIMIT_DELAY = 1000;
@@ -32,14 +31,14 @@ export const submitUrlsToIndexNow = Effect.fn(
   "scripts.indexing.indexNow.submitUrls"
 )(function* (urls: readonly string[], key: string) {
   if (urls.length === 0) {
-    logger.info("No new URLs to submit to IndexNow.");
+    yield* Effect.logInfo("No new URLs to submit to IndexNow.");
     return [];
   }
 
   const batches = chunkIndexNowUrls(urls);
   const successfullySubmitted: string[] = [];
 
-  logger.info(`Submitting ${urls.length} URLs to IndexNow...`);
+  yield* Effect.logInfo(`Submitting ${urls.length} URLs to IndexNow...`);
 
   for (const [index, batch] of batches.entries()) {
     const batchResult = yield* submitBatchToIndexNow({
@@ -55,7 +54,7 @@ export const submitUrlsToIndexNow = Effect.fn(
     }
   }
 
-  logger.info(
+  yield* Effect.logInfo(
     `IndexNow submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} URLs.`
   );
 
@@ -76,10 +75,8 @@ const submitBatchToIndexNow = Effect.fn(
   key: string;
   totalBatches: number;
 }) {
-  logger.progress(
-    batchCount,
-    totalBatches,
-    `Submitting batch ${batchCount} of ${totalBatches}`
+  yield* Effect.logInfo(
+    `Submitting batch ${batchCount} of ${totalBatches}: ${batchCount}/${totalBatches} (${Math.round((batchCount / totalBatches) * 100)}%)`
   );
 
   const status = yield* Effect.tryPromise({
@@ -110,6 +107,6 @@ const submitBatchToIndexNow = Effect.fn(
     });
   }
 
-  logger.success(`Batch ${batchCount} completed (${batch.length} URLs)`);
+  yield* Effect.logInfo(`Batch ${batchCount} completed (${batch.length} URLs)`);
   return [...batch];
 });

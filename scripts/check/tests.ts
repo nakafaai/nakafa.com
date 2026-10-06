@@ -7,6 +7,10 @@ import {
   String as Str,
 } from "effect";
 import {
+  inspectCompilerConfigs,
+  isCompilerConfig,
+} from "#scripts/check/compiler";
+import {
   effectFindings,
   effectTestViolations,
   findingMessages,
@@ -59,7 +63,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
   );
 }, Effect.scoped);
 
-/** Validates test ownership, source policy, and repository layout. */
+/** Validates test ownership, source policy, compiler configuration, and repository layout. */
 export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   function* (root: string) {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -90,6 +94,25 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     const sourceViolations = yield* inspectSources(sources);
     const relative = (files: readonly string[]) =>
       Arr.map(files, (file) => path.relative(root, file));
+    // The policy reads repository paths, which use "/" on every platform. A
+    // configuration at the repository root counts like any workspace's own.
+    const rootEntries = yield* fileSystem.readDirectory(root);
+    const configs = yield* Effect.forEach(
+      Arr.filter(
+        Arr.appendAll(
+          Arr.map(relative(Arr.appendAll(workspaces, scripts)), (file) =>
+            Arr.join(Str.split(file, path.sep), "/")
+          ),
+          rootEntries
+        ),
+        isCompilerConfig
+      ),
+      (file) =>
+        Effect.map(
+          fileSystem.readFileString(path.join(root, file)),
+          (sourceText) => ({ file, sourceText })
+        )
+    );
     const reports = Arr.filter(
       [
         fileReport(
@@ -106,6 +129,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         ),
         lineReport(runnerViolations),
         lineReport(sourceViolations),
+        lineReport(inspectCompilerConfigs(configs)),
         lineReport(
           Arr.flatMap(sources, ({ file, sourceText }) =>
             inspectTailwindSource(file, sourceText)

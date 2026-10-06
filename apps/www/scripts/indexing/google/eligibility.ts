@@ -5,7 +5,6 @@ import {
 } from "@/scripts/indexing/errors";
 import { hasGoogleIndexingApiEligibleStructuredData } from "@/scripts/indexing/google/structured";
 import type { SiteIndexUrlBatch } from "@/scripts/indexing/manifest";
-import { logger } from "@/scripts/utils";
 
 const ELIGIBILITY_FETCH_CONCURRENCY = 8;
 const JSON_LD_SCRIPT_PATTERN =
@@ -17,14 +16,13 @@ const decodeStructuredDataJson = Schema.decodeUnknownEffect(
 export const getEligibleGoogleIndexingUrls = Effect.fn(
   "scripts.google.eligibility.list"
 )(function* (batch: SiteIndexUrlBatch) {
-  logger.stats(
-    `Canonical URLs in sitemap batch ${batch.batchIndex}`,
-    batch.urls.length
+  yield* Effect.logInfo(
+    `Canonical URLs in sitemap batch ${batch.batchIndex}: ${batch.urls.length}`
   );
-  logger.info(
+  yield* Effect.logInfo(
     "General Google discovery remains sitemap.xml, sitemap shards, robots.txt, canonical metadata, and Search Console."
   );
-  logger.info(
+  yield* Effect.logInfo(
     "Checking sitemap URLs for JobPosting or BroadcastEvent-in-VideoObject JSON-LD before using the Google Indexing API."
   );
   const maybeEligibleUrls = yield* Effect.forEach(
@@ -33,9 +31,8 @@ export const getEligibleGoogleIndexingUrls = Effect.fn(
     { concurrency: ELIGIBILITY_FETCH_CONCURRENCY }
   );
   const urls = maybeEligibleUrls.filter(Predicate.isString);
-  logger.stats(
-    `Google Indexing API eligible URLs in batch ${batch.batchIndex}`,
-    urls.length
+  yield* Effect.logInfo(
+    `Google Indexing API eligible URLs in batch ${batch.batchIndex}: ${urls.length}`
   );
   return urls;
 });

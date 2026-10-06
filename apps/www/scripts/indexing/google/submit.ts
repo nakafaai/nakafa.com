@@ -1,6 +1,5 @@
 import { Effect } from "effect";
 import { GoogleIndexSubmitError } from "@/scripts/indexing/errors";
-import { logger } from "@/scripts/utils";
 
 const RATE_LIMIT_DELAY = 1000;
 const MAX_BACKOFF_DELAY = 30_000;
@@ -19,13 +18,13 @@ const GOOGLE_PUBLISH_ENDPOINT =
 export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
   function* (urls: string[], accessToken: string) {
     if (urls.length === 0) {
-      return yield* Effect.sync(() => {
-        logger.info("No new eligible URLs to submit to Google Indexing API.");
-        return [];
-      });
+      yield* Effect.logInfo(
+        "No new eligible URLs to submit to Google Indexing API."
+      );
+      return [];
     }
 
-    logger.info(
+    yield* Effect.logInfo(
       `Submitting ${urls.length} Google Indexing API eligible URLs individually...`
     );
 
@@ -35,7 +34,9 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
 
     for (const [index, url] of urls.entries()) {
       if (shouldStop) {
-        logger.warn(`Stopping at URL ${index + 1} due to API errors.`);
+        yield* Effect.logWarning(
+          `Stopping at URL ${index + 1} due to API errors.`
+        );
         break;
       }
 
@@ -59,7 +60,9 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
           currentDelay * BACKOFF_MULTIPLIER,
           MAX_BACKOFF_DELAY
         );
-        logger.warn(`Increasing delay to ${currentDelay}ms due to failure.`);
+        yield* Effect.logWarning(
+          `Increasing delay to ${currentDelay}ms due to failure.`
+        );
       }
 
       if (index < urls.length - 1 && !shouldStop) {
@@ -67,7 +70,7 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
       }
     }
 
-    logger.info(
+    yield* Effect.logInfo(
       `Google Indexing API submission completed. Successfully submitted ${successfullySubmitted.length}/${urls.length} eligible URLs.`
     );
 
@@ -82,7 +85,9 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
   index: number,
   totalUrls: number
 ) {
-  logger.progress(index, totalUrls, `Submitting URL ${index} of ${totalUrls}`);
+  yield* Effect.logInfo(
+    `Submitting URL ${index} of ${totalUrls}: ${index}/${totalUrls} (${Math.round((index / totalUrls) * 100)}%)`
+  );
 
   const response = yield* Effect.tryPromise({
     try: () =>
@@ -108,19 +113,19 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
   if (status === HTTP_STATUS_CODE_OK) {
     // Reading the acknowledgement releases the connection for the next URL.
     yield* readSubmitResponse(response, url);
-    logger.info(`Successfully submitted ${url}`);
+    yield* Effect.logInfo(`Successfully submitted ${url}`);
     return { shouldStop: false, success: true };
   }
 
   const responseText = yield* readSubmitResponse(response, url);
 
-  logger.error(`Failed to submit ${url} - Status: ${status}`);
-  logger.error(
+  yield* Effect.logError(`Failed to submit ${url} - Status: ${status}`);
+  yield* Effect.logError(
     `Response: ${responseText.slice(0, LOG_RESPONSE_MAX_LENGTH)}...`
   );
 
   if (status === HTTP_STATUS_CODE_TOO_MANY_REQUESTS) {
-    logger.error("Rate limit exceeded. Stopping script.");
+    yield* Effect.logError("Rate limit exceeded. Stopping script.");
     return { shouldStop: true, success: false };
   }
 
@@ -128,7 +133,9 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
     status === HTTP_STATUS_CODE_UNAUTHORIZED ||
     status === HTTP_STATUS_CODE_FORBIDDEN
   ) {
-    logger.error("Authentication or permission error. Stopping script.");
+    yield* Effect.logError(
+      "Authentication or permission error. Stopping script."
+    );
     return { shouldStop: true, success: false };
   }
 
@@ -136,7 +143,7 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
     responseText.toLowerCase().includes("quota") ||
     responseText.toLowerCase().includes("limit exceeded")
   ) {
-    logger.error("API quota exceeded. Stopping script.");
+    yield* Effect.logError("API quota exceeded. Stopping script.");
     return { shouldStop: true, success: false };
   }
 

@@ -92,11 +92,15 @@ describe("test ownership policy", () => {
         "apps/web/style.test.ts":
           'import { it } from "@effect/vitest";\nit("keeps size-[4px]", () => {});\n',
         "apps/web/style.ts": 'export const style = "w-[calc(100%-2rem)]";\n',
+        "apps/web/tsconfig.json":
+          '{"extends":"@repo/typescript-config/base.json"}\n',
         "apps/web/value.test.ts": CLEAN_TEST,
         "apps/web/value.ts": "export const value = 1;\n",
         "packages/core/_generated/api.ts":
           "try {\n  run();\n} catch {\n  stop();\n}\n",
         "packages/core/node_modules/dependency/view.test.tsx": CLEAN_TEST,
+        "packages/typescript-config/base.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
         "packages/core/types.d.ts":
           'export declare const narrowed: typeof value === "object";\n',
         "scripts/tool.test.ts": CLEAN_TEST,
@@ -129,6 +133,9 @@ describe("test ownership policy", () => {
         "scripts/raw.ts":
           "export function read() {\n  try {\n    return 1;\n  } catch {\n    return 0;\n  }\n}\n",
         "apps/web/store.ts": "export const store = Object.keys(value);\n",
+        "apps/web/tsconfig.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
+        "tsconfig.json": '{"compilerOptions":{"plugins":[]}}\n',
       });
 
       assert.deepStrictEqual(yield* checkFixture(root), {
@@ -139,6 +146,7 @@ describe("test ownership policy", () => {
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
           "packages/core/runner.test.ts: return the Effect to @effect/vitest instead of running it.\n",
           `apps/web/store.ts:1: ${RULES["object-helper"].message} (object-helper)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
+          "apps/web/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\ntsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\n",
           "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
         stdout: [],

@@ -1,7 +1,7 @@
 "use client";
 
 import { selectFileBatch } from "@repo/design-system/lib/upload/selection";
-import { Effect, Result } from "effect";
+import { Array as Arr, Effect, HashSet, Result } from "effect";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import {
@@ -13,10 +13,6 @@ import {
   useRef,
   useState,
 } from "react";
-
-const BASE36_RADIX = 36;
-const RANDOM_STRING_START = 2;
-const RANDOM_STRING_END = 9;
 
 /** Describes a file that is already stored outside the browser. */
 export interface FileMetadata {
@@ -102,6 +98,7 @@ export const useFileUpload = (
   const inputRef = useRef<HTMLInputElement>(null);
   const filesRef = useRef(state.files);
   const objectUrlsRef = useRef(new Set<string>());
+  const pickedCountRef = useRef(0);
 
   /** Keeps imperative file actions aligned with the next rendered file list. */
   const updateFiles = useCallback(
@@ -161,10 +158,20 @@ export const useFileUpload = (
   }, []);
 
   const generateUniqueId = useCallback((file: File | FileMetadata): string => {
-    if (file instanceof File) {
-      return `${file.name}-${Date.now()}-${Math.random().toString(BASE36_RADIX).slice(RANDOM_STRING_START, RANDOM_STRING_END)}`;
+    if (!(file instanceof File)) {
+      return file.id;
     }
-    return file.id;
+    // A picked file needs an id no other file in this hook holds. The counter
+    // keeps picked files apart, and the loop skips an id a stored file brought.
+    const held = HashSet.fromIterable(
+      Arr.map(filesRef.current, (entry) => entry.id)
+    );
+    let id = "";
+    do {
+      pickedCountRef.current += 1;
+      id = `${file.name}-${pickedCountRef.current}`;
+    } while (HashSet.has(held, id));
+    return id;
   }, []);
 
   const clearFiles = useCallback(() => {

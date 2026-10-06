@@ -74,7 +74,7 @@
     "vitest": "catalog:",
     "yaml": "2.9.1"
   },
-  "packageManager": "pnpm@11.28.2",
+  "packageManager": "pnpm@11.28.4",
   "engines": {
     "node": ">=24.0.0 <25.0.0"
   },
