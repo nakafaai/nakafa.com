@@ -100,12 +100,15 @@ describe("test ownership policy", () => {
         "apps/web/style.test.ts":
           'import { it } from "@effect/vitest";\nit("keeps size-[4px]", () => {});\n',
         "apps/web/style.ts": 'export const style = "w-[calc(100%-2rem)]";\n',
-        "apps/web/tsconfig.json": '{"extends":"shared"}\n',
+        "apps/web/tsconfig.json":
+          '{"extends":"@repo/typescript-config/base.json"}\n',
         "apps/web/value.test.ts": CLEAN_TEST,
         "apps/web/value.ts": "export const value = 1;\n",
         "packages/core/_generated/api.ts":
           "try {\n  run();\n} catch {\n  stop();\n}\n",
         "packages/core/node_modules/dependency/view.test.tsx": CLEAN_TEST,
+        "packages/typescript-config/base.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
         "packages/core/types.d.ts":
           'export declare const narrowed: typeof value === "object";\n',
         "scripts/tool.test.ts": CLEAN_TEST,

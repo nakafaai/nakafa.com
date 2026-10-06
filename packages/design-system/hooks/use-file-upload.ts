@@ -1,7 +1,7 @@
 "use client";
 
 import { selectFileBatch } from "@repo/design-system/lib/upload/selection";
-import { Effect, Result } from "effect";
+import { Array as Arr, Effect, HashSet, Result } from "effect";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import {
@@ -163,12 +163,14 @@ export const useFileUpload = (
     }
     // A picked file needs an id no other file in this hook holds. The counter
     // keeps picked files apart, and the loop skips an id a stored file brought.
-    const held = new Set(filesRef.current.map((entry) => entry.id));
+    const held = HashSet.fromIterable(
+      Arr.map(filesRef.current, (entry) => entry.id)
+    );
     let id = "";
     do {
       pickedCountRef.current += 1;
       id = `${file.name}-${pickedCountRef.current}`;
-    } while (held.has(id));
+    } while (HashSet.has(held, id));
     return id;
   }, []);
 

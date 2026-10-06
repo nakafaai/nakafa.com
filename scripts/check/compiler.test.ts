@@ -6,21 +6,27 @@ import {
 } from "#scripts/check/compiler";
 
 const BASE = "packages/typescript-config/base.json";
+const LIBRARY = "packages/typescript-config/library.json";
 const NEXT = "packages/typescript-config/nextjs.json";
 const RULES = {
   diagnosticSeverity: { instanceOfSchema: "error" },
   name: "@effect/language-service",
 };
 
-/** Renders one compiler configuration with the given plugins and parent. */
+/** Renders one compiler configuration with the given parent and plugins. */
 function config(
-  plugins: readonly Readonly<Record<string, unknown>>[],
-  parent?: string
+  parent: unknown,
+  plugins?: readonly Readonly<Record<string, unknown>>[]
 ) {
   return JSON.stringify({
-    compilerOptions: { plugins },
+    ...(plugins === undefined ? {} : { compilerOptions: { plugins } }),
     ...(parent === undefined ? {} : { extends: parent }),
   });
+}
+
+/** Renders the report line for a configuration that reaches no Effect block. */
+function unreached(file: string) {
+  return `${file}: extend a shared configuration that declares the @effect/language-service block, by its @repo/typescript-config/ name or by a relative path, or declare the block in a shared configuration that extends nothing.`;
 }
 
 describe("compiler configuration policy", () => {
@@ -42,28 +48,36 @@ describe("compiler configuration policy", () => {
     );
   });
 
-  it("accepts shared configurations that carry the same rules", () => {
+  it("accepts configurations that reach the same shared rules", () => {
     assert.deepStrictEqual(
       inspectCompilerConfigs([
-        { file: "apps/www/tsconfig.json", sourceText: '{"extends":"next"}' },
-        { file: BASE, sourceText: config([RULES]) },
         {
-          file: "packages/typescript-config/library.json",
-          sourceText:
-            '{"compilerOptions":{"strict":true},"extends":"./base.json"}',
+          file: "apps/www/tsconfig.json",
+          sourceText: config("@repo/typescript-config/nextjs.json"),
         },
         {
+          file: "packages/backend/convex/tsconfig.json",
+          sourceText: config("../tsconfig.json"),
+        },
+        {
+          file: "packages/backend/tsconfig.json",
+          sourceText: config("../typescript-config/./library.json"),
+        },
+        { file: BASE, sourceText: config(undefined, [RULES]) },
+        { file: LIBRARY, sourceText: config("./base.json") },
+        {
           file: NEXT,
-          sourceText: config(
-            [
-              { name: "next" },
-              {
-                name: "@effect/language-service",
-                diagnosticSeverity: { instanceOfSchema: "error" },
-              },
-            ],
-            "./base.json"
-          ),
+          sourceText: config("./base.json", [
+            { name: "next" },
+            {
+              name: "@effect/language-service",
+              diagnosticSeverity: { instanceOfSchema: "error" },
+            },
+          ]),
+        },
+        {
+          file: "scripts/tsconfig.json",
+          sourceText: config("../packages/typescript-config/base.json"),
         },
       ]),
       []
@@ -73,13 +87,12 @@ describe("compiler configuration policy", () => {
   it("rejects a shared configuration whose rules differ", () => {
     assert.deepStrictEqual(
       inspectCompilerConfigs([
-        { file: BASE, sourceText: config([RULES]) },
+        { file: BASE, sourceText: config(undefined, [RULES]) },
         {
           file: NEXT,
-          sourceText: config(
-            [{ ...RULES, diagnosticSeverity: { instanceOfSchema: "off" } }],
-            "./base.json"
-          ),
+          sourceText: config("./base.json", [
+            { ...RULES, diagnosticSeverity: { instanceOfSchema: "off" } },
+          ]),
         },
       ]),
       [
@@ -88,14 +101,26 @@ describe("compiler configuration policy", () => {
     );
   });
 
-  it("rejects a shared configuration that drops the rules", () => {
+  it("rejects every configuration a dropped block leaves without rules", () => {
     assert.deepStrictEqual(
       inspectCompilerConfigs([
-        { file: BASE, sourceText: '{"compilerOptions":{"strict":true}}' },
-        { file: NEXT, sourceText: config([{ name: "next" }], "./base.json") },
+        {
+          file: "apps/api/tsconfig.json",
+          sourceText: config("@repo/typescript-config/library.json"),
+        },
+        {
+          file: "apps/www/tsconfig.json",
+          sourceText: config("@repo/typescript-config/nextjs.json"),
+        },
+        { file: BASE, sourceText: config(undefined) },
+        { file: LIBRARY, sourceText: config("./base.json") },
+        { file: NEXT, sourceText: config("./base.json", [{ name: "next" }]) },
       ]),
       [
-        `${BASE}: declare the @effect/language-service block, because it extends no configuration that provides one.`,
+        unreached("apps/api/tsconfig.json"),
+        unreached("apps/www/tsconfig.json"),
+        unreached(BASE),
+        unreached(LIBRARY),
         `${NEXT}: add the @effect/language-service block to its plugins array, because a plugins array replaces the one it extends.`,
       ]
     );
@@ -105,32 +130,62 @@ describe("compiler configuration policy", () => {
     assert.deepStrictEqual(
       inspectCompilerConfigs([
         {
-          file: "packages/design-system/tsconfig.json",
-          sourceText: config([RULES], "shared"),
-        },
-        {
           file: "apps/www/tsconfig.json",
-          sourceText: config([{ name: "next" }], "shared"),
+          sourceText: config("@repo/typescript-config/base.json", [
+            { name: "next" },
+          ]),
+        },
+        { file: BASE, sourceText: config(undefined, [RULES]) },
+        {
+          file: "packages/design-system/tsconfig.json",
+          sourceText: config("@repo/typescript-config/base.json", [RULES]),
         },
       ]),
       [
-        "packages/design-system/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.",
         "apps/www/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.",
+        "packages/design-system/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.",
       ]
     );
   });
 
-  it("rejects a configuration it cannot read", () => {
+  it("rejects a configuration it cannot read or follow", () => {
     assert.deepStrictEqual(
       inspectCompilerConfigs([
-        { file: BASE, sourceText: config([RULES]) },
+        { file: "apps/api/tsconfig.json", sourceText: config(undefined) },
+        {
+          file: "apps/cycle/tsconfig.json",
+          sourceText: config("./tsconfig.json"),
+        },
+        {
+          file: "apps/email/tsconfig.json",
+          sourceText: config(["@repo/typescript-config/base.json"]),
+        },
+        {
+          file: "apps/mcp/tsconfig.json",
+          sourceText: config("@tsconfig/node24/tsconfig.json"),
+        },
+        {
+          file: "apps/www/tsconfig.json",
+          sourceText: config("@repo/typescript-config/nextjs.json"),
+        },
+        { file: BASE, sourceText: config(undefined, [RULES]) },
         {
           file: NEXT,
           sourceText: '{ // Next.js\n  "extends": "./base.json",\n}',
         },
+        {
+          file: "packages/seo/tsconfig.json",
+          sourceText: config("@repo/typescript-config/missing.json"),
+        },
       ]),
       [
+        unreached("apps/api/tsconfig.json"),
+        unreached("apps/cycle/tsconfig.json"),
+        unreached("apps/email/tsconfig.json"),
+        unreached("apps/mcp/tsconfig.json"),
+        unreached("apps/www/tsconfig.json"),
         `${NEXT}: write this compiler configuration as plain JSON, without comments or trailing commas, so the check can read its plugins.`,
+        unreached("packages/seo/tsconfig.json"),
       ]
     );
   });
