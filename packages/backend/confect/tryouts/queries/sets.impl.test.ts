@@ -17,7 +17,7 @@ import {
   makeTryoutStartPlacement,
   TRYOUT_START_NOW,
 } from "@repo/backend/test/tryout/source";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 describe("tryouts/queries/sets", () => {
   it.effect("requires an active signed try-out publication", () =>
@@ -339,7 +339,9 @@ describe("tryouts/queries/sets", () => {
           const t = createConvexTestWithBetterAuth();
           const source = makeTryoutStartHierarchy("id", visibility);
           const durationSeconds = visibility === "visible" ? 11_700 : 4500;
-          const section = source.find((row) => row.kind === "section");
+          const section = Option.getOrUndefined(
+            Arr.findFirst(source, (row) => row.kind === "section")
+          );
           if (section?.kind !== "section") {
             return yield* Effect.die("Expected the technical section fixture.");
           }

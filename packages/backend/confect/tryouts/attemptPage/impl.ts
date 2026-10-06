@@ -28,7 +28,7 @@ import {
 import { loadSectionAttemptState } from "@repo/backend/confect/tryouts/runtime/section/state";
 import { loadSetAttemptState } from "@repo/backend/confect/tryouts/runtime/set/state";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type RedirectPageResult = Extract<
@@ -145,8 +145,11 @@ export const readSectionAttemptPage = Effect.fn(
     if (attempt?.status !== "in-progress") {
       return null;
     }
-    const snapshot = attempt.sectionSnapshots.find(
-      (section) => section.sectionKey === request.sectionKey
+    const snapshot = Option.getOrUndefined(
+      Arr.findFirst(
+        attempt.sectionSnapshots,
+        (section) => section.sectionKey === request.sectionKey
+      )
     );
     if (!snapshot?.publicPath) {
       return null;

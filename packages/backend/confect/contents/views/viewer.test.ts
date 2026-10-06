@@ -13,7 +13,7 @@ import {
   readContentViewState as readViewState,
   seedArticleViewer,
 } from "@repo/backend/test/content/view";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 
 describe("contents/views/viewer", () => {
   beforeEach(() => {
@@ -366,9 +366,11 @@ describe("contents/views/viewer", () => {
     });
 
     const state = await readViewState(t);
-    const deviceView = state.views.find((view) => view.deviceId === "device-1");
-    const accountView = state.views.find(
-      (view) => view.userId === identity.userId
+    const deviceView = Option.getOrUndefined(
+      Arr.findFirst(state.views, (view) => view.deviceId === "device-1")
+    );
+    const accountView = Option.getOrUndefined(
+      Arr.findFirst(state.views, (view) => view.userId === identity.userId)
     );
     expect(state.views).toHaveLength(2);
     expect(deviceView).not.toHaveProperty("userId");
@@ -413,10 +415,14 @@ describe("contents/views/viewer", () => {
     });
     expect(state.views).toHaveLength(2);
     expect(
-      state.views.find((view) => view.deviceId === undefined)
+      Option.getOrUndefined(
+        Arr.findFirst(state.views, (view) => view.deviceId === undefined)
+      )
     ).toMatchObject({ lastViewedAt: NOW, userId: identity.userId });
     expect(
-      state.views.find((view) => view.deviceId === "device-1")
+      Option.getOrUndefined(
+        Arr.findFirst(state.views, (view) => view.deviceId === "device-1")
+      )
     ).toMatchObject({ lastViewedAt: NOW + 1000, userId: identity.userId });
     expect(state.engagementQueue).toHaveLength(1);
     expect(state.viewerSignals).toHaveLength(1);

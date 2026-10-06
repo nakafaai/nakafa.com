@@ -27,7 +27,7 @@ import {
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
@@ -112,7 +112,9 @@ describe("contentRelease/compact", () => {
     });
     expect(stored.heads).toHaveLength(82);
     expect(
-      stored.heads.find((row) => row.contentKey === "test:anchor")
+      Option.getOrUndefined(
+        Arr.findFirst(stored.heads, (row) => row.contentKey === "test:anchor")
+      )
     ).toMatchObject({
       sequence: 3,
     });
@@ -141,8 +143,11 @@ describe("contentRelease/compact", () => {
       retained
     );
     expect(
-      stored.facts.find(
-        ({ artifactHash }) => artifactHash === `sha256:${"c".repeat(64)}`
+      Option.getOrUndefined(
+        Arr.findFirst(
+          stored.facts,
+          ({ artifactHash }) => artifactHash === `sha256:${"c".repeat(64)}`
+        )
       )?.retainUntil
     ).toBeGreaterThan(Date.now());
     expect(stored.state).toMatchObject({

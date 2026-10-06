@@ -11,7 +11,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, pipe } from "effect";
+import { Array as Arr, Effect, Option, pipe } from "effect";
 
 const DAY = Date.parse("2026-01-08T00:00:00.000Z");
 
@@ -283,7 +283,9 @@ describe("contents/metrics/cycle", () => {
         .unique(),
     }));
     expect(
-      completed.counters.find(({ windowKey }) => windowKey === "1d")?.score
+      Option.getOrUndefined(
+        Arr.findFirst(completed.counters, ({ windowKey }) => windowKey === "1d")
+      )?.score
     ).toBe(1);
     expect(
       pipe(

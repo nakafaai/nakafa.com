@@ -1,7 +1,13 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, FileSystem, Record as Rec } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  Option,
+  Record as Rec,
+} from "effect";
 import { parse as yamlParse } from "yaml";
 import {
   GITHUB_ACTION_REVIEWS,
@@ -50,7 +56,7 @@ const makeWorkflows = Effect.fn("GithubPolicyTest.makeWorkflows")(function* (
 });
 
 function validActionUses(): GithubActionUse[] {
-  return GITHUB_ACTION_REVIEWS.flatMap((review) =>
+  return Arr.flatMap(GITHUB_ACTION_REVIEWS, (review) =>
     Array.from({ length: review.expectedUsages }, (_, index) => ({
       inputs: review.expectedInputs ?? {},
       reference: `${review.action}@${review.approvedSha}`,
@@ -260,12 +266,19 @@ describe("GitHub Action policy", () => {
       validActionUses(),
       ({ reference }) => !reference.startsWith("actions/download-artifact@")
     );
-    const setupIndex = actionUses.findIndex(({ reference }) =>
-      reference.startsWith("pnpm/setup@")
+    const setupIndex = Option.getOrElse(
+      Arr.findFirstIndex(actionUses, ({ reference }) =>
+        reference.startsWith("pnpm/setup@")
+      ),
+      () => -1
     );
     const { cache, ...reviewedInputs } =
-      GITHUB_ACTION_REVIEWS.find(({ action }) => action === "pnpm/setup")
-        ?.expectedInputs ?? {};
+      Option.getOrUndefined(
+        Arr.findFirst(
+          GITHUB_ACTION_REVIEWS,
+          ({ action }) => action === "pnpm/setup"
+        )
+      )?.expectedInputs ?? {};
     const setupUse = actionUses[setupIndex];
     expect(setupUse).toBeDefined();
     if (!setupUse) {
@@ -307,11 +320,17 @@ describe("GitHub Action policy", () => {
       workflowPath: ".github/workflows/example.yml",
     });
 
-    const setupIndex = actionUses.findIndex(({ reference }) =>
-      reference.startsWith("pnpm/setup@")
+    const setupIndex = Option.getOrElse(
+      Arr.findFirstIndex(actionUses, ({ reference }) =>
+        reference.startsWith("pnpm/setup@")
+      ),
+      () => -1
     );
-    const setupReview = GITHUB_ACTION_REVIEWS.find(
-      ({ action }) => action === "pnpm/setup"
+    const setupReview = Option.getOrUndefined(
+      Arr.findFirst(
+        GITHUB_ACTION_REVIEWS,
+        ({ action }) => action === "pnpm/setup"
+      )
     );
     const setupUse = actionUses[setupIndex];
     expect(setupReview).toBeDefined();

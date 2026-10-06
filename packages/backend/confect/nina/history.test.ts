@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
 import type { ModelMessage } from "ai";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 
 /** One complete turn with a verified capability result. */
 function turn(
@@ -411,9 +411,13 @@ describe("Nina provider context", () => {
       ...toolRound("four"),
     ]);
     const current = result.slice(
-      result.findIndex(
-        (message) =>
-          message.role === "user" && message.content === "Gather everything"
+      Option.getOrElse(
+        Arr.findFirstIndex(
+          result,
+          (message) =>
+            message.role === "user" && message.content === "Gather everything"
+        ),
+        () => -1
       )
     );
     expect(tokens(current)).toBeLessThanOrEqual(NINA_BUDGET.turnEvidence + 400);

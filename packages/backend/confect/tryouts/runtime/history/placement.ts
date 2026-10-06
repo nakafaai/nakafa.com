@@ -11,7 +11,7 @@ import {
   TryoutHistoryError,
   type TryoutHistoryRequest,
 } from "@repo/backend/confect/tryouts/runtime/history/spec";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type TryoutHistorySelector = TryoutHistoryRequest["selectors"][number];
 
@@ -26,8 +26,11 @@ export const readHistoryPlacement = Effect.fn("tryouts.history.readPlacement")(
     ) {
       return null;
     }
-    const sectionSnapshot = attempt.sectionSnapshots.find(
-      (section) => section.sectionKey === selector.sectionKey
+    const sectionSnapshot = Option.getOrUndefined(
+      Arr.findFirst(
+        attempt.sectionSnapshots,
+        (section) => section.sectionKey === selector.sectionKey
+      )
     );
     if (!sectionSnapshot) {
       return null;

@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   type ArrowFunction,
   type Expression,
@@ -105,7 +105,9 @@ function declaredFunction(initializer: Expression | undefined) {
   if (name === undefined || !FUNCTION_WRAPPERS.has(name)) {
     return;
   }
-  return initializer.arguments.find(isFunctionValue);
+  return Option.getOrUndefined(
+    Arr.findFirst(initializer.arguments, isFunctionValue)
+  );
 }
 
 /** Returns the name and function of a component-shaped declaration. */

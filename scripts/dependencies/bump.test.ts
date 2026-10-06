@@ -6,6 +6,7 @@ import {
   Effect,
   FileSystem,
   Layer,
+  Option,
   PlatformError,
   Sink,
   Stdio,
@@ -34,15 +35,18 @@ function reviewedDependencies(args: readonly string[]): CommandResult {
     return { exitCode: 0, stderr: "", stdout: "" };
   }
   assert.strictEqual(args[0], "view");
-  const review = REGISTRY_REVIEWS.find(([registry]) => registry === args[1]);
+  const review = Option.getOrUndefined(
+    Arr.findFirst(REGISTRY_REVIEWS, ([registry]) => registry === args[1])
+  );
   assert.isDefined(review);
   return { exitCode: 0, stderr: "", stdout: JSON.stringify(review[1]) };
 }
 
 /** Returns the release tag last reviewed for one action. */
 function reviewedTag(action: string) {
-  return GITHUB_ACTION_REVIEWS.find((review) => review.action === action)
-    ?.expectedTag;
+  return Option.getOrUndefined(
+    Arr.findFirst(GITHUB_ACTION_REVIEWS, (review) => review.action === action)
+  )?.expectedTag;
 }
 
 function reviewedRelease(review: GithubActionReleaseReview) {
@@ -58,10 +62,13 @@ const releaseClient = Effect.fn("DependencyBumpTest.releaseClient")(function* (
     HttpClient.HttpClient,
     HttpClient.make((request) =>
       Effect.sync(() => {
-        const review = reviews.find(
-          ({ repository }) =>
-            request.url ===
-            `https://api.github.com/repos/${repository}/releases/latest`
+        const review = Option.getOrUndefined(
+          Arr.findFirst(
+            reviews,
+            ({ repository }) =>
+              request.url ===
+              `https://api.github.com/repos/${repository}/releases/latest`
+          )
         );
         assert.isDefined(review);
         return HttpClientResponse.fromWeb(request, release(review));
@@ -168,8 +175,11 @@ describe("dependency updates", () => {
 
   it.effect("reports registry failures and unresolved updates together", () =>
     Effect.gen(function* () {
-      const sharedPlatformReview = REGISTRY_REVIEWS.find(
-        ([registry]) => registry === "@effect/platform-node-shared@latest"
+      const sharedPlatformReview = Option.getOrUndefined(
+        Arr.findFirst(
+          REGISTRY_REVIEWS,
+          ([registry]) => registry === "@effect/platform-node-shared@latest"
+        )
       );
       assert.isDefined(sharedPlatformReview);
       const result = yield* runScenario({

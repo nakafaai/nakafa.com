@@ -7,7 +7,7 @@ import {
   readConfectPlacement,
   seedTryoutContentAccessState,
 } from "@repo/backend/test/tryout/runtime";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 describe("retained explanation language", () => {
   it("reads a signed sibling without changing the original exam content", async () => {
@@ -69,7 +69,9 @@ describe("retained explanation language", () => {
     });
     await t.mutation(async (ctx) => {
       const rows = await ctx.db.query("tryoutPlacements").collect();
-      const english = rows.find((row) => row.appLocale === "en");
+      const english = Option.getOrUndefined(
+        Arr.findFirst(rows, (row) => row.appLocale === "en")
+      );
       assert.isDefined(english);
       await ctx.db.patch(english._id, { rowHash: "tampered" });
     });

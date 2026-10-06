@@ -8,7 +8,7 @@ import {
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -171,8 +171,11 @@ const indexAttemptSections = Effect.fn("tryouts.response.indexAttemptSections")(
     }
     const sectionsByIdentity = new Map<string, TryoutSectionAttempt>();
     for (const section of sections) {
-      const snapshot = attempt.sectionSnapshots.find(
-        (candidate) => candidate.sectionIdentity === section.sectionIdentity
+      const snapshot = Option.getOrUndefined(
+        Arr.findFirst(
+          attempt.sectionSnapshots,
+          (candidate) => candidate.sectionIdentity === section.sectionIdentity
+        )
       );
       if (
         !snapshot ||

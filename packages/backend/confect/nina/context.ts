@@ -28,7 +28,7 @@ import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { cleanSlug } from "@repo/utilities/helper";
 import { slugify } from "@repo/utilities/slug";
-import { Effect, Layer, Option, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 
 const referenceLayer = Layer.mergeAll(
   articleLayer,
@@ -117,7 +117,8 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
 const resolvePublishedContext = Effect.fn("nina.context.publication")(
   function* (input: typeof NinaPageInput.Type, slug: string, url: string) {
     const appLocale = AppLocaleSchema.make(input.locale);
-    const isMaterial = PUBLIC_ROUTE_SURFACES.some(
+    const isMaterial = Arr.some(
+      PUBLIC_ROUTE_SURFACES,
       (surface) =>
         surface.key === "subject" &&
         surface.routeSlugs[input.locale] === slug.split("/")[0]

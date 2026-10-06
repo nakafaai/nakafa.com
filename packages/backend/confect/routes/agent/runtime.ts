@@ -11,7 +11,7 @@ import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
-import { Cause, Effect } from "effect";
+import { Array as Arr, Cause, Effect, Option } from "effect";
 
 type AgentDomainError =
   | AgentHttpInputError
@@ -41,7 +41,9 @@ export function runAgentRequest<R>(
   return program.pipe(
     Effect.matchCauseEffect({
       onFailure: (cause) => {
-        const failure = cause.reasons.find(Cause.isFailReason);
+        const failure = Option.getOrUndefined(
+          Arr.findFirst(cause.reasons, Cause.isFailReason)
+        );
         if (!failure) {
           return logInternalFailure(cause, instance, requestId);
         }

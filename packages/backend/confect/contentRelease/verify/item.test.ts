@@ -29,7 +29,7 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Runs item verification against the only staged release item. */
 function verifyOnly(ctx: MutationCtx) {
@@ -105,7 +105,9 @@ describe("contentRelease/verify/item", () => {
     await stageDeleteFixture(t);
     await t.mutation(async (ctx) => {
       const bindings = await ctx.db.query("contentBindings").collect();
-      const tombstone = bindings.find((binding) => binding.sequence === 2);
+      const tombstone = Option.getOrUndefined(
+        Arr.findFirst(bindings, (binding) => binding.sequence === 2)
+      );
       const item = await ctx.db.query("contentItems").unique();
       assert(tombstone && item);
       await ctx.db.patch(tombstone._id, {
@@ -184,7 +186,11 @@ describe("contentRelease/verify/item", () => {
     const heads = await deletion.run((ctx) =>
       ctx.db.query("contentHeads").take(3)
     );
-    expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(heads, ({ sequence }) => sequence === 2)
+      )
+    ).toMatchObject({
       contentKey: TEST_ARTICLE_KEY,
       family: "article",
       operation: "delete",
@@ -230,7 +236,11 @@ describe("contentRelease/verify/item", () => {
     const heads = await deletion.run((ctx) =>
       ctx.db.query("contentHeads").take(3)
     );
-    expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(heads, ({ sequence }) => sequence === 2)
+      )
+    ).toMatchObject({
       contentKey: TEST_PAGE_KEY,
       family: "page",
       operation: "delete",
@@ -248,7 +258,11 @@ describe("contentRelease/verify/item", () => {
         t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
       ).resolves.toBeNull();
       const heads = await t.run((ctx) => ctx.db.query("contentHeads").take(3));
-      expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
+      expect(
+        Option.getOrUndefined(
+          Arr.findFirst(heads, ({ sequence }) => sequence === 2)
+        )
+      ).toMatchObject({
         contentKey:
           family === "question" ? TEST_QUESTION_CONTENT_KEY : "test:deleted",
         family,

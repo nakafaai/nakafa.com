@@ -9,7 +9,7 @@ import {
   readTryoutCatalogRowByIdentity,
   readTryoutCatalogRowByPath,
 } from "@repo/backend/content/tryout/row";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Finds a localized route inside the attempt's own retained snapshot. */
 export const readAttemptDestination = Effect.fn(
@@ -22,8 +22,11 @@ export const readAttemptDestination = Effect.fn(
   if (locale === attempt.appLocale) {
     return sectionKey === undefined
       ? attempt.setPublicPath
-      : (attempt.sectionSnapshots.find(
-          (section) => section.sectionKey === sectionKey
+      : (Option.getOrUndefined(
+          Arr.findFirst(
+            attempt.sectionSnapshots,
+            (section) => section.sectionKey === sectionKey
+          )
         )?.publicPath ?? null);
   }
   const identity = {
@@ -52,8 +55,11 @@ export const readAttemptSectionForPath = Effect.fn(
   locale: AppLocaleCode,
   publicPath: string
 ) {
-  const frozen = attempt.sectionSnapshots.find(
-    (section) => section.publicPath === publicPath
+  const frozen = Option.getOrUndefined(
+    Arr.findFirst(
+      attempt.sectionSnapshots,
+      (section) => section.publicPath === publicPath
+    )
   );
   if (frozen) {
     return frozen;
@@ -72,8 +78,11 @@ export const readAttemptSectionForPath = Effect.fn(
     return null;
   }
   return (
-    attempt.sectionSnapshots.find(
-      (section) => section.sectionKey === row.sectionKey
+    Option.getOrUndefined(
+      Arr.findFirst(
+        attempt.sectionSnapshots,
+        (section) => section.sectionKey === row.sectionKey
+      )
     ) ?? null
   );
 });

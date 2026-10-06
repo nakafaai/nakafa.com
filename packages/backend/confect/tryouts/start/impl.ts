@@ -18,7 +18,7 @@ import type {
   StartAttemptResult,
 } from "@repo/backend/confect/tryouts/start/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 type TryoutAttempt = Docs["tryoutAttempts"];
@@ -84,8 +84,11 @@ const resolveStartResult = Effect.fn("tryouts.start.resolveStartResult")(
         },
       } satisfies StartAttemptResult;
     }
-    const destination = attempt.sectionSnapshots.find(
-      (section) => section.sectionKey === args.destinationSectionKey
+    const destination = Option.getOrUndefined(
+      Arr.findFirst(
+        attempt.sectionSnapshots,
+        (section) => section.sectionKey === args.destinationSectionKey
+      )
     );
     if (!destination?.publicPath) {
       return yield* new TryoutRuntimeError({
@@ -128,15 +131,21 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
     }
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
-      const currentEntrySection = attempt.sectionSnapshots.find(
-        (section) => section.sectionKey === entrySectionKey
+      const currentEntrySection = Option.getOrUndefined(
+        Arr.findFirst(
+          attempt.sectionSnapshots,
+          (section) => section.sectionKey === entrySectionKey
+        )
       );
       const entrySection =
         currentEntrySection ??
-        attempt.sectionSnapshots.find(
-          (section) =>
-            section.publicPath === undefined &&
-            !attempt.completedSectionKeys.includes(section.sectionKey)
+        Option.getOrUndefined(
+          Arr.findFirst(
+            attempt.sectionSnapshots,
+            (section) =>
+              section.publicPath === undefined &&
+              !attempt.completedSectionKeys.includes(section.sectionKey)
+          )
         );
       if (!entrySection || entrySection.publicPath) {
         return attempt;

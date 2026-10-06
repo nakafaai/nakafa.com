@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
 import { slugify } from "@repo/utilities/slug";
-import { Array as Arr, pipe } from "effect";
+import { Array as Arr, Option, pipe } from "effect";
 
 /** The implicit section before a document's first heading. */
 const READ_START_SECTION = "top";
@@ -182,8 +182,12 @@ export function formatRead(
   const parts = Arr.flatMap(splitSections(result.text), (candidate) =>
     splitParts(candidate, Math.floor(budget / 2))
   );
-  const start = parts.findIndex(
-    ({ slug }) => slug === (section ?? READ_START_SECTION)
+  const start = Option.getOrElse(
+    Arr.findFirstIndex(
+      parts,
+      ({ slug }) => slug === (section ?? READ_START_SECTION)
+    ),
+    () => -1
   );
   if (section !== undefined && start < 0) {
     return boundText(

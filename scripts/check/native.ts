@@ -4,7 +4,10 @@ import {
   isCallExpression,
   isElementAccessExpression,
   isIdentifier,
+  isImportDeclaration,
+  isNamedImports,
   isPropertyAccessExpression,
+  isStringLiteral,
   isStringLiteralLikeNode,
   isTryStatement,
   isTypeOfExpression,
@@ -28,8 +31,23 @@ const ARRAY_METHODS = HashSet.make(
   "some",
   "toReversed"
 );
+/** Array methods that search for one element, which Effect returns as an Option. */
+const SEARCH_METHODS = HashSet.make(
+  "find",
+  "findIndex",
+  "findLast",
+  "findLastIndex"
+);
 /** Receivers that are not module imports, so an array method transforms a value. */
 const VALUE_BINDINGS: readonly (typeof Binding.Type)[] = ["global", "local"];
+/** Every binding, for a receiver that a repository module exports as a value. */
+const ANY_BINDING: readonly (typeof Binding.Type)[] = [
+  "global",
+  "import",
+  "local",
+];
+/** Relative paths, app and script aliases, and workspace packages name repository modules. */
+const REPOSITORY_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;
 
 const EQUALITY_OPERATORS = HashSet.make(
   SyntaxKind.EqualsEqualsEqualsToken,
@@ -66,19 +84,53 @@ function calledMethod(node: Node) {
 }
 
 /**
- * Returns the receiver of a call to an array method that transforms its
- * array. `join` counts with at most one argument, which tells it from the
- * path helper of the same name.
+ * Returns the receiver of a call to an array method and the rule it breaks:
+ * a method that transforms its array, or one that searches it. `join` counts
+ * with at most one argument, which tells it from the path helper of the same
+ * name.
  */
-function arrayReceiver(node: Node) {
+function arrayCall(node: Node) {
   const call = calledMethod(node);
   if (call === undefined) {
     return;
   }
-  return HashSet.has(ARRAY_METHODS, call.method) ||
+  if (
+    HashSet.has(ARRAY_METHODS, call.method) ||
     (call.method === "join" && call.count <= 1)
-    ? call.receiver
+  ) {
+    return { receiver: call.receiver, rule: "array-method" as const };
+  }
+  return HashSet.has(SEARCH_METHODS, call.method)
+    ? { receiver: call.receiver, rule: "array-search" as const }
     : undefined;
+}
+
+/**
+ * Whether a module imports `name` as a value from a repository module, by a
+ * default or a named import. Such an import is a value like any local one,
+ * while a namespace import or a package import may be a module of functions,
+ * such as `Arr` from `effect`.
+ */
+function importsRepositoryValue(sourceFile: SourceFile, name: string) {
+  return Arr.some(sourceFile.statements, (statement) => {
+    if (
+      !(
+        isImportDeclaration(statement) &&
+        isStringLiteral(statement.moduleSpecifier) &&
+        REPOSITORY_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
+      )
+    ) {
+      return false;
+    }
+    const clause = statement.importClause;
+    const bindings = clause?.namedBindings;
+    return (
+      clause?.name?.text === name ||
+      (bindings !== undefined &&
+        isNamedImports(bindings) &&
+        Arr.some(bindings.elements, (element) => element.name.text === name))
+    );
+  });
 }
 
 /** Whether a node compares a typeof result against the object tag. */
@@ -104,12 +156,20 @@ function isTypeofObjectComparison(node: Node) {
 
 /** Returns the native array, failure, and narrowing syntax at one node. */
 function syntaxCandidates(sourceFile: SourceFile, node: Node) {
-  const receiver = arrayReceiver(node);
-  if (receiver !== undefined) {
+  const call = arrayCall(node);
+  if (call !== undefined) {
     return [
-      isIdentifier(receiver)
-        ? candidate("array-method", sourceFile, node, receiver, VALUE_BINDINGS)
-        : candidate("array-method", sourceFile, node),
+      isIdentifier(call.receiver)
+        ? candidate(
+            call.rule,
+            sourceFile,
+            node,
+            call.receiver,
+            importsRepositoryValue(sourceFile, call.receiver.text)
+              ? ANY_BINDING
+              : VALUE_BINDINGS
+          )
+        : candidate(call.rule, sourceFile, node),
     ];
   }
   if (isTryStatement(node) && node.catchClause !== undefined) {
