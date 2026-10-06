@@ -31,7 +31,7 @@ export const PERMISSIONS = {
   FORUM_MODERATE: "forum:moderate",
 } as const;
 export const PermissionSchema = Schema.Literals(Object.values(PERMISSIONS));
-export type Permission = Schema.Schema.Type<typeof PermissionSchema>;
+export type Permission = typeof PermissionSchema.Type;
 
 /** The stable access-control failure returned by school and class mutations. */
 export class PermissionDenied extends Schema.TaggedError<PermissionDenied>()(

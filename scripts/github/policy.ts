@@ -16,16 +16,14 @@ export const GithubActionReviewSchema = Schema.Struct({
   expectedUsages: NonNegativeInteger,
   reason: Schema.String,
 });
-export type GithubActionReview = Schema.Schema.Type<
-  typeof GithubActionReviewSchema
->;
+export type GithubActionReview = typeof GithubActionReviewSchema.Type;
 
 export const GithubActionUseSchema = Schema.Struct({
   inputs: UnknownRecord,
   reference: Schema.String,
   workflowPath: Schema.String,
 });
-export type GithubActionUse = Schema.Schema.Type<typeof GithubActionUseSchema>;
+export type GithubActionUse = typeof GithubActionUseSchema.Type;
 
 export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   Schema.Array(GithubActionReviewSchema)

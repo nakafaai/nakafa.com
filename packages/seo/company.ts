@@ -54,7 +54,7 @@ export const CompanyIdentitySchema = Schema.Struct({
   }),
 });
 
-export type CompanyIdentity = Schema.Schema.Type<typeof CompanyIdentitySchema>;
+export type CompanyIdentity = typeof CompanyIdentitySchema.Type;
 
 /**
  * Public-safe corporate identity, registration, representation, address, and

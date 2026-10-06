@@ -28,7 +28,7 @@ const SystemPromptPropsSchema = RuntimePromptContextSchema.mapFields(
   })
 );
 
-type SystemPromptProps = Schema.Schema.Type<typeof SystemPromptPropsSchema>;
+type SystemPromptProps = typeof SystemPromptPropsSchema.Type;
 
 /**
  * Builds Nina's system prompt with internal LearningCapability policy. Stable

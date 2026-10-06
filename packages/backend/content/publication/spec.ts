@@ -22,7 +22,7 @@ export const publicBatchResultValidator = Schema.mutable(
   Schema.Array(publicResultValidator)
 );
 /** Stored active public row returned only to the authenticated HTTP adapter. */
-export type PublicRuntimeRow = Schema.Schema.Type<typeof publicResultValidator>;
+export type PublicRuntimeRow = typeof publicResultValidator.Type;
 /** Exact active signed publication identity exposed to server consumers. */
 export const activeIdentityValidator = Schema.Union([
   Schema.Null,

@@ -1,4 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
+import { Data } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 
 /** One canonical sitemap XML page identity. */
@@ -30,6 +31,13 @@ export type SitemapPage =
       locale: Locale;
       page: number;
     };
+
+/** A canonical sitemap page id whose route page does not exist. */
+export class SitemapPageNotFoundError extends Data.TaggedError(
+  "SitemapPageNotFoundError"
+)<{
+  readonly pageId: string;
+}> {}
 
 /** Stable identity for the sitemap containing application-level routes. */
 export const SITEMAP_BASE_ID = "base";

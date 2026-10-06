@@ -69,6 +69,4 @@ export const protectedResultValidator = Schema.Union([
 ]);
 
 /** Stored protected batch returned only through one internal query. */
-export type ProtectedRuntimeBatchRow = Schema.Schema.Type<
-  typeof protectedResultValidator
->;
+export type ProtectedRuntimeBatchRow = typeof protectedResultValidator.Type;

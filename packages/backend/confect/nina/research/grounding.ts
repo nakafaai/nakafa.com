@@ -99,7 +99,7 @@ function getGroundedSources({
   groundingMetadata,
   sources,
 }: {
-  groundingMetadata?: Schema.Schema.Type<typeof GroundingMetadataSchema>;
+  groundingMetadata?: typeof GroundingMetadataSchema.Type;
   sources: unknown;
 }) {
   const decoded = Schema.decodeUnknownResult(Schema.Array(SourceSchema))(
@@ -125,7 +125,7 @@ function getGroundedSources({
 }
 /** Normalizes Google Search queries so the UI shows the actual searched term. */
 function getGroundingSearchQueries(
-  groundingMetadata: Schema.Schema.Type<typeof GroundingMetadataSchema>
+  groundingMetadata: typeof GroundingMetadataSchema.Type
 ) {
   return [
     ...new Set(

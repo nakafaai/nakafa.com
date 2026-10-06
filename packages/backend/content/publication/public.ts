@@ -22,7 +22,7 @@ import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { PublicationSource } from "@repo/backend/content/publication/source";
 import { Effect, Option, Schema } from "effect";
 
-type AppLocale = Schema.Schema.Type<typeof appLocaleValidator>;
+type AppLocale = typeof appLocaleValidator.Type;
 type ActiveIdentity = NonNullable<
   Effect.Success<ReturnType<typeof loadActiveIdentity>>
 >;

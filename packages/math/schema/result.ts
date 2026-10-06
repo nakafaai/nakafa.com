@@ -27,4 +27,4 @@ export const MathResultSchema = Schema.Struct({
   .annotate({
     description: "Deterministic CAS math result returned to Nina and the UI.",
   });
-export type MathResult = Schema.Schema.Type<typeof MathResultSchema>;
+export type MathResult = typeof MathResultSchema.Type;

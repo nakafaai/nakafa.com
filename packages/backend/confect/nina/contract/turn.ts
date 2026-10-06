@@ -25,9 +25,9 @@ export const NinaUserSchema = Schema.Struct({
   curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
   role: Schema.optional(PromptUserRoleSchema),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type NinaPage = Schema.Schema.Type<typeof NinaPageSchema>;
-export type NinaRuntime = Schema.Schema.Type<typeof NinaRuntimeSchema>;
-export type NinaUser = Schema.Schema.Type<typeof NinaUserSchema>;
+export type NinaPage = typeof NinaPageSchema.Type;
+export type NinaRuntime = typeof NinaRuntimeSchema.Type;
+export type NinaUser = typeof NinaUserSchema.Type;
 /** Returns the immutable learning page that should drive one Nina turn. */
 export function readNinaLearningPage(page: NinaPage) {
   const learning = page.nina.learning;

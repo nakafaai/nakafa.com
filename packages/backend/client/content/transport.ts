@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/content/endpoint";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Data, Effect, Schedule } from "effect";
+import { Data, Effect, Schedule, Schema } from "effect";
 
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
@@ -81,7 +81,9 @@ function isRetryableContentFailure(
   ) {
     return true;
   }
-  return error instanceof NetworkRequestError && isRetryableNetworkError(error);
+  return (
+    Schema.is(NetworkRequestError)(error) && isRetryableNetworkError(error)
+  );
 }
 
 /** Returns whether an exact unmarked JSON 500 is eligible for read retry. */
@@ -138,7 +140,7 @@ const CONTENT_RETRY_SCHEDULE: Schedule.Schedule<number, unknown> =
 
 /** Preserves terminal reader failures and marks only interrupted bodies retryable. */
 function classifyContentBodyFailure<Failure>(failure: Failure) {
-  if (failure instanceof ContentTransportError && failure.reason === "body") {
+  if (Schema.is(ContentTransportError)(failure) && failure.reason === "body") {
     return new RetryableContentBody({
       cause: failure,
     });
@@ -341,7 +343,7 @@ export const requestContentResponse = Effect.fn(
     ),
     Effect.catchIf(
       (failure): failure is NetworkRequestError =>
-        failure instanceof NetworkRequestError,
+        Schema.is(NetworkRequestError)(failure),
       (failure) =>
         Effect.fail(
           new ContentTransportError({

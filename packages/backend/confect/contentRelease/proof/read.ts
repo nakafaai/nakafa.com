@@ -23,13 +23,11 @@ import {
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
 import { getConvexSize } from "convex/values";
-import { Effect, Option, type Schema, Struct } from "effect";
-export type ProofPage = Schema.Schema.Type<typeof proofPageValidator>;
-export type ProofState = Schema.Schema.Type<typeof proofStateValidator>;
-export type ArtifactProofPage = Schema.Schema.Type<
-  typeof artifactProofPageValidator
->;
-export type RouteProofPage = Schema.Schema.Type<typeof routePageValidator>;
+import { Effect, Option, Struct } from "effect";
+export type ProofPage = typeof proofPageValidator.Type;
+export type ProofState = typeof proofStateValidator.Type;
+export type ArtifactProofPage = typeof artifactProofPageValidator.Type;
+export type RouteProofPage = typeof routePageValidator.Type;
 
 /** Reads immutable staged counters after release ingestion has stopped. */
 export const stateProgram = Effect.fn("contentRelease.proofState")(function* (

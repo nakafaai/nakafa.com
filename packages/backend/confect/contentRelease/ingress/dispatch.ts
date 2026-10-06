@@ -20,9 +20,9 @@ import {
 } from "@repo/backend/confect/contentRelease/ingress/response";
 import { stagePublication } from "@repo/backend/confect/contentRelease/ingress/stage";
 import { activeContentSigningKeyId } from "@repo/backend/content/trust";
-import { Effect, Result, type Schema } from "effect";
+import { Effect, Result } from "effect";
 /** Complete bounded evidence accepted by the Node publication dispatcher. */
-export type DispatchInput = Schema.Schema.Type<typeof dispatchInputValidator>;
+export type DispatchInput = typeof dispatchInputValidator.Type;
 /** Routes one decoded request to its single domain-owned capability. */
 export const performRequest = Effect.fn("contentRelease.performRequest")(
   function* (request: PublicationRequest, activeKeyId: string) {

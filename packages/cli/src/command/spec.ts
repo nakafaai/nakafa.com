@@ -72,8 +72,8 @@ export const CliRequestSchema = Schema.Struct({
   pretty: Schema.Boolean,
 });
 
-export type CliRequest = Schema.Schema.Type<typeof CliRequestSchema>;
-export type CliCommand = Schema.Schema.Type<typeof CliCommandSchema>;
+export type CliRequest = typeof CliRequestSchema.Type;
+export type CliCommand = typeof CliCommandSchema.Type;
 
 /** Checks that an API override is exactly one HTTP or HTTPS origin. */
 function isHttpOrigin(value: string) {

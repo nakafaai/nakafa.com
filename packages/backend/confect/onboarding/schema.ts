@@ -8,20 +8,14 @@ export const onboardingRegionValidator = Schema.Literals([
   ...onboardingRegions,
 ]);
 export const onboardingFocusValidator = Schema.Literals([...onboardingFocuses]);
-export type OnboardingRegion = Schema.Schema.Type<
-  typeof onboardingRegionValidator
->;
-export type OnboardingFocus = Schema.Schema.Type<
-  typeof onboardingFocusValidator
->;
+export type OnboardingRegion = typeof onboardingRegionValidator.Type;
+export type OnboardingFocus = typeof onboardingFocusValidator.Type;
 export const onboardingCompletionValidator = Schema.Struct({
   focus: onboardingFocusValidator,
   region: onboardingRegionValidator,
   role: selfSelectableUserRoleValidator,
 });
-export type OnboardingCompletion = Schema.Schema.Type<
-  typeof onboardingCompletionValidator
->;
+export type OnboardingCompletion = typeof onboardingCompletionValidator.Type;
 export const onboardingAnswerValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("role"),

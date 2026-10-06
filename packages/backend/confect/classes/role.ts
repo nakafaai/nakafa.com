@@ -6,9 +6,7 @@ export const schoolClassMemberRoleValidator = Schema.Literals([
   "teacher",
   "student",
 ]);
-export type SchoolClassMemberRole = Schema.Schema.Type<
-  typeof schoolClassMemberRoleValidator
->;
+export type SchoolClassMemberRole = typeof schoolClassMemberRoleValidator.Type;
 
 /**
  * School class teacher role validator (base type without optional wrapper)
@@ -18,9 +16,8 @@ export const schoolClassTeacherRoleBaseValidator = Schema.Literals([
   "co-teacher",
   "assistant",
 ]);
-export type SchoolClassTeacherRole = Schema.Schema.Type<
-  typeof schoolClassTeacherRoleBaseValidator
->;
+export type SchoolClassTeacherRole =
+  typeof schoolClassTeacherRoleBaseValidator.Type;
 
 /**
  * School class teacher role validator (with optional wrapper for schema use)

@@ -141,6 +141,6 @@ export const matrixSchema = Schema.Array(matrixRowSchema)
     description:
       "Matrix rows as nested arrays of exact string values, for example [[1, 2], [3, 4]].",
   });
-export type MathExpression = Schema.Schema.Type<typeof MathExpressionSchema>;
-export type MathItem = Schema.Schema.Type<typeof MathItemSchema>;
-export type MathStep = Schema.Schema.Type<typeof MathStepSchema>;
+export type MathExpression = typeof MathExpressionSchema.Type;
+export type MathItem = typeof MathItemSchema.Type;
+export type MathStep = typeof MathStepSchema.Type;

@@ -10,7 +10,7 @@ export const cleanupSourceValidator = Schema.Union([
   Schema.Literal(cleanupSource.accountDeletion),
   Schema.Literal(cleanupSource.consentOverlap),
 ]);
-export type CleanupSource = Schema.Schema.Type<typeof cleanupSourceValidator>;
+export type CleanupSource = typeof cleanupSourceValidator.Type;
 
 /** Typed failure for durable privacy cleanup coordination. */
 export class PrivacyCleanupError extends Schema.TaggedError<PrivacyCleanupError>()(

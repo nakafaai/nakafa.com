@@ -57,9 +57,7 @@ export const classRouteResultValidator = Schema.Union([
   classRouteAccessibleValidator,
   classRouteJoinValidator,
 ]);
-export type ClassRouteResult = Schema.Schema.Type<
-  typeof classRouteResultValidator
->;
+export type ClassRouteResult = typeof classRouteResultValidator.Type;
 
 /** Return shape for class join mutations. */
 export const classJoinMutationResultValidator = Schema.Struct({

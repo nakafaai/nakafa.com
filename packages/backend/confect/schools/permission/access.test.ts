@@ -198,7 +198,7 @@ describe("school and class permission grants", () => {
         );
         assert(Option.isSome(decoded));
         expect(decoded.value).toBeInstanceOf(PermissionDenied);
-        assert(decoded.value instanceof PermissionDenied);
+        assert(Schema.is(PermissionDenied)(decoded.value));
         expect(
           yield* Schema.encodeEffect(PermissionDenied)(decoded.value)
         ).toEqual(failure.cause.data);

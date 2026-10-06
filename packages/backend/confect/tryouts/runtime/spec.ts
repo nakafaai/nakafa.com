@@ -78,16 +78,13 @@ export const tryoutQuestionSelectorValidator = Schema.Struct({
   ...selectorFields,
   delivery: Schema.Literal("authenticated"),
 });
-export type TryoutQuestionSelector = Schema.Schema.Type<
-  typeof tryoutQuestionSelectorValidator
->;
+export type TryoutQuestionSelector =
+  typeof tryoutQuestionSelectorValidator.Type;
 export const tryoutAnswerSelectorValidator = Schema.Struct({
   ...selectorFields,
   delivery: Schema.Literal("entitled"),
 });
-export type TryoutAnswerSelector = Schema.Schema.Type<
-  typeof tryoutAnswerSelectorValidator
->;
+export type TryoutAnswerSelector = typeof tryoutAnswerSelectorValidator.Type;
 export const tryoutSectionContentAccessValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("none"),
@@ -100,9 +97,8 @@ export const tryoutSectionContentAccessValidator = Schema.Union([
     questions: Schema.mutable(Schema.Array(tryoutQuestionSelectorValidator)),
   }),
 ]);
-export type TryoutSectionContentAccess = Schema.Schema.Type<
-  typeof tryoutSectionContentAccessValidator
->;
+export type TryoutSectionContentAccess =
+  typeof tryoutSectionContentAccessValidator.Type;
 export const noTryoutSectionContentAccess = {
   kind: "none",
 } satisfies TryoutSectionContentAccess;

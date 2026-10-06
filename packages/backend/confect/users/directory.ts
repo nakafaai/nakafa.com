@@ -1,8 +1,8 @@
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, type Schema, Struct } from "effect";
-export type UserData = Schema.Schema.Type<typeof userDataValidator>;
+import { Effect, Struct } from "effect";
+export type UserData = typeof userDataValidator.Type;
 
 /** Resolve a persisted identity without weakening the unique auth index. */
 export const getAppUserByAuthId = Effect.fn("users.directory.identity")(

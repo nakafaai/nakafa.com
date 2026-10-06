@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { Data, Effect } from "effect";
+import { Data, Effect, Schema } from "effect";
 import {
   PreviewConfigError,
   readPreviewConfig,
@@ -67,7 +67,7 @@ function streamFailure(source: string) {
     Effect.flatMap((stream) =>
       Effect.tryPromise({
         catch: (cause) =>
-          cause instanceof PreviewEventError
+          Schema.is(PreviewEventError)(cause)
             ? cause
             : new UnexpectedPreviewStreamError({ cause }),
         try: () => new Response(stream).text(),

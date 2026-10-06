@@ -12,9 +12,8 @@ export const GithubActionReleaseReviewSchema = Schema.Struct({
   reason: Schema.String,
   repository: Schema.String,
 });
-export type GithubActionReleaseReview = Schema.Schema.Type<
-  typeof GithubActionReleaseReviewSchema
->;
+export type GithubActionReleaseReview =
+  typeof GithubActionReleaseReviewSchema.Type;
 
 /** Expected failure while reading upstream GitHub Action release metadata. */
 export class GithubActionReleaseError extends Schema.TaggedError<GithubActionReleaseError>()(

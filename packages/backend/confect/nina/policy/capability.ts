@@ -12,9 +12,7 @@ export const NinaCapabilityDecisionSchema = Schema.Union([
   Schema.Struct({ state: Schema.Literal("allowed") }),
   Schema.Struct({ state: Schema.Literal("denied"), reason: Schema.String }),
 ]);
-export type NinaCapabilityDecision = Schema.Schema.Type<
-  typeof NinaCapabilityDecisionSchema
->;
+export type NinaCapabilityDecision = typeof NinaCapabilityDecisionSchema.Type;
 /** Resolves whether one Nina capability may run under the immutable context pack. */
 export function decideNinaCapability({
   capability,

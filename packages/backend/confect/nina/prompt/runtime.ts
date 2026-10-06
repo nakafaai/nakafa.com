@@ -16,9 +16,7 @@ export const RuntimePromptContextSchema = Schema.Struct({
   nina: NinaContextPackSchema,
   url: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type RuntimePromptContext = Schema.Schema.Type<
-  typeof RuntimePromptContextSchema
->;
+export type RuntimePromptContext = typeof RuntimePromptContextSchema.Type;
 /** Formats verified page, Nina context, and learning selection facts. */
 export function formatRuntimePrompt({
   currentDate,

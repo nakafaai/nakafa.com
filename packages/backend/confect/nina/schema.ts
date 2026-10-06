@@ -4,7 +4,7 @@ import { vMessageStatus, vStreamMessage } from "@convex-dev/agent/validators";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/conversation.spec";
 import { Schema } from "effect";
 
-export type NinaMessage = UIMessage<Schema.Schema.Type<typeof NinaTurnSummary>>;
+export type NinaMessage = UIMessage<typeof NinaTurnSummary.Type>;
 
 /** Agent owns part decoding and delta assembly; Confect validates its envelope. */
 export const AgentMessage = Schema.Struct({

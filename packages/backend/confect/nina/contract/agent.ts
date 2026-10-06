@@ -14,9 +14,8 @@ export const AgentCurriculumPreferenceSchema = Schema.Struct({
     title: Schema.String,
   }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type AgentCurriculumPreference = Schema.Schema.Type<
-  typeof AgentCurriculumPreferenceSchema
->;
+export type AgentCurriculumPreference =
+  typeof AgentCurriculumPreferenceSchema.Type;
 /** Per-turn context shared by Nina and specialist agents after authenticated admission. */
 export const AgentContextSchema = Schema.Struct({
   currentDate: Schema.String,
@@ -27,7 +26,7 @@ export const AgentContextSchema = Schema.Struct({
   userRole: Schema.optional(PromptUserRoleSchema),
   verified: Schema.Boolean,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type AgentContext = Schema.Schema.Type<typeof AgentContextSchema>;
+export type AgentContext = typeof AgentContextSchema.Type;
 /** Schema-derived data passed to task-oriented specialist agents. */
 export const TaskAgentDataSchema = Schema.Struct({
   userId: Id("users"),
@@ -36,7 +35,7 @@ export const TaskAgentDataSchema = Schema.Struct({
   modelId: ModelId,
   task: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-type TaskAgentData = Schema.Schema.Type<typeof TaskAgentDataSchema>;
+type TaskAgentData = typeof TaskAgentDataSchema.Type;
 /** Parameters for the deterministic math specialist Agent. */
 export type MathAgentParams = TaskAgentData & {
   readonly publish: CapabilityProgress;
@@ -52,8 +51,6 @@ export const ResearchAgentDataSchema = Schema.Struct({
   toolCallId: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Parameters for the external research specialist Agent. */
-export type ResearchAgentParams = Schema.Schema.Type<
-  typeof ResearchAgentDataSchema
-> & {
+export type ResearchAgentParams = typeof ResearchAgentDataSchema.Type & {
   readonly publish: CapabilityProgress;
 };

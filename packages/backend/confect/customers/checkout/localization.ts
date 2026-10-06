@@ -18,9 +18,7 @@ export const checkoutLocaleValidator = Schema.Literals([
  * - https://polar.sh/docs/api-reference/checkouts/create-session
  */
 export const polarCheckoutLocaleValidator = Schema.Literals(["de", "en"]);
-export type PolarCheckoutLocale = Schema.Schema.Type<
-  typeof polarCheckoutLocaleValidator
->;
+export type PolarCheckoutLocale = typeof polarCheckoutLocaleValidator.Type;
 const polarLocaleByAppLocale = {
   de: "de",
   en: "en",

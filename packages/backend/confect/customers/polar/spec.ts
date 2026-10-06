@@ -15,10 +15,8 @@ export const customerIdMetadataKey = "userId";
 export const checkoutSessionResultValidator = Schema.Struct({
   url: Schema.String,
 });
-export type PolarMetadata = Schema.Schema.Type<typeof polarMetadataValidator>;
-export type CheckoutSessionResult = Schema.Schema.Type<
-  typeof checkoutSessionResultValidator
->;
+export type PolarMetadata = typeof polarMetadataValidator.Type;
+export type CheckoutSessionResult = typeof checkoutSessionResultValidator.Type;
 export interface PolarCustomerSource {
   readonly email?: string | null | undefined;
   readonly externalId?: string | null | undefined;

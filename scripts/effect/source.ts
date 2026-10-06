@@ -158,7 +158,7 @@ const readSourceIdentity = Effect.fn("EffectSource.readIdentity")(function* (
 /** Writes the source identity that the staged vendored tree must match. */
 const writeSourceIdentity = Effect.fn("EffectSource.writeIdentity")(function* (
   path: string,
-  identity: Schema.Schema.Type<typeof SourceIdentity>
+  identity: typeof SourceIdentity.Type
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   yield* fileSystem

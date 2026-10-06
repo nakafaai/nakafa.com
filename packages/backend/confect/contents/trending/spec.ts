@@ -23,9 +23,8 @@ export const getTrendingSubjectsArgsValidator = Schema.Struct(
 export const getTrendingSubjectsResultValidator = Schema.mutable(
   Schema.Array(trendingSubjectValidator)
 );
-export type GetTrendingSubjectsArgs = Schema.Schema.Type<
-  typeof getTrendingSubjectsArgsValidator
->;
+export type GetTrendingSubjectsArgs =
+  typeof getTrendingSubjectsArgsValidator.Type;
 export type GetTrendingSubjectsResult = TrendingSubject[];
 
 /** Raised when Convex IO fails while reading trending materials. */

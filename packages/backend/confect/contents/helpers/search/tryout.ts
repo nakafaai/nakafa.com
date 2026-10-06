@@ -15,11 +15,9 @@ import {
 import { findTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
-import { Effect, Option, type Schema } from "effect";
+import { Effect, Option } from "effect";
 
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 type TryoutCatalog = Option.Option.Value<
   Effect.Success<ReturnType<typeof findTryoutCatalog>>
 >;

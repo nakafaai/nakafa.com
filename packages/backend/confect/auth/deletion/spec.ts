@@ -17,17 +17,15 @@ export const accountDeletionRequestPhase = {
 const accountDeletionRequestPhaseSchema = Schema.Literals(
   Object.values(accountDeletionRequestPhase)
 );
-export type AccountDeletionRequestPhase = Schema.Schema.Type<
-  typeof accountDeletionRequestPhaseSchema
->;
+export type AccountDeletionRequestPhase =
+  typeof accountDeletionRequestPhaseSchema.Type;
 export const accountDeletionBrowserAttemptSchema = Schema.Struct({
   attemptId: Schema.String,
   phase: accountDeletionRequestPhaseSchema,
   userId: Schema.String,
 });
-export type AccountDeletionBrowserAttempt = Schema.Schema.Type<
-  typeof accountDeletionBrowserAttemptSchema
->;
+export type AccountDeletionBrowserAttempt =
+  typeof accountDeletionBrowserAttemptSchema.Type;
 export const accountDeletionCancellationOutcome = {
   complete: "complete",
   continue: "continue",
@@ -35,9 +33,8 @@ export const accountDeletionCancellationOutcome = {
 export const accountDeletionCancellationOutcomeValidator = Schema.Literals([
   ...Object.values(accountDeletionCancellationOutcome),
 ]);
-export type AccountDeletionCancellationOutcome = Schema.Schema.Type<
-  typeof accountDeletionCancellationOutcomeValidator
->;
+export type AccountDeletionCancellationOutcome =
+  typeof accountDeletionCancellationOutcomeValidator.Type;
 export const accountDeletionPreparationOutcome = {
   continue: "continue",
   ready: "ready",
@@ -47,9 +44,8 @@ export const accountDeletionPreparationOutcome = {
 export const accountDeletionPreparationOutcomeValidator = Schema.Literals([
   ...Object.values(accountDeletionPreparationOutcome),
 ]);
-export type AccountDeletionPreparationOutcome = Schema.Schema.Type<
-  typeof accountDeletionPreparationOutcomeValidator
->;
+export type AccountDeletionPreparationOutcome =
+  typeof accountDeletionPreparationOutcomeValidator.Type;
 export const accountDeletionAttemptStatus = {
   committed: "committed",
   pending: "pending",
@@ -58,14 +54,12 @@ export const accountDeletionAttemptStatus = {
 export const accountDeletionAttemptStatusValidator = Schema.Literals([
   ...Object.values(accountDeletionAttemptStatus),
 ]);
-export type AccountDeletionAttemptStatus = Schema.Schema.Type<
-  typeof accountDeletionAttemptStatusValidator
->;
+export type AccountDeletionAttemptStatus =
+  typeof accountDeletionAttemptStatusValidator.Type;
 export const accountDeletionPreparationVersionValidator = Schema.Struct({
   attemptId: Schema.String,
   preparationId: IdSchema("accountDeletionPreparations"),
   recoveryGeneration: Schema.Finite,
 });
-export type AccountDeletionPreparationVersion = Schema.Schema.Type<
-  typeof accountDeletionPreparationVersionValidator
->;
+export type AccountDeletionPreparationVersion =
+  typeof accountDeletionPreparationVersionValidator.Type;

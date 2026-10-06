@@ -3,16 +3,13 @@ import type {
   releaseSnapshotTransitionsValidator,
   releaseSnapshotTransitionValidator,
 } from "@repo/backend/confect/contentRelease/spec";
-import type { Schema } from "effect";
 /** Snapshot transition facts the history cleaner reads for one family. */
-export type ReleaseSnapshotTransition = Schema.Schema.Type<
-  typeof releaseSnapshotTransitionValidator
->;
+export type ReleaseSnapshotTransition =
+  typeof releaseSnapshotTransitionValidator.Type;
 
 /** Fixed per-family snapshot transitions stored beside one release. */
-export type ReleaseSnapshotTransitions = Schema.Schema.Type<
-  typeof releaseSnapshotTransitionsValidator
->;
+export type ReleaseSnapshotTransitions =
+  typeof releaseSnapshotTransitionsValidator.Type;
 
 /** Reachability facts stored beside one release so retirement never decodes it. */
 export interface ReleaseReachability {

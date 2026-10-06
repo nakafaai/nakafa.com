@@ -36,7 +36,7 @@ const CliWorkflowSchema = Schema.StructWithRest(
   [Schema.Record(Schema.String, Schema.Unknown)]
 );
 
-type WorkflowJob = Schema.Schema.Type<typeof WorkflowJobSchema>;
+type WorkflowJob = typeof WorkflowJobSchema.Type;
 
 const SETUP_NODE_ACTION =
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020";

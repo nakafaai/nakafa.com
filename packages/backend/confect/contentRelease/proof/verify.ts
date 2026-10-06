@@ -29,9 +29,9 @@ import type {
   progressValidator,
   statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Effect, type Schema } from "effect";
-export type Progress = Schema.Schema.Type<typeof progressValidator>;
-export type Status = Schema.Schema.Type<typeof statusValidator>;
+import { Effect } from "effect";
+export type Progress = typeof progressValidator.Type;
+export type Status = typeof statusValidator.Type;
 /** Authenticates the frozen release and renderer identity shared by proof steps. */
 export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
   function* (manifestHash: string, releaseId: string) {

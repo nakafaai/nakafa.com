@@ -21,9 +21,9 @@ import { stagedEvidence } from "@repo/backend/confect/contentRelease/receipt";
 import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { Clock, Context, Effect, Layer, type Schema } from "effect";
-export type ProofFailure = Schema.Schema.Type<typeof proofFailureValidator>;
-export type ProofPoll = Schema.Schema.Type<typeof proofPollValidator>;
+import { Clock, Context, Effect, Layer } from "effect";
+export type ProofFailure = typeof proofFailureValidator.Type;
+export type ProofPoll = typeof proofPollValidator.Type;
 export type Release = Docs["contentReleases"];
 export interface ProofPollCoordinatorService {
   /** Removes terminal component state after its outcome is persisted. */

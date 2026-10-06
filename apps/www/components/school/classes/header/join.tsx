@@ -30,7 +30,7 @@ const form = Schema.Struct({
 const formSchema = Schema.toStandardSchemaV1(form);
 const defaultValues = {
   code: "",
-} satisfies Schema.Schema.Type<typeof form>;
+} satisfies typeof form.Type;
 export function SchoolClassesHeaderJoin() {
   const t = useTranslations("School.Classes");
   const pathname = usePathname();

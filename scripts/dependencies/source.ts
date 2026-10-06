@@ -26,8 +26,8 @@ const WorkspaceManifest = Schema.Struct({
   ),
 });
 
-export type PackageManifest = Schema.Schema.Type<typeof PackageManifest>;
-export type WorkspaceManifest = Schema.Schema.Type<typeof WorkspaceManifest>;
+export type PackageManifest = typeof PackageManifest.Type;
+export type WorkspaceManifest = typeof WorkspaceManifest.Type;
 
 export interface FirstPartyManifest {
   readonly manifest: PackageManifest;

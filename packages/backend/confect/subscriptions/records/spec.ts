@@ -5,9 +5,7 @@ export const subscriptionRecordValidator = subscriptions.Fields;
 export const subscriptionRecordArgs = {
   subscription: subscriptionRecordValidator,
 };
-export type SubscriptionRecord = Schema.Schema.Type<
-  typeof subscriptionRecordValidator
->;
+export type SubscriptionRecord = typeof subscriptionRecordValidator.Type;
 
 /** Raised when Convex IO fails while upserting one subscription record. */
 export class SubscriptionRecordIoError extends Schema.TaggedError<SubscriptionRecordIoError>()(

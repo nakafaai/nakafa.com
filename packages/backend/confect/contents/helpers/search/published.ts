@@ -12,11 +12,9 @@ import { rankContentSearchDocuments } from "@repo/backend/confect/contents/helpe
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { getExactRouteQuery } from "@repo/backend/confect/contents/helpers/search/terms";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
-import { Effect, type Schema } from "effect";
+import { Effect } from "effect";
 
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 type PublishedSearchOwner = NonNullable<
   Effect.Success<ReturnType<typeof loadSearchOwner>>
 >;

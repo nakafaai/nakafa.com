@@ -40,7 +40,7 @@ const QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
  * Function errors and decoding failures are never transient.
  */
 export function isTransientQueryFailure(error: unknown) {
-  if (!(error instanceof HttpClient.HttpClientError)) {
+  if (!Schema.is(HttpClient.HttpClientError)(error)) {
     return false;
   }
   const { cause } = error;

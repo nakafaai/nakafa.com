@@ -34,7 +34,7 @@ const form = Schema.Struct({
 const formSchema = Schema.toStandardSchemaV1(form);
 const defaultValues = {
   code: "",
-} satisfies Schema.Schema.Type<typeof form>;
+} satisfies typeof form.Type;
 interface Props {
   classId: Id<"schoolClasses">;
   visibility: SchoolClassVisibility;

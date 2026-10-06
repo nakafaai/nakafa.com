@@ -91,4 +91,4 @@ export const quranMarkdownValidator = Schema.Struct({
   toVerse: Schema.Finite,
   verses: Schema.mutable(Schema.Array(quranMarkdownVerseValidator)),
 });
-export type QuranMarkdown = Schema.Schema.Type<typeof quranMarkdownValidator>;
+export type QuranMarkdown = typeof quranMarkdownValidator.Type;

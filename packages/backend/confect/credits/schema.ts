@@ -10,9 +10,7 @@ export const creditTransactionTypeValidator = Schema.Literals([
   "bonus",
   "expiration",
 ]);
-export type CreditTransactionType = Schema.Schema.Type<
-  typeof creditTransactionTypeValidator
->;
+export type CreditTransactionType = typeof creditTransactionTypeValidator.Type;
 export type CreditGrantType = Extract<CreditTransactionType, `${string}-grant`>;
 
 /** Scalar audit values allowed on credit transaction metadata. */
@@ -28,9 +26,8 @@ export const creditTransactionMetadataValidator = Schema.Record(
   Schema.String,
   creditTransactionMetadataValueValidator
 );
-export type CreditTransactionMetadata = Schema.Schema.Type<
-  typeof creditTransactionMetadataValidator
->;
+export type CreditTransactionMetadata =
+  typeof creditTransactionMetadataValidator.Type;
 export const creditTransactionValidator = Schema.Struct({
   userId: IdSchema("users"),
   amount: Schema.Finite,

@@ -82,9 +82,7 @@ const MathEquationSystemStructSchema = Schema.Struct({
     })
   ),
 });
-type MathEquationSystemInput = Schema.Schema.Type<
-  typeof MathEquationSystemStructSchema
->;
+type MathEquationSystemInput = typeof MathEquationSystemStructSchema.Type;
 /** Returns whether a solve request includes a non-real solve domain. */
 function hasSolveDomain(value: MathEquationSystemInput) {
   return value.lower !== undefined || value.upper !== undefined;

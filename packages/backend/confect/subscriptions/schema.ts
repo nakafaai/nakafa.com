@@ -6,6 +6,5 @@ import { Schema } from "effect";
 export const subscriptionRecurringIntervalValidator = Schema.NullOr(
   Schema.Literals(["day", "week", "month", "year"])
 );
-export type SubscriptionRecurringInterval = Schema.Schema.Type<
-  typeof subscriptionRecurringIntervalValidator
->;
+export type SubscriptionRecurringInterval =
+  typeof subscriptionRecurringIntervalValidator.Type;

@@ -13,10 +13,9 @@ import {
 } from "@repo/backend/confect/emails/welcome/impl";
 import type { welcomeIntentReconciliationPhaseValidator } from "@repo/backend/confect/emails/welcome/reconciliation.spec";
 import { workflow } from "@repo/backend/confect/workflow";
-import { Duration, Effect, flow, Result, type Schema } from "effect";
-export type WelcomeIntentReconciliationPhase = Schema.Schema.Type<
-  typeof welcomeIntentReconciliationPhaseValidator
->;
+import { Duration, Effect, flow, Result } from "effect";
+export type WelcomeIntentReconciliationPhase =
+  typeof welcomeIntentReconciliationPhaseValidator.Type;
 /** Maximum app intents one reconciliation transaction may inspect. */
 export const welcomeIntentReconciliationPageSize = 32;
 

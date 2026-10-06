@@ -17,7 +17,7 @@ import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { readPageCatalog } from "@repo/backend/content/publication/page";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, flow, type Schema } from "effect";
+import { Effect, flow } from "effect";
 
 const PRIVACY_POLICY_PAGE_KEY = PageKeySchema.make("privacy-policy");
 const TERMS_OF_SERVICE_PAGE_KEY = PageKeySchema.make("terms-of-service");
@@ -86,9 +86,7 @@ export const resolveWelcomeEmailLinks = Effect.fn(
     ).href,
   };
 });
-export type WelcomeIntentInput = Schema.Schema.Type<
-  typeof welcomeIntentInputValidator
->;
+export type WelcomeIntentInput = typeof welcomeIntentInputValidator.Type;
 
 /** Reads one scheduled intent and its signed locale-exact links. */
 export const readWelcomeIntentInput = Effect.fn(

@@ -3,20 +3,11 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect } from "effect";
 import { GET } from "@/app/sitemap/[id]/route";
+import { SitemapPageNotFoundError } from "@/lib/sitemap/identity";
 
 const mockGetCachedSitemapEntries = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
 const mockCaptureServerExceptionSafely = vi.hoisted(() => vi.fn());
-const mockSitemapPageNotFoundError = vi.hoisted(() => {
-  class SitemapPageNotFoundError extends Error {
-    readonly pageId: string;
-    constructor(options: { pageId: string }) {
-      super(`Sitemap page ${options.pageId} does not exist.`);
-      this.pageId = options.pageId;
-    }
-  }
-  return SitemapPageNotFoundError;
-});
 
 /** Test-only typed sitemap page failure. */
 class TestSitemapPageError extends Data.TaggedError("TestSitemapPageError")<{
@@ -27,13 +18,9 @@ vi.mock("@/lib/sitemap/entries", () => ({
   getCachedSitemapEntries: mockGetCachedSitemapEntries,
 }));
 
-vi.mock("@/lib/sitemap/identity", () => ({
+vi.mock(import("@/lib/sitemap/identity"), async (importOriginal) => ({
+  ...(await importOriginal()),
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
-}));
-
-vi.mock("@/lib/sitemap/routes", () => ({
-  /** Matches the handler's 404 discrimination without loading Convex. */
-  SitemapPageNotFoundError: mockSitemapPageNotFoundError,
 }));
 
 vi.mock("@/lib/analytics/server", () => ({
@@ -113,7 +100,7 @@ describe("sitemap page route", () => {
       partition: 7,
     });
     mockGetCachedSitemapEntries.mockRejectedValueOnce(
-      new mockSitemapPageNotFoundError({ pageId: "material_en_p7" })
+      new SitemapPageNotFoundError({ pageId: "material_en_p7" })
     );
 
     const response = await GET(

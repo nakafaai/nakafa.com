@@ -31,9 +31,8 @@ const NakafaContentGraphProjectionSchema =
   );
 
 /** Persisted graph projection fields derived from the runtime schema. */
-type NakafaContentGraphProjection = Schema.Schema.Type<
-  typeof NakafaContentGraphProjectionSchema
->;
+type NakafaContentGraphProjection =
+  typeof NakafaContentGraphProjectionSchema.Type;
 
 interface NakafaUrlRoute {
   locale: Locale;

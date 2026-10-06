@@ -240,8 +240,8 @@ export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerati
     text: Schema.optional(Schema.String),
   }
 ) {}
-export type ScrapeInput = Schema.Schema.Type<typeof ScrapeInputSchema>;
-export type ScrapeOutput = Schema.Schema.Type<typeof ScrapeOutputSchema>;
-export type ResearchOutput = Schema.Schema.Type<typeof ResearchOutputSchema>;
-export type WebSearchInput = Schema.Schema.Type<typeof WebSearchInputSchema>;
-export type WebSearchOutput = Schema.Schema.Type<typeof WebSearchOutputSchema>;
+export type ScrapeInput = typeof ScrapeInputSchema.Type;
+export type ScrapeOutput = typeof ScrapeOutputSchema.Type;
+export type ResearchOutput = typeof ResearchOutputSchema.Type;
+export type WebSearchInput = typeof WebSearchInputSchema.Type;
+export type WebSearchOutput = typeof WebSearchOutputSchema.Type;

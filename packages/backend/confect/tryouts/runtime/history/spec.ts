@@ -17,9 +17,7 @@ export const tryoutHistoryRequestValidator = Schema.Struct({
     )
   ),
 });
-export type TryoutHistoryRequest = Schema.Schema.Type<
-  typeof tryoutHistoryRequestValidator
->;
+export type TryoutHistoryRequest = typeof tryoutHistoryRequestValidator.Type;
 
 /** An owned content read failed its immutable identity or transport bound. */
 export class TryoutHistoryError extends Schema.TaggedError<TryoutHistoryError>()(
