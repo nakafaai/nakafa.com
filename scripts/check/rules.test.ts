@@ -139,4 +139,60 @@ page.locator(() => Object.keys(routes));
         );
       })
   );
+
+  it.effect(
+    "leaves a function alone when the module passes it to the browser page by name",
+    () =>
+      Effect.gen(function* () {
+        const page = `function countFrames() {
+  return Object.keys(window.frames);
+}
+const readState = () => Object.values(window.state);
+const local = function () {
+  return Array.isArray(window.state);
+};
+function nodeSide() {
+  return Object.keys(routes);
+}
+page.addInitScript(countFrames);
+page.evaluate(readState);
+page.evaluate(local);
+page.evaluate((limit) => limit, nodeSide);
+page.$eval("main", countMain);
+function countMain(node) {
+  return Object.keys(node.dataset);
+}
+let later;
+later = () => Object.keys(routes);
+page.evaluate(later);
+export default function () {
+  return Object.keys(routes);
+}
+const { length } = [() => Object.keys(routes)];
+`;
+        assert.deepStrictEqual(
+          yield* findings([
+            {
+              file: "apps/www/e2e/named.browser.ts",
+              sourceText: `import { test } from "@playwright/test";\n${page}`,
+            },
+            { file: "apps/www/lib/named.ts", sourceText: page },
+          ]),
+          [
+            "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts array-check",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+          ]
+        );
+      })
+  );
 });

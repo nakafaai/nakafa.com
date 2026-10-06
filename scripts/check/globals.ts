@@ -1,8 +1,12 @@
 import { Array as Arr, HashSet, Option, Record as Rec } from "effect";
 import {
+  isAsExpression,
   isElementAccessExpression,
   isIdentifier,
+  isNonNullExpression,
+  isParenthesizedExpression,
   isPropertyAccessExpression,
+  isSatisfiesExpression,
   isStringLiteralLikeNode,
   type Node,
   type SourceFile,
@@ -26,6 +30,26 @@ const GLOBALS = HashSet.fromIterable(Rec.keys(MEMBERS));
 /** Global objects whose members are the same platform globals. */
 const GLOBAL_OBJECTS = HashSet.make("globalThis", "self", "window");
 
+/** Whether a node only wraps an expression: parentheses, a non-null assertion, or a type assertion. */
+function isWrapper(node: Node) {
+  return (
+    isParenthesizedExpression(node) ||
+    isNonNullExpression(node) ||
+    isAsExpression(node) ||
+    isSatisfiesExpression(node)
+  );
+}
+
+/** Returns the outermost expression that only wraps `node`, such as `(Object)`. */
+function wrapped(node: Node): Node {
+  return isWrapper(node.parent) ? wrapped(node.parent) : node;
+}
+
+/** Returns the expression inside every wrapper around it. */
+function unwrapped(node: Node): Node {
+  return isWrapper(node) ? unwrapped(node.expression) : node;
+}
+
 /**
  * Returns the member a node reads from `owner`, written as a property or as an
  * element access with a string literal, such as `Object.keys` or
@@ -47,7 +71,8 @@ function memberRead(node: Node, owner: Node): Option.Option<string> {
  * through the member it reads, such as `Object.keys` or `Array.isArray`.
  */
 function globalRule(name: string, reference: Node): Option.Option<RuleId> {
-  return Option.flatMap(memberRead(reference.parent, reference), (member) =>
+  const outer = wrapped(reference);
+  return Option.flatMap(memberRead(outer.parent, outer), (member) =>
     Option.flatMap(Rec.get(MEMBERS, name), (members) =>
       Rec.get(members, member)
     )
@@ -68,13 +93,15 @@ function referenceCandidates(sourceFile: SourceFile, node: Node) {
   if (!(isPropertyAccessExpression(node) || isElementAccessExpression(node))) {
     return [];
   }
-  const owner = node.expression;
+  const owner = unwrapped(node.expression);
   if (!(isIdentifier(owner) && HashSet.has(GLOBAL_OBJECTS, owner.text))) {
     return [];
   }
   return Option.toArray(
     Option.map(
-      Option.flatMap(memberRead(node, owner), (name) => globalRule(name, node)),
+      Option.flatMap(memberRead(node, node.expression), (name) =>
+        globalRule(name, node)
+      ),
       (rule) => candidate(rule, sourceFile, node, owner)
     )
   );

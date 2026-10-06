@@ -1,9 +1,10 @@
-import { Array as Arr, HashSet, Match, Schema } from "effect";
+import { Array as Arr, HashSet, Match, Result, Schema } from "effect";
 import {
   type Identifier,
   isArrowFunction,
   isCallExpression,
   isExportAssignment,
+  isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
   isImportDeclaration,
@@ -13,6 +14,7 @@ import {
   isSourceFile,
   isStringLiteral,
   isTypeReferenceNode,
+  isVariableDeclaration,
   type Node,
   type SourceFile,
 } from "typescript/unstable/ast";
@@ -148,26 +150,61 @@ function isConfiguration(file: string, sourceFile: SourceFile) {
   );
 }
 
-/** Whether a node is a function that a Playwright call serializes into the browser page. */
-function isPageFunction(node: Node) {
-  if (!(isArrowFunction(node) || isFunctionExpression(node))) {
-    return false;
+/**
+ * Returns the function a Playwright call serializes into the browser page: the
+ * first argument of `evaluate` and its siblings, the second of `$eval` and
+ * `$$eval`.
+ */
+function pageArgument(node: Node) {
+  if (
+    !(
+      isCallExpression(node) &&
+      isPropertyAccessExpression(node.expression) &&
+      HashSet.has(PAGE_METHODS, node.expression.name.text)
+    )
+  ) {
+    return;
   }
-  const call = node.parent;
-  return (
-    isCallExpression(call) &&
-    Arr.some(call.arguments, (argument) => argument === node) &&
-    isPropertyAccessExpression(call.expression) &&
-    HashSet.has(PAGE_METHODS, call.expression.name.text)
+  return node.arguments[node.expression.name.text.startsWith("$") ? 1 : 0];
+}
+
+/** Returns the names of the functions a module passes to the browser page by reference. */
+function pageFunctionNames(nodes: readonly Node[]) {
+  return HashSet.fromIterable(
+    Arr.filterMap(nodes, (node) => {
+      const argument = pageArgument(node);
+      return argument !== undefined && isIdentifier(argument)
+        ? Result.succeed(argument.text)
+        : Result.failVoid;
+    })
   );
 }
 
+/**
+ * Whether a node is a function that runs in the browser page: one written in
+ * the Playwright call, or one the module declares under a name it passes to
+ * such a call.
+ */
+function isPageFunction(node: Node, names: HashSet.HashSet<string>) {
+  if (isFunctionDeclaration(node)) {
+    return node.name !== undefined && HashSet.has(names, node.name.text);
+  }
+  if (!(isArrowFunction(node) || isFunctionExpression(node))) {
+    return false;
+  }
+  const { parent } = node;
+  if (isVariableDeclaration(parent)) {
+    return isIdentifier(parent.name) && HashSet.has(names, parent.name.text);
+  }
+  return pageArgument(parent) === node;
+}
+
 /** Whether a node sits inside a function that runs in the browser page. */
-function runsInPage(node: Node): boolean {
+function runsInPage(node: Node, names: HashSet.HashSet<string>): boolean {
   if (isSourceFile(node)) {
     return false;
   }
-  return isPageFunction(node) || runsInPage(node.parent);
+  return isPageFunction(node, names) || runsInPage(node.parent, names);
 }
 
 /**
@@ -177,9 +214,11 @@ function runsInPage(node: Node): boolean {
  * exists there, so Effect cannot replace a platform global inside it.
  */
 export function outsidePage(sourceFile: SourceFile, nodes: readonly Node[]) {
-  return imports(sourceFile, PLAYWRIGHT_PATTERN)
-    ? Arr.filter(nodes, (node) => !runsInPage(node))
-    : nodes;
+  if (!imports(sourceFile, PLAYWRIGHT_PATTERN)) {
+    return nodes;
+  }
+  const names = pageFunctionNames(nodes);
+  return Arr.filter(nodes, (node) => !runsInPage(node, names));
 }
 
 /** Whether `rule` inspects the authored module `file`. */

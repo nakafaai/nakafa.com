@@ -32,6 +32,12 @@ Object["keys"](value);
 Array['isArray'](value);
 globalThis.Object["values"](value);
 globalThis["Object"].entries(value);
+(Object).keys(value);
+(globalThis.Object).values(value);
+Object!.keys(value);
+(Array as typeof Array).isArray(value);
+(globalThis).Object.keys(value);
+(Object satisfies unknown).keys(value);
 `),
         [
           "1 object-helper",
@@ -46,6 +52,12 @@ globalThis["Object"].entries(value);
           "10 array-check",
           "11 object-helper",
           "12 object-helper",
+          "13 object-helper",
+          "14 object-helper",
+          "15 object-helper",
+          "16 array-check",
+          "17 object-helper",
+          "18 object-helper",
         ]
       );
     })
