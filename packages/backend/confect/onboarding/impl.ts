@@ -25,9 +25,9 @@ import {
   toOnboardingStatus,
 } from "@repo/backend/confect/onboarding/status";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Clock, Effect, type Schema } from "effect";
+import { Clock, Effect } from "effect";
 
-type OnboardingAnswer = Schema.Schema.Type<typeof onboardingAnswerValidator>;
+type OnboardingAnswer = typeof onboardingAnswerValidator.Type;
 const onboardingPersistenceFailedMessage =
   "Unable to read or persist onboarding progress.";
 /** Maps unknown database failures into the stable onboarding contract. */

@@ -47,9 +47,7 @@ const MathProbabilityBaseInputSchema = Schema.Struct({
     }).pipe(Schema.check(Schema.isMinLength(1)))
   ),
 });
-type ProbabilityBaseInput = Schema.Schema.Type<
-  typeof MathProbabilityBaseInputSchema
->;
+type ProbabilityBaseInput = typeof MathProbabilityBaseInputSchema.Type;
 type ProbabilityParameter = keyof ProbabilityBaseInput["parameters"];
 type ProbabilityMomentInput = ProbabilityBaseInput & {
   expression?: string;

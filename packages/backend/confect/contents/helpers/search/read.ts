@@ -8,11 +8,9 @@ import { readSignedQuranSearchDocuments } from "@repo/backend/confect/contents/h
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { readSignedTryoutSearchDocuments } from "@repo/backend/confect/contents/helpers/search/tryout";
 import type { NakafaSection } from "@repo/backend/confect/lib/validators/contents";
-import { Effect, type Schema } from "effect";
+import { Effect } from "effect";
 
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 
 /** Reads a bounded page across active signed content families. */
 export const readContentSearchDocuments = Effect.fn(

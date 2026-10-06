@@ -4,11 +4,9 @@ export const tryoutStatusValidator = Schema.Literals([
   "completed",
   "expired",
 ]);
-export type TryoutStatus = Schema.Schema.Type<typeof tryoutStatusValidator>;
+export type TryoutStatus = typeof tryoutStatusValidator.Type;
 export const tryoutStatusRankValidator = Schema.Literals([1, 2, 3]);
-export type TryoutStatusRank = Schema.Schema.Type<
-  typeof tryoutStatusRankValidator
->;
+export type TryoutStatusRank = typeof tryoutStatusRankValidator.Type;
 
 /** Returns the stable workflow rank used by progress indexes. */
 export function getTryoutStatusRank(status: TryoutStatus): TryoutStatusRank {

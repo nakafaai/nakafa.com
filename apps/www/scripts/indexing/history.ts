@@ -24,12 +24,8 @@ const decodeSubmissionHistory = Schema.decodeUnknownEffect(
 const decodeEmptySubmissionHistory = Schema.decodeUnknownEffect(
   SubmissionHistorySchema
 );
-export type SubmissionHistory = Schema.Schema.Type<
-  typeof SubmissionHistorySchema
->;
-export type SubmissionService = Schema.Schema.Type<
-  typeof SubmissionServiceSchema
->;
+export type SubmissionHistory = typeof SubmissionHistorySchema.Type;
+export type SubmissionService = typeof SubmissionServiceSchema.Type;
 /** Builds an empty local submission-history value for a first script run. */
 export function emptySubmissionHistory(): SubmissionHistory {
   return {

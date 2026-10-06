@@ -40,4 +40,4 @@ export const MathRequestSchema = Schema.Struct({
     description:
       "Canonical request sent to the deterministic CAS math service.",
   });
-export type MathRequest = Schema.Schema.Type<typeof MathRequestSchema>;
+export type MathRequest = typeof MathRequestSchema.Type;

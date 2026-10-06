@@ -7,7 +7,7 @@ import { resolveBoundPublicProjection } from "@repo/backend/content/publication/
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { PublicationSource } from "@repo/backend/content/publication/source";
 import type { routeResultValidator } from "@repo/backend/content/publication/spec";
-import { Effect, Option, type Schema } from "effect";
+import { Effect, Option } from "effect";
 /** Resolves one public route from the exact active publication sequence. */
 export const resolveActiveRoute = Effect.fn(
   "contentRelease.resolveActiveRoute"
@@ -74,7 +74,7 @@ export const resolveActiveRoute = Effect.fn(
     projection,
   };
 });
-type RouteResult = Schema.Schema.Type<typeof routeResultValidator>;
+type RouteResult = typeof routeResultValidator.Type;
 /** Converts the internal route model into its public ownership contract. */
 function toRouteResult(
   resolved: Effect.Success<ReturnType<typeof resolveActiveRoute>>

@@ -17,6 +17,9 @@
         "ignoreEffectSuggestionsInTscExitCode": false,
         "diagnosticSeverity": {
           "experimentalApiUsage": "off",
+          "extendsNativeError": "error",
+          "instanceOfSchema": "error",
+          "preferSchemaTypeProperty": "error",
           "unstableApiUsage": "off"
         }
       }

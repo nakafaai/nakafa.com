@@ -15,4 +15,4 @@ const MaterialListItemSchema = Schema.Struct({
 const MaterialListSchema = Schema.Array(MaterialListItemSchema).pipe(
   Schema.mutable
 );
-export type MaterialList = Schema.Schema.Type<typeof MaterialListSchema>;
+export type MaterialList = typeof MaterialListSchema.Type;

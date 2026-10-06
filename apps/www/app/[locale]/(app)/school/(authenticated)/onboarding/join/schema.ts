@@ -8,4 +8,4 @@ export const schoolJoinFormSchema = Schema.toStandardSchemaV1(schoolJoinForm);
 /** Default values for the school join onboarding form. */
 export const schoolJoinDefaultValues = {
   code: "",
-} satisfies Schema.Schema.Type<typeof schoolJoinForm>;
+} satisfies typeof schoolJoinForm.Type;

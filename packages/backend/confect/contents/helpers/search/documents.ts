@@ -28,9 +28,7 @@ export const contentSearchSourceValidator = Schema.Struct({
 });
 
 /** Search source row derived from the Convex validator. */
-export type ContentSearchSource = Schema.Schema.Type<
-  typeof contentSearchSourceValidator
->;
+export type ContentSearchSource = typeof contentSearchSourceValidator.Type;
 
 /**
  * Creates the stable public content reference stored in the search read model.

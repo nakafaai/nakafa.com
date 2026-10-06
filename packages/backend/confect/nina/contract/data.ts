@@ -42,7 +42,7 @@ export const NinaReadOptionsSchema = NakafaAgentReadOptionsSchema.mapFields(
     ),
   })
 ).mapFields(Struct.map(Schema.mutableKey));
-export type NinaReadOptions = Schema.Schema.Type<typeof NinaReadOptionsSchema>;
+export type NinaReadOptions = typeof NinaReadOptionsSchema.Type;
 const ReadInputSchema = NinaReadOptionsSchema;
 const QuranInputSchema = NakafaAgentQuranReferenceOptionsSchema;
 const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
@@ -214,5 +214,5 @@ export const DataPartSchema = Schema.Struct({
     status: StatusSchema,
   }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type DataPart = Schema.Schema.Type<typeof DataPartSchema>;
-export type NakafaDataPart = Schema.Schema.Type<typeof NakafaDataSchema>;
+export type DataPart = typeof DataPartSchema.Type;
+export type NakafaDataPart = typeof NakafaDataSchema.Type;

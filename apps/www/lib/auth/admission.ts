@@ -106,7 +106,7 @@ export const PostAuthIntentSchema = Schema.String.pipe(
   Schema.brand("@Nakafa/PostAuthIntent")
 );
 
-export type PostAuthIntent = Schema.Schema.Type<typeof PostAuthIntentSchema>;
+export type PostAuthIntent = typeof PostAuthIntentSchema.Type;
 
 const AppLocaleSchema = Schema.Literals(routing.locales);
 
@@ -128,9 +128,8 @@ export const PostAuthIntentResolutionSchema = Schema.Union([
   }),
 ]);
 
-export type PostAuthIntentResolution = Schema.Schema.Type<
-  typeof PostAuthIntentResolutionSchema
->;
+export type PostAuthIntentResolution =
+  typeof PostAuthIntentResolutionSchema.Type;
 
 export interface PostAuthDestination {
   readonly href: string;

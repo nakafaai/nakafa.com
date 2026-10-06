@@ -26,7 +26,7 @@ export const QuranLlmsRouteSchema = Schema.Union([
   }),
 ]);
 
-export type QuranLlmsRoute = Schema.Schema.Type<typeof QuranLlmsRouteSchema>;
+export type QuranLlmsRoute = typeof QuranLlmsRouteSchema.Type;
 
 /** Classifies Quran Markdown ownership without reading publication body data. */
 export function classifyQuranLlmsRoute(

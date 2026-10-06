@@ -6,7 +6,7 @@ export const SEARCH_FAMILIES = [
   "material",
 ] as const satisfies readonly ContentFamily[];
 export const searchFamilyValidator = Schema.Literals([...SEARCH_FAMILIES]);
-export type SearchFamily = Schema.Schema.Type<typeof searchFamilyValidator>;
+export type SearchFamily = typeof searchFamilyValidator.Type;
 
 /** Narrows one signed release family to the learning-search domain. */
 export function isSearchFamily(family: ContentFamily): family is SearchFamily {

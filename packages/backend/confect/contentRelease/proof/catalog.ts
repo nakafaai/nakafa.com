@@ -22,8 +22,8 @@ import {
 } from "@repo/backend/confect/contentRelease/spec";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolveContentHead } from "@repo/backend/content/publication/projection";
-import { Effect, type Schema } from "effect";
-export type CatalogCursor = Schema.Schema.Type<typeof catalogCursorValidator>;
+import { Effect } from "effect";
+export type CatalogCursor = typeof catalogCursorValidator.Type;
 export interface CatalogPage {
   readonly done: boolean;
   readonly heads: readonly ContentHead[];
@@ -146,8 +146,7 @@ export const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(
     const release = yield* catalogRelease(releaseId);
     const stored = yield* loadCatalogKeys(cursor);
     const keys = stored.slice(0, PROOF_PAGE_LIMIT);
-    const heads: (ContentHead &
-      Schema.Schema.Type<typeof contentHeadValidator>)[] = [];
+    const heads: (ContentHead & typeof contentHeadValidator.Type)[] = [];
     let nextCursor = cursor;
     let processed = 0;
     for (const key of keys) {

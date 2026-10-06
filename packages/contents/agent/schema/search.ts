@@ -134,9 +134,5 @@ export const NakafaAgentSearchFactsSchema =
       Schema.mutable(Schema.Array(Schema.NonEmptyString))
     ),
   }));
-export type NakafaAgentSearchInput = Schema.Schema.Type<
-  typeof NakafaAgentSearchOptionsSchema
->;
-export type NakafaAgentSearchResult = Schema.Schema.Type<
-  typeof NakafaAgentSearchResultSchema
->;
+export type NakafaAgentSearchInput = typeof NakafaAgentSearchOptionsSchema.Type;
+export type NakafaAgentSearchResult = typeof NakafaAgentSearchResultSchema.Type;

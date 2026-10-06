@@ -31,9 +31,7 @@ import { Effect, Option, Schema } from "effect";
 type PublishedRef = NakafaAgentReadableContentRef & {
   readonly section: "articles" | "material";
 };
-type AgentContentSource = Schema.Schema.Type<
-  typeof agentContentSourceValidator
->;
+type AgentContentSource = typeof agentContentSourceValidator.Type;
 type QuranContentSource = Extract<
   NonNullable<AgentContentSource>,
   {

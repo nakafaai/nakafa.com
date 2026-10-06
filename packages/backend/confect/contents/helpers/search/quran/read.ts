@@ -20,9 +20,7 @@ import { readQuranRow } from "@repo/backend/content/quran/row";
 import { authenticateQuranSearchHit } from "@repo/backend/content/quran/search";
 import { Effect, Option, Schema } from "effect";
 
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 interface SignedQuranSearch {
   readonly index: number;
   readonly payload: typeof QuranSearchRowSchema.Type;

@@ -2,7 +2,7 @@ import "server-only";
 import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { cacheLife, cacheTag } from "next/cache";
 import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import { ContentExecutionError } from "@/lib/content/published/errors";
@@ -29,9 +29,9 @@ export const readRenderedBody = Effect.fn("NakafaContent.readRenderedBody")(
     Effect.tryPromise({
       try: () => renderVerifiedBody(artifact),
       catch: (cause) =>
-        cause instanceof ContentExecutionError ||
-        cause instanceof RendererComponentCollision ||
-        cause instanceof RendererImplementationMissing
+        Schema.is(ContentExecutionError)(cause) ||
+        Schema.is(RendererComponentCollision)(cause) ||
+        Schema.is(RendererImplementationMissing)(cause)
           ? cause
           : new ContentExecutionError({
               contentKey: artifact.payload.contentKey,

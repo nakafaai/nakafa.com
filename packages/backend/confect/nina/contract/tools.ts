@@ -139,11 +139,9 @@ export const MathToolInputSchema = Schema.Struct({
       `,
     }),
   });
-export type NakafaToolInput = Schema.Schema.Type<typeof NakafaToolInputSchema>;
-export type ResearchToolInput = Schema.Schema.Type<
-  typeof ResearchToolInputSchema
->;
-export type MathToolInput = Schema.Schema.Type<typeof MathToolInputSchema>;
+export type NakafaToolInput = typeof NakafaToolInputSchema.Type;
+export type ResearchToolInput = typeof ResearchToolInputSchema.Type;
+export type MathToolInput = typeof MathToolInputSchema.Type;
 type SpecialistToolInput = MathToolInput | NakafaToolInput | ResearchToolInput;
 /**
  * Builds the internal Markdown task after the public tool input has separated

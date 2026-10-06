@@ -39,9 +39,8 @@ export const AnalyticsConsentDecisionSchema = Schema.Literals([
   "denied",
 ]);
 
-export type AnalyticsConsentDecision = Schema.Schema.Type<
-  typeof AnalyticsConsentDecisionSchema
->;
+export type AnalyticsConsentDecision =
+  typeof AnalyticsConsentDecisionSchema.Type;
 
 const anonymousConsentFields = {
   category: Schema.Literals(CONSENT_CATEGORIES),
@@ -62,9 +61,8 @@ export const AnonymousAnalyticsConsentRecordSchema = Schema.Union([
   }),
 ]);
 
-export type AnonymousAnalyticsConsentRecord = Schema.Schema.Type<
-  typeof AnonymousAnalyticsConsentRecordSchema
->;
+export type AnonymousAnalyticsConsentRecord =
+  typeof AnonymousAnalyticsConsentRecordSchema.Type;
 
 const AnonymousAnalyticsConsentSchema = Schema.fromJsonString(
   AnonymousAnalyticsConsentRecordSchema

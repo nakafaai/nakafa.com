@@ -48,9 +48,7 @@ const contentViewTargetValidator = Schema.Union([
   }),
 ]);
 /** Current verified route facts used by views, recents, and popularity. */
-export type ContentViewTarget = Schema.Schema.Type<
-  typeof contentViewTargetValidator
->;
+export type ContentViewTarget = typeof contentViewTargetValidator.Type;
 /** Exact browser route and stable identity required for a new view write. */
 export type IncomingContentViewTargetInput = Pick<
   RecordContentViewArgs,

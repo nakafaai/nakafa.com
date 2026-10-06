@@ -27,9 +27,7 @@ export const AccountReadyEmailInputSchema = Schema.Struct({
   privacyPolicyUrl: EmailUrlSchema,
   termsOfServiceUrl: EmailUrlSchema,
 });
-export type AccountReadyEmailInput = Schema.Schema.Type<
-  typeof AccountReadyEmailInputSchema
->;
+export type AccountReadyEmailInput = typeof AccountReadyEmailInputSchema.Type;
 export interface AccountReadyEmailCopy {
   readonly body: string;
   readonly cta: string;

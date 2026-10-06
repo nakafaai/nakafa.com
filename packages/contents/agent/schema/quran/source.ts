@@ -182,9 +182,6 @@ export const NakafaQuranTafsirAccessSchema = Schema.Union([
     "Signed tafsir access. External editions are linked but their text is not republished.",
 });
 
-export type NakafaQuranReadingSources = Schema.Schema.Type<
-  typeof NakafaQuranReadingSourcesSchema
->;
-export type NakafaQuranTafsirAccess = Schema.Schema.Type<
-  typeof NakafaQuranTafsirAccessSchema
->;
+export type NakafaQuranReadingSources =
+  typeof NakafaQuranReadingSourcesSchema.Type;
+export type NakafaQuranTafsirAccess = typeof NakafaQuranTafsirAccessSchema.Type;

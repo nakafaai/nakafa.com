@@ -11,7 +11,7 @@ export const NetworkRetryCodeSchema = Schema.Literals([
   "EPIPE",
   "UND_ERR_SOCKET",
 ]);
-type NetworkRetryCode = Schema.Schema.Type<typeof NetworkRetryCodeSchema>;
+type NetworkRetryCode = typeof NetworkRetryCodeSchema.Type;
 const NETWORK_CODE_PATTERN = /^[A-Z][A-Z0-9_]{1,47}$/;
 const NETWORK_CAUSE_LIMIT = 32;
 const networkRetryCodes: ReadonlySet<string> = new Set(

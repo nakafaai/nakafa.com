@@ -107,9 +107,6 @@ export const NakafaAgentTaxonomySchema = Schema.Struct({
 })
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   .annotate({ description: "Nakafa public content taxonomy." });
-export type NakafaAgentTaxonomyOptions = Schema.Schema.Type<
-  typeof NakafaAgentTaxonomyOptionsSchema
->;
-export type NakafaAgentTaxonomy = Schema.Schema.Type<
-  typeof NakafaAgentTaxonomySchema
->;
+export type NakafaAgentTaxonomyOptions =
+  typeof NakafaAgentTaxonomyOptionsSchema.Type;
+export type NakafaAgentTaxonomy = typeof NakafaAgentTaxonomySchema.Type;

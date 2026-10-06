@@ -25,6 +25,4 @@ const materialGroupForm = Schema.Struct({
 );
 export const materialGroupFormSchema =
   Schema.toStandardSchemaV1(materialGroupForm);
-export type MaterialGroupFormValues = Schema.Schema.Type<
-  typeof materialGroupForm
->;
+export type MaterialGroupFormValues = typeof materialGroupForm.Type;

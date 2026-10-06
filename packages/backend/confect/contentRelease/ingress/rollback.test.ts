@@ -32,7 +32,7 @@ import {
 import { convexTest, type TestConvex } from "convex-test";
 import { Cause, Effect, Exit, Schema } from "effect";
 
-type StoredRollbackEnvelope = Schema.Schema.Type<typeof stageEnvelopeValidator>;
+type StoredRollbackEnvelope = typeof stageEnvelopeValidator.Type;
 type RollbackReadRequest = Parameters<typeof readRollback>[0];
 const prepareRollback = internal.contentRelease.rollback.prepareRollback;
 

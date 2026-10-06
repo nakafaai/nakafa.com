@@ -62,22 +62,14 @@ export const NinaLearningSessionInputSchema = Schema.Struct({
   placement: Schema.optionalKey(LearningPlacementContextSchema),
   source: Schema.Literals(NINA_CONTEXT_SOURCES),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type NinaLearningContext = Schema.Schema.Type<
-  typeof NinaLearningContextSchema
->;
-export type LearningPlacementContext = Schema.Schema.Type<
-  typeof LearningPlacementContextSchema
->;
-export type NinaToolContext = Schema.Schema.Type<typeof NinaToolContextSchema>;
-export type NinaContextSnapshot = Schema.Schema.Type<
-  typeof NinaContextSnapshotSchema
->;
-export type NinaContextTransition = Schema.Schema.Type<
-  typeof NinaContextTransitionSchema
->;
-export type NinaLearningSessionInput = Schema.Schema.Type<
-  typeof NinaLearningSessionInputSchema
->;
+export type NinaLearningContext = typeof NinaLearningContextSchema.Type;
+export type LearningPlacementContext =
+  typeof LearningPlacementContextSchema.Type;
+export type NinaToolContext = typeof NinaToolContextSchema.Type;
+export type NinaContextSnapshot = typeof NinaContextSnapshotSchema.Type;
+export type NinaContextTransition = typeof NinaContextTransitionSchema.Type;
+export type NinaLearningSessionInput =
+  typeof NinaLearningSessionInputSchema.Type;
 /** Nina context pack consumed by prompts, specialists, and message metadata. */
 export const NinaContextPackSchema = Schema.Struct({
   focus: Schema.optionalKey(NinaFocusSchema),
@@ -87,14 +79,12 @@ export const NinaContextPackSchema = Schema.Struct({
   tools: NinaToolContextSchema,
   transition: NinaContextTransitionSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type NinaContextPack = Schema.Schema.Type<typeof NinaContextPackSchema>;
+export type NinaContextPack = typeof NinaContextPackSchema.Type;
 /** Learning context persisted with one Nina turn. */
 export const NinaLearningSessionSchema = Schema.Struct({
   context: NinaContextPackSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type NinaLearningSession = Schema.Schema.Type<
-  typeof NinaLearningSessionSchema
->;
+export type NinaLearningSession = typeof NinaLearningSessionSchema.Type;
 /** Raised when the app boundary sends an invalid Nina learning context. */
 export class NinaContextError extends Schema.TaggedError<NinaContextError>()(
   "NinaContextError",

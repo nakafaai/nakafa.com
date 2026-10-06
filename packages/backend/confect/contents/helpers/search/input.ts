@@ -16,9 +16,7 @@ export class ContentSearchInputError extends Schema.TaggedError<ContentSearchInp
     message: Schema.String,
   }
 ) {}
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 
 /** Validates bounded public search input and returns unique query texts. */
 export const validateContentSearchInput = Effect.fn(

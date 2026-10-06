@@ -40,7 +40,7 @@ const referenceLayer = Layer.mergeAll(
 /** Freeze authenticated page and learner facts in the admission transaction. */
 export const resolveNinaContext = Effect.fn("nina.context.resolve")(
   function* (
-    input: Schema.Schema.Type<typeof NinaPageInput>,
+    input: typeof NinaPageInput.Type,
     user: Docs["users"],
     capturedAt: string,
     chatId?: Docs["chats"]["_id"]
@@ -115,11 +115,7 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
 
 /** Resolve context using the same signed owners used by lesson navigation. */
 const resolvePublishedContext = Effect.fn("nina.context.publication")(
-  function* (
-    input: Schema.Schema.Type<typeof NinaPageInput>,
-    slug: string,
-    url: string
-  ) {
+  function* (input: typeof NinaPageInput.Type, slug: string, url: string) {
     const appLocale = AppLocaleSchema.make(input.locale);
     const isMaterial = PUBLIC_ROUTE_SURFACES.some(
       (surface) =>
@@ -183,7 +179,7 @@ const resolvePlacement = Effect.fn("nina.context.placement")(function* (
   context: NonNullable<
     Effect.Success<ReturnType<typeof readProgramContext>>["context"]
   >,
-  locale: Schema.Schema.Type<typeof NinaPageInput>["locale"]
+  locale: (typeof NinaPageInput.Type)["locale"]
 ) {
   const label = context.group.materialCardTitle ?? context.group.title;
   const programKey = yield* Schema.decodeEffect(LearningProgramKeySchema)(

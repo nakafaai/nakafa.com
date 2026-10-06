@@ -1,8 +1,10 @@
 import { Effect } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { getCachedSitemapEntries } from "@/lib/sitemap/entries";
-import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
-import { SitemapPageNotFoundError } from "@/lib/sitemap/routes";
+import {
+  getSitemapPageDescriptor,
+  SitemapPageNotFoundError,
+} from "@/lib/sitemap/identity";
 import { buildSitemapUrlSetXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
 
 const sitemapPageError = "Internal Server Error";

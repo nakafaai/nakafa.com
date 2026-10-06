@@ -2,11 +2,8 @@ import { buildContentSearchExcerpt } from "@repo/backend/confect/contents/helper
 import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { NAKAFA_AGENT_MAX_OFFSET } from "@repo/contents/agent/search";
-import type { Schema } from "effect";
 
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 
 /** Builds the stable paginated search response shape used by tools and UI. */
 export function buildContentSearchResult(

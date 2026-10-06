@@ -12,7 +12,7 @@ const CapturedIngestSchema = Schema.Struct({
   uuid: Schema.optional(Schema.Unknown),
 });
 
-type CapturedIngest = Schema.Schema.Type<typeof CapturedIngestSchema>;
+type CapturedIngest = typeof CapturedIngestSchema.Type;
 
 const IngestBodySchema = Schema.Union([
   CapturedIngestSchema,

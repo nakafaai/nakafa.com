@@ -26,9 +26,7 @@ export const CapabilityArtifactSchema = Schema.Union([
   }),
 ]);
 
-export type CapabilityArtifact = Schema.Schema.Type<
-  typeof CapabilityArtifactSchema
->;
+export type CapabilityArtifact = typeof CapabilityArtifactSchema.Type;
 
 /** The final output owns every card; model context can project only its text. */
 export const CapabilityOutputSchema = Schema.Struct({
@@ -39,9 +37,7 @@ export const CapabilityOutputSchema = Schema.Struct({
   text: Schema.String,
 });
 
-export type CapabilityOutput = Schema.Schema.Type<
-  typeof CapabilityOutputSchema
->;
+export type CapabilityOutput = typeof CapabilityOutputSchema.Type;
 
 export type CapabilityProgress = (
   artifact: CapabilityArtifact

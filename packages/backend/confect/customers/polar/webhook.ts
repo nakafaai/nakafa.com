@@ -18,9 +18,8 @@ const subscriptionWebhookOperationSchema = Schema.Literals([
   "create",
   "update",
 ]);
-type SubscriptionWebhookOperation = Schema.Schema.Type<
-  typeof subscriptionWebhookOperationSchema
->;
+type SubscriptionWebhookOperation =
+  typeof subscriptionWebhookOperationSchema.Type;
 class PolarWebhookIoError extends Schema.TaggedError<PolarWebhookIoError>()(
   "PolarWebhookIoError",
   {

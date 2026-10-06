@@ -7,12 +7,9 @@ import type {
   quranReadingSourcesValidator,
   quranTafsirAccessValidator,
 } from "@repo/backend/confect/contentRelease/quran/spec";
-import type { Schema } from "effect";
 
-type QuranReadingSources = Schema.Schema.Type<
-  typeof quranReadingSourcesValidator
->;
-type QuranTafsirAccess = Schema.Schema.Type<typeof quranTafsirAccessValidator>;
+type QuranReadingSources = typeof quranReadingSourcesValidator.Type;
+type QuranTafsirAccess = typeof quranTafsirAccessValidator.Type;
 
 /** Checks that one response carries the exact signed sources for its locale. */
 export function hasExpectedQuranSources(

@@ -1,9 +1,6 @@
 import type { contentSearchDocumentValidator } from "@repo/backend/confect/contents/helpers/search/schema";
-import type { Schema } from "effect";
 /** Search document shape shared by source-owned and release-owned read models. */
-export type ContentSearchDocument = Schema.Schema.Type<
-  typeof contentSearchDocumentValidator
->;
+export type ContentSearchDocument = typeof contentSearchDocumentValidator.Type;
 
 /** Interleaves unique group items fairly up to one explicit global limit. */
 export function interleaveSearchGroups<Item>(

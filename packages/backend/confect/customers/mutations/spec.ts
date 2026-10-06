@@ -16,6 +16,4 @@ export const customerUpsertResultValidator = Schema.Union([
     kind: Schema.Literal("prepared"),
   }),
 ]);
-export type CustomerUpsertResult = Schema.Schema.Type<
-  typeof customerUpsertResultValidator
->;
+export type CustomerUpsertResult = typeof customerUpsertResultValidator.Type;

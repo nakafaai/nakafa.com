@@ -1,7 +1,7 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
 import { compareSitemapPaths } from "@repo/backend/confect/contentRelease/sitemap";
-import { Array as Arr, Data, Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
   readPublishedArticleBuckets,
@@ -30,6 +30,7 @@ import {
   isQuranSitemapPage,
   isTryoutSitemapPage,
   type SitemapPage,
+  SitemapPageNotFoundError,
 } from "@/lib/sitemap/identity";
 import { selectSitemapPartition } from "@/lib/sitemap/partition";
 
@@ -53,13 +54,6 @@ type SitemapFamilyPage = Extract<
   SitemapPage,
   { kind: "article" | "material" | "program" }
 >;
-
-/** A canonical sitemap page id whose route page does not exist. */
-export class SitemapPageNotFoundError extends Data.TaggedError(
-  "SitemapPageNotFoundError"
-)<{
-  readonly pageId: string;
-}> {}
 
 /** Static top-level routes in canonical lexical order. */
 export const baseRoutes: readonly string[] = [

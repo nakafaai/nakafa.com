@@ -40,7 +40,7 @@ const MathCalculusStructSchema = Schema.Struct({
   upper: Schema.optionalKey(boundInputSchema),
   variable: Schema.optionalKey(variableInputSchema),
 }).annotate({ description: "Calculus tool input." });
-type MathCalculusInput = Schema.Schema.Type<typeof MathCalculusStructSchema>;
+type MathCalculusInput = typeof MathCalculusStructSchema.Type;
 export const MathCalculusInputSchema = MathCalculusStructSchema.mapFields(
   Struct.map(Schema.mutableKey)
 )

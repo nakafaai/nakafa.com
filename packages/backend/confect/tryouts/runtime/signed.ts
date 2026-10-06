@@ -21,11 +21,9 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { Clock, Effect, type Schema } from "effect";
+import { Clock, Effect } from "effect";
 export type ReadCtx = MutationCtx | QueryCtx;
-export type RuntimeReceipt = Schema.Schema.Type<
-  typeof tryoutRuntimeBundleReceiptValidator
->;
+export type RuntimeReceipt = typeof tryoutRuntimeBundleReceiptValidator.Type;
 
 /** Reads one permanent runtime bundle by its content-addressed identity. */
 export const findTryoutRuntimeBundleByHash = Effect.fn(

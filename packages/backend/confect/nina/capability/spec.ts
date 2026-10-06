@@ -8,9 +8,7 @@ export const LEARNING_CAPABILITY_NAME_VALUES = [
 export const LearningCapabilityNameSchema = Schema.Literals(
   LEARNING_CAPABILITY_NAME_VALUES
 );
-export type LearningCapabilityName = Schema.Schema.Type<
-  typeof LearningCapabilityNameSchema
->;
+export type LearningCapabilityName = typeof LearningCapabilityNameSchema.Type;
 export const NAKAFA_CAPABILITY = "nakafa" satisfies LearningCapabilityName;
 export const RESEARCH_CAPABILITY =
   "deepResearch" satisfies LearningCapabilityName;

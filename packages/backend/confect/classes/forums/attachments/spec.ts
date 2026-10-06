@@ -38,9 +38,8 @@ export const forumAttachmentErrorCodeSchema = Schema.Literals([
   forumAttachmentTypeUnsupportedCode,
   forumAttachmentUploadNotFoundCode,
 ]);
-export type ForumAttachmentErrorCode = Schema.Schema.Type<
-  typeof forumAttachmentErrorCodeSchema
->;
+export type ForumAttachmentErrorCode =
+  typeof forumAttachmentErrorCodeSchema.Type;
 /**
  * One pending forum upload after the storage file and metadata have both been
  * finalized.

@@ -32,9 +32,8 @@ export const tryoutSetAttemptPageRequestValidator = Schema.Union([
   currentSetRequestValidator,
   retainedSetRequestValidator,
 ]);
-export type TryoutSetAttemptPageRequest = Schema.Schema.Type<
-  typeof tryoutSetAttemptPageRequestValidator
->;
+export type TryoutSetAttemptPageRequest =
+  typeof tryoutSetAttemptPageRequestValidator.Type;
 /** Asks for the learner's current attempt through the section a public URL names. */
 export const currentSectionRequestValidator = Schema.Struct({
   kind: Schema.Literal("current"),
@@ -46,9 +45,8 @@ export const tryoutSectionAttemptPageRequestValidator = Schema.Union([
   currentSectionRequestValidator,
   retainedSectionRequestValidator,
 ]);
-export type TryoutSectionAttemptPageRequest = Schema.Schema.Type<
-  typeof tryoutSectionAttemptPageRequestValidator
->;
+export type TryoutSectionAttemptPageRequest =
+  typeof tryoutSectionAttemptPageRequestValidator.Type;
 const setPageValidator = Schema.Struct({
   exam: publicTryoutExamValidator,
   entrySection: Schema.Union([publicTryoutSectionValidator, Schema.Null]),
@@ -95,9 +93,8 @@ export const tryoutSetAttemptPageResultValidator = Schema.Union([
   currentSetResultValidator,
   retainedSetResultValidator,
 ]);
-export type TryoutSetAttemptPageResult = Schema.Schema.Type<
-  typeof tryoutSetAttemptPageResultValidator
->;
+export type TryoutSetAttemptPageResult =
+  typeof tryoutSetAttemptPageResultValidator.Type;
 const retainedSectionResultValidator = Schema.Struct({
   activeSectionPublicPath: Schema.Union([Schema.String, Schema.Null]),
   activeSetPublicPath: Schema.Union([Schema.String, Schema.Null]),
@@ -112,6 +109,5 @@ export const tryoutSectionAttemptPageResultValidator = Schema.Union([
   redirectResultValidator,
   retainedSectionResultValidator,
 ]);
-export type TryoutSectionAttemptPageResult = Schema.Schema.Type<
-  typeof tryoutSectionAttemptPageResultValidator
->;
+export type TryoutSectionAttemptPageResult =
+  typeof tryoutSectionAttemptPageResultValidator.Type;

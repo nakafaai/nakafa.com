@@ -24,9 +24,7 @@ export const modelBuildPhaseValidator = Schema.Union([
   Schema.Literal("searchVerify"),
   Schema.Literal("ready"),
 ]);
-export type ModelBuildPhase = Schema.Schema.Type<
-  typeof modelBuildPhaseValidator
->;
+export type ModelBuildPhase = typeof modelBuildPhaseValidator.Type;
 export const modelBuildBaseValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("empty"),
@@ -54,17 +52,13 @@ export const modelBuildStatusValidator = Schema.Union([
     syncJobId: GenericId.GenericId("_scheduled_functions"),
   }),
 ]);
-export type ModelBuildStatus = Schema.Schema.Type<
-  typeof modelBuildStatusValidator
->;
+export type ModelBuildStatus = typeof modelBuildStatusValidator.Type;
 export const modelBuildRestartArgsValidator = Schema.Struct({
   expectedGeneration: Schema.Finite,
   expectedJobId: GenericId.GenericId("_scheduled_functions"),
   releaseId: Schema.String,
 });
-export type ModelBuildRestartArgs = Schema.Schema.Type<
-  typeof modelBuildRestartArgsValidator
->;
+export type ModelBuildRestartArgs = typeof modelBuildRestartArgsValidator.Type;
 export const modelBuildRestartResultValidator = Schema.Union([
   Schema.Struct({
     status: Schema.Literal("restarted"),
@@ -75,9 +69,8 @@ export const modelBuildRestartResultValidator = Schema.Union([
     status: Schema.Literal("stale"),
   }),
 ]);
-export type ModelBuildRestartResult = Schema.Schema.Type<
-  typeof modelBuildRestartResultValidator
->;
+export type ModelBuildRestartResult =
+  typeof modelBuildRestartResultValidator.Type;
 export const modelBuildSlotsValidator = Schema.Struct({
   articleBaseSlot: modelSlotValidator,
   articleTargetSlot: modelSlotValidator,

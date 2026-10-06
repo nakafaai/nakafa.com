@@ -35,7 +35,7 @@ export const SourceReferenceSchema = Schema.Struct({
   hostname: Schema.String,
   text: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type SourceReference = Schema.Schema.Type<typeof SourceReferenceSchema>;
+export type SourceReference = typeof SourceReferenceSchema.Type;
 /**
  * Extracts every unique external source reference from plain user text.
  */

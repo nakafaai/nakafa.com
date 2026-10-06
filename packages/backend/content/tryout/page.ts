@@ -13,10 +13,10 @@ import type {
   tryoutHubArgsValidator,
   tryoutPageArgsValidator,
 } from "@repo/backend/content/tryout/spec";
-import { Effect, type Schema } from "effect";
+import { Effect } from "effect";
 
-type HubInput = Schema.Schema.Type<typeof tryoutHubArgsValidator>;
-type PageInput = Schema.Schema.Type<typeof tryoutPageArgsValidator>;
+type HubInput = typeof tryoutHubArgsValidator.Type;
+type PageInput = typeof tryoutPageArgsValidator.Type;
 
 /** Reads the complete verified localized country-first hub. */
 export const readTryoutHubPage = Effect.fn("tryouts.readHubPage")(function* (

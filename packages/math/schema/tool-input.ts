@@ -24,4 +24,4 @@ export const MathToolInputSchema = Schema.Union([
   description:
     "Strict math tool input shape accepted before deterministic math evidence is requested.",
 });
-export type MathToolInput = Schema.Schema.Type<typeof MathToolInputSchema>;
+export type MathToolInput = typeof MathToolInputSchema.Type;

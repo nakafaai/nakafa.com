@@ -16,6 +16,4 @@ export const tryoutBodyBatchValidator = Schema.Struct({
   ),
   rendererJson: Schema.String,
 });
-export type TryoutBodyBatch = Schema.Schema.Type<
-  typeof tryoutBodyBatchValidator
->;
+export type TryoutBodyBatch = typeof tryoutBodyBatchValidator.Type;
