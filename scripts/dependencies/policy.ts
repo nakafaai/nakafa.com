@@ -12,7 +12,7 @@ type DependencyHold = ApprovedSpecs &
   DeclarationOwners & { readonly dependency: string };
 
 /** The exact package manager the root manifest pins for every checkout and CI job. */
-export const PACKAGE_MANAGER = "pnpm@11.28.2";
+export const PACKAGE_MANAGER = "pnpm@12.9.1";
 export const CONTRACT_PACKAGE_VERSION = "0.46.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.1";
@@ -273,7 +273,7 @@ export const REGISTRY_REVIEWS = [
   [
     "pnpm@latest",
     "12.9.1",
-    "OSV Scanner skipped the application graph after pnpm 12 added a package-manager YAML document (seen with 2.5.1), and the 2.6.0 release notes do not address it; pnpm 12 moves in its own change once a scan of its lockfile is proven complete.",
+    "pnpm 12 records its own packages in a second YAML document at the top of the lockfile. OSV Scanner 2.6.0 reads both documents (2.5.1 read only the first and skipped the application graph), and Turborepo hashes each workspace's dependencies exactly as it did with pnpm 11.",
   ],
   [
     "react-doctor@latest",
@@ -306,8 +306,8 @@ export const SCRIPT_DEPENDENCY_HOLDS = [
   {
     // dlx honors the workspace's zero minimumReleaseAge, so React Doctor's
     // throwaway install took versions npm was still propagating: a 4-minute-old
-    // electron-to-chromium tarball returned 404 and failed Doctor. The pnpm 11
-    // default of one day keeps that install on settled releases.
+    // electron-to-chromium tarball returned 404 and failed Doctor. One day
+    // keeps that install on settled releases.
     approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17",
     manifestPath: "apps/www/package.json",
     script: "doctor",
