@@ -4,6 +4,7 @@ import {
   ByteSize,
   Effect,
   FileSystem,
+  HashSet,
   Layer,
   Option,
   Path,
@@ -80,8 +81,8 @@ describe("repository files", () => {
       yield* fileSystem.writeFileString(`${root}/packages/app/src/a.ts`, "");
       yield* fileSystem.writeFileString(`${root}/fix.patch`, "");
       yield* fileSystem.writeFileString(`${root}/.cache/acceptance/db`, "");
-      const files = yield* readRepositoryFiles(root, new Set([".cache"]));
-      expect([...files].sort()).toEqual([
+      const files = yield* readRepositoryFiles(root, HashSet.make(".cache"));
+      expect(files).toEqual([
         `${root}/fix.patch`,
         `${root}/packages/app/src/a.ts`,
       ]);
@@ -90,21 +91,22 @@ describe("repository files", () => {
 
   it.effect("skips entries that vanish while the walk runs", () =>
     Effect.gen(function* () {
-      const files = yield* readRepositoryFiles("/repo", new Set());
+      const files = yield* readRepositoryFiles("/repo", HashSet.empty());
       expect(files).toEqual(["/repo/lesson.patch"]);
     }).pipe(Effect.provide(racingFileSystem("NotFound")))
   );
 
   it.effect("fails with a typed error when an entry cannot be read", () =>
     Effect.gen(function* () {
-      const failure = yield* readRepositoryFiles("/repo", new Set()).pipe(
+      const failure = yield* readRepositoryFiles("/repo", HashSet.empty()).pipe(
         Effect.flip
       );
       expect(failure).toBeInstanceOf(RepositoryReadError);
       expect(failure.message).toBe("Unable to inspect /repo/journal.");
-      const locked = yield* readRepositoryFiles("/locked", new Set()).pipe(
-        Effect.flip
-      );
+      const locked = yield* readRepositoryFiles(
+        "/locked",
+        HashSet.empty()
+      ).pipe(Effect.flip);
       expect(locked.message).toBe("Unable to read /locked.");
     }).pipe(Effect.provide(racingFileSystem("PermissionDenied")))
   );

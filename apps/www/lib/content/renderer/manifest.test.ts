@@ -3,7 +3,7 @@ import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import { baseRenderers } from "@/lib/content/renderer/domain/base";
 import { rendererDomainImplementations } from "@/lib/content/renderer/selection";
 
@@ -65,7 +65,7 @@ describe("renderer manifest", () => {
           });
           const expectedNames = [...new Set(requiredComponents)].sort();
 
-          expect(Object.keys(components).sort()).toEqual(expectedNames);
+          expect(Rec.keys(components).sort()).toEqual(expectedNames);
         }
       }),
     120_000

@@ -21,6 +21,7 @@ import {
 } from "@repo/design-system/lib/code-block/context";
 import { filenameIconMap } from "@repo/design-system/lib/code-block/icons";
 import { cn } from "cn";
+import { Record as Rec } from "effect";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 
@@ -81,7 +82,7 @@ export function CodeBlockFilename({
   ...props
 }: CodeBlockFilenameProps) {
   const activeValue = useCodeBlock((state) => state.value);
-  const defaultIcon = Object.entries(filenameIconMap).find(([pattern]) => {
+  const defaultIcon = Rec.toEntries(filenameIconMap).find(([pattern]) => {
     const regex = new RegExp(
       `^${pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")}$`
     );

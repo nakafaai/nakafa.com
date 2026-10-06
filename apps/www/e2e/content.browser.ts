@@ -1,7 +1,7 @@
 import type { PublicationDates } from "@nakafa/aksara-contracts/date";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Schedule, Schema } from "effect";
+import { Effect, Record as Rec, Schedule, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -334,7 +334,7 @@ const readContentViewStorage = Effect.fn("NakafaE2E.readContentViewStorage")(
     const views = yield* Schema.decodeEffect(ContentViewsRecord)(stored.views);
     return {
       deviceId: stored.deviceId,
-      recordedViews: Object.keys(views.state.viewedSlugs).length,
+      recordedViews: Rec.keys(views.state.viewedSlugs).length,
     };
   }
 );

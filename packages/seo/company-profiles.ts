@@ -1,3 +1,4 @@
+import { Record as Rec } from "effect";
 /**
  * Public company destinations shared by server and browser surfaces.
  *
@@ -13,6 +14,4 @@ export const COMPANY_SOCIAL_PROFILES = {
   youtube: "https://www.youtube.com/@nakafaa",
 } as const;
 
-export const COMPANY_SOCIAL_PROFILE_URLS = Object.values(
-  COMPANY_SOCIAL_PROFILES
-);
+export const COMPANY_SOCIAL_PROFILE_URLS = Rec.values(COMPANY_SOCIAL_PROFILES);

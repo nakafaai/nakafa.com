@@ -19,6 +19,7 @@ import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import type { TransactionMetrics } from "convex/server";
 import { convexTest, type TestConvex } from "convex-test";
+import { Record as Rec } from "effect";
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const SIGNAL_DAY = getPopularitySignalDay(NOW);
@@ -303,7 +304,7 @@ describe("contents/mutations/analytics", () => {
       )
     ).toBe(true);
 
-    const minimumRemaining = Object.fromEntries(
+    const minimumRemaining = Rec.fromEntries(
       METRIC_KEYS.map((key) => [
         key,
         Math.min(...pages.map((page) => page.metrics[key].remaining)),

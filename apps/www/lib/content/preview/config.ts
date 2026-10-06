@@ -8,7 +8,14 @@ import {
   PreviewRendererSecretSchema,
 } from "@nakafa/aksara-contracts/preview/auth";
 import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
-import { Effect, Option, Redacted, Result, Schema } from "effect";
+import {
+  Effect,
+  Option,
+  Record as Rec,
+  Redacted,
+  Result,
+  Schema,
+} from "effect";
 import {
   readPreviewEnvironment,
   readPreviewRendererEnvironment,
@@ -134,7 +141,7 @@ export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
       return Option.none<PreviewConfig>();
     }
     const environment = readPreviewEnvironment();
-    if (Object.values(environment).every((value) => value === undefined)) {
+    if (Rec.values(environment).every((value) => value === undefined)) {
       return Option.none<PreviewConfig>();
     }
     const decoded = decodePreviewEnvironment(environment);
@@ -152,7 +159,7 @@ export const readPreviewRendererConfig = Effect.fn(
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }
   const environment = readPreviewRendererEnvironment();
-  if (Object.values(environment).every((value) => value === undefined)) {
+  if (Rec.values(environment).every((value) => value === undefined)) {
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }
   return Schema.decodeUnknownEffect(PreviewRendererEnvironmentSchema)(

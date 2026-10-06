@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { inspectGatewaySource } from "#scripts/check/gateway";
-import { sourceViolations } from "#scripts/check/source";
+import { parseSources } from "#scripts/check/source";
 
 const NINA = "packages/backend/confect/nina/generation.ts";
 const PACKAGE =
@@ -15,7 +15,13 @@ const MODEL =
 
 /** Inspects one module with the gateway policy alone. */
 function inspect(sourceText: string, file = NINA) {
-  return sourceViolations([{ file, sourceText }], [inspectGatewaySource]);
+  return Effect.scoped(
+    Effect.map(parseSources([{ file, sourceText }]), ({ modules }) =>
+      Arr.flatMap(modules, (parsed) =>
+        inspectGatewaySource(parsed.file, parsed.sourceFile)
+      )
+    )
+  );
 }
 
 describe("Gateway source policy", () => {

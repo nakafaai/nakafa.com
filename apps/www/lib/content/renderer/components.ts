@@ -2,7 +2,7 @@ import "server-only";
 
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import {
   RendererImplementationMissing,
   type RendererSelection,
@@ -10,7 +10,7 @@ import {
 } from "@/lib/content/renderer/selection";
 
 function findSemanticComponent(componentName: string) {
-  return Object.entries(semanticMdxComponents).find(
+  return Rec.toEntries(semanticMdxComponents).find(
     ([name]) => name === componentName
   )?.[1];
 }

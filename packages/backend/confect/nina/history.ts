@@ -6,7 +6,7 @@ import {
 import { CapabilityOutputSchema } from "@repo/backend/confect/nina/capability/progress";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /**
  * Gemini's flat input cost for one image. Documents count the same, since only
@@ -67,7 +67,7 @@ function evidenceText(part: ToolResultPart) {
 function projectMessages(messages: readonly ModelMessage[]) {
   const unavailableTools = new Set<string>();
   const projected = messages.flatMap((message): ModelMessage[] => {
-    if (message.role === "assistant" && Array.isArray(message.content)) {
+    if (message.role === "assistant" && Arr.isArray(message.content)) {
       for (const part of message.content) {
         if (
           part.type === "tool-call" &&

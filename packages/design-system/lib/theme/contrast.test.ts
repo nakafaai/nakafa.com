@@ -20,7 +20,7 @@ import {
 } from "@repo/design-system/lib/theme/contrast";
 import { themes } from "@repo/design-system/lib/theme/registry";
 import Color from "colorjs.io";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 
 const NORMAL_TEXT_MINIMUM_CONTRAST = 4.5;
 const NON_TEXT_MINIMUM_CONTRAST = 3;
@@ -259,7 +259,7 @@ function findStatusColorFamilyViolations(profiles: readonly ProfileSource[]) {
       continue;
     }
 
-    for (const [status, family] of Object.entries(STATUS_COLOR_FAMILIES)) {
+    for (const [status, family] of Rec.toEntries(STATUS_COLOR_FAMILIES)) {
       const token = `--${status}`;
       const value = readDirectValue(rule, token);
       if (!value) {

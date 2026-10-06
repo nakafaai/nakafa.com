@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { Record as Rec } from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
@@ -38,7 +39,7 @@ function approvedSpec(dependency: string) {
 function validInput(): PolicyInput {
   const manifests = CONTRACT_MANIFEST_PATHS.map((path, index) => ({
     manifest: {
-      dependencies: Object.fromEntries(
+      dependencies: Rec.fromEntries(
         DEPENDENCY_HOLDS.filter((hold) =>
           "declarationPaths" in hold
             ? hold.declarationPaths.includes(path)
@@ -115,8 +116,8 @@ function withoutDependency(input: PolicyInput, dependency: string) {
     manifests: input.manifests.map(({ manifest, path }) => ({
       manifest: {
         ...manifest,
-        dependencies: Object.fromEntries(
-          Object.entries(manifest.dependencies ?? {}).filter(
+        dependencies: Rec.fromEntries(
+          Rec.toEntries(manifest.dependencies ?? {}).filter(
             ([name]) => name !== dependency
           )
         ),

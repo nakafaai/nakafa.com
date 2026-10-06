@@ -3,6 +3,7 @@ import {
   type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
+import { Record as Rec } from "effect";
 
 type AlternateLanguagePath = Partial<{
   [Key in AppLocaleCode | "x-default"]: string;
@@ -45,7 +46,7 @@ export function createLocalizedAlternates(
   const pathWithoutLocale = getPathWithoutLocale(canonical);
   const languages =
     options.languages ??
-    Object.fromEntries(
+    Rec.fromEntries(
       routing.locales.map((locale) => [
         locale,
         `/${locale}${pathWithoutLocale}`,

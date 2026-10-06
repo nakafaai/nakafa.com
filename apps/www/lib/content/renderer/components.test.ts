@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
@@ -60,8 +60,8 @@ describe("renderer components", () => {
         });
 
         expect(components).toMatchObject(semanticMdxComponents);
-        expect(Object.keys(components).sort()).toEqual(
-          [...Object.keys(semanticMdxComponents), "InlineMath"].sort()
+        expect(Rec.keys(components).sort()).toEqual(
+          [...Rec.keys(semanticMdxComponents), "InlineMath"].sort()
         );
         expect(components).not.toHaveProperty("BlockMath");
         expect(components).not.toHaveProperty("Mermaid");
@@ -186,8 +186,8 @@ describe("renderer components", () => {
         requiredComponents: ["Triangle"],
       });
 
-      expect(Object.keys(components).sort()).toEqual(
-        [...Object.keys(semanticMdxComponents), "Triangle"].sort()
+      expect(Rec.keys(components).sort()).toEqual(
+        [...Rec.keys(semanticMdxComponents), "Triangle"].sort()
       );
       expect(components).not.toHaveProperty("UnitCircle");
     })

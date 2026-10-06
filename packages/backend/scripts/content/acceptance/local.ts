@@ -22,7 +22,7 @@ import {
   LocalSigningIdentitySchema,
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
-import { Effect, FileSystem, Option, Schema } from "effect";
+import { Effect, FileSystem, Option, Record as Rec, Schema } from "effect";
 
 const LoopbackUrl = Schema.String.check(
   Schema.isPattern(/^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/),
@@ -249,7 +249,7 @@ export const initializeLocalRuntime = Effect.fn(
   yield* command(
     ["env", "set", "--force"],
     [
-      ...Object.entries({
+      ...Rec.toEntries({
         ...localEnvironment,
         AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
         AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,

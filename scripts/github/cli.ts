@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { parseDocument } from "yaml";
 
 const WorkflowStepSchema = Schema.StructWithRest(
@@ -129,8 +129,8 @@ function stepSource(step: WorkflowJob["steps"][number]) {
   return [
     executableSource(step.run),
     step.uses,
-    ...Object.entries(step.env ?? {}).flat(),
-    ...Object.entries(step.with ?? {}).flat(),
+    ...Rec.toEntries(step.env ?? {}).flat(),
+    ...Rec.toEntries(step.with ?? {}).flat(),
   ]
     .filter((value) => value !== undefined)
     .join("\n");
@@ -229,10 +229,10 @@ function executionBoundaryProblems(
   if (verify.environment !== undefined) {
     problems.push("CLI verification must not use a protected environment.");
   }
-  if (Object.keys(verify.permissions ?? {}).length > 0) {
+  if (Rec.keys(verify.permissions ?? {}).length > 0) {
     problems.push("CLI verification permissions must remain empty.");
   }
-  for (const [name, job] of Object.entries(jobs)) {
+  for (const [name, job] of Rec.toEntries(jobs)) {
     if (name !== "publish" && job.permissions?.["id-token"] !== undefined) {
       problems.push(`${name} must not receive npm OIDC identity.`);
     }
@@ -241,12 +241,12 @@ function executionBoundaryProblems(
   const publishNeeds = publish.needs;
   const consumesBuild =
     publishNeeds === "build" ||
-    (Array.isArray(publishNeeds) && publishNeeds.includes("build"));
+    (Arr.isArray(publishNeeds) && publishNeeds.includes("build"));
   if (!consumesBuild) {
     problems.push("CLI publication must consume the verified build job.");
   }
 
-  const verifyNeeds = Array.isArray(verify.needs)
+  const verifyNeeds = Arr.isArray(verify.needs)
     ? verify.needs
     : [verify.needs].filter((need) => need !== undefined);
   if (
@@ -294,7 +294,7 @@ export function validateCliWorkflow(source: string): string[] {
   }
 
   const { defaults, env, jobs, permissions } = decoded.value;
-  if (Object.keys(permissions).length > 0) {
+  if (Rec.keys(permissions).length > 0) {
     problems.push("CLI workflow root permissions must remain empty.");
   }
   if (defaults !== undefined) {

@@ -1,4 +1,4 @@
-import { Config, Effect, Result, Schema } from "effect";
+import { Config, Effect, Record as Rec, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
@@ -78,7 +78,7 @@ function decodeOutdatedDependencies(source: string) {
     Effect.flatMap(
       Schema.decodeUnknownEffect(Schema.Record(Schema.String, Schema.Unknown))
     ),
-    Effect.map((dependencies) => Object.keys(dependencies).sort()),
+    Effect.map((dependencies) => Rec.keys(dependencies).sort()),
     Effect.mapError(
       (cause) =>
         new DependencyMetadataError({

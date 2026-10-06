@@ -24,7 +24,7 @@ import {
 } from "@repo/backend/test/content/proof";
 import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
-import { Array as Arr, Effect, Stream } from "effect";
+import { Array as Arr, Effect, Record as Rec, Stream } from "effect";
 import {
   testPublishedCurriculumRoutes,
   testPublishedProgram,
@@ -117,7 +117,7 @@ export const makeProgramContextRuntimeSource = Effect.fn(
   const sitemapRows = storedRoutes.flatMap((row) =>
     row.bucket === undefined ? [] : [{ ...row, bucket: row.bucket }]
   );
-  const buckets = Object.values(
+  const buckets = Rec.values(
     Arr.groupBy(sitemapRows, (row) => `${row.appLocale}/${row.bucket}`)
   ).map((rows) => ({
     appLocale: rows[0].appLocale,

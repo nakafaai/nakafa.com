@@ -1,4 +1,4 @@
-import { Predicate } from "effect";
+import { Array as Arr, Predicate } from "effect";
 
 /**
  * Checks whether one JSON-LD document is allowed by Google Indexing API.
@@ -19,7 +19,7 @@ export function hasGoogleIndexingApiEligibleStructuredData(
 
 /** Recursively checks for one Schema.org `@type` value. */
 function hasSchemaType(value: unknown, schemaType: string): boolean {
-  if (Array.isArray(value)) {
+  if (Arr.isArray(value)) {
     return value.some((entry) => hasSchemaType(entry, schemaType));
   }
 
@@ -38,7 +38,7 @@ function hasSchemaType(value: unknown, schemaType: string): boolean {
 
 /** Checks Google's livestream case: BroadcastEvent nested in VideoObject. */
 function hasBroadcastEventInsideVideoObject(value: unknown): boolean {
-  if (Array.isArray(value)) {
+  if (Arr.isArray(value)) {
     return value.some(hasBroadcastEventInsideVideoObject);
   }
 
@@ -64,7 +64,7 @@ function readSchemaTypes(value: Readonly<Record<PropertyKey, unknown>>) {
     return [schemaType];
   }
 
-  if (!Array.isArray(schemaType)) {
+  if (!Arr.isArray(schemaType)) {
     return [];
   }
 

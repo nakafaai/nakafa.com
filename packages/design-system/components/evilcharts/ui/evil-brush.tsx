@@ -9,6 +9,7 @@ import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-s
 import { EvilBrushControls } from "@repo/design-system/components/evilcharts/ui/evil-brush-controls";
 import { useBrushSelection } from "@repo/design-system/components/evilcharts/ui/evil-brush-selection";
 import { cn } from "cn";
+import { Record as Rec } from "effect";
 import {
   Suspense,
   useDeferredValue,
@@ -124,7 +125,7 @@ function EvilBrush({
 }: EvilBrushProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const keys = useMemo(
-    () => dataKeys ?? Object.keys(chartConfig),
+    () => dataKeys ?? Rec.keys(chartConfig),
     [dataKeys, chartConfig]
   );
   const totalPoints = data.length;

@@ -5,6 +5,7 @@ import {
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import type { EvilBrushVariant } from "@repo/design-system/components/evilcharts/ui/evil-brush";
+import { Record as Rec } from "effect";
 
 interface BrushDefinitionsProps {
   chartConfig: ChartConfig;
@@ -122,7 +123,7 @@ export function BrushDefinitions({
           <stop offset="100%" stopColor="white" stopOpacity={0} />
         </linearGradient>
       ) : null}
-      {Object.entries(chartConfig).flatMap(([dataKey, config]) => {
+      {Rec.toEntries(chartConfig).flatMap(([dataKey, config]) => {
         if (!visibleKeys.has(dataKey)) {
           return [];
         }

@@ -1,6 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import { readLayoutShift } from "@/e2e/support/layout";
@@ -453,7 +453,7 @@ test.describe("Quran source and tafsir coverage", () => {
     );
   });
 
-  for (const contract of Object.values(quranLocaleContracts)) {
+  for (const contract of Rec.values(quranLocaleContracts)) {
     test(`keeps ${contract.locale} translation notes and tafsir coverage truthful`, async ({
       page,
     }) => {

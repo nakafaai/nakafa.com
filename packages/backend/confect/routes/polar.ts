@@ -11,7 +11,7 @@ import {
   HTTP_FORBIDDEN,
   HTTP_INTERNAL_ERROR,
 } from "@repo/backend/confect/routes/constants";
-import { Config, Effect, Redacted, Schema } from "effect";
+import { Config, Effect, Record as Rec, Redacted, Schema } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 type PolarWebhookEvent = ReturnType<typeof validateEvent>;
@@ -101,7 +101,7 @@ export const polarRoutes = HttpRouter.add(
     const body = yield* readPolarWebhookBody(request);
     const event = yield* verifyPolarWebhook(
       body,
-      Object.fromEntries(request.headers.entries())
+      Rec.fromEntries(request.headers.entries())
     );
     const handled = yield* processPolarWebhookEvent(event);
     return handled

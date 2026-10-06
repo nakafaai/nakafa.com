@@ -1,6 +1,6 @@
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
-import { Effect, Predicate } from "effect";
+import { Array as Arr, Effect, Predicate } from "effect";
 import type { Instrumentation } from "next";
 
 /**
@@ -22,7 +22,7 @@ function getErrorDigest(error: unknown) {
 /** Reads the requesting user agent from Next.js instrumentation headers. */
 function getRequestUserAgent(headers: NodeJS.Dict<string | string[]>) {
   const userAgent = headers["user-agent"];
-  return Array.isArray(userAgent) ? userAgent[0] : userAgent;
+  return Arr.isArray(userAgent) ? userAgent[0] : userAgent;
 }
 
 /** Loads Node-only reporting and captures one Next.js request failure. */

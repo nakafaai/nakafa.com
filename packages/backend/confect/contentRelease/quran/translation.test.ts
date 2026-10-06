@@ -4,7 +4,7 @@ import {
   readQuranTranslation,
 } from "@repo/backend/confect/contentRelease/quran/translation";
 import { makeQuranChunk } from "@repo/backend/test/quran/rows";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 
 const verse = makeQuranChunk({
   firstQuranNumber: 1,
@@ -45,7 +45,7 @@ describe("contentRelease/quran/translation", () => {
           )
         ),
       });
-      for (const result of Object.values(results)) {
+      for (const result of Rec.values(results)) {
         expect(result).toMatchObject({
           _tag: "Failure",
           failure: { code: "CONTENT_RELEASE_INTEGRITY" },

@@ -1,7 +1,15 @@
 import { execFileSync } from "node:child_process";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, PlatformError, Schema } from "effect";
+import {
+  Effect,
+  FileSystem,
+  Layer,
+  Path,
+  PlatformError,
+  Record as Rec,
+  Schema,
+} from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
   type EffectSourceConfig,
@@ -48,7 +56,7 @@ const writeFiles = Effect.fn("EffectSourceTest.writeFiles")(function* (
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  for (const [file, content] of Object.entries(files)) {
+  for (const [file, content] of Rec.toEntries(files)) {
     const filePath = path.join(root, file);
     yield* fileSystem.makeDirectory(path.dirname(filePath), {
       recursive: true,

@@ -1,13 +1,19 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
-import { sourceViolations } from "#scripts/check/source";
+import { parseSources } from "#scripts/check/source";
 
 const VIEW = "apps/www/components/example.tsx";
 
 /** Inspects one TSX module with the React policy alone. */
 function inspect(sourceText: string, file = VIEW) {
-  return sourceViolations([{ file, sourceText }], [inspectReactSource]);
+  return Effect.scoped(
+    Effect.map(parseSources([{ file, sourceText }]), ({ modules }) =>
+      Arr.flatMap(modules, (parsed) =>
+        inspectReactSource(parsed.file, parsed.sourceFile)
+      )
+    )
+  );
 }
 
 /** The message for one function that returns JSX inside a component. */
@@ -129,7 +135,13 @@ declare function declared(): void;`);
 
 /** Inspects one module with the shared-state policy alone. */
 function inspectState(sourceText: string, file = VIEW) {
-  return sourceViolations([{ file, sourceText }], [inspectStateSource]);
+  return Effect.scoped(
+    Effect.map(parseSources([{ file, sourceText }]), ({ modules }) =>
+      Arr.flatMap(modules, (parsed) =>
+        inspectStateSource(parsed.file, parsed.sourceFile)
+      )
+    )
+  );
 }
 
 const USE_CONTEXT = "read contexts with use() instead of React's useContext";
