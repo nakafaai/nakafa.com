@@ -158,12 +158,18 @@ export const useFileUpload = (
   }, []);
 
   const generateUniqueId = useCallback((file: File | FileMetadata): string => {
-    if (file instanceof File) {
-      // Picked files only need an id that is unique within this hook.
-      pickedCountRef.current += 1;
-      return `${file.name}-${pickedCountRef.current}`;
+    if (!(file instanceof File)) {
+      return file.id;
     }
-    return file.id;
+    // A picked file needs an id no other file in this hook holds. The counter
+    // keeps picked files apart, and the loop skips an id a stored file brought.
+    const held = new Set(filesRef.current.map((entry) => entry.id));
+    let id = "";
+    do {
+      pickedCountRef.current += 1;
+      id = `${file.name}-${pickedCountRef.current}`;
+    } while (held.has(id));
+    return id;
   }, []);
 
   const clearFiles = useCallback(() => {

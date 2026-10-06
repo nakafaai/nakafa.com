@@ -150,7 +150,7 @@ describe("test ownership policy", () => {
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
           "packages/core/runner.test.ts: return the Effect to @effect/vitest instead of running it.\n",
           `apps/web/store.ts:1: ${RULES["object-helper"].message} (object-helper)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
-          "apps/web/tsconfig.json: remove the @effect/language-service block and inherit it from the shared configuration, because a plugins array replaces the one it extends.\n",
+          "apps/web/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\n",
           "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
         stdout: [],

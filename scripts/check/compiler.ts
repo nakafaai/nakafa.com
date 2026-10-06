@@ -3,7 +3,8 @@ import type { RepositorySource } from "#scripts/check/source";
 
 const PLUGIN_NAME = "@effect/language-service";
 /** The shared configurations every workspace extends. */
-const SHARED_CONFIG_PATTERN = /^packages\/typescript-config\/[^/]+\.json$/u;
+const SHARED_CONFIG_PATTERN =
+  /^packages\/typescript-config\/(?!package\.json$)[^/]+\.json$/u;
 /** One workspace's own configuration, such as `tsconfig.json`. */
 const WORKSPACE_CONFIG_PATTERN = /(?:^|\/)tsconfig(?:\.[^/]+)?\.json$/u;
 
@@ -16,6 +17,7 @@ const CompilerConfig = Schema.fromJsonString(
         ),
       })
     ),
+    extends: Schema.optionalKey(Schema.Unknown),
   })
 );
 const decodeConfig = Schema.decodeUnknownOption(CompilerConfig);
@@ -27,49 +29,84 @@ export function isCompilerConfig(file: string) {
   );
 }
 
-/** Returns the Effect language service block one configuration declares. */
-function languageService(source: typeof RepositorySource.Type) {
-  return Option.map(
-    Option.flatMap(decodeConfig(source.sourceText), (config) =>
-      Arr.findFirst(
-        config.compilerOptions?.plugins ?? [],
-        (plugin) => plugin.name === PLUGIN_NAME
-      )
-    ),
-    (plugin) => ({ file: source.file, plugin })
-  );
+/**
+ * Reports what one shared configuration declares wrongly: a `plugins` array
+ * without the Effect language service block, or no block at all in a
+ * configuration that extends nothing.
+ */
+function sharedProblems(
+  file: string,
+  config: typeof CompilerConfig.Type,
+  block: Option.Option<Readonly<Record<string, unknown>>>
+) {
+  if (Option.isSome(block)) {
+    return [];
+  }
+  if (config.compilerOptions?.plugins !== undefined) {
+    return [
+      `${file}: add the ${PLUGIN_NAME} block to its plugins array, because a plugins array replaces the one it extends.`,
+    ];
+  }
+  return config.extends === undefined
+    ? [
+        `${file}: declare the ${PLUGIN_NAME} block, because it extends no configuration that provides one.`,
+      ]
+    : [];
 }
 
 /**
- * Reports compiler configurations that would run the typecheck with their own
- * Effect language service rules. A `plugins` array replaces the one it
- * extends, so every shared configuration that declares the plugin declares the
- * same block, and no workspace configuration declares one.
+ * Reports compiler configurations that would run the typecheck without the
+ * shared Effect language service rules. A `plugins` array replaces the one it
+ * extends, so only shared configurations declare one, each of them carries
+ * the same Effect block, and a configuration the check cannot read is
+ * reported instead of skipped.
  */
 export function inspectCompilerConfigs(
   configs: readonly (typeof RepositorySource.Type)[]
 ) {
-  const declared = Arr.getSomes(Arr.map(configs, languageService));
-  const shared = Arr.filter(declared, ({ file }) =>
-    SHARED_CONFIG_PATTERN.test(file)
+  const inspected = Arr.map(configs, ({ file, sourceText }) => {
+    const config = decodeConfig(sourceText);
+    return {
+      block: Option.flatMap(config, ({ compilerOptions }) =>
+        Arr.findFirst(
+          compilerOptions?.plugins ?? [],
+          (plugin) => plugin.name === PLUGIN_NAME
+        )
+      ),
+      config,
+      file,
+      shared: SHARED_CONFIG_PATTERN.test(file),
+    };
+  });
+  const reference = Arr.head(
+    Arr.flatMap(inspected, ({ block, file, shared }) =>
+      shared && Option.isSome(block) ? [{ block: block.value, file }] : []
+    )
   );
-  return Arr.appendAll(
-    Arr.map(
-      Arr.filter(declared, ({ file }) => !SHARED_CONFIG_PATTERN.test(file)),
-      ({ file }) =>
-        `${file}: remove the ${PLUGIN_NAME} block and inherit it from the shared configuration, because a plugins array replaces the one it extends.`
-    ),
-    Option.match(Arr.head(shared), {
-      onNone: () => [],
-      onSome: (reference) =>
-        Arr.map(
-          Arr.filter(
-            shared,
-            ({ plugin }) => !Equal.equals(plugin, reference.plugin)
-          ),
-          ({ file }) =>
-            `${file}: its ${PLUGIN_NAME} block differs from ${reference.file}; keep them identical so every workspace enforces the same rules.`
-        ),
-    })
-  );
+  return Arr.flatMap(inspected, ({ block, config, file, shared }) => {
+    if (Option.isNone(config)) {
+      return [
+        `${file}: write this compiler configuration as plain JSON, without comments or trailing commas, so the check can read its plugins.`,
+      ];
+    }
+    if (!shared) {
+      return config.value.compilerOptions?.plugins === undefined
+        ? []
+        : [
+            `${file}: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.`,
+          ];
+    }
+    return Arr.appendAll(
+      sharedProblems(file, config.value, block),
+      Option.match(Option.all({ block, reference }), {
+        onNone: () => [],
+        onSome: (found) =>
+          Equal.equals(found.block, found.reference.block)
+            ? []
+            : [
+                `${file}: its ${PLUGIN_NAME} block differs from ${found.reference.file}; keep them identical so every workspace enforces the same rules.`,
+              ],
+      })
+    );
+  });
 }
