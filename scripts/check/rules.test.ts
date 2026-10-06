@@ -48,6 +48,10 @@ describe("Effect-native rule scopes", () => {
               sourceText: `import type { AuthConfig } from "./types";\nexport default ${config} satisfies AuthConfig;\n`,
             },
             {
+              file: "packages/a/workspace.ts",
+              sourceText: `import type { AuthConfig } from "@repo/backend/auth";\nexport default ${config} satisfies AuthConfig;\n`,
+            },
+            {
               file: "packages/a/options.ts",
               sourceText: `import type { Options } from "convex/server";\nexport default ${config} satisfies Options;\n`,
             },
@@ -85,6 +89,7 @@ describe("Effect-native rule scopes", () => {
             "packages/a/options.ts object-helper",
             "packages/a/plain.ts object-helper",
             "packages/a/qualified.ts object-helper",
+            "packages/a/workspace.ts object-helper",
           ]
         );
       })

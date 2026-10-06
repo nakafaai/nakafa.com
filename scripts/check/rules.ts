@@ -75,8 +75,8 @@ const PAGE_METHODS = HashSet.make(
 const GLOBAL_ONLY: readonly (typeof Binding.Type)[] = ["global"];
 /** Framework configuration types name what they configure, such as `NextConfig` or Convex's `AuthConfig`. */
 const CONFIGURATION_TYPE_PATTERN = /Config$/u;
-/** Relative paths and app aliases name repository modules rather than framework packages. */
-const LOCAL_SPECIFIER_PATTERN = /^(?:\.|@\/|#)/u;
+/** Relative paths, app aliases, and workspace packages name repository modules rather than framework packages. */
+const LOCAL_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;
 
 /** Whether a module imports a module specifier that `pattern` matches. */
 function imports(sourceFile: SourceFile, pattern: RegExp) {
