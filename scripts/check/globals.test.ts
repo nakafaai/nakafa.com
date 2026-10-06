@@ -40,6 +40,10 @@ Object!.keys(value);
 (Object satisfies unknown).keys(value);
 global.Object.keys(value);
 global.Array.isArray(value);
+const { keys } = Object;
+const { isArray: check, from } = Array;
+const { values: read } = globalThis.Object;
+const { "entries": list } = (Object);
 `),
         [
           "1 object-helper",
@@ -62,6 +66,10 @@ global.Array.isArray(value);
           "18 object-helper",
           "19 object-helper",
           "20 array-check",
+          "21 object-helper",
+          "22 array-check",
+          "23 object-helper",
+          "24 object-helper",
         ]
       );
     })
@@ -82,6 +90,10 @@ globalThis.Math.max(1, 2);
 globalThis.Array.from(items);
 globalThis.Array;
 Object[name](value);
+const { [name]: dynamic, ...rest } = Object;
+const { max } = Math;
+const [first] = Object;
+const copy = Object;
 globalThis[name].keys(value);
 globalThis["Math"].max(1, 2);
 client["Object"].keys(value);

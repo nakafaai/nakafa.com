@@ -1,13 +1,15 @@
-import { Array as Arr, HashSet, Option, Record as Rec } from "effect";
+import { Array as Arr, HashSet, Option, Record as Rec, Result } from "effect";
 import {
   isAsExpression,
   isElementAccessExpression,
   isIdentifier,
   isNonNullExpression,
+  isObjectBindingPattern,
   isParenthesizedExpression,
   isPropertyAccessExpression,
   isSatisfiesExpression,
   isStringLiteralLikeNode,
+  isVariableDeclaration,
   type Node,
   type SourceFile,
 } from "typescript/unstable/ast";
@@ -67,26 +69,62 @@ function memberRead(node: Node, owner: Node): Option.Option<string> {
 }
 
 /**
- * Returns the rule that a reference to the platform global `name` breaks
- * through the member it reads, such as `Object.keys` or `Array.isArray`.
+ * Returns the members a declaration destructures from `outer`, such as `keys`
+ * and `values` in `const { keys, values: read } = Object`.
  */
-function globalRule(name: string, reference: Node): Option.Option<RuleId> {
-  const outer = wrapped(reference);
-  return Option.flatMap(memberRead(outer.parent, outer), (member) =>
-    Option.flatMap(Rec.get(MEMBERS, name), (members) =>
-      Rec.get(members, member)
+function destructured(outer: Node) {
+  const declaration = outer.parent;
+  if (
+    !(
+      isVariableDeclaration(declaration) &&
+      declaration.initializer === outer &&
+      isObjectBindingPattern(declaration.name)
+    )
+  ) {
+    return [];
+  }
+  return Arr.flatMap(declaration.name.elements, (element) =>
+    Arr.filterMap(
+      Arr.fromNullishOr(element.propertyName ?? element.name),
+      (property) =>
+        isIdentifier(property) || isStringLiteralLikeNode(property)
+          ? Result.succeed({ at: element, member: property.text })
+          : Result.failVoid
     )
   );
+}
+
+/**
+ * Returns each prohibited member that a reference to the platform global
+ * `name` uses, with the node that names it: a member it reads, such as
+ * `Object.keys`, and the members a declaration destructures from it.
+ */
+function globalUses(name: string, reference: Node) {
+  const outer = wrapped(reference);
+  return Arr.flatMap(Option.toArray(Rec.get(MEMBERS, name)), (members) => [
+    ...Option.toArray(
+      Option.map(
+        Option.flatMap(memberRead(outer.parent, outer), (member) =>
+          Rec.get(members, member)
+        ),
+        (rule) => ({ at: reference, rule })
+      )
+    ),
+    ...Arr.filterMap(destructured(outer), ({ at, member }) =>
+      Option.match(Rec.get(members, member), {
+        onNone: () => Result.failVoid,
+        onSome: (rule) => Result.succeed({ at, rule }),
+      })
+    ),
+  ]);
 }
 
 /** Returns the platform globals one node uses, directly or through a global object. */
 function referenceCandidates(sourceFile: SourceFile, node: Node) {
   if (isIdentifier(node)) {
     return HashSet.has(GLOBALS, node.text)
-      ? Option.toArray(
-          Option.map(globalRule(node.text, node), (rule) =>
-            candidate(rule, sourceFile, node, node)
-          )
+      ? Arr.map(globalUses(node.text, node), ({ at, rule }) =>
+          candidate(rule, sourceFile, at, node)
         )
       : [];
   }
@@ -97,13 +135,12 @@ function referenceCandidates(sourceFile: SourceFile, node: Node) {
   if (!(isIdentifier(owner) && HashSet.has(GLOBAL_OBJECTS, owner.text))) {
     return [];
   }
-  return Option.toArray(
-    Option.map(
-      Option.flatMap(memberRead(node, node.expression), (name) =>
-        globalRule(name, node)
-      ),
-      (rule) => candidate(rule, sourceFile, node, owner)
-    )
+  return Arr.flatMap(
+    Option.toArray(memberRead(node, node.expression)),
+    (name) =>
+      Arr.map(globalUses(name, node), ({ at, rule }) =>
+        candidate(rule, sourceFile, at, owner)
+      )
   );
 }
 

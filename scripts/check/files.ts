@@ -31,8 +31,9 @@ const IGNORED_DIRECTORIES = HashSet.make(
   "dist",
   "node_modules"
 );
-const SOURCE_FILE_PATTERN = /\.tsx?$/u;
-const DECLARATION_FILE_PATTERN = /\.d\.ts$/u;
+/** TypeScript modules in every flavor: `.ts`, `.tsx`, `.mts`, and `.cts`. */
+const SOURCE_FILE_PATTERN = /\.[cm]?tsx?$/u;
+const DECLARATION_FILE_PATTERN = /\.d\.[cm]?ts$/u;
 const GENERATED_DIRECTORY = "_generated";
 
 /**

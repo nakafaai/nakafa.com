@@ -64,7 +64,7 @@ const CONFIGURATION_FILE_PATTERN = /(?:^|\/)[^/]+\.config\.[cm]?tsx?$/u;
 /** The Vitest configuration API, which shared configuration modules import. */
 const CONFIGURATION_MODULE_PATTERN = /^vitest\/config$/u;
 const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;
-const MODULE_EXTENSION_PATTERN = /\.tsx?$/u;
+const MODULE_EXTENSION_PATTERN = /\.[cm]?tsx?$/u;
 /** Playwright methods that serialize a function and run it in the browser page. */
 const PAGE_METHODS = HashSet.make(
   "$$eval",
