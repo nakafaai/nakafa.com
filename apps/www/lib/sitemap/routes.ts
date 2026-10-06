@@ -157,7 +157,9 @@ function mapFamilyRoute(route: {
  *
  * Pins the active release before the fan-out and re-verifies it after, so a
  * publication that lands mid-render fails loudly instead of caching a mixed
- * or partial partition behind the long origin-cache lifetime. */
+ * or partial partition behind the long origin-cache lifetime. A missing
+ * partition is cached too, so it is re-verified the same way: a partition
+ * the landing publication just added must not be cached as missing. */
 const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
   function* (
     pageId: string,
@@ -174,10 +176,13 @@ const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
       return yield* new PublishedProjectionError(identity);
     }
     const activeReleaseId = active.releaseId;
+    const missing = verifyContentReleasePin(activeReleaseId, identity).pipe(
+      Effect.andThen(new SitemapPageNotFoundError({ pageId }))
+    );
     const inventory = yield* familyBucketInventories[family](locale);
     const buckets = selectSitemapPartition(inventory.buckets, partition);
     if (buckets.length === 0) {
-      return yield* new SitemapPageNotFoundError({ pageId });
+      return yield* missing;
     }
     const pages =
       family === "material"
@@ -199,7 +204,7 @@ const readFamilyPartition = Effect.fn("www.sitemap.routePage.partition")(
       .flat()
       .sort((left, right) => compareSitemapPaths(left.path, right.path));
     if (routes.length === 0) {
-      return yield* new SitemapPageNotFoundError({ pageId });
+      return yield* missing;
     }
     yield* verifyContentReleasePin(activeReleaseId, identity);
     return { routes };
