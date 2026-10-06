@@ -1,11 +1,16 @@
-import { Array as Arr, Match, Schema } from "effect";
+import { Array as Arr, HashSet, Match, Schema } from "effect";
 import {
   type Identifier,
+  isArrowFunction,
+  isCallExpression,
   isExportAssignment,
+  isFunctionExpression,
   isIdentifier,
   isImportDeclaration,
   isNamedImports,
+  isPropertyAccessExpression,
   isSatisfiesExpression,
+  isSourceFile,
   isStringLiteral,
   isTypeReferenceNode,
   type Node,
@@ -56,6 +61,17 @@ export const RULES = {
 const CONFIGURATION_FILE_PATTERN = /(?:^|\/)[^/]+\.config\.[cm]?tsx?$/u;
 /** The Vitest configuration API, which shared configuration modules import. */
 const CONFIGURATION_MODULE_PATTERN = /^vitest\/config$/u;
+const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;
+/** Playwright methods that serialize a function and run it in the browser page. */
+const PAGE_METHODS = HashSet.make(
+  "$$eval",
+  "$eval",
+  "addInitScript",
+  "evaluate",
+  "evaluateAll",
+  "evaluateHandle",
+  "waitForFunction"
+);
 const GLOBAL_ONLY: readonly (typeof Binding.Type)[] = ["global"];
 /** Framework configuration types name what they configure, such as `NextConfig` or Convex's `AuthConfig`. */
 const CONFIGURATION_TYPE_PATTERN = /Config$/u;
@@ -130,6 +146,40 @@ function isConfiguration(file: string, sourceFile: SourceFile) {
     imports(sourceFile, CONFIGURATION_MODULE_PATTERN) ||
     exportsFrameworkConfiguration(sourceFile)
   );
+}
+
+/** Whether a node is a function that a Playwright call serializes into the browser page. */
+function isPageFunction(node: Node) {
+  if (!(isArrowFunction(node) || isFunctionExpression(node))) {
+    return false;
+  }
+  const call = node.parent;
+  return (
+    isCallExpression(call) &&
+    Arr.some(call.arguments, (argument) => argument === node) &&
+    isPropertyAccessExpression(call.expression) &&
+    HashSet.has(PAGE_METHODS, call.expression.name.text)
+  );
+}
+
+/** Whether a node sits inside a function that runs in the browser page. */
+function runsInPage(node: Node): boolean {
+  if (isSourceFile(node)) {
+    return false;
+  }
+  return isPageFunction(node) || runsInPage(node.parent);
+}
+
+/**
+ * Returns the nodes of a module that run where its imports exist. In a
+ * Playwright module, a function passed to `page.evaluate`, `addInitScript`,
+ * or one of their siblings is serialized into the browser page. No import
+ * exists there, so Effect cannot replace a platform global inside it.
+ */
+export function outsidePage(sourceFile: SourceFile, nodes: readonly Node[]) {
+  return imports(sourceFile, PLAYWRIGHT_PATTERN)
+    ? Arr.filter(nodes, (node) => !runsInPage(node))
+    : nodes;
 }
 
 /** Whether `rule` inspects the authored module `file`. */

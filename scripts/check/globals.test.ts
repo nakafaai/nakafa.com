@@ -28,6 +28,10 @@ Array.isArray(value);
 globalThis.Object.keys(value);
 window.Array.isArray(value);
 self.Object.values(value);
+Object["keys"](value);
+Array['isArray'](value);
+globalThis.Object["values"](value);
+globalThis["Object"].entries(value);
 `),
         [
           "1 object-helper",
@@ -38,6 +42,10 @@ self.Object.values(value);
           "6 object-helper",
           "7 array-check",
           "8 object-helper",
+          "9 object-helper",
+          "10 array-check",
+          "11 object-helper",
+          "12 object-helper",
         ]
       );
     })
@@ -57,6 +65,10 @@ client.Object.keys(value);
 globalThis.Math.max(1, 2);
 globalThis.Array.from(items);
 globalThis.Array;
+Object[name](value);
+globalThis[name].keys(value);
+globalThis["Math"].max(1, 2);
+client["Object"].keys(value);
 function read(Array: Source) {
   return Array.isArray(value);
 }

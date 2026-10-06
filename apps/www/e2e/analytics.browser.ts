@@ -1,5 +1,5 @@
 import { expect, type Page, type Request, test } from "@playwright/test";
-import { Effect, Option, Record as Rec, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -123,7 +123,7 @@ test("baseline counts one cookieless pageview without consent", async ({
               expect(view?.properties.$current_url).toBe(`${baseURL}/en`);
               expect(view?.properties.$user_id).toBeUndefined();
               const keys = yield* Effect.promise(() =>
-                page.evaluate(() => Rec.keys(window.localStorage))
+                page.evaluate(() => Object.keys(window.localStorage))
               );
               expect(
                 keys.filter(

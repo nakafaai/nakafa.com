@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { Effect, Record as Rec } from "effect";
+import { Effect } from "effect";
 
 interface PricingRect {
   height: number;
@@ -73,7 +73,7 @@ const installPricingTransitionObserver = Effect.fn(
         };
       };
       const readGeometry = (): PricingGeometry => ({
-        plans: Rec.fromEntries(
+        plans: Object.fromEntries(
           [...document.querySelectorAll("[data-pricing-plan]")].map(
             (element) => [
               element.getAttribute("data-pricing-plan") ?? "",
@@ -81,7 +81,7 @@ const installPricingTransitionObserver = Effect.fn(
             ]
           )
         ),
-        slots: Rec.fromEntries(
+        slots: Object.fromEntries(
           [...document.querySelectorAll("[data-pricing-price-slot]")].map(
             (element) => [
               element.getAttribute("data-pricing-price-slot") ?? "",
@@ -146,7 +146,7 @@ const installPricingTransitionObserver = Effect.fn(
         }
 
         const geometry = readGeometry();
-        const renderedPlans = Rec.values(geometry.plans);
+        const renderedPlans = Object.values(geometry.plans);
 
         if (
           renderedPlans.length !== 2 ||

@@ -89,4 +89,49 @@ describe("Effect-native rule scopes", () => {
         );
       })
   );
+
+  it.effect(
+    "leaves functions that Playwright runs in the browser page alone",
+    () =>
+      Effect.gen(function* () {
+        const page = `page.evaluate(() => Object.keys(window.localStorage));
+page.addInitScript(function () {
+  const read = () => Object.values(window.state);
+  return Array.isArray(read());
+});
+links.evaluateAll((nodes) => Object.entries(nodes));
+page.$eval("main", (node) => Object.keys(node.dataset));
+page.waitForFunction((limit) => Object.keys(window.state).length > limit, 1);
+Object.keys(routes);
+run(() => Object.keys(routes));
+evaluate(() => Object.keys(routes));
+page.locator(() => Object.keys(routes));
+`;
+        assert.deepStrictEqual(
+          yield* findings([
+            {
+              file: "apps/www/e2e/page.browser.ts",
+              sourceText: `import { test } from "@playwright/test";\n${page}`,
+            },
+            { file: "apps/www/lib/page.ts", sourceText: page },
+          ]),
+          [
+            "apps/www/e2e/page.browser.ts object-helper",
+            "apps/www/e2e/page.browser.ts object-helper",
+            "apps/www/e2e/page.browser.ts object-helper",
+            "apps/www/e2e/page.browser.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts array-check",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+          ]
+        );
+      })
+  );
 });

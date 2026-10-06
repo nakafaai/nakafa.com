@@ -15,7 +15,7 @@ import {
 import type { API } from "typescript/unstable/sync";
 import { globalCandidates } from "#scripts/check/globals";
 import { nativeCandidates } from "#scripts/check/native";
-import { covers, RULES, Rule } from "#scripts/check/rules";
+import { covers, outsidePage, RULES, Rule } from "#scripts/check/rules";
 import { effectRunnerViolation } from "#scripts/check/runtime";
 import {
   descendants,
@@ -167,7 +167,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
       if (isGenerated(sourceFile)) {
         return [];
       }
-      const nodes = descendants(sourceFile);
+      const nodes = outsidePage(sourceFile, descendants(sourceFile));
       return Arr.filterMap(
         Arr.flatten([
           globalCandidates(sourceFile, nodes),
