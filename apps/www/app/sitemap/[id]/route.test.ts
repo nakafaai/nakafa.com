@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect } from "effect";
 import { GET } from "@/app/sitemap/[id]/route";
-import { SitemapPageNotFoundError } from "@/lib/sitemap/identity";
 
 const mockGetCachedSitemapEntries = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
@@ -18,8 +17,7 @@ vi.mock("@/lib/sitemap/entries", () => ({
   getCachedSitemapEntries: mockGetCachedSitemapEntries,
 }));
 
-vi.mock(import("@/lib/sitemap/identity"), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock("@/lib/sitemap/identity", () => ({
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
 }));
 
@@ -36,12 +34,15 @@ describe("sitemap page route", () => {
     mockGetSitemapPageDescriptor.mockImplementation((pageId) =>
       pageId === "base" ? { id: "base" } : null
     );
-    mockGetCachedSitemapEntries.mockResolvedValue([
-      {
-        lastModified: new Date("2025-01-01T00:00:00.000Z"),
-        url: "https://nakafa.com/en",
-      },
-    ]);
+    mockGetCachedSitemapEntries.mockResolvedValue({
+      _tag: "Found",
+      entries: [
+        {
+          lastModified: "2025-01-01T00:00:00.000Z",
+          url: "https://nakafa.com/en",
+        },
+      ],
+    });
   });
 
   it("serves one bounded sitemap page by .xml id", async () => {
@@ -99,9 +100,7 @@ describe("sitemap page route", () => {
       locale: "en",
       partition: 7,
     });
-    mockGetCachedSitemapEntries.mockRejectedValueOnce(
-      new SitemapPageNotFoundError({ pageId: "material_en_p7" })
-    );
+    mockGetCachedSitemapEntries.mockResolvedValueOnce({ _tag: "Missing" });
 
     const response = await GET(
       new Request("https://nakafa.com/sitemap/material_en_p7.xml"),

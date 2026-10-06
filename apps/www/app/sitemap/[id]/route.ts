@@ -1,10 +1,7 @@
-import { Effect } from "effect";
+import { Effect, Match } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { getCachedSitemapEntries } from "@/lib/sitemap/entries";
-import {
-  getSitemapPageDescriptor,
-  SitemapPageNotFoundError,
-} from "@/lib/sitemap/identity";
+import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 import { buildSitemapUrlSetXml, sitemapXmlHeaders } from "@/lib/sitemap/xml";
 
 const sitemapPageError = "Internal Server Error";
@@ -25,18 +22,16 @@ export async function GET(
   return Effect.runPromise(
     buildSitemapPageResponse(pageId).pipe(
       Effect.catch((error) =>
-        error.cause instanceof SitemapPageNotFoundError
-          ? Effect.succeed(createNotFoundResponse())
-          : captureServerExceptionSafely(error.cause, {
-              source: "sitemap-page",
-            }).pipe(
-              Effect.as(
-                new Response(sitemapPageError, {
-                  headers: { "Content-Type": "text/plain; charset=utf-8" },
-                  status: 500,
-                })
-              )
-            )
+        captureServerExceptionSafely(error.cause, {
+          source: "sitemap-page",
+        }).pipe(
+          Effect.as(
+            new Response(sitemapPageError, {
+              headers: { "Content-Type": "text/plain; charset=utf-8" },
+              status: 500,
+            })
+          )
+        )
       )
     )
   );
@@ -67,12 +62,16 @@ function parseSitemapPageId(segment: string) {
 /** Builds one sitemap page response from bounded sitemap entries. */
 const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
   function* (pageId: string) {
-    const entries = yield* Effect.tryPromise(() =>
+    const page = yield* Effect.tryPromise(() =>
       getCachedSitemapEntries({ pageId })
     );
 
-    return new Response(buildSitemapUrlSetXml(entries), {
-      headers: sitemapXmlHeaders,
+    return Match.valueTags(page, {
+      Found: ({ entries }) =>
+        new Response(buildSitemapUrlSetXml(entries), {
+          headers: sitemapXmlHeaders,
+        }),
+      Missing: createNotFoundResponse,
     });
   }
 );

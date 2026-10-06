@@ -92,20 +92,31 @@ function getSitemapEntryLocales(pageId: string) {
  * The cache key is the page id, which already encodes family, locale, and
  * partition. Entries keep the long built-in profile on purpose because only
  * publication purges them through the shared sitemap tag. Dates are
- * normalized to strings so the cached value stays serializable. */
-async function readCachedSitemapEntries(
-  options: SitemapPageEntryOptions
-): Promise<readonly SitemapEntry[]> {
+ * normalized to strings so the cached value stays serializable.
+ *
+ * A missing page returns as data. Next.js rethrows a cached function's failure
+ * to its caller as a new error without the original class, so a thrown
+ * `SitemapPageNotFoundError` reached the route as an unknown failure. */
+async function readCachedSitemapEntries(options: SitemapPageEntryOptions) {
   "use cache";
 
   applySitemapCache();
-  const entries = await Effect.runPromise(getSitemapEntries(options));
-  return entries.map((entry) => ({
-    ...entry,
-    ...(entry.lastModified instanceof Date
-      ? { lastModified: entry.lastModified.toISOString() }
-      : {}),
-  }));
+  return await Effect.runPromise(
+    getSitemapEntries(options).pipe(
+      Effect.map((entries) => ({
+        _tag: "Found" as const,
+        entries: entries.map((entry) => ({
+          ...entry,
+          ...(entry.lastModified instanceof Date
+            ? { lastModified: entry.lastModified.toISOString() }
+            : {}),
+        })),
+      })),
+      Effect.catchTag("SitemapPageNotFoundError", () =>
+        Effect.succeed({ _tag: "Missing" as const })
+      )
+    )
+  );
 }
 
 /** Shares one cached sitemap page between the route and indexing scripts

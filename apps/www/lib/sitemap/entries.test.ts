@@ -1,11 +1,12 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import type { getPathname } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import {
   getCachedSitemapEntries,
   getSitemapEntries,
 } from "@/lib/sitemap/entries";
+import { SitemapPageNotFoundError } from "@/lib/sitemap/identity";
 
 const mockReadSitemapRoutePage = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
@@ -48,7 +49,8 @@ vi.mock("@/lib/sitemap/routes", () => ({
   readSitemapRoutePage: mockReadSitemapRoutePage,
 }));
 
-vi.mock("@/lib/sitemap/identity", () => ({
+vi.mock(import("@/lib/sitemap/identity"), async (importOriginal) => ({
+  ...(await importOriginal()),
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
 }));
 
@@ -293,9 +295,10 @@ describe("sitemap entries", () => {
   );
 
   it("shares base sitemap pages through the origin cache", async () => {
-    const entries = await getCachedSitemapEntries({ pageId: "base" });
+    const page = await getCachedSitemapEntries({ pageId: "base" });
 
-    expect(entries.length).toBeGreaterThan(0);
+    assert(page._tag === "Found");
+    expect(page.entries.length).toBeGreaterThan(0);
     expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
     expect(mockCacheLife).toHaveBeenCalledWith("max");
   });
@@ -308,9 +311,10 @@ describe("sitemap entries", () => {
       partition: 0,
     });
 
-    const entries = await getCachedSitemapEntries({ pageId: "material_en_p0" });
+    const page = await getCachedSitemapEntries({ pageId: "material_en_p0" });
 
-    expect(entries.length).toBeGreaterThan(0);
+    assert(page._tag === "Found");
+    expect(page.entries.length).toBeGreaterThan(0);
     expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
   });
 
@@ -335,11 +339,22 @@ describe("sitemap entries", () => {
       })
     );
 
-    const entries = await getCachedSitemapEntries({ pageId: "base" });
+    const page = await getCachedSitemapEntries({ pageId: "base" });
 
-    expect(entries).toContainEqual({
+    assert(page._tag === "Found");
+    expect(page.entries).toContainEqual({
       lastModified: "2024-01-02T00:00:00.000Z",
       url: "https://nakafa.com/en/search",
     });
+  });
+
+  it("returns a missing page as data, because the cache boundary drops the error's class", async () => {
+    mockReadSitemapRoutePage.mockReturnValueOnce(
+      Effect.fail(new SitemapPageNotFoundError({ pageId: "material_en_p7" }))
+    );
+
+    const page = await getCachedSitemapEntries({ pageId: "material_en_p7" });
+
+    expect(page).toEqual({ _tag: "Missing" });
   });
 });
