@@ -4,6 +4,7 @@ import {
   DEPENDENCY_HOLDS,
   EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
+  PACKAGE_MANAGER,
   VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
 import {
@@ -68,7 +69,7 @@ function validInput(): PolicyInput {
     manifests,
     rootManifest: {
       devEngines: { runtime: { version: "24.21.0" } },
-      packageManager: "pnpm@11.28.2",
+      packageManager: PACKAGE_MANAGER,
     },
     workspace: {
       catalog: {
@@ -344,7 +345,7 @@ describe("dependency policy validation", () => {
         ...input,
         rootManifest: { ...input.rootManifest, packageManager: "pnpm@11.26.0" },
       }),
-      problem: "packageManager must be pnpm@11.27.0.",
+      problem: `packageManager must be ${PACKAGE_MANAGER}.`,
     },
     {
       name: "a Node runtime drift",

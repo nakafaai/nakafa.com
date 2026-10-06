@@ -5,6 +5,7 @@ import {
   EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
   FORBIDDEN_EFFECT_DEPENDENCIES,
+  PACKAGE_MANAGER,
   SCRIPT_DEPENDENCY_HOLDS,
   VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
@@ -178,8 +179,8 @@ export function validateDependencyPolicy({
   }
 
   problems.push(...cohortProblems(workspace));
-  if (rootManifest.packageManager !== "pnpm@11.28.2") {
-    problems.push("packageManager must be pnpm@11.27.0.");
+  if (rootManifest.packageManager !== PACKAGE_MANAGER) {
+    problems.push(`packageManager must be ${PACKAGE_MANAGER}.`);
   }
   if (rootManifest.devEngines?.runtime?.version !== "24.21.0") {
     problems.push("The managed Node runtime must be 24.21.0.");
