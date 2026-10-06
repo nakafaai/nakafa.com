@@ -24,6 +24,7 @@ import type { Binding } from "#scripts/check/source";
 export const Rule = Schema.Literals([
   "array-check",
   "array-method",
+  "array-search",
   "object-helper",
   "try-catch",
   "typeof-object",
@@ -51,6 +52,11 @@ export const RULES = {
   "array-method": {
     message:
       "transform arrays with the Array module from effect, such as Array.map, Array.filter, and Array.join, instead of a native array method.",
+    scope: "strict",
+  },
+  "array-search": {
+    message:
+      "search arrays with Array.findFirst, Array.findLast, or their index forms from effect, which return an Option, instead of a native find method.",
     scope: "strict",
   },
   "object-helper": {

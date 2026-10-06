@@ -1,7 +1,13 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, FileSystem, Record as Rec } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  Option,
+  Record as Rec,
+} from "effect";
 import { parse as yamlParse } from "yaml";
 import {
   GITHUB_ACTION_REVIEWS,
@@ -260,8 +266,11 @@ describe("GitHub Action policy", () => {
       validActionUses(),
       ({ reference }) => !reference.startsWith("actions/download-artifact@")
     );
-    const setupIndex = actionUses.findIndex(({ reference }) =>
-      reference.startsWith("pnpm/setup@")
+    const setupIndex = Option.getOrElse(
+      Arr.findFirstIndex(actionUses, ({ reference }) =>
+        reference.startsWith("pnpm/setup@")
+      ),
+      () => -1
     );
     const { cache, ...reviewedInputs } =
       GITHUB_ACTION_REVIEWS.find(({ action }) => action === "pnpm/setup")
@@ -307,8 +316,11 @@ describe("GitHub Action policy", () => {
       workflowPath: ".github/workflows/example.yml",
     });
 
-    const setupIndex = actionUses.findIndex(({ reference }) =>
-      reference.startsWith("pnpm/setup@")
+    const setupIndex = Option.getOrElse(
+      Arr.findFirstIndex(actionUses, ({ reference }) =>
+        reference.startsWith("pnpm/setup@")
+      ),
+      () => -1
     );
     const setupReview = GITHUB_ACTION_REVIEWS.find(
       ({ action }) => action === "pnpm/setup"

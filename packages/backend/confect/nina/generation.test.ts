@@ -16,7 +16,7 @@ import {
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -219,7 +219,9 @@ describe("Nina generation through the real Agent component", () => {
       const state = yield* Effect.promise(f.inspect);
       expect(state.turn?.state.status).toBe("complete");
       expect(
-        state.turn?.usage.find((row) => row.agent === "nina")
+        Option.getOrUndefined(
+          Arr.findFirst(state.turn?.usage ?? [], (row) => row.agent === "nina")
+        )
       ).toMatchObject({ input: 0, output: 0 });
     })
   );
@@ -279,8 +281,11 @@ describe("Nina generation through the real Agent component", () => {
     expect(languageModel.doGenerateCalls).toHaveLength(0);
     expect(state.user?.credits).toBe(8);
     expect(state.messages.page).toHaveLength(2);
-    const answer = state.messages.page.find(
-      (message) => message.role === "assistant"
+    const answer = Option.getOrUndefined(
+      Arr.findFirst(
+        state.messages.page,
+        (message) => message.role === "assistant"
+      )
     );
     expect(answer?.parts).toEqual(
       expect.arrayContaining([
@@ -352,8 +357,11 @@ describe("Nina generation through the real Agent component", () => {
         ],
       },
     ]);
-    const answer = state.messages.page.find(
-      (message) => message.role === "assistant"
+    const answer = Option.getOrUndefined(
+      Arr.findFirst(
+        state.messages.page,
+        (message) => message.role === "assistant"
+      )
     );
     expect(answer?.parts).toEqual(
       expect.arrayContaining([
@@ -378,9 +386,11 @@ describe("Nina generation through the real Agent component", () => {
         }),
       ])
     );
-    expect(state.turn?.usage.find((row) => row.agent === "nina")?.calls).toBe(
-      2
-    );
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(state.turn?.usage ?? [], (row) => row.agent === "nina")
+      )?.calls
+    ).toBe(2);
   });
 
   it("refunds an interrupted provider without generating a title or follow-up", async () => {

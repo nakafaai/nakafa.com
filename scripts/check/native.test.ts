@@ -38,6 +38,7 @@ run();
         "3 array-method",
         "5 array-method",
         "6 array-method",
+        "10 array-search",
         "11 array-method",
       ]);
       assert.deepStrictEqual(yield* findings(source), []);

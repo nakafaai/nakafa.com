@@ -13,7 +13,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const ROUTE = "material/lesson/mathematics/vector/addition";
@@ -107,12 +107,17 @@ describe("contents/metrics/counter", () => {
       });
       const queueItem = await ctx.db.get(queueId);
       assert(queueItem);
-      const counter = [
-        ...buildMetricsBatch({
-          queueItems: [queueItem],
-          updatedAt: NOW,
-        }).counters.values(),
-      ].find(({ windowKey }) => windowKey === "lifetime");
+      const counter = Option.getOrUndefined(
+        Arr.findFirst(
+          [
+            ...buildMetricsBatch({
+              queueItems: [queueItem],
+              updatedAt: NOW,
+            }).counters.values(),
+          ],
+          ({ windowKey }) => windowKey === "lifetime"
+        )
+      );
       assert(counter);
       const read = vi.spyOn(ctx.db, "get");
       await Effect.runPromise(
@@ -195,12 +200,17 @@ describe("contents/metrics/counter", () => {
       if (!queueItem) {
         throw new Error("Expected the duplicate-counter queue fixture.");
       }
-      const counter = [
-        ...buildMetricsBatch({
-          queueItems: [queueItem],
-          updatedAt: NOW,
-        }).counters.values(),
-      ].find(({ windowKey }) => windowKey === "lifetime");
+      const counter = Option.getOrUndefined(
+        Arr.findFirst(
+          [
+            ...buildMetricsBatch({
+              queueItems: [queueItem],
+              updatedAt: NOW,
+            }).counters.values(),
+          ],
+          ({ windowKey }) => windowKey === "lifetime"
+        )
+      );
       if (!counter) {
         throw new Error("Expected the duplicate counter delta fixture.");
       }

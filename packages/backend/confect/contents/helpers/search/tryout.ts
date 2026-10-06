@@ -97,7 +97,9 @@ function searchTryoutQuery(
 ) {
   const exactRoute = getExactRouteQuery(locale, queryText);
   const exact = exactRoute
-    ? documents.find(({ route }) => route === exactRoute)
+    ? Option.getOrUndefined(
+        Arr.findFirst(documents, ({ route }) => route === exactRoute)
+      )
     : undefined;
   const hits = Arr.filter(documents, (document) =>
     matchesContentSearchQuery(getTryoutSearchText(document), queryText)

@@ -27,7 +27,7 @@ import {
   TRYOUT_START_TRACK as TRACK,
 } from "@repo/backend/test/tryout/source";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const startArgs: StartAttemptArgs = {
   countryKey: COUNTRY,
@@ -248,7 +248,12 @@ describe("tryouts/start/scale", () => {
     }));
     expect(proof.scales).toHaveLength(33);
     expect(
-      proof.scales.find(({ _id }) => _id === proof.attempt?.scaleVersionId)
+      Option.getOrUndefined(
+        Arr.findFirst(
+          proof.scales,
+          ({ _id }) => _id === proof.attempt?.scaleVersionId
+        )
+      )
     ).not.toHaveProperty("history");
   });
   it.each([

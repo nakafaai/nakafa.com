@@ -225,7 +225,9 @@ const retainedFloor = Effect.fn("contentRelease.retainedFloor")(function* (
     }
   }
   const cutoff = (yield* Clock.currentTimeMillis) - ROLLBACK_RETENTION_MS;
-  const retained = releases.find((release) => release.createdAt >= cutoff);
+  const retained = Option.getOrUndefined(
+    Arr.findFirst(releases, (release) => release.createdAt >= cutoff)
+  );
   if (retained) {
     return retained.sequence;
   }

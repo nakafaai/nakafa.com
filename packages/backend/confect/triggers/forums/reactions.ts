@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /**
  * Trigger handler for schoolClassForumReactions table changes.
@@ -28,8 +28,9 @@ export const forumReactionsHandler = Effect.fn(
         .table("schoolClassForums")
         .get(reaction.forumId);
       const reactionCounts = [...forum.reactionCounts];
-      const existingIndex = reactionCounts.findIndex(
-        (r) => r.emoji === reaction.emoji
+      const existingIndex = Option.getOrElse(
+        Arr.findFirstIndex(reactionCounts, (r) => r.emoji === reaction.emoji),
+        () => -1
       );
       if (existingIndex >= 0) {
         reactionCounts[existingIndex] = {
@@ -55,8 +56,12 @@ export const forumReactionsHandler = Effect.fn(
         .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
       if (forum) {
         const reactionCounts = [...forum.reactionCounts];
-        const existingIndex = reactionCounts.findIndex(
-          (r) => r.emoji === oldReaction.emoji
+        const existingIndex = Option.getOrElse(
+          Arr.findFirstIndex(
+            reactionCounts,
+            (r) => r.emoji === oldReaction.emoji
+          ),
+          () => -1
         );
         if (existingIndex >= 0) {
           const newCount = reactionCounts[existingIndex].count - 1;

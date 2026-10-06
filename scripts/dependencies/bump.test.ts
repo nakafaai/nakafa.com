@@ -6,6 +6,7 @@ import {
   Effect,
   FileSystem,
   Layer,
+  Option,
   PlatformError,
   Sink,
   Stdio,
@@ -58,10 +59,13 @@ const releaseClient = Effect.fn("DependencyBumpTest.releaseClient")(function* (
     HttpClient.HttpClient,
     HttpClient.make((request) =>
       Effect.sync(() => {
-        const review = reviews.find(
-          ({ repository }) =>
-            request.url ===
-            `https://api.github.com/repos/${repository}/releases/latest`
+        const review = Option.getOrUndefined(
+          Arr.findFirst(
+            reviews,
+            ({ repository }) =>
+              request.url ===
+              `https://api.github.com/repos/${repository}/releases/latest`
+          )
         );
         assert.isDefined(review);
         return HttpClientResponse.fromWeb(request, release(review));

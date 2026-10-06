@@ -13,7 +13,7 @@ import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { readVerifiedProgramCatalog } from "@repo/backend/content/program/catalog";
 import { programLayer } from "@repo/backend/content/program/confect";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Clock, Effect } from "effect";
+import { Array as Arr, Clock, Effect, Option } from "effect";
 
 const CURRICULUM_PROGRAM_LIMIT = 50;
 const curriculumPreferenceIoFailedMessage =
@@ -51,15 +51,22 @@ const listSignedPrograms = Effect.fn("learningPreferences.listSignedPrograms")(
 const readSignedProgram = Effect.fn("learningPreferences.readSignedProgram")(
   function* (locale: Locale, programKey: string) {
     const programs = yield* listSignedPrograms(locale);
-    return programs.find((program) => program.key === programKey) ?? null;
+    return (
+      Option.getOrUndefined(
+        Arr.findFirst(programs, (program) => program.key === programKey)
+      ) ?? null
+    );
   }
 );
 /** Converts one verified Aksara program into a localized selector option. */
 const toCurriculumProgramOption = Effect.fn(
   "learningPreferences.toCurriculumProgramOption"
 )(function* (program: LearningProgram, locale: Locale) {
-  const translation = program.translations.find(
-    (candidate) => candidate.appLocale === locale
+  const translation = Option.getOrUndefined(
+    Arr.findFirst(
+      program.translations,
+      (candidate) => candidate.appLocale === locale
+    )
   );
   if (!translation) {
     return yield* new CurriculumPreferenceError({

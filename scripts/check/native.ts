@@ -28,6 +28,13 @@ const ARRAY_METHODS = HashSet.make(
   "some",
   "toReversed"
 );
+/** Array methods that search for one element, which Effect returns as an Option. */
+const SEARCH_METHODS = HashSet.make(
+  "find",
+  "findIndex",
+  "findLast",
+  "findLastIndex"
+);
 /** Receivers that are not module imports, so an array method transforms a value. */
 const VALUE_BINDINGS: readonly (typeof Binding.Type)[] = ["global", "local"];
 
@@ -66,18 +73,24 @@ function calledMethod(node: Node) {
 }
 
 /**
- * Returns the receiver of a call to an array method that transforms its
- * array. `join` counts with at most one argument, which tells it from the
- * path helper of the same name.
+ * Returns the receiver of a call to an array method and the rule it breaks:
+ * a method that transforms its array, or one that searches it. `join` counts
+ * with at most one argument, which tells it from the path helper of the same
+ * name.
  */
-function arrayReceiver(node: Node) {
+function arrayCall(node: Node) {
   const call = calledMethod(node);
   if (call === undefined) {
     return;
   }
-  return HashSet.has(ARRAY_METHODS, call.method) ||
+  if (
+    HashSet.has(ARRAY_METHODS, call.method) ||
     (call.method === "join" && call.count <= 1)
-    ? call.receiver
+  ) {
+    return { receiver: call.receiver, rule: "array-method" as const };
+  }
+  return HashSet.has(SEARCH_METHODS, call.method)
+    ? { receiver: call.receiver, rule: "array-search" as const }
     : undefined;
 }
 
@@ -104,12 +117,12 @@ function isTypeofObjectComparison(node: Node) {
 
 /** Returns the native array, failure, and narrowing syntax at one node. */
 function syntaxCandidates(sourceFile: SourceFile, node: Node) {
-  const receiver = arrayReceiver(node);
-  if (receiver !== undefined) {
+  const call = arrayCall(node);
+  if (call !== undefined) {
     return [
-      isIdentifier(receiver)
-        ? candidate("array-method", sourceFile, node, receiver, VALUE_BINDINGS)
-        : candidate("array-method", sourceFile, node),
+      isIdentifier(call.receiver)
+        ? candidate(call.rule, sourceFile, node, call.receiver, VALUE_BINDINGS)
+        : candidate(call.rule, sourceFile, node),
     ];
   }
   if (isTryStatement(node) && node.catchClause !== undefined) {

@@ -8,7 +8,7 @@ import {
 import { schoolMembersHandler } from "@repo/backend/confect/triggers/schools/members";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 20, 30, 0);
 describe("triggers/schools/members", () => {
@@ -215,9 +215,12 @@ describe("triggers/schools/members", () => {
     const inviteCode = await t.query(async (ctx) => {
       const inviteCodes = await ctx.db.query("schoolInviteCodes").collect();
       return (
-        inviteCodes.find(
-          (code) =>
-            code.schoolId === created.schoolId && code.role === "student"
+        Option.getOrUndefined(
+          Arr.findFirst(
+            inviteCodes,
+            (code) =>
+              code.schoolId === created.schoolId && code.role === "student"
+          )
         ) ?? null
       );
     });

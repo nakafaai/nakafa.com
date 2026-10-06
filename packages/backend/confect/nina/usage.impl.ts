@@ -5,7 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/nina/usage.spec";
-import { Array as Arr, Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /** Agent invokes this after every model response, including repair and synthesis. */
 const record = FunctionImpl.make(
@@ -24,11 +24,15 @@ const record = FunctionImpl.make(
       return null;
     }
     const totals = [...turn.usage];
-    const index = totals.findIndex(
-      (row) =>
-        row.agent === usage.agent &&
-        row.model === usage.model &&
-        row.provider === usage.provider
+    const index = Option.getOrElse(
+      Arr.findFirstIndex(
+        totals,
+        (row) =>
+          row.agent === usage.agent &&
+          row.model === usage.model &&
+          row.provider === usage.provider
+      ),
+      () => -1
     );
     const previous = totals[index];
     if (previous) {

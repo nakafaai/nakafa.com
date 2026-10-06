@@ -1,4 +1,4 @@
-import { Array as Arr, Record as Rec, Result } from "effect";
+import { Array as Arr, Option, Record as Rec, Result } from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
@@ -154,8 +154,11 @@ export function validateDependencyPolicy({
   }
 
   for (const hold of SCRIPT_DEPENDENCY_HOLDS) {
-    const manifest = manifests.find(
-      ({ path: manifestPath }) => manifestPath === hold.manifestPath
+    const manifest = Option.getOrUndefined(
+      Arr.findFirst(
+        manifests,
+        ({ path: manifestPath }) => manifestPath === hold.manifestPath
+      )
     )?.manifest;
     const actual = manifest?.scripts?.[hold.script];
     if (actual !== hold.approved) {

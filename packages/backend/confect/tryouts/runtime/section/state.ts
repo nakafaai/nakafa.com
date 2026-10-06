@@ -7,7 +7,7 @@ import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/look
 import { loadSectionState } from "@repo/backend/confect/tryouts/runtime/section/questions";
 import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Loads one exact section without repeating immutable catalog reads. */
 export const loadSectionAttemptState = Effect.fn(
@@ -17,15 +17,23 @@ export const loadSectionAttemptState = Effect.fn(
   sectionKey: string,
   appLocale: AppLocaleCode
 ) {
-  const snapshot = attempt.sectionSnapshots.find(
-    (section) => section.sectionKey === sectionKey
+  const snapshot = Option.getOrUndefined(
+    Arr.findFirst(
+      attempt.sectionSnapshots,
+      (section) => section.sectionKey === sectionKey
+    )
   );
   if (!snapshot) {
     return null;
   }
   const sections = yield* loadAttemptSections(attempt);
   const section =
-    sections.find((candidate) => candidate.sectionKey === sectionKey) ?? null;
+    Option.getOrUndefined(
+      Arr.findFirst(
+        sections,
+        (candidate) => candidate.sectionKey === sectionKey
+      )
+    ) ?? null;
   const { current, loaded } = yield* Effect.all(
     {
       current: loadAttemptState({

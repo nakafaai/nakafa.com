@@ -14,7 +14,7 @@ import {
 } from "@repo/backend/test/content/model";
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const identity = {
   manifestHash: `sha256:${"6".repeat(64)}`,
@@ -144,8 +144,11 @@ describe("material inactive-buffer synchronization", () => {
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const heads = await ctx.db.query("contentHeads").collect();
-            const head = heads.find(
-              (row) => row.contentKey === deleted.contentKey
+            const head = Option.getOrUndefined(
+              Arr.findFirst(
+                heads,
+                (row) => row.contentKey === deleted.contentKey
+              )
             );
             assert(head);
             await ctx.db.patch("contentHeads", head._id, {

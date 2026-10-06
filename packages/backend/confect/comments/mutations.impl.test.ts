@@ -6,7 +6,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 
 describe("comment write and read contracts", () => {
   it("keeps reply identities and viewer votes coherent across account removal", async () => {
@@ -87,14 +87,20 @@ describe("comment write and read contracts", () => {
       slug,
       paginationOpts,
     });
-    expect(page.page.find((row) => row._id === root)).toMatchObject({
+    expect(
+      Option.getOrUndefined(Arr.findFirst(page.page, (row) => row._id === root))
+    ).toMatchObject({
       viewerVote: 1,
       replyToUser: null,
       user: {
         _id: author.userId,
       },
     });
-    expect(page.page.find((row) => row._id === reply)).toMatchObject({
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(page.page, (row) => row._id === reply)
+      )
+    ).toMatchObject({
       viewerVote: null,
       replyToUser: {
         _id: author.userId,
@@ -144,8 +150,16 @@ describe("comment write and read contracts", () => {
       slug,
       paginationOpts,
     });
-    expect(after.page.find((row) => row._id === root)?.user).toBeNull();
-    expect(after.page.find((row) => row._id === reply)?.replyToUser).toBeNull();
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(after.page, (row) => row._id === root)
+      )?.user
+    ).toBeNull();
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(after.page, (row) => row._id === reply)
+      )?.replyToUser
+    ).toBeNull();
     await viewer.mutation(api.comments.mutations.deleteComment, {
       commentId: reply,
     });

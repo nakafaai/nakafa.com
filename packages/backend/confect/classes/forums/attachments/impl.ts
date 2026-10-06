@@ -30,7 +30,7 @@ import {
   MAX_FORUM_ATTACHMENT_BYTES,
 } from "@repo/backend/confect/classes/forums/constants";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, flow, Option } from "effect";
+import { Array as Arr, Effect, flow, Option } from "effect";
 
 function hasAllowedForumAttachmentMimeType(mimeType: string) {
   if (mimeType.startsWith("image/")) {
@@ -159,8 +159,11 @@ export const validateForumAttachmentStorageClaim = Effect.fn(
       .index("by_storageId", (q) => q.eq("storageId", storageId))
       .take(2)
       .pipe(Effect.orDie);
-    const conflictingPendingUpload = matchingPendingUploads.find(
-      (pendingUpload) => pendingUpload._id !== uploadId
+    const conflictingPendingUpload = Option.getOrUndefined(
+      Arr.findFirst(
+        matchingPendingUploads,
+        (pendingUpload) => pendingUpload._id !== uploadId
+      )
     );
     if (conflictingPendingUpload) {
       return yield* failForumAttachment(

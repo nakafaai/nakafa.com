@@ -5,14 +5,17 @@ import type {
 import { parseQuranTranslation } from "@nakafa/aksara-contracts/quran/notes";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads the exact reviewed translation selected by one application locale. */
 export const readQuranTranslation = Effect.fn(
   "contentRelease.readQuranTranslation"
 )(function* (verse: QuranRuntimeVerse, appLocale: AppLocaleCode) {
-  const localized = verse.translations.find(
-    (translation) => translation.appLocale === appLocale
+  const localized = Option.getOrUndefined(
+    Arr.findFirst(
+      verse.translations,
+      (translation) => translation.appLocale === appLocale
+    )
   );
   if (!localized) {
     return yield* releaseFail(
@@ -60,8 +63,11 @@ export const readQuranTafsir = Effect.fn("contentRelease.readQuranTafsir")(
     verse: QuranRuntimeVerse,
     appLocale: typeof INDONESIAN_APP_LOCALE_CODE
   ) {
-    const localized = verse.tafsir.find(
-      (interpretation) => interpretation.appLocale === appLocale
+    const localized = Option.getOrUndefined(
+      Arr.findFirst(
+        verse.tafsir,
+        (interpretation) => interpretation.appLocale === appLocale
+      )
     );
     if (!localized) {
       return yield* releaseFail(

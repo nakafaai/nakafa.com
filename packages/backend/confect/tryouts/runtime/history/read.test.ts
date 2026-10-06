@@ -64,8 +64,11 @@ describe("tryouts/runtime/history/read", () => {
     () =>
       Effect.gen(function* () {
         const { owned, seed, t } = yield* Effect.promise(() => setup());
-        const answer = seed.request.selectors.find(
-          (selector) => selector.delivery === "entitled"
+        const answer = Option.getOrUndefined(
+          Arr.findFirst(
+            seed.request.selectors,
+            (selector) => selector.delivery === "entitled"
+          )
         );
         assert.isDefined(answer);
         const later = answer.questionOrder + 2;

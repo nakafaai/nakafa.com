@@ -279,7 +279,9 @@ function executionBoundaryProblems(
     ["publication", publish],
     ["verification", verify],
   ] as const) {
-    const setup = job.steps.find(({ uses }) => uses === SETUP_NODE_ACTION);
+    const setup = Option.getOrUndefined(
+      Arr.findFirst(job.steps, ({ uses }) => uses === SETUP_NODE_ACTION)
+    );
     if (setup?.with?.["node-version"] !== "24.21.0") {
       problems.push(`CLI ${owner} must use the repository Node runtime.`);
     }
