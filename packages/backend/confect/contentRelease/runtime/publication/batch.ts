@@ -17,7 +17,7 @@ import {
   publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
-import { Effect, flow, Result, Schema } from "effect";
+import { Array as Arr, Effect, flow, Result, Schema } from "effect";
 
 class PublicRuntimeBatchRequestError extends Schema.TaggedError<PublicRuntimeBatchRequestError>()(
   "PublicRuntimeBatchRequestError",
@@ -56,7 +56,7 @@ const resolvePublicRuntimeBatch = Effect.fn(
   const rows = yield* runQuery(
     refs.internal.contentRelease.runtime.publication.internal.readBatch,
     {
-      requests: requests.map(({ appLocale, publicPath }) => ({
+      requests: Arr.map(requests, ({ appLocale, publicPath }) => ({
         appLocale,
         publicPath,
       })),
@@ -106,7 +106,8 @@ export const dispatchBatchProgram = Effect.fn(
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
   if (
-    responses.success.some(
+    Arr.some(
+      responses.success,
       (response) =>
         publicRuntimeResponseBytes(response) > MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
     )

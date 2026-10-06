@@ -8,7 +8,7 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpe
 import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const readReference = Ref.getFunctionReference(
   refs.public.tryouts.queries.content.getBatch
@@ -51,7 +51,7 @@ describe("tryouts/runtime/history/placement", () => {
     expect(
       await owned.query(readReference, {
         ...seed.request,
-        selectors: seed.request.selectors.map((selector) => ({
+        selectors: Arr.map(seed.request.selectors, (selector) => ({
           ...selector,
           artifactHash: `sha256:${"0".repeat(64)}`,
         })),
@@ -226,7 +226,8 @@ describe("tryouts/runtime/history/placement", () => {
         yield* Effect.promise(() =>
           owned.query(readReference, {
             ...seed.request,
-            selectors: seed.request.selectors.filter(
+            selectors: Arr.filter(
+              seed.request.selectors,
               (selector) => selector.delivery === "entitled"
             ),
           })

@@ -176,7 +176,9 @@ export const readWorkflowActionUses = Effect.fn(
   const workflowRoot = path.join(root, ".github", "workflows");
   const workflowFiles = yield* fileSystem.readDirectory(workflowRoot).pipe(
     Effect.map((files) =>
-      files.filter((fileName) => WORKFLOW_FILE_PATTERN.test(fileName)).sort()
+      Arr.filter(files, (fileName) =>
+        WORKFLOW_FILE_PATTERN.test(fileName)
+      ).sort()
     ),
     Effect.mapError((cause) =>
       policyError("Unable to read GitHub workflow files.", cause)
@@ -200,7 +202,7 @@ export const readWorkflowActionUses = Effect.fn(
     collectActionUses(workflow, workflowPath, uses);
   }
 
-  return uses.filter(({ reference }) => !reference.startsWith("./"));
+  return Arr.filter(uses, ({ reference }) => !reference.startsWith("./"));
 });
 
 /** Validates immutable revisions, exact reviewed inputs, and complete action coverage. */
@@ -209,7 +211,7 @@ export function validateGithubActionPolicy(
 ) {
   const problems: string[] = [];
   const reviews = new Map(
-    GITHUB_ACTION_REVIEWS.map((review) => [review.action, review])
+    Arr.map(GITHUB_ACTION_REVIEWS, (review) => [review.action, review])
   );
   const usageCounts = new Map<string, number>();
 

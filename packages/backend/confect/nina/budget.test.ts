@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { boundText, countTextTokens } from "@repo/backend/confect/nina/budget";
+import { Array as Arr } from "effect";
 
 const SHORTENED_NOTE =
   /\n\n\[Shortened to about 200 of \d+ tokens\. Read the next section\.\]$/;
@@ -14,7 +15,7 @@ describe("Nina token budgets", () => {
     const paragraph = "Limits describe values a function approaches. ".repeat(
       12
     );
-    const text = [paragraph, paragraph, paragraph, paragraph].join("\n\n");
+    const text = Arr.join([paragraph, paragraph, paragraph, paragraph], "\n\n");
     const bounded = boundText(text, 200, "Read the next section.");
     expect(countTextTokens(bounded)).toBeLessThanOrEqual(200);
     expect(bounded).toMatch(SHORTENED_NOTE);

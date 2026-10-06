@@ -25,7 +25,7 @@ import {
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 describe("learningPreferences/program", () => {
   it.effect("returns no curriculum for a retired saved key", () =>
@@ -177,7 +177,8 @@ describe("learningPreferences/program", () => {
           LearningProgramSchema
         )({
           ...original,
-          translations: original.translations.filter(
+          translations: Arr.filter(
+            original.translations,
             ({ appLocale }) => appLocale !== "en"
           ),
         });

@@ -16,7 +16,7 @@ import {
 } from "@repo/backend/test/runtime/ingress";
 import { insertRetentionAttempt } from "@repo/backend/test/runtime/retention";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Runs one release abort through the native Convex test boundary. */
 function abort(ctx: MutationCtx, releaseId: string) {
@@ -353,7 +353,7 @@ describe("content release abort runtime", () => {
       expect(repeatedRecovery).toMatchObject({
         complete: true,
       });
-      expect(stored.releases.map(({ status }) => status)).toEqual([
+      expect(Arr.map(stored.releases, ({ status }) => status)).toEqual([
         "aborted",
         "aborted",
       ]);

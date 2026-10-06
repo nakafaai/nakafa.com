@@ -1,3 +1,5 @@
+import { Array as Arr, pipe } from "effect";
+
 const DEFAULT_MAX_LENGTH = 2000;
 const MIN_KEYWORD_LENGTH = 3;
 const KEYWORD_BONUS_POINTS = 0.5;
@@ -37,7 +39,8 @@ interface SelectRelevantContentParams {
 function extractKeywords(query: string): string[] {
   const seen = new Set<string>();
 
-  return [...query.toLocaleLowerCase().matchAll(SEARCH_TOKEN_REGEX)].flatMap(
+  return Arr.flatMap(
+    [...query.toLocaleLowerCase().matchAll(SEARCH_TOKEN_REGEX)],
     ([word]) => {
       if (word.length < MIN_KEYWORD_LENGTH || seen.has(word)) {
         return [];
@@ -154,16 +157,18 @@ export function selectRelevantContent(
     return truncateAtBoundary(content, maxLength);
   }
 
-  const paragraphs = content
-    .split(PARAGRAPH_SPLIT_REGEX)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const paragraphs = pipe(
+    content.split(PARAGRAPH_SPLIT_REGEX),
+    Arr.map((p) => p.trim()),
+    Arr.filter(Boolean)
+  );
 
   if (paragraphs.length <= 2) {
     return truncateAtBoundary(content, maxLength);
   }
 
-  const analyzedParagraphs: ContentParagraph[] = paragraphs.map(
+  const analyzedParagraphs: ContentParagraph[] = Arr.map(
+    paragraphs,
     (text, index) => ({
       text,
       score: calculateRelevanceScore(text, keywords),
@@ -182,8 +187,10 @@ export function selectRelevantContent(
   const paragraphLimit = preserveStructure
     ? maxRelevantParagraphs
     : Math.max(minRelevantParagraphs, maxRelevantParagraphs);
-  const selectedParagraphs = candidates
-    .filter((paragraph) => paragraph.score > 0)
+  const selectedParagraphs = Arr.filter(
+    candidates,
+    (paragraph) => paragraph.score > 0
+  )
     .sort((left, right) => right.score - left.score)
     .slice(0, paragraphLimit);
 
@@ -210,6 +217,6 @@ export function selectRelevantContent(
     return truncateAtBoundary(content, maxLength);
   }
 
-  const result = selectedParts.join("\n\n");
+  const result = Arr.join(selectedParts, "\n\n");
   return truncateAtBoundary(result, maxLength);
 }

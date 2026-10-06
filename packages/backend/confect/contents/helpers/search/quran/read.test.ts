@@ -5,7 +5,7 @@ import { readSignedQuranSearchDocuments } from "@repo/backend/confect/contents/h
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("contents/helpers/search/quran/read", () => {
   it.effect(
@@ -31,7 +31,9 @@ describe("contents/helpers/search/quran/read", () => {
               queries,
               2
             );
-            expect(documents.map(({ route }) => route)).toEqual(["quran/1"]);
+            expect(Arr.map(documents, ({ route }) => route)).toEqual([
+              "quran/1",
+            ]);
           })
         );
       })
@@ -62,7 +64,9 @@ describe("contents/helpers/search/quran/read", () => {
               queries,
               1
             );
-            expect(documents.map(({ route }) => route)).toEqual(["quran/1"]);
+            expect(Arr.map(documents, ({ route }) => route)).toEqual([
+              "quran/1",
+            ]);
             expect(documents[0]).toMatchObject({
               content_id: "asset:en:quran:quran-surah:1",
               text: expect.stringContaining("mercy"),
@@ -230,7 +234,7 @@ describe("contents/helpers/search/quran/read", () => {
             queries,
             2
           );
-          expect(documents.map(({ route }) => route)).toEqual([
+          expect(Arr.map(documents, ({ route }) => route)).toEqual([
             "quran/1",
             "quran/2",
           ]);
@@ -264,7 +268,7 @@ describe("contents/helpers/search/quran/read", () => {
               queries,
               2
             );
-            expect(documents.map(({ route }) => route)).toEqual([
+            expect(Arr.map(documents, ({ route }) => route)).toEqual([
               "quran/1",
               "quran/2",
             ]);
@@ -298,7 +302,7 @@ describe("contents/helpers/search/quran/read", () => {
               10
             );
             const empty = yield* readSignedQuranSearchDocuments(input, [], 0);
-            expect(browsed.map(({ locale }) => locale)).toEqual(["id"]);
+            expect(Arr.map(browsed, ({ locale }) => locale)).toEqual(["id"]);
             expect(empty).toEqual([]);
           })
         );

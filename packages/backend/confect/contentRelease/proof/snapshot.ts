@@ -19,11 +19,12 @@ import {
   parseStoredJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
-import { Effect, Option, Stream } from "effect";
+import { Array as Arr, Effect, Option, Stream } from "effect";
 
 /** Returns fixed replacement families in canonical signed order. */
 function replacementFamilies(release: SignedContentRelease) {
-  return ContentSnapshotKindSchema.literals.filter(
+  return Arr.filter(
+    ContentSnapshotKindSchema.literals,
     (family) => release.manifest.snapshots[family].mode === "replace"
   );
 }

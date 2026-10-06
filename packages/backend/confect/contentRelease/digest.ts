@@ -1,12 +1,15 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Converts deterministic digest bytes into lower-case hexadecimal. */
 function toHex(buffer: ArrayBuffer) {
-  return Array.from(new Uint8Array(buffer), (byte) =>
-    byte.toString(16).padStart(2, "0")
-  ).join("");
+  return Arr.join(
+    Array.from(new Uint8Array(buffer), (byte) =>
+      byte.toString(16).padStart(2, "0")
+    ),
+    ""
+  );
 }
 /** Computes one SHA-256 identity through the Convex Web Crypto runtime. */
 export const hashText = Effect.fn("contentRelease.hashText")(function* (

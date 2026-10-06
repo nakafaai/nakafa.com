@@ -26,7 +26,7 @@ import {
   polarPortalErrorCode,
   polarUpdateErrorCode,
 } from "@repo/backend/confect/customers/polar/spec";
-import { Data, Effect } from "effect";
+import { Array as Arr, Data, Effect } from "effect";
 
 class PolarRequestError extends Data.TaggedError("PolarRequestError")<{
   readonly cause: unknown;
@@ -64,7 +64,8 @@ function isMissingCustomer(error: unknown) {
 function isDuplicateEmail(error: unknown) {
   return (
     error instanceof HTTPValidationError &&
-    (error.detail ?? []).some(
+    Arr.some(
+      error.detail ?? [],
       (detail) =>
         detail.loc.length === 2 &&
         detail.loc[0] === "body" &&

@@ -39,7 +39,11 @@ function messageTokens(message: ModelMessage) {
 }
 
 function turnTokens(turn: readonly ModelMessage[]) {
-  return turn.reduce((total, message) => total + messageTokens(message), 0);
+  return Arr.reduce(
+    turn,
+    0,
+    (total, message) => total + messageTokens(message)
+  );
 }
 
 /** Returns validated capability evidence text, when the result carries one. */
@@ -66,7 +70,7 @@ function evidenceText(part: ToolResultPart) {
  */
 function projectMessages(messages: readonly ModelMessage[]) {
   const unavailableTools = new Set<string>();
-  const projected = messages.flatMap((message): ModelMessage[] => {
+  const projected = Arr.flatMap(messages, (message): ModelMessage[] => {
     if (message.role === "assistant" && Arr.isArray(message.content)) {
       for (const part of message.content) {
         if (
@@ -81,7 +85,7 @@ function projectMessages(messages: readonly ModelMessage[]) {
       return [message];
     }
     const retained: ModelMessage[] = [];
-    const content = message.content.map((part) => {
+    const content = Arr.map(message.content, (part) => {
       if (part.type !== "tool-result") {
         return part;
       }
@@ -115,7 +119,7 @@ function excerptMessage(message: ModelMessage): ModelMessage {
   }
   return {
     ...message,
-    content: message.content.map((part) =>
+    content: Arr.map(message.content, (part) =>
       part.type === "tool-result"
         ? {
             ...part,
@@ -144,7 +148,7 @@ function noteDocuments(message: ModelMessage): ModelMessage {
   }
   return {
     ...message,
-    content: message.content.map((part) =>
+    content: Arr.map(message.content, (part) =>
       part.type === "file" && !part.mediaType.startsWith("image/")
         ? {
             type: "text" as const,
@@ -177,7 +181,7 @@ function splitTurns(messages: readonly ModelMessage[]) {
 export function boundStep(messages: readonly ModelMessage[]) {
   const projected = projectMessages(messages);
   const start = Math.max(
-    projected.map((message) => message.role).lastIndexOf("user"),
+    Arr.map(projected, (message) => message.role).lastIndexOf("user"),
     0
   );
   let turn = projected.slice(start);
@@ -186,7 +190,7 @@ export function boundStep(messages: readonly ModelMessage[]) {
     index < turn.length - 1 && turnTokens(turn) > NINA_BUDGET.turnEvidence;
     index += 1
   ) {
-    turn = turn.map((message, position) =>
+    turn = Arr.map(turn, (message, position) =>
       position === index ? excerptMessage(message) : message
     );
   }
@@ -212,7 +216,7 @@ export function assembleContext({
   readonly throughOrder: number | null;
 }) {
   const newestFirst = splitTurns(
-    projectMessages(recent).map(noteDocuments)
+    Arr.map(projectMessages(recent), noteDocuments)
   ).reverse();
   const covered = throughOrder ?? -1;
   const selected: ModelMessage[][] = [];
@@ -225,9 +229,10 @@ export function assembleContext({
     ) {
       break;
     }
-    const kept = cost > NINA_BUDGET.history ? turn.map(excerptMessage) : turn;
+    const kept =
+      cost > NINA_BUDGET.history ? Arr.map(turn, excerptMessage) : turn;
     selected.unshift(kept);
     used += turnTokens(kept);
   }
-  return [...selected.flat(), ...boundStep(current)];
+  return [...Arr.flatten(selected), ...boundStep(current)];
 }

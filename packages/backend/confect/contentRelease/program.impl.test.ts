@@ -9,7 +9,7 @@ import {
   makeProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const program = api.contentRelease.program;
 const appLocale = "en";
@@ -74,7 +74,7 @@ describe("contentRelease/program registered queries", () => {
         });
         const sitemap = yield* Effect.promise(() =>
           Promise.all(
-            buckets.buckets.map((bucket) =>
+            Arr.map(buckets.buckets, (bucket) =>
               t.query(program.sitemapPage, {
                 appLocale,
                 bucket,
@@ -82,7 +82,9 @@ describe("contentRelease/program registered queries", () => {
             )
           )
         );
-        expect(sitemap.flatMap((page) => page?.routes ?? [])).toContainEqual({
+        expect(
+          Arr.flatMap(sitemap, (page) => page?.routes ?? [])
+        ).toContainEqual({
           publicPath,
         });
       })

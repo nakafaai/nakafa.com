@@ -8,7 +8,7 @@ import {
   forumPostsBySequence,
 } from "@repo/backend/confect/classes/forums/aggregate";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect, pipe } from "effect";
 
 /** Load the current viewer's read-state rows for one forum page. */
 const getForumReadStateMap = Effect.fn(
@@ -35,7 +35,7 @@ const getForumReadStateMap = Effect.fn(
     })
   );
   return new Map(
-    readStates.map(({ forumId, readState }) => [forumId, readState])
+    Arr.map(readStates, ({ forumId, readState }) => [forumId, readState])
   );
 });
 /**
@@ -56,30 +56,32 @@ export const getForumUnreadCounts = Effect.fn(
 }) {
   const ctx = yield* QueryCtxService;
   const readStateByForumId = yield* getForumReadStateMap({
-    forumIds: forums.map((forum) => forum._id),
+    forumIds: Arr.map(forums, (forum) => forum._id),
     userId,
   });
-  const forumsWithUnreadPotential = forums
-    .map((forum, index) => ({
+  const forumsWithUnreadPotential = pipe(
+    forums,
+    Arr.map((forum, index) => ({
       forum,
       index,
-    }))
-    .filter(({ forum }) => {
+    })),
+    Arr.filter(({ forum }) => {
       if (forum.postCount === 0) {
         return false;
       }
       const lastReadSequence =
         readStateByForumId.get(forum._id)?.lastReadSequence ?? 0;
       return lastReadSequence < forum.nextPostSequence - 1;
-    });
-  const unreadCounts = forums.map(() => 0);
+    })
+  );
+  const unreadCounts = Arr.map(forums, () => 0);
   if (forumsWithUnreadPotential.length === 0) {
     return unreadCounts;
   }
   const totalUnreadCounts = yield* Effect.promise(() =>
     forumPostsBySequence.countBatch(
       ctx,
-      forumsWithUnreadPotential.map(({ forum }) => ({
+      Arr.map(forumsWithUnreadPotential, ({ forum }) => ({
         bounds: {
           lower: {
             key: readStateByForumId.get(forum._id)?.lastReadSequence ?? 0,
@@ -93,7 +95,7 @@ export const getForumUnreadCounts = Effect.fn(
   const ownUnreadCounts = yield* Effect.promise(() =>
     forumPostsByAuthorSequence.countBatch(
       ctx,
-      forumsWithUnreadPotential.map(({ forum }) => ({
+      Arr.map(forumsWithUnreadPotential, ({ forum }) => ({
         bounds: {
           lower: {
             key: readStateByForumId.get(forum._id)?.lastReadSequence ?? 0,

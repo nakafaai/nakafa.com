@@ -4,7 +4,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { loadSnapshot } from "@repo/backend/confect/contentRelease/snapshot/manifest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 export interface StoredRow {
   readonly index: number;
   readonly rowJson: string;
@@ -22,14 +22,14 @@ export const exactRowJson = Effect.fn("contentRelease.exactSnapshotRowJson")(
   ) {
     if (
       rows.length !== rowCount ||
-      rows.some((row, offset) => row.index !== firstIndex + offset)
+      Arr.some(rows, (row, offset) => row.index !== firstIndex + offset)
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Snapshot ${family}/${snapshotId} lost one staged row range.`
       );
     }
-    return rows.map(({ rowJson }) => rowJson);
+    return Arr.map(rows, ({ rowJson }) => rowJson);
   }
 );
 

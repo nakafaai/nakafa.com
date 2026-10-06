@@ -36,7 +36,7 @@ import {
   testRendererJson,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
-import { Effect, Exit } from "effect";
+import { Array as Arr, Effect, Exit } from "effect";
 
 /** Creates exact server-derived evidence for strict proof decoding. */
 function testProofJson() {
@@ -192,7 +192,10 @@ describe("contentRelease/parse", () => {
         expect(Exit.isFailure(malformed)).toBe(true);
         expect(failures).toHaveLength(10);
         expect(
-          failures.every(({ code }) => code === "CONTENT_RELEASE_INTEGRITY")
+          Arr.every(
+            failures,
+            ({ code }) => code === "CONTENT_RELEASE_INTEGRITY"
+          )
         ).toBe(true);
       })
   );

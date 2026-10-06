@@ -11,6 +11,11 @@ const findings = Effect.fn("RulePolicyTest.findings")(function* (
   return Arr.map(found, ({ file, rule }) => `${file} ${rule}`);
 }, Effect.scoped);
 
+/** The same module text at each path in `files`. */
+function everywhere(sourceText: string, files: readonly string[]) {
+  return Arr.map(files, (file) => ({ file, sourceText }));
+}
+
 describe("Effect-native rule scopes", () => {
   it.effect("leaves framework configuration to the framework", () =>
     Effect.gen(function* () {
@@ -229,5 +234,26 @@ import fallback, * as everything from "./support/frames";
           ]
         );
       })
+  );
+
+  it.effect("holds Confect and script modules to array methods", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          everywhere("export const ids = rows.map(String);\n", [
+            "packages/backend/confect/users/list.ts",
+            "packages/backend/confect/users/list.test.ts",
+            "scripts/check/list.ts",
+            "packages/backend/convex/users.ts",
+            "apps/www/lib/list.ts",
+          ])
+        ),
+        [
+          "packages/backend/confect/users/list.test.ts array-method",
+          "packages/backend/confect/users/list.ts array-method",
+          "scripts/check/list.ts array-method",
+        ]
+      );
+    })
   );
 });

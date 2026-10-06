@@ -10,7 +10,7 @@ import {
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { TryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
-import { Effect, flow, Option } from "effect";
+import { Array as Arr, Effect, flow, Option } from "effect";
 
 const IRT_MODEL = "2pl";
 const PROVISIONAL_DIFFICULTY = 0;
@@ -84,7 +84,7 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
     const previousItems = previous
       ? yield* loadScaleItemMap(previous)
       : new Map<string, IrtScaleItem>();
-    const reusesEveryItem = placements.every(({ identity, rowHash }) => {
+    const reusesEveryItem = Arr.every(placements, ({ identity, rowHash }) => {
       const item = previousItems.get(identity);
       return item?.placementRowHash === rowHash;
     });
@@ -182,7 +182,8 @@ const verifyScaleItems = Effect.fn("tryouts.start.verifyScaleItems")(function* (
 ) {
   const items = yield* loadScaleItemMap(scale);
   const placements = signedPlacements(source);
-  const matches = placements.every(
+  const matches = Arr.every(
+    placements,
     ({ identity, rowHash }) => items.get(identity)?.placementRowHash === rowHash
   );
   if (!matches || items.size !== placements.length) {
@@ -221,8 +222,8 @@ const loadScaleItemMap = Effect.fn("tryouts.start.loadScaleItemMap")(function* (
 
 /** Flattens authenticated placements with their immutable identity fields. */
 function signedPlacements(source: TryoutStartSource) {
-  return source.snapshot.sections.flatMap(({ placements }) =>
-    placements.map((placement) => ({
+  return Arr.flatMap(source.snapshot.sections, ({ placements }) =>
+    Arr.map(placements, (placement) => ({
       identity: tryoutPlacementIdentity(placement.row),
       rowHash: placement.rowHash,
     }))

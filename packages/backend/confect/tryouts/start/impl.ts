@@ -18,7 +18,7 @@ import type {
   StartAttemptResult,
 } from "@repo/backend/confect/tryouts/start/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 type TryoutAttempt = Docs["tryoutAttempts"];
@@ -43,7 +43,7 @@ export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(
     const entrySectionKey = input.args.entrySectionKey;
     if (entrySectionKey) {
       yield* requireInternalEntrySection(
-        source.snapshot.sections.map(({ section }) => section.row),
+        Arr.map(source.snapshot.sections, ({ section }) => section.row),
         entrySectionKey
       );
     }

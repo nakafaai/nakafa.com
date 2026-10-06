@@ -164,7 +164,8 @@ function isGenerated(sourceFile: SourceFile) {
 /**
  * Finds every Effect-native rule a parsed authored module breaks. A construct
  * that names a platform global counts only when the compiler proves no import
- * or local declaration shadows the name.
+ * or local declaration shadows the name, and an array method counts only when
+ * its receiver is a value rather than an imported module.
  */
 export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
   function* ({

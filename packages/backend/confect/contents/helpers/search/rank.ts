@@ -1,4 +1,5 @@
 import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
+import { Array as Arr } from "effect";
 
 /** Minimal persisted search fields required by deterministic reranking. */
 export type ContentSearchRankDocument = Pick<
@@ -29,11 +30,11 @@ export function matchesContentSearchQuery(text: string, queryText: string) {
     return false;
   }
   const textTokens = new Set(tokenizeSearchText(text));
-  return queryTokens.every((token, index) => {
+  return Arr.every(queryTokens, (token, index) => {
     if (index < queryTokens.length - 1) {
       return textTokens.has(token);
     }
-    return Array.from(textTokens).some((candidate) =>
+    return Arr.some(Array.from(textTokens), (candidate) =>
       candidate.startsWith(token)
     );
   });
@@ -44,17 +45,18 @@ export function rankContentSearchDocuments<
   Document extends ContentSearchRankDocument,
 >(documents: readonly Document[], queryText: string) {
   const queryTokens = tokenizeSearchText(queryText);
-  const semanticTokens = queryTokens.filter(
+  const semanticTokens = Arr.filter(
+    queryTokens,
     (token) => !numericTokenPattern.test(token)
   );
-  const numericTokens = queryTokens.filter((token) =>
+  const numericTokens = Arr.filter(queryTokens, (token) =>
     numericTokenPattern.test(token)
   );
   if (queryTokens.length === 0) {
     return documents;
   }
-  const ranked = documents
-    .map((document, index) => ({
+  const ranked = Arr.filter(
+    Arr.map(documents, (document, index) => ({
       bodyNumericScore: scoreSearchText(document.text, numericTokens),
       bodySemanticScore: scoreSearchText(document.text, semanticTokens),
       document,
@@ -67,8 +69,7 @@ export function rankContentSearchDocuments<
         getDocumentMetadataSearchText(document),
         semanticTokens
       ),
-    }))
-    .sort((left, right) => {
+    })).sort((left, right) => {
       if (left.metadataSemanticScore !== right.metadataSemanticScore) {
         return right.metadataSemanticScore - left.metadataSemanticScore;
       }
@@ -82,13 +83,12 @@ export function rankContentSearchDocuments<
         return right.bodyNumericScore - left.bodyNumericScore;
       }
       return left.index - right.index;
-    })
-    .filter(
-      (ranked) =>
-        semanticTokens.length <= 1 ||
-        ranked.metadataSemanticScore + ranked.bodySemanticScore >= 2
-    );
-  return ranked.map((item) => item.document);
+    }),
+    (ranked) =>
+      semanticTokens.length <= 1 ||
+      ranked.metadataSemanticScore + ranked.bodySemanticScore >= 2
+  );
+  return Arr.map(ranked, (item) => item.document);
 }
 
 /** Scores text by how many unique query tokens it directly contains. */
@@ -105,9 +105,10 @@ function scoreSearchText(text: string, queryTokens: readonly string[]) {
 
 /** Joins content identity fields before using body text as a tie-breaker. */
 function getDocumentMetadataSearchText(document: ContentSearchRankDocument) {
-  return [document.title, document.description, document.route]
-    .join(" ")
-    .replaceAll(routeSeparatorPattern, " ");
+  return Arr.join(
+    [document.title, document.description, document.route],
+    " "
+  ).replaceAll(routeSeparatorPattern, " ");
 }
 
 /** Tokenizes multilingual query and document text for deterministic ranking. */

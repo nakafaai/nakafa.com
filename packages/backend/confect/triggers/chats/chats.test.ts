@@ -10,7 +10,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -135,8 +135,9 @@ describe("native Nina deletion lifecycle", () => {
       })
     );
     const facts = async () =>
-      (await t.query((ctx) => ctx.db.query("ninaMemories").collect())).map(
-        (memory) => memory.facts.map((kept) => kept.key)
+      Arr.map(
+        await t.query((ctx) => ctx.db.query("ninaMemories").collect()),
+        (memory) => Arr.map(memory.facts, (kept) => kept.key)
       );
     await owner.mutation(remove, { chatId: receipt.chatId });
     expect(await facts()).toEqual([[1]]);
@@ -205,7 +206,9 @@ describe("native Nina deletion lifecycle", () => {
     expect(state.messages.page).toEqual([]);
     expect(state.threads.page).toEqual([]);
     expect(state.file).toMatchObject({ refcount: 0 });
-    expect(state.ledger.filter((row) => row.type === "refund")).toHaveLength(1);
+    expect(
+      Arr.filter(state.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
     expect(state.user?.credits).toBe(10);
     await expect(
       t.mutation((ctx) =>

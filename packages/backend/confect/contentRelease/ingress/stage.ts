@@ -28,7 +28,7 @@ import {
   encodeRendererJson,
   encodeRouteJson,
 } from "@repo/backend/confect/contentRelease/wire";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type StageRequest =
   | StageOperation
@@ -165,7 +165,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
         refs.internal.contentRelease.items.stageItemBatch,
         {
           batchIndex: request.batchIndex,
-          itemJson: request.items.map(encodeItemJson),
+          itemJson: Arr.map(request.items, encodeItemJson),
           releaseId: request.releaseId,
         }
       ).pipe(Effect.catchTag("SchemaError", Effect.die));
@@ -181,7 +181,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
         {
           batchIndex: request.batchIndex,
           releaseId: request.releaseId,
-          routeJson: request.routes.map(encodeRouteJson),
+          routeJson: Arr.map(request.routes, encodeRouteJson),
         }
       ).pipe(Effect.catchTag("SchemaError", Effect.die));
       return {
@@ -195,7 +195,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
         refs.internal.contentRelease.items.stageProjectionBatch,
         {
           batchIndex: request.batchIndex,
-          projectionJson: request.projections.map(encodeProjectionJson),
+          projectionJson: Arr.map(request.projections, encodeProjectionJson),
           releaseId: request.releaseId,
         }
       ).pipe(Effect.catchTag("SchemaError", Effect.die));
@@ -209,7 +209,7 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
     const value = yield* runMutation(
       refs.internal.contentRelease.artifacts.stageArtifactBatch,
       {
-        artifactJson: request.artifacts.map(encodeArtifactJson),
+        artifactJson: Arr.map(request.artifacts, encodeArtifactJson),
         batchIndex: request.batchIndex,
         releaseId: request.releaseId,
       }

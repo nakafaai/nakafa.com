@@ -5,7 +5,7 @@ import type {
 import { parseQuranTranslation } from "@nakafa/aksara-contracts/quran/notes";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Reads the exact reviewed translation selected by one application locale. */
 export const readQuranTranslation = Effect.fn(
@@ -31,12 +31,12 @@ export const readQuranTranslationDocument = Effect.fn(
   const document = yield* parseQuranTranslation(translation).pipe(Effect.orDie);
   return {
     document: {
-      notes: document.notes.map(({ number, referenceOffset, text }) => ({
+      notes: Arr.map(document.notes, ({ number, referenceOffset, text }) => ({
         number,
         referenceOffset,
         text,
       })),
-      segments: document.segments.map((segment) =>
+      segments: Arr.map(document.segments, (segment) =>
         segment.kind === "text"
           ? {
               kind: segment.kind,

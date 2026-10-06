@@ -8,7 +8,7 @@ import {
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect, pipe } from "effect";
 
 const FORUM_REACTION_VALUE_PATTERN =
   /^(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))(?:\u200D(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))*$/u;
@@ -46,7 +46,9 @@ export const getMyForumReactions = Effect.fn(
       .take(FORUM_REACTION_PREVIEW_BATCH_LIMIT)
       .pipe(Effect.orDie)
   );
-  return reactions.map((rows) => rows.map((reaction) => reaction.emoji));
+  return Arr.map(reactions, (rows) =>
+    Arr.map(rows, (reaction) => reaction.emoji)
+  );
 });
 
 /**
@@ -68,12 +70,17 @@ export const getForumReactionPreviews = Effect.fn(
         .pipe(Effect.orDie)
   );
   const userMap = yield* getUserMap(
-    reactionsByEmoji.flat().map((reaction) => reaction.userId)
+    pipe(
+      reactionsByEmoji,
+      Arr.flatten,
+      Arr.map((reaction) => reaction.userId)
+    )
   );
-  return forum.reactionCounts.map(({ emoji, count }, index) => ({
+  return Arr.map(forum.reactionCounts, ({ emoji, count }, index) => ({
     count,
     emoji,
-    reactors: reactionsByEmoji[index].map(
+    reactors: Arr.map(
+      reactionsByEmoji[index],
       (reaction) => userMap.get(reaction.userId)?.name ?? "Unknown"
     ),
   }));

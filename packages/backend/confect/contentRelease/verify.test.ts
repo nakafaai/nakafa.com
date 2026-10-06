@@ -23,6 +23,7 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
+import { Array as Arr } from "effect";
 
 vi.mock("@repo/backend/confect/contentRelease/proof/budget", { spy: true });
 
@@ -68,23 +69,23 @@ async function stagePagedFixture(t: TestConvex<typeof schema>) {
     const batch = changes.slice(batchStart, batchStart + RELEASE_PAGE_LIMIT);
     await t.mutation(stageItems, {
       batchIndex,
-      itemJson: batch.map(({ item }) => item),
+      itemJson: Arr.map(batch, ({ item }) => item),
       releaseId: TEST_RELEASE_ID,
     });
     await t.mutation(stageArtifacts, {
-      artifactJson: batch.map(({ artifact }) => artifact),
+      artifactJson: Arr.map(batch, ({ artifact }) => artifact),
       batchIndex,
       releaseId: TEST_RELEASE_ID,
     });
     await t.mutation(stageProjections, {
       batchIndex,
-      projectionJson: batch.map(({ projection }) => projection),
+      projectionJson: Arr.map(batch, ({ projection }) => projection),
       releaseId: TEST_RELEASE_ID,
     });
     await t.mutation(stageRoutes, {
       batchIndex,
       releaseId: TEST_RELEASE_ID,
-      routeJson: batch.map(({ route }) => route),
+      routeJson: Arr.map(batch, ({ route }) => route),
     });
   }
   await beginFixture(t);

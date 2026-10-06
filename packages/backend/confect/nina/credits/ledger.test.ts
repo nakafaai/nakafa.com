@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { products } from "@repo/backend/confect/utils/polar/products";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 8, 1);
 async function fixture(credits = 2, creditsResetAt = NOW) {
@@ -64,7 +64,9 @@ describe("Nina credit transactions", () => {
       ledger: await ctx.db.query("creditTransactions").collect(),
     }));
     expect(result.user?.credits).toBe(10);
-    expect(result.ledger.map(({ type, amount }) => [type, amount])).toEqual([
+    expect(
+      Arr.map(result.ledger, ({ type, amount }) => [type, amount])
+    ).toEqual([
       ["daily-grant", 10],
       ["usage", -2],
       ["refund", 2],

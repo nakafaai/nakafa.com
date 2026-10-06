@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { validateSearchQuery } from "@repo/backend/confect/contentRelease/search/input";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Runs one search validator and exposes its typed failure for assertions. */
 function result(source: string, characterLimit?: number) {
@@ -17,9 +17,17 @@ describe("contentRelease/search/input", () => {
       );
       expect(
         yield* validateSearchQuery(
-          Array.from({ length: 16 }, () => "term").join("-")
+          Arr.join(
+            Array.from({ length: 16 }, () => "term"),
+            "-"
+          )
         )
-      ).toBe(Array.from({ length: 16 }, () => "term").join("-"));
+      ).toBe(
+        Arr.join(
+          Array.from({ length: 16 }, () => "term"),
+          "-"
+        )
+      );
       expect(yield* validateSearchQuery("x".repeat(31))).toBe("x".repeat(31));
       expect(yield* validateSearchQuery("bounded", { characterLimit: 7 })).toBe(
         "bounded"
@@ -28,12 +36,13 @@ describe("contentRelease/search/input", () => {
   );
   it.live("rejects empty, excessive, oversized, and overlong queries", () =>
     Effect.gen(function* () {
-      const seventeenTerms = Array.from(
-        { length: 17 },
-        (_, index) => `term${index}`
-      ).join("-");
+      const seventeenTerms = Arr.join(
+        Array.from({ length: 17 }, (_, index) => `term${index}`),
+        "-"
+      );
       const oversizedVocalizedTerm = `ا${"ّ".repeat(16)}`;
-      const hiddenSeventeenTerms = Array.from({ length: 17 }, () => "x").join(
+      const hiddenSeventeenTerms = Arr.join(
+        Array.from({ length: 17 }, () => "x"),
         "\u200d"
       );
       expect(yield* result(" ")).toMatchObject({

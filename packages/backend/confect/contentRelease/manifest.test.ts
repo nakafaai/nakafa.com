@@ -23,7 +23,7 @@ import {
 } from "@repo/backend/test/content/state";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const stageRelease = internal.contentRelease.manifest.stageRelease;
 const stageRecovery = internal.contentRelease.manifest.stageRecovery;
@@ -165,7 +165,7 @@ describe("contentRelease/manifest", () => {
       recoveryReleaseId: RECOVERY.releaseId,
     });
     expect(
-      stored.releases.map(({ baseFamilies, resultFamilies }) => ({
+      Arr.map(stored.releases, ({ baseFamilies, resultFamilies }) => ({
         baseFamilies,
         resultFamilies,
       }))

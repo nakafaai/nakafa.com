@@ -4,6 +4,7 @@ import { effectFindings } from "#scripts/check/effect";
 import { parseSources } from "#scripts/check/source";
 
 const CODE = "apps/www/lib/example.ts";
+const SCRIPT = "scripts/tool.ts";
 
 /** Lists the Effect-native findings of one module as `line rule`. */
 const findings = Effect.fn("NativePolicyTest.findings")(function* (
@@ -17,6 +18,32 @@ const findings = Effect.fn("NativePolicyTest.findings")(function* (
 }, Effect.scoped);
 
 describe("native syntax", () => {
+  it.effect("reports array methods on values in strict modules", () =>
+    Effect.gen(function* () {
+      const source = `import { Array as Arr } from "effect";
+const items = [1];
+items.map(String);
+Arr.map(items, String);
+make().filter(Boolean);
+parts.join(", ");
+path.join(root, file);
+text.slice(1);
+items.push(2);
+items.find(Boolean);
+items["map"](String);
+items[name](String);
+run();
+`;
+      assert.deepStrictEqual(yield* findings(source, SCRIPT), [
+        "3 array-method",
+        "5 array-method",
+        "6 array-method",
+        "11 array-method",
+      ]);
+      assert.deepStrictEqual(yield* findings(source), []);
+    })
+  );
+
   it.effect("reports raw failure handling and typeof-object narrowing", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

@@ -3,7 +3,7 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/agent/errors";
-import { Config, Effect } from "effect";
+import { Array as Arr, Config, Effect } from "effect";
 
 const MAX_EDGE_SECRETS = 2;
 
@@ -13,12 +13,12 @@ export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
     const configured = yield* Config.String(contract.secretEnvironment).pipe(
       Effect.mapError(unavailableEdgeSecret)
     );
-    const acceptedSecrets = configured
-      .split(",")
-      .map((secret) => secret.trim());
+    const acceptedSecrets = Arr.map(configured.split(","), (secret) =>
+      secret.trim()
+    );
     if (
       acceptedSecrets.length > MAX_EDGE_SECRETS ||
-      acceptedSecrets.some((secret) => secret.length === 0)
+      Arr.some(acceptedSecrets, (secret) => secret.length === 0)
     ) {
       return yield* unavailableEdgeSecret();
     }
@@ -29,7 +29,7 @@ export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
     const comparisons = yield* Effect.forEach(acceptedSecrets, (expected) =>
       constantTimeEqual(expected, supplied)
     );
-    return comparisons.some(Boolean);
+    return Arr.some(comparisons, Boolean);
   }
 );
 

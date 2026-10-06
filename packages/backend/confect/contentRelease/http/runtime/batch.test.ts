@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
@@ -133,7 +134,12 @@ describe("public content runtime batch HTTP route", () => {
     expectPrivate(response);
     const body = await response.json();
     expect(body.responses).toHaveLength(8);
-    expect(body.responses.map(({ kind }: { kind: string }) => kind)).toEqual([
+    expect(
+      Arr.map<readonly { kind: string }[], string>(
+        body.responses,
+        ({ kind }) => kind
+      )
+    ).toEqual([
       "found",
       "missing",
       "found",

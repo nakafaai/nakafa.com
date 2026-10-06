@@ -6,7 +6,7 @@ import {
   RESEARCH_CAPABILITY,
 } from "@repo/backend/confect/nina/capability/spec";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 /** Schema-owned permission result for a Nina capability in one turn. */
 export const NinaCapabilityDecisionSchema = Schema.Union([
   Schema.Struct({ state: Schema.Literal("allowed") }),
@@ -56,18 +56,21 @@ export function deniedCapabilityResult({
   readonly capability: LearningCapabilityName;
   readonly decision: Extract<NinaCapabilityDecision, { state: "denied" }>;
 }) {
-  const text = [
-    "# Capability Policy",
-    "",
-    `- Capability: ${capability}`,
-    "- Status: denied",
-    `- Reason: ${decision.reason}`,
-    "",
-    "# Final Answer Constraint",
-    "",
-    "Use only evidence already available in the conversation.",
-    "Do not invent unavailable Nakafa, research, or math evidence.",
-  ].join("\n");
+  const text = Arr.join(
+    [
+      "# Capability Policy",
+      "",
+      `- Capability: ${capability}`,
+      "- Status: denied",
+      `- Reason: ${decision.reason}`,
+      "",
+      "# Final Answer Constraint",
+      "",
+      "Use only evidence already available in the conversation.",
+      "Do not invent unavailable Nakafa, research, or math evidence.",
+    ],
+    "\n"
+  );
   return { failure: "denied", text } satisfies Pick<
     CapabilityOutput,
     "text" | "failure"

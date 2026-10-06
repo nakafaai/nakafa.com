@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
@@ -21,7 +21,7 @@ const CONTRACT_MANIFEST_PATHS = [
   "packages/internationalization/package.json",
   "packages/seo/package.json",
 ] as const;
-const CONTRACT_OWNERS = CONTRACT_MANIFEST_PATHS.join(", ");
+const CONTRACT_OWNERS = Arr.join(CONTRACT_MANIFEST_PATHS, ", ");
 const WEB_MANIFEST = "apps/www/package.json";
 
 type PolicyInput = Parameters<typeof validateDependencyPolicy>[0];
@@ -37,17 +37,20 @@ function approvedSpec(dependency: string) {
 
 /** Builds manifests and workspace settings that satisfy every reviewed hold. */
 function validInput(): PolicyInput {
-  const manifests = CONTRACT_MANIFEST_PATHS.map((path, index) => ({
+  const manifests = Arr.map(CONTRACT_MANIFEST_PATHS, (path, index) => ({
     manifest: {
       dependencies: Rec.fromEntries(
-        DEPENDENCY_HOLDS.filter((hold) =>
-          "declarationPaths" in hold
-            ? hold.declarationPaths.includes(path)
-            : index === 0
-        ).map((hold) => [
-          hold.dependency,
-          "approved" in hold ? hold.approved : hold.allowed[0],
-        ])
+        Arr.map(
+          DEPENDENCY_HOLDS.filter((hold) =>
+            "declarationPaths" in hold
+              ? hold.declarationPaths.includes(path)
+              : index === 0
+          ),
+          (hold) => [
+            hold.dependency,
+            "approved" in hold ? hold.approved : hold.allowed[0],
+          ]
+        )
       ),
       scripts:
         index === 0
@@ -101,7 +104,7 @@ function updateWebManifest(
 ): PolicyInput {
   return {
     ...input,
-    manifests: input.manifests.map((entry) =>
+    manifests: Arr.map(input.manifests, (entry) =>
       entry.path === WEB_MANIFEST
         ? { ...entry, manifest: update(entry.manifest) }
         : entry
@@ -113,11 +116,12 @@ function updateWebManifest(
 function withoutDependency(input: PolicyInput, dependency: string) {
   return {
     ...input,
-    manifests: input.manifests.map(({ manifest, path }) => ({
+    manifests: Arr.map(input.manifests, ({ manifest, path }) => ({
       manifest: {
         ...manifest,
         dependencies: Rec.fromEntries(
-          Rec.toEntries(manifest.dependencies ?? {}).filter(
+          Arr.filter(
+            Rec.toEntries(manifest.dependencies ?? {}),
             ([name]) => name !== dependency
           )
         ),
@@ -149,7 +153,7 @@ describe("dependency policy validation", () => {
     );
 
     assert.deepStrictEqual(
-      declarations.map(({ group }) => group),
+      Arr.map(declarations, ({ group }) => group),
       [
         "dependencies",
         "devDependencies",

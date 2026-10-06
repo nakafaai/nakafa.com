@@ -31,7 +31,7 @@ import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/sch
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/agent/schema/taxonomy";
 import { isStepCount } from "ai";
-import { Effect } from "effect";
+import { Array as Arr, Effect, pipe } from "effect";
 
 const nakafaSearchInputSchema = createEffectSchema(
   NakafaAgentSearchOptionsSchema
@@ -147,8 +147,11 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
            * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
            */
           prepareStep: ({ messages, steps }) => {
-            const hasReadToolCall = steps.some((step) =>
-              step.toolCalls.some((toolCall) => toolCall.toolName === "read")
+            const hasReadToolCall = Arr.some(steps, (step) =>
+              Arr.some(
+                step.toolCalls,
+                (toolCall) => toolCall.toolName === "read"
+              )
             );
 
             if (hasReadToolCall) {
@@ -185,10 +188,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 
   return {
     text:
-      result.steps
-        .flatMap((step) =>
-          step.toolResults.map((toolResult) => toolResult.output)
-        )
-        .join("\n\n") || result.text,
+      pipe(
+        result.steps,
+        Arr.flatMap((step) =>
+          Arr.map(step.toolResults, (toolResult) => String(toolResult.output))
+        ),
+        Arr.join("\n\n")
+      ) || result.text,
   };
 });

@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import { formatRead } from "@repo/backend/confect/nina/nakafa/sections";
 import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { Array as Arr } from "effect";
 
 const MORE_SECTIONS = /- \d+ more sections$/;
 const NEXT_SECTION = /\(section: ([^)]+)\)/;
@@ -45,12 +46,15 @@ describe("Nakafa sectioned reads", () => {
       `## ${heading}\n\n${"Fungsi memetakan setiap anggota domain. ".repeat(400)}`;
     const content = {
       ...readNakafaContentRefFixture("id", subjectRoute, "material"),
-      text: [
-        "Pengantar singkat.",
-        lesson("Definisi"),
-        lesson("Contoh"),
-        lesson("Contoh"),
-      ].join("\n\n"),
+      text: Arr.join(
+        [
+          "Pengantar singkat.",
+          lesson("Definisi"),
+          lesson("Contoh"),
+          lesson("Contoh"),
+        ],
+        "\n\n"
+      ),
       title: "Fungsi",
     };
     const first = formatRead(content);
@@ -71,11 +75,14 @@ describe("Nakafa sectioned reads", () => {
   });
 
   it("caps the outline for content with many sections", () => {
-    const text = Array.from(
-      { length: 40 },
-      (_, index) =>
-        `### Verse ${index + 1}\n\n${"Ayat panjang dengan tafsir. ".repeat(120)}`
-    ).join("\n\n");
+    const text = Arr.join(
+      Array.from(
+        { length: 40 },
+        (_, index) =>
+          `### Verse ${index + 1}\n\n${"Ayat panjang dengan tafsir. ".repeat(120)}`
+      ),
+      "\n\n"
+    );
     const read = formatRead({
       ...readNakafaContentRefFixture("id", subjectRoute, "material"),
       text,
@@ -89,10 +96,13 @@ describe("Nakafa sectioned reads", () => {
     const step = "Langkah bukti yang panjang.";
     const content = {
       ...readNakafaContentRefFixture("id", subjectRoute, "material"),
-      text: [
-        `## Bukti\n\n${`${step}\n`.repeat(1500)}`,
-        `## Ringkasan\n\n${"Kalimat tanpa jeda ".repeat(3000)}`,
-      ].join("\n\n"),
+      text: Arr.join(
+        [
+          `## Bukti\n\n${`${step}\n`.repeat(1500)}`,
+          `## Ringkasan\n\n${"Kalimat tanpa jeda ".repeat(3000)}`,
+        ],
+        "\n\n"
+      ),
       title: "Bukti",
     };
     const next = (read: string) => NEXT_SECTION.exec(read)?.[1];
@@ -123,7 +133,7 @@ describe("Nakafa sectioned reads", () => {
       title: "Data",
     };
     const body = (read: string) =>
-      read.split("\n\n").filter((block) => DIGITS.test(block));
+      Arr.filter(read.split("\n\n"), (block) => DIGITS.test(block));
     let read = formatRead(content);
     const blocks = body(read);
     for (let slug = NEXT_SECTION.exec(read)?.[1]; slug; ) {
@@ -134,7 +144,7 @@ describe("Nakafa sectioned reads", () => {
       slug = following === "data" ? undefined : following;
     }
     expect(blocks.length).toBeGreaterThan(1);
-    expect(blocks.join("")).toBe(blob);
+    expect(Arr.join(blocks, "")).toBe(blob);
   });
 
   it("stays within its budget when the description leaves no room", () => {
@@ -149,11 +159,14 @@ describe("Nakafa sectioned reads", () => {
   });
 
   it("lists the sections after a later read first in a capped outline", () => {
-    const text = Array.from(
-      { length: 40 },
-      (_, index) =>
-        `### Verse ${index + 1}\n\n${"Ayat panjang dengan tafsir. ".repeat(120)}`
-    ).join("\n\n");
+    const text = Arr.join(
+      Array.from(
+        { length: 40 },
+        (_, index) =>
+          `### Verse ${index + 1}\n\n${"Ayat panjang dengan tafsir. ".repeat(120)}`
+      ),
+      "\n\n"
+    );
     const read = formatRead(
       {
         ...readNakafaContentRefFixture("id", subjectRoute, "material"),

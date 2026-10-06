@@ -16,7 +16,7 @@ import {
   type ModelBuildPage,
 } from "@repo/backend/confect/contentRelease/models/spec";
 import { compareValues } from "convex/values";
-import { Effect, Option, Schema, Stream } from "effect";
+import { Array as Arr, Effect, Option, Schema, Stream } from "effect";
 
 const PositionSchema = Schema.Tuple([Schema.String, Schema.String]);
 const CursorSchema = Schema.fromJsonString(
@@ -110,7 +110,7 @@ const appendIdentity = Effect.fn("contentRelease.appendModelIdentity")(
     }
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Model phase ${input.build.phase} has duplicate identity ${input.position(row).join("/")}.`
+      `Model phase ${input.build.phase} has duplicate identity ${Arr.join(input.position(row), "/")}.`
     );
   }
 );

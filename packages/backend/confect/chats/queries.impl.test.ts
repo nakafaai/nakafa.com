@@ -4,6 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 4, 13, 12, 0, 0);
 
@@ -138,10 +139,10 @@ describe("chats/queries", () => {
       type: "study",
     });
 
-    expect(defaultChats.page.map((chat) => chat.visibility)).toEqual([
+    expect(Arr.map(defaultChats.page, (chat) => chat.visibility)).toEqual([
       "public",
     ]);
-    expect(ownerChats.page.map((chat) => chat.visibility).sort()).toEqual([
+    expect(Arr.map(ownerChats.page, (chat) => chat.visibility).sort()).toEqual([
       "private",
       "public",
     ]);
@@ -257,7 +258,8 @@ it("keeps search and every optional list filter scoped to the right owner and vi
         });
         expect(ownPage.page).toHaveLength(visibility ? 1 : 2);
         expect(
-          ownPage.page.every(
+          Arr.every(
+            ownPage.page,
             (chat) =>
               chat.userId === identity.userId &&
               (!visibility || chat.visibility === visibility)

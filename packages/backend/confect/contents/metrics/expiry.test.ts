@@ -8,6 +8,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
+import { Array as Arr } from "effect";
 
 const DAY = Date.parse("2026-01-08T00:00:00.000Z");
 const ROUTE = "material/lesson/mathematics/vector/addition";
@@ -170,9 +171,11 @@ describe("contents/metrics/expiry", () => {
       skipped: false,
     });
     expect(
-      counters
-        .map(({ contextKey, score, title }) => ({ contextKey, score, title }))
-        .sort((left, right) => left.contextKey.localeCompare(right.contextKey))
+      Arr.map(counters, ({ contextKey, score, title }) => ({
+        contextKey,
+        score,
+        title,
+      })).sort((left, right) => left.contextKey.localeCompare(right.contextKey))
     ).toEqual([
       { contextKey: "repair", score: 4, title: "Repaired title" },
       { contextKey: "sparse", score: 4, title: "Current title" },

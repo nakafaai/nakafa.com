@@ -15,7 +15,7 @@ import {
   COMPACTION_PAGE_BYTES,
   ROLLBACK_RETENTION_MS,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Clock, Effect, Option } from "effect";
+import { Array as Arr, Clock, Effect, Option } from "effect";
 
 const RELEASE_SCAN_COUNT = 32;
 interface SlotIdentity {
@@ -247,7 +247,7 @@ const activeCycle = Effect.fn("contentRelease.activeCompaction")(function* (
     state.compactPhase,
     state.compactStartedAt,
   ];
-  const present = required.filter((value) => value !== undefined).length;
+  const present = Arr.filter(required, (value) => value !== undefined).length;
   if (present === 0 && state.compactCursor === undefined) {
     return null;
   }

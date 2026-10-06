@@ -40,7 +40,7 @@ import {
   NakafaApiIndexSchema,
 } from "@repo/contents/agent/schema/api";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/agent/schema/taxonomy";
-import { Clock, Effect, Layer } from "effect";
+import { Array as Arr, Clock, Effect, Layer } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** Registers the protected read-only API and its machine-readable contract. */
@@ -143,7 +143,8 @@ const apiRoutes = HttpRouter.addAll(
     ...contentRoutes,
     ...searchRoutes,
     ...quranRoutes,
-    ...(["/", "/health", "/taxonomy"] satisfies HttpRouter.PathInput[]).map(
+    ...Arr.map(
+      ["/", "/health", "/taxonomy"] satisfies HttpRouter.PathInput[],
       (path) =>
         HttpRouter.route(
           "OPTIONS",
@@ -151,7 +152,7 @@ const apiRoutes = HttpRouter.addAll(
           HttpServerResponse.fromWeb(agentOptionsResponse())
         )
     ),
-    ...nonReadMethods.map((method) =>
+    ...Arr.map(nonReadMethods, (method) =>
       HttpRouter.route(method, "/", missingRoute)
     ),
     HttpRouter.route("*", "/:path/*", missingRoute),
@@ -167,7 +168,7 @@ const openApiPreflight = HttpRouter.route(
   HttpServerResponse.fromWeb(createOpenApiOptionsResponse())
 );
 const documentRoutes = HttpRouter.addAll([
-  ...nonReadMethods.map((method) =>
+  ...Arr.map(nonReadMethods, (method) =>
     HttpRouter.route(method, documentPath, missingRoute)
   ),
   HttpRouter.route(

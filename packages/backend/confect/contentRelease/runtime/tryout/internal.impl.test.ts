@@ -8,7 +8,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const readProtected = internal.contentRelease.runtime.tryout.internal.read;
 
@@ -19,7 +19,7 @@ function batch(
 ) {
   return {
     bundleHash: fixture.request.bundleHash,
-    selectors: selectors.map(({ artifactHash, contentKey, delivery }) => ({
+    selectors: Arr.map(selectors, ({ artifactHash, contentKey, delivery }) => ({
       artifactHash,
       contentKey,
       delivery,

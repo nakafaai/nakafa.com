@@ -6,7 +6,7 @@ import {
   isPublicHttpUrlSyntax,
   normalizeHostname,
 } from "@repo/backend/confect/nina/research/url";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const unsafeUrlMessage =
   "Only public http(s) URLs can be scraped by the research agent.";
@@ -42,7 +42,7 @@ export const assertPublicResearchUrl = Effect.fn(
     return yield* rejectUnsafeUrl();
   }
 
-  if (addresses.some((address) => isBlockedIpAddress(address.address))) {
+  if (Arr.some(addresses, (address) => isBlockedIpAddress(address.address))) {
     return yield* rejectUnsafeUrl();
   }
 

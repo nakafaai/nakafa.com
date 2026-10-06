@@ -5,7 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/nina/usage.spec";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 /** Agent invokes this after every model response, including repair and synthesis. */
 const record = FunctionImpl.make(
@@ -41,8 +41,8 @@ const record = FunctionImpl.make(
     } else {
       totals.push({ ...usage, calls: 1 });
     }
-    const input = totals.reduce((total, row) => total + row.input, 0);
-    const output = totals.reduce((total, row) => total + row.output, 0);
+    const input = Arr.reduce(totals, 0, (total, row) => total + row.input);
+    const output = Arr.reduce(totals, 0, (total, row) => total + row.output);
     yield* (yield* DatabaseWriter)
       .table("ninaTurns")
       .patch(turnId, {

@@ -13,6 +13,7 @@ import {
   readContentViewState as readViewState,
   seedArticleViewer,
 } from "@repo/backend/test/content/view";
+import { Array as Arr } from "effect";
 
 describe("contents/views/viewer", () => {
   beforeEach(() => {
@@ -158,7 +159,7 @@ describe("contents/views/viewer", () => {
     );
     expect(state.engagementQueue).toHaveLength(2);
     expect(state.viewerSignals).toHaveLength(2);
-    expect(state.contentViewEvents.map(getScheduledDistinctId)).toEqual([
+    expect(Arr.map(state.contentViewEvents, getScheduledDistinctId)).toEqual([
       identity.firstUser.userId,
       identity.firstUser.userId,
       identity.secondUser.userId,
@@ -380,7 +381,7 @@ describe("contents/views/viewer", () => {
       { lastViewedAt: NOW + 2000, userId: identity.userId },
     ]);
     expect(
-      state.viewerSignals.map((signal) => signal.viewerKey).sort()
+      Arr.map(state.viewerSignals, (signal) => signal.viewerKey).sort()
     ).toEqual(["device:device-1", `user:${identity.userId}`]);
   });
 

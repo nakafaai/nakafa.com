@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
 import {
+  Array as Arr,
   Effect,
   FileSystem,
   Layer,
@@ -42,7 +43,7 @@ const runGit = Effect.fn("EffectSourceTest.runGit")(
       catch: (cause) =>
         new GitFixtureError({
           cause,
-          message: `git ${args.join(" ")} failed`,
+          message: `git ${Arr.join(args, " ")} failed`,
         }),
       try: () =>
         execFileSync("git", [...args], { cwd, encoding: "utf8" }).trim(),
@@ -370,7 +371,7 @@ describe("Effect source identity", () => {
         "Effect source updates require a clean worktree. Commit dependency changes first.",
       name: "an update from a dirty worktree",
     },
-    ...[undefined, "sync"].map((action) => ({
+    ...Arr.map([undefined, "sync"], (action) => ({
       action,
       change: () => Effect.void,
       error: "EffectSourceUsageError",

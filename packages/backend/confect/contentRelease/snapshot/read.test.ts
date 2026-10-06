@@ -24,7 +24,7 @@ import {
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
-import { Effect, Struct } from "effect";
+import { Array as Arr, Effect, Struct } from "effect";
 
 const readManifest = internal.contentRelease.snapshot.read.manifest;
 const readRows = internal.contentRelease.snapshot.read.rows;
@@ -177,7 +177,7 @@ describe("contentRelease/snapshot/read", () => {
                   yield* makeQuranSnapshotRow(snapshotId, quran)
                 ),
               ]
-            : [catalog, placement].map(canonicalizeContentSnapshotRow);
+            : Arr.map([catalog, placement], canonicalizeContentSnapshotRow);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
             ctx.db.insert("snapshotBatches", {

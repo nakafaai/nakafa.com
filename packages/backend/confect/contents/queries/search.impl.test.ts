@@ -23,7 +23,7 @@ import {
 } from "@repo/backend/test/tryout/snapshot";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
 import { ConvexError } from "convex/values";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const MARKDOWN_PATH_PATTERN = /\.md$/;
 
@@ -194,7 +194,7 @@ describe("contents/queries/search:search", () => {
       has_more: true,
       next_offset: 2,
     });
-    expect(result.items.map(({ route }) => route)).toEqual([
+    expect(Arr.map(result.items, ({ route }) => route)).toEqual([
       testArticleProjection(0).publicPath,
       testArticleProjection(1).publicPath,
     ]);

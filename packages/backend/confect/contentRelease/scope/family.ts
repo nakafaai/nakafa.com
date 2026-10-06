@@ -8,14 +8,15 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Returns every family once in the canonical shared-contract order. */
 export function mergeManagedFamilies(
   current: readonly ContentFamily[],
   selected: readonly ContentFamily[]
 ) {
-  return ContentFamilySchema.literals.filter(
+  return Arr.filter(
+    ContentFamilySchema.literals,
     (family) => current.includes(family) || selected.includes(family)
   );
 }
@@ -27,7 +28,7 @@ export function hasExactFamilies(
 ) {
   return (
     stored.length === derived.length &&
-    stored.every((family, index) => family === derived[index])
+    Arr.every(stored, (family, index) => family === derived[index])
   );
 }
 
@@ -39,7 +40,8 @@ export function hasSamePublicationScope(
   return (
     hasExactFamilies(left.families, right.families) &&
     left.snapshots.length === right.snapshots.length &&
-    left.snapshots.every(
+    Arr.every(
+      left.snapshots,
       (snapshot, index) => snapshot === right.snapshots[index]
     )
   );

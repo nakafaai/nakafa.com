@@ -20,7 +20,7 @@ import {
   TEST_RUNTIME_RELEASE_ID,
 } from "@repo/backend/test/runtime/ingress";
 import { convexTest } from "convex-test";
-import { type Cause, Effect } from "effect";
+import { Array as Arr, type Cause, Effect } from "effect";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_ID: keyId, TEST_KEY_RESOLVER: resolver } = await import(
@@ -102,7 +102,7 @@ describe("content release runtime bundle staging", () => {
       const stored = yield* Effect.promise(() =>
         t.run((ctx) => ctx.db.query("tryoutRuntimeBundles").collect())
       );
-      expect(stored.map(({ snapshotId }) => snapshotId).sort()).toEqual(
+      expect(Arr.map(stored, ({ snapshotId }) => snapshotId).sort()).toEqual(
         [result.snapshot.snapshotId, retainedBase.snapshot.snapshotId].sort()
       );
     })

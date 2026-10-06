@@ -30,7 +30,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_ID, TEST_KEY_RESOLVER } = await import(
@@ -67,11 +67,14 @@ describe("content publication Node dispatch", () => {
     const t = convexTest(schema, convexModules);
     const candidateResponses = await publishIngressCandidate(t);
     expect(
-      candidateResponses.every(({ ok }) => ok),
+      Arr.every(candidateResponses, ({ ok }) => ok),
       JSON.stringify(candidateResponses)
     ).toBe(true);
     expect(
-      candidateResponses.map((response) => response.ok && response.operation)
+      Arr.map(
+        candidateResponses,
+        (response) => response.ok && response.operation
+      )
     ).toEqual([
       "stageRelease",
       "current",
@@ -84,7 +87,7 @@ describe("content publication Node dispatch", () => {
 
     const recoveryResponses = await publishIngressRecovery(t);
     expect(
-      recoveryResponses.every(({ ok }) => ok),
+      Arr.every(recoveryResponses, ({ ok }) => ok),
       JSON.stringify(recoveryResponses)
     ).toBe(true);
     expect(recoveryResponses[3]).toMatchObject({

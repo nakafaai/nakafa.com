@@ -9,6 +9,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 8, 1);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -150,7 +151,9 @@ it("claims one due recovery batch and schedules exactly one continuation", async
   );
   const state = await t.query(async (ctx) => ({
     rows: await Promise.all(
-      preparations.map((id) => ctx.db.get("accountDeletionPreparations", id))
+      Arr.map(preparations, (id) =>
+        ctx.db.get("accountDeletionPreparations", id)
+      )
     ),
     jobs: await ctx.db.system.query("_scheduled_functions").collect(),
   }));
@@ -162,13 +165,14 @@ it("claims one due recovery batch and schedules exactly one continuation", async
       })
     )
   );
-  const recoveries = state.jobs.filter(
+  const recoveries = Arr.filter(
+    state.jobs,
     (job) => job.name === "auth/deletion/recovery:recoverAccountDeletion"
   );
   expect(recoveries).toHaveLength(ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE);
-  expect(recoveries.map((job) => job.args)).toEqual(
+  expect(Arr.map(recoveries, (job) => job.args)).toEqual(
     expect.arrayContaining(
-      preparations.map((preparationId, index) => [
+      Arr.map(preparations, (preparationId, index) => [
         {
           authId: `recover-${index}`,
           expectedPreparation: {
@@ -181,7 +185,8 @@ it("claims one due recovery batch and schedules exactly one continuation", async
     )
   );
   expect(
-    state.jobs.filter(
+    Arr.filter(
+      state.jobs,
       (job) =>
         job.name === "auth/deletion/recovery:sweepAccountDeletionRecovery"
     )

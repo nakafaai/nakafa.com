@@ -18,7 +18,7 @@ import {
   setResponseClock,
 } from "@repo/backend/test/tryout/response";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const saveSelection = Effect.fn("test.tryout.response.saveSelection")(
   (
@@ -368,7 +368,7 @@ describe("tryouts/response/write", () => {
         code: "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
       });
       const stored = yield* readResponseState(t, seeded);
-      expect(stored.responses.map(({ updatedAt }) => updatedAt)).toEqual([
+      expect(Arr.map(stored.responses, ({ updatedAt }) => updatedAt)).toEqual([
         TRYOUT_TEST_NOW,
         TRYOUT_TEST_NOW + 1,
       ]);

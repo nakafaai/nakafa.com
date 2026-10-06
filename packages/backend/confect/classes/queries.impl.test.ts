@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/confect/classes/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
+import { Array as Arr } from "effect";
 
 const paginationOpts = {
   cursor: null,
@@ -47,7 +48,7 @@ describe("class queries", () => {
             }),
         paginationOpts,
       });
-      expect(new Set(all.page.map((row) => row._id))).toEqual(
+      expect(new Set(Arr.map(all.page, (row) => row._id))).toEqual(
         new Set([classId, archivedId])
       );
       for (const filter of [
@@ -72,7 +73,7 @@ describe("class queries", () => {
           paginationOpts,
           ...filter,
         });
-        expect(result.page.map((row) => row._id)).toEqual([classId]);
+        expect(Arr.map(result.page, (row) => row._id)).toEqual([classId]);
       }
     }
     const first = await admin.query(api.classes.queries.getClasses, {
@@ -90,7 +91,7 @@ describe("class queries", () => {
       },
     });
     expect(
-      new Set([...first.page, ...second.page].map((row) => row._id))
+      new Set(Arr.map([...first.page, ...second.page], (row) => row._id))
     ).toEqual(new Set([classId, archivedId]));
     await expect(
       outsider.query(api.classes.queries.getClasses, {
@@ -185,14 +186,19 @@ describe("class queries", () => {
               q,
             }),
       });
-      expect(all.page.map((row) => row.role)).toEqual(["teacher", "student"]);
+      expect(Arr.map(all.page, (row) => row.role)).toEqual([
+        "teacher",
+        "student",
+      ]);
     }
     const byName = await admin.query(api.classes.queries.getPeople, {
       classId,
       paginationOpts,
       q: "  ADA  ",
     });
-    expect(byName.page.map((row) => row.userId)).toEqual([users.admin.userId]);
+    expect(Arr.map(byName.page, (row) => row.userId)).toEqual([
+      users.admin.userId,
+    ]);
     const first = await admin.query(api.classes.queries.getPeople, {
       classId,
       q: "shared",
@@ -291,7 +297,7 @@ describe("class queries", () => {
         paginationOpts,
         ...search,
       });
-      expect(result.page.map((row) => row.userId)).toEqual([
+      expect(Arr.map(result.page, (row) => row.userId)).toEqual([
         users.admin.userId,
       ]);
     }
@@ -309,7 +315,7 @@ describe("class queries", () => {
     const codes = await admin.query(api.classes.queries.getInviteCodes, {
       classId,
     });
-    expect(new Set(codes.map((row) => row.role))).toEqual(
+    expect(new Set(Arr.map(codes, (row) => row.role))).toEqual(
       new Set(["teacher", "student"])
     );
     await expect(

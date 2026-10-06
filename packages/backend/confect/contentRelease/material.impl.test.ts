@@ -14,7 +14,7 @@ import {
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const publication = api.contentRelease.material.publication;
 const publications = api.contentRelease.material.publications;
@@ -81,7 +81,7 @@ describe("contentRelease/material", () => {
         );
         const results = yield* Effect.promise(() =>
           Promise.all(
-            buckets.buckets.map(async (bucket) => ({
+            Arr.map(buckets.buckets, async (bucket) => ({
               bucket: await t.query(material.bucket, {
                 appLocale: "en",
                 bucket,
@@ -94,21 +94,21 @@ describe("contentRelease/material", () => {
           )
         );
         expect(
-          results.flatMap(({ bucket }) => bucket.materials ?? [])
+          Arr.flatMap(results, ({ bucket }) => bucket.materials ?? [])
         ).toMatchObject([
           {
             dateModified,
             publicPath: source.publicPath,
           },
         ]);
-        expect(results.flatMap(({ sitemap }) => sitemap?.routes ?? [])).toEqual(
-          [
-            {
-              lastModified: dateModified,
-              publicPath: source.publicPath,
-            },
-          ]
-        );
+        expect(
+          Arr.flatMap(results, ({ sitemap }) => sitemap?.routes ?? [])
+        ).toEqual([
+          {
+            lastModified: dateModified,
+            publicPath: source.publicPath,
+          },
+        ]);
       })
   );
   it.effect(

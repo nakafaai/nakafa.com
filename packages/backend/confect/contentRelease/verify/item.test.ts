@@ -29,7 +29,7 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Runs item verification against the only staged release item. */
 function verifyOnly(ctx: MutationCtx) {
@@ -121,7 +121,7 @@ describe("contentRelease/verify/item", () => {
     const heads = await t.query((ctx) =>
       ctx.db.query("contentHeads").collect()
     );
-    expect(heads.every((head) => head.sequence !== 2)).toBe(true);
+    expect(Arr.every(heads, (head) => head.sequence !== 2)).toBe(true);
   });
   it("writes and idempotently replays one valid immutable upsert", async () => {
     const t = convexTest(schema, convexModules);

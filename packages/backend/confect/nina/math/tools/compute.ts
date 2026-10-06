@@ -5,7 +5,7 @@ import type { MathData } from "@repo/math/schema/data";
 import type { MathRequest } from "@repo/math/schema/request";
 import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
-import { Effect, Result, Schema } from "effect";
+import { Array as Arr, Effect, Result, Schema } from "effect";
 
 const invalidMathInputError = "invalid_math_input";
 const mathCheckUnavailableError = "math_check_unavailable";
@@ -79,12 +79,15 @@ export const compute = Effect.fn("math.compute")(function* ({
   ).pipe(Effect.result);
   if (Result.isFailure(decoded)) {
     const recovery = decodeRecoveryMessage(formatDecodeError(decoded.failure));
-    return [
-      "# Checked Math Work",
-      "- Status: error",
-      `- Error code: ${invalidMathInputError}`,
-      `- Recovery: ${recovery}`,
-    ].join("\n");
+    return Arr.join(
+      [
+        "# Checked Math Work",
+        "- Status: error",
+        `- Error code: ${invalidMathInputError}`,
+        `- Recovery: ${recovery}`,
+      ],
+      "\n"
+    );
   }
   const request = {
     ...decoded.success,

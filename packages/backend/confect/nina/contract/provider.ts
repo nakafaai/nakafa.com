@@ -45,7 +45,7 @@ function objectVariants(schema: JsonSchema.JsonSchema) {
   if (!Arr.isArray(schema.anyOf)) {
     return [];
   }
-  return schema.anyOf.map((variant) => {
+  return Arr.map(schema.anyOf, (variant) => {
     if (!isObjectSchema(variant)) {
       throw new Error(
         "Provider-compatible tool schema unions require every branch to be an object."

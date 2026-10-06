@@ -27,7 +27,7 @@ import {
   TRYOUT_START_TRACK as TRACK,
 } from "@repo/backend/test/tryout/source";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const startArgs: StartAttemptArgs = {
   countryKey: COUNTRY,
@@ -94,8 +94,8 @@ describe("tryouts/start/scale", () => {
         await ctx.db.delete("contentReleases", release._id);
         await ctx.db.delete("contentState", state._id);
         const locales = ACTIVE_APP_LOCALE_CODES;
-        const catalog = locales.flatMap((locale) =>
-          makeTryoutStartCatalog(locale, "visible", "irt").map((row) =>
+        const catalog = Arr.flatMap(locales, (locale) =>
+          Arr.map(makeTryoutStartCatalog(locale, "visible", "irt"), (row) =>
             locale === "en" && row.kind === "set"
               ? {
                   ...row,
@@ -104,7 +104,7 @@ describe("tryouts/start/scale", () => {
               : row
           )
         );
-        const placements = locales.map((locale) => {
+        const placements = Arr.map(locales, (locale) => {
           const placement = makeTryoutStartPlacement(locale);
           return changed
             ? {

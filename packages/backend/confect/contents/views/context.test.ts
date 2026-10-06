@@ -48,7 +48,7 @@ import {
 import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
-import { Data, Effect, Schema } from "effect";
+import { Array as Arr, Data, Effect, Schema } from "effect";
 
 const PROGRAM_KEY = LearningProgramKeySchema.make("technical-program-1");
 const GROUP_KEY = CurriculumNodeKeySchema.make("test-group");
@@ -481,7 +481,8 @@ it.effect("records canonical and verified placement popularity scopes", () =>
     );
     const scopes = yield* Effect.promise(() =>
       target.query(async (ctx) =>
-        (await ctx.db.query("learningEngagementQueue").collect()).map(
+        Arr.map(
+          await ctx.db.query("learningEngagementQueue").collect(),
           (row) => row.scopeMode
         )
       )

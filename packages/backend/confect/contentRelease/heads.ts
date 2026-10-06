@@ -8,7 +8,7 @@ import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { loadReadableSnapshot } from "@repo/backend/confect/contentRelease/snapshot";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolveContentHead } from "@repo/backend/content/publication/projection";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /**
  * Maximum content keys one head page resolves.
@@ -99,7 +99,7 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
     ),
     Effect.map((decoded) => ({
       ...decoded,
-      heads: decoded.heads.map(({ publicPath, ...head }) => ({
+      heads: Arr.map(decoded.heads, ({ publicPath, ...head }) => ({
         ...head,
         ...(publicPath === undefined
           ? {}

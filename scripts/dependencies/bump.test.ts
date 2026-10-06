@@ -1,6 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import {
+  Array as Arr,
   ConfigProvider,
   Effect,
   FileSystem,
@@ -132,7 +133,7 @@ describe("dependency updates", () => {
         ]);
         assert.ok(result.output.at(-1)?.startsWith("Routine dependencies and"));
         assert.ok(
-          result.output.some((message) =>
+          Arr.some(result.output, (message) =>
             message.startsWith("actions/checkout:")
           )
         );
@@ -205,7 +206,7 @@ describe("dependency updates", () => {
           "Routine dependencies remain outdated: unreviewed-library.\n",
       ]);
       assert.ok(
-        result.output.some((message) =>
+        Arr.some(result.output, (message) =>
           message.startsWith("@effect/platform-node-shared@latest: reviewed")
         )
       );
@@ -235,7 +236,8 @@ describe("dependency updates", () => {
           "pnpm outdated returned invalid JSON.\n",
       ]);
       assert.ok(
-        result.output.every(
+        Arr.every(
+          result.output,
           (message) => !message.startsWith("actions/checkout:")
         )
       );

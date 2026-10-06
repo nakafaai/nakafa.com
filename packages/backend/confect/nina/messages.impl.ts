@@ -13,7 +13,7 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/conversation.spec";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
 import type { StreamRequest } from "@repo/backend/confect/nina/schema";
-import { Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, pipe, Schema } from "effect";
 
 /** Reads active streams or their deltas for one authorized thread. */
 const readStreams = Effect.fn("nina.messages.streams")(function* (
@@ -34,14 +34,16 @@ const readStreams = Effect.fn("nina.messages.streams")(function* (
       catch: () =>
         new NinaReadError({ message: "Unable to read Nina streams." }),
     });
-    const allowed = new Set(available.map((stream) => stream.streamId));
+    const allowed = new Set(Arr.map(available, (stream) => stream.streamId));
     streamArgs = {
       kind: "deltas",
       cursors: [
         ...new Map(
-          streamArgs.cursors
-            .filter((cursor) => allowed.has(cursor.streamId))
-            .map((cursor) => [cursor.streamId, cursor])
+          pipe(
+            streamArgs.cursors,
+            Arr.filter((cursor) => allowed.has(cursor.streamId)),
+            Arr.map((cursor) => [cursor.streamId, cursor])
+          )
         ).values(),
       ],
     };
@@ -92,7 +94,7 @@ const list = FunctionImpl.make(
     // ownership of parts and stream cursors; app facts come from their own turn.
     const turns = new Map(
       yield* Effect.forEach(
-        [...new Set(page.page.map((message) => message.order))],
+        [...new Set(Arr.map(page.page, (message) => message.order))],
         Effect.fn(function* (order) {
           const turn = yield* reader
             .table("ninaTurns")
@@ -109,7 +111,7 @@ const list = FunctionImpl.make(
     );
     return {
       ...page,
-      page: page.page.map((message) => {
+      page: Arr.map(page.page, (message) => {
         const metadata = turns.get(message.order) ?? undefined;
         let createdAt = message._creationTime;
         if (message.role === "user" && metadata?.promptedAt !== undefined) {

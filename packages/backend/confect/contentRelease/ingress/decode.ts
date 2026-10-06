@@ -13,7 +13,7 @@ import {
   type PublicationRequest,
 } from "@nakafa/aksara-contracts/transport/request";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type BoundedPublicationRequest = PublicationRequest | StageOperation;
 type PublicationOperation = BoundedPublicationRequest["operation"];
@@ -81,7 +81,8 @@ export function validateRequestBytes(
   if (request.operation !== "stageGroup") {
     return Effect.void;
   }
-  const hasOversizedChild = request.requests.some(
+  const hasOversizedChild = Arr.some(
+    request.requests,
     (child) => !hasValidRequestBytes(child, encodedRequestBytes(child))
   );
   return hasOversizedChild

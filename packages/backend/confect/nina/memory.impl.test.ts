@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/nina/memory.spec";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
+import { Array as Arr } from "effect";
 
 const get = Ref.getFunctionReference(refs.public.nina.memory.get);
 const enable = Ref.getFunctionReference(refs.public.nina.memory.enable);
@@ -104,7 +105,7 @@ describe("Nina learner memory", () => {
     });
     for (let batch = 0; batch < MEMORY_FACTS / 3; batch += 1) {
       await f.curate({
-        remember: [0, 1, 2].map((item) => `Fakta ${batch}-${item}.`),
+        remember: Arr.map([0, 1, 2], (item) => `Fakta ${batch}-${item}.`),
       });
     }
     const view = await f.owner.query(get, {});

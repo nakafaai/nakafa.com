@@ -4,7 +4,7 @@ import { estimateIrtScore } from "@repo/backend/confect/tryouts/runtime/estimate
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type IrtScaleItem = Doc<"irtScaleItems">;
 
@@ -153,19 +153,22 @@ describe("tryouts/runtime/estimate", () => {
     () =>
       Effect.gen(function* () {
         const item = yield* Effect.promise(() => loadIrtItem());
-        const answers = [
-          { discrimination: 12.6, difficulty: 4.7, isCorrect: true },
-          { discrimination: 8.2, difficulty: 0.2, isCorrect: false },
-          { discrimination: 7.1, difficulty: -3.4, isCorrect: true },
-          { discrimination: 10.7, difficulty: 2.7, isCorrect: false },
-          { discrimination: 12.3, difficulty: 4.2, isCorrect: false },
-          { discrimination: 14.2, difficulty: -3, isCorrect: true },
-          { discrimination: 10.8, difficulty: 2, isCorrect: true },
-          { discrimination: 3.9, difficulty: 3, isCorrect: false },
-        ].map(({ isCorrect, ...parameters }) => ({
-          isCorrect,
-          item: { ...item, ...parameters },
-        }));
+        const answers = Arr.map(
+          [
+            { discrimination: 12.6, difficulty: 4.7, isCorrect: true },
+            { discrimination: 8.2, difficulty: 0.2, isCorrect: false },
+            { discrimination: 7.1, difficulty: -3.4, isCorrect: true },
+            { discrimination: 10.7, difficulty: 2.7, isCorrect: false },
+            { discrimination: 12.3, difficulty: 4.2, isCorrect: false },
+            { discrimination: 14.2, difficulty: -3, isCorrect: true },
+            { discrimination: 10.8, difficulty: 2, isCorrect: true },
+            { discrimination: 3.9, difficulty: 3, isCorrect: false },
+          ],
+          ({ isCorrect, ...parameters }) => ({
+            isCorrect,
+            item: { ...item, ...parameters },
+          })
+        );
         const baseline = yield* estimateIrtScore(answers);
         // These saturated items contribute no information before the final theta.
         // At that theta, individually finite terms overflow when accumulated.

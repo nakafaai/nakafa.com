@@ -5,7 +5,7 @@ import { triggers } from "@repo/backend/confect/functions";
 import { schoolActivitySchema } from "@repo/backend/confect/schools/schema";
 import { schoolClassesHandler } from "@repo/backend/confect/triggers/schools/classes";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Effect, Schema, Struct } from "effect";
+import { Array as Arr, Effect, pipe, Schema, Struct } from "effect";
 
 it("records a native class rename without inventing visibility changes", async () => {
   const { t, classId } = await createClassFixture();
@@ -28,9 +28,11 @@ it("records a native class rename without inventing visibility changes", async (
     ctx.db.query("schoolActivityLogs").take(20)
   );
   expect(
-    events
-      .filter((event) => event.action === "class_updated")
-      .map((event) => event.metadata)
+    pipe(
+      events,
+      Arr.filter((event) => event.action === "class_updated"),
+      Arr.map((event) => event.metadata)
+    )
   ).toEqual([
     {
       className: "Advanced Algebra",
@@ -112,8 +114,11 @@ it.effect.each(["archiver", "editor", "creator"] as const)(
           scheduled: await ctx.db.system.query("_scheduled_functions").take(5),
         }))
       );
-      const events = state.events.filter((event) => event.entityId === classId);
-      expect(events.map((event) => event.action)).toEqual([
+      const events = Arr.filter(
+        state.events,
+        (event) => event.entityId === classId
+      );
+      expect(Arr.map(events, (event) => event.action)).toEqual([
         "class_created",
         "class_archived",
         "class_updated",

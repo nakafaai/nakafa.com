@@ -5,6 +5,7 @@ import type {
 } from "@repo/contents/agent/schema/search";
 import { NAKAFA_AGENT_MAX_QUERIES } from "@repo/contents/agent/search";
 import type { ModelMessage } from "ai";
+import { Array as Arr } from "effect";
 
 /**
  * Detects search results that need a full content read before Nina answers.
@@ -21,7 +22,8 @@ function shouldReadAfterSearch(
     return false;
   }
 
-  return result.items.some(
+  return Arr.some(
+    result.items,
     (item) => item.section === "articles" || item.section === "material"
   );
 }
@@ -88,16 +90,16 @@ export function prepareTaxonomyAnswerStep<const ToolName extends string>(
     readonly toolCalls: readonly { readonly toolName: ToolName }[];
   }[]
 ) {
-  const hasTaxonomyToolCall = steps.some((step) =>
-    step.toolCalls.some((toolCall) => toolCall.toolName === "taxonomy")
+  const hasTaxonomyToolCall = Arr.some(steps, (step) =>
+    Arr.some(step.toolCalls, (toolCall) => toolCall.toolName === "taxonomy")
   );
 
   if (!hasTaxonomyToolCall) {
     return;
   }
 
-  const hasOtherToolCall = steps.some((step) =>
-    step.toolCalls.some((toolCall) => toolCall.toolName !== "taxonomy")
+  const hasOtherToolCall = Arr.some(steps, (step) =>
+    Arr.some(step.toolCalls, (toolCall) => toolCall.toolName !== "taxonomy")
   );
 
   if (hasOtherToolCall) {
@@ -147,8 +149,8 @@ function shouldAnswerFromNakafaEvidence<const ToolName extends string>(
     readonly toolCalls: readonly { readonly toolName: ToolName }[];
   }[]
 ) {
-  const searchCalls = steps.flatMap((step) =>
-    step.toolCalls.filter((toolCall) => toolCall.toolName === "search")
+  const searchCalls = Arr.flatMap(steps, (step) =>
+    Arr.filter(step.toolCalls, (toolCall) => toolCall.toolName === "search")
   );
 
   return searchCalls.length >= NAKAFA_AGENT_MAX_QUERIES;

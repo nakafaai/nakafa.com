@@ -62,7 +62,9 @@ describe("tryouts/sets/published", () => {
               },
             })
           );
-          expect(result.page.map(({ setKey }) => setKey)).toEqual(expected);
+          expect(Arr.map(result.page, ({ setKey }) => setKey)).toEqual(
+            expected
+          );
         }
         const anonymous = yield* Effect.promise(() =>
           t.query(api.tryouts.queries.sets.list, {
@@ -73,11 +75,14 @@ describe("tryouts/sets/published", () => {
             },
           })
         );
-        expect(anonymous.page.map(({ setKey }) => setKey)).toEqual(
+        expect(Arr.map(anonymous.page, ({ setKey }) => setKey)).toEqual(
           orders[0][2]
         );
         expect(
-          anonymous.page.every(({ publishedScore }) => publishedScore === null)
+          Arr.every(
+            anonymous.page,
+            ({ publishedScore }) => publishedScore === null
+          )
         ).toBe(true);
         const unauthenticated = yield* Effect.promise(() =>
           t.query(api.tryouts.queries.sets.list, {

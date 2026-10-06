@@ -10,7 +10,7 @@ import type {
 import { PublishedSetPaginationError } from "@repo/backend/confect/tryouts/sets/spec";
 import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
 import { toPublicPublishedSet } from "@repo/backend/content/tryout/published";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const SIGNED_CURSOR_PREFIX = "signed:";
 /** One authored set joined with the current user's optional progress. */
@@ -42,7 +42,7 @@ export const paginatePublishedSets = Effect.fn(
   // A growing first-page subscription never exceeds the verified whole-catalog ceiling.
   const size = Math.min(pagination.numItems, TRYOUT_CATALOG_LIMIT);
   const end = Math.min(offset + size, rows.length);
-  const page = rows.slice(offset, end).map(projectPublishedSet);
+  const page = Arr.map(rows.slice(offset, end), projectPublishedSet);
   const isDone = end >= rows.length;
   return {
     continueCursor: isDone ? "" : encodeCursor(snapshotId, revision, end),
@@ -56,7 +56,7 @@ const identifyRows = Effect.fn("tryouts.sets.identifyPublishedPage")(
     hashText(
       "the signed try-out pagination state",
       JSON.stringify(
-        rows.map(({ progress, set }) => ({
+        Arr.map(rows, ({ progress, set }) => ({
           attemptStatus: progress?.status ?? null,
           publishedScore: progress?.publishedScore ?? null,
           setIdentity: tryoutCatalogIdentity(set),

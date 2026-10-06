@@ -14,7 +14,7 @@ import { verifyArticle } from "@repo/backend/content/article/verify";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
-import { Effect } from "effect";
+import { Array as Arr, Effect, pipe } from "effect";
 
 const PARTNER_PAGE_LIMIT = 100;
 interface PartnerPageInput {
@@ -57,7 +57,7 @@ function matchesPrefix(contentKey: string, prefix: string) {
 
 /** Normalizes one partner prefix before using it in indexed range reads. */
 function normalizePrefix(prefix: string) {
-  return prefix.split("/").filter(Boolean).join("/");
+  return pipe(prefix.split("/"), Arr.filter(Boolean), Arr.join("/"));
 }
 
 /** Returns the segment-safe indexed range after one validated cursor. */
@@ -249,7 +249,7 @@ export const readPartnerApiPage = Effect.fn(
     activeReleaseId: active.releaseId,
     continueCursor,
     isDone,
-    page: selected.map((row) => ({
+    page: Arr.map(selected, (row) => ({
       appLocale: row.appLocale,
       publicPath: row.publicPath,
     })),

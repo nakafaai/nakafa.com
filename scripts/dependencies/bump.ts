@@ -1,4 +1,11 @@
-import { Config, Effect, Record as Rec, Result, Schema } from "effect";
+import {
+  Array as Arr,
+  Config,
+  Effect,
+  Record as Rec,
+  Result,
+  Schema,
+} from "effect";
 import { FetchHttpClient } from "effect/http";
 import { runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
@@ -141,7 +148,7 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
   }: BumpDependenciesOptions) {
     const preflightProblems = yield* inspectPolicy(root);
     if (preflightProblems.length > 0) {
-      yield* writeErrorMessage(`${preflightProblems.join("\n")}\n`);
+      yield* writeErrorMessage(`${Arr.join(preflightProblems, "\n")}\n`);
       return 1;
     }
 
@@ -197,7 +204,7 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
         problems.push(unresolved.failure.message);
       } else if (unresolved.success.length > 0) {
         problems.push(
-          `Routine dependencies remain outdated: ${unresolved.success.join(", ")}.`
+          `Routine dependencies remain outdated: ${Arr.join(unresolved.success, ", ")}.`
         );
       }
     } else {
@@ -205,7 +212,7 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
     }
 
     if (problems.length > 0) {
-      yield* writeErrorMessage(`${problems.join("\n")}\n`);
+      yield* writeErrorMessage(`${Arr.join(problems, "\n")}\n`);
       return 1;
     }
 

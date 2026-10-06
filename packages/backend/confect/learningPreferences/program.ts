@@ -13,7 +13,7 @@ import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { readVerifiedProgramCatalog } from "@repo/backend/content/program/catalog";
 import { programLayer } from "@repo/backend/content/program/confect";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Clock, Effect } from "effect";
+import { Array as Arr, Clock, Effect } from "effect";
 
 const CURRICULUM_PROGRAM_LIMIT = 50;
 const curriculumPreferenceIoFailedMessage =
@@ -93,7 +93,8 @@ export const listCurriculumPrograms = Effect.fn(
   "learningPreferences.listCurriculumPrograms"
 )(function* (locale: Locale) {
   const programs = yield* listSignedPrograms(locale);
-  const curricula = programs.filter(
+  const curricula = Arr.filter(
+    programs,
     (program) => program.kind === "school-curriculum"
   );
   if (curricula.length > CURRICULUM_PROGRAM_LIMIT) {

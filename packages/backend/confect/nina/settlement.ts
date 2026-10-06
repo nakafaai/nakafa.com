@@ -15,7 +15,7 @@ import {
   NinaSettledTurn,
   NinaTurnError,
 } from "@repo/backend/confect/nina/turns.spec";
-import { Clock, Duration, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
 
 const settlementFailure = () =>
   new NinaTurnError({
@@ -51,7 +51,8 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
     final.finishReason === "stop" &&
     (typeof final.message.content === "string"
       ? final.message.content.trim().length > 0
-      : final.message.content.some(
+      : Arr.some(
+          final.message.content,
           (part) => part.type === "text" && part.text.trim().length > 0
         ));
   const status = completed ? "complete" : interrupted;
@@ -102,8 +103,16 @@ export const settleTurn = Effect.fn("nina.settlement")(function* (
       .pipe(Effect.orDie);
   }
   const finishedAt = yield* Clock.currentTimeMillis;
-  const input = turn.usage.reduce((total, usage) => total + usage.input, 0);
-  const output = turn.usage.reduce((total, usage) => total + usage.output, 0);
+  const input = Arr.reduce(
+    turn.usage,
+    0,
+    (total, usage) => total + usage.input
+  );
+  const output = Arr.reduce(
+    turn.usage,
+    0,
+    (total, usage) => total + usage.output
+  );
   const settled = yield* Schema.decodeEffect(NinaSettledTurn)({
     ...turn,
     phase: "settled",

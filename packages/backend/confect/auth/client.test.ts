@@ -6,6 +6,7 @@ import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { getFunctionName, makeFunctionReference } from "convex/server";
+import { Array as Arr, pipe } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
@@ -25,24 +26,27 @@ function encodeGoogleTokenPart(value: object) {
 }
 function createGoogleIdToken(suffix: string) {
   const issuedAt = Math.floor(NOW / 1000);
-  return [
-    encodeGoogleTokenPart({
-      alg: "none",
-      typ: "JWT",
-    }),
-    encodeGoogleTokenPart({
-      aud: "test-google-client",
-      email: `${suffix}@example.com`,
-      email_verified: true,
-      exp: issuedAt + 3600,
-      iat: issuedAt,
-      iss: "https://accounts.google.com",
-      name: `Synthetic ${suffix}`,
-      picture: `https://example.com/${suffix}.png`,
-      sub: `google-${suffix}`,
-    }),
-    "test-signature",
-  ].join(".");
+  return Arr.join(
+    [
+      encodeGoogleTokenPart({
+        alg: "none",
+        typ: "JWT",
+      }),
+      encodeGoogleTokenPart({
+        aud: "test-google-client",
+        email: `${suffix}@example.com`,
+        email_verified: true,
+        exp: issuedAt + 3600,
+        iat: issuedAt,
+        iss: "https://accounts.google.com",
+        name: `Synthetic ${suffix}`,
+        picture: `https://example.com/${suffix}.png`,
+        sub: `google-${suffix}`,
+      }),
+      "test-signature",
+    ],
+    "."
+  );
 }
 async function signUpGoogleLearner(
   test: ReturnType<typeof createConvexTestWithBetterAuth>,
@@ -83,10 +87,11 @@ async function signUpGoogleLearner(
   if (!state) {
     throw new Error("Expected Google authorization state.");
   }
-  const cookie = signInResponse.headers
-    .getSetCookie()
-    .map((value) => value.split(";", 1)[0])
-    .join("; ");
+  const cookie = pipe(
+    signInResponse.headers.getSetCookie(),
+    Arr.map((value) => value.split(";", 1)[0]),
+    Arr.join("; ")
+  );
   const response = await test.fetch(
     `/api/auth/callback/google?${new URLSearchParams({
       code: "synthetic-authorization-code",
@@ -138,7 +143,7 @@ describe("auth/client", () => {
       image: "https://example.com/learner.png",
       name: "Synthetic learner",
     });
-    const jobNames = stored.jobs.map(({ name }) => name);
+    const jobNames = Arr.map(stored.jobs, ({ name }) => name);
     expect(jobNames).toEqual([
       getFunctionName(internal.customers.actions.internal.syncCustomer),
     ]);
@@ -232,7 +237,8 @@ describe("auth/client", () => {
     });
     expect(stored.user).not.toHaveProperty("image");
     expect(
-      stored.jobs.filter(
+      Arr.filter(
+        stored.jobs,
         ({ name }) =>
           name ===
           getFunctionName(internal.customers.actions.internal.syncCustomer)
@@ -355,7 +361,8 @@ describe("auth/client", () => {
       });
     });
     const cleanupJobs = await test.query(async (ctx) =>
-      (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+      Arr.filter(
+        await ctx.db.system.query("_scheduled_functions").collect(),
         ({ name }) =>
           name === getFunctionName(finalizeDeletedUserCleanupReference)
       )

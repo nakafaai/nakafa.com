@@ -32,7 +32,7 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { encodeProjectionJson } from "@repo/backend/confect/contentRelease/wire";
 import { getConvexSize } from "convex/values";
-import { Clock, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Effect, Schema } from "effect";
 
 /** Decodes one bounded projection batch through the shared wire contract. */
 const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
@@ -146,13 +146,14 @@ export const stageProjectionProgram = Effect.fn(
   }
   const batch = yield* decodeBatch(releaseId, batchIndex, sources);
   const projections: readonly ContentProjection[] = batch.projections;
-  const entries = projections.map((projection) => ({
+  const entries = Arr.map(projections, (projection) => ({
     projection,
     projectionJson: encodeProjectionJson(projection),
   }));
-  const values = entries.map(({ projectionJson }) => projectionJson);
+  const values = Arr.map(entries, ({ projectionJson }) => projectionJson);
   const identities = new Set(
-    projections.map(
+    Arr.map(
+      projections,
       (projection) =>
         `${projection.contentKey}\0${projectionArtifactLocale(projection)}`
     )
@@ -180,7 +181,7 @@ export const stageProjectionProgram = Effect.fn(
     yield* validateStoredBatch(
       existing.length,
       values.length,
-      existing.map(({ projectionBatchHash }) => projectionBatchHash),
+      Arr.map(existing, ({ projectionBatchHash }) => projectionBatchHash),
       batchHash,
       releaseId,
       batchIndex

@@ -6,7 +6,7 @@ import {
 import { mcpTransportErrorResponse } from "@repo/backend/confect/routes/agent/mcp/response";
 import { hasValidEdgeSecret } from "@repo/backend/confect/routes/agent/security";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { Config, Effect, Option } from "effect";
+import { Array as Arr, Config, Effect, Option } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 const MAX_CONFIGURED_ORIGINS = 16;
@@ -63,10 +63,10 @@ const readTrustedOrigins = Effect.fn("agent.mcp.readTrustedOrigins")(
     if (configured === undefined) {
       return allowed;
     }
-    const entries = configured.split(",").map((entry) => entry.trim());
+    const entries = Arr.map(configured.split(","), (entry) => entry.trim());
     if (
       entries.length > MAX_CONFIGURED_ORIGINS ||
-      entries.some((entry) => entry.length === 0)
+      Arr.some(entries, (entry) => entry.length === 0)
     ) {
       return yield* invalidOrigins();
     }
