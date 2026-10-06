@@ -65,7 +65,9 @@ describe("renderer manifest", () => {
           });
           const expectedNames = [...new Set(requiredComponents)].sort();
 
-          expect(Rec.keys(components).sort()).toEqual(expectedNames);
+          expect(Rec.keys<string, unknown>(components).sort()).toEqual(
+            expectedNames
+          );
         }
       }),
     120_000

@@ -60,7 +60,7 @@ describe("renderer components", () => {
         });
 
         expect(components).toMatchObject(semanticMdxComponents);
-        expect(Rec.keys(components).sort()).toEqual(
+        expect(Rec.keys<string, unknown>(components).sort()).toEqual(
           [...Rec.keys(semanticMdxComponents), "InlineMath"].sort()
         );
         expect(components).not.toHaveProperty("BlockMath");
@@ -186,7 +186,7 @@ describe("renderer components", () => {
         requiredComponents: ["Triangle"],
       });
 
-      expect(Rec.keys(components).sort()).toEqual(
+      expect(Rec.keys<string, unknown>(components).sort()).toEqual(
         [...Rec.keys(semanticMdxComponents), "Triangle"].sort()
       );
       expect(components).not.toHaveProperty("UnitCircle");

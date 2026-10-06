@@ -242,7 +242,9 @@ const verifyContributorPayloads = Effect.fn(
           links.map((link) => link.getAttribute("href")).sort()
         )
     );
-    const expectedSocialLinks = Rec.values(contributor.social ?? {})
+    const expectedSocialLinks = Rec.values<string, string | undefined>(
+      contributor.social ?? {}
+    )
       .filter((href) => href !== undefined)
       .sort();
     yield* Effect.sync(() =>

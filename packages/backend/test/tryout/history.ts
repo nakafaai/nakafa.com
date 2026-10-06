@@ -62,7 +62,7 @@ async function retainChoicesSnapshot(
     const row = { ...identity, choices: response.options };
     const canonical = JSON.stringify(
       Rec.fromEntries(
-        Rec.toEntries(row).sort(([left], [right]) => {
+        Rec.toEntries<string, unknown>(row).sort(([left], [right]) => {
           if (left < right) {
             return -1;
           }
