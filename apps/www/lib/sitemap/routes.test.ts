@@ -388,6 +388,22 @@ describe("sitemap route pages", () => {
       })
   );
 
+  it.effect.each(["tryout_en_0", "page_en"])(
+    "rejects a missing %s read across publication releases",
+    (pageId) =>
+      Effect.gen(function* () {
+        activeMocks.readActiveContentIdentity
+          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-before" }))
+          .mockReturnValueOnce(Effect.succeed({ releaseId: "release-after" }));
+
+        expect(yield* readFailure(pageId)).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-after",
+          expectedReleaseId: "release-before",
+        });
+      })
+  );
+
   it.effect("rejects partitions without an active publication", () =>
     Effect.gen(function* () {
       activeMocks.readActiveContentIdentity.mockReturnValue(
