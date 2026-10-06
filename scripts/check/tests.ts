@@ -94,9 +94,12 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     const sourceViolations = yield* inspectSources(sources);
     const relative = (files: readonly string[]) =>
       Arr.map(files, (file) => path.relative(root, file));
+    // The policy reads repository paths, which use "/" on every platform.
     const configs = yield* Effect.forEach(
       Arr.filter(
-        relative(Arr.appendAll(workspaces, scripts)),
+        Arr.map(relative(Arr.appendAll(workspaces, scripts)), (file) =>
+          Arr.join(Str.split(file, path.sep), "/")
+        ),
         isCompilerConfig
       ),
       (file) =>

@@ -9,6 +9,7 @@
 // Environment variables loaded via Node.js --env-file flag.
 import { Effect } from "effect";
 import { runIndexNow } from "@/scripts/indexing/indexnow/run";
+import { IndexingLogger } from "@/scripts/indexing/logger";
 
 Effect.runPromise(
   runIndexNow().pipe(
@@ -20,6 +21,7 @@ Effect.runPromise(
           })
         )
       )
-    )
+    ),
+    Effect.provide(IndexingLogger)
   )
 );

@@ -15,6 +15,7 @@
 // Environment variables loaded via Node.js --env-file flag.
 import { Effect } from "effect";
 import { runGoogleIndexing } from "@/scripts/indexing/google/run";
+import { IndexingLogger } from "@/scripts/indexing/logger";
 
 Effect.runPromise(
   runGoogleIndexing().pipe(
@@ -26,6 +27,7 @@ Effect.runPromise(
           })
         )
       )
-    )
+    ),
+    Effect.provide(IndexingLogger)
   )
 );
