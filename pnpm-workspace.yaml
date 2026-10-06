@@ -43,16 +43,16 @@ update:
     - vitest
 
 catalog:
-  '@ai-sdk/gateway': 4.0.103
-  '@ai-sdk/google': 4.0.87
+  '@ai-sdk/gateway': 4.0.104
+  '@ai-sdk/google': 4.0.88
   '@effect/platform-node': 4.0.1
   '@effect/vitest': 4.0.1
-  '@vitest/coverage-istanbul': 5.0.2
-  '@vitest/ui': 5.0.2
-  ai: 7.0.127
+  '@vitest/coverage-istanbul': 5.0.3
+  '@vitest/ui': 5.0.3
+  ai: 7.0.128
   effect: 4.0.1
   typescript: 7.0.2
-  vitest: 5.0.2
+  vitest: 5.0.3
 
 overrides:
   "react": "19.2.8"
@@ -63,22 +63,26 @@ overrides:
   "@effect/ai-openrouter": "4.0.1"
   "@effect/platform-node": "4.0.1"
   "@effect/platform-node-shared": "4.0.1"
-  "@react-email/ui@6.11.0>next": "16.3.7"
+  "@react-email/ui@6.11.0>next": "16.3.8"
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
-  "@scalar/json-magic@0.15.3>undici": "7.29.1"
   "auth@1.6.33>@babel/core": "7.29.7"
   "axios": "1.20.0"
-  "convex-helpers": "0.1.124"
+  "convex-helpers": "0.1.126"
   "fast-uri": "3.1.8"
   "ip-address": "10.7.2"
   "lodash": "4.18.1"
   "mermaid@11.17.2>dompurify": "^3.4.16"
-  "next@16.3.7>postcss": "8.5.28"
+  "mermaid@11.17.2>katex": "0.19.0"
+  "micromark-extension-math@3.1.0>katex": "0.19.0"
+  "next@16.3.8>postcss": "8.5.29"
+  "solid-js@1.9.15>seroval": "1.6.8"
+  "solid-js@1.9.15>seroval-plugins": "1.6.8"
+  "source-map-js": "1.2.2"
 
 # The tested test-utils-only exception is recorded in scripts/dependencies/policy.ts.
 peerDependencyRules:
   allowedVersions:
-    "better-auth@1.6.33>vitest": "5.0.2"
+    "better-auth@1.6.33>vitest": "5.0.3"
 
 # The Next integration imports next/headers.js but omits its framework peer.
 # Resolve it from the consuming app so request storage has one identity.
