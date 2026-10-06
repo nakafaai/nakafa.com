@@ -38,6 +38,8 @@ Object!.keys(value);
 (Array as typeof Array).isArray(value);
 (globalThis).Object.keys(value);
 (Object satisfies unknown).keys(value);
+global.Object.keys(value);
+global.Array.isArray(value);
 `),
         [
           "1 object-helper",
@@ -58,6 +60,8 @@ Object!.keys(value);
           "16 array-check",
           "17 object-helper",
           "18 object-helper",
+          "19 object-helper",
+          "20 array-check",
         ]
       );
     })

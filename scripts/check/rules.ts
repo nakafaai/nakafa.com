@@ -64,6 +64,8 @@ const CONFIGURATION_FILE_PATTERN = /(?:^|\/)[^/]+\.config\.[cm]?tsx?$/u;
 /** The Vitest configuration API, which shared configuration modules import. */
 const CONFIGURATION_MODULE_PATTERN = /^vitest\/config$/u;
 const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;
+/** The browser test tree, whose support modules hold functions the tests run in the page. */
+const E2E_PATTERN = /(?:^|\/)e2e\//u;
 /** Playwright methods that serialize a function and run it in the browser page. */
 const PAGE_METHODS = HashSet.make(
   "$$eval",
@@ -168,16 +170,23 @@ function pageArgument(node: Node) {
   return node.arguments[node.expression.name.text.startsWith("$") ? 1 : 0];
 }
 
-/** Returns the names of the functions a module passes to the browser page by reference. */
-function pageFunctionNames(nodes: readonly Node[]) {
-  return HashSet.fromIterable(
-    Arr.filterMap(nodes, (node) => {
-      const argument = pageArgument(node);
-      return argument !== undefined && isIdentifier(argument)
-        ? Result.succeed(argument.text)
-        : Result.failVoid;
-    })
-  );
+/**
+ * Returns the names of the functions a Playwright module passes to the browser
+ * page by reference, such as `page.addInitScript(countFrames)`. The function
+ * may be declared in the module or imported from another browser test module.
+ */
+export function pageFunctionNames(
+  sourceFile: SourceFile,
+  nodes: readonly Node[]
+) {
+  return imports(sourceFile, PLAYWRIGHT_PATTERN)
+    ? Arr.filterMap(nodes, (node) => {
+        const argument = pageArgument(node);
+        return argument !== undefined && isIdentifier(argument)
+          ? Result.succeed(argument.text)
+          : Result.failVoid;
+      })
+    : [];
 }
 
 /**
@@ -208,17 +217,22 @@ function runsInPage(node: Node, names: HashSet.HashSet<string>): boolean {
 }
 
 /**
- * Returns the nodes of a module that run where its imports exist. In a
- * Playwright module, a function passed to `page.evaluate`, `addInitScript`,
- * or one of their siblings is serialized into the browser page. No import
- * exists there, so Effect cannot replace a platform global inside it.
+ * Returns the nodes of a module that run where its imports exist. A function
+ * that Playwright serializes into the browser page runs without any import,
+ * so Effect cannot replace a platform global inside it. That covers a function
+ * written in a `page.evaluate`, `addInitScript`, or sibling call, and, in a
+ * Playwright or `e2e` module, one declared under a name in `names`, the names
+ * that Playwright modules pass to such calls by reference.
  */
-export function outsidePage(sourceFile: SourceFile, nodes: readonly Node[]) {
-  if (!imports(sourceFile, PLAYWRIGHT_PATTERN)) {
-    return nodes;
-  }
-  const names = pageFunctionNames(nodes);
-  return Arr.filter(nodes, (node) => !runsInPage(node, names));
+export function outsidePage(
+  file: string,
+  sourceFile: SourceFile,
+  nodes: readonly Node[],
+  names: HashSet.HashSet<string>
+) {
+  return imports(sourceFile, PLAYWRIGHT_PATTERN) || E2E_PATTERN.test(file)
+    ? Arr.filter(nodes, (node) => !runsInPage(node, names))
+    : nodes;
 }
 
 /** Whether `rule` inspects the authored module `file`. */

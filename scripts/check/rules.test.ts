@@ -165,10 +165,18 @@ function countMain(node) {
 let later;
 later = () => Object.keys(routes);
 page.evaluate(later);
+page.addInitScript(countShared);
 export default function () {
   return Object.keys(routes);
 }
 const { length } = [() => Object.keys(routes)];
+`;
+        const shared = `export function countShared() {
+  return Object.keys(window.frames);
+}
+export function nodeHelper() {
+  return Object.keys(routes);
+}
 `;
         assert.deepStrictEqual(
           yield* findings([
@@ -177,12 +185,17 @@ const { length } = [() => Object.keys(routes)];
               sourceText: `import { test } from "@playwright/test";\n${page}`,
             },
             { file: "apps/www/lib/named.ts", sourceText: page },
+            { file: "apps/www/e2e/support/frames.ts", sourceText: shared },
+            { file: "apps/www/lib/frames.ts", sourceText: shared },
           ]),
           [
             "apps/www/e2e/named.browser.ts object-helper",
             "apps/www/e2e/named.browser.ts object-helper",
             "apps/www/e2e/named.browser.ts object-helper",
             "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/e2e/support/frames.ts object-helper",
+            "apps/www/lib/frames.ts object-helper",
+            "apps/www/lib/frames.ts object-helper",
             "apps/www/lib/named.ts object-helper",
             "apps/www/lib/named.ts object-helper",
             "apps/www/lib/named.ts array-check",

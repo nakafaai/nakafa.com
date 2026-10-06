@@ -1,6 +1,7 @@
 import {
   Array as Arr,
   Effect,
+  HashSet,
   Order,
   Record as Rec,
   Result,
@@ -15,7 +16,13 @@ import {
 import type { API } from "typescript/unstable/sync";
 import { globalCandidates } from "#scripts/check/globals";
 import { nativeCandidates } from "#scripts/check/native";
-import { covers, outsidePage, RULES, Rule } from "#scripts/check/rules";
+import {
+  covers,
+  outsidePage,
+  pageFunctionNames,
+  RULES,
+  Rule,
+} from "#scripts/check/rules";
 import { effectRunnerViolation } from "#scripts/check/runtime";
 import {
   descendants,
@@ -163,11 +170,19 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
     bind,
     modules,
   }: Effect.Success<ReturnType<typeof parseSources>>) {
-    const candidates = Arr.flatMap(modules, ({ file, sourceFile }) => {
-      if (isGenerated(sourceFile)) {
-        return [];
-      }
-      const nodes = outsidePage(sourceFile, descendants(sourceFile));
+    const authored = Arr.filterMap(modules, ({ file, sourceFile }) =>
+      isGenerated(sourceFile)
+        ? Result.failVoid
+        : Result.succeed({ file, nodes: descendants(sourceFile), sourceFile })
+    );
+    const pageNames = HashSet.fromIterable(
+      Arr.flatMap(authored, ({ nodes, sourceFile }) =>
+        pageFunctionNames(sourceFile, nodes)
+      )
+    );
+    const candidates = Arr.flatMap(authored, (module) => {
+      const { file, sourceFile } = module;
+      const nodes = outsidePage(file, sourceFile, module.nodes, pageNames);
       return Arr.filterMap(
         Arr.flatten([
           globalCandidates(sourceFile, nodes),

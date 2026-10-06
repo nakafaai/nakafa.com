@@ -28,7 +28,7 @@ const MEMBERS: Readonly<Record<string, Readonly<Record<string, RuleId>>>> = {
 
 const GLOBALS = HashSet.fromIterable(Rec.keys(MEMBERS));
 /** Global objects whose members are the same platform globals. */
-const GLOBAL_OBJECTS = HashSet.make("globalThis", "self", "window");
+const GLOBAL_OBJECTS = HashSet.make("global", "globalThis", "self", "window");
 
 /** Whether a node only wraps an expression: parentheses, a non-null assertion, or a type assertion. */
 function isWrapper(node: Node) {
