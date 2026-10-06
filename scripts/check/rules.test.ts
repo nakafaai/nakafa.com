@@ -165,7 +165,10 @@ function countMain(node) {
 let later;
 later = () => Object.keys(routes);
 page.evaluate(later);
-page.addInitScript(countShared);
+page.addInitScript(count);
+page.evaluate(upShared);
+page.evaluate(dotShared);
+page.evaluate(external);
 export default function () {
   return Object.keys(routes);
 }
@@ -177,24 +180,43 @@ const { length } = [() => Object.keys(routes)];
 export function nodeHelper() {
   return Object.keys(routes);
 }
+export function upShared() {
+  return Array.isArray(window.frames);
+}
+export const dotShared = () => Object.values(window.frames);
+`;
+        const imported = `import { test } from "@playwright/test";
+import { countShared as count } from "@/e2e/support/frames";
+import { upShared } from "../e2e/./support/frames";
+import { dotShared } from "./support/frames";
+import { external } from "some-package";
+import fallback, * as everything from "./support/frames";
 `;
         assert.deepStrictEqual(
           yield* findings([
             {
               file: "apps/www/e2e/named.browser.ts",
-              sourceText: `import { test } from "@playwright/test";\n${page}`,
+              sourceText: `${imported}${page}`,
             },
             { file: "apps/www/lib/named.ts", sourceText: page },
             { file: "apps/www/e2e/support/frames.ts", sourceText: shared },
             { file: "apps/www/lib/frames.ts", sourceText: shared },
+            {
+              file: "apps/www/e2e/other.ts",
+              sourceText:
+                "export function count() {\n  return Object.keys(routes);\n}\n",
+            },
           ]),
           [
             "apps/www/e2e/named.browser.ts object-helper",
             "apps/www/e2e/named.browser.ts object-helper",
             "apps/www/e2e/named.browser.ts object-helper",
             "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/e2e/other.ts object-helper",
             "apps/www/e2e/support/frames.ts object-helper",
             "apps/www/lib/frames.ts object-helper",
+            "apps/www/lib/frames.ts object-helper",
+            "apps/www/lib/frames.ts array-check",
             "apps/www/lib/frames.ts object-helper",
             "apps/www/lib/named.ts object-helper",
             "apps/www/lib/named.ts object-helper",

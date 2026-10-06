@@ -19,7 +19,7 @@ import { nativeCandidates } from "#scripts/check/native";
 import {
   covers,
   outsidePage,
-  pageFunctionNames,
+  pageFunctionKeys,
   RULES,
   Rule,
 } from "#scripts/check/rules";
@@ -175,14 +175,14 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
         ? Result.failVoid
         : Result.succeed({ file, nodes: descendants(sourceFile), sourceFile })
     );
-    const pageNames = HashSet.fromIterable(
-      Arr.flatMap(authored, ({ nodes, sourceFile }) =>
-        pageFunctionNames(sourceFile, nodes)
+    const pageKeys = HashSet.fromIterable(
+      Arr.flatMap(authored, ({ file, nodes, sourceFile }) =>
+        pageFunctionKeys(file, sourceFile, nodes)
       )
     );
     const candidates = Arr.flatMap(authored, (module) => {
       const { file, sourceFile } = module;
-      const nodes = outsidePage(file, sourceFile, module.nodes, pageNames);
+      const nodes = outsidePage(file, sourceFile, module.nodes, pageKeys);
       return Arr.filterMap(
         Arr.flatten([
           globalCandidates(sourceFile, nodes),

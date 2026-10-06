@@ -64,8 +64,7 @@ const CONFIGURATION_FILE_PATTERN = /(?:^|\/)[^/]+\.config\.[cm]?tsx?$/u;
 /** The Vitest configuration API, which shared configuration modules import. */
 const CONFIGURATION_MODULE_PATTERN = /^vitest\/config$/u;
 const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;
-/** The browser test tree, whose support modules hold functions the tests run in the page. */
-const E2E_PATTERN = /(?:^|\/)e2e\//u;
+const MODULE_EXTENSION_PATTERN = /\.tsx?$/u;
 /** Playwright methods that serialize a function and run it in the browser page. */
 const PAGE_METHODS = HashSet.make(
   "$$eval",
@@ -170,12 +169,94 @@ function pageArgument(node: Node) {
   return node.arguments[node.expression.name.text.startsWith("$") ? 1 : 0];
 }
 
+/** Names one function by the module that declares it, such as `apps/www/e2e/support/canvas#countFrames`. */
+function functionKey(module: string, name: string) {
+  return `${module}#${name}`;
+}
+
+/** Returns a module's path without its extension, the form an import specifier resolves to. */
+function moduleKey(file: string) {
+  return file.replace(MODULE_EXTENSION_PATTERN, "");
+}
+
+/** Joins path segments, resolving `.` and `..`. */
+function joinSegments(segments: readonly string[]) {
+  return Arr.join(
+    Arr.reduce(segments, Arr.empty<string>(), (path, segment) => {
+      if (segment === "." || segment === "") {
+        return path;
+      }
+      return segment === ".."
+        ? Arr.dropRight(path, 1)
+        : Arr.append(path, segment);
+    }),
+    "/"
+  );
+}
+
 /**
- * Returns the names of the functions a Playwright module passes to the browser
- * page by reference, such as `page.addInitScript(countFrames)`. The function
- * may be declared in the module or imported from another browser test module.
+ * Resolves a repository import specifier from `file` to a module key: the app
+ * alias `@/` from the app's root (its first two path segments), and a relative
+ * path from the file's folder.
+ * A package specifier names no repository module.
  */
-export function pageFunctionNames(
+function resolveSpecifier(file: string, specifier: string) {
+  if (specifier.startsWith("@/")) {
+    return Result.succeed(
+      joinSegments([...Arr.take(file.split("/"), 2), specifier.slice(2)])
+    );
+  }
+  return specifier.startsWith(".")
+    ? Result.succeed(
+        joinSegments([
+          ...Arr.dropRight(file.split("/"), 1),
+          ...specifier.split("/"),
+        ])
+      )
+    : Result.failVoid;
+}
+
+/**
+ * Returns the function a local name stands for: the module that declares it
+ * and its declared name. A named import resolves to the exporting module and
+ * the exported name, so an aliased import still names the original function.
+ */
+function declaredFunction(file: string, sourceFile: SourceFile, local: string) {
+  for (const statement of sourceFile.statements) {
+    if (
+      !(
+        isImportDeclaration(statement) &&
+        isStringLiteral(statement.moduleSpecifier)
+      )
+    ) {
+      continue;
+    }
+    const bindings = statement.importClause?.namedBindings;
+    if (bindings === undefined || !isNamedImports(bindings)) {
+      continue;
+    }
+    const element = Arr.findFirst(
+      bindings.elements,
+      (candidate) => candidate.name.text === local
+    );
+    if (element._tag === "Some") {
+      const name = element.value.propertyName?.text ?? local;
+      return Result.map(
+        resolveSpecifier(file, statement.moduleSpecifier.text),
+        (module) => functionKey(module, name)
+      );
+    }
+  }
+  return Result.succeed(functionKey(moduleKey(file), local));
+}
+
+/**
+ * Returns the functions a Playwright module passes to the browser page by
+ * reference, such as `page.addInitScript(countFrames)`, each named by the
+ * module that declares it.
+ */
+export function pageFunctionKeys(
+  file: string,
   sourceFile: SourceFile,
   nodes: readonly Node[]
 ) {
@@ -183,7 +264,7 @@ export function pageFunctionNames(
     ? Arr.filterMap(nodes, (node) => {
         const argument = pageArgument(node);
         return argument !== undefined && isIdentifier(argument)
-          ? Result.succeed(argument.text)
+          ? declaredFunction(file, sourceFile, argument.text)
           : Result.failVoid;
       })
     : [];
@@ -191,48 +272,60 @@ export function pageFunctionNames(
 
 /**
  * Whether a node is a function that runs in the browser page: one written in
- * the Playwright call, or one the module declares under a name it passes to
- * such a call.
+ * a Playwright call of a Playwright module, or one this module declares under
+ * a name that satisfies `passed`.
  */
-function isPageFunction(node: Node, names: HashSet.HashSet<string>) {
+function isPageFunction(
+  node: Node,
+  inline: boolean,
+  passed: (name: string) => boolean
+) {
   if (isFunctionDeclaration(node)) {
-    return node.name !== undefined && HashSet.has(names, node.name.text);
+    return node.name !== undefined && passed(node.name.text);
   }
   if (!(isArrowFunction(node) || isFunctionExpression(node))) {
     return false;
   }
   const { parent } = node;
   if (isVariableDeclaration(parent)) {
-    return isIdentifier(parent.name) && HashSet.has(names, parent.name.text);
+    return isIdentifier(parent.name) && passed(parent.name.text);
   }
-  return pageArgument(parent) === node;
+  return inline && pageArgument(parent) === node;
 }
 
 /** Whether a node sits inside a function that runs in the browser page. */
-function runsInPage(node: Node, names: HashSet.HashSet<string>): boolean {
+function runsInPage(
+  node: Node,
+  inline: boolean,
+  passed: (name: string) => boolean
+): boolean {
   if (isSourceFile(node)) {
     return false;
   }
-  return isPageFunction(node, names) || runsInPage(node.parent, names);
+  return (
+    isPageFunction(node, inline, passed) ||
+    runsInPage(node.parent, inline, passed)
+  );
 }
 
 /**
  * Returns the nodes of a module that run where its imports exist. A function
  * that Playwright serializes into the browser page runs without any import,
  * so Effect cannot replace a platform global inside it. That covers a function
- * written in a `page.evaluate`, `addInitScript`, or sibling call, and, in a
- * Playwright or `e2e` module, one declared under a name in `names`, the names
- * that Playwright modules pass to such calls by reference.
+ * written in a `page.evaluate`, `addInitScript`, or sibling call of a
+ * Playwright module, and a function this module declares that some Playwright
+ * module passes to such a call by reference (`keys`, from `pageFunctionKeys`).
  */
 export function outsidePage(
   file: string,
   sourceFile: SourceFile,
   nodes: readonly Node[],
-  names: HashSet.HashSet<string>
+  keys: HashSet.HashSet<string>
 ) {
-  return imports(sourceFile, PLAYWRIGHT_PATTERN) || E2E_PATTERN.test(file)
-    ? Arr.filter(nodes, (node) => !runsInPage(node, names))
-    : nodes;
+  const inline = imports(sourceFile, PLAYWRIGHT_PATTERN);
+  const module = moduleKey(file);
+  const passed = (name: string) => HashSet.has(keys, functionKey(module, name));
+  return Arr.filter(nodes, (node) => !runsInPage(node, inline, passed));
 }
 
 /** Whether `rule` inspects the authored module `file`. */
