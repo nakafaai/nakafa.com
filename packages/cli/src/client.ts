@@ -8,10 +8,12 @@ import {
   ResponseDecodeError,
 } from "#cli/error";
 
-interface ApiRequest {
-  readonly apiBase: string;
-  readonly path: string;
-}
+const ApiRequestSchema = Schema.Struct({
+  apiBase: Schema.String,
+  path: Schema.String,
+});
+
+type ApiRequest = typeof ApiRequestSchema.Type;
 
 /** Calls one public Nakafa endpoint and preserves typed Problem Details. */
 export const requestNakafaApi = Effect.fn("NakafaCli.requestApi")(function* (
