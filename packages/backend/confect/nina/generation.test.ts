@@ -166,6 +166,33 @@ describe("Nina generation through the real Agent component", () => {
     expect(provider.languageModel).not.toHaveBeenCalled();
   });
 
+  it.effect("records the gateway cost a call reports on its usage row", () =>
+    Effect.gen(function* () {
+      provider.languageModel.mockReturnValue(
+        new MockLanguageModelV4({
+          doStream: ninaStream([
+            { type: "stream-start", warnings: [] },
+            { type: "text-start", id: "answer" },
+            { type: "text-delta", id: "answer", delta: "A recorded answer." },
+            { type: "text-end", id: "answer" },
+            {
+              type: "finish",
+              finishReason: { unified: "stop", raw: "stop" },
+              usage: ninaUsage,
+              providerMetadata: { convexGateway: { cost: 0.25 } },
+            },
+          ]),
+        })
+      );
+      const f = yield* Effect.promise(() => fixture());
+      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+      const state = yield* Effect.promise(f.inspect);
+      expect(state.turn?.usage).toEqual([
+        expect.objectContaining({ agent: "nina", calls: 1, cost: 0.25 }),
+      ]);
+    })
+  );
+
   it.effect("refunds a failure before the Agent stream starts", () =>
     Effect.gen(function* () {
       provider.languageModel.mockReturnValue(ninaModel());
