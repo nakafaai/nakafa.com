@@ -60,6 +60,9 @@ describe("shared Next environment keys", () => {
     });
 
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "");
-    expect(appUrlKeys).toThrow();
+    expect(appUrlKeys).toThrow("NEXT_PUBLIC_APP_URL is required.");
+
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", undefined);
+    expect(appUrlKeys).toThrow("NEXT_PUBLIC_APP_URL is required.");
   });
 });

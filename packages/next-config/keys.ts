@@ -55,6 +55,9 @@ export const appUrlKeys = () =>
     client: {
       NEXT_PUBLIC_APP_URL: requiredStringSchema,
     },
+    onValidationError: () => {
+      throw new Error("NEXT_PUBLIC_APP_URL is required.");
+    },
     runtimeEnv: {
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     },

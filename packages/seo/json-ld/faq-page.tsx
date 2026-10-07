@@ -5,7 +5,7 @@ import { JsonLd } from ".";
 const FaqItemSchema = Schema.Struct({
   acceptedAnswer: Schema.Struct({
     "@type": Schema.Literal("Answer"),
-    text: Schema.String,
+    text: Schema.optionalKey(Schema.String),
   }),
   name: Schema.String,
 });

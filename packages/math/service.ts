@@ -101,6 +101,8 @@ export class MathService extends Context.Service<
 }) {
   static readonly layer = Layer.effect(this, this.make);
 }
+/** The shape that MathService provides, derived from its class-style key. */
+export type MathRuntime = Context.Service.Shape<typeof MathService>;
 /** Reads math service JSON errors without leaking framework HTML pages into chat. */
 const readResponseError = Effect.fn("Math.readResponseError")(function* (
   response: HttpClientResponse.HttpClientResponse
