@@ -2,7 +2,13 @@
 
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import type {
+  ActivateRecoveryRequest,
+  ActivateReleaseRequest,
+  PublicationAbortRequest,
+  PublicationAcceptRequest,
+  VerifyReleaseRequest,
+} from "@nakafa/aksara-contracts/transport/request";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   MutationRunner,
@@ -20,23 +26,16 @@ import {
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
 import { Effect } from "effect";
 
-type LifecycleRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation:
-      | "accept"
-      | "abort"
-      | "activate"
-      | "activateRecovery"
-      | "verify";
-  }
->;
-type SignedRequest = Exclude<
-  LifecycleRequest,
-  {
-    readonly operation: "abort" | "accept";
-  }
->;
+type LifecycleRequest =
+  | PublicationAcceptRequest
+  | PublicationAbortRequest
+  | VerifyReleaseRequest
+  | ActivateReleaseRequest
+  | ActivateRecoveryRequest;
+type SignedRequest =
+  | VerifyReleaseRequest
+  | ActivateReleaseRequest
+  | ActivateRecoveryRequest;
 /** Authenticates one lifecycle request and its immutable release identity. */
 function verifyRequest(request: SignedRequest) {
   return verifySignedContentRelease(request.release).pipe(

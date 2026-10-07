@@ -1,6 +1,6 @@
 "use node";
 
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import type { StageTryoutRuntimeBundleRequest } from "@nakafa/aksara-contracts/transport/runtime";
 import { verifyTryoutRuntimeBundleSource } from "@nakafa/aksara-contracts/tryout/runtime/source";
 import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -14,16 +14,10 @@ import {
 } from "@repo/backend/confect/contentRelease/wire";
 import { Effect } from "effect";
 
-type RuntimeBundleRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation: "stageTryoutRuntimeBundle";
-  }
->;
 /** Authenticates and binds one permanent bundle to its staged Git release. */
 export const stageTryoutRuntimeBundle = Effect.fn(
   "contentRelease.stageTryoutRuntimeBundle"
-)(function* (request: RuntimeBundleRequest, activeKeyId: string) {
+)(function* (request: StageTryoutRuntimeBundleRequest, activeKeyId: string) {
   const { runMutation } = yield* MutationRunner;
   const verified = yield* loadStageEnvelope(request.releaseId);
   const bundle = yield* verifySignedTryoutRuntimeBundle({
