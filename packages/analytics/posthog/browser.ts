@@ -1,6 +1,10 @@
 "use client";
 
-import type { AnonymousAnalyticsConsentRecord } from "@repo/analytics/consent";
+import {
+  AnonymousAnalyticsConsentDecidedAtSchema,
+  CONSENT_DECISION_MECHANISMS,
+  CONSENT_NOTICE_VERSIONS,
+} from "@repo/analytics/consent";
 import { keys } from "@repo/analytics/keys";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import {
@@ -13,7 +17,10 @@ import {
   type AnalyticsTier,
   filterAuthorizedAnalyticsEvent,
 } from "@repo/analytics/posthog/identity";
-import { startPageviewTracking } from "@repo/analytics/posthog/pageview";
+import {
+  PageviewWindow,
+  startPageviewTracking,
+} from "@repo/analytics/posthog/pageview";
 import { Effect, MutableRef, Option, Schema } from "effect";
 import type { PostHog } from "posthog-js";
 
@@ -32,26 +39,29 @@ export type BrowserAnalyticsClient = Pick<
   | "setPersonProperties"
 >;
 
-interface BrowserAnalyticsLoader {
-  readonly load: Effect.Effect<BrowserAnalyticsClient, unknown>;
-}
+/** Consent provenance that every granted browser event carries into PostHog. */
+const BrowserAnalyticsConsentProvenanceFields = {
+  consentDecidedAt: AnonymousAnalyticsConsentDecidedAtSchema,
+  consentMechanism: Schema.Literals(CONSENT_DECISION_MECHANISMS),
+  consentNoticeVersion: Schema.Literals(CONSENT_NOTICE_VERSIONS),
+};
+
+const BrowserAnalyticsIdentitySchema = Schema.Union([
+  Schema.Struct({
+    ...BrowserAnalyticsConsentProvenanceFields,
+    status: Schema.Literal("anonymous"),
+  }),
+  Schema.Struct({
+    ...BrowserAnalyticsConsentProvenanceFields,
+    plan: Schema.String,
+    role: Schema.NullOr(Schema.String),
+    status: Schema.Literal("identified"),
+    userId: Schema.String,
+  }),
+]);
 
 export type BrowserAnalyticsIdentity =
-  | {
-      readonly consentDecidedAt: AnonymousAnalyticsConsentRecord["decidedAt"];
-      readonly consentMechanism: AnonymousAnalyticsConsentRecord["mechanism"];
-      readonly consentNoticeVersion: AnonymousAnalyticsConsentRecord["noticeVersion"];
-      readonly status: "anonymous";
-    }
-  | {
-      readonly consentDecidedAt: AnonymousAnalyticsConsentRecord["decidedAt"];
-      readonly consentMechanism: AnonymousAnalyticsConsentRecord["mechanism"];
-      readonly consentNoticeVersion: AnonymousAnalyticsConsentRecord["noticeVersion"];
-      readonly plan: string;
-      readonly role: string | null;
-      readonly status: "identified";
-      readonly userId: string;
-    };
+  typeof BrowserAnalyticsIdentitySchema.Type;
 
 const browserAnalyticsLoadFailedCode = "BROWSER_ANALYTICS_LOAD_FAILED";
 const analyticsClient = MutableRef.make<BrowserAnalyticsClient | undefined>(
@@ -73,11 +83,11 @@ export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<BrowserAnalyt
 const browserAnalyticsLoadFailure = () =>
   new BrowserAnalyticsLoadFailed({ code: browserAnalyticsLoadFailedCode });
 
-const defaultBrowserAnalyticsLoader: BrowserAnalyticsLoader = {
-  load: Effect.tryPromise(() => import("posthog-js")).pipe(
+/** Loads the PostHog browser SDK that the baseline client is built on. */
+const loadBrowserAnalyticsSdk: Effect.Effect<BrowserAnalyticsClient, unknown> =
+  Effect.tryPromise(() => import("posthog-js")).pipe(
     Effect.map((module) => module.default)
-  ),
-};
+  );
 
 /** Returns the gate to baseline and revokes identity without SDK calls. */
 function revokeGate() {
@@ -118,14 +128,16 @@ function captureInitialPageview(client: BrowserAnalyticsClient) {
  */
 export const enableBaselineAnalytics = Effect.fn(
   "Analytics.enableBaselineAnalytics"
-)(function* (loader: BrowserAnalyticsLoader = defaultBrowserAnalyticsLoader) {
+)(function* (
+  load: Effect.Effect<BrowserAnalyticsClient, unknown> = loadBrowserAnalyticsSdk
+) {
   return yield* Effect.gen(function* () {
     if (MutableRef.get(analyticsClient)) {
       return;
     }
 
     revokeGate();
-    const client: BrowserAnalyticsClient = yield* loader.load.pipe(
+    const client: BrowserAnalyticsClient = yield* load.pipe(
       Effect.mapError(browserAnalyticsLoadFailure)
     );
     const runtimeKeys = yield* Effect.try({
@@ -183,9 +195,9 @@ export const enableBaselineAnalytics = Effect.fn(
     MutableRef.set(analyticsClient, client);
     // A navigation that lands before the first settled admission counts
     // instead, so the admission must not recount the same destination.
-    startPageviewTracking(window, client, () =>
+    yield* startPageviewTracking(client, () =>
       MutableRef.set(initialPageviewCaptured, true)
-    );
+    ).pipe(Effect.provideService(PageviewWindow, window));
   }).pipe(Effect.tapError(() => Effect.sync(revokeGate)));
 });
 

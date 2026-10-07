@@ -4,7 +4,7 @@ import {
   decodeOperationalExceptionProperties,
   operationalRequestProperties,
 } from "@repo/analytics/posthog/exception";
-import { Option } from "effect";
+import { Option, Schema } from "effect";
 
 describe("operational exception privacy", () => {
   it("removes messages and retains stack frames", () => {
@@ -23,7 +23,11 @@ describe("operational exception privacy", () => {
     expect(operational.stack).toBe(
       "OperationalError(chat-api): Operational exception\n    at submit (/app/chunk.js:10:5)"
     );
-    expect(JSON.stringify(operational)).not.toContain("user@example.com");
+    expect(
+      Schema.encodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(
+        operational
+      )
+    ).not.toContain("user@example.com");
   });
 
   it("does not serialize arbitrary non-error payloads", () => {
@@ -36,7 +40,11 @@ describe("operational exception privacy", () => {
       message: "Operational exception",
       name: "OperationalError(chat-api)",
     });
-    expect(JSON.stringify(operational)).not.toContain("user@example.com");
+    expect(
+      Schema.encodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(
+        operational
+      )
+    ).not.toContain("user@example.com");
   });
 
   it("names the exception after its origin so grouping is stable", () => {
