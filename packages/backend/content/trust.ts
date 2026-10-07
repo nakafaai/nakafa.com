@@ -1,4 +1,3 @@
-import { ConvexConfigProvider } from "@confect/server";
 import {
   ACTIVE_SIGNING_KEY_ID,
   makeTrustedKeyResolver,
@@ -6,7 +5,8 @@ import {
   TrustedKeySchema,
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import { Config, Effect, Option, Schema } from "effect";
+import { agentTrustKeys } from "@repo/backend/keys";
+import { Schema } from "effect";
 
 const TRAILING_DOT = /\.$/;
 const CLOUD_HOST = /^[a-z0-9-]+\.convex\.cloud$/;
@@ -34,34 +34,22 @@ const AgentTrustSchema = Schema.Struct({
     );
   })
 );
-// The Convex provider reads each exact name, because Convex does not expose
-// process.env for enumeration, which ConfigProvider.fromEnv requires.
-const agentEnvironment = Effect.runSync(
-  Config.all({
-    keyId: Config.option(Config.String("AKSARA_AGENT_SIGNING_KEY_ID")),
-    publicKeyPem: Config.option(
-      Config.String("AKSARA_AGENT_SIGNING_PUBLIC_KEY")
-    ),
-    cloudUrl: Config.option(Config.String("CONVEX_CLOUD_URL")),
-    convexUrl: Config.option(Config.String("NEXT_PUBLIC_CONVEX_URL")),
-    vercel: Config.option(Config.String("VERCEL_ENV")),
-  }).parse(ConvexConfigProvider.make())
-);
+const agentEnvironment = agentTrustKeys();
 const hasAgentKey =
-  Option.isSome(agentEnvironment.keyId) ||
-  Option.isSome(agentEnvironment.publicKeyPem);
+  agentEnvironment.AKSARA_AGENT_SIGNING_KEY_ID !== undefined ||
+  agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY !== undefined;
 const agentKey = hasAgentKey
   ? // Convex and Next load this immutable trust configuration at module startup.
     // Synchronous schema validation fails before any publication or artifact read.
     Schema.decodeUnknownSync(AgentTrustSchema)({
       key: {
-        keyId: Option.getOrUndefined(agentEnvironment.keyId),
-        publicKeyPem: Option.getOrUndefined(agentEnvironment.publicKeyPem),
+        keyId: agentEnvironment.AKSARA_AGENT_SIGNING_KEY_ID,
+        publicKeyPem: agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY,
       },
       target:
-        Option.getOrUndefined(agentEnvironment.cloudUrl) ??
-        Option.getOrUndefined(agentEnvironment.convexUrl),
-      vercel: Option.getOrUndefined(agentEnvironment.vercel),
+        agentEnvironment.CONVEX_CLOUD_URL ??
+        agentEnvironment.NEXT_PUBLIC_CONVEX_URL,
+      vercel: agentEnvironment.VERCEL_ENV,
     }).key
   : undefined;
 const trustedContentKeys =
