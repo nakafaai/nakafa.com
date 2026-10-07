@@ -28,7 +28,7 @@ import {
 } from "@repo/backend/confect/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/confect/tryouts/score";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, HashMap, Struct } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -189,7 +189,7 @@ export const finalizeAttemptScore = Effect.fn(
   const score = yield* scoreTryoutSection({
     attempt: args.attempt,
     placements: args.responseIndex.placements,
-    responses: [...HashMap.values(args.responseIndex.responses)],
+    responses: [...MutableHashMap.values(args.responseIndex.responses)],
     source: args.source,
     totalQuestions: args.attempt.totalQuestions,
   });

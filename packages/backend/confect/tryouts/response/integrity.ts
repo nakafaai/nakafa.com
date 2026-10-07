@@ -206,7 +206,7 @@ export const indexTryoutResponses = Effect.fn(
   const linksByPlacement = HashMap.fromIterable(
     Arr.map(input.links, (link) => [link.placement._id, link])
   );
-  let responsesByPlacement = HashMap.empty<
+  const responsesByPlacement = MutableHashMap.empty<
     Id<"tryoutAttemptPlacements">,
     TryoutResponse
   >();
@@ -224,7 +224,7 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out response links do not match its frozen attempt placement."
       );
     }
-    if (HashMap.has(responsesByPlacement, response.placementId)) {
+    if (MutableHashMap.has(responsesByPlacement, response.placementId)) {
       return yield* responseIntegrity(
         "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
         "Try-out placement has more than one response."
@@ -249,11 +249,7 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out response evaluation differs from its stored result."
       );
     }
-    responsesByPlacement = HashMap.set(
-      responsesByPlacement,
-      response.placementId,
-      response
-    );
+    MutableHashMap.set(responsesByPlacement, response.placementId, response);
   }
   return responsesByPlacement;
 });

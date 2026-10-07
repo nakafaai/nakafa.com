@@ -5,7 +5,9 @@ import {
   seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { tryoutPaywallSourceValidator } from "@repo/backend/confect/tryouts/start/spec";
 import { api } from "@repo/backend/convex/_generated/api";
+import { Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 22, 9, 0, 0);
 
@@ -44,7 +46,11 @@ describe("tryouts/mutations/access", () => {
         args: [
           expect.objectContaining({
             event: "tryout paywall viewed",
-            properties: '{"source":"review"}',
+            properties: Schema.encodeSync(
+              Schema.fromJsonString(
+                Schema.Struct({ source: tryoutPaywallSourceValidator })
+              )
+            )({ source: "review" }),
           }),
         ],
       }),

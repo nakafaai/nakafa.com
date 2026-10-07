@@ -10,7 +10,7 @@ import {
 import { tryoutSectionSnapshot } from "@repo/backend/test/tryout/runtime";
 import { makeSignedTryoutSection } from "@repo/backend/test/tryout/section";
 import { makeTryoutSection } from "@repo/backend/test/tryouts";
-import { Array as Arr, Effect, HashMap, Schema } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Schema } from "effect";
 
 const attemptId = Schema.decodeUnknownSync(Id("tryoutAttempts"))("attempt");
 const placementId = Schema.decodeUnknownSync(Id("tryoutAttemptPlacements"))(
@@ -118,7 +118,7 @@ function index(
   }).pipe(
     Effect.match({
       onFailure: (error) => error.code,
-      onSuccess: (indexed) => HashMap.size(indexed),
+      onSuccess: (indexed) => MutableHashMap.size(indexed),
     })
   );
 }

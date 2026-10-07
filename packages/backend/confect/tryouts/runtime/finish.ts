@@ -24,7 +24,7 @@ import {
   summarizeResponses,
   type TryoutScoreSource,
 } from "@repo/backend/confect/tryouts/runtime/score";
-import { Array as Arr, Effect, flow, HashMap } from "effect";
+import { Array as Arr, Effect, flow, MutableHashMap } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
@@ -45,7 +45,7 @@ const createExpiredSectionAttempt = Effect.fn(
   const score = yield* scoreTryoutSection({
     attempt: args.attempt,
     placements: args.responseIndex.placements,
-    responses: [...HashMap.values(args.responseIndex.responses)],
+    responses: [...MutableHashMap.values(args.responseIndex.responses)],
     source: args.scoreSource,
     totalQuestions: args.snapshot.questionCount,
   });
@@ -284,7 +284,7 @@ const readSectionFinalization = Effect.fn(
   scoreSource: TryoutScoreSource;
   section: TryoutSectionAttempt;
 }) {
-  const responses = [...HashMap.values(args.responseIndex.responses)];
+  const responses = [...MutableHashMap.values(args.responseIndex.responses)];
   const summary = summarizeResponses(responses);
   const score = yield* scoreTryoutSection({
     attempt: args.attempt,
@@ -312,7 +312,7 @@ function selectSectionResponseIndex(
   const placementIds = new Set(
     Arr.map(placements, (placement) => placement._id)
   );
-  const responses = HashMap.fromIterable(
+  const responses = MutableHashMap.fromIterable(
     Arr.filter([...responseIndex.responses], ([placementId]) =>
       placementIds.has(placementId)
     )

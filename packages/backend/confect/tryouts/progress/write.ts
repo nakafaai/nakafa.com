@@ -1,3 +1,4 @@
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -10,10 +11,18 @@ import {
   getTryoutStatusRank,
   type TryoutStatus,
 } from "@repo/backend/confect/tryouts/status";
-import { Effect, flow } from "effect";
+import { Effect, flow, Schema } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
-type ProgressIdentity = ReturnType<typeof readProgressIdentity>;
+const ProgressIdentitySchema = Schema.Struct({
+  appLocale: AppLocaleCodeSchema,
+  countryKey: Schema.String,
+  examKey: Schema.String,
+  setIdentity: Schema.String,
+  setKey: Schema.String,
+  trackKey: Schema.String,
+});
+type ProgressIdentity = typeof ProgressIdentitySchema.Type;
 
 /** Stores the latest compact attempt state used by set discovery queries. */
 export const writeTryoutSetProgress = Effect.fn(
@@ -90,7 +99,7 @@ function readProgressIdentity(attempt: TryoutAttempt) {
     setIdentity: attempt.setIdentity,
     setKey: attempt.setKey,
     trackKey: attempt.trackKey,
-  };
+  } satisfies ProgressIdentity;
 }
 
 /** Loads the one compact progress row owned by the attempt identity. */
