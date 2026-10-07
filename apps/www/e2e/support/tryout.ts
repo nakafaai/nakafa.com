@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect } from "effect";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/request-tracker";
 
 export const readinessTimeoutMilliseconds = 15_000;
 export const hubHref = "/en/try-out";
@@ -39,6 +40,34 @@ export function press(control: Locator, hasTouch: boolean) {
     ? control.tap({ noWaitAfter: true })
     : control.click({ noWaitAfter: true });
 }
+
+/**
+ * Rests on a link the way a pointer or a finger does before it presses, and
+ * waits until the link asks for its whole page. Try-out links only do that
+ * once intent reaches React, while Playwright presses in the same instant as it
+ * arrives, so a press without this step navigates as if nobody had shown
+ * intent.
+ */
+export const intend = Effect.fn("NakafaE2E.intendTryoutLink")(function* (
+  page: Page,
+  link: Locator,
+  target: { hasTouch: boolean; pathname: string }
+) {
+  yield* Effect.promise(() =>
+    Promise.all([
+      // A link in view has already asked for the shared shell, which Next.js
+      // marks with "1"; intent is the first request for more than that.
+      page.waitForRequest(
+        (request) =>
+          new URL(request.url()).pathname === target.pathname &&
+          request.headers().rsc === "1" &&
+          request.headers()[NEXT_ROUTER_PREFETCH_HEADER] !== "1",
+        { timeout: readinessTimeoutMilliseconds }
+      ),
+      target.hasTouch ? link.dispatchEvent("touchstart") : link.hover(),
+    ])
+  );
+});
 
 /** Scrolls a control into view and activates it. */
 export const activate = Effect.fn("NakafaE2E.activateTryoutControl")(function* (

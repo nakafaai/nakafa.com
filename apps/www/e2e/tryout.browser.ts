@@ -11,6 +11,7 @@ import {
 import {
   activate,
   arrive,
+  intend,
   openHub,
   openTrack,
   press,
@@ -40,6 +41,7 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
     }
   ) {
     yield* Effect.promise(() => link.scrollIntoViewIfNeeded());
+    yield* intend(page, link, target);
     // @next/playwright owns this native Promise callback while its lock is held.
     yield* Effect.promise(() =>
       instant(page, () =>
