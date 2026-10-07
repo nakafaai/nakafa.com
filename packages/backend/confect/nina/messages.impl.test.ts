@@ -14,7 +14,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 
 vi.mock("@convex-dev/agent", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@convex-dev/agent")>();
@@ -32,7 +32,9 @@ const paginationOpts = { cursor: null, numItems: 20 };
 async function fixture(visibility: "private" | "public" = "private") {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation(async (ctx) => {
-    const user = await seedAuthenticatedUser(ctx, { now: Date.now() });
+    const user = await seedAuthenticatedUser(ctx, {
+      now: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+    });
     const threadId = await createThread(ctx, components.nina, {
       userId: user.userId,
     });
@@ -40,7 +42,7 @@ async function fixture(visibility: "private" | "public" = "private") {
       threadId,
       type: "study",
       userId: user.userId,
-      updatedAt: Date.now(),
+      updatedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
       visibility,
     });
     const prompt = await saveMessage(ctx, components.nina, {

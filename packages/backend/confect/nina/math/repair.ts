@@ -21,6 +21,7 @@ const repairArgumentsSchema = Schema.Record(Schema.String, Schema.Unknown);
 const operationSchema = Schema.Struct({
   operation: Schema.String,
 });
+const prettyJsonCodec = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 /** Reads the requested operation from raw tool arguments. */
 function decodeOperation(input: string) {
   return Schema.decodeEffect(Schema.fromJsonString(operationSchema))(input);
@@ -67,7 +68,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   )(toolCall.input).pipe(Effect.option);
   const failedArgumentsText = Option.match(failedArguments, {
     onNone: () => toolCall.input,
-    onSome: (input) => JSON.stringify(input, null, 2),
+    onSome: (input) => Schema.encodeSync(prettyJsonCodec)(input),
   });
   const ctx = yield* ActionCtx;
   const handle = (yield* Gateway).language({
@@ -80,21 +81,25 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     usageHandler,
     languageModel: handle.model,
   });
-  const repaired = yield* Effect.tryPromise((signal) =>
-    agent
-      .generateText(
-        ctx,
-        { userId },
-        {
-          abortSignal: signal,
-          output: Output.object({ schema: tool.inputSchema }),
-          prompt: createPrompt({
-            taskContext: `
+  const repaired = yield* Schema.encodeEffect(prettyJsonCodec)(
+    schema.value
+  ).pipe(
+    Effect.flatMap((acceptedSchemaText) =>
+      Effect.tryPromise((signal) =>
+        agent
+          .generateText(
+            ctx,
+            { userId },
+            {
+              abortSignal: signal,
+              output: Output.object({ schema: tool.inputSchema }),
+              prompt: createPrompt({
+                taskContext: `
         # Repair Task
 
         Repair the math tool arguments without changing the selected tool.
       `,
-            toolUsageGuidelines: `
+                toolUsageGuidelines: `
         # Repair Rules
 
         - Keep the operation field exactly the same as the failed arguments.
@@ -112,7 +117,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         - For named probability distributions, include distribution and parameters.
         - Include the requested probability point or event bounds.
       `,
-            backgroundData: `
+                backgroundData: `
         # Selected Tool
 
         ${toolCall.toolName}
@@ -127,19 +132,22 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
 
         # Accepted Schema
 
-        ${JSON.stringify(schema.value, null, 2)}
+        ${acceptedSchemaText}
 
         # Validation Error
 
         ${error.message}
       `,
-          }),
-          ...(instructions === undefined ? {} : { instructions }),
-          timeout: handle.timeout,
-        }
+              }),
+              ...(instructions === undefined ? {} : { instructions }),
+              timeout: handle.timeout,
+            }
+          )
+          .then((result) => result.output)
       )
-      .then((result) => result.output)
-  ).pipe(Effect.option);
+    ),
+    Effect.option
+  );
   if (Option.isNone(repaired)) {
     return null;
   }
@@ -156,8 +164,11 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     onNone: () => repairedInput.value,
     onSome: ({ operation }) => ({ ...repairedInput.value, operation }),
   });
+  const encodedInput = yield* Schema.encodeEffect(prettyJsonCodec)(input).pipe(
+    Effect.orDie
+  );
   return {
     ...toolCall,
-    input: JSON.stringify(input, null, 2),
+    input: encodedInput,
   };
 });
