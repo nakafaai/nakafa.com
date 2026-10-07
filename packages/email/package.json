@@ -17,7 +17,7 @@
     "effect": "catalog:",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-email": "6.11.0"
+    "react-email": "6.11.1"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

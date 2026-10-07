@@ -27,7 +27,6 @@ const runWithRequestHeaders = Effect.fn(
   "auth.server.test.runWithRequestHeaders"
 )((headers: Headers, getToken: typeof getAuthToken) => {
   const requestStore = createRequestStore({
-    fallbackParams: null,
     headers,
     hmrRefreshHash: undefined,
     implicitTags: { expirationsByCacheKind: new Map(), tags: [] },
@@ -38,6 +37,7 @@ const runWithRequestHeaders = Effect.fn(
     resumeDataCache: null,
     rootParams: {},
     serverComponentsHmrCache: undefined,
+    stagedFallbackParams: null,
     url: { pathname: "/test" },
   });
   const workStore = createWorkStore({
@@ -53,6 +53,7 @@ const runWithRequestHeaders = Effect.fn(
       },
       experimental: {
         authInterrupts: false,
+        durableUseCacheEntries: false,
         isRoutePPREnabled: false,
         useCacheTimeout: 50,
       },
@@ -62,7 +63,6 @@ const runWithRequestHeaders = Effect.fn(
       onAfterTaskError: undefined,
       onClose: () => undefined,
       staticPageGenerationTimeout: 60,
-      supportsDynamicResponse: true,
       validationLevel: "warning",
       waitUntil: undefined,
     },

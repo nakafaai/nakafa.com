@@ -35,9 +35,9 @@ export const VITEST_COHORT_VERSION = "5.0.3";
  * the gateway module's provider contracts (confect/gateway).
  */
 export const AI_SDK_COHORT = {
-  "@ai-sdk/gateway": "4.0.104",
-  "@ai-sdk/google": "4.0.88",
-  ai: "7.0.128",
+  "@ai-sdk/gateway": "4.0.106",
+  "@ai-sdk/google": "4.0.90",
+  ai: "7.0.130",
 } as const;
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
@@ -82,9 +82,9 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "typescript",
     minimumDeclarations: 1,
   },
-  { approved: "16.3.8", dependency: "next", minimumDeclarations: 1 },
+  { approved: "16.4.0", dependency: "next", minimumDeclarations: 1 },
   {
-    approved: "16.3.8",
+    approved: "16.4.0",
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
@@ -233,8 +233,8 @@ export const REGISTRY_REVIEWS = [
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "next@latest",
-    "16.3.8",
-    "Stable 16.3.8 is a security release: it fixes server-side request forgery in image optimization (GHSA-cjq9-62q9-8jv4) and cache leaks across `use cache` fills and root params (GHSA-3w37-wq28-93x7, GHSA-h694-7cp9-m8p3).",
+    "16.4.0",
+    "Next.js 16.4 recommends Cache Components with partial prefetching for every app, which Nakafa already runs, adds `ensureStatic` and the `navigation()` and `prefetch()` deferral APIs, and ships one shared Turbopack runtime chunk with export mangling. It follows the 16.3.8 security release.",
   ],
   [
     "convex@latest",
