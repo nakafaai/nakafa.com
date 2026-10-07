@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import "server-only";
+import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import {
   CorpusSourcePathSchema,
@@ -21,11 +22,7 @@ type MaterialSummary = Ref.Returns<
   typeof refs.public.contentRelease.material.latest
 >["materials"][number];
 const PublishedMaterialSummarySchema = Schema.Struct({
-  authors: Schema.Array(
-    Schema.Struct({
-      name: Schema.String,
-    })
-  ),
+  authors: Schema.Array(ContentAuthorSchema),
   ...PublicationDatesSchema.fields,
   description: Schema.optionalKey(Schema.String),
   publicPath: PublicPathSchema,
