@@ -7,9 +7,10 @@ import {
 } from "effect";
 import { ChildProcess } from "effect/process";
 
-interface RunOptions {
-  readonly capture?: boolean;
-}
+const RunOptionsSchema = Schema.Struct({
+  capture: Schema.optionalKey(Schema.Boolean),
+});
+type RunOptions = typeof RunOptionsSchema.Type;
 
 /** Expected failure while running pnpm for dependency maintenance. */
 class DependencyCommandError extends Schema.TaggedError<DependencyCommandError>()(
