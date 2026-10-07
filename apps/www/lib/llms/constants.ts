@@ -1,4 +1,6 @@
-export const BASE_URL = getLlmsBaseUrl();
+import { getAppUrl } from "@repo/next-config/app";
+
+export const BASE_URL = getAppUrl();
 export const LLMS_CACHE_CONTROL =
   "public, max-age=300, s-maxage=3600, must-revalidate";
 export const MARKDOWN_EXTENSIONS = /\.(?:md|mdx|txt)$/;
@@ -14,16 +16,3 @@ export const SECTION_LABELS = {
 };
 
 export type LlmsSection = keyof typeof SECTION_LABELS;
-
-/**
- * Reads the public application origin used by generated agent-facing indexes.
- */
-function getLlmsBaseUrl() {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-  if (!appUrl) {
-    throw new Error("NEXT_PUBLIC_APP_URL is required.");
-  }
-
-  return appUrl;
-}

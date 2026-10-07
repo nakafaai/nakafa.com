@@ -1,38 +1,36 @@
-const rendererEnvironmentNames = [
-  "AKSARA_PREVIEW_RENDERER_SECRET",
-  "AKSARA_PREVIEW_RENDERER_TOKEN",
-];
+import { previewKeys } from "@repo/next-config/keys";
 
 /** Reports whether the development child supplied any renderer field. */
 export function hasPreviewRendererEnvironment() {
-  return hasDevelopmentEnvironment(rendererEnvironmentNames);
+  if (process.env.NODE_ENV !== "development") {
+    return false;
+  }
+
+  const keys = previewKeys();
+  return (
+    keys.AKSARA_PREVIEW_RENDERER_SECRET !== undefined ||
+    keys.AKSARA_PREVIEW_RENDERER_TOKEN !== undefined
+  );
 }
 
 /** Reads only the ephemeral provider fields owned by the Aksara child. */
 export function readPreviewEnvironment() {
+  const keys = previewKeys();
   return {
-    eventsPath: process.env.AKSARA_PREVIEW_EVENTS_PATH,
-    keyId: process.env.AKSARA_PREVIEW_KEY_ID,
-    manifestPath: process.env.AKSARA_PREVIEW_MANIFEST_PATH,
-    origin: process.env.AKSARA_PREVIEW_ORIGIN,
-    publicKey: process.env.AKSARA_PREVIEW_PUBLIC_KEY,
-    token: process.env.AKSARA_PREVIEW_PROVIDER_TOKEN,
+    eventsPath: keys.AKSARA_PREVIEW_EVENTS_PATH,
+    keyId: keys.AKSARA_PREVIEW_KEY_ID,
+    manifestPath: keys.AKSARA_PREVIEW_MANIFEST_PATH,
+    origin: keys.AKSARA_PREVIEW_ORIGIN,
+    publicKey: keys.AKSARA_PREVIEW_PUBLIC_KEY,
+    token: keys.AKSARA_PREVIEW_PROVIDER_TOKEN,
   };
 }
 
 /** Reads only the ephemeral renderer fields owned by the Aksara child. */
 export function readPreviewRendererEnvironment() {
+  const keys = previewKeys();
   return {
-    secret: process.env.AKSARA_PREVIEW_RENDERER_SECRET,
-    token: process.env.AKSARA_PREVIEW_RENDERER_TOKEN,
+    secret: keys.AKSARA_PREVIEW_RENDERER_SECRET,
+    token: keys.AKSARA_PREVIEW_RENDERER_TOKEN,
   };
-}
-
-/** Detects a strict local-preview mode without accepting it in production. */
-function hasDevelopmentEnvironment(names: readonly string[]) {
-  if (process.env.NODE_ENV !== "development") {
-    return false;
-  }
-
-  return names.some((name) => process.env[name] !== undefined);
 }

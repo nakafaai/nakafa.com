@@ -1,11 +1,4 @@
-const candidateLocalePreviewEnvironmentNames = [
-  "AKSARA_PREVIEW_EVENTS_PATH",
-  "AKSARA_PREVIEW_KEY_ID",
-  "AKSARA_PREVIEW_MANIFEST_PATH",
-  "AKSARA_PREVIEW_ORIGIN",
-  "AKSARA_PREVIEW_PUBLIC_KEY",
-  "AKSARA_PREVIEW_PROVIDER_TOKEN",
-] as const;
+import { previewKeys } from "@repo/next-config/keys";
 
 /** Allows contract-supported route locales only inside an Aksara dev child. */
 export function hasCandidateLocalePreview() {
@@ -13,7 +6,13 @@ export function hasCandidateLocalePreview() {
     return false;
   }
 
-  return candidateLocalePreviewEnvironmentNames.some(
-    (name) => process.env[name] !== undefined
-  );
+  const keys = previewKeys();
+  return [
+    keys.AKSARA_PREVIEW_EVENTS_PATH,
+    keys.AKSARA_PREVIEW_KEY_ID,
+    keys.AKSARA_PREVIEW_MANIFEST_PATH,
+    keys.AKSARA_PREVIEW_ORIGIN,
+    keys.AKSARA_PREVIEW_PUBLIC_KEY,
+    keys.AKSARA_PREVIEW_PROVIDER_TOKEN,
+  ].some((value) => value !== undefined);
 }

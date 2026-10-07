@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
+  appUrlKeys,
   contentRuntimeKeys,
+  previewKeys,
   publicationKeys,
   readContentRuntimeTarget,
   siteUrlKeys,
@@ -49,6 +51,38 @@ describe("shared Next environment keys", () => {
     vi.stubEnv("CONTENT_RUNTIME_TOKEN", "runtime-token");
     expect(contentRuntimeKeys()).toMatchObject({
       CONTENT_RUNTIME_TOKEN: "runtime-token",
+    });
+  });
+});
+
+describe("public app origin key", () => {
+  it("requires a non-empty public app origin", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://nakafa.com");
+    expect(appUrlKeys()).toMatchObject({
+      NEXT_PUBLIC_APP_URL: "https://nakafa.com",
+    });
+
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "");
+    expect(appUrlKeys).toThrow();
+  });
+});
+
+describe("Aksara preview keys", () => {
+  it("keeps each unset optional preview field absent", () => {
+    vi.stubEnv("AKSARA_PREVIEW_ORIGIN", undefined);
+    vi.stubEnv("AKSARA_PREVIEW_RENDERER_TOKEN", undefined);
+
+    expect(previewKeys().AKSARA_PREVIEW_ORIGIN).toBeUndefined();
+    expect(previewKeys().AKSARA_PREVIEW_RENDERER_TOKEN).toBeUndefined();
+  });
+
+  it("counts an empty optional preview field as set without checking its format", () => {
+    vi.stubEnv("AKSARA_PREVIEW_ORIGIN", "");
+    vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "not a path");
+
+    expect(previewKeys()).toMatchObject({
+      AKSARA_PREVIEW_EVENTS_PATH: "not a path",
+      AKSARA_PREVIEW_ORIGIN: "",
     });
   });
 });
