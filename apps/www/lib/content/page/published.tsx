@@ -1,6 +1,9 @@
 import "server-only";
 
-import { Effect, Option } from "effect";
+import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
+import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
+import { Effect, Option, Schema } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
 import { readRenderedBody } from "@/lib/content/published/body";
 import {
@@ -18,6 +21,15 @@ export type PublishedPageInput = PublishedContentInput;
 /** Current public Page identity resolved from signed runtime state. */
 export type CurrentPublishedPageInput = PublishedContentRouteInput;
 
+const PublishedPageDataSchema = Schema.Struct({
+  activeReleaseId: PublicContentRuntimeFoundSchema.fields.activeReleaseId,
+  artifact: PublicContentRuntimeFoundSchema.fields.artifact,
+  projection: PublicPageProjectionSchema,
+  rendererManifest: PublicContentRuntimeFoundSchema.fields.rendererManifest,
+  sourcePath: PublicContentRuntimeFoundSchema.fields.sourcePath,
+  sourceRevision: Schema.NullOr(GitCommitShaSchema),
+});
+
 /** Narrows one authenticated runtime exchange to a signed Page. */
 const decodePageData = Effect.fn("NakafaContent.decodePageData")(function* (
   data: PublishedContentData,
@@ -31,13 +43,11 @@ const decodePageData = Effect.fn("NakafaContent.decodePageData")(function* (
     rendererManifest: data.rendererManifest,
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,
-  };
+  } satisfies PublishedPageData;
 });
 
 /** Verified signed runtime data narrowed to the Page projection contract. */
-export type PublishedPageData = Effect.Success<
-  ReturnType<typeof decodePageData>
->;
+export type PublishedPageData = typeof PublishedPageDataSchema.Type;
 
 /** Reads a Page pinned to a release selected by another trusted read. */
 export const readPublishedPage = Effect.fn("NakafaContent.readPublishedPage")(

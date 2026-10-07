@@ -29,6 +29,7 @@ const EVENT_PREFIX = "event: update\ndata: ";
 const EVENT_CONTENT_TYPE = /^text\/event-stream(?:\s*;\s*charset=utf-8)?$/i;
 const encoder = new TextEncoder();
 const PreviewEventJsonSchema = Schema.fromJsonString(PreviewEventSchema);
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 /** Strictly validates and re-encodes one provider event for the browser. */
 function sanitizeEvent(block: string) {
   if (block.startsWith(":") && !block.includes("\n")) {
@@ -49,7 +50,7 @@ function sanitizeEvent(block: string) {
   }
   return Result.succeed(
     encoder.encode(
-      `${EVENT_PREFIX}${Schema.encodeSync(PreviewEventJsonSchema)(decoded.success)}\n\n`
+      `${EVENT_PREFIX}${Schema.encodeSync(JsonTextSchema)(decoded.success)}\n\n`
     )
   );
 }
