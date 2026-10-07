@@ -28,6 +28,7 @@ const EVENT_HEARTBEAT = ": keep-alive";
 const EVENT_PREFIX = "event: update\ndata: ";
 const EVENT_CONTENT_TYPE = /^text\/event-stream(?:\s*;\s*charset=utf-8)?$/i;
 const encoder = new TextEncoder();
+const PreviewEventJsonSchema = Schema.fromJsonString(PreviewEventSchema);
 /** Strictly validates and re-encodes one provider event for the browser. */
 function sanitizeEvent(block: string) {
   if (block.startsWith(":") && !block.includes("\n")) {
@@ -40,14 +41,16 @@ function sanitizeEvent(block: string) {
   if (source.includes("\n")) {
     return Result.fail(new PreviewEventError({ stage: "event" }));
   }
-  const decoded = Schema.decodeResult(
-    Schema.fromJsonString(PreviewEventSchema)
-  )(source, { onExcessProperty: "error" });
+  const decoded = Schema.decodeResult(PreviewEventJsonSchema)(source, {
+    onExcessProperty: "error",
+  });
   if (Result.isFailure(decoded)) {
     return Result.fail(new PreviewEventError({ stage: "event" }));
   }
   return Result.succeed(
-    encoder.encode(`${EVENT_PREFIX}${JSON.stringify(decoded.success)}\n\n`)
+    encoder.encode(
+      `${EVENT_PREFIX}${Schema.encodeSync(PreviewEventJsonSchema)(decoded.success)}\n\n`
+    )
   );
 }
 type SanitizedEvent = Result.Result<Uint8Array, PreviewEventError>;
