@@ -20,21 +20,22 @@ import { httpLayer } from "@/lib/convex/http";
 type MaterialSummary = Ref.Returns<
   typeof refs.public.contentRelease.material.latest
 >["materials"][number];
+const PublishedMaterialSummarySchema = Schema.Struct({
+  authors: Schema.Array(
+    Schema.Struct({
+      name: Schema.String,
+    })
+  ),
+  ...PublicationDatesSchema.fields,
+  description: Schema.optionalKey(Schema.String),
+  publicPath: PublicPathSchema,
+  sourcePath: CorpusSourcePathSchema,
+  title: Schema.String,
+});
+
 /** Verified compact material metadata used by discovery surfaces. */
-export interface PublishedMaterialSummary {
-  readonly authors: readonly {
-    readonly name: string;
-  }[];
-  readonly dateModified?: Exclude<
-    (typeof PublicationDatesSchema.Type)["dateModified"],
-    undefined
-  >;
-  readonly datePublished: (typeof PublicationDatesSchema.Type)["datePublished"];
-  readonly description?: string;
-  readonly publicPath: typeof PublicPathSchema.Type;
-  readonly sourcePath: typeof CorpusSourcePathSchema.Type;
-  readonly title: string;
-}
+export type PublishedMaterialSummary =
+  typeof PublishedMaterialSummarySchema.Type;
 /** Decodes one backend-verified material discovery row. */
 const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
   function* (summary: MaterialSummary, locale: Locale) {

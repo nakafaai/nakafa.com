@@ -1,12 +1,12 @@
 import type { Ref } from "@confect/core";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
+import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type refs from "@repo/backend/confect/_generated/refs";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { slugify } from "@repo/utilities/slug";
 
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
@@ -16,20 +16,22 @@ export type PublishedMaterialIdentity = Pick<
   "contentKey" | "materialKey" | "parentPath" | "publicPath"
 >;
 
+const PublishedMaterialContextSchema = Schema.Struct({
+  context: Schema.Struct({
+    nodeKey: Schema.String,
+    programKey: Schema.String,
+  }),
+  group: CurriculumRouteSchema,
+  href: Schema.String,
+  label: Schema.String,
+  mapping: CurriculumRouteSchema,
+  parent: CurriculumRouteSchema,
+  resolvedCanonicalPath: Schema.String,
+});
+
 /** Verified curriculum return link for one material lesson. */
-export interface PublishedMaterialContext {
-  readonly context: MaterialContextIdentity;
-  readonly group: CurriculumRoute;
-  readonly href: string;
-  readonly label: string;
-  readonly mapping: CurriculumRoute;
-  readonly parent: CurriculumRoute;
-  readonly resolvedCanonicalPath: NonNullable<
-    Ref.Returns<
-      typeof refs.public.contentRelease.program.context
-    >["resolvedCanonicalPath"]
-  >;
-}
+export type PublishedMaterialContext =
+  typeof PublishedMaterialContextSchema.Type;
 
 /** Verifies the public query result before it can affect learner navigation. */
 export const decodePublishedMaterialContext = Effect.fn(

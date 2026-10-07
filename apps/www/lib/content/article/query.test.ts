@@ -4,7 +4,7 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { encodeArticlePublicationCursor } from "@repo/contents/publication";
-import { Option } from "effect";
+import { Option, Schema } from "effect";
 import {
   getArticleNextHref,
   readArticlePageCursor,
@@ -14,6 +14,14 @@ import {
 
 const manifest = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const releaseId = ReleaseIdSchema.make("release-article");
+const CursorPositionSchema = Schema.Tuple([
+  Schema.String,
+  Schema.String,
+  Schema.String,
+  Schema.String,
+  Schema.Finite,
+  Schema.String,
+]);
 
 describe("article catalog query", () => {
   it("decodes initial and release-bound cursors", () => {
@@ -76,7 +84,7 @@ describe("article catalog query", () => {
       expectedReleaseId: releaseId,
     };
     const current = encodeArticlePublicationCursor(
-      JSON.stringify([
+      Schema.encodeSync(Schema.fromJsonString(CursorPositionSchema))([
         "en",
         "politics",
         "2026-08-22",
