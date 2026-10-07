@@ -1,5 +1,5 @@
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, Layer, Path, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { CSSProperties } from "react";
 import { ImageResponse } from "takumi-js/response";
@@ -14,10 +14,12 @@ const ogLogoStyle = {
   borderRadius: "50%",
 } satisfies CSSProperties;
 
-type GenerateOGImageOptions = OgImageProps & {
-  height?: number;
-  width?: number;
-};
+const OgImageSizeSchema = Schema.Struct({
+  height: Schema.optionalKey(Schema.Finite),
+  width: Schema.optionalKey(Schema.Finite),
+});
+
+type GenerateOGImageOptions = OgImageProps & typeof OgImageSizeSchema.Type;
 
 /** Loads the shared logo asset as a serializable data URL for OG rendering. */
 async function getLogoDataUrl() {

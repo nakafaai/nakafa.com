@@ -4,7 +4,7 @@ import {
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { Effect, Option } from "effect";
+import { Effect, HashMap, Option } from "effect";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
 import {
   testArticleDeProjection,
@@ -126,14 +126,16 @@ beforeEach(() => {
     .mockReset()
     .mockReturnValue(Effect.succeed({ alternates: [], route: null }));
   publishedMocks.tryoutPath.mockReset().mockImplementation(({ publicPath }) => {
-    const counterparts = new Map([
+    const counterparts = HashMap.make(
       ["try-out/indonesia", "try-out/indonesia"],
       [
         "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
         "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-      ],
-    ]);
-    return Effect.succeed(counterparts.get(publicPath) ?? null);
+      ]
+    );
+    return Effect.succeed(
+      Option.getOrNull(HashMap.get(counterparts, publicPath))
+    );
   });
 });
 

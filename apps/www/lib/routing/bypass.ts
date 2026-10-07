@@ -1,6 +1,8 @@
+import { HashSet } from "effect";
+
 const UNSUPPORTED_ROOT_FILE_PATTERN =
   /^\/[^/]+\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$/i;
-const LOCALE_BYPASS_PATHS = new Set([
+const LOCALE_BYPASS_PATHS = HashSet.fromIterable([
   "/llms.txt",
   "/logo.svg",
   "/manifest.webmanifest",
@@ -17,7 +19,7 @@ const LOCALE_BYPASS_PATHS = new Set([
 
 /** Returns whether one public AI or system path skips locale routing. */
 export function isLocaleBypassPath(pathname: string) {
-  return LOCALE_BYPASS_PATHS.has(pathname);
+  return HashSet.has(LOCALE_BYPASS_PATHS, pathname);
 }
 
 /** Rejects unknown system resources before they enter localized content routes. */
