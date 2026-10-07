@@ -15,7 +15,7 @@ import {
 import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
 import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
-import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
+import { Array as Arr, Effect, HashMap, Option } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 
@@ -120,9 +120,7 @@ function projectRuntimeQuestion(
     readonly questions: boolean;
   }
 ) {
-  const response = Option.getOrNull(
-    MutableHashMap.get(responses, placement._id)
-  );
+  const response = Option.getOrNull(HashMap.get(responses, placement._id));
   const runtimeResponse = response
     ? {
         answeredAt: response.answeredAt,

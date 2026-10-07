@@ -24,13 +24,7 @@ import {
   summarizeResponses,
   type TryoutScoreSource,
 } from "@repo/backend/confect/tryouts/runtime/score";
-import {
-  Array as Arr,
-  Effect,
-  flow,
-  MutableHashMap,
-  MutableHashSet,
-} from "effect";
+import { Array as Arr, Effect, flow, HashMap, MutableHashSet } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
@@ -51,9 +45,7 @@ const createExpiredSectionAttempt = Effect.fn(
   const score = yield* scoreTryoutSection({
     attempt: args.attempt,
     placements: args.responseIndex.placements,
-    responses: Arr.fromIterable(
-      MutableHashMap.values(args.responseIndex.responses)
-    ),
+    responses: Arr.fromIterable(HashMap.values(args.responseIndex.responses)),
     source: args.scoreSource,
     totalQuestions: args.snapshot.questionCount,
   });
@@ -293,7 +285,7 @@ const readSectionFinalization = Effect.fn(
   section: TryoutSectionAttempt;
 }) {
   const responses = Arr.fromIterable(
-    MutableHashMap.values(args.responseIndex.responses)
+    HashMap.values(args.responseIndex.responses)
   );
   const summary = summarizeResponses(responses);
   const score = yield* scoreTryoutSection({
@@ -322,10 +314,9 @@ function selectSectionResponseIndex(
   const placementIds = MutableHashSet.fromIterable(
     Arr.map(placements, (placement) => placement._id)
   );
-  const responses = MutableHashMap.fromIterable(
-    Arr.filter(Arr.fromIterable(responseIndex.responses), ([placementId]) =>
-      MutableHashSet.has(placementIds, placementId)
-    )
+  const responses = HashMap.filter(
+    responseIndex.responses,
+    (_response, placementId) => MutableHashSet.has(placementIds, placementId)
   );
   return {
     placements,

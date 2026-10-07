@@ -33,10 +33,7 @@ const TryoutIrtItemSchema = irtScaleItemsTable.Fields.mapFields(
 );
 
 /** The exact IRT scale version one frozen attempt or section is scored against. */
-const TryoutIrtScaleSchema = Schema.Struct({
-  _id: Id("irtScaleVersions"),
-  ...irtScaleVersionsTable.Fields.fields,
-});
+const TryoutIrtScaleSchema = irtScaleVersionsTable.Doc;
 
 /** One exact IRT scale plus items validated against immutable placements. */
 export const TryoutIrtSourceSchema = Schema.Struct({

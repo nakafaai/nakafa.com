@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/confect/tryouts/response/integrity";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
+import { Array as Arr, Effect, HashMap, MutableHashMap, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -65,7 +65,7 @@ export const loadSectionResponseIndex = Effect.fn(
   });
   return {
     placements: validatedPlacements,
-    responses: MutableHashMap.fromIterable(indexed),
+    responses: HashMap.fromIterable(indexed),
   };
 });
 
@@ -134,7 +134,7 @@ export const loadAttemptResponses = Effect.fn(
   });
   return {
     placements: validatedPlacements,
-    responses: MutableHashMap.fromIterable(indexed),
+    responses: HashMap.fromIterable(indexed),
     sections,
   };
 });
