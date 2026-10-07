@@ -1,9 +1,11 @@
 import { Ref } from "@confect/core";
 import { RegisteredConvexFunction } from "@confect/server";
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { decodeArtifactJson } from "@repo/backend/confect/contentRelease/parse";
+import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
@@ -307,11 +309,11 @@ describe("tryouts/runtime/history/placement", () => {
             )
           );
           await ctx.db.patch(stored._id, {
-            artifactJson: JSON.stringify({
+            artifactJson: encodeArtifactJson({
               ...artifact,
               payload: {
                 ...artifact.payload,
-                artifactLocale: "id",
+                artifactLocale: ArtifactLocaleSchema.make("id"),
               },
             }),
           });
