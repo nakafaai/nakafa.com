@@ -14,14 +14,9 @@ import {
 
 const manifest = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const releaseId = ReleaseIdSchema.make("release-article");
-const CursorPositionSchema = Schema.Tuple([
-  Schema.String,
-  Schema.String,
-  Schema.String,
-  Schema.String,
-  Schema.Finite,
-  Schema.String,
-]);
+const encodeCursorPosition = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
 
 describe("article catalog query", () => {
   it("decodes initial and release-bound cursors", () => {
@@ -84,7 +79,7 @@ describe("article catalog query", () => {
       expectedReleaseId: releaseId,
     };
     const current = encodeArticlePublicationCursor(
-      Schema.encodeSync(Schema.fromJsonString(CursorPositionSchema))([
+      encodeCursorPosition([
         "en",
         "politics",
         "2026-08-22",
