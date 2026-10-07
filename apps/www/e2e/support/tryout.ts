@@ -146,6 +146,22 @@ export const openTrack = Effect.fn("NakafaE2E.openTryoutTrack")(function* (
   }
 });
 
+/**
+ * The set page's first section link once the learner's attempt has resolved.
+ * The resolved set replaces the catalog view's rows, and a row that is replaced
+ * in the middle of a press loses the press.
+ */
+export const settledSection = Effect.fn("NakafaE2E.settledTryoutSection")(
+  function* (page: Page) {
+    yield* arrive(
+      page,
+      setHref,
+      page.getByRole("button", { exact: true, name: "Start" })
+    );
+    return sectionLink(page);
+  }
+);
+
 /** Reads the href of a set's first section link. */
 export const readSectionHref = Effect.fn("NakafaE2E.readTryoutSectionHref")(
   function* (section: Locator) {

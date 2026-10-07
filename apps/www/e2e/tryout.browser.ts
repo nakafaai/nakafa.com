@@ -20,6 +20,7 @@ import {
   recordIntentRequests,
   sectionLink,
   setHref,
+  settledSection,
   trackHref,
   viewports,
   visibleLink,
@@ -48,6 +49,9 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
     yield* Effect.promise(() =>
       instant(page, () =>
         press(link, target.hasTouch)
+          // A pointer that rests where it pressed would show intent on
+          // whatever the next page puts there, before the test asks for it.
+          .then(() => page.mouse.move(-1, -1))
           .then(() =>
             page.waitForURL((url) => url.pathname === target.pathname, {
               timeout: readinessTimeoutMilliseconds,
@@ -89,8 +93,7 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
 
   yield* openTrack(page, hasTouch);
   yield* activate(visibleLink(page, setHref), hasTouch);
-  const section = sectionLink(page);
-  yield* arrive(page, setHref, section);
+  const section = yield* settledSection(page);
   const sectionHref = yield* readSectionHref(section);
   yield* activate(section, hasTouch);
   const start = page.getByRole("button", { exact: true, name: "Start" });
@@ -148,14 +151,7 @@ const verifyPrefetchedHeadings = Effect.fn(
     requested
   );
 
-  // The resolved set replaces the catalog view's rows, so the section link
-  // whose prefetch is measured must be the one that stays.
-  const section = sectionLink(page);
-  yield* arrive(
-    page,
-    setHref,
-    page.getByRole("button", { exact: true, name: "Start" })
-  );
+  const section = yield* settledSection(page);
   const sectionHref = yield* readSectionHref(section);
   const sectionTitle = yield* Effect.promise(() =>
     section.locator("h3").innerText()
