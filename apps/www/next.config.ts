@@ -212,6 +212,14 @@ const nextConfig = {
   // `process.cwd()` resolves to the app directory (`apps/www`) during Next.js
   // config loading, so walking up two levels targets the monorepo root.
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
+  // The image routes read the logo through Effect's FileSystem, which the
+  // file tracer cannot follow, so the trace names the file. Without it the
+  // deployed function has no logo and answers 500.
+  // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats
+  outputFileTracingIncludes: {
+    "/og/*": ["./public/logo.svg"],
+    "/*/og/*": ["./public/logo.svg"],
+  },
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
     "@takumi-rs/core",
