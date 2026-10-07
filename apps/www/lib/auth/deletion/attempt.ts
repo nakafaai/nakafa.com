@@ -3,6 +3,7 @@ import {
   accountDeletionBrowserAttemptSchema,
   accountDeletionRequestPhase,
 } from "@repo/backend/confect/auth/deletion/spec";
+import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Schema } from "effect";
 
 const accountDeletionAttemptStorageFailedCode =
@@ -91,10 +92,7 @@ export const loadOrCreateAccountDeletionAttempt = Effect.fn(
     }
   }
   const attempt: AccountDeletionBrowserAttempt = {
-    attemptId: yield* Effect.try({
-      try: () => crypto.randomUUID(),
-      catch: accountDeletionAttemptStorageFailure,
-    }),
+    attemptId: yield* randomUuid,
     phase: accountDeletionRequestPhase.preparation,
     userId,
   };
