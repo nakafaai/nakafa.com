@@ -1,21 +1,25 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import {
+  QuranRowPayloadSchema,
+  QuranSearchRowSchema,
+} from "@nakafa/aksara-contracts/quran/snapshot/row";
 import type { PublishedQuranRow } from "@repo/backend/content/quran/contract";
-import { Array as Arr, pipe } from "effect";
+import { Array as Arr, pipe, Schema } from "effect";
 
 type QuranSnapshotRow = PublishedQuranRow["record"];
-type QuranSearch = Extract<
-  QuranSnapshotRow["payload"],
-  {
-    readonly kind: "quran-search";
-  }
->;
-interface QuranRowFacts {
-  readonly appLocale?: QuranSearch["appLocale"];
-  readonly firstVerse?: number;
-  readonly identity: string;
-  readonly kind: QuranSnapshotRow["payload"]["kind"];
-  readonly surahNumber?: number;
-}
+type QuranSearch = typeof QuranSearchRowSchema.Type;
+/** Row kinds owned by the signed Quran payload union. */
+const QuranRowKindSchema = Schema.Literals(
+  Arr.map(QuranRowPayloadSchema.members, (member) => member.fields.kind.literal)
+);
+const QuranRowFactsSchema = Schema.Struct({
+  appLocale: Schema.optionalKey(QuranSearchRowSchema.fields.appLocale),
+  firstVerse: Schema.optionalKey(Schema.Finite),
+  identity: Schema.String,
+  kind: QuranRowKindSchema,
+  surahNumber: Schema.optionalKey(Schema.Finite),
+});
+type QuranRowFacts = typeof QuranRowFactsSchema.Type;
 
 /** Derives the canonical identity for one localized Quran search row. */
 export function quranSearchIdentity(
