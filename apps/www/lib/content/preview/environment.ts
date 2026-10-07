@@ -13,7 +13,7 @@ export function hasPreviewRendererEnvironment() {
   );
 }
 
-/** Reads only the ephemeral provider fields owned by the Aksara child. */
+/** Returns the ephemeral provider fields owned by the Aksara child. */
 export function readPreviewEnvironment() {
   const keys = previewKeys();
   return {
@@ -26,7 +26,7 @@ export function readPreviewEnvironment() {
   };
 }
 
-/** Reads only the ephemeral renderer fields owned by the Aksara child. */
+/** Returns the ephemeral renderer fields owned by the Aksara child. */
 export function readPreviewRendererEnvironment() {
   const keys = previewKeys();
   return {
