@@ -20,7 +20,7 @@ calls use the generated context service at the SDK boundary.
 A public mutation authenticates the learner, verifies page context, reserves
 credits, saves the prompt through the Agent component, and schedules generation
 in one transaction. A stable request key makes retries idempotent. The scheduled
-action invokes Agent with a Vercel AI Gateway model. Lifecycle mutations settle
+action invokes Agent with a Convex AI gateway model. Lifecycle mutations settle
 successful responses or refund failed and cancelled responses once.
 
 A committed final answer releases the chat immediately. The settlement mutation
@@ -48,7 +48,7 @@ context within the page token budget. The model spends no forced tool step on
 it and asks Nakafa for other sections.
 
 Math, Nakafa retrieval, and external research are Agent tools implemented as
-Effect programs. Specialist agents use the same Vercel Gateway provider and
+Effect programs. Specialist agents use the same Convex AI gateway provider and
 Agent usage handler. Tool results retain progressive evidence cards and final
 model-facing evidence, which never exceeds the evidence token budget: a
 truncated output says what it omitted and how to ask for it, and Nakafa reads
@@ -93,11 +93,10 @@ reasoning is excluded from provider history; full conversation data stays in
 Agent storage. External research admits at most
 8 exact source URLs before provider work, with 3 concurrent fetches and 8,000
 selected characters per source. Excess requests receive an explicit limit;
-sources are never silently omitted. Public grounding sources are published for
-zero, one, or multiple provider-reported queries without inventing query labels.
+sources are never silently omitted.
 
-Convex deployments own `AI_GATEWAY_API_KEY`, `FIRECRAWL_API_KEY`,
-`MATH_CAS_API_KEY`, and `NEXT_PUBLIC_CAS_URL`. The CAS key must match the
+Convex deployments own `FIRECRAWL_API_KEY`, `MATH_CAS_API_KEY`, and
+`NEXT_PUBLIC_CAS_URL`. The CAS key must match the
 production CAS service, and its URL is `https://cas.nakafa.com`. These are
 backend action configuration, not Next.js environment inputs. Resolve CAS
 configuration before asking the math specialist to generate tool calls, so a
