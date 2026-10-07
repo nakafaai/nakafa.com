@@ -62,7 +62,7 @@
     "@sigstore/bundle": "5.0.0",
     "@turbo/gen": "2.11.7",
     "@types/node": "24.19.1",
-    "@vercel/config": "^0.10.0",
+    "@vercel/config": "^0.11.0",
     "afdocs": "0.20.0",
     "effect": "catalog:",
     "esbuild": "0.28.2",
