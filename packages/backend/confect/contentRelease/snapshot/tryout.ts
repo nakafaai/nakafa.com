@@ -1,4 +1,5 @@
-import type { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { TryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog";
+import type { TryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -15,26 +16,22 @@ import {
 } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { Effect } from "effect";
 
-/** Try-out members of the contract row union, at their declared positions. */
-type CatalogRow = (typeof ContentSnapshotRowSchema.members)[2]["Type"];
-type PlacementRow = (typeof ContentSnapshotRowSchema.members)[3]["Type"];
-
 /** Stores one immutable try-out hierarchy row without flattening its body. */
 export const stageTryoutCatalog = Effect.fn(
   "contentRelease.stageTryoutCatalog"
 )(function* (
   snapshotId: string,
   index: number,
-  source: CatalogRow,
+  record: TryoutCatalogRecord,
   rowJson: string
 ) {
   const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  const facts = tryoutCatalogFacts(source.record);
+  const facts = tryoutCatalogFacts(record);
   const stored = {
     ...facts,
     index,
-    rowHash: source.record.rowHash,
+    rowHash: record.rowHash,
     rowJson,
     snapshotId,
   };
@@ -63,7 +60,7 @@ export const stageTryoutCatalog = Effect.fn(
       byIndex._id !== byIdentity._id ||
       byIndex.assetId !== stored.assetId ||
       byIndex.rowJson !== rowJson ||
-      byIndex.rowHash !== source.record.rowHash
+      byIndex.rowHash !== record.rowHash
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
@@ -82,16 +79,16 @@ export const stageTryoutPlacement = Effect.fn(
 )(function* (
   snapshotId: string,
   index: number,
-  source: PlacementRow,
+  record: TryoutPlacementRecord,
   rowJson: string
 ) {
   const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  const facts = tryoutPlacementFacts(source.record);
+  const facts = tryoutPlacementFacts(record);
   const stored = {
     ...facts,
     index,
-    rowHash: source.record.rowHash,
+    rowHash: record.rowHash,
     rowJson,
     snapshotId,
   };
@@ -119,7 +116,7 @@ export const stageTryoutPlacement = Effect.fn(
       !(byIndex && byIdentity) ||
       byIndex._id !== byIdentity._id ||
       byIndex.rowJson !== rowJson ||
-      byIndex.rowHash !== source.record.rowHash
+      byIndex.rowHash !== record.rowHash
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
