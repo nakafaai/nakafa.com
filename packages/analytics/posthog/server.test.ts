@@ -10,7 +10,8 @@ const postHogMocks = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock("@repo/analytics/keys", () => ({
+vi.mock("@repo/analytics/keys", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@repo/analytics/keys")>()),
   keys: postHogMocks.keys,
 }));
 
