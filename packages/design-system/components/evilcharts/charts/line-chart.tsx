@@ -52,17 +52,19 @@ export type CurveType = NonNullable<
 
 // Shared context
 
-/**
- * Shared state for every part of the chart. Lifted into <EvilLineChart /> so that
- * <Line />, <XAxis />, <Legend />, and friends can read it without prop drilling.
- * Sub-components are composed freely, the provider is the single source of truth.
- */
 const LineChartStateSchema = Schema.Struct({
+  animationType: Schema.Literals([
+    "none",
+    "left-to-right",
+    "right-to-left",
+    "center-out",
+    "edges-in",
+  ]), // default intro reveal each <Line /> inherits
   isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
   selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
 });
 
-type SelectDataKey = (dataKey: string | null) => void;
+type SelectDataKey = (dataKey: string | null) => void; // sets the selected series
 
 /**
  * Builds the shared value of the chart. `config` holds the colors and labels of
@@ -70,10 +72,13 @@ type SelectDataKey = (dataKey: string | null) => void;
  * <Line /> inherits. The context type is derived from this hook.
  */
 function useLineChartValue(
-  { isLoading, selectedDataKey }: typeof LineChartStateSchema.Type,
+  {
+    animationType,
+    isLoading,
+    selectedDataKey,
+  }: typeof LineChartStateSchema.Type,
   config: ChartConfig,
   curveType: CurveType,
-  animationType: LineAnimationType,
   selectDataKey: SelectDataKey
 ) {
   return useMemo(
@@ -96,6 +101,11 @@ function useLineChartValue(
   );
 }
 
+/**
+ * Shared state for every part of the chart. Lifted into <EvilLineChart /> so that
+ * <Line />, <XAxis />, <Legend />, and friends can read it without prop drilling.
+ * Sub-components are composed freely, the provider is the single source of truth.
+ */
 type LineChartContextValue = ReturnType<typeof useLineChartValue>;
 
 const LineChartContext = createContext<LineChartContextValue | null>(null);
@@ -196,10 +206,9 @@ export function EvilLineChart<
   );
 
   const contextValue = useLineChartValue(
-    { isLoading, selectedDataKey },
+    { animationType, isLoading, selectedDataKey },
     config,
     curveType,
-    animationType,
     selectDataKey
   );
 

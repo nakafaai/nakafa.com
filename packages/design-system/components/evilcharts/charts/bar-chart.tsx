@@ -67,12 +67,14 @@ export type BarAnimationType = "none" | OrderedRevealAnimation;
 
 // Shared context
 
-/**
- * Shared state for every part of the chart. Lifted into <EvilBarChart /> so that
- * <Bar />, <XAxis />, <Legend />, and friends can read it without prop drilling.
- * Sub-components are composed freely, the provider is the single source of truth.
- */
 const BarChartStateSchema = Schema.Struct({
+  animationType: Schema.Literals([
+    "none",
+    "left-to-right",
+    "right-to-left",
+    "center-out",
+    "edges-in",
+  ]), // default grow-in order each <Bar /> inherits
   barRadius: Schema.Finite, // default corner radius each <Bar /> inherits
   dataLength: Schema.Finite, // number of rows currently rendered
   isHorizontal: Schema.Boolean, // whether bars are laid out horizontally
@@ -82,7 +84,7 @@ const BarChartStateSchema = Schema.Struct({
   selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
 });
 
-type SelectDataKey = (dataKey: string | null) => void;
+type SelectDataKey = (dataKey: string | null) => void; // sets the selected series
 
 /**
  * Builds the shared value of the chart. `config` holds the colors and labels of
@@ -91,6 +93,7 @@ type SelectDataKey = (dataKey: string | null) => void;
  */
 function useBarChartValue(
   {
+    animationType,
     barRadius,
     dataLength,
     isHorizontal,
@@ -100,7 +103,6 @@ function useBarChartValue(
     selectedDataKey,
   }: typeof BarChartStateSchema.Type,
   config: ChartConfig,
-  animationType: BarAnimationType,
   selectDataKey: SelectDataKey
 ) {
   return useMemo(
@@ -131,6 +133,11 @@ function useBarChartValue(
   );
 }
 
+/**
+ * Shared state for every part of the chart. Lifted into <EvilBarChart /> so that
+ * <Bar />, <XAxis />, <Legend />, and friends can read it without prop drilling.
+ * Sub-components are composed freely, the provider is the single source of truth.
+ */
 type BarChartContextValue = ReturnType<typeof useBarChartValue>;
 
 const BarChartContext = createContext<BarChartContextValue | null>(null);
@@ -245,6 +252,7 @@ export function EvilBarChart<
 
   const contextValue = useBarChartValue(
     {
+      animationType,
       barRadius,
       dataLength: displayData.length,
       isHorizontal,
@@ -254,7 +262,6 @@ export function EvilBarChart<
       selectedDataKey,
     },
     config,
-    animationType,
     selectDataKey
   );
 

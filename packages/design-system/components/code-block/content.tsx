@@ -29,7 +29,7 @@ const CodeHighlightRequestSchema = Schema.Struct({
   transparentBackground: Schema.Boolean,
 });
 type CodeHighlightRequest = typeof CodeHighlightRequestSchema.Type &
-  Record<"themes", CodeHighlightOptions["themes"]>;
+  Pick<CodeHighlightOptions, "themes">;
 
 /** Highlights client-rendered code while retaining a safe text fallback. */
 export function CodeBlockContent({

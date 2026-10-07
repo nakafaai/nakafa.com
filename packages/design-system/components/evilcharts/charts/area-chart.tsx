@@ -51,13 +51,20 @@ export type CurveType = NonNullable<
 type StackType = "default" | "expanded" | "stacked";
 
 const AreaChartStateSchema = Schema.Struct({
+  animationType: Schema.Literals([
+    "none",
+    "left-to-right",
+    "right-to-left",
+    "center-out",
+    "edges-in",
+  ]), // default intro reveal each <Area /> inherits
   isExpanded: Schema.Boolean, // whether the stack is normalized to 100%
   isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
   isStacked: Schema.Boolean, // whether areas stack on top of each other
   selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
 });
 
-type SelectDataKey = (dataKey: string | null) => void;
+type SelectDataKey = (dataKey: string | null) => void; // sets the selected series
 
 /**
  * Builds the value every area part reads. `config` holds the colors and labels
@@ -66,6 +73,7 @@ type SelectDataKey = (dataKey: string | null) => void;
  */
 function useAreaChartValue(
   {
+    animationType,
     isExpanded,
     isLoading,
     isStacked,
@@ -73,7 +81,6 @@ function useAreaChartValue(
   }: typeof AreaChartStateSchema.Type,
   config: ChartConfig,
   curveType: CurveType,
-  animationType: AreaAnimationType,
   selectDataKey: SelectDataKey
 ) {
   return useMemo(
@@ -206,10 +213,9 @@ export function EvilAreaChart<
   );
 
   const contextValue = useAreaChartValue(
-    { isExpanded, isLoading, isStacked, selectedDataKey },
+    { animationType, isExpanded, isLoading, isStacked, selectedDataKey },
     config,
     curveType,
-    animationType,
     selectDataKey
   );
 

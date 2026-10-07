@@ -65,20 +65,21 @@ export type ComposedAnimationType = "none" | OrderedRevealAnimation;
 
 // Shared context
 
-/**
- * Shared state for every part of the chart. Lifted into <EvilComposedChart /> so
- * that <Bar />, <Line />, <XAxis />, <Legend />, and friends can read it without
- * prop drilling. Sub-components are composed freely, the provider is the single
- * source of truth.
- */
 const ComposedChartStateSchema = Schema.Struct({
+  animationType: Schema.Literals([
+    "none",
+    "left-to-right",
+    "right-to-left",
+    "center-out",
+    "edges-in",
+  ]), // default intro each <Bar /> and <Line /> inherits
   dataLength: Schema.Finite, // number of rows currently rendered
   hoveredIndex: Schema.NullOr(Schema.Finite), // data index currently hovered, or null when none
   isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
   selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
 });
 
-type SelectDataKey = (dataKey: string | null) => void;
+type SelectDataKey = (dataKey: string | null) => void; // sets the selected series
 
 /**
  * Builds the shared value of the chart. `config` holds the colors and labels of
@@ -88,6 +89,7 @@ type SelectDataKey = (dataKey: string | null) => void;
  */
 function useComposedChartValue(
   {
+    animationType,
     dataLength,
     hoveredIndex,
     isLoading,
@@ -95,7 +97,6 @@ function useComposedChartValue(
   }: typeof ComposedChartStateSchema.Type,
   config: ChartConfig,
   curveType: CurveType,
-  animationType: ComposedAnimationType,
   selectDataKey: SelectDataKey
 ) {
   return useMemo(
@@ -122,6 +123,12 @@ function useComposedChartValue(
   );
 }
 
+/**
+ * Shared state for every part of the chart. Lifted into <EvilComposedChart /> so
+ * that <Bar />, <Line />, <XAxis />, <Legend />, and friends can read it without
+ * prop drilling. Sub-components are composed freely, the provider is the single
+ * source of truth.
+ */
 type ComposedChartContextValue = ReturnType<typeof useComposedChartValue>;
 
 const ComposedChartContext = createContext<ComposedChartContextValue | null>(
@@ -232,6 +239,7 @@ export function EvilComposedChart<
 
   const contextValue = useComposedChartValue(
     {
+      animationType,
       dataLength: displayData.length,
       hoveredIndex,
       isLoading,
@@ -239,7 +247,6 @@ export function EvilComposedChart<
     },
     config,
     curveType,
-    animationType,
     selectDataKey
   );
 
