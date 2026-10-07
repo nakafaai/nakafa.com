@@ -5,11 +5,11 @@ import "@/styles/globals.css";
 import { captureException } from "@repo/analytics/posthog/browser";
 import { DesignSystemProvider } from "@repo/design-system";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "cn";
 import { useEffect } from "react";
+import { DeferredParticles } from "@/components/shared/particles";
 
 export default function GlobalError({
   error,
@@ -37,7 +37,7 @@ export default function GlobalError({
         <DesignSystemProvider>
           <div className="relative">
             <div className="relative flex h-svh items-center justify-center">
-              <Particles className="pointer-events-none absolute inset-0 opacity-80" />
+              <DeferredParticles className="pointer-events-none absolute inset-0 opacity-80" />
               <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
                 <div className="space-y-4 text-center">
                   <h1 className="font-bold font-mono text-6xl text-destructive">
