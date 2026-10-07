@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-import { relative } from "node:path";
 import { parseEnv } from "node:util";
 import {
   NAKAFA_API_EDGE_CONTRACT,
@@ -22,7 +20,16 @@ import {
   LocalSigningIdentitySchema,
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
-import { Effect, FileSystem, Option, Record as Rec, Schema } from "effect";
+import {
+  Crypto,
+  Effect,
+  FileSystem,
+  Option,
+  Path,
+  Record as Rec,
+  Schema,
+} from "effect";
+import { Hex } from "effect/encoding";
 
 const LoopbackUrl = Schema.String.check(
   Schema.isPattern(/^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/),
@@ -44,6 +51,17 @@ const RuntimeManifest = Schema.Struct({
   site: LoopbackUrl,
 });
 export type LocalRuntime = typeof RuntimeManifest.Type;
+/** Hashes text with SHA-256 through Effect's `Crypto` and returns the hex digest. */
+const sha256Hex = Effect.fn("ContentAcceptance.sha256Hex")(function* (
+  text: string
+) {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto.digest(
+    "SHA-256",
+    new TextEncoder().encode(text)
+  );
+  return Hex.encode(digest);
+});
 export const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
 
 /**
@@ -182,6 +200,7 @@ export const initializeLocalRuntime = Effect.fn(
   "contentAcceptance.initializeLocalRuntime"
 )(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const directory = `${root}/.cache/acceptance`;
   const reserved = yield* directoryIdentity(directory);
   const identity = yield* createLocalSigningIdentity(directory);
@@ -201,7 +220,7 @@ export const initializeLocalRuntime = Effect.fn(
     `${backend}/convex.json`,
     JSON.stringify({
       ...config,
-      functions: relative(backend, `${root}/packages/backend/convex`),
+      functions: path.relative(backend, `${root}/packages/backend/convex`),
     })
   );
   for (const entry of ["node_modules", "package.json"]) {
@@ -273,12 +292,10 @@ export const initializeLocalRuntime = Effect.fn(
     analytics: yield* reserveAnalyticsOrigin(),
     backend,
     databaseInode: database.ino.value,
-    configurationHash: createHash("sha256")
-      .update(
-        yield* fs.readFileString(`${backend}/.convex/local/default/config.json`)
-      )
-      .digest("hex"),
-    environmentHash: createHash("sha256").update(source).digest("hex"),
+    configurationHash: yield* sha256Hex(
+      yield* fs.readFileString(`${backend}/.convex/local/default/config.json`)
+    ),
+    environmentHash: yield* sha256Hex(source),
   };
   yield* fs.writeFileString(
     `${directory}/manifest.json`,
@@ -320,15 +337,12 @@ export const readLocalRuntime = Effect.fn("contentAcceptance.readLocalRuntime")(
       Option.isNone(database.ino) ||
       runtime.databaseInode !== database.ino.value ||
       runtime.configurationHash !==
-        createHash("sha256")
-          .update(
-            yield* fs.readFileString(
-              `${backend}/.convex/local/default/config.json`
-            )
+        (yield* sha256Hex(
+          yield* fs.readFileString(
+            `${backend}/.convex/local/default/config.json`
           )
-          .digest("hex") ||
-      runtime.environmentHash !==
-        createHash("sha256").update(source).digest("hex")
+        )) ||
+      runtime.environmentHash !== (yield* sha256Hex(source))
     ) {
       return yield* acceptanceRuntimeError(
         "The local build runtime changed ownership; existing state is preserved."
