@@ -1,6 +1,6 @@
 import { instant } from "@next/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, type MutableHashSet } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import {
@@ -11,13 +11,16 @@ import {
 import {
   activate,
   arrive,
+  intend,
   openHub,
   openTrack,
   press,
   readinessTimeoutMilliseconds,
   readSectionHref,
+  recordIntentRequests,
   sectionLink,
   setHref,
+  settledSection,
   trackHref,
   viewports,
   visibleLink,
@@ -37,13 +40,18 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
       hasTouch: boolean;
       pathname: string;
       title: string;
-    }
+    },
+    requested: MutableHashSet.MutableHashSet<string>
   ) {
     yield* Effect.promise(() => link.scrollIntoViewIfNeeded());
+    yield* intend(link, target, requested);
     // @next/playwright owns this native Promise callback while its lock is held.
     yield* Effect.promise(() =>
       instant(page, () =>
         press(link, target.hasTouch)
+          // A pointer that rests where it pressed would show intent on
+          // whatever the next page puts there, before the test asks for it.
+          .then(() => page.mouse.move(-1, -1))
           .then(() =>
             page.waitForURL((url) => url.pathname === target.pathname, {
               timeout: readinessTimeoutMilliseconds,
@@ -85,8 +93,7 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
 
   yield* openTrack(page, hasTouch);
   yield* activate(visibleLink(page, setHref), hasTouch);
-  const section = sectionLink(page);
-  yield* arrive(page, setHref, section);
+  const section = yield* settledSection(page);
   const sectionHref = yield* readSectionHref(section);
   yield* activate(section, hasTouch);
   const start = page.getByRole("button", { exact: true, name: "Start" });
@@ -124,6 +131,7 @@ const verifyPrefetchedHeadings = Effect.fn(
   "NakafaE2E.verifyPrefetchedTryoutHeadings"
 )(function* (page: Page, hasTouch: boolean) {
   yield* seedDeniedAnalyticsConsent(page);
+  const requested = recordIntentRequests(page);
   yield* openHub(page);
   yield* openTrack(page, hasTouch);
 
@@ -131,34 +139,37 @@ const verifyPrefetchedHeadings = Effect.fn(
   const setTitle = yield* Effect.promise(() =>
     setLink.locator("[title]").getAttribute("title")
   ).pipe(Effect.flatMap(Effect.fromNullishOr));
-  yield* openPrefetched(page, setLink, {
-    content: sectionLink(page),
-    hasTouch,
-    pathname: setHref,
-    title: setTitle,
-  });
-
-  // The resolved set replaces the catalog view's rows, so the section link
-  // whose prefetch is measured must be the one that stays.
-  const section = sectionLink(page);
-  yield* arrive(
+  yield* openPrefetched(
     page,
-    setHref,
-    page.getByRole("button", { exact: true, name: "Start" })
+    setLink,
+    {
+      content: sectionLink(page),
+      hasTouch,
+      pathname: setHref,
+      title: setTitle,
+    },
+    requested
   );
+
+  const section = yield* settledSection(page);
   const sectionHref = yield* readSectionHref(section);
   const sectionTitle = yield* Effect.promise(() =>
     section.locator("h3").innerText()
   );
-  yield* openPrefetched(page, section, {
-    content: page
-      .locator("main")
-      .getByText("Questions", { exact: true })
-      .filter({ visible: true }),
-    hasTouch,
-    pathname: sectionHref,
-    title: sectionTitle,
-  });
+  yield* openPrefetched(
+    page,
+    section,
+    {
+      content: page
+        .locator("main")
+        .getByText("Questions", { exact: true })
+        .filter({ visible: true }),
+      hasTouch,
+      pathname: sectionHref,
+      title: sectionTitle,
+    },
+    requested
+  );
 });
 
 for (const viewport of viewports) {
