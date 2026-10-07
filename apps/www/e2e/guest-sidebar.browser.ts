@@ -240,17 +240,22 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
 
         // A middle click opens the link in a background tab, and the browser
         // reads the href when the auxclick's default action runs. The last
-        // listener records that href and cancels the tab: Playwright does not
-        // always report a background tab, and its animated shader competes
-        // for a small runner's CPU.
+        // listener records that href and whether the app left the default
+        // action alone, then cancels the tab: Playwright does not always
+        // report a background tab, and its animated shader competes for a
+        // small runner's CPU.
         const nativeClick = yield* Effect.promise(() =>
           loginLink.evaluateHandle((link) => {
-            const observed: { href: string | null } = { href: null };
+            const observed: {
+              cancelled: boolean | null;
+              href: string | null;
+            } = { cancelled: null, href: null };
             window.addEventListener(
               "auxclick",
               (event) => {
-                event.preventDefault();
+                observed.cancelled = event.defaultPrevented;
                 observed.href = link.getAttribute("href");
+                event.preventDefault();
               },
               { once: true }
             );
@@ -258,12 +263,15 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
           })
         );
         yield* Effect.promise(() => loginLink.click({ button: "middle" }));
-        const nativeHref = yield* Effect.promise(() =>
-          nativeClick.evaluate((observed) => observed.href)
+        const native = yield* Effect.promise(() => nativeClick.jsonValue());
+        yield* Effect.sync(() =>
+          expect(native).toStrictEqual({ cancelled: false, href: exactHref })
         );
-        yield* Effect.sync(() => expect(nativeHref).toBe(exactHref));
+        // The tab would load this exact URL, so a redirect must not pass.
         const nativeResponse = yield* Effect.promise(() =>
-          page.request.get(new URL(exactHref, page.url()).toString())
+          page.request.get(new URL(exactHref, page.url()).toString(), {
+            maxRedirects: 0,
+          })
         );
         yield* Effect.sync(() => expect(nativeResponse.ok()).toBe(true));
         yield* Effect.promise(() =>
