@@ -8,16 +8,13 @@ import {
 } from "@repo/backend/confect/contentRelease/model";
 import { decodeProjectionJson } from "@repo/backend/confect/contentRelease/parse";
 import { catalogRelease } from "@repo/backend/confect/contentRelease/proof/catalog";
+import type { routeCatalogValidator } from "@repo/backend/confect/contentRelease/proof/routes.spec";
 import {
   PROOF_PAGE_BYTES,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
 import { Effect } from "effect";
-export interface RouteCatalogPage {
-  readonly checked: number;
-  readonly done: boolean;
-  readonly nextCursor: null | string;
-}
+export type RouteCatalogPage = typeof routeCatalogValidator.Type;
 
 /** Validates one bounded active-route directory page at a frozen sequence. */
 export const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(

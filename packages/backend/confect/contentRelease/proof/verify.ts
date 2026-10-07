@@ -1,6 +1,9 @@
 "use node";
 
-import type { ReleaseVerificationEvidence } from "@nakafa/aksara-contracts/release";
+import {
+  type ReleaseVerificationEvidence,
+  ReleaseVerificationEvidenceSchema,
+} from "@nakafa/aksara-contracts/release";
 import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result/digest";
 import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/route/verify";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
@@ -29,9 +32,13 @@ import type {
   progressValidator,
   statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 export type Progress = typeof progressValidator.Type;
 export type Status = typeof statusValidator.Type;
+/** Stores the proof as the exact JSON text that the commit compares byte for byte. */
+const ProofJsonSchema = Schema.fromJsonString(
+  ReleaseVerificationEvidenceSchema
+);
 /** Authenticates the frozen release and renderer identity shared by proof steps. */
 export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
   function* (manifestHash: string, releaseId: string) {
@@ -226,8 +233,11 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       stagedSnapshotRows: snapshots.stagedRows,
       upsertHeads: items.upsertCount,
     };
+    const proofJson = yield* Schema.encodeEffect(ProofJsonSchema)(proof).pipe(
+      Effect.orDie
+    );
     yield* runMutation(refs.internal.contentRelease.proof.commit.commitProof, {
-      proofJson: JSON.stringify(proof),
+      proofJson,
     }).pipe(Effect.catchTag("SchemaError", Effect.die));
     return proof;
   }
