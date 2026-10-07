@@ -68,17 +68,19 @@ export function ForumPostInput() {
   );
   const createPost = useCreateForumPost();
   const [{ files }, { removeFile, clearFiles, openFileDialog, getInputProps }] =
-    useFileUpload({
-      multiple: true,
-      accept: "image/*,.pdf,.doc,.docx,.txt",
-      maxSize: MAX_FORUM_ATTACHMENT_BYTES,
-      maxFiles: MAX_FORUM_POST_ATTACHMENTS,
-      onError: (errors) => {
+    useFileUpload(
+      {
+        multiple: true,
+        accept: "image/*,.pdf,.doc,.docx,.txt",
+        maxSize: MAX_FORUM_ATTACHMENT_BYTES,
+        maxFiles: MAX_FORUM_POST_ATTACHMENTS,
+      },
+      (errors) => {
         for (const error of errors) {
           toast.error(error, { position: "bottom-center" });
         }
-      },
-    });
+      }
+    );
   const [isEmojiPickerOpen, emojiPicker] = useDisclosure(false);
   const os = useOs();
   const isMobile = os === "ios" || os === "android";

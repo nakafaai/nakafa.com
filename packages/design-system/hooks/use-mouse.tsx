@@ -1,12 +1,7 @@
 import { useEffect, useRef } from "react";
 
-interface MousePosition {
-  x: number;
-  y: number;
-}
-
 export function useMousePosition() {
-  const mousePosition = useRef<MousePosition>({
+  const mousePosition = useRef({
     x: 0,
     y: 0,
   });

@@ -4,9 +4,10 @@ import { useControllableState } from "@repo/design-system/hooks/use-controllable
 import {
   CodeBlockContext,
   type CodeBlockData,
+  useCodeBlockContextValue,
 } from "@repo/design-system/lib/code-block/context";
 import { cn } from "cn";
-import { type HTMLAttributes, useMemo } from "react";
+import type { HTMLAttributes } from "react";
 
 /** Controlled or uncontrolled source selection for a composed code block. */
 export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
@@ -25,17 +26,12 @@ export function CodeBlock({
   data,
   ...props
 }: CodeBlockProps) {
-  const [value, onValueChange] = useControllableState({
-    defaultProp: defaultValue ?? "",
-    prop: controlledValue,
-    ...(controlledOnValueChange === undefined
-      ? {}
-      : { onChange: controlledOnValueChange }),
-  });
-  const contextValue = useMemo(
-    () => ({ value, onValueChange, data }),
-    [value, onValueChange, data]
+  const [value, onValueChange] = useControllableState(
+    defaultValue ?? "",
+    controlledValue,
+    controlledOnValueChange
   );
+  const contextValue = useCodeBlockContextValue(data, value, onValueChange);
 
   return (
     <CodeBlockContext value={contextValue}>
