@@ -12,7 +12,7 @@ type ControllableChange<T> = (value: T) => void;
  */
 export function useControllableState<T>(
   defaultProp: T,
-  prop: T | undefined,
+  prop?: T | undefined,
   onChange?: ControllableChange<T>
 ): ControllableState<T> {
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultProp);

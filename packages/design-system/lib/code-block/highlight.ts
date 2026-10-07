@@ -30,8 +30,9 @@ const CodeHighlightInputSchema = Schema.Struct({
 });
 
 /** Input contract for one Shiki code-highlighting operation. */
-export type CodeHighlightOptions = typeof CodeHighlightInputSchema.Type &
-  Partial<Pick<CodeOptionsMultipleThemes, "themes">>;
+export type CodeHighlightOptions = typeof CodeHighlightInputSchema.Type & {
+  readonly themes?: CodeOptionsMultipleThemes["themes"] | undefined;
+};
 
 /** Expected failure when a code block names a language outside Shiki's bundle. */
 export class UnsupportedCodeLanguageError extends Schema.TaggedError<UnsupportedCodeLanguageError>()(

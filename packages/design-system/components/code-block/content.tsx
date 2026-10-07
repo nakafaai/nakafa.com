@@ -75,7 +75,7 @@ export function CodeBlockContent({
           ? {}
           : { language: request.language }),
         preClassName: request.preClassName,
-        ...(request.themes === undefined ? {} : { themes: request.themes }),
+        themes: request.themes,
         transparentBackground: request.transparentBackground,
       }).pipe(
         Effect.matchEffect({
