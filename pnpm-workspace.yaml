@@ -17,6 +17,7 @@ update:
     - '@ai-sdk/google'
     - '@biomejs/biome'
     - '@convex-dev/better-auth'
+    - '@effect/platform-browser'
     - '@effect/platform-node'
     - '@effect/tsgo'
     - '@effect/vitest'
@@ -45,6 +46,7 @@ update:
 catalog:
   '@ai-sdk/gateway': 4.0.104
   '@ai-sdk/google': 4.0.88
+  '@effect/platform-browser': 4.0.1
   '@effect/platform-node': 4.0.1
   '@effect/vitest': 4.0.1
   '@vitest/coverage-istanbul': 5.0.3

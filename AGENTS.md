@@ -56,6 +56,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 | Native array and object helpers, `Map`, `Set`, `switch` or `if` chains over tags | The Effect data modules with `pipe` or `flow`: `Array`, `Record`, `Option`, `Result`, `Match`, `HashMap`, `HashSet`, and their kin |
 | `process.env`, `Date`, `Math.random`, timers, `console` | `Config`, `Clock` and `DateTime`, `Random`, `Duration` and `Schedule`, `Effect.log` |
 | `fetch` | `HttpClient` from `effect/http`, provided by `FetchClient` from `@repo/utilities/http/client` |
+| `crypto.randomUUID` | `randomUuid` from `@repo/utilities/uuid`, which reads Effect's `Crypto` service |
 | `node:` file, path, and process modules | `FileSystem`, `Path`, and `ChildProcess`, provided by `NodeServices.layer` |
 | Hand-written encodings, `JSON.parse` | `effect/encoding`, `Schema.fromJsonString` |
 | `null`, generic `Error`, raw throws, silent fallbacks | A specific `Schema.TaggedError` or `Data.TaggedError`, handled with `catchTag` or `catchTags` |

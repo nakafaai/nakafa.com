@@ -1,5 +1,6 @@
 "use client";
 
+import { randomUuid } from "@repo/utilities/uuid";
 import { Effect } from "effect";
 import {
   createContext,
@@ -57,7 +58,7 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
   }
 
   const [ask] = useState(() => (prompt: NinaDraft) => {
-    const id = crypto.randomUUID();
+    const id = Effect.runSync(randomUuid);
     const current = latest.current;
     if (current.gate.pending) {
       if (current.openAsk({ id, text: prompt.text })) {
