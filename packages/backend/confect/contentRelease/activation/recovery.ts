@@ -1,4 +1,3 @@
-import { PublicationReceiptSchema } from "@nakafa/aksara-contracts/release";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { completedActivation } from "@repo/backend/confect/contentRelease/activation/complete";
 import {
@@ -22,7 +21,8 @@ import {
 import { loadReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/runtime";
 import { Clock, Effect, Schema } from "effect";
 
-const ReceiptJsonSchema = Schema.fromJsonString(PublicationReceiptSchema);
+/** Stores the receipt as plain JSON text, with the bytes JSON.stringify produces. */
+const ReceiptJson = Schema.fromJsonString(Schema.Unknown);
 
 /** Starts the inactive read-model build for one retained recovery. */
 export const prepareRecovery = Effect.fn("contentRelease.prepareRecovery")(
@@ -84,14 +84,13 @@ export const activateRecovery = Effect.fn("contentRelease.activateRecovery")(
       publicationReceipt(release, signed),
     ]);
     const now = yield* Clock.currentTimeMillis;
-    const receiptJson = yield* Schema.encodeUnknownEffect(ReceiptJsonSchema)(
-      receipt
-    ).pipe(Effect.orDie);
     yield* writer
       .table("contentReleases")
       .patch(release._id, {
         completedAt: now,
-        receiptJson,
+        receiptJson: yield* Schema.encodeEffect(ReceiptJson)(receipt).pipe(
+          Effect.orDie
+        ),
         status: "completed",
         tryoutRuntimeBundleHash: runtime.result?.bundle.bundleHash,
         updatedAt: now,

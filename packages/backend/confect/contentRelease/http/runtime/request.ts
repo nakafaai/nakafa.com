@@ -1,9 +1,9 @@
 import {
   type HttpBodyError,
-  HttpJsonBodySchema,
   readJsonBody,
 } from "@repo/backend/confect/contentRelease/http/body";
 import { matchesHttpSecret } from "@repo/backend/confect/contentRelease/http/secret";
+import { dispatchInputValidator } from "@repo/backend/confect/contentRelease/ingress/dispatch.spec";
 import { failureResult } from "@repo/backend/confect/contentRelease/runtime/result";
 import { Effect, Result, Schema } from "effect";
 
@@ -13,7 +13,7 @@ const RuntimeHttpResultSchema = Schema.Struct({
   status: Schema.Finite,
 });
 const AcceptedRuntimeRequestSchema = Schema.Struct({
-  body: HttpJsonBodySchema,
+  body: dispatchInputValidator,
   kind: Schema.Literal("accepted"),
 });
 const RejectedRuntimeRequestSchema = Schema.Struct({
