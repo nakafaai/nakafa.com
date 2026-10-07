@@ -1,10 +1,15 @@
-import type { Answer, FAQPage, Question, WithContext } from "schema-dts";
+import { Schema } from "effect";
+import type { FAQPage, Question, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
-interface FaqItem {
-  readonly acceptedAnswer: Answer;
-  readonly name: string;
-}
+const FaqItemSchema = Schema.Struct({
+  acceptedAnswer: Schema.Struct({
+    "@type": Schema.Literal("Answer"),
+    text: Schema.String,
+  }),
+  name: Schema.String,
+});
+type FaqItem = typeof FaqItemSchema.Type;
 
 interface FAQPageJsonLdProps {
   inLanguage: string;

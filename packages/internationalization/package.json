@@ -12,6 +12,8 @@
   "dependencies": {
     "@nakafa/aksara-contracts": "0.46.0",
     "@repo/utilities": "workspace:*",
+    "@t3-oss/env-nextjs": "^0.13.11",
+    "effect": "catalog:",
     "next": "16.4.0",
     "next-intl": "^4.14.9"
   },

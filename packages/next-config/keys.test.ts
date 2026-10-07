@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
+  appUrlKeys,
   contentRuntimeKeys,
   publicationKeys,
   readContentRuntimeTarget,
@@ -50,5 +51,15 @@ describe("shared Next environment keys", () => {
     expect(contentRuntimeKeys()).toMatchObject({
       CONTENT_RUNTIME_TOKEN: "runtime-token",
     });
+  });
+
+  it("requires a non-empty public app origin", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://nakafa.com");
+    expect(appUrlKeys()).toMatchObject({
+      NEXT_PUBLIC_APP_URL: "https://nakafa.com",
+    });
+
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "");
+    expect(appUrlKeys).toThrow();
   });
 });
