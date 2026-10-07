@@ -1,3 +1,4 @@
+import { ConvexConfigProvider } from "@confect/server";
 import {
   ACTIVE_SIGNING_KEY_ID,
   makeTrustedKeyResolver,
@@ -5,7 +6,7 @@ import {
   TrustedKeySchema,
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import { Schema } from "effect";
+import { Config, Effect, Option, Schema } from "effect";
 
 const TRAILING_DOT = /\.$/;
 const CLOUD_HOST = /^[a-z0-9-]+\.convex\.cloud$/;
@@ -33,20 +34,34 @@ const AgentTrustSchema = Schema.Struct({
     );
   })
 );
-const agentKeyId = process.env.AKSARA_AGENT_SIGNING_KEY_ID;
-const agentPublicKeyPem = process.env.AKSARA_AGENT_SIGNING_PUBLIC_KEY;
-const hasAgentKey = agentKeyId !== undefined || agentPublicKeyPem !== undefined;
+// The Convex provider reads each exact name, because Convex does not expose
+// process.env for enumeration, which ConfigProvider.fromEnv requires.
+const agentEnvironment = Effect.runSync(
+  Config.all({
+    keyId: Config.option(Config.String("AKSARA_AGENT_SIGNING_KEY_ID")),
+    publicKeyPem: Config.option(
+      Config.String("AKSARA_AGENT_SIGNING_PUBLIC_KEY")
+    ),
+    cloudUrl: Config.option(Config.String("CONVEX_CLOUD_URL")),
+    convexUrl: Config.option(Config.String("NEXT_PUBLIC_CONVEX_URL")),
+    vercel: Config.option(Config.String("VERCEL_ENV")),
+  }).parse(ConvexConfigProvider.make())
+);
+const hasAgentKey =
+  Option.isSome(agentEnvironment.keyId) ||
+  Option.isSome(agentEnvironment.publicKeyPem);
 const agentKey = hasAgentKey
   ? // Convex and Next load this immutable trust configuration at module startup.
     // Synchronous schema validation fails before any publication or artifact read.
     Schema.decodeUnknownSync(AgentTrustSchema)({
       key: {
-        keyId: agentKeyId,
-        publicKeyPem: agentPublicKeyPem,
+        keyId: Option.getOrUndefined(agentEnvironment.keyId),
+        publicKeyPem: Option.getOrUndefined(agentEnvironment.publicKeyPem),
       },
       target:
-        process.env.CONVEX_CLOUD_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL,
-      vercel: process.env.VERCEL_ENV,
+        Option.getOrUndefined(agentEnvironment.cloudUrl) ??
+        Option.getOrUndefined(agentEnvironment.convexUrl),
+      vercel: Option.getOrUndefined(agentEnvironment.vercel),
     }).key
   : undefined;
 const trustedContentKeys =
