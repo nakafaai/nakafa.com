@@ -1,13 +1,20 @@
 import { RegisteredFunction } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
+import {
+  MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
+  PublicContentRuntimeRequestSchema,
+} from "@nakafa/aksara-contracts/runtime/spec";
 import { dispatchBatchProgram } from "@repo/backend/confect/contentRelease/runtime/publication/batch";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/batch";
+import {
+  MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES,
+  PublicContentRuntimeBatchRequestSchema,
+  PublicContentRuntimeBatchResponseSchema,
+} from "@repo/backend/content/batch";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
@@ -20,7 +27,15 @@ import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
-const foundRequest = JSON.parse(publicRuntimeRequest());
+const encodeBatchBody = Schema.encodeSync(
+  Schema.fromJsonString(PublicContentRuntimeBatchRequestSchema)
+);
+const decodeBatchBody = Schema.decodeSync(
+  Schema.fromJsonString(PublicContentRuntimeBatchResponseSchema)
+);
+const foundRequest = Schema.decodeSync(
+  Schema.fromJsonString(PublicContentRuntimeRequestSchema)
+)(publicRuntimeRequest());
 const missingRequest = {
   appLocale: "en",
   delivery: "public",
@@ -30,7 +45,10 @@ afterEach(() => vi.restoreAllMocks());
 
 /** Executes the bounded public batch transport program. */
 function runDispatch(t: RuntimeAction, input: unknown) {
-  const source = typeof input === "string" ? input : JSON.stringify(input);
+  const source =
+    typeof input === "string"
+      ? input
+      : Schema.encodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(input);
   const byteLength = new TextEncoder().encode(source).byteLength;
   return t.action((ctx) =>
     Effect.runPromise(
@@ -66,7 +84,7 @@ describe("contentRelease/runtime/publication/batch", () => {
       requests,
     });
     expect(result.status).toBe(200);
-    const responses = JSON.parse(result.body).responses;
+    const { responses } = decodeBatchBody(result.body);
     expect(responses).toHaveLength(8);
     expect(
       Arr.map<readonly { kind: string }[], string>(
@@ -96,7 +114,7 @@ describe("contentRelease/runtime/publication/batch", () => {
   });
   it("rejects empty, nine-item, malformed, and mismatched request bytes", async () => {
     const t = createConvexTestWithBetterAuth();
-    const source = JSON.stringify({
+    const source = encodeBatchBody({
       requests: [foundRequest],
     });
     const mismatch = await t.action((ctx) =>
@@ -201,7 +219,7 @@ describe("contentRelease/runtime/publication/batch", () => {
   });
   it("rejects a transport response whose cardinality differs from its request", async () => {
     const t = createConvexTestWithBetterAuth();
-    const source = JSON.stringify({
+    const source = encodeBatchBody({
       requests: [foundRequest],
     });
     const result = await t.action((ctx) => {
@@ -223,7 +241,7 @@ describe("contentRelease/runtime/publication/batch", () => {
   it("returns an internal failure when Node cannot hash an authenticated query result", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedPublicRuntime(t);
-    const source = JSON.stringify({
+    const source = encodeBatchBody({
       requests: [foundRequest],
     });
     const result = await t.action(async (ctx) => {
@@ -260,7 +278,7 @@ describe("contentRelease/runtime/publication/batch", () => {
     "sanitizes a %s query response at the action boundary",
     async (failure) => {
       const t = createConvexTestWithBetterAuth();
-      const source = JSON.stringify({
+      const source = encodeBatchBody({
         requests: [foundRequest],
       });
       const result = await t.action((ctx) => {
