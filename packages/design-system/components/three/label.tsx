@@ -181,7 +181,7 @@ export function ThreeLabel({
           (element.offsetWidth * worldFontSize) / LABEL_BASE_FONT_SIZE;
         const height =
           (element.offsetHeight * worldFontSize) / LABEL_BASE_FONT_SIZE;
-        framing.labels.set(object, {
+        framing.labels.set(object.id, {
           anchorX: anchorOffset(anchorX),
           anchorY: anchorOffset(anchorY),
           gap: {
@@ -211,7 +211,7 @@ export function ThreeLabel({
       measure();
       return () => {
         observer.disconnect();
-        framing.labels.delete(object);
+        framing.labels.delete(object.id);
         framing.invalidate();
       };
     },

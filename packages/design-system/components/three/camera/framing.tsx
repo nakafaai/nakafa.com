@@ -15,12 +15,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { Box3, type Group, type Object3D, Vector3 } from "three";
+import { Box3, type Group, Vector3 } from "three";
 
 function createFraming() {
   const listeners = new Set<() => void>();
-  const labels = new Map<Object3D, CameraLabelBounds>();
-  const subjects = new Map<Object3D, CameraSubjectBounds>();
+  const labels = new Map<number, CameraLabelBounds>();
+  const subjects = new Map<number, CameraSubjectBounds>();
   let scheduled: number | undefined;
   let renderedChildren: ReactNode;
   const invalidate = () => {
@@ -122,7 +122,7 @@ export function CameraBounds({
       return;
     }
     if (exclude) {
-      framing.subjects.set(object, false);
+      framing.subjects.set(object.id, false);
     } else if (
       rotation !== undefined ||
       scale !== undefined ||
@@ -141,7 +141,7 @@ export function CameraBounds({
               z: { min: travelMinZ, max: travelMaxZ },
             }
           : undefined;
-      framing.subjects.set(object, {
+      framing.subjects.set(object.id, {
         rotation,
         scale,
         translation,
@@ -155,13 +155,13 @@ export function CameraBounds({
       maxZ !== undefined
     ) {
       framing.subjects.set(
-        object,
+        object.id,
         new Box3(new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ))
       );
     }
     framing.invalidate();
     return () => {
-      framing.subjects.delete(object);
+      framing.subjects.delete(object.id);
       framing.invalidate();
     };
   }, [
