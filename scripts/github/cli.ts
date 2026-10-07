@@ -46,6 +46,8 @@ const CliWorkflowSchema = Schema.StructWithRest(
 
 type WorkflowJob = typeof WorkflowJobSchema.Type;
 
+const WorkflowJobJson = Schema.fromJsonString(WorkflowJobSchema);
+
 const SETUP_NODE_ACTION =
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020";
 const UPLOAD_ACTION =
@@ -193,7 +195,7 @@ function trustedPublishProblems(publish: WorkflowJob, source: string) {
     Arr.join("\n")
   );
   const sha256 = createHash("sha256")
-    .update(JSON.stringify(publish))
+    .update(Schema.encodeSync(WorkflowJobJson)(publish))
     .digest("hex");
   return Arr.flatten([
     problemWhen(
@@ -222,7 +224,7 @@ function trustedPublishProblems(publish: WorkflowJob, source: string) {
 
 function trustedVerifyProblems(verify: WorkflowJob) {
   const sha256 = createHash("sha256")
-    .update(JSON.stringify(verify))
+    .update(Schema.encodeSync(WorkflowJobJson)(verify))
     .digest("hex");
   return sha256 === TRUSTED_VERIFY_SHA256
     ? []
