@@ -1,25 +1,17 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import {
-  QuranRowPayloadSchema,
-  QuranSearchRowSchema,
-} from "@nakafa/aksara-contracts/quran/snapshot/row";
+import type { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { PublishedQuranRow } from "@repo/backend/content/quran/contract";
-import { Array as Arr, pipe, Schema } from "effect";
+import { Array as Arr, pipe } from "effect";
 
 type QuranSnapshotRow = PublishedQuranRow["record"];
 type QuranSearch = typeof QuranSearchRowSchema.Type;
-/** Row kinds owned by the signed Quran payload union. */
-const QuranRowKindSchema = Schema.Literals(
-  Arr.map(QuranRowPayloadSchema.members, (member) => member.fields.kind.literal)
-);
-const QuranRowFactsSchema = Schema.Struct({
-  appLocale: Schema.optionalKey(QuranSearchRowSchema.fields.appLocale),
-  firstVerse: Schema.optionalKey(Schema.Finite),
-  identity: Schema.String,
-  kind: QuranRowKindSchema,
-  surahNumber: Schema.optionalKey(Schema.Finite),
-});
-type QuranRowFacts = typeof QuranRowFactsSchema.Type;
+/** Indexed facts stored beside one signed Quran row. */
+type QuranRowFacts = Pick<
+  Docs["quranRows"],
+  "appLocale" | "firstVerse" | "identity" | "surahNumber"
+> &
+  Pick<QuranSnapshotRow["payload"], "kind">;
 
 /** Derives the canonical identity for one localized Quran search row. */
 export function quranSearchIdentity(

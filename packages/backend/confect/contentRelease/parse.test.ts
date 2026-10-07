@@ -55,7 +55,7 @@ const ReleaseJson = Schema.fromJsonString(SignedContentReleaseSchema);
 
 /** Creates exact server-derived evidence for strict proof decoding. */
 function testProofJson() {
-  return Schema.encodeUnknownSync(ProofJson)({
+  return Schema.encodeUnknownSync(ProofJson, { onExcessProperty: "error" })({
     activeAppLocales: ACTIVE_APP_LOCALE_CODES,
     baseActiveAppLocales: null,
     baseManifestHash: null,
