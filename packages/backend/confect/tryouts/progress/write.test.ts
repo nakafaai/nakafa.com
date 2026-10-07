@@ -5,6 +5,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import type { TryoutProgressError } from "@repo/backend/confect/tryouts/progress/spec";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout/runtime";
 import { makeTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
@@ -12,13 +13,8 @@ import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 
 type ProgressInput = Parameters<typeof writeTryoutSetProgress>[0];
-type ProgressScoreMismatch = Pick<
-  ProgressInput,
-  "publishedScore" | "status"
-> & {
-  readonly code: string;
-  readonly message: string;
-};
+type ProgressScoreMismatch = Pick<ProgressInput, "publishedScore" | "status"> &
+  Pick<TryoutProgressError, "code" | "message">;
 
 /** Verifies that one invalid progress score pair fails through the typed seam. */
 const expectProgressScoreMismatch = Effect.fn(

@@ -8,7 +8,7 @@ import {
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, type MutableHashMap, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -21,7 +21,7 @@ interface ResponsePlacementLink {
 }
 export interface TryoutResponseIndex {
   readonly placements: readonly TryoutPlacement[];
-  readonly responses: ReadonlyMap<
+  readonly responses: MutableHashMap.MutableHashMap<
     Id<"tryoutAttemptPlacements">,
     TryoutResponse
   >;

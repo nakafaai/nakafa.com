@@ -13,14 +13,7 @@ import {
 import { Effect, flow } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
-interface ProgressIdentity {
-  readonly appLocale: NonNullable<TryoutAttempt["appLocale"]>;
-  readonly countryKey: TryoutAttempt["countryKey"];
-  readonly examKey: TryoutAttempt["examKey"];
-  readonly setIdentity: TryoutAttempt["setIdentity"];
-  readonly setKey: TryoutAttempt["setKey"];
-  readonly trackKey: TryoutAttempt["trackKey"];
-}
+type ProgressIdentity = ReturnType<typeof readProgressIdentity>;
 
 /** Stores the latest compact attempt state used by set discovery queries. */
 export const writeTryoutSetProgress = Effect.fn(
@@ -97,7 +90,7 @@ function readProgressIdentity(attempt: TryoutAttempt) {
     setIdentity: attempt.setIdentity,
     setKey: attempt.setKey,
     trackKey: attempt.trackKey,
-  } satisfies ProgressIdentity;
+  };
 }
 
 /** Loads the one compact progress row owned by the attempt identity. */
