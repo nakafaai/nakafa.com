@@ -9,10 +9,11 @@ export class HttpBodyError extends Schema.TaggedError<HttpBodyError>()(
   }
 ) {}
 /** Complete UTF-8 JSON request body accepted by one HTTP adapter. */
-export interface HttpJsonBody {
-  readonly byteLength: number;
-  readonly source: string;
-}
+export const HttpJsonBodySchema = Schema.Struct({
+  byteLength: Schema.Finite,
+  source: Schema.String,
+});
+export type HttpJsonBody = typeof HttpJsonBodySchema.Type;
 /** Creates one sanitized body failure without retaining request bytes. */
 function bodyError(reason: HttpBodyError["reason"]) {
   return new HttpBodyError({

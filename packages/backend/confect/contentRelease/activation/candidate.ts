@@ -1,3 +1,4 @@
+import { PublicationReceiptSchema } from "@nakafa/aksara-contracts/release";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { completedActivation } from "@repo/backend/confect/contentRelease/activation/complete";
 import {
@@ -19,7 +20,9 @@ import {
   stagedEvidence,
 } from "@repo/backend/confect/contentRelease/receipt";
 import { loadReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/runtime";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Schema } from "effect";
+
+const ReceiptJsonSchema = Schema.fromJsonString(PublicationReceiptSchema);
 
 /** Starts the invisible read-model build after full candidate validation. */
 export const prepareCandidate = Effect.fn("contentRelease.prepareCandidate")(
@@ -82,6 +85,9 @@ export const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
       publicationReceipt(release, signed),
     ]);
     const now = yield* Clock.currentTimeMillis;
+    const receiptJson = yield* Schema.encodeUnknownEffect(ReceiptJsonSchema)(
+      receipt
+    ).pipe(Effect.orDie);
     yield* writer
       .table("contentReleases")
       .patch(recovery._id, {
@@ -93,7 +99,7 @@ export const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
       .table("contentReleases")
       .patch(release._id, {
         completedAt: now,
-        receiptJson: JSON.stringify(receipt),
+        receiptJson,
         status: "completed",
         tryoutRuntimeBundleHash: runtime.result?.bundle.bundleHash,
         updatedAt: now,
