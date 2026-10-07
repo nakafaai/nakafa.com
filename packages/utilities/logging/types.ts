@@ -1,4 +1,6 @@
+import { Schema } from "effect";
+
+const LogContextSchema = Schema.Record(Schema.String, Schema.Unknown);
+
 /** Structured metadata attached to Effect logs as annotations. */
-export interface LogContext {
-  [key: string]: unknown;
-}
+export type LogContext = typeof LogContextSchema.Type;

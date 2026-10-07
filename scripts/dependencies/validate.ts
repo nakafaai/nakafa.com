@@ -1,4 +1,10 @@
-import { Array as Arr, Option, Order, Record as Rec } from "effect";
+import {
+  Array as Arr,
+  Equivalence,
+  Option,
+  Order,
+  Record as Rec,
+} from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
@@ -10,17 +16,11 @@ import {
   VITEST_COHORT_VERSION,
 } from "#scripts/dependencies/policy";
 import type {
+  DependencyPolicyInput,
   FirstPartyManifest,
-  PackageManifest,
   WorkspaceManifest,
 } from "#scripts/dependencies/source";
 import { problemWhen } from "#scripts/problem";
-
-interface DependencyPolicyInput {
-  readonly manifests: readonly FirstPartyManifest[];
-  readonly rootManifest: PackageManifest;
-  readonly workspace: WorkspaceManifest;
-}
 
 const DEPENDENCY_GROUPS = [
   "dependencies",
@@ -28,6 +28,9 @@ const DEPENDENCY_GROUPS = [
   "optionalDependencies",
   "peerDependencies",
 ] as const;
+
+/** Compares two lists of names or paths, element by element and in order. */
+const sameStrings = Equivalence.Array(Equivalence.String);
 
 /** Returns every first-party declaration for one dependency. */
 export function dependencyDeclarations(
@@ -54,11 +57,13 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
       "declarationPaths" in hold
         ? Arr.sort(hold.declarationPaths, Order.String)
         : [];
-    const allowed = new Set("allowed" in hold ? hold.allowed : [hold.approved]);
+    const allowed = Arr.dedupe(
+      "allowed" in hold ? hold.allowed : [hold.approved]
+    );
     return Arr.flatten([
       "declarationPaths" in hold
         ? problemWhen(
-            JSON.stringify(actualPaths) !== JSON.stringify(expectedPaths),
+            !sameStrings(actualPaths, expectedPaths),
             `${hold.dependency} declarations are ${Arr.join(actualPaths, ", ") || "missing"}; expected ${Arr.join(expectedPaths, ", ")}.`
           )
         : problemWhen(
@@ -67,8 +72,8 @@ function declarationProblems(manifests: readonly FirstPartyManifest[]) {
           ),
       Arr.flatMap(declarations, (declaration) =>
         problemWhen(
-          !allowed.has(declaration.spec),
-          `${declaration.manifestPath} declares ${hold.dependency} as ${declaration.spec}; approved ${Arr.join([...allowed], " or ")}.`
+          !Arr.contains(allowed, declaration.spec),
+          `${declaration.manifestPath} declares ${hold.dependency} as ${declaration.spec}; approved ${Arr.join(allowed, " or ")}.`
         )
       ),
     ]);
@@ -125,7 +130,7 @@ export function validateDependencyPolicy({
   workspace,
 }: DependencyPolicyInput) {
   const expectedIgnores = Arr.sort(
-    new Set([
+    Arr.dedupe([
       ...Arr.map(DEPENDENCY_HOLDS, ({ dependency }) => dependency),
       "node",
       "pnpm",
@@ -138,7 +143,7 @@ export function validateDependencyPolicy({
   );
   return Arr.flatten([
     declarationProblems(manifests),
-    Arr.flatMap(Arr.fromIterable(FORBIDDEN_EFFECT_DEPENDENCIES), (dependency) =>
+    Arr.flatMap(FORBIDDEN_EFFECT_DEPENDENCIES, (dependency) =>
       Arr.map(
         dependencyDeclarations(manifests, dependency),
         (declaration) =>
@@ -159,7 +164,7 @@ export function validateDependencyPolicy({
       );
     }),
     problemWhen(
-      JSON.stringify(actualIgnores) !== JSON.stringify(expectedIgnores),
+      !sameStrings(actualIgnores, expectedIgnores),
       "pnpm update.ignoreDeps does not match the reviewed hold policy."
     ),
     cohortProblems(workspace),

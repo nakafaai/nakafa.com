@@ -66,7 +66,7 @@ function validInput(): PolicyInput {
     path,
   }));
   const ignoreDeps = Arr.sort(
-    new Set([
+    Arr.dedupe([
       ...Arr.map(DEPENDENCY_HOLDS, ({ dependency }) => dependency),
       "node",
       "pnpm",
