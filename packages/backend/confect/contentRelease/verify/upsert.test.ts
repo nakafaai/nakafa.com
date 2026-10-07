@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { QuestionPromptProjectionSchema } from "@nakafa/aksara-contracts/projection/question";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -22,8 +23,14 @@ const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
 const stageProjections = internal.contentRelease.items.stageProjectionBatch;
 const verifyItems = internal.contentRelease.verify.verifyItems;
-/** JSON text for a deliberately off-contract body; a contract codec would strip its extra key. */
-const encodeRawJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const AlteredQuestionProjectionSchema = Schema.Struct({
+  ...QuestionPromptProjectionSchema.fields,
+  choices: Schema.Array(Schema.Never),
+});
+/** JSON text for a deliberately off-contract body: the derived Struct declares the excess choices key that the contract would strip. */
+const encodeAlteredProjection = Schema.encodeSync(
+  Schema.fromJsonString(AlteredQuestionProjectionSchema)
+);
 
 /** Stages one complete Question body through its role-owned projection seam. */
 async function stageQuestion(
@@ -84,7 +91,7 @@ describe("contentRelease/verify/upsert", () => {
           throw new Error("Expected staged Question item.");
         }
         await ctx.db.patch("contentItems", row._id, {
-          projectionJson: encodeRawJson({
+          projectionJson: encodeAlteredProjection({
             ...TEST_QUESTION_PROJECTION,
             choices: [],
           }),
