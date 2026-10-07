@@ -30,12 +30,27 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { Link } from "@repo/internationalization/src/navigation";
-import { FetchClient } from "@repo/utilities/http/client";
-import { Effect } from "effect";
+import { Data, Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
 import { toast } from "sonner";
-import { copyOpenContent } from "@/components/shared/content/copy";
+
+/** Raised when the browser cannot load the copy module. */
+class OpenContentCopyModuleError extends Data.TaggedError(
+  "OpenContentCopyModuleError"
+)<{
+  cause: unknown;
+}> {}
+
+/**
+ * Loads the copy module when a reader copies. It carries the HTTP client, so
+ * a static import would add that client to the first JavaScript of every
+ * content page, which `apps/www/e2e/resources.browser.ts` budgets.
+ */
+const loadOpenContentCopy = Effect.tryPromise({
+  catch: (cause) => new OpenContentCopyModuleError({ cause }),
+  try: () => import("@/components/shared/content/copy"),
+});
 
 /**
  * Renders open/share actions for one content page.
@@ -82,11 +97,14 @@ export function OpenContent({
     const abortController = new AbortController();
     copyAbortController.current = abortController;
 
-    const copyProgram = copyOpenContent({
-      ...(content === undefined ? {} : { content }),
-      ...(copySourceUrl === undefined ? {} : { copySourceUrl }),
-      writeClipboard: (source) => navigator.clipboard.writeText(source),
-    }).pipe(
+    const copyProgram = loadOpenContentCopy.pipe(
+      Effect.flatMap(({ copyOpenContent }) =>
+        copyOpenContent({
+          ...(content === undefined ? {} : { content }),
+          ...(copySourceUrl === undefined ? {} : { copySourceUrl }),
+          writeClipboard: (source) => navigator.clipboard.writeText(source),
+        })
+      ),
       Effect.matchEffect({
         onFailure: () =>
           Effect.sync(() =>
@@ -104,8 +122,7 @@ export function OpenContent({
           }
           copyAbortController.current = null;
         })
-      ),
-      Effect.provide(FetchClient)
+      )
     );
 
     startTransition(async () => {

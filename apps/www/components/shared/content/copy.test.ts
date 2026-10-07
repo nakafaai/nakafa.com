@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Fiber } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
@@ -11,10 +10,9 @@ import {
 const SOURCE_PATH = "/en/subjects/mathematics/analytic-geometry/hyperbola.md";
 type CopyInput = Parameters<typeof copyOpenContent>[0];
 
-/** Runs one copy through Effect's fetch client with a controlled fetch. */
+/** Runs one copy through the module's own client with a controlled fetch. */
 function copy(input: CopyInput, fetcher: typeof fetch = vi.fn<typeof fetch>()) {
   return copyOpenContent(input).pipe(
-    Effect.provide(FetchClient),
     Effect.provideService(FetchHttpClient.Fetch, fetcher)
   );
 }

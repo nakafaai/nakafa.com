@@ -1,3 +1,4 @@
+import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Schema } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 
@@ -74,7 +75,13 @@ const readOpenContentCopySource = Effect.fn("www.openContent.readCopySource")(
     return source;
   }
 );
-/** Loads the reviewed source on intent and waits for clipboard persistence. */
+/**
+ * Loads the reviewed source on intent and waits for clipboard persistence.
+ *
+ * The browser imports this module when a reader copies, and the module
+ * provides its own client, so no content page ships the HTTP client in its
+ * first JavaScript.
+ */
 export const copyOpenContent = Effect.fn("www.openContent.copy")(function* (
   input: CopyOpenContentInput
 ) {
@@ -98,4 +105,4 @@ export const copyOpenContent = Effect.fn("www.openContent.copy")(function* (
       }),
     try: () => input.writeClipboard(source),
   });
-});
+}, Effect.provide(FetchClient));
