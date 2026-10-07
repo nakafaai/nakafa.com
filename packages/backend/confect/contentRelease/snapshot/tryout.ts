@@ -1,4 +1,4 @@
-import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -15,24 +15,9 @@ import {
 } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { Effect } from "effect";
 
-type TryoutRow = Extract<
-  ContentSnapshotRow,
-  {
-    readonly family: "tryout";
-  }
->;
-type CatalogRow = Extract<
-  TryoutRow,
-  {
-    readonly rowKind: "catalog";
-  }
->;
-type PlacementRow = Extract<
-  TryoutRow,
-  {
-    readonly rowKind: "placement";
-  }
->;
+/** Try-out members of the contract row union, at their declared positions. */
+type CatalogRow = (typeof ContentSnapshotRowSchema.members)[2]["Type"];
+type PlacementRow = (typeof ContentSnapshotRowSchema.members)[3]["Type"];
 
 /** Stores one immutable try-out hierarchy row without flattening its body. */
 export const stageTryoutCatalog = Effect.fn(
