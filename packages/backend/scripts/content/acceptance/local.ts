@@ -70,7 +70,6 @@ export const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
  * as `JWKS`, so synthetic learners can sign in locally.
  */
 const localEnvironment = {
-  AI_GATEWAY_API_KEY: "build-disabled",
   AUTH_GOOGLE_ID: "build-disabled",
   AUTH_GOOGLE_SECRET: "build-disabled",
   BETTER_AUTH_SECRET: LOCAL_AUTH_SECRET,
