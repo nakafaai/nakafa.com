@@ -1,6 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { Effect } from "effect";
+import { NodeFileSystem, NodePath } from "@effect/platform-node";
+import { Effect, FileSystem, Layer, Path } from "effect";
 import { cacheLife } from "next/cache";
 import type { CSSProperties } from "react";
 import { ImageResponse } from "takumi-js/response";
@@ -27,13 +26,14 @@ async function getLogoDataUrl() {
   cacheLife("max");
 
   return await Effect.runPromise(
-    Effect.tryPromise(() =>
-      readFile(join(process.cwd(), "public", "logo.svg"), "utf8")
-    ).pipe(
-      Effect.map(
-        (logo) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logo)}`
-      )
-    )
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const logo = yield* fs.readFileString(
+        path.join(process.cwd(), "public", "logo.svg")
+      );
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logo)}`;
+    }).pipe(Effect.provide(Layer.merge(NodeFileSystem.layer, NodePath.layer)))
   );
 }
 

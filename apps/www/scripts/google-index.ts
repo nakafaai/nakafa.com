@@ -13,6 +13,7 @@
  */
 
 // Environment variables loaded via Node.js --env-file flag.
+import { NodeServices } from "@effect/platform-node";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Layer } from "effect";
 import { runGoogleIndexing } from "@/scripts/indexing/google/run";
@@ -29,6 +30,8 @@ Effect.runPromise(
         )
       )
     ),
-    Effect.provide(Layer.merge(IndexingLogger, FetchClient))
+    Effect.provide(
+      Layer.mergeAll(IndexingLogger, FetchClient, NodeServices.layer)
+    )
   )
 );

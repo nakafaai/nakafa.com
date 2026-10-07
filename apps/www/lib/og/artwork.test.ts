@@ -1,8 +1,8 @@
 // @vitest-environment node
 
-import { glob, readFile } from "node:fs/promises";
-import { basename, join } from "node:path";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect, FileSystem, Path } from "effect";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import {
   listStaticArtworkPaths,
@@ -52,33 +52,42 @@ describe("public artwork", () => {
     ).toBe("/en/og/image.png");
   });
 
-  it("keeps the manifest and filesystem in exact agreement", async () => {
-    const artworkRoot = join(process.cwd(), "public", "open-graph");
-    const manifestPaths = listStaticArtworkPaths();
-    const filesystemPaths: string[] = [];
-    for await (const path of glob("**/*.png", { cwd: artworkRoot })) {
-      filesystemPaths.push(path);
-    }
-    const publicFilesystemPaths = filesystemPaths.map(
-      (path) => `/open-graph/${path}`
-    );
+  it.effect("keeps the manifest and filesystem in exact agreement", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const artworkRoot = path.join(process.cwd(), "public", "open-graph");
+      const manifestPaths = listStaticArtworkPaths();
+      const entries = yield* fs.readDirectory(artworkRoot, { recursive: true });
+      const filesystemPaths = entries.filter((entry) => entry.endsWith(".png"));
+      const publicFilesystemPaths = filesystemPaths.map(
+        (entry) => `/open-graph/${entry}`
+      );
 
-    expect(manifestPaths).toHaveLength(101);
-    expect(new Set(manifestPaths).size).toBe(101);
-    expect([...publicFilesystemPaths].sort()).toEqual(
-      [...manifestPaths].sort()
-    );
-    expect(publicFilesystemPaths).not.toContain(
-      "/open-graph/tryout/indonesia/en-2026.png"
-    );
+      expect(manifestPaths).toHaveLength(101);
+      expect(new Set(manifestPaths).size).toBe(101);
+      expect([...publicFilesystemPaths].sort()).toEqual(
+        [...manifestPaths].sort()
+      );
+      expect(publicFilesystemPaths).not.toContain(
+        "/open-graph/tryout/indonesia/en-2026.png"
+      );
 
-    for (const path of filesystemPaths) {
-      expect(basename(path)).toMatch(ARTWORK_FILENAME_PATTERN);
+      for (const entry of filesystemPaths) {
+        expect(path.basename(entry)).toMatch(ARTWORK_FILENAME_PATTERN);
 
-      const image = await readFile(join(artworkRoot, path));
-      expect(image.subarray(1, 4).toString("ascii")).toBe("PNG");
-      expect(image.readUInt32BE(16)).toBe(1200);
-      expect(image.readUInt32BE(20)).toBe(630);
-    }
-  });
+        const image = yield* fs.readFile(path.join(artworkRoot, entry));
+        const header = new DataView(
+          image.buffer,
+          image.byteOffset,
+          image.byteLength
+        );
+        expect(new TextDecoder("ascii").decode(image.subarray(1, 4))).toBe(
+          "PNG"
+        );
+        expect(header.getUint32(16)).toBe(1200);
+        expect(header.getUint32(20)).toBe(630);
+      }
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
 });

@@ -1,12 +1,10 @@
-import { webcrypto } from "node:crypto";
-import fs from "node:fs";
-import { Effect, Schema } from "effect";
+import { Effect, FileSystem, Schema } from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import {
   GoogleAssertionSignError,
   GoogleTokenRequestError,
 } from "@/scripts/indexing/errors";
-import { GOOGLE_KEY_FILE } from "@/scripts/indexing/paths";
+import { indexingFiles } from "@/scripts/indexing/paths";
 
 const GOOGLE_INDEXING_SCOPE = "https://www.googleapis.com/auth/indexing";
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
@@ -31,14 +29,17 @@ const decodeGoogleTokenResponse = Schema.decodeUnknownEffect(
 const loadGoogleServiceAccount = Effect.fn(
   "scripts.google.auth.loadServiceAccount"
 )(function* () {
-  const keyFileContent = yield* Effect.try({
-    try: () => fs.readFileSync(GOOGLE_KEY_FILE, "utf8"),
-    catch: (cause) =>
-      new GoogleAssertionSignError({
-        cause,
-        message: `Failed to read ${GOOGLE_KEY_FILE}.`,
-      }),
-  });
+  const fs = yield* FileSystem.FileSystem;
+  const { googleKey } = yield* indexingFiles;
+  const keyFileContent = yield* fs.readFileString(googleKey).pipe(
+    Effect.mapError(
+      (cause) =>
+        new GoogleAssertionSignError({
+          cause,
+          message: `Failed to read ${googleKey}.`,
+        })
+    )
+  );
   return yield* decodeGoogleServiceAccount(keyFileContent).pipe(
     Effect.mapError(
       () =>
@@ -59,7 +60,7 @@ const signGoogleAccessTokenAssertion = Effect.fn(
   const encoder = new TextEncoder();
   const key = yield* Effect.tryPromise({
     try: () =>
-      webcrypto.subtle.importKey(
+      crypto.subtle.importKey(
         "pkcs8",
         Buffer.from(
           credentials.private_key
@@ -99,7 +100,7 @@ const signGoogleAccessTokenAssertion = Effect.fn(
   const signatureInput = `${encodedHeader}.${encodedPayload}`;
   const signature = yield* Effect.tryPromise({
     try: () =>
-      webcrypto.subtle.sign(
+      crypto.subtle.sign(
         "RSASSA-PKCS1-v1_5",
         key,
         encoder.encode(signatureInput)
