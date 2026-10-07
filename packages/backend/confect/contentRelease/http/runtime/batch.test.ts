@@ -31,9 +31,10 @@ const batchJson = Schema.encodeUnknownSync(
 const malformedJson = Schema.encodeUnknownSync(
   Schema.fromJsonString(Schema.Unknown)
 );
+/** Decodes the found request with the strict contract production uses, so an unmodeled key fails here. */
 const foundRequest = Schema.decodeSync(
   Schema.fromJsonString(PublicContentRuntimeRequestSchema)
-)(publicRuntimeRequest());
+)(publicRuntimeRequest(), { onExcessProperty: "error" });
 const missingRequest = {
   appLocale: "en",
   delivery: "public",
