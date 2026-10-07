@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@ai-sdk/google':
-      specifier: 4.0.90
-      version: 4.0.90
     '@convex-dev/ai-sdk-provider':
       specifier: 0.2.1
       version: 0.2.1
@@ -457,9 +454,6 @@ importers:
 
   packages/backend:
     dependencies:
-      '@ai-sdk/google':
-        specifier: 'catalog:'
-        version: 4.0.90(zod@4.6.5)
       '@confect/core':
         specifier: 10.0.0
         version: 10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
@@ -1151,12 +1145,6 @@ packages:
 
   '@ai-sdk/gateway@4.0.106':
     resolution: {integrity: sha512-NprSdFzyVnbEp2SDWtIgsCFIUHFCehOD9S6FQkF/dLrCmnke8w4SOK3KcmUUiEbwtVzlUF8prkaELp+ohcQaQw==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/google@4.0.90':
-    resolution: {integrity: sha512-XQNKWT6CwcgARdqTUZn0j89y0gvDMR0k2j2qhOg7ffoL+6MNViQ9t3ALoleAAKo10yMLFE7Ato0Fk+RD14i2kg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -7789,12 +7777,6 @@ snapshots:
       '@ai-sdk/provider': 4.0.24
       '@ai-sdk/provider-utils': 5.0.56(zod@4.6.5)
       '@vercel/oidc': 3.2.0
-      zod: 4.6.5
-
-  '@ai-sdk/google@4.0.90(zod@4.6.5)':
-    dependencies:
-      '@ai-sdk/provider': 4.0.24
-      '@ai-sdk/provider-utils': 5.0.56(zod@4.6.5)
       zod: 4.6.5
 
   '@ai-sdk/openai-compatible@3.0.14(zod@4.6.5)':

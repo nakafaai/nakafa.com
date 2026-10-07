@@ -62,132 +62,71 @@ const searchCall = providerStep(
   ],
   "tool-calls"
 );
-const groundingCall = providerStep(
-  [
-    {
-      type: "tool-call",
-      toolCallId: "google",
-      toolName: "google_search",
-      input: "{}",
-      providerExecuted: true,
-    },
-    {
-      type: "tool-result",
-      toolCallId: "google",
-      toolName: "google_search",
-      result: {},
-    },
-  ],
-  "tool-calls"
-);
+const evidenceNotes = providerStep([{ type: "text", text: "Evidence notes." }]);
 const final = providerStep([{ type: "text", text: JSON.stringify(output) }]);
 
 describe("research Agent evidence boundary", () => {
-  it.each([
-    null,
-    [],
-    ["official agents"],
-    ["official agents", "Agent context"],
-  ])(
-    "allows only retrieved citations and publishes actual grounding queries: %j",
-    async (queries) => {
-      const grounded = queries !== null;
-      vi.mocked(searchWeb).mockReturnValue(
-        Effect.succeed({
-          text: "Inspectable source evidence.",
-          result: {
-            error: undefined,
-            sources: grounded
-              ? []
-              : [
-                  {
-                    url,
-                    title: "Official source",
-                    citation: "Official",
-                    content: "Verified source.",
-                    description: "Direct evidence",
-                  },
-                ],
-          },
-        })
-      );
-      vi.mocked(scrapeUrl).mockReturnValue(
-        Effect.succeed({
-          data: { url, content: "Exact source text." },
+  it("searches once with webSearch and keeps only retrieved citations", async () => {
+    vi.mocked(searchWeb).mockReturnValue(
+      Effect.succeed({
+        text: "Inspectable source evidence.",
+        result: {
           error: undefined,
-        })
-      );
-      const evidence = {
-        ...providerStep([
-          ...groundingCall.content,
-          { type: "text", text: "Evidence notes." },
-          ...(grounded
-            ? [
-                {
-                  type: "source" as const,
-                  sourceType: "url" as const,
-                  id: "official",
-                  url,
-                  title: "Official source",
-                },
-              ]
-            : []),
-        ]),
-        ...(grounded
-          ? {
-              providerMetadata: {
-                google: {
-                  groundingMetadata: { webSearchQueries: queries },
-                },
-              },
-            }
-          : {}),
-      };
-      const model = new MockLanguageModelV4({
-        doGenerate: [searchCall, evidence, final],
-      });
-      provider.languageModel.mockReturnValue(model);
-      const usageHandler = vi.fn();
-      const { artifacts, publish } = recordProgress();
-      const result = await runSpecialist((userId) =>
-        runResearchAgent({
-          ...specialistRequest,
-          userId,
-          task: `Verify ${url}`,
-          sourceReferences: grounded
-            ? [source]
-            : Array.from({ length: researchMaxSources }, (_, i) => ({
-                ...source,
-                href: i === 0 ? url : `${url}/${i}`,
-              })),
-          toolCallId: "research",
-          publish,
-          usageHandler,
-        })
-      );
-      expect(result.text).toContain("Verified finding.");
-      expect(result.text).not.toContain("Invented finding.");
-      expect(scrapeUrl).toHaveBeenCalledTimes(
-        grounded ? 1 : researchMaxSources
-      );
-      expect(usageHandler).toHaveBeenCalledTimes(3);
-      expect(model.doGenerateCalls[0]?.toolChoice).toEqual({
-        type: "tool",
-        toolName: "webSearch",
-      });
-      expect(model.doGenerateCalls[1]?.toolChoice).toEqual({
-        type: "required",
-      });
-      if (grounded) {
-        expect(artifacts.at(-1)).toMatchObject({
-          type: "data-web-search",
-          data: { queries, status: "done" },
-        });
-      } else {
-        expect(artifacts).toEqual([]);
-      }
-    }
-  );
+          sources: [
+            {
+              url,
+              title: "Official source",
+              citation: "Official",
+              content: "Verified source.",
+              description: "Direct evidence",
+            },
+          ],
+        },
+      })
+    );
+    vi.mocked(scrapeUrl).mockReturnValue(
+      Effect.succeed({
+        data: { url, content: "Exact source text." },
+        error: undefined,
+      })
+    );
+    const model = new MockLanguageModelV4({
+      doGenerate: [searchCall, evidenceNotes, final],
+    });
+    provider.languageModel.mockReturnValue(model);
+    const usageHandler = vi.fn();
+    const { artifacts, publish } = recordProgress();
+    const result = await runSpecialist((userId) =>
+      runResearchAgent({
+        ...specialistRequest,
+        userId,
+        task: `Verify ${url}`,
+        sourceReferences: Array.from(
+          { length: researchMaxSources },
+          (_, i) => ({
+            ...source,
+            href: i === 0 ? url : `${url}/${i}`,
+          })
+        ),
+        toolCallId: "research",
+        publish,
+        usageHandler,
+      })
+    );
+    expect(result.text).toContain("Verified finding.");
+    expect(result.text).not.toContain("Invented finding.");
+    expect(scrapeUrl).toHaveBeenCalledTimes(researchMaxSources);
+    expect(usageHandler).toHaveBeenCalledTimes(3);
+    expect(artifacts).toEqual([]);
+    expect(model.doGenerateCalls[0]?.toolChoice).toEqual({
+      type: "tool",
+      toolName: "webSearch",
+    });
+    expect(model.doGenerateCalls[0]?.tools?.map((tool) => tool.name)).toEqual([
+      "webSearch",
+    ]);
+    expect(model.doGenerateCalls[1]?.tools ?? []).toEqual([]);
+  });
 
   it("rejects excess exact sources before any provider call without silently dropping URLs", async () => {
     const sources = Array.from({ length: researchMaxSources + 1 }, (_, i) => ({
@@ -235,10 +174,7 @@ describe("research Agent evidence boundary", () => {
     const model = new MockLanguageModelV4({
       doGenerate: [
         searchCall,
-        providerStep([
-          ...groundingCall.content,
-          { type: "text", text: "Unverified provider claim." },
-        ]),
+        providerStep([{ type: "text", text: "Unverified provider claim." }]),
         final,
       ],
     });
@@ -279,7 +215,7 @@ describe("research Agent evidence boundary", () => {
             return Promise.resolve(searchCall);
           }
           if (calls === 2) {
-            return Promise.resolve(groundingCall);
+            return Promise.resolve(evidenceNotes);
           }
           return Promise.resolve(
             providerStep([{ type: "text", text: "Invalid JSON" }])
