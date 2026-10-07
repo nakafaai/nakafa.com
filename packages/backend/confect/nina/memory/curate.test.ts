@@ -70,10 +70,6 @@ describe("Nina memory curation", () => {
     });
     await f.curate();
     await f.curate();
-    expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
-      "space:personal",
-      "purpose:background",
-    ]);
     const [first, second] = Arr.map(model.doGenerateCalls, (call) =>
       JSON.stringify(call.prompt)
     );

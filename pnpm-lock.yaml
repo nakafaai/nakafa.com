@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@ai-sdk/gateway':
-      specifier: 4.0.106
-      version: 4.0.106
     '@ai-sdk/google':
       specifier: 4.0.90
       version: 4.0.90
@@ -460,9 +457,6 @@ importers:
 
   packages/backend:
     dependencies:
-      '@ai-sdk/gateway':
-        specifier: 'catalog:'
-        version: 4.0.106(zod@4.6.5)
       '@ai-sdk/google':
         specifier: 'catalog:'
         version: 4.0.90(zod@4.6.5)

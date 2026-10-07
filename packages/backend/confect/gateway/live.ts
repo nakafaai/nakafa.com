@@ -1,15 +1,24 @@
-import { createGateway } from "@ai-sdk/gateway";
+import { convexGateway } from "@convex-dev/ai-sdk-provider";
+import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { Gateway, make } from "@repo/backend/confect/gateway/handle";
-import { apiKey, headers } from "@repo/backend/confect/gateway/key";
-import { Effect, Layer, Redacted } from "effect";
+import { getServiceToken } from "convex/server";
+import { Effect, Layer } from "effect";
 
 /**
- * The production adapter: the Vercel AI Gateway with the deployment's key,
- * read once per action before any request.
+ * The production adapter: the Convex AI gateway. The deployment's service
+ * token is read once per action, before any request; the provider reads it
+ * again for each request.
  */
 export const GatewayLive = Layer.effect(
   Gateway,
-  Effect.map(apiKey, (key) =>
-    make(createGateway({ apiKey: Redacted.value(key), headers }))
+  Effect.as(
+    Effect.tryPromise({
+      try: () => getServiceToken("ai-gateway"),
+      catch: () =>
+        new GatewayConfigurationError({
+          message: "The AI gateway is not available on this deployment.",
+        }),
+    }),
+    make({ languageModel: convexGateway })
   )
 );

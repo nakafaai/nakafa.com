@@ -29,7 +29,6 @@
     "typecheck": "pnpm codegen && tsc --project tsconfig.json --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "catalog:",
     "@ai-sdk/google": "catalog:",
     "@confect/core": "10.0.0",
     "@confect/server": "10.0.0",

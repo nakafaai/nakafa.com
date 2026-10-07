@@ -1,5 +1,3 @@
-import type { GatewayModelId } from "@ai-sdk/gateway";
-import type { GoogleLanguageModelOptions } from "@ai-sdk/google";
 import { Schema } from "effect";
 
 /** The language models a learner chooses between in Nakafa. */
@@ -16,20 +14,18 @@ export type ModelId = typeof ModelId.Type;
 
 export const defaultModel = ModelId.make("nakafa-lite");
 
-/** The gateway model behind each key. */
+/** The Convex AI gateway model behind each key, as `provider/model`. */
 export const models = {
   "nakafa-lite": "google/gemini-3.5-flash-lite",
   "nakafa-pro": "google/gemini-3.7-flash",
-} satisfies Record<ModelKey, GatewayModelId>;
+} satisfies Record<ModelKey, string>;
 
 /** How much a model reasons: deeply for answers, briefly for supporting work. */
 export const Effort = Schema.Literals(["fast", "interactive"]);
 export type Effort = typeof Effort.Type;
 
-/** Gemini's thinking options for each effort; every key runs a Gemini model. */
-export const thinking = {
-  fast: { thinkingConfig: { thinkingLevel: "low" } },
-  interactive: {
-    thinkingConfig: { includeThoughts: true, thinkingLevel: "high" },
-  },
-} satisfies Record<Effort, GoogleLanguageModelOptions>;
+/** How much the model reasons for each effort; summaries come back with every answer. */
+export const reasoning = {
+  fast: "low",
+  interactive: "high",
+} satisfies Record<Effort, "low" | "high">;

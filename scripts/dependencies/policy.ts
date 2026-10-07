@@ -30,13 +30,11 @@ export const EFFECT_COHORT_OVERRIDES = [
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.0.3";
 /**
- * The AI SDK core, its gateway, the Google provider, and the Convex AI gateway
- * provider pin the same exact provider packages, so they move as one catalog
- * cohort. Each bump rechecks the gateway module's provider contracts
- * (confect/gateway).
+ * The AI SDK core, the Google provider, and the Convex AI gateway provider pin
+ * the same exact provider packages, so they move as one catalog cohort. Each
+ * bump rechecks the gateway module's provider contracts (confect/gateway).
  */
 export const AI_SDK_COHORT = {
-  "@ai-sdk/gateway": "4.0.106",
   "@ai-sdk/google": "4.0.90",
   "@convex-dev/ai-sdk-provider": "0.2.1",
   ai: "7.0.130",
@@ -100,11 +98,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     approved: "catalog:",
     dependency: "@ai-sdk/google",
-    minimumDeclarations: 1,
-  },
-  {
-    approved: "catalog:",
-    dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
   {
@@ -266,11 +259,6 @@ export const REGISTRY_REVIEWS = [
   [
     "@ai-sdk/google@latest",
     AI_SDK_COHORT["@ai-sdk/google"],
-    "AI SDK packages move as one reviewed cohort.",
-  ],
-  [
-    "@ai-sdk/gateway@latest",
-    AI_SDK_COHORT["@ai-sdk/gateway"],
     "AI SDK packages move as one reviewed cohort.",
   ],
   [

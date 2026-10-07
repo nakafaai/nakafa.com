@@ -43,6 +43,8 @@ export default mergeConfig(config, {
           include: ["confect/**/*.test.ts", "components/**/*.test.ts"],
           exclude: defaultExcludes,
           environment: "edge-runtime",
+          // The Convex AI gateway provider imports `convex/server`, which tests mock.
+          server: { deps: { inline: ["@convex-dev/ai-sdk-provider"] } },
         },
       },
       {

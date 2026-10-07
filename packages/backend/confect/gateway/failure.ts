@@ -1,22 +1,22 @@
-import { GatewayError, GatewayResponseError } from "@ai-sdk/gateway";
-import {
-  AISDKError,
-  APICallError,
-  NoOutputGeneratedError,
-  RetryError,
-} from "ai";
+import { APICallError, NoOutputGeneratedError, RetryError } from "ai";
 import { Match, Number as Num, Option, Predicate, Schema } from "effect";
 
 /** Seconds the gateway asked to wait before retrying. */
 const Seconds = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0));
-/** A gateway generation ID: a bounded plain identifier, never free text. */
-const GenerationId = Schema.String.check(
-  Schema.isPattern(/^[a-zA-Z0-9_-]{1,128}$/)
-);
+/** The gateway's own error type or code: a bounded plain identifier, never free text. */
+const GatewayType = Schema.String.check(Schema.isMaxLength(128));
+
+/** The deployment cannot call the gateway, such as a free, local, or self-hosted deployment. */
+export class GatewayConfigurationError extends Schema.TaggedError<GatewayConfigurationError>()(
+  "GatewayConfigurationError",
+  {
+    message: Schema.String,
+  }
+) {}
 
 /**
- * One classification of every AI SDK and gateway error a model call can
- * raise. It carries routing facts only: never a message, cause, or payload.
+ * One classification of every error a model call can raise. It carries
+ * routing facts only: never a message, cause, or payload.
  */
 export class GatewayFailure extends Schema.TaggedError<GatewayFailure>()(
   "GatewayFailure",
@@ -37,9 +37,8 @@ export class GatewayFailure extends Schema.TaggedError<GatewayFailure>()(
     status: Schema.optional(Schema.Finite),
     retryAfter: Schema.optional(Seconds),
     retryable: Schema.optional(Schema.Boolean),
-    generation: Schema.optional(GenerationId),
-    /** The gateway's own error type, such as `rate_limit_exceeded`. */
-    type: Schema.optional(Schema.String.check(Schema.isMaxLength(128))),
+    /** The gateway's own error type, such as `rate_limit_exceeded`, or its code when the body names no type. */
+    type: Schema.optional(GatewayType),
   }
 ) {}
 type Reason = GatewayFailure["reason"];
@@ -47,24 +46,11 @@ type Reason = GatewayFailure["reason"];
 /** Envelopes followed before classifying, instead of an unbounded cause chain. */
 const ENVELOPE_DEPTH = 4;
 
-/** Whether an error came from an HTTP response, so its status is one a server sent. */
-function responded(error: unknown) {
-  return APICallError.isInstance(error) && error.statusCode !== undefined;
-}
-
-/**
- * The error an SDK envelope wraps: the last retry's error, an empty output's
- * cause, or the failure the gateway client reports as a response error with
- * an invented status 500 when no HTTP response arrived (a refused connection,
- * a deadline, or an abort before the response).
- */
+/** The error an SDK envelope wraps: the last retry's error, or an empty output's cause. */
 const wrapped = Match.type<unknown>().pipe(
   Match.when(RetryError.isInstance, ({ lastError }) => Option.some(lastError)),
   Match.when(NoOutputGeneratedError.isInstance, ({ cause }) =>
     Option.fromUndefinedOr(cause)
-  ),
-  Match.when(GatewayResponseError.isInstance, ({ cause }) =>
-    Option.fromUndefinedOr(cause).pipe(Option.filter(Predicate.not(responded)))
   ),
   Match.orElse(() => Option.none())
 );
@@ -98,19 +84,12 @@ const namedReason = Match.type<string>().pipe(
   Match.withReturnType<Reason>(),
   Match.when("TimeoutError", () => "timeout"),
   Match.when("AbortError", () => "interrupted"),
-  Match.when("GatewayAuthenticationError", () => "auth"),
   Match.orElse(() => "unknown")
 );
 
-/** The reason an error gives by its class or name when no HTTP status classifies it. */
+/** The reason an error gives by its name when no HTTP status classifies it. */
 const nameReason = Match.type<unknown>().pipe(
   Match.withReturnType<Reason>(),
-  // AI SDK replaces GatewayAuthenticationError at its public model boundary.
-  Match.when(
-    (error: unknown) =>
-      AISDKError.isInstance(error) && error.name === "GatewayError",
-    () => "auth"
-  ),
   Match.when(Predicate.isError, ({ name }) => namedReason(name)),
   Match.orElse(() => "unknown")
 );
@@ -135,33 +114,31 @@ function retryAfter(error: unknown) {
   );
 }
 
-/** A gateway generation ID, kept only when it is a bounded plain identifier. */
-function generation(id: string | undefined) {
-  return Option.fromUndefinedOr(id).pipe(
-    Option.filter(Schema.is(GenerationId)),
-    Option.match({
-      onNone: () => ({}),
-      onSome: (kept) => ({ generation: kept }),
-    })
-  );
+/** The gateway's error body. Only its type and code are read; its message and parameters never are. */
+const ErrorBody = Schema.Struct({
+  error: Schema.Struct({
+    type: Schema.optionalKey(Schema.NullOr(Schema.String)),
+    code: Schema.optionalKey(
+      Schema.NullOr(Schema.Union([Schema.String, Schema.Finite]))
+    ),
+  }),
+});
+
+/** The gateway's error type: its `error.type`, or its string `error.code` when the body names no type. */
+function gatewayType(data: unknown) {
+  return Option.match(Schema.decodeUnknownOption(ErrorBody)(data), {
+    onNone: () => ({}),
+    onSome: ({ error: { type, code } }) => {
+      const named = type ?? (typeof code === "string" ? code : undefined);
+      return Schema.is(GatewayType)(named) ? { type: named } : {};
+    },
+  });
 }
 
-/** Classifies an unwrapped error by its SDK class; a classified failure stays as it is. */
+/** Classifies an SDK API call error by its status; no status means no response arrived. */
 const failure = Match.type<unknown>().pipe(
   Match.withReturnType<GatewayFailure>(),
   Match.when(Schema.is(GatewayFailure), (classified) => classified),
-  Match.when(
-    GatewayError.isInstance,
-    (error) =>
-      new GatewayFailure({
-        reason: httpReason(error.statusCode, error),
-        status: error.statusCode,
-        retryable: error.isRetryable,
-        type: error.type,
-        ...retryAfter(error.cause),
-        ...generation(error.generationId),
-      })
-  ),
   Match.when(APICallError.isInstance, (error) =>
     Option.match(Option.fromUndefinedOr(error.statusCode), {
       // No HTTP status: the request never reached a server.
@@ -170,6 +147,7 @@ const failure = Match.type<unknown>().pipe(
           reason: "network",
           retryable: error.isRetryable,
           ...retryAfter(error),
+          ...gatewayType(error.data),
         }),
       onSome: (status) =>
         new GatewayFailure({
@@ -177,6 +155,7 @@ const failure = Match.type<unknown>().pipe(
           status,
           retryable: error.isRetryable,
           ...retryAfter(error),
+          ...gatewayType(error.data),
         }),
     })
   ),
@@ -184,9 +163,8 @@ const failure = Match.type<unknown>().pipe(
 );
 
 /**
- * Unwraps RetryError, NoOutputGeneratedError, and the gateway client's
- * response error around a failure that got no HTTP response, then classifies
- * by SDK class, name, and status.
+ * Unwraps RetryError and NoOutputGeneratedError around the failure behind
+ * them, then classifies by SDK class, name, and status.
  */
 export function classify(cause: unknown): GatewayFailure {
   return failure(unwrap(cause, 0));

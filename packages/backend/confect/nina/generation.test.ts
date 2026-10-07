@@ -3,7 +3,7 @@ import { Agent, listUIMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { GatewayConfigurationError } from "@repo/backend/confect/gateway/key";
+import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
@@ -446,9 +446,6 @@ describe("Nina generation through the real Agent component", () => {
       })
     );
     await f.t.action(run, { turnId: f.turnId });
-    expect(
-      languageModel.doStreamCalls[0]?.providerOptions?.gateway?.tags
-    ).toEqual(["space:personal", "purpose:chat"]);
     const prompt = JSON.stringify(languageModel.doStreamCalls[0]?.prompt);
     expect(prompt).toContain("# Conversation Summary");
     expect(prompt).toContain("- The learner practiced limits.");

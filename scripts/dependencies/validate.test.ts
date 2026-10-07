@@ -343,10 +343,13 @@ describe("dependency policy validation", () => {
         ...input,
         workspace: {
           ...input.workspace,
-          catalog: { ...input.workspace.catalog, "@ai-sdk/gateway": "4.0.101" },
+          catalog: {
+            ...input.workspace.catalog,
+            "@convex-dev/ai-sdk-provider": "0.2.0",
+          },
         },
       }),
-      problem: `The @ai-sdk/gateway catalog must be exactly ${AI_SDK_COHORT["@ai-sdk/gateway"]}.`,
+      problem: `The @convex-dev/ai-sdk-provider catalog must be exactly ${AI_SDK_COHORT["@convex-dev/ai-sdk-provider"]}.`,
     },
     {
       name: "a package manager drift",

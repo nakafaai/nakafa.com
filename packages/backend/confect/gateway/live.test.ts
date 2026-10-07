@@ -1,100 +1,98 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import { Space } from "@repo/backend/confect/space";
-import { ConfigProvider, Effect, Layer, Result, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
+
+const serviceToken = vi.hoisted(() => vi.fn<() => Promise<string>>());
+vi.mock("convex/server", () => ({ getServiceToken: serviceToken }));
 
 const space = Schema.decodeUnknownSync(Space)({
   kind: "personal",
   userId: "user-1",
 });
-const answer = {
-  content: [{ type: "text", text: "Hello" }],
-  finishReason: { unified: "stop", raw: "stop" },
-  usage: {
-    inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-    outputTokens: { total: 1, text: 1, reasoning: 0 },
-  },
-  warnings: [],
+const prompt = [
+  { role: "user" as const, content: [{ type: "text" as const, text: "Hi" }] },
+];
+const completion = {
+  id: "chatcmpl-test",
+  object: "chat.completion",
+  created: 0,
+  model: "google/gemini-3.7-flash",
+  choices: [
+    {
+      index: 0,
+      message: { role: "assistant", content: "Hello" },
+      finish_reason: "stop",
+    },
+  ],
+  usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
 };
 
-/** Runs an effect on the production layer under one deployed key value. */
-function deployed(apiKey: string | undefined) {
-  return Effect.provide(
-    GatewayLive.pipe(
-      Layer.provide(
-        ConfigProvider.layer(
-          ConfigProvider.fromUnknown({ AI_GATEWAY_API_KEY: apiKey })
-        )
-      )
-    )
-  );
-}
+/** The one fetch double this file stubs globally and resets between tests. */
+const fetch = vi.fn<typeof globalThis.fetch>();
 
-afterEach(() => vi.unstubAllGlobals());
+beforeEach(() => vi.stubGlobal("fetch", fetch));
+afterEach(() => {
+  vi.unstubAllGlobals();
+  serviceToken.mockReset();
+  fetch.mockReset();
+});
+
+/** Runs an effect on the production layer. */
+const deployed = Effect.provide(GatewayLive);
 
 describe("The production gateway", () => {
-  it.effect.each([undefined, "", "   "])(
-    "fails before any request when the key is %j",
-    (apiKey) =>
+  it.effect(
+    "fails before any request when the deployment cannot read a service token",
+    () =>
       Effect.gen(function* () {
-        const fetch = vi.fn<typeof globalThis.fetch>();
-        vi.stubGlobal("fetch", fetch);
+        serviceToken.mockRejectedValueOnce(new Error("private deployment"));
         const result = yield* Effect.service(Gateway).pipe(
-          deployed(apiKey),
+          deployed,
           Effect.result
         );
         expect(Result.isFailure(result) && result.failure).toMatchObject({
           _tag: "GatewayConfigurationError",
-          message: "AI Gateway is not configured.",
+          message: "The AI gateway is not available on this deployment.",
         });
         expect(fetch).not.toHaveBeenCalled();
       })
   );
 
-  it.effect(
-    "sends each call to the Vercel AI Gateway with the key, attribution, and route",
-    () =>
-      Effect.gen(function* () {
-        const fetch = vi.fn<typeof globalThis.fetch>(() =>
-          Promise.resolve(Response.json(answer))
-        );
-        vi.stubGlobal("fetch", fetch);
+  it.effect.each([
+    ["specialist", "low"],
+    ["chat", "high"],
+  ] as const)(
+    "sends a %s call to the Convex AI gateway with reasoning effort %s",
+    ([purpose, effort]) => {
+      // The layer reads the service token when it is built, before the body runs.
+      serviceToken.mockResolvedValue("service-token");
+      fetch.mockResolvedValue(Response.json(completion));
+      return Effect.gen(function* () {
         const handle = (yield* Gateway).language({
-          purpose: "specialist",
+          purpose,
           model: "nakafa-pro",
           space,
         });
         const result = yield* Effect.promise(() =>
-          handle.model.doGenerate({
-            prompt: [{ role: "user", content: [{ type: "text", text: "Hi" }] }],
-            providerOptions: { gateway: { only: ["openai"] } },
-          })
+          handle.model.doGenerate({ prompt })
         );
-        expect(result.content).toEqual(answer.content);
+        expect(result.content).toEqual([{ type: "text", text: "Hello" }]);
         expect(fetch).toHaveBeenCalledTimes(1);
         const [url, init] = fetch.mock.calls[0] ?? [];
-        expect(url).toBe("https://ai-gateway.vercel.sh/v4/ai/language-model");
-        expect(init?.headers).toMatchObject({
-          authorization: "Bearer private-test-key",
-          "ai-language-model-id": "google/gemini-3.7-flash",
-          "http-referer": "https://nakafa.com",
-          "x-title": "nakafa.com",
-        });
+        expect(url).toBe("https://ai-gateway.convex.dev/v1/chat/completions");
+        expect(new Headers(init?.headers).get("authorization")).toBe(
+          "Bearer service-token"
+        );
         const body = yield* Schema.decodeUnknownEffect(
           Schema.fromJsonString(Schema.Unknown)
         )(init?.body);
         expect(body).toMatchObject({
-          providerOptions: {
-            gateway: {
-              disallowPromptTraining: true,
-              only: ["google", "vertex"],
-              sort: "ttft",
-              tags: ["space:personal", "purpose:specialist"],
-            },
-            google: { thinkingConfig: { thinkingLevel: "low" } },
-          },
+          model: "google/gemini-3.7-flash",
+          reasoning_effort: effort,
         });
-      }).pipe(deployed("private-test-key"))
+      }).pipe(deployed);
+    }
   );
 });
