@@ -80,10 +80,14 @@ export interface ContentHttpTarget {
   readonly token: string;
 }
 
-/** One exact unmarked response may share the safe read retry budget. */
+/**
+ * One exact unmarked response may share the safe read retry budget. It keeps
+ * the deadline of the attempt that received it for a read after the budget.
+ */
 class RetryableContentResponse extends Data.TaggedError(
   "RetryableContentResponse"
 )<{
+  readonly deadline: number;
   readonly response: HttpClientResponse.HttpClientResponse;
 }> {}
 
@@ -326,6 +330,21 @@ export const requestContentResponse = Effect.fn(
     HttpClientRequest.setHeader("x-nakafa-content-token", input.target.token),
     HttpClientRequest.bodyText(input.source, "application/json")
   );
+  /** Reads one response until the deadline of the attempt that received it. */
+  const readUntil = (
+    response: HttpClientResponse.HttpClientResponse,
+    deadline: number
+  ) =>
+    Effect.gen(function* () {
+      const remaining = deadline - (yield* Clock.currentTimeMillis);
+      return yield* read(response, input.endpoint).pipe(
+        Effect.timeoutOrElse({
+          duration: Math.max(remaining, 0),
+          orElse: () =>
+            Effect.fail(new ContentTransportError({ reason: "body" })),
+        })
+      );
+    });
   const attempt = Effect.gen(function* () {
     const deadline =
       (yield* Clock.currentTimeMillis) + CONTENT_TIMEOUT_MILLISECONDS;
@@ -340,17 +359,12 @@ export const requestContentResponse = Effect.fn(
         (received) => !isRetryableContentResponse(received, input.endpoint),
         (received) =>
           new RetryableContentResponse({
+            deadline,
             response: received,
           })
       )
     );
-    const remaining = deadline - (yield* Clock.currentTimeMillis);
-    const value = yield* read(response, input.endpoint).pipe(
-      Effect.timeoutOrElse({
-        duration: Math.max(remaining, 0),
-        orElse: () =>
-          Effect.fail(new ContentTransportError({ reason: "body" })),
-      }),
+    const value = yield* readUntil(response, deadline).pipe(
       Effect.mapError(classifyContentBodyFailure)
     );
     return {
@@ -364,7 +378,7 @@ export const requestContentResponse = Effect.fn(
       (failure): failure is RetryableContentResponse =>
         failure instanceof RetryableContentResponse,
       (failure) =>
-        read(failure.response, input.endpoint).pipe(
+        readUntil(failure.response, failure.deadline).pipe(
           Effect.map((value) => ({
             response: failure.response,
             value,

@@ -381,18 +381,24 @@ describe("content runtime transport", () => {
     })
   );
 
-  it.effect("counts a body that outlives its deadline as interrupted", () =>
-    Effect.gen(function* () {
-      fetchMock.mockImplementation(() =>
-        Promise.resolve(createResponse(new ReadableStream<Uint8Array>(), 200))
-      );
+  it.effect.each([
+    ["a marked response", 200, undefined],
+    ["the final unmarked response", 500, unmarkedJsonHeaders],
+  ] as const)(
+    "counts a stalled body of %s as interrupted at its deadline",
+    ([_label, status, headers]) =>
+      Effect.gen(function* () {
+        const body = () => new ReadableStream<Uint8Array>();
+        fetchMock.mockImplementation(() =>
+          Promise.resolve(createResponse(body(), status, headers))
+        );
 
-      // Three attempts of ten seconds each, with both retry delays between them.
-      expect(
-        yield* runRetryRequest(requestJson().pipe(Effect.flip), 32)
-      ).toEqual(new ContentTransportError({ reason: "body" }));
-      expect(fetchMock).toHaveBeenCalledTimes(3);
-    })
+        // Three attempts of ten seconds each, with both retry delays between them.
+        expect(
+          yield* runRetryRequest(requestJson().pipe(Effect.flip), 32)
+        ).toEqual(new ContentTransportError({ reason: "body" }));
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+      })
   );
 
   it.live("reads exact bounded JSON and rejects untrusted responses", () =>
