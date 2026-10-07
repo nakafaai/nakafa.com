@@ -46,7 +46,6 @@
     "test:scripts": "pnpm typecheck:scripts && vitest run --config scripts/vitest.config.mts",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",
-    "translate": "turbo run translate",
     "typecheck:scripts": "tsc --project scripts/tsconfig.json --noEmit",
     "version-packages": "changeset version"
   },
