@@ -11,7 +11,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 | Versions, package manager, runtime, dependency holds | `package.json`, `pnpm-workspace.yaml`, `scripts/dependencies/policy.ts` |
 | Writing Effect v4 | `repos/effect/LLMS.md`, then source and tests under `repos/effect/packages`; https://effect.website/docs/v4/api/effect |
 | Confect v10 | https://confect.dev and the installed `@confect/*` source |
-| Convex architecture, auth, deployments, migrations | `packages/backend/AGENTS.md`; installed API rules in `packages/backend/convex/_generated/ai/guidelines.md` |
+| Convex architecture, auth, the dev deployment, migrations | `packages/backend/AGENTS.md`; installed API rules in `packages/backend/convex/_generated/ai/guidelines.md` |
 | Next.js APIs, file conventions, deprecations | the installed docs, `apps/www/node_modules/next/dist/docs` |
 | Turborepo | `docs/README.md` inside the installed `turbo` package |
 | Effect-native source rules, their scopes and fixes | `scripts/check/rules.ts` |
@@ -88,7 +88,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 ## Convex
 
-- `packages/backend/AGENTS.md` owns everything Convex, the rollout contract of public functions included. Prefer direct Convex queries and mutations for app data; add a Next.js Server Action or Route Handler only for a real framework boundary such as cookies, headers, cache invalidation, or a non-Convex integration, and document that reason at the seam.
+- `packages/backend/AGENTS.md` owns Convex architecture, the dev deployment, and the rollout contract of public functions; the Deployment section below owns production. Prefer direct Convex queries and mutations for app data; add a Next.js Server Action or Route Handler only for a real framework boundary such as cookies, headers, cache invalidation, or a non-Convex integration, and document that reason at the seam.
 
 ## Testing
 
@@ -133,5 +133,5 @@ This guide is a map. It states each Nakafa decision once and names the file, com
   ```
 
   The queue reruns both checks on the change combined with the latest `main` and every change queued ahead of it, then squash merges it, so the branch needs no update from `main`. A pull request is merged once its state is `MERGED`, not when it enters the queue.
-- A change that depends on an open pull request goes up as a GitHub stack: `gh stack link <bottom> <top>`, then `gh stack sync` after the bottom merges. CI runs each pull request on its own base.
+- A change that depends on an open pull request goes up as a GitHub stack: `gh stack init <bottom> <top>` tracks the branches locally and `gh stack submit` opens the pull requests. After the bottom merges, `gh stack sync` rebases and pushes the rest. `gh stack link` only links existing pull requests on GitHub, so run `gh stack checkout <stack>` once before syncing a stack made that way. CI runs each pull request on its own base.
 - Version packages on demand: on a branch from the latest `main`, run `GITHUB_TOKEN="$(gh auth token)" pnpm version-packages` (the changelog plugin needs the token to link each entry to its pull request), then land that pull request through the queue. Keep release pull requests human-opened: CI never runs for a pull request a workflow opens with `GITHUB_TOKEN`, so it can never pass Required.
