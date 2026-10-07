@@ -11,7 +11,7 @@ import {
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/research/tools/search", () => ({
   searchWeb: vi.fn(),
@@ -122,9 +122,9 @@ describe("research Agent evidence boundary", () => {
       type: "tool",
       toolName: "webSearch",
     });
-    expect(model.doGenerateCalls[0]?.tools?.map((tool) => tool.name)).toEqual([
-      "webSearch",
-    ]);
+    expect(
+      Arr.map(model.doGenerateCalls[0]?.tools ?? [], (tool) => tool.name)
+    ).toEqual(["webSearch"]);
     expect(model.doGenerateCalls[1]?.tools ?? []).toEqual([]);
   });
 
