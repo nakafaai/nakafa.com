@@ -57,6 +57,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   {
     approved: "catalog:",
+    dependency: "@effect/platform-browser",
+    minimumDeclarations: 1,
+  },
+  {
+    approved: "catalog:",
     dependency: "@effect/platform-node",
     minimumDeclarations: 1,
   },
@@ -183,6 +188,11 @@ export const REGISTRY_REVIEWS = [
     "effect@latest",
     EFFECT_COHORT_VERSION,
     "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts peers on one exact Effect version.",
+  ],
+  [
+    "@effect/platform-browser@latest",
+    EFFECT_COHORT_VERSION,
+    "The platform package must match the Effect cohort.",
   ],
   [
     "@effect/platform-node@latest",

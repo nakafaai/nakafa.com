@@ -21,6 +21,8 @@
           "globalConsole": "error",
           "globalConsoleInEffect": "error",
           "globalFetch": "error",
+          "cryptoRandomUUID": "error",
+          "cryptoRandomUUIDInEffect": "error",
           "globalFetchInEffect": "error",
           "globalRandom": "error",
           "globalRandomInEffect": "error",

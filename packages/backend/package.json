@@ -40,6 +40,7 @@
     "@convex-dev/resend": "^0.2.8",
     "@convex-dev/workflow": "^0.4.9",
     "@convex-dev/workpool": "^0.4.13",
+    "@effect/platform-browser": "catalog:",
     "@effect/platform-node": "catalog:",
     "@mendable/firecrawl-js": "^4.44.1",
     "@modelcontextprotocol/server": "2.3.1",

@@ -357,7 +357,7 @@ describe("classes/forums/attachments/route", () => {
               );
             }
             if (failure === "uuid") {
-              vi.spyOn(crypto, "randomUUID").mockImplementation(() => {
+              vi.spyOn(crypto, "getRandomValues").mockImplementation(() => {
                 throw new Error("Random source unavailable.");
               });
             }

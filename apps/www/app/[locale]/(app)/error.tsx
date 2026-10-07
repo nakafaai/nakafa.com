@@ -2,11 +2,11 @@
 
 import { captureException } from "@repo/analytics/posthog/browser";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { DeferredParticles } from "@/components/shared/particles";
 
 export default function ErrorPage({
   error,
@@ -26,7 +26,7 @@ export default function ErrorPage({
 
   return (
     <div className="relative flex h-[calc(100svh-4rem)] items-center justify-center lg:h-svh">
-      <Particles className="pointer-events-none absolute inset-0 opacity-80" />
+      <DeferredParticles className="pointer-events-none absolute inset-0 opacity-80" />
       <div className="mx-6 rounded-xl border bg-card/30 p-6 shadow-sm backdrop-blur-xs">
         <div className="space-y-4 text-center">
           <h1 className="font-bold font-mono text-6xl text-destructive">5XX</h1>
