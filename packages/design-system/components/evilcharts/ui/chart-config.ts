@@ -1,6 +1,6 @@
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import type { ChartSeriesCue } from "@repo/design-system/lib/charts/series-cue";
-import { Predicate, Record as Rec } from "effect";
+import { Predicate, Record as Rec, Schema } from "effect";
 import type * as React from "react";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -19,12 +19,15 @@ type AtLeastOneThemeColor = {
     Partial<Omit<ThemeColorsBase, K>>;
 }[ThemeKey];
 
-type ChartConfigValidationInput = Record<
-  string,
-  {
-    colors?: object;
-  }
->;
+const ChartConfigValidationInputSchema = Schema.Record(
+  Schema.String,
+  Schema.Struct({
+    colors: Schema.optionalKey(
+      Schema.Record(Schema.String, Schema.Array(Schema.String))
+    ),
+  })
+);
+type ChartConfigValidationInput = typeof ChartConfigValidationInputSchema.Type;
 
 function isThemeKey(key: string): key is ThemeKey {
   return key in THEMES;

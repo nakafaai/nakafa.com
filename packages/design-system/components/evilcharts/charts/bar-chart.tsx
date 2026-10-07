@@ -28,6 +28,7 @@ import {
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
+import { Schema } from "effect";
 import {
   type ComponentProps,
   createContext,
@@ -71,18 +72,66 @@ export type BarAnimationType = "none" | OrderedRevealAnimation;
  * <Bar />, <XAxis />, <Legend />, and friends can read it without prop drilling.
  * Sub-components are composed freely, the provider is the single source of truth.
  */
-interface BarChartContextValue {
-  animationType: BarAnimationType; // default grow-in order each <Bar /> inherits
-  barRadius: number; // default corner radius each <Bar /> inherits
-  config: ChartConfig; // colors + labels for every series
-  dataLength: number; // number of rows currently rendered
-  isHorizontal: boolean; // whether bars are laid out horizontally
-  isLoading: boolean; // whether the chart shows its loading skeleton
-  isMouseInChart: boolean; // whether the pointer is currently over the chart
-  isStacked: boolean; // whether bars stack on top of each other
-  selectDataKey: (dataKey: string | null) => void; // sets the selected series
-  selectedDataKey: string | null; // currently selected series, or null when none
+const BarChartStateSchema = Schema.Struct({
+  barRadius: Schema.Finite, // default corner radius each <Bar /> inherits
+  dataLength: Schema.Finite, // number of rows currently rendered
+  isHorizontal: Schema.Boolean, // whether bars are laid out horizontally
+  isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
+  isMouseInChart: Schema.Boolean, // whether the pointer is currently over the chart
+  isStacked: Schema.Boolean, // whether bars stack on top of each other
+  selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
+});
+
+type SelectDataKey = (dataKey: string | null) => void;
+
+/**
+ * Builds the shared value of the chart. `config` holds the colors and labels of
+ * every series, and `animationType` is the default grow-in order each <Bar />
+ * inherits. The context type is derived from this hook.
+ */
+function useBarChartValue(
+  {
+    barRadius,
+    dataLength,
+    isHorizontal,
+    isLoading,
+    isMouseInChart,
+    isStacked,
+    selectedDataKey,
+  }: typeof BarChartStateSchema.Type,
+  config: ChartConfig,
+  animationType: BarAnimationType,
+  selectDataKey: SelectDataKey
+) {
+  return useMemo(
+    () => ({
+      animationType,
+      barRadius,
+      config,
+      dataLength,
+      isHorizontal,
+      isLoading,
+      isMouseInChart,
+      isStacked,
+      selectDataKey,
+      selectedDataKey,
+    }),
+    [
+      animationType,
+      barRadius,
+      config,
+      dataLength,
+      isHorizontal,
+      isLoading,
+      isMouseInChart,
+      isStacked,
+      selectDataKey,
+      selectedDataKey,
+    ]
+  );
 }
+
+type BarChartContextValue = ReturnType<typeof useBarChartValue>;
 
 const BarChartContext = createContext<BarChartContextValue | null>(null);
 
@@ -194,31 +243,19 @@ export function EvilBarChart<
     [onSelectionChange]
   );
 
-  const contextValue = useMemo<BarChartContextValue>(
-    () => ({
-      config,
-      isStacked,
-      isHorizontal,
-      isLoading,
+  const contextValue = useBarChartValue(
+    {
       barRadius,
-      animationType,
       dataLength: displayData.length,
-      selectedDataKey,
-      selectDataKey,
-      isMouseInChart,
-    }),
-    [
-      config,
-      isStacked,
       isHorizontal,
       isLoading,
-      barRadius,
-      animationType,
-      displayData.length,
-      selectedDataKey,
-      selectDataKey,
       isMouseInChart,
-    ]
+      isStacked,
+      selectedDataKey,
+    },
+    config,
+    animationType,
+    selectDataKey
   );
 
   return (

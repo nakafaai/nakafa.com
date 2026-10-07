@@ -12,7 +12,7 @@ import { writeCodeToClipboard } from "@repo/design-system/lib/code-block/clipboa
 import { getCodeFileExtension } from "@repo/design-system/lib/code-block/language-extension";
 import { downloadFile } from "@repo/design-system/lib/files/download";
 import { cn } from "cn";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import {
   type ComponentProps,
   createContext,
@@ -24,10 +24,11 @@ import {
 } from "react";
 
 /** One code sample and the language it is written in. */
-interface CodeSource {
-  code: string;
-  language: string;
-}
+const CodeSourceSchema = Schema.Struct({
+  code: Schema.String,
+  language: Schema.String,
+});
+type CodeSource = typeof CodeSourceSchema.Type;
 
 const CodeSourceContext = createContext<CodeSource | null>(null);
 

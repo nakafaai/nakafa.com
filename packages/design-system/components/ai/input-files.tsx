@@ -6,7 +6,14 @@ import {
   type PromptInputFileConstraintError,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
-import { Effect, Result } from "effect";
+import {
+  Effect,
+  HashSet,
+  MutableHashMap,
+  Option,
+  Result,
+  Schema,
+} from "effect";
 import { nanoid } from "nanoid";
 import {
   type RefObject,
@@ -17,34 +24,32 @@ import {
   useState,
 } from "react";
 
-interface PromptInputFilesOptions {
-  accept?: string | undefined;
-  inputRef: RefObject<HTMLInputElement | null>;
-  maxFileSize?: number | undefined;
-  maxFiles?: number | undefined;
-  onError?: ((error: PromptInputFileConstraintError) => void) | undefined;
-}
+const PromptInputFilesLimitsSchema = Schema.Struct({
+  accept: Schema.optional(Schema.String),
+  maxFileSize: Schema.optional(Schema.Finite),
+  maxFiles: Schema.optional(Schema.Finite),
+});
+type PromptInputFilesLimits = typeof PromptInputFilesLimitsSchema.Type;
+type OnPromptInputFileError = (error: PromptInputFileConstraintError) => void;
+
 /** Owns selected files and the lifetime of their browser preview URLs. */
-export function usePromptInputFiles({
-  accept,
-  inputRef,
-  maxFiles,
-  maxFileSize,
-  onError,
-}: PromptInputFilesOptions) {
+export function usePromptInputFiles(
+  { accept, maxFiles, maxFileSize }: PromptInputFilesLimits,
+  inputRef: RefObject<HTMLInputElement | null>,
+  onError?: OnPromptInputFileError
+) {
   const [items, setItems] = useState<PromptInputFile[]>([]);
   const localItemsRef = useRef<PromptInputFile[]>([]);
-  const localUrls = useStableMutableValue(() => new Map<string, string>());
+  const localUrls = useStableMutableValue(() =>
+    MutableHashMap.empty<string, string>()
+  );
   const files = items;
   const fileCountRef = useRef(files.length);
-  const [fileIds] = useState(() => new Set(files.map((file) => file.id)));
+  const fileIdsRef = useRef(HashSet.empty<string>());
   useLayoutEffect(() => {
     fileCountRef.current = files.length;
-    fileIds.clear();
-    for (const file of files) {
-      fileIds.add(file.id);
-    }
-  }, [fileIds, files]);
+    fileIdsRef.current = HashSet.fromIterable(files.map((file) => file.id));
+  }, [files]);
   const openFileDialogLocal = useCallback(() => {
     inputRef.current?.click();
   }, [inputRef]);
@@ -53,7 +58,7 @@ export function usePromptInputFiles({
       const next = selectedFiles.map((file): PromptInputFile => {
         const id = nanoid();
         const url = URL.createObjectURL(file);
-        localUrls.set(id, url);
+        MutableHashMap.set(localUrls, id, url);
         return {
           id,
           file,
@@ -71,10 +76,10 @@ export function usePromptInputFiles({
   );
   const removeLocal = useCallback(
     (id: string) => {
-      const url = localUrls.get(id);
-      if (url) {
-        URL.revokeObjectURL(url);
-        localUrls.delete(id);
+      const url = MutableHashMap.get(localUrls, id);
+      if (Option.isSome(url)) {
+        URL.revokeObjectURL(url.value);
+        MutableHashMap.remove(localUrls, id);
       }
       const nextItems = localItemsRef.current.filter((file) => file.id !== id);
       localItemsRef.current = nextItems;
@@ -83,10 +88,10 @@ export function usePromptInputFiles({
     [localUrls]
   );
   const clearLocal = useCallback(() => {
-    for (const url of localUrls.values()) {
+    for (const url of MutableHashMap.values(localUrls)) {
       URL.revokeObjectURL(url);
     }
-    localUrls.clear();
+    MutableHashMap.clear(localUrls);
     localItemsRef.current = [];
     setItems([]);
   }, [localUrls]);
@@ -120,29 +125,30 @@ export function usePromptInputFiles({
   );
   const remove = useCallback(
     (id: string) => {
-      if (fileIds.delete(id)) {
+      if (HashSet.has(fileIdsRef.current, id)) {
+        fileIdsRef.current = HashSet.remove(fileIdsRef.current, id);
         fileCountRef.current = Math.max(0, fileCountRef.current - 1);
       }
       removeLocal(id);
     },
-    [fileIds, removeLocal]
+    [removeLocal]
   );
   const clear = useCallback(() => {
     fileCountRef.current = 0;
-    fileIds.clear();
+    fileIdsRef.current = HashSet.empty();
     clearLocal();
-  }, [clearLocal, fileIds]);
+  }, [clearLocal]);
   const openFileDialog = openFileDialogLocal;
   useLayoutEffect(() => {
     // Activity preserves the draft while releasing effects. Restore preview
     // resources before the preserved input becomes visible again.
     let restored = false;
     const next = localItemsRef.current.map((item) => {
-      if (localUrls.has(item.id)) {
+      if (MutableHashMap.has(localUrls, item.id)) {
         return item;
       }
       const url = URL.createObjectURL(item.file);
-      localUrls.set(item.id, url);
+      MutableHashMap.set(localUrls, item.id, url);
       restored = true;
       return { ...item, url };
     });
@@ -151,10 +157,10 @@ export function usePromptInputFiles({
       setItems(next);
     }
     return () => {
-      for (const url of localUrls.values()) {
+      for (const url of MutableHashMap.values(localUrls)) {
         URL.revokeObjectURL(url);
       }
-      localUrls.clear();
+      MutableHashMap.clear(localUrls);
     };
   }, [localUrls]);
   const attachments = useMemo<AttachmentsContext>(
