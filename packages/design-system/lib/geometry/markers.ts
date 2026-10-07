@@ -1,12 +1,15 @@
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Selected authored samples whose point markers remain visible on a dense curve. */
 export const LineMarkerIndicesSchema = Schema.Array(
   Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))
 ).check(
-  Schema.makeFilter((indices) => new Set(indices).size === indices.length, {
-    message: "Expected each point marker index only once.",
-  })
+  Schema.makeFilter(
+    (indices) => Arr.dedupe(indices).length === indices.length,
+    {
+      message: "Expected each point marker index only once.",
+    }
+  )
 );
 export type LineMarkerIndices = typeof LineMarkerIndicesSchema.Type;
 

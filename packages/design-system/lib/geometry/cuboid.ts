@@ -1,15 +1,19 @@
-export interface CuboidPoint {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-}
+import { Schema } from "effect";
 
-export interface CuboidDimensions {
-  readonly center?: CuboidPoint;
-  readonly height: number;
-  readonly length: number;
-  readonly width: number;
-}
+const CuboidPointSchema = Schema.Struct({
+  x: Schema.Finite,
+  y: Schema.Finite,
+  z: Schema.Finite,
+});
+export type CuboidPoint = typeof CuboidPointSchema.Type;
+
+const CuboidDimensionsSchema = Schema.Struct({
+  center: Schema.optionalKey(CuboidPointSchema),
+  height: Schema.Finite,
+  length: Schema.Finite,
+  width: Schema.Finite,
+});
+export type CuboidDimensions = typeof CuboidDimensionsSchema.Type;
 
 const ORIGIN: CuboidPoint = { x: 0, y: 0, z: 0 };
 

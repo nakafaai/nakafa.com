@@ -1,17 +1,12 @@
 "use client";
 
-import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
-import { createContext, type RefObject, use } from "react";
+import type { usePromptInputFiles } from "@repo/design-system/components/ai/input-files";
+import { createContext, use } from "react";
 
 /** Attachment state shared by prompt input composition components. */
-export interface AttachmentsContext {
-  add: (files: File[] | FileList) => void;
-  clear: () => void;
-  fileInputRef: RefObject<HTMLInputElement | null>;
-  files: PromptInputFile[];
-  openFileDialog: () => void;
-  remove: (id: string) => void;
-}
+export type AttachmentsContext = ReturnType<
+  typeof usePromptInputFiles
+>["attachments"];
 
 /** Context consumed by the form and its composed attachment controls. */
 export const LocalAttachmentsContext = createContext<AttachmentsContext | null>(

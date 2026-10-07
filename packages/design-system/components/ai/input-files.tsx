@@ -1,6 +1,5 @@
 "use client";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
-import type { AttachmentsContext } from "@repo/design-system/lib/prompt-input/context";
 import {
   type PromptInputFile,
   type PromptInputFileConstraintError,
@@ -157,7 +156,7 @@ export function usePromptInputFiles({
       localUrls.clear();
     };
   }, [localUrls]);
-  const attachments = useMemo<AttachmentsContext>(
+  const attachments = useMemo(
     () => ({
       files,
       add,
