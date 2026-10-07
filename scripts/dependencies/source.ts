@@ -29,10 +29,18 @@ const WorkspaceManifest = Schema.Struct({
 export type PackageManifest = typeof PackageManifest.Type;
 export type WorkspaceManifest = typeof WorkspaceManifest.Type;
 
-export interface FirstPartyManifest {
-  readonly manifest: PackageManifest;
-  readonly path: string;
-}
+const FirstPartyManifest = Schema.Struct({
+  manifest: PackageManifest,
+  path: Schema.String,
+});
+export type FirstPartyManifest = typeof FirstPartyManifest.Type;
+
+const DependencyPolicyInput = Schema.Struct({
+  manifests: Schema.Array(FirstPartyManifest),
+  rootManifest: PackageManifest,
+  workspace: WorkspaceManifest,
+});
+export type DependencyPolicyInput = typeof DependencyPolicyInput.Type;
 
 /** Expected failure while reading or decoding dependency policy files. */
 export class DependencyPolicyReadError extends Schema.TaggedError<DependencyPolicyReadError>()(
@@ -47,6 +55,9 @@ function readError(message: string, cause: unknown) {
   return new DependencyPolicyReadError({ cause, message });
 }
 
+/** Parses manifest text into a value whose shape PackageManifest narrows next. */
+const ManifestJson = Schema.fromJsonString(Schema.Unknown);
+
 const readPackageManifest = Effect.fn("RepositoryPolicy.readPackageManifest")(
   function* (manifestPath: string) {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -57,11 +68,11 @@ const readPackageManifest = Effect.fn("RepositoryPolicy.readPackageManifest")(
           readError(`Unable to read ${manifestPath}.`, cause)
         )
       );
-    const input = yield* Effect.try({
-      try: (): unknown => JSON.parse(source),
-      catch: (cause) =>
-        readError(`${manifestPath} does not contain valid JSON.`, cause),
-    });
+    const input = yield* Schema.decodeEffect(ManifestJson)(source).pipe(
+      Effect.mapError((cause) =>
+        readError(`${manifestPath} does not contain valid JSON.`, cause)
+      )
+    );
     return yield* Schema.decodeUnknownEffect(PackageManifest)(input).pipe(
       Effect.mapError((cause) =>
         readError(`${manifestPath} has an invalid package manifest.`, cause)
