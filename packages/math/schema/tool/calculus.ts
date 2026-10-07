@@ -12,7 +12,7 @@ function hasSafeCalculusVariable(value: MathCalculusInput) {
   if (value.variable) {
     return true;
   }
-  return getExpressionSymbols(value.expression).size < 2;
+  return getExpressionSymbols(value.expression).length < 2;
 }
 /** Keeps derivative-order input aligned with the only CAS operation that uses it. */
 function hasValidCalculusOrder(value: MathCalculusInput) {

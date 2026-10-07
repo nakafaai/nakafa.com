@@ -49,3 +49,16 @@ export const siteUrlKeys = () =>
       SITE_URL: process.env.SITE_URL,
     },
   });
+/** Defines the public app origin that client and server absolute URL builders share. */
+export const appUrlKeys = () =>
+  createEnv({
+    client: {
+      NEXT_PUBLIC_APP_URL: requiredStringSchema,
+    },
+    onValidationError: () => {
+      throw new Error("NEXT_PUBLIC_APP_URL is required.");
+    },
+    runtimeEnv: {
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    },
+  });

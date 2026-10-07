@@ -983,6 +983,12 @@ importers:
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
+      '@t3-oss/env-nextjs':
+        specifier: ^0.13.11
+        version: 0.13.11(typescript@7.0.2)(zod@4.6.5)
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.1
       next:
         specifier: 16.4.0
         version: 16.4.0(@babel/core@8.0.5)(@playwright/test@1.63.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
