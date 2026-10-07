@@ -1,6 +1,4 @@
-import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Schema } from "effect";
-import { HttpClient, HttpClientResponse } from "effect/http";
 
 const COPY_SOURCE_TIMEOUT = "10 seconds";
 /** The reviewed source for a content page could not be copied. */
@@ -18,17 +16,28 @@ export class OpenContentCopyError extends Schema.TaggedError<OpenContentCopyErro
     message: Schema.String,
   }
 ) {}
-interface CopyOpenContentInput {
+interface OpenContentCopySource {
   readonly content?: string;
   readonly copySourceUrl?: null | string;
-  readonly writeClipboard: (source: string) => Promise<void>;
 }
+/**
+ * Loads the request module when a reader copies. It carries the HTTP client,
+ * so a static import would add that client to the first JavaScript of every
+ * content page, which `apps/www/e2e/resources.browser.ts` budgets.
+ */
+const loadSourceRequest = Effect.tryPromise({
+  catch: () =>
+    new OpenContentCopyError({
+      code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
+      message: "The reviewed content source request could not be loaded.",
+    }),
+  try: () => import("@/components/shared/content/source"),
+});
 /** Reads inline preview source or fetches one immutable published source. */
-const readOpenContentCopySource = Effect.fn("www.openContent.readCopySource")(
-  function* ({
-    content,
-    copySourceUrl,
-  }: Pick<CopyOpenContentInput, "content" | "copySourceUrl">) {
+export const readOpenContentCopySource = Effect.fn(
+  "www.openContent.readCopySource"
+)(
+  function* ({ content, copySourceUrl }: OpenContentCopySource) {
     if (content) {
       return content;
     }
@@ -38,34 +47,8 @@ const readOpenContentCopySource = Effect.fn("www.openContent.readCopySource")(
         message: "No reviewed content source is available to copy.",
       });
     }
-    const client = yield* HttpClient.HttpClient;
-    const response = yield* client.get(copySourceUrl).pipe(
-      Effect.mapError(
-        () =>
-          new OpenContentCopyError({
-            code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
-            message: "The reviewed content source could not be fetched.",
-          })
-      )
-    );
-    yield* HttpClientResponse.filterStatusOk(response).pipe(
-      Effect.mapError(
-        () =>
-          new OpenContentCopyError({
-            code: "OPEN_CONTENT_SOURCE_REJECTED",
-            message: "The reviewed content source request was rejected.",
-          })
-      )
-    );
-    const source = yield* response.text.pipe(
-      Effect.mapError(
-        () =>
-          new OpenContentCopyError({
-            code: "OPEN_CONTENT_SOURCE_READ_FAILED",
-            message: "The reviewed content source could not be read.",
-          })
-      )
-    );
+    const { requestOpenContentSource } = yield* loadSourceRequest;
+    const source = yield* requestOpenContentSource(copySourceUrl);
     if (source.trim().length === 0) {
       return yield* new OpenContentCopyError({
         code: "OPEN_CONTENT_SOURCE_EMPTY",
@@ -73,36 +56,54 @@ const readOpenContentCopySource = Effect.fn("www.openContent.readCopySource")(
       });
     }
     return source;
-  }
+  },
+  Effect.timeoutOrElse({
+    duration: COPY_SOURCE_TIMEOUT,
+    orElse: () =>
+      Effect.fail(
+        new OpenContentCopyError({
+          code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
+          message: "The reviewed content source request timed out.",
+        })
+      ),
+  })
 );
 /**
- * Loads the reviewed source on intent and waits for clipboard persistence.
- *
- * The browser imports this module when a reader copies, and the module
- * provides its own client, so no content page ships the HTTP client in its
- * first JavaScript.
+ * Hands the source to the clipboard as a promise where the browser accepts
+ * one, and otherwise writes it once it has loaded.
  */
-export const copyOpenContent = Effect.fn("www.openContent.copy")(function* (
-  input: CopyOpenContentInput
-) {
-  const source = yield* readOpenContentCopySource(input).pipe(
-    Effect.timeoutOrElse({
-      duration: COPY_SOURCE_TIMEOUT,
-      orElse: () =>
-        Effect.fail(
-          new OpenContentCopyError({
-            code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
-            message: "The reviewed content source request timed out.",
-          })
-        ),
-    })
-  );
-  yield* Effect.tryPromise({
+function writeClipboardSource(source: Promise<string>) {
+  if (typeof ClipboardItem === "undefined") {
+    return source.then((text) => navigator.clipboard.writeText(text));
+  }
+  return navigator.clipboard.write([
+    new ClipboardItem({
+      "text/plain": source.then(
+        (text) => new Blob([text], { type: "text/plain" })
+      ),
+    }),
+  ]);
+}
+/**
+ * Starts the clipboard write for one copy and returns the effect that waits
+ * for it. Call it inside the click handler, before anything is awaited.
+ *
+ * A browser allows a clipboard write only for a short time after the click:
+ * WebKit refuses one that starts more than five seconds later, and the source
+ * may take up to ten. A clipboard item accepts its content as a promise, so
+ * the write starts now and keeps the click's permission while the source
+ * loads. Firefox before version 127 has no `ClipboardItem`.
+ *
+ * @see https://webkit.org/blog/10855/async-clipboard-api/
+ */
+export function startOpenContentCopy(source: Promise<string>) {
+  const written = writeClipboardSource(source);
+  return Effect.tryPromise({
     catch: () =>
       new OpenContentCopyError({
         code: "OPEN_CONTENT_CLIPBOARD_FAILED",
         message: "The reviewed content source could not be copied.",
       }),
-    try: () => input.writeClipboard(source),
+    try: () => written,
   });
-}, Effect.provide(FetchClient));
+}
