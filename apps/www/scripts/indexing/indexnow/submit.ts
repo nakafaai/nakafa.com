@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import { HttpBody, HttpClient } from "effect/http";
 import { IndexNowSubmitError } from "@/scripts/indexing/errors";
 import {
   INDEXING_HOSTNAME,
@@ -8,6 +9,7 @@ import {
 const BATCH_SIZE = 100;
 const RATE_LIMIT_DELAY = 1000;
 const HTTP_STATUS_CODE_OK = 200;
+const JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 const INDEXNOW_ENDPOINT = "https://api.indexnow.org";
 
 /** Splits canonical sitemap URLs into IndexNow's supported batch size. */
@@ -79,26 +81,29 @@ const submitBatchToIndexNow = Effect.fn(
     `Submitting batch ${batchCount} of ${totalBatches}: ${batchCount}/${totalBatches} (${Math.round((batchCount / totalBatches) * 100)}%)`
   );
 
-  const status = yield* Effect.tryPromise({
-    catch: (cause) =>
-      new IndexNowSubmitError({
-        cause,
-        message: `Error submitting IndexNow batch ${batchCount}.`,
-      }),
-    try: () =>
-      fetch(INDEXNOW_ENDPOINT, {
-        body: JSON.stringify({
+  const client = yield* HttpClient.HttpClient;
+  const status = yield* client
+    .post(INDEXNOW_ENDPOINT, {
+      body: HttpBody.jsonUnsafe(
+        {
           host: INDEXING_HOSTNAME,
           key,
           keyLocation: INDEXNOW_KEY_LOCATION,
           urlList: batch,
-        }),
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
         },
-        method: "POST",
-      }).then((response) => response.status),
-  });
+        JSON_CONTENT_TYPE
+      ),
+    })
+    .pipe(
+      Effect.map((response) => response.status),
+      Effect.mapError(
+        (cause) =>
+          new IndexNowSubmitError({
+            cause,
+            message: `Error submitting IndexNow batch ${batchCount}.`,
+          })
+      )
+    );
 
   if (status !== HTTP_STATUS_CODE_OK) {
     return yield* new IndexNowSubmitError({

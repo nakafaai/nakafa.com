@@ -1,7 +1,8 @@
 // @vitest-environment node
 
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect, Schema } from "effect";
+import { FetchHttpClient } from "effect/http";
 import {
   PreviewConfigError,
   readPreviewConfig,
@@ -17,6 +18,8 @@ vi.mock("@/lib/content/preview/config", async (importOriginal) => ({
 
 const target = "http://127.0.0.1:4000/events";
 const configMock = vi.mocked(readPreviewConfig);
+/** The fetch that Effect's client calls in place of the global one. */
+const fetcher = vi.fn<typeof fetch>();
 const route = {
   appLocale: previewRoute.appLocale,
   publicPath: previewRoute.publicPath,
@@ -36,9 +39,24 @@ function response(
   return value;
 }
 
+/** Opens the provider stream through the controlled fetch. */
+function openEvents(signal = new AbortController().signal) {
+  return openPreviewEvents(signal).pipe(
+    Effect.provideService(FetchHttpClient.Fetch, fetcher)
+  );
+}
+
+/** Builds one valid event-stream response around a provider body. */
+function eventResponse(body: BodyInit | null) {
+  return response(body, {
+    headers: { "content-type": "text/event-stream" },
+    status: 200,
+  });
+}
+
 /** Opens and consumes one finite test event stream. */
 function readEvents() {
-  return openPreviewEvents(new AbortController().signal).pipe(
+  return openEvents().pipe(
     Effect.flatMap((stream) =>
       Effect.promise(() => new Response(stream).text())
     )
@@ -46,24 +64,14 @@ function readEvents() {
 }
 
 /** Returns the typed failure produced before a stream is established. */
-function openFailure() {
-  return openPreviewEvents(new AbortController().signal).pipe(Effect.flip);
+function openFailure(signal?: AbortSignal) {
+  return openEvents(signal).pipe(Effect.flip);
 }
 
 /** Consumes one stream that is expected to fail after response validation. */
-function streamFailure(source: string) {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(() =>
-      Promise.resolve(
-        response(source, {
-          headers: { "content-type": "text/event-stream" },
-          status: 200,
-        })
-      )
-    )
-  );
-  return openPreviewEvents(new AbortController().signal).pipe(
+function streamFailure(source: BodyInit | null) {
+  fetcher.mockResolvedValue(eventResponse(source));
+  return openEvents().pipe(
     Effect.flatMap((stream) =>
       Effect.tryPromise({
         catch: (cause) =>
@@ -81,12 +89,9 @@ function streamFailure(source: string) {
 }
 
 beforeEach(() => {
+  fetcher.mockReset();
   configMock.mockReset();
   configMock.mockReturnValue(Effect.succeedSome(previewConfig));
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 describe("local preview events", () => {
@@ -104,10 +109,7 @@ describe("local preview events", () => {
     "maps provider connection failures without exposing their cause",
     () =>
       Effect.gen(function* () {
-        vi.stubGlobal(
-          "fetch",
-          vi.fn(() => Promise.reject(new TypeError("private failure")))
-        );
+        fetcher.mockRejectedValue(new TypeError("private failure"));
 
         expect(yield* openFailure()).toMatchObject({
           _tag: "PreviewRequestError",
@@ -120,11 +122,9 @@ describe("local preview events", () => {
     "does not send its bearer token after configuration validation fails",
     () =>
       Effect.gen(function* () {
-        const fetcher = vi.fn();
         configMock.mockReturnValueOnce(
           Effect.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }))
         );
-        vi.stubGlobal("fetch", fetcher);
 
         expect(yield* openFailure()).toMatchObject({
           _tag: "PreviewConfigError",
@@ -151,19 +151,9 @@ describe("local preview events", () => {
         status: 200,
       }),
     ],
-    [
-      "body",
-      response(null, {
-        headers: { "content-type": "text/event-stream" },
-        status: 200,
-      }),
-    ],
-  ])("rejects an invalid %s response", ([_label, value]) =>
+  ] as const)("rejects an invalid %s response", ([_label, value]) =>
     Effect.gen(function* () {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(() => Promise.resolve(value))
-      );
+      fetcher.mockResolvedValue(value);
 
       expect(yield* openFailure()).toMatchObject({
         _tag: "PreviewEventError",
@@ -171,6 +161,69 @@ describe("local preview events", () => {
       });
     })
   );
+
+  it.effect("fails the stream of a response that has no body", () =>
+    Effect.gen(function* () {
+      expect(yield* streamFailure(null)).toMatchObject({
+        _tag: "PreviewEventError",
+        stage: "response",
+      });
+    })
+  );
+
+  it.effect.each([
+    ["before", true],
+    ["while", false],
+  ] as const)(
+    "stops connecting when the browser left %s the request",
+    ([_label, isAborted]) => {
+      const browser = new AbortController();
+      return Effect.gen(function* () {
+        fetcher.mockImplementation(() => {
+          browser.abort();
+          return new Promise<Response>(() => undefined);
+        });
+        if (isAborted) {
+          browser.abort();
+        }
+
+        expect(yield* openFailure(browser.signal)).toMatchObject({
+          _tag: "PreviewRequestError",
+          stage: "connect",
+        });
+        expect(fetcher.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+      });
+    }
+  );
+
+  it.effect("ends the provider stream when the browser leaves it", () => {
+    const browser = new AbortController();
+    return Effect.gen(function* () {
+      const cancel = vi.fn();
+      fetcher.mockResolvedValue(
+        eventResponse(
+          new ReadableStream<Uint8Array>({
+            cancel,
+            /** Sends one heartbeat and then stays open like a live provider. */
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode(": ping\n\n"));
+            },
+          })
+        )
+      );
+      const reader = (yield* openEvents(browser.signal)).getReader();
+
+      expect(
+        new TextDecoder().decode(
+          (yield* Effect.promise(() => reader.read())).value
+        )
+      ).toBe(": keep-alive\n\n");
+      browser.abort();
+
+      expect((yield* Effect.promise(() => reader.read())).done).toBe(true);
+      expect(cancel).toHaveBeenCalledOnce();
+    });
+  });
 
   it.effect(
     "forwards only complete schema-validated updates and heartbeats",
@@ -204,24 +257,19 @@ describe("local preview events", () => {
             controller.close();
           },
         });
-        vi.stubGlobal(
-          "fetch",
-          vi.fn(() =>
-            Promise.resolve(
-              response(source, {
-                headers: {
-                  "content-type": "text/event-stream; charset=utf-8",
-                },
-                status: 200,
-              })
-            )
-          )
+        fetcher.mockResolvedValue(
+          response(source, {
+            headers: {
+              "content-type": "text/event-stream; charset=utf-8",
+            },
+            status: 200,
+          })
         );
 
         expect(yield* readEvents()).toBe(
           `event: update\ndata: ${pending}\n\n: keep-alive\n\nevent: update\ndata: ${ready}\n\n`
         );
-        expect(fetch).toHaveBeenCalledWith(
+        expect(fetcher).toHaveBeenCalledWith(
           new URL(target),
           expect.objectContaining({
             cache: "no-store",

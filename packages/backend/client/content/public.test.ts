@@ -92,6 +92,13 @@ function foundResponse(title?: string) {
   };
 }
 
+/** Reads the JSON body of the one request that reached Fetch. */
+const sentJson = () =>
+  Effect.promise(
+    (): Promise<unknown> =>
+      new Response(fetchMock.mock.calls[0]?.[1]?.body).json()
+  );
+
 beforeEach(() => {
   fetchMock.mockReset();
   verifyMock.mockReset();
@@ -210,16 +217,12 @@ describe("public content runtime client", () => {
       expect(
         yield* readPublicContent(target, input, found.rendererManifest)
       ).toMatchObject({ kind: "found" });
-      expect(fetchMock).toHaveBeenCalledWith(
-        endpoint,
-        expect.objectContaining({
-          body: JSON.stringify({
-            appLocale: input.appLocale,
-            delivery: "public",
-            publicPath: input.publicPath,
-          }),
-        })
-      );
+      expect(fetchMock.mock.calls[0]?.[0]).toEqual(new URL(endpoint));
+      expect(yield* sentJson()).toEqual({
+        appLocale: input.appLocale,
+        delivery: "public",
+        publicPath: input.publicPath,
+      });
       expect(verifyContentRuntimeExchange).toHaveBeenCalledOnce();
     })
   );
@@ -244,18 +247,14 @@ describe("public content runtime client", () => {
         yield* readPublicContentEvidenceBatch(target, inputs)
       ).toHaveLength(8);
       expect(fetchMock).toHaveBeenCalledOnce();
-      expect(fetchMock).toHaveBeenCalledWith(
-        batchEndpoint,
-        expect.objectContaining({
-          body: JSON.stringify({
-            requests: inputs.map(({ appLocale, publicPath }) => ({
-              appLocale,
-              delivery: "public",
-              publicPath,
-            })),
-          }),
-        })
-      );
+      expect(fetchMock.mock.calls[0]?.[0]).toEqual(new URL(batchEndpoint));
+      expect(yield* sentJson()).toEqual({
+        requests: inputs.map(({ appLocale, publicPath }) => ({
+          appLocale,
+          delivery: "public",
+          publicPath,
+        })),
+      });
       expect(verifyMock).toHaveBeenCalledTimes(8);
       expect(
         verifyMock.mock.calls.map(([exchange]) => exchange.request.publicPath)

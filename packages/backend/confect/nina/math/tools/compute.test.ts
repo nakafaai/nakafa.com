@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type {
   CapabilityArtifact,
   CapabilityProgress,
@@ -9,6 +9,7 @@ import type { MathResult } from "@repo/math/schema/result";
 import type { MathToolInput } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
 import { Array as Arr, ConfigProvider, Effect, MutableRef } from "effect";
+import { FetchHttpClient } from "effect/http";
 
 type WrittenPart = CapabilityArtifact;
 const input = {
@@ -69,13 +70,15 @@ function createProgress() {
   );
   return { parts: () => MutableRef.get(written), publish };
 }
-afterEach(() => {
-  vi.restoreAllMocks();
+/** The fetch that Effect's client calls in place of the global one. */
+const fetcher = vi.fn<typeof fetch>();
+beforeEach(() => {
+  fetcher.mockReset();
 });
 describe("math compute tool", () => {
   it.effect("writes loading and done math data parts", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json(result));
+      fetcher.mockResolvedValue(Response.json(result));
       const { parts, publish } = createProgress();
       const output = yield* compute({
         input,
@@ -83,7 +86,8 @@ describe("math compute tool", () => {
         publish,
       }).pipe(
         Effect.provide(MathService.layer),
-        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
       );
       expect(output).toContain("# Checked Math Work");
       expect(output).toContain("- Status: verified");
@@ -113,7 +117,7 @@ describe("math compute tool", () => {
   );
   it.effect("writes an error data part for math request failures", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
+      fetcher.mockRejectedValue(new Error("offline"));
       const { parts, publish } = createProgress();
       const output = yield* compute({
         input,
@@ -121,7 +125,8 @@ describe("math compute tool", () => {
         publish,
       }).pipe(
         Effect.provide(MathService.layer),
-        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
       );
       expect(output).toContain("- Status: error");
       expect(output).toContain(
@@ -151,9 +156,7 @@ describe("math compute tool", () => {
   );
   it.effect("writes an error data part for math response failures", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(
-        Response.json({ status: "verified" })
-      );
+      fetcher.mockResolvedValue(Response.json({ status: "verified" }));
       const { parts, publish } = createProgress();
       const output = yield* compute({
         input,
@@ -161,7 +164,8 @@ describe("math compute tool", () => {
         publish,
       }).pipe(
         Effect.provide(MathService.layer),
-        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
       );
       expect(output).toContain("- Status: error");
       expect(output).toContain("- Error code: math_check_unavailable");
@@ -183,7 +187,7 @@ describe("math compute tool", () => {
     "asks the model to retry ambiguous symbolic calculus with the explicit variable",
     () =>
       Effect.gen(function* () {
-        vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        fetcher.mockResolvedValue(
           Response.json(
             {
               detail: "Variable is required when multiple symbols are present.",
@@ -204,7 +208,8 @@ describe("math compute tool", () => {
           publish,
         }).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         );
         expect(output).toContain(
           "Retry the same operation with the explicit variable"
@@ -223,7 +228,7 @@ describe("math compute tool", () => {
     "returns a model-readable error before writing data for invalid tool input",
     () =>
       Effect.gen(function* () {
-        const fetch = vi.spyOn(globalThis, "fetch");
+        const fetch = fetcher;
         const { parts, publish } = createProgress();
         const output = yield* compute({
           input: { operation: "simplify" },
@@ -231,7 +236,8 @@ describe("math compute tool", () => {
           publish,
         }).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         );
         expect(output).toContain("- Status: error");
         expect(output).toContain("- Error code: invalid_math_input");
@@ -246,7 +252,7 @@ describe("math compute tool", () => {
     "tells the model how to retry bounded systems with the same bounds",
     () =>
       Effect.gen(function* () {
-        const fetch = vi.spyOn(globalThis, "fetch");
+        const fetch = fetcher;
         const { parts, publish } = createProgress();
         const output = yield* compute({
           input: {
@@ -260,7 +266,8 @@ describe("math compute tool", () => {
           publish,
         }).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         );
         expect(output).toContain("- Error code: invalid_math_input");
         expect(output).toContain("Retry the same equation solve");
@@ -277,7 +284,7 @@ describe("math compute tool", () => {
     "tells the model how to retry incomplete bounded system expressions",
     () =>
       Effect.gen(function* () {
-        const fetch = vi.spyOn(globalThis, "fetch");
+        const fetch = fetcher;
         const { parts, publish } = createProgress();
         const output = yield* compute({
           input: {
@@ -291,7 +298,8 @@ describe("math compute tool", () => {
           publish,
         }).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         );
         expect(output).toContain("- Error code: invalid_math_input");
         expect(output).toContain("Retry the same bounded system solve");
@@ -305,7 +313,7 @@ describe("math compute tool", () => {
   );
   it.effect("keeps invalid input errors locale-free", () =>
     Effect.gen(function* () {
-      const fetch = vi.spyOn(globalThis, "fetch");
+      const fetch = fetcher;
       const { parts, publish } = createProgress();
       const output = yield* compute({
         input: { operation: "domain" },
@@ -313,7 +321,8 @@ describe("math compute tool", () => {
         publish,
       }).pipe(
         Effect.provide(MathService.layer),
-        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
       );
       expect(output).toContain("- Error code: invalid_math_input");
       expect(fetch).not.toHaveBeenCalled();
@@ -322,7 +331,7 @@ describe("math compute tool", () => {
   );
   it.effect("writes locale-free error data for math service failures", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
+      fetcher.mockRejectedValue(new Error("offline"));
       const { parts, publish } = createProgress();
       const output = yield* compute({
         input,
@@ -330,7 +339,8 @@ describe("math compute tool", () => {
         publish,
       }).pipe(
         Effect.provide(MathService.layer),
-        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
       );
       expect(output).toContain("- Error code: math_check_unavailable");
       expect(parts().at(-1)).toEqual(

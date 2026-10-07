@@ -15,10 +15,10 @@ import {
 } from "@repo/design-system/components/ui/input-group";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
+import { FetchClient } from "@repo/utilities/http/client";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
 import { Effect, Schema } from "effect";
-import { FetchHttpClient } from "effect/http";
 import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -176,7 +176,7 @@ export function ForumPostInput() {
           forumId,
           parentId: replyTarget?.postId,
         },
-      }).pipe(Effect.provide(FetchHttpClient.layer));
+      }).pipe(Effect.provide(FetchClient));
       if (isTextOnlyPost) {
         Effect.runSync(clearSubmittedDraft());
         return Effect.runPromise(

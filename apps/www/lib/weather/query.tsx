@@ -1,6 +1,7 @@
+import { FetchClient } from "@repo/utilities/http/client";
 import { useQuery } from "@tanstack/react-query";
 import { Effect } from "effect";
-import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import { CurrentWeatherSummarySchema } from "@/lib/weather/schema";
 
 const WEATHER_REQUEST_TIMEOUT = "10 seconds";
@@ -21,8 +22,6 @@ export function useWeather() {
   return useQuery({
     queryKey: ["weather"],
     queryFn: () =>
-      Effect.runPromise(
-        fetchWeather().pipe(Effect.provide(FetchHttpClient.layer))
-      ),
+      Effect.runPromise(fetchWeather().pipe(Effect.provide(FetchClient))),
   });
 }

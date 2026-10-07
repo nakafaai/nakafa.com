@@ -34,7 +34,10 @@ import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
 import { toast } from "sonner";
-import { copyOpenContent } from "@/components/shared/content/copy";
+import {
+  readOpenContentCopySource,
+  writeOpenContentCopy,
+} from "@/components/shared/content/copy";
 
 /**
  * Renders open/share actions for one content page.
@@ -81,11 +84,16 @@ export function OpenContent({
     const abortController = new AbortController();
     copyAbortController.current = abortController;
 
-    const copyProgram = copyOpenContent({
-      ...(content === undefined ? {} : { content }),
-      ...(copySourceUrl === undefined ? {} : { copySourceUrl }),
-      writeClipboard: (source) => navigator.clipboard.writeText(source),
-    }).pipe(
+    // The clipboard write has to start inside this click, so it takes the
+    // source as a promise and runs before this handler returns.
+    const source = Effect.runPromise(
+      readOpenContentCopySource({
+        ...(content === undefined ? {} : { content }),
+        ...(copySourceUrl === undefined ? {} : { copySourceUrl }),
+      }),
+      { signal: abortController.signal }
+    );
+    const copyProgram = writeOpenContentCopy(source).pipe(
       Effect.matchEffect({
         onFailure: () =>
           Effect.sync(() =>

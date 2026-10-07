@@ -23,9 +23,9 @@ import {
   TEST_PROOF_RENDERER,
 } from "@repo/backend/test/content/proof";
 import { completeContentProof } from "@repo/backend/test/content/verify";
+import { FetchClient } from "@repo/utilities/http/client";
 import type { TestConvex } from "convex-test";
 import { Effect, Layer, Schema } from "effect";
-import { FetchHttpClient } from "effect/http";
 
 /** Executes one request through the real Node dispatcher and technical key. */
 export async function sendPublication(
@@ -48,7 +48,7 @@ export async function sendPublication(
         ),
         Effect.provide(
           Layer.provideMerge(
-            FetchHttpClient.layer,
+            FetchClient,
             RegisteredFunction.actionLayer(confectSchema, ctx)
           )
         )

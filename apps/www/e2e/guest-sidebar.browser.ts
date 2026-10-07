@@ -125,6 +125,47 @@ for (const viewport of targetViewports) {
   });
 }
 
+test("the language menu opens the same route in the chosen language", async ({
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        const response = yield* Effect.promise(() =>
+          page.goto("/en/search", { waitUntil: "domcontentloaded" })
+        );
+        yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+
+        const languageButton = page
+          .locator('[data-sidebar="sidebar"]:visible')
+          .getByRole("button", { exact: true, name: "Language" });
+        const german = page.getByRole("menuitem", {
+          exact: true,
+          name: "Deutsch (Deutschland)",
+        });
+        yield* activateUntilVisible(
+          languageButton,
+          german,
+          readinessTimeoutMilliseconds
+        );
+        // The pick loads the request module on demand, asks the route-owned
+        // endpoint for the localized href, and replaces the route with it.
+        yield* Effect.promise(() => german.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL("/de/search", page.url()).toString(), {
+            timeout: readinessTimeoutMilliseconds,
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(page.locator("html")).toHaveAttribute("lang", "de")
+        );
+      })
+    )
+  );
+});
+
 test("provider failures land on one clean generic retry", async ({ page }) => {
   await Effect.runPromise(
     withObservedPageErrors(

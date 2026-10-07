@@ -1,12 +1,15 @@
 import "server-only";
-import {
-  type BodyLimitError,
-  type BodyMissingError,
-  type BodyReadError,
-  readBoundedBody,
-} from "@repo/utilities/body";
+import { type BodyLimitError, readBoundedStream } from "@repo/utilities/body";
+import { FetchClient } from "@repo/utilities/http/client";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Effect, Redacted, Result, Schema } from "effect";
+import { Effect, Layer, Result, Schema } from "effect";
+import {
+  FetchHttpClient,
+  HttpClient,
+  type HttpClientError,
+  HttpClientRequest,
+  type HttpClientResponse,
+} from "effect/http";
 import {
   decodePreviewUrl,
   type PreviewConfig,
@@ -19,6 +22,21 @@ import {
 /** Maximum UTF-8 bytes accepted from the small current-state manifest. */
 export const MAX_PREVIEW_MANIFEST_BYTES = 128 * 1024;
 const PREVIEW_PHASE_TIMEOUT_MS = 5000;
+/**
+ * The loopback transport: the Fetch client, kept uncached and free of cookies,
+ * redirects, and referrers. Only that client honors these options, so the
+ * preview modules provide it themselves instead of accepting any HTTP client.
+ */
+export const PreviewHttpClient = FetchClient.pipe(
+  Layer.provide(
+    Layer.succeed(FetchHttpClient.RequestInit, {
+      cache: "no-store",
+      credentials: "omit",
+      redirect: "error",
+      referrerPolicy: "no-referrer",
+    })
+  )
+);
 /** Applies the typed timeout for one preview request phase. */
 function withPreviewRequestTimeout<A, E, R>(
   effect: Effect.Effect<A, E, R>,
@@ -37,11 +55,11 @@ const decodePreviewJson = Schema.decodeUnknownEffect(
 );
 /** Validates the exact successful JSON response before reading its body. */
 const validateResponse = Effect.fn("NakafaContent.validatePreviewResponse")(
-  function* (response: Response, target: URL) {
+  function* (response: HttpClientResponse.HttpClientResponse, target: URL) {
     if (
       response.status !== 200 ||
       response.url !== target.toString() ||
-      !isJsonContentType(response.headers.get("content-type"))
+      !isJsonContentType(response.headers["content-type"] ?? null)
     ) {
       return yield* new PreviewRequestError({
         stage: "response",
@@ -63,10 +81,8 @@ const decodeJson = Effect.fn("NakafaContent.decodePreviewJson")(function* (
     Effect.mapError(() => new PreviewRequestError({ stage: "body" }))
   );
 });
-/** Maps a generic bounded-body failure into the preview error vocabulary. */
-function mapBodyError(
-  error: BodyLimitError | BodyMissingError | BodyReadError
-) {
+/** Maps a bounded-body failure into the preview error vocabulary. */
+function mapBodyError(error: BodyLimitError | HttpClientError.HttpClientError) {
   if (error._tag === "BodyLimitError") {
     return new PreviewBodyLimitError({
       actualBytes: error.actualBytes,
@@ -75,101 +91,36 @@ function mapBodyError(
   }
   return new PreviewRequestError({ stage: "body" });
 }
-/** Cancels an unread response body without replacing its primary result. */
-function cancelUnreadResponse(response: Response) {
-  const body = response.body;
-  if (body === null || response.bodyUsed) {
-    return Effect.void;
-  }
-  return Effect.tryPromise({
-    catch: () => undefined,
-    try: () => body.cancel(),
-  }).pipe(Effect.ignore);
-}
-/** Builds the private request shared by Effect and Next framework boundaries. */
-function previewRequestInit(config: PreviewConfig, signal: AbortSignal) {
-  return {
-    cache: "no-store",
-    credentials: "omit",
-    headers: {
-      accept: "application/json",
-      authorization: `Bearer ${Redacted.value(config.token)}`,
-    },
-    redirect: "error",
-    referrerPolicy: "no-referrer",
-    signal,
-  } satisfies RequestInit;
-}
 /** Sends one interruptible loopback request with typed connection failure. */
 const requestPreviewResponse = Effect.fn(
   "NakafaContent.requestPreviewResponse"
 )(function* (config: PreviewConfig, target: URL) {
-  return yield* Effect.tryPromise({
-    catch: () => new PreviewRequestError({ stage: "connect" }),
-    try: (signal) => fetch(target, previewRequestInit(config, signal)),
-  });
+  // The scope aborts the request, so a response left unread never lingers.
+  const client = (yield* HttpClient.HttpClient).pipe(HttpClient.withScope);
+  return yield* HttpClientRequest.get(target).pipe(
+    HttpClientRequest.acceptJson,
+    HttpClientRequest.bearerToken(config.token),
+    client.execute,
+    Effect.mapError(() => new PreviewRequestError({ stage: "connect" }))
+  );
 });
 /** Validates and decodes one fetched response through the Effect error channel. */
 const decodePreviewResponse = Effect.fn("NakafaContent.decodePreviewResponse")(
-  function* (response: Response, target: URL, maxBytes: number) {
-    return yield* Effect.acquireUseRelease(
-      Effect.succeed(response),
-      (activeResponse) =>
-        Effect.gen(function* () {
-          const validated = yield* validateResponse(activeResponse, target);
-          return yield* withPreviewRequestTimeout(
-            readBoundedBody(validated.body, maxBytes).pipe(
-              Effect.mapError(mapBodyError),
-              Effect.flatMap(decodeJson)
-            ),
-            "body"
-          );
-        }),
-      cancelUnreadResponse
+  function* (
+    response: HttpClientResponse.HttpClientResponse,
+    target: URL,
+    maxBytes: number
+  ) {
+    const validated = yield* validateResponse(response, target);
+    return yield* withPreviewRequestTimeout(
+      readBoundedStream(validated.stream, maxBytes).pipe(
+        Effect.mapError(mapBodyError),
+        Effect.flatMap(decodeJson)
+      ),
+      "body"
     );
   }
 );
-/**
- * Fetches one bounded result through Next's direct Promise boundary.
- *
- * Request-less static generation must not start an Effect fiber before its
- * uncached fetch: https://nextjs.org/docs/messages/next-prerender-current-time
- */
-export function fetchPreviewJsonForPrerender(
-  config: PreviewConfig,
-  path: string,
-  maxBytes: number
-): Promise<
-  Result.Result<unknown, Effect.Error<ReturnType<typeof fetchPreviewJson>>>
-> {
-  const target = decodePreviewUrl(config, path);
-  if (Result.isFailure(target)) {
-    return Promise.resolve(Result.fail(target.failure));
-  }
-  const controller = new AbortController();
-  const response = fetch(
-    target.success,
-    previewRequestInit(config, controller.signal)
-  );
-  return Effect.runPromise(
-    Effect.acquireUseRelease(
-      Effect.succeed(controller),
-      () =>
-        withPreviewRequestTimeout(
-          Effect.tryPromise({
-            catch: () => new PreviewRequestError({ stage: "connect" }),
-            try: () => response,
-          }),
-          "connect"
-        ).pipe(
-          Effect.flatMap((value) =>
-            decodePreviewResponse(value, target.success, maxBytes)
-          )
-        ),
-      (activeController) => Effect.sync(() => activeController.abort())
-    ).pipe(Effect.result)
-  );
-}
 /** Fetches one bearer-protected loopback JSON resource with strict bounds. */
 export const fetchPreviewJson = Effect.fn("NakafaContent.fetchPreviewJson")(
   function* (config: PreviewConfig, path: string, maxBytes: number) {
@@ -182,5 +133,24 @@ export const fetchPreviewJson = Effect.fn("NakafaContent.fetchPreviewJson")(
       "connect"
     );
     return yield* decodePreviewResponse(response, target.success, maxBytes);
-  }
+  },
+  Effect.scoped,
+  Effect.provide(PreviewHttpClient)
 );
+/**
+ * Fetches one bounded result as a Promise for React `cache` and
+ * `generateStaticParams`, which cannot yield an Effect.
+ *
+ * A render that reads it awaits `io()` first, and Next.js does not track the
+ * current time in `generateStaticParams`, so the request may start a fiber:
+ * https://nextjs.org/docs/app/api-reference/functions/io
+ */
+export function fetchPreviewJsonForPrerender(
+  config: PreviewConfig,
+  path: string,
+  maxBytes: number
+) {
+  return Effect.runPromise(
+    fetchPreviewJson(config, path, maxBytes).pipe(Effect.result)
+  );
+}
