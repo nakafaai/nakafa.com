@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, MutableHashSet } from "effect";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/request-tracker";
 
@@ -42,30 +42,43 @@ export function press(control: Locator, hasTouch: boolean) {
 }
 
 /**
+ * Records every pathname the page asks for beyond its shared shell. A try-out
+ * link in view only asks for the shell, which Next.js marks with "1"; it asks
+ * for the rest once intent reaches React. Start recording before the link can
+ * render, because a pointer that rests where the link appears shows intent on
+ * its own.
+ */
+export function recordIntentRequests(page: Page) {
+  const pathnames = MutableHashSet.empty<string>();
+  page.on("request", (request) => {
+    const headers = request.headers();
+    if (headers.rsc === "1" && headers[NEXT_ROUTER_PREFETCH_HEADER] !== "1") {
+      MutableHashSet.add(pathnames, new URL(request.url()).pathname);
+    }
+  });
+  return pathnames;
+}
+
+/**
  * Rests on a link the way a pointer or a finger does before it presses, and
- * waits until the link asks for its whole page. Try-out links only do that
- * once intent reaches React, while Playwright presses in the same instant as it
- * arrives, so a press without this step navigates as if nobody had shown
- * intent.
+ * waits until the link has asked for more than the shell. Playwright presses
+ * in the same instant as intent arrives, so a press without this step can
+ * navigate as if nobody had shown intent.
  */
 export const intend = Effect.fn("NakafaE2E.intendTryoutLink")(function* (
-  page: Page,
   link: Locator,
-  target: { hasTouch: boolean; pathname: string }
+  target: { hasTouch: boolean; pathname: string },
+  requested: MutableHashSet.MutableHashSet<string>
 ) {
   yield* Effect.promise(() =>
-    Promise.all([
-      // A link in view has already asked for the shared shell, which Next.js
-      // marks with "1"; intent is the first request for more than that.
-      page.waitForRequest(
-        (request) =>
-          new URL(request.url()).pathname === target.pathname &&
-          request.headers().rsc === "1" &&
-          request.headers()[NEXT_ROUTER_PREFETCH_HEADER] !== "1",
-        { timeout: readinessTimeoutMilliseconds }
-      ),
-      target.hasTouch ? link.dispatchEvent("touchstart") : link.hover(),
-    ])
+    target.hasTouch ? link.dispatchEvent("touchstart") : link.hover()
+  );
+  yield* Effect.promise(() =>
+    expect
+      .poll(() => MutableHashSet.has(requested, target.pathname), {
+        timeout: readinessTimeoutMilliseconds,
+      })
+      .toBe(true)
   );
 });
 

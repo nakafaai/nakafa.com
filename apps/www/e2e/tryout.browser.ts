@@ -1,6 +1,6 @@
 import { instant } from "@next/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, type MutableHashSet } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import {
@@ -17,6 +17,7 @@ import {
   press,
   readinessTimeoutMilliseconds,
   readSectionHref,
+  recordIntentRequests,
   sectionLink,
   setHref,
   trackHref,
@@ -38,10 +39,11 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
       hasTouch: boolean;
       pathname: string;
       title: string;
-    }
+    },
+    requested: MutableHashSet.MutableHashSet<string>
   ) {
     yield* Effect.promise(() => link.scrollIntoViewIfNeeded());
-    yield* intend(page, link, target);
+    yield* intend(link, target, requested);
     // @next/playwright owns this native Promise callback while its lock is held.
     yield* Effect.promise(() =>
       instant(page, () =>
@@ -126,6 +128,7 @@ const verifyPrefetchedHeadings = Effect.fn(
   "NakafaE2E.verifyPrefetchedTryoutHeadings"
 )(function* (page: Page, hasTouch: boolean) {
   yield* seedDeniedAnalyticsConsent(page);
+  const requested = recordIntentRequests(page);
   yield* openHub(page);
   yield* openTrack(page, hasTouch);
 
@@ -133,12 +136,17 @@ const verifyPrefetchedHeadings = Effect.fn(
   const setTitle = yield* Effect.promise(() =>
     setLink.locator("[title]").getAttribute("title")
   ).pipe(Effect.flatMap(Effect.fromNullishOr));
-  yield* openPrefetched(page, setLink, {
-    content: sectionLink(page),
-    hasTouch,
-    pathname: setHref,
-    title: setTitle,
-  });
+  yield* openPrefetched(
+    page,
+    setLink,
+    {
+      content: sectionLink(page),
+      hasTouch,
+      pathname: setHref,
+      title: setTitle,
+    },
+    requested
+  );
 
   // The resolved set replaces the catalog view's rows, so the section link
   // whose prefetch is measured must be the one that stays.
@@ -152,15 +160,20 @@ const verifyPrefetchedHeadings = Effect.fn(
   const sectionTitle = yield* Effect.promise(() =>
     section.locator("h3").innerText()
   );
-  yield* openPrefetched(page, section, {
-    content: page
-      .locator("main")
-      .getByText("Questions", { exact: true })
-      .filter({ visible: true }),
-    hasTouch,
-    pathname: sectionHref,
-    title: sectionTitle,
-  });
+  yield* openPrefetched(
+    page,
+    section,
+    {
+      content: page
+        .locator("main")
+        .getByText("Questions", { exact: true })
+        .filter({ visible: true }),
+      hasTouch,
+      pathname: sectionHref,
+      title: sectionTitle,
+    },
+    requested
+  );
 });
 
 for (const viewport of viewports) {
