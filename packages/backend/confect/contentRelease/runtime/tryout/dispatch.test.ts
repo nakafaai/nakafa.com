@@ -3,19 +3,30 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
   MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
 } from "@nakafa/aksara-contracts/runtime/protected/limits";
+import {
+  ProtectedContentRuntimeRequestSchema,
+  ProtectedContentRuntimeResponseSchema,
+} from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { dispatchProgram } from "@repo/backend/confect/contentRelease/runtime/tryout/dispatch";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
+const encodeRequest = Schema.encodeSync(
+  Schema.fromJsonString(ProtectedContentRuntimeRequestSchema)
+);
+const decodeResponse = Schema.decodeSync(
+  Schema.fromJsonString(ProtectedContentRuntimeResponseSchema)
+);
 
 /** Executes the protected runtime transport program. */
 function runDispatch(t: RuntimeAction, source: string) {
@@ -37,9 +48,9 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
   it("authenticates an ordered question and answer batch", async () => {
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation(insertProtectedRuntime);
-    const result = await runDispatch(t, JSON.stringify(fixture.request));
+    const result = await runDispatch(t, encodeRequest(fixture.request));
     expect(result.status).toBe(200);
-    expect(JSON.parse(result.body)).toMatchObject({
+    expect(decodeResponse(result.body)).toMatchObject({
       items: [
         {
           artifact: {
@@ -79,11 +90,11 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
       selectors: [
         {
           ...fixture.question,
-          artifactHash: `sha256:${"f".repeat(64)}`,
+          artifactHash: Sha256HashSchema.make(`sha256:${"f".repeat(64)}`),
         },
       ],
     };
-    const source = JSON.stringify(fixture.request);
+    const source = encodeRequest(fixture.request);
     const mismatch = await t.action((ctx) =>
       Effect.runPromise(
         dispatchProgram(source, 1).pipe(
@@ -95,7 +106,7 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
         )
       )
     );
-    await expect(runDispatch(t, JSON.stringify(missing))).resolves.toEqual({
+    await expect(runDispatch(t, encodeRequest(missing))).resolves.toEqual({
       body: '{"kind":"missing"}',
       status: 404,
     });
@@ -125,7 +136,7 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
       await ctx.db.delete("contentArtifacts", artifact._id);
     });
     await expect(
-      runDispatch(t, JSON.stringify(fixture.request))
+      runDispatch(t, encodeRequest(fixture.request))
     ).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
       status: 500,
@@ -143,7 +154,7 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
     );
     expect(fixture.request.selectors).toHaveLength(6);
     await expect(
-      runDispatch(t, JSON.stringify(fixture.request))
+      runDispatch(t, encodeRequest(fixture.request))
     ).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_RESPONSE_TOO_LARGE","kind":"failure"}',
       status: 500,
@@ -154,7 +165,7 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
     async (failure) => {
       const t = createConvexTestWithBetterAuth();
       const fixture = await t.mutation(insertProtectedRuntime);
-      const source = JSON.stringify(fixture.request);
+      const source = encodeRequest(fixture.request);
       const result = await t.action((ctx) => {
         const query = vi.spyOn(ctx, "runQuery");
         if (failure === "invalid") {

@@ -16,11 +16,14 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { beginFixture } from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
+import { Schema } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
 const stageProjections = internal.contentRelease.items.stageProjectionBatch;
 const verifyItems = internal.contentRelease.verify.verifyItems;
+/** JSON text for a deliberately off-contract body; a contract codec would strip its extra key. */
+const encodeRawJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Stages one complete Question body through its role-owned projection seam. */
 async function stageQuestion(
@@ -81,7 +84,7 @@ describe("contentRelease/verify/upsert", () => {
           throw new Error("Expected staged Question item.");
         }
         await ctx.db.patch("contentItems", row._id, {
-          projectionJson: JSON.stringify({
+          projectionJson: encodeRawJson({
             ...TEST_QUESTION_PROJECTION,
             choices: [],
           }),
