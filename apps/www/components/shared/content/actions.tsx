@@ -3,14 +3,9 @@
 import {
   ArrowUpRight01Icon,
   Copy01Icon,
-  LinkSquare02Icon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  BrandLogo,
-  type BrandLogoName,
-} from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -19,7 +14,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSub,
-  DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -29,8 +23,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { Link } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
 import { toast } from "sonner";
@@ -38,6 +32,21 @@ import {
   readOpenContentCopySource,
   writeOpenContentCopy,
 } from "@/components/shared/content/copy";
+
+/**
+ * Loads the open-in submenu when the actions menu opens. Its brand logos are
+ * one module that no content page needs before that.
+ */
+const OpenInSubmenuContent = dynamic(
+  () =>
+    import("@/components/shared/content/open").then(
+      (module) => module.OpenInSubmenuContent
+    ),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
 
 /**
  * Renders open/share actions for one content page.
@@ -121,39 +130,6 @@ export function OpenContent({
     });
   };
 
-  const markdownUrl = new URL(`${slug}.mdx`, "https://nakafa.com");
-  const q = `I'm looking at this ${markdownUrl}, help me understand.`;
-
-  const links: {
-    href: string;
-    logo: BrandLogoName;
-    title: string;
-  }[] = [];
-  if (sourceUrl) {
-    links.push({
-      href: sourceUrl,
-      logo: "github",
-      title: t("open-in-github"),
-    });
-  }
-  links.push(
-    {
-      title: t("open-in-chatgpt"),
-      href: `https://chatgpt.com/?${new URLSearchParams({ hints: "search", q })}`,
-      logo: "openai",
-    },
-    {
-      title: t("open-in-gemini"),
-      href: `https://gemini.google.com/app?${new URLSearchParams({ q })}`,
-      logo: "gemini",
-    },
-    {
-      title: t("open-in-claude"),
-      href: `https://claude.ai/new?${new URLSearchParams({ q })}`,
-      logo: "claude",
-    }
-  );
-
   return (
     <DropdownMenu onOpenChange={set} open={open}>
       <Tooltip disabled={open}>
@@ -190,29 +166,7 @@ export function OpenContent({
               <HugeIcons icon={ArrowUpRight01Icon} />
               {t("open-in")}
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-56">
-              <DropdownMenuGroup>
-                {links.map((item) => (
-                  <DropdownMenuItem
-                    key={item.title}
-                    render={
-                      <Link
-                        href={item.href}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <BrandLogo name={item.logo} />
-                        {item.title}
-                        <HugeIcons
-                          className="ms-auto"
-                          icon={LinkSquare02Icon}
-                        />
-                      </Link>
-                    }
-                  />
-                ))}
-              </DropdownMenuGroup>
-            </DropdownMenuSubContent>
+            <OpenInSubmenuContent slug={slug} sourceUrl={sourceUrl} />
           </DropdownMenuSub>
         </DropdownMenuGroup>
       </DropdownMenuContent>
