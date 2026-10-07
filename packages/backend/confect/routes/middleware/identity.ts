@@ -1,4 +1,4 @@
-import { generateId } from "@repo/backend/confect/utils/id";
+import { randomUuid } from "@repo/utilities/uuid";
 import { Context, Effect } from "effect";
 import { HttpRouter, HttpServerRequest } from "effect/http";
 export class RequestIdentity extends Context.Service<RequestIdentity, string>()(
@@ -11,8 +11,7 @@ export const requestIdentity = HttpRouter.middleware<{
 }>()((handler) =>
   Effect.gen(function* () {
     const request = yield* HttpServerRequest.HttpServerRequest;
-    const id =
-      request.headers["x-request-id"] ?? (yield* Effect.sync(generateId));
+    const id = request.headers["x-request-id"] ?? (yield* randomUuid);
     return yield* handler.pipe(Effect.provideService(RequestIdentity, id));
   })
 );

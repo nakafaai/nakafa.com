@@ -8,8 +8,8 @@ import {
 import { FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX } from "@repo/backend/confect/classes/forums/attachments/constants";
 import { MAX_FORUM_ATTACHMENT_BYTES } from "@repo/backend/confect/classes/forums/constants";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
-import { generateId } from "@repo/backend/confect/utils/id";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
+import { randomUuid } from "@repo/utilities/uuid";
 import { Duration, Effect, flow, Layer, Result, Schema } from "effect";
 import {
   HttpMiddleware,
@@ -122,10 +122,11 @@ const readUploadBody = Effect.fn("classes.forums.attachments.readUploadBody")(
 const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
   function* (request: Request, uploadId: string, uploadToken: string) {
     const { runMutation } = yield* MutationRunner;
-    const leaseId = yield* Effect.try({
-      try: generateId,
-      catch: () => uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "claim", 500),
-    });
+    const leaseId = yield* randomUuid.pipe(
+      Effect.catchDefect(() =>
+        Effect.fail(uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "claim", 500))
+      )
+    );
     const claimed = yield* runMutation(
       refs.internal.classes.forums.attachments.upload.claim,
       {

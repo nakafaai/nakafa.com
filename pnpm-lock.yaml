@@ -12,6 +12,9 @@ catalogs:
     '@ai-sdk/google':
       specifier: 4.0.88
       version: 4.0.88
+    '@effect/platform-browser':
+      specifier: 4.0.1
+      version: 4.0.1
     '@effect/vitest':
       specifier: 4.0.1
       version: 4.0.1
@@ -487,6 +490,9 @@ importers:
       '@convex-dev/workpool':
         specifier: ^0.4.13
         version: 0.4.13(convex-helpers@0.1.126(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
+      '@effect/platform-browser':
+        specifier: 'catalog:'
+        version: 4.0.1(effect@4.0.1)
       '@effect/platform-node':
         specifier: 4.0.1
         version: 4.0.1(effect@4.0.1)(redis@6.2.1)
@@ -1112,6 +1118,9 @@ importers:
 
   packages/utilities:
     dependencies:
+      '@effect/platform-browser':
+        specifier: 'catalog:'
+        version: 4.0.1(effect@4.0.1)
       effect:
         specifier: 'catalog:'
         version: 4.0.1
@@ -1863,6 +1872,11 @@ packages:
 
   '@effect/ai-openrouter@4.0.1':
     resolution: {integrity: sha512-l9vVp3ag8/N+OmPD/SP86MKuJrLxpZ5U2ItM6jPO/Al8njQZ4uEWRQZ72byVH7qumaWsN7cSd7wTCR8C9epBAw==}
+    peerDependencies:
+      effect: ^4.0.1
+
+  '@effect/platform-browser@4.0.1':
+    resolution: {integrity: sha512-RsnobWEnffdkRH/wZ3ARIAgMxtGLyfrD0R3iVS+dwQCdYrSbotlJHEoVHEgzcOn5RzMsHG6FHkfdgRMwvcM7kg==}
     peerDependencies:
       effect: ^4.0.1
 
@@ -8745,6 +8759,10 @@ snapshots:
       effect: 4.0.1
 
   '@effect/ai-openrouter@4.0.1(effect@4.0.1)':
+    dependencies:
+      effect: 4.0.1
+
+  '@effect/platform-browser@4.0.1(effect@4.0.1)':
     dependencies:
       effect: 4.0.1
 

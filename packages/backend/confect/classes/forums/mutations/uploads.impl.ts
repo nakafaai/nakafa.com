@@ -25,7 +25,7 @@ import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/confect/classes/forums
 import spec from "@repo/backend/confect/classes/forums/mutations/uploads.spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { generateId } from "@repo/backend/confect/utils/id";
+import { randomUuid } from "@repo/utilities/uuid";
 import { Clock, DateTime, Effect, Layer } from "effect";
 
 /**
@@ -55,7 +55,7 @@ const generateUploadUrl = FunctionImpl.make(
           message: "Forum post attachment count exceeds the supported limit.",
         });
       }
-      const uploadToken = generateId();
+      const uploadToken = yield* randomUuid;
       const createdAt = yield* Clock.currentTimeMillis;
       const expiresAt = createdAt + FORUM_PENDING_UPLOAD_EXPIRATION_MS;
       const uploadId = yield* writer
