@@ -76,34 +76,33 @@ function writeClipboardSource(source: Promise<string>) {
   if (typeof ClipboardItem === "undefined") {
     return source.then((text) => navigator.clipboard.writeText(text));
   }
-  return navigator.clipboard.write([
-    new ClipboardItem({
-      "text/plain": source.then(
-        (text) => new Blob([text], { type: "text/plain" })
-      ),
-    }),
-  ]);
+  const blob = source.then((text) => new Blob([text], { type: "text/plain" }));
+  // A browser that throws on the lines below never reads this promise, so a
+  // failed source is observed here. The write itself still reports it.
+  blob.catch(() => undefined);
+  return navigator.clipboard.write([new ClipboardItem({ "text/plain": blob })]);
 }
 /**
- * Starts the clipboard write for one copy and returns the effect that waits
- * for it. Call it inside the click handler, before anything is awaited.
+ * Writes the source of one copy to the clipboard. Run it inside the click
+ * handler, before anything is awaited: Effect starts a fiber synchronously, so
+ * the browser sees the write begin inside the click.
  *
  * A browser allows a clipboard write only for a short time after the click:
  * WebKit refuses one that starts more than five seconds later, and the source
  * may take up to ten. A clipboard item accepts its content as a promise, so
- * the write starts now and keeps the click's permission while the source
- * loads. Firefox before version 127 has no `ClipboardItem`.
+ * the write starts at once and keeps the click's permission while the source
+ * loads. Firefox before version 127 has no `ClipboardItem`. A clipboard that
+ * throws instead of rejecting fails the same typed way.
  *
  * @see https://webkit.org/blog/10855/async-clipboard-api/
  */
-export function startOpenContentCopy(source: Promise<string>) {
-  const written = writeClipboardSource(source);
+export function writeOpenContentCopy(source: Promise<string>) {
   return Effect.tryPromise({
     catch: () =>
       new OpenContentCopyError({
         code: "OPEN_CONTENT_CLIPBOARD_FAILED",
         message: "The reviewed content source could not be copied.",
       }),
-    try: () => written,
+    try: () => writeClipboardSource(source),
   });
 }

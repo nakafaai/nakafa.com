@@ -5,7 +5,7 @@ import { TestClock } from "effect/testing";
 import {
   OpenContentCopyError,
   readOpenContentCopySource,
-  startOpenContentCopy,
+  writeOpenContentCopy,
 } from "@/components/shared/content/copy";
 
 const SOURCE_PATH = "/en/subjects/mathematics/analytic-geometry/hyperbola.md";
@@ -171,7 +171,7 @@ describe("readOpenContentCopySource", () => {
   );
 });
 
-describe("startOpenContentCopy", () => {
+describe("writeOpenContentCopy", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -182,10 +182,13 @@ describe("startOpenContentCopy", () => {
       write.mockResolvedValue(undefined);
       const source = pendingSource();
 
-      const copy = startOpenContentCopy(source.promise);
+      const copy = yield* writeOpenContentCopy(source.promise).pipe(
+        Effect.forkChild
+      );
+      yield* Effect.yieldNow;
       expect(write).toHaveBeenCalledOnce();
       source.load("## Published");
-      yield* copy;
+      yield* Fiber.join(copy);
 
       const blob = yield* Effect.promise(
         async () => await write.mock.calls[0]?.[0][0]?.items["text/plain"]
@@ -202,7 +205,7 @@ describe("startOpenContentCopy", () => {
       const { write, writeText } = stubClipboard({ items: false });
       writeText.mockResolvedValue(undefined);
 
-      yield* startOpenContentCopy(Promise.resolve("## Published"));
+      yield* writeOpenContentCopy(Promise.resolve("## Published"));
 
       expect(writeText).toHaveBeenCalledWith("## Published");
       expect(write).not.toHaveBeenCalled();
@@ -214,7 +217,20 @@ describe("startOpenContentCopy", () => {
       write.mockRejectedValue(new Error("clipboard denied"));
 
       yield* expectCopyFailure(
-        startOpenContentCopy(Promise.resolve("## Source")),
+        writeOpenContentCopy(Promise.resolve("## Source")),
+        "OPEN_CONTENT_CLIPBOARD_FAILED"
+      );
+    })
+  );
+  it.effect("models a clipboard that throws instead of rejecting", () =>
+    Effect.gen(function* () {
+      const { write } = stubClipboard({ items: true });
+      write.mockImplementation(() => {
+        throw new TypeError("write is not supported");
+      });
+
+      yield* expectCopyFailure(
+        writeOpenContentCopy(Promise.reject(new Error("source failed"))),
         "OPEN_CONTENT_CLIPBOARD_FAILED"
       );
     })
@@ -224,7 +240,7 @@ describe("startOpenContentCopy", () => {
       const { writeText } = stubClipboard({ items: false });
 
       yield* expectCopyFailure(
-        startOpenContentCopy(Promise.reject(new Error("source failed"))),
+        writeOpenContentCopy(Promise.reject(new Error("source failed"))),
         "OPEN_CONTENT_CLIPBOARD_FAILED"
       );
       expect(writeText).not.toHaveBeenCalled();

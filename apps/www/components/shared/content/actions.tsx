@@ -36,7 +36,7 @@ import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
 import { toast } from "sonner";
 import {
   readOpenContentCopySource,
-  startOpenContentCopy,
+  writeOpenContentCopy,
 } from "@/components/shared/content/copy";
 
 /**
@@ -85,7 +85,7 @@ export function OpenContent({
     copyAbortController.current = abortController;
 
     // The clipboard write has to start inside this click, so it takes the
-    // source as a promise instead of waiting for it.
+    // source as a promise and runs before this handler returns.
     const source = Effect.runPromise(
       readOpenContentCopySource({
         ...(content === undefined ? {} : { content }),
@@ -93,7 +93,7 @@ export function OpenContent({
       }),
       { signal: abortController.signal }
     );
-    const copyProgram = startOpenContentCopy(source).pipe(
+    const copyProgram = writeOpenContentCopy(source).pipe(
       Effect.matchEffect({
         onFailure: () =>
           Effect.sync(() =>
