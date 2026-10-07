@@ -1,8 +1,4 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const scriptsDirectory = path.dirname(scriptDirectory);
+import { Effect, Path } from "effect";
 
 /** Canonical production host used by sitemap, IndexNow, Bing, and Google checks. */
 export const INDEXING_HOST = "https://nakafa.com";
@@ -19,14 +15,22 @@ export const INDEXNOW_KEY = "e22d548f7fd2482a9022e3b84e944901";
 /** Absolute public URL proving Nakafa owns the IndexNow key. */
 export const INDEXNOW_KEY_LOCATION = `${INDEXING_HOST}/${INDEXNOW_KEY_FILE_NAME}`;
 
-/** Ignored local folder for URL submission state across indexing adapters. */
-export const INDEXING_STATE_FOLDER = path.join(scriptsDirectory, "state");
-
-/** Ignored local history file that prevents duplicate URL notifications. */
-export const SUBMISSION_HISTORY_FILE = path.join(
-  INDEXING_STATE_FOLDER,
-  "submission-history.json"
-);
-
-/** Ignored local service-account key used only at the CLI boundary. */
-export const GOOGLE_KEY_FILE = path.join(scriptsDirectory, "google-key.json");
+/**
+ * Resolves the ignored local files the indexing scripts keep beside the
+ * `scripts` folder: the service-account key used only at the CLI boundary,
+ * the state folder shared by the indexing adapters, and the history file
+ * that prevents duplicate URL notifications.
+ */
+export const indexingFiles = Effect.gen(function* () {
+  const path = yield* Path.Path;
+  const scriptDirectory = path.dirname(
+    yield* Effect.orDie(path.fromFileUrl(new URL(import.meta.url)))
+  );
+  const scriptsDirectory = path.dirname(scriptDirectory);
+  const stateFolder = path.join(scriptsDirectory, "state");
+  return {
+    googleKey: path.join(scriptsDirectory, "google-key.json"),
+    stateFolder,
+    submissionHistory: path.join(stateFolder, "submission-history.json"),
+  };
+});
