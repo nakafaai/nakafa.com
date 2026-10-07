@@ -30,25 +30,36 @@ type RuntimeAction = Pick<RuntimeTest, "action">;
 const encodeBatchBody = Schema.encodeSync(
   Schema.fromJsonString(PublicContentRuntimeBatchRequestSchema)
 );
+const encodeJsonBody = Schema.encodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
 const decodeBatchBody = Schema.decodeSync(
   Schema.fromJsonString(PublicContentRuntimeBatchResponseSchema)
 );
 const foundRequest = Schema.decodeSync(
   Schema.fromJsonString(PublicContentRuntimeRequestSchema)
-)(publicRuntimeRequest());
-const missingRequest = {
+)(publicRuntimeRequest(), { onExcessProperty: "error" });
+const missingRequest = Schema.decodeSync(PublicContentRuntimeRequestSchema)({
   appLocale: "en",
   delivery: "public",
   publicPath: "test/missing",
-};
+});
 afterEach(() => vi.restoreAllMocks());
+
+/** Returns one body's wire text. Undefined has no JSON text, so it is sent as the empty body. */
+function bodyText(input: unknown) {
+  if (typeof input === "string") {
+    return input;
+  }
+  if (input === undefined) {
+    return "";
+  }
+  return encodeJsonBody(input);
+}
 
 /** Executes the bounded public batch transport program. */
 function runDispatch(t: RuntimeAction, input: unknown) {
-  const source =
-    typeof input === "string"
-      ? input
-      : Schema.encodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(input);
+  const source = bodyText(input);
   const byteLength = new TextEncoder().encode(source).byteLength;
   return t.action((ctx) =>
     Effect.runPromise(
@@ -80,9 +91,12 @@ describe("contentRelease/runtime/publication/batch", () => {
         () => foundRequest
       ),
     ];
-    const result = await runDispatch(t, {
-      requests,
-    });
+    const result = await runDispatch(
+      t,
+      encodeBatchBody({
+        requests,
+      })
+    );
     expect(result.status).toBe(200);
     const { responses } = decodeBatchBody(result.body);
     expect(responses).toHaveLength(8);
@@ -167,9 +181,12 @@ describe("contentRelease/runtime/publication/batch", () => {
       });
     });
     await expect(
-      runDispatch(t, {
-        requests: [foundRequest],
-      })
+      runDispatch(
+        t,
+        encodeBatchBody({
+          requests: [foundRequest],
+        })
+      )
     ).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_RESPONSE_TOO_LARGE","kind":"failure"}',
       status: 500,
@@ -188,9 +205,12 @@ describe("contentRelease/runtime/publication/batch", () => {
       });
     });
     await expect(
-      runDispatch(t, {
-        requests: [foundRequest, missingRequest],
-      })
+      runDispatch(
+        t,
+        encodeBatchBody({
+          requests: [foundRequest, missingRequest],
+        })
+      )
     ).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
       status: 500,
@@ -209,9 +229,12 @@ describe("contentRelease/runtime/publication/batch", () => {
       });
     });
     await expect(
-      runDispatch(t, {
-        requests: [foundRequest],
-      })
+      runDispatch(
+        t,
+        encodeBatchBody({
+          requests: [foundRequest],
+        })
+      )
     ).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
       status: 500,
