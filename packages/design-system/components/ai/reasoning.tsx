@@ -10,7 +10,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { cn } from "cn";
-import { DateTime, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
@@ -23,14 +22,12 @@ import {
   useState,
 } from "react";
 
-const ReasoningContextValueSchema = Schema.Struct({
-  duration: Schema.Finite,
-  hasContent: Schema.Boolean,
-  isOpen: Schema.Boolean,
-  isStreaming: Schema.Boolean,
-});
-
-type ReasoningContextValue = typeof ReasoningContextValueSchema.Type;
+interface ReasoningContextValue {
+  duration: number;
+  hasContent: boolean;
+  isOpen: boolean;
+  isStreaming: boolean;
+}
 
 const ReasoningContext = createContext<ReasoningContextValue | null>(null);
 
@@ -55,13 +52,11 @@ export type ReasoningProps = ComponentProps<typeof Collapsible> & {
 const AUTO_CLOSE_DELAY = 1000;
 const MS_IN_S = 1000;
 
-const ReasoningTimingSchema = Schema.Struct({
-  duration: Schema.Finite,
-  isStreaming: Schema.Boolean,
-  startedAt: Schema.NullOr(Schema.Finite),
-});
-
-type ReasoningTiming = typeof ReasoningTimingSchema.Type;
+interface ReasoningTiming {
+  duration: number;
+  isStreaming: boolean;
+  startedAt: number | null;
+}
 
 export const Reasoning = memo(
   ({
@@ -84,27 +79,19 @@ export const Reasoning = memo(
     const [timing, setTiming] = useState<ReasoningTiming>(() => ({
       duration: 0,
       isStreaming,
-      startedAt: isStreaming
-        ? DateTime.toEpochMillis(DateTime.nowUnsafe())
-        : null,
+      startedAt: isStreaming ? Date.now() : null,
     }));
 
     if (timing.isStreaming !== isStreaming) {
       const duration =
         isStreaming || timing.startedAt === null
           ? timing.duration
-          : Math.ceil(
-              (DateTime.toEpochMillis(DateTime.nowUnsafe()) -
-                timing.startedAt) /
-                MS_IN_S
-            );
+          : Math.ceil((Date.now() - timing.startedAt) / MS_IN_S);
 
       setTiming({
         duration,
         isStreaming,
-        startedAt: isStreaming
-          ? DateTime.toEpochMillis(DateTime.nowUnsafe())
-          : null,
+        startedAt: isStreaming ? Date.now() : null,
       });
     }
 
