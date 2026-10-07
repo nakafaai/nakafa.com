@@ -73,7 +73,6 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   const handle = (yield* Gateway).language({
     purpose: "background",
     model: modelId,
-    space: { kind: "personal", userId },
   });
   const agent = new Agent(components.nina, {
     name: "math-repair",

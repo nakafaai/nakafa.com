@@ -84,7 +84,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     const { model, timeout } = (yield* Gateway).language({
       purpose: "specialist",
       model: modelId,
-      space: { kind: "personal", userId },
     });
     const agent = new Agent(components.nina, {
       name: "research",

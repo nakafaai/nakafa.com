@@ -60,7 +60,6 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   const { model, timeout } = (yield* Gateway).language({
     purpose: "specialist",
     model: modelId,
-    space: { kind: "personal", userId },
   });
   const agent = new Agent(components.nina, {
     name: "nakafa",

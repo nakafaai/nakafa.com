@@ -8,15 +8,13 @@ import {
   Purpose,
   purposes,
 } from "@repo/backend/confect/gateway/purpose";
-import { Space } from "@repo/backend/confect/space";
 import { defaultSettingsMiddleware, wrapLanguageModel } from "ai";
 import { Context, Schema } from "effect";
 
-/** What one model call is for, which model it runs, and whose data it carries. */
+/** What one model call is for and which model it runs. */
 export const LanguageRequest = Schema.Struct({
   model: ModelKey,
   purpose: Purpose,
-  space: Space,
 });
 export type LanguageRequest = typeof LanguageRequest.Type;
 

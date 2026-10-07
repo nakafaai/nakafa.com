@@ -2,14 +2,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { make } from "@repo/backend/confect/gateway/handle";
 import { ModelKey } from "@repo/backend/confect/gateway/model";
 import { Purpose } from "@repo/backend/confect/gateway/purpose";
-import { Space } from "@repo/backend/confect/space";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect } from "effect";
 
-const personal = Schema.decodeUnknownSync(Space)({
-  kind: "personal",
-  userId: "user-1",
-});
 const prompt = [
   { role: "user" as const, content: [{ type: "text" as const, text: "Hi" }] },
 ];
@@ -62,11 +57,7 @@ describe("Gateway handles", () => {
     ([purpose, key]) =>
       Effect.gen(function* () {
         const { gateway, languageModel, model } = serve();
-        const handle = gateway.language({
-          purpose,
-          model: key,
-          space: personal,
-        });
+        const handle = gateway.language({ purpose, model: key });
         yield* Effect.promise(() => handle.model.doGenerate({ prompt }));
         expect(languageModel).toHaveBeenCalledExactlyOnceWith(
           gatewayModels[key]
@@ -84,7 +75,6 @@ describe("Gateway handles", () => {
       const handle = gateway.language({
         purpose: "chat",
         model: "nakafa-pro",
-        space: personal,
       });
       yield* Effect.promise(() =>
         handle.model.doGenerate({
@@ -103,7 +93,6 @@ describe("Gateway handles", () => {
     const handle = gateway.language({
       purpose: "background",
       model: "nakafa-lite",
-      space: personal,
     });
     expect(handle.model.provider).toBe(model.provider);
     expect(handle.model.modelId).toBe(model.modelId);

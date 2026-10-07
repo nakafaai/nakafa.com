@@ -1,16 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
-import { Space } from "@repo/backend/confect/space";
 import { Effect, Result, Schema } from "effect";
 
 const serviceToken = vi.hoisted(() => vi.fn<() => Promise<string>>());
 vi.mock("convex/server", () => ({ getServiceToken: serviceToken }));
 
-const space = Schema.decodeUnknownSync(Space)({
-  kind: "personal",
-  userId: "user-1",
-});
 const prompt = [
   { role: "user" as const, content: [{ type: "text" as const, text: "Hi" }] },
 ];
@@ -73,7 +68,6 @@ describe("The production gateway", () => {
         const handle = (yield* Gateway).language({
           purpose,
           model: "nakafa-pro",
-          space,
         });
         const result = yield* Effect.promise(() =>
           handle.model.doGenerate({ prompt })
