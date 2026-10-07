@@ -5,18 +5,15 @@ import {
   withAnalyticsSink,
 } from "@repo/backend/scripts/content/acceptance/analytics";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { FetchClient } from "@repo/utilities/http/client";
 import { Effect } from "effect";
+import { HttpBody, HttpClient } from "effect/http";
 
 const LOOPBACK_ORIGIN = /^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/;
 
 /** Whether anything still accepts connections at the origin. */
 const isListening = (origin: string) =>
-  Effect.promise(() =>
-    fetch(origin).then(
-      () => true,
-      () => false
-    )
-  );
+  HttpClient.get(origin).pipe(Effect.isSuccess);
 
 describe("acceptance analytics stand-in", () => {
   it.live("accepts every proxied analytics request until the start ends", () =>
@@ -27,19 +24,18 @@ describe("acceptance analytics stand-in", () => {
 
       const replies = yield* withAnalyticsSink(
         origin,
-        Effect.promise(async () => {
-          const capture = await fetch(`${origin}/e/?retry_count=1`, {
-            body: JSON.stringify({ event: "$pageview" }),
-            method: "POST",
+        Effect.gen(function* () {
+          const capture = yield* HttpClient.post(`${origin}/e/?retry_count=1`, {
+            body: HttpBody.jsonUnsafe({ event: "$pageview" }),
           });
-          const asset = await fetch(`${origin}/static/array.js`);
-          return [capture.status, await capture.json(), asset.status];
+          const asset = yield* HttpClient.get(`${origin}/static/array.js`);
+          return [capture.status, yield* capture.json, asset.status];
         })
       );
 
       expect(replies).toEqual([200, { status: 1 }, 200]);
       expect(yield* isListening(origin)).toBe(false);
-    })
+    }).pipe(Effect.provide(FetchClient))
   );
 
   it.live("stops when the start fails", () =>
@@ -51,7 +47,7 @@ describe("acceptance analytics stand-in", () => {
         yield* withAnalyticsSink(origin, Effect.fail(failure)).pipe(Effect.flip)
       ).toBe(failure);
       expect(yield* isListening(origin)).toBe(false);
-    })
+    }).pipe(Effect.provide(FetchClient))
   );
 
   it.live("refuses an occupied port and leaves its listener running", () =>

@@ -9,7 +9,8 @@ import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance
 import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
-import { Effect, FileSystem } from "effect";
+import { FetchClient } from "@repo/utilities/http/client";
+import { Effect, FileSystem, Layer } from "effect";
 
 const main = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -35,4 +36,6 @@ const main = Effect.gen(function* () {
   );
 });
 
-runMain(withTerminal(main).pipe(Effect.provide(layer)));
+runMain(
+  withTerminal(main).pipe(Effect.provide(Layer.merge(layer, FetchClient)))
+);

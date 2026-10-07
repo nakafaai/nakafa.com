@@ -72,10 +72,8 @@ export const readPreviewSnapshot = Effect.fn(
   return Option.some(snapshot.success);
 });
 /**
- * Reads one manifest through Next's request-less static-generation Promise.
- *
- * This deliberately avoids an Effect fiber before the uncached fetch:
- * https://nextjs.org/docs/messages/next-prerender-current-time
+ * Reads one manifest as a Promise for `generateStaticParams` and for a render
+ * that has already awaited `io()`.
  */
 export function readPreviewManifestForPrerender() {
   return readSnapshotForRender().then((snapshot) => {

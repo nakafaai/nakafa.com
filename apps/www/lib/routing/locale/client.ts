@@ -1,6 +1,8 @@
 "use client";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { FetchClient } from "@repo/utilities/http/client";
 import { Data, Effect, Schema } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import type { Locale } from "next-intl";
 import { useTransition } from "react";
 
@@ -23,42 +25,21 @@ function readCurrentHref() {
  */
 const readLocalizedHref = Effect.fn("www.routing.locale.client.read")(
   function* ({ href, locale }: { href: string; locale: Locale }) {
-    const url = new URL("/api/internal/routing/locale", window.location.origin);
-    url.searchParams.set("href", href);
-    url.searchParams.set("locale", locale);
-    const response = yield* Effect.tryPromise({
-      catch: (cause) =>
-        new LocalizedHrefClientError({ message: String(cause) }),
-      try: () =>
-        fetch(url, {
-          headers: { accept: "application/json" },
-        }),
-    });
-    if (!response.ok) {
-      return yield* new LocalizedHrefClientError({
-        message: `Locale route lookup failed with ${response.status}`,
-      });
-    }
-    const responseText = yield* Effect.tryPromise({
-      catch: (cause) =>
-        new LocalizedHrefClientError({ message: String(cause) }),
-      try: () => response.text(),
-    });
-    const body = yield* Effect.try({
-      catch: (cause) =>
-        new LocalizedHrefClientError({ message: String(cause) }),
-      try: () => {
-        const value: unknown = JSON.parse(responseText);
-        return value;
-      },
-    });
-    return yield* Schema.decodeUnknownEffect(LocalizedHrefResponseSchema)(
-      body
-    ).pipe(
-      Effect.mapError(
-        (error) => new LocalizedHrefClientError({ message: String(error) })
-      )
-    );
+    const client = yield* HttpClient.HttpClient;
+    return yield* client
+      .get("/api/internal/routing/locale", {
+        acceptJson: true,
+        urlParams: { href, locale },
+      })
+      .pipe(
+        Effect.flatMap(HttpClientResponse.filterStatusOk),
+        Effect.flatMap(
+          HttpClientResponse.schemaBodyJson(LocalizedHrefResponseSchema)
+        ),
+        Effect.mapError(
+          (cause) => new LocalizedHrefClientError({ message: String(cause) })
+        )
+      );
   }
 );
 /**
@@ -77,7 +58,8 @@ export function useLocalizedRouteSwitch() {
               router.replace(href, { locale });
             })
           ),
-          Effect.catch(() => Effect.void)
+          Effect.catch(() => Effect.void),
+          Effect.provide(FetchClient)
         )
       );
     });

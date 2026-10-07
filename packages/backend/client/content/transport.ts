@@ -11,12 +11,37 @@ import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
 } from "@repo/backend/content/endpoint";
-import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
+import { parseContentLength, readBoundedStream } from "@repo/utilities/body";
+import { FetchClient } from "@repo/utilities/http/client";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Data, Effect, Schedule, Schema } from "effect";
+import { Clock, Data, Effect, Layer, Schedule, Schema, Stream } from "effect";
+import {
+  FetchHttpClient,
+  HttpClient,
+  type HttpClientError,
+  HttpClientRequest,
+  type HttpClientResponse,
+} from "effect/http";
 
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
+/**
+ * The Fetch client for the private runtime: never cached, never redirected,
+ * and kept out of telemetry because every request carries the runtime
+ * credential. Only the Fetch client honors those options, so this module
+ * provides it instead of accepting any HTTP client.
+ */
+const ContentHttpClient = FetchClient.pipe(
+  Layer.provide(
+    Layer.merge(
+      Layer.succeed(FetchHttpClient.RequestInit, {
+        cache: "no-store",
+        redirect: "error",
+      }),
+      Layer.succeed(HttpClient.TracerDisabledWhen, () => true)
+    )
+  )
+);
 type ContentRuntimeResponse =
   | ProtectedContentRuntimeResponse
   | PublicContentRuntimeResponse;
@@ -59,7 +84,7 @@ export interface ContentHttpTarget {
 class RetryableContentResponse extends Data.TaggedError(
   "RetryableContentResponse"
 )<{
-  readonly response: Response;
+  readonly response: HttpClientResponse.HttpClientResponse;
 }> {}
 
 /** One received response failed while its bounded body stream was read. */
@@ -87,37 +112,27 @@ function isRetryableContentFailure(
 }
 
 /** Returns whether an exact unmarked JSON 500 is eligible for read retry. */
-function isRetryableContentResponse(response: Response, endpoint: string) {
+function isRetryableContentResponse(
+  response: HttpClientResponse.HttpClientResponse,
+  endpoint: string
+) {
   return (
     response.url === endpoint &&
     response.status === 500 &&
-    isJsonContentType(response.headers.get("content-type")) &&
-    response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER) === null
+    isJsonContentType(response.headers["content-type"] ?? null) &&
+    response.headers[CONTENT_RUNTIME_RESPONSE_HEADER] === undefined
   );
 }
 
 /**
- * Releases only a response that the retry schedule will discard.
+ * Releases only a response that the retry schedule will discard: opening its
+ * body and closing it at once cancels the body and aborts the request.
  *
  * @see https://github.com/nodejs/undici/blob/v7.29.0/README.md#garbage-collection
  */
 const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
-  function* (failure: RetryableContentResponse) {
-    const body = failure.response.body;
-    if (body === null) {
-      return;
-    }
-    yield* Effect.tryPromise({
-      catch: () => undefined,
-      try: () => body.cancel(),
-    }).pipe(
-      Effect.catch(() =>
-        Effect.logWarning(
-          "Unable to cancel a discarded content runtime response body."
-        )
-      )
-    );
-  }
+  (failure: RetryableContentResponse) =>
+    Effect.scoped(Stream.toPull(failure.response.stream))
 );
 const CONTENT_RETRY_SCHEDULE: Schedule.Schedule<number, unknown> =
   Schedule.recurs(2).pipe(
@@ -149,15 +164,19 @@ function classifyContentBodyFailure<Failure>(failure: Failure) {
 }
 
 /** Returns whether the response carries the current diagnostic marker. */
-function hasContentRuntimeMarker(response: Response) {
+function hasContentRuntimeMarker(
+  response: HttpClientResponse.HttpClientResponse
+) {
   return (
-    response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER) ===
+    response.headers[CONTENT_RUNTIME_RESPONSE_HEADER] ===
     CONTENT_RUNTIME_RESPONSE_MARKER
   );
 }
 
 /** Classifies an out-of-contract JSON body without exposing its contents. */
-export function createContentContractError(response: Response) {
+export function createContentContractError(
+  response: HttpClientResponse.HttpClientResponse
+) {
   if (hasContentRuntimeMarker(response)) {
     return new ContentTransportError({
       reason: "response-contract",
@@ -169,7 +188,9 @@ export function createContentContractError(response: Response) {
 }
 
 /** Classifies malformed JSON without exposing its response body. */
-function createContentSyntaxError(response: Response) {
+function createContentSyntaxError(
+  response: HttpClientResponse.HttpClientResponse
+) {
   if (hasContentRuntimeMarker(response)) {
     return new ContentTransportError({
       reason: "json-syntax",
@@ -265,13 +286,22 @@ export const encodeContentRequest = Effect.fn(
 });
 
 /**
+ * Keeps only the sanitized retry classification of one failed request: the
+ * rejection Fetch raised, which is the cause of the client's transport failure.
+ */
+function toNetworkRequestError(error: HttpClientError.HttpClientError) {
+  return createNetworkRequestError(error.reason.cause);
+}
+
+/**
  * Requests and reads one response with the server-owned runtime capability.
  *
  * The runtime action is read-only. Allowlisted network failures and the exact
  * unmarked JSON 500 that the pinned Convex backend creates when Nakafa does not
  * complete the action share two bounded retries with an interrupted response
  * body. Every other HTTP response and reader failure continues without retry
- * into the exact status, response, and signature checks.
+ * into the exact status, response, and signature checks. One attempt, from its
+ * request to the end of its body, has one deadline.
  *
  * @see https://docs.convex.dev/functions/http-actions
  * @see https://github.com/get-convex/convex-backend/blob/38abb46277140838cc5cdad59c6e85ad0432fc9a/crates/application/src/redaction.rs#L143-L160
@@ -286,36 +316,41 @@ export const requestContentResponse = Effect.fn(
     readonly target: ContentHttpTarget;
   },
   read: (
-    response: Response,
+    response: HttpClientResponse.HttpClientResponse,
     endpoint: string
   ) => Effect.Effect<Value, Failure, Requirements>
 ) {
+  const client = yield* HttpClient.HttpClient;
+  const request = HttpClientRequest.post(input.endpoint).pipe(
+    HttpClientRequest.acceptJson,
+    HttpClientRequest.setHeader("x-nakafa-content-token", input.target.token),
+    HttpClientRequest.bodyText(input.source, "application/json")
+  );
   const attempt = Effect.gen(function* () {
-    const response = yield* Effect.tryPromise({
-      catch: createNetworkRequestError,
-      try: () =>
-        fetch(input.endpoint, {
-          body: input.source,
-          cache: "no-store",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "x-nakafa-content-token": input.target.token,
-          },
-          method: "POST",
-          redirect: "error",
-          signal: AbortSignal.timeout(CONTENT_TIMEOUT_MILLISECONDS),
-        }),
-    }).pipe(
+    const deadline =
+      (yield* Clock.currentTimeMillis) + CONTENT_TIMEOUT_MILLISECONDS;
+    const response = yield* client.execute(request).pipe(
+      Effect.mapError(toNetworkRequestError),
+      Effect.timeoutOrElse({
+        duration: CONTENT_TIMEOUT_MILLISECONDS,
+        orElse: () =>
+          Effect.fail(new NetworkRequestError({ networkCodes: [] })),
+      }),
       Effect.filterOrFail(
-        (response) => !isRetryableContentResponse(response, input.endpoint),
-        (response) =>
+        (received) => !isRetryableContentResponse(received, input.endpoint),
+        (received) =>
           new RetryableContentResponse({
-            response,
+            response: received,
           })
       )
     );
+    const remaining = deadline - (yield* Clock.currentTimeMillis);
     const value = yield* read(response, input.endpoint).pipe(
+      Effect.timeoutOrElse({
+        duration: Math.max(remaining, 0),
+        orElse: () =>
+          Effect.fail(new ContentTransportError({ reason: "body" })),
+      }),
       Effect.mapError(classifyContentBodyFailure)
     );
     return {
@@ -353,24 +388,28 @@ export const requestContentResponse = Effect.fn(
         )
     )
   );
-});
+}, Effect.provide(ContentHttpClient));
 
 /** Reads one private JSON response without trusting advertised byte counts. */
 export const readContentResponse = Effect.fn(
   "NakafaContent.readContentResponse"
-)(function* (response: Response, endpoint: string, maxBytes: number) {
+)(function* (
+  response: HttpClientResponse.HttpClientResponse,
+  endpoint: string,
+  maxBytes: number
+) {
   if (response.url !== endpoint) {
     return yield* new ContentTransportError({
       reason: "response-url",
     });
   }
-  if (!isJsonContentType(response.headers.get("content-type"))) {
+  if (!isJsonContentType(response.headers["content-type"] ?? null)) {
     return yield* new ContentTransportError({
       reason: "content-type",
     });
   }
   yield* parseContentLength(
-    response.headers.get("content-length"),
+    response.headers["content-length"] ?? null,
     maxBytes
   ).pipe(
     Effect.mapError(
@@ -380,7 +419,7 @@ export const readContentResponse = Effect.fn(
         })
     )
   );
-  const bytes = yield* readBoundedBody(response.body, maxBytes).pipe(
+  const bytes = yield* readBoundedStream(response.stream, maxBytes).pipe(
     Effect.mapError(
       (error) =>
         new ContentTransportError({

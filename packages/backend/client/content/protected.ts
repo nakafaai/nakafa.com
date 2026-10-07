@@ -28,11 +28,15 @@ import {
 import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect } from "effect";
+import type { HttpClientResponse } from "effect/http";
 
 /** Reads one protected response without trusting its advertised size or shape. */
 const readProtectedRuntimeResponse = Effect.fn(
   "NakafaContent.readProtectedRuntimeResponse"
-)(function* (response: Response, endpoint: string) {
+)(function* (
+  response: HttpClientResponse.HttpClientResponse,
+  endpoint: string
+) {
   const input = yield* readContentResponse(
     response,
     endpoint,

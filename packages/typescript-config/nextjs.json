@@ -13,6 +13,8 @@
           "extendsNativeError": "error",
           "globalConsole": "error",
           "globalConsoleInEffect": "error",
+          "globalFetch": "error",
+          "globalFetchInEffect": "error",
           "globalRandom": "error",
           "globalRandomInEffect": "error",
           "instanceOfSchema": "error",

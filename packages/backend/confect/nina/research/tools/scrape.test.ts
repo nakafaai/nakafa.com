@@ -44,16 +44,23 @@ function createProgress() {
   return { parts: () => MutableRef.get(written), publish };
 }
 
+/**
+ * One fetch for the whole file: the tool provides its own HTTP client, so the
+ * double is global, and Effect's client keeps the first global fetch it reads.
+ */
+const fetcher = vi.fn<typeof fetch>();
+
 describe("research scrape tool", () => {
   beforeEach(() => {
     firecrawlApp.scrape.mockReset();
     lookup.mockReset();
     lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
     selectRelevantContent.mockClear();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.resolve(new Response("", { status: 404 })))
+    fetcher.mockReset();
+    fetcher.mockImplementation(() =>
+      Promise.resolve(new Response("", { status: 404 }))
     );
+    vi.stubGlobal("fetch", fetcher);
   });
 
   afterEach(() => {
@@ -156,37 +163,33 @@ describe("research scrape tool", () => {
 
   it.effect("prefers source-native markdown for IP-literal URLs", () =>
     Effect.gen(function* () {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn((input: Parameters<typeof fetch>[0]) => {
-          if (
-            String(input) ===
-            "https://93.184.216.34/docs/ai-sdk-core/devtools.md"
-          ) {
-            return Promise.resolve(
-              new Response(
-                Arr.join(
-                  [
-                    "# DevTools",
-                    "",
-                    "AI SDK DevTools gives you full visibility over your AI SDK calls with generateText, streamText, and ToolLoopAgent.",
-                  ],
-                  "\n"
-                ),
-                {
-                  headers: { "content-type": "text/markdown" },
-                }
-              )
-            );
-          }
-
+      fetcher.mockImplementation((input: Parameters<typeof fetch>[0]) => {
+        if (
+          String(input) === "https://93.184.216.34/docs/ai-sdk-core/devtools.md"
+        ) {
           return Promise.resolve(
-            new Response("<html>docs shell</html>", {
-              headers: { "content-type": "text/html" },
-            })
+            new Response(
+              Arr.join(
+                [
+                  "# DevTools",
+                  "",
+                  "AI SDK DevTools gives you full visibility over your AI SDK calls with generateText, streamText, and ToolLoopAgent.",
+                ],
+                "\n"
+              ),
+              {
+                headers: { "content-type": "text/markdown" },
+              }
+            )
           );
-        })
-      );
+        }
+
+        return Promise.resolve(
+          new Response("<html>docs shell</html>", {
+            headers: { "content-type": "text/html" },
+          })
+        );
+      });
       firecrawlApp.scrape.mockResolvedValue({
         markdown: "Search...\n\n# DevTools\n\n[Sign Up](https://vercel.com)",
         metadata: {
@@ -223,14 +226,11 @@ describe("research scrape tool", () => {
 
   it.effect("keeps source-native markdown when Firecrawl scrape fails", () =>
     Effect.gen(function* () {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(() =>
-          Promise.resolve(
-            new Response("# Native source\n\nDirect markdown evidence.", {
-              headers: { "content-type": "text/markdown" },
-            })
-          )
+      fetcher.mockImplementation(() =>
+        Promise.resolve(
+          new Response("# Native source\n\nDirect markdown evidence.", {
+            headers: { "content-type": "text/markdown" },
+          })
         )
       );
       firecrawlApp.scrape.mockRejectedValue(new Error("offline"));

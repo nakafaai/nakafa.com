@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { createServer } from "node:net";
 import { availableParallelism, tmpdir } from "node:os";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
@@ -12,18 +12,30 @@ import {
   withTerminal,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
+import { FetchClient } from "@repo/utilities/http/client";
 import {
   Deferred,
   Effect,
   Fiber,
   FileSystem,
+  Layer,
   Logger,
   Schedule,
   Sink,
   Stream,
 } from "effect";
+import { FetchHttpClient } from "effect/http";
 import { type ChildProcess, ChildProcessSpawner } from "effect/process";
 import { TestClock } from "effect/testing";
+
+/** The fetch that Effect's client calls in place of the global one. */
+const fetcher = vi.fn<typeof fetch>();
+/** Node services with the Fetch client reading that controlled fetch. */
+const services = Layer.mergeAll(
+  nodeServicesLayer,
+  FetchClient,
+  Layer.succeed(FetchHttpClient.Fetch, fetcher)
+);
 
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -91,7 +103,9 @@ function spawner(
 }
 
 describe("application process ownership", () => {
-  afterEach(() => vi.unstubAllGlobals());
+  beforeEach(() => {
+    fetcher.mockReset();
+  });
 
   it.live(
     "handles hangup through the finalizer and then releases its listener",
@@ -125,7 +139,9 @@ describe("application process ownership", () => {
       Effect.gen(function* () {
         const { fs, runtime } = yield* fixture;
         const child = spawner();
-        vi.stubGlobal("fetch", () => Promise.resolve(new Response("owned")));
+        fetcher.mockImplementation(() =>
+          Promise.resolve(new Response("owned"))
+        );
         const program = Effect.gen(function* () {
           if (outcome === "failure") {
             return yield* acceptanceRuntimeError("application failed");
@@ -166,7 +182,7 @@ describe("application process ownership", () => {
         for (const root of child.temporaryRoots) {
           expect(existsSync(root)).toBe(false);
         }
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(services))
     );
   }
 
@@ -185,7 +201,9 @@ describe("application process ownership", () => {
         const original = acceptanceRuntimeError(
           "Signed publication returned HTTP 500."
         );
-        vi.stubGlobal("fetch", () => Promise.resolve(new Response("owned")));
+        fetcher.mockImplementation(() =>
+          Promise.resolve(new Response("owned"))
+        );
         const failure = yield* withLocalBackend(runtime, original).pipe(
           Effect.provideService(
             ChildProcessSpawner.ChildProcessSpawner,
@@ -203,7 +221,7 @@ describe("application process ownership", () => {
         expect(messages[0]).not.toContain("\u001B");
         expect(messages[0]?.length).toBeLessThanOrEqual(2040);
         expect(child.release).toHaveBeenCalledOnce();
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(services))
   );
 
   for (const state of ["empty", "missing"]) {
@@ -216,7 +234,9 @@ describe("application process ownership", () => {
           const messages: unknown[] = [];
           const logger = Logger.make(({ message }) => messages.push(message));
           const original = acceptanceRuntimeError("Signed publication failed.");
-          vi.stubGlobal("fetch", () => Promise.resolve(new Response("owned")));
+          fetcher.mockImplementation(() =>
+            Promise.resolve(new Response("owned"))
+          );
           const program = Effect.gen(function* () {
             const logPath = `${runtime.directory}/convex.log`;
             yield* state === "empty"
@@ -236,7 +256,7 @@ describe("application process ownership", () => {
           ).toBe(original);
           expect(messages).toEqual([]);
           expect(child.release).toHaveBeenCalledOnce();
-        }).pipe(Effect.provide(nodeServicesLayer))
+        }).pipe(Effect.provide(services))
     );
   }
 
@@ -269,7 +289,7 @@ describe("application process ownership", () => {
         });
         expect(listener.listening).toBe(true);
         expect(child.commands).toHaveLength(0);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(services))
   );
 
   for (const failure of ["exited", "request", "during"] as const) {
@@ -280,7 +300,7 @@ describe("application process ownership", () => {
           exit: Effect.succeed(ChildProcessSpawner.ExitCode(7)),
           running: Effect.succeed(failure !== "exited"),
         });
-        vi.stubGlobal("fetch", () =>
+        fetcher.mockImplementation(() =>
           failure === "request"
             ? Promise.reject(new Error("connection refused"))
             : Promise.resolve(new Response("owned"))
@@ -302,7 +322,7 @@ describe("application process ownership", () => {
           message: expect.stringContaining(messages[failure]),
         });
         expect(child.release).toHaveBeenCalledOnce();
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(services))
     );
   }
 
@@ -313,7 +333,7 @@ describe("application process ownership", () => {
       const child = spawner({ output: "" });
       const request = vi.fn();
       const application = vi.fn();
-      vi.stubGlobal("fetch", request);
+      fetcher.mockImplementation(request);
       const fiber = yield* withLocalBackend(
         runtime,
         Effect.sync(application)
@@ -341,7 +361,7 @@ describe("application process ownership", () => {
       expect(request).not.toHaveBeenCalled();
       expect(application).not.toHaveBeenCalled();
       expect(child.release).toHaveBeenCalledOnce();
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(services))
   );
 
   it.live("waits for an interrupted command to finish its cleanup", () =>
@@ -373,7 +393,7 @@ writeFileSync("ready", "ready");`
       expect(yield* fs.readFileString(`${runtime.directory}/stopped`)).toBe(
         "SIGINT"
       );
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(services))
   );
 
   for (const code of [0, 7]) {

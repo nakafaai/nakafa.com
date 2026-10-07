@@ -2,7 +2,13 @@ import { casApiKey, casUrl } from "@repo/math/config";
 import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
 import type { MathRequest } from "@repo/math/schema/request";
 import { type MathResult, MathResultSchema } from "@repo/math/schema/result";
-import { Context, Effect, Layer, Redacted, Result, Schema } from "effect";
+import { FetchClient } from "@repo/utilities/http/client";
+import { Context, Effect, Layer, Result, Schema } from "effect";
+import {
+  HttpClient,
+  HttpClientRequest,
+  type HttpClientResponse,
+} from "effect/http";
 
 const CAS_MATH_PATH = "/api/math";
 const JSON_CONTENT_TYPE = "application/json";
@@ -38,39 +44,38 @@ export class MathService extends Context.Service<MathService, MathRuntime>()(
     make: Effect.gen(function* () {
       const baseUrl = yield* casUrl;
       const apiKey = yield* casApiKey;
+      const client = yield* HttpClient.HttpClient;
       return {
         compute: Effect.fn("Math.compute")(
           function* (request: MathRequest) {
-            const signal = yield* Effect.abortSignal;
-            const response = yield* Effect.tryPromise({
-              try: () =>
-                fetch(new URL(CAS_MATH_PATH, baseUrl), {
-                  body: JSON.stringify(request),
-                  headers: {
-                    Authorization: `Bearer ${Redacted.value(apiKey)}`,
-                    "Content-Type": "application/json",
-                  },
-                  method: "POST",
-                  signal,
-                }),
-              catch: () =>
-                new MathCasRequestError({
-                  message: "Unable to reach the Nakafa math service.",
-                }),
-            });
-            if (!response.ok) {
+            const response = yield* HttpClientRequest.post(
+              new URL(CAS_MATH_PATH, baseUrl)
+            ).pipe(
+              HttpClientRequest.bearerToken(apiKey),
+              HttpClientRequest.bodyJsonUnsafe(request),
+              client.execute,
+              Effect.mapError(
+                () =>
+                  new MathCasRequestError({
+                    message: "Unable to reach the Nakafa math service.",
+                  })
+              )
+            );
+            if (response.status < 200 || response.status >= 300) {
               return yield* new MathCasRequestError({
                 message: yield* readResponseError(response),
                 status: response.status,
               });
             }
-            const payload = yield* Effect.tryPromise({
-              try: () => response.json(),
-              catch: () =>
-                new MathCasResponseError({
-                  message: "Math service returned an unreadable JSON response.",
-                }),
-            });
+            const payload = yield* response.json.pipe(
+              Effect.mapError(
+                () =>
+                  new MathCasResponseError({
+                    message:
+                      "Math service returned an unreadable JSON response.",
+                  })
+              )
+            );
             return yield* Schema.decodeUnknownEffect(MathResultSchema)(
               payload
             ).pipe(
@@ -82,10 +87,9 @@ export class MathService extends Context.Service<MathService, MathRuntime>()(
               )
             );
           },
-          Effect.scoped,
           // CAS terminates its worker after 20 seconds. This outer budget
-          // includes transport and response decoding, without leaving fetch
-          // alive when the Effect fiber is interrupted.
+          // includes transport and response decoding, and interrupting the
+          // request aborts it instead of leaving it alive.
           Effect.timeoutOrElse({
             duration: "25 seconds",
             orElse: () =>
@@ -95,29 +99,20 @@ export class MathService extends Context.Service<MathService, MathRuntime>()(
           })
         ),
       };
-    }),
+    }).pipe(Effect.provide(FetchClient)),
   }
 ) {
   static readonly layer = Layer.effect(this, this.make);
 }
 /** Reads math service JSON errors without leaking framework HTML pages into chat. */
 const readResponseError = Effect.fn("Math.readResponseError")(function* (
-  response: Response
+  response: HttpClientResponse.HttpClientResponse
 ) {
-  const body = yield* Effect.result(
-    Effect.tryPromise({
-      try: () => response.text(),
-      catch: () =>
-        new MathCasRequestError({
-          message: "Math service returned an unreadable error response.",
-          status: response.status,
-        }),
-    })
-  );
+  const body = yield* Effect.result(response.text);
   if (Result.isFailure(body) || body.success.length === 0) {
     return `Math request failed with status ${response.status}.`;
   }
-  if (!response.headers.get("content-type")?.includes(JSON_CONTENT_TYPE)) {
+  if (!response.headers["content-type"]?.includes(JSON_CONTENT_TYPE)) {
     return `Math request failed with status ${response.status}.`;
   }
   const decoded = yield* Effect.result(

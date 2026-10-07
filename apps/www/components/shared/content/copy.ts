@@ -1,4 +1,5 @@
 import { Effect, Schema } from "effect";
+import { HttpClient, HttpClientResponse } from "effect/http";
 
 const COPY_SOURCE_TIMEOUT = "10 seconds";
 /** The reviewed source for a content page could not be copied. */
@@ -36,28 +37,34 @@ const readOpenContentCopySource = Effect.fn("www.openContent.readCopySource")(
         message: "No reviewed content source is available to copy.",
       });
     }
-    const response = yield* Effect.tryPromise({
-      catch: () =>
-        new OpenContentCopyError({
-          code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
-          message: "The reviewed content source could not be fetched.",
-        }),
-      try: (signal) => fetch(copySourceUrl, { signal }),
-    });
-    if (!response.ok) {
-      return yield* new OpenContentCopyError({
-        code: "OPEN_CONTENT_SOURCE_REJECTED",
-        message: "The reviewed content source request was rejected.",
-      });
-    }
-    const source = yield* Effect.tryPromise({
-      catch: () =>
-        new OpenContentCopyError({
-          code: "OPEN_CONTENT_SOURCE_READ_FAILED",
-          message: "The reviewed content source could not be read.",
-        }),
-      try: () => response.text(),
-    });
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* client.get(copySourceUrl).pipe(
+      Effect.mapError(
+        () =>
+          new OpenContentCopyError({
+            code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
+            message: "The reviewed content source could not be fetched.",
+          })
+      )
+    );
+    yield* HttpClientResponse.filterStatusOk(response).pipe(
+      Effect.mapError(
+        () =>
+          new OpenContentCopyError({
+            code: "OPEN_CONTENT_SOURCE_REJECTED",
+            message: "The reviewed content source request was rejected.",
+          })
+      )
+    );
+    const source = yield* response.text.pipe(
+      Effect.mapError(
+        () =>
+          new OpenContentCopyError({
+            code: "OPEN_CONTENT_SOURCE_READ_FAILED",
+            message: "The reviewed content source could not be read.",
+          })
+      )
+    );
     if (source.trim().length === 0) {
       return yield* new OpenContentCopyError({
         code: "OPEN_CONTENT_SOURCE_EMPTY",

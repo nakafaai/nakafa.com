@@ -7,8 +7,8 @@ import {
 } from "@repo/backend/confect/contentRelease/ingress/dispatch";
 import spec from "@repo/backend/confect/contentRelease/ingress/dispatch.spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
+import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Layer } from "effect";
-import { FetchHttpClient } from "effect/http";
 
 const dispatch = FunctionImpl.make(
   databaseSchema,
@@ -19,7 +19,7 @@ const dispatch = FunctionImpl.make(
   ) {
     return yield* dispatchPublication(input).pipe(
       Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
-      Effect.provide(FetchHttpClient.layer)
+      Effect.provide(FetchClient)
     );
   })
 );

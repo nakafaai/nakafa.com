@@ -1,6 +1,7 @@
 import { webcrypto } from "node:crypto";
 import fs from "node:fs";
 import { Effect, Schema } from "effect";
+import { HttpClient, HttpClientRequest } from "effect/http";
 import {
   GoogleAssertionSignError,
   GoogleTokenRequestError,
@@ -111,45 +112,41 @@ const signGoogleAccessTokenAssertion = Effect.fn(
   });
   return `${signatureInput}.${Buffer.from(signature).toString("base64url")}`;
 });
-/** Reads a token endpoint response body, whether it grants or refuses. */
-const readGoogleTokenResponse = Effect.fn("scripts.google.auth.readResponse")(
-  (response: Response) =>
-    Effect.tryPromise({
-      try: () => response.text(),
-      catch: (cause) =>
-        new GoogleTokenRequestError({
-          cause,
-          message: "Google token response could not be read.",
-        }),
-    })
-);
-
 /** Exchanges a signed service-account assertion for a Google API access token. */
 export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
   function* () {
     const assertion = yield* signGoogleAccessTokenAssertion();
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch(GOOGLE_TOKEN_ENDPOINT, {
-          body: new URLSearchParams({
-            assertion,
-            grant_type: GOOGLE_JWT_GRANT_TYPE,
-          }),
-          method: "POST",
-        }),
-      catch: (cause) =>
-        new GoogleTokenRequestError({
-          cause,
-          message: "Google token request transport failed.",
-        }),
-    });
-    if (!response.ok) {
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* HttpClientRequest.post(GOOGLE_TOKEN_ENDPOINT).pipe(
+      HttpClientRequest.bodyUrlParams({
+        assertion,
+        grant_type: GOOGLE_JWT_GRANT_TYPE,
+      }),
+      client.execute,
+      Effect.mapError(
+        (cause) =>
+          new GoogleTokenRequestError({
+            cause,
+            message: "Google token request transport failed.",
+          })
+      )
+    );
+    // The body is read whether the endpoint grants or refuses the token.
+    const responseText = yield* response.text.pipe(
+      Effect.mapError(
+        (cause) =>
+          new GoogleTokenRequestError({
+            cause,
+            message: "Google token response could not be read.",
+          })
+      )
+    );
+    if (response.status < 200 || response.status >= 300) {
       return yield* new GoogleTokenRequestError({
         message: "Google token request failed.",
-        responseText: yield* readGoogleTokenResponse(response),
+        responseText,
       });
     }
-    const responseText = yield* readGoogleTokenResponse(response);
     return (yield* decodeGoogleTokenResponse(responseText)).access_token;
   }
 );

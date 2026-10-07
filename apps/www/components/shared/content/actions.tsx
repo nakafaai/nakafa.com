@@ -30,6 +30,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { Link } from "@repo/internationalization/src/navigation";
+import { FetchClient } from "@repo/utilities/http/client";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
@@ -103,7 +104,8 @@ export function OpenContent({
           }
           copyAbortController.current = null;
         })
-      )
+      ),
+      Effect.provide(FetchClient)
     );
 
     startTransition(async () => {

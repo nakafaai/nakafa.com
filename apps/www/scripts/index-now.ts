@@ -7,7 +7,8 @@
  */
 
 // Environment variables loaded via Node.js --env-file flag.
-import { Effect } from "effect";
+import { FetchClient } from "@repo/utilities/http/client";
+import { Effect, Layer } from "effect";
 import { runIndexNow } from "@/scripts/indexing/indexnow/run";
 import { IndexingLogger } from "@/scripts/indexing/logger";
 
@@ -22,6 +23,6 @@ Effect.runPromise(
         )
       )
     ),
-    Effect.provide(IndexingLogger)
+    Effect.provide(Layer.merge(IndexingLogger, FetchClient))
   )
 );

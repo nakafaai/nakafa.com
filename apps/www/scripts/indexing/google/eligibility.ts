@@ -1,4 +1,5 @@
 import { Effect, Predicate, Schema } from "effect";
+import { HttpClient } from "effect/http";
 import {
   GoogleIndexPageFetchError,
   GoogleStructuredDataParseError,
@@ -40,30 +41,33 @@ export const getEligibleGoogleIndexingUrls = Effect.fn(
 const readEligibleGoogleIndexingUrl = Effect.fn(
   "scripts.google.eligibility.readUrl"
 )(function* (url: string) {
-  const response = yield* Effect.tryPromise({
-    try: () => fetch(url),
-    catch: (cause) =>
-      new GoogleIndexPageFetchError({
-        cause,
-        message: `Failed to fetch ${url} for Google Indexing API eligibility.`,
-        url,
-      }),
-  });
-  if (!response.ok) {
+  const client = yield* HttpClient.HttpClient;
+  const response = yield* client.get(url).pipe(
+    Effect.mapError(
+      (cause) =>
+        new GoogleIndexPageFetchError({
+          cause,
+          message: `Failed to fetch ${url} for Google Indexing API eligibility.`,
+          url,
+        })
+    )
+  );
+  if (response.status < 200 || response.status >= 300) {
     return yield* new GoogleIndexPageFetchError({
       message: `Google Indexing API eligibility fetch returned HTTP ${response.status}.`,
       url,
     });
   }
-  const html = yield* Effect.tryPromise({
-    try: () => response.text(),
-    catch: (cause) =>
-      new GoogleIndexPageFetchError({
-        cause,
-        message: `Failed to read ${url} for Google Indexing API eligibility.`,
-        url,
-      }),
-  });
+  const html = yield* response.text.pipe(
+    Effect.mapError(
+      (cause) =>
+        new GoogleIndexPageFetchError({
+          cause,
+          message: `Failed to read ${url} for Google Indexing API eligibility.`,
+          url,
+        })
+    )
+  );
   const blocks = readJsonLdScriptBodies(html);
   for (const block of blocks) {
     const data = yield* decodeStructuredDataJson(block).pipe(

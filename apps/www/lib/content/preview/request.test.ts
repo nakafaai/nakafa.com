@@ -1,8 +1,9 @@
 // @vitest-environment node
 
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Deferred, Effect, Fiber, Redacted } from "effect";
+import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
@@ -21,8 +22,11 @@ const config: PreviewConfig = {
   token: Redacted.make("secret-token"),
 };
 
-afterEach(() => {
-  vi.unstubAllGlobals();
+/** The fetch that Effect's client calls in place of the global one. */
+const fetcher = vi.fn<typeof fetch>();
+
+beforeEach(() => {
+  fetcher.mockReset();
 });
 
 /** Builds one response whose final URL matches the Fetch contract. */
@@ -38,8 +42,13 @@ function response(
 }
 
 /** Builds one preview fetch for the Effect test runtime. */
-function run(maxBytes = MAX_PREVIEW_MANIFEST_BYTES) {
-  return fetchPreviewJson(config, config.manifestPath, maxBytes);
+function run(
+  maxBytes = MAX_PREVIEW_MANIFEST_BYTES,
+  path: string = config.manifestPath
+) {
+  return fetchPreviewJson(config, path, maxBytes).pipe(
+    Effect.provideService(FetchHttpClient.Fetch, fetcher)
+  );
 }
 
 /** Returns one typed request failure without losing its error channel. */
@@ -47,19 +56,18 @@ function runFailure(
   maxBytes = MAX_PREVIEW_MANIFEST_BYTES,
   path: string = config.manifestPath
 ) {
-  return fetchPreviewJson(config, path, maxBytes).pipe(Effect.flip);
+  return run(maxBytes, path).pipe(Effect.flip);
 }
 
 describe("local preview JSON requests", () => {
   it.effect("sends a private bearer request and decodes bounded JSON", () =>
     Effect.gen(function* () {
-      const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      fetcher.mockResolvedValue(
         response('{"status":"ready"}', {
           headers: { "content-type": "application/json; charset=utf-8" },
           status: 200,
         })
       );
-      vi.stubGlobal("fetch", fetcher);
 
       expect(yield* run()).toEqual({ status: "ready" });
       expect(fetcher).toHaveBeenCalledWith(
@@ -80,10 +88,7 @@ describe("local preview JSON requests", () => {
 
   it.effect("maps connection failures without exposing their cause", () =>
     Effect.gen(function* () {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn<typeof fetch>().mockRejectedValue(new TypeError("secret"))
-      );
+      fetcher.mockRejectedValue(new TypeError("secret"));
       expect(yield* runFailure()).toMatchObject({
         _tag: "PreviewRequestError",
         stage: "connect",
@@ -97,9 +102,6 @@ describe("local preview JSON requests", () => {
     `/artifacts/sha256%3a${"a".repeat(64)}`,
   ])("rejects non-contract path %s before sending its bearer token", (path) =>
     Effect.gen(function* () {
-      const fetcher = vi.fn<typeof fetch>();
-      vi.stubGlobal("fetch", fetcher);
-
       expect(yield* runFailure(MAX_PREVIEW_MANIFEST_BYTES, path)).toMatchObject(
         { _tag: "PreviewConfigError" }
       );
@@ -125,16 +127,15 @@ describe("local preview JSON requests", () => {
       Effect.gen(function* () {
         const artifactPath = `/artifacts/sha256%3A${"a".repeat(64)}`;
         const artifactTarget = `http://127.0.0.1:4000${artifactPath}`;
-        const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+        fetcher.mockResolvedValue(
           response("{}", {
             headers: { "content-type": "application/json" },
             status: 200,
             url: artifactTarget,
           })
         );
-        vi.stubGlobal("fetch", fetcher);
 
-        expect(yield* fetchPreviewJson(config, artifactPath, 1024)).toEqual({});
+        expect(yield* run(1024, artifactPath)).toEqual({});
         expect(fetcher).toHaveBeenCalledWith(
           new URL(artifactTarget),
           expect.objectContaining({
@@ -172,7 +173,7 @@ describe("local preview JSON requests", () => {
     ],
   ] as const)("rejects an invalid %s response", ([_label, value]) =>
     Effect.gen(function* () {
-      vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockResolvedValue(value));
+      fetcher.mockResolvedValue(value);
       expect(yield* runFailure()).toMatchObject({
         _tag: "PreviewRequestError",
         stage: "response",
@@ -181,42 +182,26 @@ describe("local preview JSON requests", () => {
     })
   );
 
-  it.effect.each([false, true])(
-    "cancels an unread invalid response even when cancellation rejects: %s",
-    (rejectCancellation) =>
-      Effect.gen(function* () {
-        const cancel = vi.fn(() => {
-          if (rejectCancellation) {
-            return Promise.reject(new TypeError("cancel failed"));
-          }
-        });
-        const invalid = response(new ReadableStream({ cancel }), {
-          status: 409,
-        });
-        vi.stubGlobal(
-          "fetch",
-          vi.fn<typeof fetch>().mockResolvedValue(invalid)
-        );
+  it.effect("aborts the request of an invalid response it never reads", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValue(response("{}", { status: 409 }));
 
-        expect(yield* runFailure()).toMatchObject({
-          _tag: "PreviewRequestError",
-          stage: "response",
-          status: 409,
-        });
-        expect(cancel).toHaveBeenCalledOnce();
-      })
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewRequestError",
+        stage: "response",
+        status: 409,
+      });
+      expect(fetcher.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+    })
   );
 
   it.effect("rejects a response without a body", () =>
     Effect.gen(function* () {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn<typeof fetch>().mockResolvedValue(
-          response(null, {
-            headers: { "content-type": "application/json" },
-            status: 200,
-          })
-        )
+      fetcher.mockResolvedValue(
+        response(null, {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        })
       );
       expect(yield* runFailure()).toMatchObject({
         _tag: "PreviewRequestError",
@@ -237,8 +222,7 @@ describe("local preview JSON requests", () => {
           controller.enqueue(new TextEncoder().encode("oversized"));
         },
       });
-      const fetcher = vi
-        .fn<typeof fetch>()
+      fetcher
         .mockResolvedValueOnce(
           response('{"value":"too large"}', {
             headers: { "content-type": "application/json" },
@@ -251,7 +235,6 @@ describe("local preview JSON requests", () => {
             status: 200,
           })
         );
-      vi.stubGlobal("fetch", fetcher);
 
       expect(yield* runFailure(4)).toMatchObject({
         _tag: "PreviewBodyLimitError",
@@ -273,56 +256,29 @@ describe("local preview JSON requests", () => {
           controller.error(new TypeError("stream failed"));
         },
       });
-      vi.stubGlobal(
-        "fetch",
-        vi
-          .fn<typeof fetch>()
-          .mockResolvedValueOnce(
-            response(stream, {
-              headers: { "content-type": "application/json" },
-              status: 200,
-            })
-          )
-          .mockResolvedValueOnce(
-            response(new Uint8Array([255]), {
-              headers: { "content-type": "application/json" },
-              status: 200,
-            })
-          )
-          .mockResolvedValueOnce(
-            response("not-json", {
-              headers: { "content-type": "application/json" },
-              status: 200,
-            })
-          )
-      );
+      fetcher
+        .mockResolvedValueOnce(
+          response(stream, {
+            headers: { "content-type": "application/json" },
+            status: 200,
+          })
+        )
+        .mockResolvedValueOnce(
+          response(new Uint8Array([255]), {
+            headers: { "content-type": "application/json" },
+            status: 200,
+          })
+        )
+        .mockResolvedValueOnce(
+          response("not-json", {
+            headers: { "content-type": "application/json" },
+            status: 200,
+          })
+        );
 
       expect(yield* runFailure()).toMatchObject({ stage: "body" });
       expect(yield* runFailure()).toMatchObject({ stage: "body" });
       expect(yield* runFailure()).toMatchObject({ stage: "body" });
-    })
-  );
-
-  it.effect("maps synchronous stream-reader acquisition failures", () =>
-    Effect.gen(function* () {
-      const unreadable = new ReadableStream<Uint8Array>();
-      Object.defineProperty(unreadable, "getReader", {
-        /** Fails after response validation but before the first body pull. */
-        value() {
-          throw new TypeError("reader unavailable");
-        },
-      });
-      const value = response("{}", {
-        headers: { "content-type": "application/json" },
-        status: 200,
-      });
-      Object.defineProperty(value, "body", { value: unreadable });
-      vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockResolvedValue(value));
-
-      expect(yield* runFailure()).toMatchObject({
-        _tag: "PreviewRequestError",
-        stage: "body",
-      });
     })
   );
 
@@ -337,14 +293,11 @@ describe("local preview JSON requests", () => {
           Deferred.doneUnsafe(pullStarted, Effect.void);
         },
       });
-      vi.stubGlobal(
-        "fetch",
-        vi.fn<typeof fetch>().mockResolvedValue(
-          response(stalled, {
-            headers: { "content-type": "application/json" },
-            status: 200,
-          })
-        )
+      fetcher.mockResolvedValue(
+        response(stalled, {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        })
       );
       const fiber = yield* runFailure().pipe(
         Effect.forkChild({ startImmediately: true })
@@ -364,10 +317,7 @@ describe("local preview JSON requests", () => {
   it.effect("interrupts a stalled request at its typed timeout", () =>
     Effect.gen(function* () {
       /** Keeps Fetch pending until Effect interrupts its AbortSignal. */
-      const fetcher = vi
-        .fn<typeof fetch>()
-        .mockImplementation(() => new Promise<Response>(() => undefined));
-      vi.stubGlobal("fetch", fetcher);
+      fetcher.mockImplementation(() => new Promise<Response>(() => undefined));
       const fiber = yield* runFailure().pipe(
         Effect.forkChild({ startImmediately: true })
       );

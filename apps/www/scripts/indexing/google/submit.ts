@@ -1,4 +1,9 @@
 import { Effect } from "effect";
+import {
+  HttpClient,
+  HttpClientRequest,
+  type HttpClientResponse,
+} from "effect/http";
 import { GoogleIndexSubmitError } from "@/scripts/indexing/errors";
 
 const RATE_LIMIT_DELAY = 1000;
@@ -89,25 +94,22 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
     `Submitting URL ${index} of ${totalUrls}: ${index}/${totalUrls} (${Math.round((index / totalUrls) * 100)}%)`
   );
 
-  const response = yield* Effect.tryPromise({
-    try: () =>
-      fetch(GOOGLE_PUBLISH_ENDPOINT, {
-        body: JSON.stringify({
-          type: "URL_UPDATED",
-          url,
-        }),
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      }),
-    catch: (cause) =>
-      new GoogleIndexSubmitError({
-        cause,
-        message: `Network error submitting ${url}.`,
-      }),
-  });
+  const client = yield* HttpClient.HttpClient;
+  const response = yield* HttpClientRequest.post(GOOGLE_PUBLISH_ENDPOINT).pipe(
+    HttpClientRequest.bearerToken(accessToken),
+    HttpClientRequest.bodyJsonUnsafe({
+      type: "URL_UPDATED",
+      url,
+    }),
+    client.execute,
+    Effect.mapError(
+      (cause) =>
+        new GoogleIndexSubmitError({
+          cause,
+          message: `Network error submitting ${url}.`,
+        })
+    )
+  );
   const { status } = response;
 
   if (status === HTTP_STATUS_CODE_OK) {
@@ -152,13 +154,14 @@ const submitUrlToGoogle = Effect.fn("scripts.google.submit.url")(function* (
 
 /** Reads the Indexing API response body for one submitted URL. */
 const readSubmitResponse = Effect.fn("scripts.google.submit.readResponse")(
-  (response: Response, url: string) =>
-    Effect.tryPromise({
-      try: () => response.text(),
-      catch: (cause) =>
-        new GoogleIndexSubmitError({
-          cause,
-          message: `Failed to read the Indexing API response for ${url}.`,
-        }),
-    })
+  (response: HttpClientResponse.HttpClientResponse, url: string) =>
+    response.text.pipe(
+      Effect.mapError(
+        (cause) =>
+          new GoogleIndexSubmitError({
+            cause,
+            message: `Failed to read the Indexing API response for ${url}.`,
+          })
+      )
+    )
 );

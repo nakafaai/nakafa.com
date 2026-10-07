@@ -1,22 +1,25 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { MathCasRequestError } from "@repo/math/errors";
 import { MathService } from "@repo/math/service";
 import { ConfigProvider, Deferred, Effect, Exit, Fiber } from "effect";
+import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 
 const provider = ConfigProvider.fromEnvRecord({
   MATH_CAS_API_KEY: "secret",
   NEXT_PUBLIC_CAS_URL: "https://cas.nakafa.test",
 });
-afterEach(() => {
-  vi.restoreAllMocks();
+/** The fetch that Effect's client calls in place of the global one. */
+const fetcher = vi.fn<typeof fetch>();
+beforeEach(() => {
+  fetcher.mockReset();
 });
 describe("MathService", () => {
   it.effect("aborts transport when its response deadline expires", () =>
     Effect.gen(function* () {
       const started = yield* Deferred.make<void>();
       let requestSignal: AbortSignal | null | undefined;
-      vi.spyOn(globalThis, "fetch").mockImplementation((_url, options) => {
+      fetcher.mockImplementation((_url, options) => {
         requestSignal = options?.signal;
         Deferred.doneUnsafe(started, Exit.void);
         return new Promise<Response>(() => undefined);
@@ -30,6 +33,7 @@ describe("MathService", () => {
       ).pipe(
         Effect.provide(MathService.layer),
         Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher),
         Effect.exit,
         Effect.forkChild
       );
@@ -45,7 +49,7 @@ describe("MathService", () => {
   );
   it.effect("calls the configured CAS endpoint and decodes the result", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      fetcher.mockResolvedValue(
         Response.json({
           conditions: [],
           input: {
@@ -96,7 +100,8 @@ describe("MathService", () => {
           })
         ).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         )
       );
       expect(Exit.isSuccess(exit)).toBe(true);
@@ -104,11 +109,11 @@ describe("MathService", () => {
         return;
       }
       expect(exit.value.secondary?.expression).toBe("42");
-      expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect(fetcher).toHaveBeenCalledWith(
         new URL("/api/math", "https://cas.nakafa.test"),
         expect.objectContaining({
           headers: expect.objectContaining({
-            Authorization: "Bearer secret",
+            authorization: "Bearer secret",
           }),
         })
       );
@@ -116,9 +121,7 @@ describe("MathService", () => {
   );
   it.effect("keeps CAS HTTP failures typed", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(
-        new Response("bad request", { status: 422 })
-      );
+      fetcher.mockResolvedValue(new Response("bad request", { status: 422 }));
       const exit = yield* Effect.exit(
         MathService.use((service) =>
           service.compute({
@@ -128,7 +131,8 @@ describe("MathService", () => {
           })
         ).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         )
       );
       expect(Exit.isFailure(exit)).toBe(true);
@@ -140,7 +144,7 @@ describe("MathService", () => {
   );
   it.effect("keeps CAS JSON error details readable", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      fetcher.mockResolvedValue(
         Response.json({ detail: "Invalid expression." }, { status: 422 })
       );
       const exit = yield* Effect.exit(
@@ -152,7 +156,8 @@ describe("MathService", () => {
           })
         ).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         )
       );
       expect(Exit.isFailure(exit)).toBe(true);
@@ -164,7 +169,7 @@ describe("MathService", () => {
   );
   it.effect("keeps CAS validation issues readable", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      fetcher.mockResolvedValue(
         Response.json(
           {
             detail: [{ msg: "Expression is required." }],
@@ -181,7 +186,8 @@ describe("MathService", () => {
           })
         ).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         )
       );
       expect(Exit.isFailure(exit)).toBe(true);
@@ -195,7 +201,7 @@ describe("MathService", () => {
     "uses a status message when CAS returns malformed JSON errors",
     () =>
       Effect.gen(function* () {
-        vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        fetcher.mockResolvedValue(
           new Response("{", {
             headers: { "content-type": "application/json" },
             status: 500,
@@ -210,7 +216,8 @@ describe("MathService", () => {
             })
           ).pipe(
             Effect.provide(MathService.layer),
-            Effect.provideService(ConfigProvider.ConfigProvider, provider)
+            Effect.provideService(ConfigProvider.ConfigProvider, provider),
+            Effect.provideService(FetchHttpClient.Fetch, fetcher)
           )
         );
         expect(Exit.isFailure(exit)).toBe(true);
@@ -224,7 +231,7 @@ describe("MathService", () => {
   );
   it.effect("does not leak HTML error pages into math evidence", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      fetcher.mockResolvedValue(
         new Response("<!DOCTYPE html><html><body>404</body></html>", {
           headers: { "content-type": "text/html; charset=utf-8" },
           status: 404,
@@ -239,7 +246,8 @@ describe("MathService", () => {
           })
         ).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         )
       );
       expect(Exit.isFailure(exit)).toBe(true);
@@ -254,7 +262,7 @@ describe("MathService", () => {
   );
   it.effect("keeps network failures typed", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
+      fetcher.mockRejectedValue(new Error("offline"));
       const exit = yield* Effect.exit(
         MathService.use((service) =>
           service.compute({
@@ -264,7 +272,8 @@ describe("MathService", () => {
           })
         ).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         )
       );
       expect(Exit.isFailure(exit)).toBe(true);
@@ -278,7 +287,7 @@ describe("MathService", () => {
   );
   it.effect("keeps unreadable JSON responses typed", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("not-json"));
+      fetcher.mockResolvedValue(new Response("not-json"));
       const exit = yield* Effect.exit(
         MathService.use((service) =>
           service.compute({
@@ -288,7 +297,8 @@ describe("MathService", () => {
           })
         ).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         )
       );
       expect(Exit.isFailure(exit)).toBe(true);
@@ -302,9 +312,7 @@ describe("MathService", () => {
   );
   it.effect("keeps invalid CAS payloads typed", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(
-        Response.json({ status: "verified" })
-      );
+      fetcher.mockResolvedValue(Response.json({ status: "verified" }));
       const exit = yield* Effect.exit(
         MathService.use((service) =>
           service.compute({
@@ -314,7 +322,8 @@ describe("MathService", () => {
           })
         ).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         )
       );
       expect(Exit.isFailure(exit)).toBe(true);
@@ -326,9 +335,7 @@ describe("MathService", () => {
   );
   it.effect("uses a status message when CAS returns an empty error body", () =>
     Effect.gen(function* () {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(
-        new Response("", { status: 500 })
-      );
+      fetcher.mockResolvedValue(new Response("", { status: 500 }));
       const exit = yield* Effect.exit(
         MathService.use((service) =>
           service.compute({
@@ -338,7 +345,8 @@ describe("MathService", () => {
           })
         ).pipe(
           Effect.provide(MathService.layer),
-          Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
         )
       );
       expect(Exit.isFailure(exit)).toBe(true);
@@ -359,9 +367,7 @@ describe("MathService", () => {
             return Promise.reject(new Error("broken body"));
           }
         }
-        vi.spyOn(globalThis, "fetch").mockResolvedValue(
-          new BrokenTextResponse("", { status: 500 })
-        );
+        fetcher.mockResolvedValue(new BrokenTextResponse("", { status: 500 }));
         const exit = yield* Effect.exit(
           MathService.use((service) =>
             service.compute({
@@ -371,7 +377,8 @@ describe("MathService", () => {
             })
           ).pipe(
             Effect.provide(MathService.layer),
-            Effect.provideService(ConfigProvider.ConfigProvider, provider)
+            Effect.provideService(ConfigProvider.ConfigProvider, provider),
+            Effect.provideService(FetchHttpClient.Fetch, fetcher)
           )
         );
         expect(Exit.isFailure(exit)).toBe(true);
