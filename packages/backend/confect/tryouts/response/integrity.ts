@@ -25,15 +25,12 @@ const ResponsePlacementLinkSchema = Schema.Struct({
   placement: tryoutAttemptPlacementsTable.Doc,
   sectionAttemptId: IdSchema("tryoutSectionAttempts"),
 });
-type ResponsePlacementLink = typeof ResponsePlacementLinkSchema.Type;
+export type ResponsePlacementLink = typeof ResponsePlacementLinkSchema.Type;
 /** Indexes one unique frozen section graph by immutable identity. */
 export const validateTryoutSectionSnapshots = Effect.fn(
   "tryouts.response.validateSectionSnapshots"
 )(function* (snapshots: readonly TryoutSectionSnapshot[]) {
-  const snapshotsByIdentity = MutableHashMap.empty<
-    string,
-    TryoutSectionSnapshot
-  >();
+  let snapshotsByIdentity = HashMap.empty<string, TryoutSectionSnapshot>();
   const sectionKeys = MutableHashSet.empty<string>();
   const sectionOrders = MutableHashSet.empty<number>();
   for (const snapshot of snapshots) {
@@ -47,7 +44,7 @@ export const validateTryoutSectionSnapshots = Effect.fn(
       );
     }
     if (
-      MutableHashMap.has(snapshotsByIdentity, snapshot.sectionIdentity) ||
+      HashMap.has(snapshotsByIdentity, snapshot.sectionIdentity) ||
       MutableHashSet.has(sectionKeys, snapshot.sectionKey) ||
       MutableHashSet.has(sectionOrders, snapshot.sectionOrder)
     ) {
@@ -56,7 +53,11 @@ export const validateTryoutSectionSnapshots = Effect.fn(
         "Try-out section snapshots contain a duplicate identity, key, or order."
       );
     }
-    MutableHashMap.set(snapshotsByIdentity, snapshot.sectionIdentity, snapshot);
+    snapshotsByIdentity = HashMap.set(
+      snapshotsByIdentity,
+      snapshot.sectionIdentity,
+      snapshot
+    );
     MutableHashSet.add(sectionKeys, snapshot.sectionKey);
     MutableHashSet.add(sectionOrders, snapshot.sectionOrder);
   }
@@ -70,7 +71,7 @@ export const requireTryoutResponseSectionSnapshot = Effect.fn(
     attempt.sectionSnapshots
   );
   const snapshot = Option.getOrUndefined(
-    MutableHashMap.get(snapshotsByIdentity, section.sectionIdentity)
+    HashMap.get(snapshotsByIdentity, section.sectionIdentity)
   );
   if (
     !snapshot ||
@@ -205,7 +206,7 @@ export const indexTryoutResponses = Effect.fn(
   const linksByPlacement = HashMap.fromIterable(
     Arr.map(input.links, (link) => [link.placement._id, link])
   );
-  const responsesByPlacement = MutableHashMap.empty<
+  let responsesByPlacement = HashMap.empty<
     Id<"tryoutAttemptPlacements">,
     TryoutResponse
   >();
@@ -223,7 +224,7 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out response links do not match its frozen attempt placement."
       );
     }
-    if (MutableHashMap.has(responsesByPlacement, response.placementId)) {
+    if (HashMap.has(responsesByPlacement, response.placementId)) {
       return yield* responseIntegrity(
         "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
         "Try-out placement has more than one response."
@@ -248,7 +249,11 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out response evaluation differs from its stored result."
       );
     }
-    MutableHashMap.set(responsesByPlacement, response.placementId, response);
+    responsesByPlacement = HashMap.set(
+      responsesByPlacement,
+      response.placementId,
+      response
+    );
   }
   return responsesByPlacement;
 });
