@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
 import {
@@ -10,11 +9,13 @@ import {
   PlatformError,
   Record as Rec,
   Schema,
+  Stream,
 } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
   type EffectSourceConfig,
   makeEffectSourceProgram,
+  SourceIdentity,
 } from "#scripts/effect/source";
 
 class GitFixtureError extends Schema.TaggedError<GitFixtureError>()(
@@ -31,24 +32,50 @@ const STAGED_TREE = "0123456789abcdef0123456789abcdef01234567";
 const OUTSIDE_REPOSITORY =
   /^git status --porcelain -- repos\/effect scripts\/effect\/source\.json: fatal: /u;
 
+const PackageManifestJson = Schema.fromJsonString(
+  Schema.Struct({ name: Schema.String, version: Schema.String }),
+  { space: 2 }
+);
+const SourceIdentityJson = Schema.fromJsonString(SourceIdentity, { space: 2 });
+// Accepts any commit or tree text: a fixture may record an invalid identity.
+const UncheckedSourceIdentityJson = Schema.fromJsonString(
+  Schema.Struct({
+    ...SourceIdentity.fields,
+    commit: Schema.String,
+    tree: Schema.String,
+  }),
+  { space: 2 }
+);
+
 const packageManifest = (version: string) =>
-  `${JSON.stringify({ name: "effect", version }, null, 2)}\n`;
+  `${Schema.encodeSync(PackageManifestJson)({ name: "effect", version })}\n`;
 
 const sourceIdentity = (commit: string, tag: string, tree: string) =>
-  `${JSON.stringify({ commit, tag, tree }, null, 2)}\n`;
+  `${Schema.encodeSync(SourceIdentityJson)({ commit, tag, tree })}\n`;
 
-const runGit = Effect.fn("EffectSourceTest.runGit")(
-  (cwd: string, args: readonly string[]) =>
-    Effect.try({
-      catch: (cause) =>
-        new GitFixtureError({
-          cause,
-          message: `git ${Arr.join(args, " ")} failed`,
-        }),
-      try: () =>
-        execFileSync("git", [...args], { cwd, encoding: "utf8" }).trim(),
+/** Runs Git in one child process and returns its trimmed standard output. */
+const runGit = Effect.fn("EffectSourceTest.runGit")(function* (
+  cwd: string,
+  args: readonly string[]
+) {
+  const message = `git ${Arr.join(args, " ")} failed`;
+  const [exitCode, stdout] = yield* Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* ChildProcess.make("git", args, {
+        cwd,
+        stderr: "inherit",
+      });
+      return yield* Effect.all(
+        [handle.exitCode, Stream.mkString(Stream.decodeText(handle.stdout))],
+        { concurrency: 2 }
+      );
     })
-);
+  ).pipe(Effect.mapError((cause) => new GitFixtureError({ cause, message })));
+  if (exitCode !== 0) {
+    return yield* new GitFixtureError({ cause: exitCode, message });
+  }
+  return stdout.trim();
+});
 
 /** Writes fixture files below one repository root. */
 const writeFiles = Effect.fn("EffectSourceTest.writeFiles")(function* (
@@ -207,6 +234,29 @@ function stagedSourceTree(tree: string) {
   ).pipe(Layer.provide(NodeServices.layer));
 }
 
+/** Answers the upstream commit query with an abbreviated Git object id. */
+function abbreviatedUpstreamCommit(commit: string) {
+  return Layer.effect(
+    ChildProcessSpawner.ChildProcessSpawner,
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      return ChildProcessSpawner.make((command) =>
+        spawner.spawn(
+          ChildProcess.isStandardCommand(command) &&
+            command.args[0] === "rev-parse" &&
+            command.args[1] === "FETCH_HEAD^{commit}"
+            ? ChildProcess.make(
+                "git",
+                ["rev-parse", "--short", commit],
+                command.options
+              )
+            : command
+        )
+      );
+    })
+  ).pipe(Layer.provide(NodeServices.layer));
+}
+
 describe("Effect source identity", () => {
   it.effect(
     "updates linearly and remains valid after its subtree history is squashed",
@@ -232,7 +282,12 @@ describe("Effect source identity", () => {
         expect(
           yield* runGit(consumer, ["show", "-s", "--format=%B", updatedHead])
         ).toContain(`git-subtree-split: ${fixture.newCommit}`);
-        expect(JSON.parse(identity)).toEqual({
+        // Excess keys fail the decode, so toEqual also proves the exact key set.
+        expect(
+          yield* Schema.decodeEffect(SourceIdentityJson)(identity, {
+            onExcessProperty: "error",
+          })
+        ).toEqual({
           commit: fixture.newCommit,
           tag: "effect@2.0.0",
           tree: fixture.newTree,
@@ -355,7 +410,11 @@ describe("Effect source identity", () => {
       action: "check",
       change: (fixture: Fixture) =>
         commitFiles(fixture.consumer, {
-          [IDENTITY]: sourceIdentity("HEAD", "effect@1.0.0", "HEAD"),
+          [IDENTITY]: `${Schema.encodeSync(UncheckedSourceIdentityJson)({
+            commit: "HEAD",
+            tag: "effect@1.0.0",
+            tree: "HEAD",
+          })}\n`,
         }),
       error: "EffectSourceFileError",
       message: (fixture: Fixture) =>
@@ -470,6 +529,16 @@ describe("Effect source identity", () => {
       update: (fixture: Fixture) =>
         makeEffectSourceProgram("update", fixture.config).pipe(
           Effect.provide(stagedSourceTree(STAGED_TREE))
+        ),
+    },
+    {
+      error: "EffectSourceFileError",
+      message: (fixture: Fixture) =>
+        `${fixture.identityManifest} cannot be written as an Effect source identity.`,
+      name: "the upstream commit is not a full object id",
+      update: (fixture: Fixture) =>
+        makeEffectSourceProgram("update", fixture.config).pipe(
+          Effect.provide(abbreviatedUpstreamCommit(fixture.newCommit))
         ),
     },
   ])("keeps the branch when $name", ({ error, message, update }) =>
