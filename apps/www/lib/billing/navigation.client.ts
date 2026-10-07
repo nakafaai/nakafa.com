@@ -1,22 +1,26 @@
 "use client";
 
 import { useAction } from "@confect/react";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { billingNavigationProgram } from "@/lib/billing/navigation";
 
-interface BillingSource {
-  readonly source: string;
-}
+const BillingSourceSchema = Schema.Struct({
+  source: Schema.String,
+});
 
-interface CheckoutNavigation extends BillingSource {
-  readonly locale: PublicAppLocale;
-}
+const CheckoutNavigationSchema = Schema.Struct({
+  ...BillingSourceSchema.fields,
+  locale: ActiveAppLocaleCodeSchema,
+});
+
+type BillingSource = typeof BillingSourceSchema.Type;
+type CheckoutNavigation = typeof CheckoutNavigationSchema.Type;
 
 /** Owns checkout and customer-portal requests for every client purchase CTA. */
 export function useBillingNavigation() {
@@ -35,20 +39,20 @@ export function useBillingNavigation() {
   ) {
     startTransition(() =>
       Effect.runPromise(
-        billingNavigationProgram({
-          navigate: (url) => {
+        billingNavigationProgram(
+          request,
+          (url) => {
             window.location.href = url;
           },
-          onFailure: (cause) =>
+          (cause) =>
             reportClientException(cause, { source: failure.source }).pipe(
               Effect.tap(() =>
                 Effect.sync(() => {
                   toast.error(failure.message, { position: "bottom-center" });
                 })
               )
-            ),
-          request,
-        })
+            )
+        )
       )
     );
   }

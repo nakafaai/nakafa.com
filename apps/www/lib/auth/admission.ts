@@ -131,10 +131,12 @@ export const PostAuthIntentResolutionSchema = Schema.Union([
 export type PostAuthIntentResolution =
   typeof PostAuthIntentResolutionSchema.Type;
 
-export interface PostAuthDestination {
-  readonly href: string;
-  readonly locale: (typeof routing.locales)[number];
-}
+const PostAuthDestinationSchema = Schema.Struct({
+  href: Schema.String,
+  locale: AppLocaleSchema,
+});
+
+export type PostAuthDestination = typeof PostAuthDestinationSchema.Type;
 
 const decodeString = Schema.decodeUnknownOption(Schema.String);
 

@@ -24,9 +24,12 @@ import {
   accountDeletionErrorCode,
 } from "@/lib/auth/deletion/errors";
 import {
-  type AccountDeletionPreparationOperations,
+  type CancelAccountDeletionRequest,
+  type ClearAccountDeletionAttempt,
   cancelPreparedAccountDeletion,
   clearCanceledAccountDeletionAttempt,
+  type PersistAccountDeletionAttempt,
+  type PrepareAccountDeletionRequest,
   prepareAccountDeletion,
 } from "@/lib/auth/deletion/prepare";
 
@@ -34,10 +37,10 @@ const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
 const betterAuthUserDeletedMessage = "User deleted";
 type DeleteUserResult = Awaited<ReturnType<typeof authClient.deleteUser>>;
 type AccountDeletionAttemptId = AccountDeletionBrowserAttempt["attemptId"];
-type DeleteUserRequest = (
+export type DeleteUserRequest = (
   attemptId: AccountDeletionAttemptId
 ) => Promise<DeleteUserResult>;
-type ReconcileAccountDeletionRequest = (
+export type ReconcileAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
 ) => Effect.Effect<
   AccountDeletionAttemptStatus,
@@ -45,29 +48,24 @@ type ReconcileAccountDeletionRequest = (
   | HttpClient.HttpClientError
   | Schema.SchemaError
 >;
-interface AccountDeletionOperations
-  extends AccountDeletionPreparationOperations {
-  readonly reconcile: ReconcileAccountDeletionRequest;
-  readonly request?: DeleteUserRequest;
-}
 /** Deletes the current Better Auth account through a typed failure channel. */
 export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
-  function* ({
-    attempt,
-    cancelPreparation,
-    clearAttempt,
-    persist,
-    prepare,
-    reconcile,
-    request = async (requestAttemptId) =>
+  function* (
+    attempt: AccountDeletionBrowserAttempt,
+    cancelPreparation: CancelAccountDeletionRequest,
+    clearAttempt: ClearAccountDeletionAttempt,
+    persist: PersistAccountDeletionAttempt,
+    prepare: PrepareAccountDeletionRequest,
+    reconcile: ReconcileAccountDeletionRequest,
+    request: DeleteUserRequest = async (requestAttemptId) =>
       await authClient.deleteUser({
         fetchOptions: {
           headers: {
             [ACCOUNT_DELETION_ATTEMPT_HEADER]: requestAttemptId,
           },
         },
-      }),
-  }: AccountDeletionOperations) {
+      })
+  ) {
     const { attemptId, phase: startPhase } = attempt;
     const proveCommittedDeletion = () =>
       reconcile(attemptId).pipe(
@@ -93,13 +91,13 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
         yield* clearCanceledAccountDeletionAttempt(clearAttempt);
       });
     if (startPhase === accountDeletionRequestPhase.preparation) {
-      yield* prepareAccountDeletion({
+      yield* prepareAccountDeletion(
         attempt,
         cancelPreparation,
         clearAttempt,
         persist,
-        prepare,
-      });
+        prepare
+      );
     }
     if (
       startPhase === accountDeletionRequestPhase.deletion &&

@@ -96,16 +96,7 @@ function AnalyticsConsentController({
     );
   }, [durableStatus]);
 
-  useAnalyticsRuntimeAlignment({
-    accountConsent: consent.accountConsent,
-    anonymousConsent: consent.browserConsent.anonymousConsent,
-    isAuthenticated: consent.isAuthenticated,
-    isPreviewChild: consent.isPreviewChild,
-    isRuntimeSuppressed: consent.isRuntimeSuppressed,
-    setHasRuntimeError,
-    status: durableStatus,
-    user: consent.user,
-  });
+  useAnalyticsRuntimeAlignment(consent, setHasRuntimeError);
 
   useEffect(() => {
     if (!promptIdentity) {
@@ -118,16 +109,7 @@ function AnalyticsConsentController({
     };
   }, [interruptDepartedSave, promptIdentity]);
 
-  useAccountAnalyticsConsentRevocation({
-    currentAccountUserId: consent.currentAccountUserId,
-    currentBrowserPrivacySignal: consent.currentBrowserPrivacySignal,
-    isOnline,
-    promptIdentity,
-    readLatestSave: consent.readLatestSave,
-    setAccountConsent: consent.setAccountConsent,
-    setSessionOverrides: consent.setSessionOverrides,
-    shouldRevokeAccountGrant: consent.shouldRevokeAccountGrant,
-  });
+  useAccountAnalyticsConsentRevocation(consent, isOnline);
 
   return null;
 }

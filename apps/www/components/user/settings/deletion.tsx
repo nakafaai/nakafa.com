@@ -81,21 +81,20 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
       const result = await Effect.runPromise(
         loadOrCreateAccountDeletionAttempt(userId).pipe(
           Effect.flatMap((attempt) =>
-            deleteCurrentAccount({
+            deleteCurrentAccount(
               attempt,
-              cancelPreparation: (attemptId) =>
-                cancelAccountDeletion({ attemptId }),
-              clearAttempt: clearAccountDeletionAttempt(),
-              persist: saveAccountDeletionAttempt,
-              prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
-              reconcile: (attemptId) =>
+              (attemptId) => cancelAccountDeletion({ attemptId }),
+              clearAccountDeletionAttempt(),
+              saveAccountDeletionAttempt,
+              (attemptId) => prepareAccountDeletion({ attemptId }),
+              (attemptId) =>
                 Effect.flatMap(HttpClient.HttpClient, (client) =>
                   client.query(
                     refs.public.auth.deletion.getAccountDeletionAttemptStatus,
                     { attemptId }
                   )
-                ).pipe(Effect.provide(httpLayer())),
-            })
+                ).pipe(Effect.provide(httpLayer()))
+            )
           ),
           Effect.andThen(clearDeletedAccountBrowserIdentity()),
           Effect.result
