@@ -287,8 +287,12 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
 function getUniqueSourceReferences(
   sourceReferences: ResearchAgentParams["sourceReferences"]
 ) {
-  return Arr.dedupeWith(
-    sourceReferences,
-    (left, right) => left.href === right.href
-  );
+  const seen = MutableHashSet.empty<string>();
+  return Arr.filter(sourceReferences, (source) => {
+    if (MutableHashSet.has(seen, source.href)) {
+      return false;
+    }
+    MutableHashSet.add(seen, source.href);
+    return true;
+  });
 }

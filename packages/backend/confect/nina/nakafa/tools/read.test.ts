@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { getNakafaContent } from "@repo/backend/agent/content";
+import { CapabilityArtifactSchema } from "@repo/backend/confect/nina/capability/progress";
 import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
 import {
   recordProgress,
@@ -21,7 +22,9 @@ const content = {
 const input = {
   content_ref: NakafaAgentContentRefInputSchema.make(content.url),
 };
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const encodeArtifacts = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Array(CapabilityArtifactSchema))
+);
 
 describe("Nina content evidence", () => {
   it("publishes a bounded preview while returning full verified content to the Agent", async () => {
@@ -41,7 +44,7 @@ describe("Nina content evidence", () => {
         },
       },
     ]);
-    expect(encodeJson(artifacts)).not.toContain(content.text);
+    expect(encodeArtifacts(artifacts)).not.toContain(content.text);
   });
   it.each(["missing", "failed"] as const)(
     "publishes an honest %s result without inventing content",
