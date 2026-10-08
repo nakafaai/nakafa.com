@@ -25,7 +25,7 @@ import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.cli
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /** One option as the server builds it from the signed program catalog. */
-export type CurriculumSelectorOption = ReturnType<
+type CurriculumSelectorOption = ReturnType<
   typeof readRuntimeCurriculumOptions
 >[number];
 type SavePreferredCurriculumArgs = Ref.Args<

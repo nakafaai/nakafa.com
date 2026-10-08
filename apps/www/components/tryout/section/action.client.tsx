@@ -20,7 +20,7 @@ import { isActiveLocale } from "@/lib/i18n/active";
 type CurrentAttempt = TryoutSectionAttempt | null;
 type CompletedAction = "restart" | "return";
 /** Props of the summary action: `value` is the cohesive state that selects one valid action. */
-export interface TryoutSummaryActionProps {
+interface TryoutSummaryActionProps {
   value: {
     activeAttempt: NonNullable<CurrentAttempt> | null;
     attempt?: CurrentAttempt;

@@ -13,7 +13,7 @@ import {
 } from "@/components/tryout/set/start";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-export interface TryoutSetActionProps {
+interface TryoutSetActionProps {
   value: {
     activeAttempt: CurrentAttempt | null;
     currentAttempt?: CurrentAttempt | null;

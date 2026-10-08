@@ -21,7 +21,7 @@ const TryoutAttemptCapabilitySchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("invalid") }),
   Schema.Struct({ attemptId: Schema.String, kind: Schema.Literal("valid") }),
 ]);
-export type TryoutAttemptCapability = typeof TryoutAttemptCapabilitySchema.Type;
+type TryoutAttemptCapability = typeof TryoutAttemptCapabilitySchema.Type;
 
 /** Builds a public try-out href from already-localized route segments. */
 export function getTryoutHref({

@@ -13,7 +13,7 @@ export type SignedContentAccess = Exclude<
 export type TryoutQuestionSelector = SignedContentAccess["questions"][number];
 export type TryoutAnswerSelector = SignedContentAccess["answers"][number];
 export type TryoutSelector = TryoutAnswerSelector | TryoutQuestionSelector;
-export type TryoutRenderSelector = Pick<
+type TryoutRenderSelector = Pick<
   TryoutQuestionSelector,
   "contentHash" | "sourcePath" | "sourceRevision"
 >;

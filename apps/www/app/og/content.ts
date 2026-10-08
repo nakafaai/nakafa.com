@@ -17,7 +17,7 @@ const OgCopySchema = Schema.Struct({
 });
 
 /** Title and description copy resolved for one social image. */
-export type OgCopy = typeof OgCopySchema.Type;
+type OgCopy = typeof OgCopySchema.Type;
 
 /** Reads translated default copy for routes without signed ownership. */
 async function readDefaultOgCopy(

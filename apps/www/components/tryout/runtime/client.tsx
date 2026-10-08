@@ -6,7 +6,7 @@ import { TryoutActiveQuestion } from "@/components/tryout/runtime/question.clien
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
 /** Props of one loaded try-out runtime: its cohesive render model is `value`. */
-export interface TryoutRuntimeProps {
+interface TryoutRuntimeProps {
   value: {
     expired: boolean;
     questions: readonly TryoutQuestionContent[];

@@ -11,7 +11,7 @@ export type OnboardingProfile = Ref.Returns<
   typeof refs.public.onboarding.queries.getStatus
 >["profile"];
 
-export type OnboardingAnswers = Pick<
+type OnboardingAnswers = Pick<
   typeof onboardingProfileValidator.Type,
   "focus" | "region" | "role"
 >;

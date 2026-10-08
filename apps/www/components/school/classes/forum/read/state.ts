@@ -28,8 +28,3 @@ export function markTranscriptRead<T extends ReadablePost>(
 
   return { posts: nextPosts, unreadCount };
 }
-
-/** Loaded posts and unread count after one read boundary is applied. */
-export type ForumReadState<T extends ReadablePost> = NonNullable<
-  ReturnType<typeof markTranscriptRead<T>>
->;
