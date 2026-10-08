@@ -1,11 +1,13 @@
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
+import { registerNakafaMcpPrompts } from "@repo/backend/agent/mcp/prompts";
+import { registerNakafaMcpResources } from "@repo/backend/agent/mcp/resources";
 import { registerNakafaMcpTools } from "@repo/backend/agent/mcp/tools";
 import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   NAKAFA_MCP_SERVER_NAME,
   NAKAFA_MCP_SERVER_VERSION,
 } from "@repo/contents/agent/constants";
-import { type Context, Layer } from "effect";
+import { type Context, Effect, Layer } from "effect";
 import { McpProtocol, type McpSchema, McpServer } from "effect/ai";
 
 const SERVER_INSTRUCTIONS =
@@ -22,6 +24,18 @@ const SERVER_IDENTITY: McpSchema.Implementation = {
   version: NAKAFA_MCP_SERVER_VERSION,
 };
 
+/** Registers every Nakafa definition on the request's engine. */
+const registerNakafaMcp = Effect.fn("agent.mcp.registerNakafaMcp")(
+  function* (options: {
+    readonly requestId: string;
+    readonly services: Context.Context<QueryRunner>;
+  }) {
+    yield* registerNakafaMcpTools(options.services, options.requestId);
+    yield* registerNakafaMcpResources(options.services);
+    yield* registerNakafaMcpPrompts();
+  }
+);
+
 /**
  * The Nakafa MCP engine for one request: Effect's Streamable HTTP server at the
  * protected origin path, with the Nakafa definitions registered on it. Handlers
@@ -32,9 +46,7 @@ export function nakafaMcpEngine(options: {
   readonly requestId: string;
   readonly services: Context.Context<QueryRunner>;
 }) {
-  return Layer.effectDiscard(
-    registerNakafaMcpTools(options.services, options.requestId)
-  ).pipe(
+  return Layer.effectDiscard(registerNakafaMcp(options)).pipe(
     Layer.provide(
       McpServer.layerHttp({
         ...SERVER_IDENTITY,
