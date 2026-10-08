@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { parseMaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
@@ -11,11 +11,13 @@ import { getMaterialModel } from "@/lib/content/material/publication";
 import { httpLayer } from "@/lib/convex/http";
 import { getCachedMetadataFromSlug } from "@/lib/utils/system";
 
+const OgCopySchema = Schema.Struct({
+  description: Schema.String,
+  title: Schema.String,
+});
+
 /** Title and description copy resolved for one social image. */
-export interface OgCopy {
-  readonly description: string;
-  readonly title: string;
-}
+export type OgCopy = typeof OgCopySchema.Type;
 
 /** Reads translated default copy for routes without signed ownership. */
 async function readDefaultOgCopy(

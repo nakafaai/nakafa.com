@@ -1,14 +1,6 @@
-import type {
-  ArticleMetadata,
-  ArticleProjection,
-  ArticleReference,
-} from "@nakafa/aksara-contracts/projection/article";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 import {
   type ArticleContentInput,
-  type PreviewOwner,
-  type PublishedOwner,
   resolveArticleOwner,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/owner";
 import { getArticlePublication } from "@/lib/content/article/publication";
@@ -16,19 +8,7 @@ import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAksaraUrl } from "@/lib/utils/github";
 
 /** Complete article data consumed by the existing page shell. */
-export interface ArticlePageContent {
-  readonly alternates: readonly ArticleProjection[];
-  readonly body: string;
-  readonly categoryTitle: string;
-  readonly children: ReactNode;
-  readonly contentId: ArticleProjection["graph"]["assetId"];
-  readonly copySourceUrl: null | string;
-  readonly kind: PreviewOwner["kind"] | PublishedOwner["kind"];
-  readonly metadata: ArticleMetadata;
-  readonly references: readonly ArticleReference[];
-  readonly route: ArticleProjection;
-  readonly sourceUrl: null | string;
-}
+export type ArticlePageContent = Awaited<ReturnType<typeof readArticlePage>>;
 
 /** Reads metadata through the same exclusive owner used by page rendering. */
 export async function readArticleMetadata(input: ArticleContentInput) {
@@ -57,9 +37,7 @@ export async function readArticleMetadata(input: ArticleContentInput) {
 }
 
 /** Loads the body, metadata, references, and immutable source link. */
-export async function readArticlePage(
-  input: ArticleContentInput
-): Promise<ArticlePageContent> {
+export async function readArticlePage(input: ArticleContentInput) {
   const owner = await resolveArticleOwner(input);
   if (owner.kind === "preview") {
     return {
