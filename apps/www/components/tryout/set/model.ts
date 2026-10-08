@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
-import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type refs from "@repo/backend/confect/_generated/refs";
-import { Schema } from "effect";
+
+import type { Locale } from "next-intl";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
 /** Convex query contract for the set discovery page. */
@@ -39,21 +39,19 @@ export type LoadedRuntime = NonNullable<
 >;
 
 /** URL route coordinates for one try-out set page. */
-const TryoutSetRouteSchema = Schema.Struct({
-  country: Schema.String,
-  exam: Schema.String,
-  locale: AppLocaleCodeSchema,
-  set: Schema.String,
-  track: Schema.String,
-});
-export type TryoutSetRoute = typeof TryoutSetRouteSchema.Type;
+export interface TryoutSetRoute {
+  country: string;
+  exam: string;
+  locale: Locale;
+  set: string;
+  track: string;
+}
 
 /** Section route and query identity selected for the current set action. */
-const TryoutSetDestinationSchema = Schema.Struct({
-  href: Schema.String,
-  sectionKey: Schema.String,
-});
-export type TryoutSetDestination = typeof TryoutSetDestinationSchema.Type;
+export interface TryoutSetDestination {
+  href: string;
+  sectionKey: string;
+}
 
 /** Verified entry and canonical set route for a new current-catalog attempt. */
 export type TryoutSetRestartTarget = NonNullable<
