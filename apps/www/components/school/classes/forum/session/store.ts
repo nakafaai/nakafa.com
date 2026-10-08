@@ -7,8 +7,8 @@ import { immer } from "zustand/middleware/immer";
 import { ConversationViewSchema } from "@/components/school/classes/forum/conversation/data/view/model";
 
 /** A forum id as a record key: Confect's id Schema does not carry the key type that `Schema.Record` needs. */
-const ForumKeySchema = Schema.String.pipe(
-  Schema.refine((key): key is Id<"schoolClassForums"> => key.length > 0)
+const ForumKeySchema = Schema.NonEmptyString.pipe(
+  Schema.refine(Schema.is(IdSchema("schoolClassForums")))
 );
 
 export const ForumReplyTargetSchema = Schema.Struct({
