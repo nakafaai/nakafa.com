@@ -275,8 +275,8 @@ export const watchBuild = Effect.fn("BuildWatch.run")(function* (options: {
 });
 
 /**
- * A production build prints a heartbeat every 15 seconds and stops after five
- * minutes without output.
+ * A production build prints a heartbeat about every 15 seconds, between lines
+ * of output, and stops after five minutes without output.
  */
 const BUILD_CADENCE = {
   heartbeatInterval: Duration.seconds(15),
