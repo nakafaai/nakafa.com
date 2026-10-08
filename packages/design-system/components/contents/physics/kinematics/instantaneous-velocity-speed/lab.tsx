@@ -14,7 +14,6 @@ import {
   INSTANTANEOUS_SPEED_COLORS,
   INSTANTANEOUS_SPEED_SCENE,
   type InstantaneousSpeedCaseId,
-  type InstantaneousVelocitySpeedLabProps,
   type InstantaneousVelocitySpeedState,
   isInstantaneousSpeedCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/instantaneous-velocity-speed/data";
@@ -41,6 +40,23 @@ import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const ROAD_Y = -0.03;
+
+export interface InstantaneousVelocitySpeedLabProps {
+  description: ReactNode;
+  labels: {
+    chooseMoment: string;
+    factLabels: {
+      speed: ReactNode;
+      time: ReactNode;
+      velocity: ReactNode;
+    };
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
+
+export type InstantaneousVelocitySpeedLabLabels =
+  InstantaneousVelocitySpeedLabProps["labels"];
 
 export function InstantaneousVelocitySpeedLab({
   title,

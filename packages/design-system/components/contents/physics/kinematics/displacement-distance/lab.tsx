@@ -8,7 +8,6 @@ import {
   DISPLACEMENT_DISTANCE_CASE_IDS,
   DISPLACEMENT_DISTANCE_SCENE,
   type DisplacementDistanceCaseId,
-  type DisplacementDistanceLabProps,
   type DisplacementDistanceState,
   formatMeterMath,
   formatVectorMath,
@@ -46,6 +45,26 @@ const CAR_COLOR = getColor("ORANGE", 500);
 const END_PAUSE_SECONDS = 0.9;
 const MIN_TRAVEL_SECONDS = 4.8;
 const TRAVEL_SECONDS_PER_METER = 0.56;
+
+export interface DisplacementDistanceLabProps {
+  description: ReactNode;
+  labels: {
+    chooseCase: string;
+    factLabels: {
+      displacement: ReactNode;
+      distance: ReactNode;
+      meaning: ReactNode;
+      vector: ReactNode;
+    };
+    meanings: Record<DisplacementDistanceCaseId, ReactNode>;
+    modeLabels: Record<DisplacementDistanceCaseId, ReactNode>;
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
+
+export type DisplacementDistanceLabLabels =
+  DisplacementDistanceLabProps["labels"];
 
 export function DisplacementDistanceLab({
   title,
