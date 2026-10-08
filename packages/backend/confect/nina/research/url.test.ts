@@ -77,6 +77,21 @@ describe("research URL policy", () => {
     expect(judgeLabel("::ffff:8.8.8.8")).toBe("public");
   });
 
+  it("refuses every IPv6 address outside the global unicast space", () => {
+    expect(judgeLabel("1fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")).toBe(
+      "refused"
+    );
+    expect(judgeLabel("2000::")).toBe("public");
+    expect(judgeLabel("3fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")).toBe(
+      "public"
+    );
+    expect(judgeLabel("4000::")).toBe("refused");
+    expect(judgeLabel("64:ff9b::808:808")).toBe("refused");
+    expect(judgeLabel("::5efe:7f00:1")).toBe("refused");
+    expect(judgeLabel("::200:5efe:10.0.0.1")).toBe("refused");
+    expect(isPublicHttpUrlSyntax("https://[::5efe:a9fe:a9fe]/")).toBe(false);
+  });
+
   it("gives text the address parser does not accept no verdict", () => {
     expect(judgeLabel("")).toBe("none");
     expect(judgeLabel("not-an-address")).toBe("none");

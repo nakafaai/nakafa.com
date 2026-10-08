@@ -66,10 +66,11 @@ export function judgeAddress(text: string): Option.Option<AddressVerdict> {
 }
 
 /**
- * RFC 4291 section 2.5.5.1: IPv4-compatible IPv6 addresses (::a.b.c.d) are
- * deprecated, so the whole block is refused.
+ * RFC 4291 section 2.4: every global unicast IPv6 address is inside 2000::/3.
+ * An address outside it is loopback, link-local, unique-local, multicast,
+ * IPv4-compatible, a translation prefix, or reserved space, so it is refused.
  */
-const ipv4CompatibleNetwork = IpNetwork.fromStringUnsafe("::/96");
+const globalUnicastNetwork = IpNetwork.fromStringUnsafe("2000::/3");
 
 /** IPv4 special-use blocks that no NetAddress predicate covers exactly. */
 const refusedIpv4Networks = Arr.map(
@@ -91,24 +92,12 @@ const refusedIpv4Networks = Arr.map(
 );
 
 /**
- * IPv6 special-use blocks that no NetAddress predicate covers exactly.
- * 2001::/23 (RFC 2928) holds Teredo, benchmarking, AMT, AS112, ORCHID, and the
- * drone identity tags, so they need no entry of their own.
+ * Special-use blocks inside the global unicast space. 2001::/23 (RFC 2928)
+ * holds Teredo, benchmarking, AMT, AS112, ORCHID, and the drone identity tags,
+ * so they need no entry of their own.
  */
 const refusedIpv6Networks = Arr.map(
-  [
-    "100::/64",
-    "2001::/23",
-    "2001:db8::/32",
-    "2002::/16",
-    "2620:4f:8000::/48",
-    "3fff::/20",
-    "5f00::/16",
-    "64:ff9b::/96",
-    "64:ff9b:1::/48",
-    "fec0::/10",
-    "::ffff:0:0:0/96",
-  ],
+  ["2001::/23", "2001:db8::/32", "2002::/16", "2620:4f:8000::/48", "3fff::/20"],
   (cidr) => IpNetwork.fromStringUnsafe(cidr)
 );
 
@@ -138,12 +127,7 @@ function isRefusedIpv4(address: NetAddress.Ipv4Address): boolean {
 
 function isRefusedIpv6(address: NetAddress.Ipv6Address): boolean {
   return (
-    NetAddress.isLinkLocal(address) ||
-    NetAddress.isLoopback(address) ||
-    NetAddress.isMulticast(address) ||
-    NetAddress.isUniqueLocal(address) ||
-    NetAddress.isUnspecified(address) ||
-    IpNetwork.contains(ipv4CompatibleNetwork, address) ||
+    !IpNetwork.contains(globalUnicastNetwork, address) ||
     Arr.some(refusedIpv6Networks, (network) =>
       IpNetwork.contains(network, address)
     )
