@@ -24,7 +24,13 @@ import {
   summarizeResponses,
   type TryoutScoreSource,
 } from "@repo/backend/confect/tryouts/runtime/score";
-import { Array as Arr, Effect, flow, MutableHashMap } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  flow,
+  MutableHashMap,
+  MutableHashSet,
+} from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
@@ -45,7 +51,9 @@ const createExpiredSectionAttempt = Effect.fn(
   const score = yield* scoreTryoutSection({
     attempt: args.attempt,
     placements: args.responseIndex.placements,
-    responses: [...MutableHashMap.values(args.responseIndex.responses)],
+    responses: Arr.fromIterable(
+      MutableHashMap.values(args.responseIndex.responses)
+    ),
     source: args.scoreSource,
     totalQuestions: args.snapshot.questionCount,
   });
@@ -81,11 +89,11 @@ const createMissingExpiredSectionAttempts = Effect.fn(
   scoreSource: TryoutScoreSource;
   sections: readonly TryoutSectionAttempt[];
 }) {
-  const attemptedSectionKeys = new Set(
+  const attemptedSectionKeys = MutableHashSet.fromIterable(
     Arr.map(args.sections, (section) => section.sectionKey)
   );
   for (const snapshot of args.attempt.sectionSnapshots) {
-    if (attemptedSectionKeys.has(snapshot.sectionKey)) {
+    if (MutableHashSet.has(attemptedSectionKeys, snapshot.sectionKey)) {
       continue;
     }
     yield* createExpiredSectionAttempt({
@@ -284,7 +292,9 @@ const readSectionFinalization = Effect.fn(
   scoreSource: TryoutScoreSource;
   section: TryoutSectionAttempt;
 }) {
-  const responses = [...MutableHashMap.values(args.responseIndex.responses)];
+  const responses = Arr.fromIterable(
+    MutableHashMap.values(args.responseIndex.responses)
+  );
   const summary = summarizeResponses(responses);
   const score = yield* scoreTryoutSection({
     attempt: args.attempt,
@@ -309,12 +319,12 @@ function selectSectionResponseIndex(
     responseIndex.placements,
     (placement) => placement.sectionIdentity === sectionIdentity
   );
-  const placementIds = new Set(
+  const placementIds = MutableHashSet.fromIterable(
     Arr.map(placements, (placement) => placement._id)
   );
   const responses = MutableHashMap.fromIterable(
     Arr.filter([...responseIndex.responses], ([placementId]) =>
-      placementIds.has(placementId)
+      MutableHashSet.has(placementIds, placementId)
     )
   );
   return {
