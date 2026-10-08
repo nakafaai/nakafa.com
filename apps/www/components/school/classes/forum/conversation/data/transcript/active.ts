@@ -4,18 +4,10 @@ import type {
   ForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
 import {
-  type ConversationRow,
   createConversationRows,
   getLastConversationPostId,
 } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/transcript/unread";
-
-export interface ActiveTranscriptModel {
-  lastPostId: Id<"schoolClassForumPosts"> | null;
-  postIds: Id<"schoolClassForumPosts">[];
-  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
-  rows: ConversationRow[];
-}
 
 /** Builds the current loaded transcript model from one reactive post list. */
 export function createActiveTranscriptModel({
@@ -46,5 +38,10 @@ export function createActiveTranscriptModel({
     postIds,
     rowIndexByPostId,
     rows,
-  } satisfies ActiveTranscriptModel;
+  };
 }
+
+/** The loaded transcript model the viewport reads, derived from its builder. */
+export type ActiveTranscriptModel = ReturnType<
+  typeof createActiveTranscriptModel
+>;

@@ -3,7 +3,7 @@ import { useMutation } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Effect, Option } from "effect";
+import { DateTime, Effect, Option } from "effect";
 
 import { useData } from "@/components/school/classes/forum/conversation/context";
 import { createOptimisticForumPost } from "@/components/school/classes/forum/conversation/input/optimistic";
@@ -26,7 +26,7 @@ export function useCreateForumPost() {
       return createForumPost(args);
     }
 
-    const now = Date.now();
+    const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
     const postId = Effect.runSync(randomUuid) as Id<"schoolClassForumPosts">;
     const optimisticMutation = createForumPost.withOptimisticUpdate(
       (localStore, optimisticArgs) => {
@@ -49,8 +49,7 @@ export function useCreateForumPost() {
           { forumId: optimisticArgs.forumId },
           Option.some([
             ...posts,
-            createOptimisticForumPost({
-              args: optimisticArgs,
+            createOptimisticForumPost(optimisticArgs, {
               currentUser: {
                 _id: currentUser.appUser._id,
                 email: currentUser.appUser.email,

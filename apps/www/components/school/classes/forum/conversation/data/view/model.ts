@@ -1,11 +1,22 @@
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Schema } from "effect";
 
-export type ConversationView =
-  | { kind: "bottom" }
-  | {
-      kind: "post";
-      postId: Id<"schoolClassForumPosts">;
-    };
+const ConversationBottomViewSchema = Schema.Struct({
+  kind: Schema.Literal("bottom"),
+});
+
+const ConversationPostViewSchema = Schema.Struct({
+  kind: Schema.Literal("post"),
+  postId: IdSchema("schoolClassForumPosts"),
+});
+
+const ConversationViewSchema = Schema.Union([
+  ConversationBottomViewSchema,
+  ConversationPostViewSchema,
+]);
+
+export type ConversationView = typeof ConversationViewSchema.Type;
 
 /** Returns whether two semantic transcript views point at the same place. */
 export function areConversationViewsEqual(

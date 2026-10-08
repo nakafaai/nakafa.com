@@ -1,27 +1,32 @@
 import type { Ref } from "@confect/core";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type refs from "@repo/backend/confect/_generated/refs";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import {
+  forumDetailValidator,
+  forumUserValidator,
+} from "@repo/backend/confect/classes/forums/validators";
+import { Schema } from "effect";
 
-import type {
-  Forum,
-  ForumPost,
+import {
+  type Forum,
+  type ForumPost,
+  ForumPostSchema,
 } from "@/components/school/classes/forum/conversation/data/entities";
 
 type CreateForumPostArgs = Ref.Args<
   typeof refs.public.classes.forums.mutations.posts.createForumPost
 >;
 
-type ForumPostUser = NonNullable<ForumPost["user"]>;
+const OptimisticForumPostInputSchema = Schema.Struct({
+  currentUser: forumUserValidator,
+  forum: forumDetailValidator,
+  now: Schema.Finite,
+  parentPost: Schema.UndefinedOr(ForumPostSchema),
+  postId: IdSchema("schoolClassForumPosts"),
+  posts: Schema.Array(ForumPostSchema),
+});
 
-interface OptimisticForumPostInput {
-  args: CreateForumPostArgs;
-  currentUser: ForumPostUser;
-  forum: Forum;
-  now: number;
-  parentPost: ForumPost | undefined;
-  postId: Id<"schoolClassForumPosts">;
-  posts: readonly ForumPost[];
-}
+type OptimisticForumPostInput = typeof OptimisticForumPostInputSchema.Type;
 
 /** Derives the next temporary sequence from the loaded transcript window. */
 function getOptimisticForumPostSequence({
@@ -37,15 +42,17 @@ function getOptimisticForumPostSequence({
 }
 
 /** Builds the feed-row shape Convex returns so optimistic chat renders normally. */
-export function createOptimisticForumPost({
-  args,
-  currentUser,
-  forum,
-  now,
-  parentPost,
-  postId,
-  posts,
-}: OptimisticForumPostInput) {
+export function createOptimisticForumPost(
+  args: CreateForumPostArgs,
+  {
+    currentUser,
+    forum,
+    now,
+    parentPost,
+    postId,
+    posts,
+  }: OptimisticForumPostInput
+) {
   return {
     _creationTime: now,
     _id: postId,

@@ -39,10 +39,6 @@ import {
   useForumSessionStoreApi,
 } from "@/components/school/classes/forum/session/context";
 
-interface ForumPostFailureReport {
-  draft?: ForumPostInputDraft;
-  error: unknown;
-}
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
 export function ForumPostInput() {
   const t = useTranslations("School.Classes");
@@ -108,7 +104,10 @@ export function ForumPostInput() {
         replyTarget,
       } satisfies ForumPostInputDraft;
       /** Reports a failed submit without hiding already optimistic local feedback. */
-      const reportSubmitFailure = ({ draft, error }: ForumPostFailureReport) =>
+      const reportSubmitFailure = (
+        error: unknown,
+        draft?: ForumPostInputDraft
+      ) =>
         Effect.all(
           [
             Effect.sync(() => {
@@ -118,20 +117,22 @@ export function ForumPostInput() {
               toast.error(t("create-post-failed"));
             }),
             draft
-              ? restoreForumPostInputDraft({
-                  currentBody: form.state.values.body,
-                  currentReplyTarget:
-                    forumSessionStore.getState().replyTargetByForumId[
-                      forumId
-                    ] ?? null,
-                  draft,
-                  restoreBody: (body) => {
+              ? restoreForumPostInputDraft(
+                  {
+                    currentBody: form.state.values.body,
+                    currentReplyTarget:
+                      forumSessionStore.getState().replyTargetByForumId[
+                        forumId
+                      ] ?? null,
+                    draft,
+                  },
+                  (body) => {
                     form.setFieldValue("body", body);
                   },
-                  restoreReplyTarget: (replyTarget) => {
+                  (replyTarget) => {
                     setForumReplyTarget(forumId, replyTarget);
-                  },
-                })
+                  }
+                )
               : Effect.void,
             Effect.sync(() => {
               requestAnimationFrame(() => {
@@ -182,7 +183,7 @@ export function ForumPostInput() {
         return Effect.runPromise(
           submitPost.pipe(
             Effect.matchEffect({
-              onFailure: (error) => reportSubmitFailure({ draft, error }),
+              onFailure: (error) => reportSubmitFailure(error, draft),
               onSuccess: placeConfirmedPost,
             })
           )
@@ -191,7 +192,7 @@ export function ForumPostInput() {
       return Effect.runPromise(
         submitPost.pipe(
           Effect.matchEffect({
-            onFailure: (error) => reportSubmitFailure({ error }),
+            onFailure: (error) => reportSubmitFailure(error),
             onSuccess: completeSubmit,
           })
         )
