@@ -21,9 +21,9 @@ import { Box3, type Group, Vector3 } from "three";
 function createFraming() {
   const listeners = MutableHashSet.empty<() => void>();
   // Effect hashes object keys structurally, which would walk a whole scene
-  // graph, so each registry keys an object by its uuid.
-  const labels = MutableHashMap.empty<string, CameraLabelBounds>();
-  const subjects = MutableHashMap.empty<string, CameraSubjectBounds>();
+  // graph, so each registry keys an object by its id.
+  const labels = MutableHashMap.empty<number, CameraLabelBounds>();
+  const subjects = MutableHashMap.empty<number, CameraSubjectBounds>();
   let scheduled: number | undefined;
   let renderedChildren: ReactNode;
   const invalidate = () => {
@@ -125,7 +125,7 @@ export function CameraBounds({
       return;
     }
     if (exclude) {
-      MutableHashMap.set(framing.subjects, object.uuid, false);
+      MutableHashMap.set(framing.subjects, object.id, false);
     } else if (
       rotation !== undefined ||
       scale !== undefined ||
@@ -144,7 +144,7 @@ export function CameraBounds({
               z: { min: travelMinZ, max: travelMaxZ },
             }
           : undefined;
-      MutableHashMap.set(framing.subjects, object.uuid, {
+      MutableHashMap.set(framing.subjects, object.id, {
         rotation,
         scale,
         translation,
@@ -159,13 +159,13 @@ export function CameraBounds({
     ) {
       MutableHashMap.set(
         framing.subjects,
-        object.uuid,
+        object.id,
         new Box3(new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ))
       );
     }
     framing.invalidate();
     return () => {
-      MutableHashMap.remove(framing.subjects, object.uuid);
+      MutableHashMap.remove(framing.subjects, object.id);
       framing.invalidate();
     };
   }, [

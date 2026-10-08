@@ -182,7 +182,7 @@ export function ThreeLabel({
           (element.offsetWidth * worldFontSize) / LABEL_BASE_FONT_SIZE;
         const height =
           (element.offsetHeight * worldFontSize) / LABEL_BASE_FONT_SIZE;
-        MutableHashMap.set(framing.labels, object.uuid, {
+        MutableHashMap.set(framing.labels, object.id, {
           anchorX: anchorOffset(anchorX),
           anchorY: anchorOffset(anchorY),
           gap: {
@@ -212,7 +212,7 @@ export function ThreeLabel({
       measure();
       return () => {
         observer.disconnect();
-        MutableHashMap.remove(framing.labels, object.uuid);
+        MutableHashMap.remove(framing.labels, object.id);
         framing.invalidate();
       };
     },

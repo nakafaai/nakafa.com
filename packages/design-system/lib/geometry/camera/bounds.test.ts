@@ -6,7 +6,7 @@ import {
   type CameraSubjectBounds,
   measureCameraBounds,
 } from "@repo/design-system/lib/geometry/camera/bounds";
-import { Effect, MutableHashMap, Option } from "effect";
+import { Effect, HashMap, Option } from "effect";
 import {
   Box3,
   BoxGeometry,
@@ -21,8 +21,8 @@ import {
 
 const sample = (
   root: Object3D,
-  subjects = MutableHashMap.empty<string, CameraSubjectBounds>(),
-  labels = MutableHashMap.empty<string, CameraLabelBounds>()
+  subjects = HashMap.empty<number, CameraSubjectBounds>(),
+  labels = HashMap.empty<number, CameraLabelBounds>()
 ) =>
   measureCameraBounds({
     labels,
@@ -44,9 +44,9 @@ describe("camera subjects", () => {
         label.position.set(2, 3, 0);
         moving.add(label);
         root.add(moving);
-        const labels = MutableHashMap.fromIterable<string, CameraLabelBounds>([
+        const labels = HashMap.fromIterable<number, CameraLabelBounds>([
           [
-            label.uuid,
+            label.id,
             {
               anchorX: 0,
               anchorY: -0.5,
@@ -58,10 +58,9 @@ describe("camera subjects", () => {
             },
           ],
         ]);
-        const subjects = MutableHashMap.fromIterable<
-          string,
-          CameraSubjectBounds
-        >([[moving.uuid, { rotation: "y", scale: 2 }]]);
+        const subjects = HashMap.fromIterable<number, CameraSubjectBounds>([
+          [moving.id, { rotation: "y", scale: 2 }],
+        ]);
         const measure = () =>
           measureCameraBounds({
             labels,
@@ -110,9 +109,7 @@ describe("camera subjects", () => {
         const bounds = Option.getOrThrow(
           yield* sample(
             root,
-            MutableHashMap.fromIterable<string, CameraSubjectBounds>([
-              [sky.uuid, false],
-            ])
+            HashMap.fromIterable<number, CameraSubjectBounds>([[sky.id, false]])
           )
         );
         expect(bounds.min.toArray()).toEqual([4, 0, -3]);
@@ -146,10 +143,10 @@ describe("camera subjects", () => {
         const bounds = Option.getOrThrow(
           yield* sample(
             label,
-            MutableHashMap.empty<string, CameraSubjectBounds>(),
-            MutableHashMap.fromIterable<string, CameraLabelBounds>([
+            HashMap.empty<number, CameraSubjectBounds>(),
+            HashMap.fromIterable<number, CameraLabelBounds>([
               [
-                label.uuid,
+                label.id,
                 {
                   anchorX: 0,
                   anchorY: -0.5,
@@ -177,12 +174,9 @@ describe("camera subjects", () => {
         const moving = new Group();
         moving.add(new Mesh(new BoxGeometry(2, 2, 2)));
         root.add(moving);
-        const subjects = MutableHashMap.fromIterable<
-          string,
-          CameraSubjectBounds
-        >([
+        const subjects = HashMap.fromIterable<number, CameraSubjectBounds>([
           [
-            moving.uuid,
+            moving.id,
             {
               translation: {
                 x: { min: -5, max: 8 },
@@ -208,10 +202,9 @@ describe("camera subjects", () => {
         for (const rotation of ["x", "y", "z"] as const) {
           const root = new Group();
           root.add(new Mesh(new BoxGeometry(2, 4, 6)));
-          const subjects = MutableHashMap.fromIterable<
-            string,
-            CameraSubjectBounds
-          >([[root.uuid, { rotation, scale: 1.2 }]]);
+          const subjects = HashMap.fromIterable<number, CameraSubjectBounds>([
+            [root.id, { rotation, scale: 1.2 }],
+          ]);
           const before = Option.getOrThrow(yield* sample(root, subjects));
           root.rotation[rotation] = 1.7;
           root.scale.setScalar(0.9);
@@ -229,9 +222,9 @@ describe("camera subjects", () => {
     Effect.gen(function* () {
       const root = new Group();
       root.add(new Mesh(new BoxGeometry(2, 4, 6)));
-      const subjects = MutableHashMap.fromIterable<string, CameraSubjectBounds>(
-        [[root.uuid, { rotation: "all" }]]
-      );
+      const subjects = HashMap.fromIterable<number, CameraSubjectBounds>([
+        [root.id, { rotation: "all" }],
+      ]);
       const before = Option.getOrThrow(yield* sample(root, subjects));
       root.rotation.set(0.7, 1.2, 2.1);
       const after = Option.getOrThrow(yield* sample(root, subjects));
@@ -264,8 +257,8 @@ describe("camera subjects", () => {
         const bounds = Option.getOrThrow(
           yield* sample(
             root,
-            MutableHashMap.fromIterable<string, CameraSubjectBounds>([
-              [root.uuid, { rotation: "y" }],
+            HashMap.fromIterable<number, CameraSubjectBounds>([
+              [root.id, { rotation: "y" }],
             ])
           )
         );
@@ -287,8 +280,8 @@ describe("camera subjects", () => {
           Option.getOrThrow(
             yield* sample(
               root,
-              MutableHashMap.fromIterable<string, CameraSubjectBounds>([
-                [root.uuid, declared],
+              HashMap.fromIterable<number, CameraSubjectBounds>([
+                [root.id, declared],
               ])
             )
           ).equals(declared)
@@ -298,8 +291,8 @@ describe("camera subjects", () => {
           Option.isNone(
             yield* sample(
               empty,
-              MutableHashMap.fromIterable<string, CameraSubjectBounds>([
-                [empty.uuid, { rotation: "y" }],
+              HashMap.fromIterable<number, CameraSubjectBounds>([
+                [empty.id, { rotation: "y" }],
               ])
             )
           )
