@@ -26,8 +26,7 @@ const BrowserPrivacySignalSchema = Schema.Struct({
 });
 
 /** Reads the browser's current DNT and GPC values. */
-export type BrowserPrivacySignalSource =
-  () => typeof BrowserPrivacySignalSchema.Type;
+type BrowserPrivacySignalSource = () => typeof BrowserPrivacySignalSchema.Type;
 
 /** Reads current DNT and GPC values each time the Effect executes. */
 export const readBrowserPrivacySignal = Effect.fn(
