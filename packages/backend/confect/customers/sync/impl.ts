@@ -130,12 +130,11 @@ export const syncCustomerForUser = Effect.fn(
     userId: input.user._id,
   });
   const result = yield* saveLocalCustomer(customer);
-  const localCustomerId = yield* settleCustomerSync(
-    result,
-    input.user._id,
-    () => deleteLocalCustomer(syncedPolarCustomer.id),
-    () => polarGateway.deleteCustomer(syncedPolarCustomer.id)
-  );
+  const localCustomerId = yield* settleCustomerSync(result, input.user._id, {
+    deleteLocalCustomer: () => deleteLocalCustomer(syncedPolarCustomer.id),
+    deletePolarCustomer: () =>
+      polarGateway.deleteCustomer(syncedPolarCustomer.id),
+  });
   return {
     ...customer,
     localCustomerId,

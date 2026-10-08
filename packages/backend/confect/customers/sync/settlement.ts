@@ -8,32 +8,31 @@ import {
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
-type DeleteLocalCustomer<R = never> = () => Effect.Effect<
-  void,
-  CustomerSyncIoError,
-  R
->;
-type DeletePolarCustomer<R = never> = () => Effect.Effect<
-  void,
-  PolarDeleteError,
-  R
->;
-
 /** Resolves the transactional write result without erasing cancelable state. */
 export const settleCustomerSync = Effect.fn(
   "customers.sync.settleCustomerSync"
 )(function* <R>(
   result: CustomerUpsertResult,
   userId: Id<"users">,
-  deleteLocalCustomer: DeleteLocalCustomer<R>,
-  deletePolarCustomer: DeletePolarCustomer<R>
+  operations: {
+    readonly deleteLocalCustomer: () => Effect.Effect<
+      void,
+      CustomerSyncIoError,
+      R
+    >;
+    readonly deletePolarCustomer: () => Effect.Effect<
+      void,
+      PolarDeleteError,
+      R
+    >;
+  }
 ) {
   if (result.kind === "stored") {
     return result.customerId;
   }
   if (result.kind !== "prepared") {
-    yield* deletePolarCustomer();
-    yield* deleteLocalCustomer();
+    yield* operations.deletePolarCustomer();
+    yield* operations.deleteLocalCustomer();
   }
   return yield* new UserNotFound({
     code: userNotFoundCode,
