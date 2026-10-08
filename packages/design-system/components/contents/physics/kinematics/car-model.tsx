@@ -1,12 +1,12 @@
 "use client";
 
 import { useGLTF } from "@react-three/drei";
-import { Array as Arr } from "effect";
+import { Array as Arr, HashSet } from "effect";
 import { useMemo } from "react";
 import { Box3, Color, type Material, Mesh, Vector3 } from "three";
 
-const COLORABLE_CAR_PART_NAMES = new Set(["body", "kart-oobi", "spoiler"]);
-const COLORABLE_CAR_MATERIAL_NAMES = new Set(["Body", "Red_Chasis"]);
+const COLORABLE_CAR_PART_NAMES = HashSet.make("body", "kart-oobi", "spoiler");
+const COLORABLE_CAR_MATERIAL_NAMES = HashSet.make("Body", "Red_Chasis");
 
 interface PhysicsCarModelProps {
   bodyColor?: string;
@@ -43,7 +43,7 @@ export function PhysicsCarModel({
 }
 
 function shouldTintCarPart(mesh: Mesh) {
-  if (COLORABLE_CAR_PART_NAMES.has(mesh.name)) {
+  if (HashSet.has(COLORABLE_CAR_PART_NAMES, mesh.name)) {
     return true;
   }
 
@@ -52,7 +52,7 @@ function shouldTintCarPart(mesh: Mesh) {
     : [mesh.material];
 
   return materials.some((material) =>
-    COLORABLE_CAR_MATERIAL_NAMES.has(material.name)
+    HashSet.has(COLORABLE_CAR_MATERIAL_NAMES, material.name)
   );
 }
 

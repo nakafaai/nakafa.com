@@ -17,6 +17,7 @@ import {
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { getColor } from "@repo/design-system/lib/color";
+import { Schema } from "effect";
 import { Suspense, useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
 
@@ -33,12 +34,14 @@ const BALL_Y =
   AVERAGE_VELOCITY_SPEED_SCENE.routeRadius +
   AVERAGE_VELOCITY_SPEED_SCENE.ballRadius;
 
-interface PlatformBounds {
-  centerX: number;
-  centerZ: number;
-  depth: number;
-  width: number;
-}
+const PlatformBoundsSchema = Schema.Struct({
+  centerX: Schema.Finite,
+  centerZ: Schema.Finite,
+  depth: Schema.Finite,
+  width: Schema.Finite,
+});
+
+type PlatformBounds = typeof PlatformBoundsSchema.Type;
 
 export function AverageMotionStage({
   motion,
