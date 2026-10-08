@@ -1,142 +1,9 @@
 import { type McpCase, modernPost } from "@repo/backend/test/mcp/harness";
 import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
-import { GET_CONTENT_OUTPUT } from "@repo/backend/test/mcp/outputs/content";
 import { GET_QURAN_REFERENCE_OUTPUT } from "@repo/backend/test/mcp/outputs/quran";
-import { SEARCH_CONTENT_OUTPUT } from "@repo/backend/test/mcp/outputs/search";
 
-/** Tool calls: each tool's success and declared failures, pinned against seeded publications. */
-export const TOOL_CALL_CASES: readonly McpCase[] = [
-  {
-    answer: {
-      body: {
-        json: {
-          result: {
-            content: [
-              {
-                type: "text",
-                text: '{"count":1,"has_more":false,"items":[{"alignmentId":"alignment:article:politics:article:politics:article-0","assetId":"asset:en:article:politics:article:politics:article-0","conceptId":"concept:article:politics","content_id":"asset:en:article:politics:article:politics:article-0","learningObjectId":"lo:article:politics:article-0","lensId":"lens:article:politics","locale":"en","route":"articles/politics/article-0","section":"articles","url":"https://nakafa.com/en/articles/politics/article-0","markdown_url":"https://nakafa.com/en/articles/politics/article-0.md","description":"","title":"Article 0","excerpt":"Article 0 Article 0 articles/politics/article-0 rational function grade eleven asymptote"}],"limit":10,"offset":0}',
-              },
-            ],
-            structuredContent: SEARCH_CONTENT_OUTPUT,
-            resultType: "complete",
-            _meta: {
-              "io.modelcontextprotocol/serverInfo": {
-                name: "nakafa-mcp-server",
-                title: "Nakafa",
-                version: "1.0.1",
-              },
-            },
-          },
-          jsonrpc: "2.0",
-          id: 24,
-        },
-      },
-      headers: JSON_RESPONSE_HEADERS,
-      status: 200,
-    },
-    arrangement: "article",
-    name: "nakafa_search_content returns the seeded article for a query",
-    request: modernPost(
-      24,
-      "tools/call",
-      {
-        arguments: {
-          locale: "en",
-          queries: ["rational function"],
-          section: "articles",
-        },
-        name: "nakafa_search_content",
-      },
-      "nakafa_search_content"
-    ),
-  },
-  {
-    answer: {
-      body: {
-        json: {
-          result: {
-            content: [
-              {
-                type: "text",
-                text: '{"alignmentId":"alignment:article:politics:article:politics:article-0","assetId":"asset:en:article:politics:article:politics:article-0","conceptId":"concept:article:politics","content_id":"asset:en:article:politics:article:politics:article-0","learningObjectId":"lo:article:politics:article-0","lensId":"lens:article:politics","locale":"en","route":"articles/politics/article-0","section":"articles","url":"https://nakafa.com/en/articles/politics/article-0","markdown_url":"https://nakafa.com/en/articles/politics/article-0.md","text":"# Article 0\\n\\n## Technical fixture","title":"Article 0"}',
-              },
-            ],
-            structuredContent: GET_CONTENT_OUTPUT,
-            resultType: "complete",
-            _meta: {
-              "io.modelcontextprotocol/serverInfo": {
-                name: "nakafa-mcp-server",
-                title: "Nakafa",
-                version: "1.0.1",
-              },
-            },
-          },
-          jsonrpc: "2.0",
-          id: 25,
-        },
-      },
-      headers: JSON_RESPONSE_HEADERS,
-      status: 200,
-    },
-    arrangement: "article",
-    name: "nakafa_get_content returns the signed article Markdown for its canonical URL",
-    request: modernPost(
-      25,
-      "tools/call",
-      {
-        arguments: {
-          content_ref: "https://nakafa.com/en/articles/politics/article-0",
-        },
-        name: "nakafa_get_content",
-      },
-      "nakafa_get_content"
-    ),
-  },
-  {
-    answer: {
-      body: {
-        json: {
-          result: {
-            content: [
-              {
-                type: "text",
-                text: '{"error":{"message":"Unable to read signed Nakafa material inventory.","suggestions":["Retry later using the same documented arguments."]}}',
-              },
-            ],
-            structuredContent: {
-              error: {
-                message: "Unable to read signed Nakafa material inventory.",
-                suggestions: [
-                  "Retry later using the same documented arguments.",
-                ],
-              },
-            },
-            isError: true,
-            resultType: "complete",
-            _meta: {
-              "io.modelcontextprotocol/serverInfo": {
-                name: "nakafa-mcp-server",
-                title: "Nakafa",
-                version: "1.0.1",
-              },
-            },
-          },
-          jsonrpc: "2.0",
-          id: 26,
-        },
-      },
-      headers: JSON_RESPONSE_HEADERS,
-      status: 200,
-    },
-    arrangement: "article",
-    name: "nakafa_get_taxonomy reports a partly published deployment as unavailable",
-    request: modernPost(
-      26,
-      "tools/call",
-      { arguments: { locale: "en" }, name: "nakafa_get_taxonomy" },
-      "nakafa_get_taxonomy"
-    ),
-  },
+/** Quran calls: a bounded verse range from the seeded catalog, and the refusals for empty catalogs, invalid ranges, and locales the catalog does not publish. */
+export const QURAN_CALL_CASES: readonly McpCase[] = [
   {
     answer: {
       body: {
@@ -181,148 +48,6 @@ export const TOOL_CALL_CASES: readonly McpCase[] = [
         name: "nakafa_get_quran_reference",
       },
       "nakafa_get_quran_reference"
-    ),
-  },
-  {
-    answer: {
-      body: {
-        json: {
-          result: {
-            content: [
-              {
-                type: "text",
-                text: '{"count":0,"has_more":false,"items":[],"limit":10,"offset":0}',
-              },
-            ],
-            structuredContent: {
-              count: 0,
-              has_more: false,
-              items: [],
-              limit: 10,
-              offset: 0,
-            },
-            resultType: "complete",
-            _meta: {
-              "io.modelcontextprotocol/serverInfo": {
-                name: "nakafa-mcp-server",
-                title: "Nakafa",
-                version: "1.0.1",
-              },
-            },
-          },
-          jsonrpc: "2.0",
-          id: 20,
-        },
-      },
-      headers: JSON_RESPONSE_HEADERS,
-      status: 200,
-    },
-    name: "nakafa_search_content answers stable empty pagination from an empty deployment",
-    request: modernPost(
-      20,
-      "tools/call",
-      {
-        arguments: {
-          limit: 10,
-          locale: "en",
-          offset: 0,
-          queries: ["algebra"],
-        },
-        name: "nakafa_search_content",
-      },
-      "nakafa_search_content"
-    ),
-  },
-  {
-    answer: {
-      body: {
-        json: {
-          result: {
-            content: [
-              {
-                type: "text",
-                text: '{"error":{"message":"Call nakafa_search_content and pass a content_id only from a result with markdown_url.","suggestions":["The supplied content_ref did not resolve."]}}',
-              },
-            ],
-            structuredContent: {
-              error: {
-                message:
-                  "Call nakafa_search_content and pass a content_id only from a result with markdown_url.",
-                suggestions: ["The supplied content_ref did not resolve."],
-              },
-            },
-            isError: true,
-            resultType: "complete",
-            _meta: {
-              "io.modelcontextprotocol/serverInfo": {
-                name: "nakafa-mcp-server",
-                title: "Nakafa",
-                version: "1.0.1",
-              },
-            },
-          },
-          jsonrpc: "2.0",
-          id: 21,
-        },
-      },
-      headers: JSON_RESPONSE_HEADERS,
-      status: 200,
-    },
-    name: "nakafa_get_content reports an unresolved content_ref with search guidance",
-    request: modernPost(
-      21,
-      "tools/call",
-      {
-        arguments: {
-          content_ref: "https://nakafa.com/en/articles/missing/content",
-        },
-        name: "nakafa_get_content",
-      },
-      "nakafa_get_content"
-    ),
-  },
-  {
-    answer: {
-      body: {
-        json: {
-          result: {
-            content: [
-              {
-                type: "text",
-                text: '{"error":{"message":"Unable to read signed Nakafa content inventory.","suggestions":["Retry later using the same documented arguments."]}}',
-              },
-            ],
-            structuredContent: {
-              error: {
-                message: "Unable to read signed Nakafa content inventory.",
-                suggestions: [
-                  "Retry later using the same documented arguments.",
-                ],
-              },
-            },
-            isError: true,
-            resultType: "complete",
-            _meta: {
-              "io.modelcontextprotocol/serverInfo": {
-                name: "nakafa-mcp-server",
-                title: "Nakafa",
-                version: "1.0.1",
-              },
-            },
-          },
-          jsonrpc: "2.0",
-          id: 22,
-        },
-      },
-      headers: JSON_RESPONSE_HEADERS,
-      status: 200,
-    },
-    name: "nakafa_get_taxonomy reports the unavailable publication from an empty deployment",
-    request: modernPost(
-      22,
-      "tools/call",
-      { arguments: { locale: "en" }, name: "nakafa_get_taxonomy" },
-      "nakafa_get_taxonomy"
     ),
   },
   {
@@ -413,6 +138,148 @@ export const TOOL_CALL_CASES: readonly McpCase[] = [
       "tools/call",
       {
         arguments: { from_verse: 6, locale: "en", surah: 1, to_verse: 8 },
+        name: "nakafa_get_quran_reference",
+      },
+      "nakafa_get_quran_reference"
+    ),
+  },
+  {
+    answer: {
+      body: {
+        json: {
+          result: {
+            content: [
+              {
+                type: "text",
+                text: '{"error":{"message":"Invalid Quran verse range.","suggestions":["to_verse must be greater than or equal to from_verse."]}}',
+              },
+            ],
+            structuredContent: {
+              error: {
+                message: "Invalid Quran verse range.",
+                suggestions: [
+                  "to_verse must be greater than or equal to from_verse.",
+                ],
+              },
+            },
+            isError: true,
+            resultType: "complete",
+            _meta: {
+              "io.modelcontextprotocol/serverInfo": {
+                name: "nakafa-mcp-server",
+                title: "Nakafa",
+                version: "1.0.1",
+              },
+            },
+          },
+          jsonrpc: "2.0",
+          id: 47,
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 200,
+    },
+    arrangement: "quran",
+    name: "nakafa_get_quran_reference rejects a range that ends before it starts",
+    request: modernPost(
+      47,
+      "tools/call",
+      {
+        arguments: { from_verse: 5, locale: "en", surah: 1, to_verse: 2 },
+        name: "nakafa_get_quran_reference",
+      },
+      "nakafa_get_quran_reference"
+    ),
+  },
+  {
+    answer: {
+      body: {
+        json: {
+          result: {
+            content: [
+              {
+                type: "text",
+                text: '{"error":{"message":"Invalid Quran verse range.","suggestions":["Request at most 20 verses at a time."]}}',
+              },
+            ],
+            structuredContent: {
+              error: {
+                message: "Invalid Quran verse range.",
+                suggestions: ["Request at most 20 verses at a time."],
+              },
+            },
+            isError: true,
+            resultType: "complete",
+            _meta: {
+              "io.modelcontextprotocol/serverInfo": {
+                name: "nakafa-mcp-server",
+                title: "Nakafa",
+                version: "1.0.1",
+              },
+            },
+          },
+          jsonrpc: "2.0",
+          id: 48,
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 200,
+    },
+    arrangement: "quran",
+    name: "nakafa_get_quran_reference rejects a range above the verse ceiling",
+    request: modernPost(
+      48,
+      "tools/call",
+      {
+        arguments: { from_verse: 1, locale: "en", surah: 1, to_verse: 100 },
+        name: "nakafa_get_quran_reference",
+      },
+      "nakafa_get_quran_reference"
+    ),
+  },
+  {
+    answer: {
+      body: {
+        json: {
+          result: {
+            content: [
+              {
+                type: "text",
+                text: '{"error":{"message":"Unable to read the signed Nakafa Quran reference.","suggestions":["Retry later using the same documented arguments."]}}',
+              },
+            ],
+            structuredContent: {
+              error: {
+                message: "Unable to read the signed Nakafa Quran reference.",
+                suggestions: [
+                  "Retry later using the same documented arguments.",
+                ],
+              },
+            },
+            isError: true,
+            resultType: "complete",
+            _meta: {
+              "io.modelcontextprotocol/serverInfo": {
+                name: "nakafa-mcp-server",
+                title: "Nakafa",
+                version: "1.0.1",
+              },
+            },
+          },
+          jsonrpc: "2.0",
+          id: 49,
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 200,
+    },
+    arrangement: "quran",
+    name: "nakafa_get_quran_reference reports a locale the signed catalog does not publish",
+    request: modernPost(
+      49,
+      "tools/call",
+      {
+        arguments: { from_verse: 1, locale: "id", surah: 1 },
         name: "nakafa_get_quran_reference",
       },
       "nakafa_get_quran_reference"

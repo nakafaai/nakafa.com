@@ -2,7 +2,10 @@
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { TOOL_CALL_CASES } from "@repo/backend/test/mcp/calls";
+import { CONTENT_CALL_CASES } from "@repo/backend/test/mcp/calls/content";
+import { QURAN_CALL_CASES } from "@repo/backend/test/mcp/calls/quran";
+import { SEARCH_CALL_CASES } from "@repo/backend/test/mcp/calls/search";
+import { TAXONOMY_CALL_CASES } from "@repo/backend/test/mcp/calls/taxonomy";
 import { DISCOVERY_CASES } from "@repo/backend/test/mcp/discovery";
 import {
   MCP_SECRET,
@@ -48,7 +51,10 @@ describe("Nakafa MCP golden contract", () => {
     it.effect.each(DISCOVERY_CASES)("$name", runGoldenCase);
   });
   describe("tool calls", () => {
-    it.effect.each(TOOL_CALL_CASES)("$name", runGoldenCase);
+    it.effect.each(SEARCH_CALL_CASES)("$name", runGoldenCase);
+    it.effect.each(CONTENT_CALL_CASES)("$name", runGoldenCase);
+    it.effect.each(TAXONOMY_CALL_CASES)("$name", runGoldenCase);
+    it.effect.each(QURAN_CALL_CASES)("$name", runGoldenCase);
     it.effect.each(INVALID_TOOL_CALL_CASES)("$name", runGoldenCase);
   });
   describe("prompts", () => {
