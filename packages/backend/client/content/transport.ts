@@ -1,4 +1,7 @@
-import type { ContentHttpTarget } from "@repo/backend/client/content/endpoint";
+import {
+  type ContentHttpTarget,
+  JsonTextSchema,
+} from "@repo/backend/client/content/endpoint";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {
   createNetworkRequestError,
@@ -23,8 +26,6 @@ import {
 } from "effect/http";
 
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
-/** Reads and writes unknown JSON text; its bytes match JSON.parse and JSON.stringify. */
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 /**
  * The Fetch client for the private runtime: never cached, never redirected,
  * and kept out of telemetry because every request carries the runtime

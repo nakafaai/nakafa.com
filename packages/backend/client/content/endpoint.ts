@@ -3,7 +3,7 @@ import { Effect, HashSet, Schema } from "effect";
 
 const LOOPBACK_HOSTS = HashSet.make("127.0.0.1", "[::1]", "localhost");
 /** Reads and writes unknown JSON text; its bytes match JSON.parse and JSON.stringify. */
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
+export const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 const ContentHttpTargetSchema = Schema.Struct({
   siteUrl: Schema.String,
