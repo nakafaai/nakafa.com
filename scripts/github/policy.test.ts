@@ -138,6 +138,27 @@ describe("GitHub Action policy", () => {
       }).pipe(Effect.provide(NodeServices.layer))
   );
 
+  it.effect(
+    "generates the Convex bindings once, in the Quality typecheck",
+    () =>
+      readRepositoryFile("../../.github/workflows/ci.yml").pipe(
+        Effect.tap((source) =>
+          Effect.sync(() => {
+            const typecheck = source.indexOf("      - name: Typecheck\n");
+            const verify = source.indexOf(
+              "      - name: Verify generated backend contracts\n"
+            );
+            const tests = source.indexOf("      - name: Run tests\n");
+            expect(typecheck).toBeGreaterThan(-1);
+            expect(verify).toBeGreaterThan(typecheck);
+            expect(tests).toBeGreaterThan(verify);
+            expect(source).not.toContain("pnpm --filter @repo/backend codegen");
+          })
+        ),
+        Effect.provide(NodeServices.layer)
+      )
+  );
+
   it.effect("runs every required check on each candidate head", () =>
     readRepositoryFile("../../.github/workflows/ci.yml").pipe(
       Effect.tap((source) =>

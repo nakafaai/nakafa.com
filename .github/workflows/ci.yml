@@ -120,11 +120,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify generated backend contracts
-        run: |
-          pnpm --filter @repo/backend codegen
-          test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex)"
-
       - name: Audit dependencies
         run: bash scripts/osv
 
@@ -142,6 +137,11 @@ jobs:
           NEXT_PUBLIC_CONVEX_URL: http://127.0.0.1:3210
           NEXT_PUBLIC_POLAR_SERVER: sandbox
         run: pnpm -r run typecheck
+
+      - name: Verify generated backend contracts
+        # The backend typecheck regenerates the Convex bindings before tsc runs,
+        # so this proves the committed bindings are current.
+        run: test -z "$(git status --porcelain -- packages/backend/confect/_generated packages/backend/convex)"
 
       - name: Run tests
         run: pnpm test
