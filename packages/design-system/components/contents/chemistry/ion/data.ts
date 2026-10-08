@@ -1,3 +1,4 @@
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const SODIUM_CATION_ID = "sodium-cation";
@@ -17,6 +18,13 @@ export const ION_SAMPLE_IDS = [
   LITHIUM_CATION_ID,
   OXIDE_ANION_ID,
 ] satisfies IonSampleId[];
+
+const IonSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  charge: Schema.Finite,
+  massNumber: Schema.Finite,
+  symbol: Schema.String,
+});
 
 export const ION_SAMPLES = {
   [SODIUM_CATION_ID]: {
@@ -43,15 +51,7 @@ export const ION_SAMPLES = {
     massNumber: 16,
     symbol: "O",
   },
-} satisfies Record<
-  IonSampleId,
-  {
-    atomicNumber: number;
-    charge: number;
-    massNumber: number;
-    symbol: string;
-  }
->;
+} satisfies Record<IonSampleId, typeof IonSampleSchema.Type>;
 
 export interface IonSampleLabels {
   action: ReactNode;

@@ -1,3 +1,4 @@
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const HYDROGEN_1_ID = "hydrogen-1";
@@ -23,6 +24,12 @@ export const ISOTOPE_SAMPLE_IDS = [
   CARBON_13_ID,
   CARBON_14_ID,
 ] satisfies IsotopeSampleId[];
+
+const IsotopeSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  massNumber: Schema.Finite,
+  symbol: Schema.String,
+});
 
 export const ISOTOPE_SAMPLES = {
   [HYDROGEN_1_ID]: {
@@ -55,14 +62,7 @@ export const ISOTOPE_SAMPLES = {
     massNumber: 14,
     symbol: "C",
   },
-} satisfies Record<
-  IsotopeSampleId,
-  {
-    atomicNumber: number;
-    massNumber: number;
-    symbol: string;
-  }
->;
+} satisfies Record<IsotopeSampleId, typeof IsotopeSampleSchema.Type>;
 
 export interface IsotopeSampleLabels {
   abundance: ReactNode;
