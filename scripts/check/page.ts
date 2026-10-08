@@ -47,7 +47,7 @@ function pageArgument(node: Node) {
   return node.arguments[node.expression.name.text.startsWith("$") ? 1 : 0];
 }
 
-/** Names one function by the module that declares it, such as `apps/www/e2e/support/canvas#countFrames`. */
+/** Names one function by the module that declares it, such as `apps/www/e2e/support/canvas#patchWebGL`. */
 function functionKey(module: string, name: string) {
   return `${module}#${name}`;
 }
@@ -130,8 +130,8 @@ function declaredFunction(file: string, sourceFile: SourceFile, local: string) {
 
 /**
  * Returns the functions a Playwright module passes to the browser page by
- * reference, such as `page.addInitScript(countFrames)`, each named by the
- * module that declares it.
+ * reference, such as `patchWebGL` in `page.addInitScript(patchWebGL, ...)`,
+ * each named by the module that declares it.
  */
 export function pageFunctionKeys(
   file: string,
