@@ -28,14 +28,10 @@ export function press(
   return hasTouch ? control.tap(options) : control.click(options);
 }
 
-/**
- * The first link to `href` that the page shows. A `scope` selector, such as
- * `main`, keeps the search inside that element.
- */
-export function visibleLink(page: Page, href: string, scope?: string) {
-  const link = `a[href="${href}"]`;
+/** The first link to `href` that the page shows inside `scope`, such as `main`. */
+export function visibleLink(page: Page, href: string, scope: string) {
   return page
-    .locator(scope === undefined ? link : `${scope} ${link}`)
+    .locator(`${scope} a[href="${href}"]`)
     .filter({ visible: true })
     .first();
 }

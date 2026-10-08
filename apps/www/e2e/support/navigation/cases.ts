@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
-import { activateUntilVisible, press, visibleLink } from "@/e2e/support/input";
+import { activateUntilVisible, press } from "@/e2e/support/input";
 import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
 import { appRoutes } from "@/e2e/support/route";
 import {
@@ -125,7 +125,7 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
   href: string,
   sourceHref: string
 ) {
-  const link = visibleLink(page, href);
+  const link = page.locator(`a[href="${href}"]:visible`).first();
   const missingLink = new NavigationLinkMissing({
     hrefPattern: href,
     sourceHref,
