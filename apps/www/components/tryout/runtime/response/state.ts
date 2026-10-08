@@ -26,7 +26,8 @@ export const TryoutRenderableResponseSpecSchema = Schema.Union([
   RenderableSpec,
 ]);
 
-const TryoutResponseStateSchema = Schema.Struct({
+/** Response definition and the selection a learner made against it. */
+export const TryoutResponseStateSchema = Schema.Struct({
   responseSpec: TryoutRenderableResponseSpecSchema,
   selection: Schema.NullOr(Selection),
 });

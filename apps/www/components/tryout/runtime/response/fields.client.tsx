@@ -1,6 +1,5 @@
 "use client";
 
-import { Selection } from "@repo/backend/confect/response/model";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { HashMap, HashSet, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
@@ -16,8 +15,8 @@ import {
 } from "@/components/tryout/runtime/response/id";
 import {
   assignCategorySelection,
-  TryoutRenderableResponseSpecSchema,
   type TryoutResponseSelection,
+  TryoutResponseStateSchema,
   toggleMultipleChoiceSelection,
 } from "@/components/tryout/runtime/response/state";
 
@@ -34,9 +33,8 @@ export type TryoutResponseFieldLabel =
 const TryoutResponseFieldsDataSchema = Schema.Struct({
   id: Schema.String,
   locked: Schema.Boolean,
-  responseSpec: TryoutRenderableResponseSpecSchema,
+  ...TryoutResponseStateSchema.fields,
   revealAnswers: Schema.optionalKey(Schema.Boolean),
-  selection: Schema.NullOr(Selection),
 });
 type TryoutResponseFieldsData = typeof TryoutResponseFieldsDataSchema.Type;
 
@@ -91,12 +89,7 @@ function SingleChoiceFields({
   onChange,
   renderLabel,
   value,
-}: {
-  answerLabel: string;
-  onChange: OnResponseChange;
-  renderLabel: RenderResponseLabel;
-  value: TryoutResponseFieldsData;
-}) {
+}: TryoutResponseFieldsProps & { answerLabel: string }) {
   const { id, locked, responseSpec, selection } = value;
   if (responseSpec.kind !== "single-choice") {
     return null;
@@ -149,12 +142,7 @@ function MultipleChoiceFields({
   onChange,
   renderLabel,
   value,
-}: {
-  answerLabel: string;
-  onChange: OnResponseChange;
-  renderLabel: RenderResponseLabel;
-  value: TryoutResponseFieldsData;
-}) {
+}: TryoutResponseFieldsProps & { answerLabel: string }) {
   const { id, locked, responseSpec, selection } = value;
   if (responseSpec.kind !== "multiple-choice") {
     return null;
@@ -198,11 +186,7 @@ function CategoryFields({
   onChange,
   renderLabel,
   value,
-}: {
-  onChange: OnResponseChange;
-  renderLabel: RenderResponseLabel;
-  value: TryoutResponseFieldsData;
-}) {
+}: TryoutResponseFieldsProps) {
   const { id, locked, responseSpec, selection } = value;
   if (responseSpec.kind !== "category") {
     return null;

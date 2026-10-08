@@ -1,6 +1,7 @@
 import {
   tryoutAttemptStateValidator,
   tryoutCurrentSectionValidator,
+  tryoutSectionRuntimeValidator,
 } from "@repo/backend/confect/tryouts/runtime/spec";
 import { Schema, Struct } from "effect";
 
@@ -12,7 +13,7 @@ type TryoutAttemptClock = typeof TryoutAttemptClockSchema.Type;
 
 /** Section runtime fields that decide whether its timer has reached its end. */
 const TryoutRuntimeClockSchema = Schema.Struct({
-  expiresAt: Schema.Finite,
+  ...tryoutSectionRuntimeValidator.mapFields(Struct.pick(["expiresAt"])).fields,
   section: tryoutCurrentSectionValidator.mapFields(Struct.pick(["status"])),
 });
 type TryoutRuntimeClock = typeof TryoutRuntimeClockSchema.Type;
