@@ -67,7 +67,7 @@ export function ScatterDiagram({
   showResiduals,
 }: Props) {
   const datasetConfig = Rec.fromEntries(
-    datasets.map((dataset, index) => [
+    Arr.map(datasets, (dataset, index) => [
       dataset.name,
       {
         cue: getPointSeriesCue(index),
@@ -88,8 +88,8 @@ export function ScatterDiagram({
     },
     ...datasetConfig,
   } satisfies ChartConfig;
-  const chartData = datasets.flatMap((dataset) =>
-    dataset.points.map((point) => ({
+  const chartData = Arr.flatMap(datasets, (dataset) =>
+    Arr.map(dataset.points, (point) => ({
       x: point.x,
       y: point.y,
       [dataset.name]: point.y,
@@ -134,7 +134,7 @@ export function ScatterDiagram({
               type="number"
             />
             <Tooltip hideContent />
-            {datasets.map((dataset, index) => {
+            {Arr.map(datasets, (dataset, index) => {
               const cue = getPointSeriesCue(index);
 
               return (
@@ -174,8 +174,8 @@ export function ScatterDiagram({
             )}
             {!!showResiduals &&
               Option.isSome(regressionLine) &&
-              datasets.flatMap((dataset) =>
-                dataset.points.map((point) => {
+              Arr.flatMap(datasets, (dataset) =>
+                Arr.map(dataset.points, (point) => {
                   const yPredicted = predictY(regressionLine.value, point.x);
 
                   return (

@@ -18,6 +18,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
+import { Array as Arr, Option } from "effect";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {
@@ -97,11 +98,12 @@ function Content({
       { value: Math.sqrt(3), display: "\\sqrt{3}" },
       { value: Math.sqrt(3) / 3, display: "\\frac{\\sqrt{3}}{3}" },
     ];
-    const exact = commonValues.find(
+    const exact = Arr.findFirst(
+      commonValues,
       (candidate) => Math.abs(Math.abs(value) - candidate.value) < 1e-10
     );
-    if (exact) {
-      return `= ${value < 0 ? "-" : ""}${exact.display}`;
+    if (Option.isSome(exact)) {
+      return `= ${value < 0 ? "-" : ""}${exact.value.display}`;
     }
     return `\\approx ${format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).replaceAll(",", "{,}")}`;
   }

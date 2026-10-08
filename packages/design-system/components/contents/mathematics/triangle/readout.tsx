@@ -6,6 +6,7 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
+import { Array as Arr } from "effect";
 import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -31,7 +32,7 @@ export function TriangleReadout({
   return (
     <>
       <div className="flex flex-wrap items-center justify-center gap-2 px-6">
-        {TRIANGLE_SIDES.map((side) => (
+        {Arr.map(TRIANGLE_SIDES, (side) => (
           <Badge key={side.key} style={{ color: side.color }} variant="outline">
             <InlineMath math={side.symbol} />: {labels[side.key]}
           </Badge>

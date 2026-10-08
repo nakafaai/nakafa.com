@@ -5,6 +5,7 @@ import { Choice } from "@repo/design-system/components/contents/mathematics/choi
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { VisualCardFullscreen } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 
 const SPEED_STEP = 0.25;
@@ -48,7 +49,7 @@ export function BacterialPlayback({
       </div>
 
       <div className="flex flex-wrap justify-center gap-2">
-        {SPEED_VALUES.map((speedValue) => (
+        {Arr.map(SPEED_VALUES, (speedValue) => (
           <Choice
             key={speedValue}
             onClick={() => onSpeedChange(speedValue)}
