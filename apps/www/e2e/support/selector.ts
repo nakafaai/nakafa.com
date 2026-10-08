@@ -25,6 +25,10 @@ export const VISIBLE_SIDEBAR_TRIGGER = '[data-slot="sidebar-trigger"]:visible';
 export const MARKETING_PAGE = 'main[data-marketing-page="true"]';
 /** The Nina conversation showcase on the homepage and the composer suites. */
 export const NINA_SHOWCASE = '[data-slot="nina-showcase"]';
+/** A visual card, which wraps a lesson's lab, chart, or 3D scene. */
+export const VISUAL_CARD = '[data-slot="visual-card"]';
+/** A link to a subject lesson, such as the neighbors that lesson pagination shows. */
+export const SUBJECT_LINK = 'a[href^="/en/subjects/"]';
 
 /** The cards that hold a deferred 3D line scene. */
 export function lineSceneCards(page: Page) {

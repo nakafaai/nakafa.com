@@ -4,7 +4,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { paginationNavigation } from "@/e2e/support/selector";
+import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const NINA_DIALOG_NAME = /^Nina/;
@@ -418,9 +418,7 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
     expect(controls.replaced).toBe(0);
   });
 
-  const pagination = paginationNavigation(page)
-    .locator('a[href^="/en/subjects/"]')
-    .first();
+  const pagination = paginationNavigation(page).locator(SUBJECT_LINK).first();
   const target = yield* Effect.promise(() => pagination.getAttribute("href"));
   yield* Effect.promise(() => pagination.click());
   yield* Effect.promise(() =>

@@ -6,7 +6,7 @@ import { readMathFonts } from "@/e2e/support/fonts";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
-import { paginationNavigation } from "@/e2e/support/selector";
+import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
 import {
   cacheTimeoutMilliseconds,
   readinessTimeoutMilliseconds,
@@ -92,9 +92,7 @@ const verifyNavigationFonts = Effect.fn("NakafaE2E.verifyNavigationFonts")(
         return hrefs;
       })
     );
-    const previous = paginationNavigation(page)
-      .locator('a[href^="/en/subjects/"]')
-      .first();
+    const previous = paginationNavigation(page).locator(SUBJECT_LINK).first();
     const target = yield* Effect.promise(() => previous.getAttribute("href"));
     yield* Effect.sync(() => {
       expect(target).toMatch(lessonPath);

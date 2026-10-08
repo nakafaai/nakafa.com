@@ -7,7 +7,7 @@ import {
   readCumulativeLayoutShift,
   readPageLayoutShift,
 } from "@/e2e/support/layout";
-import { LINE_SCENE } from "@/e2e/support/selector";
+import { CARD, LINE_SCENE, VISUAL_CARD } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** How long one attempt of a retried check waits before the next one. */
@@ -56,7 +56,7 @@ export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
     );
     yield* Effect.sync(() => expect(response?.ok()).toBe(true));
     yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-    const cards = page.locator('[data-slot="visual-card"]');
+    const cards = page.locator(VISUAL_CARD);
     // A card the server streamed can wait hidden beside the lesson React
     // renders, so each attempt counts the cards again.
     yield* Effect.promise(() =>
@@ -83,7 +83,7 @@ export const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
   index = 0
 ) {
   const card = page
-    .locator('[data-slot="visual-card"] > [data-slot="card"]')
+    .locator(`${VISUAL_CARD} > ${CARD}`)
     .filter({ has: page.locator(content) })
     .nth(index);
   // A content-visibility card lays out its content only near the viewport.
@@ -149,14 +149,14 @@ export const revealAction = Effect.fn("NakafaE2E.revealVisualAction")(
 
 /** Reads where the card's slot and the lesson around it sit in the page. */
 export function readPlacement(card: Locator) {
-  return card.evaluate((element) => ({
-    article: element.closest("article")?.getBoundingClientRect().height,
-    scrollY: window.scrollY,
-    slot: element
-      .closest('[data-slot="visual-card"]')
-      ?.getBoundingClientRect()
-      .toJSON(),
-  }));
+  return card.evaluate(
+    (element, visualCard) => ({
+      article: element.closest("article")?.getBoundingClientRect().height,
+      scrollY: window.scrollY,
+      slot: element.closest(visualCard)?.getBoundingClientRect().toJSON(),
+    }),
+    VISUAL_CARD
+  );
 }
 
 /**
