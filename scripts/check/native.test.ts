@@ -268,4 +268,106 @@ export const wrapped = workflow.define({ handler: wrap(async (step) => step.runA
         );
       })
   );
+
+  it.effect(
+    "lets a workflow handler keep promise syntax under any spelling of its key",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { workflow } from "@repo/backend/confect/workflow";
+const handler = async (step) => {
+  await step.runAction(run);
+};
+export const shorthand = workflow.define({ handler });
+export const method = workflow.define({
+  async handler(step) {
+    await step.runAction(run);
+  },
+});
+export const quoted = workflow.define({
+  "handler": async (step) => {
+    await step.runAction(run);
+  },
+});
+export const computed = workflow.define({
+  ["handler"]: async (step) => step.runAction(run),
+});
+`,
+            WORKFLOW
+          ),
+          []
+        );
+      })
+  );
+
+  it.effect(
+    "keeps promise syntax reported when the handler key binds no function",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { workflow } from "@repo/backend/confect/workflow";
+const handler = wrap(async (step) => {
+  await step.runAction(run);
+});
+export const wrapped = workflow.define({ handler });
+export const other = workflow.define({
+  async other(step) {
+    await step.runAction(run);
+  },
+});
+export const dynamic = workflow.define({
+  [name]: async (step) => step.runAction(run),
+});
+`,
+            WORKFLOW
+          ),
+          ["2 promise", "3 promise", "7 promise", "8 promise", "12 promise"]
+        );
+      })
+  );
+
+  it.effect("resolves a handler name in the scope that declares it", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          `import { workflow } from "@repo/backend/confect/workflow";
+export async function handler(step) {
+  await step.runAction(run);
+}
+export function build() {
+  const handler = async (step) => {
+    await step.runAction(run);
+  };
+  return workflow.define({ handler: handler });
+}
+export const shadowed = (handler) => workflow.define({ handler });
+`,
+          WORKFLOW
+        ),
+        ["2 promise", "3 promise"]
+      );
+    })
+  );
+
+  it.effect("reads only the handler option among the other options", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          `import { workflow } from "@repo/backend/confect/workflow";
+const retries = 2;
+export const spread = workflow.define({
+  ...base,
+  retries,
+  handler: async (step) => step.runAction(run),
+});
+export const other = workflow.define({ retries, handler: wrap(async (step) => step.runAction(run)) });
+`,
+          WORKFLOW
+        ),
+        ["8 promise"]
+      );
+    })
+  );
 });

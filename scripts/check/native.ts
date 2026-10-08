@@ -1,34 +1,33 @@
 import { Array as Arr, HashSet } from "effect";
 import {
-  type ArrowFunction,
-  type FunctionExpression,
-  isArrowFunction,
   isAsyncKeyword,
   isAwaitExpression,
   isBinaryExpression,
   isCallExpression,
+  isComputedPropertyName,
   isElementAccessExpression,
   isForOfStatement,
-  isFunctionDeclaration,
-  isFunctionExpression,
   isFunctionLikeDeclaration,
   isIdentifier,
   isImportDeclaration,
+  isMethodDeclaration,
   isNamedImports,
   isObjectLiteralExpression,
   isPropertyAccessExpression,
   isPropertyAssignment,
+  isShorthandPropertyAssignment,
   isSourceFile,
   isStringLiteral,
   isStringLiteralLikeNode,
   isTryStatement,
   isTypeOfExpression,
-  isVariableStatement,
   type Node,
+  type PropertyName,
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
 import { candidate, REPOSITORY_SPECIFIER_PATTERN } from "#scripts/check/rules";
+import { boundFunctions, isFunctionValue } from "#scripts/check/scope";
 import type { Binding } from "#scripts/check/source";
 
 /** Array methods that return a new array and have no String counterpart, so a call names an array. */
@@ -241,6 +240,8 @@ function isTypeofObjectComparison(node: Node) {
 /** The Confect module whose `workflow` export defines durable workflows. */
 const WORKFLOW_MODULE = "@repo/backend/confect/workflow";
 const WORKFLOW_EXPORT = "workflow";
+/** The option of `workflow.define` that holds a workflow's handler. */
+const HANDLER_KEY = "handler";
 
 /**
  * Returns the local names a module binds to the `workflow` export of the
@@ -268,49 +269,55 @@ function workflowNames(sourceFile: SourceFile) {
   });
 }
 
-/** Whether a node is an arrow function or a function expression. */
-function isFunctionValue(
-  node: Node | undefined
-): node is ArrowFunction | FunctionExpression {
-  return (
-    node !== undefined && (isArrowFunction(node) || isFunctionExpression(node))
-  );
+/**
+ * Returns the static key that a property name spells: an identifier, a string,
+ * or a computed string, such as `handler`, `"handler"`, or `["handler"]`.
+ */
+function propertyName(name: PropertyName): string | undefined {
+  if (isIdentifier(name) || isStringLiteral(name)) {
+    return name.text;
+  }
+  return isComputedPropertyName(name) && isStringLiteral(name.expression)
+    ? name.expression.text
+    : undefined;
 }
 
 /**
- * Returns the function a handler names: the function itself when it is written
- * inline, or the module's top-level function declaration or function-valued
- * constant of that name.
+ * Returns the functions a handler value names: the function itself when it is
+ * written inline, or the function that an identifier binds where it stands.
  */
-function handlerFunctions(
-  sourceFile: SourceFile,
-  handler: Node
-): readonly Node[] {
+function handlerFunctions(handler: Node): readonly Node[] {
   if (isFunctionValue(handler)) {
     return [handler];
   }
-  if (!isIdentifier(handler)) {
-    return [];
+  return isIdentifier(handler) ? boundFunctions(handler) : [];
+}
+
+/**
+ * Returns the handler functions that one option of `workflow.define` names: a
+ * method called `handler`, the value of a `handler` property, or the variable
+ * that a shorthand `handler` reads.
+ */
+function handlerOptions(option: Node): readonly Node[] {
+  if (isMethodDeclaration(option)) {
+    return propertyName(option.name) === HANDLER_KEY ? [option] : [];
   }
-  return Arr.flatMap(sourceFile.statements, (statement): readonly Node[] => {
-    if (isFunctionDeclaration(statement)) {
-      return statement.name?.text === handler.text ? [statement] : [];
-    }
-    return isVariableStatement(statement)
-      ? Arr.flatMap(statement.declarationList.declarations, (declaration) =>
-          isIdentifier(declaration.name) &&
-          declaration.name.text === handler.text &&
-          isFunctionValue(declaration.initializer)
-            ? [declaration.initializer]
-            : []
-        )
+  if (isPropertyAssignment(option)) {
+    return propertyName(option.name) === HANDLER_KEY
+      ? handlerFunctions(option.initializer)
       : [];
-  });
+  }
+  if (isShorthandPropertyAssignment(option)) {
+    return propertyName(option.name) === HANDLER_KEY
+      ? handlerFunctions(option.name)
+      : [];
+  }
+  return [];
 }
 
 /**
  * Returns the handler functions of each Confect workflow a module defines: the
- * value of `handler` in the object that `workflow.define` receives, where
+ * `handler` option of the object that `workflow.define` receives, where
  * `workflow` is bound to the Confect workflow module's export. The Convex
  * workflow engine owns when a handler's steps start, because it starts them in
  * parallel only when their requests are already buffered when it handles the
@@ -336,13 +343,7 @@ function workflowHandlers(sourceFile: SourceFile, nodes: readonly Node[]) {
     if (options === undefined || !isObjectLiteralExpression(options)) {
       return [];
     }
-    return Arr.flatMap(options.properties, (property) =>
-      isPropertyAssignment(property) &&
-      isIdentifier(property.name) &&
-      property.name.text === "handler"
-        ? handlerFunctions(sourceFile, property.initializer)
-        : []
-    );
+    return Arr.flatMap(options.properties, handlerOptions);
   });
 }
 
