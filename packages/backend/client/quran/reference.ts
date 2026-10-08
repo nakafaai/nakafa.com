@@ -1,5 +1,4 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
 import {
   decodePublishedQuranSource,
@@ -14,7 +13,7 @@ import {
 } from "@repo/backend/client/quran/rows";
 import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
 import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";
-import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
+import type { PublishedQuranReferenceFieldsSchema } from "@repo/backend/content/quran/response";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
@@ -24,16 +23,8 @@ type QuranReferenceResult = FunctionReturnType<
 >;
 
 /** One bounded signed Quran passage in its canonical shape. */
-export type PublishedQuranReference = PublishedQuranSource & {
-  readonly fromVerse: number;
-  readonly preBismillah: QuranReferenceResult["preBismillah"];
-  readonly search: QuranSearchRow;
-  readonly sources: NonNullable<QuranReferenceResult["sources"]>;
-  readonly surah: PublishedQuranSurah;
-  readonly tafsirAccess: NonNullable<QuranReferenceResult["tafsirAccess"]>;
-  readonly toVerse: number;
-  readonly verses: readonly QuranRuntimeVerse[];
-};
+export type PublishedQuranReference = PublishedQuranSource &
+  typeof PublishedQuranReferenceFieldsSchema.Type;
 
 /** Decodes one bounded active signed Quran passage. */
 export const decodePublishedQuranReference = Effect.fn(

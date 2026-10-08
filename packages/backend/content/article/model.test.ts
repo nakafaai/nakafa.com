@@ -8,6 +8,7 @@ import {
   ArticleProjectionSchema,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
+import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   MutationCtx,
@@ -69,7 +70,9 @@ function localizedArticle(index: number) {
 
 /** Decodes one backend-returned projection for result assertions. */
 function decodeProjection(source: string) {
-  return Schema.decodeUnknownSync(ArticleProjectionSchema)(JSON.parse(source));
+  return Schema.decodeSync(Schema.fromJsonString(ArticleProjectionSchema))(
+    source
+  );
 }
 describe("contentRelease/article/model", () => {
   it.effect(
@@ -94,11 +97,14 @@ describe("contentRelease/article/model", () => {
                 publicPath: localizedArticle(0).publicPath,
               }
             );
-            const runtime = JSON.parse(result.runtimeJson ?? "");
+            const runtime = yield* Schema.decodeEffect(
+              Schema.fromJsonString(PublicContentRuntimeFoundSchema)
+            )(result.runtimeJson ?? "", { onExcessProperty: "error" });
             expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
-            expect(runtime.projection).toEqual(
-              JSON.parse(result.model.projectionJson ?? "")
-            );
+            const projection = yield* Schema.decodeEffect(
+              Schema.fromJsonString(ArticleProjectionSchema)
+            )(result.model.projectionJson ?? "", { onExcessProperty: "error" });
+            expect(runtime.projection).toEqual(projection);
             expect(runtime.delivery).toBe("public");
             const missing = yield* (yield* QueryRunner).runQuery(
               refs.public.contentRelease.article.delivery,

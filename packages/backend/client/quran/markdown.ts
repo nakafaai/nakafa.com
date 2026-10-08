@@ -112,6 +112,3 @@ export const decodePublishedQuranMarkdown = Effect.fn(
     verses: result.verses,
   };
 });
-export type PublishedQuranMarkdown = Effect.Success<
-  ReturnType<typeof decodePublishedQuranMarkdown>
->;
