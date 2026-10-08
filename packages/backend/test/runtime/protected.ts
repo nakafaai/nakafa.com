@@ -1,16 +1,16 @@
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentSnapshotManifestSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import {
-  type ProtectedContentRuntimeRequest,
   ProtectedContentRuntimeRequestSchema,
-  type ProtectedContentRuntimeSelector,
   ProtectedContentRuntimeSelectorSchema,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import {
   type TryoutPlacement,
   TryoutPlacementSchema,
 } from "@nakafa/aksara-contracts/tryout/placement";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { insertTestArtifact } from "@repo/backend/test/content/artifact";
 import {
@@ -26,14 +26,19 @@ import {
 } from "@repo/backend/test/tryout/snapshot";
 import { Schema } from "effect";
 
-interface ProtectedRuntimeFixture {
-  readonly answer: ProtectedContentRuntimeSelector;
-  readonly placement: TryoutPlacement;
-  readonly question: ProtectedContentRuntimeSelector;
-  readonly request: ProtectedContentRuntimeRequest;
-  readonly runtimeId: Id<"tryoutRuntimeBundles">;
-  readonly snapshotId: ProtectedContentRuntimeRequest["snapshotId"];
-}
+const SignedArtifactJsonSchema = Schema.fromJsonString(
+  SignedContentArtifactSchema
+);
+const SignedReleaseJsonSchema = Schema.fromJsonString(
+  SignedContentReleaseSchema
+);
+const SnapshotJsonSchema = Schema.fromJsonString(ContentSnapshotManifestSchema);
+const SignedBundleJsonSchema = Schema.fromJsonString(
+  SignedTryoutRuntimeBundleSchema
+);
+const RendererJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
 
 /** Builds one exact protected selector from a signed placement body. */
 function protectedSelector(
@@ -59,7 +64,7 @@ function insertArtifact(
 ) {
   return insertTestArtifact(ctx, {
     artifactHash: artifact.artifactHash,
-    artifactJson: JSON.stringify(artifact),
+    artifactJson: Schema.encodeSync(SignedArtifactJsonSchema)(artifact),
   });
 }
 
@@ -73,7 +78,7 @@ export async function insertProtectedRuntime(
     readonly questionCount?: number;
     readonly rawMdx?: string;
   }
-): Promise<ProtectedRuntimeFixture> {
+) {
   const locales = ["en", "id"] as const;
   const bodies = locales.flatMap((appLocale) =>
     Array.from({ length: options?.questionCount ?? 1 }, (_, index) => {
@@ -132,8 +137,8 @@ export async function insertProtectedRuntime(
   if (!(release && state)) {
     throw new Error("Expected protected runtime release state.");
   }
-  const storedRelease = Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-    JSON.parse(release.releaseJson)
+  const storedRelease = Schema.decodeSync(SignedReleaseJsonSchema)(
+    release.releaseJson
   );
   const storedSnapshot = await ctx.db
     .query("contentSnapshots")
@@ -144,8 +149,8 @@ export async function insertProtectedRuntime(
   if (!storedSnapshot) {
     throw new Error("Expected protected runtime snapshot.");
   }
-  const snapshot = Schema.decodeUnknownSync(ContentSnapshotManifestSchema)(
-    JSON.parse(storedSnapshot.snapshotJson)
+  const snapshot = Schema.decodeSync(SnapshotJsonSchema)(
+    storedSnapshot.snapshotJson
   );
   if (snapshot.family !== "tryout") {
     throw new Error("Expected a try-out snapshot manifest.");
@@ -161,10 +166,10 @@ export async function insertProtectedRuntime(
   });
   const runtimeId = await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: bundle.bundleHash,
-    bundleJson: JSON.stringify(bundle),
+    bundleJson: Schema.encodeSync(SignedBundleJsonSchema)(bundle),
     cleanupReleaseId: bundle.payload.sourceReleaseId,
     createdAt: 1,
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    rendererJson: Schema.encodeSync(RendererJsonSchema)(TEST_PROOF_RENDERER),
     rendererManifestHash: bundle.payload.rendererManifestHash,
     snapshotId,
     sourceGitSha: bundle.payload.sourceGitSha,
@@ -172,8 +177,8 @@ export async function insertProtectedRuntime(
     sourceReleaseId: bundle.payload.sourceReleaseId,
   });
   await ctx.db.patch(release._id, {
-    releaseJson: JSON.stringify(signedRelease),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    releaseJson: Schema.encodeSync(SignedReleaseJsonSchema)(signedRelease),
+    rendererJson: Schema.encodeSync(RendererJsonSchema)(TEST_PROOF_RENDERER),
     tryoutRuntimeBundleHash: bundle.bundleHash,
   });
   await Promise.all(
