@@ -17,6 +17,18 @@ export type NinaFailure =
   | Ref.Error<typeof refs.public.nina.lifecycle.cancel>
   | NinaConnectionError;
 
+/** The recovery the chat offers after a failure. */
+type FeedbackAction =
+  | "retry"
+  | "edit"
+  | "wait"
+  | "credits"
+  | "sign-in"
+  | "new-chat";
+
+/** The localized message that explains a failure. */
+type FeedbackMessage = keyof AppConfig["Messages"]["Ai"]["failures"];
+
 /** Every typed admission failure has localized copy and an appropriate recovery. */
 export const ninaFailureFeedback = {
   NINA_CONNECTION_FAILED: {
@@ -83,11 +95,7 @@ export const ninaFailureFeedback = {
   },
 } as const satisfies Record<
   NinaFailure["code"],
-  {
-    action: "retry" | "edit" | "wait" | "credits" | "sign-in" | "new-chat";
-    message: keyof AppConfig["Messages"]["Ai"]["failures"];
-    report: boolean;
-  }
+  { action: FeedbackAction; message: FeedbackMessage; report: boolean }
 >;
 
 /** Persisted failures retain their own recovery policy when history is reopened. */
@@ -104,10 +112,7 @@ export const ninaResponseFeedback = {
   unknown: { message: "unknown", action: "retry" },
 } as const satisfies Record<
   typeof NinaFailureReason.Type,
-  {
-    action: "retry" | "edit" | "wait" | "credits" | "sign-in" | "new-chat";
-    message: keyof AppConfig["Messages"]["Ai"]["failures"];
-  }
+  { action: FeedbackAction; message: FeedbackMessage }
 >;
 
 /** Report operational failures and show only the caller's localized message. */
