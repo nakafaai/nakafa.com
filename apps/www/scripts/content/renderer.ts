@@ -1,12 +1,17 @@
 import { runMain } from "@effect/platform-node/NodeRuntime";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
+
+const CompactJsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 runMain(
   rendererManifest.pipe(
     Effect.flatMap((manifest) =>
+      Schema.encodeEffect(CompactJsonSchema)(manifest)
+    ),
+    Effect.flatMap((json) =>
       Effect.sync(() => {
-        process.stdout.write(`${JSON.stringify(manifest)}\n`);
+        process.stdout.write(`${json}\n`);
       })
     )
   )
