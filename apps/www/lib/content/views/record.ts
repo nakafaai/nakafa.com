@@ -4,10 +4,7 @@ import { useMutation } from "@confect/react";
 import { useDocumentVisibility } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
 import refs from "@repo/backend/confect/_generated/refs";
-import { learningContextInputValidator } from "@repo/backend/confect/contents/context";
-import { contentViewSectionValidator } from "@repo/backend/confect/contents/views/section";
-import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
-import { Effect, Option, Result, Schema } from "effect";
+import { Effect, Option, Result } from "effect";
 import { useEffect } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
@@ -17,17 +14,10 @@ import {
   resolveContentViewAttribution,
 } from "@/lib/content/views/device";
 import { createContentViewKey } from "@/lib/content/views/key";
+import type { UseRecordContentViewOptionsSchema } from "@/lib/content/views/options";
 import { useViewer } from "@/lib/identity/client";
 
 /** Client-side graph content-view recording configuration. */
-const UseRecordContentViewOptionsSchema = Schema.Struct({
-  contentId: Schema.optionalKey(Schema.NullOr(Schema.String)),
-  context: Schema.optionalKey(learningContextInputValidator),
-  delay: Schema.optionalKey(Schema.Finite),
-  locale: localeValidator,
-  publicPath: Schema.String,
-  section: contentViewSectionValidator,
-});
 type UseRecordContentViewOptions =
   typeof UseRecordContentViewOptionsSchema.Type;
 
