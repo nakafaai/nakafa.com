@@ -5,6 +5,7 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { Polygon } from "@repo/design-system/components/three/polygon";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import { resolveMathAppearance } from "@/lib/content/renderer/client/base/visual/palette";
@@ -23,10 +24,11 @@ export interface MathSceneProps {
   readonly labels: Readonly<Record<string, ReactNode>>;
   readonly scene: PlaneVisual | SpaceVisual;
 }
-interface LabelAnchor {
-  readonly anchorX: "center" | "left" | "right";
-  readonly anchorY: "bottom" | "middle" | "top";
-}
+const LabelAnchorSchema = Schema.Struct({
+  anchorX: Schema.Literals(["center", "left", "right"]),
+  anchorY: Schema.Literals(["bottom", "middle", "top"]),
+});
+type LabelAnchor = typeof LabelAnchorSchema.Type;
 
 type MathLabelPlacement = Exclude<
   NonNullable<SpaceVisual["labels"]>[number]["placement"],
