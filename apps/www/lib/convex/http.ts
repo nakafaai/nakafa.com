@@ -3,17 +3,10 @@ import { HttpClient } from "@confect/js";
 import {
   createNetworkRequestError,
   isRetryableNetworkError,
-  NETWORK_RETRY_DELAYS_MILLISECONDS,
+  NETWORK_ATTEMPT_DEADLINE,
+  NETWORK_RETRY_SCHEDULE,
 } from "@repo/backend/client/network";
-import {
-  Data,
-  Duration,
-  Effect,
-  Layer,
-  Result,
-  Schedule,
-  Schema,
-} from "effect";
+import { Data, Effect, Layer, Result, Schema } from "effect";
 import { env } from "@/env";
 
 type HttpClientOptions = Parameters<typeof HttpClient.layer>[1];
@@ -31,34 +24,12 @@ const RefusedQuery = Schema.fromJsonString(
   })
 );
 
-/** Two retries after 500 ms and 1 s, the delays the content transport uses. */
-const QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
-  Schedule.addDelay(({ attempt }) =>
-    Effect.succeed(
-      attempt === 1
-        ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
-        : NETWORK_RETRY_DELAYS_MILLISECONDS[1]
-    )
-  )
-);
-
 /**
  * One attempt of a query that Convex did not answer within its deadline. It is
  * the cause of the client's own error, so the retry policy treats it like any
  * other transient failure.
  */
 class QueryDeadline extends Data.TaggedError("QueryDeadline") {}
-
-/**
- * Each attempt of a query may take at most this long. One query therefore ends
- * within 31.5 seconds: three attempts of 10 seconds, with the 500 ms and 1 s
- * waits between them. The bound is per query. A cached function that makes one
- * Convex query and then one protected content read, such as the featured
- * try-out, can take about 63 seconds. Next.js stops a cache fill at 54 seconds
- * (see next/dist/server/use-cache/use-cache-wrapper.js), so that attempt fails
- * there, and the page's retry (`staticGenerationRetryCount`) runs it again.
- */
-const QUERY_ATTEMPT_DEADLINE = Duration.seconds(10);
 
 /**
  * Whether repeating a query is safe: Convex queries only read, and this
@@ -89,6 +60,12 @@ function isTransientQueryFailure(error: unknown) {
  * Mutations and actions are not idempotent, so they pass through unchanged.
  * The export lets the tests script the base client under the test clock, which
  * httpLayer does not allow.
+ *
+ * The budget is per query. A cached function that makes one Convex query and
+ * then one protected content read, such as the featured try-out, can take about
+ * 63 seconds. Next.js stops a cache fill at 54 seconds (see
+ * next/dist/server/use-cache/use-cache-wrapper.js), so that attempt fails there,
+ * and the page's retry (`staticGenerationRetryCount`) runs it again.
  */
 export const withQueryRetry = <E, R>(
   base: Layer.Layer<HttpClient.HttpClient, E, R>
@@ -103,14 +80,14 @@ export const withQueryRetry = <E, R>(
       ) =>
         client.query(ref, ...rest).pipe(
           Effect.timeoutOrElse({
-            duration: QUERY_ATTEMPT_DEADLINE,
+            duration: NETWORK_ATTEMPT_DEADLINE,
             orElse: () =>
               Effect.fail(
                 new HttpClient.HttpClientError({ cause: new QueryDeadline() })
               ),
           }),
           Effect.retry({
-            schedule: QUERY_RETRY_SCHEDULE,
+            schedule: NETWORK_RETRY_SCHEDULE,
             while: isTransientQueryFailure,
           }),
           Effect.tapError((error) =>
