@@ -1,3 +1,5 @@
+import { polarKeys } from "@repo/backend/keys";
+
 /** Whether Polar should target production or sandbox resources. */
 export const isPolarProduction =
-  process.env.NEXT_PUBLIC_POLAR_SERVER === "production";
+  polarKeys().NEXT_PUBLIC_POLAR_SERVER === "production";

@@ -1,6 +1,6 @@
 import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
 import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
-import { Array as Arr } from "effect";
+import { Array as Arr, MutableHashSet } from "effect";
 
 /** Normalizes public research URLs before citation eligibility checks. */
 export function normalizeResearchCitationUrl(url: string) {
@@ -15,19 +15,22 @@ export function normalizeResearchCitationUrl(url: string) {
 }
 
 /** Adds one eligible URL to the shared citation whitelist. */
-export function addEligibleCitationUrl(urls: Set<string>, url: string) {
+export function addEligibleCitationUrl(
+  urls: MutableHashSet.MutableHashSet<string>,
+  url: string
+) {
   const normalized = normalizeResearchCitationUrl(url);
 
   if (!normalized) {
     return;
   }
 
-  urls.add(normalized);
+  MutableHashSet.add(urls, normalized);
 }
 
 /** Adds each returned search source URL to the citation whitelist. */
 export function addEligibleSourceUrls(
-  urls: Set<string>,
+  urls: MutableHashSet.MutableHashSet<string>,
   sources: readonly { url: string }[]
 ) {
   for (const source of sources) {
@@ -38,14 +41,14 @@ export function addEligibleSourceUrls(
 /** Removes findings that cite sources outside the retrieved direct evidence. */
 export function filterResearchOutputCitations(
   output: ResearchOutput,
-  eligibleUrls: ReadonlySet<string>
+  eligibleUrls: MutableHashSet.MutableHashSet<string>
 ) {
   let changed = false;
   const findings = Arr.flatMap(output.findings, (finding) => {
     const citations = Arr.filter(finding.citations, (citation) => {
       const normalized = normalizeResearchCitationUrl(citation.url);
 
-      return normalized ? eligibleUrls.has(normalized) : false;
+      return normalized ? MutableHashSet.has(eligibleUrls, normalized) : false;
     });
 
     if (citations.length !== finding.citations.length) {

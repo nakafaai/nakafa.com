@@ -1,7 +1,7 @@
 import "server-only";
 import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
 import { PreviewRendererSecretSchema } from "@nakafa/aksara-contracts/preview/auth";
-import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
+import { hasPreviewProvider } from "@repo/next-config/preview";
 import {
   Effect,
   Option,
@@ -128,7 +128,7 @@ export const previewUrl = Effect.fn("NakafaContent.previewUrl")(function* (
  * returns true so strict decoding exposes the error instead of falling back.
  */
 export function hasPreviewConfig() {
-  return hasCandidateLocalePreview();
+  return hasPreviewProvider();
 }
 /** Reads the complete ephemeral connection only in the development child. */
 export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(

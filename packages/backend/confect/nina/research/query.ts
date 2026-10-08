@@ -1,4 +1,4 @@
-import { Array as Arr, pipe } from "effect";
+import { Array as Arr, MutableHashSet, pipe, Schema } from "effect";
 
 const queryTokenPattern = /[\p{L}\p{N}][\p{L}\p{N}._-]*/gu;
 const mixedCasePattern = /\p{Ll}[\p{L}\p{N}._-]*\p{Lu}/u;
@@ -10,23 +10,27 @@ const nonSearchCharacterPattern = /[^\p{L}\p{N}]+/gu;
 const tokenBoundaryPattern = /^[._-]+|[._-]+$/gu;
 const titleCasePattern = /^\p{Lu}[\p{L}\p{N}._-]*$/u;
 
-interface PlanSearchQueriesInput {
-  fallback?: "task" | "none";
-  includeShortNumbers?: boolean;
-  maxQueries: number;
-  queries: readonly string[];
-  scopeByNamedPhrases?: boolean;
-  task: string;
-}
+const PlanSearchQueriesInputSchema = Schema.Struct({
+  fallback: Schema.optionalKey(Schema.Literals(["task", "none"])),
+  includeShortNumbers: Schema.optionalKey(Schema.Boolean),
+  maxQueries: Schema.Finite,
+  queries: Schema.Array(Schema.String),
+  scopeByNamedPhrases: Schema.optionalKey(Schema.Boolean),
+  task: Schema.String,
+});
+type PlanSearchQueriesInput = typeof PlanSearchQueriesInputSchema.Type;
 
-interface DistinctiveSearchTermOptions {
-  includeShortNumbers?: boolean;
-}
+const DistinctiveSearchTermOptionsSchema = Schema.Struct({
+  includeShortNumbers: Schema.optionalKey(Schema.Boolean),
+});
+type DistinctiveSearchTermOptions =
+  typeof DistinctiveSearchTermOptionsSchema.Type;
 
-interface NamedSearchPhrase {
-  normalized: string;
-  text: string;
-}
+const NamedSearchPhraseSchema = Schema.Struct({
+  normalized: Schema.String,
+  text: Schema.String,
+});
+type NamedSearchPhrase = typeof NamedSearchPhraseSchema.Type;
 
 /** Plans executable search queries without rewriting model-chosen search text. */
 export function planSearchQueries({
@@ -37,7 +41,7 @@ export function planSearchQueries({
   queries,
   scopeByNamedPhrases = false,
 }: PlanSearchQueriesInput) {
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
   const executableQueries = Arr.flatMap(queries, (query) => {
     const text = normalizeExecutableSearchQuery(query);
 
@@ -78,12 +82,12 @@ export function getDistinctiveSearchTerms(
   options: DistinctiveSearchTermOptions = {}
 ) {
   const tokens = getSearchTokens(getSearchableText(query));
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
 
   return Arr.flatMap(tokens, (text, index) => {
     const normalized = normalizeSearchTerm(text);
 
-    if (!normalized || seen.has(normalized)) {
+    if (!normalized || MutableHashSet.has(seen, normalized)) {
       return [];
     }
 
@@ -91,7 +95,7 @@ export function getDistinctiveSearchTerms(
       return [];
     }
 
-    seen.add(normalized);
+    MutableHashSet.add(seen, normalized);
 
     return [{ normalized, text }];
   });
@@ -229,7 +233,7 @@ function preserveScopedQueryContext(
 
 /** Extracts adjacent date-like context without language-specific month names. */
 function getDroppedContextTerms(queries: readonly string[]) {
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
 
   return Arr.flatMap(queries, (query) => {
     const tokens = getSearchTokens(query);
@@ -241,11 +245,11 @@ function getDroppedContextTerms(queries: readonly string[]) {
 
       const normalized = normalizeSearchTerm(text);
 
-      if (!normalized || seen.has(normalized)) {
+      if (!normalized || MutableHashSet.has(seen, normalized)) {
         return [];
       }
 
-      seen.add(normalized);
+      MutableHashSet.add(seen, normalized);
       return [{ normalized, text }];
     });
   });
@@ -323,7 +327,7 @@ function appendSearchQuery({
   text,
 }: {
   maxQueries: number;
-  seen: Set<string>;
+  seen: MutableHashSet.MutableHashSet<string>;
   text: string;
 }) {
   if (!text) {
@@ -332,11 +336,14 @@ function appendSearchQuery({
 
   const key = text.toLocaleLowerCase();
 
-  if (seen.has(key) || seen.size >= maxQueries) {
+  if (
+    MutableHashSet.has(seen, key) ||
+    MutableHashSet.size(seen) >= maxQueries
+  ) {
     return [];
   }
 
-  seen.add(key);
+  MutableHashSet.add(seen, key);
   return [text];
 }
 

@@ -107,12 +107,12 @@ describe("content runtime target", () => {
         {
           cwd: import.meta.dirname,
           env: {
-            ...process.env,
             NEXT_PUBLIC_CONVEX_SITE_URL: productionTarget.site,
             NEXT_PUBLIC_CONVEX_URL: productionTarget.query,
             VERCEL: "1",
             VERCEL_ENV: "preview",
           },
+          extendEnv: true,
           stdout: "ignore",
         }
       );
