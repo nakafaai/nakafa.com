@@ -121,7 +121,7 @@ describe("Polar payload contracts", () => {
   );
 
   it.effect(
-    "rejects metadata that Convex cannot store as a primitive value",
+    "rejects a customer whose metadata holds a value that is not a string, number, or boolean",
     () =>
       Effect.gen(function* () {
         const failure = yield* decodePolarCustomer({
