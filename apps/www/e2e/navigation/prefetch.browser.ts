@@ -3,9 +3,12 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { loadMathFonts } from "@/e2e/support/fonts";
+import { settlePrefetch } from "@/e2e/support/navigation/prefetch";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
+  expectStillShell,
   observeShell,
   readPageTime,
   readShellObservation,
@@ -17,6 +20,7 @@ const lessonHref = pinnedRoutes.material.en;
 const articleHref = pinnedRoutes.article.en;
 const articleCategoryHref = articleHref.slice(0, articleHref.lastIndexOf("/"));
 const NEXT_LINK_PATTERN = /^Next/;
+const PREVIOUS_LINK_PATTERN = /^Previous/;
 
 const viewports = [desktopViewport, touchViewport] as const;
 
@@ -47,13 +51,25 @@ const readPathname = Effect.fn("NakafaE2E.readLinkPathname")(function* (
   return new URL(href, "https://nakafa.com").pathname;
 });
 
+const paginationLink = (page: Page, name: RegExp) =>
+  page
+    .getByRole("navigation", { name: "Pagination navigation" })
+    .getByRole("link", { name });
+
+/** The first paragraph of the page's article. */
+const articleText = (page: Page) =>
+  page.getByRole("article").locator("p").first();
+
 /**
  * Opens `link` while Next.js holds back everything a prefetch did not load, so
- * the destination's heading and article have to come from the link's own
- * prefetch. A touch press taps; otherwise the link is focused, the keyboard's
- * sign of intent, and opened with Enter. Every frame from the press on must
- * show the one app shell and a page heading: first the current page's, then
- * the destination's, with no empty frame between them.
+ * the destination's heading and its text have to come from the link's own
+ * prefetch. The reader's sign of intent comes first and its prefetch and
+ * scripts land before the press, as they would for a reader who pauses on the
+ * link: a touch press starts with a touch, otherwise the link is focused, the
+ * keyboard's sign of intent, and opened with Enter. Every frame from the press
+ * on must show the one app shell and a page heading: first the current page's,
+ * then the destination's, with no empty frame and no layout shift between
+ * them.
  */
 const openPrefetched = Effect.fn("NakafaE2E.openPrefetched")(function* (
   page: Page,
@@ -63,14 +79,25 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetched")(function* (
   const pathname = yield* readPathname(link);
   const heading = page.getByRole("heading", { level: 1 });
   const source = yield* Effect.promise(() => heading.innerText());
-  yield* Effect.promise(() => link.scrollIntoViewIfNeeded());
+  yield* settlePrefetch(
+    page,
+    pathname,
+    Effect.promise(() =>
+      link
+        .scrollIntoViewIfNeeded()
+        .then(() =>
+          hasTouch ? link.dispatchEvent("touchstart") : link.focus()
+        )
+    )
+  );
+  yield* loadMathFonts(page);
   const since = yield* readPageTime(page);
   // @next/playwright owns this native Promise callback while its lock is held.
   yield* Effect.promise(() =>
     instant(page, () =>
       (hasTouch
         ? link.tap({ noWaitAfter: true })
-        : link.focus().then(() => link.press("Enter", { noWaitAfter: true }))
+        : link.press("Enter", { noWaitAfter: true })
       )
         .then(() =>
           page.waitForURL((url) => url.pathname === pathname, {
@@ -84,19 +111,14 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetched")(function* (
         )
         .then(() => expect(heading).not.toHaveText(source))
         .then(() =>
-          expect(page.getByRole("article").locator("p").first()).toBeVisible({
+          expect(articleText(page)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           })
         )
     )
   );
   const observation = yield* readShellObservation(page, since);
-  yield* Effect.sync(() => {
-    expect(observation.frames).toBeGreaterThan(0);
-    expect(observation.hiddenFrames).toBe(0);
-    expect(observation.headinglessFrames).toBe(0);
-    expect(observation.shells).toBe(1);
-  });
+  yield* Effect.sync(() => expectStillShell(observation, [false]));
 });
 
 /**
@@ -128,15 +150,64 @@ const verifyNextLesson = Effect.fn("NakafaE2E.verifyNextLesson")(function* (
   yield* Effect.promise(() => expect(prompt).toBeHidden());
   yield* openPrefetched(
     page,
-    page
-      .getByRole("navigation", { name: "Pagination navigation" })
-      .getByRole("link", { name: NEXT_LINK_PATTERN }),
+    paginationLink(page, NEXT_LINK_PATTERN),
     hasTouch
   );
   yield* Effect.sync(() =>
     expect(Arr.contains(requested, privacyPathname)).toBe(false)
   );
 });
+
+/**
+ * Opening the privacy Page from the prompt teaches the client router the
+ * signed Pages' route as a navigation, not as a prefetch. Back on the lesson,
+ * the next lesson must still come from the Next link's own prefetch.
+ */
+const verifyNextLessonAfterPage = Effect.fn(
+  "NakafaE2E.verifyNextLessonAfterPage"
+)(function* (page: Page, hasTouch: boolean) {
+  yield* open(page, lessonHref);
+  const prompt = page.getByRole("region", { name: "Usage data" });
+  const privacyPathname = yield* readPathname(
+    prompt.getByRole("link", { name: "Privacy Policy" })
+  );
+  yield* Effect.promise(() =>
+    prompt.getByRole("link", { name: "Privacy Policy" }).click()
+  );
+  yield* Effect.promise(() =>
+    expect(page).toHaveURL((url) => url.pathname === privacyPathname, {
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+  yield* Effect.promise(() => page.goBack());
+  yield* Effect.promise(() =>
+    expect(page).toHaveURL((url) => url.pathname === lessonHref, {
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+  yield* Effect.promise(() =>
+    prompt.getByRole("button", { name: "Decline" }).click()
+  );
+  yield* Effect.promise(() => expect(prompt).toBeHidden());
+  yield* openPrefetched(
+    page,
+    paginationLink(page, NEXT_LINK_PATTERN),
+    hasTouch
+  );
+});
+
+/** Previous waits for intent, and its page must paint from that prefetch. */
+const verifyPreviousLesson = Effect.fn("NakafaE2E.verifyPreviousLesson")(
+  function* (page: Page, hasTouch: boolean) {
+    yield* seedAnalyticsConsent(page, "denied");
+    yield* open(page, lessonHref);
+    yield* openPrefetched(
+      page,
+      paginationLink(page, PREVIOUS_LINK_PATTERN),
+      hasTouch
+    );
+  }
+);
 
 /** An article card loads its article once the reader shows intent. */
 const verifyArticleCard = Effect.fn("NakafaE2E.verifyArticleCard")(function* (
@@ -169,6 +240,26 @@ const verifyContentLink = Effect.fn("NakafaE2E.verifyContentLink")(function* (
   );
 });
 
+/**
+ * A link in a lesson's text that leads to the lesson on screen is marked as the
+ * current page, like the app's other links, even though it prefetches on intent.
+ */
+const verifyCurrentContentLink = Effect.fn(
+  "NakafaE2E.verifyCurrentContentLink"
+)(function* (page: Page) {
+  yield* seedAnalyticsConsent(page, "denied");
+  yield* open(page, lessonHref);
+  const link = page
+    .getByRole("article")
+    .locator(`a[href="${lessonHref}"]`)
+    .first();
+  yield* Effect.promise(() =>
+    expect(link).toHaveAttribute("aria-current", "page", {
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+});
+
 for (const viewport of viewports) {
   test.describe(`Prefetched navigation on ${viewport.name}`, () => {
     test.use({
@@ -181,6 +272,28 @@ for (const viewport of viewports) {
     }) => {
       await Effect.runPromise(
         withObservedPageErrors(page, verifyNextLesson(page, viewport.hasTouch))
+      );
+    });
+
+    test("the next lesson paints from its prefetch after the privacy page was opened", async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(
+          page,
+          verifyNextLessonAfterPage(page, viewport.hasTouch)
+        )
+      );
+    });
+
+    test("the previous lesson paints from its intent prefetch", async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(
+          page,
+          verifyPreviousLesson(page, viewport.hasTouch)
+        )
       );
     });
 
@@ -197,6 +310,14 @@ for (const viewport of viewports) {
     }) => {
       await Effect.runPromise(
         withObservedPageErrors(page, verifyContentLink(page, viewport.hasTouch))
+      );
+    });
+
+    test("a link in a lesson to the lesson on screen is marked as the current page", async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(page, verifyCurrentContentLink(page))
       );
     });
   });
