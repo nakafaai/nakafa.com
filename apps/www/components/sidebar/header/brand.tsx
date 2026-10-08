@@ -26,7 +26,7 @@ export function HeaderMenu() {
         >
           <div className="relative aspect-square size-8">
             <Image
-              alt="Nakafa"
+              alt=""
               className="rounded-sm border object-contain"
               fill
               sizes="32px"
