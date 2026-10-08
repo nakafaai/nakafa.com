@@ -1,28 +1,32 @@
 import "server-only";
 
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { Effect } from "effect";
+import {
+  AppLocaleCodeSchema,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
+import { Effect, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 
-type TryoutMetadataKind = Parameters<typeof readTryoutMetadata>[0]["kind"];
+const TryoutMetadataQueryInputSchema = Schema.Struct({
+  kind: tryoutMetadataArgsValidator.kind,
+  locale: AppLocaleCodeSchema,
+  publicPath: Schema.String,
+});
+type TryoutMetadataQueryInput = typeof TryoutMetadataQueryInputSchema.Type;
 
-interface TryoutMetadataQueryInput {
-  readonly kind: TryoutMetadataKind;
-  readonly locale: Locale;
-  readonly publicPath: string;
-}
-
-interface RetainedTryoutMetadataSource {
-  readonly description?: string;
-  readonly title: string;
-}
+const RetainedTryoutMetadataSourceSchema = Schema.Struct({
+  description: Schema.optionalKey(Schema.String),
+  title: Schema.String,
+});
+type RetainedTryoutMetadataSource =
+  typeof RetainedTryoutMetadataSourceSchema.Type;
 
 /** Creates private metadata for one authenticated retained attempt route. */
 export function createRetainedTryoutMetadata(

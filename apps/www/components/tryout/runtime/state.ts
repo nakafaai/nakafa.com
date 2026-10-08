@@ -1,11 +1,12 @@
+import type { tryoutAttemptStateValidator } from "@repo/backend/confect/tryouts/runtime/spec";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
 type TryoutStatus = TryoutSectionRuntime["section"]["status"];
 
-interface TryoutAttemptClock {
-  expiresAt: number;
-  status: TryoutStatus;
-}
+type TryoutAttemptClock = Pick<
+  typeof tryoutAttemptStateValidator.Type,
+  "expiresAt" | "status"
+>;
 
 interface TryoutRuntimeClock {
   expiresAt: number;

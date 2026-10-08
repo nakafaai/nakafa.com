@@ -1,4 +1,5 @@
 import { addDays, format, getHours, getMinutes, isToday, set } from "date-fns";
+import { DateTime } from "effect";
 import type { Locale } from "next-intl";
 import { getLocale } from "@/lib/utils/date";
 
@@ -26,7 +27,9 @@ export function updateTime(timestamp: number, timeString: string) {
 
   const newTimestamp = set(timestamp, { hours, minutes, seconds: 0 }).getTime();
 
-  return newTimestamp <= Date.now() ? timestamp : newTimestamp;
+  return newTimestamp <= DateTime.toEpochMillis(DateTime.nowUnsafe())
+    ? timestamp
+    : newTimestamp;
 }
 
 /** Updates a scheduled date and moves past selections to the next full hour. */
@@ -35,11 +38,11 @@ export function updateDate(timestamp: number | undefined, newDate: Date) {
   const minutes = timestamp ? getMinutes(timestamp) : 0;
   const newTimestamp = set(newDate, { hours, minutes, seconds: 0 }).getTime();
 
-  if (newTimestamp > Date.now()) {
+  if (newTimestamp > DateTime.toEpochMillis(DateTime.nowUnsafe())) {
     return newTimestamp;
   }
 
-  const nextHour = getHours(new Date()) + 1;
+  const nextHour = getHours(DateTime.toDate(DateTime.nowUnsafe())) + 1;
 
   if (nextHour < 24) {
     return set(newDate, {
@@ -58,7 +61,7 @@ export function updateDate(timestamp: number | undefined, newDate: Date) {
 
 /** Returns tomorrow at 08:00 as the initial class schedule. */
 export function getDefaultScheduledAt() {
-  return set(addDays(new Date(), 1), {
+  return set(addDays(DateTime.toDate(DateTime.nowUnsafe()), 1), {
     hours: 8,
     minutes: 0,
     seconds: 0,
@@ -68,6 +71,6 @@ export function getDefaultScheduledAt() {
 /** Returns the earliest allowed time when editing a schedule for today. */
 export function getMinTime(timestamp: number | undefined) {
   if (timestamp && isToday(timestamp)) {
-    return format(new Date(), "HH:mm");
+    return format(DateTime.toDate(DateTime.nowUnsafe()), "HH:mm");
   }
 }

@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog/browser";
 import type refs from "@repo/backend/confect/_generated/refs";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id, TableNames } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import { Effect, Result, Schema } from "effect";
 import {
@@ -13,16 +13,44 @@ import {
 } from "effect/http";
 
 const STORAGE_UPLOAD_TIMEOUT = "10 seconds";
-const StorageIdSchema = Schema.declare(
-  (input): input is Id<"_storage"> =>
-    typeof input === "string" && input.length > 0,
-  {
-    identifier: "ConvexStorageId",
-  }
-);
+const StorageIdSchema = Schema.declare(isConvexId<"_storage">, {
+  identifier: "ConvexStorageId",
+});
 const StorageUploadResponseSchema = Schema.Struct({
   storageId: StorageIdSchema,
 });
+/** Checks that an unknown value is a non-empty Convex id, typed by its table. */
+function isConvexId<TableName extends TableNames | "_storage">(
+  input: unknown
+): input is Id<TableName> {
+  return typeof input === "string" && input.length > 0;
+}
+const ForumIdSchema = Schema.declare(isConvexId<"schoolClassForums">, {
+  identifier: "ConvexForumId",
+});
+const ForumPostIdSchema = Schema.declare(isConvexId<"schoolClassForumPosts">, {
+  identifier: "ConvexForumPostId",
+});
+const ForumPendingUploadIdSchema = Schema.declare(
+  isConvexId<"schoolClassForumPendingUploads">,
+  { identifier: "ConvexForumPendingUploadId" }
+);
+const ForumPostSubmitDraftSchema = Schema.Struct({
+  body: Schema.String,
+  forumId: ForumIdSchema,
+  parentId: Schema.UndefinedOr(ForumPostIdSchema),
+});
+type ForumPostSubmitDraft = typeof ForumPostSubmitDraftSchema.Type;
+const DiscardPendingUploadsInputSchema = Schema.Struct({
+  source: Schema.String,
+  uploadIds: Schema.mutable(Schema.Array(ForumPendingUploadIdSchema)),
+});
+type DiscardPendingUploadsInput = typeof DiscardPendingUploadsInputSchema.Type;
+const UploadAttachmentFileInputSchema = Schema.Struct({
+  file: Schema.instanceOf(File),
+  forumId: ForumIdSchema,
+});
+type UploadAttachmentFileInput = typeof UploadAttachmentFileInputSchema.Type;
 type GenerateUploadUrlMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
@@ -51,35 +79,6 @@ type CreateForumPostMutation = (
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.posts.createForumPost
 >;
-interface ForumPostSubmitMutations {
-  createPost: CreateForumPostMutation;
-  discardForumUploads: DiscardForumUploadsMutation;
-  generateUploadUrl: GenerateUploadUrlMutation;
-  saveForumUpload: SaveForumUploadMutation;
-}
-interface ForumPostSubmitDraft {
-  body: string;
-  forumId: Id<"schoolClassForums">;
-  parentId: Id<"schoolClassForumPosts"> | undefined;
-}
-interface ForumPostSubmitInput {
-  files: readonly FileWithPreview[];
-  mutations: ForumPostSubmitMutations;
-  post: ForumPostSubmitDraft;
-}
-interface DiscardPendingUploadsInput {
-  mutations: Pick<ForumPostSubmitMutations, "discardForumUploads">;
-  source: string;
-  uploadIds: Id<"schoolClassForumPendingUploads">[];
-}
-interface UploadAttachmentFileInput {
-  file: File;
-  forumId: Id<"schoolClassForums">;
-  mutations: Pick<
-    ForumPostSubmitMutations,
-    "discardForumUploads" | "generateUploadUrl" | "saveForumUpload"
-  >;
-}
 class ForumAttachmentUploadError extends Schema.TaggedError<ForumAttachmentUploadError>()(
   "ForumAttachmentUploadError",
   {
@@ -117,7 +116,13 @@ function getUploadableFiles(files: readonly FileWithPreview[]) {
 }
 /** Discards pending uploads and captures cleanup failures without masking the original error. */
 const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
-  function* ({ mutations, source, uploadIds }: DiscardPendingUploadsInput) {
+  function* ({
+    mutations,
+    source,
+    uploadIds,
+  }: DiscardPendingUploadsInput & {
+    mutations: { discardForumUploads: DiscardForumUploadsMutation };
+  }) {
     if (uploadIds.length === 0) {
       return;
     }
@@ -157,7 +162,17 @@ const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
 );
 /** Uploads one attachment and removes its pending record if the upload fails. */
 const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
-  function* ({ file, forumId, mutations }: UploadAttachmentFileInput) {
+  function* ({
+    file,
+    forumId,
+    mutations,
+  }: UploadAttachmentFileInput & {
+    mutations: {
+      discardForumUploads: DiscardForumUploadsMutation;
+      generateUploadUrl: GenerateUploadUrlMutation;
+      saveForumUpload: SaveForumUploadMutation;
+    };
+  }) {
     const { uploadId, uploadUrl } = yield* Effect.tryPromise({
       try: () =>
         mutations.generateUploadUrl({
@@ -251,7 +266,16 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
   files,
   mutations,
   post,
-}: ForumPostSubmitInput) {
+}: {
+  files: readonly FileWithPreview[];
+  mutations: {
+    createPost: CreateForumPostMutation;
+    discardForumUploads: DiscardForumUploadsMutation;
+    generateUploadUrl: GenerateUploadUrlMutation;
+    saveForumUpload: SaveForumUploadMutation;
+  };
+  post: ForumPostSubmitDraft;
+}) {
   const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
   const uploadResults = yield* Effect.all(
     getUploadableFiles(files).map((file) =>

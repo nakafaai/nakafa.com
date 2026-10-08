@@ -24,7 +24,15 @@ type MarkForumReadMutation = (
   typeof refs.public.classes.forums.mutations.readState.markForumRead
 >;
 
-interface BrowserViewportAdaptersInput {
+/** Creates the browser-backed Effect adapters for one live Conversation viewport. */
+export function createBrowserViewportAdapters({
+  forumId,
+  getHandle,
+  getTranscript,
+  markForumRead,
+  prefersReducedMotion,
+  saveSnapshot,
+}: {
   forumId: Id<"schoolClassForums">;
   /** Returns the mounted Virtua handle when the transcript is rendered. */
   getHandle: () => VirtualizerHandle | null;
@@ -38,17 +46,7 @@ interface BrowserViewportAdaptersInput {
     forumId: Id<"schoolClassForums">,
     snapshot: ConversationScrollSnapshot
   ) => void;
-}
-
-/** Creates the browser-backed Effect adapters for one live Conversation viewport. */
-export function createBrowserViewportAdapters({
-  forumId,
-  getHandle,
-  getTranscript,
-  markForumRead,
-  prefersReducedMotion,
-  saveSnapshot,
-}: BrowserViewportAdaptersInput) {
+}) {
   const scroller = createViewportScroller({
     getHandle,
     getTranscript,

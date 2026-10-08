@@ -9,10 +9,6 @@ import {
 import { createContext, type ReactNode, use } from "react";
 import { SCHOOL_CLASSES_DETAIL_PANEL_BREAKPOINT } from "@/components/school/classes/detail";
 
-interface SchoolClassesWorkspaceModeContextValue {
-  isCompact: boolean;
-}
-
 export const SCHOOL_CLASSES_WORKSPACE_DETAIL_PANEL_ID = "detail";
 const SCHOOL_CLASSES_WORKSPACE_MAIN_PANEL_ID = "content";
 const SCHOOL_CLASSES_WORKSPACE_MAIN_PANEL_MIN_SIZE = "36rem";
@@ -47,6 +43,7 @@ const SCHOOL_CLASSES_WORKSPACE_EMPTY_LAYOUT_STORAGE = {
 } as const;
 const COMPACT_WORKSPACE_MODE = { isCompact: true };
 const DESKTOP_WORKSPACE_MODE = { isCompact: false };
+type SchoolClassesWorkspaceModeContextValue = typeof COMPACT_WORKSPACE_MODE;
 const SchoolClassesWorkspaceModeContext =
   createContext<SchoolClassesWorkspaceModeContextValue | null>(null);
 

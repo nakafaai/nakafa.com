@@ -19,44 +19,46 @@ import { isActiveLocale } from "@/lib/i18n/active";
 
 type CurrentAttempt = TryoutSectionAttempt | null;
 type CompletedAction = "restart" | "return";
-interface TryoutSummarySet {
-  countryKey: string;
-  examKey: string;
-  setKey: string;
-  trackKey: string;
+/** Props of the summary action: `value` is the cohesive state that selects one valid action. */
+interface TryoutSummaryActionProps {
+  value: {
+    activeAttempt: NonNullable<CurrentAttempt> | null;
+    attempt?: CurrentAttempt;
+    completedAction: CompletedAction;
+    locale: Locale;
+    returnHref: string;
+    section: TryoutSummarySection;
+    sectionFinished: boolean;
+    set: {
+      countryKey: string;
+      examKey: string;
+      setKey: string;
+      trackKey: string;
+    };
+    startAttemptSectionKey?: string;
+    startDestination: {
+      href: string;
+      successNavigation: StartTryoutRequest["successNavigation"];
+    } | null;
+  };
 }
 
 /** Canonical destination and post-start behavior for one section route. */
-export interface TryoutStartDestination {
-  href: string;
-  successNavigation: StartTryoutRequest["successNavigation"];
-}
+export type TryoutStartDestination = NonNullable<
+  TryoutSummaryActionProps["value"]["startDestination"]
+>;
 
-/** Cohesive state needed to select one valid section summary action. */
-export interface TryoutSummaryActionValue {
-  activeAttempt: NonNullable<CurrentAttempt> | null;
-  attempt?: CurrentAttempt;
-  completedAction: CompletedAction;
-  locale: Locale;
-  returnHref: string;
-  section: TryoutSummarySection;
-  sectionFinished: boolean;
-  set: TryoutSummarySet;
-  startAttemptSectionKey?: string;
-  startDestination: TryoutStartDestination | null;
-}
-interface ResumeSectionValue {
-  activeAttempt: NonNullable<CurrentAttempt>;
-  returnHref: string;
-  section: TryoutSummarySection;
+/** Props of the call to action that starts or resumes one unfinished section. */
+interface StartOrResumeSectionCtaProps {
+  value: {
+    activeAttempt: NonNullable<CurrentAttempt>;
+    returnHref: string;
+    section: TryoutSummarySection;
+  };
 }
 
 /** Renders the only valid action for the current section summary state. */
-export function TryoutSummaryAction({
-  value,
-}: {
-  value: TryoutSummaryActionValue;
-}) {
+export function TryoutSummaryAction({ value }: TryoutSummaryActionProps) {
   if (!isActiveLocale(value.locale)) {
     return null;
   }
@@ -104,7 +106,10 @@ export function TryoutSummaryAction({
 function TryoutReturnAction({
   value,
 }: {
-  value: Pick<TryoutSummaryActionValue, "activeAttempt" | "returnHref">;
+  value: Pick<
+    TryoutSummaryActionProps["value"],
+    "activeAttempt" | "returnHref"
+  >;
 }) {
   const tTryouts = useTranslations("Tryouts");
   return (
@@ -119,7 +124,7 @@ function TryoutReturnAction({
 }
 
 /** Starts a ready section or links to the active section already in progress. */
-function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
+function StartOrResumeSectionCta({ value }: StartOrResumeSectionCtaProps) {
   const tTryouts = useTranslations("Tryouts");
   const resumeHref = getResumeHref(value);
   const resumeSectionKey = value.activeAttempt.resumeSectionKey;
@@ -142,7 +147,7 @@ function StartOrResumeSectionCta({ value }: { value: ResumeSectionValue }) {
 }
 
 /** Returns the active attempt target when it belongs to another section. */
-function getResumeHref(value: ResumeSectionValue) {
+function getResumeHref(value: StartOrResumeSectionCtaProps["value"]) {
   const { activeAttempt, section } = value;
   if (!activeAttempt.resumeSectionKey) {
     return null;

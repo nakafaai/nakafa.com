@@ -13,18 +13,20 @@ import {
 } from "@/components/tryout/set/start";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-export interface TryoutSetActionValue {
-  activeAttempt: CurrentAttempt | null;
-  currentAttempt?: CurrentAttempt | null;
-  currentHref: string;
-  destination: TryoutSetDestination | null;
-  entrySection: SetEntrySection | null;
-  locale: Locale;
-  set: Pick<SetPage["set"], "countryKey" | "examKey" | "setKey" | "trackKey">;
+interface TryoutSetActionProps {
+  value: {
+    activeAttempt: CurrentAttempt | null;
+    currentAttempt?: CurrentAttempt | null;
+    currentHref: string;
+    destination: TryoutSetDestination | null;
+    entrySection: SetEntrySection | null;
+    locale: Locale;
+    set: Pick<SetPage["set"], "countryKey" | "examKey" | "setKey" | "trackKey">;
+  };
 }
 
 /** Renders the only valid set-page action for the current attempt state. */
-export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {
+export function TryoutSetAction({ value }: TryoutSetActionProps) {
   if (
     !(value.entrySection && value.destination && isActiveLocale(value.locale))
   ) {

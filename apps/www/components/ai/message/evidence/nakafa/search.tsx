@@ -11,6 +11,7 @@ import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 
 const MAX_SHOWN_RESULTS = 5;
@@ -81,18 +82,16 @@ export function SearchPart({ message }: Props) {
 SearchPart.displayName = "SearchPart";
 
 function SearchPartQueries({ message }: Props) {
-  const queries = Array.from(
-    new Set(
-      (message.input.queries ?? []).flatMap((query) => {
-        const text = query.trim();
+  const queries = Arr.dedupe(
+    (message.input.queries ?? []).flatMap((query) => {
+      const text = query.trim();
 
-        if (!text) {
-          return [];
-        }
+      if (!text) {
+        return [];
+      }
 
-        return [text];
-      })
-    )
+      return [text];
+    })
   );
 
   if (queries.length === 0) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { HashSet } from "effect";
 import { useTranslations } from "next-intl";
 import { getTryoutSubjectIcon } from "@/components/tryout/catalog/icons";
 import { TryoutList } from "@/components/tryout/catalog/list";
@@ -35,7 +36,9 @@ export function TryoutSectionRows({
   }
 
   const runningAttempt = attempt?.status === "in-progress" ? attempt : null;
-  const completedSections = new Set(runningAttempt?.completedSectionKeys ?? []);
+  const completedSections = HashSet.fromIterable(
+    runningAttempt?.completedSectionKeys ?? []
+  );
   const currentSectionKey = runningAttempt?.resumeSectionKey ?? null;
   return (
     <TryoutList
@@ -82,13 +85,13 @@ function getSectionStatus({
   sectionKey,
 }: {
   activeSectionKey: string | null;
-  completedSections: ReadonlySet<string>;
+  completedSections: HashSet.HashSet<string>;
   sectionKey: string;
 }): SectionStatus | undefined {
   if (sectionKey === activeSectionKey) {
     return "in-progress";
   }
-  if (completedSections.has(sectionKey)) {
+  if (HashSet.has(completedSections, sectionKey)) {
     return "completed";
   }
 }

@@ -2,13 +2,16 @@
 
 import type { ParsedHeading } from "@repo/contents/toc";
 import { extractAllHeadingIds } from "@repo/contents/toc";
+import { HashSet, Schema } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 
+const TocStateSchema = Schema.Struct({
+  activeHeadings: Schema.Array(Schema.String),
+});
+
 /** The headings currently in the reading band, in the order they entered it. */
-interface TocState {
-  readonly activeHeadings: readonly string[];
-}
+type TocState = typeof TocStateSchema.Type;
 
 type TocStore = StoreApi<TocState>;
 
@@ -29,7 +32,7 @@ const WATCH_SEPARATOR = "\n";
  * heading when none is.
  */
 function observeHeadings(store: TocStore, watch: readonly string[]) {
-  const watched = new Set(watch);
+  const watched = HashSet.fromIterable(watch);
   const visible = new Set<Element>();
 
   function publish(activeHeadings: readonly string[]) {
@@ -70,7 +73,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
       return [];
     }
     return [node, ...node.querySelectorAll("[id]")].filter((element) =>
-      watched.has(element.id)
+      HashSet.has(watched, element.id)
     );
   }
 
@@ -101,8 +104,10 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     ) {
       return;
     }
-    const visibleIds = new Set(Array.from(visible, (item) => item.id));
-    const inView = watch.filter((id) => visibleIds.has(id));
+    const visibleIds = HashSet.fromIterable(
+      Array.from(visible, (item) => item.id)
+    );
+    const inView = watch.filter((id) => HashSet.has(visibleIds, id));
     const lastId = watch.at(-1);
     if (inView.length > 0) {
       publish(inView);

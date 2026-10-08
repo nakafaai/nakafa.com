@@ -18,20 +18,21 @@ import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutTimer } from "@/components/tryout/runtime/countdown";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
-interface TryoutRuntimeControlsValue {
-  expired: boolean;
-  returnHref: string;
-  runtime: TryoutSectionRuntime;
+/** Props of the production sticky timer, progress, and finish controls. */
+interface TryoutRuntimeControlsProps {
+  title: string;
+  value: {
+    expired: boolean;
+    returnHref: string;
+    runtime: TryoutSectionRuntime;
+  };
 }
 
 /** Renders the production sticky timer, progress, and finish controls. */
 export function TryoutRuntimeControls({
   title,
   value,
-}: {
-  title: string;
-  value: TryoutRuntimeControlsValue;
-}) {
+}: TryoutRuntimeControlsProps) {
   const { expired, returnHref, runtime } = value;
   const router = useRouter();
   const completeSection = useMutation(

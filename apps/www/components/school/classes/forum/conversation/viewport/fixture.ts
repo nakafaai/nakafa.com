@@ -232,7 +232,7 @@ export async function waitForState(
       return state;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await Effect.runPromise(Effect.sleep(0));
   }
 
   return Effect.runPromise(viewport.getState);
