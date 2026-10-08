@@ -117,7 +117,10 @@ export function ConstantCompositionScene({
   modeId,
 }: {
   colors: ConstantCompositionSceneColors;
-  labels: Pick<ConstantCompositionLabProps["labels"], "after" | "before" | "modes">;
+  labels: Pick<
+    ConstantCompositionLabProps["labels"],
+    "after" | "before" | "modes"
+  >;
   modeId: ConstantCompositionModeId;
 }) {
   const modeLabels = labels.modes[modeId];
