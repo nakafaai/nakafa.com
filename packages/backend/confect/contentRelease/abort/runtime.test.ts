@@ -5,6 +5,7 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import { abortProgram } from "@repo/backend/confect/contentRelease/abort";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { reconcileTryoutRuntimeAfterAttempt } from "@repo/backend/confect/contentRelease/tryout/runtime";
+import { encodeReleaseJson } from "@repo/backend/confect/contentRelease/wire";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -197,7 +198,7 @@ describe("content release abort runtime", () => {
             ...releaseReachability(active.release),
             completedAt: 1,
             releaseId: active.release.manifest.releaseId,
-            releaseJson: JSON.stringify(active.release),
+            releaseJson: encodeReleaseJson(active.release),
             role: "candidate",
             sequence: 2,
             status: "completed",
@@ -290,7 +291,7 @@ describe("content release abort runtime", () => {
             ...releaseFields,
             ...releaseReachability(candidate.release),
             releaseId: candidate.release.manifest.releaseId,
-            releaseJson: JSON.stringify(candidate.release),
+            releaseJson: encodeReleaseJson(candidate.release),
             role: "candidate",
             sequence: 2,
           });

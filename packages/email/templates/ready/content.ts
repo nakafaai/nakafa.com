@@ -3,9 +3,9 @@ import {
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { Schema } from "effect";
+import { HashSet, Schema } from "effect";
 
-const loopbackHostnames = new Set(["127.0.0.1", "[::1]", "localhost"]);
+const loopbackHostnames = HashSet.make("127.0.0.1", "[::1]", "localhost");
 function isEmailUrl(value: string) {
   if (!URL.canParse(value)) {
     return false;
@@ -13,7 +13,7 @@ function isEmailUrl(value: string) {
   const url = new URL(value);
   return (
     url.protocol === "https:" ||
-    (url.protocol === "http:" && loopbackHostnames.has(url.hostname))
+    (url.protocol === "http:" && HashSet.has(loopbackHostnames, url.hostname))
   );
 }
 const EmailUrlSchema = Schema.String.check(
@@ -28,14 +28,15 @@ export const AccountReadyEmailInputSchema = Schema.Struct({
   termsOfServiceUrl: EmailUrlSchema,
 });
 export type AccountReadyEmailInput = typeof AccountReadyEmailInputSchema.Type;
-export interface AccountReadyEmailCopy {
-  readonly body: string;
-  readonly cta: string;
-  readonly footerReason: string;
-  readonly privacyPolicy: string;
-  readonly subject: string;
-  readonly termsOfService: string;
-}
+const AccountReadyEmailCopySchema = Schema.Struct({
+  body: Schema.String,
+  cta: Schema.String,
+  footerReason: Schema.String,
+  privacyPolicy: Schema.String,
+  subject: Schema.String,
+  termsOfService: Schema.String,
+});
+export type AccountReadyEmailCopy = typeof AccountReadyEmailCopySchema.Type;
 const accountReadyEmailCopy = {
   de: {
     body: "Dein Konto ist eingerichtet. Wähle ein Fach oder starte einen Probetest, wenn du bereit bist.",

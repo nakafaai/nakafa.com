@@ -29,7 +29,7 @@ describe("GitHub Action releases", () => {
       const reviews = yield* githubActionReleaseReviews();
       const repositories = Arr.map(reviews, ({ repository }) => repository);
 
-      expect(new Set(repositories).size).toBe(repositories.length);
+      expect(Arr.dedupe(repositories).length).toBe(repositories.length);
       expect(repositories).not.toContain("actions/cache");
     })
   );

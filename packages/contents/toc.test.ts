@@ -1,6 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { ParsedHeading } from "@repo/contents/toc";
-import { extractAllHeadingIds, getHeadings } from "@repo/contents/toc";
+import {
+  extractAllHeadingIds,
+  getHeadings,
+  ParsedHeadingSchema,
+} from "@repo/contents/toc";
+import { Schema } from "effect";
 
 describe("getHeadings", () => {
   it.each([
@@ -163,5 +168,25 @@ describe("extractAllHeadingIds", () => {
       "root-two",
     ]);
     expect(headings).toEqual(before);
+  });
+});
+
+describe("ParsedHeadingSchema", () => {
+  const decodeHeadings = Schema.decodeUnknownSync(
+    Schema.Array(ParsedHeadingSchema)
+  );
+
+  it("describes the nested headings that getHeadings returns", () => {
+    const headings = getHeadings("# Main\n## Child\n### Leaf");
+
+    expect(decodeHeadings(headings)).toEqual(headings);
+  });
+
+  it("rejects a heading index that is not a finite number", () => {
+    expect(() =>
+      decodeHeadings([
+        { children: [], href: "#main", index: Number.NaN, label: "Main" },
+      ])
+    ).toThrow();
   });
 });

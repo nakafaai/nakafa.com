@@ -12,14 +12,15 @@ import { runEntry } from "#scripts/entry";
 
 const GIT_OBJECT_PATTERN = /^[0-9a-f]{40}$/u;
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u;
-export interface EffectSourceConfig {
-  readonly identityManifest: string;
-  readonly installedManifest: string;
-  readonly repository: string;
-  readonly repositoryRoot: string;
-  readonly sourcePath: string;
-  readonly vendoredManifest: string;
-}
+const EffectSourceConfig = Schema.Struct({
+  identityManifest: Schema.String,
+  installedManifest: Schema.String,
+  repository: Schema.String,
+  repositoryRoot: Schema.String,
+  sourcePath: Schema.String,
+  vendoredManifest: Schema.String,
+});
+export type EffectSourceConfig = typeof EffectSourceConfig.Type;
 const DEFAULT_CONFIG: EffectSourceConfig = {
   identityManifest: "scripts/effect/source.json",
   installedManifest: "node_modules/effect/package.json",
@@ -31,7 +32,7 @@ const DEFAULT_CONFIG: EffectSourceConfig = {
 const PackageManifest = Schema.Struct({
   version: Schema.String.pipe(Schema.check(Schema.isPattern(VERSION_PATTERN))),
 });
-const SourceIdentity = Schema.Struct({
+export const SourceIdentity = Schema.Struct({
   commit: Schema.String.pipe(
     Schema.check(Schema.isPattern(GIT_OBJECT_PATTERN))
   ),
@@ -119,13 +120,16 @@ const readJson = Effect.fn("EffectSource.readJson")(function* (path: string) {
         (error) => new EffectSourceFileError({ message: error.message })
       )
     );
-  return yield* Effect.try({
-    catch: () =>
-      new EffectSourceFileError({
-        message: `${path} does not contain valid JSON.`,
-      }),
-    try: (): unknown => JSON.parse(source),
-  });
+  return yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown))(
+    source
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new EffectSourceFileError({
+          message: `${path} does not contain valid JSON.`,
+        })
+    )
+  );
 });
 /** Reads and validates one package version through the platform filesystem. */
 const readVersion = Effect.fn("EffectSource.readVersion")(function* (
@@ -162,8 +166,18 @@ const writeSourceIdentity = Effect.fn("EffectSource.writeIdentity")(function* (
   identity: typeof SourceIdentity.Type
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
+  const json = yield* Schema.encodeEffect(
+    Schema.fromJsonString(SourceIdentity, { space: 2 })
+  )(identity).pipe(
+    Effect.mapError(
+      () =>
+        new EffectSourceFileError({
+          message: `${path} cannot be written as an Effect source identity.`,
+        })
+    )
+  );
   yield* fileSystem
-    .writeFileString(path, `${JSON.stringify(identity, null, 2)}\n`)
+    .writeFileString(path, `${json}\n`)
     .pipe(
       Effect.mapError(
         (error) => new EffectSourceFileError({ message: error.message })

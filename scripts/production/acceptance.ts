@@ -13,15 +13,17 @@ import { writeOutput } from "#scripts/output";
 
 const GIT_REVISION_PATTERN = /^[0-9a-f]{40}$/u;
 
-interface RevisionEnvironment {
-  readonly base: string;
-  readonly head: string;
-}
+const RevisionEnvironment = Schema.Struct({
+  base: Schema.String,
+  head: Schema.String,
+});
+type RevisionEnvironment = typeof RevisionEnvironment.Type;
 
-export interface ProductionChange {
-  readonly path: string;
-  readonly status: string;
-}
+const ProductionChange = Schema.Struct({
+  path: Schema.String,
+  status: Schema.String,
+});
+export type ProductionChange = typeof ProductionChange.Type;
 
 /** Expected failure while resolving the production acceptance scope. */
 class ProductionAcceptanceError extends Schema.TaggedError<ProductionAcceptanceError>()(

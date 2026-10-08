@@ -11,11 +11,16 @@ import {
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { runPnpm } from "#scripts/dependencies/command";
 
-interface ScriptedProcess {
-  readonly exitCode: Effect.Effect<number, PlatformError.PlatformError>;
-  readonly stderr: Stream.Stream<Uint8Array, PlatformError.PlatformError>;
-  readonly stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>;
+/** Builds one scripted child process from its exit code and output streams. */
+function scriptedProcess(
+  exitCode: Effect.Effect<number, PlatformError.PlatformError>,
+  stderr: Stream.Stream<Uint8Array, PlatformError.PlatformError>,
+  stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>
+) {
+  return { exitCode, stderr, stdout };
 }
+
+type ScriptedProcess = ReturnType<typeof scriptedProcess>;
 
 const encoder = new TextEncoder();
 const brokenPipe = PlatformError.systemError({
@@ -81,14 +86,16 @@ describe("pnpm command", () => {
         Effect.provide(
           scriptedSpawner(
             spawned,
-            Effect.succeed({
-              exitCode: Effect.succeed(0),
-              stderr: Stream.make(encoder.encode("warn\n")),
-              stdout: Stream.make(
-                encoder.encode('"4.0.0-'),
-                encoder.encode('rc.117"\n')
-              ),
-            })
+            Effect.succeed(
+              scriptedProcess(
+                Effect.succeed(0),
+                Stream.make(encoder.encode("warn\n")),
+                Stream.make(
+                  encoder.encode('"4.0.0-'),
+                  encoder.encode('rc.117"\n')
+                )
+              )
+            )
           )
         )
       );
@@ -121,11 +128,9 @@ describe("pnpm command", () => {
         Effect.provide(
           scriptedSpawner(
             spawned,
-            Effect.succeed({
-              exitCode: Effect.succeed(23),
-              stderr: Stream.empty,
-              stdout: Stream.empty,
-            })
+            Effect.succeed(
+              scriptedProcess(Effect.succeed(23), Stream.empty, Stream.empty)
+            )
           )
         )
       );
@@ -156,11 +161,13 @@ describe("pnpm command", () => {
         Effect.provide(
           scriptedSpawner(
             spawned,
-            Effect.succeed({
-              exitCode: Effect.fail(brokenPipe),
-              stderr: Stream.empty,
-              stdout: Stream.empty,
-            })
+            Effect.succeed(
+              scriptedProcess(
+                Effect.fail(brokenPipe),
+                Stream.empty,
+                Stream.empty
+              )
+            )
           )
         ),
         Effect.flip
@@ -171,11 +178,13 @@ describe("pnpm command", () => {
         Effect.provide(
           scriptedSpawner(
             spawned,
-            Effect.succeed({
-              exitCode: Effect.succeed(0),
-              stderr: Stream.empty,
-              stdout: Stream.fail(brokenPipe),
-            })
+            Effect.succeed(
+              scriptedProcess(
+                Effect.succeed(0),
+                Stream.empty,
+                Stream.fail(brokenPipe)
+              )
+            )
           )
         ),
         Effect.flip

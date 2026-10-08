@@ -6,7 +6,7 @@ import {
   stringArraySchema,
   variableInputSchema,
 } from "@repo/math/schema/shared";
-import { Schema, Struct } from "effect";
+import { HashSet, Schema, Struct } from "effect";
 
 const equationDomainFields = {
   lower: Schema.optionalKey(
@@ -95,11 +95,8 @@ function hasBoundedDomainVariable(value: MathEquationSystemInput) {
   if (!(value.variable && value.variables)) {
     return false;
   }
-  const variables = new Set(value.variables);
-  if (!variables.has(value.variable)) {
-    return false;
-  }
-  return true;
+  const variables = HashSet.fromIterable(value.variables);
+  return HashSet.has(variables, value.variable);
 }
 /** Requires every bounded-system equation to involve a selected unknown. */
 function hasSolvedVariableInEveryBoundedExpression(
@@ -108,10 +105,10 @@ function hasSolvedVariableInEveryBoundedExpression(
   if (!(hasSolveDomain(value) && value.variables)) {
     return true;
   }
-  const variables = new Set(value.variables);
+  const variables = HashSet.fromIterable(value.variables);
   return value.expressions.every((expression) =>
-    [...getExpressionSymbols(expression)].some((symbol) =>
-      variables.has(symbol)
+    getExpressionSymbols(expression).some((symbol) =>
+      HashSet.has(variables, symbol)
     )
   );
 }

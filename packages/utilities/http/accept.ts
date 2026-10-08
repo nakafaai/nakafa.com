@@ -1,21 +1,27 @@
-import { Option, Schema } from "effect";
+import { HashMap, MutableHashSet, Option, Schema } from "effect";
 
-interface ParsedMediaType {
-  readonly parameters: ReadonlyMap<string, string>;
-  readonly quality: number;
-  readonly subtype: string;
-  readonly type: string;
-}
+const ParsedMediaTypeSchema = Schema.Struct({
+  parameters: Schema.HashMap(Schema.String, Schema.String),
+  quality: Schema.Finite,
+  subtype: Schema.String,
+  type: Schema.String,
+});
 
-interface MediaRangeSpecificity {
-  readonly parameterCount: number;
-  readonly rank: number;
-}
+type ParsedMediaType = typeof ParsedMediaTypeSchema.Type;
 
-interface RangePreference {
-  readonly quality: number;
-  readonly specificity: MediaRangeSpecificity;
-}
+const MediaRangeSpecificitySchema = Schema.Struct({
+  parameterCount: Schema.Finite,
+  rank: Schema.Finite,
+});
+
+type MediaRangeSpecificity = typeof MediaRangeSpecificitySchema.Type;
+
+const RangePreferenceSchema = Schema.Struct({
+  quality: Schema.Finite,
+  specificity: MediaRangeSpecificitySchema,
+});
+
+type RangePreference = typeof RangePreferenceSchema.Type;
 
 const QUALITY_PATTERN = /^(?:0(?:\.\d{0,3})?|1(?:\.0{0,3})?)$/;
 const TOKEN_PATTERN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
@@ -73,29 +79,29 @@ export function mergeVaryHeader(
 ) {
   const source = Option.getOrElse(current, () => "");
   const values: string[] = [];
-  const names = new Set<string>();
+  const names = MutableHashSet.empty<string>();
 
   for (const fieldName of source.split(",")) {
     const value = trimOptionalWhitespace(fieldName);
     const normalized = value.toLowerCase();
-    if (!value || names.has(normalized)) {
+    if (!value || MutableHashSet.has(names, normalized)) {
       continue;
     }
     values.push(value);
-    names.add(normalized);
+    MutableHashSet.add(names, normalized);
   }
 
-  if (names.has("*")) {
+  if (MutableHashSet.has(names, "*")) {
     return "*";
   }
 
   for (const fieldName of required) {
     const normalized = fieldName.toLowerCase();
-    if (names.has(normalized)) {
+    if (MutableHashSet.has(names, normalized)) {
       continue;
     }
     values.push(fieldName);
-    names.add(normalized);
+    MutableHashSet.add(names, normalized);
   }
 
   return values.join(", ");
@@ -108,7 +114,7 @@ function parseAcceptHeader(
   if (Option.isNone(acceptHeader)) {
     return [
       {
-        parameters: new Map(),
+        parameters: HashMap.empty(),
         quality: 1,
         subtype: "*",
         type: "*",
@@ -173,7 +179,7 @@ function getSpecificity(
     return Option.none();
   }
   for (const [name, value] of range.parameters) {
-    if (offered.parameters.get(name) !== value) {
+    if (!Option.contains(HashMap.get(offered.parameters, name), value)) {
       return Option.none();
     }
   }
@@ -185,7 +191,7 @@ function getSpecificity(
     rank = 1;
   }
   return Option.some({
-    parameterCount: range.parameters.size,
+    parameterCount: HashMap.size(range.parameters),
     rank,
   });
 }
@@ -242,7 +248,7 @@ function parseMediaType(
 
   let quality = 1;
   let hasWeight = false;
-  const parameters = new Map<string, string>();
+  let parameters = HashMap.empty<string, string>();
   for (const rawParameter of rawParameters) {
     const parameter = trimOptionalWhitespace(rawParameter);
     if (!parameter) {
@@ -269,10 +275,11 @@ function parseMediaType(
     }
 
     const value = parseParameterValue(rawValue);
-    if (Option.isNone(value) || parameters.has(name)) {
+    if (Option.isNone(value) || HashMap.has(parameters, name)) {
       return Option.none();
     }
-    parameters.set(
+    parameters = HashMap.set(
+      parameters,
       name,
       name === "charset" ? value.value.toLowerCase() : value.value
     );

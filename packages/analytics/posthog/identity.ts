@@ -1,4 +1,4 @@
-import { Predicate } from "effect";
+import { Predicate, Schema } from "effect";
 import type { CaptureResult } from "posthog-js";
 
 /**
@@ -10,10 +10,17 @@ import type { CaptureResult } from "posthog-js";
  */
 export type AnalyticsTier = "baseline" | "granted";
 
+const AnalyticsIdentityAuthorizationSchema = Schema.Union([
+  Schema.Struct({ status: Schema.Literal("anonymous") }),
+  Schema.Struct({
+    status: Schema.Literal("identified"),
+    userId: Schema.String,
+  }),
+  Schema.Struct({ status: Schema.Literal("unresolved") }),
+]);
+
 export type AnalyticsIdentityAuthorization =
-  | { readonly status: "anonymous" }
-  | { readonly status: "identified"; readonly userId: string }
-  | { readonly status: "unresolved" };
+  typeof AnalyticsIdentityAuthorizationSchema.Type;
 
 /**
  * Minimizes one baseline event URL to origin plus pathname.
