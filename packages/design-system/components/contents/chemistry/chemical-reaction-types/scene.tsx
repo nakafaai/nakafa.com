@@ -1,7 +1,6 @@
 import type {
   ChemicalReactionTypeId,
   ChemicalReactionTypeSceneColors,
-  ChemicalReactionTypesLabLabels,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import { ReactionModel } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/models";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -18,7 +17,7 @@ export function ChemicalReactionTypesScene({
   typeId,
 }: {
   colors: ChemicalReactionTypeSceneColors;
-  labels: ChemicalReactionTypesLabLabels;
+  labels: { after: string; before: string };
   typeId: ChemicalReactionTypeId;
 }) {
   return (

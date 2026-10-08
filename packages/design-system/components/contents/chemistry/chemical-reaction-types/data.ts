@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const COMBUSTION_TYPE_ID = "combustion";
 export const RUST_TYPE_ID = "rust";
@@ -20,34 +20,13 @@ export type ChemicalReactionTypeId =
 export type ChemicalReactionTypeSceneColors = ReturnType<
   typeof getChemicalReactionTypeSceneColors
 >;
-export type ChemicalReactionTypeScenePoint = readonly [number, number, number];
-
-export interface ChemicalReactionTypeLabels {
-  check: ReactNode;
-  equation: ReactNode;
-  helperCaption: ReactNode;
-  reading: ReactNode;
-  tab: string;
-  visibleCue: ReactNode;
-}
-
-export interface ChemicalReactionTypesLabLabels {
-  after: string;
-  before: string;
-  checkLabel: string;
-  chooseType: string;
-  equationLabel: string;
-  reactionView: string;
-  readingLabel: string;
-  types: Record<ChemicalReactionTypeId, ChemicalReactionTypeLabels>;
-  visibleCueLabel: string;
-}
-
-export interface ChemicalReactionTypesLabProps {
-  description: ReactNode;
-  labels: ChemicalReactionTypesLabLabels;
-  title: ReactNode;
-}
+export const ChemicalReactionTypeScenePointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+export type ChemicalReactionTypeScenePoint =
+  typeof ChemicalReactionTypeScenePointSchema.Type;
 
 export const CHEMICAL_REACTION_TYPES = {
   [COMBUSTION_TYPE_ID]: {

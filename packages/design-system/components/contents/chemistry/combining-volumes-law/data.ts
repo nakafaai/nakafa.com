@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const WATER_VAPOR_MODE_ID = "water-vapor";
 export const AMMONIA_SYNTHESIS_MODE_ID = "ammonia-synthesis";
@@ -15,58 +15,55 @@ export const COMBINING_VOLUMES_MODE_IDS = [
 
 export type CombiningVolumesModeId =
   (typeof COMBINING_VOLUMES_MODE_IDS)[number];
-export type CombiningVolumesElement = "hydrogen" | "nitrogen" | "oxygen";
+export const CombiningVolumesElementSchema = Schema.Literals([
+  "hydrogen",
+  "nitrogen",
+  "oxygen",
+]);
+export type CombiningVolumesElement = typeof CombiningVolumesElementSchema.Type;
+
+const CombiningVolumesMoleculeKindSchema = Schema.Literals([
+  "ammonia",
+  "hydrogen",
+  "nitrogen",
+  "oxygen",
+  "water-vapor",
+]);
 export type CombiningVolumesMoleculeKind =
-  | "ammonia"
-  | "hydrogen"
-  | "nitrogen"
-  | "oxygen"
-  | "water-vapor";
+  typeof CombiningVolumesMoleculeKindSchema.Type;
 export type CombiningVolumesSceneColors = ReturnType<
   typeof getCombiningVolumesSceneColors
 >;
-export type CombiningVolumesScenePoint = readonly [number, number, number];
 
-export interface CombiningVolumesGasModel {
-  fillColor: keyof Pick<
-    CombiningVolumesSceneColors,
-    "hydrogenGas" | "nitrogenGas" | "oxygenGas" | "steamGas"
-  >;
-  formulaLabel: string;
-  id: string;
-  moleculeKind: CombiningVolumesMoleculeKind;
-  volumeUnits: number;
-}
+export const CombiningVolumesScenePointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+export type CombiningVolumesScenePoint =
+  typeof CombiningVolumesScenePointSchema.Type;
 
-export interface CombiningVolumesModeModel {
-  products: readonly CombiningVolumesGasModel[];
-  reactants: readonly CombiningVolumesGasModel[];
-}
+const CombiningVolumesGasModelSchema = Schema.Struct({
+  fillColor: Schema.Literals([
+    "hydrogenGas",
+    "nitrogenGas",
+    "oxygenGas",
+    "steamGas",
+  ]),
+  formulaLabel: Schema.String,
+  id: Schema.String,
+  moleculeKind: CombiningVolumesMoleculeKindSchema,
+  volumeUnits: Schema.Finite,
+});
+export type CombiningVolumesGasModel =
+  typeof CombiningVolumesGasModelSchema.Type;
 
-export interface CombiningVolumesModeLabels {
-  example: ReactNode;
-  helperCaption: ReactNode;
-  ratio: ReactNode;
-  tab: ReactNode;
-  tabLabel: string;
-}
-
-export interface CombiningVolumesLabLabels {
-  chooseMode: string;
-  exampleLabel: string;
-  modes: Record<CombiningVolumesModeId, CombiningVolumesModeLabels>;
-  products: string;
-  ratioLabel: string;
-  reactants: string;
-  reactionView: string;
-  volumeUnit: string;
-}
-
-export interface CombiningVolumesLabProps {
-  description: ReactNode;
-  labels: CombiningVolumesLabLabels;
-  title: ReactNode;
-}
+const CombiningVolumesModeModelSchema = Schema.Struct({
+  products: Schema.Array(CombiningVolumesGasModelSchema),
+  reactants: Schema.Array(CombiningVolumesGasModelSchema),
+});
+export type CombiningVolumesModeModel =
+  typeof CombiningVolumesModeModelSchema.Type;
 
 export const COMBINING_VOLUMES_SCENE_VIEW = {
   cameraPosition: [0, 2.15, 4.35],

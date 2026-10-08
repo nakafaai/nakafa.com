@@ -1,9 +1,9 @@
 import { Line } from "@react-three/drei";
 import {
-  type ConstantCompositionLabLabels,
   type ConstantCompositionModeId,
   type ConstantCompositionSceneColors,
   type ConstantCompositionScenePoint,
+  ConstantCompositionScenePointSchema,
   EXACT_RATIO_MODE_ID,
   HYDROGEN_EXCESS_MODE_ID,
   OXYGEN_EXCESS_MODE_ID,
@@ -16,6 +16,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 const BEFORE_X = -1.08;
@@ -25,6 +26,23 @@ const SCENE_SCALE = 1.25;
 const HYDROGEN_RADIUS = 0.095;
 const OXYGEN_RADIUS = 0.15;
 const BOND_LINE_WIDTH = 2.5;
+
+const AtomElementSchema = Schema.Literals(["hydrogen", "oxygen"]);
+type AtomElement = typeof AtomElementSchema.Type;
+
+const CompositionAtomSchema = Schema.Struct({
+  element: AtomElementSchema,
+  id: Schema.String,
+  position: ConstantCompositionScenePointSchema,
+});
+type CompositionAtom = typeof CompositionAtomSchema.Type;
+
+const CompositionBondSchema = Schema.Struct({
+  end: ConstantCompositionScenePointSchema,
+  id: Schema.String,
+  start: ConstantCompositionScenePointSchema,
+});
+type CompositionBond = typeof CompositionBondSchema.Type;
 
 const WATER_ATOMS = [
   {
@@ -92,27 +110,20 @@ const SCENE_LAYOUTS = {
   }
 >;
 
-type AtomElement = "hydrogen" | "oxygen";
-
-interface CompositionAtom {
-  element: AtomElement;
-  id: string;
-  position: ConstantCompositionScenePoint;
-}
-
-interface CompositionBond {
-  end: ConstantCompositionScenePoint;
-  id: string;
-  start: ConstantCompositionScenePoint;
-}
-
 export function ConstantCompositionScene({
   colors,
   labels,
   modeId,
 }: {
   colors: ConstantCompositionSceneColors;
-  labels: ConstantCompositionLabLabels;
+  labels: {
+    after: string;
+    before: string;
+    modes: Record<
+      ConstantCompositionModeId,
+      { readoutAfter: ReactNode; readoutBefore: ReactNode }
+    >;
+  };
   modeId: ConstantCompositionModeId;
 }) {
   const modeLabels = labels.modes[modeId];
