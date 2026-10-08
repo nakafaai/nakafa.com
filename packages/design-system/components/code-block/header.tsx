@@ -21,7 +21,7 @@ import {
 } from "@repo/design-system/lib/code-block/context";
 import { filenameIconMap } from "@repo/design-system/lib/code-block/icons";
 import { cn } from "cn";
-import { Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 
@@ -62,7 +62,7 @@ export function CodeBlockFiles({
       className={cn("flex min-w-0 grow flex-row items-center gap-2", className)}
       {...props}
     >
-      {data.map(children)}
+      {Arr.map(data, children)}
     </div>
   );
 }
@@ -82,12 +82,14 @@ export function CodeBlockFilename({
   ...props
 }: CodeBlockFilenameProps) {
   const activeValue = useCodeBlock((state) => state.value);
-  const defaultIcon = Rec.toEntries(filenameIconMap).find(([pattern]) => {
-    const regex = new RegExp(
-      `^${pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")}$`
-    );
-    return regex.test(children?.toString() ?? "");
-  })?.[1];
+  const defaultIcon = Option.getOrUndefined(
+    Arr.findFirst(Rec.toEntries(filenameIconMap), ([pattern]) => {
+      const regex = new RegExp(
+        `^${pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, ".*")}$`
+      );
+      return regex.test(children?.toString() ?? "");
+    })
+  )?.[1];
   const iconValue = icon ?? defaultIcon;
 
   if (value !== activeValue) {
@@ -117,7 +119,7 @@ export function CodeBlockSelect(props: CodeBlockSelectProps) {
   const data = useCodeBlock((state) => state.data);
   const value = useCodeBlock((state) => state.value);
   const onValueChange = useCodeBlock((state) => state.onValueChange);
-  const items = data.map((item) => ({
+  const items = Arr.map(data, (item) => ({
     label: item.language,
     value: item.language,
   }));
@@ -184,7 +186,7 @@ export function CodeBlockSelectContent({
     <SelectContent {...props}>
       <SelectGroup>
         <SelectLabel>{t("language")}</SelectLabel>
-        {data.map(children)}
+        {Arr.map(data, children)}
       </SelectGroup>
     </SelectContent>
   );
