@@ -11,7 +11,7 @@ import {
   SEMANTIC_COLOR_TOKENS,
   toRgbProjection,
 } from "@repo/design-system/lib/theme/contract";
-import { Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Option, Order, Record as Rec } from "effect";
 
 const readProfiles = readThemeStyleSources().pipe(
   Effect.map((sources) => createThemeProfiles(["light", "dark"], sources)),
@@ -25,28 +25,34 @@ describe("theme compatibility colors", () => {
   ])("derives every $name RGB value from canonical OKLCH", ({ name, values }) =>
     Effect.gen(function* () {
       const profiles = yield* readProfiles;
-      const profile = profiles.find((candidate) => candidate.name === name);
-      expect(profile).toBeDefined();
-      if (!profile) {
+      const profile = Arr.findFirst(
+        profiles,
+        (candidate) => candidate.name === name
+      );
+      expect(Option.isSome(profile)).toBe(true);
+      if (Option.isNone(profile)) {
         return;
       }
 
-      const rule = findTopLevelRule(profile.root, profile.selector);
+      const rule = findTopLevelRule(profile.value.root, profile.value.selector);
       expect(rule).toBeDefined();
       if (!rule) {
         return;
       }
 
       const expected = Rec.fromEntries(
-        SEMANTIC_COLOR_TOKENS.map((token) => {
+        Arr.map(SEMANTIC_COLOR_TOKENS, (token) => {
           const value = readDirectValue(rule, token);
           expect(value).toBeDefined();
           return [token.slice(2), value ? toRgbProjection(value) : undefined];
         })
       );
 
-      expect(Rec.keys(values).sort()).toEqual(
-        SEMANTIC_COLOR_TOKENS.map((token) => token.slice(2)).sort()
+      expect(Arr.sort(Rec.keys(values), Order.String)).toEqual(
+        Arr.sort(
+          Arr.map(SEMANTIC_COLOR_TOKENS, (token) => token.slice(2)),
+          Order.String
+        )
       );
       expect(values).toEqual(expected);
     })

@@ -1,4 +1,5 @@
 import Color from "colorjs.io";
+import { Array as Arr } from "effect";
 
 /** Foreground and surface roles that must support normal-sized text. */
 export const TEXT_ROLE_PAIRS = [
@@ -30,7 +31,7 @@ export const STATUS_COLOR_FAMILIES = {
 
 /** Essential focus and chart roles that require 3:1 against their surfaces. */
 export const NON_TEXT_ROLE_PAIRS = [
-  ...CHART_NAMES.flatMap((chart) => [
+  ...Arr.flatMap(CHART_NAMES, (chart) => [
     [chart, "background", "essential chart mark on the page surface"],
     [chart, "card", "essential chart mark on a card surface"],
   ]),

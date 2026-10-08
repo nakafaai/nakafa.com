@@ -14,9 +14,10 @@ import {
   SEMANTIC_COLOR_TOKENS,
   THEME_METADATA_PROPERTIES,
   ThemeStyleSourceLoadError,
+  toRgbProjection,
 } from "@repo/design-system/lib/theme/contract";
 import { themes } from "@repo/design-system/lib/theme/registry";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option, Order } from "effect";
 import postcss from "postcss";
 
 const STATUS_NAMES = ["success", "warning", "info"];
@@ -38,11 +39,13 @@ const EXPECTED_CONCRETE_THEME_COUNT = 31;
 const readSources = readThemeStyleSources().pipe(
   Effect.provide(NodeFileSystem.layer)
 );
-const registeredThemeNames = themes.map((theme) => theme.value);
-const concreteThemeNames = registeredThemeNames.filter(
+const registeredThemeNames = Arr.map(themes, (theme) => theme.value);
+const concreteThemeNames = Arr.filter(
+  registeredThemeNames,
   (name) => name !== "system"
 );
-const customThemeNames = concreteThemeNames.filter(
+const customThemeNames = Arr.filter(
+  concreteThemeNames,
   (name) => name !== "light" && name !== "dark"
 );
 
@@ -111,6 +114,11 @@ describe("theme profile contract", () => {
     expect(REQUIRED_THEME_TOKENS).toHaveLength(47);
     expect(Arr.dedupe(REQUIRED_THEME_TOKENS).length).toBe(47);
   });
+  it("projects canonical OKLCH into comma-form sRGB bytes", () => {
+    expect(toRgbProjection("oklch(1 0 0)")).toBe("rgb(255, 255, 255)");
+    expect(toRgbProjection("oklch(0 0 0)")).toBe("rgb(0, 0, 0)");
+    expect(toRgbProjection("oklch(0.5 0.1 240)")).toBe("rgb(31, 106, 150)");
+  });
   it("rejects an OKLCH color with an omitted numeric channel", () => {
     expect(() => readOklchChannels("oklch(none 0.1 240)")).toThrow(
       'Theme color "oklch(none 0.1 240)" has a missing channel.'
@@ -119,7 +127,7 @@ describe("theme profile contract", () => {
   it("registers exactly 31 concrete profiles plus system preference", () => {
     expect(concreteThemeNames).toHaveLength(EXPECTED_CONCRETE_THEME_COUNT);
     expect(
-      registeredThemeNames.filter((name) => name === "system")
+      Arr.filter(registeredThemeNames, (name) => name === "system")
     ).toHaveLength(1);
     expect(Arr.dedupe(registeredThemeNames).length).toBe(themes.length);
   });
@@ -127,23 +135,27 @@ describe("theme profile contract", () => {
     Effect.gen(function* () {
       const sources = yield* readSources;
 
-      expect(readCustomThemeNames(sources.customThemes).sort()).toEqual(
-        [...customThemeNames].sort()
-      );
+      expect(
+        Arr.sort(readCustomThemeNames(sources.customThemes), Order.String)
+      ).toEqual(Arr.sort(customThemeNames, Order.String));
     })
   );
   it.effect("gives every concrete theme a distinct semantic identity", () =>
     Effect.gen(function* () {
       const profiles = yield* readProfiles;
-      const fingerprints = profiles.map((profile) => {
+      const fingerprints = Arr.map(profiles, (profile) => {
         const rule = findTopLevelRule(profile.root, profile.selector);
         expect(rule).toBeDefined();
         if (!rule) {
           return "";
         }
-        return THEME_IDENTITY_TOKENS.map((token) =>
-          readDirectValue(rule, token)
-        ).join("|");
+        return Arr.join(
+          Arr.map(
+            THEME_IDENTITY_TOKENS,
+            (token) => readDirectValue(rule, token) ?? ""
+          ),
+          "|"
+        );
       });
 
       expect(Arr.dedupe(fingerprints).length).toBe(profiles.length);
@@ -152,16 +164,19 @@ describe("theme profile contract", () => {
   it.effect("keeps each theme's feedback palette distinct", () =>
     Effect.gen(function* () {
       const profiles = yield* readProfiles;
-      const fingerprints = profiles.map((profile) => {
+      const fingerprints = Arr.map(profiles, (profile) => {
         const rule = findTopLevelRule(profile.root, profile.selector);
         expect(rule).toBeDefined();
         if (!rule) {
           return "";
         }
-        return STATUS_NAMES.flatMap((status) => [
-          readDirectValue(rule, `--${status}`),
-          readDirectValue(rule, `--${status}-foreground`),
-        ]).join("|");
+        return Arr.join(
+          Arr.flatMap(STATUS_NAMES, (status) => [
+            readDirectValue(rule, `--${status}`) ?? "",
+            readDirectValue(rule, `--${status}-foreground`) ?? "",
+          ]),
+          "|"
+        );
       });
 
       expect(Arr.dedupe(fingerprints).length).toBe(profiles.length);
@@ -187,13 +202,14 @@ describe("theme profile contract", () => {
           return;
         }
 
-        const properties = rule.nodes.flatMap((node) =>
+        const properties = Arr.flatMap(rule.nodes, (node) =>
           node.type === "decl" ? [node.prop] : []
         );
-        const coreProperties = properties.filter((property) =>
+        const coreProperties = Arr.filter(properties, (property) =>
           REQUIRED_THEME_TOKENS.includes(property)
         );
-        const unexpectedProperties = properties.filter(
+        const unexpectedProperties = Arr.filter(
+          properties,
           (property) =>
             !(
               REQUIRED_THEME_TOKENS.includes(property) ||
@@ -201,8 +217,8 @@ describe("theme profile contract", () => {
             )
         );
 
-        expect(coreProperties.sort()).toEqual(
-          [...REQUIRED_THEME_TOKENS].sort()
+        expect(Arr.sort(coreProperties, Order.String)).toEqual(
+          Arr.sort(REQUIRED_THEME_TOKENS, Order.String)
         );
         expect(unexpectedProperties).toEqual([]);
       })
@@ -223,17 +239,20 @@ describe("theme profile contract", () => {
         if (!rule) {
           return;
         }
-        const definition = themes.find((theme) => theme.value === profile.name);
-        expect(definition).toBeDefined();
-        if (!definition) {
+        const definition = Arr.findFirst(
+          themes,
+          (theme) => theme.value === profile.name
+        );
+        expect(Option.isSome(definition)).toBe(true);
+        if (Option.isNone(definition)) {
           return;
         }
-        const colorSchemes = rule.nodes.flatMap((node) =>
+        const colorSchemes = Arr.flatMap(rule.nodes, (node) =>
           node.type === "decl" && node.prop === "color-scheme"
             ? [node.value.trim()]
             : []
         );
-        expect(colorSchemes).toEqual([definition.appearance]);
+        expect(colorSchemes).toEqual([definition.value.appearance]);
       })
   );
   it.effect("maps every status pair into Tailwind's inline theme", () =>
