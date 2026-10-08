@@ -164,6 +164,26 @@ export function readCanvasSize(canvas: Locator) {
   });
 }
 
+/** A pointer position on the page, in CSS pixels. */
+interface PagePoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+/** Presses the mouse at `from`, drags it to `to` in six steps, and releases it. */
+export const dragMouse = Effect.fn("NakafaE2E.dragMouse")(function* (
+  page: Page,
+  from: PagePoint,
+  to: PagePoint
+) {
+  yield* Effect.promise(async () => {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(to.x, to.y, { steps: 6 });
+    await page.mouse.up();
+  });
+});
+
 /**
  * Drags across the middle of a scene the way a learner rotates it. The drag
  * has one length at every size, so damping settles it as fast in full screen
@@ -178,12 +198,12 @@ export const orbitCanvas = Effect.fn("NakafaE2E.orbitCanvas")(function* (
   if (!bounds) {
     return;
   }
-  const x = bounds.x + bounds.width / 2;
-  const y = bounds.y + bounds.height / 2;
-  yield* Effect.promise(async () => {
-    await page.mouse.move(x, y);
-    await page.mouse.down();
-    await page.mouse.move(x + ORBIT_DRAG.x, y + ORBIT_DRAG.y, { steps: 6 });
-    await page.mouse.up();
+  const from = {
+    x: bounds.x + bounds.width / 2,
+    y: bounds.y + bounds.height / 2,
+  };
+  yield* dragMouse(page, from, {
+    x: from.x + ORBIT_DRAG.x,
+    y: from.y + ORBIT_DRAG.y,
   });
 });

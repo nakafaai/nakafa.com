@@ -3,7 +3,11 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { THREE_DIAGRAM_MINIMUM_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect, Schema } from "effect";
-import { expectCanvasToMove, waitForStableCanvas } from "@/e2e/support/canvas";
+import {
+  dragMouse,
+  expectCanvasToMove,
+  waitForStableCanvas,
+} from "@/e2e/support/canvas";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   withBrowserContext,
@@ -64,19 +68,17 @@ const orbitScene = Effect.fn("NakafaE2E.orbitScene")(function* (
     return;
   }
 
-  const startX = bounds.x + bounds.width * 0.4;
-  const startY = bounds.y + bounds.height * 0.55;
-  const endX = bounds.x + bounds.width * 0.7;
-  const endY = bounds.y + bounds.height * 0.4;
-
-  yield* Effect.promise(() => page.mouse.move(startX, startY));
-  yield* Effect.promise(() => page.mouse.down());
-  yield* Effect.promise(() =>
-    page.mouse.move(endX, endY, {
-      steps: 6,
-    })
+  yield* dragMouse(
+    page,
+    {
+      x: bounds.x + bounds.width * 0.4,
+      y: bounds.y + bounds.height * 0.55,
+    },
+    {
+      x: bounds.x + bounds.width * 0.7,
+      y: bounds.y + bounds.height * 0.4,
+    }
   );
-  yield* Effect.promise(() => page.mouse.up());
 });
 
 const zoomScene = Effect.fn("NakafaE2E.zoomScene")(function* (
