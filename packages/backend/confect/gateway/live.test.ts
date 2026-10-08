@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
-import { Effect, Result, Schema } from "effect";
+import { Array as Arr, Effect, Option, Result, Schema, Stream } from "effect";
 
 const serviceToken = vi.hoisted(() => vi.fn<() => Promise<string>>());
 vi.mock("convex/server", () => ({ getServiceToken: serviceToken }));
@@ -23,6 +23,50 @@ const completion = {
   ],
   usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
 };
+
+/**
+ * A streamed answer as the gateway sent it on 8 October 2026 for a request
+ * without `stream_options`: the last chunk carries the usage and the cost.
+ */
+const chunks = [
+  {
+    id: "chatcmpl-test",
+    object: "chat.completion.chunk",
+    created: 0,
+    model: "google/gemini-3.7-flash",
+    choices: [
+      {
+        index: 0,
+        delta: { role: "assistant", content: "Hello" },
+        finish_reason: null,
+      },
+    ],
+  },
+  {
+    id: "chatcmpl-test",
+    object: "chat.completion.chunk",
+    created: 0,
+    model: "google/gemini-3.7-flash",
+    choices: [
+      {
+        index: 0,
+        delta: { role: "assistant", content: "" },
+        finish_reason: "stop",
+      },
+    ],
+    usage: {
+      prompt_tokens: 13,
+      completion_tokens: 9,
+      total_tokens: 22,
+      cost: 0.000_026_4,
+    },
+  },
+];
+const encodeChunk = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const events = `${Arr.join(
+  Arr.map(chunks, (chunk) => `data: ${encodeChunk(chunk)}\n\n`),
+  ""
+)}data: [DONE]\n\n`;
 
 /** The one fetch double this file stubs globally and resets between tests. */
 const fetch = vi.fn<typeof globalThis.fetch>();
@@ -86,6 +130,44 @@ describe("The production gateway", () => {
           model: "google/gemini-3.7-flash",
           reasoning_effort: effort,
         });
+      }).pipe(deployed);
+    }
+  );
+
+  it.effect(
+    "reports the tokens and the cost of a streamed answer from its last chunk",
+    () => {
+      serviceToken.mockResolvedValue("service-token");
+      fetch.mockResolvedValue(
+        new Response(events, {
+          headers: { "content-type": "text/event-stream" },
+        })
+      );
+      return Effect.gen(function* () {
+        const handle = (yield* Gateway).language({
+          purpose: "chat",
+          model: "nakafa-pro",
+        });
+        const { stream } = yield* Effect.promise(() =>
+          handle.model.doStream({ prompt })
+        );
+        const parts = yield* Stream.runCollect(
+          Stream.fromReadableStream({
+            evaluate: () => stream,
+            onError: (cause) => cause,
+          })
+        );
+        const finish = Arr.findFirst(parts, (part) => part.type === "finish");
+        expect(Option.getOrUndefined(finish)).toMatchObject({
+          usage: { inputTokens: { total: 13 }, outputTokens: { total: 9 } },
+          providerMetadata: { convexGateway: { cost: 0.000_026_4 } },
+        });
+        const [, init] = fetch.mock.calls[0] ?? [];
+        const body = yield* Schema.decodeUnknownEffect(
+          Schema.fromJsonString(Schema.Unknown)
+        )(init?.body);
+        expect(body).toMatchObject({ stream: true });
+        expect(body).not.toHaveProperty("stream_options");
       }).pipe(deployed);
     }
   );
