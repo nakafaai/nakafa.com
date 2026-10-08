@@ -6,7 +6,7 @@ import {
   stringArraySchema,
   variableInputSchema,
 } from "@repo/math/schema/shared";
-import { HashSet, Schema, Struct } from "effect";
+import { Array as Arr, HashSet, Schema, Struct } from "effect";
 
 const equationDomainFields = {
   lower: Schema.optionalKey(
@@ -106,8 +106,8 @@ function hasSolvedVariableInEveryBoundedExpression(
     return true;
   }
   const variables = HashSet.fromIterable(value.variables);
-  return value.expressions.every((expression) =>
-    getExpressionSymbols(expression).some((symbol) =>
+  return Arr.every(value.expressions, (expression) =>
+    Arr.some(getExpressionSymbols(expression), (symbol) =>
       HashSet.has(variables, symbol)
     )
   );
