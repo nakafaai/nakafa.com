@@ -39,7 +39,7 @@ export const tryoutStartAccessValidator = Schema.Union([
 export type TryoutStartAccess = typeof tryoutStartAccessValidator.Type;
 export const tryoutPaywallSourceValidator = Schema.Literal("review");
 export type TryoutPaywallSource = typeof tryoutPaywallSourceValidator.Type;
-export const attemptAccessFieldsValidator = tryoutAttempts.Doc.mapFields(
+export const attemptAccessFieldsSchema = tryoutAttempts.Doc.mapFields(
   Struct.pick([
     "accessEndsAt",
     "accessSourceKind",
@@ -47,8 +47,8 @@ export const attemptAccessFieldsValidator = tryoutAttempts.Doc.mapFields(
     "countsForCompetition",
   ])
 );
-export type AttemptAccessFields = typeof attemptAccessFieldsValidator.Type;
-const tryoutStartScopeValidator = Schema.Struct({
+export type AttemptAccessFields = typeof attemptAccessFieldsSchema.Type;
+const tryoutStartScopeSchema = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
   examKey: tryoutRouteKeyValidator,
   now: Schema.Finite,
@@ -56,7 +56,7 @@ const tryoutStartScopeValidator = Schema.Struct({
   trackKey: tryoutRouteKeyValidator,
   userId: IdSchema("users"),
 });
-export type TryoutStartScope = typeof tryoutStartScopeValidator.Type;
+export type TryoutStartScope = typeof tryoutStartScopeSchema.Type;
 
 /** Expected domain failure raised while starting a try-out attempt. */
 export class TryoutStartError extends Schema.TaggedError<TryoutStartError>()(

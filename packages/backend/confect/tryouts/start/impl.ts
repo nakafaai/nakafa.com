@@ -23,12 +23,12 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 type TryoutAttempt = Docs["tryoutAttempts"];
-const startTryoutAttemptInputValidator = Schema.Struct({
+const startTryoutAttemptInputSchema = Schema.Struct({
   args: startAttemptArgsValidator,
   now: Schema.Finite,
   userId: IdSchema("users"),
 });
-type StartTryoutAttemptInput = typeof startTryoutAttemptInputValidator.Type;
+type StartTryoutAttemptInput = typeof startTryoutAttemptInputSchema.Type;
 
 /** Starts or resumes one try-out attempt in the caller's atomic mutation. */
 export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(

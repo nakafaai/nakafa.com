@@ -12,7 +12,7 @@ import { readTryoutSet } from "@repo/backend/content/tryout/set";
 import { Effect, Schema } from "effect";
 
 /** Signed rows of one verified try-out set, exactly as readTryoutSet returns them. */
-const verifiedTryoutSetValidator = Schema.Struct({
+const verifiedTryoutSetSchema = Schema.Struct({
   sections: Schema.Array(
     Schema.Struct({
       placements: Schema.Array(
@@ -35,17 +35,17 @@ const verifiedTryoutSetValidator = Schema.Struct({
   setIdentity: Schema.String,
   snapshotId: Schema.String,
 });
-const tryoutSnapshotSourceValidator = Schema.Struct({
-  snapshot: verifiedTryoutSetValidator,
+const tryoutSnapshotSourceSchema = Schema.Struct({
+  snapshot: verifiedTryoutSetSchema,
 });
 /** Authenticated immutable snapshot rows used by attempt-owned projections. */
-export type TryoutSnapshotSource = typeof tryoutSnapshotSourceValidator.Type;
-export const tryoutStartSourceValidator = Schema.Struct({
-  ...tryoutSnapshotSourceValidator.fields,
+export type TryoutSnapshotSource = typeof tryoutSnapshotSourceSchema.Type;
+export const tryoutStartSourceSchema = Schema.Struct({
+  ...tryoutSnapshotSourceSchema.fields,
   bundle: tryoutRuntimeBundles.Doc,
   releaseId: Schema.String,
 });
-export type TryoutStartSource = typeof tryoutStartSourceValidator.Type;
+export type TryoutStartSource = typeof tryoutStartSourceSchema.Type;
 
 /** Loads the active signed snapshot through its explicit runtime binding. */
 export const loadTryoutStartSource = Effect.fn(

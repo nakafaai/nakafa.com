@@ -12,9 +12,9 @@ import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import { startSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
-import { tryoutStartSourceValidator } from "@repo/backend/confect/tryouts/start/source";
+import { tryoutStartSourceSchema } from "@repo/backend/confect/tryouts/start/source";
 import {
-  attemptAccessFieldsValidator,
+  attemptAccessFieldsSchema,
   startAttemptArgsValidator,
   toTryoutStartError,
 } from "@repo/backend/confect/tryouts/start/spec";
@@ -22,16 +22,16 @@ import { Array as Arr, Duration, Effect, flow, Schema } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
-const createTryoutAttemptInputValidator = Schema.Struct({
-  access: attemptAccessFieldsValidator,
+const createTryoutAttemptInputSchema = Schema.Struct({
+  access: attemptAccessFieldsSchema,
   args: startAttemptArgsValidator,
   attemptNumber: Schema.Finite,
   now: Schema.Finite,
   scaleVersion: Schema.NullOr(irtScaleVersions.Doc),
-  source: tryoutStartSourceValidator,
+  source: tryoutStartSourceSchema,
   userId: IdSchema("users"),
 });
-type CreateTryoutAttemptInput = typeof createTryoutAttemptInputValidator.Type;
+type CreateTryoutAttemptInput = typeof createTryoutAttemptInputSchema.Type;
 
 /** Creates the attempt snapshot and all start-related rows atomically. */
 export const createTryoutAttempt = Effect.fn(

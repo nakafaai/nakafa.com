@@ -14,14 +14,14 @@ import { Array as Arr, Effect, Schema } from "effect";
 
 const SIGNED_CURSOR_PREFIX = "signed:";
 const PaginationJsonSchema = Schema.fromJsonString(Schema.Unknown);
-const publishedSetRowValidator = Schema.Struct({
+const publishedSetRowSchema = Schema.Struct({
   durationSeconds: Schema.Finite,
   progress: Schema.NullOr(tryoutSetProgress.Doc),
   runningAttempt: Schema.NullOr(runningAttemptValidator),
   set: TryoutSetSchema,
 });
 /** One authored set joined with the current user's optional progress. */
-export type PublishedSetRow = typeof publishedSetRowValidator.Type;
+export type PublishedSetRow = typeof publishedSetRowSchema.Type;
 /** Stable client failure for invalid signed-catalog pagination. */
 
 /** Paginates one signed list and invalidates cursors when its rows move. */
