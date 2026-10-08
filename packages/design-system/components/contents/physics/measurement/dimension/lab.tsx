@@ -6,7 +6,7 @@ import {
   CAMERA_POSITION,
   CAMERA_TARGET,
   DIMENSION_MODES,
-  type DimensionLabProps,
+  type DimensionLabLabels,
   type DimensionModeId,
   getDimensionSceneColors,
   isDimensionModeId,
@@ -39,6 +39,12 @@ import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
+
+export interface DimensionLabProps {
+  description: ReactNode;
+  labels: DimensionLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders a compact model for visualizing length powers in dimensions.
