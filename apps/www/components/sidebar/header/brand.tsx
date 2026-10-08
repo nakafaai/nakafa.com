@@ -31,7 +31,6 @@ export function HeaderMenu() {
               fill
               sizes="32px"
               src="/logo.svg"
-              title="Nakafa"
             />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
