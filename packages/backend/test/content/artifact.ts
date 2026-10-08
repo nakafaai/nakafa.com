@@ -9,7 +9,7 @@ import {
 import { Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
-/** Plain codec: writes the same bytes as JSON.stringify, so the stored artifact matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Stores one artifact body with the facts that staging writes beside it. */

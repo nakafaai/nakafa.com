@@ -27,7 +27,7 @@ import { FetchClient } from "@repo/utilities/http/client";
 import type { TestConvex } from "convex-test";
 import { Effect, Layer, Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so the request body matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Executes one request through the real Node dispatcher and technical key. */

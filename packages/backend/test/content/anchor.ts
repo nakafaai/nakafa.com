@@ -15,7 +15,7 @@ import { Schema } from "effect";
 
 /** Names one manifest field a retired content contract still carried. */
 const RETIRED_MANIFEST_FIELD = "rendererContractVersion";
-/** Plain codec: writes the same bytes as JSON.stringify, so the stored text matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** A JSON object whose top-level fields are kept as stored, so the retired payload keeps every key. */
 const StoredObjectSchema = Schema.Record(Schema.String, Schema.Unknown);

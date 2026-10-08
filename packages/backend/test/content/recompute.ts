@@ -33,7 +33,7 @@ import {
 } from "@repo/backend/test/content/proof";
 import { Effect, Schema, Stream } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so the staged rows match main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Stages a complete authenticated genesis release across real bounded batches. */

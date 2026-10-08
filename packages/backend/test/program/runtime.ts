@@ -11,7 +11,7 @@ import { testPublicationScope } from "@repo/backend/test/content/release";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { Effect, MutableHashMap, Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so each stored row matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates the complete active program publication and its indexed consumer rows. */

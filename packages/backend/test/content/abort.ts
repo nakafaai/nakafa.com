@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so the staged body matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 export const ABORT_RELEASE_ID = "release-abort";

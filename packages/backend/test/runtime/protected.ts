@@ -23,7 +23,7 @@ import {
 } from "@repo/backend/test/tryout/snapshot";
 import { Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so each stored text matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const SignedReleaseJsonSchema = Schema.fromJsonString(
   SignedContentReleaseSchema

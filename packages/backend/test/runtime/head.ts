@@ -52,7 +52,7 @@ type RuntimeHeadOptions = typeof RuntimeHeadOptionsSchema.Type;
 const ContentProjectionJsonSchema = Schema.fromJsonString(
   ContentProjectionSchema
 );
-/** Plain codec: writes the same bytes as JSON.stringify, so the stored artifact matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Builds one material projection that owns the requested runtime route. */

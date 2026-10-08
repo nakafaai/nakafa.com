@@ -37,7 +37,7 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so the stored text matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const NOW = Date.UTC(2026, 6, 23, 12);

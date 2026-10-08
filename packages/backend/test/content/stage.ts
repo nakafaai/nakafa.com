@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so the stored envelope matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const StagedReleaseOptionsSchema = Schema.Struct({
   activeAppLocales: Schema.optionalKey(Schema.Array(ActiveAppLocaleCodeSchema)),

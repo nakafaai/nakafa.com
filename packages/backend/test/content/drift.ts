@@ -5,7 +5,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testProofRenderer } from "@repo/backend/test/content/proof";
 import { Data, Effect, Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so the stored renderer matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 class InvalidDriftFixture extends Data.TaggedError("InvalidDriftFixture")<{

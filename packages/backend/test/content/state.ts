@@ -73,7 +73,7 @@ const TestStateOptionsSchema = Schema.Struct({
 });
 type TestStateOptions = typeof TestStateOptionsSchema.Type;
 
-/** Plain codec: writes the same bytes as JSON.stringify, so every stored release matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** A JSON object whose fields are kept exactly as stored, so the patch keeps every key. */
 const StoredObjectSchema = Schema.Record(Schema.String, Schema.Unknown);

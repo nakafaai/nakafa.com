@@ -19,7 +19,7 @@ import {
 import type { TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so the stored release matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 type StoredRollbackEnvelope = typeof stageEnvelopeValidator.Type;

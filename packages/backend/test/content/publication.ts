@@ -28,7 +28,7 @@ import {
   Schema,
 } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so every stored string matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 export const TEST_PUBLICATION_RELEASE = testSignedRelease(

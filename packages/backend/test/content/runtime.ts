@@ -48,7 +48,7 @@ import {
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so every stored and sent text matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Plain codec: parses the same text as JSON.parse, so each expected response keeps its exact values. */
 const decodeJson = Schema.decodeUnknownSync(

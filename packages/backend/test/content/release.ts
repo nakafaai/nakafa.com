@@ -37,7 +37,7 @@ import { testMaterialPublicPath } from "@repo/backend/test/content/material";
 import { Effect, Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
-/** Plain codec: writes the same bytes as JSON.stringify, so every fixture string matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
 export const TEST_MANIFEST_HASH = Sha256HashSchema.make(

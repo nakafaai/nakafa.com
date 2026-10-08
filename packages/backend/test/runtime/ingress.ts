@@ -30,7 +30,7 @@ import { Effect, Schema } from "effect";
 export const TEST_RUNTIME_RELEASE_ID = ReleaseIdSchema.make(
   "release-runtime-bundle"
 );
-/** Plain codec: writes the same bytes as JSON.stringify, so the stored renderer matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates one coherent signed release and its permanent runtime bundle. */

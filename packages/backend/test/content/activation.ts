@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/test/content/state";
 import { Effect, Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so the stored release matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const releaseId = ReleaseIdSchema.make("release-lifecycle-ingress");

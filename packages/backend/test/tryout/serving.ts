@@ -27,7 +27,7 @@ import {
 import { convexTest } from "convex-test";
 import { Effect, MutableHashMap, Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify, so each stored string matches main. */
+/** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates an inherited active try-out snapshot with authentic immutable bundle dependencies. */
