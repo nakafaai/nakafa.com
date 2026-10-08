@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import {
   readSelectedPublicRuntime,
@@ -73,7 +74,7 @@ describe("active public body selection", () => {
             }).pipe(Effect.provide(publicationLayer))
           );
         }
-        const empty = yield* createTestPublication(new Map());
+        const empty = yield* Confect.pipe(Effect.provide(confectLayer));
         yield* empty.run(
           resolveActiveRoute("page", "en", "missing").pipe(
             Effect.flatMap(readSelectedPublicRuntime),
@@ -88,7 +89,7 @@ describe("active public body selection", () => {
   );
   it.effect("preserves exact request order when no publication is active", () =>
     Effect.gen(function* () {
-      const target = yield* createTestPublication(new Map());
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
       const requests = [
         {
           appLocale: "en",

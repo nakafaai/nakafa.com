@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import {
   contentHead,
@@ -59,7 +60,7 @@ describe("immutable publication projections", () => {
     "preserves an unrouted protected head and excludes question bodies from public routing",
     () =>
       Effect.gen(function* () {
-        const target = yield* createTestPublication(new Map());
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
         yield* target.run(
           Effect.gen(function* () {
             const ctx = yield* MutationCtx;
