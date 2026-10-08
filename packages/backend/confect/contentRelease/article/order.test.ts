@@ -8,10 +8,7 @@ import {
   PUBLICATION_SCAN_LIMIT,
 } from "@repo/backend/confect/contentRelease/paging";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import {
-  articlePublicationCursor,
-  decodePublicationPosition,
-} from "@repo/backend/content/article/cursor";
+import { articlePublicationCursor } from "@repo/backend/content/article/cursor";
 import schema from "@repo/backend/convex/schema";
 import {
   insertRuntimeArticles,
@@ -215,8 +212,8 @@ describe("contentRelease/article/order", () => {
     expect(Arr.map(result.page, ({ contentKey }) => contentKey)).toEqual([
       testArticleProjection(1).contentKey,
     ]);
-    const position = await Effect.runPromise(
-      decodePublicationPosition(result.continueCursor)
+    const position: unknown = Schema.decodeSync(JsonTextSchema)(
+      result.continueCursor.slice(ARTICLE_PUBLICATION_CURSOR_PREFIX.length)
     );
     expect(position).toHaveLength(5);
   });
