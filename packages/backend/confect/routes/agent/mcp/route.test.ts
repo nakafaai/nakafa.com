@@ -2,15 +2,19 @@
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { DISCOVERY_CASES } from "@repo/backend/test/mcp/discovery";
 import {
   jsonBody,
   MCP_CLIENT_META,
   MCP_PREDECESSOR_PROTOCOL_VERSION,
   MCP_SECRET,
   MCP_SECRET_ENVIRONMENT,
+  type McpCase,
   type McpRequest,
   modernPost,
   pinMcpClock,
+  readMcpAnswer,
+  sendMcpCase,
   sendMcpRequest,
 } from "@repo/backend/test/mcp/harness";
 import { Array as Arr, Effect } from "effect";
@@ -29,6 +33,19 @@ afterEach(() => {
   vi.doUnmock("@repo/backend/agent/mcp/server");
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
+});
+/** Sends one golden case and compares its complete answer with the pinned one. */
+const runGoldenCase = Effect.fn("TestMcp.runGoldenCase")(function* (
+  testCase: McpCase
+) {
+  const response = yield* Effect.promise(() => sendMcpCase(testCase));
+  const answer = yield* readMcpAnswer(response, testCase.answer.body);
+  expect(answer).toStrictEqual(testCase.answer);
+});
+describe("Nakafa MCP golden contract", () => {
+  describe("discovery and lists", () => {
+    it.effect.each(DISCOVERY_CASES)("$name", runGoldenCase);
+  });
 });
 describe("Nakafa MCP transport", () => {
   it.effect("serves current discovery and the established tool surface", () =>
