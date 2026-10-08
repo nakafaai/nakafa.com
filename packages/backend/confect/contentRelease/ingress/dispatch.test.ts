@@ -5,7 +5,6 @@ import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
   Ed25519SignatureSchema,
   ReleaseIdSchema,
-  Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
@@ -141,11 +140,11 @@ describe("content publication Node dispatch", () => {
 
     const first = await sendPublication(t, {
       operation: "cleanup",
-      releaseId: ReleaseIdSchema.make("release-cleanup-dispatch"),
+      releaseId: "release-cleanup-dispatch",
     });
     const repeated = await sendPublication(t, {
       operation: "cleanup",
-      releaseId: ReleaseIdSchema.make("release-cleanup-dispatch"),
+      releaseId: "release-cleanup-dispatch",
     });
     expect(first).toMatchObject({ ok: true, value: { complete: true } });
     expect(repeated).toEqual(first);
@@ -190,8 +189,8 @@ describe("content publication Node dispatch", () => {
     await expect(
       sendPublication(t, {
         operation: "accept",
-        recoveryId: ReleaseIdSchema.make(recovery.releaseId),
-        releaseId: ReleaseIdSchema.make(active.releaseId),
+        recoveryId: recovery.releaseId,
+        releaseId: active.releaseId,
       })
     ).resolves.toMatchObject({
       ok: true,
@@ -278,7 +277,7 @@ describe("content publication Node dispatch", () => {
       const status = await sendPublication(t, {
         manifestHash,
         operation: "status",
-        releaseId: ReleaseIdSchema.make("release-active"),
+        releaseId: "release-active",
       });
       for (const result of [response, status]) {
         expect(result).toMatchObject({
@@ -296,13 +295,11 @@ describe("content publication Node dispatch", () => {
     );
 
     const response = await sendPublication(t, {
-      activeManifestHash: Sha256HashSchema.make(
-        await t.run(async (ctx) => {
-          const state = await ctx.db.query("contentState").unique();
-          return state?.activeManifestHash ?? "";
-        })
-      ),
-      activeReleaseId: ReleaseIdSchema.make("release-active"),
+      activeManifestHash: await t.run(async (ctx) => {
+        const state = await ctx.db.query("contentState").unique();
+        return state?.activeManifestHash ?? "";
+      }),
+      activeReleaseId: "release-active",
       cursor: null,
       family: "material",
       limit: 10,
@@ -357,7 +354,7 @@ describe("content publication Node dispatch", () => {
     const missing = await sendPublication(t, {
       manifestHash: ingressRelease.manifestHash,
       operation: "status",
-      releaseId: ReleaseIdSchema.make("release-missing"),
+      releaseId: "release-missing",
     });
     expect(missing).toMatchObject({
       ok: true,
