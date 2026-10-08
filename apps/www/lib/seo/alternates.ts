@@ -79,11 +79,10 @@ export function createResolvedRouteAlternates(
   const routePath = `/${route.appLocale}/${route.publicPath}`;
   const languages = Rec.fromEntries(
     alternates.map(
-      (alternate) =>
-        [
-          alternate.appLocale,
-          `/${alternate.appLocale}/${alternate.publicPath}`,
-        ] as const
+      (alternate): readonly [ResolvedAlternateRoute["appLocale"], string] => [
+        alternate.appLocale,
+        `/${alternate.appLocale}/${alternate.publicPath}`,
+      ]
     )
   );
 
