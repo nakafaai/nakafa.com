@@ -82,6 +82,43 @@ describe("content trust", () => {
   });
 
   it.effect(
+    "rejects an empty Agent Mode key identity that is set without a public key",
+    () => {
+      vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", "");
+      vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", undefined);
+      vi.stubEnv("CONVEX_CLOUD_URL", "http://127.0.0.1:3210");
+      vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", undefined);
+      vi.stubEnv("VERCEL_ENV", undefined);
+      vi.resetModules();
+
+      return Effect.promise(() =>
+        expect(import("@repo/backend/content/trust")).rejects.toThrow()
+      );
+    }
+  );
+
+  it.effect(
+    "rejects an empty Convex cloud URL instead of falling back to the public URL",
+    () =>
+      Effect.gen(function* () {
+        const key = TRUSTED_CONTENT_KEYS[0];
+        if (key === undefined) {
+          return yield* Effect.die("Expected a retained signing key.");
+        }
+        vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", agentKeyId);
+        vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", key.publicKeyPem);
+        vi.stubEnv("CONVEX_CLOUD_URL", "");
+        vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "http://127.0.0.1:3210");
+        vi.stubEnv("VERCEL_ENV", undefined);
+        vi.resetModules();
+
+        yield* Effect.promise(() =>
+          expect(import("@repo/backend/content/trust")).rejects.toThrow()
+        );
+      })
+  );
+
+  it.effect(
     "rejects acceptance trust on production and unverified targets",
     () =>
       Effect.gen(function* () {
