@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 
 export const UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/race.glb";
@@ -52,7 +53,10 @@ export function getUniformCircularMotionState(
 export function isUniformCircularMotionPeriod(
   value: number
 ): value is UniformCircularMotionPeriod {
-  return UNIFORM_CIRCULAR_MOTION_PERIODS.some((period) => period === value);
+  return Arr.some(
+    UNIFORM_CIRCULAR_MOTION_PERIODS,
+    (period) => period === value
+  );
 }
 
 export function formatCircularMotionDecimal(

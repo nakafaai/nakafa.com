@@ -43,7 +43,7 @@ export function PhysicsTrainModel({
 
 function tintMaterial(material: Mesh["material"], color: string) {
   if (Arr.isArray(material)) {
-    return material.map((item) => tintSingleMaterial(item, color));
+    return Arr.map(material, (item) => tintSingleMaterial(item, color));
   }
 
   return tintSingleMaterial(material, color);
