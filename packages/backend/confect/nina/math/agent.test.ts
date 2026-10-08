@@ -7,8 +7,18 @@ import {
   runSpecialist,
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
+import { MathAlgebraInputSchema } from "@repo/math/schema/tool/algebra";
+import { MathArithmeticInputSchema } from "@repo/math/schema/tool/arithmetic";
+import { MathCalculusInputSchema } from "@repo/math/schema/tool/calculus";
+import { MathDiscreteInputSchema } from "@repo/math/schema/tool/discrete";
+import { MathEquationInputSchema } from "@repo/math/schema/tool/equation";
+import { MathGeometryInputSchema } from "@repo/math/schema/tool/geometry";
+import { MathMatrixInputSchema } from "@repo/math/schema/tool/matrix";
+import { MathProbabilityInputSchema } from "@repo/math/schema/tool/probability";
+import { MathSeriesInputSchema } from "@repo/math/schema/tool/series";
+import { MathStatisticsInputSchema } from "@repo/math/schema/tool/statistics";
 import { MockLanguageModelV4 } from "ai/test";
-import { ConfigProvider, Effect } from "effect";
+import { ConfigProvider, Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/tools/compute", () => ({
   compute: vi.fn(),
@@ -18,43 +28,66 @@ afterEach(() => {
   provider.languageModel.mockReset();
 });
 
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
+
+/** Pairs a tool name with the contract its production tool decodes, checking the fixture against that contract. */
+function toolCase<S extends Schema.Top>(
+  toolName: string,
+  contract: S,
+  input: S["Type"]
+): [string, S, S["Type"]] {
+  return [toolName, contract, input];
+}
+
 const cases = [
-  ["algebra", { operation: "simplify", expression: "x + x" }],
-  ["arithmetic", { operation: "evaluate", expression: "2 + 2" }],
-  ["calculus", { operation: "differentiate", expression: "x^2" }],
-  ["discrete", { operation: "gcd", values: ["84", "30"] }],
-  ["equation", { operation: "solve", expression: "x + 1 = 2" }],
-  [
-    "geometry",
-    {
-      operation: "distance",
-      points: [
-        { x: "0", y: "0" },
-        { x: "3", y: "4" },
-      ],
-    },
-  ],
-  [
-    "matrix",
-    {
-      operation: "determinant",
-      matrix: [
-        ["1", "0"],
-        ["0", "1"],
-      ],
-    },
-  ],
-  [
-    "probability",
-    {
-      operation: "distribution",
-      distribution: "bernoulli",
-      parameters: { p: "0.5" },
-    },
-  ],
-  ["series", { operation: "series", expression: "exp(x)" }],
-  ["statistics", { operation: "mean", values: ["1", "2", "3"] }],
-] as const;
+  toolCase("algebra", MathAlgebraInputSchema, {
+    operation: "simplify",
+    expression: "x + x",
+  }),
+  toolCase("arithmetic", MathArithmeticInputSchema, {
+    operation: "evaluate",
+    expression: "2 + 2",
+  }),
+  toolCase("calculus", MathCalculusInputSchema, {
+    operation: "differentiate",
+    expression: "x^2",
+  }),
+  toolCase("discrete", MathDiscreteInputSchema, {
+    operation: "gcd",
+    values: ["84", "30"],
+  }),
+  toolCase("equation", MathEquationInputSchema, {
+    operation: "solve",
+    expression: "x + 1 = 2",
+  }),
+  toolCase("geometry", MathGeometryInputSchema, {
+    operation: "distance",
+    points: [
+      { x: "0", y: "0" },
+      { x: "3", y: "4" },
+    ],
+  }),
+  toolCase("matrix", MathMatrixInputSchema, {
+    operation: "determinant",
+    matrix: [
+      ["1", "0"],
+      ["0", "1"],
+    ],
+  }),
+  toolCase("probability", MathProbabilityInputSchema, {
+    operation: "distribution",
+    distribution: "bernoulli",
+    parameters: { p: "0.5" },
+  }),
+  toolCase("series", MathSeriesInputSchema, {
+    operation: "series",
+    expression: "exp(x)",
+  }),
+  toolCase("statistics", MathStatisticsInputSchema, {
+    operation: "mean",
+    values: ["1", "2", "3"],
+  }),
+];
 
 describe("math Agent execution", () => {
   it("rejects missing CAS configuration before spending tokens on unexecutable tools", async () => {
@@ -81,7 +114,7 @@ describe("math Agent execution", () => {
   });
   it.each(cases)(
     "validates and computes %s through the Agent tool boundary",
-    async (toolName, input) => {
+    async (toolName, contract, input) => {
       const usageHandler = vi.fn();
       const model = new MockLanguageModelV4({
         doGenerate: [
@@ -91,7 +124,9 @@ describe("math Agent execution", () => {
                 type: "tool-call",
                 toolCallId: "calculation",
                 toolName,
-                input: JSON.stringify(input),
+                input: Schema.encodeSync(Schema.fromJsonString(contract))(
+                  input
+                ),
               },
             ],
             finishReason: { unified: "tool-calls", raw: "tool-calls" },
@@ -136,9 +171,9 @@ describe("math Agent execution", () => {
         "space:personal",
         "purpose:specialist",
       ]);
-      expect(JSON.stringify(model.doGenerateCalls[1]?.prompt)).toContain(
-        "Deterministic evidence."
-      );
+      expect(
+        Schema.encodeSync(JsonTextSchema)(model.doGenerateCalls[1]?.prompt)
+      ).toContain("Deterministic evidence.");
     }
   );
 
@@ -166,7 +201,10 @@ describe("math Agent execution", () => {
   });
 
   it("repairs missing arguments through Agent before executing the requested calculation", async () => {
-    const input = { operation: "simplify", expression: "x + x" };
+    const input: typeof MathAlgebraInputSchema.Type = {
+      operation: "simplify",
+      expression: "x + x",
+    };
     const usageHandler = vi.fn();
     const model = new MockLanguageModelV4({
       doGenerate: [
@@ -184,7 +222,14 @@ describe("math Agent execution", () => {
           warnings: [],
         },
         {
-          content: [{ type: "text", text: JSON.stringify(input) }],
+          content: [
+            {
+              type: "text",
+              text: Schema.encodeSync(
+                Schema.fromJsonString(MathAlgebraInputSchema)
+              )(input),
+            },
+          ],
           finishReason: { unified: "stop", raw: "stop" },
           usage: ninaUsage,
           warnings: [],

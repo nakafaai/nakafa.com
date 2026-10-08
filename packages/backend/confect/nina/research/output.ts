@@ -30,18 +30,9 @@ function formatFinding(finding: ResearchOutput["findings"][number]) {
 function formatCitations(
   citations: ResearchOutput["findings"][number]["citations"]
 ) {
-  const seen = new Set<string>();
-
   return pipe(
-    citations,
-    Arr.flatMap((citation) => {
-      if (seen.has(citation.url)) {
-        return [];
-      }
-
-      seen.add(citation.url);
-      return [`[${citation.title}](${citation.url})`];
-    }),
+    Arr.dedupeWith(citations, (left, right) => left.url === right.url),
+    Arr.map((citation) => `[${citation.title}](${citation.url})`),
     Arr.join(" ")
   );
 }

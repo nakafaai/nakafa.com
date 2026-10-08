@@ -6,7 +6,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { settleTurn } from "@repo/backend/confect/nina/settlement";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
-import { Array as Arr, Effect, Option, pipe } from "effect";
+import { Array as Arr, Effect, Option, pipe, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/nina/settlement", async (load) => {
   const actual =
@@ -24,6 +24,7 @@ const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const record = Ref.getFunctionReference(refs.internal.nina.usage.record);
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 async function fixture() {
   const seeded = await createNinaTest({ now: NOW });
@@ -103,7 +104,7 @@ describe("native Nina settlement", () => {
       [
         expect.objectContaining({
           event: "chat response failed",
-          properties: JSON.stringify({
+          properties: Schema.encodeSync(JsonTextSchema)({
             chat_type: "study",
             model_id: "nakafa-lite",
             error_code: "interrupted",
@@ -180,7 +181,7 @@ describe("native Nina settlement", () => {
       [
         expect.objectContaining({
           event: "chat response completed",
-          properties: JSON.stringify({
+          properties: Schema.encodeSync(JsonTextSchema)({
             chat_type: "study",
             model_id: "nakafa-lite",
             credits: 2,
