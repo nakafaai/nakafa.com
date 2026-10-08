@@ -30,15 +30,17 @@ import {
 import { convexTest } from "convex-test";
 import { Effect, MutableHashMap, Schema } from "effect";
 
-/** Encodes fixture JSON with the contracts production decodes, so each stored string has the wire shape production reads. */
+/** Encodes a signed artifact through the strict contract that production decodes. */
 const encodeArtifactJson = Schema.encodeSync(
   Schema.fromJsonString(SignedContentArtifactSchema),
   { onExcessProperty: "error" }
 );
+/** Encodes a signed runtime bundle through the strict contract that production decodes. */
 const encodeBundleJson = Schema.encodeSync(
   Schema.fromJsonString(SignedTryoutRuntimeBundleSchema),
   { onExcessProperty: "error" }
 );
+/** Encodes a renderer manifest through the strict contract that production decodes. */
 const encodeRendererJson = Schema.encodeSync(
   Schema.fromJsonString(RendererManifestEnvelopeSchema),
   { onExcessProperty: "error" }

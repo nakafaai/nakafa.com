@@ -22,11 +22,6 @@ export const TRYOUT_TEST_CONTENT_HASH = TryoutContentHashSchema.make(
   "3".repeat(64)
 );
 
-/** Signed section and placement records used by runtime tests. */
-export interface SignedTryoutSectionFixture {
-  readonly signed: TryoutSnapshotSource["snapshot"]["sections"][number];
-}
-
 /** Builds one coherent signed section and placement fixture. */
 export function makeSignedTryoutSection(
   section: TryoutSection,
@@ -34,7 +29,7 @@ export function makeSignedTryoutSection(
     readonly contentHash?: TryoutPlacement["contentHash"];
     readonly sourceRevision?: TryoutPlacement["sourceRevision"];
   } = {}
-): SignedTryoutSectionFixture {
+) {
   const sourceRevision = options.sourceRevision ?? section.sourceRevision;
   const sourcePath = requireCorpusRelativePath(section.questionSourcePath);
   const placements = Array.from(
@@ -96,14 +91,19 @@ export function makeSignedTryoutSection(
     throw new Error("Expected one signed section record.");
   }
 
-  return {
-    signed: {
-      placements: placements.map(makeTryoutPlacementRecord),
-      section: { row: record.row, rowHash: record.rowHash },
-      snapshotId: testTextHash("tryout-runtime-snapshot"),
-    },
+  const signed: TryoutSnapshotSource["snapshot"]["sections"][number] = {
+    placements: placements.map(makeTryoutPlacementRecord),
+    section: { row: record.row, rowHash: record.rowHash },
+    snapshotId: testTextHash("tryout-runtime-snapshot"),
   };
+
+  return { signed };
 }
+
+/** Signed section and placement records used by runtime tests. */
+export type SignedTryoutSectionFixture = Readonly<
+  ReturnType<typeof makeSignedTryoutSection>
+>;
 
 /** Builds one complete signed source from signed-only fixtures. */
 export function makeSignedTryoutSource(

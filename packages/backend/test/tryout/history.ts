@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { ContentSnapshotManifestSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { replaceContentSnapshot } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   tryoutCatalogNodeIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
+import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import {
   decodeReleaseJson,
@@ -23,7 +25,20 @@ import {
 } from "@repo/backend/test/content/proof";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect, Record as Rec } from "effect";
+import { Effect, Record as Rec, Schema } from "effect";
+
+/** Plain codec whose output equals JSON.stringify, keeping the legacy row and hash text exact. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+/** Encodes a family manifest through the strict contract that production decodes. */
+const encodeSnapshotJson = Schema.encodeSync(
+  Schema.fromJsonString(ContentSnapshotManifestSchema),
+  { onExcessProperty: "error" }
+);
+/** Encodes a signed runtime bundle through the strict contract that production decodes. */
+const encodeBundleJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedTryoutRuntimeBundleSchema),
+  { onExcessProperty: "error" }
+);
 
 /** Rebuilds a technical fixture using the exact choices-era placement hash format. */
 async function retainChoicesSnapshot(
@@ -60,7 +75,7 @@ async function retainChoicesSnapshot(
     }
     const { response, languagePolicy, ...identity } = original.record.row;
     const row = { ...identity, choices: response.options };
-    const canonical = JSON.stringify(
+    const canonical = encodeJson(
       Rec.fromEntries(
         Rec.toEntries<string, unknown>(row).sort(([left], [right]) => {
           if (left < right) {
@@ -76,7 +91,7 @@ async function retainChoicesSnapshot(
     digest.update(`${canonical}\0${rowHash}\n`);
     records.push({
       stored,
-      rowJson: JSON.stringify({
+      rowJson: encodeJson({
         family: "tryout",
         rowKind: "placement",
         record: { row, rowHash },
@@ -121,7 +136,7 @@ async function retainChoicesSnapshot(
   });
   await ctx.db.patch(storedSnapshot._id, {
     snapshotId: snapshot.snapshotId,
-    snapshotJson: JSON.stringify({ family: "tryout", manifest: snapshot }),
+    snapshotJson: encodeSnapshotJson({ family: "tryout", manifest: snapshot }),
   });
   for (const record of records) {
     await ctx.db.patch(record.stored._id, {
@@ -132,7 +147,7 @@ async function retainChoicesSnapshot(
   }
   await ctx.db.patch(runtime._id, {
     bundleHash: bundle.bundleHash,
-    bundleJson: JSON.stringify(bundle),
+    bundleJson: encodeBundleJson(bundle),
     snapshotId: snapshot.snapshotId,
     sourceManifestHash: bundle.payload.sourceManifestHash,
   });
