@@ -77,6 +77,42 @@ describe("signed Quran passage decoder", () => {
       }
     })
   );
+  it.live(
+    "rejects a passage past its surah or with a Bismillah its verses lack",
+    () =>
+      Effect.gen(function* () {
+        const pastSurahEnd = yield* Effect.result(
+          decodePublishedQuranReference(
+            { ...referenceResult(), toVerse: 7 },
+            { appLocale: "en", surahNumber: 1 }
+          )
+        );
+        const unownedBismillah = yield* Effect.result(
+          decodePublishedQuranReference(
+            {
+              ...referenceResult(),
+              preBismillah: {
+                arabic: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+                translation: {
+                  notes: [],
+                  segments: [
+                    { kind: "text", offset: 0, value: "In the Name of Allah" },
+                  ],
+                },
+              },
+            },
+            { appLocale: "en", surahNumber: 1 }
+          )
+        );
+
+        for (const result of [pastSurahEnd, unownedBismillah]) {
+          expect(result._tag).toBe("Failure");
+          if (result._tag === "Failure") {
+            expect(result.failure).toBeInstanceOf(QuranPublicationError);
+          }
+        }
+      })
+  );
 });
 
 /** Builds one complete bounded passage response. */
