@@ -5,12 +5,12 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { expectUncovered, readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 // Long enough that the server-rendered page paints before it hydrates.
 const heldScriptMilliseconds = 1000;
-const appScriptPattern = /\/_next\/static\/chunks\/.+\.js$/;
 
 const verifyOutlineHydration = Effect.fn("NakafaE2E.verifyOutlineHydration")(
   function* (page: Page) {
@@ -19,7 +19,7 @@ const verifyOutlineHydration = Effect.fn("NakafaE2E.verifyOutlineHydration")(
     // as a slow device does; its rows must not move when the page hydrates.
     const services = yield* Effect.context<never>();
     yield* Effect.promise(() =>
-      page.route(appScriptPattern, (route) =>
+      page.route(APP_SCRIPT_PATTERN, (route) =>
         Effect.runPromiseWith(services)(
           Effect.sleep(Duration.millis(heldScriptMilliseconds)).pipe(
             Effect.andThen(() => Effect.promise(() => route.continue()))

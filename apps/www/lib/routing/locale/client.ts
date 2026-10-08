@@ -17,7 +17,8 @@ function readCurrentHref() {
 /**
  * Loads the request module when a visitor picks a language. It carries the
  * HTTP client, so a static import would add that client to the first
- * JavaScript of every page, which `apps/www/e2e/budget/javascript.browser.ts` budgets.
+ * JavaScript of every page, which
+ * `apps/www/e2e/budget/javascript.browser.ts` budgets.
  */
 const loadLocalizedHrefRequest = Effect.tryPromise({
   catch: (cause) => new LocalizedHrefModuleError({ cause }),

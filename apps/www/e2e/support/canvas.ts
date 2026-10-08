@@ -65,7 +65,7 @@ export const expectCanvasToMove = Effect.fn("NakafaE2E.expectCanvasToMove")(
  * records: a `frame` counts the call on the canvas it draws to, and a `stack`
  * appends the call's stack to the page global `key`.
  */
-export type WebGLPatch =
+type WebGLPatch =
   | { readonly method: "clear"; readonly record: "frame" }
   | {
       readonly key: string;

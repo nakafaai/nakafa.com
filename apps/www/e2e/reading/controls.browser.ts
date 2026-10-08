@@ -4,6 +4,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
 import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -11,7 +12,6 @@ const NINA_DIALOG_NAME = /^Nina/;
 const INTER_FONT = /Inter/;
 
 const routes = [pinnedRoutes.material.en, pinnedRoutes.article.en];
-const appScriptPattern = /\/_next\/static\/chunks\/.+\.js$/;
 // The lesson's pagination, breadcrumb and outline header, as the server sends them.
 const readingControls =
   'nav[aria-label="Pagination navigation"] a, nav[aria-label="breadcrumb"] li, aside [data-sidebar="header"] a';
@@ -367,7 +367,7 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
   const released = yield* Deferred.make<void>();
   const services = yield* Effect.context<never>();
   yield* Effect.promise(() =>
-    page.route(appScriptPattern, (route) =>
+    page.route(APP_SCRIPT_PATTERN, (route) =>
       Effect.runPromiseWith(services)(
         Deferred.await(released).pipe(
           Effect.andThen(() => Effect.promise(() => route.continue()))
