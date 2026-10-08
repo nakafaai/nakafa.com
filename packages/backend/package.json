@@ -9,7 +9,6 @@
   },
   "scripts": {
     "acceptance": "node scripts/content/acceptance/main.ts",
-    "build": "pnpm typecheck",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "codegen": "confect codegen",
     "confect:dev": "confect dev",
