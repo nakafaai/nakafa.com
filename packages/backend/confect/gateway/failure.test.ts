@@ -68,6 +68,102 @@ describe("Gateway failure classification", () => {
 
   it.each([
     [
+      "401 invalid_api_key",
+      401,
+      {
+        error: {
+          message: "private",
+          type: "invalid_request_error",
+          code: "invalid_api_key",
+        },
+      },
+      "auth",
+      "invalid_request_error",
+    ],
+    [
+      "400 unsupported_endpoint",
+      400,
+      { error: { message: "private", code: "unsupported_endpoint" } },
+      "invalid",
+      "unsupported_endpoint",
+    ],
+    [
+      "400 unsupported_parameter",
+      400,
+      {
+        error: {
+          message: "private",
+          type: "invalid_request_error",
+          code: "unsupported_parameter",
+          param: "provider",
+        },
+      },
+      "invalid",
+      "invalid_request_error",
+    ],
+    [
+      "400 too_many_inputs",
+      400,
+      { error: { message: "private", code: "too_many_inputs" } },
+      "invalid",
+      "too_many_inputs",
+    ],
+    [
+      "413 request_too_large",
+      413,
+      { error: { message: "private", code: "request_too_large" } },
+      "too-large",
+      "request_too_large",
+    ],
+    [
+      "502 upstream_error",
+      502,
+      { error: { message: "private", code: "upstream_error" } },
+      "unavailable",
+      "upstream_error",
+    ],
+    [
+      "503 upstream_error",
+      503,
+      { error: { message: "private", code: "upstream_error" } },
+      "unavailable",
+      "upstream_error",
+    ],
+  ] as const)(
+    "classifies the documented %s by its body",
+    (_, status, data, reason, type) => {
+      const failure = classify(httpError(status, data));
+      expect(failure).toEqual(
+        new GatewayFailure({
+          reason,
+          status,
+          retryable: httpError(status).isRetryable,
+          type,
+        })
+      );
+      expect(encode(failure)).not.toContain("private");
+    }
+  );
+
+  it("classifies a 429 with Retry-After by its status, since the page documents no body for it", () => {
+    expect(classify(httpError(429, undefined, "2"))).toEqual(
+      new GatewayFailure({
+        reason: "rate-limit",
+        status: 429,
+        retryable: true,
+        retryAfter: 2,
+      })
+    );
+  });
+
+  it("classifies a 402 by its status, since the page documents no body for it", () => {
+    expect(classify(httpError(402))).toEqual(
+      new GatewayFailure({ reason: "quota", status: 402, retryable: false })
+    );
+  });
+
+  it.each([
+    [
       "a type the body names",
       {
         error: {

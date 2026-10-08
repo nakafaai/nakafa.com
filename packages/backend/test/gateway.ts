@@ -28,8 +28,9 @@ export const GatewayTest = Layer.effect(
 
 /**
  * One failure per reason, with the routing facts the classifier keeps. The
- * gateway names a type only for some bodies, such as the measured
- * `unsupported_parameter` rejection, so the other fixtures carry none.
+ * gateway documents a type only for some bodies, such as the `provider`
+ * rejection, whose type is `invalid_request_error`, so the other fixtures
+ * carry none.
  */
 export const failures = {
   "rate-limit": new GatewayFailure({

@@ -37,7 +37,11 @@ export class GatewayFailure extends Schema.TaggedError<GatewayFailure>()(
     status: Schema.optional(Schema.Finite),
     retryAfter: Schema.optional(Seconds),
     retryable: Schema.optional(Schema.Boolean),
-    /** The gateway's own error type, such as `invalid_request_error`, or its code when the body names no type. */
+    /**
+     * The error's documented type, such as `invalid_request_error`. Named
+     * failures such as `unsupported_parameter` are its code, which is read only
+     * when the body names no type.
+     */
     type: Schema.optional(GatewayType),
   }
 ) {}
