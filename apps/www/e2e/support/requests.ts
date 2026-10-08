@@ -1,5 +1,13 @@
 import type { Page, Request } from "@playwright/test";
-import { Effect, Equal, MutableHashMap, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Equal,
+  MutableHashMap,
+  Option,
+  Result,
+  Schema,
+} from "effect";
 
 export const TrackedRequestKindSchema = Schema.Literals([
   "javascript",
@@ -205,9 +213,13 @@ const openRequestTracker = Effect.fn("NakafaE2E.openRequestTracker")(
             return Option.getOrUndefined(MutableHashMap.get(failures, kind));
           },
           pendingRequests(kind: TrackedRequestKind) {
-            return Array.from(MutableHashMap.values(pendingRequests))
-              .filter((request) => request.kind === kind)
-              .map((request) => request.details);
+            return Arr.filterMap(
+              MutableHashMap.values(pendingRequests),
+              (request) =>
+                request.kind === kind
+                  ? Result.succeed(request.details)
+                  : Result.failVoid
+            );
           },
           get pendingCount() {
             return MutableHashMap.size(pendingRequests);
