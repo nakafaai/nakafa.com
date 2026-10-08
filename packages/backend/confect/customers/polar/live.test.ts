@@ -22,6 +22,7 @@ const customerWire = {
   id: "customer-1",
   metadata: { userId: "user-1" },
   name: "Learner",
+  type: "individual",
 };
 const customer = {
   email: "learner@example.com",

@@ -84,7 +84,7 @@ export const polarGateway: PolarCustomerGateway = {
     return yield* request(
       (client) =>
         createCheckoutsService(client).create({
-          // The 0.49 client filled these defaults into every checkout request.
+          // The checkout body always carries these flags, so they are sent explicitly.
           allow_discount_codes: true,
           allow_trial: true,
           customer_id: input.customerId,
@@ -119,7 +119,7 @@ export const polarGateway: PolarCustomerGateway = {
     return yield* request(
       (client) =>
         createCustomersService(client).create({
-          // The 0.49 client always sent the individual customer type.
+          // Customers are always created as individuals, so the type is sent explicitly.
           email: input.email,
           external_id: input.externalId,
           name: input.name,
@@ -185,7 +185,7 @@ export const polarGateway: PolarCustomerGateway = {
   findCustomerByEmail: Effect.fn("polar.findCustomerByEmail")(function* (
     email: string
   ) {
-    // An empty sort sends no sorting parameter, as the 0.49 list request did.
+    // An empty sort sends no sorting parameter, so the SDK's created-at default does not apply.
     const page = yield* request(
       (client) =>
         createCustomersService(client).list({
