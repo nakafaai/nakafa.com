@@ -165,13 +165,14 @@ function enclosingFunctions(node: Node, name: string): readonly Node[] {
  * `reference` binds. The search runs outward through each enclosing statement
  * list (a module, a block, a module block, or a case block), each function's
  * parameters and expression name, each class expression's name, each loop
- * head, and each catch clause, and the first scope that binds the name decides. A binding without a function value, such as a
- * parameter, a destructured name, a class, or a variable that a call
- * initializes, binds no function, so an outer function of the same name is
- * not the one the reference names. Hoisted `var` declarations are not searched,
- * because the repository's Ultracite configuration rejects `var` (`noVar`).
- * Imports are not searched either, because a module that imports a name
- * declares no function of that name at its top level.
+ * head, and each catch clause, and the first scope that binds the name decides.
+ * A binding without a function value, such as a parameter, a destructured
+ * name, a class, or a variable that a call initializes, binds no function, so
+ * an outer function of the same name is not the one the reference names.
+ * Hoisted `var` declarations are not searched, because the repository's
+ * Ultracite configuration rejects `var` (`noVar`). Imports are not searched
+ * either, because a module that imports a name declares no function of that
+ * name at its top level.
  */
 export function boundFunctions(reference: Identifier): readonly Node[] {
   return enclosingFunctions(reference.parent, reference.text);
