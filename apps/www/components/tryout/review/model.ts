@@ -17,6 +17,14 @@ type ReviewRuntimeQuestion = ReviewContentIdentity &
     "placementId" | "questionOrder" | "response" | "responseSpec"
   >;
 
+/** One reviewed question: its frozen runtime fields with its signed body and answer. */
+type TryoutReviewQuestion = Pick<TryoutAnswerContent, "answer"> &
+  Pick<TryoutQuestionContent, "content"> &
+  Pick<
+    ReviewRuntimeQuestion,
+    "placementId" | "questionOrder" | "response" | "responseSpec"
+  >;
+
 const IdentityJsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Fails closed when signed review content no longer matches frozen runtime. */
@@ -27,11 +35,6 @@ export class TryoutReviewProjectionError extends Schema.TaggedError<TryoutReview
     message: Schema.String,
   }
 ) {}
-
-/** One immutable reviewed question ready for read-only composition. */
-export type TryoutReviewQuestion = ReturnType<
-  typeof createTryoutReviewQuestion
->;
 
 /** Pairs one terminal runtime with its exact signed questions and answers. */
 export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
@@ -93,13 +96,14 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
       );
     }
 
-    reviewQuestions.push(
-      createTryoutReviewQuestion(
-        question,
-        signedQuestion.value,
-        signedAnswer.value
-      )
-    );
+    reviewQuestions.push({
+      answer: signedAnswer.value.answer,
+      content: signedQuestion.value.content,
+      placementId: question.placementId,
+      questionOrder: question.questionOrder,
+      response: question.response,
+      responseSpec: question.responseSpec,
+    });
   }
 
   return reviewQuestions;
@@ -112,22 +116,6 @@ function getContentIdentity(identity: ReviewContentIdentity) {
     identity.contentHash,
     identity.sourceRevision,
   ]);
-}
-
-/** Pairs one frozen runtime question with its signed body and answer. */
-function createTryoutReviewQuestion(
-  question: ReviewRuntimeQuestion,
-  signedQuestion: TryoutQuestionContent,
-  signedAnswer: TryoutAnswerContent
-) {
-  return {
-    answer: signedAnswer.answer,
-    content: signedQuestion.content,
-    placementId: question.placementId,
-    questionOrder: question.questionOrder,
-    response: question.response,
-    responseSpec: question.responseSpec,
-  };
 }
 
 /** Creates one typed terminal-review projection failure. */
