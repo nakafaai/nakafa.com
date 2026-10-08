@@ -246,6 +246,13 @@ const nextConfig = {
     // (next/dist/server/config-shared.js).
     // https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
     staticGenerationRetryCount: 2,
+    // Each static worker runs at most this many pages at once, down from the
+    // default of 8 (next/dist/server/config-shared.js). The production builder
+    // has 8 GB. A healthy static phase takes 14 to 23 seconds for 257 pages, and
+    // two builds stalled in it on 8 October. The worker count stays as it is:
+    // this option only limits the pages in flight within each worker.
+    // https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
+    staticGenerationMaxConcurrency: 4,
     ...(configEnv.NEXT_EXPOSE_TESTING_API === "true"
       ? { exposeTestingApiInProductionBuild: true }
       : {}),
