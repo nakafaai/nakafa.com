@@ -1,5 +1,5 @@
 import type { Page, Request } from "@playwright/test";
-import { Effect, Schema } from "effect";
+import { Effect, MutableHashMap, Option, Schema } from "effect";
 
 export const TrackedRequestKindSchema = Schema.Literals([
   "javascript",
@@ -58,22 +58,14 @@ export const formatRequestFailure = (failure: RequestFailure) => {
   return `outcome=${failure.outcome} url=${failure.url}${prefetchHeader}${segmentPrefetchHeader}${status}${errorText}`;
 };
 
-export interface RequestTracker {
-  readonly getFailure: (kind: TrackedRequestKind) => RequestFailure | undefined;
-  readonly pendingCount: number;
-  readonly pendingRequests: (
-    kind: TrackedRequestKind
-  ) => readonly TrackedRequest[];
-  readonly revision: number;
-  readonly successfulCount: (kind: TrackedRequestKind) => number;
-}
-
 type RequestClassifier = (request: Request) => TrackedRequestKind | undefined;
 
-interface PendingRequest {
-  readonly details: TrackedRequest;
-  readonly kind: TrackedRequestKind;
-}
+const PendingRequestSchema = Schema.Struct({
+  details: TrackedRequestSchema,
+  kind: TrackedRequestKindSchema,
+});
+
+type PendingRequest = typeof PendingRequestSchema.Type;
 
 const readTrackedRequest = (request: Request): TrackedRequest => {
   const headers = request.headers();
@@ -87,6 +79,134 @@ const readTrackedRequest = (request: Request): TrackedRequest => {
   };
 };
 
+/**
+ * Starts listening to one page's requests and returns the tracker that reads
+ * them, with the handlers that stop the listening.
+ */
+function openRequestTracker(page: Page, classifyRequest: RequestClassifier) {
+  const failures = MutableHashMap.empty<TrackedRequestKind, RequestFailure>();
+  // Effect collections compare object keys by structure, and a Request must
+  // match by reference, so pending requests stay in a native Map.
+  const pendingRequests = new Map<Request, PendingRequest>();
+  const successfulCounts = MutableHashMap.empty<TrackedRequestKind, number>();
+  let revision = 0;
+
+  const countSuccessful = (kind: TrackedRequestKind) =>
+    Option.getOrElse(MutableHashMap.get(successfulCounts, kind), () => 0);
+  const handleRequest = (request: Request) => {
+    const requestKind = classifyRequest(request);
+    if (!requestKind) {
+      return;
+    }
+    pendingRequests.set(request, {
+      details: readTrackedRequest(request),
+      kind: requestKind,
+    });
+    revision += 1;
+  };
+  const settleRequest = (request: Request) => {
+    const pendingRequest = pendingRequests.get(request);
+    if (!pendingRequest) {
+      return;
+    }
+    pendingRequests.delete(request);
+    revision += 1;
+    return pendingRequest;
+  };
+  const recordFailure = (
+    pendingRequest: PendingRequest,
+    requestFailure: RequestFailure
+  ) => {
+    if (!MutableHashMap.has(failures, pendingRequest.kind)) {
+      MutableHashMap.set(failures, pendingRequest.kind, requestFailure);
+    }
+  };
+  const handleRequestFailed = (request: Request) => {
+    const pendingRequest = settleRequest(request);
+    if (!pendingRequest) {
+      return;
+    }
+    const requestFailure = request.failure();
+    recordFailure(
+      pendingRequest,
+      requestFailure
+        ? {
+            ...pendingRequest.details,
+            errorText: requestFailure.errorText,
+            outcome: "network",
+          }
+        : {
+            ...pendingRequest.details,
+            outcome: "network",
+          }
+    );
+  };
+  const handleRequestFinished = (request: Request) => {
+    const pendingRequest = settleRequest(request);
+    if (!pendingRequest) {
+      return;
+    }
+    const response = request.existingResponse();
+    if (!response) {
+      recordFailure(pendingRequest, {
+        ...pendingRequest.details,
+        outcome: "missing-response",
+      });
+      return;
+    }
+    if (!response.ok()) {
+      recordFailure(pendingRequest, {
+        ...pendingRequest.details,
+        outcome: "http",
+        status: response.status(),
+      });
+      return;
+    }
+    MutableHashMap.set(
+      successfulCounts,
+      pendingRequest.kind,
+      countSuccessful(pendingRequest.kind) + 1
+    );
+  };
+
+  /**
+   * Playwright reports network failures through `requestfailed`, while
+   * HTTP error responses still finish through `requestfinished`.
+   *
+   * @see https://playwright.dev/docs/api/class-page#page-event-request-failed
+   * @see https://playwright.dev/docs/api/class-page#page-event-request-finished
+   */
+  page.on("request", handleRequest);
+  page.on("requestfailed", handleRequestFailed);
+  page.on("requestfinished", handleRequestFinished);
+
+  return {
+    handleRequest,
+    handleRequestFailed,
+    handleRequestFinished,
+    tracker: {
+      getFailure(kind: TrackedRequestKind) {
+        return Option.getOrUndefined(MutableHashMap.get(failures, kind));
+      },
+      pendingRequests(kind: TrackedRequestKind) {
+        return Array.from(pendingRequests.values())
+          .filter((request) => request.kind === kind)
+          .map((request) => request.details);
+      },
+      get pendingCount() {
+        return pendingRequests.size;
+      },
+      get revision() {
+        return revision;
+      },
+      successfulCount: countSuccessful,
+    },
+  };
+}
+
+/** The live view a suite reads while its page's requests settle. */
+export type RequestTracker = ReturnType<typeof openRequestTracker>["tracker"];
+
 /** Owns one classified Playwright request lifecycle and its truthful outcome. */
 export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
   function* <A, E, R>(
@@ -95,123 +215,7 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
     use: (tracker: RequestTracker) => Effect.Effect<A, E, R>
   ) {
     return yield* Effect.acquireUseRelease(
-      Effect.sync(() => {
-        const failures = new Map<TrackedRequestKind, RequestFailure>();
-        const pendingRequests = new Map<Request, PendingRequest>();
-        const successfulCounts = new Map<TrackedRequestKind, number>();
-        let revision = 0;
-
-        const handleRequest = (request: Request) => {
-          const requestKind = classifyRequest(request);
-          if (!requestKind) {
-            return;
-          }
-          pendingRequests.set(request, {
-            details: readTrackedRequest(request),
-            kind: requestKind,
-          });
-          revision += 1;
-        };
-        const settleRequest = (request: Request) => {
-          const pendingRequest = pendingRequests.get(request);
-          if (!pendingRequest) {
-            return;
-          }
-          pendingRequests.delete(request);
-          revision += 1;
-          return pendingRequest;
-        };
-        const recordFailure = (
-          pendingRequest: PendingRequest,
-          requestFailure: RequestFailure
-        ) => {
-          if (!failures.has(pendingRequest.kind)) {
-            failures.set(pendingRequest.kind, requestFailure);
-          }
-        };
-        const handleRequestFailed = (request: Request) => {
-          const pendingRequest = settleRequest(request);
-          if (!pendingRequest) {
-            return;
-          }
-          const requestFailure = request.failure();
-          recordFailure(
-            pendingRequest,
-            requestFailure
-              ? {
-                  ...pendingRequest.details,
-                  errorText: requestFailure.errorText,
-                  outcome: "network",
-                }
-              : {
-                  ...pendingRequest.details,
-                  outcome: "network",
-                }
-          );
-        };
-        const handleRequestFinished = (request: Request) => {
-          const pendingRequest = settleRequest(request);
-          if (!pendingRequest) {
-            return;
-          }
-          const response = request.existingResponse();
-          if (!response) {
-            recordFailure(pendingRequest, {
-              ...pendingRequest.details,
-              outcome: "missing-response",
-            });
-            return;
-          }
-          if (!response.ok()) {
-            recordFailure(pendingRequest, {
-              ...pendingRequest.details,
-              outcome: "http",
-              status: response.status(),
-            });
-            return;
-          }
-          successfulCounts.set(
-            pendingRequest.kind,
-            (successfulCounts.get(pendingRequest.kind) ?? 0) + 1
-          );
-        };
-
-        /**
-         * Playwright reports network failures through `requestfailed`, while
-         * HTTP error responses still finish through `requestfinished`.
-         *
-         * @see https://playwright.dev/docs/api/class-page#page-event-request-failed
-         * @see https://playwright.dev/docs/api/class-page#page-event-request-finished
-         */
-        page.on("request", handleRequest);
-        page.on("requestfailed", handleRequestFailed);
-        page.on("requestfinished", handleRequestFinished);
-
-        return {
-          handleRequest,
-          handleRequestFailed,
-          handleRequestFinished,
-          tracker: {
-            getFailure(kind: TrackedRequestKind) {
-              return failures.get(kind);
-            },
-            pendingRequests(kind: TrackedRequestKind) {
-              return Array.from(pendingRequests.values())
-                .filter((request) => request.kind === kind)
-                .map((request) => request.details);
-            },
-            get pendingCount() {
-              return pendingRequests.size;
-            },
-            get revision() {
-              return revision;
-            },
-            successfulCount(kind: TrackedRequestKind) {
-              return successfulCounts.get(kind) ?? 0;
-            },
-          },
-        };
-      }),
+      Effect.sync(() => openRequestTracker(page, classifyRequest)),
       ({ tracker }) => use(tracker),
       ({ handleRequest, handleRequestFailed, handleRequestFinished }) =>
         Effect.sync(() => {
