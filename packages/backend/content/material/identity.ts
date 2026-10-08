@@ -3,22 +3,24 @@ import {
   MaterialKeySchema,
   MaterialSectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/confect/contentRelease/error";
+import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
 import { Effect, Option, Schema } from "effect";
+
+const MaterialIdentityInputSchema = Schema.Struct({
+  appLocale: appLocaleValidator,
+  contentKey: Schema.String,
+  expectedMaterialKey: Schema.String,
+  expectedSectionKey: Schema.String,
+});
 /** Stable signed material identity requested by an application surface. */
-export interface MaterialIdentityInput {
-  readonly appLocale: Docs["materialCatalog"]["appLocale"];
-  readonly contentKey: string;
-  readonly expectedMaterialKey: string;
-  readonly expectedSectionKey: string;
-}
+export type MaterialIdentityInput = typeof MaterialIdentityInputSchema.Type;
 /** Decodes the caller's stable identity through Aksara's current contracts. */
 const decodeMaterialIdentity = Effect.fn(
   "contentRelease.decodeMaterialIdentity"
