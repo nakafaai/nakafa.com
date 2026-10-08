@@ -21,6 +21,7 @@ import { HTTP_CASES } from "@repo/backend/test/mcp/http";
 import { INVALID_TOOL_CALL_CASES } from "@repo/backend/test/mcp/invalid";
 import { JSON_RPC_CASES } from "@repo/backend/test/mcp/jsonrpc";
 import { LIMIT_CASES } from "@repo/backend/test/mcp/limits";
+import { OPTIONS_TOOL_CALL_CASES } from "@repo/backend/test/mcp/options";
 import { PROMPT_CASES } from "@repo/backend/test/mcp/prompts";
 import { PROTOCOL_CASES } from "@repo/backend/test/mcp/protocol";
 import { RESOURCE_CASES } from "@repo/backend/test/mcp/resources";
@@ -56,6 +57,7 @@ describe("Nakafa MCP golden contract", () => {
     it.effect.each(TAXONOMY_CALL_CASES)("$name", runGoldenCase);
     it.effect.each(QURAN_CALL_CASES)("$name", runGoldenCase);
     it.effect.each(INVALID_TOOL_CALL_CASES)("$name", runGoldenCase);
+    it.effect.each(OPTIONS_TOOL_CALL_CASES)("$name", runGoldenCase);
   });
   describe("prompts", () => {
     it.effect.each(PROMPT_CASES)("$name", runGoldenCase);
