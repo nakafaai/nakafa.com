@@ -3,24 +3,18 @@ import {
   DatabaseReader,
   StorageReader,
 } from "@repo/backend/confect/_generated/services";
-import schoolClassForumPostAttachmentsTable from "@repo/backend/confect/_generated/tables/schoolClassForumPostAttachments";
 import { ForumAttachmentError } from "@repo/backend/confect/classes/forums/attachments/spec";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/confect/classes/forums/constants";
 import {
   getMyPostReactions,
   getPostReactionPreviews,
 } from "@repo/backend/confect/classes/forums/postReactions";
+import type { forumPostAttachmentValidator } from "@repo/backend/confect/classes/forums/validators";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, Schema, Struct } from "effect";
+import { Array as Arr, Effect } from "effect";
 
-const PostAttachmentSchema = Schema.Struct({
-  ...schoolClassForumPostAttachmentsTable.Doc.mapFields(
-    Struct.pick(["_id", "mimeType", "name", "size"])
-  ).fields,
-  url: Schema.NullOr(Schema.String),
-});
-export type PostAttachment = typeof PostAttachmentSchema.Type;
+export type PostAttachment = typeof forumPostAttachmentValidator.Type;
 
 /**
  * Enrich forum posts with user data, reactions, and attachments.
