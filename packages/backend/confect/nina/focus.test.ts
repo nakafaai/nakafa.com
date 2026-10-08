@@ -168,9 +168,9 @@ describe("Nina question focus", () => {
           await ctx.db.delete("contentArtifacts", stored._id);
           return;
         }
-        const artifact = Schema.decodeSync(SignedArtifactJson)(
-          stored.artifactJson
-        );
+        const artifact = Schema.decodeSync(SignedArtifactJson, {
+          onExcessProperty: "error",
+        })(stored.artifactJson);
         await ctx.db.patch("contentArtifacts", stored._id, {
           artifactJson: encodeJson({
             ...artifact,
