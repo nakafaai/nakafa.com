@@ -137,9 +137,17 @@ export const printHeartbeats = Effect.fn("BuildWatch.printHeartbeats")(
 
 /**
  * How long a stopped command gets to exit after SIGTERM before it is killed,
- * and how long its output may take to close once it has been stopped.
+ * and how long its output may take to close once the command has ended.
  */
 const STOP_GRACE = Duration.seconds(5);
+
+/**
+ * Waits at most STOP_GRACE for the output of a command to close. A process that
+ * the command started can hold the output open after the command has exited,
+ * so the wait is bounded. A read error still fails the build.
+ */
+const drainOutput = (output: Fiber.Fiber<void, PlatformError.PlatformError>) =>
+  Fiber.join(output).pipe(Effect.timeoutOption(STOP_GRACE), Effect.asVoid);
 
 /**
  * Runs one command and watches it. Its output passes through unchanged, a
@@ -178,15 +186,10 @@ export const watchBuild = Effect.fn("BuildWatch.run")(function* (options: {
       const heartbeats = yield* Effect.forkChild(
         printHeartbeats(activity, stdio, options.heartbeatInterval)
       );
-      // The command is finished once it has exited and its output has closed.
-      // A process that holds the output open after the exit must also print
-      // within the stall limit, so the silence watch runs through the drain.
-      const finished = Effect.gen(function* () {
-        const status = yield* child.exitCode;
-        yield* Fiber.join(output);
-        return status;
-      });
-      return yield* finished.pipe(
+      // Only a command that is still running can stall. Once it has exited,
+      // its exit status is the result, even if a process it started still
+      // holds the output open, so the output gets one bounded drain.
+      const status = yield* child.exitCode.pipe(
         Effect.raceFirst(watchSilence(activity, options.stallLimit)),
         Effect.ensuring(Fiber.interrupt(heartbeats)),
         Effect.catchTag("BuildStalled", (stalled) =>
@@ -200,16 +203,13 @@ export const watchBuild = Effect.fn("BuildWatch.run")(function* (options: {
               Effect.ignore,
               // A stopped command's output closes at once unless a process
               // outside its group still holds it, so the wait is bounded.
-              Effect.andThen(
-                Fiber.join(output).pipe(
-                  Effect.timeout(STOP_GRACE),
-                  Effect.ignore
-                )
-              ),
+              Effect.andThen(drainOutput(output).pipe(Effect.ignore)),
               Effect.andThen(Effect.fail(stalled))
             )
         )
       );
+      yield* drainOutput(output);
+      return status;
     })
   );
 });

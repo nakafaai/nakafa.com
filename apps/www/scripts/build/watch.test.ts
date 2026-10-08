@@ -232,26 +232,27 @@ describe("build watch", () => {
       })
   );
 
-  it.live("ends a command whose output stays open after it exits", () =>
-    Effect.gen(function* () {
-      const streams = yield* captureStreams();
-      const failure = yield* runWatch(streams.stdio, {
-        args: ["-e", OUTPUT_HELD],
-        command: process.execPath,
-        heartbeatInterval: Duration.seconds(15),
-        stallLimit: Duration.seconds(2),
-      }).pipe(Effect.flip);
+  it.live(
+    "returns the status of a command whose output stays open after it exits",
+    () =>
+      Effect.gen(function* () {
+        const streams = yield* captureStreams();
+        const status = yield* runWatch(streams.stdio, {
+          args: ["-e", OUTPUT_HELD],
+          command: process.execPath,
+          heartbeatInterval: Duration.seconds(15),
+          stallLimit: Duration.seconds(2),
+        });
 
-      expectStalled(
-        failure,
-        "build stalled: no output for 2s; last output: done"
-      );
-      const [grandchildLine = ""] = Str.split(
-        yield* Ref.get(streams.stdout),
-        "\n"
-      );
-      yield* expectProcessEnded(Number(grandchildLine));
-    })
+        expect(status).toBe(0);
+        const [grandchildLine = "", done = ""] = Str.split(
+          yield* Ref.get(streams.stdout),
+          "\n"
+        );
+        expect(Number(grandchildLine)).toBeGreaterThan(0);
+        expect(done).toBe("done");
+      }),
+    15_000
   );
 
   it.live("reads a character split across two chunks in the stall line", () =>
