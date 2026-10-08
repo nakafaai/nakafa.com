@@ -1,12 +1,18 @@
-import { expect, it } from "@effect/vitest";
+import { afterEach, expect, it } from "@effect/vitest";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { DateTime } from "effect";
+
+const NOW = Date.UTC(2026, 9, 8, 12, 0, 0);
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 it("requires a session and grants subscription UI access only for the current customer's active product", async () => {
+  vi.setSystemTime(new Date(NOW));
   const t = createConvexTestWithBetterAuth();
   const query = api.subscriptions.queries.hasActiveSubscription;
   const args = { productId: "pro-product" };
@@ -18,9 +24,7 @@ it("requires a session and grants subscription UI access only for the current cu
     },
   });
   const identity = await t.mutation((ctx) =>
-    seedAuthenticatedUser(ctx, {
-      now: DateTime.toEpochMillis(DateTime.nowUnsafe()),
-    })
+    seedAuthenticatedUser(ctx, { now: NOW })
   );
   const authed = t.withIdentity({
     subject: identity.authUserId,
