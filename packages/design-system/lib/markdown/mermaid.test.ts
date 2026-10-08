@@ -5,6 +5,7 @@ import {
   normalizeMermaidChart,
   readMermaidMetadata,
 } from "@repo/design-system/lib/markdown/mermaid";
+import { Array as Arr } from "effect";
 
 describe("readMermaidMetadata", () => {
   it("uses distinct fallback copy when metadata is missing", () => {
@@ -116,11 +117,14 @@ A -->|\\(H_2O\\)| B`;
   });
 
   it("normalizes Mermaid math in sequence diagrams without flowchart quoting", () => {
-    const chart = [
-      "sequenceDiagram",
-      String.raw`participant 1 as \\(\alpha\\)`,
-      "1->>2: Solve `\\\\(x^2\\\\)`",
-    ].join("\n");
+    const chart = Arr.join(
+      [
+        "sequenceDiagram",
+        String.raw`participant 1 as \\(\alpha\\)`,
+        "1->>2: Solve `\\\\(x^2\\\\)`",
+      ],
+      "\n"
+    );
 
     expect(normalizeMermaidChart(chart)).toBe(`sequenceDiagram
 participant 1 as $$\\alpha$$
@@ -128,18 +132,24 @@ participant 1 as $$\\alpha$$
   });
 
   it("normalizes other LLM math delimiter variants in Mermaid text", () => {
-    const chart = [
-      "sequenceDiagram",
-      String.raw`1->>2: Area \[x^2\]`,
-      "2-->>1: Already `$$y^2$$`, inline `$z^2$`, and empty $ $",
-    ].join("\n");
-
-    expect(normalizeMermaidChart(chart)).toBe(
+    const chart = Arr.join(
       [
         "sequenceDiagram",
-        "1->>2: Area $$x^2$$",
-        "2-->>1: Already $$y^2$$, inline $$z^2$$, and empty $ $",
-      ].join("\n")
+        String.raw`1->>2: Area \[x^2\]`,
+        "2-->>1: Already `$$y^2$$`, inline `$z^2$`, and empty $ $",
+      ],
+      "\n"
+    );
+
+    expect(normalizeMermaidChart(chart)).toBe(
+      Arr.join(
+        [
+          "sequenceDiagram",
+          "1->>2: Area $$x^2$$",
+          "2-->>1: Already $$y^2$$, inline $$z^2$$, and empty $ $",
+        ],
+        "\n"
+      )
     );
   });
 

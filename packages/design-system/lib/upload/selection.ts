@@ -1,4 +1,4 @@
-import { Effect, Result, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Rejects an entire selection that exceeds the multiple-file limit. */
 export class FileCountError extends Schema.TaggedError<FileCountError>()(
@@ -29,7 +29,7 @@ function acceptsFile(file: File, accept: string) {
   const extension =
     nameParts.length > 1 && lastPart ? `.${lastPart.toLowerCase()}` : "";
 
-  return accept.split(",").some((entry) => {
+  return Arr.some(accept.split(","), (entry) => {
     const type = entry.trim();
     if (type.startsWith(".")) {
       return extension === type.toLowerCase();
@@ -78,23 +78,21 @@ export const selectFileBatch = Effect.fn("fileUpload.selectBatch")(function* ({
     return yield* new FileCountError({ maxFiles });
   }
 
-  const accepted: File[] = [];
-  const errors: (FileSizeError | FileTypeError)[] = [];
-  for (const file of files) {
-    const duplicate =
-      multiple &&
-      currentFiles.some(
-        (existing) => existing.name === file.name && existing.size === file.size
-      );
-    if (duplicate) {
-      continue;
-    }
-    const result = yield* Effect.result(validateFile(file, accept, maxSize));
-    if (Result.isFailure(result)) {
-      errors.push(result.failure);
-    } else {
-      accepted.push(result.success);
-    }
-  }
+  const candidates = Arr.filter(
+    files,
+    (file) =>
+      !(
+        multiple &&
+        Arr.some(
+          currentFiles,
+          (existing) =>
+            existing.name === file.name && existing.size === file.size
+        )
+      )
+  );
+  const outcomes = yield* Effect.forEach(candidates, (file) =>
+    Effect.result(validateFile(file, accept, maxSize))
+  );
+  const [accepted, errors] = Arr.separate(outcomes);
   return { files: accepted, errors };
 });

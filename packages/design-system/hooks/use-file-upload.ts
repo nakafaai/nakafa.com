@@ -6,6 +6,7 @@ import {
   Effect,
   HashSet,
   MutableHashSet,
+  Option,
   Result,
   Schema,
 } from "effect";
@@ -91,7 +92,7 @@ export const useFileUpload = (
   } = options;
 
   const [state, setState] = useState<FileUploadState>({
-    files: initialFiles.map((file) => ({
+    files: Arr.map(initialFiles, (file) => ({
       file,
       id: file.id,
       preview: file.url,
@@ -201,7 +202,7 @@ export const useFileUpload = (
         Effect.result(
           selectFileBatch({
             accept,
-            currentFiles: currentFiles.map(({ file }) => file),
+            currentFiles: Arr.map(currentFiles, ({ file }) => file),
             files: Array.from(newFiles),
             maxFiles,
             maxSize,
@@ -220,7 +221,7 @@ export const useFileUpload = (
         resetInput();
         return;
       }
-      const errors = selection.success.errors.map((error) => {
+      const errors = Arr.map(selection.success.errors, (error) => {
         if (error._tag === "FileTypeError") {
           return t("not-accepted-file-type", { fileName: error.fileName });
         }
@@ -231,7 +232,7 @@ export const useFileUpload = (
           }
         );
       });
-      const validFiles = selection.success.files.map((file) => ({
+      const validFiles = Arr.map(selection.success.files, (file) => ({
         file,
         id: generateUniqueId(file),
         preview: createPreview(file),
@@ -280,13 +281,16 @@ export const useFileUpload = (
 
   const removeFile = useCallback(
     (id: string) => {
-      const fileToRemove = filesRef.current.find((file) => file.id === id);
-      if (!fileToRemove) {
+      const fileToRemove = Arr.findFirst(
+        filesRef.current,
+        (file) => file.id === id
+      );
+      if (Option.isNone(fileToRemove)) {
         return;
       }
 
-      revokePreview(fileToRemove);
-      const newFiles = filesRef.current.filter((file) => file.id !== id);
+      revokePreview(fileToRemove.value);
+      const newFiles = Arr.filter(filesRef.current, (file) => file.id !== id);
       updateFiles(newFiles, []);
       onFilesChange?.(newFiles);
     },

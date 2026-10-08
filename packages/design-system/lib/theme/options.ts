@@ -33,6 +33,7 @@ import {
   YenIcon,
 } from "@hugeicons/core-free-icons";
 import { themes } from "@repo/design-system/lib/theme/registry";
+import { Array as Arr } from "effect";
 
 type ThemeIconRegistry = {
   readonly [Value in (typeof themes)[number]["value"]]: typeof Sun01Icon;
@@ -73,10 +74,15 @@ const themeIcons = {
   zelda: KnightShieldIcon,
 } satisfies ThemeIconRegistry;
 
-/** Theme picker options derived from the lightweight runtime registry. */
-export const themeOptions = Object.freeze(
-  themes.map((theme) => ({
-    ...theme,
-    icon: themeIcons[theme.value],
-  }))
-);
+const themeOptionList = Arr.map(themes, (theme) => ({
+  ...theme,
+  icon: themeIcons[theme.value],
+}));
+
+/**
+ * Theme picker options derived from the lightweight runtime registry. The type
+ * stays an array: mapping the tuple of themes would infer a non-empty tuple,
+ * and the picker slices its options.
+ */
+export const themeOptions: readonly (typeof themeOptionList)[number][] =
+  Object.freeze(themeOptionList);

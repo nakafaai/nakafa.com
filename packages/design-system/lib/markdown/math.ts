@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 // Hoisted regex patterns to top-level scope for performance
 const TRIPLE_BACKTICKS = /```/g;
 // Detects math expressions in backticks with dollar signs: `$x^2$`
@@ -159,10 +161,10 @@ function createFencedMathBlock(
   const mathContent = inner.trim();
 
   if (blockquotePrefix) {
-    const quotedMath = mathContent
-      .split("\n")
-      .map((line) => `${blockquotePrefix}${line}`)
-      .join("\n");
+    const quotedMath = Arr.join(
+      Arr.map(mathContent.split("\n"), (line) => `${blockquotePrefix}${line}`),
+      "\n"
+    );
 
     return `\`\`\`math\n${quotedMath}\n${blockquotePrefix}\`\`\``;
   }
