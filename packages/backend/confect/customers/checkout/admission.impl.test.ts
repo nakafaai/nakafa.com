@@ -171,9 +171,11 @@ describe("customers/checkout/admission", () => {
   it.effect("preserves account revalidation failures", () =>
     Effect.gen(function* () {
       const captureEvent = vi.fn(() => Effect.void);
-      const failure = yield* admitCheckoutProgram(captureEvent, () =>
-        Effect.fail(checkoutSessionIoError(new Error("Convex unavailable")))
-      ).pipe(Effect.flip);
+      const failure = yield* admitCheckoutProgram({
+        captureEvent,
+        loadUser: () =>
+          Effect.fail(checkoutSessionIoError(new Error("Convex unavailable"))),
+      }).pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(CheckoutSessionIoError);
       expect(captureEvent).not.toHaveBeenCalled();
