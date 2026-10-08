@@ -8,6 +8,7 @@ import { TestClock } from "effect/testing";
 import {
   httpLayer,
   isTransientQueryFailure,
+  QueryDeadline,
   withQueryRetry,
 } from "@/lib/convex/http";
 
@@ -63,8 +64,11 @@ function scriptQuery(...outcomes: Effect.Effect<unknown, unknown>[]) {
   return { runs: () => runs };
 }
 
-/** Runs one query through the retrying client while test time passes. */
-function runQuery(messages: unknown[] = []) {
+/**
+ * Runs one query through the retrying client while the test clock passes
+ * `elapsed`, which must cover every attempt the scenario makes.
+ */
+function runQuery(messages: unknown[] = [], elapsed = Duration.seconds(2)) {
   return Effect.gen(function* () {
     const fiber = yield* Effect.forkChild(
       Effect.flatMap(HttpClient.HttpClient, (client) =>
@@ -83,7 +87,7 @@ function runQuery(messages: unknown[] = []) {
         Effect.exit
       )
     );
-    yield* TestClock.adjust(Duration.seconds(2));
+    yield* TestClock.adjust(elapsed);
     return yield* Fiber.join(fiber);
   });
 }
@@ -104,6 +108,47 @@ describe("Convex HTTP query retries", () => {
 
       expect(yield* runQuery()).toStrictEqual(Exit.succeed("surahs"));
       expect(query.runs()).toBe(3);
+    })
+  );
+
+  it.effect("fails a query that never answers after three attempts", () =>
+    Effect.gen(function* () {
+      const query = scriptQuery(Effect.never, Effect.never, Effect.never);
+      const messages: unknown[] = [];
+
+      // Three attempts of ten seconds, with the 500 ms and 1 s delays between them.
+      expect(yield* runQuery(messages, Duration.millis(31_500))).toStrictEqual(
+        Exit.fail(
+          new HttpClient.HttpClientError({ cause: new QueryDeadline() })
+        )
+      );
+      expect(query.runs()).toBe(3);
+      expect(messages).toEqual([["A Convex query failed after its retries."]]);
+    })
+  );
+
+  it.effect("answers a query whose first attempt missed its deadline", () =>
+    Effect.gen(function* () {
+      const query = scriptQuery(Effect.never, Effect.succeed("surahs"));
+
+      expect(yield* runQuery([], Duration.millis(10_500))).toStrictEqual(
+        Exit.succeed("surahs")
+      );
+      expect(query.runs()).toBe(2);
+    })
+  );
+
+  it.effect("returns a function error at once", () =>
+    Effect.gen(function* () {
+      const failure = new HttpClient.HttpClientError({
+        cause: new Error("Uncaught Error: Surah not found."),
+      });
+      const query = scriptQuery(Effect.fail(failure));
+      const messages: unknown[] = [];
+
+      expect(yield* runQuery(messages)).toStrictEqual(Exit.fail(failure));
+      expect(query.runs()).toBe(1);
+      expect(messages).toEqual([]);
     })
   );
 
@@ -147,7 +192,7 @@ describe("Convex HTTP query retries", () => {
 });
 
 describe("transient query failures", () => {
-  it("accepts only refusals and dropped connections from the client", () => {
+  it("accepts only refusals, dropped connections, and missed deadlines", () => {
     expect(
       [
         refused("ExpiredInQueue"),
@@ -158,8 +203,9 @@ describe("transient query failures", () => {
         new HttpClient.HttpClientError({ cause: "closed" }),
         new Error(JSON.stringify({ code: "ExpiredInQueue" })),
         { _tag: "HttpClientError", cause: dropped().cause },
+        new HttpClient.HttpClientError({ cause: new QueryDeadline() }),
       ].map(isTransientQueryFailure)
-    ).toEqual([true, true, true, false, false, false, false, false]);
+    ).toEqual([true, true, true, false, false, false, false, false, true]);
   });
 });
 

@@ -5,7 +5,15 @@ import {
   isRetryableNetworkError,
   NETWORK_RETRY_DELAYS_MILLISECONDS,
 } from "@repo/backend/client/network";
-import { Effect, Layer, Result, Schedule, Schema } from "effect";
+import {
+  Data,
+  Duration,
+  Effect,
+  Layer,
+  Result,
+  Schedule,
+  Schema,
+} from "effect";
 import { env } from "@/env";
 
 type HttpClientOptions = Parameters<typeof HttpClient.layer>[1];
@@ -35,15 +43,32 @@ const QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
 );
 
 /**
- * Whether a query failed before Convex ran it, so repeating it is safe: a
- * refused request, or a connection that dropped before Convex answered.
- * Function errors and decoding failures are never transient.
+ * One attempt of a query that Convex did not answer within its deadline. It is
+ * the cause of the client's own error, so the retry policy treats it like any
+ * other transient failure.
+ */
+export class QueryDeadline extends Data.TaggedError("QueryDeadline") {}
+
+/**
+ * Each attempt of a query may take at most this long. With two retries, a
+ * query ends within 31.5 seconds, inside a page's 60 second budget.
+ */
+const QUERY_ATTEMPT_DEADLINE = Duration.seconds(10);
+
+/**
+ * Whether repeating a query is safe: Convex queries only read, and this
+ * failure either happened before Convex ran the query, or the attempt missed
+ * its deadline, or the connection dropped before Convex answered. Function
+ * errors and decoding failures are never transient.
  */
 export function isTransientQueryFailure(error: unknown) {
   if (!Schema.is(HttpClient.HttpClientError)(error)) {
     return false;
   }
   const { cause } = error;
+  if (cause instanceof QueryDeadline) {
+    return true;
+  }
   if (
     cause instanceof Error &&
     Result.isSuccess(Schema.decodeResult(RefusedQuery)(cause.message))
@@ -54,8 +79,10 @@ export function isTransientQueryFailure(error: unknown) {
 }
 
 /**
- * Makes the provided client retry transient query failures. Mutations and
- * actions are not idempotent, so they pass through unchanged.
+ * Makes the provided client retry transient query failures, and gives each
+ * attempt its own deadline so a stalled query cannot outlive the page that
+ * reads it. Mutations and actions are not idempotent, so they pass through
+ * unchanged.
  */
 export const withQueryRetry = <E, R>(
   base: Layer.Layer<HttpClient.HttpClient, E, R>
@@ -69,6 +96,13 @@ export const withQueryRetry = <E, R>(
         ...rest: OptionalArgs<Query>
       ) =>
         client.query(ref, ...rest).pipe(
+          Effect.timeoutOrElse({
+            duration: QUERY_ATTEMPT_DEADLINE,
+            orElse: () =>
+              Effect.fail(
+                new HttpClient.HttpClientError({ cause: new QueryDeadline() })
+              ),
+          }),
           Effect.retry({
             schedule: QUERY_RETRY_SCHEDULE,
             while: isTransientQueryFailure,
