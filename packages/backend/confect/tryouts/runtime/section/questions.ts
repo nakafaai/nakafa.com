@@ -18,6 +18,7 @@ import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/resul
 import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
+type TryoutResponse = Docs["tryoutResponses"];
 
 /** Projects the public state shared by attempt and runtime responses. */
 export const readCurrentSection = Effect.fn(
@@ -106,23 +107,27 @@ function projectRuntimeQuestions(
     readonly questions: boolean;
   }
 ) {
+  const responsesByPlacement = MutableHashMap.fromIterable(
+    Arr.map(responses, (response) => [response.placementId, response])
+  );
   return Arr.map(placements, (placement) =>
-    projectRuntimeQuestion(placement, responses, access)
+    projectRuntimeQuestion(
+      placement,
+      Option.getOrNull(MutableHashMap.get(responsesByPlacement, placement._id)),
+      access
+    )
   );
 }
 
 /** Projects one validated frozen placement and optional learner response. */
 function projectRuntimeQuestion(
   placement: TryoutPlacement,
-  responses: TryoutResponseIndex["responses"],
+  response: TryoutResponse | null,
   access: {
     readonly answers: boolean;
     readonly questions: boolean;
   }
 ) {
-  const response = Option.getOrNull(
-    MutableHashMap.get(responses, placement._id)
-  );
   const runtimeResponse = response
     ? {
         answeredAt: response.answeredAt,

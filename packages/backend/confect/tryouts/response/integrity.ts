@@ -192,7 +192,7 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
   }
   return input.placements;
 });
-/** Validates response rows against the caller's verified placement inventory. */
+/** Validates response rows against the verified placement inventory and keeps their stored order. */
 export const indexTryoutResponses = Effect.fn(
   "tryouts.response.indexIntegrity"
 )(function* (input: {
@@ -203,10 +203,7 @@ export const indexTryoutResponses = Effect.fn(
   const linksByPlacement = HashMap.fromIterable(
     Arr.map(input.links, (link) => [link.placement._id, link])
   );
-  const responsesByPlacement = MutableHashMap.empty<
-    Id<"tryoutAttemptPlacements">,
-    TryoutResponse
-  >();
+  const placementIds = MutableHashSet.empty<Id<"tryoutAttemptPlacements">>();
   for (const response of input.responses) {
     const link = Option.getOrUndefined(
       HashMap.get(linksByPlacement, response.placementId)
@@ -221,7 +218,7 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out response links do not match its frozen attempt placement."
       );
     }
-    if (MutableHashMap.has(responsesByPlacement, response.placementId)) {
+    if (MutableHashSet.has(placementIds, response.placementId)) {
       return yield* responseIntegrity(
         "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
         "Try-out placement has more than one response."
@@ -246,9 +243,9 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out response evaluation differs from its stored result."
       );
     }
-    MutableHashMap.set(responsesByPlacement, response.placementId, response);
+    MutableHashSet.add(placementIds, response.placementId);
   }
-  return responsesByPlacement;
+  return input.responses;
 });
 const sameOutcome = Schema.toEquivalence(Outcome);
 

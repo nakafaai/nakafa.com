@@ -13,13 +13,13 @@ type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 type SectionCoverage = "complete" | "partial";
-/** One section's validated placements with the stored response of each placement that has one. */
-export type TryoutResponseIndex = Readonly<
-  Effect.Success<ReturnType<typeof loadSectionResponseIndex>>
+/** One section's validated placements and its validated responses in stored order. */
+export type TryoutResponseIndex = Effect.Success<
+  ReturnType<typeof loadSectionResponseIndex>
 >;
-/** One attempt's validated placements, responses, and frozen section attempts. */
-export type TryoutAttemptResponseIndex = Readonly<
-  Effect.Success<ReturnType<typeof loadAttemptResponses>>
+/** One attempt's validated placements, responses in stored order, and frozen sections. */
+export type TryoutAttemptResponseIndex = Effect.Success<
+  ReturnType<typeof loadAttemptResponses>
 >;
 
 /** Loads one section response graph from an already-read placement inventory. */

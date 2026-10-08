@@ -32,7 +32,7 @@ import {
   type TryoutScoringStrategy,
   tryoutScoringStrategyValidator,
 } from "@repo/backend/confect/tryouts/score";
-import { Array as Arr, Effect, MutableHashMap, Schema, Struct } from "effect";
+import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -215,9 +215,7 @@ export const finalizeAttemptScore = Effect.fn(
   const score = yield* scoreTryoutSection({
     attempt: args.attempt,
     placements: args.responseIndex.placements,
-    responses: Arr.fromIterable(
-      MutableHashMap.values(args.responseIndex.responses)
-    ),
+    responses: args.responseIndex.responses,
     source: args.source,
     totalQuestions: args.attempt.totalQuestions,
   });
