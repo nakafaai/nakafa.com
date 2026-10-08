@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { PublicationReceiptSchema } from "@nakafa/aksara-contracts/release";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
@@ -15,6 +16,9 @@ import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { TEST_PROOF_WORKFLOW_ID } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
 import { Effect, Schema, Struct } from "effect";
+
+const ReceiptJsonSchema = Schema.fromJsonString(PublicationReceiptSchema);
+const encodeReceiptJson = Schema.encodeUnknownSync(ReceiptJsonSchema);
 
 /** Loads one typed release row and its decoded immutable manifest. */
 function fixture() {
@@ -172,7 +176,9 @@ describe("contentRelease/receipt", () => {
       const completed = {
         ...verified,
         completedAt: 2,
-        receiptJson: JSON.stringify(makePublicationReceipt(verified, signed)),
+        receiptJson: encodeReceiptJson(
+          makePublicationReceipt(verified, signed)
+        ),
         status: "completed",
       } satisfies Docs["contentReleases"];
 
@@ -193,7 +199,7 @@ describe("contentRelease/receipt", () => {
         { ...completed, receiptJson: "{}" },
         {
           ...completed,
-          receiptJson: JSON.stringify({
+          receiptJson: encodeReceiptJson({
             ...makePublicationReceipt(verified, signed),
             releaseId: "another-release",
           }),
@@ -212,7 +218,9 @@ describe("contentRelease/receipt", () => {
       const completed = {
         ...verified,
         completedAt: 2,
-        receiptJson: JSON.stringify(makePublicationReceipt(verified, signed)),
+        receiptJson: encodeReceiptJson(
+          makePublicationReceipt(verified, signed)
+        ),
         status: "completed",
       } satisfies Docs["contentReleases"];
 

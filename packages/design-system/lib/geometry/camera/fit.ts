@@ -4,7 +4,7 @@ import type {
   resolveOrthographicZoom,
 } from "@repo/design-system/lib/geometry/camera";
 import type { CameraPixelLabel } from "@repo/design-system/lib/geometry/camera/bounds";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { type Box3, MathUtils, Matrix4, Vector3 } from "three";
 
 const VIEWPORT_EDGE_SPACE = 24;
@@ -19,10 +19,12 @@ export class CameraLabelFitError extends Schema.TaggedError<CameraLabelFitError>
   }
 ) {}
 
-interface AxisConstraint {
-  readonly lower: { readonly offset: number; readonly rate: number };
-  readonly upper: { readonly offset: number; readonly rate: number };
-}
+const AxisConstraintSchema = Schema.Struct({
+  lower: Schema.Struct({ offset: Schema.Finite, rate: Schema.Finite }),
+  upper: Schema.Struct({ offset: Schema.Finite, rate: Schema.Finite }),
+});
+
+type AxisConstraint = typeof AxisConstraintSchema.Type;
 
 /**
  * Fits finite world bounds along the existing viewing direction. The camera
@@ -157,9 +159,9 @@ export const resolveCameraFit = Effect.fn("camera.resolveFit")(function* ({
 });
 
 function* boxCorners(bounds: Box3) {
-  for (const x of new Set([bounds.min.x, bounds.max.x])) {
-    for (const y of new Set([bounds.min.y, bounds.max.y])) {
-      for (const z of new Set([bounds.min.z, bounds.max.z])) {
+  for (const x of Arr.dedupe([bounds.min.x, bounds.max.x])) {
+    for (const y of Arr.dedupe([bounds.min.y, bounds.max.y])) {
+      for (const z of Arr.dedupe([bounds.min.z, bounds.max.z])) {
         yield new Vector3(x, y, z);
       }
     }

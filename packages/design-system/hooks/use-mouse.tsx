@@ -1,9 +1,12 @@
+import { Schema } from "effect";
 import { useEffect, useRef } from "react";
 
-interface MousePosition {
-  x: number;
-  y: number;
-}
+const MousePositionSchema = Schema.Struct({
+  x: Schema.Finite,
+  y: Schema.Finite,
+});
+
+type MousePosition = typeof MousePositionSchema.Type;
 
 export function useMousePosition() {
   const mousePosition = useRef<MousePosition>({

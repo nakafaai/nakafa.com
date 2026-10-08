@@ -140,10 +140,10 @@ export const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(
       artifactJson: encodeArtifactJson(artifact),
     }));
     const values = Arr.map(entries, ({ artifactJson }) => artifactJson);
-    const identities = new Set(
+    const identities = Arr.dedupe(
       Arr.map(artifacts, ({ artifactHash }) => artifactHash)
     );
-    if (identities.size !== artifacts.length) {
+    if (identities.length !== artifacts.length) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
         `Artifact batch ${batchIndex} repeats one immutable hash.`

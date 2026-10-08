@@ -1,27 +1,33 @@
-import type {
-  TryoutCountry,
-  TryoutExam,
-  TryoutSection,
-  TryoutSet,
-  TryoutTrack,
+import {
+  type TryoutCountry,
+  TryoutCountrySchema,
+  type TryoutExam,
+  TryoutExamSchema,
+  type TryoutSection,
+  TryoutSectionSchema,
+  type TryoutSet,
+  TryoutSetSchema,
+  type TryoutTrack,
+  TryoutTrackSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { TrackIdentity } from "@repo/backend/confect/tryouts/sets/spec";
 import type { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
-import { Effect } from "effect";
+import { Effect, MutableHashSet, Schema } from "effect";
 /** Verified localized catalog selected by the active release owner. */
 export type PublishedCatalog = Effect.Success<
   ReturnType<typeof loadTryoutCatalog>
 >;
+export const PublishedCatalogIndexSchema = Schema.Struct({
+  countries: Schema.Array(TryoutCountrySchema),
+  exams: Schema.Array(TryoutExamSchema),
+  sections: Schema.Array(TryoutSectionSchema),
+  sets: Schema.Array(TryoutSetSchema),
+  tracks: Schema.Array(TryoutTrackSchema),
+});
 /** Signed catalog rows split into their exact discriminated hierarchy kinds. */
-export interface PublishedCatalogIndex {
-  readonly countries: readonly TryoutCountry[];
-  readonly exams: readonly TryoutExam[];
-  readonly sections: readonly TryoutSection[];
-  readonly sets: readonly TryoutSet[];
-  readonly tracks: readonly TryoutTrack[];
-}
+export type PublishedCatalogIndex = typeof PublishedCatalogIndexSchema.Type;
 /** Splits verified catalog rows and rejects duplicate public routes. */
 export const indexPublishedCatalog = Effect.fn(
   "tryouts.catalog.indexPublishedCatalog"
@@ -31,15 +37,15 @@ export const indexPublishedCatalog = Effect.fn(
   const sections: TryoutSection[] = [];
   const sets: TryoutSet[] = [];
   const tracks: TryoutTrack[] = [];
-  const publicPaths = new Set<string>();
+  const publicPaths = MutableHashSet.empty<string>();
   for (const { row } of catalog.entries) {
     if ("publicPath" in row && row.publicPath !== undefined) {
-      if (publicPaths.has(row.publicPath)) {
+      if (MutableHashSet.has(publicPaths, row.publicPath)) {
         return yield* catalogIntegrity(
           `Signed try-out route ${row.publicPath} is duplicated.`
         );
       }
-      publicPaths.add(row.publicPath);
+      MutableHashSet.add(publicPaths, row.publicPath);
     }
     switch (row.kind) {
       case "country":

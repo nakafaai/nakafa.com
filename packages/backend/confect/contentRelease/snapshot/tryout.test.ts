@@ -40,7 +40,12 @@ describe("contentRelease/snapshot/tryout", () => {
     const stage = (index: number) =>
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutPlacement(snapshotId, index, placement, rowJson).pipe(
+          stageTryoutPlacement(
+            snapshotId,
+            index,
+            placement.record,
+            rowJson
+          ).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -84,7 +89,7 @@ describe("contentRelease/snapshot/tryout", () => {
     await expect(
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutCatalog(snapshotId, 0, catalog, catalogJson).pipe(
+          stageTryoutCatalog(snapshotId, 0, catalog.record, catalogJson).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -95,7 +100,12 @@ describe("contentRelease/snapshot/tryout", () => {
     await expect(
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutPlacement(snapshotId, 1, placement, placementJson).pipe(
+          stageTryoutPlacement(
+            snapshotId,
+            1,
+            placement.record,
+            placementJson
+          ).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -129,7 +139,7 @@ describe("contentRelease/snapshot/tryout", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       Effect.runPromise(
-        stageTryoutCatalog(snapshotId, 0, catalog, rowJson).pipe(
+        stageTryoutCatalog(snapshotId, 0, catalog.record, rowJson).pipe(
           Effect.provide(
             RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
           )
@@ -139,7 +149,7 @@ describe("contentRelease/snapshot/tryout", () => {
     await expect(
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutCatalog(snapshotId, 0, catalog, rowJson).pipe(
+          stageTryoutCatalog(snapshotId, 0, catalog.record, rowJson).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -159,7 +169,7 @@ describe("contentRelease/snapshot/tryout", () => {
     await expect(
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutCatalog(snapshotId, 0, catalog, rowJson).pipe(
+          stageTryoutCatalog(snapshotId, 0, catalog.record, rowJson).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -172,7 +182,7 @@ describe("contentRelease/snapshot/tryout", () => {
     await expect(
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutCatalog(snapshotId, 1, catalog, rowJson).pipe(
+          stageTryoutCatalog(snapshotId, 1, catalog.record, rowJson).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -227,7 +237,7 @@ describe("contentRelease/snapshot/tryout", () => {
     await expect(
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutCatalog(snapshotId, 0, catalog, catalogJson).pipe(
+          stageTryoutCatalog(snapshotId, 0, catalog.record, catalogJson).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -240,7 +250,12 @@ describe("contentRelease/snapshot/tryout", () => {
     await expect(
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutPlacement(snapshotId, 1, placement, placementJson).pipe(
+          stageTryoutPlacement(
+            snapshotId,
+            1,
+            placement.record,
+            placementJson
+          ).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -269,7 +284,7 @@ describe("contentRelease/snapshot/tryout", () => {
     await expect(
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutCatalog(snapshotId, 0, catalog, catalogJson).pipe(
+          stageTryoutCatalog(snapshotId, 0, catalog.record, catalogJson).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -282,7 +297,12 @@ describe("contentRelease/snapshot/tryout", () => {
     await expect(
       t.mutation((ctx) =>
         Effect.runPromise(
-          stageTryoutPlacement(snapshotId, 1, placement, placementJson).pipe(
+          stageTryoutPlacement(
+            snapshotId,
+            1,
+            placement.record,
+            placementJson
+          ).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )

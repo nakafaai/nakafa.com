@@ -1,249 +1,280 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { HTTPValidationError } from "@polar-sh/sdk/models/errors/httpvalidationerror";
-import { PolarError } from "@polar-sh/sdk/models/errors/polarerror";
 import { polarGateway } from "@repo/backend/confect/customers/polar/live";
 import type {
+  EnsurePolarCustomerInput,
+  PolarCheckoutInput,
   PolarCustomerErrorUnion,
   PolarDuplicateEmailError,
+  StoredPolarCustomer,
 } from "@repo/backend/confect/customers/polar/spec";
-import { Array as Arr, ConfigProvider, Effect } from "effect";
+import { ConfigProvider, Effect, Record as Rec } from "effect";
 
-const sdk = vi.hoisted(() => ({
-  checkout: vi.fn(),
-  portal: vi.fn(),
-  create: vi.fn(),
-  delete: vi.fn(),
-  get: vi.fn(),
-  external: vi.fn(),
-  list: vi.fn(),
-  update: vi.fn(),
-}));
-vi.mock("@polar-sh/sdk/funcs/checkoutsCreate", () => ({
-  checkoutsCreate: sdk.checkout,
-}));
-vi.mock("@polar-sh/sdk/funcs/customerSessionsCreate", () => ({
-  customerSessionsCreate: sdk.portal,
-}));
-vi.mock("@polar-sh/sdk/funcs/customersCreate", () => ({
-  customersCreate: sdk.create,
-}));
-vi.mock("@polar-sh/sdk/funcs/customersDelete", () => ({
-  customersDelete: sdk.delete,
-}));
-vi.mock("@polar-sh/sdk/funcs/customersGet", () => ({ customersGet: sdk.get }));
-vi.mock("@polar-sh/sdk/funcs/customersGetExternal", () => ({
-  customersGetExternal: sdk.external,
-}));
-vi.mock("@polar-sh/sdk/funcs/customersList", () => ({
-  customersList: sdk.list,
-}));
-vi.mock("@polar-sh/sdk/funcs/customersUpdate", () => ({
-  customersUpdate: sdk.update,
-}));
+const polarFetch = vi.hoisted(() => vi.fn<typeof fetch>());
+vi.stubGlobal("fetch", polarFetch);
 
-const customer = {
-  id: "customer-1",
-  externalId: "user-1",
-  email: "learner@example.com",
-  name: "Learner",
-  metadata: { userId: "user-1" },
-};
-const checkout = {
-  customerId: customer.id,
-  customerIpAddress: null,
-  locale: "en" as const,
-  productIds: ["pro"],
-  successUrl: "https://example.com/success",
-};
 const configured = Effect.provideService(
   ConfigProvider.ConfigProvider,
   ConfigProvider.fromEnv({ env: { POLAR_ACCESS_TOKEN: "polar_test" } })
 );
+const customerWire = {
+  email: "learner@example.com",
+  external_id: "user-1",
+  id: "customer-1",
+  metadata: { userId: "user-1" },
+  name: "Learner",
+  type: "individual",
+};
+const customer = {
+  email: "learner@example.com",
+  externalId: "user-1",
+  id: "customer-1",
+  metadata: { userId: "user-1" },
+  name: "Learner",
+};
+const next: EnsurePolarCustomerInput = {
+  email: "learner@example.com",
+  externalId: "user-1",
+  metadata: { userId: "user-1" },
+  name: "Learner",
+};
+const stored: StoredPolarCustomer = { ...customer };
+const checkout: PolarCheckoutInput = {
+  customerId: "customer-1",
+  customerIpAddress: null,
+  locale: "en",
+  productIds: ["pro"],
+  successUrl: "https://example.com/success",
+};
 const operations: ReadonlyArray<{
-  code: string;
-  mock: typeof sdk.create;
-  effect: Effect.Effect<
+  readonly code: string;
+  readonly effect: Effect.Effect<
     unknown,
     PolarCustomerErrorUnion | PolarDuplicateEmailError
   >;
 }> = [
   {
     code: "POLAR_CHECKOUT_ERROR",
-    mock: sdk.checkout,
     effect: polarGateway.createCheckoutSession(checkout),
   },
-  {
-    code: "POLAR_CUSTOMER_ERROR",
-    mock: sdk.create,
-    effect: polarGateway.createCustomer(customer),
-  },
+  { code: "POLAR_CUSTOMER_ERROR", effect: polarGateway.createCustomer(next) },
   {
     code: "POLAR_PORTAL_ERROR",
-    mock: sdk.portal,
-    effect: polarGateway.createCustomerPortalSession(customer.id),
+    effect: polarGateway.createCustomerPortalSession("customer-1"),
   },
   {
     code: "POLAR_DELETE_ERROR",
-    mock: sdk.delete,
-    effect: polarGateway.deleteCustomer(customer.id),
+    effect: polarGateway.deleteCustomer("customer-1"),
   },
   {
     code: "POLAR_CUSTOMER_ERROR",
-    mock: sdk.list,
-    effect: polarGateway.findCustomerByEmail(customer.email),
+    effect: polarGateway.findCustomerByEmail("learner@example.com"),
   },
   {
     code: "POLAR_CUSTOMER_ERROR",
-    mock: sdk.external,
-    effect: polarGateway.getCustomerByExternalId(customer.externalId),
+    effect: polarGateway.getCustomerByExternalId("user-1"),
   },
   {
     code: "POLAR_CUSTOMER_ERROR",
-    mock: sdk.get,
-    effect: polarGateway.getCustomerById(customer.id),
+    effect: polarGateway.getCustomerById("customer-1"),
   },
   {
     code: "POLAR_UPDATE_ERROR",
-    mock: sdk.update,
-    effect: polarGateway.updateCustomer({ customer, next: customer }),
+    effect: polarGateway.updateCustomer({ customer: stored, next }),
   },
   {
     code: "POLAR_UPDATE_ERROR",
-    mock: sdk.update,
     effect: polarGateway.updateCustomerMetadata({
-      polarCustomerId: customer.id,
-      metadata: customer.metadata,
+      polarCustomerId: "customer-1",
+      metadata: { consent: true },
     }),
   },
 ];
 
-function responseMeta(status: number) {
-  return {
-    response: new Response(null, { status }),
-    request: new Request("https://api.polar.sh/v1/customers"),
-    body: "",
-  };
+function reply(status: number, body?: unknown) {
+  return body === undefined
+    ? new Response(null, { status })
+    : Response.json(body, { status });
+}
+
+/** The request the SDK sent for one fetch call, read as the wire saw it. */
+function sentRequest(index: number) {
+  const [input, init] = polarFetch.mock.calls[index];
+  return new Request(input, init);
+}
+
+function sentBody(index: number) {
+  return Effect.promise(() => sentRequest(index).json());
 }
 
 describe("live Polar gateway", () => {
-  beforeEach(() => vi.resetAllMocks());
+  beforeEach(() => polarFetch.mockReset());
 
   it.effect(
-    "projects checkout and portal URLs and preserves customer identity at the SDK boundary",
+    "sends each customer call as its snake_case Polar request and maps the response",
     () =>
       Effect.gen(function* () {
-        sdk.checkout.mockResolvedValue({
-          ok: true,
-          value: { url: "https://checkout.polar.sh/session" },
-        });
-        sdk.portal.mockResolvedValue({
-          ok: true,
-          value: { customerPortalUrl: "https://polar.sh/portal" },
-        });
-        sdk.create.mockResolvedValue({ ok: true, value: customer });
-        sdk.get.mockResolvedValue({ ok: true, value: customer });
-        sdk.external.mockResolvedValue({ ok: true, value: customer });
-        sdk.list.mockResolvedValue({
-          ok: true,
-          value: { result: { items: [customer] } },
-        });
-        sdk.update.mockResolvedValue({ ok: true, value: customer });
-        sdk.delete.mockResolvedValue({ ok: true, value: undefined });
+        polarFetch.mockResolvedValueOnce(
+          reply(201, { url: "https://checkout.polar.sh/session" })
+        );
         expect(yield* polarGateway.createCheckoutSession(checkout)).toEqual({
           url: "https://checkout.polar.sh/session",
         });
-        expect(sdk.checkout).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.objectContaining({
-            products: ["pro"],
-            customerId: customer.id,
-            allowDiscountCodes: true,
-          })
+        expect(sentRequest(0).method).toBe("POST");
+        expect(new URL(sentRequest(0).url).pathname).toBe("/v1/checkouts/");
+        expect(yield* sentBody(0)).toEqual({
+          allow_discount_codes: true,
+          allow_trial: true,
+          customer_id: "customer-1",
+          customer_ip_address: null,
+          is_business_customer: false,
+          locale: "en",
+          products: ["pro"],
+          require_billing_address: false,
+          success_url: "https://example.com/success",
+        });
+
+        polarFetch.mockResolvedValueOnce(
+          reply(201, { customer_portal_url: "https://polar.sh/portal" })
         );
         expect(
-          yield* polarGateway.createCustomerPortalSession(customer.id)
+          yield* polarGateway.createCustomerPortalSession("customer-1")
         ).toEqual({ url: "https://polar.sh/portal" });
-        expect(sdk.portal).toHaveBeenCalledWith(expect.anything(), {
-          customerId: customer.id,
+        expect(new URL(sentRequest(1).url).pathname).toBe(
+          "/v1/customer-sessions/"
+        );
+        expect(yield* sentBody(1)).toEqual({ customer_id: "customer-1" });
+
+        polarFetch.mockResolvedValueOnce(reply(201, customerWire));
+        expect(yield* polarGateway.createCustomer(next)).toEqual(customer);
+        expect(yield* sentBody(2)).toEqual({
+          email: "learner@example.com",
+          external_id: "user-1",
+          metadata: { userId: "user-1" },
+          name: "Learner",
+          type: "individual",
         });
-        expect(yield* polarGateway.createCustomer(customer)).toEqual(customer);
-        expect(sdk.create).toHaveBeenCalledWith(expect.anything(), {
-          email: customer.email,
-          externalId: customer.externalId,
-          metadata: customer.metadata,
-          name: customer.name,
-        });
-        expect(yield* polarGateway.getCustomerById(customer.id)).toEqual(
-          customer
+
+        polarFetch.mockResolvedValueOnce(
+          reply(200, { items: [customerWire], pagination: {} })
         );
         expect(
-          yield* polarGateway.getCustomerByExternalId(customer.externalId)
+          yield* polarGateway.findCustomerByEmail("learner@example.com")
         ).toEqual(customer);
-        expect(yield* polarGateway.findCustomerByEmail(customer.email)).toEqual(
+        expect(
+          Rec.fromEntries(new URL(sentRequest(3).url).searchParams.entries())
+        ).toEqual({ email: "learner@example.com", limit: "1", page: "1" });
+
+        polarFetch.mockResolvedValueOnce(
+          reply(200, { items: [], pagination: {} })
+        );
+        expect(
+          yield* polarGateway.findCustomerByEmail("learner@example.com")
+        ).toBeNull();
+
+        polarFetch.mockResolvedValueOnce(reply(200, customerWire));
+        expect(yield* polarGateway.getCustomerByExternalId("user-1")).toEqual(
           customer
         );
-        expect(sdk.list).toHaveBeenCalledWith(expect.anything(), {
-          email: customer.email,
-          limit: 1,
-        });
-        sdk.list.mockResolvedValueOnce({
-          ok: true,
-          value: { result: { items: [] } },
-        });
-        expect(
-          yield* polarGateway.findCustomerByEmail(customer.email)
-        ).toBeNull();
+        expect(new URL(sentRequest(5).url).pathname).toBe(
+          "/v1/customers/external/user-1"
+        );
+
+        polarFetch.mockResolvedValueOnce(reply(200, customerWire));
+        expect(yield* polarGateway.getCustomerById("customer-1")).toEqual(
+          customer
+        );
+        expect(new URL(sentRequest(6).url).pathname).toBe(
+          "/v1/customers/customer-1"
+        );
+
+        polarFetch.mockResolvedValueOnce(reply(200, customerWire));
         expect(
           yield* polarGateway.updateCustomer({
-            customer,
-            next: { ...customer, name: "Updated" },
+            customer: stored,
+            next: { ...next, name: "Updated" },
           })
         ).toEqual(customer);
-        expect(sdk.update).toHaveBeenLastCalledWith(expect.anything(), {
-          id: customer.id,
-          customerUpdate: {
-            email: customer.email,
-            externalId: customer.externalId,
-            metadata: customer.metadata,
-            name: "Updated",
-          },
+        expect(sentRequest(7).method).toBe("PATCH");
+        expect(yield* sentBody(7)).toEqual({
+          email: "learner@example.com",
+          external_id: "user-1",
+          metadata: { userId: "user-1" },
+          name: "Updated",
         });
+
+        polarFetch.mockResolvedValueOnce(reply(200, customerWire));
         expect(
           yield* polarGateway.updateCustomerMetadata({
-            polarCustomerId: customer.id,
+            polarCustomerId: "customer-1",
             metadata: { consent: true },
           })
         ).toEqual(customer);
-        expect(sdk.update).toHaveBeenLastCalledWith(expect.anything(), {
-          id: customer.id,
-          customerUpdate: { metadata: { consent: true } },
-        });
-        expect(yield* polarGateway.deleteCustomer(customer.id)).toBeNull();
-        expect(sdk.delete).toHaveBeenCalledWith(expect.anything(), {
-          id: customer.id,
-          anonymize: true,
-        });
+        expect(yield* sentBody(8)).toEqual({ metadata: { consent: true } });
+
+        polarFetch.mockResolvedValueOnce(reply(204));
+        expect(yield* polarGateway.deleteCustomer("customer-1")).toBeNull();
+        expect(sentRequest(9).method).toBe("DELETE");
+        expect(new URL(sentRequest(9).url).search).toBe("?anonymize=true");
       }).pipe(configured)
   );
 
   it.effect(
-    "keeps returned and rejected provider failures in each operation's typed error channel",
+    "leaves out the optional fields a caller did not set and sends the ones it did",
+    () =>
+      Effect.gen(function* () {
+        polarFetch.mockResolvedValueOnce(
+          reply(201, { url: "https://checkout.polar.sh/session" })
+        );
+        yield* polarGateway.createCheckoutSession({
+          ...checkout,
+          embedOrigin: "https://nakafa.com",
+          subscriptionId: "subscription-1",
+        });
+        expect(yield* sentBody(0)).toMatchObject({
+          embed_origin: "https://nakafa.com",
+          subscription_id: "subscription-1",
+        });
+
+        polarFetch.mockResolvedValueOnce(reply(201, customerWire));
+        yield* polarGateway.createCustomer({
+          email: "learner@example.com",
+          externalId: "user-1",
+          name: "Learner",
+        });
+        expect(yield* sentBody(1)).not.toHaveProperty("metadata");
+
+        polarFetch.mockResolvedValueOnce(reply(200, customerWire));
+        yield* polarGateway.updateCustomer({
+          customer: stored,
+          next: {
+            email: "learner@example.com",
+            externalId: "user-1",
+            name: "Learner",
+          },
+        });
+        expect(yield* sentBody(2)).not.toHaveProperty("metadata");
+      }).pipe(configured)
+  );
+
+  it.effect(
+    "keeps rejected and failed provider calls in each operation's typed error channel",
     () =>
       Effect.gen(function* () {
         for (const operation of operations) {
-          operation.mock.mockResolvedValueOnce({
-            ok: false,
-            error: new Error("provider unavailable"),
-          });
+          polarFetch.mockResolvedValueOnce(
+            reply(500, { detail: "provider unavailable" })
+          );
           expect(yield* operation.effect.pipe(Effect.flip)).toMatchObject({
             code: operation.code,
-            cause: expect.objectContaining({ message: "provider unavailable" }),
+            cause: expect.objectContaining({ statusCode: 500 }),
             message: expect.not.stringContaining("provider unavailable"),
           });
-          operation.mock.mockRejectedValueOnce(new Error("connection lost"));
+          polarFetch.mockRejectedValueOnce(new TypeError("connection lost"));
           expect(yield* operation.effect.pipe(Effect.flip)).toMatchObject({
             code: operation.code,
-            cause: expect.objectContaining({ message: "connection lost" }),
+            cause: expect.objectContaining({
+              message: expect.stringContaining("connection lost"),
+            }),
             message: expect.not.stringContaining("connection lost"),
           });
         }
@@ -259,8 +290,8 @@ describe("live Polar gateway", () => {
             code: operation.code,
             message: expect.not.stringContaining("polar_test"),
           });
-          expect(operation.mock).not.toHaveBeenCalled();
         }
+        expect(polarFetch).not.toHaveBeenCalled();
       }).pipe(
         Effect.provideService(
           ConfigProvider.ConfigProvider,
@@ -273,25 +304,32 @@ describe("live Polar gateway", () => {
     "treats only a provider 404 as an absent or already deleted customer",
     () =>
       Effect.gen(function* () {
-        for (const { mock, effect: operation } of Arr.filter(
-          operations,
-          ({ mock }) =>
-            mock === sdk.get || mock === sdk.external || mock === sdk.delete
-        )) {
-          const missing = new PolarError("missing", responseMeta(404));
-          mock.mockResolvedValueOnce({ ok: false, error: missing });
-          expect(yield* operation).toBeNull();
-          mock.mockRejectedValueOnce(missing);
-          expect(yield* operation).toBeNull();
-          mock.mockResolvedValueOnce({
-            ok: false,
-            error: new PolarError("access denied", responseMeta(403)),
-          });
-          expect(yield* operation.pipe(Effect.flip)).toMatchObject({
-            cause: expect.objectContaining({ message: "access denied" }),
-            message: expect.not.stringContaining("access denied"),
+        const lookups: readonly Effect.Effect<
+          unknown,
+          PolarCustomerErrorUnion
+        >[] = [
+          polarGateway.getCustomerById("customer-1"),
+          polarGateway.getCustomerByExternalId("user-1"),
+          polarGateway.deleteCustomer("customer-1"),
+        ];
+        for (const lookup of lookups) {
+          polarFetch.mockResolvedValueOnce(
+            reply(404, { error: "ResourceNotFound", detail: "Not found" })
+          );
+          expect(yield* lookup).toBeNull();
+          polarFetch.mockResolvedValueOnce(
+            reply(403, { detail: "access denied" })
+          );
+          expect(yield* lookup.pipe(Effect.flip)).toMatchObject({
+            cause: expect.objectContaining({ statusCode: 403 }),
           });
         }
+        polarFetch.mockResolvedValueOnce(reply(404, { detail: "Not found" }));
+        expect(
+          yield* polarGateway
+            .findCustomerByEmail("learner@example.com")
+            .pipe(Effect.flip)
+        ).toMatchObject({ code: "POLAR_CUSTOMER_ERROR" });
       }).pipe(configured)
   );
 
@@ -299,8 +337,8 @@ describe("live Polar gateway", () => {
     "recognizes the exact duplicate-email conflict without reclassifying unrelated validation errors",
     () =>
       Effect.gen(function* () {
-        const duplicate = new HTTPValidationError(
-          {
+        polarFetch.mockResolvedValueOnce(
+          reply(422, {
             detail: [
               {
                 loc: ["body", "email"],
@@ -308,53 +346,75 @@ describe("live Polar gateway", () => {
                 type: "value_error",
               },
             ],
-          },
-          responseMeta(422)
+          })
         );
-        sdk.create.mockResolvedValueOnce({ ok: false, error: duplicate });
         expect(
-          yield* polarGateway.createCustomer(customer).pipe(Effect.flip)
+          yield* polarGateway.createCustomer(next).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "PolarDuplicateEmailError",
           code: "POLAR_DUPLICATE_EMAIL",
         });
-        sdk.create.mockRejectedValueOnce(duplicate);
-        expect(
-          yield* polarGateway.createCustomer(customer).pipe(Effect.flip)
-        ).toMatchObject({ _tag: "PolarDuplicateEmailError" });
-        for (const detail of [
-          undefined,
-          [
-            {
-              loc: ["email"],
-              msg: duplicate.detail?.[0]?.msg ?? "",
-              type: "value_error",
-            },
-          ],
-          [
-            {
-              loc: ["query", "email"],
-              msg: "invalid email",
-              type: "value_error",
-            },
-          ],
-          [{ loc: ["body", "name"], msg: "invalid name", type: "value_error" }],
-          [
-            {
-              loc: ["body", "email"],
-              msg: "invalid email",
-              type: "value_error",
-            },
-          ],
+        for (const body of [
+          {},
+          {
+            detail: [
+              {
+                loc: ["email"],
+                msg: "A customer with this email address already exists.",
+                type: "value_error",
+              },
+            ],
+          },
+          {
+            detail: [
+              {
+                loc: ["query", "email"],
+                msg: "invalid email",
+                type: "value_error",
+              },
+            ],
+          },
+          {
+            detail: [
+              {
+                loc: ["body", "name"],
+                msg: "invalid name",
+                type: "value_error",
+              },
+            ],
+          },
+          {
+            detail: [
+              {
+                loc: ["body", "email"],
+                msg: "invalid email",
+                type: "value_error",
+              },
+            ],
+          },
         ]) {
-          sdk.create.mockResolvedValueOnce({
-            ok: false,
-            error: new HTTPValidationError({ detail }, responseMeta(422)),
-          });
+          polarFetch.mockResolvedValueOnce(reply(422, body));
           expect(
-            yield* polarGateway.createCustomer(customer).pipe(Effect.flip)
+            yield* polarGateway.createCustomer(next).pipe(Effect.flip)
           ).toMatchObject({ _tag: "PolarCustomerError" });
         }
+      }).pipe(configured)
+  );
+
+  it.effect(
+    "fails a provider payload that breaks the customer contract as a typed request failure",
+    () =>
+      Effect.gen(function* () {
+        polarFetch.mockResolvedValueOnce(
+          reply(200, { id: "customer-1", name: "Learner" })
+        );
+        expect(
+          yield* polarGateway.getCustomerById("customer-1").pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PolarCustomerError",
+          code: "POLAR_CUSTOMER_ERROR",
+          cause: expect.objectContaining({ _tag: "PolarPayloadError" }),
+        });
       }).pipe(configured)
   );
 });

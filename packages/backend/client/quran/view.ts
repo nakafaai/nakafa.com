@@ -89,7 +89,7 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
     };
   }
 );
-export type PublishedQuranView = Effect.Success<
+type PublishedQuranView = Effect.Success<
   ReturnType<typeof decodePublishedQuranView>
 >;
 /** One semantic verse rendered by the app-locale Quran web view. */

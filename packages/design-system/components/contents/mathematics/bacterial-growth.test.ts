@@ -5,7 +5,7 @@ import {
   BacterialGrowthFrameInputSchema,
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial-growth";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 describe("bacterial growth frames", () => {
   it("keeps every exponential division visible for a large initial culture", () => {
@@ -57,7 +57,7 @@ describe("bacterial growth frames", () => {
       gridColumns: 8,
     });
     expect(frame.bacteriaIds).toHaveLength(54);
-    expect(new Set(frame.bacteriaIds)).toHaveProperty("size", 54);
+    expect(Arr.dedupe(frame.bacteriaIds)).toHaveLength(54);
   });
 
   it("removes lineages when a bounded culture decreases", () => {

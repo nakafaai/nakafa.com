@@ -1,8 +1,14 @@
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
-import { CLASS_IMAGES } from "@repo/backend/confect/lib/images";
+import { isValidClassImage } from "@repo/backend/confect/lib/images";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
 import { Array as Arr, Option, Order } from "effect";
+
+vi.mock("@repo/backend/confect/lib/images", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@repo/backend/confect/lib/images")>();
+  return { ...actual, isValidClassImage: vi.fn(actual.isValidClassImage) };
+});
 
 const mutations = api.classes.mutations;
 describe("class membership and administration", () => {
@@ -209,7 +215,7 @@ describe("class membership and administration", () => {
   it("rejects a class image when its registered asset is unavailable", async () => {
     const { t, admin, classId } = await createClassFixture();
     const before = await t.query((ctx) => ctx.db.get("schoolClasses", classId));
-    vi.spyOn(CLASS_IMAGES, "has").mockReturnValueOnce(false);
+    vi.mocked(isValidClassImage).mockReturnValueOnce(false);
     await expect(
       admin.mutation(mutations.updateClassImage, {
         classId,

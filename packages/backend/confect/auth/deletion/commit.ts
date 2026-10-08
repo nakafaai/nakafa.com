@@ -8,7 +8,6 @@ import {
 import {
   toUserCleanupError,
   tryUserCleanup,
-  type UserCleanupError,
 } from "@repo/backend/confect/auth/cleanup/spec";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/confect/auth/deletion/constants";
 import { finalizeAccountDeletion } from "@repo/backend/confect/auth/deletion/finalize";
@@ -21,12 +20,6 @@ const betterAuthDeletePageSchema = Schema.Struct({
 const decodeBetterAuthDeletePage = Schema.decodeUnknownEffect(
   betterAuthDeletePageSchema
 );
-interface AccountDeletionCommitOperations {
-  readonly deleteAccounts: Effect.Effect<number, UserCleanupError>;
-  readonly deleteAuthUser: Effect.Effect<unknown, UserCleanupError>;
-  readonly deleteSessions: Effect.Effect<number, UserCleanupError>;
-  readonly scheduleContinuation: Effect.Effect<unknown, UserCleanupError>;
-}
 const createAccountDeletionCommitOperations = Effect.fn(
   "auth.deletion.commitOperations"
 )(function* (
@@ -76,7 +69,7 @@ const createAccountDeletionCommitOperations = Effect.fn(
           ],
         },
       })
-    ),
+    ).pipe(Effect.asVoid),
     deleteSessions: deletePage("session"),
     scheduleContinuation: scheduler
       .runAfter(
@@ -87,9 +80,17 @@ const createAccountDeletionCommitOperations = Effect.fn(
           expectedPreparation,
         }
       )
-      .pipe(Effect.catchDefect(flow(toUserCleanupError, Effect.fail))),
-  } satisfies AccountDeletionCommitOperations;
+      .pipe(
+        Effect.catchDefect(flow(toUserCleanupError, Effect.fail)),
+        Effect.asVoid
+      ),
+  };
 });
+
+/** The commit effects one deletion attempt runs, derived from their production definition. */
+type AccountDeletionCommitOperations = Effect.Success<
+  ReturnType<typeof createAccountDeletionCommitOperations>
+>;
 
 /**
  * Finishes a claimed Better Auth deletion in bounded component transactions.

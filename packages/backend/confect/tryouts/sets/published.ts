@@ -28,7 +28,7 @@ import {
   readPublishedSetSections,
   readPublishedTrackSets,
 } from "@repo/backend/content/tryout/hierarchy";
-import { Array as Arr, Effect, Order } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Option, Order } from "effect";
 
 type Progress = Docs["tryoutSetProgress"];
 type User = Docs["users"];
@@ -92,12 +92,14 @@ const readJoinedSets = Effect.fn("tryouts.sets.readPublishedProgress")(
     }
     const progress = user
       ? yield* loadProgress(found.sets, user)
-      : new Map<string, Progress>();
+      : MutableHashMap.empty<string, Progress>();
     return yield* Effect.forEach(
       found.sets,
       Effect.fn("tryouts.sets.projectPublished")(function* (set) {
         const sections = yield* readPublishedSetSections(found.index, set);
-        const row = progress.get(tryoutCatalogIdentity(set)) ?? null;
+        const row = Option.getOrNull(
+          MutableHashMap.get(progress, tryoutCatalogIdentity(set))
+        );
         return {
           durationSeconds: Arr.reduce(
             sections,
@@ -146,18 +148,18 @@ const loadProgress = Effect.fn("tryouts.sets.loadPublishedProgress")(function* (
       concurrency: 16,
     }
   );
-  const byIdentity = new Map<string, Progress>();
+  const byIdentity = MutableHashMap.empty<string, Progress>();
   for (const entry of entries) {
     if (!entry) {
       continue;
     }
-    if (byIdentity.has(entry.identity)) {
+    if (MutableHashMap.has(byIdentity, entry.identity)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         "Signed try-out catalog has duplicate set identities."
       );
     }
-    byIdentity.set(entry.identity, entry.row);
+    MutableHashMap.set(byIdentity, entry.identity, entry.row);
   }
   return byIdentity;
 });

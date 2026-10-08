@@ -1,17 +1,18 @@
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   type Permission,
   PermissionDenied,
   ROLE_PERMISSIONS,
 } from "@repo/backend/confect/schools/permission/spec";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
-interface PermissionTarget {
-  readonly classId?: Id<"schoolClasses">;
-  readonly schoolId?: Id<"schools">;
-  readonly userId: Id<"users">;
-}
+const PermissionTargetSchema = Schema.Struct({
+  classId: Schema.optionalKey(IdSchema("schoolClasses")),
+  schoolId: Schema.optionalKey(IdSchema("schools")),
+  userId: IdSchema("users"),
+});
+type PermissionTarget = typeof PermissionTargetSchema.Type;
 /** Checks school grants before class grants and teacher-specific additions. */
 const checkPermission = Effect.fn("permissions.check")(function* (
   permission: Permission,

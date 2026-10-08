@@ -12,7 +12,9 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Builds every signed row needed by one two-chunk technical document. */
 function documentRows() {
@@ -110,11 +112,9 @@ describe("contentRelease/quran/document", () => {
               },
             });
             expect(document.verses).toHaveLength(7);
-            expect(JSON.stringify(document)).not.toContain(
-              "Technical translation"
-            );
-            expect(JSON.stringify(document)).not.toContain("Tafsir teknis");
-            expect(JSON.stringify(document)).not.toContain("hizbQuarter");
+            expect(encodeJson(document)).not.toContain("Technical translation");
+            expect(encodeJson(document)).not.toContain("Tafsir teknis");
+            expect(encodeJson(document)).not.toContain("hizbQuarter");
           })
         );
       })

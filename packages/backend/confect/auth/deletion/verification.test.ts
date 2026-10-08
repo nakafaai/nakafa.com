@@ -12,6 +12,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 21, 0, 0);
+const JsonText = Schema.fromJsonString(Schema.Unknown);
 const decodeVerificationPage = Schema.decodeUnknownSync(
   Schema.Struct({
     page: Schema.Array(
@@ -153,6 +154,15 @@ describe("auth/deletion/verification", () => {
             },
           })
         );
+        const oauthLinkState = yield* Schema.encodeEffect(JsonText)({
+          callbackURL: "https://nakafa.com/id",
+          codeVerifier: "verifier",
+          expiresAt: NOW + 60_000,
+          link: {
+            email: "verification-owner@example.com",
+            userId: authUser._id,
+          },
+        }).pipe(Effect.orDie);
         yield* Effect.promise(() =>
           t.mutation(components.betterAuth.adapter.create, {
             input: {
@@ -162,15 +172,7 @@ describe("auth/deletion/verification", () => {
                 expiresAt: NOW + 60_000,
                 identifier: "oauth-link-state",
                 updatedAt: NOW + 101,
-                value: JSON.stringify({
-                  callbackURL: "https://nakafa.com/id",
-                  codeVerifier: "verifier",
-                  expiresAt: NOW + 60_000,
-                  link: {
-                    email: "verification-owner@example.com",
-                    userId: authUser._id,
-                  },
-                }),
+                value: oauthLinkState,
               },
             },
           })

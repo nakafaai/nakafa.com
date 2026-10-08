@@ -177,7 +177,7 @@ const stagePlacement = Effect.fn("contents.views.test.stagePlacement")(
             stageProgramRow(
               snapshotId,
               offset + 100,
-              row.source,
+              row.source.record,
               row.rowJson
             ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
           )

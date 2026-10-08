@@ -12,7 +12,7 @@ import { rankContentSearchDocuments } from "@repo/backend/confect/contents/helpe
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { getExactRouteQuery } from "@repo/backend/confect/contents/helpers/search/terms";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, HashMap, Option } from "effect";
 
 type ContentSearchInput = typeof contentSearchInputValidator.Type;
 type PublishedSearchOwner = NonNullable<
@@ -102,13 +102,15 @@ export const readPublishedSearchDocuments = Effect.fn(
     (row) => row._id
   );
   const authenticated = yield* authenticateSearchRows(rows, owner);
-  const documentsByRow = new Map(
+  const documentsByRow = HashMap.fromIterable(
     Arr.map(authenticated, ({ document, row }) => [row._id, document])
   );
   const rankedGroups = Arr.map(groups, ({ queryText, rows: queryRows }) => {
     let documents: ContentSearchDocument[] = [];
     for (const row of queryRows) {
-      const document = documentsByRow.get(row._id);
+      const document = Option.getOrUndefined(
+        HashMap.get(documentsByRow, row._id)
+      );
       if (document) {
         documents = Arr.append(documents, document);
       }

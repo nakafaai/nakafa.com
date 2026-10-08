@@ -302,9 +302,9 @@ describe("tryouts/queries/sets", () => {
         expect(grown.isDone).toBe(true);
         expect(grown.page).toHaveLength(125);
         expect(grown.page.slice(0, 25)).toEqual(first.page);
-        expect(new Set(Arr.map(grown.page, ({ setKey }) => setKey)).size).toBe(
-          125
-        );
+        expect(
+          Arr.dedupe(Arr.map(grown.page, ({ setKey }) => setKey)).length
+        ).toBe(125);
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             for (const row of await ctx.db

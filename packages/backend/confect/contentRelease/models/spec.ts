@@ -3,12 +3,13 @@ import { modelSlotValidator } from "@repo/backend/confect/contentRelease/models/
 import { Schema } from "effect";
 export const MODEL_BUILD_PAGE_ROWS = 32;
 export const MODEL_BUILD_PAGE_BYTES = 512 * 1024;
-export interface ModelBuildPage {
-  readonly cursor?: string | undefined;
-  readonly done: boolean;
-  readonly itemIndex?: number;
-  readonly processed: number;
-}
+const modelBuildPageValidator = Schema.Struct({
+  cursor: Schema.optional(Schema.String),
+  done: Schema.Boolean,
+  itemIndex: Schema.optionalKey(Schema.Finite),
+  processed: Schema.Finite,
+});
+export type ModelBuildPage = typeof modelBuildPageValidator.Type;
 export const modelBuildPhaseValidator = Schema.Union([
   Schema.Literal("articleCatalog"),
   Schema.Literal("articleCategories"),

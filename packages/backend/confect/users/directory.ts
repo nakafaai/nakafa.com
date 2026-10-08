@@ -1,7 +1,7 @@
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, Struct } from "effect";
+import { Array as Arr, Effect, HashMap, Struct } from "effect";
 export type UserData = typeof userDataValidator.Type;
 
 /** Resolve a persisted identity without weakening the unique auth index. */
@@ -22,7 +22,7 @@ export const getUserMap = Effect.fn("users.directory.read")(function* (
   userIds: readonly Id<"users">[]
 ) {
   const database = yield* DatabaseReader;
-  const users = yield* Effect.forEach([...new Set(userIds)], (id) =>
+  const users = yield* Effect.forEach(Arr.dedupe(userIds), (id) =>
     database
       .table("users")
       .get(id)
@@ -46,5 +46,5 @@ export const getUserMap = Effect.fn("users.directory.read")(function* (
       },
     ]);
   }
-  return new Map(entries);
+  return HashMap.fromIterable(entries);
 });

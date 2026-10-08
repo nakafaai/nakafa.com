@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const SODIUM_CATION_ID = "sodium-cation";
-export const FLUORIDE_ANION_ID = "fluoride-anion";
-export const LITHIUM_CATION_ID = "lithium-cation";
-export const OXIDE_ANION_ID = "oxide-anion";
+const FLUORIDE_ANION_ID = "fluoride-anion";
+const LITHIUM_CATION_ID = "lithium-cation";
+const OXIDE_ANION_ID = "oxide-anion";
 
 export type IonSampleId =
   | typeof SODIUM_CATION_ID
@@ -17,6 +17,13 @@ export const ION_SAMPLE_IDS = [
   LITHIUM_CATION_ID,
   OXIDE_ANION_ID,
 ] satisfies IonSampleId[];
+
+const IonSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  charge: Schema.Finite,
+  massNumber: Schema.Finite,
+  symbol: Schema.String,
+});
 
 export const ION_SAMPLES = {
   [SODIUM_CATION_ID]: {
@@ -43,40 +50,7 @@ export const ION_SAMPLES = {
     massNumber: 16,
     symbol: "O",
   },
-} satisfies Record<
-  IonSampleId,
-  {
-    atomicNumber: number;
-    charge: number;
-    massNumber: number;
-    symbol: string;
-  }
->;
-
-export interface IonSampleLabels {
-  action: ReactNode;
-  name: string;
-  type: string;
-}
-
-export interface IonLabLabels {
-  afterChange: string;
-  beforeChange: string;
-  charge: string;
-  chooseIon: string;
-  electronChange: string;
-  electrons: string;
-  neutralAtom: string;
-  neutrons: string;
-  protons: string;
-  samples: Record<IonSampleId, IonSampleLabels>;
-}
-
-export interface IonLabProps {
-  description: ReactNode;
-  labels: IonLabLabels;
-  title: ReactNode;
-}
+} satisfies Record<IonSampleId, typeof IonSampleSchema.Type>;
 
 /**
  * Narrows ToggleGroup string values to the available ion examples.

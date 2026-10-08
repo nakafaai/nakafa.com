@@ -1,23 +1,27 @@
-import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
 import { accountUnavailableCode } from "@repo/backend/confect/auth/spec";
-import type { PolarCheckoutLocale } from "@repo/backend/confect/customers/checkout/localization";
+import {
+  checkoutLocaleValidator,
+  polarCheckoutLocaleValidator,
+} from "@repo/backend/confect/customers/checkout/localization";
 import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const invalidCheckoutSuccessUrlCode = "INVALID_CHECKOUT_SUCCESS_URL";
 export const checkoutSessionIoErrorCode = "CHECKOUT_SESSION_IO_FAILED";
-export interface CheckoutRequestInput {
-  readonly locale: Locale;
-  readonly successUrl: string;
-}
-export interface CheckoutRequest {
-  readonly locale: Locale;
-  readonly polarLocale: PolarCheckoutLocale;
-  readonly primaryProductId: string;
-  readonly productIds: readonly string[];
-  readonly successUrl: string;
-}
+export const checkoutRequestInputValidator = Schema.Struct({
+  locale: checkoutLocaleValidator,
+  successUrl: Schema.String,
+});
+export type CheckoutRequestInput = typeof checkoutRequestInputValidator.Type;
+const checkoutRequestValidator = Schema.Struct({
+  locale: checkoutLocaleValidator,
+  polarLocale: polarCheckoutLocaleValidator,
+  primaryProductId: Schema.String,
+  productIds: Schema.Array(Schema.String),
+  successUrl: Schema.String,
+});
+export type CheckoutRequest = typeof checkoutRequestValidator.Type;
 export const checkoutAdmissionArgsValidator = Schema.Struct({
   event: productAnalyticsEventValidator,
   timestamp: Schema.optionalKey(Schema.Finite),

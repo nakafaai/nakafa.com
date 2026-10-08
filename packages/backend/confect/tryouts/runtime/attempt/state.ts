@@ -1,5 +1,6 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import tryoutAttemptsTable from "@repo/backend/confect/_generated/tables/tryoutAttempts";
+import tryoutSectionAttemptsTable from "@repo/backend/confect/_generated/tables/tryoutSectionAttempts";
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import { readAttemptResume } from "@repo/backend/confect/tryouts/runtime/attempt/sections";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
@@ -7,14 +8,15 @@ import {
   getSectionScoreResult,
   loadAttemptScoreResult,
 } from "@repo/backend/confect/tryouts/score/result";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
-interface AttemptStateInput {
-  readonly appLocale: AppLocaleCode;
-  readonly attempt: Docs["tryoutAttempts"];
-  readonly sectionKey?: string;
-  readonly sections: readonly Docs["tryoutSectionAttempts"][];
-}
+const AttemptStateInputSchema = Schema.Struct({
+  appLocale: AppLocaleCodeSchema,
+  attempt: tryoutAttemptsTable.Doc,
+  sectionKey: Schema.optionalKey(Schema.String),
+  sections: Schema.Array(tryoutSectionAttemptsTable.Doc),
+});
+type AttemptStateInput = typeof AttemptStateInputSchema.Type;
 
 /** Projects the loaded attempt graph into its compact reactive state contract. */
 export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(

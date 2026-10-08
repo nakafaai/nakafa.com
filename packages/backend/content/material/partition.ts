@@ -8,7 +8,7 @@ import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads a transaction-bounded group of complete material discovery buckets. */
 export const readMaterialPartition = Effect.fn(
@@ -20,7 +20,7 @@ export const readMaterialPartition = Effect.fn(
   if (
     buckets.length === 0 ||
     buckets.length > MATERIAL_SITEMAP_BUCKET_LIMIT ||
-    new Set(buckets).size !== buckets.length ||
+    Arr.dedupe(buckets).length !== buckets.length ||
     buckets.some((bucket) => !isProjectionBucket(bucket))
   ) {
     return yield* releaseFail(

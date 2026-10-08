@@ -3,19 +3,20 @@ import {
   type DragType,
   useBrushDrag,
 } from "@repo/design-system/components/evilcharts/ui/evil-brush-drag";
+import { Schema } from "effect";
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-interface UseBrushSelectionOptions {
-  containerRef: RefObject<HTMLDivElement | null>;
-  controlledEnd?: number;
-  controlledStart?: number;
-  defaultEndIndex?: number;
-  defaultStartIndex: number;
-  minSpan: number;
-  onChange?: (range: EvilBrushRange) => void;
-  totalPoints: number;
-}
+const BrushSelectionInputSchema = Schema.Struct({
+  controlledEnd: Schema.optionalKey(Schema.Finite),
+  controlledStart: Schema.optionalKey(Schema.Finite),
+  defaultEndIndex: Schema.optionalKey(Schema.Finite),
+  defaultStartIndex: Schema.Finite,
+  minSpan: Schema.Finite,
+  totalPoints: Schema.Finite,
+});
+type BrushSelectionInput = typeof BrushSelectionInputSchema.Type;
+type OnBrushChange = (range: EvilBrushRange) => void;
 
 function rangesEqual(current: EvilBrushRange, next: EvilBrushRange) {
   return (
@@ -70,7 +71,10 @@ function useBrushSelection({
   minSpan,
   onChange,
   totalPoints,
-}: UseBrushSelectionOptions) {
+}: BrushSelectionInput & {
+  containerRef: RefObject<HTMLDivElement | null>;
+  onChange?: OnBrushChange | undefined;
+}) {
   const isControlled =
     controlledStart !== undefined && controlledEnd !== undefined;
   const [internalRange, setInternalRange] = useState<EvilBrushRange>(() =>

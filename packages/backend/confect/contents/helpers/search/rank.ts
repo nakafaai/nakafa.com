@@ -1,5 +1,5 @@
 import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
-import { Array as Arr, Order, pipe } from "effect";
+import { Array as Arr, HashSet, Order, pipe } from "effect";
 
 /** Minimal persisted search fields required by deterministic reranking. */
 export type ContentSearchRankDocument = Pick<
@@ -29,12 +29,12 @@ export function matchesContentSearchQuery(text: string, queryText: string) {
   if (queryTokens.length === 0) {
     return false;
   }
-  const textTokens = new Set(tokenizeSearchText(text));
+  const textTokens = HashSet.fromIterable(tokenizeSearchText(text));
   return Arr.every(queryTokens, (token, index) => {
     if (index < queryTokens.length - 1) {
-      return textTokens.has(token);
+      return HashSet.has(textTokens, token);
     }
-    return Arr.some(Array.from(textTokens), (candidate) =>
+    return Arr.some(Arr.fromIterable(textTokens), (candidate) =>
       candidate.startsWith(token)
     );
   });
@@ -94,10 +94,10 @@ export function rankContentSearchDocuments<
 
 /** Scores text by how many unique query tokens it directly contains. */
 function scoreSearchText(text: string, queryTokens: readonly string[]) {
-  const textTokens = new Set(tokenizeSearchText(text));
+  const textTokens = HashSet.fromIterable(tokenizeSearchText(text));
   let score = 0;
   for (const token of queryTokens) {
-    if (textTokens.has(token)) {
+    if (HashSet.has(textTokens, token)) {
       score += 1;
     }
   }

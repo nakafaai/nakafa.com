@@ -69,6 +69,3 @@ export const decodePublishedQuranInterpretation = Effect.fn(
     verseNumber: result.verseNumber,
   };
 });
-export type PublishedQuranInterpretation = Effect.Success<
-  ReturnType<typeof decodePublishedQuranInterpretation>
->;

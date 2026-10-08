@@ -479,7 +479,9 @@ describe("contentRelease/manifest", () => {
     });
     await expect(
       t.mutation(stageRecovery, {
-        releaseJson: JSON.stringify(narrowed),
+        releaseJson: Schema.encodeSync(
+          Schema.fromJsonString(SignedContentReleaseSchema)
+        )(narrowed),
         rendererJson: testRendererJson(),
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });

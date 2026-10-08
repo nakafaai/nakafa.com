@@ -19,9 +19,12 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest, type TestConvex } from "convex-test";
+import { Schema } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageProjections = internal.contentRelease.items.stageProjectionBatch;
+/** Encodes raw JSON, so a body can carry fields its contract rejects. */
+const RawJson = Schema.fromJsonString(Schema.Unknown);
 
 /** Stages the exact technical upsert required by projection tests. */
 function stageUpsert(t: TestConvex<typeof schema>, contentKey = "test:head-0") {
@@ -224,7 +227,12 @@ describe("contentRelease/projection", () => {
       await t.mutation((ctx) => insertTestRelease(ctx, { role }));
       await stageQuestionUpsert(t);
       await expect(
-        stage(t, [JSON.stringify({ ...TEST_QUESTION_PROJECTION, choices: [] })])
+        stage(t, [
+          Schema.encodeSync(RawJson)({
+            ...TEST_QUESTION_PROJECTION,
+            choices: [],
+          }),
+        ])
       ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
     }
   );

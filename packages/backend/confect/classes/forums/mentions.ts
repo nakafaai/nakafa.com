@@ -3,7 +3,7 @@ import { checkClassAccess } from "@repo/backend/confect/classes/access";
 import { MAX_FORUM_POST_MENTIONS } from "@repo/backend/confect/classes/forums/constants";
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Only mention viewers who can currently read this forum's class. */
 export const validateForumMentions = Effect.fn(
@@ -15,7 +15,7 @@ export const validateForumMentions = Effect.fn(
   forum: Docs["schoolClassForums"];
   mentionedUserIds: readonly Id<"users">[];
 }) {
-  const uniqueMentionedUserIds = [...new Set(mentionedUserIds)];
+  const uniqueMentionedUserIds = Arr.dedupe(mentionedUserIds);
   if (uniqueMentionedUserIds.length > MAX_FORUM_POST_MENTIONS) {
     return yield* new ForumError({
       code: "FORUM_MENTION_LIMIT_EXCEEDED",

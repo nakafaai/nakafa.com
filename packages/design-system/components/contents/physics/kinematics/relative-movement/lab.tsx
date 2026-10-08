@@ -12,7 +12,6 @@ import {
   RELATIVE_MOVEMENT_SCENE,
   RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH,
   type RelativeMovementCaseId,
-  type RelativeMovementLabProps,
   type RelativeMovementState,
 } from "@repo/design-system/components/contents/physics/kinematics/relative-movement/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -45,6 +44,23 @@ const MAX_LOOP_SECONDS = 10.5;
 const MAX_RELATIVE_SPEED = 24;
 const SHADOW_CAMERA_RADIUS =
   RELATIVE_MOVEMENT_SCENE.roadLength / 2 + RELATIVE_MOVEMENT_SCENE.roadWidth;
+
+interface RelativeMovementLabProps {
+  description: ReactNode;
+  labels: {
+    chooseCase: string;
+    directionLabels: Record<"left" | "right", ReactNode>;
+    factLabels: {
+      observer: ReactNode;
+      relativeVelocity: ReactNode;
+      target: ReactNode;
+      visibleDirection: ReactNode;
+    };
+    modeLabels: Record<RelativeMovementCaseId, ReactNode>;
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
 
 export function RelativeMovementLab({
   title,

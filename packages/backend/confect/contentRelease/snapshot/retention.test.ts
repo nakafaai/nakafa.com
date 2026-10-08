@@ -1,5 +1,6 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -32,7 +33,9 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 describe("contentRelease/snapshot/retention", () => {
   it.effect(
@@ -129,9 +132,11 @@ describe("contentRelease/snapshot/retention", () => {
             if (!release) {
               throw new Error("Expected candidate snapshot release.");
             }
-            const stored = JSON.parse(release.releaseJson);
+            const stored = Schema.decodeSync(
+              Schema.fromJsonString(SignedContentReleaseSchema)
+            )(release.releaseJson);
             await ctx.db.patch("contentReleases", release._id, {
-              releaseJson: JSON.stringify({
+              releaseJson: Schema.encodeSync(UnknownJsonSchema)({
                 ...stored,
                 manifest: {
                   ...stored.manifest,

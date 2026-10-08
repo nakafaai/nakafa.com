@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { createServer } from "node:net";
 import { availableParallelism, tmpdir } from "node:os";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
@@ -58,13 +57,14 @@ const fixture = Effect.gen(function* () {
   return { fs, runtime };
 });
 
-function spawner(
+const spawner = Effect.fn("ProcessTest.spawner")(function* (
   options: {
     exit?: Effect.Effect<ChildProcessSpawner.ExitCode>;
     output?: string;
     running?: Effect.Effect<boolean>;
   } = {}
 ) {
+  const fs = yield* FileSystem.FileSystem;
   const release = vi.fn();
   const commands: ChildProcess.Command[] = [];
   const temporaryRoots: string[] = [];
@@ -80,7 +80,10 @@ function spawner(
       }
       // Records whether the command's temporary root outlived its group.
       yield* Effect.acquireRelease(Effect.void, () =>
-        Effect.sync(() => release(root !== undefined && existsSync(root)))
+        Effect.gen(function* () {
+          const present = root === undefined ? false : yield* fs.exists(root);
+          release(present);
+        }).pipe(Effect.orDie)
       );
       return ChildProcessSpawner.makeHandle({
         all: Stream.succeed(
@@ -100,7 +103,7 @@ function spawner(
     })
   );
   return { commands, release, service, temporaryRoots };
-}
+});
 
 describe("application process ownership", () => {
   beforeEach(() => {
@@ -138,7 +141,7 @@ describe("application process ownership", () => {
     it.live(`closes its local child after application ${outcome}`, () =>
       Effect.gen(function* () {
         const { fs, runtime } = yield* fixture;
-        const child = spawner();
+        const child = yield* spawner();
         fetcher.mockImplementation(() =>
           Promise.resolve(new Response("owned"))
         );
@@ -180,7 +183,7 @@ describe("application process ownership", () => {
         ]);
         expect(child.temporaryRoots).toHaveLength(1);
         for (const root of child.temporaryRoots) {
-          expect(existsSync(root)).toBe(false);
+          expect(yield* fs.exists(root)).toBe(false);
         }
       }).pipe(Effect.provide(services))
     );
@@ -191,7 +194,7 @@ describe("application process ownership", () => {
     () =>
       Effect.gen(function* () {
         const { runtime } = yield* fixture;
-        const child = spawner({
+        const child = yield* spawner({
           output: `${"Convex functions ready!\n".repeat(300)}\u001B[31mStaging rejected: missing publication owner\u001B[0m ${runtime.publicationToken}`,
         });
         const messages: string[] = [];
@@ -230,7 +233,7 @@ describe("application process ownership", () => {
       () =>
         Effect.gen(function* () {
           const { fs, runtime } = yield* fixture;
-          const child = spawner();
+          const child = yield* spawner();
           const messages: unknown[] = [];
           const logger = Logger.make(({ message }) => messages.push(message));
           const original = acceptanceRuntimeError("Signed publication failed.");
@@ -275,7 +278,7 @@ describe("application process ownership", () => {
         yield* Effect.callback<void>((resume) => {
           listener.listen(43_310, "127.0.0.1", () => resume(Effect.void));
         });
-        const child = spawner();
+        const child = yield* spawner();
         const error = yield* withLocalBackend(runtime, Effect.void).pipe(
           Effect.provideService(
             ChildProcessSpawner.ChildProcessSpawner,
@@ -296,7 +299,7 @@ describe("application process ownership", () => {
     it.live(`reports a typed local backend failure: ${failure}`, () =>
       Effect.gen(function* () {
         const { runtime } = yield* fixture;
-        const child = spawner({
+        const child = yield* spawner({
           exit: Effect.succeed(ChildProcessSpawner.ExitCode(7)),
           running: Effect.succeed(failure !== "exited"),
         });
@@ -330,7 +333,7 @@ describe("application process ownership", () => {
     Effect.gen(function* () {
       const { fs, runtime } = yield* fixture;
       const readinessLog = yield* Deferred.make<string>();
-      const child = spawner({ output: "" });
+      const child = yield* spawner({ output: "" });
       const request = vi.fn();
       const application = vi.fn();
       fetcher.mockImplementation(request);
@@ -401,7 +404,7 @@ writeFileSync("ready", "ready");`
       `keeps acquisition credentials out of build children with exit ${code}`,
       () =>
         Effect.gen(function* () {
-          const child = spawner({
+          const child = yield* spawner({
             exit: Effect.succeed(ChildProcessSpawner.ExitCode(code)),
           });
           const result = yield* runBuildCommand("/tmp", ["pnpm", "build"], {
@@ -437,7 +440,7 @@ writeFileSync("ready", "ready");`
               )
             );
           }
-        })
+        }).pipe(Effect.provide(services))
     );
   }
 });

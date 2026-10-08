@@ -153,11 +153,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "^0.49.0",
-    dependency: "@polar-sh/sdk",
-    minimumDeclarations: 1,
-  },
-  {
     approved: "9.7.0",
     dependency: "@react-three/fiber",
     minimumDeclarations: 1,
@@ -306,11 +301,6 @@ export const REGISTRY_REVIEWS = [
     "@react-three/fiber@latest",
     "9.8.1",
     "Fiber 9.8 accepts React 19.3 and mounts a scene inside the React DOM commit that renders its canvas. Drei's Html replaces its React root during that mount, and React DOM then commits the first label's replaced root last: it clears the label and makes the label's removal throw on lesson navigation, on React 19.2 and 19.3 alike (pmndrs/drei#2867). Fiber 9.8 and React 19.3 move together once Html keeps one root or scene labels stop using it. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene/lines.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
-  ],
-  [
-    "@polar-sh/sdk@latest",
-    "1.0.2",
-    "SDK 1.0 replaces the standalone funcs and model subpaths with versioned API service modules; the billing integration migrates in its own change.",
   ],
   [
     "afdocs@latest",

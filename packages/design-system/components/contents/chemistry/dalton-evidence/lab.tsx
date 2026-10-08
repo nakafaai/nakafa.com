@@ -4,7 +4,7 @@ import {
   CONSERVATION_MODE_ID,
   DALTON_LAYOUTS,
   DALTON_MODE_IDS,
-  type DaltonEvidenceLabProps,
+  type DaltonEvidenceLabLabels,
   type DaltonModeId,
   isDaltonModeId,
 } from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
@@ -23,6 +23,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+interface DaltonEvidenceLabProps {
+  description: ReactNode;
+  labels: DaltonEvidenceLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders a compact lab for Dalton's evidence from mass patterns.

@@ -19,7 +19,7 @@ import {
   resolveCameraPanOffset,
   resolveCameraRefit,
 } from "@repo/design-system/lib/geometry/camera/fit";
-import { Effect, Option } from "effect";
+import { Effect, HashMap, Option } from "effect";
 import {
   type ComponentRef,
   useCallback,
@@ -255,10 +255,10 @@ export function CameraControls(props: CameraControlsProps) {
       }
       const measurement = Effect.runSync(
         measureCameraBounds({
-          labels: framing.labels,
+          labels: HashMap.fromIterable(framing.labels),
           position: authoredPosition,
           root: scene,
-          subjects: framing.subjects,
+          subjects: HashMap.fromIterable(framing.subjects),
           target: authoredTarget,
         })
       );

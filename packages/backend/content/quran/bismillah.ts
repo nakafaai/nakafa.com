@@ -4,7 +4,7 @@ const unicodeMarkPattern = /^\p{Mark}$/u;
 const whitespacePrefixPattern = /^\s/u;
 
 /** Separates a signed Bismillah prefix without changing any source glyphs. */
-export function splitQuranBismillahPrefix(arabic: string, bismillah: string) {
+function splitQuranBismillahPrefix(arabic: string, bismillah: string) {
   const expectedLetters = baseLetters(bismillah);
   let matchedLetters = 0;
   let offset = 0;

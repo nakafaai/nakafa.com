@@ -1,47 +1,43 @@
 import { getColor } from "@repo/design-system/lib/color";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
-export type AccelerationCaseId = "speed-up" | "steady" | "slow-down";
+const AccelerationCaseIdSchema = Schema.Literals([
+  "speed-up",
+  "steady",
+  "slow-down",
+]);
+export type AccelerationCaseId = typeof AccelerationCaseIdSchema.Type;
 
-export interface AccelerationCase {
-  color: string;
-  id: AccelerationCaseId;
-  t0: number;
-  t1: number;
-  v0: number;
-  v1: number;
-}
+export const RocketExhaustSchema = Schema.Struct({
+  anchor: Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]),
+  radius: Schema.Finite,
+});
+export type RocketExhaust = typeof RocketExhaustSchema.Type;
 
-interface MotionPoint {
-  time: number;
-  velocity: number;
-}
+const AccelerationCaseSchema = Schema.Struct({
+  color: Schema.String,
+  id: AccelerationCaseIdSchema,
+  t0: Schema.Finite,
+  t1: Schema.Finite,
+  v0: Schema.Finite,
+  v1: Schema.Finite,
+});
+export type AccelerationCase = typeof AccelerationCaseSchema.Type;
 
-export interface AccelerationLabels {
-  chooseCase: string;
-  contextLine: string;
-  scenarioNames: Record<AccelerationCaseId, string>;
-  timeAxis: string;
-  velocityAxis: string;
-}
+const MotionPointSchema = Schema.Struct({
+  time: Schema.Finite,
+  velocity: Schema.Finite,
+});
+type MotionPoint = typeof MotionPointSchema.Type;
 
-export interface AccelerationLabLabels {
-  chooseCase: string;
-  factLabels: {
-    acceleration: ReactNode;
-    finalVelocity: ReactNode;
-    initialVelocity: ReactNode;
-    timeStep: ReactNode;
-  };
-  scenarioNames: Record<AccelerationCaseId, ReactNode>;
-  viewLabel: string;
-}
-
-export interface AccelerationLabProps {
-  description: ReactNode;
-  labels: AccelerationLabLabels;
-  title: ReactNode;
-}
+const AccelerationLabelsSchema = Schema.Struct({
+  chooseCase: Schema.String,
+  contextLine: Schema.String,
+  scenarioNames: Schema.Record(AccelerationCaseIdSchema, Schema.String),
+  timeAxis: Schema.String,
+  velocityAxis: Schema.String,
+});
+export type AccelerationLabels = typeof AccelerationLabelsSchema.Type;
 
 export const ACCELERATION_ROCKET_MODEL_PATH =
   "/models/physics/kinematics/nasa-pegasus-xl/pegasus-xl-textureless.glb";
@@ -149,7 +145,7 @@ export function isAccelerationCaseId(
   return ACCELERATION_CASES.some((item) => item.id === value);
 }
 
-export function getDeltaVelocity(item: AccelerationCase) {
+function getDeltaVelocity(item: AccelerationCase) {
   return item.v1 - item.v0;
 }
 
@@ -213,22 +209,19 @@ export function getAccelerationPositionSample(
   };
 }
 
-export function getAccelerationValue(item: AccelerationCase) {
+function getAccelerationValue(item: AccelerationCase) {
   return getDeltaVelocity(item) / getAccelerationDuration(item);
 }
 
-export function getAccelerationDuration(item: AccelerationCase) {
+function getAccelerationDuration(item: AccelerationCase) {
   return item.t1 - item.t0;
 }
 
-export function getAccelerationVelocityAt(
-  item: AccelerationCase,
-  time: number
-) {
+function getAccelerationVelocityAt(item: AccelerationCase, time: number) {
   return item.v0 + getAccelerationValue(item) * time;
 }
 
-export function getMotionSegments() {
+function getMotionSegments() {
   return ACCELERATION_CASES.map((item) => ({
     end: { time: item.t1, velocity: item.v1 },
     id: item.id,

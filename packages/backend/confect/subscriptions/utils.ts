@@ -1,5 +1,5 @@
-import type { Subscription } from "@polar-sh/sdk/models/components/subscription";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { PolarSubscriptionSource } from "@repo/backend/confect/customers/polar/payload";
 import type { SubscriptionRecurringInterval } from "@repo/backend/confect/subscriptions/schema";
 import type { WithoutSystemFields } from "convex/server";
 
@@ -11,8 +11,8 @@ const INTERVAL_MAP: Record<string, SubscriptionRecurringInterval> = {
 };
 
 /**
- * Validate and normalize recurring interval from Polar SDK.
- * SDK uses open enums that may include unrecognized values.
+ * Maps a Polar recurring interval to the stored one. Polar may send intervals
+ * this repository does not store, and those map to null.
  */
 function normalizeRecurringInterval(
   interval: string
@@ -34,12 +34,13 @@ function getSchoolIdFromMetadata(
 }
 
 /**
- * Convert Polar subscription to database format.
- * Converts Date objects to ISO strings for storage.
- * schoolId is extracted from metadata if present (for school subscriptions).
+ * Convert one decoded Polar subscription to database format.
+ * Dates are stored as Date.toISOString() strings, the form the tryout access
+ * query compares. schoolId is extracted from metadata if present (for school
+ * subscriptions).
  */
 export function convertToDatabaseSubscription(
-  subscription: Subscription
+  subscription: PolarSubscriptionSource
 ): WithoutSystemFields<Docs["subscriptions"]> {
   const schoolId = getSchoolIdFromMetadata(subscription.metadata);
   return {
