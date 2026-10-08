@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { formatCodeBlockData } from "@repo/contents/llms/code";
+import { Array as Arr } from "effect";
 
 describe("CodeBlock data formatting", () => {
   it("ignores missing and blank code", () => {
@@ -8,14 +9,17 @@ describe("CodeBlock data formatting", () => {
   });
 
   it("formats optional metadata and nested code fences", () => {
-    const data = [
-      'language: "markdown",',
-      'filename: "README.md",',
-      "code: `# Example",
-      "\\`\\`\\`ts",
-      "const ready = true;",
-      "\\`\\`\\``",
-    ].join("\n");
+    const data = Arr.join(
+      [
+        'language: "markdown",',
+        'filename: "README.md",',
+        "code: `# Example",
+        "\\`\\`\\`ts",
+        "const ready = true;",
+        "\\`\\`\\``",
+      ],
+      "\n"
+    );
 
     expect(formatCodeBlockData(data)).toBe(
       "File: README.md\n```markdown\n# Example\n``\\`ts\nconst ready = true;\n``\\`\n```"
