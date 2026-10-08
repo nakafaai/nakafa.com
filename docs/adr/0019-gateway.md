@@ -199,11 +199,14 @@ Stored data:
 
 Not yet established:
 
-- Convex's public pages state zero data retention on every request. They state
-  no no-training commitment and list no subprocessors for the gateway. Convex
-  must confirm these terms in writing before the privacy and terms pages change.
-  Those pages live in the Aksara repository and change in their own pull
-  request.
+- Convex's public pages state zero data retention on every request and routing
+  only to providers under a zero data retention agreement. Its subprocessor
+  list names OpenRouter, Inc. for AI model routing in the United States
+  (`convex.dev/legal/subprocessors`, read on 8 October 2026). No Convex page
+  states a no-training commitment in those words, and none names which provider
+  serves a Gemini request. The privacy, terms, and security pages state exactly
+  these published facts and no more. They live in the Aksara repository and
+  changed in nakafaai/aksara#403.
 - Cost and latency figures, bundle size, and whether the dev and production
   teams have the paid plan that the gateway requires were not measured here.
 

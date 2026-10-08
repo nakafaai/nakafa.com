@@ -26,12 +26,11 @@ export function HeaderMenu() {
         >
           <div className="relative aspect-square size-8">
             <Image
-              alt="Nakafa"
+              alt=""
               className="rounded-sm border object-contain"
               fill
               sizes="32px"
               src="/logo.svg"
-              title="Nakafa"
             />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
