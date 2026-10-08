@@ -24,11 +24,6 @@ const PostHogErasureConfigSchema = Schema.Struct({
   projectId: Schema.String,
 });
 export type PostHogErasureConfig = typeof PostHogErasureConfigSchema.Type;
-const PostHogErasureOptionsSchema = Schema.Struct({
-  config: PostHogErasureConfigSchema,
-});
-export type PostHogErasureOptions = typeof PostHogErasureOptionsSchema.Type;
-type PostHogRequest = typeof fetch;
 const JsonText = Schema.fromJsonString(Schema.Unknown);
 
 /** Reads named Convex settings without exposing credentials in decode errors. */
@@ -104,18 +99,23 @@ export const ensurePostHogErasureConfigured = Effect.fn(
   );
 });
 
+export type PostHogErasureOptions = NonNullable<
+  Parameters<typeof erasePostHogPerson>[1]
+>;
 /** Erases the PostHog person, historical events, and session recordings. */
 export const erasePostHogPerson = Effect.fn(
   "analytics.erasure.erasePostHogPerson"
 )(function* (
   distinctId: string,
-  options?: PostHogErasureOptions,
-  request?: PostHogRequest
+  options?: {
+    readonly config: PostHogErasureConfig;
+    readonly request: typeof fetch;
+  }
 ) {
-  const resolvedConfig = options?.config ?? (yield* readPostHogErasureConfig());
-  const send = request ?? fetch;
+  const config = options?.config ?? (yield* readPostHogErasureConfig());
+  const request = options?.request ?? fetch;
   const { apiOrigin, deletionApiKey, projectId } =
-    yield* validatePostHogErasureConfig(resolvedConfig);
+    yield* validatePostHogErasureConfig(config);
   const endpoint = `${apiOrigin}/api/projects/${encodeURIComponent(projectId)}/persons/bulk_delete/`;
   const requestNotSent = () =>
     new PostHogErasureRequestError({
@@ -130,7 +130,7 @@ export const erasePostHogPerson = Effect.fn(
   }).pipe(Effect.mapError(requestNotSent));
   const response = yield* Effect.tryPromise({
     try: () =>
-      send(endpoint, {
+      request(endpoint, {
         body,
         headers: {
           Authorization: `Bearer ${deletionApiKey}`,

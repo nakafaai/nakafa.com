@@ -78,7 +78,10 @@ describe("analytics erasure action", () => {
           )
         )
       );
-      yield* erasePostHogPerson("user-1", { config }, request);
+      yield* erasePostHogPerson("user-1", {
+        config,
+        request,
+      });
       const body = yield* Schema.encodeEffect(JsonText)({
         delete_events: true,
         delete_recordings: true,
@@ -118,22 +121,22 @@ describe("analytics erasure action", () => {
           )
         );
         expect(
-          yield* erasePostHogPerson("user-1", { config }, request)
+          yield* erasePostHogPerson("user-1", {
+            config,
+            request,
+          })
         ).toBeUndefined();
       })
   );
   it.effect("returns a typed failure when credentials are missing", () =>
     Effect.gen(function* () {
-      const failure = yield* erasePostHogPerson(
-        "user-1",
-        {
-          config: {
-            ...config,
-            deletionApiKey: "",
-          },
+      const failure = yield* erasePostHogPerson("user-1", {
+        config: {
+          ...config,
+          deletionApiKey: "",
         },
-        fetch
-      ).pipe(Effect.flip);
+        request: fetch,
+      }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(PostHogErasureConfigError);
     })
   );
@@ -161,53 +164,50 @@ describe("analytics erasure action", () => {
   );
   it.effect("returns a typed failure for an invalid host", () =>
     Effect.gen(function* () {
-      const failure = yield* erasePostHogPerson(
-        "user-1",
-        {
-          config: {
-            ...config,
-            host: "not a URL",
-          },
+      const failure = yield* erasePostHogPerson("user-1", {
+        config: {
+          ...config,
+          host: "not a URL",
         },
-        fetch
-      ).pipe(Effect.flip);
+        request: fetch,
+      }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(PostHogErasureConfigError);
     })
   );
   it.effect("never sends the deletion credential outside PostHog", () =>
     Effect.gen(function* () {
       const request = vi.fn<typeof fetch>();
-      const failure = yield* erasePostHogPerson(
-        "user-1",
-        {
-          config: {
-            ...config,
-            host: "https://eu.i.posthog.com.example.com",
-          },
+      const failure = yield* erasePostHogPerson("user-1", {
+        config: {
+          ...config,
+          host: "https://eu.i.posthog.com.example.com",
         },
-        request
-      ).pipe(Effect.flip);
+        request,
+      }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(PostHogErasureConfigError);
       expect(request).not.toHaveBeenCalled();
     })
   );
   it.effect("returns a typed failure when the request cannot be sent", () =>
     Effect.gen(function* () {
-      const failure = yield* erasePostHogPerson("user-1", { config }, () =>
-        Promise.reject(new Error("offline"))
-      ).pipe(Effect.flip);
+      const failure = yield* erasePostHogPerson("user-1", {
+        config,
+        request: () => Promise.reject(new Error("offline")),
+      }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(PostHogErasureRequestError);
     })
   );
   it.effect("returns a typed failure when PostHog rejects erasure", () =>
     Effect.gen(function* () {
-      const failure = yield* erasePostHogPerson("user-1", { config }, () =>
-        Promise.resolve(
-          new Response(null, {
-            status: 403,
-          })
-        )
-      ).pipe(Effect.flip);
+      const failure = yield* erasePostHogPerson("user-1", {
+        config,
+        request: () =>
+          Promise.resolve(
+            new Response(null, {
+              status: 403,
+            })
+          ),
+      }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(PostHogErasureRequestError);
       expect(failure.message).toBe("PostHog person erasure returned HTTP 403.");
     })
@@ -216,13 +216,15 @@ describe("analytics erasure action", () => {
     "returns a typed failure for an invalid success response %s",
     (body) =>
       Effect.gen(function* () {
-        const failure = yield* erasePostHogPerson("user-1", { config }, () =>
-          Promise.resolve(
-            new Response(body, {
-              status: 202,
-            })
-          )
-        ).pipe(Effect.flip);
+        const failure = yield* erasePostHogPerson("user-1", {
+          config,
+          request: () =>
+            Promise.resolve(
+              new Response(body, {
+                status: 202,
+              })
+            ),
+        }).pipe(Effect.flip);
         expect(failure).toBeInstanceOf(PostHogErasureRequestError);
         expect(failure.message).toBe(
           "PostHog person erasure returned an invalid response."
@@ -231,26 +233,28 @@ describe("analytics erasure action", () => {
   );
   it.effect("retries when PostHog reports a partial erasure failure", () =>
     Effect.gen(function* () {
-      const failure = yield* erasePostHogPerson("user-1", { config }, () =>
-        Promise.resolve(
-          new Response(
-            Schema.encodeSync(EraseResponseJson)({
-              deletion_errors: [
-                {
-                  person_uuid: "person-1",
-                },
-              ],
-              events_queued_for_deletion: false,
-              persons_deleted: 0,
-              persons_found: 1,
-              recordings_queued_for_deletion: false,
-            }),
-            {
-              status: 202,
-            }
-          )
-        )
-      ).pipe(Effect.flip);
+      const failure = yield* erasePostHogPerson("user-1", {
+        config,
+        request: () =>
+          Promise.resolve(
+            new Response(
+              Schema.encodeSync(EraseResponseJson)({
+                deletion_errors: [
+                  {
+                    person_uuid: "person-1",
+                  },
+                ],
+                events_queued_for_deletion: false,
+                persons_deleted: 0,
+                persons_found: 1,
+                recordings_queued_for_deletion: false,
+              }),
+              {
+                status: 202,
+              }
+            )
+          ),
+      }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(PostHogErasureRequestError);
       expect(failure.message).toBe(
         "PostHog did not accept complete analytics erasure."
@@ -278,19 +282,21 @@ describe("analytics erasure action", () => {
     },
   ])("retries an incomplete accepted response", (result) =>
     Effect.gen(function* () {
-      const failure = yield* erasePostHogPerson("user-1", { config }, () =>
-        Promise.resolve(
-          new Response(
-            Schema.encodeSync(EraseResponseJson)({
-              deletion_errors: [],
-              ...result,
-            }),
-            {
-              status: 202,
-            }
-          )
-        )
-      ).pipe(Effect.flip);
+      const failure = yield* erasePostHogPerson("user-1", {
+        config,
+        request: () =>
+          Promise.resolve(
+            new Response(
+              Schema.encodeSync(EraseResponseJson)({
+                deletion_errors: [],
+                ...result,
+              }),
+              {
+                status: 202,
+              }
+            )
+          ),
+      }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(PostHogErasureRequestError);
       expect(failure.message).toBe(
         "PostHog did not accept complete analytics erasure."
