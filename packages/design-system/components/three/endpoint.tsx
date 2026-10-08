@@ -6,6 +6,7 @@ import {
   clipOpenLineEnds,
   type LineEndpoints,
 } from "@repo/design-system/lib/geometry/endpoint";
+import { Array as Arr } from "effect";
 import { type ComponentProps, type ComponentRef, useMemo, useRef } from "react";
 import {
   InterleavedBufferAttribute,
@@ -91,7 +92,7 @@ export function EndpointLine({
       geometry.computeBoundingBox();
       geometry.computeBoundingSphere();
     } else {
-      geometry.setPositions(clipped.flatMap((point) => point.toArray()));
+      geometry.setPositions(Arr.flatMap(clipped, (point) => point.toArray()));
     }
   });
 

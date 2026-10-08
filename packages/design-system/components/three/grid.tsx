@@ -7,6 +7,7 @@ import {
   createGridGeometry,
   type GridPlaneGeometry,
 } from "@repo/design-system/components/three/frame";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { type ColorRepresentation, DoubleSide } from "three";
 
@@ -79,29 +80,32 @@ export function CoordinateGrid({
   if (infinite) {
     return (
       <group position={[origin?.x ?? 0, origin?.y ?? 0, origin?.z ?? 0]}>
-        {[
-          [Math.PI / 2, 0, 0],
-          [0, 0, 0],
-          [0, 0, Math.PI / 2],
-        ].map(([x, y, z]) => (
-          <Grid
-            args={[2, 2]}
-            cellColor={cellColor}
-            cellSize={1}
-            cellThickness={0.35}
-            fadeDistance={80}
-            fadeStrength={2}
-            followCamera
-            infiniteGrid
-            key={`${x}-${y}-${z}`}
-            material-depthWrite={false}
-            rotation={[x, y, z]}
-            sectionColor={sectionColor}
-            sectionSize={5}
-            sectionThickness={0.6}
-            side={DoubleSide}
-          />
-        ))}
+        {Arr.map(
+          [
+            [Math.PI / 2, 0, 0],
+            [0, 0, 0],
+            [0, 0, Math.PI / 2],
+          ],
+          ([x, y, z]) => (
+            <Grid
+              args={[2, 2]}
+              cellColor={cellColor}
+              cellSize={1}
+              cellThickness={0.35}
+              fadeDistance={80}
+              fadeStrength={2}
+              followCamera
+              infiniteGrid
+              key={`${x}-${y}-${z}`}
+              material-depthWrite={false}
+              rotation={[x, y, z]}
+              sectionColor={sectionColor}
+              sectionSize={5}
+              sectionThickness={0.6}
+              side={DoubleSide}
+            />
+          )
+        )}
       </group>
     );
   }

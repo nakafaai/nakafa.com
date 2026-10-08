@@ -6,6 +6,7 @@ import { reactMdxComponents } from "@repo/design-system/components/markdown/reac
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
+import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import ReactMarkdown from "react-markdown";
 import { harden } from "rehype-harden";
@@ -75,7 +76,7 @@ export function MarkdownContent({
 
   return (
     <MarkdownFrame className={className} variant={variant}>
-      {blocks.map((block) => (
+      {Arr.map(blocks, (block) => (
         <MarkdownBlock
           allowedImagePrefixes={allowedImagePrefixes}
           allowedLinkPrefixes={allowedLinkPrefixes}
