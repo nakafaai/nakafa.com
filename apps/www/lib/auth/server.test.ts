@@ -15,6 +15,7 @@ import { workAsyncStorage } from "next/dist/server/app-render/work-async-storage
 import { workUnitAsyncStorage } from "next/dist/server/app-render/work-unit-async-storage.external";
 import { createRequestStore } from "next/dist/server/async-storage/request-store";
 import { createWorkStore } from "next/dist/server/async-storage/work-store";
+import { getImplicitTags } from "next/dist/server/lib/implicit-tags";
 import type { getToken as getAuthToken } from "@/lib/auth/server";
 
 const CONVEX_SITE_URL = "https://test.convex.site";
@@ -25,11 +26,15 @@ const loadAuthServer = Effect.fn("auth.server.test.load")(() =>
 
 const runWithRequestHeaders = Effect.fn(
   "auth.server.test.runWithRequestHeaders"
-)((headers: Headers, getToken: typeof getAuthToken) => {
+)(function* (headers: Headers, getToken: typeof getAuthToken) {
+  // Next.js builds the implicit tags itself, so the fixture holds its own types.
+  const implicitTags = yield* Effect.promise(() =>
+    getImplicitTags("/test/page", "/test", null)
+  );
   const requestStore = createRequestStore({
     headers,
     hmrRefreshHash: undefined,
-    implicitTags: { expirationsByCacheKind: new Map(), tags: [] },
+    implicitTags,
     isHmrRefresh: false,
     onUpdateCookies: undefined,
     phase: "render",
@@ -68,7 +73,7 @@ const runWithRequestHeaders = Effect.fn(
     },
   });
 
-  return Effect.tryPromise(() =>
+  return yield* Effect.tryPromise(() =>
     workAsyncStorage.run(workStore, () =>
       workUnitAsyncStorage.run(requestStore, getToken)
     )

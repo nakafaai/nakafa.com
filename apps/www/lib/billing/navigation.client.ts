@@ -1,8 +1,8 @@
 "use client";
 
 import { useAction } from "@confect/react";
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -15,11 +15,6 @@ const BillingSourceSchema = Schema.Struct({
 });
 
 type BillingSource = typeof BillingSourceSchema.Type;
-
-const BillingCheckoutSchema = Schema.Struct({
-  ...BillingSourceSchema.fields,
-  locale: ActiveAppLocaleCodeSchema,
-});
 
 /** Owns checkout and customer-portal requests for every client purchase CTA. */
 export function useBillingNavigation() {
@@ -58,7 +53,10 @@ export function useBillingNavigation() {
 
   return {
     isPending,
-    openCheckout: ({ locale, ...failure }: typeof BillingCheckoutSchema.Type) =>
+    openCheckout: ({
+      locale,
+      ...failure
+    }: BillingSource & { readonly locale: PublicAppLocale }) =>
       runBillingRequest(
         Effect.tryPromise(() =>
           createCheckout({ locale, successUrl: window.location.href })
