@@ -1,8 +1,21 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { toContentViewIoError } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
-import { Effect, flow, Option } from "effect";
+import { Effect, flow, Option, Schema } from "effect";
+
+const ContentViewerSchema = Schema.Union([
+  Schema.Struct({
+    deviceId: Schema.optionalKey(Schema.String),
+    kind: Schema.Literal("account"),
+    userId: IdSchema("users"),
+  }),
+  Schema.Struct({
+    deviceId: Schema.String,
+    kind: Schema.Literal("device"),
+  }),
+]);
 
 /**
  * The one identity a content view is attributed to.
@@ -11,16 +24,7 @@ import { Effect, flow, Option } from "effect";
  * account view may arrive without one, and a signed-out view without one has
  * no identity to count.
  */
-export type ContentViewer =
-  | {
-      readonly deviceId?: string;
-      readonly kind: "account";
-      readonly userId: Docs["users"]["_id"];
-    }
-  | {
-      readonly deviceId: string;
-      readonly kind: "device";
-    };
+export type ContentViewer = typeof ContentViewerSchema.Type;
 
 /** Attributes one view to the signed-in account, or else to a consented device. */
 export function resolveContentViewer(input: {
