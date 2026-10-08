@@ -3,6 +3,7 @@ import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { quranLayer } from "@repo/backend/content/quran/confect";
 import { readQuranDocument } from "@repo/backend/content/quran/document";
+import { quranDocumentValidator } from "@repo/backend/content/quran/response";
 import {
   makeQuranAttribution,
   makeQuranChunk,
@@ -12,7 +13,12 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+const encodeDocument = Schema.encodeSync(
+  Schema.fromJsonString(quranDocumentValidator),
+  { onExcessProperty: "error" }
+);
 
 /** Builds every signed row needed by one two-chunk technical document. */
 function documentRows() {
@@ -110,11 +116,11 @@ describe("contentRelease/quran/document", () => {
               },
             });
             expect(document.verses).toHaveLength(7);
-            expect(JSON.stringify(document)).not.toContain(
+            expect(encodeDocument(document)).not.toContain(
               "Technical translation"
             );
-            expect(JSON.stringify(document)).not.toContain("Tafsir teknis");
-            expect(JSON.stringify(document)).not.toContain("hizbQuarter");
+            expect(encodeDocument(document)).not.toContain("Tafsir teknis");
+            expect(encodeDocument(document)).not.toContain("hizbQuarter");
           })
         );
       })

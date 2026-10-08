@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { quranLayer } from "@repo/backend/content/quran/confect";
+import { quranViewValidator } from "@repo/backend/content/quran/response";
 import { readQuranView } from "@repo/backend/content/quran/view";
 import {
   makeQuranAttribution,
@@ -13,7 +14,12 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+const encodeView = Schema.encodeSync(
+  Schema.fromJsonString(quranViewValidator),
+  { onExcessProperty: "error" }
+);
 
 /** Builds every verified source row needed by the first Quran page. */
 function viewRows() {
@@ -334,7 +340,7 @@ describe("contentRelease/quran/view", () => {
             expect(indonesian.surah?.name.sourceMeaning).toEqual(
               makeQuranMeaning(1)
             );
-            expect(JSON.stringify(indonesian)).not.toContain("Tafsir teknis");
+            expect(encodeView(indonesian)).not.toContain("Tafsir teknis");
             expect({
               english: english.appLocale,
               indonesian: indonesian.appLocale,
