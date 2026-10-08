@@ -16,18 +16,18 @@ import {
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { Effect, Schema } from "effect";
 
-/** One authenticated section row with its signed immutable digest. */
 const SelectedTryoutSectionSchema = Schema.Struct({
   row: TryoutSectionSchema,
   rowHash: Schema.String,
 });
+/** One authenticated section row with its signed immutable digest. */
 export type SelectedTryoutSection = typeof SelectedTryoutSectionSchema.Type;
 
-/** Complete verified set-local catalog needed by public and attempt reads. */
 const TryoutSetSelectionSchema = Schema.Struct({
   ...PublishedCatalogIndexSchema.fields,
   sectionRecords: Schema.Array(SelectedTryoutSectionSchema),
 });
+/** Complete verified set-local catalog needed by public and attempt reads. */
 export type TryoutSetSelection = typeof TryoutSetSelectionSchema.Type;
 
 /** Reads the verified parent and section rows needed for one set route. */

@@ -16,11 +16,11 @@ import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { Effect, Option, Schema } from "effect";
 
-/** Stable authored keys that select one localized try-out section. */
 const TryoutSectionIdentitySchema = Schema.Struct({
   ...tryoutSetIdentityValidator.fields,
   sectionKey: TryoutSectionSchema.fields.sectionKey,
 });
+/** Stable authored keys that select one localized try-out section. */
 export type TryoutSectionIdentity = typeof TryoutSectionIdentitySchema.Type;
 /** Reads one verified server-only section and all signed placements. */
 export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(

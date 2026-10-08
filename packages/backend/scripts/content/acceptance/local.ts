@@ -51,7 +51,7 @@ export const RuntimeManifest = Schema.Struct({
   site: LoopbackUrl,
 });
 export type LocalRuntime = typeof RuntimeManifest.Type;
-/** Plain JSON text: encoding yields the same bytes as `JSON.stringify`. */
+/** Plain JSON text: for every value `JSON.stringify` serializes, encoding yields the same bytes; `undefined` fails instead. */
 const JsonText = Schema.fromJsonString(Schema.Unknown);
 /** Hashes text with SHA-256 through Effect's `Crypto` and returns the hex digest. */
 const sha256Hex = Effect.fn("ContentAcceptance.sha256Hex")(function* (

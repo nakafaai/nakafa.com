@@ -19,7 +19,6 @@ import { Effect, MutableHashSet, Schema } from "effect";
 export type PublishedCatalog = Effect.Success<
   ReturnType<typeof loadTryoutCatalog>
 >;
-/** Signed catalog rows split into their exact discriminated hierarchy kinds. */
 export const PublishedCatalogIndexSchema = Schema.Struct({
   countries: Schema.Array(TryoutCountrySchema),
   exams: Schema.Array(TryoutExamSchema),
@@ -27,6 +26,7 @@ export const PublishedCatalogIndexSchema = Schema.Struct({
   sets: Schema.Array(TryoutSetSchema),
   tracks: Schema.Array(TryoutTrackSchema),
 });
+/** Signed catalog rows split into their exact discriminated hierarchy kinds. */
 export type PublishedCatalogIndex = typeof PublishedCatalogIndexSchema.Type;
 /** Splits verified catalog rows and rejects duplicate public routes. */
 export const indexPublishedCatalog = Effect.fn(
