@@ -4,35 +4,35 @@ import { useMutation } from "@confect/react";
 import { StopIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import refs from "@repo/backend/confect/_generated/refs";
-import { tryoutSectionRuntimeValidator } from "@repo/backend/confect/tryouts/runtime/spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutTimer } from "@/components/tryout/runtime/countdown";
+import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
-const TryoutRuntimeControlsValueSchema = Schema.Struct({
-  expired: Schema.Boolean,
-  returnHref: Schema.String,
-  runtime: tryoutSectionRuntimeValidator,
-});
-type TryoutRuntimeControlsValue = typeof TryoutRuntimeControlsValueSchema.Type;
+/** Props of the production sticky timer, progress, and finish controls. */
+interface TryoutRuntimeControlsProps {
+  title: string;
+  value: {
+    expired: boolean;
+    returnHref: string;
+    runtime: TryoutSectionRuntime;
+  };
+}
 
 /** Renders the production sticky timer, progress, and finish controls. */
 export function TryoutRuntimeControls({
   title,
   value,
-}: {
-  title: string;
-  value: TryoutRuntimeControlsValue;
-}) {
+}: TryoutRuntimeControlsProps) {
   const { expired, returnHref, runtime } = value;
   const router = useRouter();
   const completeSection = useMutation(

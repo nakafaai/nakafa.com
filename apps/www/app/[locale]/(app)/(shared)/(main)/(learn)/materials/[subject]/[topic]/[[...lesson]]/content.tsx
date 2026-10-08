@@ -6,7 +6,7 @@ import {
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Schema, Struct } from "effect";
 import { notFound } from "next/navigation";
-import type { PropsWithChildren } from "react";
+import type { ReactNode } from "react";
 import type { MaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { resolveMaterialOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
 import { getMaterialPublication } from "@/lib/content/material/publication";
@@ -65,15 +65,13 @@ const MaterialNavigationPageSchema = Schema.Struct({
 });
 export type MaterialNavigationPage = typeof MaterialNavigationPageSchema.Type;
 
-/** React children hold the rendered body, which no Schema can describe. */
-type MaterialPageChildren = Required<Pick<PropsWithChildren, "children">>;
-
-/** Complete verified body and shell model consumed by the material page. */
+/** Complete verified body and shell model consumed by the material page; its React children hold the rendered body. */
 export type MaterialPageContent = (
   | typeof PreviewPageSchema.Type
   | typeof PublishedPageSchema.Type
-) &
-  MaterialPageChildren;
+) & {
+  readonly children: ReactNode;
+};
 
 /** Reads metadata from the same signed delivery the page body renders. */
 export async function readMaterialMetadata(params: MaterialParams) {

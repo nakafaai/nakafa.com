@@ -1,21 +1,21 @@
 "use client";
 
-import { tryoutSectionRuntimeValidator } from "@repo/backend/confect/tryouts/runtime/spec";
-import { HashMap, Option, Schema } from "effect";
-import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
+import { HashMap, Option } from "effect";
+import type { TryoutQuestionContent } from "@/components/tryout/content/model";
 import { TryoutActiveQuestion } from "@/components/tryout/runtime/question.client";
+import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
-const TryoutRuntimeValueSchema = Schema.Struct({
-  expired: Schema.Boolean,
-  runtime: tryoutSectionRuntimeValidator,
-});
-
-/** Cohesive render model for one loaded try-out runtime. */
-export type TryoutRuntimeValue = typeof TryoutRuntimeValueSchema.Type &
-  Pick<TryoutRuntimeContent, "questions">;
+/** Props of one loaded try-out runtime: its cohesive render model is `value`. */
+export interface TryoutRuntimeProps {
+  value: {
+    expired: boolean;
+    questions: readonly TryoutQuestionContent[];
+    runtime: TryoutSectionRuntime;
+  };
+}
 
 /** Renders the active Convex-backed try-out section runtime. */
-export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
+export function TryoutRuntime({ value }: TryoutRuntimeProps) {
   const { expired, questions, runtime } = value;
   const isActive = runtime.section.status === "in-progress";
   const questionBySnapshot = HashMap.fromIterable(

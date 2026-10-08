@@ -9,9 +9,6 @@ import {
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
 import refs from "@repo/backend/confect/_generated/refs";
-import { historyRowValidator } from "@repo/backend/confect/tryouts/queries/history.spec";
-import { tryoutSetIdentityValidator } from "@repo/backend/confect/tryouts/route";
-import { tryoutScoreResultValidator } from "@repo/backend/confect/tryouts/score";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -31,7 +28,6 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
 import { format } from "date-fns";
-import { Schema, Struct } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -42,27 +38,27 @@ import { getLocale } from "@/lib/utils/date";
 type HistoryQuery = typeof refs.public.tryouts.queries.history.bySet;
 type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
 type HistoryRow = Ref.Returns<HistoryQuery>["page"][number];
-const ScoredHistoryRowSchema = Schema.Struct({
-  ...historyRowValidator.fields,
-  score: tryoutScoreResultValidator,
-});
-type ScoredHistoryRow = typeof ScoredHistoryRowSchema.Type;
-const ScoredAttemptSchema = ScoredHistoryRowSchema.mapFields(
-  Struct.pick(["attemptId", "attemptNumber", "score", "startedAt", "status"])
-);
+type ScoredHistoryRow = HistoryRow & {
+  score: NonNullable<HistoryRow["score"]>;
+};
+type ScoredAttempt = Pick<
+  ScoredHistoryRow,
+  "attemptId" | "attemptNumber" | "score" | "startedAt" | "status"
+>;
 
-const TryoutAttemptResultsValueSchema = Schema.Struct({
-  attempt: ScoredAttemptSchema,
-  identity: tryoutSetIdentityValidator,
-});
-type TryoutAttemptResultsValue = typeof TryoutAttemptResultsValueSchema.Type;
+/** Props of the attempt results: `value` holds the scored attempt and its set identity. */
+interface TryoutAttemptResultsProps {
+  value: {
+    attempt: ScoredAttempt;
+    identity: HistoryIdentity;
+  };
+}
 
-const AttemptOptionSchema = Schema.Struct({
-  attemptId: historyRowValidator.fields.attemptId,
-  label: Schema.String,
-  subtitle: Schema.String,
-});
-type AttemptOption = typeof AttemptOptionSchema.Type;
+interface AttemptOption {
+  attemptId: HistoryRow["attemptId"];
+  label: string;
+  subtitle: string;
+}
 
 /** Renders one selectable attempt row inside the history picker. */
 function TryoutAttemptHistoryItem({
@@ -218,11 +214,7 @@ function TryoutAttemptHistory({
 }
 
 /** Renders a score card with selectable immutable attempt history. */
-export function TryoutAttemptResults({
-  value,
-}: {
-  value: TryoutAttemptResultsValue;
-}) {
+export function TryoutAttemptResults({ value }: TryoutAttemptResultsProps) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const [selectedAttemptId, setSelectedAttemptId] = useState<
     HistoryRow["attemptId"] | null

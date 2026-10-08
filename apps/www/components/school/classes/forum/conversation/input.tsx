@@ -40,6 +40,11 @@ import {
 } from "@/components/school/classes/forum/session/context";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
+interface ForumPostFailureReport {
+  draft?: ForumPostInputDraft;
+  error: unknown;
+}
+
 export function ForumPostInput() {
   const t = useTranslations("School.Classes");
   const { acknowledgeUnreadCue, goToLatest } = useControls();
@@ -104,13 +109,7 @@ export function ForumPostInput() {
         replyTarget,
       } satisfies ForumPostInputDraft;
       /** Reports a failed submit without hiding already optimistic local feedback. */
-      const reportSubmitFailure = ({
-        draft,
-        error,
-      }: {
-        draft?: ForumPostInputDraft;
-        error: unknown;
-      }) =>
+      const reportSubmitFailure = ({ draft, error }: ForumPostFailureReport) =>
         Effect.all(
           [
             Effect.sync(() => {

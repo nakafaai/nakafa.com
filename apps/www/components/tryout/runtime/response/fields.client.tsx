@@ -16,9 +16,9 @@ import {
 import {
   assignCategorySelection,
   type TryoutResponseSelection,
-  TryoutResponseStateSchema,
   toggleMultipleChoiceSelection,
 } from "@/components/tryout/runtime/response/state";
+import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 
 /** Label of one response option or statement, marked correct or not once revealed. */
 const TryoutResponseFieldLabelSchema = Schema.Struct({
@@ -29,22 +29,20 @@ const TryoutResponseFieldLabelSchema = Schema.Struct({
 export type TryoutResponseFieldLabel =
   typeof TryoutResponseFieldLabelSchema.Type;
 
-/** Response data one field set renders; its callbacks arrive as separate props. */
-const TryoutResponseFieldsDataSchema = Schema.Struct({
-  id: Schema.String,
-  locked: Schema.Boolean,
-  ...TryoutResponseStateSchema.fields,
-  revealAnswers: Schema.optionalKey(Schema.Boolean),
-});
-type TryoutResponseFieldsData = typeof TryoutResponseFieldsDataSchema.Type;
-
 type OnResponseChange = (selection: TryoutResponseSelection | null) => void;
 type RenderResponseLabel = (value: TryoutResponseFieldLabel) => ReactNode;
 
+/** Props of one response field set: its callbacks arrive as separate props. */
 interface TryoutResponseFieldsProps {
   onChange: OnResponseChange;
   renderLabel: RenderResponseLabel;
-  value: TryoutResponseFieldsData;
+  value: {
+    readonly id: string;
+    readonly locked: boolean;
+    readonly responseSpec: TryoutRenderableResponseSpec;
+    readonly revealAnswers?: boolean;
+    readonly selection: TryoutResponseSelection | null;
+  };
 }
 
 /** Renders every response kind through one persistence-neutral surface. */
