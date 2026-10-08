@@ -2,13 +2,10 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
+import { createContentContractError } from "@repo/backend/client/content/status";
 import {
-  createContentContractError,
-  createContentEndpoint,
-  encodeContentRequest,
   readContentResponse,
   requestContentResponse,
-  validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -114,57 +111,6 @@ beforeEach(() => {
 });
 
 describe("content runtime transport", () => {
-  it.live("builds only fixed HTTPS or loopback endpoints", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* createContentEndpoint(
-          "https://example.convex.site/ignored",
-          PUBLIC_CONTENT_RUNTIME_PATH
-        )
-      ).toBe(endpoint);
-      expect(
-        yield* createContentEndpoint(
-          "http://localhost:3211/ignored",
-          PUBLIC_CONTENT_RUNTIME_PATH
-        )
-      ).toBe(`http://localhost:3211${PUBLIC_CONTENT_RUNTIME_PATH}`);
-
-      for (const siteUrl of [
-        "not a URL",
-        "http://example.com",
-        "ftp://localhost",
-        "https://user:secret@example.com",
-      ]) {
-        expect(
-          yield* createContentEndpoint(
-            siteUrl,
-            PUBLIC_CONTENT_RUNTIME_PATH
-          ).pipe(Effect.flip)
-        ).toEqual(new ContentTransportError({ reason: "url" }));
-      }
-    })
-  );
-
-  it.live("serializes bounded request JSON and rejects invalid values", () =>
-    Effect.gen(function* () {
-      expect(yield* encodeContentRequest({ locale: "en" }, 1024)).toBe(
-        '{"locale":"en"}'
-      );
-      const cyclic: { self?: unknown } = {};
-      cyclic.self = cyclic;
-      for (const input of [cyclic, undefined]) {
-        expect(
-          yield* encodeContentRequest(input, 1024).pipe(Effect.flip)
-        ).toMatchObject({ reason: "request" });
-      }
-      expect(
-        yield* encodeContentRequest({ value: "x".repeat(1024) }, 10).pipe(
-          Effect.flip
-        )
-      ).toMatchObject({ reason: "request-size" });
-    })
-  );
-
   it.live("posts one private no-store request with the server credential", () =>
     Effect.gen(function* () {
       fetchMock.mockResolvedValue(createResponse("{}", 200));
@@ -234,6 +180,17 @@ describe("content runtime transport", () => {
 
       expect(failure).toEqual(new ContentTransportError({ reason: "body" }));
       expect(fetchMock).toHaveBeenCalledTimes(3);
+    })
+  );
+
+  it.effect("does not retry a terminal reader failure", () =>
+    Effect.gen(function* () {
+      fetchMock.mockResolvedValue(createResponse("{", 200));
+
+      expect(yield* runRetryRequest(requestJson().pipe(Effect.flip))).toEqual(
+        new ContentTransportError({ reason: "json-syntax" })
+      );
+      expect(fetchMock).toHaveBeenCalledOnce();
     })
   );
 
@@ -365,19 +322,55 @@ describe("content runtime transport", () => {
     })
   );
 
-  it.effect("ends an attempt that gets no response before its deadline", () =>
+  it.effect(
+    "fails a read after three attempts miss their request deadline",
+    () =>
+      Effect.gen(function* () {
+        fetchMock.mockImplementation(
+          () => new Promise<Response>(() => undefined)
+        );
+
+        // Three attempts of ten seconds, with the 500 ms and 1 s delays between them.
+        expect(
+          yield* runRetryRequest(requestResponse().pipe(Effect.flip), 31.5)
+        ).toEqual(
+          new ContentTransportError({ networkCodes: [], reason: "fetch" })
+        );
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+        expect(attemptSignal(0)?.aborted).toBe(true);
+        expect(attemptSignal(1)?.aborted).toBe(true);
+        expect(attemptSignal(2)?.aborted).toBe(true);
+      })
+  );
+
+  it.effect(
+    "answers a read whose first attempt misses its request deadline",
+    () =>
+      Effect.gen(function* () {
+        fetchMock
+          .mockImplementationOnce(() => new Promise<Response>(() => undefined))
+          .mockResolvedValueOnce(createResponse("{}", 200));
+
+        expect((yield* runRetryRequest(requestResponse(), 11)).status).toBe(
+          200
+        );
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(attemptSignal(0)?.aborted).toBe(true);
+      })
+  );
+
+  it.effect("keeps an unknown network code final after a missed deadline", () =>
     Effect.gen(function* () {
-      fetchMock.mockImplementation(
-        () => new Promise<Response>(() => undefined)
-      );
+      fetchMock
+        .mockImplementationOnce(() => new Promise<Response>(() => undefined))
+        .mockRejectedValueOnce(createFetchFailure("UND_ERR_CONNECT_TIMEOUT"));
 
       expect(
-        yield* runRetryRequest(requestResponse().pipe(Effect.flip), 10)
+        yield* runRetryRequest(requestResponse().pipe(Effect.flip), 11)
       ).toEqual(
         new ContentTransportError({ networkCodes: [], reason: "fetch" })
       );
-      expect(fetchMock).toHaveBeenCalledOnce();
-      expect(attemptSignal(0)?.aborted).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
     })
   );
 
@@ -410,17 +403,6 @@ describe("content runtime transport", () => {
           1024
         )
       ).toEqual({ kind: "missing" });
-      expect(
-        createContentContractError(received(createResponse("{}", 200)))
-      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
-      expect(
-        createContentContractError(
-          received(
-            createResponse("{}", 200, { "content-type": "application/json" })
-          )
-        )
-      ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
-
       const invalid: readonly [Response, string][] = [
         [
           createResponse("{}", 200, undefined, "https://other.test"),
@@ -461,38 +443,6 @@ describe("content runtime transport", () => {
             Effect.flip
           )
         ).toMatchObject({ reason });
-      }
-    })
-  );
-
-  it.live("accepts only contract-owned response status pairs", () =>
-    Effect.gen(function* () {
-      for (const [response, status] of [
-        [{ kind: "found" }, 200],
-        [{ kind: "missing" }, 404],
-        [{ code: "CONTENT_RUNTIME_UNAUTHORIZED", kind: "failure" }, 401],
-        [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 400],
-        [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 413],
-        [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 415],
-        [{ code: "CONTENT_RUNTIME_INTERNAL", kind: "failure" }, 500],
-        [{ code: "CONTENT_RUNTIME_RESPONSE_TOO_LARGE", kind: "failure" }, 500],
-      ] as const) {
-        expect(
-          yield* validateContentRuntimeStatus(response, status)
-        ).toBeUndefined();
-      }
-      for (const [response, status] of [
-        [{ kind: "missing" }, 200],
-        [{ code: "CONTENT_RUNTIME_UNAUTHORIZED", kind: "failure" }, 403],
-        [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 422],
-        [{ code: "CONTENT_RUNTIME_INTERNAL", kind: "failure" }, 503],
-        [{ code: "CONTENT_RUNTIME_RESPONSE_TOO_LARGE", kind: "failure" }, 413],
-      ] as const) {
-        expect(
-          yield* validateContentRuntimeStatus(response, status).pipe(
-            Effect.flip
-          )
-        ).toMatchObject({ reason: "status" });
       }
     })
   );

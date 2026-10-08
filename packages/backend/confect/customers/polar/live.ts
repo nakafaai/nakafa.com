@@ -12,9 +12,12 @@ import {
   type PolarPayloadError,
 } from "@repo/backend/confect/customers/polar/payload";
 import {
+  type EnsurePolarCustomerInput,
   PolarCheckoutError,
+  type PolarCheckoutInput,
   PolarCustomerError,
-  type PolarCustomerGateway,
+  type PolarCustomerMetadataUpdateInput,
+  type PolarCustomerUpdateInput,
   PolarDeleteError,
   PolarDuplicateEmailError,
   PolarPortalError,
@@ -26,7 +29,7 @@ import {
   polarPortalErrorCode,
   polarUpdateErrorCode,
 } from "@repo/backend/confect/customers/polar/spec";
-import { Array as Arr, Data, Effect } from "effect";
+import { Array as Arr, Data, Effect, Option } from "effect";
 
 class PolarRequestError extends Data.TaggedError("PolarRequestError")<{
   readonly cause: unknown;
@@ -77,9 +80,9 @@ function isDuplicateEmail(error: unknown) {
 }
 
 /** Live Polar operations keep recovery policy next to each domain operation. */
-export const polarGateway: PolarCustomerGateway = {
+export const polarGateway = {
   createCheckoutSession: Effect.fn("polar.createCheckoutSession")(function* (
-    input: Parameters<PolarCustomerGateway["createCheckoutSession"]>[0]
+    input: PolarCheckoutInput
   ) {
     return yield* request(
       (client) =>
@@ -93,7 +96,7 @@ export const polarGateway: PolarCustomerGateway = {
           // Checkout is for individuals, so the billing name and address are not required.
           is_business_customer: false,
           locale: input.locale,
-          products: input.productIds,
+          products: [...input.productIds],
           // Only the country is required at checkout; US customers still enter the full address.
           require_billing_address: false,
           success_url: input.successUrl,
@@ -117,7 +120,7 @@ export const polarGateway: PolarCustomerGateway = {
     );
   }),
   createCustomer: Effect.fn("polar.createCustomer")(function* (
-    input: Parameters<PolarCustomerGateway["createCustomer"]>[0]
+    input: EnsurePolarCustomerInput
   ) {
     return yield* request(
       (client) =>
@@ -207,7 +210,7 @@ export const polarGateway: PolarCustomerGateway = {
           })
       )
     );
-    return page.items[0] ?? null;
+    return Option.getOrNull(Arr.head(page.items));
   }),
   getCustomerByExternalId: Effect.fn("polar.getCustomerByExternalId")(
     function* (externalId: string) {
@@ -248,7 +251,7 @@ export const polarGateway: PolarCustomerGateway = {
     );
   }),
   updateCustomer: Effect.fn("polar.updateCustomer")(function* (
-    input: Parameters<PolarCustomerGateway["updateCustomer"]>[0]
+    input: PolarCustomerUpdateInput
   ) {
     return yield* request(
       (client) =>
@@ -273,7 +276,7 @@ export const polarGateway: PolarCustomerGateway = {
     );
   }),
   updateCustomerMetadata: Effect.fn("polar.updateCustomerMetadata")(function* (
-    input: Parameters<PolarCustomerGateway["updateCustomerMetadata"]>[0]
+    input: PolarCustomerMetadataUpdateInput
   ) {
     return yield* request(
       (client) =>
