@@ -1,4 +1,4 @@
-import { Effect, Ref, SubscriptionRef } from "effect";
+import { Effect, HashMap, Ref, SubscriptionRef } from "effect";
 import { startViewportPlacement } from "@/components/school/classes/forum/conversation/viewport/placement";
 import type { ViewportRuntime } from "@/components/school/classes/forum/conversation/viewport/runtime";
 import { updateViewportState } from "@/components/school/classes/forum/conversation/viewport/state";
@@ -22,7 +22,10 @@ export function handleBackNavigation(runtime: ViewportRuntime) {
 
     if (
       backView.kind === "post" &&
-      !activeTranscript?.rowIndexByPostId.has(backView.postId)
+      !(
+        activeTranscript &&
+        HashMap.has(activeTranscript.rowIndexByPostId, backView.postId)
+      )
     ) {
       yield* startViewportPlacement(runtime, {
         highlightPostId: null,

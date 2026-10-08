@@ -1,4 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { HashMap, Option } from "effect";
 import type { ConversationGeometryHandle } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
 /** Clamps one row index into the currently rendered transcript range. */
 export function clampConversationIndex(index: number, itemCount: number) {
@@ -80,10 +81,10 @@ export function getConversationPostTargetIndex({
   rowIndexByPostId,
   postId,
 }: {
-  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
+  rowIndexByPostId: HashMap.HashMap<Id<"schoolClassForumPosts">, number>;
   postId: Id<"schoolClassForumPosts">;
 }) {
-  return rowIndexByPostId.get(postId);
+  return Option.getOrUndefined(HashMap.get(rowIndexByPostId, postId));
 }
 
 /** Returns how far one row is from the viewport center line. */

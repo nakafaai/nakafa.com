@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Ref } from "effect";
+import { Effect, HashMap, Ref } from "effect";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
   createConversationTestPost,
@@ -147,8 +147,11 @@ describe("conversation/viewport/persist", () => {
         ...rows,
         { post: latestPost, type: "post" },
       ] satisfies ActiveTranscriptModel["rows"];
-      const latestRowIndexByPostId = new Map(rowIndexByPostId);
-      latestRowIndexByPostId.set(latestPost._id, latestRows.length - 1);
+      const latestRowIndexByPostId = HashMap.set(
+        rowIndexByPostId,
+        latestPost._id,
+        latestRows.length - 1
+      );
       const latestTranscript = {
         lastPostId: latestPost._id,
         postIds: [firstPost._id, secondPost._id, latestPost._id],

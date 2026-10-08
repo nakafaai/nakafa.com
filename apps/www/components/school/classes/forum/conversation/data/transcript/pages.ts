@@ -1,15 +1,27 @@
+import { Schema } from "effect";
 import type {
   Forum,
   ForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
-import { isOptimisticForumPost } from "@/components/school/classes/forum/conversation/data/entities";
-import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/transcript/unread";
+import {
+  ForumPostSchema,
+  isOptimisticForumPost,
+} from "@/components/school/classes/forum/conversation/data/entities";
+import {
+  type ConversationUnreadCue,
+  ConversationUnreadCueSchema,
+} from "@/components/school/classes/forum/conversation/data/transcript/unread";
 
-export type ConversationRow =
-  | { type: "date"; value: number }
-  | { type: "header" }
-  | (ConversationUnreadCue & { type: "unread" })
-  | { post: ForumPost; type: "post" };
+export const ConversationRowSchema = Schema.Union([
+  Schema.Struct({ type: Schema.Literal("date"), value: Schema.Finite }),
+  Schema.Struct({ type: Schema.Literal("header") }),
+  Schema.Struct({
+    ...ConversationUnreadCueSchema.fields,
+    type: Schema.Literal("unread"),
+  }),
+  Schema.Struct({ post: ForumPostSchema, type: Schema.Literal("post") }),
+]);
+export type ConversationRow = typeof ConversationRowSchema.Type;
 
 /**
  * Build transcript rows from one ascending post list.

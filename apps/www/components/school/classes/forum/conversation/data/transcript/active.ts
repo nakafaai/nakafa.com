@@ -1,21 +1,26 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { Array as Arr, HashMap, Schema, Tuple } from "effect";
 import type {
   Forum,
   ForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
 import {
-  type ConversationRow,
+  ConversationRowSchema,
   createConversationRows,
   getLastConversationPostId,
 } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/transcript/unread";
 
-export interface ActiveTranscriptModel {
-  lastPostId: Id<"schoolClassForumPosts"> | null;
-  postIds: Id<"schoolClassForumPosts">[];
-  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
-  rows: ConversationRow[];
-}
+export const ActiveTranscriptModelSchema = Schema.Struct({
+  lastPostId: Schema.NullOr(IdSchema("schoolClassForumPosts")),
+  postIds: Schema.Array(IdSchema("schoolClassForumPosts")),
+  rowIndexByPostId: Schema.HashMap(
+    IdSchema("schoolClassForumPosts"),
+    Schema.Finite
+  ),
+  rows: Schema.Array(ConversationRowSchema),
+});
+export type ActiveTranscriptModel = typeof ActiveTranscriptModelSchema.Type;
 
 /** Builds the current loaded transcript model from one reactive post list. */
 export function createActiveTranscriptModel({
@@ -33,13 +38,11 @@ export function createActiveTranscriptModel({
     ...(unreadCue === undefined ? {} : { unreadCue }),
   });
   const postIds = posts.map((post) => post._id);
-  const rowIndexByPostId = new Map<Id<"schoolClassForumPosts">, number>();
-
-  for (const [index, row] of rows.entries()) {
-    if (row.type === "post") {
-      rowIndexByPostId.set(row.post._id, index);
-    }
-  }
+  const rowIndexByPostId = HashMap.fromIterable(
+    Arr.flatMap(rows, (row, index) =>
+      row.type === "post" ? [Tuple.make(row.post._id, index)] : []
+    )
+  );
 
   return {
     lastPostId: getLastConversationPostId(posts),
