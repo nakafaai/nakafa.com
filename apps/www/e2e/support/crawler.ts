@@ -20,14 +20,35 @@ const ServerDocumentSchema = Schema.Struct({
 export type ServerDocument = typeof ServerDocumentSchema.Type;
 
 /**
+ * Reads the canonical and alternate links of a document: the live page when
+ * `html` is absent, or the server HTML as a crawler parses it. It runs in the
+ * page, so pass it to `page.evaluate` by reference.
+ */
+export function readHeadLinks(html?: string) {
+  const root =
+    html === undefined
+      ? document
+      : new DOMParser().parseFromString(html, "text/html");
+  return [
+    ...root.querySelectorAll(
+      'link[rel="canonical"], link[rel="alternate"][hreflang]'
+    ),
+  ].map((element) => ({
+    href: element.getAttribute("href"),
+    hreflang: element.getAttribute("hreflang"),
+    rel: element.getAttribute("rel"),
+  }));
+}
+
+/**
  * Parses the HTML the server returned the way a crawler reads it: inert, with
  * every streamed segment in place at once, so nothing depends on when the
  * browser reveals or hydrates them.
  */
 export const readServerDocument = Effect.fn("NakafaE2E.readServerDocument")(
   function* (page: Page, html: string) {
-    return yield* Effect.promise(() =>
-      page.evaluate((source): ServerDocument => {
+    const fields = yield* Effect.promise(() =>
+      page.evaluate((source) => {
         const parsed = new DOMParser().parseFromString(source, "text/html");
         const read = (selector: string, name: string) =>
           parsed.querySelector(selector)?.getAttribute(name) ?? null;
@@ -38,18 +59,14 @@ export const readServerDocument = Effect.fn("NakafaE2E.readServerDocument")(
             ...parsed.querySelectorAll('script[type="application/ld+json"]'),
           ].map((element) => element.textContent ?? ""),
           language: parsed.documentElement.lang,
-          links: [
-            ...parsed.querySelectorAll(
-              'link[rel="canonical"], link[rel="alternate"][hreflang]'
-            ),
-          ].map((element) => ({
-            href: element.getAttribute("href"),
-            hreflang: element.getAttribute("hreflang"),
-            rel: element.getAttribute("rel"),
-          })),
         };
       }, html)
     );
+    const links = yield* Effect.promise(() =>
+      page.evaluate(readHeadLinks, html)
+    );
+    const served: ServerDocument = { ...fields, links };
+    return served;
   }
 );
 

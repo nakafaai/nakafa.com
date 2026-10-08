@@ -5,6 +5,7 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { readHeadLinks } from "@/e2e/support/crawler";
 
 class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing>()(
   "LessonNavigationMissing",
@@ -15,28 +16,12 @@ class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing
 const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
   page: Page
 ) {
+  const title = yield* Effect.promise(() => page.title());
   const heading = yield* Effect.promise(() =>
     page.getByRole("heading", { level: 1 }).textContent()
   );
-  return yield* Effect.promise(() =>
-    page.evaluate(
-      (visibleHeading) => ({
-        title: document.title,
-        heading: visibleHeading,
-        links: Array.from(
-          document.querySelectorAll<HTMLLinkElement>(
-            'link[rel="canonical"], link[rel="alternate"][hreflang]'
-          ),
-          (link) => ({
-            rel: link.rel,
-            locale: link.hreflang,
-            href: link.href,
-          })
-        ),
-      }),
-      heading
-    )
-  );
+  const links = yield* Effect.promise(() => page.evaluate(readHeadLinks));
+  return { heading, links, title };
 });
 
 for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
