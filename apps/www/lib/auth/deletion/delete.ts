@@ -50,22 +50,30 @@ export type ReconcileAccountDeletionRequest = (
 >;
 /** Deletes the current Better Auth account through a typed failure channel. */
 export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
-  function* (
-    attempt: AccountDeletionBrowserAttempt,
-    cancelPreparation: CancelAccountDeletionRequest,
-    clearAttempt: ClearAccountDeletionAttempt,
-    persist: PersistAccountDeletionAttempt,
-    prepare: PrepareAccountDeletionRequest,
-    reconcile: ReconcileAccountDeletionRequest,
-    request: DeleteUserRequest = async (requestAttemptId) =>
+  function* ({
+    attempt,
+    cancelPreparation,
+    clearAttempt,
+    persist,
+    prepare,
+    reconcile,
+    request = async (requestAttemptId) =>
       await authClient.deleteUser({
         fetchOptions: {
           headers: {
             [ACCOUNT_DELETION_ATTEMPT_HEADER]: requestAttemptId,
           },
         },
-      })
-  ) {
+      }),
+  }: {
+    readonly attempt: AccountDeletionBrowserAttempt;
+    readonly cancelPreparation: CancelAccountDeletionRequest;
+    readonly clearAttempt: ClearAccountDeletionAttempt;
+    readonly persist: PersistAccountDeletionAttempt;
+    readonly prepare: PrepareAccountDeletionRequest;
+    readonly reconcile: ReconcileAccountDeletionRequest;
+    readonly request?: DeleteUserRequest;
+  }) {
     const { attemptId, phase: startPhase } = attempt;
     const proveCommittedDeletion = () =>
       reconcile(attemptId).pipe(
@@ -91,13 +99,13 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
         yield* clearCanceledAccountDeletionAttempt(clearAttempt);
       });
     if (startPhase === accountDeletionRequestPhase.preparation) {
-      yield* prepareAccountDeletion(
+      yield* prepareAccountDeletion({
         attempt,
         cancelPreparation,
         clearAttempt,
         persist,
-        prepare
-      );
+        prepare,
+      });
     }
     if (
       startPhase === accountDeletionRequestPhase.deletion &&

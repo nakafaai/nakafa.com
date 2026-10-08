@@ -94,13 +94,19 @@ export const clearCanceledAccountDeletionAttempt = Effect.fn(
 /** Reserves all owned resources before the irreversible auth deletion. */
 export const prepareAccountDeletion = Effect.fn(
   "www.auth.prepareAccountDeletion"
-)(function* (
-  attempt: AccountDeletionBrowserAttempt,
-  cancelPreparation: CancelAccountDeletionRequest,
-  clearAttempt: ClearAccountDeletionAttempt,
-  persist: PersistAccountDeletionAttempt,
-  prepare: PrepareAccountDeletionRequest
-) {
+)(function* ({
+  attempt,
+  cancelPreparation,
+  clearAttempt,
+  persist,
+  prepare,
+}: {
+  readonly attempt: AccountDeletionBrowserAttempt;
+  readonly cancelPreparation: CancelAccountDeletionRequest;
+  readonly clearAttempt: ClearAccountDeletionAttempt;
+  readonly persist: PersistAccountDeletionAttempt;
+  readonly prepare: PrepareAccountDeletionRequest;
+}) {
   const { attemptId } = attempt;
   let preparationOutcome: AccountDeletionPreparationOutcome =
     accountDeletionPreparationOutcome.continue;

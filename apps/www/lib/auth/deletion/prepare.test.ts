@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  type AccountDeletionBrowserAttempt,
   accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
@@ -11,52 +10,40 @@ import {
   AccountDeletionFailed,
   AccountDeletionSchoolMemberRequired,
 } from "@/lib/auth/deletion/errors";
-import {
-  type CancelAccountDeletionRequest,
-  type ClearAccountDeletionAttempt,
-  type PersistAccountDeletionAttempt,
-  type PrepareAccountDeletionRequest,
-  prepareAccountDeletion,
-} from "@/lib/auth/deletion/prepare";
+import { prepareAccountDeletion } from "@/lib/auth/deletion/prepare";
 
+type AccountDeletionPreparationOperations = Parameters<
+  typeof prepareAccountDeletion
+>[0];
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const USER_ID = "user-1";
 const STORAGE_FAILED_CODE = "ACCOUNT_DELETION_ATTEMPT_STORAGE_FAILED";
-/** The default browser operations; each test overrides only what it observes. */
-function defaultPreparationOperations() {
-  const attempt: AccountDeletionBrowserAttempt = {
-    attemptId: ATTEMPT_ID,
-    phase: accountDeletionRequestPhase.preparation,
-    userId: USER_ID,
-  };
-  const cancelPreparation: CancelAccountDeletionRequest = vi.fn(() =>
-    Promise.resolve(Result.succeed(accountDeletionCancellationOutcome.complete))
-  );
-  const clearAttempt: ClearAccountDeletionAttempt = Effect.void;
-  const persist: PersistAccountDeletionAttempt = vi.fn(() => Effect.void);
-  const prepare: PrepareAccountDeletionRequest = vi.fn(() =>
-    Promise.resolve(Result.succeed(accountDeletionPreparationOutcome.ready))
-  );
-  return { attempt, cancelPreparation, clearAttempt, persist, prepare };
-}
-type PreparationOperations = ReturnType<typeof defaultPreparationOperations>;
 function createPreparationOperations(
-  overrides: Partial<PreparationOperations> = {}
-): PreparationOperations {
-  return { ...defaultPreparationOperations(), ...overrides };
+  overrides: Partial<AccountDeletionPreparationOperations> = {}
+): AccountDeletionPreparationOperations {
+  return {
+    attempt: {
+      attemptId: ATTEMPT_ID,
+      phase: accountDeletionRequestPhase.preparation,
+      userId: USER_ID,
+    },
+    cancelPreparation: vi.fn(() =>
+      Promise.resolve(
+        Result.succeed(accountDeletionCancellationOutcome.complete)
+      )
+    ),
+    clearAttempt: Effect.void,
+    persist: vi.fn(() => Effect.void),
+    prepare: vi.fn(() =>
+      Promise.resolve(Result.succeed(accountDeletionPreparationOutcome.ready))
+    ),
+    ...overrides,
+  };
 }
-/** Passes one operations bag to prepareAccountDeletion's positional parameters. */
-function runPreparation(operations: PreparationOperations) {
-  return prepareAccountDeletion(
-    operations.attempt,
-    operations.cancelPreparation,
-    operations.clearAttempt,
-    operations.persist,
-    operations.prepare
-  );
-}
-function preparationFailure(overrides: Partial<PreparationOperations>) {
-  return runPreparation(createPreparationOperations(overrides)).pipe(
+function preparationFailure(
+  overrides: Partial<AccountDeletionPreparationOperations>
+) {
+  return prepareAccountDeletion(createPreparationOperations(overrides)).pipe(
     Effect.flip
   );
 }
@@ -67,7 +54,7 @@ describe("account deletion preparation", () => {
       Effect.gen(function* () {
         const persist = vi.fn(() => Effect.void);
         const prepare = vi
-          .fn<PrepareAccountDeletionRequest>()
+          .fn<AccountDeletionPreparationOperations["prepare"]>()
           .mockResolvedValueOnce(
             Result.succeed(accountDeletionPreparationOutcome.continue)
           )
@@ -77,7 +64,7 @@ describe("account deletion preparation", () => {
           .mockResolvedValueOnce(
             Result.succeed(accountDeletionPreparationOutcome.ready)
           );
-        yield* runPreparation(
+        yield* prepareAccountDeletion(
           createPreparationOperations({
             persist,
             prepare,
@@ -101,7 +88,7 @@ describe("account deletion preparation", () => {
       const prepare = vi.fn(() =>
         Promise.resolve(Result.succeed(accountDeletionPreparationOutcome.ready))
       );
-      yield* runPreparation(
+      yield* prepareAccountDeletion(
         createPreparationOperations({
           attempt: {
             attemptId: persistedAttemptId,
