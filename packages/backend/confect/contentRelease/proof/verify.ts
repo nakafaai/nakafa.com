@@ -1,9 +1,6 @@
 "use node";
 
-import {
-  type ReleaseVerificationEvidence,
-  ReleaseVerificationEvidenceSchema,
-} from "@nakafa/aksara-contracts/release";
+import type { ReleaseVerificationEvidence } from "@nakafa/aksara-contracts/release";
 import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result/digest";
 import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/route/verify";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
@@ -36,9 +33,7 @@ import { Effect, Schema } from "effect";
 export type Progress = typeof progressValidator.Type;
 export type Status = typeof statusValidator.Type;
 /** Stores the proof as the exact JSON text that the commit compares byte for byte. */
-const ProofJsonSchema = Schema.fromJsonString(
-  ReleaseVerificationEvidenceSchema
-);
+const ProofJsonSchema = Schema.fromJsonString(Schema.Unknown);
 /** Authenticates the frozen release and renderer identity shared by proof steps. */
 export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
   function* (manifestHash: string, releaseId: string) {

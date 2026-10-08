@@ -11,16 +11,12 @@ import {
 import {
   decodePublicationRequest,
   type PublicationRequest,
-  PublicationRequestSchema,
 } from "@nakafa/aksara-contracts/transport/request";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Array as Arr, Effect, Schema } from "effect";
 
 type BoundedPublicationRequest = PublicationRequest | StageOperation;
 type PublicationOperation = BoundedPublicationRequest["operation"];
-const PublicationRequestJsonSchema = Schema.fromJsonString(
-  PublicationRequestSchema
-);
 const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
 const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   accept: MAX_PUBLICATION_REQUEST_BYTES,
@@ -64,8 +60,8 @@ export function publicationRequestLimit(operation: PublicationOperation) {
 
 /** Measures one decoded request using its exact UTF-8 JSON representation. */
 function encodedRequestBytes(request: BoundedPublicationRequest) {
-  const json = Schema.encodeSync(PublicationRequestJsonSchema)(request);
-  return new TextEncoder().encode(json).byteLength;
+  return new TextEncoder().encode(Schema.encodeSync(UnknownJsonSchema)(request))
+    .byteLength;
 }
 
 /** Checks one decoded operation against its own transport ceiling. */

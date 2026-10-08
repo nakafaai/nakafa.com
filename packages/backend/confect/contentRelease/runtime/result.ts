@@ -5,11 +5,11 @@ import {
 import { Result, Schema } from "effect";
 
 type ContentRuntimeFailureCode = typeof ContentRuntimeFailureCodeSchema.Type;
-const RuntimeHttpResultSchema = Schema.Struct({
+/** Encoded runtime response returned across the Node action boundary. */
+export const RuntimeHttpResultSchema = Schema.Struct({
   body: Schema.String,
   status: Schema.Finite,
 });
-/** Encoded runtime response returned across the Node action boundary. */
 export type RuntimeHttpResult = typeof RuntimeHttpResultSchema.Type;
 /** Stringifies one value it already holds to JSON text, with no shape check. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));

@@ -50,7 +50,7 @@ export const encodePublicationResult = Effect.fn(
     )
   );
   const body = yield* Schema.encodeEffect(
-    Schema.fromJsonString(PublicationResponseSchema)
+    Schema.fromJsonString(Schema.Unknown)
   )(response).pipe(
     Effect.catch(() =>
       Effect.die(

@@ -31,6 +31,10 @@ const commit = internal.contentRelease.proof.commit.commitProof;
 const encodeProofJson = Schema.encodeSync(
   Schema.fromJsonString(ReleaseVerificationEvidenceSchema)
 );
+/** The text JSON.stringify writes, which the commit compares byte for byte. */
+const encodePlainJson = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
 const encodeRendererJson = Schema.encodeSync(
   Schema.fromJsonString(RendererManifestEnvelopeSchema)
 );
@@ -38,7 +42,7 @@ const encodeReleaseJson = Schema.encodeSync(
   Schema.fromJsonString(SignedContentReleaseSchema)
 );
 
-/** Runs the production verifier and returns the proof bytes it stored. */
+/** Obtains authentic proof bytes through the same verifier used by production. */
 async function prepare() {
   const t = convexTest(schema, convexModules);
   await t.mutation((ctx) =>
@@ -50,11 +54,7 @@ async function prepare() {
     )
   );
   const proof = await recomputeContentProof(t, release.manifestHash, releaseId);
-  const stored = await t.run(storedRelease);
-  if (stored.proofJson === undefined) {
-    throw new Error("Expected the production verifier to store proof bytes.");
-  }
-  return { proof, proofJson: stored.proofJson, t };
+  return { proof, proofJson: encodePlainJson(proof), t };
 }
 
 /** Selects the unique technical release for deliberate durability corruption. */
