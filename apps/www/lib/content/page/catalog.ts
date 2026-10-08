@@ -9,7 +9,7 @@ import {
   canonicalizePublicPageProjection,
   PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
@@ -54,7 +54,7 @@ export const readPublishedPageCatalog = Effect.fn(
     publicPath: "pages",
   };
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.page.catalog, {})
+    client.query(contentRelease.page.catalog, {})
   ).pipe(Effect.provide(httpLayer()));
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,

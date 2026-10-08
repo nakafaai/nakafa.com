@@ -1,6 +1,6 @@
 import { HttpClient } from "@confect/js";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, HashSet, Option, Schema } from "effect";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
@@ -187,7 +187,7 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
     return null;
   }
   const redirect = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.material.identity, identity.value)
+    client.query(contentRelease.material.identity, identity.value)
   ).pipe(Effect.provide(httpLayer()));
   if (!(redirect.activeReleaseId && redirect.managed && redirect.publicPath)) {
     return null;
