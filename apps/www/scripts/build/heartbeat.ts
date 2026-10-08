@@ -23,17 +23,18 @@ const CgroupLimit = Schema.Union([
   Schema.FiniteFromString,
 ]);
 
+/** Each memory reading on its own, so one missing file never hides the others. */
 const Memory = Schema.Struct({
-  current: Schema.Finite,
-  high: CgroupLimit,
-  max: CgroupLimit,
+  current: Schema.Option(Schema.Finite),
+  high: Schema.Option(CgroupLimit),
+  max: Schema.Option(CgroupLimit),
 });
 type Memory = typeof Memory.Type;
 
 /** One heartbeat. An unavailable reading is `None`, never a made-up value. */
 export const Heartbeat = Schema.Struct({
   load: Schema.Option(Schema.String),
-  memory: Schema.Option(Memory),
+  memory: Memory,
   pressure: Schema.Option(Schema.String),
   silentSeconds: Schema.Finite,
 });
@@ -74,11 +75,11 @@ export const readHeartbeat = Effect.fn("BuildHeartbeat.read")(function* (
   ]);
   return {
     load: Option.map(load, loadAverages),
-    memory: Option.all({
+    memory: {
       current: Option.flatMap(current, decodeBytes),
       high: Option.flatMap(high, decodeLimit),
       max: Option.flatMap(max, decodeLimit),
-    }),
+    },
     pressure: Option.map(pressure, pressureLine),
     silentSeconds,
   };
@@ -90,12 +91,24 @@ function formatMebibytes(bytes: number) {
 }
 
 /** Formats one cgroup limit; `max` stays as the kernel writes it. */
-function formatLimit(limit: Memory["high"]) {
+function formatLimit(limit: typeof CgroupLimit.Type) {
   return Predicate.isNumber(limit) ? formatMebibytes(limit) : limit;
 }
 
+/** Formats one reading, or names it as unavailable when its file is missing. */
+function formatReading<A>(
+  reading: Option.Option<A>,
+  format: (value: A) => string
+) {
+  return Option.match(reading, {
+    onNone: () => "unavailable",
+    onSome: format,
+  });
+}
+
+/** Formats the three memory readings, each one printed on its own. */
 function formatMemory({ current, high, max }: Memory) {
-  return `${formatMebibytes(current)}, high ${formatLimit(high)}, max ${formatLimit(max)}`;
+  return `${formatReading(current, formatMebibytes)}, high ${formatReading(high, formatLimit)}, max ${formatReading(max, formatLimit)}`;
 }
 
 /** Renders one heartbeat as a single line that starts with `build heartbeat:`. */
@@ -103,10 +116,7 @@ export function formatHeartbeat(heartbeat: Heartbeat) {
   return Arr.join(
     [
       `build heartbeat: silent ${heartbeat.silentSeconds}s`,
-      `memory ${Option.match(heartbeat.memory, {
-        onNone: () => "unavailable",
-        onSome: formatMemory,
-      })}`,
+      `memory ${formatMemory(heartbeat.memory)}`,
       `pressure ${Option.getOrElse(heartbeat.pressure, () => "unavailable")}`,
       `load ${Option.getOrElse(heartbeat.load, () => "unavailable")}`,
     ],

@@ -12,11 +12,11 @@ describe("build heartbeat", () => {
     expect(
       formatHeartbeat({
         load: Option.some("0.52 0.58 0.59"),
-        memory: Option.some({
-          current: 1024 * MEBIBYTE,
-          high: "max",
-          max: 8192 * MEBIBYTE,
-        }),
+        memory: {
+          current: Option.some(1024 * MEBIBYTE),
+          high: Option.some("max"),
+          max: Option.some(8192 * MEBIBYTE),
+        },
         pressure: Option.some(
           "some avg10=0.00 avg60=0.00 avg300=0.00 total=0 | full avg10=0.00 avg60=0.00 avg300=0.00 total=0"
         ),
@@ -31,12 +31,33 @@ describe("build heartbeat", () => {
     expect(
       formatHeartbeat({
         load: Option.none(),
-        memory: Option.none(),
+        memory: {
+          current: Option.none(),
+          high: Option.none(),
+          max: Option.none(),
+        },
         pressure: Option.none(),
         silentSeconds: 300,
       })
     ).toBe(
-      "build heartbeat: silent 300s; memory unavailable; pressure unavailable; load unavailable"
+      "build heartbeat: silent 300s; memory unavailable, high unavailable, max unavailable; pressure unavailable; load unavailable"
+    );
+  });
+
+  it("prints each memory reading that exists beside a missing one", () => {
+    expect(
+      formatHeartbeat({
+        load: Option.none(),
+        memory: {
+          current: Option.none(),
+          high: Option.some("max"),
+          max: Option.some(8192 * MEBIBYTE),
+        },
+        pressure: Option.none(),
+        silentSeconds: 30,
+      })
+    ).toBe(
+      "build heartbeat: silent 30s; memory unavailable, high max, max 8192 MiB; pressure unavailable; load unavailable"
     );
   });
 
@@ -68,42 +89,48 @@ describe("build heartbeat", () => {
         )
       ).toEqual({
         load: Option.none(),
-        memory: Option.some({
-          current: 1024 * MEBIBYTE,
-          high: "max",
-          max: 8192 * MEBIBYTE,
-        }),
+        memory: {
+          current: Option.some(1024 * MEBIBYTE),
+          high: Option.some("max"),
+          max: Option.some(8192 * MEBIBYTE),
+        },
         pressure: Option.some("some avg10=0.00 | full avg10=0.00"),
         silentSeconds: 15,
       });
     }).pipe(Effect.scoped, Effect.provide(layer))
   );
 
-  it.effect("treats empty and malformed container files as unavailable", () =>
-    Effect.gen(function* () {
-      const fileSystem = yield* FileSystem.FileSystem;
-      const directory = yield* fileSystem.makeTempDirectoryScoped();
-      yield* fileSystem.writeFileString(`${directory}/memory.current`, "\n");
-      yield* fileSystem.writeFileString(`${directory}/memory.high`, "max\n");
-      yield* fileSystem.writeFileString(`${directory}/memory.max`, "lots\n");
-      yield* fileSystem.writeFileString(`${directory}/memory.pressure`, "\n");
-      yield* fileSystem.writeFileString(`${directory}/loadavg`, "  \n");
+  it.effect(
+    "treats each empty or malformed container file as unavailable on its own",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const directory = yield* fileSystem.makeTempDirectoryScoped();
+        yield* fileSystem.writeFileString(`${directory}/memory.current`, "\n");
+        yield* fileSystem.writeFileString(`${directory}/memory.high`, "max\n");
+        yield* fileSystem.writeFileString(`${directory}/memory.max`, "lots\n");
+        yield* fileSystem.writeFileString(`${directory}/memory.pressure`, "\n");
+        yield* fileSystem.writeFileString(`${directory}/loadavg`, "  \n");
 
-      expect(
-        yield* readHeartbeat(
-          {
-            cgroupDirectory: directory,
-            loadAverageFile: `${directory}/loadavg`,
+        expect(
+          yield* readHeartbeat(
+            {
+              cgroupDirectory: directory,
+              loadAverageFile: `${directory}/loadavg`,
+            },
+            0
+          )
+        ).toEqual({
+          load: Option.none(),
+          memory: {
+            current: Option.none(),
+            high: Option.some("max"),
+            max: Option.none(),
           },
-          0
-        )
-      ).toEqual({
-        load: Option.none(),
-        memory: Option.none(),
-        pressure: Option.none(),
-        silentSeconds: 0,
-      });
-    }).pipe(Effect.scoped, Effect.provide(layer))
+          pressure: Option.none(),
+          silentSeconds: 0,
+        });
+      }).pipe(Effect.scoped, Effect.provide(layer))
   );
 
   it.effect("keeps the first three load averages from the load file", () =>
