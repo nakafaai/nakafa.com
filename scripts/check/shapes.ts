@@ -1,15 +1,28 @@
 import { Array as Arr, HashSet } from "effect";
 import {
+  type EntityName,
+  type Identifier,
+  type ImportClause,
+  type InterfaceDeclaration,
   isArrayTypeNode,
   isArrowFunction,
   isCallExpression,
+  isCallSignatureDeclaration,
+  isConstructorTypeNode,
+  isConstructSignatureDeclaration,
   isDeclareKeyword,
+  isFunctionTypeNode,
   isIdentifier,
+  isImportDeclaration,
+  isIndexSignatureDeclaration,
   isInterfaceDeclaration,
   isIntersectionTypeNode,
   isLiteralTypeNode,
+  isMethodSignatureDeclaration,
   isModuleDeclaration,
+  isNamedImports,
   isNamedTupleMember,
+  isNamespaceImport,
   isNumericLiteral,
   isOptionalTypeNode,
   isParenthesizedTypeNode,
@@ -29,6 +42,9 @@ import {
   type Node,
   type SourceFile,
   SyntaxKind,
+  type TypeAliasDeclaration,
+  type TypeElement,
+  type TypeLiteralNode,
   type TypeNode,
   type TypeReferenceNode,
 } from "typescript/unstable/ast";
@@ -40,6 +56,8 @@ const PROPS_PATTERN = /Props$/u;
 const SELECTOR_FILTERS = HashSet.make("Exclude", "Extract");
 /** The Schema types whose type argument a recursive `Schema.suspend` thunk returns. */
 const RECURSIVE_CODECS = HashSet.make("Codec", "Schema");
+/** The modules whose types describe React and MDX values, which no Schema describes as data. */
+const FRAMEWORK_TYPE_MODULES = HashSet.make("mdx/types", "react");
 
 /**
  * Whether a type is a string, number, or boolean literal, or a union of them,
@@ -101,15 +119,15 @@ function selectsMembers(type: TypeReferenceNode) {
 }
 
 /**
- * Whether a type spells out an object literal, directly or through a union,
- * intersection, array, tuple, `readonly`, or a type argument such as
+ * Returns the object literal types that a type spells out, directly or through
+ * a union, intersection, array, tuple, `readonly`, or a type argument such as
  * `Readonly<{ ... }>`. The selector that `Extract` or `Exclude` takes as its
  * second argument is skipped, because it picks union members and declares no
  * shape.
  */
-function spellsObject(type: TypeNode): boolean {
+function objectLiterals(type: TypeNode): readonly TypeLiteralNode[] {
   if (isTypeLiteralNode(type)) {
-    return true;
+    return [type];
   }
   if (
     isParenthesizedTypeNode(type) ||
@@ -118,24 +136,24 @@ function spellsObject(type: TypeNode): boolean {
     isRestTypeNode(type) ||
     isNamedTupleMember(type)
   ) {
-    return spellsObject(type.type);
+    return objectLiterals(type.type);
   }
   if (isArrayTypeNode(type)) {
-    return spellsObject(type.elementType);
+    return objectLiterals(type.elementType);
   }
   if (isUnionTypeNode(type) || isIntersectionTypeNode(type)) {
-    return Arr.some(type.types, spellsObject);
+    return Arr.flatMap(type.types, objectLiterals);
   }
   if (isTupleTypeNode(type)) {
-    return Arr.some(type.elements, spellsObject);
+    return Arr.flatMap(type.elements, objectLiterals);
   }
   if (!isTypeReferenceNode(type)) {
-    return false;
+    return [];
   }
   const args = type.typeArguments ?? [];
-  return Arr.some(
+  return Arr.flatMap(
     selectsMembers(type) ? Arr.take(args, 1) : args,
-    spellsObject
+    objectLiterals
   );
 }
 
@@ -205,12 +223,114 @@ function recursiveNames(nodes: readonly Node[]) {
   });
 }
 
+/** Returns the local names that one import clause binds, such as `React` in `import type * as React from "react"`. */
+function clauseNames(clause: ImportClause | undefined): readonly string[] {
+  const bindings = clause?.namedBindings;
+  const named =
+    bindings !== undefined && isNamedImports(bindings)
+      ? Arr.map(bindings.elements, ({ name }) => name.text)
+      : [];
+  const namespace =
+    bindings !== undefined && isNamespaceImport(bindings)
+      ? [bindings.name.text]
+      : [];
+  return [...Arr.fromNullishOr(clause?.name?.text), ...named, ...namespace];
+}
+
+/**
+ * Returns the local names that a module binds through its imports from React
+ * and MDX, type-only imports included, such as `ReactNode`, `JSX`, and
+ * `MDXComponents`.
+ */
+function frameworkNames(sourceFile: SourceFile) {
+  return Arr.flatMap(sourceFile.statements, (statement) => {
+    if (
+      !(
+        isImportDeclaration(statement) &&
+        isStringLiteral(statement.moduleSpecifier) &&
+        HashSet.has(FRAMEWORK_TYPE_MODULES, statement.moduleSpecifier.text)
+      )
+    ) {
+      return [];
+    }
+    return clauseNames(statement.importClause);
+  });
+}
+
+/** Returns the identifier that begins a type name, such as `JSX` in `JSX.Element`. */
+function leading(name: EntityName): Identifier {
+  return isQualifiedName(name) ? leading(name.left) : name;
+}
+
+/**
+ * Whether a member type holds a function, a constructor, or a React or MDX
+ * value, directly or inside a union, an array, or a readonly array. A name
+ * that the file does not import from React or MDX, such as a local alias, is
+ * not followed.
+ */
+function holdsValue(type: TypeNode, names: readonly string[]): boolean {
+  if (isParenthesizedTypeNode(type)) {
+    return holdsValue(type.type, names);
+  }
+  if (isUnionTypeNode(type)) {
+    return Arr.some(type.types, (member) => holdsValue(member, names));
+  }
+  if (isArrayTypeNode(type)) {
+    return holdsValue(type.elementType, names);
+  }
+  if (
+    isTypeOperatorNode(type) &&
+    type.operator === SyntaxKind.ReadonlyKeyword
+  ) {
+    return holdsValue(type.type, names);
+  }
+  if (isFunctionTypeNode(type) || isConstructorTypeNode(type)) {
+    return true;
+  }
+  return (
+    isTypeReferenceNode(type) &&
+    Arr.contains(names, leading(type.typeName).text)
+  );
+}
+
+/**
+ * Whether one member of a shape holds a function, a constructor, or a React or
+ * MDX value, or is itself a method or a callable or constructible signature.
+ * A Schema describes data only, so such a member keeps its shape out of Schema
+ * candidates.
+ */
+function holdsValueMember(
+  member: TypeElement,
+  names: readonly string[]
+): boolean {
+  if (
+    isPropertySignatureDeclaration(member) ||
+    isIndexSignatureDeclaration(member)
+  ) {
+    return member.type !== undefined && holdsValue(member.type, names);
+  }
+  return (
+    isMethodSignatureDeclaration(member) ||
+    isCallSignatureDeclaration(member) ||
+    isConstructSignatureDeclaration(member)
+  );
+}
+
+/** Returns the members that a shape declares itself: an interface's body, or the object literals of a type alias. */
+function ownMembers(
+  node: InterfaceDeclaration | TypeAliasDeclaration
+): readonly TypeElement[] {
+  return isInterfaceDeclaration(node)
+    ? node.members
+    : Arr.flatMap(objectLiterals(node.type), (literal) => literal.members);
+}
+
 /**
  * Returns the hand-written data shapes among one module's `nodes`: interfaces
  * that declare their own members and type aliases that spell out an object.
  * React component props in `.tsx` modules, ambient augmentations, interfaces
- * that only extend a derived type, and the type a recursive schema names stay
- * allowed.
+ * that only extend a derived type, the type a recursive schema names, and
+ * shapes that hold a function or a React or MDX value stay allowed.
  */
 export function shapeCandidates(
   file: string,
@@ -219,6 +339,7 @@ export function shapeCandidates(
 ) {
   const props = JSX_PATTERN.test(file);
   const recursive = recursiveNames(nodes);
+  const names = frameworkNames(sourceFile);
   return Arr.flatMap(nodes, (node) => {
     if (!(isInterfaceDeclaration(node) || isTypeAliasDeclaration(node))) {
       return [];
@@ -226,11 +347,12 @@ export function shapeCandidates(
     const handWritten = isInterfaceDeclaration(node)
       ? !Arr.isReadonlyArrayEmpty(node.members) ||
         node.heritageClauses === undefined
-      : spellsObject(node.type);
+      : !Arr.isReadonlyArrayEmpty(objectLiterals(node.type));
     const allowed =
       (props && PROPS_PATTERN.test(node.name.text)) ||
       isAmbient(node) ||
-      Arr.contains(recursive, node.name.text);
+      Arr.contains(recursive, node.name.text) ||
+      Arr.some(ownMembers(node), (member) => holdsValueMember(member, names));
     return handWritten && !allowed
       ? [candidate("data-type", sourceFile, node.name)]
       : [];

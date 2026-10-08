@@ -185,4 +185,93 @@ export const other = Schema.suspend(makeThunk);
         );
       })
   );
+
+  it.effect(
+    "allows a shape whose own member holds a function or a method",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`export interface Toggle {
+  readonly onChange: (value: boolean) => void;
+}
+export interface OptionalToggle {
+  readonly onClose?: () => void;
+}
+export interface Lifecycle {
+  close(): void;
+}
+export interface Factory {
+  readonly build: new () => Builder;
+}
+export interface Constructible {
+  new (value: boolean): Toggle;
+}
+export interface Callable {
+  (value: boolean): void;
+}
+export interface Lookup {
+  [key: string]: () => void;
+}
+export type Handlers = { readonly onOpen: () => void };
+export type Wrapped = Readonly<{ onOpen: (() => void) | null }>;
+`),
+          []
+        );
+      })
+  );
+
+  it.effect("allows a shape whose own member holds a React or MDX value", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`import React, { type ComponentType, type ReactNode } from "react";
+import type { JSX } from "react";
+import type * as Mdx from "mdx/types";
+export interface Card {
+  readonly body: ReactNode;
+}
+export interface Slot {
+  readonly children: ReactNode | null;
+}
+export interface Column {
+  readonly items: ReactNode[];
+}
+export interface Grid {
+  readonly rows: readonly ReactNode[];
+}
+export interface Icon {
+  readonly element: JSX.Element;
+}
+export interface Docs {
+  readonly components: Mdx.MDXComponents;
+  readonly node: React.ReactNode;
+  readonly render: ComponentType<Props>;
+}
+export type Shell = Readonly<{ icon: (JSX.Element | null)[] }>;
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "keeps a shape reported when a member names no React import or is a local alias",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`import type { ReactNode } from "./nodes";
+type Render = () => void;
+export interface Imported {
+  readonly body: ReactNode;
+}
+export interface Aliased {
+  readonly render: Render;
+}
+export interface Data {
+  readonly title: string;
+}
+`),
+          [3, 6, 9]
+        );
+      })
+  );
 });
