@@ -13,30 +13,27 @@ import {
 } from "effect/http";
 
 const STORAGE_UPLOAD_TIMEOUT = "10 seconds";
-const StorageIdSchema = Schema.declare(
-  (input): input is Id<"_storage"> =>
-    typeof input === "string" && input.length > 0,
-  {
-    identifier: "ConvexStorageId",
-  }
-);
+const StorageIdSchema = Schema.declare(isConvexId<"_storage">, {
+  identifier: "ConvexStorageId",
+});
 const StorageUploadResponseSchema = Schema.Struct({
   storageId: StorageIdSchema,
 });
-/** Declares the Schema of one Convex document id, checked as a non-empty string. */
-function convexIdSchema<TableName extends TableNames>(tableName: TableName) {
-  return Schema.declare(
-    (input): input is Id<TableName> =>
-      typeof input === "string" && input.length > 0,
-    {
-      identifier: `ConvexId(${tableName})`,
-    }
-  );
+/** Checks that an unknown value is a non-empty Convex id, typed by its table. */
+function isConvexId<TableName extends TableNames | "_storage">(
+  input: unknown
+): input is Id<TableName> {
+  return typeof input === "string" && input.length > 0;
 }
-const ForumIdSchema = convexIdSchema("schoolClassForums");
-const ForumPostIdSchema = convexIdSchema("schoolClassForumPosts");
-const ForumPendingUploadIdSchema = convexIdSchema(
-  "schoolClassForumPendingUploads"
+const ForumIdSchema = Schema.declare(isConvexId<"schoolClassForums">, {
+  identifier: "ConvexForumId",
+});
+const ForumPostIdSchema = Schema.declare(isConvexId<"schoolClassForumPosts">, {
+  identifier: "ConvexForumPostId",
+});
+const ForumPendingUploadIdSchema = Schema.declare(
+  isConvexId<"schoolClassForumPendingUploads">,
+  { identifier: "ConvexForumPendingUploadId" }
 );
 const ForumPostSubmitDraftSchema = Schema.Struct({
   body: Schema.String,
