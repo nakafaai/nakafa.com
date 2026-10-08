@@ -10,24 +10,29 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   fullyParallel: false,
   outputDir: "../../.cache/playwright/www",
+  // Projects select suites by folder path, so a file that repeats a basename
+  // never joins a project by accident.
   projects: [
     {
       // The hydration checks need pages that still stream on demand, so they
       // run before any other suite opens, and caches, those pages.
       name: "cold-runtime",
-      testMatch: "**/hydration.browser.ts",
+      testMatch: "**/content/hydration.browser.ts",
       workers: 1,
     },
     {
       dependencies: ["cold-runtime"],
       name: "shared-runtime",
-      testIgnore: ["**/hydration.browser.ts", "**/navigation.browser.ts"],
+      testIgnore: [
+        "**/content/hydration.browser.ts",
+        "**/navigation/instant.browser.ts",
+      ],
       workers: 1,
     },
     {
       dependencies: ["shared-runtime"],
       name: "isolated-navigation",
-      testMatch: "**/navigation.browser.ts",
+      testMatch: "**/navigation/instant.browser.ts",
       workers: 2,
     },
     // Visual cards take the whole screen through the Fullscreen API on
@@ -37,7 +42,7 @@ export default defineConfig({
     {
       dependencies: ["isolated-navigation"],
       name: "webkit",
-      testMatch: "**/visual.browser.ts",
+      testMatch: "**/visual/cards.browser.ts",
       use: { browserName: "webkit" },
       workers: 1,
     },

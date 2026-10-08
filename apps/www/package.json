@@ -20,7 +20,7 @@
     "test:ui": "NODE_OPTIONS='--no-experimental-webstorage' vitest --ui",
     "test:watch": "NODE_OPTIONS='--no-experimental-webstorage' vitest watch",
     "typecheck": "next typegen && tsc --checkers 2 --noEmit --emitDeclarationOnly false",
-    "verify:featured-renderer": "node --env-file-if-exists=.env.local --import tsx --conditions=import --conditions=react-server e2e/featured/renderer.mts"
+    "verify:featured-renderer": "node --env-file-if-exists=.env.local --import tsx --conditions=import --conditions=react-server scripts/content/featured.mts"
   },
   "dependencies": {
     "@confect/core": "10.0.0",

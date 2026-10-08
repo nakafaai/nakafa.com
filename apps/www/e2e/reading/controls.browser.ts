@@ -1,0 +1,426 @@
+import { expect, type Page, test } from "@playwright/test";
+import { Deferred, Effect } from "effect";
+import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { withObservedPageErrors } from "@/e2e/support/context";
+import { pinnedRoutes } from "@/e2e/support/corpus";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+
+const NINA_DIALOG_NAME = /^Nina/;
+const INTER_FONT = /Inter/;
+
+const routes = [pinnedRoutes.material.en, pinnedRoutes.article.en];
+const appScriptPattern = /\/_next\/static\/chunks\/.+\.js$/;
+// The lesson's pagination, breadcrumb and outline header, as the server sends them.
+const readingControls =
+  'nav[aria-label="Pagination navigation"] a, nav[aria-label="breadcrumb"] li, aside [data-sidebar="header"] a';
+
+/** Reads the first rendered section heading ink and its underline accent. */
+const readSectionHeadingInk = (span: HTMLElement) => {
+  const resolveToken = (token: string) => {
+    const probe = document.createElement("span");
+    probe.style.color = token;
+    document.body.appendChild(probe);
+    const value = getComputedStyle(probe).color;
+    probe.remove();
+    return value;
+  };
+
+  const style = getComputedStyle(span);
+  return {
+    decorationColor: style.textDecorationColor,
+    decorationLine: style.textDecorationLine,
+    headingRule: resolveToken("var(--chart-4)"),
+    foreground: resolveToken("var(--foreground)"),
+    ink: style.color,
+    primary: resolveToken("var(--primary)"),
+    thickness: Number.parseFloat(style.textDecorationThickness),
+  };
+};
+
+/** Verifies the header controls against the real signed reading page. */
+const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
+  function* (page: Page, href: string, width: number) {
+    yield* seedDeniedAnalyticsConsent(page);
+    yield* Effect.promise(() => page.goto(href));
+    yield* waitForCommittedAppRouter(page, href, href, 15_000);
+    const title = page.getByRole("heading", { level: 1 });
+    yield* Effect.promise(() => expect(title).toHaveCount(1));
+    yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "36px"));
+    yield* Effect.promise(() => expect(title).toHaveCSS("text-align", "start"));
+    yield* Effect.promise(() =>
+      expect(title).toHaveCSS("font-family", INTER_FONT)
+    );
+    yield* Effect.promise(() =>
+      expect(title).toHaveCSS("text-wrap-style", "balance")
+    );
+    const interLoaded = yield* Effect.promise(() =>
+      page.evaluate(async () => {
+        await document.fonts.ready;
+        return [...document.fonts].some(
+          (font) =>
+            font.family.includes("Inter") &&
+            !font.family.includes("Fallback") &&
+            font.status === "loaded"
+        );
+      })
+    );
+    yield* Effect.sync(() => expect(interLoaded).toBe(true));
+    const summary = page.locator("header").filter({ has: title }).locator("p");
+    if (href === routes[0]) {
+      yield* Effect.promise(() => expect(summary).toHaveCount(0));
+    } else {
+      yield* Effect.promise(() => expect(summary).toBeVisible());
+      yield* Effect.promise(() => expect(summary).not.toBeEmpty());
+      yield* Effect.promise(() =>
+        expect(summary).toHaveCSS("text-align", "start")
+      );
+      yield* Effect.promise(() =>
+        expect(summary).toHaveCSS("text-wrap-style", "pretty")
+      );
+      const titleLeft = yield* Effect.promise(() =>
+        title.evaluate((element) => element.getBoundingClientRect().left)
+      );
+      const summaryLeft = yield* Effect.promise(() =>
+        summary.evaluate((element) => element.getBoundingClientRect().left)
+      );
+      yield* Effect.sync(() => expect(summaryLeft).toBe(titleLeft));
+    }
+
+    const sectionHeading = page
+      .locator("article")
+      .getByRole("heading", { level: 2 })
+      .first()
+      .locator("span");
+    yield* Effect.promise(() => expect(sectionHeading).toBeVisible());
+    const sectionInk = yield* Effect.promise(() =>
+      sectionHeading.evaluate(readSectionHeadingInk)
+    );
+    yield* Effect.sync(() =>
+      expect(sectionInk.decorationLine).toBe("underline")
+    );
+    yield* Effect.sync(() => expect(sectionInk.ink).toBe(sectionInk.primary));
+    yield* Effect.sync(() =>
+      expect(sectionInk.decorationColor).toBe(sectionInk.headingRule)
+    );
+    yield* Effect.sync(() =>
+      expect(sectionInk.ink).not.toBe(sectionInk.decorationColor)
+    );
+    yield* Effect.sync(() => expect(sectionInk.thickness).toBeGreaterThan(1));
+    const subheading = page
+      .locator("article")
+      .getByRole("heading", { level: 3 })
+      .first()
+      .locator("span");
+    yield* Effect.promise(() => expect(subheading).toBeVisible());
+    const subheadingInk = yield* Effect.promise(() =>
+      subheading.evaluate(readSectionHeadingInk)
+    );
+    yield* Effect.sync(() => expect(subheadingInk.decorationLine).toBe("none"));
+    yield* Effect.sync(() =>
+      expect(subheadingInk.ink).toBe(subheadingInk.primary)
+    );
+    const titleText = yield* Effect.promise(() => title.innerText());
+    const more = page.getByRole("button", {
+      name: "More actions",
+      exact: true,
+    });
+    const header = page.locator("header").filter({ has: more });
+    yield* Effect.promise(() => expect(header).toBeVisible());
+    if (href === routes[0]) {
+      yield* Effect.promise(() =>
+        expect(
+          header.getByRole("navigation", { name: "breadcrumb" })
+        ).toContainText(titleText)
+      );
+    } else {
+      yield* Effect.promise(() => expect(header).not.toContainText(titleText));
+    }
+    yield* Effect.promise(() =>
+      expect(
+        header.getByRole("group", { name: "Content actions", exact: true })
+      ).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      expect(
+        page.getByRole("button", { name: "Ask Nina", exact: true })
+      ).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      expect(
+        page.getByRole("button", { name: "Copy Content", exact: true })
+      ).toHaveCount(0)
+    );
+    const outline = header.getByRole("button", {
+      name: "On this page",
+      exact: true,
+    });
+    yield* Effect.promise(() => expect(outline).toBeVisible());
+    // Base UI 1.8 keeps tooltips visual and labels their triggers with aria-label.
+    // https://base-ui.com/react/components/tooltip#usage-guidelines
+    const tooltip = page.locator('[data-slot="tooltip-content"]');
+    for (const [trigger, label] of [
+      [more, "More actions"],
+      [outline, "On this page"],
+    ] as const) {
+      yield* Effect.promise(() => trigger.hover());
+      yield* Effect.promise(() => expect(tooltip).toHaveText(label));
+      yield* Effect.promise(() => expect(tooltip).toBeVisible());
+      yield* Effect.promise(() => page.keyboard.press("Escape"));
+      yield* Effect.promise(() => expect(tooltip).toHaveCount(0));
+    }
+    const bounds = yield* Effect.promise(() =>
+      Promise.all([more.boundingBox(), outline.boundingBox()])
+    );
+    yield* Effect.sync(() => {
+      expect(bounds[0]?.y).toBe(bounds[1]?.y);
+      expect(bounds[0]?.x).toBeLessThan(bounds[1]?.x ?? 0);
+    });
+    if (width < 1280) {
+      yield* Effect.promise(() =>
+        expect(outline).toHaveAttribute("aria-expanded", "false")
+      );
+      yield* Effect.promise(() => outline.click());
+      const sidebar = page.locator('[role="dialog"][data-sidebar="sidebar"]');
+      yield* Effect.promise(() => expect(sidebar).toBeVisible());
+      yield* Effect.promise(() => page.keyboard.press("Escape"));
+      yield* Effect.promise(() => expect(sidebar).toHaveCount(0));
+      yield* Effect.promise(() => expect(outline).toBeFocused());
+    } else {
+      const sidebar = page.locator('[data-side="right"][data-slot="sidebar"]');
+      const panel = sidebar.locator('[data-slot="sidebar-container"]');
+      yield* Effect.promise(() =>
+        expect(outline).toHaveAttribute("aria-expanded", "true")
+      );
+      yield* Effect.promise(() => outline.click());
+      yield* Effect.promise(() =>
+        expect(outline).toHaveAttribute("aria-expanded", "false")
+      );
+      yield* Effect.promise(() => expect(panel).not.toBeInViewport());
+      yield* Effect.promise(() => outline.click());
+      yield* Effect.promise(() =>
+        expect(outline).toHaveAttribute("aria-expanded", "true")
+      );
+      yield* Effect.promise(() => expect(panel).toBeInViewport());
+    }
+    yield* Effect.promise(() => more.focus());
+    yield* Effect.promise(() => page.keyboard.press("Enter"));
+    const menu = page.getByRole("menu");
+    yield* Effect.promise(() => expect(tooltip).toHaveCount(0));
+    yield* Effect.promise(() =>
+      expect(menu.getByText("More", { exact: true })).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      expect(menu.getByRole("menuitem")).toHaveCount(3)
+    );
+    const openIn = page.getByRole("menuitem", { name: "Open in", exact: true });
+    if (width < 1280) {
+      yield* Effect.promise(() => openIn.click());
+    } else {
+      yield* Effect.promise(() => openIn.hover());
+    }
+    for (const provider of ["GitHub", "ChatGPT", "Gemini", "Claude"]) {
+      const link = page.getByRole("menuitem", {
+        name: `Open in ${provider}`,
+        exact: true,
+      });
+      yield* Effect.promise(() => expect(link).toBeVisible());
+      yield* Effect.promise(() =>
+        expect(link).toHaveAttribute("target", "_blank")
+      );
+    }
+    yield* Effect.promise(() => page.keyboard.press("Escape"));
+    yield* Effect.promise(() => expect(openIn).toBeFocused());
+    yield* Effect.promise(() => page.keyboard.press("Escape"));
+    yield* Effect.promise(() => expect(more).toBeFocused());
+    const clipboardPermissions =
+      page.context().browser()?.browserType().name() === "webkit"
+        ? ["clipboard-read"]
+        : ["clipboard-read", "clipboard-write"];
+    yield* Effect.promise(() =>
+      page.context().grantPermissions(clipboardPermissions)
+    );
+    yield* Effect.promise(() => more.click());
+    yield* Effect.promise(() =>
+      page.getByRole("menuitem", { name: "Copy Content", exact: true }).click()
+    );
+    yield* Effect.promise(() =>
+      expect(page.getByText("Copied!", { exact: true })).toBeVisible({
+        timeout: 15_000,
+      })
+    );
+    const copiedContent = yield* Effect.promise(() =>
+      page.evaluate(() => navigator.clipboard.readText())
+    );
+    yield* Effect.sync(() => expect(copiedContent).toContain(titleText));
+    yield* Effect.promise(() => more.click());
+    yield* Effect.promise(() =>
+      page.getByRole("menuitem", { name: "Ask Nina", exact: true }).click()
+    );
+    const nina = page.getByRole("dialog", { name: NINA_DIALOG_NAME });
+    yield* Effect.promise(() => expect(nina).toBeVisible());
+    yield* Effect.promise(() =>
+      expect(
+        nina.getByRole("button", {
+          name: `Explain ${titleText} in simple student-friendly language.`,
+          exact: true,
+        })
+      ).toBeVisible()
+    );
+    yield* Effect.promise(() => expect(page.getByRole("menu")).toHaveCount(0));
+    yield* Effect.promise(() =>
+      nina.getByRole("button", { name: "Close", exact: true }).click()
+    );
+    yield* Effect.promise(() => expect(nina).toHaveCount(0));
+    yield* Effect.promise(() => page.evaluate(() => window.scrollTo(0, 600)));
+    yield* Effect.promise(() => expect(more).toBeInViewport());
+    const overflow = yield* Effect.promise(() =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth
+      )
+    );
+    yield* Effect.sync(() => expect(overflow).toBe(false));
+  }
+);
+
+for (const width of [320, 390, 1440]) {
+  test.describe(`reading header at ${width}px`, () => {
+    test.use({ viewport: { width, height: 900 } });
+    for (const href of routes) {
+      test(href, async ({ page }) => {
+        await Effect.runPromise(
+          withObservedPageErrors(page, verifyReadingHeader(page, href, width))
+        );
+      });
+    }
+  });
+}
+
+test("reading outline replaces an existing fragment", async ({ page }) => {
+  const href = routes[0];
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        yield* Effect.promise(() =>
+          page.setViewportSize({ width: 1440, height: 900 })
+        );
+        yield* Effect.promise(() => page.goto(`${href}#exercises`));
+        yield* waitForCommittedAppRouter(page, href, href, 15_000);
+        const exercises = page.getByRole("link", {
+          name: "Exercises",
+          exact: true,
+        });
+        yield* Effect.promise(() => exercises.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(`${href}#exercises`)
+        );
+        yield* Effect.promise(() => exercises.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(`${href}#exercises`)
+        );
+        yield* Effect.promise(() =>
+          page
+            .getByRole("link", { name: "Worked Solutions", exact: true })
+            .click()
+        );
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(`${href}#worked-solutions`)
+        );
+        yield* Effect.promise(() =>
+          expect(
+            page.getByRole("heading", {
+              name: "Link to Worked Solutions",
+              exact: true,
+            })
+          ).toBeInViewport()
+        );
+      })
+    )
+  );
+});
+
+/**
+ * A reader can press a control as soon as the server paints it, before the
+ * page hydrates. Each control must be the element React hydrates, not a copy
+ * React replaces, because replacing the pressed element loses the click.
+ */
+const verifyReadingControlsHydrateInPlace = Effect.fn(
+  "NakafaE2E.verifyReadingControlsHydrateInPlace"
+)(function* (page: Page) {
+  const href = pinnedRoutes.material.en;
+  yield* seedDeniedAnalyticsConsent(page);
+  // The app's scripts wait until the served page has been read, as they would
+  // on a slow device, so React cannot hydrate or replace anything before then.
+  const released = yield* Deferred.make<void>();
+  const services = yield* Effect.context<never>();
+  yield* Effect.promise(() =>
+    page.route(appScriptPattern, (route) =>
+      Effect.runPromiseWith(services)(
+        Deferred.await(released).pipe(
+          Effect.andThen(() => Effect.promise(() => route.continue()))
+        )
+      )
+    )
+  );
+  yield* Effect.promise(() =>
+    page.goto(href, { waitUntil: "domcontentloaded" })
+  );
+  // React's inline streaming scripts reveal the served lesson on their own.
+  yield* Effect.promise(() =>
+    expect(
+      page.getByRole("navigation", { name: "Pagination navigation" })
+    ).toBeVisible()
+  );
+  const servedLesson = yield* Effect.promise(() =>
+    page
+      .getByRole("navigation", { name: "breadcrumb" })
+      .locator('[aria-current="page"]')
+      .count()
+  );
+  yield* Effect.sync(() => expect(servedLesson).toBe(1));
+  const served = yield* Effect.promise(() =>
+    page.evaluateHandle(
+      (selector) => new WeakSet(document.querySelectorAll(selector)),
+      readingControls
+    )
+  );
+  yield* Deferred.succeed(released, undefined);
+  yield* waitForCommittedAppRouter(page, href, href, 15_000);
+  yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+  const controls = yield* Effect.promise(() =>
+    page.evaluate(
+      ([set, selector]) => {
+        const current = [...document.querySelectorAll(selector)];
+        return {
+          count: current.length,
+          replaced: current.filter((element) => !set.has(element)).length,
+        };
+      },
+      [served, readingControls] as const
+    )
+  );
+  yield* Effect.sync(() => {
+    expect(controls.count).toBeGreaterThan(2);
+    expect(controls.replaced).toBe(0);
+  });
+
+  const pagination = page
+    .getByRole("navigation", { name: "Pagination navigation" })
+    .locator('a[href^="/en/subjects/"]')
+    .first();
+  const target = yield* Effect.promise(() => pagination.getAttribute("href"));
+  yield* Effect.promise(() => pagination.click());
+  yield* Effect.promise(() =>
+    page.waitForURL((url) => url.pathname === target)
+  );
+});
+
+test("reading controls hydrate where the server painted them", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await Effect.runPromise(
+    withObservedPageErrors(page, verifyReadingControlsHydrateInPlace(page))
+  );
+});

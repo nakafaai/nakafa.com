@@ -1,7 +1,7 @@
 import type { Browser, Page, Request } from "@playwright/test";
 import { Clock, Duration, Effect, Option, Schema } from "effect";
-import { withBrowserContext } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { withBrowserContext } from "@/e2e/support/context";
 import {
   formatRequestFailure,
   NEXT_ROUTER_PREFETCH_HEADER,
@@ -10,7 +10,7 @@ import {
   requestFailureFields,
   type TrackedRequestKind,
   withRequestTracker,
-} from "@/e2e/support/request-tracker";
+} from "@/e2e/support/requests";
 
 const JAVASCRIPT_RESOURCE_PATTERN =
   /^\/_next\/static\/(?:immutable\/)?chunks\/.+\.js$/;

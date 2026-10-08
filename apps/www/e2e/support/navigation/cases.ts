@@ -208,8 +208,8 @@ const discoverLinkedHref = Effect.fn("NakafaE2E.discoverLinkedHref")(function* (
  * The callback therefore verifies the committed route shell, while the Effect
  * program verifies destination-specific content after release.
  *
- * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/segment-cache/navigation.ts
- * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next-playwright/README.md
+ * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/navigation-testing-lock.ts
+ * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next-playwright/README.md
  */
 const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
   page: Page,

@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, MutableHashSet } from "effect";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/request-tracker";
+import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/requests";
 
 export const readinessTimeoutMilliseconds = 15_000;
 export const hubHref = "/en/try-out";
