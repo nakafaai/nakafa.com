@@ -11,10 +11,13 @@ import { requestWeatherJson } from "@/lib/weather/transport";
 type MakeResponse = (request: HttpClientRequest.HttpClientRequest) => Response;
 type ObserveRequest = (request: HttpClientRequest.HttpClientRequest) => void;
 /** Builds a deterministic Effect HTTP client for transport tests. */
-function makeTestClient(
-  makeResponse: MakeResponse,
-  observeRequest: ObserveRequest = () => undefined
-) {
+function makeTestClient({
+  makeResponse,
+  observeRequest = () => undefined,
+}: {
+  readonly makeResponse: MakeResponse;
+  readonly observeRequest?: ObserveRequest;
+}) {
   return Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make((request) =>
@@ -40,7 +43,10 @@ describe("requestWeatherJson", () => {
         url: "https://weather.example.test/weather",
       }).pipe(
         Effect.provide(
-          makeTestClient(() => Response.json({ cod: "200" }), observeRequest)
+          makeTestClient({
+            makeResponse: () => Response.json({ cod: "200" }),
+            observeRequest,
+          })
         )
       );
       expect(result).toEqual({ cod: "200" });
@@ -67,12 +73,12 @@ describe("requestWeatherJson", () => {
         url: "https://weather.example.test/weather",
       }).pipe(
         Effect.provide(
-          makeTestClient(
-            () =>
+          makeTestClient({
+            makeResponse: () =>
               new Response("unauthorized", {
                 status: 401,
-              })
-          )
+              }),
+          })
         ),
         Effect.result
       );
@@ -101,7 +107,10 @@ describe("requestWeatherJson", () => {
         endpoint: "current-weather",
         searchParams: {},
         url: "https://weather.example.test/weather",
-      }).pipe(Effect.provide(makeTestClient(makeResponse)), Effect.forkChild);
+      }).pipe(
+        Effect.provide(makeTestClient({ makeResponse })),
+        Effect.forkChild
+      );
       yield* TestClock.adjust("300 millis");
       const result = yield* Fiber.join(resultFiber);
       expect(result).toEqual({ cod: "200" });
