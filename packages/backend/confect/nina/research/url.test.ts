@@ -5,7 +5,10 @@ import {
   isPublicHttpUrlSyntax,
   normalizeHostname,
 } from "@repo/backend/confect/nina/research/url";
-import { ADDRESS_VERDICTS } from "@repo/backend/test/research/addresses";
+import {
+  ADDRESS_VERDICTS,
+  type GoldenAddress,
+} from "@repo/backend/test/research/addresses";
 
 describe("research URL policy", () => {
   it("accepts only public http(s) URL syntax", () => {
@@ -71,10 +74,17 @@ describe("research URL policy", () => {
 describe("golden verdicts recorded from ipaddr.js", () => {
   it.each(ADDRESS_VERDICTS)(
     "keeps the recorded verdict for %s",
-    (host, url, blocked, ip) => {
+    (host, url, address) => {
       expect(isPublicHttpUrlSyntax(`https://${host}/`)).toBe(url === "allowed");
-      expect(isBlockedIpAddress(host)).toBe(blocked);
-      expect(isIpAddress(host)).toBe(ip);
+      expect(addressLabelOf(host)).toBe(address);
     }
   );
 });
+
+/** Temporary adapter over the ipaddr.js helpers, removed with the judgeAddress change. */
+function addressLabelOf(host: string): GoldenAddress {
+  if (!isIpAddress(host)) {
+    return "none";
+  }
+  return isBlockedIpAddress(host) ? "refused" : "public";
+}
