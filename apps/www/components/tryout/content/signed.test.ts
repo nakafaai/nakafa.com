@@ -9,6 +9,8 @@ import {
   ProtectedContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 
+const wireJson = Schema.fromJsonString(ProtectedContentRuntimeResponseSchema);
+
 // @vitest-environment node
 
 // Node tests isolate Next navigation imports while real semantic renderers execute.
@@ -284,9 +286,7 @@ describe("signed try-out execution", () => {
           )
         );
         assert.isNotNull(found);
-        const body = yield* Schema.encodeEffect(
-          Schema.fromJsonString(ProtectedContentRuntimeResponseSchema)
-        )(found);
+        const body = yield* Schema.encodeEffect(wireJson)(found);
         const response = new Response(body, {
           headers: {
             "content-type": "application/json",
@@ -294,9 +294,7 @@ describe("signed try-out execution", () => {
           },
           status: 200,
         });
-        Object.defineProperty(response, "url", {
-          value: endpoint,
-        });
+        Object.defineProperty(response, "url", { value: endpoint });
         fetchMock.mockResolvedValueOnce(response);
         runtimeKeysMock.mockReturnValue({
           CONTENT_RUNTIME_TOKEN: "technical-test-token",
