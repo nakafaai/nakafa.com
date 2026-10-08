@@ -50,11 +50,13 @@ const QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
 export class QueryDeadline extends Data.TaggedError("QueryDeadline") {}
 
 /**
- * Each attempt of a query may take at most this long, so one query ends within
- * 31.5 seconds with two retries. The bound is per query. A function that reads
- * twice in a row, such as the featured try-out, can take up to 63 seconds. That
- * runs past the 54 second use cache fill timer (see
- * next/dist/server/use-cache/use-cache-wrapper.js), and the page then fails.
+ * Each attempt of a query may take at most this long. One query therefore ends
+ * within 31.5 seconds: three attempts of 10 seconds, with the 500 ms and 1 s
+ * waits between them. The bound is per query. A cached function that makes one
+ * Convex query and then one protected content read, such as the featured
+ * try-out, can take about 63 seconds. Next.js stops a cache fill at 54 seconds
+ * (see next/dist/server/use-cache/use-cache-wrapper.js), so that attempt fails
+ * there, and the page's retry (`staticGenerationRetryCount`) runs it again.
  */
 const QUERY_ATTEMPT_DEADLINE = Duration.seconds(10);
 
