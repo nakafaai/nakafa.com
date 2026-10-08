@@ -18,6 +18,7 @@ import {
   sendMcpCase,
   sendMcpRequest,
 } from "@repo/backend/test/mcp/harness";
+import { HTTP_CASES } from "@repo/backend/test/mcp/http";
 import { INVALID_TOOL_CALL_CASES } from "@repo/backend/test/mcp/invalid";
 import { JSON_RPC_CASES } from "@repo/backend/test/mcp/jsonrpc";
 import { PROMPT_CASES } from "@repo/backend/test/mcp/prompts";
@@ -67,6 +68,9 @@ describe("Nakafa MCP golden contract", () => {
   });
   describe("JSON-RPC shape", () => {
     it.effect.each(JSON_RPC_CASES)("$name", runGoldenCase);
+  });
+  describe("HTTP shape", () => {
+    it.effect.each(HTTP_CASES)("$name", runGoldenCase);
   });
 });
 describe("Nakafa MCP transport", () => {
