@@ -1,4 +1,5 @@
-import type { InequalityProps } from "@repo/design-system/components/three/inequality-data";
+import type { InequalityProps } from "@repo/design-system/components/three/inequality";
+import { Schema } from "effect";
 import { BufferAttribute, BufferGeometry, Float32BufferAttribute } from "three";
 
 export type InequalitySampling = Pick<
@@ -11,12 +12,13 @@ export type InequalitySampling = Pick<
 
 type Point = [number, number, number];
 type Quad = [Point, Point, Point, Point];
-interface Cell {
-  x1: number;
-  x2: number;
-  y1: number;
-  y2: number;
-}
+const CellSchema = Schema.Struct({
+  x1: Schema.Finite,
+  x2: Schema.Finite,
+  y1: Schema.Finite,
+  y2: Schema.Finite,
+});
+type Cell = typeof CellSchema.Type;
 
 /** Builds the existing sampled inequality surface in one indexed geometry. */
 export function createInequalityGeometry(sampling: InequalitySampling) {

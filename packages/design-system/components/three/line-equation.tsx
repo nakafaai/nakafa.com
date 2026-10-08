@@ -25,7 +25,7 @@ import {
   type LineMarkerIndices,
   resolveLineMarkers,
 } from "@repo/design-system/lib/geometry/markers";
-import { Effect } from "effect";
+import { Effect, MutableHashMap, Option } from "effect";
 import { type ComponentProps, type ReactNode, useMemo } from "react";
 import {
   CatmullRomCurve3,
@@ -44,8 +44,8 @@ const DEFAULT_FONT_SIZE = "diagram" satisfies ThreeFontSize;
 
 // Shared geometry cache
 let sharedSphereGeometry: SphereGeometry | null = null;
-const sharedConeGeometries = new Map<string, ConeGeometry>();
-const sharedMaterials = new Map<string, MeshBasicMaterial>();
+const sharedConeGeometries = MutableHashMap.empty<string, ConeGeometry>();
+const sharedMaterials = MutableHashMap.empty<string, MeshBasicMaterial>();
 
 /**
  * Reuses point marker geometry across all rendered line equations.
@@ -70,9 +70,9 @@ function getSharedSphereGeometry(): SphereGeometry {
  */
 function getSharedConeGeometry(size: number): ConeGeometry {
   const key = `cone-${size}`;
-  const cached = sharedConeGeometries.get(key);
-  if (cached) {
-    return cached;
+  const cached = MutableHashMap.get(sharedConeGeometries, key);
+  if (Option.isSome(cached)) {
+    return cached.value;
   }
   const geometry = new ConeGeometry(
     size / 2,
@@ -80,7 +80,7 @@ function getSharedConeGeometry(size: number): ConeGeometry {
     GRAPH_ARROW_SEGMENTS,
     CONE_GEOMETRY_HEIGHT_SEGMENTS
   );
-  sharedConeGeometries.set(key, geometry);
+  MutableHashMap.set(sharedConeGeometries, key, geometry);
   return geometry;
 }
 
@@ -91,31 +91,15 @@ function getSharedConeGeometry(size: number): ConeGeometry {
  */
 function getSharedMaterial(color: string | Color): MeshBasicMaterial {
   const colorKey = color instanceof Color ? color.getHexString() : color;
-  const cached = sharedMaterials.get(colorKey);
-  if (cached) {
-    return cached;
+  const cached = MutableHashMap.get(sharedMaterials, colorKey);
+  if (Option.isSome(cached)) {
+    return cached.value;
   }
   const material = new MeshBasicMaterial({
     color: color instanceof Color ? color : new Color(color),
   });
-  sharedMaterials.set(colorKey, material);
+  MutableHashMap.set(sharedMaterials, colorKey, material);
   return material;
-}
-
-interface LineLabelStyle {
-  /** Horizontal alignment around the authored point. */
-  anchorX?: ComponentProps<typeof ThreeLabel>["anchorX"];
-  /** Optional index into the points array where this label appears. */
-  at?: number;
-  /** Font size of the label. */
-  fontSize?: ThreeFontSize | number;
-  /** Optional [x,y,z] offset from the selected point. */
-  offset?: [number, number, number];
-}
-
-/** Semantic React content rendered at one line point. */
-export interface LineLabel extends LineLabelStyle {
-  text: ReactNode;
 }
 
 export interface Props {
@@ -142,7 +126,18 @@ export interface Props {
    * Optional array of labels to render along the line. Each can specify the index of the point
    * at which to render (defaults to midpoint), optional offset, and text styling.
    */
-  labels?: LineLabel[];
+  labels?: {
+    /** Horizontal alignment around the authored point. */
+    anchorX?: ComponentProps<typeof ThreeLabel>["anchorX"];
+    /** Optional index into the points array where this label appears. */
+    at?: number;
+    /** Font size of the label. */
+    fontSize?: ThreeFontSize | number;
+    /** Optional [x,y,z] offset from the selected point. */
+    offset?: [number, number, number];
+    /** Semantic React content rendered at the label's point. */
+    text: ReactNode;
+  }[];
   lineWidth?: number;
   /** Optional sample indices to mark without changing the curve geometry. */
   pointIndices?: LineMarkerIndices;
@@ -157,6 +152,9 @@ export interface Props {
    */
   smooth?: boolean;
 }
+
+/** Semantic React content rendered at one line point. */
+export type LineLabel = NonNullable<Props["labels"]>[number];
 
 const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
 

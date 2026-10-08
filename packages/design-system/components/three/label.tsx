@@ -9,6 +9,7 @@ import {
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
+import { MutableHashMap } from "effect";
 import {
   type ComponentProps,
   type ReactNode,
@@ -181,7 +182,7 @@ export function ThreeLabel({
           (element.offsetWidth * worldFontSize) / LABEL_BASE_FONT_SIZE;
         const height =
           (element.offsetHeight * worldFontSize) / LABEL_BASE_FONT_SIZE;
-        framing.labels.set(object, {
+        MutableHashMap.set(framing.labels, object.uuid, {
           anchorX: anchorOffset(anchorX),
           anchorY: anchorOffset(anchorY),
           gap: {
@@ -211,7 +212,7 @@ export function ThreeLabel({
       measure();
       return () => {
         observer.disconnect();
-        framing.labels.delete(object);
+        MutableHashMap.remove(framing.labels, object.uuid);
         framing.invalidate();
       };
     },
