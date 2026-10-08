@@ -203,6 +203,14 @@ describe("production acceptance scope", () => {
       changes: [{ path: ".changeset/fetch.md", status: "A" }],
       expected: false,
     },
+    {
+      changes: [{ path: "docs/convex/diagram.svg", status: "A" }],
+      expected: false,
+    },
+    {
+      changes: [{ path: ".changeset/config.json", status: "M" }],
+      expected: false,
+    },
     { changes: [{ path: "osv.toml", status: "M" }], expected: false },
     {
       changes: [{ path: "packages/cli/README.md", status: "M" }],
