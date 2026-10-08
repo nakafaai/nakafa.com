@@ -1,12 +1,6 @@
 import "server-only";
-import {
-  type SigningKeyId,
-  SigningKeyIdSchema,
-} from "@nakafa/aksara-contracts/ids";
-import {
-  type PreviewRendererSecret,
-  PreviewRendererSecretSchema,
-} from "@nakafa/aksara-contracts/preview/auth";
+import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
+import { PreviewRendererSecretSchema } from "@nakafa/aksara-contracts/preview/auth";
 import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
 import {
   Effect,
@@ -54,20 +48,22 @@ const PreviewRendererEnvironmentSchema = Schema.Struct({
   secret: PreviewRendererSecretSchema,
   token: PreviewTokenSchema,
 });
+export const PreviewConfigSchema = Schema.Struct({
+  eventsPath: PreviewEventsPathSchema,
+  keyId: SigningKeyIdSchema,
+  manifestPath: PreviewManifestPathSchema,
+  origin: Schema.URL,
+  publicKey: PreviewPublicKeySchema,
+  token: Schema.Redacted(Schema.String),
+});
 /** Complete ephemeral connection passed by the Aksara CLI child process. */
-export interface PreviewConfig {
-  readonly eventsPath: "/events";
-  readonly keyId: SigningKeyId;
-  readonly manifestPath: "/manifest";
-  readonly origin: URL;
-  readonly publicKey: string;
-  readonly token: Redacted.Redacted<string>;
-}
+export type PreviewConfig = typeof PreviewConfigSchema.Type;
+const PreviewRendererConfigSchema = Schema.Struct({
+  secret: PreviewRendererSecretSchema,
+  token: Schema.Redacted(Schema.String),
+});
 /** Ephemeral credentials accepted only by the local renderer endpoint. */
-export interface PreviewRendererConfig {
-  readonly secret: PreviewRendererSecret;
-  readonly token: Redacted.Redacted<string>;
-}
+export type PreviewRendererConfig = typeof PreviewRendererConfigSchema.Type;
 /** Local preview configuration exists but does not satisfy its strict shape. */
 export class PreviewConfigError extends Schema.TaggedError<PreviewConfigError>()(
   "PreviewConfigError",
