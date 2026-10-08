@@ -11,7 +11,7 @@ import { readChat } from "@repo/backend/confect/chats/access/read";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import type { StreamRequest } from "@repo/backend/confect/nina/contract/message";
-import { NinaTurnSummary } from "@repo/backend/confect/nina/conversation.spec";
+import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
 import {
   Array as Arr,

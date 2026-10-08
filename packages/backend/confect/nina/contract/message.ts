@@ -1,5 +1,5 @@
 import { PaginationResult } from "@confect/core";
-import { NinaTurnSummary } from "@repo/backend/confect/nina/conversation.spec";
+import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import { Schema } from "effect";
 
 /**

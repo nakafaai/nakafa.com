@@ -1,8 +1,16 @@
+import { Id } from "@repo/backend/confect/_generated/id";
+import { ModelId } from "@repo/backend/confect/gateway/model";
 import {
   type AgentContext,
   AgentCurriculumPreferenceSchema,
 } from "@repo/backend/confect/nina/contract/agent";
-import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
+import {
+  NinaContextPackSchema,
+  NinaContextSnapshotSchema,
+  NinaContextTransitionSchema,
+} from "@repo/backend/confect/nina/contract/pack";
+import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
+import { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -38,6 +46,75 @@ export const NinaFailureReason = Schema.Literals([
   "interrupted",
   "unknown",
 ]);
+export const NinaTurnState = Schema.Union([
+  Schema.Struct({ status: Schema.Literal("queued") }),
+  Schema.Struct({
+    status: Schema.Literal("running"),
+    startedAt: Schema.Finite,
+  }),
+  Schema.Struct({
+    status: Schema.Literal("complete"),
+    finishedAt: Schema.Finite,
+  }),
+  Schema.Struct({
+    status: Schema.Literal("failed"),
+    finishedAt: Schema.Finite,
+    reason: Schema.optionalKey(NinaFailureReason),
+  }),
+  Schema.Struct({
+    status: Schema.Literal("cancelled"),
+    finishedAt: Schema.Finite,
+  }),
+  Schema.Struct({ status: Schema.Literal("unanswered") }),
+]);
+/** A request key survives settlement so network retries remain idempotent. */
+export const NinaRequestId = Schema.NonEmptyString.check(
+  Schema.isMaxLength(128)
+);
+/** Recorded response facts never invent an unknown model, charge or token count. */
+export const NinaTurnFacts = Schema.Struct({
+  userId: Id("users"),
+  chatId: Id("chats"),
+  threadId: Schema.String,
+  promptMessageId: Schema.String,
+  promptedAt: Schema.optionalKey(Schema.Finite),
+  order: Schema.Finite,
+  modelId: Schema.optionalKey(ModelId),
+  credits: Schema.optionalKey(Schema.Finite),
+  requestId: Schema.optionalKey(NinaRequestId),
+  fingerprint: Schema.optionalKey(Schema.String),
+  transactionId: Schema.optionalKey(Id("creditTransactions")),
+  page: Schema.optionalKey(NinaPageSchema),
+  user: Schema.optionalKey(NinaUserSchema),
+  snapshot: Schema.optionalKey(NinaContextSnapshotSchema),
+  transition: Schema.optionalKey(NinaContextTransitionSchema),
+  tokens: Schema.optionalKey(
+    Schema.Struct({
+      input: Schema.optionalKey(Schema.Finite),
+      output: Schema.optionalKey(Schema.Finite),
+      total: Schema.optionalKey(Schema.Finite),
+    })
+  ),
+  usage: Schema.Array(NinaUsageTotal).check(Schema.isMaxLength(32)),
+  suggestions: Schema.optionalKey(NinaSuggestions),
+});
+/** Public response facts exclude account, billing-period and private page context. */
+export const NinaTurnSummary = Schema.Struct({
+  ...NinaTurnFacts.fields,
+  state: NinaTurnState,
+}).mapFields(
+  Struct.pick([
+    "order",
+    "state",
+    "modelId",
+    "credits",
+    "usage",
+    "tokens",
+    "suggestions",
+    "promptMessageId",
+    "promptedAt",
+  ])
+);
 export type NinaPage = typeof NinaPageSchema.Type;
 export type NinaRuntime = typeof NinaRuntimeSchema.Type;
 export type NinaUser = typeof NinaUserSchema.Type;
