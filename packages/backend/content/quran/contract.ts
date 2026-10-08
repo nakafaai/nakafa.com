@@ -27,6 +27,11 @@ export type PublishedQuranMeaning = typeof PublishedQuranMeaningSchema.Type;
 export const PublishedQuranSurahSchema = QuranSurahRowSchema;
 export type PublishedQuranSurah = typeof PublishedQuranSurahSchema.Type;
 
+/** Complete signed surah list served by the active Quran snapshot. */
+export const PublishedQuranSurahsSchema = Schema.Struct({
+  surahs: Schema.Array(PublishedQuranSurahSchema),
+});
+
 /** Current signed Quran row envelope stored by the active snapshot. */
 export const PublishedQuranRowSchema = Schema.Struct({
   family: Schema.Literal("quran"),

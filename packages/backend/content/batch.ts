@@ -22,6 +22,11 @@ const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 export function publicRuntimeResponseBytes<Response>(response: Response) {
   return new TextEncoder().encode(encodeJson(response)).byteLength;
 }
+/** Route identity of one public read: its path stays a plain string until a request validates it. */
+export const PublicContentRuntimeInputSchema = Schema.Struct({
+  appLocale: PublicContentRuntimeRequestSchema.fields.appLocale,
+  publicPath: Schema.String,
+});
 /** Nakafa batch of exact Aksara public runtime requests. */
 export const PublicContentRuntimeBatchRequestSchema = Schema.Struct({
   requests: Schema.Array(PublicContentRuntimeRequestSchema).pipe(

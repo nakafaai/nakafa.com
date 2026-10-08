@@ -1,8 +1,4 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import {
-  QuranRuntimeVerseSchema,
-  QuranSearchRowSchema,
-} from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
 import {
   decodePublishedQuranSource,
@@ -16,32 +12,15 @@ import {
   type QuranSearchRow,
 } from "@repo/backend/client/quran/rows";
 import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
-import {
-  quranReadingSourcesValidator,
-  quranTafsirAccessValidator,
-} from "@repo/backend/confect/contentRelease/quran/spec";
 import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";
-import { PublishedQuranSurahSchema } from "@repo/backend/content/quran/contract";
-import { quranPassageValidator } from "@repo/backend/content/quran/response";
+import type { PublishedQuranReferenceFieldsSchema } from "@repo/backend/content/quran/response";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 
 type QuranReferenceResult = FunctionReturnType<
   typeof api.contentRelease.quran.passage
 >;
-
-/** Decoded and passed-through fields of one bounded signed Quran passage. */
-const PublishedQuranReferenceFieldsSchema = Schema.Struct({
-  fromVerse: quranPassageValidator.fields.fromVerse,
-  preBismillah: quranPassageValidator.fields.preBismillah,
-  search: QuranSearchRowSchema,
-  sources: quranReadingSourcesValidator,
-  surah: PublishedQuranSurahSchema,
-  tafsirAccess: quranTafsirAccessValidator,
-  toVerse: quranPassageValidator.fields.toVerse,
-  verses: Schema.Array(QuranRuntimeVerseSchema),
-});
 
 /** One bounded signed Quran passage in its canonical shape. */
 export type PublishedQuranReference = PublishedQuranSource &

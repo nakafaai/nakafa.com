@@ -1,4 +1,8 @@
 import {
+  QuranRuntimeVerseSchema,
+  QuranSearchRowSchema,
+} from "@nakafa/aksara-contracts/quran/snapshot/row";
+import {
   quranAppLocaleValidator,
   quranReadingSourcesValidator,
   quranRevelationPlaceValidator,
@@ -8,7 +12,10 @@ import {
   quranTafsirAppLocaleValidator,
   quranTranslationDocumentValidator,
 } from "@repo/backend/confect/contentRelease/quran/spec";
-import { quranBismillahValidator } from "@repo/backend/content/quran/contract";
+import {
+  PublishedQuranSurahSchema,
+  quranBismillahValidator,
+} from "@repo/backend/content/quran/contract";
 import { Schema } from "effect";
 export const quranDocumentSurahValidator = Schema.Struct({
   kind: Schema.Literal("quran-surah"),
@@ -67,6 +74,17 @@ export const quranPassageFields = {
 export const quranPassageValidator = Schema.Struct({
   ...quranPassageFields,
   preBismillah: Schema.Union([quranBismillahValidator, Schema.Null]),
+});
+/** Decoded fields of one bounded signed Quran passage in its canonical shape. */
+export const PublishedQuranReferenceFieldsSchema = Schema.Struct({
+  fromVerse: quranPassageValidator.fields.fromVerse,
+  preBismillah: quranPassageValidator.fields.preBismillah,
+  search: QuranSearchRowSchema,
+  sources: quranReadingSourcesValidator,
+  surah: PublishedQuranSurahSchema,
+  tafsirAccess: quranTafsirAccessValidator,
+  toVerse: quranPassageValidator.fields.toVerse,
+  verses: Schema.Array(QuranRuntimeVerseSchema),
 });
 export const quranViewNameValidator = Schema.Struct({
   arabic: Schema.String,

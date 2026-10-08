@@ -1,4 +1,3 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   decodePublicContentRuntimeRequest,
   decodePublicContentRuntimeResponse,
@@ -29,6 +28,7 @@ import {
   MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES,
   PublicContentRuntimeBatchRequestSchema,
   PublicContentRuntimeBatchResponseSchema,
+  type PublicContentRuntimeInputSchema,
 } from "@repo/backend/content/batch";
 import {
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
@@ -40,10 +40,6 @@ import type { HttpClientResponse } from "effect/http";
 /** Server-owned connection values for the private content runtime endpoint. */
 export type ContentRuntimeTarget = ContentHttpTarget;
 const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
-const PublicContentRuntimeInputSchema = Schema.Struct({
-  appLocale: AppLocaleSchema,
-  publicPath: Schema.String,
-});
 /** Public route identity without its module-owned delivery discriminator. */
 export type PublicContentRuntimeInput =
   typeof PublicContentRuntimeInputSchema.Type;
