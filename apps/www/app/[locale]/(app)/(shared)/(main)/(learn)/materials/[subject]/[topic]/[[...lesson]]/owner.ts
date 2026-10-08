@@ -1,4 +1,5 @@
-import { Effect, Option } from "effect";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { Effect, Option, Schema } from "effect";
 import { io } from "next/cache";
 import type { Locale } from "next-intl";
 import {
@@ -11,17 +12,21 @@ import {
   readMaterialPreview,
 } from "@/lib/content/preview/material";
 
-interface PreviewOwner {
-  readonly appLocale: Locale;
-  readonly kind: "preview";
-  readonly preview: MaterialPreviewContent;
-}
+const PublishedOwnerSchema = Schema.Struct({
+  kind: Schema.Literal("published"),
+  locale: AppLocaleCodeSchema,
+  publicPath: Schema.String,
+});
+type PublishedOwner = typeof PublishedOwnerSchema.Type;
 
-interface PublishedOwner {
-  readonly kind: "published";
-  readonly locale: Locale;
-  readonly publicPath: string;
+/** Keeps the discriminant a literal type, so the owner union narrows on it. */
+const previewKind = "preview" as const;
+
+/** Wraps an authenticated preview. Its body holds React content, so no Schema describes it. */
+function toPreviewOwner(appLocale: Locale, preview: MaterialPreviewContent) {
+  return { appLocale, kind: previewKind, preview };
 }
+type PreviewOwner = ReturnType<typeof toPreviewOwner>;
 
 export type MaterialOwner = PreviewOwner | PublishedOwner;
 
@@ -36,7 +41,7 @@ async function readPreviewOwner(
   await io();
   return Option.map(
     await Effect.runPromise(readMaterialPreview({ params })),
-    (preview) => ({ appLocale, kind: "preview", preview })
+    (preview) => toPreviewOwner(appLocale, preview)
   );
 }
 

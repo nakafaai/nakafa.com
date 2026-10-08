@@ -1,61 +1,82 @@
-import type {
-  MaterialLessonProjection,
-  MaterialMetadata,
-} from "@nakafa/aksara-contracts/projection/material";
-import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
-import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
-import type { ReactNode } from "react";
-import type { MaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import {
-  type MaterialOwner,
-  resolveMaterialOwner,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
+  MaterialLessonProjectionSchema,
+  MaterialMetadataSchema,
+} from "@nakafa/aksara-contracts/projection/material";
+import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
+import { Schema, Struct } from "effect";
+import { notFound } from "next/navigation";
+import type { PropsWithChildren } from "react";
+import type { MaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
+import { resolveMaterialOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAksaraUrl } from "@/lib/utils/github";
 
-interface MaterialRouteFields {
-  readonly alternates: readonly MaterialLessonProjection[];
-  readonly appLocale: Locale;
-  readonly metadata: MaterialMetadata;
-  readonly route: MaterialLessonProjection;
-}
+const PreviewPageSchema = Schema.Struct({
+  alternates: Schema.Array(MaterialLessonProjectionSchema),
+  appLocale: AppLocaleCodeSchema,
+  body: Schema.String,
+  copySourceUrl: Schema.Null,
+  kind: Schema.Literal("preview"),
+  metadata: MaterialMetadataSchema,
+  rendererDomain: RendererDomainSchema,
+  route: MaterialLessonProjectionSchema,
+  siblings: Schema.Array(MaterialLessonProjectionSchema),
+  sourceUrl: Schema.Null,
+});
 
-interface MaterialFields extends MaterialRouteFields {
-  readonly rendererDomain: RendererDomain;
-}
+const PublishedPageSchema = Schema.Struct({
+  alternates: Schema.Array(MaterialLessonProjectionSchema),
+  appLocale: AppLocaleCodeSchema,
+  body: Schema.String,
+  copySourceUrl: Schema.NullOr(Schema.String),
+  kind: Schema.Literal("published"),
+  metadata: MaterialMetadataSchema,
+  rendererDomain: RendererDomainSchema,
+  route: MaterialLessonProjectionSchema,
+  siblings: Schema.Array(MaterialLessonProjectionSchema),
+  sourceUrl: Schema.NullOr(Schema.String),
+});
 
-interface PreviewContent extends MaterialFields {
-  readonly body: string;
-  readonly children: ReactNode;
-  readonly copySourceUrl: null;
-  readonly kind: "preview";
-  readonly siblings: readonly MaterialLessonProjection[];
-  readonly sourceUrl: null;
-}
+/** Only route identity and visible labels are needed for sibling navigation. */
+const MaterialNavigationRouteSchema = Schema.Struct({
+  ...MaterialLessonProjectionSchema.mapFields(
+    Struct.pick(["appLocale", "order", "parentPath", "publicPath"])
+  ).fields,
+  metadata: MaterialLessonProjectionSchema.fields.metadata.mapFields(
+    Struct.pick(["title"])
+  ),
+});
 
-interface PublishedContent extends MaterialFields {
-  readonly body: string;
-  readonly children: ReactNode;
-  readonly copySourceUrl: null | string;
-  readonly kind: "published";
-  readonly siblings: readonly MaterialLessonProjection[];
-  readonly sourceUrl: null | string;
-}
+/** Small public navigation model shared by the static shell and client controls. */
+const MaterialNavigationPageSchema = Schema.Struct({
+  kind: Schema.Literals(["preview", "published"]),
+  route: MaterialLessonProjectionSchema.mapFields(
+    Struct.pick([
+      "appLocale",
+      "contentKey",
+      "materialKey",
+      "parentPath",
+      "publicPath",
+    ])
+  ),
+  siblings: Schema.Array(MaterialNavigationRouteSchema),
+});
+export type MaterialNavigationPage = typeof MaterialNavigationPageSchema.Type;
+
+/** React children hold the rendered body, which no Schema can describe. */
+type MaterialPageChildren = Required<Pick<PropsWithChildren, "children">>;
 
 /** Complete verified body and shell model consumed by the material page. */
-export type MaterialPageContent = PreviewContent | PublishedContent;
-
-/** Metadata selected from the same exclusive owner as the page body. */
-export interface MaterialMetadataContent extends MaterialRouteFields {
-  readonly kind: MaterialOwner["kind"];
-}
+export type MaterialPageContent = (
+  | typeof PreviewPageSchema.Type
+  | typeof PublishedPageSchema.Type
+) &
+  MaterialPageChildren;
 
 /** Reads metadata from the same signed delivery the page body renders. */
-export async function readMaterialMetadata(
-  params: MaterialParams
-): Promise<MaterialMetadataContent> {
+export async function readMaterialMetadata(params: MaterialParams) {
   const owner = await resolveMaterialOwner(params);
   if (!owner) {
     notFound();
@@ -86,6 +107,11 @@ export async function readMaterialMetadata(
     route: publication.model.projection,
   };
 }
+
+/** Metadata selected from the same exclusive owner as the page body. */
+export type MaterialMetadataContent = Awaited<
+  ReturnType<typeof readMaterialMetadata>
+>;
 
 /** Loads the verified body, metadata, navigation model, and source link. */
 export async function readMaterialPage(
