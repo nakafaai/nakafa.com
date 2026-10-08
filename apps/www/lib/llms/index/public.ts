@@ -6,24 +6,25 @@ import {
 import { routing } from "@repo/internationalization/src/routing";
 import { Schema } from "effect";
 import type { Locale } from "next-intl";
-import {
-  BASE_URL,
-  type LlmsSection,
-  SECTION_LABELS,
-} from "@/lib/llms/constants";
+import { BASE_URL, SECTION_LABELS } from "@/lib/llms/constants";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import { renderLlmsIndexText } from "@/lib/llms/index/render";
 
-type LlmsContentSection = Exclude<LlmsSection, "site">;
+const LlmsContentSectionSchema = Schema.Literals([
+  "articles",
+  "material",
+  "quran",
+]);
 
 const PublicLlmsLocaleIndexRouteSchema = Schema.Literals(["", "llms"]);
 
 /** One public-prefix index in the locale discovery hierarchy. */
-interface PublicLlmsSectionIndex {
-  label: string;
-  prefix: string;
-  section?: LlmsContentSection;
-}
+const PublicLlmsSectionIndexSchema = Schema.Struct({
+  label: Schema.String,
+  prefix: Schema.String,
+  section: Schema.optionalKey(LlmsContentSectionSchema),
+});
+type PublicLlmsSectionIndex = typeof PublicLlmsSectionIndexSchema.Type;
 
 /** Renders the constant-size root discovery index. */
 export function buildRootLlmsIndexText() {
