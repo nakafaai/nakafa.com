@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 export type ParabolicMovementDecimalSeparator = "comma" | "dot";
 
@@ -64,13 +64,14 @@ export const PARABOLIC_LAUNCHES: ParabolicLaunchScenario[] = [
 export type ParabolicMotionState = ReturnType<typeof getParabolicMotionState>;
 
 export function isParabolicLaunchId(value: string): value is ParabolicLaunchId {
-  return PARABOLIC_LAUNCHES.some((launch) => launch.id === value);
+  return Arr.some(PARABOLIC_LAUNCHES, (launch) => launch.id === value);
 }
 
 export function getParabolicMotionState(id: ParabolicLaunchId) {
-  const scenario =
-    PARABOLIC_LAUNCHES.find((launch) => launch.id === id) ??
-    PARABOLIC_LAUNCHES[0];
+  const scenario = Option.getOrElse(
+    Arr.findFirst(PARABOLIC_LAUNCHES, (launch) => launch.id === id),
+    () => PARABOLIC_LAUNCHES[0]
+  );
   const angleRadians = (scenario.angleDegrees * Math.PI) / 180;
   const horizontalVelocity = scenario.initialSpeed * Math.cos(angleRadians);
   const verticalVelocity = scenario.initialSpeed * Math.sin(angleRadians);
