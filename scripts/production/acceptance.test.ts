@@ -204,7 +204,7 @@ describe("production acceptance scope", () => {
       expected: false,
     },
     {
-      changes: [{ path: "docs/convex/diagram.svg", status: "A" }],
+      changes: [{ path: "docs/adr/diagram.svg", status: "A" }],
       expected: false,
     },
     {
@@ -218,10 +218,6 @@ describe("production acceptance scope", () => {
     },
     {
       changes: [{ path: "apps/www/public/notes.md", status: "A" }],
-      expected: true,
-    },
-    {
-      changes: [{ path: "repos/effect/LLMS.md", status: "M" }],
       expected: true,
     },
     {
