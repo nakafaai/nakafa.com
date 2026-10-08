@@ -1,6 +1,7 @@
 "use client";
 
 import { useReducedMotion } from "@mantine/hooks";
+import { Array as Arr } from "effect";
 import { m } from "motion/react";
 
 const LOADING_ANIMATION_DURATION = 2000;
@@ -49,7 +50,7 @@ export const LoadingShimmer = ({ chartId }: { chartId: string }) => {
         y1="0"
         y2="0"
       >
-        {gradientStops.map(({ offset, opacity }) => (
+        {Arr.map(gradientStops, ({ offset, opacity }) => (
           <stop
             key={offset}
             offset={offset}
