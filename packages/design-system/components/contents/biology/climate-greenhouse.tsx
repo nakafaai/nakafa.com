@@ -20,6 +20,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
@@ -168,7 +169,7 @@ function EarthModel({
           transparent
         />
       </mesh>
-      {particles.map((particle) => (
+      {Arr.map(particles, (particle) => (
         <mesh key={particle.id} position={particle.position}>
           <sphereGeometry args={[0.035, 18, 12]} />
           <meshStandardMaterial
@@ -189,7 +190,7 @@ function SunLight({ color }: { color: string }) {
         <sphereGeometry args={[0.18, 32, 20]} />
         <meshStandardMaterial color={color} emissive={color} />
       </mesh>
-      {[-0.22, 0, 0.22].map((offset) => (
+      {Arr.map([-0.22, 0, 0.22], (offset) => (
         <mesh
           key={offset}
           position={[-1.55, 0.94 + offset, 0.12]}
@@ -216,7 +217,7 @@ function HeatParticles({
 
   return (
     <CameraBounds motion={{ rotation: "y" }} objectRef={refObject}>
-      {HEAT_PARTICLE_IDS.slice(0, particleCount).map((id, index) => (
+      {Arr.map(HEAT_PARTICLE_IDS.slice(0, particleCount), (id, index) => (
         <mesh key={id} position={getHeatParticlePosition(index, particleCount)}>
           <sphereGeometry args={[0.026, 18, 12]} />
           <meshStandardMaterial
