@@ -24,7 +24,7 @@ const SetPageSchema = Schema.Struct({
   exam: publicTryoutExamValidator,
   entrySection: Schema.NullOr(publicTryoutSectionValidator),
   set: publicTryoutSetValidator,
-  sections: Schema.mutable(Schema.Array(publicTryoutSectionValidator)),
+  sections: Schema.Array(publicTryoutSectionValidator),
   track: publicTryoutTrackValidator,
 });
 /** Loaded try-out set discovery payload. */

@@ -1,5 +1,6 @@
+import { publicTryoutSectionValidator } from "@repo/backend/confect/tryouts/queries/catalogModel";
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
-import { Schema } from "effect";
+import { Struct } from "effect";
 import { useTranslations } from "next-intl";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
 import { TryoutScoreStatus } from "@/components/tryout/score/status";
@@ -15,11 +16,9 @@ import {
 } from "@/components/tryout/section/metrics";
 import { TryoutStatus } from "@/components/tryout/status";
 
-const TryoutSummarySectionSchema = Schema.Struct({
-  questionCount: Schema.Finite,
-  sectionKey: Schema.String,
-  timeLimitSeconds: Schema.Finite,
-});
+const TryoutSummarySectionSchema = publicTryoutSectionValidator.mapFields(
+  Struct.pick(["questionCount", "sectionKey", "timeLimitSeconds"])
+);
 /** Minimal section contract rendered by the shared summary surface. */
 export type TryoutSummarySection = typeof TryoutSummarySectionSchema.Type;
 
