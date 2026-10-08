@@ -3,19 +3,20 @@ import {
   type DragType,
   useBrushDrag,
 } from "@repo/design-system/components/evilcharts/ui/evil-brush-drag";
+import { Schema } from "effect";
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-interface UseBrushSelectionOptions {
-  containerRef: RefObject<HTMLDivElement | null>;
-  controlledEnd?: number;
-  controlledStart?: number;
-  defaultEndIndex?: number;
-  defaultStartIndex: number;
-  minSpan: number;
-  onChange?: (range: EvilBrushRange) => void;
-  totalPoints: number;
-}
+const BrushSelectionInputSchema = Schema.Struct({
+  controlledEnd: Schema.optionalKey(Schema.Finite),
+  controlledStart: Schema.optionalKey(Schema.Finite),
+  defaultEndIndex: Schema.optionalKey(Schema.Finite),
+  defaultStartIndex: Schema.Finite,
+  minSpan: Schema.Finite,
+  totalPoints: Schema.Finite,
+});
+type BrushSelectionInput = typeof BrushSelectionInputSchema.Type;
+type OnBrushChange = (range: EvilBrushRange) => void;
 
 function rangesEqual(current: EvilBrushRange, next: EvilBrushRange) {
   return (
@@ -61,16 +62,18 @@ function clampRange(
  * Owns the controlled or uncontrolled brush selection. Updates are clamped and
  * deduplicated before they reach the parent chart.
  */
-function useBrushSelection({
-  containerRef,
-  controlledEnd,
-  controlledStart,
-  defaultEndIndex,
-  defaultStartIndex,
-  minSpan,
-  onChange,
-  totalPoints,
-}: UseBrushSelectionOptions) {
+function useBrushSelection(
+  {
+    controlledEnd,
+    controlledStart,
+    defaultEndIndex,
+    defaultStartIndex,
+    minSpan,
+    totalPoints,
+  }: BrushSelectionInput,
+  containerRef: RefObject<HTMLDivElement | null>,
+  onChange?: OnBrushChange
+) {
   const isControlled =
     controlledStart !== undefined && controlledEnd !== undefined;
   const [internalRange, setInternalRange] = useState<EvilBrushRange>(() =>
@@ -117,12 +120,11 @@ function useBrushSelection({
     },
     [isControlled, minSpan, onChange, totalPoints]
   );
-  const { bind } = useBrushDrag({
-    commit,
+  const { bind } = useBrushDrag(
+    { endIndex: rangeEndIndex, startIndex: rangeStartIndex, totalPoints },
     containerRef,
-    range,
-    totalPoints,
-  });
+    commit
+  );
 
   return { bind, range };
 }

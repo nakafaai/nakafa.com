@@ -60,13 +60,15 @@ export function PromptInput({
 }: PromptInputProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { attachments, files } = usePromptInputFiles({
-    ...(accept === undefined ? {} : { accept }),
+  const { attachments, files } = usePromptInputFiles(
+    {
+      ...(accept === undefined ? {} : { accept }),
+      maxFiles,
+      ...(maxFileSize === undefined ? {} : { maxFileSize }),
+    },
     inputRef,
-    maxFiles,
-    ...(maxFileSize === undefined ? {} : { maxFileSize }),
-    onError,
-  });
+    onError
+  );
   const addFiles = attachments.add;
 
   useEffect(() => {

@@ -24,6 +24,7 @@ import {
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
+import { Schema } from "effect";
 import {
   type ComponentProps,
   createContext,
@@ -64,22 +65,71 @@ export type ComposedAnimationType = "none" | OrderedRevealAnimation;
 
 // Shared context
 
+const ComposedChartStateSchema = Schema.Struct({
+  animationType: Schema.Literals([
+    "none",
+    "left-to-right",
+    "right-to-left",
+    "center-out",
+    "edges-in",
+  ]), // default intro each <Bar /> and <Line /> inherits
+  dataLength: Schema.Finite, // number of rows currently rendered
+  hoveredIndex: Schema.NullOr(Schema.Finite), // data index currently hovered, or null when none
+  isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
+  selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
+});
+
+type SelectDataKey = (dataKey: string | null) => void; // sets the selected series
+
+/**
+ * Builds the shared value of the chart. `config` holds the colors and labels of
+ * every bar and line series, while `animationType` and `curveType` are the
+ * defaults each <Bar />, <Line /> inherits. The context type is derived from
+ * this hook.
+ */
+function useComposedChartValue(
+  {
+    animationType,
+    dataLength,
+    hoveredIndex,
+    isLoading,
+    selectedDataKey,
+  }: typeof ComposedChartStateSchema.Type,
+  config: ChartConfig,
+  curveType: CurveType,
+  selectDataKey: SelectDataKey
+) {
+  return useMemo(
+    () => ({
+      animationType,
+      config,
+      curveType,
+      dataLength,
+      hoveredIndex,
+      isLoading,
+      selectDataKey,
+      selectedDataKey,
+    }),
+    [
+      animationType,
+      config,
+      curveType,
+      dataLength,
+      hoveredIndex,
+      isLoading,
+      selectDataKey,
+      selectedDataKey,
+    ]
+  );
+}
+
 /**
  * Shared state for every part of the chart. Lifted into <EvilComposedChart /> so
  * that <Bar />, <Line />, <XAxis />, <Legend />, and friends can read it without
  * prop drilling. Sub-components are composed freely, the provider is the single
  * source of truth.
  */
-interface ComposedChartContextValue {
-  animationType: ComposedAnimationType; // default intro each <Bar />/<Line /> inherits
-  config: ChartConfig; // colors + labels for every bar and line series
-  curveType: CurveType; // default curve interpolation each <Line /> inherits
-  dataLength: number; // number of rows currently rendered
-  hoveredIndex: number | null; // data index currently hovered, or null when none
-  isLoading: boolean; // whether the chart shows its loading skeleton
-  selectDataKey: (dataKey: string | null) => void; // sets the selected series
-  selectedDataKey: string | null; // currently selected series, or null when none
-}
+type ComposedChartContextValue = ReturnType<typeof useComposedChartValue>;
 
 const ComposedChartContext = createContext<ComposedChartContextValue | null>(
   null
@@ -187,27 +237,17 @@ export function EvilComposedChart<
     [onSelectionChange]
   );
 
-  const contextValue = useMemo<ComposedChartContextValue>(
-    () => ({
-      config,
-      curveType,
+  const contextValue = useComposedChartValue(
+    {
       animationType,
       dataLength: displayData.length,
-      isLoading,
       hoveredIndex,
-      selectedDataKey,
-      selectDataKey,
-    }),
-    [
-      config,
-      curveType,
-      animationType,
-      displayData.length,
       isLoading,
-      hoveredIndex,
       selectedDataKey,
-      selectDataKey,
-    ]
+    },
+    config,
+    curveType,
+    selectDataKey
   );
 
   return (

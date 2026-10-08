@@ -9,7 +9,7 @@ import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-s
 import { EvilBrushControls } from "@repo/design-system/components/evilcharts/ui/evil-brush-controls";
 import { useBrushSelection } from "@repo/design-system/components/evilcharts/ui/evil-brush-selection";
 import { cn } from "cn";
-import { Record as Rec } from "effect";
+import { Record as Rec, Schema } from "effect";
 import {
   Suspense,
   useDeferredValue,
@@ -25,10 +25,11 @@ import {
 type EvilBrushVariant = "line" | "area" | "bar";
 
 /** Inclusive indexes selected by an EvilCharts brush. */
-interface EvilBrushRange {
-  endIndex: number;
-  startIndex: number;
-}
+const EvilBrushRangeSchema = Schema.Struct({
+  endIndex: Schema.Finite,
+  startIndex: Schema.Finite,
+});
+type EvilBrushRange = typeof EvilBrushRangeSchema.Type;
 
 /**
  * Configuration for a standalone or chart-owned EvilCharts range selector.
@@ -131,16 +132,18 @@ function EvilBrush({
   const totalPoints = data.length;
   const chartId = useId().replace(/:/g, "");
 
-  const { bind, range } = useBrushSelection({
+  const { bind, range } = useBrushSelection(
+    {
+      ...(controlledEnd === undefined ? {} : { controlledEnd }),
+      ...(controlledStart === undefined ? {} : { controlledStart }),
+      ...(defaultEndIndex === undefined ? {} : { defaultEndIndex }),
+      defaultStartIndex,
+      minSpan,
+      totalPoints,
+    },
     containerRef,
-    ...(controlledEnd === undefined ? {} : { controlledEnd }),
-    ...(controlledStart === undefined ? {} : { controlledStart }),
-    ...(defaultEndIndex === undefined ? {} : { defaultEndIndex }),
-    defaultStartIndex,
-    minSpan,
-    ...(onChange === undefined ? {} : { onChange }),
-    totalPoints,
-  });
+    onChange
+  );
   const rangeStartIndex = range.startIndex;
   const rangeEndIndex = range.endIndex;
 

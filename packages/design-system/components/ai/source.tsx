@@ -6,14 +6,16 @@ import {
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
 import { cn } from "cn";
+import { Schema } from "effect";
 import Image from "next/image";
 import { createContext, use, useMemo, useState } from "react";
 
 /** One cited link and the domain it is shown under. */
-interface SourceLink {
-  domain: string;
-  href: string;
-}
+const SourceLinkSchema = Schema.Struct({
+  domain: Schema.String,
+  href: Schema.String,
+});
+type SourceLink = typeof SourceLinkSchema.Type;
 
 const SourceContext = createContext<SourceLink | null>(null);
 
