@@ -8,6 +8,12 @@ const AccelerationCaseIdSchema = Schema.Literals([
 ]);
 export type AccelerationCaseId = typeof AccelerationCaseIdSchema.Type;
 
+export const RocketExhaustSchema = Schema.Struct({
+  anchor: Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]),
+  radius: Schema.Finite,
+});
+export type RocketExhaust = typeof RocketExhaustSchema.Type;
+
 const AccelerationCaseSchema = Schema.Struct({
   color: Schema.String,
   id: AccelerationCaseIdSchema,

@@ -4,12 +4,10 @@ import { useGLTF } from "@react-three/drei";
 import {
   ACCELERATION_ROCKET_MODEL_PATH,
   ACCELERATION_ROCKET_MOTION,
-} from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
-import {
-  AnimatedExhaust,
   type RocketExhaust,
   RocketExhaustSchema,
-} from "@repo/design-system/components/contents/physics/kinematics/acceleration/exhaust";
+} from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
+import { AnimatedExhaust } from "@repo/design-system/components/contents/physics/kinematics/acceleration/exhaust";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
 import { Schema } from "effect";
