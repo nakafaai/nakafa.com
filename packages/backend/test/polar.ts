@@ -1,4 +1,4 @@
-import type { Subscription } from "@polar-sh/sdk/models/components/subscription";
+import type { models, webhooks } from "@polar-sh/sdk/2026-04";
 import posthogTest from "@posthog/convex/test";
 import type { StoredPolarCustomer } from "@repo/backend/confect/customers/polar/spec";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
@@ -109,79 +109,89 @@ export function buildSubscription(
   };
 }
 
-export const polarTimestamp = new Date("2026-09-01T00:00:00.000Z");
+/** A Polar individual customer as the 2026-04 API returns it. */
+export const polarCustomer = {
+  avatar_url: null,
+  billing_address: null,
+  billing_name: null,
+  created_at: "2026-09-01T00:00:00.000Z",
+  deleted_at: null,
+  email: "subscriber@example.com",
+  email_verified: true,
+  first_user_event_at: null,
+  id: "customer",
+  metadata: {},
+  modified_at: null,
+  name: "Subscriber",
+  organization_id: "organization",
+  tax_id: null,
+  type: "individual",
+} satisfies models.CustomerIndividual;
+
+/** A Polar product as the 2026-04 API returns it. */
+export const polarProduct = {
+  attached_custom_fields: [],
+  benefits: [],
+  created_at: "2026-09-01T00:00:00.000Z",
+  description: null,
+  id: "product",
+  is_archived: false,
+  is_deletable: true,
+  is_recurring: true,
+  meter_interval: null,
+  meter_interval_count: null,
+  medias: [],
+  metadata: {},
+  modified_at: null,
+  name: "Pro",
+  organization_id: "organization",
+  prices: [],
+  recurring_interval: "month",
+  recurring_interval_count: 1,
+  trial_interval: null,
+  trial_interval_count: null,
+  visibility: "public",
+} satisfies models.Product;
+
+/** A Polar subscription as the 2026-04 API returns it, with ISO date-times. */
 export const polarSubscription = {
   amount: 1000,
-  cancelAtPeriodEnd: false,
-  canceledAt: null,
-  checkoutId: null,
-  createdAt: polarTimestamp,
+  cancel_at_period_end: false,
+  canceled_at: null,
+  checkout_id: null,
+  created_at: "2026-09-01T00:00:00.000Z",
   currency: "usd",
-  currentMeterPeriodEnd: null,
-  currentMeterPeriodStart: null,
-  currentPeriodEnd: polarTimestamp,
-  currentPeriodStart: polarTimestamp,
-  customer: {
-    avatarUrl: null,
-    billingAddress: null,
-    billingName: null,
-    createdAt: polarTimestamp,
-    deletedAt: null,
-    emailVerified: true,
-    id: "customer",
-    metadata: {},
-    modifiedAt: null,
-    name: "Subscriber",
-    organizationId: "organization",
-    taxId: null,
-    type: "individual",
-  },
-  customerCancellationComment: null,
-  customerCancellationReason: null,
-  customerId: "customer",
+  current_meter_period_end: null,
+  current_meter_period_start: null,
+  current_period_end: "2026-10-01T00:00:00.000Z",
+  current_period_start: "2026-09-01T00:00:00.000Z",
+  customer: polarCustomer,
+  customer_cancellation_comment: null,
+  customer_cancellation_reason: null,
+  customer_id: "customer",
   discount: null,
-  discountId: null,
-  endedAt: null,
-  endsAt: null,
+  discount_id: null,
+  ended_at: null,
+  ends_at: null,
   id: "subscription",
-  metadata: {},
   meters: [],
-  modifiedAt: null,
-  pauseAtPeriodEnd: false,
-  pausedAt: null,
-  pendingUpdate: null,
+  metadata: {},
+  modified_at: null,
+  pause_at_period_end: false,
+  paused_at: null,
+  pending_update: null,
   prices: [],
-  product: {
-    attachedCustomFields: [],
-    benefits: [],
-    createdAt: polarTimestamp,
-    description: null,
-    id: "product",
-    isArchived: false,
-    isRecurring: true,
-    medias: [],
-    metadata: {},
-    meterInterval: null,
-    meterIntervalCount: null,
-    modifiedAt: null,
-    name: "Pro",
-    organizationId: "organization",
-    prices: [],
-    recurringInterval: "month",
-    recurringIntervalCount: 1,
-    trialInterval: null,
-    trialIntervalCount: null,
-    visibility: "public",
-  },
-  productId: "product",
-  recurringInterval: "month",
-  recurringIntervalCount: 1,
-  resumesAt: null,
-  startedAt: null,
+  product: polarProduct,
+  product_id: "product",
+  recurring_interval: "month",
+  recurring_interval_count: 1,
+  resumes_at: null,
+  started_at: null,
   status: "active",
-  trialEnd: null,
-  trialStart: null,
-} satisfies Subscription;
+  trial_end: null,
+  trial_start: null,
+  units: null,
+} satisfies models.Subscription;
 /** Builds one trigger-capable Convex test deployment. */
 export function createWebhookTestConvex() {
   const t = convexTest(schema, convexModules);
@@ -245,5 +255,18 @@ export function buildWebhookCustomer(
     metadata: {},
     name: `User ${suffix}`,
     ...overrides,
+  };
+}
+
+/** Wraps one Polar payload in the envelope every verified webhook carries. */
+export function buildWebhookEvent<Type extends webhooks.WebhookPayload["type"]>(
+  type: Type,
+  data: Extract<webhooks.WebhookPayload, { type: Type }>["data"]
+) {
+  return {
+    api_version: "2026-04",
+    data,
+    timestamp: new Date(NOW).toISOString(),
+    type,
   };
 }
