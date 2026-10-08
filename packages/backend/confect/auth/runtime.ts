@@ -27,6 +27,7 @@ import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { openAPI } from "better-auth/plugins";
 import {
+  Array as Arr,
   Config,
   Effect,
   HashSet,
@@ -42,7 +43,7 @@ const deletionUnavailableError = () =>
     message: "Account deletion is temporarily unavailable.",
   });
 const providerErrorRoutePathnames = HashSet.fromIterable(
-  ACTIVE_APP_LOCALE_CODES.map((locale) => `/${locale}/auth/error`)
+  Arr.map(ACTIVE_APP_LOCALE_CODES, (locale) => `/${locale}/auth/error`)
 );
 const disabledCredentialPaths = [
   "/change-password",
