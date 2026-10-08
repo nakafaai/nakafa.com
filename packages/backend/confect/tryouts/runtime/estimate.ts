@@ -21,7 +21,7 @@ const IrtItemAnswerSchema = Schema.Struct({
   isCorrect: Schema.Boolean,
   item: IrtItemParametersSchema,
 });
-export type IrtItemAnswer = typeof IrtItemAnswerSchema.Type;
+type IrtItemAnswer = typeof IrtItemAnswerSchema.Type;
 
 /** Estimates theta, standard error, and the public score for one IRT vector. */
 export const estimateIrtScore = Effect.fn("tryouts.runtime.estimateIrtScore")(

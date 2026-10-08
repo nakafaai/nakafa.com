@@ -25,7 +25,7 @@ const ResponsePlacementLinkSchema = Schema.Struct({
   placement: tryoutAttemptPlacementsTable.Doc,
   sectionAttemptId: IdSchema("tryoutSectionAttempts"),
 });
-export type ResponsePlacementLink = typeof ResponsePlacementLinkSchema.Type;
+type ResponsePlacementLink = typeof ResponsePlacementLinkSchema.Type;
 /** Indexes one unique frozen section graph by immutable identity. */
 export const validateTryoutSectionSnapshots = Effect.fn(
   "tryouts.response.validateSectionSnapshots"
