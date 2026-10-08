@@ -21,7 +21,7 @@ import {
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 describe("contentRelease/material/sitemap", () => {
   it("batches sitemap buckets without repeating publication reads", async () => {
@@ -52,7 +52,7 @@ describe("contentRelease/material/sitemap", () => {
     const buckets = inventory.buckets.slice(0, MATERIAL_SITEMAP_BUCKET_LIMIT);
     assert(buckets.length === MATERIAL_SITEMAP_BUCKET_LIMIT);
     const previous = await Promise.all(
-      buckets.map((bucket) =>
+      Arr.map(buckets, (bucket) =>
         target.query(async (ctx) => {
           const page = await Effect.runPromise(
             readMaterialSitemap("en", [bucket]).pipe(
@@ -88,11 +88,15 @@ describe("contentRelease/material/sitemap", () => {
       };
     });
     expect(current.page?.routes).toEqual(
-      previous.flatMap(({ page }) => page?.routes ?? [])
+      Arr.flatMap(previous, ({ page }) => page?.routes ?? [])
     );
     expect(current.metrics.databaseQueries.used).toBe(2 + 2 * buckets.length);
     expect(current.metrics.bytesRead.used).toBeLessThan(
-      previous.reduce((sum, { metrics }) => sum + metrics.bytesRead.used, 0)
+      Arr.reduce(
+        previous,
+        0,
+        (sum, { metrics }) => sum + metrics.bytesRead.used
+      )
     );
     await expect(
       target.query(api.contentRelease.material.sitemapPage, {
@@ -274,7 +278,7 @@ describe("contentRelease/material/sitemap", () => {
       });
       expect(result.buckets.length).toBeGreaterThan(0);
       const pages = await Promise.all(
-        result.buckets.map((bucket) =>
+        Arr.map(result.buckets, (bucket) =>
           target.query((ctx) =>
             Effect.runPromise(
               readMaterialSitemap(appLocale, [bucket]).pipe(
@@ -289,7 +293,7 @@ describe("contentRelease/material/sitemap", () => {
           )
         )
       );
-      expect(pages.flatMap((page) => page?.routes ?? [])).toEqual(
+      expect(Arr.flatMap(pages, (page) => page?.routes ?? [])).toEqual(
         expect.arrayContaining([
           {
             lastModified: "2026-07-24",

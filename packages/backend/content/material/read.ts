@@ -9,7 +9,7 @@ import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
 import { encodePublicDelivery } from "@repo/backend/content/publication/exchange";
 import { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type AuthenticatedMaterial = NonNullable<
   Effect.Success<ReturnType<typeof resolveMaterialRoute>>["material"]
@@ -95,7 +95,10 @@ const assembleMaterialMetadata = Effect.fn(
     route.active.signed.manifest.activeAppLocales,
     route.active.sequence
   );
-  const alternateJson = alternates.map((material) => material.projectionJson);
+  const alternateJson = Arr.map(
+    alternates,
+    (material) => material.projectionJson
+  );
   return {
     activeManifestHash: route.active.manifestHash,
     activeAppLocales: Array.from(route.active.signed.manifest.activeAppLocales),

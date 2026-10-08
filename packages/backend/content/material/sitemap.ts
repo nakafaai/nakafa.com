@@ -7,7 +7,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { readMaterialPartition } from "@repo/backend/content/material/partition";
 import { MaterialSource } from "@repo/backend/content/material/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Lists non-empty deterministic partitions for visible published materials. */
 export const readMaterialBuckets = Effect.fn(
@@ -49,9 +49,9 @@ export const readMaterialBuckets = Effect.fn(
   }
   return {
     activeReleaseId,
-    buckets: rows.map(({ bucket }) => bucket),
+    buckets: Arr.map(rows, ({ bucket }) => bucket),
     managed: true,
-    materialCount: rows.reduce((total, { count }) => total + count, 0),
+    materialCount: Arr.reduce(rows, 0, (total, { count }) => total + count),
   };
 });
 
@@ -67,7 +67,7 @@ export const readMaterialSitemap = Effect.fn(
     return null;
   }
   return {
-    routes: partition.materials.map(({ projection }) => ({
+    routes: Arr.map(partition.materials, ({ projection }) => ({
       lastModified:
         projection.metadata.dateModified ?? projection.metadata.datePublished,
       publicPath: projection.publicPath,
