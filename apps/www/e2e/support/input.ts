@@ -56,10 +56,16 @@ export const activateUntilVisible = Effect.fn("NakafaE2E.activateUntilVisible")(
   }
 );
 
+/** The interactive surfaces a swipe starts on. */
+const SwipeSurfaceSchema = Schema.Literals([
+  "consent-drawer",
+  "contributor-drawer",
+]);
+
 /** One interactive surface did not expose measurable bounds for a gesture. */
 export class SurfaceBoundsMissing extends Schema.TaggedError<SurfaceBoundsMissing>()(
   "SurfaceBoundsMissing",
-  { surface: Schema.String }
+  { surface: SwipeSurfaceSchema }
 ) {
   get message() {
     return `Surface bounds are missing: surface=${this.surface}.`;
@@ -69,7 +75,7 @@ export class SurfaceBoundsMissing extends Schema.TaggedError<SurfaceBoundsMissin
 /** Reads the bounds a gesture starts from, failing by surface name when absent. */
 export const readBounds = Effect.fn("NakafaE2E.readBounds")(function* (
   locator: Locator,
-  surface: string
+  surface: typeof SwipeSurfaceSchema.Type
 ) {
   const bounds = yield* Effect.promise(() => locator.boundingBox());
   if (!bounds) {
