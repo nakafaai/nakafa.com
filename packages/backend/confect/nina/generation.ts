@@ -49,7 +49,6 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   const handle = (yield* Gateway).language({
     purpose: "chat",
     model: turn.modelId,
-    space: { kind: "personal", userId: turn.userId },
   });
   const agent = new Agent(components.nina, {
     name: "nina",

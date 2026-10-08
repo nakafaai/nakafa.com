@@ -78,6 +78,11 @@ export const ninaFailureFeedback = {
     action: "wait",
     report: false,
   },
+  NINA_UPLOAD_SIZE: {
+    message: "attachment-size",
+    action: "edit",
+    report: false,
+  },
   NINA_UPLOAD_FAILED: {
     message: "attachment-failed",
     action: "retry",

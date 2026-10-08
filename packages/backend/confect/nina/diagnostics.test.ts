@@ -25,8 +25,19 @@ it.effect.each([
     "a classified failure",
     failures["rate-limit"],
     {
-      gateway_error_type: "rate_limit_exceeded",
-      gateway_generation_id: "gen_test-1",
+      operation: "provider-busy",
+      gateway_status_code: 429,
+      gateway_retryable: true,
+    },
+  ],
+  [
+    "a classified failure that names its gateway type",
+    failures.invalid,
+    {
+      operation: "request-rejected",
+      gateway_error_type: "invalid_request_error",
+      gateway_status_code: 400,
+      gateway_retryable: false,
     },
   ],
   [
@@ -38,7 +49,11 @@ it.effect.each([
       responseBody: "private-secret",
       statusCode: 429,
     }),
-    {},
+    {
+      operation: "provider-busy",
+      gateway_status_code: 429,
+      gateway_retryable: true,
+    },
   ],
 ] as const)(
   "reports the routing facts of %s while redacting the prompt, response and credentials",
@@ -64,14 +79,11 @@ it.effect.each([
       const report = capture.mock.calls[0]?.[1];
       expect(report?.additionalProperties).toMatchObject({
         source: "nina-response",
-        operation: "provider-busy",
         gateway_model_id: "google/gemini-3.5-flash-lite",
-        gateway_status_code: 429,
-        gateway_retryable: true,
         ...facts,
       });
       expect(report?.error).toMatchObject({
-        name: "OperationalError(nina-response.provider-busy)",
+        name: `OperationalError(nina-response.${facts.operation})`,
         message: "Operational exception",
       });
       expect(encodeJson(report)).not.toContain("private");

@@ -3,7 +3,7 @@ import { Agent, listUIMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import { GatewayConfigurationError } from "@repo/backend/confect/gateway/key";
+import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
@@ -168,6 +168,33 @@ describe("Nina generation through the real Agent component", () => {
     expect(state.user?.credits).toBe(10);
     expect(provider.languageModel).not.toHaveBeenCalled();
   });
+
+  it.effect("records the gateway cost a call reports on its usage row", () =>
+    Effect.gen(function* () {
+      provider.languageModel.mockReturnValue(
+        new MockLanguageModelV4({
+          doStream: ninaStream([
+            { type: "stream-start", warnings: [] },
+            { type: "text-start", id: "answer" },
+            { type: "text-delta", id: "answer", delta: "A recorded answer." },
+            { type: "text-end", id: "answer" },
+            {
+              type: "finish",
+              finishReason: { unified: "stop", raw: "stop" },
+              usage: ninaUsage,
+              providerMetadata: { convexGateway: { cost: 0.25 } },
+            },
+          ]),
+        })
+      );
+      const f = yield* Effect.promise(() => fixture());
+      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
+      const state = yield* Effect.promise(f.inspect);
+      expect(state.turn?.usage).toEqual([
+        expect.objectContaining({ agent: "nina", calls: 1, cost: 0.25 }),
+      ]);
+    })
+  );
 
   it.effect("refunds a failure before the Agent stream starts", () =>
     Effect.gen(function* () {
@@ -449,9 +476,6 @@ describe("Nina generation through the real Agent component", () => {
       })
     );
     await f.t.action(run, { turnId: f.turnId });
-    expect(
-      languageModel.doStreamCalls[0]?.providerOptions?.gateway?.tags
-    ).toEqual(["space:personal", "purpose:chat"]);
     const prompt = encodeJson(languageModel.doStreamCalls[0]?.prompt);
     expect(prompt).toContain("# Conversation Summary");
     expect(prompt).toContain("- The learner practiced limits.");

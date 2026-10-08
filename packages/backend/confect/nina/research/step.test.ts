@@ -1,41 +1,23 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  prepareGoogleGroundingStep,
-  prepareResearchEvidenceStep,
-} from "@repo/backend/confect/nina/research/step";
-import type { ModelMessage } from "ai";
-
-const messages = [
-  { role: "user", content: "research latest climate data" },
-] satisfies ModelMessage[];
+import { prepareResearchEvidenceStep } from "@repo/backend/confect/nina/research/step";
 
 describe("research agent step state", () => {
-  it("starts with inspectable web search before provider grounding", () => {
-    const step = prepareResearchEvidenceStep({
-      hasWebSearchToolCall: false,
-    });
-
-    expect(step).toEqual({
+  it("forces one inspectable web search before the evidence notes", () => {
+    expect(
+      prepareResearchEvidenceStep({
+        hasWebSearchToolCall: false,
+      })
+    ).toEqual({
       activeTools: ["webSearch"],
       toolChoice: { toolName: "webSearch", type: "tool" },
     });
+  });
+
+  it("offers no tools once the search has run", () => {
     expect(
       prepareResearchEvidenceStep({
         hasWebSearchToolCall: true,
       })
-    ).toBeUndefined();
-  });
-
-  it("enables only Google Search grounding after Firecrawl", () => {
-    const step = prepareGoogleGroundingStep(messages);
-
-    expect(step.activeTools).toEqual(["google_search"]);
-    expect(step.toolChoice).toBe("required");
-    expect(step.messages.at(-1)).toEqual(
-      expect.objectContaining({
-        content: expect.stringContaining("Firecrawl webSearch is complete"),
-        role: "user",
-      })
-    );
+    ).toEqual({ activeTools: [] });
   });
 });
