@@ -14,7 +14,7 @@ import {
   makeQuranSurah,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const source = {
   activeManifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
@@ -36,9 +36,9 @@ describe("signed Quran passage decoder", () => {
         { appLocale: "en", surahNumber: 1 }
       );
 
-      expect(reference.verses.map((verse) => verse.number.inSurah)).toEqual([
-        2, 3,
-      ]);
+      expect(
+        Arr.map(reference.verses, (verse) => verse.number.inSurah)
+      ).toEqual([2, 3]);
       expect(reference.sources.translation.id).toBe("quranenc-english");
       expect(reference.tafsirAccess).toMatchObject({
         appLocale: "en",

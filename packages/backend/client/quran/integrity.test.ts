@@ -3,10 +3,11 @@ import {
   hasExactQuranVerseRange,
   hasExpectedQuranNeighbors,
 } from "@repo/backend/client/quran/integrity";
+import { Array as Arr } from "effect";
 
 /** Builds the minimal validator-independent verse identity used by integrity checks. */
 function verses(...numbers: number[]) {
-  return numbers.map((inSurah) => ({ number: { inSurah } }));
+  return Arr.map(numbers, (inSurah) => ({ number: { inSurah } }));
 }
 
 /** Builds the minimal surah identity used by neighboring-page checks. */

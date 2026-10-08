@@ -1,5 +1,6 @@
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
+import { Array as Arr } from "effect";
 
 type NumberedSurah = Pick<PublishedQuranSurah, "number">;
 type VerseNumber = Pick<QuranRuntimeVerse["number"], "inSurah">;
@@ -18,7 +19,8 @@ export function hasExactQuranVerseRange(
   ) {
     return false;
   }
-  return verses.every(
+  return Arr.every(
+    verses,
     (verse, index) => verse.number.inSurah === fromVerse + index
   );
 }
