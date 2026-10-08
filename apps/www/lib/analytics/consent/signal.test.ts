@@ -102,6 +102,54 @@ describe("browser analytics privacy signal", () => {
     })
   );
 
+  it.effect("ends a hung write at its 10 second deadline and retries it", () =>
+    Effect.gen(function* () {
+      const setAccountConsent = vi
+        .fn(() => Promise.resolve(Result.succeed(revokedDecision)))
+        .mockImplementationOnce(() => new Promise<never>(() => undefined));
+      const fiber = yield* Effect.forkChild(
+        revokeAccountAnalyticsGrant(
+          setAccountConsent,
+          expectedUserId,
+          Effect.succeed(true)
+        )
+      );
+
+      // The hung write ends at 10 seconds, and the retry waits 10 more.
+      yield* TestClock.adjust(Duration.seconds(10));
+      expect(setAccountConsent).toHaveBeenCalledOnce();
+      yield* TestClock.adjust(Duration.seconds(10));
+
+      expect(Option.getOrUndefined(yield* Fiber.join(fiber))).toEqual(
+        revokedDecision
+      );
+      expect(setAccountConsent).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect("surfaces a typed failure after three hung writes", () =>
+    Effect.gen(function* () {
+      const setAccountConsent = vi.fn(
+        () => new Promise<never>(() => undefined)
+      );
+      const fiber = yield* Effect.forkChild(
+        revokeAccountAnalyticsGrant(
+          setAccountConsent,
+          expectedUserId,
+          Effect.succeed(true)
+        ).pipe(Effect.flip)
+      );
+
+      // The attempts end at 10, 30, and 50 seconds, with 10 seconds between them.
+      yield* TestClock.adjust(Duration.seconds(50));
+
+      expect(yield* Fiber.join(fiber)).toBeInstanceOf(
+        AccountConsentPersistenceError
+      );
+      expect(setAccountConsent).toHaveBeenCalledTimes(3);
+    })
+  );
+
   it.effect("does not retry an authoritative account rejection", () =>
     Effect.gen(function* () {
       const setAccountConsent = vi.fn(() =>

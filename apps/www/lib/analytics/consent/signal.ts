@@ -7,9 +7,10 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   hasBrowserPrivacySignal,
 } from "@repo/analytics/consent";
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import type refs from "@repo/backend/confect/_generated/refs";
 
-import { Effect, Option, Schedule, Schema } from "effect";
+import { Data, Effect, Option, Schedule, Schema } from "effect";
 
 const accountConsentPersistenceFailedCode =
   "ACCOUNT_CONSENT_PERSISTENCE_FAILED";
@@ -74,6 +75,11 @@ function toAccountConsentWriteError(cause: unknown) {
   });
 }
 
+/** One consent write that did not answer within its attempt deadline. */
+class AccountConsentWriteDeadline extends Data.TaggedError(
+  "AccountConsentWriteDeadline"
+) {}
+
 const persistAccountAnalyticsConsent = Effect.fnUntraced(function* (
   setAccountConsent: SetAccountConsent,
   expectedUserId: SetAccountConsentArgs["expectedUserId"],
@@ -83,6 +89,14 @@ const persistAccountAnalyticsConsent = Effect.fnUntraced(function* (
     catch: toAccountConsentWriteError,
     try: () => setAccountConsent({ decision, expectedUserId }),
   }).pipe(
+    // A hung write ends at its deadline, so the retry schedule can run again.
+    Effect.timeoutOrElse({
+      duration: NETWORK_ATTEMPT_DEADLINE,
+      orElse: () =>
+        Effect.fail(
+          toAccountConsentWriteError(new AccountConsentWriteDeadline())
+        ),
+    }),
     Effect.flatMap((result) =>
       Effect.fromResult(result).pipe(
         Effect.mapError(
