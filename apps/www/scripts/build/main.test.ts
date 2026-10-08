@@ -47,6 +47,7 @@ describe("build entry", () => {
         yield* entry;
 
         expect(process.exitCode).toBe(3);
-      })
+      }),
+    15_000
   );
 });

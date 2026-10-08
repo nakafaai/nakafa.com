@@ -173,6 +173,7 @@ function trackFinish<A, E>(
   return watch.pipe(Effect.onExit(() => Ref.set(finished, true)));
 }
 
+// Silence limits of 2 or 5 seconds keep these tests short; production waits five minutes.
 describe("build watch", () => {
   it.live(
     "passes output through unchanged and returns a successful status",
@@ -192,21 +193,25 @@ describe("build watch", () => {
         expect(status).toBe(0);
         expect(yield* Ref.get(streams.stdout)).toBe("compiled\n");
         expect(yield* Ref.get(streams.stderr)).toBe("warning\n");
-      })
+      }),
+    15_000
   );
 
-  it.live("returns the status of a failing command", () =>
-    Effect.gen(function* () {
-      const streams = yield* captureStreams();
-      const status = yield* runWatch(streams.stdio, {
-        args: ["-e", "process.stdout.write('\\n'); process.exit(3)"],
-        command: process.execPath,
-        heartbeatInterval: Duration.seconds(15),
-        stallLimit: Duration.seconds(5),
-      });
+  it.live(
+    "returns the status of a failing command",
+    () =>
+      Effect.gen(function* () {
+        const streams = yield* captureStreams();
+        const status = yield* runWatch(streams.stdio, {
+          args: ["-e", "process.stdout.write('\\n'); process.exit(3)"],
+          command: process.execPath,
+          heartbeatInterval: Duration.seconds(15),
+          stallLimit: Duration.seconds(5),
+        });
 
-      expect(status).toBe(3);
-    })
+        expect(status).toBe(3);
+      }),
+    15_000
   );
 
   it.live(
@@ -236,7 +241,8 @@ describe("build watch", () => {
         expect(compiling).toBe("compiling");
         yield* expectProcessEnded(parent);
         yield* expectProcessEnded(grandchild);
-      })
+      }),
+    15_000
   );
 
   it.live(
@@ -262,18 +268,24 @@ describe("build watch", () => {
     15_000
   );
 
-  it.live("reads a character split across two chunks in the stall line", () =>
-    Effect.gen(function* () {
-      const streams = yield* captureStreams();
-      const failure = yield* runWatch(streams.stdio, {
-        args: ["-e", SPLIT_CHARACTER],
-        command: process.execPath,
-        heartbeatInterval: Duration.seconds(15),
-        stallLimit: Duration.seconds(2),
-      }).pipe(Effect.flip);
+  it.live(
+    "reads a character split across two chunks in the stall line",
+    () =>
+      Effect.gen(function* () {
+        const streams = yield* captureStreams();
+        const failure = yield* runWatch(streams.stdio, {
+          args: ["-e", SPLIT_CHARACTER],
+          command: process.execPath,
+          heartbeatInterval: Duration.seconds(15),
+          stallLimit: Duration.seconds(2),
+        }).pipe(Effect.flip);
 
-      expectStalled(failure, "build stalled: no output for 2s; last output: €");
-    })
+        expectStalled(
+          failure,
+          "build stalled: no output for 2s; last output: €"
+        );
+      }),
+    15_000
   );
 
   it.live(
@@ -296,37 +308,44 @@ describe("build watch", () => {
 });
 
 describe("build status", () => {
+  // The 2 second silence limit keeps these tests short; production waits five minutes.
   const cadence = {
     heartbeatInterval: Duration.seconds(15),
     stallLimit: Duration.seconds(2),
   };
 
-  it.live("returns the status of a failing build", () =>
-    Effect.gen(function* () {
-      const streams = yield* captureStreams([
-        process.execPath,
-        "-e",
-        "process.exit(3)",
-      ]);
+  it.live(
+    "returns the status of a failing build",
+    () =>
+      Effect.gen(function* () {
+        const streams = yield* captureStreams([
+          process.execPath,
+          "-e",
+          "process.exit(3)",
+        ]);
 
-      expect(yield* runBuild(streams.stdio, cadence)).toBe(3);
-      expect(yield* Ref.get(streams.stderr)).toBe("");
-    })
+        expect(yield* runBuild(streams.stdio, cadence)).toBe(3);
+        expect(yield* Ref.get(streams.stderr)).toBe("");
+      }),
+    15_000
   );
 
-  it.live("writes one stall line to standard error and returns status 1", () =>
-    Effect.gen(function* () {
-      const streams = yield* captureStreams([
-        process.execPath,
-        "-e",
-        SILENT_TREE,
-      ]);
+  it.live(
+    "writes one stall line to standard error and returns status 1",
+    () =>
+      Effect.gen(function* () {
+        const streams = yield* captureStreams([
+          process.execPath,
+          "-e",
+          SILENT_TREE,
+        ]);
 
-      expect(yield* runBuild(streams.stdio, cadence)).toBe(1);
-      expect(yield* Ref.get(streams.stderr)).toBe(
-        "build stalled: no output for 2s; last output: compiling\n"
-      );
-    })
+        expect(yield* runBuild(streams.stdio, cadence)).toBe(1);
+        expect(yield* Ref.get(streams.stderr)).toBe(
+          "build stalled: no output for 2s; last output: compiling\n"
+        );
+      }),
+    15_000
   );
 
   it.live("fails without starting anything when no command is named", () =>
