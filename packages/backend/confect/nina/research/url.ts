@@ -69,6 +69,7 @@ export function judgeAddress(text: string): Option.Option<AddressVerdict> {
  * RFC 4291 section 2.4: every global unicast IPv6 address is inside 2000::/3.
  * An address outside it is loopback, link-local, unique-local, multicast,
  * IPv4-compatible, a translation prefix, or reserved space, so it is refused.
+ * An IPv4-mapped address never reaches this rule: it takes the IPv4 verdict.
  */
 const globalUnicastNetwork = IpNetwork.fromStringUnsafe("2000::/3");
 
