@@ -172,15 +172,23 @@ const expectStableCoordinateSystem = Effect.fn(
   const card = page.locator(CARD).filter({
     hasText: MANY_SOLUTIONS_TITLE,
   });
+  const scene = card.locator(LINE_SCENE);
+  const canvas = scene.locator("canvas");
   const footer = card.locator(COORDINATE_CONTROLS);
   const gridButton = footer.getByRole("button", { name: "Kisi" });
   const rotationButton = footer.getByRole("button", {
     name: "Rotasi otomatis",
   });
 
-  yield* Effect.promise(() => expect(card).toHaveCount(1));
-  yield* revealCardContent(card, LINE_SCENE);
-  const canvas = yield* revealSceneCard(card);
+  yield* Effect.promise(() =>
+    expect(async () => {
+      await expect(card).toHaveCount(1);
+      await expect(scene).toBeAttached();
+      await card.scrollIntoViewIfNeeded();
+      await scene.scrollIntoViewIfNeeded();
+      expect(await canvas.isVisible()).toBe(true);
+    }).toPass({ timeout: revealTimeoutMilliseconds })
+  );
   yield* Effect.promise(() =>
     expect(gridButton).toHaveAttribute("aria-pressed", "true")
   );
