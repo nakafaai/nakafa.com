@@ -3,7 +3,10 @@
 import type { Ref } from "@confect/core";
 import { type OptimisticUpdate, useAction, useMutation } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { NinaFocusInput } from "@repo/backend/confect/nina/contract/focus";
+import type {
+  NinaPageInput,
+  NinaPrompt,
+} from "@repo/backend/confect/nina/turns.spec";
 import {
   NinaFileType,
   NinaUploadError,
@@ -38,10 +41,9 @@ import {
 } from "@/lib/utils/browser";
 
 type Start = typeof refs.public.nina.turns.start;
-export type NinaDraft = PromptInputMessage & {
-  focus?: NinaFocusInput;
-  text: string;
-};
+export type NinaDraft = PromptInputMessage &
+  Pick<typeof NinaPageInput.Type, "focus"> &
+  Pick<typeof NinaPrompt.Type, "text">;
 
 /** Encodes a payload as JSON text, so two payloads match when their text does. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));

@@ -33,7 +33,7 @@ type OnResponseChange = (selection: TryoutResponseSelection | null) => void;
 type RenderResponseLabel = (value: TryoutResponseFieldLabel) => ReactNode;
 
 /** Props of one response field set: its callbacks arrive as separate props. */
-interface TryoutResponseFieldsProps {
+export interface TryoutResponseFieldsProps {
   onChange: OnResponseChange;
   renderLabel: RenderResponseLabel;
   value: {

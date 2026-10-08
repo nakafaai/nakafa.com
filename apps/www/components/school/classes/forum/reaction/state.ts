@@ -1,14 +1,16 @@
-import type { forumReactionUsersValidator } from "@repo/backend/confect/classes/forums/validators";
+import type {
+  forumPostWithMetadataValidator,
+  forumReactionUsersValidator,
+} from "@repo/backend/confect/classes/forums/validators";
 import type { schoolClassReactionCountValidator } from "@repo/backend/confect/classes/schema";
 
 type ReactionCount = typeof schoolClassReactionCountValidator.Type;
 type ReactionPreview = typeof forumReactionUsersValidator.Type;
+type ReactionPost = typeof forumPostWithMetadataValidator.Type;
 
-interface ReactionState {
-  myReactions: string[];
-  reactionCounts: ReactionCount[];
-  reactionUsers?: ReactionPreview[];
-}
+/** Reaction fields of one forum post; its reactor previews may be absent. */
+type ReactionState = Pick<ReactionPost, "myReactions" | "reactionCounts"> &
+  Partial<Pick<ReactionPost, "reactionUsers">>;
 
 /** Apply one reaction delta while removing empty counters. */
 function updateCounts(

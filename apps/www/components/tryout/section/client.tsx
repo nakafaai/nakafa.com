@@ -40,19 +40,17 @@ import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 type SectionState = TryoutSectionInitialState | null;
 
 interface TryoutSectionPageClientProps {
-  binding: TryoutSectionRouteBinding;
+  binding: {
+    attemptId: Id<"tryoutAttempts">;
+    initialState: TryoutSectionInitialState;
+    startHref: string | null;
+  } | null;
   children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
   page: TryoutSectionPage;
   route: TryoutSectionRoute;
   setHref: string;
 }
-
-type TryoutSectionRouteBinding = {
-  attemptId: Id<"tryoutAttempts">;
-  initialState: TryoutSectionInitialState;
-  startHref: string | null;
-} | null;
 
 interface TryoutSectionBodyProps {
   children: ReactNode;
@@ -122,7 +120,7 @@ function LiveTryoutSectionPage({
   route,
   setHref,
 }: TryoutSectionPageClientProps & {
-  binding: NonNullable<TryoutSectionRouteBinding>;
+  binding: NonNullable<TryoutSectionPageClientProps["binding"]>;
 }) {
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const locale = useLocale();
@@ -371,7 +369,7 @@ function TryoutSectionRuntimeContent({
 
 /** Selects how a start action leaves a public or retained section route. */
 function getStartDestination(
-  binding: TryoutSectionRouteBinding,
+  binding: TryoutSectionPageClientProps["binding"],
   route: TryoutSectionRoute
 ): TryoutStartDestination | null {
   if (!binding) {

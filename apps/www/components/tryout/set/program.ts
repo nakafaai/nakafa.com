@@ -18,12 +18,6 @@ class TryoutClientRequestError extends Data.TaggedError(
   readonly cause: unknown;
 }> {}
 
-/** Arguments and failure copy of one free start, without its callbacks. */
-interface StartAttemptProgramInput {
-  readonly args: StartAttemptArgs;
-  readonly failureMessage: string;
-}
-
 /** Calls the Convex start mutation with the attempt arguments. */
 type StartAttemptMutation = (
   args: StartAttemptArgs
@@ -34,12 +28,12 @@ type StartAttemptSuccess = (result: StartAttemptResult) => Effect.Effect<void>;
 
 /** Runs the free start mutation and reports transport or source failures. */
 export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
-  (
-    input: StartAttemptProgramInput & {
-      readonly mutation: StartAttemptMutation;
-      readonly onSuccess: StartAttemptSuccess;
-    }
-  ) =>
+  (input: {
+    readonly args: StartAttemptArgs;
+    readonly failureMessage: string;
+    readonly mutation: StartAttemptMutation;
+    readonly onSuccess: StartAttemptSuccess;
+  }) =>
     Effect.tryPromise({
       try: () => input.mutation(input.args),
       catch: (cause) => new TryoutClientRequestError({ cause }),

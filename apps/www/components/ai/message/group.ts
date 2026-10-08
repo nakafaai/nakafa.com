@@ -10,28 +10,32 @@ export type AnswerPart = Extract<MessagePart, TextUIPart>;
 /** Every rendered part other than answer text. */
 export type OtherPart = Exclude<MessagePart, StepStartUIPart | TextUIPart>;
 
-interface PartEntry {
-  readonly key: string;
-  readonly part: OtherPart;
-  readonly type: "part";
+/** Builds the entry of one rendered part other than answer text. */
+function createPartEntry(key: string, part: OtherPart) {
+  return { key, part, type: "part" } as const;
 }
 
-interface AnswerEntry {
-  readonly key: string;
-  readonly part: AnswerPart;
-  /** Response parts after the answer, such as its sources. */
-  readonly trailing: PartEntry[];
-  readonly type: "answer";
+/** Builds the entry of one answer, which owns the response parts after it. */
+function createAnswerEntry(
+  key: string,
+  part: AnswerPart,
+  trailing: PartEntry[]
+) {
+  return { key, part, trailing, type: "answer" } as const;
 }
 
-type MessageEntry = AnswerEntry | PartEntry;
-
-/** One run of consecutive work steps or answer parts. */
-interface MessageGroup {
-  readonly entries: MessageEntry[];
-  readonly key: string;
-  readonly kind: "activity" | "response";
+/** Builds one run of consecutive work steps or answer parts. */
+function createMessageGroup(
+  key: string,
+  kind: "activity" | "response",
+  entries: MessageEntry[]
+) {
+  return { entries, key, kind } as const;
 }
+
+type PartEntry = ReturnType<typeof createPartEntry>;
+type MessageEntry = ReturnType<typeof createAnswerEntry> | PartEntry;
+type MessageGroup = ReturnType<typeof createMessageGroup>;
 
 /**
  * Groups a message's parts into activity and response sections in Agent order.
@@ -62,11 +66,11 @@ export function groupMessageParts(parts: readonly MessagePart[]) {
     const key = tool ? part.toolCallId : `${part.type}-${count}`;
     const entry: MessageEntry =
       part.type === "text"
-        ? { key, part, trailing: [], type: "answer" }
-        : { key, part, type: "part" };
+        ? createAnswerEntry(key, part, [])
+        : createPartEntry(key, part);
     const group = groups.at(-1);
     if (group?.kind !== kind) {
-      groups.push({ entries: [entry], key, kind });
+      groups.push(createMessageGroup(key, kind, [entry]));
       continue;
     }
     const previous = group.entries.at(-1);

@@ -38,9 +38,7 @@ import { getLocale } from "@/lib/utils/date";
 type HistoryQuery = typeof refs.public.tryouts.queries.history.bySet;
 type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
 type HistoryRow = Ref.Returns<HistoryQuery>["page"][number];
-type ScoredHistoryRow = HistoryRow & {
-  score: NonNullable<HistoryRow["score"]>;
-};
+type ScoredHistoryRow = TryoutAttemptHistoryProps["value"]["attempts"][number];
 type ScoredAttempt = Pick<
   ScoredHistoryRow,
   "attemptId" | "attemptNumber" | "score" | "startedAt" | "status"
@@ -54,22 +52,21 @@ interface TryoutAttemptResultsProps {
   };
 }
 
-interface AttemptOption {
-  attemptId: HistoryRow["attemptId"];
-  label: string;
-  subtitle: string;
-}
-
-/** Renders one selectable attempt row inside the history picker. */
-function TryoutAttemptHistoryItem({
-  value,
-}: {
+/** Props of one attempt row: `value.attempt` is the option the picker lists. */
+interface TryoutAttemptHistoryItemProps {
   value: {
-    attempt: AttemptOption;
+    attempt: {
+      attemptId: HistoryRow["attemptId"];
+      label: string;
+      subtitle: string;
+    };
     isSelected: boolean;
     onChoose: () => void;
   };
-}) {
+}
+
+/** Renders one selectable attempt row inside the history picker. */
+function TryoutAttemptHistoryItem({ value }: TryoutAttemptHistoryItemProps) {
   return (
     <AutocompleteItem
       className="min-h-8 cursor-pointer py-1.5 text-sm sm:min-h-8"
@@ -93,18 +90,21 @@ function TryoutAttemptHistoryItem({
   );
 }
 
-/** Renders the prior production attempt-history picker styling. */
-function TryoutAttemptHistory({
-  value,
-}: {
+/** Props of the attempt-history picker: `value` holds the scored attempts and the selection. */
+interface TryoutAttemptHistoryProps {
   value: {
-    attempts: readonly ScoredHistoryRow[];
+    attempts: readonly (HistoryRow & {
+      score: NonNullable<HistoryRow["score"]>;
+    })[];
     locale: HistoryIdentity["locale"];
     onLoadMore: (() => void) | undefined;
     onChoose: (attemptId: HistoryRow["attemptId"]) => void;
     selectedAttemptId: HistoryRow["attemptId"];
   };
-}) {
+}
+
+/** Renders the prior production attempt-history picker styling. */
+function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   const tTryouts = useTranslations("Tryouts");
   const firstAttempt = value.attempts.at(0);
 

@@ -3,8 +3,8 @@ import type refs from "@repo/backend/confect/_generated/refs";
 import { select } from "@repo/backend/confect/response/selection";
 import { MutableHashMap, MutableHashSet, Option, Result } from "effect";
 
+import type { TryoutResponseFieldsProps } from "@/components/tryout/runtime/response/fields.client";
 import type {
-  TryoutRenderableResponseSpec,
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
@@ -16,10 +16,11 @@ export type TryoutResponseSelection = NonNullable<
   TryoutRuntimeQuestion["response"]
 >["selection"];
 
-interface TryoutResponseState {
-  readonly responseSpec: TryoutRenderableResponseSpec;
-  readonly selection: TryoutResponseSelection | null;
-}
+/** The response spec and selection that the response helpers read from one field set. */
+type TryoutResponseState = Pick<
+  TryoutResponseFieldsProps["value"],
+  "responseSpec" | "selection"
+>;
 
 /** Applies one local response while Convex remains authoritative for time. */
 export function applyOptimisticTryoutResponse(
