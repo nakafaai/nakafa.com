@@ -1,20 +1,22 @@
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import { Data, Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
+/** Locale values accepted by next-intl routing and public route projection. */
+const LocaleSchema = Schema.Literals(routing.locales);
+
 /** Browser route-localization request accepted by the resolver. */
 const LocalizedHrefInputSchema = Schema.Struct({
   href: Schema.String,
-  locale: ActiveAppLocaleCodeSchema,
+  locale: LocaleSchema,
 });
 type LocalizedHrefInput = typeof LocalizedHrefInputSchema.Type;
 
 /** Normalized browser href after stripping one optional leading locale segment. */
 const ParsedLocalizedHrefSchema = Schema.Struct({
-  currentLocale: Schema.UndefinedOr(ActiveAppLocaleCodeSchema),
+  currentLocale: Schema.UndefinedOr(LocaleSchema),
   hash: Schema.String,
   publicPath: Schema.String,
   search: Schema.String,

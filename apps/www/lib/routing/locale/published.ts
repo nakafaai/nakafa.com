@@ -1,8 +1,7 @@
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { isRenderableCurriculumLevel } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import type { routing } from "@repo/internationalization/src/routing";
+import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Option, Schema } from "effect";
 import {
   readPublishedArticleCategory,
@@ -24,10 +23,12 @@ import {
 
 type Locale = (typeof routing.locales)[number];
 
+const LocaleSchema = Schema.Literals(routing.locales);
+
 const PublishedLocalizedHrefInputSchema = Schema.Struct({
-  currentLocale: ActiveAppLocaleCodeSchema,
+  currentLocale: LocaleSchema,
   hash: Schema.String,
-  locale: ActiveAppLocaleCodeSchema,
+  locale: LocaleSchema,
   publicPath: Schema.String,
   search: Schema.String,
 });
