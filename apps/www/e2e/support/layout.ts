@@ -2,6 +2,23 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Number as Num } from "effect";
 
 /**
+ * Records, from the first script on, the start time and value of every layout
+ * shift the browser reports, in the page global `key`. Pass it to
+ * `page.addInitScript` before the page loads, with the global's name.
+ */
+export function recordLayoutShifts(key: string) {
+  const shifts: { time: number; value: number }[] = [];
+  Object.defineProperty(window, key, { value: shifts });
+  new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+      if ("value" in entry && typeof entry.value === "number") {
+        shifts.push({ time: entry.startTime, value: entry.value });
+      }
+    }
+  }).observe({ buffered: true, type: "layout-shift" });
+}
+
+/**
  * Reads every layout shift the page has recorded since navigation, and whether
  * it moved something outside every visual card. A buffered observer holds
  * every recorded shift as soon as it observes, so taking its records reads
