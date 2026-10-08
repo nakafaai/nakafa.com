@@ -1,7 +1,6 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   encodeRendererJson,
@@ -22,11 +21,8 @@ import {
 import { convexTest } from "convex-test";
 import { Cause, Effect, Exit, Schema } from "effect";
 
-const RendererJson = Schema.fromJsonString(RendererManifestEnvelopeSchema);
-const PrettyRendererJson = Schema.fromJsonString(
-  RendererManifestEnvelopeSchema,
-  { space: 2 }
-);
+const PlainJson = Schema.fromJsonString(Schema.Unknown);
+const PrettyJson = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 
 /** Returns the complete failure cause from one rejected Convex test program. */
 const failureCause = Effect.fn("test.runtime.failureCause")(function* (
@@ -218,8 +214,8 @@ describe("tryouts/runtime signed storage", () => {
           expect(stored).not.toBeNull();
           if (stored) {
             await ctx.db.patch("tryoutRuntimeBundles", stored._id, {
-              rendererJson: Schema.encodeSync(PrettyRendererJson)(
-                Schema.decodeSync(RendererJson)(stored.rendererJson)
+              rendererJson: Schema.encodeSync(PrettyJson)(
+                Schema.decodeSync(PlainJson)(stored.rendererJson)
               ),
             });
           }

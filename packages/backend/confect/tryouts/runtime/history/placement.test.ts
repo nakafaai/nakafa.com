@@ -1,17 +1,16 @@
 import { Ref } from "@confect/core";
 import { RegisteredConvexFunction } from "@confect/server";
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
-import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { decodeArtifactJson } from "@repo/backend/confect/contentRelease/parse";
-import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
+const PlainJson = Schema.fromJsonString(Schema.Unknown);
 const readReference = Ref.getFunctionReference(
   refs.public.tryouts.queries.content.getBatch
 );
@@ -309,11 +308,11 @@ describe("tryouts/runtime/history/placement", () => {
             )
           );
           await ctx.db.patch(stored._id, {
-            artifactJson: encodeArtifactJson({
+            artifactJson: Schema.encodeSync(PlainJson)({
               ...artifact,
               payload: {
                 ...artifact.payload,
-                artifactLocale: ArtifactLocaleSchema.make("id"),
+                artifactLocale: "id",
               },
             }),
           });

@@ -33,6 +33,7 @@ const REUSED_RELEASE_ID = ReleaseIdSchema.make("release-tryout-reused");
 const SignedReleaseJsonSchema = Schema.fromJsonString(
   SignedContentReleaseSchema
 );
+const PlainJson = Schema.fromJsonString(Schema.Unknown);
 describe("tryouts/start/source", () => {
   it.effect(
     "starts from signed rows after filesystem ownership is removed",
@@ -91,7 +92,7 @@ describe("tryouts/start/source", () => {
           });
           await ctx.db.patch("contentReleases", release._id, {
             releaseId: REUSED_RELEASE_ID,
-            releaseJson: Schema.encodeSync(SignedReleaseJsonSchema)(reused),
+            releaseJson: Schema.encodeSync(PlainJson)(reused),
           });
           await ctx.db.patch("contentState", state._id, {
             activeManifestHash: reused.manifestHash,
