@@ -1,29 +1,38 @@
 import { getColor } from "@repo/design-system/lib/color";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
-export type AccelerationCaseId = "speed-up" | "steady" | "slow-down";
+const AccelerationCaseIdSchema = Schema.Literals([
+  "speed-up",
+  "steady",
+  "slow-down",
+]);
+export type AccelerationCaseId = typeof AccelerationCaseIdSchema.Type;
 
-export interface AccelerationCase {
-  color: string;
-  id: AccelerationCaseId;
-  t0: number;
-  t1: number;
-  v0: number;
-  v1: number;
-}
+const AccelerationCaseSchema = Schema.Struct({
+  color: Schema.String,
+  id: AccelerationCaseIdSchema,
+  t0: Schema.Finite,
+  t1: Schema.Finite,
+  v0: Schema.Finite,
+  v1: Schema.Finite,
+});
+export type AccelerationCase = typeof AccelerationCaseSchema.Type;
 
-interface MotionPoint {
-  time: number;
-  velocity: number;
-}
+const MotionPointSchema = Schema.Struct({
+  time: Schema.Finite,
+  velocity: Schema.Finite,
+});
+type MotionPoint = typeof MotionPointSchema.Type;
 
-export interface AccelerationLabels {
-  chooseCase: string;
-  contextLine: string;
-  scenarioNames: Record<AccelerationCaseId, string>;
-  timeAxis: string;
-  velocityAxis: string;
-}
+const AccelerationLabelsSchema = Schema.Struct({
+  chooseCase: Schema.String,
+  contextLine: Schema.String,
+  scenarioNames: Schema.Record(AccelerationCaseIdSchema, Schema.String),
+  timeAxis: Schema.String,
+  velocityAxis: Schema.String,
+});
+export type AccelerationLabels = typeof AccelerationLabelsSchema.Type;
 
 export interface AccelerationLabLabels {
   chooseCase: string;
@@ -35,12 +44,6 @@ export interface AccelerationLabLabels {
   };
   scenarioNames: Record<AccelerationCaseId, ReactNode>;
   viewLabel: string;
-}
-
-export interface AccelerationLabProps {
-  description: ReactNode;
-  labels: AccelerationLabLabels;
-  title: ReactNode;
 }
 
 export const ACCELERATION_ROCKET_MODEL_PATH =

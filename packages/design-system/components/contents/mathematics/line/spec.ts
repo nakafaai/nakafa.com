@@ -1,96 +1,116 @@
-import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
-import type { LineLabel } from "@repo/design-system/components/three/line-equation";
-import type { LineEndpoints } from "@repo/design-system/lib/geometry/endpoint";
-import type { ReactNode } from "react";
+import type {
+  Props as LineEquationProps,
+  LineLabel,
+} from "@repo/design-system/components/three/line-equation";
+import { LineEndpointsSchema } from "@repo/design-system/lib/geometry/endpoint";
+import { Schema } from "effect";
 
-export interface LinePoint {
-  x: number;
-  y: number;
-  z: number;
-}
+const LinePointSchema = Schema.Struct({
+  x: Schema.Finite,
+  y: Schema.Finite,
+  z: Schema.Finite,
+});
+export type LinePoint = typeof LinePointSchema.Type;
 
 /** Serializable label contract passed from the server card to WebGL. */
-export interface ResolvedLineLabel {
-  anchorX?: LineLabel["anchorX"];
-  at?: number;
-  fontSize?: ThreeFontSize | number;
-  offset?: [number, number, number];
-  text: ReactNode;
-}
+export type ResolvedLineLabel = LineLabel;
+
+/**
+ * Serializable line fields passed from the server card to WebGL. Labels are not
+ * in this Schema: a Schema cannot describe the React nodes they hold, so
+ * `ResolvedLine` takes their type from the WebGL line component instead.
+ */
+const ResolvedLineFieldsSchema = Schema.Struct({
+  color: Schema.optionalKey(Schema.String),
+  cone: Schema.optionalKey(
+    Schema.Struct({
+      position: Schema.Literals(["start", "end", "both"]),
+      size: Schema.optionalKey(Schema.Finite),
+    })
+  ),
+  curvePoints: Schema.optionalKey(Schema.Finite),
+  /** Membership of exact branch endpoints, independent of sample markers. */
+  endpoints: Schema.optionalKey(LineEndpointsSchema),
+  lineWidth: Schema.optionalKey(Schema.Finite),
+  /** Original authored samples that retain visible point markers. */
+  pointIndices: Schema.optionalKey(Schema.Array(Schema.Finite)),
+  /** The WebGL line component declares its points as a mutable array. */
+  points: Schema.mutable(Schema.Array(LinePointSchema)),
+  showPoints: Schema.optionalKey(Schema.Boolean),
+  smooth: Schema.optionalKey(Schema.Boolean),
+});
 
 /** Serializable line contract passed from the server card to WebGL. */
-export interface ResolvedLine {
-  color?: string;
-  cone?: {
-    position: "start" | "end" | "both";
-    size?: number;
-  };
-  curvePoints?: number;
-  /** Membership of exact branch endpoints, independent of sample markers. */
-  endpoints?: LineEndpoints;
-  labels?: ResolvedLineLabel[];
-  lineWidth?: number;
-  /** Original authored samples that retain visible point markers. */
-  pointIndices?: readonly number[];
-  points: LinePoint[];
-  showPoints?: boolean;
-  smooth?: boolean;
-}
-
-/** Exact serializable payload owned by the deferred WebGL boundary. */
-export interface LineSceneProps {
-  cameraPosition: [number, number, number];
-  cameraTarget?: [number, number, number];
-  lines: readonly ResolvedLine[];
-  showZAxis: boolean;
-}
+export type ResolvedLine = typeof ResolvedLineFieldsSchema.Type &
+  Pick<LineEquationProps, "labels">;
 
 type CircleLine = Omit<ResolvedLine, "points" | "smooth">;
 
-export interface CuboidLine
-  extends Pick<ResolvedLine, "color" | "lineWidth" | "showPoints"> {
-  readonly center?: LinePoint;
-  readonly height: number;
-  readonly kind: "cuboid";
-  readonly length: number;
-  readonly width: number;
+const CuboidLineSchema = Schema.Struct({
+  center: Schema.optionalKey(LinePointSchema),
+  height: Schema.Finite,
+  kind: Schema.Literal("cuboid"),
+  length: Schema.Finite,
+  width: Schema.Finite,
+});
+export type CuboidLine = Pick<
+  ResolvedLine,
+  "color" | "lineWidth" | "showPoints"
+> &
+  typeof CuboidLineSchema.Type;
+
+const CircleAngleSchema = Schema.Struct({
+  radius: Schema.Finite,
+  startDegrees: Schema.Finite,
+  sweepDegrees: Schema.Finite,
+});
+
+const CircleOutlineLineSchema = Schema.Struct({
+  kind: Schema.Literal("circle-outline"),
+  radius: Schema.Finite,
+});
+type CircleOutlineLine = typeof CircleOutlineLineSchema.Type & CircleLine;
+
+const CircleChordLineSchema = Schema.Struct({
+  ...CircleAngleSchema.fields,
+  kind: Schema.Literal("circle-chord"),
+});
+type CircleChordLine = typeof CircleChordLineSchema.Type & CircleLine;
+
+const CircleRadiusLineSchema = Schema.Struct({
+  degrees: Schema.Finite,
+  kind: Schema.Literal("circle-radius"),
+  radius: Schema.Finite,
+});
+type CircleRadiusLine = typeof CircleRadiusLineSchema.Type & CircleLine;
+
+const CircleArcLineSchema = Schema.Struct({
+  ...CircleAngleSchema.fields,
+  color: Schema.String,
+  kind: Schema.Literal("circle-arc"),
+  lineWidth: Schema.optionalKey(Schema.Finite),
+  segments: Schema.optionalKey(Schema.Finite),
+});
+type CircleArcFields = typeof CircleArcLineSchema.Type;
+
+const CircleArcLabelSchema = Schema.Struct({
+  progress: Schema.optionalKey(Schema.Finite),
+});
+
+/**
+ * The label holds React nodes, which no Schema can describe, so the interface
+ * stays hand-written. Its `progress` is plain data from `CircleArcLabelSchema`.
+ */
+interface CircleArcLine extends CircleArcFields {
+  readonly label?: Omit<ResolvedLineLabel, "at"> &
+    typeof CircleArcLabelSchema.Type;
 }
 
-interface CircleAngle {
-  readonly radius: number;
-  readonly startDegrees: number;
-  readonly sweepDegrees: number;
-}
-
-interface CircleRadius {
-  readonly degrees: number;
-  readonly radius: number;
-}
-
-interface CircleOutlineLine extends CircleLine {
-  readonly kind: "circle-outline";
-  readonly radius: number;
-}
-
-interface CircleChordLine extends CircleAngle, CircleLine {
-  readonly kind: "circle-chord";
-}
-
-interface CircleRadiusLine extends CircleLine, CircleRadius {
-  readonly kind: "circle-radius";
-}
-
-interface CircleArcLine extends CircleAngle {
-  readonly color: string;
-  readonly kind: "circle-arc";
-  readonly label?: Omit<ResolvedLineLabel, "at"> & { progress?: number };
-  readonly lineWidth?: number;
-  readonly segments?: number;
-}
-
-interface CircleSegmentLine extends Omit<CircleArcLine, "kind"> {
-  readonly kind: "circle-segment";
-}
+const CircleSegmentLineSchema = Schema.Struct({
+  kind: Schema.Literal("circle-segment"),
+});
+type CircleSegmentLine = Omit<CircleArcLine, "kind"> &
+  typeof CircleSegmentLineSchema.Type;
 
 /** Declarative or already-resolved line accepted by the public card. */
 export type AuthoredLine =

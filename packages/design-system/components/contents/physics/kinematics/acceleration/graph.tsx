@@ -15,6 +15,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
+import { Schema } from "effect";
 
 interface AccelerationGraphProps {
   labels: AccelerationLabels;
@@ -165,11 +166,14 @@ const CHART_MARGIN = {
   left: 8,
 };
 
-interface TooltipPayloadItem {
-  payload?: {
-    time?: unknown;
-  };
-}
+const TooltipPayloadItemSchema = Schema.Struct({
+  payload: Schema.optionalKey(
+    Schema.Struct({
+      time: Schema.optionalKey(Schema.Unknown),
+    })
+  ),
+});
+type TooltipPayloadItem = typeof TooltipPayloadItemSchema.Type;
 
 function formatTooltipTime(
   _: unknown,

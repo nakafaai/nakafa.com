@@ -8,11 +8,13 @@ import {
 import {
   AnimatedExhaust,
   type RocketExhaust,
+  RocketExhaustSchema,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/exhaust";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { Schema } from "effect";
 import { useMemo } from "react";
-import { Box3, type Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import { Box3, Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
 
 const SPACE_COLORS = {
   rocketAccent: getColor("ORANGE", 500),
@@ -24,10 +26,11 @@ const SPACE_COLORS = {
 };
 const ROCKET_NOZZLE_MESH_NAME = "nozzle_cap";
 type VectorTuple = [number, number, number];
-interface RocketAsset {
-  exhaust: RocketExhaust;
-  rocket: Group;
-}
+const RocketAssetSchema = Schema.Struct({
+  exhaust: RocketExhaustSchema,
+  rocket: Schema.instanceOf(Group),
+});
+type RocketAsset = typeof RocketAssetSchema.Type;
 
 export function RocketShip({
   flameDirection,

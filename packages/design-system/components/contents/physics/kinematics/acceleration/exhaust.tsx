@@ -3,13 +3,15 @@
 import { useFrame } from "@react-three/fiber";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { Schema } from "effect";
 import { useRef } from "react";
 import type { Mesh, PointLight } from "three";
 
-export interface RocketExhaust {
-  anchor: [number, number, number];
-  radius: number;
-}
+export const RocketExhaustSchema = Schema.Struct({
+  anchor: Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]),
+  radius: Schema.Finite,
+});
+export type RocketExhaust = typeof RocketExhaustSchema.Type;
 const SPACE_COLORS = {
   flameCore: getColor("YELLOW"),
   flameOuter: getColor("ORANGE", 500),

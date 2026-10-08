@@ -4,7 +4,7 @@ import {
   ACCELERATION_CASES,
   ACCELERATION_LAB_SCENE,
   type AccelerationCaseId,
-  type AccelerationLabProps,
+  type AccelerationLabLabels,
   DEFAULT_ACCELERATION_CASE_ID,
   formatAccelerationMath,
   formatMeterPerSecondMath,
@@ -31,6 +31,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
+
+export interface AccelerationLabProps {
+  description: ReactNode;
+  labels: AccelerationLabLabels;
+  title: ReactNode;
+}
 
 export function AccelerationLab({
   title,
