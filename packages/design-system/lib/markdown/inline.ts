@@ -1,3 +1,5 @@
+import { Schema } from "effect";
+
 const MATH_DELIMITERS = [
   ["$$", "$$"],
   ["\\[", "\\]"],
@@ -7,32 +9,46 @@ const SPACE = /\s/;
 const WORD = /[\p{L}\p{N}]/u;
 
 /** A span whose source has no escapes, so only its closer ends it. */
-interface OpenSpan {
-  readonly closer: string;
-  readonly start: number;
-}
+const OpenSpanSchema = Schema.Struct({
+  closer: Schema.String,
+  start: Schema.Finite,
+});
 
 /** A link whose label or destination has not closed yet. */
-interface OpenLink {
+const OpenLinkSchema = Schema.Struct({
   /** An angle-bracket destination, which parentheses do not close. */
-  angle: boolean;
+  angle: Schema.Boolean,
   /** Open brackets in the label, then open parentheses in the destination. */
-  depth: number;
+  depth: Schema.Finite,
   /** Where the destination starts, once the label has closed. */
-  destination: number | undefined;
-  readonly start: number;
-}
+  destination: Schema.UndefinedOr(Schema.Finite),
+  start: Schema.Finite,
+});
+type OpenLink = typeof OpenLinkSchema.Type;
+
+const MarkerSpanSchema = Schema.Struct({
+  marker: Schema.String,
+  start: Schema.Finite,
+});
 
 /** Inline spans still open after the scanned text. */
-export interface InlineState {
-  code: OpenSpan | undefined;
-  emphasis: { readonly marker: string; readonly start: number } | undefined;
-  link: OpenLink | undefined;
-  math: OpenSpan | undefined;
+export const InlineStateSchema = Schema.Struct({
+  code: Schema.UndefinedOr(OpenSpanSchema),
+  emphasis: Schema.UndefinedOr(MarkerSpanSchema),
+  link: Schema.UndefinedOr(OpenLinkSchema),
+  math: Schema.UndefinedOr(OpenSpanSchema),
   /** A final character that may be the first half of a delimiter. */
-  opener: number | undefined;
-  strong: { readonly marker: string; readonly start: number } | undefined;
-}
+  opener: Schema.UndefinedOr(Schema.Finite),
+  strong: Schema.UndefinedOr(MarkerSpanSchema),
+});
+export type InlineState = typeof InlineStateSchema.Type;
+
+/** Where scanning resumes after one step, and the spans open at that point. */
+const StepSchema = Schema.Struct({
+  index: Schema.Finite,
+  state: InlineStateSchema,
+});
+type Step = typeof StepSchema.Type;
 
 /** Returns the state before any inline span opens. */
 export function openInline(): InlineState {
@@ -50,11 +66,14 @@ export function openInline(): InlineState {
  * Ends the spans that never cross a paragraph or block boundary. An unclosed
  * marker there stays literal. Formulas may span blocks, so they stay open.
  */
-export function breakInline(state: InlineState) {
-  state.code = undefined;
-  state.emphasis = undefined;
-  state.link = undefined;
-  state.strong = undefined;
+export function breakInline(state: InlineState): InlineState {
+  return {
+    ...state,
+    code: undefined,
+    emphasis: undefined,
+    link: undefined,
+    strong: undefined,
+  };
 }
 
 /** Returns where the backtick run starting at `index` ends. */
@@ -77,7 +96,7 @@ function stepEmphasis(
   position: number,
   final: boolean,
   state: InlineState
-) {
+): Step {
   const marker = line.charAt(index);
   const before = line.charAt(index - 1);
   const after = line.charAt(index + 1);
@@ -88,18 +107,19 @@ function stepEmphasis(
     !SPACE.test(before) &&
     !(marker === "_" && WORD.test(after))
   ) {
-    state.emphasis = undefined;
-  } else if (final && !intraword) {
-    // The next character decides whether this marker opens a span.
-    state.opener = position;
-  } else if (
-    !(state.emphasis || intraword) &&
-    after !== "" &&
-    !SPACE.test(after)
-  ) {
-    state.emphasis = { marker, start: position };
+    return { index: index + 1, state: { ...state, emphasis: undefined } };
   }
-  return index + 1;
+  if (final && !intraword) {
+    // The next character decides whether this marker opens a span.
+    return { index: index + 1, state: { ...state, opener: position } };
+  }
+  if (!(state.emphasis || intraword) && after !== "" && !SPACE.test(after)) {
+    return {
+      index: index + 1,
+      state: { ...state, emphasis: { marker, start: position } },
+    };
+  }
+  return { index: index + 1, state };
 }
 
 /**
@@ -112,21 +132,25 @@ function stepStrongUnderscore(
   position: number,
   length: number,
   state: InlineState
-) {
+): Step {
   const before = line.charAt(index - 1);
   const after = line.charAt(index + 2);
   if (state.strong?.marker === "__") {
     if (before !== "" && !SPACE.test(before) && !WORD.test(after)) {
-      state.strong = undefined;
+      return { index: index + 2, state: { ...state, strong: undefined } };
     }
   } else if (!(state.strong || WORD.test(before))) {
     if (position + 1 === length - 1) {
-      state.opener = position;
-    } else if (after !== "" && !SPACE.test(after)) {
-      state.strong = { marker: "__", start: position };
+      return { index: index + 2, state: { ...state, opener: position } };
+    }
+    if (after !== "" && !SPACE.test(after)) {
+      return {
+        index: index + 2,
+        state: { ...state, strong: { marker: "__", start: position } },
+      };
     }
   }
-  return index + 2;
+  return { index: index + 2, state };
 }
 
 /**
@@ -140,18 +164,21 @@ function closeLabel(
   final: boolean,
   link: OpenLink,
   state: InlineState
-) {
-  link.depth -= 1;
-  if (link.depth > 0 || final) {
-    return index + 1;
+): Step {
+  const depth = link.depth - 1;
+  if (depth > 0 || final) {
+    return { index: index + 1, state: { ...state, link: { ...link, depth } } };
   }
   if (line.charAt(index + 1) !== "(") {
-    state.link = undefined;
-    return index + 1;
+    return { index: index + 1, state: { ...state, link: undefined } };
   }
-  link.depth = 1;
-  link.destination = position + 2;
-  return index + 2;
+  return {
+    index: index + 2,
+    state: {
+      ...state,
+      link: { ...link, depth: 1, destination: position + 2 },
+    },
+  };
 }
 
 /** Tracks a destination until its balanced closing parenthesis arrives. */
@@ -161,26 +188,37 @@ function stepDestination(
   position: number,
   link: OpenLink,
   state: InlineState
-) {
+): Step {
   const character = line.charAt(index);
   if (link.angle) {
-    link.angle = character !== ">";
-    return index + 1;
+    return {
+      index: index + 1,
+      state: { ...state, link: { ...link, angle: character !== ">" } },
+    };
   }
   if (character === "\\") {
-    return index + 2;
+    return { index: index + 2, state };
   }
   if (character === "<" && position === link.destination) {
-    link.angle = true;
-  } else if (character === "(") {
-    link.depth += 1;
-  } else if (character === ")") {
-    link.depth -= 1;
-    if (link.depth === 0) {
-      state.link = undefined;
-    }
+    return {
+      index: index + 1,
+      state: { ...state, link: { ...link, angle: true } },
+    };
   }
-  return index + 1;
+  if (character === "(") {
+    return {
+      index: index + 1,
+      state: { ...state, link: { ...link, depth: link.depth + 1 } },
+    };
+  }
+  if (character === ")") {
+    const depth = link.depth - 1;
+    return {
+      index: index + 1,
+      state: { ...state, link: depth === 0 ? undefined : { ...link, depth } },
+    };
+  }
+  return { index: index + 1, state };
 }
 
 /** Advances through prose, opening spans and math delimiters. */
@@ -190,22 +228,26 @@ function stepProse(
   position: number,
   length: number,
   state: InlineState
-) {
+): Step {
   const character = line.charAt(index);
   const final = position === length - 1;
   if (character === "`") {
     const end = runEnd(line, index);
-    state.code = { closer: line.slice(index, end), start: position };
-    return end;
+    return {
+      index: end,
+      state: {
+        ...state,
+        code: { closer: line.slice(index, end), start: position },
+      },
+    };
   }
   if (line.startsWith("**", index)) {
     // Asterisk strong emphasis toggles; an underscore span keeps it literal.
-    if (state.strong?.marker === "**") {
-      state.strong = undefined;
-    } else {
-      state.strong ??= { marker: "**", start: position };
-    }
-    return index + 2;
+    const strong =
+      state.strong?.marker === "**"
+        ? undefined
+        : (state.strong ?? { marker: "**", start: position });
+    return { index: index + 2, state: { ...state, strong } };
   }
   if (line.startsWith("__", index)) {
     return stepStrongUnderscore(line, index, position, length, state);
@@ -214,32 +256,45 @@ function stepProse(
     line.startsWith(open, index)
   );
   if (delimiter) {
-    state.math = { closer: delimiter[1], start: position };
-    return index + delimiter[0].length;
+    return {
+      index: index + delimiter[0].length,
+      state: { ...state, math: { closer: delimiter[1], start: position } },
+    };
   }
   if (character === "*" || character === "_") {
     return stepEmphasis(line, index, position, final, state);
   }
   if (character === "[") {
     if (state.link) {
-      state.link.depth += 1;
-    } else {
-      state.link = {
-        angle: false,
-        depth: 1,
-        destination: undefined,
-        start: position,
+      return {
+        index: index + 1,
+        state: {
+          ...state,
+          link: { ...state.link, depth: state.link.depth + 1 },
+        },
       };
     }
-    return index + 1;
+    return {
+      index: index + 1,
+      state: {
+        ...state,
+        link: {
+          angle: false,
+          depth: 1,
+          destination: undefined,
+          start: position,
+        },
+      },
+    };
   }
   if (character === "]" && state.link) {
     return closeLabel(line, index, position, final, state.link, state);
   }
+  const width = character === "\\" ? 2 : 1;
   if (final && (character === "$" || character === "\\")) {
-    state.opener = position;
+    return { index: index + width, state: { ...state, opener: position } };
   }
-  return index + (character === "\\" ? 2 : 1);
+  return { index: index + width, state };
 }
 
 /** Advances one step inside an open span, or through prose. */
@@ -249,7 +304,7 @@ function stepInline(
   position: number,
   length: number,
   state: InlineState
-) {
+): Step {
   const { code, link, math } = state;
   if (link?.destination !== undefined) {
     return stepDestination(line, index, position, link, state);
@@ -257,21 +312,24 @@ function stepInline(
   if (math) {
     // Math source has no escapes: the first closer ends the span.
     if (!line.startsWith(math.closer, index)) {
-      return index + 1;
+      return { index: index + 1, state };
     }
-    state.math = undefined;
-    return index + math.closer.length;
+    return {
+      index: index + math.closer.length,
+      state: { ...state, math: undefined },
+    };
   }
   if (code) {
     // Only a backtick run of the opening length closes a code span.
     if (line[index] !== "`") {
-      return index + 1;
+      return { index: index + 1, state };
     }
     const end = runEnd(line, index);
-    if (end - index === code.closer.length) {
-      state.code = undefined;
-    }
-    return end;
+    const closed = end - index === code.closer.length;
+    return {
+      index: end,
+      state: closed ? { ...state, code: undefined } : state,
+    };
   }
   return stepProse(line, index, position, length, state);
 }
@@ -285,9 +343,13 @@ export function scanInline(
   lineStart: number,
   length: number,
   state: InlineState
-) {
+): InlineState {
   let index = 0;
+  let current = state;
   while (index < line.length) {
-    index = stepInline(line, index, lineStart + index, length, state);
+    const step = stepInline(line, index, lineStart + index, length, current);
+    index = step.index;
+    current = step.state;
   }
+  return current;
 }

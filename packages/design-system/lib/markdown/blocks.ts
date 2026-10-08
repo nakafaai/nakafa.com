@@ -1,9 +1,11 @@
+import { Schema } from "effect";
 import { Lexer } from "marked";
 
-export interface MarkdownBlockModel {
-  readonly content: string;
-  readonly key: string;
-}
+const MarkdownBlockModelSchema = Schema.Struct({
+  content: Schema.String,
+  key: Schema.String,
+});
+export type MarkdownBlockModel = typeof MarkdownBlockModelSchema.Type;
 
 /** Preserves Marked block boundaries while rejoining split display-math fences. */
 export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
