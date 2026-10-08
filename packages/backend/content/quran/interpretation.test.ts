@@ -13,7 +13,7 @@ import {
   activateQuranSnapshot,
   restoreAbsentQuranSnapshot,
 } from "@repo/backend/test/quran/snapshot";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Creates only the signed rows required to read verse seven. */
 function interpretationRows() {
@@ -149,7 +149,10 @@ describe("contentRelease/quran/interpretation", () => {
           const snapshotId = yield* Effect.promise(() =>
             activateQuranSnapshot(
               tCtx,
-              interpretationRows().filter((row) => row.kind !== "quran-search")
+              Arr.filter(
+                interpretationRows(),
+                (row) => row.kind !== "quran-search"
+              )
             )
           );
           expect(
