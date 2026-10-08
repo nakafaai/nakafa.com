@@ -28,6 +28,7 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
+import { Clock, Effect } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
@@ -171,48 +172,55 @@ function stageMeasured(t: TestConvex<typeof schema>, artifactJson: string[]) {
 }
 
 describe("contentRelease/artifacts", () => {
-  it("stages one rollback artifact and replays its exact batch", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertTestRelease(ctx, { originReleaseId: "release-base" })
-    );
-    await stageItem(t);
-    const staged = await t.run((ctx) => ctx.db.query("contentItems").unique());
+  it.live("stages one rollback artifact and replays its exact batch", () =>
+    Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis;
+      yield* Effect.promise(async () => {
+        const t = convexTest(schema, convexModules);
+        await t.mutation((ctx) =>
+          insertTestRelease(ctx, { originReleaseId: "release-base" })
+        );
+        await stageItem(t);
+        const staged = await t.run((ctx) =>
+          ctx.db.query("contentItems").unique()
+        );
 
-    const created = await stage(t, [testArtifactJson()]);
-    const repeated = await stage(t, [testArtifactJson()]);
-    const state = await t.run(async (ctx) => ({
-      artifact: await ctx.db.query("contentArtifacts").unique(),
-      facts: await ctx.db.query("contentArtifactFacts").unique(),
-      item: await ctx.db.query("contentItems").unique(),
-      release: await ctx.db.query("contentReleases").unique(),
-    }));
+        const created = await stage(t, [testArtifactJson()]);
+        const repeated = await stage(t, [testArtifactJson()]);
+        const state = await t.run(async (ctx) => ({
+          artifact: await ctx.db.query("contentArtifacts").unique(),
+          facts: await ctx.db.query("contentArtifactFacts").unique(),
+          item: await ctx.db.query("contentItems").unique(),
+          release: await ctx.db.query("contentReleases").unique(),
+        }));
 
-    expect(created).toMatchObject({ created: 1, unchanged: 0 });
-    expect(repeated).toMatchObject({ created: 0, unchanged: 1 });
-    expect(state.artifact).toEqual({
-      _creationTime: expect.any(Number),
-      _id: expect.any(String),
-      artifactHash: TEST_ARTIFACT_HASH,
-      artifactJson: testArtifactJson(),
-    });
-    expect(state.facts).toEqual({
-      _creationTime: expect.any(Number),
-      _id: expect.any(String),
-      artifactHash: TEST_ARTIFACT_HASH,
-      artifactId: state.artifact?._id,
-      artifactJsonHash: testTextHash(testArtifactJson()),
-      retainUntil: expect.any(Number),
-    });
-    expect(state.facts?.retainUntil).toBeGreaterThan(Date.now());
-    expect(state.item).toEqual({
-      ...staged,
-      artifactBatchHash: expect.any(String),
-      artifactBatchIndex: 0,
-      artifactReady: true,
-    });
-    expect(state.release?.stagedArtifacts).toBe(1);
-  });
+        expect(created).toMatchObject({ created: 1, unchanged: 0 });
+        expect(repeated).toMatchObject({ created: 0, unchanged: 1 });
+        expect(state.artifact).toEqual({
+          _creationTime: expect.any(Number),
+          _id: expect.any(String),
+          artifactHash: TEST_ARTIFACT_HASH,
+          artifactJson: testArtifactJson(),
+        });
+        expect(state.facts).toEqual({
+          _creationTime: expect.any(Number),
+          _id: expect.any(String),
+          artifactHash: TEST_ARTIFACT_HASH,
+          artifactId: state.artifact?._id,
+          artifactJsonHash: testTextHash(testArtifactJson()),
+          retainUntil: expect.any(Number),
+        });
+        expect(state.facts?.retainUntil).toBeGreaterThan(now);
+        expect(state.item).toEqual({
+          ...staged,
+          artifactBatchHash: expect.any(String),
+          artifactBatchIndex: 0,
+          artifactReady: true,
+        });
+        expect(state.release?.stagedArtifacts).toBe(1);
+      });
+    })
+  );
 
   it("reuses identical bytes proven by their facts without rewriting stored rows", async () => {
     const t = convexTest(schema, convexModules);

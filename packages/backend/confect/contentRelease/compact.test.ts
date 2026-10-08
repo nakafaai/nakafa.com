@@ -27,7 +27,7 @@ import {
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Option, Order } from "effect";
+import { Array as Arr, Clock, Effect, Option, Order } from "effect";
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
@@ -61,167 +61,191 @@ describe("contentRelease/compact", () => {
       compactedFloor: 1,
     });
   });
-  it("resumes pages and preserves floor anchors before collecting history", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await seedCompactionHistory(ctx);
-      await ctx.db.insert("contentIndex", {
-        contentKey: "test:compact-0",
-        family: "material",
-        appLocale: "en",
-        projectionHash: `sha256:${"4".repeat(64)}`,
-        publicPath: "test/compact-0",
-        releaseId: "release-compact-4",
-        sequence: 4,
-        slot: "blue",
-        text: "active search entry",
-      });
-    });
-    const first = await t.mutation((ctx) =>
-      Effect.runPromise(
-        compactProgram().pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
-      )
-    );
-    const paused = await t.run((ctx) => ctx.db.query("contentState").unique());
-    expect(first).toMatchObject({
-      complete: false,
-      floor: 3,
-      phase: "heads",
-    });
-    expect(paused?.compactCursor).toBeUndefined();
-    expect(paused?.compactPhase).toBe("heads");
-    expect(paused?.compactedFloor).toBeUndefined();
-    const completed = await t.action((ctx) =>
-      Effect.runPromise(
-        runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-      )
-    );
-    const stored = await t.run(async (ctx) => ({
-      artifacts: await ctx.db.query("contentArtifacts").collect(),
-      bindings: await ctx.db.query("contentBindings").collect(),
-      facts: await ctx.db.query("contentArtifactFacts").collect(),
-      heads: await ctx.db.query("contentHeads").collect(),
-      items: await ctx.db.query("contentItems").collect(),
-      search: await ctx.db.query("contentIndex").collect(),
-      releases: await ctx.db.query("contentReleases").collect(),
-      state: await ctx.db.query("contentState").unique(),
-    }));
-    expect(completed).toMatchObject({
-      complete: true,
-      floor: 3,
-    });
-    expect(stored.heads).toHaveLength(82);
-    expect(
-      Option.getOrUndefined(
-        Arr.findFirst(stored.heads, (row) => row.contentKey === "test:anchor")
-      )
-    ).toMatchObject({
-      sequence: 3,
-    });
-    expect(
-      Arr.sort(
-        Arr.map(stored.bindings, (row) => row.sequence),
-        Order.Number
-      )
-    ).toEqual([1, 3, 4]);
-    expect(stored.items).toHaveLength(0);
-    expect(stored.search).toMatchObject([
-      {
-        contentKey: "test:compact-0",
-        sequence: 4,
-      },
-    ]);
-    expect(
-      Arr.sort(
-        Arr.map(stored.releases, (row) => row.sequence),
-        Order.Number
-      )
-    ).toEqual([3, 4, 5]);
-    const retained = [
-      `sha256:${"c".repeat(64)}`,
-      `sha256:${"d".repeat(64)}`,
-      `sha256:${"f".repeat(64)}`,
-    ];
-    expect(
-      Arr.sort(
-        Arr.map(stored.artifacts, (row) => row.artifactHash),
-        Order.String
-      )
-    ).toEqual(retained);
-    expect(
-      Arr.sort(
-        Arr.map(stored.facts, (row) => row.artifactHash),
-        Order.String
-      )
-    ).toEqual(retained);
-    expect(
-      Option.getOrUndefined(
-        Arr.findFirst(
-          stored.facts,
-          ({ artifactHash }) => artifactHash === `sha256:${"c".repeat(64)}`
-        )
-      )?.retainUntil
-    ).toBeGreaterThan(Date.now());
-    expect(stored.state).toMatchObject({
-      compactedFloor: 3,
-    });
-    expect(stored.state?.compactPhase).toBeUndefined();
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
-          runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-        )
-      )
-    ).resolves.toEqual({
-      complete: true,
-      deleted: 0,
-      floor: 3,
-      phase: "releases",
-    });
-  });
-  it("stops before a recent unreachable release", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      const releases = Array.from(
-        {
-          length: 5,
-        },
-        (_, index) => compactionIdentity(index + 1)
-      );
-      for (const [index, release] of releases.entries()) {
-        await insertCompletedRelease(
-          ctx,
-          release,
-          releases[index - 1],
-          index === 1 ? Date.now() : COMPACTION_OLD_TIME
+  it.live(
+    "resumes pages and preserves floor anchors before collecting history",
+    () =>
+      Effect.gen(function* () {
+        const now = yield* Clock.currentTimeMillis;
+        const runtimeServices = yield* Effect.context<never>();
+        yield* Effect.promise(async () => {
+          const t = convexTest(schema, convexModules);
+          await t.mutation(async (ctx) => {
+            await seedCompactionHistory(ctx);
+            await ctx.db.insert("contentIndex", {
+              contentKey: "test:compact-0",
+              family: "material",
+              appLocale: "en",
+              projectionHash: `sha256:${"4".repeat(64)}`,
+              publicPath: "test/compact-0",
+              releaseId: "release-compact-4",
+              sequence: 4,
+              slot: "blue",
+              text: "active search entry",
+            });
+          });
+          const first = await t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              compactProgram().pipe(
+                Effect.provide(mutationLayer(confectSchema, ctx))
+              )
+            )
+          );
+          const paused = await t.run((ctx) =>
+            ctx.db.query("contentState").unique()
+          );
+          expect(first).toMatchObject({
+            complete: false,
+            floor: 3,
+            phase: "heads",
+          });
+          expect(paused?.compactCursor).toBeUndefined();
+          expect(paused?.compactPhase).toBe("heads");
+          expect(paused?.compactedFloor).toBeUndefined();
+          const completed = await t.action((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+            )
+          );
+          const stored = await t.run(async (ctx) => ({
+            artifacts: await ctx.db.query("contentArtifacts").collect(),
+            bindings: await ctx.db.query("contentBindings").collect(),
+            facts: await ctx.db.query("contentArtifactFacts").collect(),
+            heads: await ctx.db.query("contentHeads").collect(),
+            items: await ctx.db.query("contentItems").collect(),
+            search: await ctx.db.query("contentIndex").collect(),
+            releases: await ctx.db.query("contentReleases").collect(),
+            state: await ctx.db.query("contentState").unique(),
+          }));
+          expect(completed).toMatchObject({
+            complete: true,
+            floor: 3,
+          });
+          expect(stored.heads).toHaveLength(82);
+          expect(
+            Option.getOrUndefined(
+              Arr.findFirst(
+                stored.heads,
+                (row) => row.contentKey === "test:anchor"
+              )
+            )
+          ).toMatchObject({
+            sequence: 3,
+          });
+          expect(
+            Arr.sort(
+              Arr.map(stored.bindings, (row) => row.sequence),
+              Order.Number
+            )
+          ).toEqual([1, 3, 4]);
+          expect(stored.items).toHaveLength(0);
+          expect(stored.search).toMatchObject([
+            {
+              contentKey: "test:compact-0",
+              sequence: 4,
+            },
+          ]);
+          expect(
+            Arr.sort(
+              Arr.map(stored.releases, (row) => row.sequence),
+              Order.Number
+            )
+          ).toEqual([3, 4, 5]);
+          const retained = [
+            `sha256:${"c".repeat(64)}`,
+            `sha256:${"d".repeat(64)}`,
+            `sha256:${"f".repeat(64)}`,
+          ];
+          expect(
+            Arr.sort(
+              Arr.map(stored.artifacts, (row) => row.artifactHash),
+              Order.String
+            )
+          ).toEqual(retained);
+          expect(
+            Arr.sort(
+              Arr.map(stored.facts, (row) => row.artifactHash),
+              Order.String
+            )
+          ).toEqual(retained);
+          expect(
+            Option.getOrUndefined(
+              Arr.findFirst(
+                stored.facts,
+                ({ artifactHash }) =>
+                  artifactHash === `sha256:${"c".repeat(64)}`
+              )
+            )?.retainUntil
+          ).toBeGreaterThan(now);
+          expect(stored.state).toMatchObject({
+            compactedFloor: 3,
+          });
+          expect(stored.state?.compactPhase).toBeUndefined();
+          await expect(
+            t.action((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                runProgram().pipe(
+                  Effect.provide(actionLayer(confectSchema, ctx))
+                )
+              )
+            )
+          ).resolves.toEqual({
+            complete: true,
+            deleted: 0,
+            floor: 3,
+            phase: "releases",
+          });
+        });
+      })
+  );
+  it.live("stops before a recent unreachable release", () =>
+    Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis;
+      const runtimeServices = yield* Effect.context<never>();
+      yield* Effect.promise(async () => {
+        const t = convexTest(schema, convexModules);
+        await t.mutation(async (ctx) => {
+          const releases = Array.from(
+            {
+              length: 5,
+            },
+            (_, index) => compactionIdentity(index + 1)
+          );
+          for (const [index, release] of releases.entries()) {
+            await insertCompletedRelease(
+              ctx,
+              release,
+              releases[index - 1],
+              index === 1 ? now : COMPACTION_OLD_TIME
+            );
+          }
+          const fifth = releases[4];
+          if (!fifth) {
+            throw new Error("Expected recent compaction releases.");
+          }
+          await insertTestState(ctx, {
+            active: fifth,
+            nextSequence: 6,
+          });
+        });
+        const receipt = await t.action((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+          )
         );
-      }
-      const fifth = releases[4];
-      if (!fifth) {
-        throw new Error("Expected recent compaction releases.");
-      }
-      await insertTestState(ctx, {
-        active: fifth,
-        nextSequence: 6,
+        const sequences = await t.run(async (ctx) =>
+          Arr.map(
+            await ctx.db.query("contentReleases").collect(),
+            (release) => release.sequence
+          )
+        );
+        expect(receipt).toMatchObject({
+          complete: true,
+          floor: 2,
+        });
+        expect(Arr.sort(sequences, Order.Number)).toEqual([2, 3, 4, 5]);
       });
-    });
-    const receipt = await t.action((ctx) =>
-      Effect.runPromise(
-        runProgram().pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-      )
-    );
-    const sequences = await t.run(async (ctx) =>
-      Arr.map(
-        await ctx.db.query("contentReleases").collect(),
-        (release) => release.sequence
-      )
-    );
-    expect(receipt).toMatchObject({
-      complete: true,
-      floor: 2,
-    });
-    expect(Arr.sort(sequences, Order.Number)).toEqual([2, 3, 4, 5]);
-  });
+    })
+  );
   it("protects exact active bases and retained recovery slots", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {

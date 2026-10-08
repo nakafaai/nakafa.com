@@ -1,3 +1,4 @@
+import type contentReleasesTable from "@repo/backend/confect/_generated/tables/contentReleases";
 import {
   ReleaseError,
   releaseFail,
@@ -11,13 +12,14 @@ const PageCursorSchema = Schema.Tuple([
   Schema.Literals(["blue", "green"]),
   Schema.String,
 ]);
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 export type PageCursorKind = (typeof PageCursorSchema.Type)[0];
 
 /** Immutable active release identity bound to a native pagination cursor. */
-export interface ReleaseCursorIdentity {
-  readonly manifestHash: string;
-  readonly releaseId: string;
-}
+export type ReleaseCursorIdentity = Pick<
+  typeof contentReleasesTable.Doc.Type,
+  "manifestHash" | "releaseId"
+>;
 
 /** Checks whether one continuation cursor belongs to a superseded release. */
 export function hasStaleReleaseCursor(
@@ -67,7 +69,8 @@ export function encodePageCursor(
   slot: ModelSlot,
   cursor: string
 ) {
-  return `${PAGE_CURSOR_PREFIX}${JSON.stringify([kind, slot, cursor])}`;
+  const text = Schema.encodeSync(JsonTextSchema)([kind, slot, cursor]);
+  return `${PAGE_CURSOR_PREFIX}${text}`;
 }
 
 /** Rejects an initial page that claims a continuation's release identity. */
