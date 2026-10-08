@@ -10,7 +10,6 @@ import {
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 
 const wireJson = Schema.fromJsonString(ProtectedContentRuntimeResponseSchema);
-
 // @vitest-environment node
 
 // Node tests isolate Next navigation imports while real semantic renderers execute.
