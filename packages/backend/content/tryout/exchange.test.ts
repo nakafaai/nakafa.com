@@ -24,10 +24,12 @@ import { Effect, Schema } from "effect";
 
 const otherHash = Sha256HashSchema.make(`sha256:${"9".repeat(64)}`);
 const encodeBundleJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedTryoutRuntimeBundleSchema)
+  Schema.fromJsonString(SignedTryoutRuntimeBundleSchema),
+  { onExcessProperty: "error" }
 );
 const encodeArtifactJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentArtifactSchema)
+  Schema.fromJsonString(SignedContentArtifactSchema),
+  { onExcessProperty: "error" }
 );
 describe("protected try-out exchange", () => {
   it.effect(
