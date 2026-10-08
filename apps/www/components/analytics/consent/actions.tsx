@@ -23,7 +23,7 @@ export function AnalyticsConsentFooterItem() {
   return (
     <li>
       <Button
-        className="h-auto justify-start p-0 text-foreground no-underline transition-colors ease-out hover:text-primary"
+        className="-my-0.5 h-6 justify-start p-0 text-foreground no-underline transition-colors ease-out hover:text-primary"
         onClick={() => consent.setPreferencesOpen(true)}
         type="button"
         variant="link"

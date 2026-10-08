@@ -368,7 +368,6 @@
     "submit-answer-error": "We couldn't save your answer. Please try again."
   },
   "Utils": {
-    "search": "Search",
     "clear-search": "Clear search",
     "search-bar-placeholder": "Search content...",
     "search-placeholder": "Find what you want...",
