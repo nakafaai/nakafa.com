@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 /** Default visualization accents from the Tailwind CSS palette. */
 const COLOR_KEYS = [
   "AMBER",
@@ -182,8 +184,9 @@ export function getColor(...args: ColorArgs) {
  * @returns The random color value
  */
 export function randomColor(exclude?: ColorName[], seed?: string | number) {
-  const availableKeys = COLOR_KEYS.filter(
-    (key) => !exclude?.some((excludeKey) => excludeKey === key)
+  const availableKeys = Arr.filter(
+    COLOR_KEYS,
+    (key) => !(exclude && Arr.some(exclude, (excludeKey) => excludeKey === key))
   );
 
   if (availableKeys.length === 0) {
@@ -195,10 +198,7 @@ export function randomColor(exclude?: ColorName[], seed?: string | number) {
   if (typeof seed === "number") {
     seedNum = seed;
   } else if (seed) {
-    seedNum = Array.from(seed).reduce(
-      (acc, char) => acc + char.charCodeAt(0),
-      0
-    );
+    seedNum = Arr.reduce(seed, 0, (acc, char) => acc + char.charCodeAt(0));
   }
   const index = seedNum % availableKeys.length;
 
