@@ -3,7 +3,6 @@
 import {
   ELECTRON_CONFIGURATION_SAMPLE_IDS,
   ELECTRON_CONFIGURATION_SAMPLES,
-  type ElectronConfigurationLabLabels,
   type ElectronConfigurationSampleId,
   getSimpleShellConfiguration,
   HYDROGEN_ID,
@@ -27,7 +26,20 @@ import { useState } from "react";
 
 interface ElectronConfigurationLabProps {
   description: ReactNode;
-  labels: ElectronConfigurationLabLabels;
+  labels: {
+    atomicNumber: string;
+    chooseAtom: string;
+    configuration: string;
+    electronTotal: string;
+    outerShell: string;
+    samples: Record<
+      ElectronConfigurationSampleId,
+      {
+        name: string;
+        note: ReactNode;
+      }
+    >;
+  };
   title: ReactNode;
 }
 

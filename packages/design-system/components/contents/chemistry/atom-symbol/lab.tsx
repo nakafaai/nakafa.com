@@ -3,7 +3,6 @@
 import {
   ATOM_SYMBOL_SAMPLE_IDS,
   ATOM_SYMBOL_SAMPLES,
-  type AtomSymbolLabLabels,
   type AtomSymbolSampleId,
   CARBON_12_ID,
   isAtomSymbolSampleId,
@@ -25,7 +24,24 @@ import { useState } from "react";
 
 interface AtomSymbolLabProps {
   description: ReactNode;
-  labels: AtomSymbolLabLabels;
+  labels: {
+    atomicNumber: string;
+    chooseAtom: string;
+    electronCount: string;
+    elementSymbol: string;
+    massNumber: string;
+    neutralAtom: string;
+    neutronCount: string;
+    protonCount: string;
+    samples: Record<
+      AtomSymbolSampleId,
+      {
+        ariaName: string;
+        name: ReactNode;
+        tab: ReactNode;
+      }
+    >;
+  };
   title: ReactNode;
 }
 

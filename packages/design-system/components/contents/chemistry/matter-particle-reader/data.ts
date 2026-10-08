@@ -2,7 +2,6 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const ATOM_MODE_ID = "atom";
 export const ELEMENT_MODE_ID = "element";
@@ -57,22 +56,6 @@ const MatterParticleModelSchema = Schema.Struct({
   molecules: Schema.Array(MatterParticleMoleculeSchema),
 });
 export type MatterParticleModel = typeof MatterParticleModelSchema.Type;
-
-export interface MatterParticleModeLabels {
-  category: ReactNode;
-  helperCaption: ReactNode;
-  reading: ReactNode;
-  tab: ReactNode;
-  tabLabel: string;
-}
-
-export interface MatterParticleReaderLabels {
-  categoryLabel: string;
-  chooseMode: string;
-  modes: Record<MatterParticleModeId, MatterParticleModeLabels>;
-  particleView: string;
-  readingLabel: string;
-}
 
 export const MATTER_PARTICLE_SCENE_VIEW = {
   cameraPosition: [0, 2.05, 4.6],

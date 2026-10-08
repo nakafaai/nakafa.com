@@ -2,7 +2,6 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const WATER_PEROXIDE_MODE_ID = "water-peroxide";
 export const CARBON_OXIDES_MODE_ID = "carbon-oxides";
@@ -67,22 +66,6 @@ const MultipleProportionsModeModelSchema = Schema.Struct({
 });
 export type MultipleProportionsModeModel =
   typeof MultipleProportionsModeModelSchema.Type;
-
-export interface MultipleProportionsModeLabels {
-  changing: ReactNode;
-  fixed: ReactNode;
-  helperCaption: ReactNode;
-  tab: ReactNode;
-  tabLabel: string;
-}
-
-export interface MultipleProportionsLabLabels {
-  changingLabel: string;
-  chooseMode: string;
-  comparisonView: string;
-  fixedLabel: string;
-  modes: Record<MultipleProportionsModeId, MultipleProportionsModeLabels>;
-}
 
 export const MULTIPLE_PROPORTIONS_SCENE_VIEW = {
   cameraPosition: [0, 2.25, 4.9],

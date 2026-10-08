@@ -8,7 +8,6 @@ import {
   MATTER_PARTICLE_MODE_IDS,
   MATTER_PARTICLE_SCENE_VIEW,
   type MatterParticleModeId,
-  type MatterParticleReaderLabels,
 } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/data";
 import { MatterParticleReaderScene } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
@@ -37,7 +36,22 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.28;
 
 interface MatterParticleReaderLabProps {
   description: ReactNode;
-  labels: MatterParticleReaderLabels;
+  labels: {
+    categoryLabel: string;
+    chooseMode: string;
+    modes: Record<
+      MatterParticleModeId,
+      {
+        category: ReactNode;
+        helperCaption: ReactNode;
+        reading: ReactNode;
+        tab: ReactNode;
+        tabLabel: string;
+      }
+    >;
+    particleView: string;
+    readingLabel: string;
+  };
   title: ReactNode;
 }
 

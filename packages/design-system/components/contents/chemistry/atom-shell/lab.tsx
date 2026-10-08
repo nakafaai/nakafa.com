@@ -3,7 +3,6 @@
 import {
   ATOM_SHELL_SAMPLE_IDS,
   ATOM_SHELL_SAMPLES,
-  type AtomShellLabLabels,
   type AtomShellSampleId,
   CALCIUM_ID,
   getEarlyElementShellConfiguration,
@@ -27,7 +26,22 @@ import { useState } from "react";
 
 interface AtomShellLabProps {
   description: ReactNode;
-  labels: AtomShellLabLabels;
+  labels: {
+    atomicNumber: string;
+    chooseAtom: string;
+    configuration: string;
+    electronTotal: string;
+    maximumCapacity: string;
+    outerShell: string;
+    samples: Record<
+      AtomShellSampleId,
+      {
+        name: string;
+        note: ReactNode;
+        tab: string;
+      }
+    >;
+  };
   title: ReactNode;
 }
 

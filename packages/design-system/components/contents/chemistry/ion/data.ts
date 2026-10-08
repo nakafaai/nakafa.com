@@ -1,5 +1,4 @@
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const SODIUM_CATION_ID = "sodium-cation";
 export const FLUORIDE_ANION_ID = "fluoride-anion";
@@ -52,25 +51,6 @@ export const ION_SAMPLES = {
     symbol: "O",
   },
 } satisfies Record<IonSampleId, typeof IonSampleSchema.Type>;
-
-export interface IonSampleLabels {
-  action: ReactNode;
-  name: string;
-  type: string;
-}
-
-export interface IonLabLabels {
-  afterChange: string;
-  beforeChange: string;
-  charge: string;
-  chooseIon: string;
-  electronChange: string;
-  electrons: string;
-  neutralAtom: string;
-  neutrons: string;
-  protons: string;
-  samples: Record<IonSampleId, IonSampleLabels>;
-}
 
 /**
  * Narrows ToggleGroup string values to the available ion examples.

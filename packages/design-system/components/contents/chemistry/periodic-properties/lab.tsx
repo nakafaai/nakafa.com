@@ -5,7 +5,7 @@ import {
   ATOMIC_RADIUS_MODE_ID,
   isPeriodicPropertyModeId,
   PERIODIC_PROPERTY_MODE_IDS,
-  type PeriodicPropertiesLabLabels,
+  type PeriodicPropertiesFactLabels,
   type PeriodicPropertyModeId,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import {
@@ -24,7 +24,23 @@ import { useState } from "react";
 
 interface PeriodicPropertiesLabProps {
   description: ReactNode;
-  labels: PeriodicPropertiesLabLabels;
+  labels: {
+    chooseTrend: string;
+    factLabels: PeriodicPropertiesFactLabels;
+    modes: Record<
+      PeriodicPropertyModeId,
+      {
+        cause: ReactNode;
+        groupTrend: ReactNode;
+        guidance: ReactNode;
+        name: string;
+        periodTrend: ReactNode;
+        question: ReactNode;
+        tab: string;
+      }
+    >;
+    sceneLabel: string;
+  };
   title: ReactNode;
 }
 

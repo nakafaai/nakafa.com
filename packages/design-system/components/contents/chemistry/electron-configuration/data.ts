@@ -1,5 +1,4 @@
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
@@ -61,23 +60,6 @@ export const ELECTRON_CONFIGURATION_SHELLS = [
   { key: "M", patternLimit: 8 },
   { key: "N", patternLimit: 2 },
 ] satisfies readonly (typeof ElectronConfigurationShellSchema.Type)[];
-
-export interface ElectronConfigurationSampleLabels {
-  name: string;
-  note: ReactNode;
-}
-
-export interface ElectronConfigurationLabLabels {
-  atomicNumber: string;
-  chooseAtom: string;
-  configuration: string;
-  electronTotal: string;
-  outerShell: string;
-  samples: Record<
-    ElectronConfigurationSampleId,
-    ElectronConfigurationSampleLabels
-  >;
-}
 
 export type ElectronConfigurationSample =
   (typeof ELECTRON_CONFIGURATION_SAMPLES)[ElectronConfigurationSampleId];

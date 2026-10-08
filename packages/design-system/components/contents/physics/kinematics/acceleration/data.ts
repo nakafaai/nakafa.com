@@ -1,6 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 const AccelerationCaseIdSchema = Schema.Literals([
   "speed-up",
@@ -33,18 +32,6 @@ const AccelerationLabelsSchema = Schema.Struct({
   velocityAxis: Schema.String,
 });
 export type AccelerationLabels = typeof AccelerationLabelsSchema.Type;
-
-export interface AccelerationLabLabels {
-  chooseCase: string;
-  factLabels: {
-    acceleration: ReactNode;
-    finalVelocity: ReactNode;
-    initialVelocity: ReactNode;
-    timeStep: ReactNode;
-  };
-  scenarioNames: Record<AccelerationCaseId, ReactNode>;
-  viewLabel: string;
-}
 
 export const ACCELERATION_ROCKET_MODEL_PATH =
   "/models/physics/kinematics/nasa-pegasus-xl/pegasus-xl-textureless.glb";

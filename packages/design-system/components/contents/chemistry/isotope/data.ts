@@ -1,5 +1,4 @@
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const HYDROGEN_1_ID = "hydrogen-1";
 export const DEUTERIUM_ID = "deuterium";
@@ -63,25 +62,6 @@ export const ISOTOPE_SAMPLES = {
     symbol: "C",
   },
 } satisfies Record<IsotopeSampleId, typeof IsotopeSampleSchema.Type>;
-
-export interface IsotopeSampleLabels {
-  abundance: ReactNode;
-  ariaName: string;
-  name: ReactNode;
-  note: ReactNode;
-  tab: ReactNode;
-}
-
-export interface IsotopeLabLabels {
-  abundance: string;
-  atomicNumber: string;
-  chooseIsotope: string;
-  electrons: string;
-  massNumber: string;
-  neutrons: string;
-  protons: string;
-  samples: Record<IsotopeSampleId, IsotopeSampleLabels>;
-}
 
 /**
  * Narrows ToggleGroup string values to the available isotope examples.

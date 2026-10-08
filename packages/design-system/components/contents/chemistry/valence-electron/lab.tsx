@@ -7,7 +7,6 @@ import {
   isValenceElectronSampleId,
   VALENCE_ELECTRON_SAMPLE_IDS,
   VALENCE_ELECTRON_SAMPLES,
-  type ValenceElectronLabLabels,
   type ValenceElectronSampleId,
 } from "@repo/design-system/components/contents/chemistry/valence-electron/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -28,7 +27,23 @@ import { useState } from "react";
 
 interface ValenceElectronLabProps {
   description: ReactNode;
-  labels: ValenceElectronLabLabels;
+  labels: {
+    atomicNumber: string;
+    behavior: string;
+    chooseAtom: string;
+    configuration: string;
+    outerShell: string;
+    samples: Record<
+      ValenceElectronSampleId,
+      {
+        name: string;
+        note: ReactNode;
+        tab: string;
+        tendency: ReactNode;
+      }
+    >;
+    valenceElectron: string;
+  };
   title: ReactNode;
 }
 

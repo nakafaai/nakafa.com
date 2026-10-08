@@ -2,7 +2,6 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { COLORS, FIXED_COLORS, getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Record as Rec, Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const ATOMIC_RADIUS_MODE_ID = "atomic-radius";
 export const IONIZATION_ENERGY_MODE_ID = "ionization-energy";
@@ -124,31 +123,14 @@ export const PERIODIC_PROPERTY_MODES = {
   },
 } satisfies Record<PeriodicPropertyModeId, PeriodicPropertyMode>;
 
-export interface PeriodicPropertiesModeLabels {
-  cause: ReactNode;
-  groupTrend: ReactNode;
-  guidance: ReactNode;
-  name: string;
-  periodTrend: ReactNode;
-  question: ReactNode;
-  tab: string;
-}
-
 const PeriodicPropertiesFactLabelsSchema = Schema.Struct({
   cause: Schema.String,
   group: Schema.String,
   period: Schema.String,
   question: Schema.String,
 });
-type PeriodicPropertiesFactLabels =
+export type PeriodicPropertiesFactLabels =
   typeof PeriodicPropertiesFactLabelsSchema.Type;
-
-export interface PeriodicPropertiesLabLabels {
-  chooseTrend: string;
-  factLabels: PeriodicPropertiesFactLabels;
-  modes: Record<PeriodicPropertyModeId, PeriodicPropertiesModeLabels>;
-  sceneLabel: string;
-}
 
 export type PeriodicPropertiesSceneColors = ReturnType<
   typeof getPeriodicPropertiesSceneColors

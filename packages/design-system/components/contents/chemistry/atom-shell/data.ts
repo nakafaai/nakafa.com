@@ -1,5 +1,4 @@
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const NEON_ID = "neon";
 export const MAGNESIUM_ID = "magnesium";
@@ -51,22 +50,6 @@ export const EARLY_ELEMENT_FILL_LIMITS = [
   { key: "M", principalQuantumNumber: 3, fillLimit: 8 },
   { key: "N", principalQuantumNumber: 4, fillLimit: 2 },
 ] satisfies readonly (typeof EarlyElementFillLimitSchema.Type)[];
-
-export interface AtomShellSampleLabels {
-  name: string;
-  note: ReactNode;
-  tab: string;
-}
-
-export interface AtomShellLabLabels {
-  atomicNumber: string;
-  chooseAtom: string;
-  configuration: string;
-  electronTotal: string;
-  maximumCapacity: string;
-  outerShell: string;
-  samples: Record<AtomShellSampleId, AtomShellSampleLabels>;
-}
 
 /**
  * Narrows ToggleGroup string values to the available atom-shell examples.

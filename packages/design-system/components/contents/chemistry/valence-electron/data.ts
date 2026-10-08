@@ -1,6 +1,5 @@
 import { getEarlyElementShellConfiguration } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
@@ -50,23 +49,6 @@ export const VALENCE_ELECTRON_SAMPLES = {
   ValenceElectronSampleId,
   typeof ValenceElectronSampleSchema.Type
 >;
-
-export interface ValenceElectronSampleLabels {
-  name: string;
-  note: ReactNode;
-  tab: string;
-  tendency: ReactNode;
-}
-
-export interface ValenceElectronLabLabels {
-  atomicNumber: string;
-  behavior: string;
-  chooseAtom: string;
-  configuration: string;
-  outerShell: string;
-  samples: Record<ValenceElectronSampleId, ValenceElectronSampleLabels>;
-  valenceElectron: string;
-}
 
 /**
  * Narrows ToggleGroup string values to the available valence-electron examples.

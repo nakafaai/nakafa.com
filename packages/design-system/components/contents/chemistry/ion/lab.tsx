@@ -4,7 +4,6 @@ import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import {
   ION_SAMPLE_IDS,
   ION_SAMPLES,
-  type IonLabLabels,
   type IonSampleId,
   isIonSampleId,
   SODIUM_CATION_ID,
@@ -27,7 +26,25 @@ import { useState } from "react";
 
 interface IonLabProps {
   description: ReactNode;
-  labels: IonLabLabels;
+  labels: {
+    afterChange: string;
+    beforeChange: string;
+    charge: string;
+    chooseIon: string;
+    electronChange: string;
+    electrons: string;
+    neutralAtom: string;
+    neutrons: string;
+    protons: string;
+    samples: Record<
+      IonSampleId,
+      {
+        action: ReactNode;
+        name: string;
+        type: string;
+      }
+    >;
+  };
   title: ReactNode;
 }
 

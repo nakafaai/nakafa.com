@@ -2,8 +2,8 @@
 
 import {
   ANCIENT_ATOM_LEVELS,
-  type AncientAtomLabLabels,
   type AncientAtomLevelId,
+  type AncientAtomLevelLabels,
   WHOLE_MATTER_LEVEL_ID,
 } from "@repo/design-system/components/contents/chemistry/ancient-atom/data";
 import {
@@ -31,7 +31,14 @@ import { useState } from "react";
 
 interface AncientAtomLabProps {
   description: ReactNode;
-  labels: AncientAtomLabLabels;
+  labels: {
+    aristotleBody: ReactNode;
+    aristotleLabel: string;
+    chooseLevel: string;
+    democritusBody: ReactNode;
+    democritusLabel: string;
+    levels: Record<AncientAtomLevelId, AncientAtomLevelLabels>;
+  };
   title: ReactNode;
 }
 

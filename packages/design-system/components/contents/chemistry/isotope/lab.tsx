@@ -4,7 +4,6 @@ import {
   HYDROGEN_1_ID,
   ISOTOPE_SAMPLE_IDS,
   ISOTOPE_SAMPLES,
-  type IsotopeLabLabels,
   type IsotopeSampleId,
   isIsotopeSampleId,
 } from "@repo/design-system/components/contents/chemistry/isotope/data";
@@ -38,7 +37,25 @@ const particleDotVariants = cva(
 
 interface IsotopeLabProps {
   description: ReactNode;
-  labels: IsotopeLabLabels;
+  labels: {
+    abundance: string;
+    atomicNumber: string;
+    chooseIsotope: string;
+    electrons: string;
+    massNumber: string;
+    neutrons: string;
+    protons: string;
+    samples: Record<
+      IsotopeSampleId,
+      {
+        abundance: ReactNode;
+        ariaName: string;
+        name: ReactNode;
+        note: ReactNode;
+        tab: ReactNode;
+      }
+    >;
+  };
   title: ReactNode;
 }
 

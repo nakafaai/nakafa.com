@@ -1,5 +1,4 @@
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const WHOLE_MATTER_LEVEL_ID = "whole";
 export const FIRST_CUT_LEVEL_ID = "first-cut";
@@ -44,12 +43,3 @@ const AncientAtomLevelLabelsSchema = Schema.Struct({
 });
 
 export type AncientAtomLevelLabels = typeof AncientAtomLevelLabelsSchema.Type;
-
-export interface AncientAtomLabLabels {
-  aristotleBody: ReactNode;
-  aristotleLabel: string;
-  chooseLevel: string;
-  democritusBody: ReactNode;
-  democritusLabel: string;
-  levels: Record<AncientAtomLevelId, AncientAtomLevelLabels>;
-}

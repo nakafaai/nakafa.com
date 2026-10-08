@@ -4,7 +4,6 @@ import {
   ACCELERATION_CASES,
   ACCELERATION_LAB_SCENE,
   type AccelerationCaseId,
-  type AccelerationLabLabels,
   DEFAULT_ACCELERATION_CASE_ID,
   formatAccelerationMath,
   formatMeterPerSecondMath,
@@ -34,7 +33,17 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 interface AccelerationLabProps {
   description: ReactNode;
-  labels: AccelerationLabLabels;
+  labels: {
+    chooseCase: string;
+    factLabels: {
+      acceleration: ReactNode;
+      finalVelocity: ReactNode;
+      initialVelocity: ReactNode;
+      timeStep: ReactNode;
+    };
+    scenarioNames: Record<AccelerationCaseId, ReactNode>;
+    viewLabel: string;
+  };
   title: ReactNode;
 }
 
