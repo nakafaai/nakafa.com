@@ -72,6 +72,11 @@ const NavigationTargetSchema = Schema.Struct({
 
 export type NavigationTarget = typeof NavigationTargetSchema.Type;
 
+/** Finds the target of one navigation case from the page that starts it. */
+type NavigationResolve = (
+  page: Page
+) => Effect.Effect<NavigationTarget, NavigationLinkMissing>;
+
 const assertSettledNavigation = Effect.fn("NakafaE2E.assertSettledNavigation")(
   function* (page: Page, target: NavigationTarget) {
     yield* Effect.promise(() =>
@@ -297,7 +302,9 @@ export const verifyHardAndClientNavigation = Effect.fn(
   yield* navigateClient(page, target, hasTouch);
 });
 
-const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>
+const resolveHomepage: NavigationResolve = Effect.fn(
+  "NakafaE2E.resolveHomepage"
+)(() =>
   Effect.succeed({
     href: "/en",
     marker: { kind: "heading", text: HOMEPAGE_HEADING_PATTERN },
@@ -307,29 +314,31 @@ const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>
   } satisfies NavigationTarget)
 );
 
-const resolveQuran = Effect.fn("NakafaE2E.resolveQuran")(() =>
-  Effect.succeed({
-    href: appRoutes.quranSurahId,
-    marker: { kind: "heading", text: QURAN_HEADING_PATTERN },
-    name: "Quran",
-    shell: "app",
-    sourceHref: appRoutes.quranId,
-  } satisfies NavigationTarget)
+const resolveQuran: NavigationResolve = Effect.fn("NakafaE2E.resolveQuran")(
+  () =>
+    Effect.succeed({
+      href: appRoutes.quranSurahId,
+      marker: { kind: "heading", text: QURAN_HEADING_PATTERN },
+      name: "Quran",
+      shell: "app",
+      sourceHref: appRoutes.quranId,
+    } satisfies NavigationTarget)
 );
 
-const resolveTryout = Effect.fn("NakafaE2E.resolveTryout")(() =>
-  Effect.succeed({
-    href: appRoutes.tryout,
-    marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
-    name: "tryout",
-    shell: "app",
-    sourceHref: "/en",
-  } satisfies NavigationTarget)
+const resolveTryout: NavigationResolve = Effect.fn("NakafaE2E.resolveTryout")(
+  () =>
+    Effect.succeed({
+      href: appRoutes.tryout,
+      marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
+      name: "tryout",
+      shell: "app",
+      sourceHref: "/en",
+    } satisfies NavigationTarget)
 );
 
-const resolveCurriculum = Effect.fn("NakafaE2E.resolveCurriculum")(function* (
-  page: Page
-) {
+const resolveCurriculum: NavigationResolve = Effect.fn(
+  "NakafaE2E.resolveCurriculum"
+)(function* (page: Page) {
   const sourceHref = "/en";
   const href = yield* discoverLinkedHref(
     page,
@@ -345,36 +354,36 @@ const resolveCurriculum = Effect.fn("NakafaE2E.resolveCurriculum")(function* (
   } satisfies NavigationTarget;
 });
 
-const resolveArticle = Effect.fn("NakafaE2E.resolveArticle")(function* (
-  page: Page
-) {
-  const categoryHref = yield* discoverLinkedHref(
-    page,
-    "/en/articles",
-    ARTICLE_CATEGORY_HREF_PATTERN
-  );
-  const sourceHref = categoryHref;
-  const href = yield* discoverLinkedHref(
-    page,
-    sourceHref,
-    ARTICLE_HREF_PATTERN
-  );
-  return {
-    href,
-    marker: { kind: "heading" },
-    name: "article",
-    shell: "app",
-    sourceHref,
-  } satisfies NavigationTarget;
-});
+const resolveArticle: NavigationResolve = Effect.fn("NakafaE2E.resolveArticle")(
+  function* (page: Page) {
+    const categoryHref = yield* discoverLinkedHref(
+      page,
+      "/en/articles",
+      ARTICLE_CATEGORY_HREF_PATTERN
+    );
+    const sourceHref = categoryHref;
+    const href = yield* discoverLinkedHref(
+      page,
+      sourceHref,
+      ARTICLE_HREF_PATTERN
+    );
+    return {
+      href,
+      marker: { kind: "heading" },
+      name: "article",
+      shell: "app",
+      sourceHref,
+    } satisfies NavigationTarget;
+  }
+);
 
 /**
  * The homepage links curriculums rather than lessons, so the material case
  * starts from the lesson the acceptance corpus pins.
  */
-const resolveMaterial = Effect.fn("NakafaE2E.resolveMaterial")(function* (
-  page: Page
-) {
+const resolveMaterial: NavigationResolve = Effect.fn(
+  "NakafaE2E.resolveMaterial"
+)(function* (page: Page) {
   const sourceHref = pinnedRoutes.material.en;
   const href = yield* discoverLinkedHref(
     page,
