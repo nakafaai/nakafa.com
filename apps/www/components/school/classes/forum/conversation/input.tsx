@@ -39,12 +39,12 @@ import {
   useForumSessionStoreApi,
 } from "@/components/school/classes/forum/session/context";
 
-/** Handles forum post submission, uploads, and reply cleanup for the transcript. */
 interface ForumPostFailureReport {
   draft?: ForumPostInputDraft;
   error: unknown;
 }
 
+/** Handles forum post submission, uploads, and reply cleanup for the transcript. */
 export function ForumPostInput() {
   const t = useTranslations("School.Classes");
   const { acknowledgeUnreadCue, goToLatest } = useControls();
