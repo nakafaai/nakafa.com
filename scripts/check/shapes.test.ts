@@ -108,6 +108,8 @@ export interface Node {
 }
 export const category = Schema.suspend((): Schema.Codec<Category> => CategorySchema);
 export const node = Schema.suspend((): Schema.Schema<Node> => NodeSchema);
+export type Tree = { readonly children: ReadonlyArray<Tree> };
+export const tree = Schema.suspend((): Schema.Codec<Tree> => TreeSchema);
 `),
         []
       );
@@ -130,8 +132,10 @@ interface Lesson {
   readonly title: string;
 }
 export const lesson: Schema.Codec<Lesson> = LessonSchema;
+type Plain = { readonly id: string };
+export const plain: Schema.Codec<Plain> = PlainSchema;
 `),
-          [1, 8]
+          [1, 8, 12]
         );
       })
   );
@@ -142,6 +146,8 @@ export const lesson: Schema.Codec<Lesson> = LessonSchema;
         yield* shapes(`type Program = Extract<Row, { readonly family: "program" }>;
 type Drafts = Exclude<Status, { readonly state: "draft" | "archived"; readonly count: 1 }>;
 type Flags = Extract<Row, { readonly done: true; readonly failed: false }>;
+type Level = Extract<Row, { readonly n: -1 }>;
+type Choice = Extract<Row, { readonly k: ("a" | "b") }>;
 `),
         []
       );
@@ -156,8 +162,9 @@ type Picked = Pick<Row, { readonly family: "program" }>;
 type Wrapped = Extract<{ readonly family: "program" }, Row>;
 type Extended = Extract<Row, { readonly family: "program" }> & { extra: string };
 type Mixed = Exclude<Row, { readonly family: "program"; readonly id: string }>;
+type Ranged = Extract<Row, { readonly n: (-1 | number) }>;
 `),
-        [1, 2, 3, 4, 5]
+        [1, 2, 3, 4, 5, 6]
       );
     })
   );

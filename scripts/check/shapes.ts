@@ -13,6 +13,7 @@ import {
   isNumericLiteral,
   isOptionalTypeNode,
   isParenthesizedTypeNode,
+  isPrefixUnaryExpression,
   isPropertyAccessExpression,
   isPropertySignatureDeclaration,
   isQualifiedName,
@@ -40,17 +41,30 @@ const SELECTOR_FILTERS = HashSet.make("Exclude", "Extract");
 /** The Schema types whose type argument a recursive `Schema.suspend` thunk returns. */
 const RECURSIVE_CODECS = HashSet.make("Codec", "Schema");
 
-/** Whether a type is a string, number, or boolean literal, or a union of them. */
+/**
+ * Whether a type is a string, number, or boolean literal, or a union of them,
+ * with parentheses around any of them and a minus sign before a number.
+ */
 function isLiteralType(type: TypeNode): boolean {
+  if (isParenthesizedTypeNode(type)) {
+    return isLiteralType(type.type);
+  }
   if (isUnionTypeNode(type)) {
     return Arr.every(type.types, isLiteralType);
   }
+  return isLiteralTypeNode(type) && isLiteralValue(type.literal);
+}
+
+/** Whether the value of a literal type is a string, a boolean, or a number, possibly negative. */
+function isLiteralValue(literal: Node): boolean {
   return (
-    isLiteralTypeNode(type) &&
-    (isStringLiteral(type.literal) ||
-      isNumericLiteral(type.literal) ||
-      type.literal.kind === SyntaxKind.TrueKeyword ||
-      type.literal.kind === SyntaxKind.FalseKeyword)
+    isStringLiteral(literal) ||
+    isNumericLiteral(literal) ||
+    literal.kind === SyntaxKind.TrueKeyword ||
+    literal.kind === SyntaxKind.FalseKeyword ||
+    (isPrefixUnaryExpression(literal) &&
+      literal.operator === SyntaxKind.MinusToken &&
+      isNumericLiteral(literal.operand))
   );
 }
 
@@ -89,7 +103,9 @@ function selectsMembers(type: TypeReferenceNode) {
 /**
  * Whether a type spells out an object literal, directly or through a union,
  * intersection, array, tuple, `readonly`, or a type argument such as
- * `Readonly<{ ... }>`.
+ * `Readonly<{ ... }>`. The selector that `Extract` or `Exclude` takes as its
+ * second argument is skipped, because it picks union members and declares no
+ * shape.
  */
 function spellsObject(type: TypeNode): boolean {
   if (isTypeLiteralNode(type)) {
