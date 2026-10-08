@@ -42,10 +42,13 @@ const currentWeatherResponse = {
 type MakeResponse = (request: HttpClientRequest.HttpClientRequest) => Response;
 type ObserveRequest = (request: HttpClientRequest.HttpClientRequest) => void;
 /** Builds an Effect HTTP client with a deterministic OpenWeather response. */
-function makeWeatherClient(
-  makeResponse: MakeResponse,
-  observeRequest: ObserveRequest = () => undefined
-) {
+function makeWeatherClient({
+  makeResponse,
+  observeRequest = () => undefined,
+}: {
+  readonly makeResponse: MakeResponse;
+  readonly observeRequest?: ObserveRequest | undefined;
+}) {
   return Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make((request) =>
@@ -62,7 +65,7 @@ function runWeather(
   observeRequest?: ObserveRequest
 ) {
   return getCurrentWeather({ latitude, longitude }).pipe(
-    Effect.provide(makeWeatherClient(makeResponse, observeRequest)),
+    Effect.provide(makeWeatherClient({ makeResponse, observeRequest })),
     Effect.result
   );
 }
