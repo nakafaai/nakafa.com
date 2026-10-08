@@ -37,7 +37,7 @@ const BreadcrumbHeaderValueSchema = Schema.Struct({
   title: Schema.String,
 });
 
-/** Complete render data for one sticky, bounded breadcrumb header. */
+/** Render data for one sticky, bounded breadcrumb header; the optional action renders beside it as its own prop. */
 export type BreadcrumbHeaderValue = typeof BreadcrumbHeaderValueSchema.Type;
 
 /** Renders at most Home and the two nearest path items, beside an optional action. */

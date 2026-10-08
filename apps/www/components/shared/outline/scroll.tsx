@@ -3,14 +3,14 @@
 import { SidebarContent } from "@repo/design-system/components/ui/sidebar-content";
 import { createContext, type ReactNode, use, useRef } from "react";
 
-/** Creates the outline body's scroll element that virtualized entries read. */
+/** Creates the ref that the outline body's scroll element fills and that virtualized entries read. */
 function useOutlineScrollValue() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return { scrollRef };
 }
 
-type OutlineScrollValue = ReturnType<typeof useOutlineScrollValue>;
+type OutlineScrollValue = Readonly<ReturnType<typeof useOutlineScrollValue>>;
 
 const OutlineScrollContext = createContext<OutlineScrollValue | null>(null);
 

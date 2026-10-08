@@ -392,15 +392,17 @@ function getResultGroups(
   return Arr.dedupe(results.map((result) => result.section)).map((section) => ({
     items: results
       .filter((result) => result.section === section)
-      .map((result) => ({
-        excerpt: result.excerpt,
-        href: `/${result.route}`,
-        key: result.content_id,
-        label: result.title,
-        query,
-        type: "content" as const,
-        value: `${result.title} ${result.description} ${result.route}`,
-      })),
+      .map(
+        (result): SearchCommandItem => ({
+          excerpt: result.excerpt,
+          href: `/${result.route}`,
+          key: result.content_id,
+          label: result.title,
+          query,
+          type: "content",
+          value: `${result.title} ${result.description} ${result.route}`,
+        })
+      ),
     value: sectionLabels[section],
   }));
 }
