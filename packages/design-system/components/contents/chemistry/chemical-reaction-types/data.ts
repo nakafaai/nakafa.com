@@ -2,6 +2,7 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
+import type { ReactNode } from "react";
 
 export const COMBUSTION_TYPE_ID = "combustion";
 export const RUST_TYPE_ID = "rust";
@@ -27,6 +28,32 @@ export const ChemicalReactionTypeScenePointSchema = Schema.Tuple([
 ]);
 export type ChemicalReactionTypeScenePoint =
   typeof ChemicalReactionTypeScenePointSchema.Type;
+
+export const ChemicalReactionTypeSceneLabelsSchema = Schema.Struct({
+  after: Schema.String,
+  before: Schema.String,
+});
+
+export interface ChemicalReactionTypeLabels {
+  check: ReactNode;
+  equation: ReactNode;
+  helperCaption: ReactNode;
+  reading: ReactNode;
+  tab: string;
+  visibleCue: ReactNode;
+}
+
+export interface ChemicalReactionTypesLabLabels {
+  after: string;
+  before: string;
+  checkLabel: string;
+  chooseType: string;
+  equationLabel: string;
+  reactionView: string;
+  readingLabel: string;
+  types: Record<ChemicalReactionTypeId, ChemicalReactionTypeLabels>;
+  visibleCueLabel: string;
+}
 
 export const CHEMICAL_REACTION_TYPES = {
   [COMBUSTION_TYPE_ID]: {

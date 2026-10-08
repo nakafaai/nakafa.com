@@ -4,6 +4,7 @@ import { useThree } from "@react-three/fiber";
 import {
   COMBINING_VOLUMES_MODE_IDS,
   COMBINING_VOLUMES_SCENE_VIEW,
+  type CombiningVolumesLabLabels,
   type CombiningVolumesModeId,
   getCombiningVolumesSceneColors,
   isCombiningVolumesModeId,
@@ -36,25 +37,7 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.27;
 
 interface CombiningVolumesLabProps {
   description: ReactNode;
-  labels: {
-    chooseMode: string;
-    exampleLabel: string;
-    modes: Record<
-      CombiningVolumesModeId,
-      {
-        example: ReactNode;
-        helperCaption: ReactNode;
-        ratio: ReactNode;
-        tab: ReactNode;
-        tabLabel: string;
-      }
-    >;
-    products: string;
-    ratioLabel: string;
-    reactants: string;
-    reactionView: string;
-    volumeUnit: string;
-  };
+  labels: CombiningVolumesLabLabels;
   title: ReactNode;
 }
 

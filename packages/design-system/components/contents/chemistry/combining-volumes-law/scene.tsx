@@ -8,6 +8,7 @@ import {
   type CombiningVolumesModeId,
   type CombiningVolumesMoleculeKind,
   type CombiningVolumesSceneColors,
+  type CombiningVolumesSceneLabelsSchema,
   type CombiningVolumesScenePoint,
   CombiningVolumesScenePointSchema,
 } from "@repo/design-system/components/contents/chemistry/combining-volumes-law/data";
@@ -93,7 +94,7 @@ export function CombiningVolumesScene({
   modeId,
 }: {
   colors: CombiningVolumesSceneColors;
-  labels: { products: string; reactants: string; volumeUnit: string };
+  labels: typeof CombiningVolumesSceneLabelsSchema.Type;
   modeId: CombiningVolumesModeId;
 }) {
   const model = COMBINING_VOLUMES_MODELS[modeId];

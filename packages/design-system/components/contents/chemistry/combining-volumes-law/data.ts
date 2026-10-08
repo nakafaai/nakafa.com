@@ -2,6 +2,7 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
+import type { ReactNode } from "react";
 
 export const WATER_VAPOR_MODE_ID = "water-vapor";
 export const AMMONIA_SYNTHESIS_MODE_ID = "ammonia-synthesis";
@@ -43,6 +44,12 @@ export const CombiningVolumesScenePointSchema = Schema.Tuple([
 export type CombiningVolumesScenePoint =
   typeof CombiningVolumesScenePointSchema.Type;
 
+export const CombiningVolumesSceneLabelsSchema = Schema.Struct({
+  products: Schema.String,
+  reactants: Schema.String,
+  volumeUnit: Schema.String,
+});
+
 const CombiningVolumesGasModelSchema = Schema.Struct({
   fillColor: Schema.Literals([
     "hydrogenGas",
@@ -64,6 +71,25 @@ const CombiningVolumesModeModelSchema = Schema.Struct({
 });
 export type CombiningVolumesModeModel =
   typeof CombiningVolumesModeModelSchema.Type;
+
+export interface CombiningVolumesModeLabels {
+  example: ReactNode;
+  helperCaption: ReactNode;
+  ratio: ReactNode;
+  tab: ReactNode;
+  tabLabel: string;
+}
+
+export interface CombiningVolumesLabLabels {
+  chooseMode: string;
+  exampleLabel: string;
+  modes: Record<CombiningVolumesModeId, CombiningVolumesModeLabels>;
+  products: string;
+  ratioLabel: string;
+  reactants: string;
+  reactionView: string;
+  volumeUnit: string;
+}
 
 export const COMBINING_VOLUMES_SCENE_VIEW = {
   cameraPosition: [0, 2.15, 4.35],

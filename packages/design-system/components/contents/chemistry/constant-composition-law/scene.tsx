@@ -1,5 +1,6 @@
 import { Line } from "@react-three/drei";
 import {
+  type ConstantCompositionLabLabels,
   type ConstantCompositionModeId,
   type ConstantCompositionSceneColors,
   type ConstantCompositionScenePoint,
@@ -116,14 +117,7 @@ export function ConstantCompositionScene({
   modeId,
 }: {
   colors: ConstantCompositionSceneColors;
-  labels: {
-    after: string;
-    before: string;
-    modes: Record<
-      ConstantCompositionModeId,
-      { readoutAfter: ReactNode; readoutBefore: ReactNode }
-    >;
-  };
+  labels: Pick<ConstantCompositionLabLabels, "after" | "before" | "modes">;
   modeId: ConstantCompositionModeId;
 }) {
   const modeLabels = labels.modes[modeId];
