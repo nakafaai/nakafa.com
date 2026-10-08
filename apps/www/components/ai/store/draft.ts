@@ -55,7 +55,7 @@ export function saveAiDraftText(
 /**
  * Reads a draft owned by the current account and claims anonymous auth handoffs.
  */
-export function readAiDraftText(ownerId: string | null) {
+function readAiDraftText(ownerId: string | null) {
   return Effect.try({
     catch: (cause) => new AiDraftStorageError({ cause }),
     try: () => {
