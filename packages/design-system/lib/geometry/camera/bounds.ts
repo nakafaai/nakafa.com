@@ -1,5 +1,5 @@
-import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
-import { Effect, Option } from "effect";
+import { CoordinateFrameSchema } from "@repo/design-system/components/three/frame";
+import { Array as Arr, Effect, MutableHashMap, Option, Schema } from "effect";
 import {
   Box2,
   Box3,
@@ -13,33 +13,39 @@ import {
   Vector3,
 } from "three";
 
-export interface CameraLabelBounds {
-  readonly anchorX: number;
-  readonly anchorY: number;
-  readonly gap: { readonly x: number; readonly y: number };
-  readonly height: number;
-  readonly pixels?: { readonly width: number; readonly height: number };
-  readonly rotation: number;
-  readonly width: number;
-}
+const CameraLabelBoundsSchema = Schema.Struct({
+  anchorX: Schema.Finite,
+  anchorY: Schema.Finite,
+  gap: Schema.Struct({ x: Schema.Finite, y: Schema.Finite }),
+  height: Schema.Finite,
+  pixels: Schema.optionalKey(
+    Schema.Struct({ width: Schema.Finite, height: Schema.Finite })
+  ),
+  rotation: Schema.Finite,
+  width: Schema.Finite,
+});
+export type CameraLabelBounds = typeof CameraLabelBoundsSchema.Type;
 
 /** A fixed pixel rectangle follows an anchor's complete world-space envelope. */
-export interface CameraPixelLabel {
-  readonly anchors: Box3;
-  readonly gap: { readonly x: number; readonly y: number };
-  readonly rectangle: Box2;
-}
+const CameraPixelLabelSchema = Schema.Struct({
+  anchors: Schema.instanceOf(Box3),
+  gap: Schema.Struct({ x: Schema.Finite, y: Schema.Finite }),
+  rectangle: Schema.instanceOf(Box2),
+});
+export type CameraPixelLabel = typeof CameraPixelLabelSchema.Type;
 
-interface CameraMeasurement {
-  readonly bounds: Box3;
-  readonly labels: CameraPixelLabel[];
-}
+const CameraMeasurementSchema = Schema.Struct({
+  bounds: Schema.instanceOf(Box3),
+  labels: Schema.Array(CameraPixelLabelSchema),
+});
+type CameraMeasurement = typeof CameraMeasurementSchema.Type;
 
-export interface CameraMotionBounds {
-  readonly rotation?: keyof CoordinateFrame | "all" | undefined;
-  readonly scale?: number | undefined;
-  readonly translation?: CoordinateFrame | undefined;
-}
+const CameraMotionBoundsSchema = Schema.Struct({
+  rotation: Schema.optional(Schema.Literals(["x", "y", "z", "all"])),
+  scale: Schema.optional(Schema.Finite),
+  translation: Schema.optional(CoordinateFrameSchema),
+});
+export type CameraMotionBounds = typeof CameraMotionBoundsSchema.Type;
 
 export type CameraSubjectBounds = Box3 | false | CameraMotionBounds;
 
@@ -57,10 +63,10 @@ export const measureCameraBounds = Effect.fn("camera.measureBounds")(
     subjects,
     target,
   }: {
-    labels: ReadonlyMap<Object3D, CameraLabelBounds>;
+    labels: MutableHashMap.MutableHashMap<string, CameraLabelBounds>;
     position: Vector3;
     root: Object3D;
-    subjects: ReadonlyMap<Object3D, CameraSubjectBounds>;
+    subjects: MutableHashMap.MutableHashMap<string, CameraSubjectBounds>;
     target: Vector3;
   }) {
     const basis = new Matrix4().lookAt(position, target, new Vector3(0, 1, 0));
@@ -72,48 +78,63 @@ export const measureCameraBounds = Effect.fn("camera.measureBounds")(
       object: Object3D,
       parent: Matrix4
     ): Effect.fn.Return<CameraMeasurement> {
-      const result: CameraMeasurement = { bounds: new Box3(), labels: [] };
-      const { bounds } = result;
-      const subject = subjects.get(object);
+      const subject = Option.getOrUndefined(
+        MutableHashMap.get(subjects, object.uuid)
+      );
       if (!object.visible || subject === false) {
-        return result;
+        return { bounds: new Box3(), labels: [] };
       }
 
       const matrix = parent.clone().multiply(object.matrix);
       if (subject instanceof Box3) {
-        bounds.copy(subject).applyMatrix4(matrix);
-        return result;
+        return {
+          bounds: new Box3().copy(subject).applyMatrix4(matrix),
+          labels: [],
+        };
       }
       if (subject) {
-        for (const child of object.children) {
-          const measured = yield* visit(child, new Matrix4());
-          bounds.union(motionEnvelope(measured.bounds, subject));
-          result.labels.push(
-            ...measured.labels.map((label) => ({
-              ...label,
-              anchors: motionEnvelope(label.anchors, subject),
-            }))
-          );
+        const children = yield* Effect.forEach(object.children, (child) =>
+          visit(child, new Matrix4())
+        );
+        const bounds = new Box3();
+        for (const child of children) {
+          bounds.union(motionEnvelope(child.bounds, subject));
         }
-        return transformMeasurement(result, parent);
+        const labels = Arr.flatMap(children, (child) =>
+          child.labels.map((label) => ({
+            ...label,
+            anchors: motionEnvelope(label.anchors, subject),
+          }))
+        );
+        return transformMeasurement({ bounds, labels }, parent);
       }
 
+      const bounds = new Box3();
       bounds.union(yield* measureGeometryBounds(object, matrix));
 
-      const label = labels.get(object);
+      const label = Option.getOrUndefined(
+        MutableHashMap.get(labels, object.uuid)
+      );
       if (label) {
         bounds.union(labelBounds(label, matrix, right, up));
-        if (label.pixels) {
-          result.labels.push(pixelLabelBounds(label, label.pixels, matrix));
-        }
       }
+      const ownLabels = label?.pixels
+        ? [pixelLabelBounds(label, label.pixels, matrix)]
+        : [];
 
-      for (const child of object.children) {
-        const measured = yield* visit(child, matrix);
-        bounds.union(measured.bounds);
-        result.labels.push(...measured.labels);
+      const children = yield* Effect.forEach(object.children, (child) =>
+        visit(child, matrix)
+      );
+      for (const child of children) {
+        bounds.union(child.bounds);
       }
-      return result;
+      return {
+        bounds,
+        labels: [
+          ...ownLabels,
+          ...Arr.flatMap(children, (child) => child.labels),
+        ],
+      };
     });
 
     const measured = yield* visit(

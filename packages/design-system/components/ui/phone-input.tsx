@@ -23,6 +23,7 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import { useMemo, useState } from "react";
@@ -76,17 +77,6 @@ interface CountrySelectProps {
   value: Country;
 }
 
-interface CountryOption {
-  label: string;
-  value: Country;
-}
-
-function hasCountryValue(
-  option: CountrySelectProps["options"][number]
-): option is CountryOption {
-  return option.value !== undefined;
-}
-
 function CountrySelect({ value, onChange, options }: CountrySelectProps) {
   const t = useTranslations("Common");
 
@@ -94,7 +84,11 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
   const [open, setOpen] = useState(false);
 
   const filteredCountries = useMemo(() => {
-    const validOptions = options.filter(hasCountryValue);
+    const validOptions = Arr.flatMap(options, (option) =>
+      option.value === undefined
+        ? []
+        : [{ label: option.label, value: option.value }]
+    );
 
     let filtered = validOptions;
 
