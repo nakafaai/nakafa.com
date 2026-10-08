@@ -9,6 +9,7 @@ import {
   getVelocityAtTime,
   PROJECTILE_INSTANT_TIME,
   PROJECTILE_SCENARIOS,
+  type ProjectileAnalysisDecimalSeparator,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -21,12 +22,16 @@ const decimalSeparators = {
   id: "comma",
 } as const satisfies Record<ActiveAppLocaleCode, "comma" | "dot">;
 
-/** Renders deterministic projectile formulas on the server for every scenario. */
-export async function FeaturesProjectile() {
-  const locale = getLocaleOrThrow(await getLocale());
-  const t = await getTranslations({ locale, namespace: "Features" });
-  const decimalSeparator = decimalSeparators[locale];
-  const scenarios = PROJECTILE_SCENARIOS.map((scenario) => {
+type FeaturesTranslator = Awaited<
+  ReturnType<typeof getTranslations<"Features">>
+>;
+
+/** Builds each scenario's labels, server-rendered formulas, and motion for the client. */
+function getProjectileScenarios(
+  t: FeaturesTranslator,
+  decimalSeparator: ProjectileAnalysisDecimalSeparator
+) {
+  return PROJECTILE_SCENARIOS.map((scenario) => {
     const motion = getProjectileMotionState(scenario.id);
     const instantVelocity = getVelocityAtTime(motion, PROJECTILE_INSTANT_TIME);
 
@@ -105,6 +110,18 @@ export async function FeaturesProjectile() {
       motion,
     };
   });
+}
+
+/** One scenario as the projectile client receives it, with its formulas rendered on the server. */
+export type ProjectileOption = ReturnType<
+  typeof getProjectileScenarios
+>[number];
+
+/** Renders deterministic projectile formulas on the server for every scenario. */
+export async function FeaturesProjectile() {
+  const locale = getLocaleOrThrow(await getLocale());
+  const t = await getTranslations({ locale, namespace: "Features" });
+  const scenarios = getProjectileScenarios(t, decimalSeparators[locale]);
   const initialScenario =
     scenarios.find(({ id }) => id === DEFAULT_PROJECTILE_SCENARIO_ID) ??
     scenarios[0];

@@ -1,36 +1,41 @@
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import { isToolUIPart } from "ai";
+import { isToolUIPart, type StepStartUIPart, type TextUIPart } from "ai";
+import { MutableHashMap, Option } from "effect";
 
 type MessagePart = NinaMessage["parts"][number];
 
 /** An answer text part, which paces while it streams. */
-export type AnswerPart = Extract<MessagePart, { type: "text" }>;
+export type AnswerPart = Extract<MessagePart, TextUIPart>;
 
 /** Every rendered part other than answer text. */
-export type OtherPart = Exclude<MessagePart, { type: "step-start" | "text" }>;
+export type OtherPart = Exclude<MessagePart, StepStartUIPart | TextUIPart>;
 
-interface PartEntry {
-  readonly key: string;
-  readonly part: OtherPart;
-  readonly type: "part";
+/** A rendered part, keyed by its position among the parts of its type. */
+function createPartEntry(key: string, part: OtherPart) {
+  return { key, part, type: "part" as const };
 }
 
-interface AnswerEntry {
-  readonly key: string;
-  readonly part: AnswerPart;
+/** An answer, which holds the response parts that follow it. */
+function createAnswerEntry(key: string, part: AnswerPart) {
   /** Response parts after the answer, such as its sources. */
-  readonly trailing: PartEntry[];
-  readonly type: "answer";
+  const trailing: PartEntry[] = [];
+  return { key, part, trailing, type: "answer" as const };
 }
 
+type PartEntry = ReturnType<typeof createPartEntry>;
+type AnswerEntry = ReturnType<typeof createAnswerEntry>;
 type MessageEntry = AnswerEntry | PartEntry;
 
-/** One run of consecutive work steps or answer parts. */
-export interface MessageGroup {
-  readonly entries: MessageEntry[];
-  readonly key: string;
-  readonly kind: "activity" | "response";
+function createMessageGroup(
+  key: string,
+  kind: "activity" | "response",
+  entries: MessageEntry[]
+) {
+  return { entries, key, kind };
 }
+
+/** One run of consecutive work steps or answer parts. */
+export type MessageGroup = ReturnType<typeof createMessageGroup>;
 
 /**
  * Groups a message's parts into activity and response sections in Agent order.
@@ -43,7 +48,7 @@ export interface MessageGroup {
  */
 export function groupMessageParts(parts: readonly MessagePart[]) {
   const groups: MessageGroup[] = [];
-  const counts = new Map<string, number>();
+  const counts = MutableHashMap.empty<string, number>();
   for (const part of parts) {
     if (
       part.type === "step-start" ||
@@ -53,16 +58,19 @@ export function groupMessageParts(parts: readonly MessagePart[]) {
     }
     const tool = isToolUIPart(part);
     const kind = part.type === "reasoning" || tool ? "activity" : "response";
-    const count = counts.get(part.type) ?? 0;
-    counts.set(part.type, count + 1);
+    const count = Option.getOrElse(
+      MutableHashMap.get(counts, part.type),
+      () => 0
+    );
+    MutableHashMap.set(counts, part.type, count + 1);
     const key = tool ? part.toolCallId : `${part.type}-${count}`;
     const entry: MessageEntry =
       part.type === "text"
-        ? { key, part, trailing: [], type: "answer" }
-        : { key, part, type: "part" };
+        ? createAnswerEntry(key, part)
+        : createPartEntry(key, part);
     const group = groups.at(-1);
     if (group?.kind !== kind) {
-      groups.push({ entries: [entry], key, kind });
+      groups.push(createMessageGroup(key, kind, [entry]));
       continue;
     }
     const previous = group.entries.at(-1);

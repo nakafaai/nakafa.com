@@ -1,23 +1,28 @@
 import type { Ref } from "@confect/core";
 import type refs from "@repo/backend/confect/_generated/refs";
+import {
+  onboardingFocuses,
+  onboardingRegions,
+} from "@repo/backend/confect/onboarding/values";
+import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
+import { Schema } from "effect";
 
 import type {
   OnboardingAnswer,
-  OnboardingFocus,
   OnboardingItemName,
-  OnboardingRegion,
-  OnboardingRole,
 } from "@/components/programs/onboarding/options";
 
 export type OnboardingProfile = Ref.Returns<
   typeof refs.public.onboarding.queries.getStatus
 >["profile"];
 
-export interface OnboardingAnswers {
-  readonly focus?: OnboardingFocus;
-  readonly region?: OnboardingRegion;
-  readonly role?: OnboardingRole;
-}
+const OnboardingAnswersSchema = Schema.Struct({
+  focus: Schema.optionalKey(Schema.Literals(onboardingFocuses)),
+  region: Schema.optionalKey(Schema.Literals(onboardingRegions)),
+  role: Schema.optionalKey(Schema.Literals(selfSelectableUserRoles)),
+});
+
+export type OnboardingAnswers = typeof OnboardingAnswersSchema.Type;
 
 /** Initializes controlled questionnaire answers from a resumable profile. */
 export function getOnboardingAnswers(
