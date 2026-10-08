@@ -31,7 +31,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest, type TestConvex } from "convex-test";
-import { Clock, Effect } from "effect";
+import { DateTime } from "effect";
 
 const cleanup = internal.contentRelease.cleanup.cleanup;
 const RELEASE = {
@@ -275,7 +275,7 @@ describe("contentRelease/cleanup", () => {
 
   it("returns an exact retry deadline for retained future artifacts", async () => {
     const t = convexTest(schema, convexModules);
-    const retryAt = Effect.runSync(Clock.currentTimeMillis) + 60_000;
+    const retryAt = DateTime.toEpochMillis(DateTime.nowUnsafe()) + 60_000;
     await t.mutation(async (ctx) => {
       await insertRelease(ctx);
       await insertArtifact(ctx, 0, retryAt);

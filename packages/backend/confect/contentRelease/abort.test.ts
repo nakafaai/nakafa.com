@@ -23,7 +23,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Clock, Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 /** Runs one server-cursor abort page at the native Convex test boundary. */
 function abort(ctx: MutationCtx, releaseId = ABORT_RELEASE_ID) {
@@ -306,7 +306,7 @@ describe("contentRelease/abort", () => {
           });
         }
       });
-      const startedAt = Effect.runSync(Clock.currentTimeMillis);
+      const startedAt = DateTime.toEpochMillis(DateTime.nowUnsafe());
       await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
       const facts = await t.run((ctx) =>
         ctx.db.query("contentArtifactFacts").unique()

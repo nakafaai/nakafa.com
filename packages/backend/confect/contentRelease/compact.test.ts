@@ -27,7 +27,7 @@ import {
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Array as Arr, Clock, Effect, Option, Order } from "effect";
+import { Array as Arr, DateTime, Effect, Option, Order } from "effect";
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
@@ -161,7 +161,7 @@ describe("contentRelease/compact", () => {
           ({ artifactHash }) => artifactHash === `sha256:${"c".repeat(64)}`
         )
       )?.retainUntil
-    ).toBeGreaterThan(Effect.runSync(Clock.currentTimeMillis));
+    ).toBeGreaterThan(DateTime.toEpochMillis(DateTime.nowUnsafe()));
     expect(stored.state).toMatchObject({
       compactedFloor: 3,
     });
@@ -194,7 +194,7 @@ describe("contentRelease/compact", () => {
           release,
           releases[index - 1],
           index === 1
-            ? Effect.runSync(Clock.currentTimeMillis)
+            ? DateTime.toEpochMillis(DateTime.nowUnsafe())
             : COMPACTION_OLD_TIME
         );
       }
