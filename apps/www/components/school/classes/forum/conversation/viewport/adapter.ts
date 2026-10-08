@@ -72,12 +72,3 @@ export type ViewportAdapters = Context.Service.Shape<
 
 /** Adapter for the virtualized Transcript scroll surface. */
 export type ViewportScroller = ViewportAdapters["scroller"];
-
-/** Adapter for persisting one Forum Conversation Snapshot. */
-export type ViewportSession = ViewportAdapters["session"];
-
-/** Adapter for marking the latest visible Transcript post as read. */
-export type ViewportRead = ViewportAdapters["read"];
-
-/** Adapter for debounce and highlight timing. */
-export type ViewportTimer = ViewportAdapters["timer"];
