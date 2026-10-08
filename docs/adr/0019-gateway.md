@@ -109,12 +109,12 @@ Given up:
 Changed:
 
 - **Failure reading.** A token read that fails inside a request, after the
-  build-time check passed, reaches `classify` as a plain `Error` and reads as
-  `unknown`. The provider reads the service token inside its own fetch, and the
-  `@ai-sdk/provider-utils` that `@ai-sdk/openai-compatible` uses returns that
-  error unchanged. Under the Vercel gateway a rejected key read as `auth`, which
-  Nina stores as `service-configuration`. `GatewayLive` still fails a deployment
-  that cannot call the gateway before any request.
+  build-time check passed, reaches `classify` as an error with no HTTP status,
+  which reads as `unknown`. The provider reads the service token inside its own
+  fetch, and the `@ai-sdk/provider-utils` that `@ai-sdk/openai-compatible` uses
+  returns that error unchanged. Under the Vercel gateway a rejected key read as
+  `auth`, which Nina stores as `service-configuration`. `GatewayLive` still fails
+  a deployment that cannot call the gateway before any request.
 - **Duplicate provider packages.** `@convex-dev/ai-sdk-provider` brings its own
   copies of the provider packages beside the AI SDK's: `@ai-sdk/provider` 4.0.3
   and 4.0.7 beside 4.0.24, and `@ai-sdk/provider-utils` 5.0.12 and 5.0.28 beside
