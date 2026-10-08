@@ -29,13 +29,16 @@ export const BacterialGrowthFrameInputSchema = Schema.Struct({
   )
 );
 type BacterialGrowthFrameInput = typeof BacterialGrowthFrameInputSchema.Type;
-interface BacteriaCountGroup {
-  bacteriaCount: number;
-  generationCount: number;
-}
-interface VisibleBacteriaCountGroup extends BacteriaCountGroup {
-  visibleCount: number;
-}
+const BacteriaCountGroupSchema = Schema.Struct({
+  bacteriaCount: Schema.Finite,
+  generationCount: Schema.Finite,
+});
+type BacteriaCountGroup = typeof BacteriaCountGroupSchema.Type;
+const VisibleBacteriaCountGroupSchema = Schema.Struct({
+  ...BacteriaCountGroupSchema.fields,
+  visibleCount: Schema.Finite,
+});
+type VisibleBacteriaCountGroup = typeof VisibleBacteriaCountGroupSchema.Type;
 
 /**
  * Calculates the population represented by one generation.
@@ -112,7 +115,10 @@ function groupBacteriaCounts(bacteriaCounts: readonly number[]) {
     const previousGroup = groups.at(-1);
 
     if (previousGroup?.bacteriaCount === bacteriaCount) {
-      previousGroup.generationCount += 1;
+      groups[groups.length - 1] = {
+        bacteriaCount,
+        generationCount: previousGroup.generationCount + 1,
+      };
       continue;
     }
 

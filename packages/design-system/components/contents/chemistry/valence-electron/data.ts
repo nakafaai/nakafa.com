@@ -65,12 +65,6 @@ export interface ValenceElectronLabLabels {
   valenceElectron: string;
 }
 
-export interface ValenceElectronLabProps {
-  description: ReactNode;
-  labels: ValenceElectronLabLabels;
-  title: ReactNode;
-}
-
 /**
  * Narrows ToggleGroup string values to the available valence-electron examples.
  */

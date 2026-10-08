@@ -7,25 +7,32 @@ import {
   GRAPH_FULL_CIRCLE_SEGMENTS,
 } from "@repo/design-system/components/three/helpers/quality";
 import { getRadians } from "@repo/math/angles";
+import { Schema } from "effect";
 
-type CircleLineLabel = Omit<ResolvedLineLabel, "at"> & {
-  progress?: number;
-};
+const CircleLabelProgressSchema = Schema.Struct({
+  progress: Schema.optionalKey(Schema.Finite),
+});
+type CircleLineLabel = Omit<ResolvedLineLabel, "at"> &
+  typeof CircleLabelProgressSchema.Type;
 
-interface CircleAngle {
-  radius: number;
-  startDegrees: number;
-  sweepDegrees: number;
-}
+const CircleAngleSchema = Schema.Struct({
+  radius: Schema.Finite,
+  startDegrees: Schema.Finite,
+  sweepDegrees: Schema.Finite,
+});
+type CircleAngle = typeof CircleAngleSchema.Type;
 
-interface CircleArc extends CircleAngle {
-  segments?: number;
-}
+const CircleArcSchema = Schema.Struct({
+  ...CircleAngleSchema.fields,
+  segments: Schema.optionalKey(Schema.Finite),
+});
+type CircleArc = typeof CircleArcSchema.Type;
 
-interface CircleRadius {
-  degrees: number;
-  radius: number;
-}
+const CircleRadiusSchema = Schema.Struct({
+  degrees: Schema.Finite,
+  radius: Schema.Finite,
+});
+type CircleRadius = typeof CircleRadiusSchema.Type;
 
 interface CircleArcLine extends CircleArc {
   color: NonNullable<ResolvedLine["color"]>;

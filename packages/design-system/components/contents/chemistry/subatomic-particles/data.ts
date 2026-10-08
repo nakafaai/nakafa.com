@@ -72,12 +72,6 @@ export interface SubatomicParticlesLabLabels {
   scene: SubatomicParticlesSceneLabels;
 }
 
-export interface SubatomicParticlesLabProps {
-  description: ReactNode;
-  labels: SubatomicParticlesLabLabels;
-  title: ReactNode;
-}
-
 export function isSubatomicParticlesModeId(
   value: string
 ): value is SubatomicParticlesModeId {

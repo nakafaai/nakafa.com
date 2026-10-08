@@ -1,8 +1,8 @@
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const RelationElementsSchema = Schema.Array(Schema.String).pipe(
   Schema.check(
-    Schema.makeFilter((ids) => new Set(ids).size === ids.length, {
+    Schema.makeFilter((ids) => Arr.dedupe(ids).length === ids.length, {
       message: "Expected unique element identities within each set.",
     })
   )
