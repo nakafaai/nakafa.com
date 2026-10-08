@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr, Schema } from "effect";
 
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import type {
@@ -11,6 +12,8 @@ import {
   projectVisualFrame,
   resolveVisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
+
+const pointJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 function plane(first: PlaneObject, ...rest: PlaneObject[]): PlaneVisual {
   return {
@@ -201,7 +204,7 @@ describe("MathVisual geometry", () => {
     const pathIds = geometry.paths.map(({ id }) => id);
 
     expect(geometry.paths).toHaveLength(13);
-    expect(new Set(pathIds).size).toBe(pathIds.length);
+    expect(Arr.dedupe(pathIds)).toHaveLength(pathIds.length);
     expect(pathIds).toContain("box:edge:1");
     expect(pathIds).toContain("box-edge-1");
     for (const path of geometry.paths.filter(({ id }) => id.includes(":"))) {
@@ -303,8 +306,9 @@ describe("MathVisual geometry", () => {
       geometry.paths[0]?.points.at(-1)
     );
     expect(
-      new Set(geometry.paths[0]?.points.map((point) => JSON.stringify(point)))
-        .size
+      Arr.dedupe(
+        geometry.paths[0]?.points.map((point) => pointJson(point)) ?? []
+      ).length
     ).toBe(4);
   });
 

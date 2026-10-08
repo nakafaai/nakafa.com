@@ -1,6 +1,6 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
+import irtScaleItemsTable from "@repo/backend/confect/_generated/tables/irtScaleItems";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 const MAX_THETA = 4;
 const MIN_THETA = -4;
@@ -11,11 +11,17 @@ const MIN_INFORMATION = 0.000_001;
 const IRT_SCORE_MEAN = 500;
 const IRT_SCORE_STANDARD_DEVIATION = 100;
 
+/** The calibrated parameters of one item, the only item fields the estimate reads. */
+const IrtItemParametersSchema = irtScaleItemsTable.Fields.mapFields(
+  Struct.pick(["difficulty", "discrimination"])
+);
+
 /** One calibrated item paired with the observed attempt answer. */
-export interface IrtItemAnswer {
-  isCorrect: boolean;
-  item: Docs["irtScaleItems"];
-}
+const IrtItemAnswerSchema = Schema.Struct({
+  isCorrect: Schema.Boolean,
+  item: IrtItemParametersSchema,
+});
+type IrtItemAnswer = typeof IrtItemAnswerSchema.Type;
 
 /** Estimates theta, standard error, and the public score for one IRT vector. */
 export const estimateIrtScore = Effect.fn("tryouts.runtime.estimateIrtScore")(
@@ -101,7 +107,7 @@ function getInformation(itemAnswers: IrtItemAnswer[], theta: number) {
 }
 
 /** Returns the 2PL expected correctness probability for one item. */
-function getExpectedProbability(item: Docs["irtScaleItems"], theta: number) {
+function getExpectedProbability(item: IrtItemAnswer["item"], theta: number) {
   const exponent = -item.discrimination * (theta - item.difficulty);
   return 1 / (1 + Math.exp(exponent));
 }

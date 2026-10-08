@@ -1,11 +1,5 @@
-import {
-  type AppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
-import {
-  type TryoutSection,
-  TryoutSectionSchema,
-} from "@nakafa/aksara-contracts/tryout/catalog";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { TryoutSectionSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import {
   ReleaseError,
@@ -16,19 +10,18 @@ import {
   verifyTryoutCatalog,
   verifyTryoutPlacement,
 } from "@repo/backend/confect/contentRelease/tryout/verify";
+import { tryoutSetIdentityValidator } from "@repo/backend/confect/tryouts/route";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { Effect, Option, Schema } from "effect";
+
+const TryoutSectionIdentitySchema = Schema.Struct({
+  ...tryoutSetIdentityValidator.fields,
+  sectionKey: TryoutSectionSchema.fields.sectionKey,
+});
 /** Stable authored keys that select one localized try-out section. */
-export interface TryoutSectionIdentity {
-  readonly countryKey: TryoutSection["countryKey"];
-  readonly examKey: TryoutSection["examKey"];
-  readonly locale: AppLocaleCode;
-  readonly sectionKey: TryoutSection["sectionKey"];
-  readonly setKey: TryoutSection["setKey"];
-  readonly trackKey: TryoutSection["trackKey"];
-}
+export type TryoutSectionIdentity = typeof TryoutSectionIdentitySchema.Type;
 /** Reads one verified server-only section and all signed placements. */
 export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
   function* (identity: TryoutSectionIdentity) {

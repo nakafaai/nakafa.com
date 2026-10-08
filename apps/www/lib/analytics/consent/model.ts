@@ -1,7 +1,10 @@
 "use client";
 
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
+import {
+  ANALYTICS_CONSENT_CATEGORY,
+  type AnalyticsConsentState,
+} from "@repo/analytics/consent";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Option } from "effect";
 import { useState } from "react";
@@ -11,7 +14,6 @@ import {
   createAnonymousConsentSave,
   refreshBrowserPrivacySignal,
 } from "@/lib/analytics/consent/browser";
-import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 import {
   resolveConsentAffordances,
   resolveConsentError,
@@ -36,6 +38,9 @@ function ignoreUnavailableConsentAction() {
   // Optional analytics cannot accept a decision before its signed notice is live.
 }
 
+const unavailableAnalyticsConsentStatus: AnalyticsConsentState["status"] =
+  "pending";
+
 const unavailableAnalyticsConsent = {
   canDecline: false,
   canGrant: false,
@@ -46,8 +51,8 @@ const unavailableAnalyticsConsent = {
   isSaving: false,
   preferences: initialConsentPreferences,
   setPreferencesOpen: ignoreUnavailableConsentAction,
-  status: "pending",
-} satisfies AnalyticsConsentContextValue;
+  status: unavailableAnalyticsConsentStatus,
+};
 
 /**
  * Derives the consent state one component sees, plus the inputs the consent
@@ -159,7 +164,7 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
       user,
     });
 
-  const value: AnalyticsConsentContextValue =
+  const value =
     mode === "unavailable"
       ? unavailableAnalyticsConsent
       : {

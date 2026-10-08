@@ -8,8 +8,6 @@ import {
   isSubatomicParticlePropertiesModeId,
   SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS,
   SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG,
-  type SubatomicParticlePropertiesFact,
-  type SubatomicParticlePropertiesLabProps,
   type SubatomicParticlePropertiesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import { SubatomicParticlePropertiesScene } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/scene";
@@ -33,9 +31,38 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { useTheme } from "next-themes";
+import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
+
+export interface SubatomicParticlePropertiesLabProps {
+  description: ReactNode;
+  labels: {
+    chooseMode: string;
+    modes: Record<
+      SubatomicParticlePropertiesModeId,
+      {
+        facts: readonly {
+          label: string;
+          value: ReactNode;
+        }[];
+        summary: ReactNode;
+        tab: string;
+      }
+    >;
+    scene: {
+      electron: ReactNode;
+      electronRegion: ReactNode;
+      negativePlate: ReactNode;
+      neutron: ReactNode;
+      nucleus: ReactNode;
+      positivePlate: ReactNode;
+      proton: ReactNode;
+    };
+  };
+  title: ReactNode;
+}
 
 /**
  * Renders one 3D lab for reading charge, mass, and location of subatomic
@@ -169,7 +196,7 @@ function ResponsivePropertyCamera({
 /**
  * Renders one compact property fact.
  */
-function PropertyFact({ fact }: { fact: SubatomicParticlePropertiesFact }) {
+function PropertyFact({ fact }: { fact: { label: string; value: ReactNode } }) {
   return (
     <div className="flex min-h-12 min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground text-sm">{fact.label}</dt>

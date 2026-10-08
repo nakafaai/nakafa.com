@@ -12,7 +12,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Array as Arr, Order, pipe } from "effect";
+import { Array as Arr, MutableHashMap, Order, pipe } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const SHORT_ID = "asset:en:material:lesson";
@@ -82,17 +82,19 @@ describe("contents/metrics/batch", () => {
     const groups = groupMetricsQueueItems(queueItems, 2);
 
     expect(Arr.map(groups, (group) => group.length)).toEqual([2, 1, 1]);
-    expect(batch.signals).toHaveProperty("size", 2);
-    expect(batch.counters).toHaveProperty(
-      "size",
+    expect(MutableHashMap.size(batch.signals)).toBe(2);
+    expect(MutableHashMap.size(batch.counters)).toBe(
       2 * learningPopularityWindowValues.length
     );
     expect(
       pipe(
-        Arr.map([...batch.signals.values()], ({ ref, viewCount }) => ({
-          contentId: ref.content_id,
-          viewCount,
-        })),
+        Arr.map(
+          [...MutableHashMap.values(batch.signals)],
+          ({ ref, viewCount }) => ({
+            contentId: ref.content_id,
+            viewCount,
+          })
+        ),
         Arr.sortWith((row) => row.contentId, Order.String)
       )
     ).toEqual([
@@ -124,13 +126,19 @@ describe("contents/metrics/batch", () => {
     const batch = buildMetricsBatch({ queueItems, updatedAt: NOW });
 
     expect(
-      Arr.map([...batch.signals.values()], (signal) => signal.ref.content_id)
+      Arr.map(
+        [...MutableHashMap.values(batch.signals)],
+        (signal) => signal.ref.content_id
+      )
     ).toEqual(["retained"]);
     expect(
-      Arr.map([...batch.counters.values()], ({ ref, windowKey }) => ({
-        contentId: ref.content_id,
-        windowKey,
-      }))
+      Arr.map(
+        [...MutableHashMap.values(batch.counters)],
+        ({ ref, windowKey }) => ({
+          contentId: ref.content_id,
+          windowKey,
+        })
+      )
     ).toEqual([
       { contentId: "retained", windowKey: "365d" },
       { contentId: "retained", windowKey: "lifetime" },

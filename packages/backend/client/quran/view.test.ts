@@ -8,8 +8,9 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import type { FunctionReturnType } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
   activeReleaseId: "quran-release",
@@ -101,7 +102,9 @@ describe("signed Quran view decoder", () => {
         kind: "external",
       });
       expect(indonesian.tafsirAccess).toEqual(makeQuranTafsirProjection("id"));
-      expect(JSON.stringify(indonesian)).not.toContain("Tafsir lengkap");
+      const indonesianJson =
+        yield* Schema.encodeEffect(JsonTextSchema)(indonesian);
+      expect(indonesianJson).not.toContain("Tafsir lengkap");
     })
   );
   it.live("fails closed for inactive and inconsistent views", () =>

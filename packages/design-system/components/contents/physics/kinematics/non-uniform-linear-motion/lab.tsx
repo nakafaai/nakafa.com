@@ -10,7 +10,6 @@ import {
   GLBB_SCENARIOS,
   GLBB_SCENE,
   GLBB_TRAIN_MODEL_PATH,
-  type GlbbLabProps,
   type GlbbMotionState,
   type GlbbScenarioId,
   getGlbbLoopTime,
@@ -43,6 +42,22 @@ import type { Group } from "three";
 const TRACK_COLOR = getColor("SLATE", 700);
 const RAIL_COLOR = getColor("SLATE", 400);
 const SLEEPER_COLOR = getColor("STONE", 600);
+
+interface GlbbLabProps {
+  description: ReactNode;
+  labels: {
+    chooseScenario: string;
+    factLabels: {
+      acceleration: ReactNode;
+      displacement: ReactNode;
+      finalVelocity: ReactNode;
+      initialVelocity: ReactNode;
+    };
+    scenarioNames: Record<GlbbScenarioId, ReactNode>;
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
 
 export function NonUniformLinearMotionLab({
   title,

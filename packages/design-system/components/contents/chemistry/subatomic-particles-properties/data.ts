@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const CHARGE_MODE_ID = "charge";
 export const MASS_MODE_ID = "mass";
@@ -14,11 +14,13 @@ export type SubatomicParticlePropertiesModeId =
 export type SubatomicParticlePropertiesColors = ReturnType<
   typeof getSubatomicParticlePropertiesColors
 >;
-export type SubatomicParticlePropertiesCameraPoint = readonly [
-  number,
-  number,
-  number,
-];
+const SubatomicParticlePropertiesCameraPointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+type SubatomicParticlePropertiesCameraPoint =
+  typeof SubatomicParticlePropertiesCameraPointSchema.Type;
 
 export const SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS = [
   CHARGE_MODE_ID,
@@ -50,42 +52,6 @@ export const SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG = {
     narrowCameraPosition: SubatomicParticlePropertiesCameraPoint;
   }
 >;
-
-export interface SubatomicParticlePropertiesFact {
-  label: string;
-  value: ReactNode;
-}
-
-export interface SubatomicParticlePropertiesModeLabels {
-  facts: readonly SubatomicParticlePropertiesFact[];
-  summary: ReactNode;
-  tab: string;
-}
-
-export interface SubatomicParticlePropertiesSceneLabels {
-  electron: ReactNode;
-  electronRegion: ReactNode;
-  negativePlate: ReactNode;
-  neutron: ReactNode;
-  nucleus: ReactNode;
-  positivePlate: ReactNode;
-  proton: ReactNode;
-}
-
-export interface SubatomicParticlePropertiesLabLabels {
-  chooseMode: string;
-  modes: Record<
-    SubatomicParticlePropertiesModeId,
-    SubatomicParticlePropertiesModeLabels
-  >;
-  scene: SubatomicParticlePropertiesSceneLabels;
-}
-
-export interface SubatomicParticlePropertiesLabProps {
-  description: ReactNode;
-  labels: SubatomicParticlePropertiesLabLabels;
-  title: ReactNode;
-}
 
 /**
  * Narrows ToggleGroup string values to the available particle-property modes.

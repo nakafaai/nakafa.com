@@ -13,7 +13,6 @@ import {
 } from "@nakafa/aksara-contracts/projection/spec";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -24,20 +23,22 @@ type ContentRouteResult = Ref.Returns<
   typeof refs.public.contentRelease.ownership.resolve
 >;
 /** One active Aksara route selected without exposing executable code. */
-type ActiveContentRoute =
-  | {
-      readonly activeReleaseId: ActiveContentReleaseId | null;
-      readonly kind: "unmanaged";
-    }
-  | {
-      readonly activeReleaseId: ActiveContentReleaseId;
-      readonly kind: "missing";
-    }
-  | {
-      readonly activeReleaseId: ActiveContentReleaseId;
-      readonly kind: "found";
-      readonly projection: typeof RoutedContentProjectionSchema.Type;
-    };
+const ActiveContentRouteSchema = Schema.Union([
+  Schema.Struct({
+    activeReleaseId: Schema.NullOr(ReleaseIdSchema),
+    kind: Schema.Literal("unmanaged"),
+  }),
+  Schema.Struct({
+    activeReleaseId: ReleaseIdSchema,
+    kind: Schema.Literal("missing"),
+  }),
+  Schema.Struct({
+    activeReleaseId: ReleaseIdSchema,
+    kind: Schema.Literal("found"),
+    projection: RoutedContentProjectionSchema,
+  }),
+]);
+type ActiveContentRoute = typeof ActiveContentRouteSchema.Type;
 /** Verifies one found projection against its requested family and route. */
 const decodeActiveProjection = Effect.fn(
   "NakafaContent.decodeActiveProjection"
@@ -54,13 +55,9 @@ const decodeActiveProjection = Effect.fn(
     readonly publicPath: string;
   }
 ) {
-  const parsed = yield* Effect.try({
-    catch: () => new PublishedProjectionError(identity),
-    try: (): unknown => JSON.parse(input.projectionJson),
-  });
-  const projection = yield* Schema.decodeUnknownEffect(
-    RoutedContentProjectionSchema
-  )(parsed, {
+  const projection = yield* Schema.decodeEffect(
+    Schema.fromJsonString(RoutedContentProjectionSchema)
+  )(input.projectionJson, {
     onExcessProperty: "error",
   }).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
   if (

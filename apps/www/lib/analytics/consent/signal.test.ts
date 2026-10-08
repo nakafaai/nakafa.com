@@ -41,17 +41,17 @@ describe("browser analytics privacy signal", () => {
         },
       };
 
-      expect(yield* readBrowserPrivacySignal(source)).toBe(false);
+      expect(yield* readBrowserPrivacySignal(source.read)).toBe(false);
 
       doNotTrack = "1";
-      expect(yield* readBrowserPrivacySignal(source)).toBe(true);
+      expect(yield* readBrowserPrivacySignal(source.read)).toBe(true);
 
       doNotTrack = "0";
       globalPrivacyControl = true;
-      expect(yield* readBrowserPrivacySignal(source)).toBe(true);
+      expect(yield* readBrowserPrivacySignal(source.read)).toBe(true);
 
       globalPrivacyControl = false;
-      expect(yield* readBrowserPrivacySignal(source)).toBe(false);
+      expect(yield* readBrowserPrivacySignal(source.read)).toBe(false);
     })
   );
 
@@ -183,7 +183,7 @@ describe("browser analytics privacy signal", () => {
         revokeAccountAnalyticsGrant(
           setAccountConsent,
           expectedUserId,
-          readBrowserPrivacySignal(source)
+          readBrowserPrivacySignal(source.read)
         )
       );
 
@@ -211,7 +211,7 @@ describe("browser analytics privacy signal", () => {
         setAccountConsent,
         expectedUserId,
         true,
-        readBrowserPrivacySignal(source)
+        readBrowserPrivacySignal(source.read)
       );
 
       doNotTrack = "1";
@@ -219,7 +219,7 @@ describe("browser analytics privacy signal", () => {
         setAccountConsent,
         expectedUserId,
         true,
-        readBrowserPrivacySignal(source)
+        readBrowserPrivacySignal(source.read)
       );
 
       expect(setAccountConsent).toHaveBeenNthCalledWith(1, {

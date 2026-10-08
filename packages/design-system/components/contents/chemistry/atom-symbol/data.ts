@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const CARBON_12_ID = "carbon-12";
-export const OXYGEN_16_ID = "oxygen-16";
-export const SODIUM_23_ID = "sodium-23";
-export const CHLORINE_35_ID = "chlorine-35";
+const OXYGEN_16_ID = "oxygen-16";
+const SODIUM_23_ID = "sodium-23";
+const CHLORINE_35_ID = "chlorine-35";
 
 export type AtomSymbolSampleId =
   | typeof CARBON_12_ID
@@ -17,6 +17,12 @@ export const ATOM_SYMBOL_SAMPLE_IDS = [
   SODIUM_23_ID,
   CHLORINE_35_ID,
 ] satisfies AtomSymbolSampleId[];
+
+const AtomSymbolSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  massNumber: Schema.Finite,
+  symbol: Schema.String,
+});
 
 export const ATOM_SYMBOL_SAMPLES = {
   [CARBON_12_ID]: {
@@ -39,38 +45,7 @@ export const ATOM_SYMBOL_SAMPLES = {
     massNumber: 35,
     symbol: "Cl",
   },
-} satisfies Record<
-  AtomSymbolSampleId,
-  {
-    atomicNumber: number;
-    massNumber: number;
-    symbol: string;
-  }
->;
-
-export interface AtomSymbolSampleLabels {
-  ariaName: string;
-  name: ReactNode;
-  tab: ReactNode;
-}
-
-export interface AtomSymbolLabLabels {
-  atomicNumber: string;
-  chooseAtom: string;
-  electronCount: string;
-  elementSymbol: string;
-  massNumber: string;
-  neutralAtom: string;
-  neutronCount: string;
-  protonCount: string;
-  samples: Record<AtomSymbolSampleId, AtomSymbolSampleLabels>;
-}
-
-export interface AtomSymbolLabProps {
-  description: ReactNode;
-  labels: AtomSymbolLabLabels;
-  title: ReactNode;
-}
+} satisfies Record<AtomSymbolSampleId, typeof AtomSymbolSampleSchema.Type>;
 
 /**
  * Narrows ToggleGroup string values to available atom-symbol samples.

@@ -1,10 +1,20 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   agentFailureResponse,
+  agentJsonResponse,
   logInternalFailure,
 } from "@repo/backend/confect/routes/agent/response";
 import { NakafaAgentInputError } from "@repo/contents/agent/errors";
-import { Array as Arr, Cause, Effect, Logger, MutableRef } from "effect";
+import {
+  Array as Arr,
+  Cause,
+  Effect,
+  Logger,
+  MutableRef,
+  Schema,
+} from "effect";
+
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 describe("agent responses", () => {
   it("uses corrective input guidance when no cause is supplied", async () => {
@@ -20,6 +30,11 @@ describe("agent responses", () => {
       resolution: "Choose a published locale.",
       request_id: "request-locale",
     });
+  });
+  it("sends an empty 200 when the body is undefined", async () => {
+    const response = agentJsonResponse(undefined);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("");
   });
   it.effect("logs unexpected causes with the public request identity", () =>
     Effect.gen(function* () {
@@ -58,7 +73,7 @@ describe("agent responses", () => {
         request_id: "request-123",
         status: 500,
       });
-      expect(JSON.stringify(body)).not.toContain("private defect detail");
+      expect(encodeJson(body)).not.toContain("private defect detail");
     })
   );
 });

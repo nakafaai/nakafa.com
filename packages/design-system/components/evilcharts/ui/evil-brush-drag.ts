@@ -1,38 +1,24 @@
 import type { EvilBrushRange } from "@repo/design-system/components/evilcharts/ui/evil-brush";
+import { Schema } from "effect";
 import {
-  type PointerEventHandler,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
   useCallback,
   useRef,
 } from "react";
 
-type DragType = "left" | "right" | "middle";
+const DragTypeSchema = Schema.Literals(["left", "right", "middle"]);
+type DragType = typeof DragTypeSchema.Type;
 
-/** Pointer handlers attached to one brush handle or the selected region. */
-interface BrushPointerBindings {
-  onLostPointerCapture: PointerEventHandler<HTMLElement>;
-  onPointerCancel: PointerEventHandler<HTMLElement>;
-  onPointerDown: PointerEventHandler<HTMLElement>;
-  onPointerMove: PointerEventHandler<HTMLElement>;
-  onPointerUp: PointerEventHandler<HTMLElement>;
-}
+const DragStateSchema = Schema.Struct({
+  originEndIndex: Schema.Finite,
+  originStartIndex: Schema.Finite,
+  originX: Schema.Finite,
+  type: DragTypeSchema,
+});
+type DragState = typeof DragStateSchema.Type;
 
-/** Creates pointer handlers for one movable part of the brush. */
-type BrushBindingFactory = (type: DragType) => BrushPointerBindings;
-
-interface DragState {
-  originRange: EvilBrushRange;
-  originX: number;
-  type: DragType;
-}
-
-interface UseBrushDragOptions {
-  commit: (next: EvilBrushRange, mode?: DragType) => void;
-  containerRef: RefObject<HTMLDivElement | null>;
-  range: EvilBrushRange;
-  totalPoints: number;
-}
+type BrushCommit = (next: EvilBrushRange, mode?: DragType) => void;
 
 /**
  * Converts captured pointer movement into range updates for either handle or
@@ -44,7 +30,13 @@ function useBrushDrag({
   totalPoints,
   containerRef,
   commit,
-}: UseBrushDragOptions) {
+}: {
+  range: EvilBrushRange;
+  totalPoints: number;
+  containerRef: RefObject<HTMLDivElement | null>;
+  commit: BrushCommit;
+}) {
+  const { endIndex: rangeEndIndex, startIndex: rangeStartIndex } = range;
   const dragRef = useRef<DragState | null>(null);
 
   const toIndexDelta = useCallback(
@@ -66,12 +58,13 @@ function useBrushDrag({
       event.preventDefault();
       event.currentTarget.setPointerCapture(event.pointerId);
       dragRef.current = {
-        originRange: { ...range },
+        originEndIndex: rangeEndIndex,
+        originStartIndex: rangeStartIndex,
         originX: event.clientX,
         type,
       };
     },
-    [range]
+    [rangeEndIndex, rangeStartIndex]
   );
 
   const moveDrag = useCallback(
@@ -82,13 +75,13 @@ function useBrushDrag({
       }
 
       const delta = toIndexDelta(event.clientX - drag.originX);
-      const { originRange, type } = drag;
+      const { originEndIndex, originStartIndex, type } = drag;
 
       if (type === "left") {
         commit(
           {
-            startIndex: originRange.startIndex + delta,
-            endIndex: originRange.endIndex,
+            startIndex: originStartIndex + delta,
+            endIndex: originEndIndex,
           },
           "left"
         );
@@ -98,16 +91,16 @@ function useBrushDrag({
       if (type === "right") {
         commit(
           {
-            startIndex: originRange.startIndex,
-            endIndex: originRange.endIndex + delta,
+            startIndex: originStartIndex,
+            endIndex: originEndIndex + delta,
           },
           "right"
         );
         return;
       }
 
-      const span = originRange.endIndex - originRange.startIndex;
-      let startIndex = originRange.startIndex + delta;
+      const span = originEndIndex - originStartIndex;
+      let startIndex = originStartIndex + delta;
       let endIndex = startIndex + span;
 
       if (startIndex < 0) {
@@ -147,6 +140,12 @@ function useBrushDrag({
 
   return { bind };
 }
+
+/** Creates pointer handlers for one movable part of the brush. */
+type BrushBindingFactory = ReturnType<typeof useBrushDrag>["bind"];
+
+/** Pointer handlers attached to one brush handle or the selected region. */
+type BrushPointerBindings = ReturnType<BrushBindingFactory>;
 
 export {
   type BrushBindingFactory,

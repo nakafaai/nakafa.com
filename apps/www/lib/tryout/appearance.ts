@@ -1,14 +1,21 @@
 import type { buttonVariants } from "@repo/design-system/lib/button";
+import { Schema } from "effect";
 
 type ButtonVariantOptions = NonNullable<Parameters<typeof buttonVariants>[0]>;
 type ButtonVariant = NonNullable<ButtonVariantOptions["variant"]>;
 
+const TryoutPreviewChoiceAppearanceSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("selectable"),
+  }),
+  Schema.Struct({
+    isCorrect: Schema.UndefinedOr(Schema.Boolean),
+    kind: Schema.Literal("revealed"),
+  }),
+]);
+
 export type TryoutPreviewChoiceAppearance =
-  | { readonly kind: "selectable" }
-  | {
-      readonly isCorrect: boolean | undefined;
-      readonly kind: "revealed";
-    };
+  typeof TryoutPreviewChoiceAppearanceSchema.Type;
 
 /** Selects the answer-option appearance while a choice remains selectable. */
 export function getTryoutSelectableChoiceVariant({

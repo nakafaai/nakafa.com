@@ -151,14 +151,12 @@ export const stageProjectionProgram = Effect.fn(
     projectionJson: encodeProjectionJson(projection),
   }));
   const values = Arr.map(entries, ({ projectionJson }) => projectionJson);
-  const identities = new Set(
-    Arr.map(
-      projections,
-      (projection) =>
-        `${projection.contentKey}\0${projectionArtifactLocale(projection)}`
-    )
+  const identities = Arr.map(
+    projections,
+    (projection) =>
+      `${projection.contentKey}\0${projectionArtifactLocale(projection)}`
   );
-  if (identities.size !== projections.length) {
+  if (Arr.dedupe(identities).length !== projections.length) {
     return yield* releaseFail(
       "CONTENT_RELEASE_CONFLICT",
       `Projection batch ${batchIndex} repeats one content head.`

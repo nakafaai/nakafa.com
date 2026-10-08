@@ -18,12 +18,14 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/legend";
 import { LoadingLine } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
+import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import {
   ChartTooltip,
   ChartTooltipContent,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
+import { Schema } from "effect";
 import {
   type ComponentProps,
   createContext,
@@ -51,19 +53,55 @@ export type CurveType = NonNullable<
 
 // Shared context
 
+const LineChartStateSchema = Schema.Struct({
+  animationType: RevealAnimationSchema, // default intro reveal each <Line /> inherits
+  isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
+  selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
+});
+
+type SelectDataKey = (dataKey: string | null) => void; // sets the selected series
+
+/**
+ * Builds the shared value of the chart. `config` holds the colors and labels of
+ * every series, while `animationType` and `curveType` are the defaults each
+ * <Line /> inherits. The context type is derived from this hook.
+ */
+function useLineChartValue(
+  {
+    animationType,
+    isLoading,
+    selectedDataKey,
+  }: typeof LineChartStateSchema.Type,
+  config: ChartConfig,
+  curveType: CurveType,
+  selectDataKey: SelectDataKey
+) {
+  return useMemo(
+    () => ({
+      animationType,
+      config,
+      curveType,
+      isLoading,
+      selectDataKey,
+      selectedDataKey,
+    }),
+    [
+      animationType,
+      config,
+      curveType,
+      isLoading,
+      selectDataKey,
+      selectedDataKey,
+    ]
+  );
+}
+
 /**
  * Shared state for every part of the chart. Lifted into <EvilLineChart /> so that
  * <Line />, <XAxis />, <Legend />, and friends can read it without prop drilling.
  * Sub-components are composed freely, the provider is the single source of truth.
  */
-interface LineChartContextValue {
-  animationType: LineAnimationType; // default intro reveal each <Line /> inherits
-  config: ChartConfig; // colors + labels for every series
-  curveType: CurveType; // default curve interpolation each <Line /> inherits
-  isLoading: boolean; // whether the chart shows its loading skeleton
-  selectDataKey: (dataKey: string | null) => void; // sets the selected series
-  selectedDataKey: string | null; // currently selected series, or null when none
-}
+type LineChartContextValue = ReturnType<typeof useLineChartValue>;
 
 const LineChartContext = createContext<LineChartContextValue | null>(null);
 
@@ -162,23 +200,11 @@ export function EvilLineChart<
     [onSelectionChange]
   );
 
-  const contextValue = useMemo<LineChartContextValue>(
-    () => ({
-      config,
-      curveType,
-      animationType,
-      isLoading,
-      selectedDataKey,
-      selectDataKey,
-    }),
-    [
-      config,
-      curveType,
-      animationType,
-      isLoading,
-      selectedDataKey,
-      selectDataKey,
-    ]
+  const contextValue = useLineChartValue(
+    { animationType, isLoading, selectedDataKey },
+    config,
+    curveType,
+    selectDataKey
   );
 
   return (

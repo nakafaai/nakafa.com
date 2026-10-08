@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -20,9 +21,12 @@ import {
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
 import { convexTest, type TestConvex } from "convex-test";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
+const RollbackEntryJsonSchema = Schema.fromJsonString(
+  RollbackSnapshotEntrySchema
+);
 
 /** Stages one exact item batch through its registered mutation. */
 function stage(
@@ -106,7 +110,9 @@ describe("contentRelease/items", () => {
       )
     );
     expect(deleted?.priorSequence).toBe(1);
-    expect(JSON.parse(deleted?.rollbackJson ?? "{}")).toMatchObject({
+    expect(
+      Schema.decodeUnknownSync(RollbackEntryJsonSchema)(deleted?.rollbackJson)
+    ).toMatchObject({
       snapshot: { state: "material" },
     });
   });
@@ -137,7 +143,11 @@ describe("contentRelease/items", () => {
       ctx.db.query("contentItems").unique()
     );
     expect(absentItem?.priorSequence).toBeUndefined();
-    expect(JSON.parse(absentItem?.rollbackJson ?? "{}")).toMatchObject({
+    expect(
+      Schema.decodeUnknownSync(RollbackEntryJsonSchema)(
+        absentItem?.rollbackJson
+      )
+    ).toMatchObject({
       snapshot: { state: "absent" },
     });
 
@@ -166,7 +176,11 @@ describe("contentRelease/items", () => {
       ctx.db.query("contentItems").unique()
     );
     expect(tombstonedItem?.priorSequence).toBe(2);
-    expect(JSON.parse(tombstonedItem?.rollbackJson ?? "{}")).toMatchObject({
+    expect(
+      Schema.decodeUnknownSync(RollbackEntryJsonSchema)(
+        tombstonedItem?.rollbackJson
+      )
+    ).toMatchObject({
       snapshot: { state: "absent" },
     });
   });
@@ -259,7 +273,9 @@ describe("contentRelease/items", () => {
     await stage(t, [testUpsertJson()]);
     const item = await t.run((ctx) => ctx.db.query("contentItems").unique());
     expect(item?.priorSequence).toBe(2);
-    expect(JSON.parse(item?.rollbackJson ?? "{}")).toMatchObject({
+    expect(
+      Schema.decodeUnknownSync(RollbackEntryJsonSchema)(item?.rollbackJson)
+    ).toMatchObject({
       snapshot: { state: "material" },
     });
   });
@@ -305,7 +321,9 @@ describe("contentRelease/items", () => {
     ]);
     const item = await t.query((ctx) => ctx.db.query("contentItems").unique());
     expect(item?.priorSequence).toBe(1);
-    expect(JSON.parse(item?.rollbackJson ?? "{}")).toMatchObject({
+    expect(
+      Schema.decodeUnknownSync(RollbackEntryJsonSchema)(item?.rollbackJson)
+    ).toMatchObject({
       snapshot: {
         state: "question",
         head: {

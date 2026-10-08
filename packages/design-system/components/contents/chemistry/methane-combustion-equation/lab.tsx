@@ -38,7 +38,7 @@ type MoleculeModel = ReturnType<typeof molecule>;
 /** One molecule of a model, placed and turned in the equation. */
 type MoleculeInstance = ReturnType<typeof instance>;
 
-export interface MethaneCombustionEquationLabProps {
+interface MethaneCombustionEquationLabProps {
   description: ReactNode;
   labels: {
     equation: ReactNode;

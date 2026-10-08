@@ -22,6 +22,10 @@ const PublicationCursorSchema = Schema.Union([
   Schema.Tuple(publicationFields),
   Schema.Tuple([...publicationFields, Schema.Finite, Schema.String]),
 ]);
+const PublicationCursorJsonSchema = Schema.fromJsonString(
+  PublicationCursorSchema
+);
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Authenticates the position encoded by one non-empty public cursor. */
 const readPublicationPosition = Effect.fn(
@@ -31,12 +35,8 @@ const readPublicationPosition = Effect.fn(
     return yield* invalidCursor("unsupported format");
   }
   const payload = cursor.slice(ARTICLE_PUBLICATION_CURSOR_PREFIX.length);
-  const parsed = yield* Effect.try({
-    try: (): unknown => JSON.parse(payload),
-    catch: () => invalidCursorError("invalid position"),
-  });
-  const key = yield* Schema.decodeUnknownEffect(PublicationCursorSchema)(
-    parsed
+  const key = yield* Schema.decodeEffect(PublicationCursorJsonSchema)(
+    payload
   ).pipe(Effect.mapError(() => invalidCursorError("invalid position")));
   return key;
 });
@@ -56,7 +56,7 @@ export function articlePublicationCursor(
   row: PublicationRow<"articleCatalog">
 ) {
   return encodeArticlePublicationCursor(
-    JSON.stringify([
+    Schema.encodeSync(JsonTextSchema)([
       row.slot,
       row.appLocale,
       row.category,

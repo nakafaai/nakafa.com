@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/confect/classes/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Array as Arr } from "effect";
+import { Array as Arr, HashSet } from "effect";
 
 const paginationOpts = {
   cursor: null,
@@ -48,8 +48,8 @@ describe("class queries", () => {
             }),
         paginationOpts,
       });
-      expect(new Set(Arr.map(all.page, (row) => row._id))).toEqual(
-        new Set([classId, archivedId])
+      expect(HashSet.fromIterable(Arr.map(all.page, (row) => row._id))).toEqual(
+        HashSet.fromIterable([classId, archivedId])
       );
       for (const filter of [
         {
@@ -91,8 +91,10 @@ describe("class queries", () => {
       },
     });
     expect(
-      new Set(Arr.map([...first.page, ...second.page], (row) => row._id))
-    ).toEqual(new Set([classId, archivedId]));
+      HashSet.fromIterable(
+        Arr.map([...first.page, ...second.page], (row) => row._id)
+      )
+    ).toEqual(HashSet.fromIterable([classId, archivedId]));
     await expect(
       outsider.query(api.classes.queries.getClasses, {
         schoolId,
@@ -315,8 +317,8 @@ describe("class queries", () => {
     const codes = await admin.query(api.classes.queries.getInviteCodes, {
       classId,
     });
-    expect(new Set(Arr.map(codes, (row) => row.role))).toEqual(
-      new Set(["teacher", "student"])
+    expect(HashSet.fromIterable(Arr.map(codes, (row) => row.role))).toEqual(
+      HashSet.fromIterable(["teacher", "student"])
     );
     await expect(
       student.query(api.classes.queries.getInviteCodes, {

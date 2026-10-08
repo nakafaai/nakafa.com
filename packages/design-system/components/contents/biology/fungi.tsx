@@ -2,12 +2,14 @@
 
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import type {
-  BiologyLabProps,
   BiologyScenePoint,
-  BiologySceneProps,
   BiologySceneView,
 } from "@repo/design-system/components/contents/biology/data";
-import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
+import {
+  BiologyLabFrame,
+  type BiologyLabProps,
+  type BiologySceneProps,
+} from "@repo/design-system/components/contents/biology/lab-frame";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import { BiologyTube } from "@repo/design-system/components/contents/biology/parts";
 

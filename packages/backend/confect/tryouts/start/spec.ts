@@ -2,7 +2,6 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Schema, Struct } from "effect";
 export const startAttemptArgsValidator = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
@@ -47,14 +46,15 @@ export type AttemptAccessFields = Pick<
   | "accessSubscriptionId"
   | "countsForCompetition"
 >;
-export interface TryoutStartScope {
-  readonly countryKey: string;
-  readonly examKey: string;
-  readonly now: number;
-  readonly setKey: string;
-  readonly trackKey: string;
-  readonly userId: Id<"users">;
-}
+const tryoutStartScopeSchema = Schema.Struct({
+  countryKey: tryoutRouteKeyValidator,
+  examKey: tryoutRouteKeyValidator,
+  now: Schema.Finite,
+  setKey: tryoutRouteKeyValidator,
+  trackKey: tryoutRouteKeyValidator,
+  userId: IdSchema("users"),
+});
+export type TryoutStartScope = typeof tryoutStartScopeSchema.Type;
 
 /** Expected domain failure raised while starting a try-out attempt. */
 export class TryoutStartError extends Schema.TaggedError<TryoutStartError>()(

@@ -1,13 +1,15 @@
-import { Array as Arr } from "effect";
+import { contentSearchDocumentValidator } from "@repo/backend/confect/contents/helpers/search/schema";
+import { Array as Arr, Struct } from "effect";
 
 const EXCERPT_CONTEXT_RADIUS = 90;
 const EXCERPT_MAX_LENGTH = 220;
 const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
 const WHITESPACE_PATTERN = /\s+/g;
-interface ContentSearchExcerptSource {
-  description: string;
-  text: string;
-}
+const ContentSearchExcerptSourceSchema =
+  contentSearchDocumentValidator.mapFields(
+    Struct.pick(["description", "text"])
+  );
+type ContentSearchExcerptSource = typeof ContentSearchExcerptSourceSchema.Type;
 
 /** Builds a plain-text search excerpt without HTML markup. */
 export function buildContentSearchExcerpt(

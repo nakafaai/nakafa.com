@@ -1,9 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { checkoutLocaleValidator } from "@repo/backend/confect/customers/checkout/localization";
 import {
   CheckoutSessionIoErrorWire,
   CheckoutUnavailable,
+  checkoutRequestInputValidator,
   InvalidCheckoutSuccessUrl,
 } from "@repo/backend/confect/customers/checkout/spec";
 import {
@@ -26,10 +26,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicAction({
       name: "generateCheckoutLink",
-      args: () => ({
-        locale: checkoutLocaleValidator,
-        successUrl: Schema.String,
-      }),
+      args: () => checkoutRequestInputValidator.fields,
       returns: () =>
         Schema.Struct({
           url: Schema.String,

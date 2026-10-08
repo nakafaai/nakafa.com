@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const GROUP_ONE_FOCUS_ID = "group-one";
 export const PERIOD_THREE_FOCUS_ID = "period-three";
@@ -27,12 +27,12 @@ export const MODERN_PERIODIC_TABLE_FOCUS_IDS = [
   NOBLE_GAS_FOCUS_ID,
 ] satisfies ModernPeriodicTableFocusId[];
 
-export const METAL_CATEGORY_ID = "metal";
-export const TRANSITION_CATEGORY_ID = "transition-metal";
-export const METALLOID_CATEGORY_ID = "metalloid";
-export const NONMETAL_CATEGORY_ID = "nonmetal";
-export const NOBLE_GAS_CATEGORY_ID = "noble-gas";
-export const INNER_TRANSITION_CATEGORY_ID = "inner-transition";
+const METAL_CATEGORY_ID = "metal";
+const TRANSITION_CATEGORY_ID = "transition-metal";
+const METALLOID_CATEGORY_ID = "metalloid";
+const NONMETAL_CATEGORY_ID = "nonmetal";
+const NOBLE_GAS_CATEGORY_ID = "noble-gas";
+const INNER_TRANSITION_CATEGORY_ID = "inner-transition";
 export const SERIES_MARKER_CATEGORY_ID = "series-marker";
 
 export type PeriodicElementCategoryId =
@@ -53,7 +53,7 @@ export const PERIODIC_ELEMENT_CATEGORY_IDS = [
   INNER_TRANSITION_CATEGORY_ID,
 ] satisfies PeriodicElementCategoryId[];
 
-export const MODERN_PERIODIC_TABLE_CATEGORY_COLOR_KEYS = {
+const MODERN_PERIODIC_TABLE_CATEGORY_COLOR_KEYS = {
   [METAL_CATEGORY_ID]: "metal",
   [TRANSITION_CATEGORY_ID]: "transitionMetal",
   [METALLOID_CATEGORY_ID]: "metalloid",
@@ -275,30 +275,13 @@ export const MODERN_PERIODIC_TABLE_FOCI = {
   }
 >;
 
-export interface ModernPeriodicTableFocusLabels {
-  detail: ReactNode;
-  name: string;
-  tab: string;
-}
-
-export interface ModernPeriodicTableLabLabels {
-  atomicNumber: string;
-  categoryNames: Record<PeriodicElementCategoryId, string>;
-  chooseFocus: string;
-  focuses: Record<ModernPeriodicTableFocusId, ModernPeriodicTableFocusLabels>;
-  focusLabel: string;
-  group: string;
-  period: string;
-  periodPrefix: string;
-  seriesNames: Record<PeriodicSeriesRowKey, string>;
-  tableLabel: string;
-}
-
-export interface ModernPeriodicTableLabProps {
-  description: ReactNode;
-  labels: ModernPeriodicTableLabLabels;
-  title: ReactNode;
-}
+const ModernPeriodicTableSceneLabelsSchema = Schema.Struct({
+  group: Schema.String,
+  period: Schema.String,
+  seriesNames: Schema.Record(Schema.String, Schema.String),
+});
+export type ModernPeriodicTableSceneLabels =
+  typeof ModernPeriodicTableSceneLabelsSchema.Type;
 
 /**
  * Narrows ToggleGroup string values to the available periodic-table focus modes.

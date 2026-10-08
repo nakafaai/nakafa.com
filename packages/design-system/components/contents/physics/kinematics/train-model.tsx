@@ -1,11 +1,11 @@
 "use client";
 
 import { useGLTF } from "@react-three/drei";
-import { Array as Arr } from "effect";
+import { Array as Arr, HashSet } from "effect";
 import { useMemo } from "react";
 import { Box3, Color, type Material, Mesh, Vector3 } from "three";
 
-const COLORABLE_TRAIN_PART_NAMES = new Set(["train-electric-bullet-a"]);
+const COLORABLE_TRAIN_PART_NAMES = HashSet.make("train-electric-bullet-a");
 
 interface PhysicsTrainModelProps {
   bodyColor?: string;
@@ -30,7 +30,7 @@ export function PhysicsTrainModel({
       child.castShadow = true;
       child.receiveShadow = true;
 
-      if (bodyColor && COLORABLE_TRAIN_PART_NAMES.has(child.name)) {
+      if (bodyColor && HashSet.has(COLORABLE_TRAIN_PART_NAMES, child.name)) {
         child.material = tintMaterial(child.material, bodyColor);
       }
     });

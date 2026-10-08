@@ -9,10 +9,7 @@ import {
 } from "@repo/analytics/consent";
 import { Clock, Effect, Fiber, Option } from "effect";
 import { useEffect } from "react";
-import {
-  type BrowserPrivacySignalSource,
-  readBrowserPrivacySignal,
-} from "@/lib/analytics/consent/signal";
+import { readBrowserPrivacySignal } from "@/lib/analytics/consent/signal";
 import {
   type AccountConsentDecision,
   type BrowserConsentSnapshot,
@@ -24,22 +21,20 @@ import {
 } from "@/lib/analytics/consent/storage";
 import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
-const navigatorPrivacySignalSource = {
-  read() {
-    let globalPrivacyControl: unknown;
-    if ("globalPrivacyControl" in navigator) {
-      globalPrivacyControl = navigator.globalPrivacyControl;
-    }
+function readNavigatorPrivacySignal() {
+  let globalPrivacyControl: unknown;
+  if ("globalPrivacyControl" in navigator) {
+    globalPrivacyControl = navigator.globalPrivacyControl;
+  }
 
-    return {
-      doNotTrack: navigator.doNotTrack,
-      globalPrivacyControl,
-    };
-  },
-} satisfies BrowserPrivacySignalSource;
+  return {
+    doNotTrack: navigator.doNotTrack,
+    globalPrivacyControl,
+  };
+}
 
 const browserPrivacySignal = readBrowserPrivacySignal(
-  navigatorPrivacySignalSource
+  readNavigatorPrivacySignal
 );
 
 type SetBrowserConsent = AnalyticsConsentStoreState["setBrowserConsent"];
@@ -123,7 +118,7 @@ export function useBrowserConsentSync({
     let isMounted = true;
     const loadBrowserConsent = () =>
       Effect.runFork(
-        readBrowserPrivacySignal(navigatorPrivacySignalSource).pipe(
+        readBrowserPrivacySignal(readNavigatorPrivacySignal).pipe(
           Effect.flatMap((hasBrowserPrivacySignal) =>
             loadAnonymousAnalyticsConsent().pipe(
               Effect.matchEffect({

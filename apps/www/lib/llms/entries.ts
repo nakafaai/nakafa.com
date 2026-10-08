@@ -1,5 +1,5 @@
 import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
-import { Option, Record as Rec } from "effect";
+import { Option, Record as Rec, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   BASE_URL,
@@ -12,27 +12,32 @@ import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames"
 const derivedSiteRoutes = ["/curricula"] as const;
 type DerivedSiteRoute = (typeof derivedSiteRoutes)[number];
 
+const LlmsSectionSchema = Schema.Literals(Rec.keys(SECTION_LABELS));
+
 /** One localized link advertised by a Nakafa llms index. */
-export interface LlmsEntry {
-  description?: string;
-  href: string;
-  route: string;
-  section: LlmsSection;
-  segments: string[];
-  title: string;
-}
+const LlmsEntrySchema = Schema.Struct({
+  description: Schema.optionalKey(Schema.String),
+  href: Schema.String,
+  route: Schema.String,
+  section: LlmsSectionSchema,
+  segments: Schema.Array(Schema.String),
+  title: Schema.String,
+});
+export type LlmsEntry = typeof LlmsEntrySchema.Type;
 
-interface PublishedContentSummary {
-  readonly description?: string;
-  readonly publicPath: string;
-  readonly title: string;
-}
+const PublishedContentSummarySchema = Schema.Struct({
+  description: Schema.optionalKey(Schema.String),
+  publicPath: Schema.String,
+  title: Schema.String,
+});
+type PublishedContentSummary = typeof PublishedContentSummarySchema.Type;
 
-export interface ApplicationSiteSummary {
-  readonly description: string;
-  readonly route: string;
-  readonly title: string;
-}
+const ApplicationSiteSummarySchema = Schema.Struct({
+  description: Schema.String,
+  route: Schema.String,
+  title: Schema.String,
+});
+export type ApplicationSiteSummary = typeof ApplicationSiteSummarySchema.Type;
 
 /** Checks whether a route segment is a supported llms section. */
 export function isLlmsSection(

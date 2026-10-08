@@ -3,10 +3,11 @@
 import { HttpClient } from "@confect/js";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import refs from "@repo/backend/confect/_generated/refs";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import {
   getMaterialModel,
   getMaterialPublication,
@@ -24,16 +25,19 @@ const cacheMock = vi.hoisted(() => vi.fn());
 const deliveryMock = vi.hoisted(() => vi.fn());
 const renderMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-material");
+const encodeProjection = Schema.encodeSync(
+  Schema.fromJsonString(MaterialLessonProjectionSchema)
+);
 const model = {
   activeReleaseId,
   activeAppLocales: ["en", "id", "de"],
   alternateJson: [projection, idProjection, deProjection].map((value) =>
-    JSON.stringify(value)
+    encodeProjection(value)
   ),
-  projectionJson: JSON.stringify(projection),
+  projectionJson: encodeProjection(projection),
   activeManifestHash: `sha256:${"a".repeat(64)}`,
   rendererDomain: "mathematics",
-  siblingJson: [JSON.stringify(projection)],
+  siblingJson: [encodeProjection(projection)],
   sourcePath,
   sourceRevision: "a".repeat(40),
 };

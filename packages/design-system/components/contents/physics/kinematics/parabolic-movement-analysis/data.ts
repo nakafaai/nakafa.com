@@ -1,38 +1,24 @@
 import { getColor } from "@repo/design-system/lib/color";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export type ProjectileAnalysisDecimalSeparator = "comma" | "dot";
-export type ProjectileScenarioId = "sixty-degree" | "long-drive" | "high-arc";
 
-export interface ProjectileScenario {
-  angleDegrees: number;
-  color: string;
-  id: ProjectileScenarioId;
-  initialSpeed: number;
-}
+const ProjectileScenarioIdSchema = Schema.Literals([
+  "sixty-degree",
+  "long-drive",
+  "high-arc",
+]);
+export type ProjectileScenarioId = typeof ProjectileScenarioIdSchema.Type;
 
-export interface ProjectileAnalysisLabLabels {
-  chooseScenario: string;
-  factLabels: {
-    flightTime: ReactNode;
-    horizontalComponent: ReactNode;
-    instantaneousVelocity: ReactNode;
-    peakTime: ReactNode;
-    range: ReactNode;
-    verticalComponent: ReactNode;
-  };
-  scenarioNames: Record<ProjectileScenarioId, ReactNode>;
-  viewLabel: string;
-}
+const ProjectileScenarioSchema = Schema.Struct({
+  angleDegrees: Schema.Finite,
+  color: Schema.String,
+  id: ProjectileScenarioIdSchema,
+  initialSpeed: Schema.Finite,
+});
+type ProjectileScenario = typeof ProjectileScenarioSchema.Type;
 
-export interface ProjectileAnalysisLabProps {
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator;
-  description: ReactNode;
-  labels: ProjectileAnalysisLabLabels;
-  title: ReactNode;
-}
-
-export const PROJECTILE_GRAVITY = 10;
+const PROJECTILE_GRAVITY = 10;
 export const DEFAULT_PROJECTILE_SCENARIO_ID =
   "sixty-degree" satisfies ProjectileScenarioId;
 

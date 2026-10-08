@@ -1,12 +1,12 @@
 "use client";
 
 import { BacillusBacteriumModel } from "@repo/design-system/components/contents/biology/bacteria-parts";
-import type {
-  BiologyLabProps,
-  BiologySceneProps,
-  BiologySceneView,
-} from "@repo/design-system/components/contents/biology/data";
-import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
+import type { BiologySceneView } from "@repo/design-system/components/contents/biology/data";
+import {
+  BiologyLabFrame,
+  type BiologyLabProps,
+  type BiologySceneProps,
+} from "@repo/design-system/components/contents/biology/lab-frame";
 import {
   BacteriophageModel,
   MiniEnvelopedVirion,

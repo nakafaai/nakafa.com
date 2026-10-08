@@ -13,7 +13,9 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Builds every verified source row needed by the first Quran page. */
 function viewRows() {
@@ -334,7 +336,7 @@ describe("contentRelease/quran/view", () => {
             expect(indonesian.surah?.name.sourceMeaning).toEqual(
               makeQuranMeaning(1)
             );
-            expect(JSON.stringify(indonesian)).not.toContain("Tafsir teknis");
+            expect(encodeJson(indonesian)).not.toContain("Tafsir teknis");
             expect({
               english: english.appLocale,
               indonesian: indonesian.appLocale,

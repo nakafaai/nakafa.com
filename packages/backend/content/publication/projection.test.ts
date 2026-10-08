@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import {
   contentHead,
@@ -26,7 +27,7 @@ import {
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { insertRuntimeVersion } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
-import { Effect, Struct } from "effect";
+import { Effect, HashMap, Struct } from "effect";
 
 describe("immutable publication projections", () => {
   it.effect("rejects withdrawn or incomplete selected route bindings", () =>
@@ -59,7 +60,7 @@ describe("immutable publication projections", () => {
     "preserves an unrouted protected head and excludes question bodies from public routing",
     () =>
       Effect.gen(function* () {
-        const target = yield* createTestPublication(new Map());
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
         yield* target.run(
           Effect.gen(function* () {
             const ctx = yield* MutationCtx;
@@ -186,7 +187,9 @@ describe("immutable publication projections", () => {
         ];
         for (const head of heads) {
           const runtime = yield* createTestPublication(
-            new Map(fixture.source).set("contentHeads", [head])
+            HashMap.set(HashMap.fromIterable(fixture.source), "contentHeads", [
+              head,
+            ])
           );
           yield* runtime.run(
             Effect.gen(function* () {
@@ -203,7 +206,7 @@ describe("immutable publication projections", () => {
           );
         }
         const runtime = yield* createTestPublication(
-          new Map(fixture.source).set("contentHeads", [
+          HashMap.set(HashMap.fromIterable(fixture.source), "contentHeads", [
             Struct.omit(fixture.head, ["projectionJson"]),
           ])
         );

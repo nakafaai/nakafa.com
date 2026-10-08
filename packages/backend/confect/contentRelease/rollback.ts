@@ -29,12 +29,16 @@ import {
 } from "@repo/backend/confect/contentRelease/spec";
 import { Array as Arr, Effect, Schema } from "effect";
 
+/** Encodes a built page to the same text as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 /** Proves one release is an exact active or verified-candidate rollback source. */
-export const rollbackSource = Effect.fn("contentRelease.rollbackSource")(
-  function* (releaseId: string, manifestHash: string) {
-    return yield* loadReadableSnapshot(releaseId, manifestHash);
-  }
-);
+const rollbackSource = Effect.fn("contentRelease.rollbackSource")(function* (
+  releaseId: string,
+  manifestHash: string
+) {
+  return yield* loadReadableSnapshot(releaseId, manifestHash);
+});
 /** Creates one bounded body-bearing rollback page. */
 export function makeRollbackPage(
   request: typeof RollbackPageRequestSchema.Type,
@@ -125,29 +129,30 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
   }
 );
 /** Resolves the owner immediately before one signed route change. */
-export const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(
-  function* (row: Docs["contentBindings"], baseSequence: number) {
-    const prior = yield* loadRouteBinding(
-      row.appLocale,
-      row.publicPath,
-      baseSequence
-    );
-    if (prior?.operation !== "bind") {
-      return null;
-    }
-    return yield* Schema.decodeUnknownEffect(ContentKeySchema)(
-      prior.contentKey
-    ).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_INTEGRITY",
-            message: `Prior route ${row.appLocale}/${row.publicPath} lost its content identity.`,
-          })
-      )
-    );
+const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(function* (
+  row: Docs["contentBindings"],
+  baseSequence: number
+) {
+  const prior = yield* loadRouteBinding(
+    row.appLocale,
+    row.publicPath,
+    baseSequence
+  );
+  if (prior?.operation !== "bind") {
+    return null;
   }
-);
+  return yield* Schema.decodeUnknownEffect(ContentKeySchema)(
+    prior.contentKey
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Prior route ${row.appLocale}/${row.publicPath} lost its content identity.`,
+        })
+    )
+  );
+});
 /** Reads one bounded exact prior-owner page from the active release. */
 export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
   function* (input: unknown) {
@@ -211,6 +216,6 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
       rollbackOfManifestHash: request.rollbackOfManifestHash,
       total,
     };
-    return JSON.stringify(page);
+    return encodeJson(page);
   }
 );

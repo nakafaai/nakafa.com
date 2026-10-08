@@ -7,13 +7,14 @@ import {
   PostHogErasureConfigError,
   PostHogErasureRequestError,
 } from "@repo/backend/confect/analytics/erasure/action.spec";
-import { ConfigProvider, Effect } from "effect";
+import { ConfigProvider, Effect, Schema } from "effect";
 
 const config = {
   deletionApiKey: "phx_test",
   host: "https://eu.i.posthog.com",
   projectId: "114144",
 };
+const JsonText = Schema.fromJsonString(Schema.Unknown);
 describe("analytics erasure action", () => {
   it.effect.each([
     "POSTHOG_ERASURE_API_KEY",
@@ -36,7 +37,10 @@ describe("analytics erasure action", () => {
           Effect.flip
         );
         expect(failure).toBeInstanceOf(PostHogErasureConfigError);
-        expect(JSON.stringify(failure)).not.toContain("phx_private_test");
+        const serializedFailure = yield* Schema.encodeEffect(JsonText)(
+          failure
+        ).pipe(Effect.orDie);
+        expect(serializedFailure).not.toContain("phx_private_test");
       }
     })
   );
@@ -59,7 +63,7 @@ describe("analytics erasure action", () => {
       const request = vi.fn(() =>
         Promise.resolve(
           new Response(
-            JSON.stringify({
+            Schema.encodeSync(JsonText)({
               deletion_errors: [],
               events_queued_for_deletion: true,
               persons_deleted: 1,
@@ -76,15 +80,16 @@ describe("analytics erasure action", () => {
         config,
         request,
       });
+      const body = yield* Schema.encodeEffect(JsonText)({
+        delete_events: true,
+        delete_recordings: true,
+        distinct_ids: ["user-1"],
+        keep_person: false,
+      }).pipe(Effect.orDie);
       expect(request).toHaveBeenCalledWith(
         "https://eu.posthog.com/api/projects/114144/persons/bulk_delete/",
         {
-          body: JSON.stringify({
-            delete_events: true,
-            delete_recordings: true,
-            distinct_ids: ["user-1"],
-            keep_person: false,
-          }),
+          body,
           headers: {
             Authorization: "Bearer phx_test",
             "Content-Type": "application/json",
@@ -101,7 +106,7 @@ describe("analytics erasure action", () => {
         const request = vi.fn(() =>
           Promise.resolve(
             new Response(
-              JSON.stringify({
+              Schema.encodeSync(JsonText)({
                 events_queued_for_deletion: false,
                 persons_deleted: 0,
                 persons_found: 0,
@@ -231,7 +236,7 @@ describe("analytics erasure action", () => {
         request: () =>
           Promise.resolve(
             new Response(
-              JSON.stringify({
+              Schema.encodeSync(JsonText)({
                 deletion_errors: [
                   {
                     person_uuid: "person-1",
@@ -280,7 +285,7 @@ describe("analytics erasure action", () => {
         request: () =>
           Promise.resolve(
             new Response(
-              JSON.stringify({
+              Schema.encodeSync(JsonText)({
                 deletion_errors: [],
                 ...result,
               }),

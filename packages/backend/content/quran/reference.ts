@@ -3,7 +3,10 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { quranSearchIdentity } from "@repo/backend/confect/contentRelease/quran/facts";
 import { validateQuranReference } from "@repo/backend/confect/contentRelease/quran/input";
 import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
-import type { QuranReferenceArgs } from "@repo/backend/confect/contentRelease/quran/spec";
+import {
+  type QuranReferenceArgs,
+  quranReferenceArgsValidator,
+} from "@repo/backend/confect/contentRelease/quran/spec";
 import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";
 import { readQuranChunks } from "@repo/backend/content/quran/chunks";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
@@ -14,11 +17,13 @@ import {
 import { readQuranRow } from "@repo/backend/content/quran/row";
 import { readQuranLocaleSources } from "@repo/backend/content/quran/sources";
 import { readQuranSurahRow } from "@repo/backend/content/quran/surah";
-import { Effect, Struct } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
-type QuranPassageSourceRequest = Omit<QuranReferenceArgs, "appLocale"> & {
-  readonly expectedSnapshotId: null | string;
-};
+const QuranPassageSourceRequestSchema = Schema.Struct({
+  ...quranReferenceArgsValidator.mapFields(Struct.omit(["appLocale"])).fields,
+  expectedSnapshotId: Schema.NullOr(Schema.String),
+});
+type QuranPassageSourceRequest = typeof QuranPassageSourceRequestSchema.Type;
 
 /** Loads the active signed surah and validated range for one reference. */
 const loadQuranPassageSource = Effect.fn(

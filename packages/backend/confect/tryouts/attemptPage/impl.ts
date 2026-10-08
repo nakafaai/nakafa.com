@@ -3,10 +3,12 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import type {
+  currentSetResultValidator,
+  redirectResultValidator,
+  retainedSectionResultValidator,
+  retainedSetResultValidator,
   TryoutSectionAttemptPageRequest,
-  TryoutSectionAttemptPageResult,
   TryoutSetAttemptPageRequest,
-  TryoutSetAttemptPageResult,
 } from "@repo/backend/confect/tryouts/attemptPage/spec";
 import {
   readActiveTryoutRestartTarget,
@@ -31,30 +33,10 @@ import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
 import { Array as Arr, Effect, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
-type RedirectPageResult = Extract<
-  NonNullable<TryoutSetAttemptPageResult>,
-  {
-    readonly kind: "redirect";
-  }
->;
-type CurrentSetPageResult = Extract<
-  NonNullable<TryoutSetAttemptPageResult>,
-  {
-    readonly kind: "current";
-  }
->;
-type RetainedSetPageResult = Extract<
-  NonNullable<TryoutSetAttemptPageResult>,
-  {
-    readonly kind: "retained";
-  }
->;
-type RetainedSectionPageResult = Extract<
-  NonNullable<TryoutSectionAttemptPageResult>,
-  {
-    readonly kind: "retained";
-  }
->;
+type RedirectPageResult = typeof redirectResultValidator.Type;
+type CurrentSetPageResult = typeof currentSetResultValidator.Type;
+type RetainedSetPageResult = typeof retainedSetResultValidator.Type;
+type RetainedSectionPageResult = typeof retainedSectionResultValidator.Type;
 
 /** Resolves one current set overlay or exact frozen set page. */
 export const readSetAttemptPage = Effect.fn(

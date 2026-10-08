@@ -22,12 +22,14 @@ import {
 import { LoadingBar } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import type { OrderedRevealAnimation } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import {
   ChartTooltip,
   ChartTooltipContent,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
+import { Schema } from "effect";
 import {
   type ComponentProps,
   createContext,
@@ -66,23 +68,72 @@ export type BarAnimationType = "none" | OrderedRevealAnimation;
 
 // Shared context
 
+const BarChartStateSchema = Schema.Struct({
+  animationType: RevealAnimationSchema, // default grow-in order each <Bar /> inherits
+  barRadius: Schema.Finite, // default corner radius each <Bar /> inherits
+  dataLength: Schema.Finite, // number of rows currently rendered
+  isHorizontal: Schema.Boolean, // whether bars are laid out horizontally
+  isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
+  isMouseInChart: Schema.Boolean, // whether the pointer is currently over the chart
+  isStacked: Schema.Boolean, // whether bars stack on top of each other
+  selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
+});
+
+type SelectDataKey = (dataKey: string | null) => void; // sets the selected series
+
+/**
+ * Builds the shared value of the chart. `config` holds the colors and labels of
+ * every series, and `animationType` is the default grow-in order each <Bar />
+ * inherits. The context type is derived from this hook.
+ */
+function useBarChartValue(
+  {
+    animationType,
+    barRadius,
+    dataLength,
+    isHorizontal,
+    isLoading,
+    isMouseInChart,
+    isStacked,
+    selectedDataKey,
+  }: typeof BarChartStateSchema.Type,
+  config: ChartConfig,
+  selectDataKey: SelectDataKey
+) {
+  return useMemo(
+    () => ({
+      animationType,
+      barRadius,
+      config,
+      dataLength,
+      isHorizontal,
+      isLoading,
+      isMouseInChart,
+      isStacked,
+      selectDataKey,
+      selectedDataKey,
+    }),
+    [
+      animationType,
+      barRadius,
+      config,
+      dataLength,
+      isHorizontal,
+      isLoading,
+      isMouseInChart,
+      isStacked,
+      selectDataKey,
+      selectedDataKey,
+    ]
+  );
+}
+
 /**
  * Shared state for every part of the chart. Lifted into <EvilBarChart /> so that
  * <Bar />, <XAxis />, <Legend />, and friends can read it without prop drilling.
  * Sub-components are composed freely, the provider is the single source of truth.
  */
-interface BarChartContextValue {
-  animationType: BarAnimationType; // default grow-in order each <Bar /> inherits
-  barRadius: number; // default corner radius each <Bar /> inherits
-  config: ChartConfig; // colors + labels for every series
-  dataLength: number; // number of rows currently rendered
-  isHorizontal: boolean; // whether bars are laid out horizontally
-  isLoading: boolean; // whether the chart shows its loading skeleton
-  isMouseInChart: boolean; // whether the pointer is currently over the chart
-  isStacked: boolean; // whether bars stack on top of each other
-  selectDataKey: (dataKey: string | null) => void; // sets the selected series
-  selectedDataKey: string | null; // currently selected series, or null when none
-}
+type BarChartContextValue = ReturnType<typeof useBarChartValue>;
 
 const BarChartContext = createContext<BarChartContextValue | null>(null);
 
@@ -194,31 +245,19 @@ export function EvilBarChart<
     [onSelectionChange]
   );
 
-  const contextValue = useMemo<BarChartContextValue>(
-    () => ({
-      config,
-      isStacked,
-      isHorizontal,
-      isLoading,
-      barRadius,
+  const contextValue = useBarChartValue(
+    {
       animationType,
+      barRadius,
       dataLength: displayData.length,
-      selectedDataKey,
-      selectDataKey,
-      isMouseInChart,
-    }),
-    [
-      config,
-      isStacked,
       isHorizontal,
       isLoading,
-      barRadius,
-      animationType,
-      displayData.length,
-      selectedDataKey,
-      selectDataKey,
       isMouseInChart,
-    ]
+      isStacked,
+      selectedDataKey,
+    },
+    config,
+    selectDataKey
   );
 
   return (

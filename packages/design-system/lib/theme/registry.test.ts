@@ -16,7 +16,7 @@ import {
   getThemeShaderColor,
   themes,
 } from "@repo/design-system/lib/theme/registry";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const readSources = readThemeStyleSources().pipe(
   Effect.provide(NodeFileSystem.layer)
@@ -30,7 +30,7 @@ describe("theme registry", () => {
   it("defines every selectable theme exactly once", () => {
     const values = themes.map((theme) => theme.value);
 
-    expect(new Set(values).size).toBe(values.length);
+    expect(Arr.dedupe(values).length).toBe(values.length);
     expect(values).toContain("darkmatter");
   });
 

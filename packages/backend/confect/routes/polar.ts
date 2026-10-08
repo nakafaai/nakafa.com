@@ -1,8 +1,5 @@
-import { SDKValidationError } from "@polar-sh/sdk/models/errors/sdkvalidationerror";
-import {
-  WebhookVerificationError as PolarSdkVerificationError,
-  validateEvent,
-} from "@polar-sh/sdk/webhooks";
+import { webhooks } from "@polar-sh/sdk/2026-10";
+import { PolarPayloadError } from "@repo/backend/confect/customers/polar/payload";
 import { processPolarWebhookEvent } from "@repo/backend/confect/customers/polar/webhook";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import {
@@ -14,7 +11,6 @@ import {
 import { Config, Effect, Record as Rec, Redacted, Schema } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
-type PolarWebhookEvent = ReturnType<typeof validateEvent>;
 class PolarWebhookReadError extends Schema.TaggedError<PolarWebhookReadError>()(
   "PolarWebhookReadError",
   {
@@ -27,8 +23,9 @@ class PolarWebhookVerificationError extends Schema.TaggedError<PolarWebhookVerif
     message: Schema.String,
   }
 ) {}
-class PolarWebhookPayloadError extends Schema.TaggedError<PolarWebhookPayloadError>()(
-  "PolarWebhookPayloadError",
+/** A correctly signed event whose type the SDK does not know; acknowledged so Polar stops retrying it. */
+class PolarWebhookUnknownEventError extends Schema.TaggedError<PolarWebhookUnknownEventError>()(
+  "PolarWebhookUnknownEventError",
   {
     message: Schema.String,
   }
@@ -52,6 +49,24 @@ const readPolarWebhookBody = Effect.fn("routes.polar.readBody")(
     })
 );
 
+/** Maps the SDK's rejections onto the responses the route returns for them. */
+function toVerificationError(error: unknown) {
+  const message = getUnknownErrorMessage(error);
+  if (error instanceof webhooks.PolarWebhookVerificationError) {
+    return new PolarWebhookVerificationError({ message });
+  }
+  if (error instanceof webhooks.PolarWebhookUnknownTypeError) {
+    // Without a string event type the body is malformed; a string type the SDK
+    // does not know is an event Nakafa acknowledges.
+    if (error.eventType === null) {
+      return new PolarPayloadError({ cause: error, message });
+    }
+    return new PolarWebhookUnknownEventError({ message });
+  }
+  // Any other rejection, including a body that is not JSON, is an SDK failure.
+  return new PolarWebhookSdkError({ message });
+}
+
 /** Verifies the signature and decodes the SDK payload without throwing. */
 const verifyPolarWebhook = Effect.fn("routes.polar.verify")(function* (
   body: string,
@@ -68,25 +83,9 @@ const verifyPolarWebhook = Effect.fn("routes.polar.verify")(function* (
         })
     )
   );
-  return yield* Effect.try({
-    catch: (error) => {
-      const message = getUnknownErrorMessage(error);
-      if (error instanceof PolarSdkVerificationError) {
-        return new PolarWebhookVerificationError({
-          message,
-        });
-      }
-      if (error instanceof SDKValidationError) {
-        return new PolarWebhookPayloadError({
-          message,
-        });
-      }
-      return new PolarWebhookSdkError({
-        message,
-      });
-    },
-    try: (): PolarWebhookEvent =>
-      validateEvent(body, headers, Redacted.value(secret)),
+  return yield* Effect.tryPromise({
+    catch: toVerificationError,
+    try: () => webhooks.validateEvent(body, headers, Redacted.value(secret)),
   });
 });
 
@@ -113,7 +112,7 @@ export const polarRoutes = HttpRouter.add(
         });
   }).pipe(
     Effect.catchTags({
-      PolarWebhookPayloadError: (error) =>
+      PolarPayloadError: (error) =>
         Effect.logWarning("Polar webhook payload rejected").pipe(
           Effect.annotateLogs({
             error: error.message,
@@ -139,6 +138,13 @@ export const polarRoutes = HttpRouter.add(
               status: HTTP_INTERNAL_ERROR,
             })
           )
+        ),
+      PolarWebhookUnknownEventError: (error) =>
+        Effect.logWarning("Polar webhook event type is unknown").pipe(
+          Effect.annotateLogs({
+            error: error.message,
+          }),
+          Effect.as(HttpServerResponse.empty({ status: HTTP_ACCEPTED }))
         ),
       PolarWebhookVerificationError: (error) =>
         Effect.logWarning("Polar webhook verification failed").pipe(

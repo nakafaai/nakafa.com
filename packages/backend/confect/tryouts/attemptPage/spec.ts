@@ -60,7 +60,7 @@ const sectionPageValidator = Schema.Struct({
   set: publicTryoutSetValidator,
   track: publicTryoutTrackValidator,
 });
-const redirectResultValidator = Schema.Struct({
+export const redirectResultValidator = Schema.Struct({
   attemptId: IdSchema("tryoutAttempts"),
   kind: Schema.Literal("redirect"),
   publicPath: Schema.String,
@@ -79,11 +79,11 @@ const setPageResultFields = {
   page: setPageValidator,
   restartTarget: restartTargetValidator,
 };
-const currentSetResultValidator = Schema.Struct({
+export const currentSetResultValidator = Schema.Struct({
   kind: Schema.Literal("current"),
   ...setPageResultFields,
 });
-const retainedSetResultValidator = Schema.Struct({
+export const retainedSetResultValidator = Schema.Struct({
   kind: Schema.Literal("retained"),
   ...setPageResultFields,
 });
@@ -93,9 +93,7 @@ export const tryoutSetAttemptPageResultValidator = Schema.Union([
   currentSetResultValidator,
   retainedSetResultValidator,
 ]);
-export type TryoutSetAttemptPageResult =
-  typeof tryoutSetAttemptPageResultValidator.Type;
-const retainedSectionResultValidator = Schema.Struct({
+export const retainedSectionResultValidator = Schema.Struct({
   activeSectionPublicPath: Schema.Union([Schema.String, Schema.Null]),
   activeSetPublicPath: Schema.Union([Schema.String, Schema.Null]),
   attemptId: IdSchema("tryoutAttempts"),
@@ -109,5 +107,3 @@ export const tryoutSectionAttemptPageResultValidator = Schema.Union([
   redirectResultValidator,
   retainedSectionResultValidator,
 ]);
-export type TryoutSectionAttemptPageResult =
-  typeof tryoutSectionAttemptPageResultValidator.Type;

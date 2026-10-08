@@ -11,7 +11,7 @@ import {
   finalizeSectionAttempt,
 } from "@repo/backend/confect/tryouts/runtime/finish";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Clock, Duration, Effect, flow } from "effect";
+import { Array as Arr, Clock, Duration, Effect, flow, HashSet } from "effect";
 export const EXPIRY_SWEEP_LIMIT = 50;
 export const EXPIRY_SWEEP_ATTEMPT_BYTES = 6 * 1024 * 1024;
 export const EXPIRY_SWEEP_SECTION_BYTES = 2 * 1024 * 1024;
@@ -187,11 +187,12 @@ export const reconcileMissedSectionExpiries = Effect.fn(
         numItems: EXPIRY_SWEEP_LIMIT,
       })
       .pipe(Effect.orDie);
-    const scheduledAttemptIds = new Set(args.scheduledAttemptIds);
+    const scheduledAttemptIds = HashSet.fromIterable(args.scheduledAttemptIds);
     yield* Effect.forEach(
       Arr.filter(
         sectionPage.page,
-        (sectionRow) => !scheduledAttemptIds.has(sectionRow.tryoutAttemptId)
+        (sectionRow) =>
+          !HashSet.has(scheduledAttemptIds, sectionRow.tryoutAttemptId)
       ),
       (sectionRow) =>
         scheduler.runAfter(

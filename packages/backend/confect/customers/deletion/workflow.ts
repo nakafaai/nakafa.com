@@ -17,90 +17,89 @@ export type StartCleanupWorkflow = (identity: {
   readonly authId: string;
   readonly userId: Id<"users">;
 }) => Effect.Effect<unknown, UserCleanupError, MutationCtxService>;
-export interface CleanupWorkflowStarters {
-  readonly startAnalytics: StartCleanupWorkflow;
-  readonly startAuth: StartCleanupWorkflow;
-  readonly startCustomer: StartCleanupWorkflow;
-  readonly startData: StartCleanupWorkflow;
-}
-export const cleanupWorkflowStarters: CleanupWorkflowStarters = {
-  startAnalytics: Effect.fn("customers.deletion.startAnalytics")(function* (
-    identity: Parameters<StartCleanupWorkflow>[0]
-  ) {
-    const ctx = yield* MutationCtxService;
-    return yield* tryUserCleanup(() =>
-      workflow.start(
-        ctx,
-        internal.customers.deletion.cleanup.cleanupDeletedUserAnalytics,
-        {
-          userId: identity.userId,
+const startAnalytics: StartCleanupWorkflow = Effect.fn(
+  "customers.deletion.startAnalytics"
+)(function* (identity: Parameters<StartCleanupWorkflow>[0]) {
+  const ctx = yield* MutationCtxService;
+  return yield* tryUserCleanup(() =>
+    workflow.start(
+      ctx,
+      internal.customers.deletion.cleanup.cleanupDeletedUserAnalytics,
+      {
+        userId: identity.userId,
+      },
+      {
+        context: {
+          source: cleanupSource.accountDeletion,
         },
-        {
-          context: {
-            source: cleanupSource.accountDeletion,
-          },
-          onComplete: internal.privacy.recovery.handleCleanupComplete,
-        }
-      )
-    );
-  }),
-  startAuth: Effect.fn("customers.deletion.startAuth")(function* (
-    identity: Parameters<StartCleanupWorkflow>[0]
-  ) {
-    const ctx = yield* MutationCtxService;
-    return yield* tryUserCleanup(() =>
-      workflow.start(
-        ctx,
-        internal.customers.deletion.cleanup.cleanupDeletedUserAuth,
-        identity,
-        {
-          context: {
-            source: cleanupSource.accountDeletion,
-          },
-          onComplete: internal.privacy.recovery.handleCleanupComplete,
-        }
-      )
-    );
-  }),
-  startCustomer: Effect.fn("customers.deletion.startCustomer")(function* (
-    identity: Parameters<StartCleanupWorkflow>[0]
-  ) {
-    const ctx = yield* MutationCtxService;
-    return yield* tryUserCleanup(() =>
-      workflow.start(
-        ctx,
-        internal.customers.deletion.cleanup.cleanupDeletedUserCustomer,
-        identity,
-        {
-          context: {
-            source: cleanupSource.accountDeletion,
-          },
-          onComplete: internal.privacy.recovery.handleCleanupComplete,
-        }
-      )
-    );
-  }),
-  startData: Effect.fn("customers.deletion.startData")(function* (
-    identity: Parameters<StartCleanupWorkflow>[0]
-  ) {
-    const ctx = yield* MutationCtxService;
-    return yield* tryUserCleanup(() =>
-      workflow.start(
-        ctx,
-        internal.customers.deletion.cleanup.cleanupDeletedUserData,
-        {
-          userId: identity.userId,
+        onComplete: internal.privacy.recovery.handleCleanupComplete,
+      }
+    )
+  );
+});
+const startAuth: StartCleanupWorkflow = Effect.fn(
+  "customers.deletion.startAuth"
+)(function* (identity: Parameters<StartCleanupWorkflow>[0]) {
+  const ctx = yield* MutationCtxService;
+  return yield* tryUserCleanup(() =>
+    workflow.start(
+      ctx,
+      internal.customers.deletion.cleanup.cleanupDeletedUserAuth,
+      identity,
+      {
+        context: {
+          source: cleanupSource.accountDeletion,
         },
-        {
-          context: {
-            source: cleanupSource.accountDeletion,
-          },
-          onComplete: internal.privacy.recovery.handleCleanupComplete,
-        }
-      )
-    );
-  }),
+        onComplete: internal.privacy.recovery.handleCleanupComplete,
+      }
+    )
+  );
+});
+const startCustomer: StartCleanupWorkflow = Effect.fn(
+  "customers.deletion.startCustomer"
+)(function* (identity: Parameters<StartCleanupWorkflow>[0]) {
+  const ctx = yield* MutationCtxService;
+  return yield* tryUserCleanup(() =>
+    workflow.start(
+      ctx,
+      internal.customers.deletion.cleanup.cleanupDeletedUserCustomer,
+      identity,
+      {
+        context: {
+          source: cleanupSource.accountDeletion,
+        },
+        onComplete: internal.privacy.recovery.handleCleanupComplete,
+      }
+    )
+  );
+});
+const startData: StartCleanupWorkflow = Effect.fn(
+  "customers.deletion.startData"
+)(function* (identity: Parameters<StartCleanupWorkflow>[0]) {
+  const ctx = yield* MutationCtxService;
+  return yield* tryUserCleanup(() =>
+    workflow.start(
+      ctx,
+      internal.customers.deletion.cleanup.cleanupDeletedUserData,
+      {
+        userId: identity.userId,
+      },
+      {
+        context: {
+          source: cleanupSource.accountDeletion,
+        },
+        onComplete: internal.privacy.recovery.handleCleanupComplete,
+      }
+    )
+  );
+});
+export const cleanupWorkflowStarters = {
+  startAnalytics,
+  startAuth,
+  startCustomer,
+  startData,
 };
+export type CleanupWorkflowStarters = typeof cleanupWorkflowStarters;
 
 /** Atomically admits independent auth, analytics, customer, and data workflows. */
 export const launchDeletedUserCleanupProgram = Effect.fn(
