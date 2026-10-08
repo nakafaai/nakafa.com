@@ -114,6 +114,19 @@ export const countCanvasFrames = {
   record: "frame",
 } as const satisfies WebGLPatch;
 
+/** The page global that collects page-script pixel readbacks. */
+export const PIXEL_READBACKS = "nakafaPixelReadbacks";
+
+/**
+ * Records where each page-script pixel readback came from, which the
+ * headless shell's own ReadPixels notice would otherwise hide.
+ */
+export const recordPixelReadbacks = {
+  key: PIXEL_READBACKS,
+  method: "readPixels",
+  record: "stack",
+} as const satisfies WebGLPatch;
+
 /** Reads a canvas frame count without scrolling the canvas into view. */
 function readFrames(canvas: Locator) {
   return canvas.evaluate((element) =>
@@ -163,6 +176,45 @@ export function readCanvasSize(canvas: Locator) {
       : undefined;
   });
 }
+
+/**
+ * Records on a canvas whether its drawing buffer changes size, as
+ * `data-drawing-buffer-changed`, so a suite can read it after an interaction.
+ */
+export const observeDrawingBufferSize = Effect.fn(
+  "NakafaE2E.observeDrawingBufferSize"
+)(function* (canvas: Locator) {
+  const started = yield* Effect.promise(() =>
+    canvas.evaluate((element) => {
+      if (!(element instanceof HTMLCanvasElement)) {
+        return false;
+      }
+
+      const initialHeight = element.height;
+      const initialWidth = element.width;
+      element.dataset.drawingBufferChanged = "false";
+
+      const observer = new MutationObserver(() => {
+        if (
+          element.height === initialHeight &&
+          element.width === initialWidth
+        ) {
+          return;
+        }
+
+        element.dataset.drawingBufferChanged = "true";
+        observer.disconnect();
+      });
+      observer.observe(element, {
+        attributeFilter: ["height", "width"],
+        attributes: true,
+      });
+      return true;
+    })
+  );
+
+  yield* Effect.sync(() => expect(started).toBe(true));
+});
 
 /** A pointer position on the page, in CSS pixels. */
 interface PagePoint {

@@ -12,8 +12,9 @@ import {
   expectCanvasToMove,
   expectFramesToAdvance,
   expectFramesToHold,
+  PIXEL_READBACKS,
   patchWebGL,
-  type WebGLPatch,
+  recordPixelReadbacks,
   waitForStableCanvas,
 } from "@/e2e/support/canvas";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -48,19 +49,6 @@ const KNOWN_SCENE_DIAGNOSTICS = [
   /^\[\.WebGL-0x[\da-f]+\]GL Driver Message \(OpenGL, Performance, \w+, High\): GPU stall due to ReadPixels( \(this message will no longer repeat\))?$/,
   /^THREE\.Clock: This module has been deprecated\. Please use THREE\.Timer instead\.$/,
 ];
-
-/** The page global that collects page-script pixel readbacks. */
-const PIXEL_READBACKS = "nakafaPixelReadbacks";
-
-/**
- * Records where each page-script pixel readback came from, which the
- * headless shell's own ReadPixels notice would otherwise hide.
- */
-const recordPixelReadbacks = {
-  key: PIXEL_READBACKS,
-  method: "readPixels",
-  record: "stack",
-} as const satisfies WebGLPatch;
 
 /** Observes unexplained three.js and WebGL notices for the page program. */
 const withObservedSceneDiagnostics = Effect.fn(

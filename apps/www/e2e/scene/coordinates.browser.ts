@@ -6,6 +6,7 @@ import { Effect, Schema } from "effect";
 import {
   dragMouse,
   expectCanvasToMove,
+  observeDrawingBufferSize,
   waitForStableCanvas,
 } from "@/e2e/support/canvas";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
@@ -23,41 +24,6 @@ const UNIT_CIRCLE_ROUTE =
   "/en/subjects/mathematics/trigonometry/trigonometry-concept";
 const HYPOTENUSE_LABEL = /^c$/;
 const TRIANGLE_SCENE = '[data-slot="triangle-scene"]';
-
-const observeDrawingBufferSize = Effect.fn(
-  "NakafaE2E.observeDrawingBufferSize"
-)(function* (canvas: Locator) {
-  const started = yield* Effect.promise(() =>
-    canvas.evaluate((element) => {
-      if (!(element instanceof HTMLCanvasElement)) {
-        return false;
-      }
-
-      const initialHeight = element.height;
-      const initialWidth = element.width;
-      element.dataset.drawingBufferChanged = "false";
-
-      const observer = new MutationObserver(() => {
-        if (
-          element.height === initialHeight &&
-          element.width === initialWidth
-        ) {
-          return;
-        }
-
-        element.dataset.drawingBufferChanged = "true";
-        observer.disconnect();
-      });
-      observer.observe(element, {
-        attributeFilter: ["height", "width"],
-        attributes: true,
-      });
-      return true;
-    })
-  );
-
-  yield* Effect.sync(() => expect(started).toBe(true));
-});
 
 const orbitScene = Effect.fn("NakafaE2E.orbitScene")(function* (
   page: Page,
