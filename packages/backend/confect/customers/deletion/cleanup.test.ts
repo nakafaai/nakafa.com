@@ -1,4 +1,4 @@
-import { Array as Arr, DateTime, Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 // @vitest-environment node
 
 import { afterEach, expect, it } from "@effect/vitest";
@@ -8,6 +8,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { registerWorkflow } from "@repo/backend/test/workflow";
 
 const JsonSchema = Schema.fromJsonString(Schema.Unknown);
+const NOW = Date.UTC(2026, 8, 27);
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -16,7 +17,7 @@ afterEach(() => {
 
 it("drains all four deletion workflows and their delayed reconciliation before releasing journals", async () => {
   vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
-  vi.setSystemTime(Date.UTC(2026, 8, 27));
+  vi.setSystemTime(NOW);
   vi.stubEnv("POSTHOG_HOST", "https://eu.i.posthog.com");
   let requests: { method: string; url: string; body: string }[] = [];
   vi.stubGlobal(
@@ -50,13 +51,12 @@ it("drains all four deletion workflows and their delayed reconciliation before r
   );
   const t = createConvexTestWithBetterAuth();
   await registerWorkflow(t);
-  const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
   const authId = "removed-auth-user";
   const userId = await t.mutation(async (ctx) => {
     const id = await ctx.db.insert("users", {
       authId,
       credits: 0,
-      creditsResetAt: now,
+      creditsResetAt: NOW,
       email: "removed@example.com",
       name: "Removed user",
       plan: "free",
@@ -75,7 +75,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
         isPublic: false,
         image: "test",
         order: index,
-        updatedAt: now,
+        updatedAt: NOW,
       });
     }
     for (let index = 0; index < 22; index += 1) {
@@ -83,9 +83,9 @@ it("drains all four deletion workflows and their delayed reconciliation before r
         input: {
           model: "verification",
           data: {
-            createdAt: now + index,
-            updatedAt: now + index,
-            expiresAt: now + 60_000,
+            createdAt: NOW + index,
+            updatedAt: NOW + index,
+            expiresAt: NOW + 60_000,
             identifier: `verification-${index}`,
             value: index === 21 ? "unrelated-user" : authId,
           },
@@ -116,7 +116,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
     authId: `deleted:${userId}`,
     email: `deleted-${userId}@account.nakafa.invalid`,
     name: "Deleted user",
-    deletedAt: now,
+    deletedAt: NOW,
     deletionCleanupStartedAt: expect.any(Number),
   });
   expect(state.user).not.toHaveProperty("authVerificationCleanupCursor");
