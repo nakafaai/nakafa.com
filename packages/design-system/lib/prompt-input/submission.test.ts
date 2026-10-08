@@ -25,13 +25,12 @@ describe("prompt input submission", () => {
       const onSubmit = vi.fn(() => true);
       const onSuccess = vi.fn(() => true);
 
-      yield* submitPromptInput({
-        event: "submit-event",
-        files: [createPromptFile()],
+      yield* submitPromptInput(
+        { files: [createPromptFile()], text: "Explain this lesson." },
+        "submit-event",
         onSubmit,
-        onSuccess,
-        text: "Explain this lesson.",
-      });
+        onSuccess
+      );
 
       expect(onSubmit).toHaveBeenCalledWith(
         {
@@ -48,19 +47,18 @@ describe("prompt input submission", () => {
     Effect.gen(function* () {
       const order: string[] = [];
 
-      yield* submitPromptInput({
-        event: "submit-event",
-        files: [],
-        onSubmit: () =>
+      yield* submitPromptInput(
+        { files: [], text: "Hello" },
+        "submit-event",
+        () =>
           Promise.resolve().then(() => {
             order.push("submitted");
             return true;
           }),
-        onSuccess: () => {
+        () => {
           order.push("completed");
-        },
-        text: "Hello",
-      });
+        }
+      );
 
       expect(order).toEqual(["submitted", "completed"]);
     })
@@ -74,13 +72,12 @@ describe("prompt input submission", () => {
         expect(message.files?.[0]?.file).toBe(file.file);
         return Promise.resolve(false);
       });
-      yield* submitPromptInput({
-        event: "submit-event",
-        files: [file],
-        text: "Hello",
+      yield* submitPromptInput(
+        { files: [file], text: "Hello" },
+        "submit-event",
         onSubmit,
-        onSuccess,
-      });
+        onSuccess
+      );
 
       expect(onSuccess).not.toHaveBeenCalled();
     })
@@ -90,15 +87,14 @@ describe("prompt input submission", () => {
     Effect.gen(function* () {
       const cause = new Error("Submit failed immediately.");
       const onSuccess = vi.fn(() => true);
-      const error = yield* submitPromptInput({
-        event: "submit-event",
-        files: [],
-        onSubmit: () => {
+      const error = yield* submitPromptInput(
+        { files: [], text: "Hello" },
+        "submit-event",
+        () => {
           throw cause;
         },
-        onSuccess,
-        text: "Hello",
-      }).pipe(Effect.flip);
+        onSuccess
+      ).pipe(Effect.flip);
 
       expect(error).toBeInstanceOf(PromptInputSubmitError);
       expect(error.cause).toBe(cause);
@@ -110,13 +106,12 @@ describe("prompt input submission", () => {
     Effect.gen(function* () {
       const cause = new Error("Submit promise rejected.");
       const onSuccess = vi.fn(() => true);
-      const error = yield* submitPromptInput({
-        event: "submit-event",
-        files: [],
-        onSubmit: () => Promise.reject(cause),
-        onSuccess,
-        text: "Hello",
-      }).pipe(Effect.flip);
+      const error = yield* submitPromptInput(
+        { files: [], text: "Hello" },
+        "submit-event",
+        () => Promise.reject(cause),
+        onSuccess
+      ).pipe(Effect.flip);
 
       expect(error).toBeInstanceOf(PromptInputSubmitError);
       expect(error.cause).toBe(cause);
@@ -127,15 +122,14 @@ describe("prompt input submission", () => {
   it.effect("types success-state failures after a successful submit", () =>
     Effect.gen(function* () {
       const cause = new Error("Completion state failed.");
-      const error = yield* submitPromptInput({
-        event: "submit-event",
-        files: [],
-        onSubmit: vi.fn(() => true),
-        onSuccess: () => {
+      const error = yield* submitPromptInput(
+        { files: [], text: "Hello" },
+        "submit-event",
+        vi.fn(() => true),
+        () => {
           throw cause;
-        },
-        text: "Hello",
-      }).pipe(Effect.flip);
+        }
+      ).pipe(Effect.flip);
 
       expect(error).toBeInstanceOf(PromptInputCompletionError);
       expect(error.cause).toBe(cause);

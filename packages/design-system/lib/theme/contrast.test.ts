@@ -20,7 +20,7 @@ import {
 } from "@repo/design-system/lib/theme/contrast";
 import { themes } from "@repo/design-system/lib/theme/registry";
 import Color from "colorjs.io";
-import { Effect, Record as Rec } from "effect";
+import { Effect, HashSet, Record as Rec, Schema } from "effect";
 
 const NORMAL_TEXT_MINIMUM_CONTRAST = 4.5;
 const NON_TEXT_MINIMUM_CONTRAST = 3;
@@ -31,7 +31,7 @@ const MAXIMUM_FAMILY_CHROMA_DIFFERENCE = 0.0001;
 const MAXIMUM_FAMILY_HUE_DIFFERENCE = 0.01;
 // These graphic themes intentionally use one high-contrast outline ink for
 // both structural boundaries and controls.
-const UNIFIED_OUTLINE_PROFILES = new Set(["neo", "popsicle", "shell"]);
+const UNIFIED_OUTLINE_PROFILES = HashSet.make("neo", "popsicle", "shell");
 const OKLCH_SYNTAX_PATTERN = /^oklch\(.+\)$/;
 const PERCEPTIBLE_BOUNDARY_PAIRS = [
   ["--border", "--background"],
@@ -39,24 +39,28 @@ const PERCEPTIBLE_BOUNDARY_PAIRS = [
   ["--border", "--popover"],
   ["--sidebar-border", "--sidebar"],
 ] as const;
-interface ContrastPair {
-  readonly against: string;
-  readonly color: string;
-  readonly minimum: number;
-  readonly role: string;
-}
-interface ThemeColorViolation {
-  readonly profile: string;
-  readonly reason: string;
-  readonly token: string;
-  readonly value?: string;
-}
+const ContrastPairSchema = Schema.Struct({
+  against: Schema.String,
+  color: Schema.String,
+  minimum: Schema.Finite,
+  role: Schema.String,
+});
+type ContrastPair = typeof ContrastPairSchema.Type;
 
-interface ThemeCohesionViolation {
-  readonly profile: string;
-  readonly reason: string;
-  readonly tokens: readonly string[];
-}
+const ThemeColorViolationSchema = Schema.Struct({
+  profile: Schema.String,
+  reason: Schema.String,
+  token: Schema.String,
+  value: Schema.optionalKey(Schema.String),
+});
+type ThemeColorViolation = typeof ThemeColorViolationSchema.Type;
+
+const ThemeCohesionViolationSchema = Schema.Struct({
+  profile: Schema.String,
+  reason: Schema.String,
+  tokens: Schema.Array(Schema.String),
+});
+type ThemeCohesionViolation = typeof ThemeCohesionViolationSchema.Type;
 
 const concreteThemeNames = themes.flatMap((theme) =>
   theme.appearance === "dynamic" ? [] : [theme.value]
@@ -196,7 +200,10 @@ function findBorderInputFamilyViolations(profiles: readonly ProfileSource[]) {
     const hueDifference = getHueDistance(borderHue, inputHue);
     const usesUnifiedOutline =
       perceptualDistance < MINIMUM_BORDER_INPUT_DISTANCE;
-    const intentionallyUnified = UNIFIED_OUTLINE_PROFILES.has(profile.name);
+    const intentionallyUnified = HashSet.has(
+      UNIFIED_OUTLINE_PROFILES,
+      profile.name
+    );
     const inputContrast = getWcagContrast(input, background);
     const borderContrast = getWcagContrast(border, background);
 

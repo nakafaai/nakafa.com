@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { TEXT_ROLE_PAIRS } from "@repo/design-system/lib/theme/contrast";
 import Color from "colorjs.io";
 import { Effect, FileSystem, Schema } from "effect";
-import postcss, { type AtRule, type Root, type Rule } from "postcss";
+import postcss, { type AtRule, Root, type Rule } from "postcss";
 
 /** Complete semantic color surface shared by every concrete profile. */
 export const SEMANTIC_COLOR_TOKENS = [
@@ -44,24 +44,27 @@ export const THEME_METADATA_PROPERTIES = [
   "--shadow-color",
 ];
 
+const ProfileSourceSchema = Schema.Struct({
+  name: Schema.String,
+  root: Schema.instanceOf(Root),
+  selector: Schema.String,
+});
 /** A concrete theme selector and the stylesheet that must directly own it. */
-export interface ProfileSource {
-  readonly name: string;
-  readonly root: Root;
-  readonly selector: string;
-}
+export type ProfileSource = typeof ProfileSourceSchema.Type;
 
+const ThemeStyleSourcesSchema = Schema.Struct({
+  customThemes: Schema.instanceOf(Root),
+  globals: Schema.instanceOf(Root),
+});
 /** Parsed owners for the official pair and selectable named profiles. */
-export interface ThemeStyleSources {
-  readonly customThemes: Root;
-  readonly globals: Root;
-}
+export type ThemeStyleSources = typeof ThemeStyleSourcesSchema.Type;
 
+const ThemeStyleSourcePathsSchema = Schema.Struct({
+  customThemes: Schema.String,
+  globals: Schema.String,
+});
 /** Filesystem paths for the two stylesheets that own theme profiles. */
-export interface ThemeStyleSourcePaths {
-  readonly customThemes: string;
-  readonly globals: string;
-}
+export type ThemeStyleSourcePaths = typeof ThemeStyleSourcePathsSchema.Type;
 
 /** Expected failure while reading or parsing a theme-owning stylesheet. */
 export class ThemeStyleSourceLoadError extends Schema.TaggedError<ThemeStyleSourceLoadError>()(
