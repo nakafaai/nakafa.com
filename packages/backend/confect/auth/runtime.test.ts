@@ -498,7 +498,7 @@ it("publishes only public key material from configured Better Auth signing keys"
   expect(ids).toContain("convex");
 });
 it("passes a configured JWKS value to the convex plugin", async () => {
-  const jwks = JSON.stringify([{ id: "runtime-signing-key" }]);
+  const jwks = '[{"id":"runtime-signing-key"}]';
   vi.stubEnv("JWKS", jwks);
   const t = createConvexTestWithBetterAuth();
   await t.action((ctx) =>
