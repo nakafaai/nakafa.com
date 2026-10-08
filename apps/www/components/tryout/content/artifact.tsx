@@ -2,9 +2,9 @@ import "server-only";
 
 import type { ProtectedContentRuntimeItem } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { Effect } from "effect";
-import {
-  makeRenderedTryoutContentEntry,
-  type TryoutSelector,
+import type {
+  RenderedTryoutContentEntry,
+  TryoutSelector,
 } from "@/components/tryout/content/model";
 import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 
@@ -14,10 +14,12 @@ export const renderLiveItem = Effect.fn("NakafaContent.renderLiveTryoutItem")(
     const rendered = yield* evaluateVerifiedArtifact({
       artifact: item.artifact,
     });
-    return makeRenderedTryoutContentEntry(
-      selector,
-      rendered.artifact.artifactHash,
-      <rendered.Content />
-    );
+    return {
+      artifactHash: rendered.artifact.artifactHash,
+      body: <rendered.Content />,
+      contentHash: selector.contentHash,
+      sourcePath: selector.sourcePath,
+      sourceRevision: selector.sourceRevision,
+    } satisfies RenderedTryoutContentEntry;
   }
 );

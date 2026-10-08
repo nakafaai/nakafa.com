@@ -18,25 +18,11 @@ type TryoutRenderSelector = Pick<
   "contentHash" | "sourcePath" | "sourceRevision"
 >;
 
-/** Pairs one verified artifact body with the immutable identity of its selector. */
-export function makeRenderedTryoutContentEntry(
-  selector: TryoutRenderSelector,
-  artifactHash: Sha256Hash,
-  body: ReactNode
-) {
-  return {
-    artifactHash,
-    body,
-    contentHash: selector.contentHash,
-    sourcePath: selector.sourcePath,
-    sourceRevision: selector.sourceRevision,
-  };
-}
-
 /** One authenticated and rendered artifact before question/answer projection. */
-export type RenderedTryoutContentEntry = ReturnType<
-  typeof makeRenderedTryoutContentEntry
->;
+export type RenderedTryoutContentEntry = TryoutRenderSelector & {
+  readonly artifactHash: Sha256Hash;
+  readonly body: ReactNode;
+};
 
 /** Projects ordered rendered entries into the exact runtime view model. */
 export function projectTryoutRuntimeContent(input: {
