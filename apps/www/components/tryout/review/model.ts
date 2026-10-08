@@ -1,33 +1,23 @@
-import { Effect, Schema } from "effect";
-import type { ReactNode } from "react";
-import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
+import { Effect, HashMap, MutableHashSet, Option, Schema } from "effect";
 import type {
+  TryoutAnswerContent,
+  TryoutQuestionContent,
+  TryoutRuntimeContent,
+} from "@/components/tryout/content/model";
+import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
+
+type ReviewContentIdentity = Pick<
   TryoutRuntimeQuestion,
-  TryoutRuntimeResponseSpec,
-} from "@/components/tryout/runtime/types";
+  "contentHash" | "sourcePath" | "sourceRevision"
+>;
 
-interface ReviewContentIdentity {
-  readonly contentHash: string;
-  readonly sourcePath: string;
-  readonly sourceRevision: string;
-}
+type ReviewRuntimeQuestion = ReviewContentIdentity &
+  Pick<
+    TryoutRuntimeQuestion,
+    "placementId" | "questionOrder" | "response" | "responseSpec"
+  >;
 
-interface ReviewRuntimeQuestion extends ReviewContentIdentity {
-  readonly placementId: TryoutRuntimeQuestion["placementId"];
-  readonly questionOrder: number;
-  readonly response: TryoutRuntimeQuestion["response"];
-  readonly responseSpec: TryoutRuntimeResponseSpec;
-}
-
-/** One immutable reviewed question ready for read-only composition. */
-export interface TryoutReviewQuestion {
-  readonly answer: ReactNode;
-  readonly content: ReactNode;
-  readonly placementId: TryoutRuntimeQuestion["placementId"];
-  readonly questionOrder: number;
-  readonly response: TryoutRuntimeQuestion["response"];
-  readonly responseSpec: TryoutRuntimeResponseSpec;
-}
+const IdentityJsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Fails closed when signed review content no longer matches frozen runtime. */
 export class TryoutReviewProjectionError extends Schema.TaggedError<TryoutReviewProjectionError>()(
@@ -37,6 +27,11 @@ export class TryoutReviewProjectionError extends Schema.TaggedError<TryoutReview
     message: Schema.String,
   }
 ) {}
+
+/** One immutable reviewed question ready for read-only composition. */
+export type TryoutReviewQuestion = ReturnType<
+  typeof createTryoutReviewQuestion
+>;
 
 /** Pairs one terminal runtime with its exact signed questions and answers. */
 export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
@@ -54,58 +49,57 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
     );
   }
 
-  const questionContent = new Map(
+  const questionContent = HashMap.fromIterable(
     input.content.questions.map((question) => [
       getContentIdentity(question),
       question,
     ])
   );
-  const answerContent = new Map(
+  const answerContent = HashMap.fromIterable(
     input.content.answers.map((answer) => [getContentIdentity(answer), answer])
   );
 
   if (
-    questionContent.size !== input.content.questions.length ||
-    answerContent.size !== input.content.answers.length
+    HashMap.size(questionContent) !== input.content.questions.length ||
+    HashMap.size(answerContent) !== input.content.answers.length
   ) {
     return yield* projectionError(
       "Terminal review content contains a duplicate frozen identity."
     );
   }
 
-  const questionOrders = new Set<number>();
+  const questionOrders = MutableHashSet.empty<number>();
   const reviewQuestions: TryoutReviewQuestion[] = [];
 
   for (const question of input.questions) {
-    if (questionOrders.has(question.questionOrder)) {
+    if (MutableHashSet.has(questionOrders, question.questionOrder)) {
       return yield* projectionError(
         "Terminal review runtime contains a duplicate question order."
       );
     }
-    questionOrders.add(question.questionOrder);
+    MutableHashSet.add(questionOrders, question.questionOrder);
 
     const identity = getContentIdentity(question);
-    const signedQuestion = questionContent.get(identity);
-    const signedAnswer = answerContent.get(identity);
-    if (!(signedQuestion && signedAnswer)) {
+    const signedQuestion = HashMap.get(questionContent, identity);
+    const signedAnswer = HashMap.get(answerContent, identity);
+    if (Option.isNone(signedQuestion) || Option.isNone(signedAnswer)) {
       return yield* projectionError(
         "Terminal review content lost a frozen question or answer."
       );
     }
-    if (!signedAnswer.answer) {
+    if (!signedAnswer.value.answer) {
       return yield* projectionError(
         "Terminal review content contains an empty signed answer."
       );
     }
 
-    reviewQuestions.push({
-      answer: signedAnswer.answer,
-      content: signedQuestion.content,
-      placementId: question.placementId,
-      questionOrder: question.questionOrder,
-      response: question.response,
-      responseSpec: question.responseSpec,
-    });
+    reviewQuestions.push(
+      createTryoutReviewQuestion(
+        question,
+        signedQuestion.value,
+        signedAnswer.value
+      )
+    );
   }
 
   return reviewQuestions;
@@ -113,11 +107,27 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
 
 /** Builds one collision-safe key from an already trusted content identity. */
 function getContentIdentity(identity: ReviewContentIdentity) {
-  return JSON.stringify([
+  return Schema.encodeSync(IdentityJsonSchema)([
     identity.sourcePath,
     identity.contentHash,
     identity.sourceRevision,
   ]);
+}
+
+/** Pairs one frozen runtime question with its signed body and answer. */
+function createTryoutReviewQuestion(
+  question: ReviewRuntimeQuestion,
+  signedQuestion: TryoutQuestionContent,
+  signedAnswer: TryoutAnswerContent
+) {
+  return {
+    answer: signedAnswer.answer,
+    content: signedQuestion.content,
+    placementId: question.placementId,
+    questionOrder: question.questionOrder,
+    response: question.response,
+    responseSpec: question.responseSpec,
+  };
 }
 
 /** Creates one typed terminal-review projection failure. */

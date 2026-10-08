@@ -1,10 +1,13 @@
-interface TryoutHrefInput {
-  country?: string;
-  exam?: string;
-  section?: string;
-  set?: string;
-  track?: string;
-}
+import { Schema } from "effect";
+
+const TryoutHrefInputSchema = Schema.Struct({
+  country: Schema.optionalKey(Schema.String),
+  exam: Schema.optionalKey(Schema.String),
+  section: Schema.optionalKey(Schema.String),
+  set: Schema.optionalKey(Schema.String),
+  track: Schema.optionalKey(Schema.String),
+});
+type TryoutHrefInput = typeof TryoutHrefInputSchema.Type;
 
 const ATTEMPT_ID_PARAM = "attemptId";
 
@@ -13,10 +16,12 @@ export type TryoutRouteSearchParams = Record<
   string | string[] | undefined
 >;
 
-export type TryoutAttemptCapability =
-  | { kind: "absent" }
-  | { kind: "invalid" }
-  | { attemptId: string; kind: "valid" };
+const TryoutAttemptCapabilitySchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("absent") }),
+  Schema.Struct({ kind: Schema.Literal("invalid") }),
+  Schema.Struct({ attemptId: Schema.String, kind: Schema.Literal("valid") }),
+]);
+export type TryoutAttemptCapability = typeof TryoutAttemptCapabilitySchema.Type;
 
 /** Builds a public try-out href from already-localized route segments. */
 export function getTryoutHref({
