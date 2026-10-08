@@ -13,7 +13,8 @@ import {
 const NETWORK_RETRY_DELAYS_MILLISECONDS = [500, 1000] as const;
 /**
  * Two retries, after 500 milliseconds and then 1 second, for every transient
- * read: Convex queries from the web app and content runtime reads.
+ * read: Convex queries from the web app, content runtime reads, and the session
+ * token read.
  */
 export const NETWORK_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
   Schedule.addDelay(({ attempt }) =>

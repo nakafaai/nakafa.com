@@ -156,12 +156,10 @@ describe("Better Auth server boundary", () => {
     })
   );
 
-  it.effect("rejects when the token route stays unavailable", () =>
+  it.effect("rejects when the token route refuses the request", () =>
     Effect.gen(function* () {
       const { getToken } = yield* loadAuthServer();
-      fetcher.mockImplementation(
-        async () => new Response(null, { status: 503 })
-      );
+      fetcher.mockResolvedValue(new Response(null, { status: 403 }));
       const requestHeaders = new Headers({
         cookie: "better-auth.session_token=session-cookie",
       });
@@ -170,9 +168,9 @@ describe("Better Auth server boundary", () => {
         Effect.flip
       );
       expect(error.cause).toStrictEqual(
-        new SessionTokenUnavailable({ reason: "status", status: 503 })
+        new SessionTokenUnavailable({ reason: "status", status: 403 })
       );
-      expect(fetcher).toHaveBeenCalledTimes(3);
+      expect(fetcher).toHaveBeenCalledOnce();
     })
   );
 });
