@@ -1,11 +1,16 @@
-interface NumberedSurah {
-  readonly number: number;
-}
-interface NumberedVerse {
-  readonly number: {
-    readonly inSurah: number;
-  };
-}
+import { Schema } from "effect";
+
+const NumberedSurahSchema = Schema.Struct({
+  number: Schema.Finite,
+});
+type NumberedSurah = typeof NumberedSurahSchema.Type;
+
+const NumberedVerseSchema = Schema.Struct({
+  number: Schema.Struct({
+    inSurah: Schema.Finite,
+  }),
+});
+type NumberedVerse = typeof NumberedVerseSchema.Type;
 
 /** Checks that one verse list exactly covers the requested local range. */
 export function hasExactQuranVerseRange(
