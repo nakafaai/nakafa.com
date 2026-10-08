@@ -1,3 +1,4 @@
+import { TryoutVisibilitySchema } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -14,13 +15,14 @@ import {
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { requireSectionSnapshot } from "@repo/backend/confect/tryouts/runtime/placement";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Duration, Effect, flow, Option } from "effect";
+import { Array as Arr, Duration, Effect, flow, Option, Schema } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
-interface InternalEntrySection {
-  readonly sectionKey: string;
-  readonly visibility: "internal-entry" | "visible";
-}
+const InternalEntrySectionSchema = Schema.Struct({
+  sectionKey: Schema.String,
+  visibility: TryoutVisibilitySchema,
+});
+type InternalEntrySection = typeof InternalEntrySectionSchema.Type;
 const startSectionResult = Object.freeze({
   kind: "started",
 });

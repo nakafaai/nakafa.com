@@ -2,7 +2,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, HashSet, MutableHashSet } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
@@ -21,19 +21,22 @@ export const readSectionCompletion = Effect.fn(
       message: "Try-out section is not active.",
     });
   }
-  const snapshotKeys = new Set(
+  const snapshotKeys = HashSet.fromIterable(
     Arr.map(attempt.sectionSnapshots, (snapshot) => snapshot.sectionKey)
   );
-  const completedKeys = new Set<string>();
+  const completedKeys = MutableHashSet.empty<string>();
   for (const sectionKey of attempt.completedSectionKeys) {
-    if (!snapshotKeys.has(sectionKey) || completedKeys.has(sectionKey)) {
+    if (
+      !HashSet.has(snapshotKeys, sectionKey) ||
+      MutableHashSet.has(completedKeys, sectionKey)
+    ) {
       return yield* completionIntegrity(
         "Try-out completed sections differ from the frozen section snapshot."
       );
     }
-    completedKeys.add(sectionKey);
+    MutableHashSet.add(completedKeys, sectionKey);
   }
-  if (completedKeys.has(section.sectionKey)) {
+  if (MutableHashSet.has(completedKeys, section.sectionKey)) {
     return yield* completionIntegrity(
       "Try-out section is already recorded as completed."
     );
