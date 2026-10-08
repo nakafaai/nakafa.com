@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import type refs from "@repo/backend/confect/_generated/refs";
 
+import { Schema } from "effect";
 import type { Locale } from "next-intl";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
@@ -46,11 +47,13 @@ export interface TryoutSetRoute {
   track: string;
 }
 
+const TryoutSetDestinationSchema = Schema.Struct({
+  href: Schema.String,
+  sectionKey: Schema.String,
+});
+
 /** Section route and query identity selected for the current set action. */
-export interface TryoutSetDestination {
-  href: string;
-  sectionKey: string;
-}
+export type TryoutSetDestination = typeof TryoutSetDestinationSchema.Type;
 
 /** Verified entry and canonical set route for a new current-catalog attempt. */
 export type TryoutSetRestartTarget = NonNullable<

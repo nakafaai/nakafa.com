@@ -16,16 +16,19 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
-export type BreadcrumbHeaderItem = Readonly<{
-  href?: string | undefined;
-  label: string;
+const BreadcrumbHeaderItemSchema = Schema.Struct({
+  href: Schema.optional(Schema.String),
+  label: Schema.String,
   /** BCP 47 language of the label when it differs from the page. */
-  language?: string;
-  menuLabel?: string;
-}>;
+  language: Schema.optionalKey(Schema.String),
+  menuLabel: Schema.optionalKey(Schema.String),
+});
+
+export type BreadcrumbHeaderItem = typeof BreadcrumbHeaderItemSchema.Type;
 
 /** Props of one sticky, bounded breadcrumb header. */
 interface BreadcrumbHeaderProps {
