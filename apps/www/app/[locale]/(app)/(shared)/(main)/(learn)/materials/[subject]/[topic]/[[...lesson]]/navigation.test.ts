@@ -4,6 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { Schema } from "effect";
+import { createElement } from "react";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import {
   readMaterialNavigation,
@@ -30,7 +31,7 @@ const context = {
 const publishedPage = {
   alternates: [previewProjection, previewIdProjection],
   body: "## Function Concept",
-  children: "Function Concept",
+  children: createElement("p", null, "Function Concept"),
   copySourceUrl: null,
   kind: "published",
   appLocale: "en",
@@ -43,7 +44,7 @@ const publishedPage = {
 const previewPage = {
   alternates: [previewProjection],
   body: "## Function Concept",
-  children: "Function Concept",
+  children: createElement("p", null, "Function Concept"),
   copySourceUrl: null,
   kind: "preview",
   appLocale: "en",
