@@ -1,69 +1,99 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { HashMap } from "effect";
-import type { ScrollToIndexOpts } from "virtua";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { HashMap, Schema } from "effect";
 import { CONVERSATION_EDGE_TOLERANCE } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
-import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
-import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/transcript/unread";
+import {
+  type ActiveTranscriptModel,
+  ActiveTranscriptModelSchema,
+} from "@/components/school/classes/forum/conversation/data/transcript/active";
+import {
+  type ConversationUnreadCue,
+  ConversationUnreadCueSchema,
+} from "@/components/school/classes/forum/conversation/data/transcript/unread";
 import {
   areConversationViewsEqual,
   type ConversationView,
+  ConversationViewSchema,
 } from "@/components/school/classes/forum/conversation/data/view/model";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/session/store";
+import {
+  type ConversationScrollSnapshot,
+  ConversationScrollSnapshotSchema,
+} from "@/components/school/classes/forum/session/store";
 
-type PlacementAlign = NonNullable<ScrollToIndexOpts["align"]>;
-type PlacementMotion = "instant" | "smooth";
+/** Matches the four alignments of virtua's `ScrollToIndexAlign`. */
+const PlacementAlignSchema = Schema.Literals([
+  "start",
+  "center",
+  "end",
+  "nearest",
+]);
+const PlacementMotionSchema = Schema.Literals(["instant", "smooth"]);
 
 /** Independent transcript jump actions derived from canonical viewport state. */
-export interface ViewportJumpControl {
-  showBack: boolean;
-  showLatest: boolean;
-}
+const ViewportJumpControlSchema = Schema.Struct({
+  showBack: Schema.Boolean,
+  showLatest: Schema.Boolean,
+});
+export type ViewportJumpControl = typeof ViewportJumpControlSchema.Type;
 
-export interface ViewportMeasurement {
-  bottomDistance: number;
-  hasOverflow: boolean;
-  isAtLatest: boolean;
-  lastVisiblePostId: Id<"schoolClassForumPosts"> | null;
-  offset: number;
-  view: ConversationView | null;
-}
+const ViewportMeasurementSchema = Schema.Struct({
+  bottomDistance: Schema.Finite,
+  hasOverflow: Schema.Boolean,
+  isAtLatest: Schema.Boolean,
+  lastVisiblePostId: Schema.NullOr(Id("schoolClassForumPosts")),
+  offset: Schema.Finite,
+  view: Schema.NullOr(ConversationViewSchema),
+});
+export type ViewportMeasurement = typeof ViewportMeasurementSchema.Type;
 
-export interface ViewportPlacement {
-  align?: PlacementAlign;
-  highlightPostId: Id<"schoolClassForumPosts"> | null;
-  motion?: PlacementMotion;
-  view: ConversationView;
-}
+const ViewportPlacementSchema = Schema.Struct({
+  align: Schema.optionalKey(PlacementAlignSchema),
+  highlightPostId: Schema.NullOr(Id("schoolClassForumPosts")),
+  motion: Schema.optionalKey(PlacementMotionSchema),
+  view: ConversationViewSchema,
+});
+export type ViewportPlacement = typeof ViewportPlacementSchema.Type;
 
-export type ViewportEvent =
-  | {
-      activeTranscript: ActiveTranscriptModel;
-      savedSnapshot: ConversationScrollSnapshot | null;
-      type: "transcript";
-      unreadCue: ConversationUnreadCue | null;
-    }
-  | {
-      measurement: ViewportMeasurement | null;
-      source: "frame" | "scroll";
-      type: "measure";
-    }
-  | { postId: Id<"schoolClassForumPosts">; type: "post" }
-  | { type: "back" }
-  | { token: number; type: "highlight-expired" }
-  | { type: "latest" }
-  | { type: "persist" }
-  | { awayFromLatest: boolean; type: "user-scroll" };
+const ViewportEventSchema = Schema.Union([
+  Schema.Struct({
+    activeTranscript: ActiveTranscriptModelSchema,
+    savedSnapshot: Schema.NullOr(ConversationScrollSnapshotSchema),
+    type: Schema.Literal("transcript"),
+    unreadCue: Schema.NullOr(ConversationUnreadCueSchema),
+  }),
+  Schema.Struct({
+    measurement: Schema.NullOr(ViewportMeasurementSchema),
+    source: Schema.Literals(["frame", "scroll"]),
+    type: Schema.Literal("measure"),
+  }),
+  Schema.Struct({
+    postId: Id("schoolClassForumPosts"),
+    type: Schema.Literal("post"),
+  }),
+  Schema.Struct({ type: Schema.Literal("back") }),
+  Schema.Struct({
+    token: Schema.Finite,
+    type: Schema.Literal("highlight-expired"),
+  }),
+  Schema.Struct({ type: Schema.Literal("latest") }),
+  Schema.Struct({ type: Schema.Literal("persist") }),
+  Schema.Struct({
+    awayFromLatest: Schema.Boolean,
+    type: Schema.Literal("user-scroll"),
+  }),
+]);
+export type ViewportEvent = typeof ViewportEventSchema.Type;
 
-export interface ViewportState {
-  backStack: ConversationView[];
-  hasOverflow: boolean;
-  highlightedPostId: Id<"schoolClassForumPosts"> | null;
-  isAtLatest: boolean;
-  jumpControl: ViewportJumpControl;
-  latestAffinity: "detached" | "latest";
-  lifecycle: "opening" | "placing" | "ready";
-  pendingPlacement: ViewportPlacement | null;
-}
+const ViewportStateSchema = Schema.Struct({
+  backStack: Schema.Array(ConversationViewSchema),
+  hasOverflow: Schema.Boolean,
+  highlightedPostId: Schema.NullOr(Id("schoolClassForumPosts")),
+  isAtLatest: Schema.Boolean,
+  jumpControl: ViewportJumpControlSchema,
+  latestAffinity: Schema.Literals(["detached", "latest"]),
+  lifecycle: Schema.Literals(["opening", "placing", "ready"]),
+  pendingPlacement: Schema.NullOr(ViewportPlacementSchema),
+});
+export type ViewportState = typeof ViewportStateSchema.Type;
 
 export const initialViewportState = deriveViewportState({
   backStack: [],
