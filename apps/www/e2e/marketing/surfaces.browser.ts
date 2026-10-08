@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/input";
 import {
@@ -15,6 +14,7 @@ import {
   expectStablePricingTransition,
   observeStablePricingReload,
 } from "@/e2e/support/pricing";
+import { openRoute } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
@@ -41,11 +41,7 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
   page: Page,
   href: string
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
-  const response = yield* Effect.promise(() =>
-    page.goto(href, { waitUntil: "domcontentloaded" })
-  );
-  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+  yield* openRoute(page, href, "denied");
   yield* waitForCommittedAppRouter(
     page,
     href,
@@ -454,11 +450,7 @@ test("the footer theme selector loads its list on demand and applies a theme", a
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
-        const response = yield* Effect.promise(() =>
-          page.goto("/en", { waitUntil: "domcontentloaded" })
-        );
-        yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+        yield* openRoute(page, "/en", "denied");
 
         const selector = page
           .locator("footer")

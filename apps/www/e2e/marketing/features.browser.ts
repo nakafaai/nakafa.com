@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/context";
+import { openRoute } from "@/e2e/support/route";
 import { targetViewports } from "@/e2e/support/viewport";
 
 const NINA_ANSWER_TEXT = "Subtract the first equation";
@@ -33,16 +33,6 @@ const featureViewports = targetViewports.map((viewport) => ({
   ...viewport,
   reducedMotion: reducedMotionByViewport[viewport.name],
 }));
-
-const prepareFeaturesPage = Effect.fn("NakafaE2E.prepareFeaturesPage")(
-  function* (page: Page) {
-    yield* seedAnalyticsConsent(page, "denied");
-    const response = yield* Effect.promise(() =>
-      page.goto("/en", { waitUntil: "domcontentloaded" })
-    );
-    yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-  }
-);
 
 /**
  * Centers one control instantly. The page scrolls smoothly, so letting the
@@ -350,7 +340,7 @@ for (const viewport of featureViewports) {
             yield* withObservedPageErrors(
               page,
               Effect.gen(function* () {
-                yield* prepareFeaturesPage(page);
+                yield* openRoute(page, "/en", "denied");
                 yield* expectProjectileDeferred(page);
                 yield* expectResponsiveFeatureLayout(page, viewport.width);
                 if (viewport.name === "desktop") {
@@ -386,7 +376,7 @@ test("homepage projectile recovers from a terminal scene load failure", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* prepareFeaturesPage(page);
+              yield* openRoute(page, "/en", "denied");
               yield* expectProjectileDeferred(page);
               yield* expectProjectileHydratedWhileDeferred(page);
               yield* expectProjectileRecovery(page);

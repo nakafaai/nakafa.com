@@ -7,9 +7,9 @@ import {
   expectFramesToAdvance,
   expectFramesToHold,
 } from "@/e2e/support/canvas";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { openRoute } from "@/e2e/support/route";
 import { revealSceneCard } from "@/e2e/support/visual";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
@@ -94,11 +94,7 @@ const withObservedSceneDiagnostics = Effect.fn(
 const openLessonScenes = Effect.fn("NakafaE2E.openLessonScenes")(function* (
   page: Page
 ) {
-  yield* seedAnalyticsConsent(page, "denied");
-  const response = yield* Effect.promise(() =>
-    page.goto(pinnedRoutes.material.en, { waitUntil: "domcontentloaded" })
-  );
-  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+  yield* openRoute(page, pinnedRoutes.material.en, "denied");
 
   const cards = page
     .locator('[data-slot="card"]')

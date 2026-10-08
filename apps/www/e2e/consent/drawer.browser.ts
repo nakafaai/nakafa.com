@@ -1,9 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent, usageDataTrigger } from "@/e2e/support/consent";
+import { usageDataTrigger } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { openRoute } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const usageDataName = "Usage data";
@@ -11,11 +12,7 @@ const usageDataName = "Usage data";
 const prepareConsentPreferences = Effect.fn(
   "NakafaE2E.prepareDrawerConsentPreferences"
 )(function* (page: Page) {
-  yield* seedAnalyticsConsent(page, "denied");
-  const response = yield* Effect.promise(() =>
-    page.goto("/en", { waitUntil: "domcontentloaded" })
-  );
-  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+  yield* openRoute(page, "/en", "denied");
   yield* waitForCommittedAppRouter(
     page,
     "/en",

@@ -1,14 +1,12 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import {
-  openConsentPreferences,
-  seedAnalyticsConsent,
-} from "@/e2e/support/consent";
+import { openConsentPreferences } from "@/e2e/support/consent";
 import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/context";
 import { dragTouch, readBounds } from "@/e2e/support/input";
+import { openRoute } from "@/e2e/support/route";
 import { targetViewports } from "@/e2e/support/viewport";
 
 /** The surface each viewport opens: a drawer on a phone, a dialog on wider screens. */
@@ -24,16 +22,6 @@ const consentViewports = targetViewports.map((viewport) => ({
   ...viewport,
   slot: slotByViewport[viewport.name],
 }));
-
-const prepareConsentPage = Effect.fn("NakafaE2E.prepareConsentPage")(function* (
-  page: Page
-) {
-  yield* seedAnalyticsConsent(page, "denied");
-  const response = yield* Effect.promise(() =>
-    page.goto("/en", { waitUntil: "domcontentloaded" })
-  );
-  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-});
 
 const expectFocusContained = Effect.fn("NakafaE2E.expectConsentFocusContained")(
   function* (page: Page, popup: Locator) {
@@ -104,7 +92,7 @@ for (const viewport of consentViewports) {
             yield* withObservedPageErrors(
               page,
               Effect.gen(function* () {
-                yield* prepareConsentPage(page);
+                yield* openRoute(page, "/en", "denied");
                 const { popup, trigger } = yield* openConsentPreferences(
                   page,
                   viewport.slot
@@ -149,7 +137,7 @@ test("compact consent drawer preserves outside and swipe dismissal", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* prepareConsentPage(page);
+              yield* openRoute(page, "/en", "denied");
 
               const outsideCase = yield* openConsentPreferences(
                 page,
