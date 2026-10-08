@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect } from "effect";
 
 interface TouchPoint {
@@ -6,7 +6,38 @@ interface TouchPoint {
   readonly y: number;
 }
 
+const ACTIVATION_PROBE_TIMEOUT_MILLISECONDS = 1000;
+const PRESS_TIMEOUT_MILLISECONDS = 15_000;
 const TOUCH_MOVE_STEPS = 5;
+
+/**
+ * Clicks or taps a control without waiting for the navigation it starts. The
+ * press gives up after 15 seconds.
+ */
+export function press(control: Locator, hasTouch: boolean) {
+  return hasTouch
+    ? control.tap({ noWaitAfter: true, timeout: PRESS_TIMEOUT_MILLISECONDS })
+    : control.click({ noWaitAfter: true, timeout: PRESS_TIMEOUT_MILLISECONDS });
+}
+
+/** Repeats a real activation until its client-owned surface becomes visible. */
+export const activateUntilVisible = Effect.fn("NakafaE2E.activateUntilVisible")(
+  function* (trigger: Locator, surface: Locator, timeoutMilliseconds: number) {
+    yield* Effect.promise(() =>
+      expect(async () => {
+        if (await surface.isVisible()) {
+          return;
+        }
+
+        await trigger.click({ timeout: timeoutMilliseconds });
+        await expect(surface).toBeVisible({
+          timeout: ACTIVATION_PROBE_TIMEOUT_MILLISECONDS,
+        });
+      }).toPass({ intervals: [100], timeout: timeoutMilliseconds })
+    );
+    return surface;
+  }
+);
 
 /** Dispatches one real touch drag while always releasing its CDP session. */
 export const dragTouch = Effect.fn("NakafaE2E.dragTouch")(function* (

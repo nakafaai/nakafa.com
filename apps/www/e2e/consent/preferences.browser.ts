@@ -8,7 +8,7 @@ import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/context";
-import { dragTouch } from "@/e2e/support/touch";
+import { dragTouch } from "@/e2e/support/input";
 
 const targetViewports = [
   { height: 800, name: "compact", slot: "drawer-popup", width: 320 },

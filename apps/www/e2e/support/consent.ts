@@ -6,7 +6,7 @@ import {
   encodeAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
 import { Effect } from "effect";
-import { activateUntilVisible } from "@/e2e/support/interaction";
+import { activateUntilVisible } from "@/e2e/support/input";
 
 /**
  * Stores an anonymous consent decision before the first navigation. Suites

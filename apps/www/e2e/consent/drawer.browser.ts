@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent, usageDataTrigger } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
-import { activateUntilVisible } from "@/e2e/support/interaction";
+import { activateUntilVisible } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const usageDataName = "Usage data";

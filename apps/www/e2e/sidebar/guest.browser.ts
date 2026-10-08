@@ -5,7 +5,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
-import { activateUntilVisible } from "@/e2e/support/interaction";
+import { activateUntilVisible } from "@/e2e/support/input";
 
 const targetViewports = [
   { height: 844, name: "compact", width: 390 },

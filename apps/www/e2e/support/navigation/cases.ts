@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
-import { activateUntilVisible } from "@/e2e/support/interaction";
+import { activateUntilVisible, press } from "@/e2e/support/input";
 import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
@@ -258,16 +258,7 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
   // @next/playwright owns this native Promise callback while its lock is held.
   yield* Effect.promise(() =>
     instant(page, () =>
-      (hasTouch
-        ? link.tap({
-            noWaitAfter: true,
-            timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-          })
-        : link.click({
-            noWaitAfter: true,
-            timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-          })
-      )
+      press(link, hasTouch)
         .then(() =>
           page.waitForURL((url) => url.pathname === target.href, {
             timeout: NAVIGATION_TIMEOUT_MILLISECONDS,

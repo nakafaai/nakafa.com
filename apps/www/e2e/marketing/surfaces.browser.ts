@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
-import { activateUntilVisible } from "@/e2e/support/interaction";
+import { activateUntilVisible } from "@/e2e/support/input";
 import {
   legacyAvatarFragmentIds,
   measureMarketingPage,

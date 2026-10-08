@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, MutableHashSet } from "effect";
+import { press } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/requests";
 
@@ -32,13 +33,6 @@ export function sectionLink(page: Page) {
     .locator(`main a[href^="${setHref}/"]`)
     .filter({ visible: true })
     .first();
-}
-
-/** Clicks or taps a control without waiting for the navigation it starts. */
-export function press(control: Locator, hasTouch: boolean) {
-  return hasTouch
-    ? control.tap({ noWaitAfter: true })
-    : control.click({ noWaitAfter: true });
 }
 
 /**
