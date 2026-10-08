@@ -3,7 +3,6 @@ import type refs from "@repo/backend/confect/_generated/refs";
 import { routing } from "@repo/internationalization/src/routing";
 
 import { Schema } from "effect";
-import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
 /** Convex query contract for the set discovery page. */
 type SetPageQuery = typeof refs.public.tryouts.queries.catalog.getSetPage;
@@ -61,26 +60,3 @@ export type TryoutSetDestination = typeof TryoutSetDestinationSchema.Type;
 export type TryoutSetRestartTarget = NonNullable<
   SetAttemptPageResult["restartTarget"]
 >;
-
-/** Cohesive render model shared by set overview surfaces. */
-export interface TryoutSetView {
-  actionAttempt?: CurrentAttempt | null;
-  activeAttempt: CurrentAttempt | null;
-  currentHref: string;
-  entrySection: SetEntrySection | null;
-  page: SetPage;
-  returnHref: string;
-  route: TryoutSetRoute;
-  sectionRoutes: readonly SetPage["sections"][number][];
-  start: {
-    destination: TryoutSetDestination | null;
-    entrySection: SetEntrySection | null;
-    set: SetPage["set"];
-  };
-}
-
-/** Render model for sets whose only section is the set entry itself. */
-export interface TryoutInternalSetView extends TryoutSetView {
-  entrySection: SetEntrySection;
-  runtimeState: TryoutRuntimeState<LoadedRuntime>;
-}

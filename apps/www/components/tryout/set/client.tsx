@@ -28,9 +28,11 @@ import type {
   TryoutSetInitialState,
   TryoutSetRestartTarget,
   TryoutSetRoute,
-  TryoutSetView,
 } from "@/components/tryout/set/model";
-import { TryoutSetOverview } from "@/components/tryout/set/overview";
+import {
+  TryoutSetOverview,
+  type TryoutSetOverviewProps,
+} from "@/components/tryout/set/overview";
 
 type SetState = TryoutSetInitialState | null;
 
@@ -191,7 +193,7 @@ function ResolvedTryoutSetPage({
     startEntrySection,
     setHref: activeAttempt ? getTryoutHref(route) : links.currentHref,
   });
-  const view: TryoutSetView = {
+  const view: TryoutSetOverviewProps["value"] = {
     actionAttempt,
     activeAttempt,
     currentHref: links.currentHref,
@@ -242,7 +244,7 @@ function TryoutInternalSet({
     entrySection: SetEntrySection;
     now: number;
     runtime: LoadedRuntime | null;
-    view: TryoutSetView;
+    view: TryoutSetOverviewProps["value"];
   };
 }) {
   const runtimeState = getTryoutRuntimeState({
@@ -287,7 +289,7 @@ function getStartDestination({
   startEntrySection,
   setHref,
 }: {
-  activeAttempt: TryoutSetView["activeAttempt"];
+  activeAttempt: TryoutSetOverviewProps["value"]["activeAttempt"];
   page: SetPage;
   startEntrySection: SetEntrySection | null;
   setHref: string;
