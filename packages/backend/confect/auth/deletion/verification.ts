@@ -15,32 +15,28 @@ export type LoadVerificationCursor = Effect.Effect<
 export type SaveVerificationCursor = (
   cursor: string | null
 ) => Effect.Effect<unknown, UserCleanupError>;
-export type VerificationCleanupOperations = Parameters<
-  typeof drainDeletedUserVerificationsProgram
->;
+export interface VerificationCleanupOperations {
+  readonly deletePage: DeleteVerificationPage;
+  readonly loadCursor: LoadVerificationCursor;
+  readonly saveCursor: SaveVerificationCursor;
+}
 /**
  * Drains every bounded verification scan page and checkpoints after each page
  * so an interrupted action resumes instead of rescanning the global prefix.
  */
 export const drainDeletedUserVerificationsProgram: (
-  deletePage: DeleteVerificationPage,
-  loadCursor: LoadVerificationCursor,
-  saveCursor: SaveVerificationCursor
+  operations: VerificationCleanupOperations
 ) => Effect.Effect<void, UserCleanupError> = Effect.fn(
   "auth.deletion.drainDeletedUserVerifications"
-)(function* (
-  deletePage: DeleteVerificationPage,
-  loadCursor: LoadVerificationCursor,
-  saveCursor: SaveVerificationCursor
-) {
-  let cursor = yield* loadCursor;
+)(function* (operations: VerificationCleanupOperations) {
+  let cursor = yield* operations.loadCursor;
   while (true) {
-    const page = yield* deletePage(cursor);
+    const page = yield* operations.deletePage(cursor);
     if (page.isDone) {
-      yield* saveCursor(null);
+      yield* operations.saveCursor(null);
       return;
     }
     cursor = page.continueCursor;
-    yield* saveCursor(cursor);
+    yield* operations.saveCursor(cursor);
   }
 });

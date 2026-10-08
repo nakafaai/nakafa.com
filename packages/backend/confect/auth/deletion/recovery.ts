@@ -13,27 +13,21 @@ import {
   ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import type { sweepAccountDeletionRecoveryArgsValidator } from "@repo/backend/confect/auth/deletion/recovery.spec";
-import { Clock, Context, Duration, Effect, flow } from "effect";
+import { Clock, Duration, Effect, flow } from "effect";
 export type SweepAccountDeletionRecoveryArgs =
   typeof sweepAccountDeletionRecoveryArgsValidator.Type;
-/**
- * The auth reads and commits that one recovery attempt runs. The recovery
- * action supplies them, and tests replace them.
- */
-export class RecoveryOperations extends Context.Service<
-  RecoveryOperations,
-  {
-    readonly authUserExists: Effect.Effect<boolean, UserCleanupError>;
-    readonly cancel: Effect.Effect<unknown, UserCleanupError>;
-    readonly continueCommit: Effect.Effect<boolean, UserCleanupError>;
-    readonly finalize: Effect.Effect<unknown, UserCleanupError>;
-  }
->()("@repo/backend/auth/deletion/RecoveryOperations") {}
+export type RecoveryOperations = Parameters<
+  typeof recoverAccountDeletionProgram
+>[0];
 /** Restores an aborted deletion or finishes one whose auth user is gone. */
 export const recoverAccountDeletionProgram = Effect.fn(
   "auth.deletion.recoverAccountDeletion"
-)(function* () {
-  const operations = yield* RecoveryOperations;
+)(function* (operations: {
+  readonly authUserExists: Effect.Effect<boolean, UserCleanupError>;
+  readonly cancel: Effect.Effect<unknown, UserCleanupError>;
+  readonly continueCommit: Effect.Effect<boolean, UserCleanupError>;
+  readonly finalize: Effect.Effect<unknown, UserCleanupError>;
+}) {
   const commitStarted = yield* operations.continueCommit;
   if (commitStarted) {
     return;

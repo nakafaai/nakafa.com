@@ -72,8 +72,8 @@ const drainDeletedUserVerifications = FunctionImpl.make(
       const ctx = yield* ActionCtxService;
       const { runMutation } = yield* MutationRunner;
       const { runQuery } = yield* QueryRunner;
-      yield* drainDeletedUserVerificationsProgram(
-        (cursor) =>
+      yield* drainDeletedUserVerificationsProgram({
+        deletePage: (cursor) =>
           tryUserCleanup(() =>
             ctx.runMutation(
               components.betterAuth.deletion.deleteUserVerificationPage,
@@ -83,7 +83,7 @@ const drainDeletedUserVerifications = FunctionImpl.make(
               }
             )
           ),
-        runQuery(
+        loadCursor: runQuery(
           refs.internal.auth.deletion.verification
             .loadDeletedUserVerificationCursor,
           {
@@ -93,7 +93,7 @@ const drainDeletedUserVerifications = FunctionImpl.make(
           Effect.mapError(toUserCleanupError),
           Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
         ),
-        (cursor) =>
+        saveCursor: (cursor) =>
           runMutation(
             refs.internal.auth.deletion.verification
               .saveDeletedUserVerificationCursor,
@@ -104,8 +104,8 @@ const drainDeletedUserVerifications = FunctionImpl.make(
           ).pipe(
             Effect.mapError(toUserCleanupError),
             Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-          )
-      );
+          ),
+      });
       return null;
     }
   )

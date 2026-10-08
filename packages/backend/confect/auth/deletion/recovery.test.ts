@@ -9,7 +9,6 @@ import {
   ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import {
-  RecoveryOperations,
   recoverAccountDeletionProgram,
   sweepAccountDeletionRecoveryProgram,
 } from "@repo/backend/confect/auth/deletion/recovery";
@@ -25,14 +24,12 @@ describe("auth/deletion/recovery", () => {
     Effect.gen(function* () {
       const cancel = vi.fn(() => Effect.succeed(false));
       const finalize = vi.fn(() => Effect.void);
-      yield* recoverAccountDeletionProgram().pipe(
-        Effect.provideService(RecoveryOperations, {
-          authUserExists: Effect.succeed(true),
-          cancel: Effect.suspend(cancel),
-          continueCommit: Effect.succeed(false),
-          finalize: Effect.suspend(finalize),
-        })
-      );
+      yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.succeed(true),
+        cancel: Effect.suspend(cancel),
+        continueCommit: Effect.succeed(false),
+        finalize: Effect.suspend(finalize),
+      });
       expect(cancel).toHaveBeenCalledOnce();
       expect(finalize).not.toHaveBeenCalled();
     })
@@ -41,31 +38,26 @@ describe("auth/deletion/recovery", () => {
     Effect.gen(function* () {
       const cancel = vi.fn(() => Effect.succeed(false));
       const finalize = vi.fn(() => Effect.void);
-      yield* recoverAccountDeletionProgram().pipe(
-        Effect.provideService(RecoveryOperations, {
-          authUserExists: Effect.succeed(false),
-          cancel: Effect.suspend(cancel),
-          continueCommit: Effect.succeed(false),
-          finalize: Effect.suspend(finalize),
-        })
-      );
+      yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.succeed(false),
+        cancel: Effect.suspend(cancel),
+        continueCommit: Effect.succeed(false),
+        finalize: Effect.suspend(finalize),
+      });
       expect(cancel).not.toHaveBeenCalled();
       expect(finalize).toHaveBeenCalledOnce();
     })
   );
   it.live("keeps failed recovery typed for the durable sweep to retry", () =>
     Effect.gen(function* () {
-      const failure = yield* recoverAccountDeletionProgram().pipe(
-        Effect.provideService(RecoveryOperations, {
-          authUserExists: Effect.fail(
-            toUserCleanupError(new Error("auth unavailable"))
-          ),
-          cancel: Effect.succeed(false),
-          continueCommit: Effect.succeed(false),
-          finalize: Effect.void,
-        }),
-        Effect.flip
-      );
+      const failure = yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.fail(
+          toUserCleanupError(new Error("auth unavailable"))
+        ),
+        cancel: Effect.succeed(false),
+        continueCommit: Effect.succeed(false),
+        finalize: Effect.void,
+      }).pipe(Effect.flip);
       expect(failure).toMatchObject({
         _tag: "UserCleanupError",
         code: "USER_CLEANUP_FAILED",
@@ -77,14 +69,12 @@ describe("auth/deletion/recovery", () => {
   it.live("delegates exactly one bounded cancellation batch", () =>
     Effect.gen(function* () {
       const cancel = vi.fn(() => Effect.succeed(true));
-      yield* recoverAccountDeletionProgram().pipe(
-        Effect.provideService(RecoveryOperations, {
-          authUserExists: Effect.succeed(true),
-          cancel: Effect.suspend(cancel),
-          continueCommit: Effect.succeed(false),
-          finalize: Effect.void,
-        })
-      );
+      yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.succeed(true),
+        cancel: Effect.suspend(cancel),
+        continueCommit: Effect.succeed(false),
+        finalize: Effect.void,
+      });
       expect(cancel).toHaveBeenCalledOnce();
     })
   );
@@ -94,14 +84,12 @@ describe("auth/deletion/recovery", () => {
       const cancel = vi.fn(() => Effect.succeed(false));
       const continueCommit = vi.fn(() => Effect.succeed(true));
       const finalize = vi.fn(() => Effect.void);
-      yield* recoverAccountDeletionProgram().pipe(
-        Effect.provideService(RecoveryOperations, {
-          authUserExists: Effect.suspend(authUserExists),
-          cancel: Effect.suspend(cancel),
-          continueCommit: Effect.suspend(continueCommit),
-          finalize: Effect.suspend(finalize),
-        })
-      );
+      yield* recoverAccountDeletionProgram({
+        authUserExists: Effect.suspend(authUserExists),
+        cancel: Effect.suspend(cancel),
+        continueCommit: Effect.suspend(continueCommit),
+        finalize: Effect.suspend(finalize),
+      });
       expect(continueCommit).toHaveBeenCalledOnce();
       expect(authUserExists).not.toHaveBeenCalled();
       expect(cancel).not.toHaveBeenCalled();
