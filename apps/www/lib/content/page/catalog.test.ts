@@ -10,12 +10,13 @@ import {
   AppLocaleSchema,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
+import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
 import {
   createTestPublication,
   makePageRuntimeSource,
   TEST_PUBLICATION_RELEASE,
 } from "@repo/backend/test/content/publication";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, MutableHashMap, Option, Schema } from "effect";
 import {
   getPublishedPageCatalog,
   readPublishedPageCatalog,
@@ -39,6 +40,11 @@ const dePageProjection = {
   artifactLocale: ArtifactLocaleSchema.make("de"),
   publicPath: PublicPathSchema.make("nutzungsbedingungen"),
 };
+/** Encodes fixture Page projections with the contract production decodes, so each stored string has the wire shape production reads. */
+const encodePageProjectionJson = Schema.encodeSync(
+  Schema.fromJsonString(PublicPageProjectionSchema),
+  { onExcessProperty: "error" }
+);
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -68,7 +74,7 @@ describe("published Page catalog", () => {
       Effect.succeed({
         activeReleaseId,
         managed: true,
-        projectionJson: [JSON.stringify(testPageProjection)],
+        projectionJson: [encodePageProjectionJson(testPageProjection)],
       })
     );
   });
@@ -84,12 +90,15 @@ describe("published Page catalog", () => {
           "contentArtifacts",
           "contentKeys",
         ] as const) {
-          fixture.source.set(
+          MutableHashMap.set(
+            fixture.source,
             table,
-            locales.flatMap(({ source }) => source.get(table) ?? [])
+            locales.flatMap(({ source }) =>
+              Option.getOrElse(MutableHashMap.get(source, table), () => [])
+            )
           );
         }
-        fixture.source.set("contentReleases", [
+        MutableHashMap.set(fixture.source, "contentReleases", [
           {
             ...fixture.release,
             resultFamilies: TEST_PUBLICATION_RELEASE.manifest.scope.families,
@@ -179,7 +188,7 @@ describe("published Page catalog", () => {
           Effect.succeed({
             activeReleaseId,
             managed: true,
-            projectionJson: [JSON.stringify(projection)],
+            projectionJson: [encodePageProjectionJson(projection)],
           })
         );
         const failure = yield* readPublishedPageCatalog().pipe(Effect.flip);
@@ -231,7 +240,7 @@ describe("published Page catalog", () => {
             testPageProjection,
             idPageProjection,
             dePageProjection,
-          ].map((projection) => JSON.stringify(projection)),
+          ].map((projection) => encodePageProjectionJson(projection)),
         })
       );
       const found = yield* readPublishedPageLocalePath({
@@ -255,7 +264,7 @@ describe("published Page catalog", () => {
         Effect.succeed({
           activeReleaseId,
           managed: true,
-          projectionJson: [JSON.stringify(testPageProjection)],
+          projectionJson: [encodePageProjectionJson(testPageProjection)],
         })
       );
       const missing = yield* readPublishedPageLocalePath({

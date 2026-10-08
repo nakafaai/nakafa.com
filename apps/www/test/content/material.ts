@@ -1,3 +1,4 @@
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALE_CODES,
@@ -23,7 +24,20 @@ import {
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { Array as Arr, Effect, Record as Rec, Struct } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashMap,
+  Record as Rec,
+  Schema,
+  Struct,
+} from "effect";
+
+/** Encodes fixture JSON with the contract production decodes, so the stored string has the wire shape production reads. */
+const encodeArtifactJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentArtifactSchema),
+  { onExcessProperty: "error" }
+);
 
 const defaultProjections = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
   makeMaterialProjection(locale, 1),
@@ -95,7 +109,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
     });
     artifacts.push({
       artifactHash: artifact.artifactHash,
-      artifactJson: JSON.stringify(artifact),
+      artifactJson: encodeArtifactJson(artifact),
     });
     const topic = yield* deriveMaterialTopicReference(projection);
     const bucket = getHashBucket(projectionHash);
@@ -131,11 +145,11 @@ export const makeMaterialRuntimeSource = Effect.fn(
     count: rows.length,
     slot: fixture.state.materialSlot,
   }));
-  fixture.source.set("contentHeads", heads);
-  fixture.source.set("contentBindings", bindings);
-  fixture.source.set("contentArtifacts", artifacts);
-  fixture.source.set("materialCatalog", catalog);
-  fixture.source.set("materialBuckets", buckets);
-  fixture.source.set("contentIndex", search);
+  MutableHashMap.set(fixture.source, "contentHeads", heads);
+  MutableHashMap.set(fixture.source, "contentBindings", bindings);
+  MutableHashMap.set(fixture.source, "contentArtifacts", artifacts);
+  MutableHashMap.set(fixture.source, "materialCatalog", catalog);
+  MutableHashMap.set(fixture.source, "materialBuckets", buckets);
+  MutableHashMap.set(fixture.source, "contentIndex", search);
   return { ...fixture, projections };
 });
