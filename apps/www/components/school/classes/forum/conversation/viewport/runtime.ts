@@ -3,7 +3,6 @@ import type { Fiber, Queue, Ref, Scope, SubscriptionRef } from "effect";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import type { ViewportAdapters } from "@/components/school/classes/forum/conversation/viewport/adapter";
 import type {
-  deriveViewportState,
   ViewportEvent,
   ViewportMeasurement,
   ViewportState,
@@ -16,7 +15,9 @@ export const VIEWPORT_EVENT_CAPACITY = 64;
 export type ActiveTranscript = ActiveTranscriptModel | null;
 export type ForumPostId = Id<"schoolClassForumPosts">;
 type RuntimeFiber = Fiber.Fiber<void, never>;
-export type ViewportStateDraft = Parameters<typeof deriveViewportState>[0];
+export type ViewportStateDraft = Omit<ViewportState, "jumpControl"> & {
+  jumpControl?: ViewportState["jumpControl"];
+};
 
 /** Mutable Effect refs and adapters owned by one open viewport service. */
 export interface ViewportRuntime {
