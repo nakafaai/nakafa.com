@@ -95,6 +95,12 @@ export function refuseMcpRequest(request: Request, parsedBody: unknown) {
   return Option.none();
 }
 
+/** A JSON-RPC request: a method name and the string or number id it expects an answer for. */
+const JsonRpcRequest = Schema.Struct({
+  id: Schema.Union([Schema.String, Schema.Finite]),
+  method: Schema.String,
+});
+
 /**
  * Answers a request for a method the protocol does not serve, with the answer
  * the SDK gave. The engine answers the same status and code with its own
@@ -103,16 +109,9 @@ export function refuseMcpRequest(request: Request, parsedBody: unknown) {
  */
 export function refuseUnservedMethod(parsedBody: unknown) {
   if (
-    !(
-      Predicate.isObject(parsedBody) &&
-      Predicate.hasProperty(parsedBody, "id") &&
-      Predicate.hasProperty(parsedBody, "method") &&
-      Predicate.isString(parsedBody.method)
-    )
+    !Schema.is(JsonRpcRequest)(parsedBody) ||
+    McpProtocol.v2026_07_28.clientRpcs.requests.has(parsedBody.method)
   ) {
-    return Option.none();
-  }
-  if (McpProtocol.v2026_07_28.clientRpcs.requests.has(parsedBody.method)) {
     return Option.none();
   }
   return Option.some(
