@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   mathToolInputSchema,
+  NakafaToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
@@ -13,11 +14,14 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { InvalidToolInputError, NoSuchToolError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
+import { Schema } from "effect";
 
 afterEach(() => {
   vi.restoreAllMocks();
   provider.languageModel.mockReset();
 });
+const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
+const nakafaInputJsonSchema = Schema.fromJsonString(NakafaToolInputSchema);
 const tools = {
   nakafa: { inputSchema: nakafaToolInputSchema },
   math: { inputSchema: mathToolInputSchema },
@@ -64,7 +68,10 @@ describe("Nina tool repair with the Agent component", () => {
   it("repairs a known task through the model and records usage", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: providerStep([
-        { type: "text", text: JSON.stringify(ninaToolInput) },
+        {
+          type: "text",
+          text: Schema.encodeSync(nakafaInputJsonSchema)(ninaToolInput),
+        },
       ]),
     });
     provider.languageModel.mockReturnValue(model);
@@ -74,7 +81,7 @@ describe("Nina tool repair with the Agent component", () => {
     );
     expect(result).toEqual({
       ...toolCall,
-      input: JSON.stringify(ninaToolInput),
+      input: Schema.encodeSync(nakafaInputJsonSchema)(ninaToolInput),
     });
     expect(usageHandler).toHaveBeenCalledWith(
       expect.anything(),
@@ -83,9 +90,9 @@ describe("Nina tool repair with the Agent component", () => {
         userId: expect.any(String),
       })
     );
-    expect(JSON.stringify(model.doGenerateCalls[0]?.prompt)).toContain(
-      "Keep the original task and source constraints"
-    );
+    expect(
+      Schema.encodeSync(jsonTextSchema)(model.doGenerateCalls[0]?.prompt)
+    ).toContain("Keep the original task and source constraints");
   });
 
   it.each(["schema", "provider", "output"] as const)(

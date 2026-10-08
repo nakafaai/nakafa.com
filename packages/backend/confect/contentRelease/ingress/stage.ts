@@ -2,8 +2,12 @@
 
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
 import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
+import type { StageArtifactBatchRequest } from "@nakafa/aksara-contracts/transport/batch";
 import type { StageOperation } from "@nakafa/aksara-contracts/transport/group";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import type {
+  StageRecoveryRequestSchema,
+  StageReleaseRequestSchema,
+} from "@nakafa/aksara-contracts/transport/request";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   MutationRunner,
@@ -30,31 +34,13 @@ import {
 } from "@repo/backend/confect/contentRelease/wire";
 import { Array as Arr, Effect } from "effect";
 
-type StageRequest =
-  | StageOperation
-  | Extract<
-      PublicationRequest,
-      {
-        readonly operation: "stageRecovery" | "stageRelease";
-      }
-    >;
-type ReleaseRequest = Extract<
-  StageRequest,
-  {
-    readonly operation: "stageRecovery" | "stageRelease";
-  }
->;
+type ReleaseRequest =
+  | typeof StageReleaseRequestSchema.Type
+  | typeof StageRecoveryRequestSchema.Type;
+type StageRequest = StageOperation | ReleaseRequest;
 /** Authenticates candidate and recovery artifacts against their keys. */
 const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
-  function* (
-    request: Extract<
-      StageRequest,
-      {
-        operation: "stageArtifactBatch";
-      }
-    >,
-    activeKeyId: string
-  ) {
+  function* (request: StageArtifactBatchRequest, activeKeyId: string) {
     const verified = yield* loadStageEnvelope(request.releaseId);
     yield* Effect.forEach(
       request.artifacts,

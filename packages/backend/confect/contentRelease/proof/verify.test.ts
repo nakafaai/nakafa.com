@@ -11,6 +11,8 @@ import {
 
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { ReleaseVerificationEvidenceSchema } from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   recomputeProgram,
@@ -43,6 +45,9 @@ const releaseId = ReleaseIdSchema.make("release-proof");
 const manifest = testEmptyManifest(releaseId);
 const signedRelease = testSignedRelease(manifest);
 const manifestHash = signedRelease.manifestHash;
+const rendererJson = Schema.encodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+)(TEST_PROOF_RENDERER);
 class ObservedProofFailure extends Schema.TaggedError<ObservedProofFailure>()(
   "ObservedProofFailure",
   {
@@ -91,12 +96,7 @@ const insertRelease = Effect.fn(
   "contentRelease.proof.verify.test.insertRelease"
 )((ctx: MutationCtx) =>
   Effect.promise(() =>
-    insertSignedCandidate(
-      ctx,
-      releaseId,
-      signedRelease,
-      JSON.stringify(TEST_PROOF_RENDERER)
-    )
+    insertSignedCandidate(ctx, releaseId, signedRelease, rendererJson)
   )
 );
 
@@ -282,9 +282,12 @@ describe("contentRelease/proof/verify", () => {
           releaseId,
           stagedArtifacts: 0,
         });
+        const proofJson = yield* Schema.encodeEffect(
+          Schema.fromJsonString(ReleaseVerificationEvidenceSchema)
+        )(proof);
         expect(release).toMatchObject({
           checkedItems: 0,
-          proofJson: JSON.stringify(proof),
+          proofJson,
           status: "verifying",
         });
       }

@@ -1,16 +1,29 @@
-import type { MaterialKey } from "@nakafa/aksara-contracts/projection/material";
-import type { Locale } from "@repo/contents/content";
+import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
+import { LocaleSchema } from "@repo/contents/content";
+import { Schema } from "effect";
 
-export interface MaterialRouteIdentity {
-  locale: Locale;
-  materialKey: MaterialKey;
-  sourcePath: string;
-}
+const MaterialRouteIdentitySchema = Schema.Struct({
+  locale: LocaleSchema,
+  materialKey: MaterialKeySchema,
+  sourcePath: Schema.String,
+});
+export type MaterialRouteIdentity = typeof MaterialRouteIdentitySchema.Type;
 
-export interface MaterialContextIdentity {
-  nodeKey: string;
-  programKey: string;
-}
+const MaterialContextIdentitySchema = Schema.Struct({
+  nodeKey: Schema.String,
+  programKey: Schema.String,
+});
+export type MaterialContextIdentity = typeof MaterialContextIdentitySchema.Type;
+
+const MaterialContextRefSchema = Schema.Struct({
+  ...MaterialContextIdentitySchema.fields,
+  anchor: Schema.String,
+  locale: LocaleSchema,
+  materialKey: MaterialKeySchema,
+  parentHref: Schema.String,
+  parentTitle: Schema.String,
+  sourcePath: Schema.String,
+});
 
 /**
  * Source-owned material return context for one concrete lesson and curriculum card.
@@ -19,14 +32,7 @@ export interface MaterialContextIdentity {
  * builds the small header return link when a material was opened from a
  * curriculum card list.
  */
-export interface MaterialContextRef extends MaterialContextIdentity {
-  anchor: string;
-  locale: Locale;
-  materialKey: MaterialKey;
-  parentHref: string;
-  parentTitle: string;
-  sourcePath: string;
-}
+export type MaterialContextRef = typeof MaterialContextRefSchema.Type;
 
 /**
  * Returns the matching context ref for one material route and curriculum group.

@@ -10,7 +10,7 @@ import {
   firstText,
   getDocumentMetadata,
 } from "@repo/backend/confect/nina/research/tools/metadata";
-import { Array as Arr, pipe } from "effect";
+import { Array as Arr, HashSet, MutableHashSet, pipe } from "effect";
 
 export type SearchSource = ReturnType<typeof getSearchSource>;
 
@@ -25,7 +25,7 @@ export function readSearchSources({
   const web = Arr.map(response.web ?? [], (result) =>
     getSearchSource({ query, result })
   );
-  const webUrls = new Set(
+  const webUrls = HashSet.fromIterable(
     pipe(
       web,
       Arr.map((item) => item.url),
@@ -35,7 +35,7 @@ export function readSearchSources({
   const news = Arr.flatMap(response.news ?? [], (result) => {
     const source = getSearchSource({ query, result });
 
-    if (!source.url || webUrls.has(source.url)) {
+    if (!source.url || HashSet.has(webUrls, source.url)) {
       return [];
     }
 
@@ -47,14 +47,14 @@ export function readSearchSources({
 
 /** Keeps one source per URL across query variants. */
 export function dedupeSources(sources: SearchSource[]) {
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
 
   return Arr.flatMap(sources, (source) => {
-    if (!source.url || seen.has(source.url)) {
+    if (!source.url || MutableHashSet.has(seen, source.url)) {
       return [];
     }
 
-    seen.add(source.url);
+    MutableHashSet.add(seen, source.url);
     return [source];
   });
 }

@@ -42,10 +42,12 @@ function concatenateChunks(chunks: readonly Uint8Array[], totalBytes: number) {
   }
   return result;
 }
-interface BoundedBodyState {
-  readonly chunks: Uint8Array[];
-  readonly totalBytes: number;
-}
+/** Chunks grow in place, so reading a body stays linear in its size. */
+const BoundedBodyStateSchema = Schema.Struct({
+  chunks: Schema.Array(Schema.Uint8Array).pipe(Schema.mutable),
+  totalBytes: Schema.Finite,
+});
+type BoundedBodyState = typeof BoundedBodyStateSchema.Type;
 /** Acquires one reader in the typed channel and cancels it when its stream ends. */
 function streamBody(body: ReadableStream<Uint8Array>) {
   return Stream.fromPull(

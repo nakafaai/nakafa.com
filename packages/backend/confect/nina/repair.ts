@@ -9,6 +9,8 @@ import type { NinaToolSet } from "@repo/backend/confect/nina/step";
 import { NoSuchToolError, Output, type ToolCallRepairFunction } from "ai";
 import { Array as Arr, Effect, Schema } from "effect";
 
+const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
+
 class NinaRepairError extends Schema.TaggedError<NinaRepairError>()(
   "NinaRepairError",
   { phase: Schema.Literals(["schema", "generation"]) }
@@ -51,6 +53,9 @@ export const repairToolCall = Effect.fn("nina.repair")(
       languageModel: handle.model,
       usageHandler,
     });
+    const acceptedSchema = yield* Schema.encodeEffect(jsonTextSchema)(
+      schema
+    ).pipe(Effect.orDie);
     const result = yield* Effect.tryPromise({
       try: (signal) =>
         agent
@@ -64,7 +69,7 @@ export const repairToolCall = Effect.fn("nina.repair")(
                 [
                   `Repair the arguments for ${toolCall.toolName}. Keep the original task and source constraints. Do not invent another task or change the tool.`,
                   `Failed arguments: ${toolCall.input}`,
-                  `Accepted schema: ${JSON.stringify(schema)}`,
+                  `Accepted schema: ${acceptedSchema}`,
                   `Validation error: ${error.message}`,
                 ],
                 "\n\n"
@@ -76,7 +81,10 @@ export const repairToolCall = Effect.fn("nina.repair")(
           .then((generated) => generated.output),
       catch: () => new NinaRepairError({ phase: "generation" }),
     });
-    return { ...toolCall, input: JSON.stringify(result) };
+    const input = yield* Schema.encodeEffect(jsonTextSchema)(result).pipe(
+      Effect.orDie
+    );
+    return { ...toolCall, input };
   },
   Effect.catchTag("NinaRepairError", (error) =>
     Effect.logWarning("Nina tool repair unavailable", {

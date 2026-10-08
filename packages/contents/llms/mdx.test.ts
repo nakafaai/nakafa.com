@@ -4,7 +4,7 @@ import {
   projectMdxForAgentMarkdown,
   readMdxBody,
 } from "@repo/contents/llms/mdx";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 describe("authored MDX body", () => {
   it.effect("omits module metadata while preserving all lesson bytes", () =>
@@ -273,11 +273,14 @@ Fragment child with <InlineMath math="x" />.
           label: `point-${index}`,
           value: index,
         }));
+        const encodedData = yield* Schema.encodeUnknownEffect(
+          Schema.fromJsonString(Schema.Unknown)
+        )(longData);
 
         const markdown = yield* projectMdxForAgentMarkdown(`
 <FutureScienceScene
   title="Orbital transfer"
-  data={${JSON.stringify(longData)}}
+  data={${encodedData}}
 >
 The scene compares entry speed and orbit height.
 </FutureScienceScene>

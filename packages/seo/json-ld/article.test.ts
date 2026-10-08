@@ -7,11 +7,16 @@ import {
 } from "@repo/seo/json-ld/article";
 import { Schema } from "effect";
 
-const decodeJsonLd = Schema.decodeUnknownSync(ArticleJsonLdSchema);
+const decodeJsonLd = Schema.decodeUnknownSync(
+  Schema.fromJsonString(ArticleJsonLdSchema)
+);
+const encodeJsonLdText = Schema.encodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
 
 /** Reads the document like a crawler: JSON text, no undeclared properties. */
 function readPublishedJsonLd(value: unknown) {
-  return decodeJsonLd(JSON.parse(JSON.stringify(value)), {
+  return decodeJsonLd(encodeJsonLdText(value), {
     onExcessProperty: "error",
   });
 }

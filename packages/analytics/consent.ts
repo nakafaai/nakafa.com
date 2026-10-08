@@ -42,9 +42,14 @@ export const AnalyticsConsentDecisionSchema = Schema.Literals([
 export type AnalyticsConsentDecision =
   typeof AnalyticsConsentDecisionSchema.Type;
 
+/** Epoch milliseconds of one recorded anonymous consent decision. */
+export const AnonymousAnalyticsConsentDecidedAtSchema = Schema.Finite.check(
+  Schema.isGreaterThanOrEqualTo(0)
+);
+
 const anonymousConsentFields = {
   category: Schema.Literals(CONSENT_CATEGORIES),
-  decidedAt: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
+  decidedAt: AnonymousAnalyticsConsentDecidedAtSchema,
   noticeVersion: Schema.Literals(CONSENT_NOTICE_VERSIONS),
 };
 
@@ -103,17 +108,33 @@ export function createAnonymousAnalyticsBrowserSignalDenial(
   };
 }
 
-export type AnalyticsConsentState =
-  | { readonly status: "denied"; readonly scope: "account" | "anonymous" }
-  | { readonly status: "browser-signal" }
-  | { readonly status: "granted"; readonly scope: "account" | "anonymous" }
-  | { readonly status: "pending" }
-  | { readonly status: "prompt"; readonly scope: "account" | "anonymous" };
+const AnalyticsConsentScopeSchema = Schema.Literals(["account", "anonymous"]);
 
-interface AccountAnalyticsConsent {
-  readonly granted: boolean;
-  readonly noticeVersion: string;
-}
+const AnalyticsConsentStateSchema = Schema.Union([
+  Schema.Struct({
+    scope: AnalyticsConsentScopeSchema,
+    status: Schema.Literal("denied"),
+  }),
+  Schema.Struct({ status: Schema.Literal("browser-signal") }),
+  Schema.Struct({
+    scope: AnalyticsConsentScopeSchema,
+    status: Schema.Literal("granted"),
+  }),
+  Schema.Struct({ status: Schema.Literal("pending") }),
+  Schema.Struct({
+    scope: AnalyticsConsentScopeSchema,
+    status: Schema.Literal("prompt"),
+  }),
+]);
+
+export type AnalyticsConsentState = typeof AnalyticsConsentStateSchema.Type;
+
+const AccountAnalyticsConsentSchema = Schema.Struct({
+  granted: Schema.Boolean,
+  noticeVersion: Schema.String,
+});
+
+type AccountAnalyticsConsent = typeof AccountAnalyticsConsentSchema.Type;
 
 /** Honors explicit browser-wide DNT and Global Privacy Control preferences. */
 export function hasBrowserPrivacySignal({

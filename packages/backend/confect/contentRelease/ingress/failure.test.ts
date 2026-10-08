@@ -1,4 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import {
+  ContentReleaseItemSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
+import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import {
   type PublicationRequest,
   PublicationRequestSchema,
@@ -29,21 +37,32 @@ import {
 import { makeTryoutSnapshotManifest } from "@repo/backend/test/tryout/snapshot";
 import { Cause, Effect, Exit, Record as Rec, Result, Schema } from "effect";
 
+const ArtifactJsonSchema = Schema.fromJsonString(SignedContentArtifactSchema);
+const ProjectionJsonSchema = Schema.fromJsonString(ContentProjectionSchema);
+const ReleaseJsonSchema = Schema.fromJsonString(SignedContentReleaseSchema);
+const RendererJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
+const RouteJsonSchema = Schema.fromJsonString(ContentRouteItemSchema);
+const UpsertJsonSchema = Schema.fromJsonString(ContentReleaseItemSchema);
+
 /** Strictly decodes one technical request through the shared contract. */
 function request(input: unknown) {
   return Schema.decodeUnknownSync(PublicationRequestSchema)(input);
 }
 
 const recoveryId = "release-recovery";
-const release: unknown = JSON.parse(testReleaseJson());
-const recoveryRelease: unknown = JSON.parse(
+const release = Schema.decodeSync(ReleaseJsonSchema)(testReleaseJson());
+const recoveryRelease = Schema.decodeSync(ReleaseJsonSchema)(
   testReleaseJson({
     baseReleaseId: TEST_RELEASE_ID,
     originReleaseId: TEST_RELEASE_ID,
     releaseId: recoveryId,
   })
 );
-const rendererManifest: unknown = JSON.parse(testRendererJson());
+const rendererManifest = Schema.decodeSync(RendererJsonSchema)(
+  testRendererJson()
+);
 const requests = {
   accept: request({
     operation: "accept",
@@ -86,7 +105,7 @@ const requests = {
     rollbackOfManifestHash: TEST_MANIFEST_HASH,
   }),
   stageArtifactBatch: request({
-    artifacts: [JSON.parse(testArtifactJson())],
+    artifacts: [Schema.decodeSync(ArtifactJsonSchema)(testArtifactJson())],
     batchIndex: 0,
     operation: "stageArtifactBatch",
     releaseId: TEST_RELEASE_ID,
@@ -97,7 +116,7 @@ const requests = {
     requests: [
       {
         batchIndex: 0,
-        items: [JSON.parse(testUpsertJson())],
+        items: [Schema.decodeSync(UpsertJsonSchema)(testUpsertJson())],
         operation: "stageItemBatch",
         releaseId: TEST_RELEASE_ID,
       },
@@ -105,14 +124,16 @@ const requests = {
   }),
   stageItemBatch: request({
     batchIndex: 0,
-    items: [JSON.parse(testUpsertJson())],
+    items: [Schema.decodeSync(UpsertJsonSchema)(testUpsertJson())],
     operation: "stageItemBatch",
     releaseId: TEST_RELEASE_ID,
   }),
   stageProjectionBatch: request({
     batchIndex: 0,
     operation: "stageProjectionBatch",
-    projections: [JSON.parse(testProjectionJson())],
+    projections: [
+      Schema.decodeSync(ProjectionJsonSchema)(testProjectionJson()),
+    ],
     releaseId: TEST_RELEASE_ID,
   }),
   stageRecovery: request({
@@ -129,7 +150,7 @@ const requests = {
     batchIndex: 0,
     operation: "stageRouteBatch",
     releaseId: TEST_RELEASE_ID,
-    routes: [JSON.parse(testRouteJson())],
+    routes: [Schema.decodeSync(RouteJsonSchema)(testRouteJson())],
   }),
   status: request({
     manifestHash: TEST_MANIFEST_HASH,

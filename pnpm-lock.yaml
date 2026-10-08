@@ -86,9 +86,6 @@ importers:
       '@repo/testing':
         specifier: workspace:*
         version: link:packages/testing
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:packages/typescript-config
       '@sigstore/bundle':
         specifier: 5.0.0
         version: 5.0.0
@@ -98,9 +95,6 @@ importers:
       '@types/node':
         specifier: 24.19.1
         version: 24.19.1
-      '@vercel/config':
-        specifier: ^0.11.0
-        version: 0.11.0
       afdocs:
         specifier: 0.20.0
         version: 0.20.0
@@ -162,9 +156,6 @@ importers:
 
   apps/email:
     dependencies:
-      '@repo/email':
-        specifier: workspace:*
-        version: link:../../packages/email
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -284,9 +275,6 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.104.1
         version: 5.104.1(@tanstack/react-query@5.104.1(react@19.2.8))(@types/react@19.2.18)(csstype@3.2.3)(react@19.2.8)
-      '@tanstack/react-table':
-        specifier: ^9.2.6
-        version: 9.2.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@vercel/functions':
         specifier: ^3.9.11
         version: 3.9.11(ws@8.22.0)
@@ -405,9 +393,6 @@ importers:
       jsdom:
         specifier: ^30.1.2
         version: 30.1.2(@noble/hashes@2.3.0)
-      tailwindcss:
-        specifier: ^4.3.3
-        version: 4.3.3
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
@@ -553,9 +538,6 @@ importers:
       gpt-tokenizer:
         specifier: ^4.0.0
         version: 4.0.0
-      hono:
-        specifier: ^4.13.13
-        version: 4.13.13
       ipaddr.js:
         specifier: ^2.5.0
         version: 2.5.0
@@ -677,9 +659,6 @@ importers:
       '@repo/design-system':
         specifier: workspace:*
         version: link:../design-system
-      '@repo/internationalization':
-        specifier: workspace:*
-        version: link:../internationalization
       '@repo/math':
         specifier: workspace:*
         version: link:../math
@@ -974,9 +953,9 @@ importers:
       '@nakafa/aksara-contracts':
         specifier: 0.46.0
         version: 0.46.0(effect@4.0.1)
-      '@repo/utilities':
+      '@repo/next-config':
         specifier: workspace:*
-        version: link:../utilities
+        version: link:../next-config
       next:
         specifier: 16.4.0
         version: 16.4.0(@babel/core@8.0.5)(@playwright/test@1.63.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -3749,18 +3728,8 @@ packages:
       react: 19.2.8
       react-dom: 19.2.8
 
-  '@tanstack/react-table@9.2.6':
-    resolution: {integrity: sha512-Wmt3sbzwz+5CtB0pqIxGw2FrNW9mF4AhJ9KnS1/VGZ8cDAEg51S4ixru2dnF0xQnY407kdYNLer3ms+n8zCN6w==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      react: 19.2.8
-
   '@tanstack/store@0.11.2':
     resolution: {integrity: sha512-sJ4mjol8uQsHV0gOJzzjwXfh2Fwm+Sz0+8deqiTm4jGbMdjzNSW+xZCFm0kUa870uhd8yi+DpKnZb5Kc4apa0Q==}
-
-  '@tanstack/table-core@9.2.6':
-    resolution: {integrity: sha512-t5LaLx8gDCgzjvwtZo5xtLklJP11D9zaKOW8q6jOCyuQYhkqpTK1heqMfgTQwDlhl0dU8f1X66Xurbj3jpCUSw==}
-    engines: {node: '>=20'}
 
   '@tufjs/canonical-json@2.0.0':
     resolution: {integrity: sha512-yVtV8zsdo8qFHe+/3kw81dSLyF7D576A5cCFCi4X7B39tWT7SekaEFUnvnWJHz+9qO7qJTah1JbrDjWKqFtdWA==}
@@ -10184,19 +10153,7 @@ snapshots:
       react-dom: 19.2.8(react@19.2.8)
       use-sync-external-store: 1.7.0(react@19.2.8)
 
-  '@tanstack/react-table@9.2.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
-    dependencies:
-      '@tanstack/react-store': 0.11.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@tanstack/table-core': 9.2.6
-      react: 19.2.8
-    transitivePeerDependencies:
-      - react-dom
-
   '@tanstack/store@0.11.2': {}
-
-  '@tanstack/table-core@9.2.6':
-    dependencies:
-      '@tanstack/store': 0.11.2
 
   '@tufjs/canonical-json@2.0.0': {}
 
@@ -11869,7 +11826,8 @@ snapshots:
 
   hls.js@1.7.3: {}
 
-  hono@4.13.13: {}
+  hono@4.13.13:
+    optional: true
 
   html-encoding-sniffer@7.0.0(@noble/hashes@2.3.0):
     dependencies:

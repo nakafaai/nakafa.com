@@ -8,7 +8,7 @@ import {
 import type { WebSearchInput } from "@repo/backend/confect/nina/research/schema";
 import type { SearchSource } from "@repo/backend/confect/nina/research/search/source";
 import { getSourceReferences } from "@repo/backend/confect/nina/research/source";
-import { Array as Arr } from "effect";
+import { Array as Arr, MutableHashSet } from "effect";
 
 const sourceKeyTokenPattern = /[\p{L}\p{N}][\p{L}\p{N}._-]*/gu;
 const sourceKeyWhitespacePattern = /\s+/gu;
@@ -103,7 +103,7 @@ function getPrimaryDomainKeys(text: string) {
     return [normalizeSourceKey(term.text)];
   });
   const versionAdjacentKeys = getVersionAdjacentKeys(text);
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
 
   return Arr.flatMap(
     [...domainKeys, ...productKeys, ...versionAdjacentKeys],
@@ -112,11 +112,11 @@ function getPrimaryDomainKeys(text: string) {
         return [];
       }
 
-      if (seen.has(token)) {
+      if (MutableHashSet.has(seen, token)) {
         return [];
       }
 
-      seen.add(token);
+      MutableHashSet.add(seen, token);
       return [token];
     }
   );

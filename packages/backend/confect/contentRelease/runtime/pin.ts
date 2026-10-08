@@ -1,9 +1,10 @@
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
-interface ActiveReleaseIdentity {
-  readonly releaseId: string;
-}
+const ActiveReleaseIdentitySchema = Schema.Struct({
+  releaseId: Schema.String,
+});
+type ActiveReleaseIdentity = typeof ActiveReleaseIdentitySchema.Type;
 
 /** Requires a multi-read operation to remain on one active release. */
 export const requireExpectedActiveRelease = Effect.fn(

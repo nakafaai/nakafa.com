@@ -1,15 +1,22 @@
+import { Schema } from "effect";
+
 /** The exact specs one reviewed dependency may declare. */
-type ApprovedSpecs =
-  | { readonly allowed: readonly [string, ...string[]] }
-  | { readonly approved: string };
+const ApprovedSpecsSchema = Schema.Union([
+  Schema.Struct({ allowed: Schema.NonEmptyArray(Schema.String) }),
+  Schema.Struct({ approved: Schema.String }),
+]);
 
 /** The manifests that must declare one reviewed dependency. */
-type DeclarationOwners =
-  | { readonly declarationPaths: readonly string[] }
-  | { readonly minimumDeclarations: number };
+const DeclarationOwnersSchema = Schema.Union([
+  Schema.Struct({ declarationPaths: Schema.Array(Schema.String) }),
+  Schema.Struct({ minimumDeclarations: Schema.Finite }),
+]);
 
-type DependencyHold = ApprovedSpecs &
-  DeclarationOwners & { readonly dependency: string };
+const DependencyNameSchema = Schema.Struct({ dependency: Schema.String });
+
+type DependencyHold = typeof ApprovedSpecsSchema.Type &
+  typeof DeclarationOwnersSchema.Type &
+  typeof DependencyNameSchema.Type;
 
 /** The exact package manager the root manifest pins for every checkout and CI job. */
 export const PACKAGE_MANAGER = "pnpm@11.28.4";
@@ -289,7 +296,7 @@ export const REGISTRY_REVIEWS = [
   [
     "@react-three/fiber@latest",
     "9.8.1",
-    "Fiber 9.8 accepts React 19.3 and mounts a scene inside the React DOM commit that renders its canvas. Drei's Html replaces its React root during that mount, and React DOM then commits the first label's replaced root last: it clears the label and makes the label's removal throw on lesson navigation, on React 19.2 and 19.3 alike (pmndrs/drei#2867). Fiber 9.8 and React 19.3 move together once Html keeps one root or scene labels stop using it. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
+    "Fiber 9.8 accepts React 19.3 and mounts a scene inside the React DOM commit that renders its canvas. Drei's Html replaces its React root during that mount, and React DOM then commits the first label's replaced root last: it clears the label and makes the label's removal throw on lesson navigation, on React 19.2 and 19.3 alike (pmndrs/drei#2867). Fiber 9.8 and React 19.3 move together once Html keeps one root or scene labels stop using it. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene/lines.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
   ],
   [
     "@polar-sh/sdk@latest",
@@ -315,7 +322,7 @@ export const SCRIPT_DEPENDENCY_HOLDS = [
   },
 ];
 
-export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
+export const FORBIDDEN_EFFECT_DEPENDENCIES = [
   "@effect/cluster",
   "@effect/experimental",
   "@effect/language-service",
@@ -323,4 +330,4 @@ export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
   "@effect/rpc",
   "@effect/sql",
   "@effect/workflow",
-]);
+];

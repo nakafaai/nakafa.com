@@ -20,14 +20,6 @@ import {
 import { writeError, writeOutput } from "#scripts/output";
 import { problemWhen } from "#scripts/problem";
 
-interface BumpDependenciesOptions {
-  readonly inspectPolicy?: typeof inspectRepositoryPolicy;
-  readonly root: string;
-  readonly run?: typeof runPnpm;
-  readonly writeError?: typeof writeError;
-  readonly writeOutput?: typeof writeOutput;
-}
-
 /** Expected failure while decoding package registry metadata. */
 class DependencyMetadataError extends Schema.TaggedError<DependencyMetadataError>()(
   "DependencyMetadataError",
@@ -51,16 +43,11 @@ export const inspectRepositoryPolicy = Effect.fn(
   ]).pipe(Effect.map(([dependency, actions]) => [...dependency, ...actions]))
 );
 
+/** A registry answers with the resolved version as one JSON string. */
+export const RegistryVersionJson = Schema.fromJsonString(Schema.String);
+
 function decodeRegistryVersion(registry: string, source: string) {
-  return Effect.try({
-    try: (): unknown => JSON.parse(source),
-    catch: (cause) =>
-      new DependencyMetadataError({
-        cause,
-        message: `${registry} returned invalid registry metadata.`,
-      }),
-  }).pipe(
-    Effect.flatMap(Schema.decodeUnknownEffect(Schema.String)),
+  return Schema.decodeEffect(RegistryVersionJson)(source).pipe(
     Effect.mapError(
       (cause) =>
         new DependencyMetadataError({
@@ -71,22 +58,17 @@ function decodeRegistryVersion(registry: string, source: string) {
   );
 }
 
+/** pnpm outdated keys each package by name; the policy reads only the names. */
+const OutdatedDependenciesJson = Schema.fromJsonString(
+  Schema.Record(Schema.String, Schema.Unknown)
+);
+
 function decodeOutdatedDependencies(source: string) {
   if (!source.trim()) {
     return Effect.succeed<string[]>([]);
   }
 
-  return Effect.try({
-    try: (): unknown => JSON.parse(source),
-    catch: (cause) =>
-      new DependencyMetadataError({
-        cause,
-        message: "pnpm outdated returned invalid JSON.",
-      }),
-  }).pipe(
-    Effect.flatMap(
-      Schema.decodeUnknownEffect(Schema.Record(Schema.String, Schema.Unknown))
-    ),
+  return Schema.decodeEffect(OutdatedDependenciesJson)(source).pipe(
     Effect.map((dependencies) =>
       Arr.sort(Rec.keys(dependencies), Order.String)
     ),
@@ -143,15 +125,24 @@ const reviewRegistryDependencies = Effect.fn("RepositoryPolicy.reviewRegistry")(
   }
 );
 
+const BumpDependenciesOptionsSchema = Schema.Struct({
+  root: Schema.String,
+});
+type BumpDependenciesOptions = typeof BumpDependenciesOptionsSchema.Type;
+type InspectPolicy = typeof inspectRepositoryPolicy;
+type RunPnpm = typeof runPnpm;
+type WriteError = typeof writeError;
+type WriteOutput = typeof writeOutput;
+
 /** Updates routine dependencies only after every safety policy passes. */
 export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
-  function* ({
-    inspectPolicy = inspectRepositoryPolicy,
-    root,
-    run = runPnpm,
-    writeError: writeErrorMessage = writeError,
-    writeOutput: writeOutputMessage = writeOutput,
-  }: BumpDependenciesOptions) {
+  function* (
+    { root }: BumpDependenciesOptions,
+    inspectPolicy: InspectPolicy = inspectRepositoryPolicy,
+    run: RunPnpm = runPnpm,
+    writeErrorMessage: WriteError = writeError,
+    writeOutputMessage: WriteOutput = writeOutput
+  ) {
     const preflightProblems = yield* inspectPolicy(root);
     if (preflightProblems.length > 0) {
       yield* writeErrorMessage(`${Arr.join(preflightProblems, "\n")}\n`);

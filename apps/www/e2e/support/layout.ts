@@ -1,5 +1,23 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Number as Num } from "effect";
+import { VISUAL_CARD } from "@/e2e/support/selector";
+
+/**
+ * Records, from the first script on, the start time and value of every layout
+ * shift the browser reports, in the page global `key`. Pass it to
+ * `page.addInitScript` before the page loads, with the global's name.
+ */
+export function recordLayoutShifts(key: string) {
+  const shifts: { time: number; value: number }[] = [];
+  Object.defineProperty(window, key, { value: shifts });
+  new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+      if ("value" in entry && typeof entry.value === "number") {
+        shifts.push({ time: entry.startTime, value: entry.value });
+      }
+    }
+  }).observe({ buffered: true, type: "layout-shift" });
+}
 
 /**
  * Reads every layout shift the page has recorded since navigation, and whether
@@ -12,7 +30,7 @@ const readLayoutShifts = Effect.fn("NakafaE2E.readLayoutShifts")(function* (
   page: Page
 ) {
   return yield* Effect.promise(() =>
-    page.evaluate(() => {
+    page.evaluate((visualCard) => {
       const observer = new PerformanceObserver(() => undefined);
       observer.observe({ buffered: true, type: "layout-shift" });
       const entries = observer.takeRecords();
@@ -25,8 +43,7 @@ const readLayoutShifts = Effect.fn("NakafaE2E.readLayoutShifts")(function* (
         return node instanceof Node ? node.parentElement : null;
       };
       const insideCard = (node: unknown) =>
-        elementOf(node)?.closest('[data-slot="visual-card"]') instanceof
-        Element;
+        elementOf(node)?.closest(visualCard) instanceof Element;
       return entries.map((entry) => {
         const sources = Array.from<{ node: unknown }>(
           Reflect.get(entry, "sources") ?? []
@@ -44,7 +61,7 @@ const readLayoutShifts = Effect.fn("NakafaE2E.readLayoutShifts")(function* (
               : 0,
         };
       });
-    })
+    }, VISUAL_CARD)
   );
 });
 

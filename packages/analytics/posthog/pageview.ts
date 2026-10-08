@@ -1,12 +1,17 @@
+import { Context, Effect } from "effect";
 import type { PostHog } from "posthog-js";
 
 export type PageviewCaptureClient = Pick<PostHog, "capture">;
 
-export interface PageviewWindow {
-  addEventListener: (type: "popstate", listener: () => void) => void;
-  readonly history: Pick<History, "pushState" | "replaceState">;
-  readonly location: Pick<Location, "href">;
-}
+/** Browser window members that pageview tracking reads and patches. */
+export class PageviewWindow extends Context.Service<
+  PageviewWindow,
+  {
+    addEventListener: (type: "popstate", listener: () => void) => void;
+    readonly history: Pick<History, "pushState" | "replaceState">;
+    readonly location: Pick<Location, "href">;
+  }
+>()("@repo/analytics/posthog/pageview/PageviewWindow") {}
 
 /**
  * Installs explicit history navigation tracking for one client.
@@ -17,11 +22,10 @@ export interface PageviewWindow {
  * same destination. Same-href replacements are skipped; runs for the
  * application lifetime.
  */
-export function startPageviewTracking(
-  source: PageviewWindow,
-  client: PageviewCaptureClient,
-  onHistoryCapture?: () => void
-) {
+export const startPageviewTracking = Effect.fn(
+  "Analytics.startPageviewTracking"
+)(function* (client: PageviewCaptureClient, onHistoryCapture?: () => void) {
+  const source = yield* PageviewWindow;
   let lastHref = source.location.href;
   const notify = () => {
     const href = source.location.href;
@@ -45,4 +49,4 @@ export function startPageviewTracking(
     notify();
   };
   source.addEventListener("popstate", notify);
-}
+});
