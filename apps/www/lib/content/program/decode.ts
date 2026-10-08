@@ -1,6 +1,5 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
-import type { LearningProgram } from "@nakafa/aksara-contracts/program/spec";
 import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -44,4 +43,3 @@ export const decodeProgramJson = Effect.fn("NakafaProgram.decodeProgram")(
   }
 );
 export type PublishedCurriculumRoute = CurriculumRoute;
-export type PublishedLearningProgram = LearningProgram;
