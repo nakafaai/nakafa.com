@@ -117,3 +117,48 @@ export const dragTouch = Effect.fn("NakafaE2E.dragTouch")(function* (
     (session) => Effect.promise(() => session.detach())
   );
 });
+
+/** How far a swipe travels once its touch starts, in CSS pixels. */
+const SWIPE_DISTANCE = 320;
+
+/** The rectangle of one surface, in CSS pixels. */
+interface SurfaceBounds {
+  readonly height: number;
+  readonly width: number;
+  readonly x: number;
+  readonly y: number;
+}
+
+/** Where a downward swipe starts and which edge stops it. */
+interface SwipeDown {
+  /** Pixels below the surface's top edge where the touch starts. */
+  readonly inset: number;
+  /**
+   * The edge that stops the swipe: the viewport's bottom, or the surface's
+   * bottom less four pixels.
+   */
+  readonly stopAt: "surface" | "viewport";
+}
+
+/**
+ * Swipes down through the middle of a surface, the way a learner dismisses a
+ * drawer. The touch starts `inset` pixels below the top edge and travels
+ * `SWIPE_DISTANCE` pixels, or until `stopAt` allows.
+ */
+export const swipeDown = Effect.fn("NakafaE2E.swipeDown")(function* (
+  page: Page,
+  bounds: SurfaceBounds,
+  swipe: SwipeDown
+) {
+  const x = bounds.x + bounds.width / 2;
+  const startY = bounds.y + swipe.inset;
+  const stopY =
+    swipe.stopAt === "viewport"
+      ? (page.viewportSize()?.height ?? 844)
+      : bounds.y + bounds.height - 4;
+  yield* dragTouch(
+    page,
+    { x, y: startY },
+    { x, y: Math.min(startY + SWIPE_DISTANCE, stopY) }
+  );
+});

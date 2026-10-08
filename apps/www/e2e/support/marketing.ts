@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
-import { dragTouch, readBounds } from "@/e2e/support/input";
+import { readBounds, swipeDown } from "@/e2e/support/input";
 
 export const legacyAvatarFragmentIds = [
   "clip0",
@@ -121,12 +121,5 @@ export const swipeContributorDrawer = Effect.fn(
   "NakafaE2E.swipeContributorDrawer"
 )(function* (drawer: Locator, page: Page) {
   const bounds = yield* readBounds(drawer, "contributor-drawer");
-  const start = {
-    x: bounds.x + bounds.width / 2,
-    y: bounds.y + 20,
-  };
-  yield* dragTouch(page, start, {
-    x: start.x,
-    y: Math.min(start.y + 320, bounds.y + bounds.height - 4),
-  });
+  yield* swipeDown(page, bounds, { inset: 20, stopAt: "surface" });
 });

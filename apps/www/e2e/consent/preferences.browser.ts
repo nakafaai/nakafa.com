@@ -2,7 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { openConsentPreferences } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
-import { dragTouch, readBounds } from "@/e2e/support/input";
+import { readBounds, swipeDown } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { DRAWER_BAR } from "@/e2e/support/selector";
@@ -61,12 +61,7 @@ const swipeDrawerClosed = Effect.fn("NakafaE2E.swipeConsentDrawerClosed")(
       popup.locator(DRAWER_BAR).click({ trial: true })
     );
     const bounds = yield* readBounds(popup, "consent-drawer");
-
-    const x = bounds.x + bounds.width / 2;
-    const startY = bounds.y + 12;
-    const endY = Math.min(page.viewportSize()?.height ?? 844, startY + 320);
-
-    yield* dragTouch(page, { x, y: startY }, { x, y: endY });
+    yield* swipeDown(page, bounds, { inset: 12, stopAt: "viewport" });
   }
 );
 
