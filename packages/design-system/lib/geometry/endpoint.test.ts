@@ -4,7 +4,7 @@ import {
   LineEndpointError,
   resolveLineEndpoints,
 } from "@repo/design-system/lib/geometry/endpoint";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   Euler,
   Matrix4,
@@ -124,7 +124,7 @@ describe("mathematical branch endpoints", () => {
         { width, height, lineWidth: 4 }
       )
     ).toEqual([]);
-    expect(authored.map((point) => point.toArray())).toEqual([
+    expect(Arr.map(authored, (point) => point.toArray())).toEqual([
       [0, 0, 0],
       [0.001, 0.001, 0],
       [2, 1, 0],

@@ -4,7 +4,7 @@ import {
   openInline,
   scanInline,
 } from "@repo/design-system/lib/markdown/inline";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})[^`]*$/;
 /** Fences whose renderer needs the complete source. */
@@ -160,16 +160,19 @@ export function trimIncompleteTail(markdown: string) {
     state = scanLine(line, lineStart, markdown.length, state);
     lineStart += line.length + 1;
   }
-  const cuts = [
-    state.fence?.withheld ? state.fence.start : undefined,
-    state.math?.start,
-    state.code?.start,
-    state.strong?.start,
-    state.emphasis?.start,
-    state.link?.start,
-    state.opener,
-    state.table?.header,
-    partialMarker(markdown, state),
-  ].filter((cut) => cut !== undefined);
+  const cuts = Arr.filter(
+    [
+      state.fence?.withheld ? state.fence.start : undefined,
+      state.math?.start,
+      state.code?.start,
+      state.strong?.start,
+      state.emphasis?.start,
+      state.link?.start,
+      state.opener,
+      state.table?.header,
+      partialMarker(markdown, state),
+    ],
+    (cut) => cut !== undefined
+  );
   return cuts.length === 0 ? markdown : markdown.slice(0, Math.min(...cuts));
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { triangulatePolygon } from "@repo/design-system/lib/geometry/polygon";
+import { Array as Arr } from "effect";
 import { Euler, Vector3 } from "three";
 
 const outline = [
@@ -20,8 +21,8 @@ describe("planar polygon triangulation", () => {
   ])(
     "preserves a concave region under winding and spatial rotation: $rotation, $reverse",
     ({ rotation, reverse }) => {
-      const order = reverse ? [...outline].reverse() : outline;
-      const points = order.map(([x, y]) =>
+      const order = reverse ? Arr.reverse(outline) : outline;
+      const points = Arr.map(order, ([x, y]) =>
         new Vector3(x, y, 0).applyEuler(
           new Euler(rotation[0], rotation[1], rotation[2])
         )
@@ -42,8 +43,8 @@ describe("planar polygon triangulation", () => {
           order[indices[index + 1]],
           order[indices[index + 2]],
         ];
-        const centerX = original.reduce((sum, [x]) => sum + x, 0) / 3;
-        const centerY = original.reduce((sum, [, y]) => sum + y, 0) / 3;
+        const centerX = Arr.reduce(original, 0, (sum, [x]) => sum + x) / 3;
+        const centerY = Arr.reduce(original, 0, (sum, [, y]) => sum + y) / 3;
         expect(centerX <= 1 || centerY <= 1).toBe(true);
       }
       expect(area).toBeCloseTo(5, 12);

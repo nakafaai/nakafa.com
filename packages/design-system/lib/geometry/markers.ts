@@ -31,11 +31,11 @@ export const resolveLineMarkers = Effect.fn("line.resolveMarkers")(function* <
   ).pipe(
     Effect.mapError((error) => new LineMarkerError({ message: error.message }))
   );
-  if (selected.some((index) => index >= points.length)) {
+  if (Arr.some(selected, (index) => index >= points.length)) {
     return yield* new LineMarkerError({
       message:
         "Expected every point marker index to identify an existing curve sample.",
     });
   }
-  return selected.map((index) => points[index]);
+  return Arr.map(selected, (index) => points[index]);
 });
