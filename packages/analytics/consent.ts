@@ -110,7 +110,7 @@ export function createAnonymousAnalyticsBrowserSignalDenial(
 
 const AnalyticsConsentScopeSchema = Schema.Literals(["account", "anonymous"]);
 
-const AnalyticsConsentStateSchema = Schema.Union([
+export const AnalyticsConsentStateSchema = Schema.Union([
   Schema.Struct({
     scope: AnalyticsConsentScopeSchema,
     status: Schema.Literal("denied"),

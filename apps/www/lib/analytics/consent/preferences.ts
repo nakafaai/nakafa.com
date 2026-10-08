@@ -1,9 +1,18 @@
-import type { AnalyticsConsentState } from "@repo/analytics/consent";
+import {
+  type AnalyticsConsentState,
+  AnalyticsConsentStateSchema,
+} from "@repo/analytics/consent";
+import { Schema } from "effect";
 
-export interface AnalyticsConsentPreferences {
-  readonly isOpen: boolean;
-  readonly statusAtOpen: AnalyticsConsentState["status"];
-}
+const AnalyticsConsentPreferencesSchema = Schema.Struct({
+  isOpen: Schema.Boolean,
+  statusAtOpen: Schema.Union(
+    AnalyticsConsentStateSchema.members.map((state) => state.fields.status)
+  ),
+});
+
+export type AnalyticsConsentPreferences =
+  typeof AnalyticsConsentPreferencesSchema.Type;
 
 export const initialConsentPreferences: AnalyticsConsentPreferences = {
   isOpen: false,
