@@ -4,7 +4,7 @@ export const NEON_ID = "neon";
 export const MAGNESIUM_ID = "magnesium";
 export const CHLORINE_ID = "chlorine";
 export const ARGON_ID = "argon";
-export const POTASSIUM_ID = "potassium";
+const POTASSIUM_ID = "potassium";
 export const CALCIUM_ID = "calcium";
 
 export type AtomShellSampleId =
@@ -44,7 +44,7 @@ const EarlyElementFillLimitSchema = Schema.Struct({
   principalQuantumNumber: Schema.Finite,
 });
 
-export const EARLY_ELEMENT_FILL_LIMITS = [
+const EARLY_ELEMENT_FILL_LIMITS = [
   { key: "K", principalQuantumNumber: 1, fillLimit: 2 },
   { key: "L", principalQuantumNumber: 2, fillLimit: 8 },
   { key: "M", principalQuantumNumber: 3, fillLimit: 8 },
@@ -61,7 +61,7 @@ export function isAtomShellSampleId(value: string): value is AtomShellSampleId {
 /**
  * Calculates the maximum electron capacity of a shell from its shell number.
  */
-export function getShellMaximumElectrons(principalQuantumNumber: number) {
+function getShellMaximumElectrons(principalQuantumNumber: number) {
   if (!Number.isInteger(principalQuantumNumber) || principalQuantumNumber < 1) {
     throw new Error("Shell number must be a positive integer.");
   }

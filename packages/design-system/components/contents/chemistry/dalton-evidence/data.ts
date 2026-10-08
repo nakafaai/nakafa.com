@@ -1,8 +1,8 @@
 import { Schema } from "effect";
 
 export const CONSERVATION_MODE_ID = "conservation";
-export const FIXED_MODE_ID = "fixed";
-export const MULTIPLE_MODE_ID = "multiple";
+const FIXED_MODE_ID = "fixed";
+const MULTIPLE_MODE_ID = "multiple";
 
 export type DaltonModeId =
   | typeof CONSERVATION_MODE_ID
@@ -35,7 +35,6 @@ const DaltonFactSchema = Schema.Struct({
   label: Schema.String,
   value: Schema.String,
 });
-export type DaltonFact = typeof DaltonFactSchema.Type;
 
 const DaltonModeLabelsSchema = Schema.Struct({
   afterTitle: Schema.String,
@@ -44,7 +43,6 @@ const DaltonModeLabelsSchema = Schema.Struct({
   facts: Schema.Array(DaltonFactSchema),
   tab: Schema.String,
 });
-export type DaltonModeLabels = typeof DaltonModeLabelsSchema.Type;
 
 const DaltonEvidenceLabLabelsSchema = Schema.Struct({
   chooseMode: Schema.String,

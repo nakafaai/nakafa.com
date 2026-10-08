@@ -55,7 +55,7 @@ function useSource<T>(selector: (source: SourceLink) => T) {
   return selector(value);
 }
 
-export interface SourceProps {
+interface SourceProps {
   children: React.ReactNode;
   href: string;
 }
@@ -71,7 +71,7 @@ export function Source({ href, children }: SourceProps) {
   );
 }
 
-export interface SourceTriggerProps {
+interface SourceTriggerProps {
   className?: string;
   faviconUrl?: string | undefined;
   label?: React.ReactNode;
@@ -125,7 +125,7 @@ export function SourceTrigger({
   );
 }
 
-export interface SourceContentProps {
+interface SourceContentProps {
   className?: string;
   description?: string | undefined;
   faviconUrl?: string | undefined;

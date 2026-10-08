@@ -1,9 +1,9 @@
 import { Schema } from "effect";
 
 export const WHOLE_MATTER_LEVEL_ID = "whole";
-export const FIRST_CUT_LEVEL_ID = "first-cut";
-export const SECOND_CUT_LEVEL_ID = "second-cut";
-export const FINE_CUT_LEVEL_ID = "fine-cut";
+const FIRST_CUT_LEVEL_ID = "first-cut";
+const SECOND_CUT_LEVEL_ID = "second-cut";
+const FINE_CUT_LEVEL_ID = "fine-cut";
 
 const AncientAtomLevelIdSchema = Schema.Literals([
   WHOLE_MATTER_LEVEL_ID,

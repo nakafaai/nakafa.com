@@ -9,7 +9,7 @@ const GraphPointSchema = Schema.Struct({
 });
 
 /** Three-dimensional point used by SNBT line and arc visuals. */
-export type GraphPoint = typeof GraphPointSchema.Type;
+type GraphPoint = typeof GraphPointSchema.Type;
 
 /** Returns the exact midpoint between two SNBT graph points. */
 export function getMidpoint(firstPoint: GraphPoint, secondPoint: GraphPoint) {

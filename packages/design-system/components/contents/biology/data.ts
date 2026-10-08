@@ -99,24 +99,6 @@ export function isBiologyItemIndex(value: string, itemCount: number) {
 }
 
 /**
- * Creates stable points around a horizontal ring.
- */
-export function createBiologyRingPoints(count: number, radius: number) {
-  return Array.from({ length: count }, (_, index) => {
-    const angle = (index / count) * Math.PI * 2;
-
-    return {
-      id: `ring-${index}`,
-      position: [
-        Math.cos(angle) * radius,
-        0,
-        Math.sin(angle) * radius,
-      ] satisfies BiologyScenePoint,
-    };
-  });
-}
-
-/**
  * Creates evenly distributed points on a sphere for viral particles and cells.
  */
 export function createBiologySpherePoints(count: number, radius: number) {
@@ -145,23 +127,6 @@ export function createBiologySpherePoints(count: number, radius: number) {
         y * radius,
         Math.sin(angle) * ringRadius * radius,
       ] satisfies BiologyScenePoint,
-    };
-  });
-}
-
-/**
- * Creates a compact front-facing grid for repeated particles or organisms.
- */
-export function createBiologyGridPoints(rows: number, columns: number) {
-  return Array.from({ length: rows * columns }, (_, index) => {
-    const row = Math.floor(index / columns);
-    const column = index % columns;
-    const x = column - (columns - 1) / 2;
-    const y = (rows - 1) / 2 - row;
-
-    return {
-      id: `grid-${index}`,
-      position: [x, y, 0] satisfies BiologyScenePoint,
     };
   });
 }

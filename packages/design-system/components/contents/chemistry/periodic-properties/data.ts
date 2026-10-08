@@ -4,9 +4,9 @@ import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Record as Rec, Schema } from "effect";
 
 export const ATOMIC_RADIUS_MODE_ID = "atomic-radius";
-export const IONIZATION_ENERGY_MODE_ID = "ionization-energy";
-export const ELECTRON_AFFINITY_MODE_ID = "electron-affinity";
-export const ELECTRONEGATIVITY_MODE_ID = "electronegativity";
+const IONIZATION_ENERGY_MODE_ID = "ionization-energy";
+const ELECTRON_AFFINITY_MODE_ID = "electron-affinity";
+const ELECTRONEGATIVITY_MODE_ID = "electronegativity";
 
 export type PeriodicPropertyModeId =
   | typeof ATOMIC_RADIUS_MODE_ID

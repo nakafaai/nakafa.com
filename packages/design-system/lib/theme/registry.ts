@@ -3,7 +3,7 @@ import { Schema } from "effect";
 const ThemeAppearanceSchema = Schema.Literals(["light", "dark"]);
 
 /** Concrete visual appearance used by runtime renderers and integrations. */
-export type ThemeAppearance = typeof ThemeAppearanceSchema.Type;
+type ThemeAppearance = typeof ThemeAppearanceSchema.Type;
 
 const ThemeShaderColorSchema = Schema.TemplateLiteral([
   "rgb(",
@@ -16,7 +16,7 @@ const ThemeShaderColorSchema = Schema.TemplateLiteral([
 ]);
 
 /** Concrete sRGB projection painted by shader-only renderers. */
-export type ThemeShaderColor = typeof ThemeShaderColorSchema.Type;
+type ThemeShaderColor = typeof ThemeShaderColorSchema.Type;
 
 /** One selectable Nakafa theme, its appearance policy, and its shader color. */
 const ThemeDefinitionSchema = Schema.Struct({
@@ -194,7 +194,7 @@ export const themes = [
 ] as const satisfies readonly ThemeDefinition[];
 
 /** Theme identifier accepted by the shared next-themes runtime. */
-export type ThemeValue = (typeof themes)[number]["value"];
+type ThemeValue = (typeof themes)[number]["value"];
 
 /** Local-storage key owned by the shared next-themes runtime. */
 export const THEME_STORAGE_KEY = "theme";

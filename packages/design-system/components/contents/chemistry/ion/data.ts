@@ -1,9 +1,9 @@
 import { Schema } from "effect";
 
 export const SODIUM_CATION_ID = "sodium-cation";
-export const FLUORIDE_ANION_ID = "fluoride-anion";
-export const LITHIUM_CATION_ID = "lithium-cation";
-export const OXIDE_ANION_ID = "oxide-anion";
+const FLUORIDE_ANION_ID = "fluoride-anion";
+const LITHIUM_CATION_ID = "lithium-cation";
+const OXIDE_ANION_ID = "oxide-anion";
 
 export type IonSampleId =
   | typeof SODIUM_CATION_ID

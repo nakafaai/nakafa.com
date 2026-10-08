@@ -13,7 +13,7 @@ const ShellModelShellSchema = Schema.Struct({
   electronCount: Schema.Finite,
   key: Schema.String,
 });
-export type ShellModelShell = typeof ShellModelShellSchema.Type;
+type ShellModelShell = typeof ShellModelShellSchema.Type;
 
 export type ShellModelShells = readonly ShellModelShell[];
 

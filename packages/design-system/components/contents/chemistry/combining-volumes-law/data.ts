@@ -4,8 +4,8 @@ import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
 
 export const WATER_VAPOR_MODE_ID = "water-vapor";
-export const AMMONIA_SYNTHESIS_MODE_ID = "ammonia-synthesis";
-export const AMMONIA_DECOMPOSITION_MODE_ID = "ammonia-decomposition";
+const AMMONIA_SYNTHESIS_MODE_ID = "ammonia-synthesis";
+const AMMONIA_DECOMPOSITION_MODE_ID = "ammonia-decomposition";
 
 export const COMBINING_VOLUMES_MODE_IDS = [
   WATER_VAPOR_MODE_ID,
@@ -68,8 +68,7 @@ const CombiningVolumesModeModelSchema = Schema.Struct({
   products: Schema.Array(CombiningVolumesGasModelSchema),
   reactants: Schema.Array(CombiningVolumesGasModelSchema),
 });
-export type CombiningVolumesModeModel =
-  typeof CombiningVolumesModeModelSchema.Type;
+type CombiningVolumesModeModel = typeof CombiningVolumesModeModelSchema.Type;
 
 export const COMBINING_VOLUMES_SCENE_VIEW = {
   cameraPosition: [0, 2.15, 4.35],

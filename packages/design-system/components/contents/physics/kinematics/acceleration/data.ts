@@ -139,7 +139,7 @@ export function isAccelerationCaseId(
   return ACCELERATION_CASES.some((item) => item.id === value);
 }
 
-export function getDeltaVelocity(item: AccelerationCase) {
+function getDeltaVelocity(item: AccelerationCase) {
   return item.v1 - item.v0;
 }
 
@@ -203,22 +203,19 @@ export function getAccelerationPositionSample(
   };
 }
 
-export function getAccelerationValue(item: AccelerationCase) {
+function getAccelerationValue(item: AccelerationCase) {
   return getDeltaVelocity(item) / getAccelerationDuration(item);
 }
 
-export function getAccelerationDuration(item: AccelerationCase) {
+function getAccelerationDuration(item: AccelerationCase) {
   return item.t1 - item.t0;
 }
 
-export function getAccelerationVelocityAt(
-  item: AccelerationCase,
-  time: number
-) {
+function getAccelerationVelocityAt(item: AccelerationCase, time: number) {
   return item.v0 + getAccelerationValue(item) * time;
 }
 
-export function getMotionSegments() {
+function getMotionSegments() {
   return ACCELERATION_CASES.map((item) => ({
     end: { time: item.t1, velocity: item.v1 },
     id: item.id,

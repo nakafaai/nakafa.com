@@ -49,7 +49,7 @@ const FileUploadOptionsSchema = Schema.Struct({
 });
 
 /** Configures selection behavior; maxSize is bytes and maxFiles is for multiple mode. */
-export type FileUploadOptions = typeof FileUploadOptionsSchema.Type;
+type FileUploadOptions = typeof FileUploadOptionsSchema.Type;
 
 /** Receives the validation messages of a selection that rejected files. */
 type FileUploadErrorHandler = (errors: string[]) => void;
@@ -67,7 +67,7 @@ const FileUploadStateSchema = Schema.Struct({
 });
 
 /** Represents selected files, drag state, and validation errors. */
-export type FileUploadState = typeof FileUploadStateSchema.Type;
+type FileUploadState = typeof FileUploadStateSchema.Type;
 
 /** Manages file validation, selection state, and browser preview lifetimes. */
 export const useFileUpload = (
@@ -391,11 +391,8 @@ export const useFileUpload = (
   return [state, actions] satisfies [FileUploadState, typeof actions];
 };
 
-/** Exposes file selection and drag-and-drop actions for UI adapters. */
-export type FileUploadActions = ReturnType<typeof useFileUpload>[1];
-
 /** Formats a byte count for file validation messages. */
-export const formatBytes = (bytes: number, decimals = 2): string => {
+const formatBytes = (bytes: number, decimals = 2): string => {
   if (bytes === 0) {
     return "0 Bytes";
   }

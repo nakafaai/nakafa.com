@@ -23,7 +23,7 @@ const ChartLineSeriesCueSchema = Schema.Struct({
 });
 
 /** A line cue shared by the plotted series and its legend indicator. */
-export type ChartLineSeriesCue = typeof ChartLineSeriesCueSchema.Type;
+type ChartLineSeriesCue = typeof ChartLineSeriesCueSchema.Type;
 
 const ChartPointSeriesCueSchema = Schema.Struct({
   activeDot: ChartDotVariantSchema,
@@ -32,7 +32,7 @@ const ChartPointSeriesCueSchema = Schema.Struct({
 });
 
 /** A point cue shared by the plotted series and its legend indicator. */
-export type ChartPointSeriesCue = typeof ChartPointSeriesCueSchema.Type;
+type ChartPointSeriesCue = typeof ChartPointSeriesCueSchema.Type;
 
 const ChartBarSeriesCueSchema = Schema.Struct({
   kind: Schema.Literal("bar"),
@@ -41,7 +41,7 @@ const ChartBarSeriesCueSchema = Schema.Struct({
 });
 
 /** A bar cue shared by the plotted series and its legend indicator. */
-export type ChartBarSeriesCue = typeof ChartBarSeriesCueSchema.Type;
+type ChartBarSeriesCue = typeof ChartBarSeriesCueSchema.Type;
 
 /** Non-color series metadata rendered by EvilCharts legends. */
 export type ChartSeriesCue =

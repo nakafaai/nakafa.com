@@ -4,9 +4,9 @@ import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
 
 export const ATOM_MODE_ID = "atom";
-export const ELEMENT_MODE_ID = "element";
-export const ELEMENTAL_MOLECULE_MODE_ID = "elemental-molecule";
-export const COMPOUND_MOLECULE_MODE_ID = "compound-molecule";
+const ELEMENT_MODE_ID = "element";
+const ELEMENTAL_MOLECULE_MODE_ID = "elemental-molecule";
+const COMPOUND_MOLECULE_MODE_ID = "compound-molecule";
 
 export const MATTER_PARTICLE_MODE_IDS = [
   ATOM_MODE_ID,
@@ -32,8 +32,7 @@ const MatterParticleScenePointSchema = Schema.Tuple([
   Schema.Finite,
   Schema.Finite,
 ]);
-export type MatterParticleScenePoint =
-  typeof MatterParticleScenePointSchema.Type;
+type MatterParticleScenePoint = typeof MatterParticleScenePointSchema.Type;
 
 const MatterParticleAtomSchema = Schema.Struct({
   element: MatterParticleElementSchema,
@@ -55,7 +54,7 @@ export type MatterParticleMolecule = typeof MatterParticleMoleculeSchema.Type;
 const MatterParticleModelSchema = Schema.Struct({
   molecules: Schema.Array(MatterParticleMoleculeSchema),
 });
-export type MatterParticleModel = typeof MatterParticleModelSchema.Type;
+type MatterParticleModel = typeof MatterParticleModelSchema.Type;
 
 export const MATTER_PARTICLE_SCENE_VIEW = {
   cameraPosition: [0, 2.05, 4.6],

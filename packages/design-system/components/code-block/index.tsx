@@ -10,7 +10,7 @@ import { cn } from "cn";
 import type { HTMLAttributes } from "react";
 
 /** Controlled or uncontrolled source selection for a composed code block. */
-export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   defaultValue?: string;
   value?: string;
   onValueChange?: (value: string) => void;

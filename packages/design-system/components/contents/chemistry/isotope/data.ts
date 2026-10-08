@@ -1,11 +1,11 @@
 import { Schema } from "effect";
 
 export const HYDROGEN_1_ID = "hydrogen-1";
-export const DEUTERIUM_ID = "deuterium";
-export const TRITIUM_ID = "tritium";
+const DEUTERIUM_ID = "deuterium";
+const TRITIUM_ID = "tritium";
 export const CARBON_12_ID = "carbon-12";
-export const CARBON_13_ID = "carbon-13";
-export const CARBON_14_ID = "carbon-14";
+const CARBON_13_ID = "carbon-13";
+const CARBON_14_ID = "carbon-14";
 
 export type IsotopeSampleId =
   | typeof HYDROGEN_1_ID

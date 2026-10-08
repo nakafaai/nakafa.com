@@ -29,7 +29,7 @@ const ReactionCueSchema = Schema.Struct({
   kind: Schema.Literals(REACTION_CUE_IDS),
 });
 
-export const REACTION_CUES = {
+const REACTION_CUES = {
   [GAS_CUE_ID]: {
     kind: GAS_CUE_ID,
   },

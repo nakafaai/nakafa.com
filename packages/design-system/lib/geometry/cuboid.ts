@@ -5,7 +5,7 @@ const CuboidPointSchema = Schema.Struct({
   y: Schema.Finite,
   z: Schema.Finite,
 });
-export type CuboidPoint = typeof CuboidPointSchema.Type;
+type CuboidPoint = typeof CuboidPointSchema.Type;
 
 const CuboidDimensionsSchema = Schema.Struct({
   center: Schema.optionalKey(CuboidPointSchema),
@@ -13,7 +13,7 @@ const CuboidDimensionsSchema = Schema.Struct({
   length: Schema.Finite,
   width: Schema.Finite,
 });
-export type CuboidDimensions = typeof CuboidDimensionsSchema.Type;
+type CuboidDimensions = typeof CuboidDimensionsSchema.Type;
 
 const ORIGIN: CuboidPoint = { x: 0, y: 0, z: 0 };
 

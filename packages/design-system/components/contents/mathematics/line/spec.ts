@@ -11,7 +11,6 @@ const LinePointSchema = Schema.Struct({
   y: Schema.Finite,
   z: Schema.Finite,
 });
-export type LinePoint = typeof LinePointSchema.Type;
 
 /** Serializable label contract passed from the server card to WebGL. */
 export type ResolvedLineLabel = LineLabel;

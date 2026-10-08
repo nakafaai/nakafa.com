@@ -161,11 +161,11 @@ export function getGlbbLoopTime(state: GlbbMotionState, elapsed: number) {
   return progress * state.scenario.duration;
 }
 
-export function getVelocityAt(scenario: GlbbScenario, time: number) {
+function getVelocityAt(scenario: GlbbScenario, time: number) {
   return scenario.initialVelocity + scenario.acceleration * time;
 }
 
-export function getDisplacementAt(scenario: GlbbScenario, time: number) {
+function getDisplacementAt(scenario: GlbbScenario, time: number) {
   return (
     scenario.initialVelocity * time + (scenario.acceleration * time ** 2) / 2
   );

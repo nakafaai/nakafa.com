@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CodeOptionsMultipleThemes } from "shiki";
 
 /** Highlighting options plus the exact source used by the text fallback. */
-export type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
   children: string;
   language?: string;
   preClassName?: string | undefined;

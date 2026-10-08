@@ -64,7 +64,7 @@ export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
 };
 
 /** Download-button callbacks for the generated code file. */
-export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
+type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
   onDownload?: () => void;
   onError?: (error: Error) => void;
 };

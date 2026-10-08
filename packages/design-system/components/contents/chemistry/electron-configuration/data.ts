@@ -2,7 +2,7 @@ import { Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
-export const CARBON_ID = "carbon";
+const CARBON_ID = "carbon";
 export const NEON_ID = "neon";
 export const SODIUM_ID = "sodium";
 export const MAGNESIUM_ID = "magnesium";
@@ -54,15 +54,12 @@ const ElectronConfigurationShellSchema = Schema.Struct({
   patternLimit: Schema.Finite,
 });
 
-export const ELECTRON_CONFIGURATION_SHELLS = [
+const ELECTRON_CONFIGURATION_SHELLS = [
   { key: "K", patternLimit: 2 },
   { key: "L", patternLimit: 8 },
   { key: "M", patternLimit: 8 },
   { key: "N", patternLimit: 2 },
 ] satisfies readonly (typeof ElectronConfigurationShellSchema.Type)[];
-
-export type ElectronConfigurationSample =
-  (typeof ELECTRON_CONFIGURATION_SAMPLES)[ElectronConfigurationSampleId];
 
 /**
  * Narrows ToggleGroup string values to the available electron examples.
@@ -105,7 +102,3 @@ export function getSimpleShellConfiguration(atomicNumber: number) {
 
   return shellConfiguration;
 }
-
-export type ElectronConfigurationShellConfiguration = ReturnType<
-  typeof getSimpleShellConfiguration
->;

@@ -27,7 +27,7 @@ export const ConstantCompositionScenePointSchema = Schema.Tuple([
 export type ConstantCompositionScenePoint =
   typeof ConstantCompositionScenePointSchema.Type;
 
-export const CONSTANT_COMPOSITION_MODES = {
+const CONSTANT_COMPOSITION_MODES = {
   [EXACT_RATIO_MODE_ID]: {
     kind: EXACT_RATIO_MODE_ID,
   },

@@ -49,7 +49,6 @@ export const DIMENSION_MODES = {
 };
 
 export type DimensionModeId = keyof typeof DIMENSION_MODES;
-export type DimensionMode = (typeof DIMENSION_MODES)[DimensionModeId];
 export type SceneColors = ReturnType<typeof getDimensionSceneColors>;
 
 const DimensionLabLabelsSchema = Schema.Struct({

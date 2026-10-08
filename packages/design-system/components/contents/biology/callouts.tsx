@@ -31,7 +31,7 @@ const BiologyCalloutTargetSchema = Schema.Struct({
   target: Schema.optionalKey(BiologyScenePointSchema),
 });
 
-export type BiologyCalloutTarget = typeof BiologyCalloutTargetSchema.Type;
+type BiologyCalloutTarget = typeof BiologyCalloutTargetSchema.Type;
 
 /**
  * Renders localized scene callouts by matching lesson labels to stable model

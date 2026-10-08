@@ -57,14 +57,14 @@ const ThemeStyleSourcesSchema = Schema.Struct({
   globals: Schema.instanceOf(Root),
 });
 /** Parsed owners for the official pair and selectable named profiles. */
-export type ThemeStyleSources = typeof ThemeStyleSourcesSchema.Type;
+type ThemeStyleSources = typeof ThemeStyleSourcesSchema.Type;
 
 const ThemeStyleSourcePathsSchema = Schema.Struct({
   customThemes: Schema.String,
   globals: Schema.String,
 });
 /** Filesystem paths for the two stylesheets that own theme profiles. */
-export type ThemeStyleSourcePaths = typeof ThemeStyleSourcePathsSchema.Type;
+type ThemeStyleSourcePaths = typeof ThemeStyleSourcePathsSchema.Type;
 
 /** Expected failure while reading or parsing a theme-owning stylesheet. */
 export class ThemeStyleSourceLoadError extends Schema.TaggedError<ThemeStyleSourceLoadError>()(

@@ -25,7 +25,7 @@ const MotionSegmentSchema = Schema.Struct({
   endX: Schema.Finite,
   startX: Schema.Finite,
 });
-export type MotionSegment = typeof MotionSegmentSchema.Type;
+type MotionSegment = typeof MotionSegmentSchema.Type;
 
 export const VELOCITY_SPEED_SCENE = {
   carScale: 0.36,

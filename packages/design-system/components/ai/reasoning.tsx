@@ -42,7 +42,7 @@ function useReasoning<T>(selector: (reasoning: ReasoningContextValue) => T) {
   return selector(value);
 }
 
-export type ReasoningProps = ComponentProps<typeof Collapsible> & {
+type ReasoningProps = ComponentProps<typeof Collapsible> & {
   hasContent?: boolean;
   isStreaming?: boolean;
   open?: boolean;
@@ -145,7 +145,7 @@ export const Reasoning = memo(
   }
 );
 
-export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
+type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
 
 const ThinkingMessage = memo(() => {
   const t = useTranslations("Ai");
@@ -200,7 +200,7 @@ export const ReasoningTrigger = memo(
   }
 );
 
-export type ReasoningContentProps = ComponentProps<typeof CollapsibleContent>;
+type ReasoningContentProps = ComponentProps<typeof CollapsibleContent>;
 
 /** Frames rendered reasoning; streamed and static callers choose the renderer. */
 export const ReasoningContent = memo(

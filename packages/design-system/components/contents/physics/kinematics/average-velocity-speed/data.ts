@@ -37,7 +37,7 @@ const ArcSegmentSchema = Schema.Struct({
 type LineSegment = typeof LineSegmentSchema.Type;
 type ArcSegment = typeof ArcSegmentSchema.Type;
 
-export type AverageMotionSegment = LineSegment | ArcSegment;
+type AverageMotionSegment = LineSegment | ArcSegment;
 
 const StraightRouteConfigSchema = Schema.Struct({
   duration: Schema.Finite,

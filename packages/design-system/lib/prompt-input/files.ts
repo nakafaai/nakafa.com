@@ -52,15 +52,14 @@ const ValidatePromptInputFilesOptionsSchema = Schema.Struct({
   maxFiles: Schema.optional(Schema.Finite),
 });
 /** Inputs used to validate one picker, paste, or drop operation. */
-export type ValidatePromptInputFilesOptions =
+type ValidatePromptInputFilesOptions =
   typeof ValidatePromptInputFilesOptionsSchema.Type;
 const PromptInputFileSelectionSchema = Schema.Struct({
   files: Schema.Array(Schema.instanceOf(File)),
   warning: Schema.optionalKey(PromptInputFileConstraintError),
 });
 /** Files accepted from one picker, paste, or drop operation. */
-export type PromptInputFileSelection =
-  typeof PromptInputFileSelectionSchema.Type;
+type PromptInputFileSelection = typeof PromptInputFileSelectionSchema.Type;
 /** Matches HTML accept syntax for extensions, exact MIME types, and MIME wildcards. */
 function matchesAccept(file: File, accept?: string) {
   if (!accept || accept.trim() === "") {

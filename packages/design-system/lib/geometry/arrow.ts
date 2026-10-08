@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export type ArrowPosition = "both" | "end" | "start";
+type ArrowPosition = "both" | "end" | "start";
 
 const ArrowPointSchema = Schema.Struct({
   x: Schema.Finite,

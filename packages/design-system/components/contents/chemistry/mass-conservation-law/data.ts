@@ -24,7 +24,7 @@ export const MassConservationScenePointSchema = Schema.Tuple([
 ]);
 type MassConservationScenePoint = typeof MassConservationScenePointSchema.Type;
 
-export const MASS_CONSERVATION_MODES = {
+const MASS_CONSERVATION_MODES = {
   [CLOSED_SYSTEM_MODE_ID]: {
     kind: CLOSED_SYSTEM_MODE_ID,
   },

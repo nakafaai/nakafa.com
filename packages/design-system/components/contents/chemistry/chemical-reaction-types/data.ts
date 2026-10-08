@@ -33,7 +33,7 @@ export const ChemicalReactionTypeSceneLabelsSchema = Schema.Struct({
   before: Schema.String,
 });
 
-export const CHEMICAL_REACTION_TYPES = {
+const CHEMICAL_REACTION_TYPES = {
   [COMBUSTION_TYPE_ID]: {
     kind: COMBUSTION_TYPE_ID,
   },

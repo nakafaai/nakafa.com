@@ -28,7 +28,7 @@ export function useCodeBlockContextValue(
 }
 
 /** State shared by the composed code-block controls. */
-export type CodeBlockContextValue = ReturnType<typeof useCodeBlockContextValue>;
+type CodeBlockContextValue = ReturnType<typeof useCodeBlockContextValue>;
 
 /** @internal Context consumed by CodeBlock and its composed controls. */
 export const CodeBlockContext = createContext<CodeBlockContextValue | null>(

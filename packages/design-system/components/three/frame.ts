@@ -4,7 +4,7 @@ const CoordinateRangeSchema = Schema.Struct({
   max: Schema.Finite,
   min: Schema.Finite,
 });
-export type CoordinateRange = typeof CoordinateRangeSchema.Type;
+type CoordinateRange = typeof CoordinateRangeSchema.Type;
 
 export const CoordinateFrameSchema = Schema.Struct({
   x: CoordinateRangeSchema,
@@ -49,7 +49,7 @@ const GridGeometrySchema = Schema.Struct({
   xz: GridPlaneGeometrySchema,
   yz: GridPlaneGeometrySchema,
 });
-export type GridGeometry = typeof GridGeometrySchema.Type;
+type GridGeometry = typeof GridGeometrySchema.Type;
 
 const ORIGIN: CoordinatePoint = { x: 0, y: 0, z: 0 };
 const MINIMUM_CELL_STEP = 0.5;

@@ -4,8 +4,8 @@ import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
 
 export const WATER_PEROXIDE_MODE_ID = "water-peroxide";
-export const CARBON_OXIDES_MODE_ID = "carbon-oxides";
-export const NITROGEN_OXIDES_MODE_ID = "nitrogen-oxides";
+const CARBON_OXIDES_MODE_ID = "carbon-oxides";
+const NITROGEN_OXIDES_MODE_ID = "nitrogen-oxides";
 
 export const MULTIPLE_PROPORTIONS_MODE_IDS = [
   WATER_PEROXIDE_MODE_ID,
@@ -34,7 +34,7 @@ const MultipleProportionsScenePointSchema = Schema.Tuple([
   Schema.Finite,
   Schema.Finite,
 ]);
-export type MultipleProportionsScenePoint =
+type MultipleProportionsScenePoint =
   typeof MultipleProportionsScenePointSchema.Type;
 
 const MultipleProportionsAtomSchema = Schema.Struct({
@@ -64,7 +64,7 @@ const MultipleProportionsModeModelSchema = Schema.Struct({
   first: MultipleProportionsCompoundModelSchema,
   second: MultipleProportionsCompoundModelSchema,
 });
-export type MultipleProportionsModeModel =
+type MultipleProportionsModeModel =
   typeof MultipleProportionsModeModelSchema.Type;
 
 export const MULTIPLE_PROPORTIONS_SCENE_VIEW = {

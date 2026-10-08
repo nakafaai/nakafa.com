@@ -17,7 +17,6 @@ const SubatomicCameraPointSchema = Schema.Tuple([
   Schema.Finite,
   Schema.Finite,
 ]);
-export type SubatomicCameraPoint = typeof SubatomicCameraPointSchema.Type;
 
 export const SUBATOMIC_PARTICLE_MODE_IDS = [
   CATHODE_RAY_MODE_ID,

@@ -1,9 +1,9 @@
 import { Schema } from "effect";
 
 export const CARBON_12_ID = "carbon-12";
-export const OXYGEN_16_ID = "oxygen-16";
-export const SODIUM_23_ID = "sodium-23";
-export const CHLORINE_35_ID = "chlorine-35";
+const OXYGEN_16_ID = "oxygen-16";
+const SODIUM_23_ID = "sodium-23";
+const CHLORINE_35_ID = "chlorine-35";
 
 export type AtomSymbolSampleId =
   | typeof CARBON_12_ID

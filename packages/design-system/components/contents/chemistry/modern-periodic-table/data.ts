@@ -27,12 +27,12 @@ export const MODERN_PERIODIC_TABLE_FOCUS_IDS = [
   NOBLE_GAS_FOCUS_ID,
 ] satisfies ModernPeriodicTableFocusId[];
 
-export const METAL_CATEGORY_ID = "metal";
-export const TRANSITION_CATEGORY_ID = "transition-metal";
-export const METALLOID_CATEGORY_ID = "metalloid";
-export const NONMETAL_CATEGORY_ID = "nonmetal";
-export const NOBLE_GAS_CATEGORY_ID = "noble-gas";
-export const INNER_TRANSITION_CATEGORY_ID = "inner-transition";
+const METAL_CATEGORY_ID = "metal";
+const TRANSITION_CATEGORY_ID = "transition-metal";
+const METALLOID_CATEGORY_ID = "metalloid";
+const NONMETAL_CATEGORY_ID = "nonmetal";
+const NOBLE_GAS_CATEGORY_ID = "noble-gas";
+const INNER_TRANSITION_CATEGORY_ID = "inner-transition";
 export const SERIES_MARKER_CATEGORY_ID = "series-marker";
 
 export type PeriodicElementCategoryId =
@@ -53,7 +53,7 @@ export const PERIODIC_ELEMENT_CATEGORY_IDS = [
   INNER_TRANSITION_CATEGORY_ID,
 ] satisfies PeriodicElementCategoryId[];
 
-export const MODERN_PERIODIC_TABLE_CATEGORY_COLOR_KEYS = {
+const MODERN_PERIODIC_TABLE_CATEGORY_COLOR_KEYS = {
   [METAL_CATEGORY_ID]: "metal",
   [TRANSITION_CATEGORY_ID]: "transitionMetal",
   [METALLOID_CATEGORY_ID]: "metalloid",

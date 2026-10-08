@@ -5,7 +5,7 @@ const MarkdownBlockModelSchema = Schema.Struct({
   content: Schema.String,
   key: Schema.String,
 });
-export type MarkdownBlockModel = typeof MarkdownBlockModelSchema.Type;
+type MarkdownBlockModel = typeof MarkdownBlockModelSchema.Type;
 
 /** Preserves Marked block boundaries while rejoining split display-math fences. */
 export const parseMarkdownIntoBlocks = (markdown: string): string[] => {

@@ -16,11 +16,11 @@ const ParabolicLaunchScenarioSchema = Schema.Struct({
   id: ParabolicLaunchIdSchema,
   initialSpeed: Schema.Finite,
 });
-export type ParabolicLaunchScenario = typeof ParabolicLaunchScenarioSchema.Type;
+type ParabolicLaunchScenario = typeof ParabolicLaunchScenarioSchema.Type;
 
 type VectorTuple = [number, number, number];
 
-export const PARABOLIC_GRAVITY = 10;
+const PARABOLIC_GRAVITY = 10;
 export const DEFAULT_PARABOLIC_LAUNCH_ID =
   "balanced-angle" satisfies ParabolicLaunchId;
 

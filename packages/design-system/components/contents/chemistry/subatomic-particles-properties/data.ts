@@ -19,7 +19,7 @@ const SubatomicParticlePropertiesCameraPointSchema = Schema.Tuple([
   Schema.Finite,
   Schema.Finite,
 ]);
-export type SubatomicParticlePropertiesCameraPoint =
+type SubatomicParticlePropertiesCameraPoint =
   typeof SubatomicParticlePropertiesCameraPointSchema.Type;
 
 export const SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS = [

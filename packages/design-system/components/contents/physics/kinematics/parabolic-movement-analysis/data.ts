@@ -16,9 +16,9 @@ const ProjectileScenarioSchema = Schema.Struct({
   id: ProjectileScenarioIdSchema,
   initialSpeed: Schema.Finite,
 });
-export type ProjectileScenario = typeof ProjectileScenarioSchema.Type;
+type ProjectileScenario = typeof ProjectileScenarioSchema.Type;
 
-export const PROJECTILE_GRAVITY = 10;
+const PROJECTILE_GRAVITY = 10;
 export const DEFAULT_PROJECTILE_SCENARIO_ID =
   "sixty-degree" satisfies ProjectileScenarioId;
 

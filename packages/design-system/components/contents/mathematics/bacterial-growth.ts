@@ -9,7 +9,7 @@ const PositiveNumberSchema = Schema.Finite.pipe(
   Schema.check(Schema.isGreaterThan(0))
 );
 
-export const BacterialFormulaTypeSchema = Schema.Literals([
+const BacterialFormulaTypeSchema = Schema.Literals([
   "geometric",
   "exponential",
 ]);
