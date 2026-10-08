@@ -5,6 +5,7 @@ import {
   TrustedKeySchema,
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
+import { agentTrustKeys } from "@repo/backend/keys";
 import { Schema } from "effect";
 
 const TRAILING_DOT = /\.$/;
@@ -33,20 +34,22 @@ const AgentTrustSchema = Schema.Struct({
     );
   })
 );
-const agentKeyId = process.env.AKSARA_AGENT_SIGNING_KEY_ID;
-const agentPublicKeyPem = process.env.AKSARA_AGENT_SIGNING_PUBLIC_KEY;
-const hasAgentKey = agentKeyId !== undefined || agentPublicKeyPem !== undefined;
+const agentEnvironment = agentTrustKeys();
+const hasAgentKey =
+  agentEnvironment.AKSARA_AGENT_SIGNING_KEY_ID !== undefined ||
+  agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY !== undefined;
 const agentKey = hasAgentKey
   ? // Convex and Next load this immutable trust configuration at module startup.
     // Synchronous schema validation fails before any publication or artifact read.
     Schema.decodeUnknownSync(AgentTrustSchema)({
       key: {
-        keyId: agentKeyId,
-        publicKeyPem: agentPublicKeyPem,
+        keyId: agentEnvironment.AKSARA_AGENT_SIGNING_KEY_ID,
+        publicKeyPem: agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY,
       },
       target:
-        process.env.CONVEX_CLOUD_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL,
-      vercel: process.env.VERCEL_ENV,
+        agentEnvironment.CONVEX_CLOUD_URL ??
+        agentEnvironment.NEXT_PUBLIC_CONVEX_URL,
+      vercel: agentEnvironment.VERCEL_ENV,
     }).key
   : undefined;
 const trustedContentKeys =

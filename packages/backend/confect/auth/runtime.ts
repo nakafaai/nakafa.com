@@ -26,7 +26,7 @@ import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { openAPI } from "better-auth/plugins";
-import { Effect, Layer, Redacted, Schema } from "effect";
+import { Config, Effect, Layer, Option, Redacted, Schema } from "effect";
 
 const deletionUnavailableError = () =>
   APIError.from("INTERNAL_SERVER_ERROR", {
@@ -171,8 +171,11 @@ const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
  * Supplies Better Auth's synchronous schema and adapter callback.
  * The component calls this during registration without request credentials.
  */
-export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
-  ({
+export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
+  const jwks = Effect.runSync(
+    Config.option(Config.String("JWKS")).parse(ConvexConfigProvider.make())
+  );
+  return {
     database: authComponent.adapter(ctx),
     account: {
       accountLinking: {
@@ -211,15 +214,12 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       openAPI(),
       convex({
         authConfig,
-        ...(process.env.JWKS === undefined
-          ? {}
-          : {
-              jwks: process.env.JWKS,
-            }),
+        ...(Option.isNone(jwks) ? {} : { jwks: jwks.value }),
         jwksRotateOnTokenGenerationError: true,
       }),
     ],
-  }) satisfies BetterAuthOptions;
+  } satisfies BetterAuthOptions;
+};
 /** Validates request configuration before creating a Better Auth instance. */
 export const createAuth = Effect.fn("auth.createAuth")(function* (
   ctx: GenericCtx<DataModel>
