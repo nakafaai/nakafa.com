@@ -2,6 +2,7 @@ import type { DataPart } from "@repo/backend/confect/nina/contract/data";
 import { normalizeResearchCitationUrl } from "@repo/backend/confect/nina/research/citations";
 import { Array as Arr, pipe, Result, Schema, Struct } from "effect";
 
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const GroundingWebChunkSchema = Schema.Struct({
   web: Schema.optional(
     Schema.Struct({
@@ -39,20 +40,13 @@ export function createGroundingWebSearchData({
   sources: unknown;
 }) {
   const groundingMetadata = getGroundingMetadata(providerMetadata);
-  const seen = new Set<string>();
   // A source shared by multiple queries owns one evidence identity and chip.
-  const groundedSources = Arr.filter(
+  const groundedSources = Arr.dedupeWith(
     getGroundedSources({
       ...(groundingMetadata === undefined ? {} : { groundingMetadata }),
       sources,
     }),
-    (source) => {
-      if (seen.has(source.url)) {
-        return false;
-      }
-      seen.add(source.url);
-      return true;
-    }
+    (left, right) => left.url === right.url
   );
   if (!Arr.isArrayNonEmpty(groundedSources)) {
     return;
@@ -133,15 +127,13 @@ function getGroundedSources({
 function getGroundingSearchQueries(
   groundingMetadata: typeof GroundingMetadataSchema.Type
 ) {
-  return [
-    ...new Set(
-      pipe(
-        groundingMetadata.webSearchQueries ?? [],
-        Arr.map((item) => item.trim().replace(/^"+|"+$/g, "")),
-        Arr.filter(Boolean)
-      )
-    ),
-  ];
+  return Arr.dedupe(
+    pipe(
+      groundingMetadata.webSearchQueries ?? [],
+      Arr.map((item) => item.trim().replace(/^"+|"+$/g, "")),
+      Arr.filter(Boolean)
+    )
+  );
 }
 /** Builds the data shape consumed by Nakafa's existing web-search tool UI. */
 function createGroundedSource(url: string, title?: string) {
@@ -192,7 +184,7 @@ function formatGroundingQueries(queries: string[]) {
   return [
     `Queries: ${pipe(
       queries,
-      Arr.map((query) => JSON.stringify(query)),
+      Arr.map((query) => encodeJson(query)),
       Arr.join(", ")
     )}`,
   ];

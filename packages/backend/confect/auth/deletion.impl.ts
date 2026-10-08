@@ -54,9 +54,7 @@ const prepareCurrentAccountDeletion = FunctionImpl.make(
   "prepareCurrentAccountDeletion",
   Effect.fn("auth.deletion.prepareCurrentAccountDeletion")(function* (args) {
     const ctx = yield* MutationCtxService;
-    const authUser = yield* Effect.promise(async () =>
-      authReader.getAuthUser(ctx)
-    );
+    const authUser = yield* Effect.promise(() => authReader.getAuthUser(ctx));
     return yield* prepareAccountDeletionProgram(authUser._id, args.attemptId);
   })
 );

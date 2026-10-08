@@ -28,11 +28,12 @@ vi.mock("@convex-dev/agent", async (importOriginal) => {
 
 const query = Ref.getFunctionReference(refs.public.nina.messages.list);
 const paginationOpts = { cursor: null, numItems: 20 };
+const NOW = Date.UTC(2026, 8, 27, 12);
 
 async function fixture(visibility: "private" | "public" = "private") {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation(async (ctx) => {
-    const user = await seedAuthenticatedUser(ctx, { now: Date.now() });
+    const user = await seedAuthenticatedUser(ctx, { now: NOW });
     const threadId = await createThread(ctx, components.nina, {
       userId: user.userId,
     });
@@ -40,7 +41,7 @@ async function fixture(visibility: "private" | "public" = "private") {
       threadId,
       type: "study",
       userId: user.userId,
-      updatedAt: Date.now(),
+      updatedAt: NOW,
       visibility,
     });
     const prompt = await saveMessage(ctx, components.nina, {

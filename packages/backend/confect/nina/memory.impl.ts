@@ -16,7 +16,16 @@ import spec, {
   MEMORY_FACTS,
   type NinaMemoryChanges,
 } from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, Clock, Effect, Layer } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Effect,
+  HashMap,
+  HashSet,
+  Layer,
+  MutableHashSet,
+  Option,
+} from "effect";
 
 type Memory = Docs["ninaMemories"];
 
@@ -44,30 +53,30 @@ function reviseFacts(
     readonly savedAt: number;
   }
 ) {
-  const forgotten = new Set(changes.forget);
-  const updates = new Map(
+  const forgotten = HashSet.fromIterable(changes.forget);
+  const updates = HashMap.fromIterable(
     Arr.map(changes.update, ({ key, text }) => [key, text])
   );
   let kept: Memory["facts"] = [];
   let rewritten: Memory["facts"] = [];
   for (const fact of memory.facts) {
-    if (forgotten.has(fact.key)) {
+    if (HashSet.has(forgotten, fact.key)) {
       continue;
     }
-    const text = updates.get(fact.key);
+    const text = Option.getOrUndefined(HashMap.get(updates, fact.key));
     if (text === undefined) {
       kept = Arr.append(kept, fact);
     } else {
       rewritten = Arr.append(rewritten, { ...source, key: fact.key, text });
     }
   }
-  const known = new Set(
+  const known = MutableHashSet.fromIterable(
     Arr.map([...kept, ...rewritten], (fact) => fact.text.toLowerCase())
   );
   let added: Memory["facts"] = [];
   for (const text of changes.remember) {
-    if (!known.has(text.toLowerCase())) {
-      known.add(text.toLowerCase());
+    if (!MutableHashSet.has(known, text.toLowerCase())) {
+      MutableHashSet.add(known, text.toLowerCase());
       added = Arr.append(added, {
         ...source,
         key: memory.next + added.length,

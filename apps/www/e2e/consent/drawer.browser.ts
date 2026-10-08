@@ -1,0 +1,104 @@
+import { expect, type Page, test } from "@playwright/test";
+import { Effect } from "effect";
+import { usageDataTrigger } from "@/e2e/support/consent";
+import { activateUntilVisible } from "@/e2e/support/input";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { openRoute } from "@/e2e/support/route";
+import {
+  DRAWER_BAR,
+  DRAWER_PANEL,
+  DRAWER_POPUP,
+  DRAWER_TITLE,
+} from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+
+const usageDataName = "Usage data";
+
+const prepareConsentPreferences = Effect.fn(
+  "NakafaE2E.prepareDrawerConsentPreferences"
+)(function* (page: Page) {
+  yield* openRoute(page, "/en", "denied");
+  yield* waitForCommittedAppRouter(
+    page,
+    "/en",
+    "/en",
+    readinessTimeoutMilliseconds
+  );
+
+  const trigger = usageDataTrigger(page);
+  yield* Effect.promise(() => expect(trigger).toBeVisible());
+  yield* Effect.promise(() => trigger.scrollIntoViewIfNeeded());
+  return trigger;
+});
+
+const verifyCompactConsentDrawer = Effect.fn(
+  "NakafaE2E.verifyCompactConsentDrawer"
+)(function* (page: Page) {
+  const trigger = yield* prepareConsentPreferences(page);
+  const drawer = page.locator(DRAWER_POPUP);
+  yield* activateUntilVisible(trigger, drawer, readinessTimeoutMilliseconds);
+  yield* Effect.promise(() => expect(drawer.locator(DRAWER_BAR)).toBeVisible());
+  yield* Effect.promise(() =>
+    expect(drawer.locator(DRAWER_TITLE)).toHaveText(usageDataName)
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-description"]')).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator(DRAWER_PANEL)).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-footer"]')).toBeVisible()
+  );
+
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
+  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+  yield* Effect.promise(() => expect(trigger).toBeFocused());
+});
+
+const verifyDesktopConsentDialog = Effect.fn(
+  "NakafaE2E.verifyDesktopConsentDialog"
+)(function* (page: Page) {
+  const trigger = yield* prepareConsentPreferences(page);
+  const dialog = page.locator('[data-slot="dialog-content"]');
+  yield* activateUntilVisible(trigger, dialog, readinessTimeoutMilliseconds);
+  yield* Effect.promise(() =>
+    expect(dialog.locator('[data-slot="dialog-title"]')).toHaveText(
+      usageDataName
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator(DRAWER_POPUP)).toHaveCount(0)
+  );
+
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
+  yield* Effect.promise(() => expect(dialog).toHaveCount(0));
+  yield* Effect.promise(() => expect(trigger).toBeFocused());
+});
+
+test.describe("public Drawer consumers", () => {
+  test.describe("compact responsive dialog", () => {
+    test.use({ viewport: { height: 844, width: 390 } });
+
+    test("keeps the consent surface as a styled bottom drawer", async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(page, verifyCompactConsentDrawer(page))
+      );
+    });
+  });
+
+  test.describe("desktop responsive dialog", () => {
+    test.use({ viewport: { height: 900, width: 1440 } });
+
+    test("keeps the consent surface as a dialog on desktop", async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(page, verifyDesktopConsentDialog(page))
+      );
+    });
+  });
+});
