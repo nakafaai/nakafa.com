@@ -6,7 +6,7 @@ import {
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { ORGANIZATION_ID } from "@repo/seo/json-ld/constants";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 const SCHEMA_ORG = "https://schema.org";
 
@@ -70,7 +70,7 @@ const BreadcrumbListSchema = Schema.Struct({
   itemListElement: Schema.Array(ListItemSchema).check(
     Schema.isMinLength(2),
     Schema.makeFilter(
-      (items) => items.every((item, index) => item.position === index + 1),
+      (items) => Arr.every(items, (item, index) => item.position === index + 1),
       { message: "Expected breadcrumb positions to count from 1." }
     )
   ),
@@ -129,7 +129,7 @@ function toSiteUrl(path: string) {
 export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
   const url = toSiteUrl(input.path);
   const authorUrl = toSiteUrl(`/${input.locale}/contributor`);
-  const [firstAuthor, ...otherAuthors] = input.authors.map(({ name }) => ({
+  const [firstAuthor, ...otherAuthors] = Arr.map(input.authors, ({ name }) => ({
     "@type": "Person" as const,
     name,
     url: authorUrl,
@@ -164,7 +164,7 @@ export function makeArticleJsonLd(input: ArticleJsonLdInput): ArticleJsonLd {
     {
       "@context": SCHEMA_ORG,
       "@type": "BreadcrumbList",
-      itemListElement: crumbs.map((crumb, index) => ({
+      itemListElement: Arr.map(crumbs, (crumb, index) => ({
         "@type": "ListItem",
         position: index + 1,
         name: crumb.name,

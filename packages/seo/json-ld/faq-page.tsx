@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { FAQPage, Question, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
@@ -43,7 +43,7 @@ export function FAQPageJsonLd({
   url,
   inLanguage,
 }: FAQPageJsonLdProps) {
-  const faqItems: Question[] = mainEntity.map((item) => ({
+  const faqItems: Question[] = Arr.map(mainEntity, (item) => ({
     "@type": "Question",
     name: item.name,
     acceptedAnswer: item.acceptedAnswer,
