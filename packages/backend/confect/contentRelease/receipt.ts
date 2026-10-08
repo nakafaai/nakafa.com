@@ -8,7 +8,7 @@ import { decodeReceiptJson } from "@repo/backend/confect/contentRelease/parse";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { Array as Arr, Effect, Schema } from "effect";
 
-/** Encodes a value to the same text as JSON.stringify, without re-walking a schema. */
+/** Encodes a value to the same text as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Checks that every staged counter is an exact nonnegative integer. */

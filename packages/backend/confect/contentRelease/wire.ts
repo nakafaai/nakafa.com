@@ -20,12 +20,11 @@ import {
   type ContentSnapshotRowSchema,
   canonicalizeContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
-/** Stores one signed release without introducing a second wire canonicalizer. */
 import type { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import type { SignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { Schema } from "effect";
 
-/** Plain JSON text codec: the bytes JSON.stringify writes, with no schema walk. */
+/** Plain JSON text codec that writes the same bytes as JSON.stringify. */
 const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Stores one signed release without introducing a second wire canonicalizer. */
