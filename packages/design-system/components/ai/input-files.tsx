@@ -32,11 +32,16 @@ type PromptInputFilesLimits = typeof PromptInputFilesLimitsSchema.Type;
 type OnPromptInputFileError = (error: PromptInputFileConstraintError) => void;
 
 /** Owns selected files and the lifetime of their browser preview URLs. */
-export function usePromptInputFiles(
-  { accept, maxFiles, maxFileSize }: PromptInputFilesLimits,
-  inputRef: RefObject<HTMLInputElement | null>,
-  onError?: OnPromptInputFileError
-) {
+export function usePromptInputFiles({
+  accept,
+  inputRef,
+  maxFiles,
+  maxFileSize,
+  onError,
+}: PromptInputFilesLimits & {
+  inputRef: RefObject<HTMLInputElement | null>;
+  onError?: OnPromptInputFileError | undefined;
+}) {
   const [items, setItems] = useState<PromptInputFile[]>([]);
   const localItemsRef = useRef<PromptInputFile[]>([]);
   const localUrls = useStableMutableValue(() =>

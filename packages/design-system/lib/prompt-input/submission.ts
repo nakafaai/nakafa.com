@@ -42,12 +42,17 @@ type PromptInputSuccessHandler = () => void;
 
 /** Passes original files to the consumer and applies success state once. */
 export const submitPromptInput = Effect.fn("designSystem.promptInput.submit")(
-  function* <TEvent>(
-    { files, text }: typeof PromptInputSubmissionSchema.Type,
-    event: TEvent,
-    onSubmit: PromptInputSubmitHandler<TEvent>,
-    onSuccess: PromptInputSuccessHandler
-  ) {
+  function* <TEvent>({
+    event,
+    files,
+    onSubmit,
+    onSuccess,
+    text,
+  }: typeof PromptInputSubmissionSchema.Type & {
+    event: TEvent;
+    onSubmit: PromptInputSubmitHandler<TEvent>;
+    onSuccess: PromptInputSuccessHandler;
+  }) {
     const accepted = yield* Effect.tryPromise({
       try: () => Promise.resolve(onSubmit({ text, files: [...files] }, event)),
       catch: (cause) => new PromptInputSubmitError({ cause }),

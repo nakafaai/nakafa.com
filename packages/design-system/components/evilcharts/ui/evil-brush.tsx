@@ -132,18 +132,16 @@ function EvilBrush({
   const totalPoints = data.length;
   const chartId = useId().replace(/:/g, "");
 
-  const { bind, range } = useBrushSelection(
-    {
-      ...(controlledEnd === undefined ? {} : { controlledEnd }),
-      ...(controlledStart === undefined ? {} : { controlledStart }),
-      ...(defaultEndIndex === undefined ? {} : { defaultEndIndex }),
-      defaultStartIndex,
-      minSpan,
-      totalPoints,
-    },
+  const { bind, range } = useBrushSelection({
     containerRef,
-    onChange
-  );
+    ...(controlledEnd === undefined ? {} : { controlledEnd }),
+    ...(controlledStart === undefined ? {} : { controlledStart }),
+    ...(defaultEndIndex === undefined ? {} : { defaultEndIndex }),
+    defaultStartIndex,
+    minSpan,
+    ...(onChange === undefined ? {} : { onChange }),
+    totalPoints,
+  });
   const rangeStartIndex = range.startIndex;
   const rangeEndIndex = range.endIndex;
 

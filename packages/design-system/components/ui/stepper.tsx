@@ -29,11 +29,15 @@ type StepItemContextValue = typeof StepItemContextValueSchema.Type;
 type StepperValueChange = (value: number) => void;
 
 /** Builds the state a Stepper shares with its items and triggers. */
-function useStepperValue(
-  defaultValue: number,
-  value: number | undefined,
-  onValueChange: StepperValueChange | undefined
-) {
+function useStepperValue({
+  defaultValue,
+  onValueChange,
+  value,
+}: {
+  defaultValue: number;
+  onValueChange: StepperValueChange | undefined;
+  value: number | undefined;
+}) {
   const [activeStep, setInternalStep] = useState(defaultValue);
 
   const setActiveStep = useCallback(
@@ -90,7 +94,7 @@ function Stepper({
   className,
   ...props
 }: StepperProps) {
-  const stepper = useStepperValue(defaultValue, value, onValueChange);
+  const stepper = useStepperValue({ defaultValue, onValueChange, value });
 
   return (
     <StepperContext value={stepper}>

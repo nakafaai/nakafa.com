@@ -18,13 +18,6 @@ const DragStateSchema = Schema.Struct({
 });
 type DragState = typeof DragStateSchema.Type;
 
-const BrushDragInputSchema = Schema.Struct({
-  endIndex: Schema.Finite,
-  startIndex: Schema.Finite,
-  totalPoints: Schema.Finite,
-});
-type BrushDragInput = typeof BrushDragInputSchema.Type;
-
 type BrushCommit = (next: EvilBrushRange, mode?: DragType) => void;
 
 /**
@@ -32,15 +25,18 @@ type BrushCommit = (next: EvilBrushRange, mode?: DragType) => void;
  * the selected region. Pointer capture keeps mouse, touch, and pen drags on the
  * originating element without global listeners.
  */
-function useBrushDrag(
-  {
-    endIndex: rangeEndIndex,
-    startIndex: rangeStartIndex,
-    totalPoints,
-  }: BrushDragInput,
-  containerRef: RefObject<HTMLDivElement | null>,
-  commit: BrushCommit
-) {
+function useBrushDrag({
+  range,
+  totalPoints,
+  containerRef,
+  commit,
+}: {
+  range: EvilBrushRange;
+  totalPoints: number;
+  containerRef: RefObject<HTMLDivElement | null>;
+  commit: BrushCommit;
+}) {
+  const { endIndex: rangeEndIndex, startIndex: rangeStartIndex } = range;
   const dragRef = useRef<DragState | null>(null);
 
   const toIndexDelta = useCallback(

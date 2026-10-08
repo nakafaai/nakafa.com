@@ -71,10 +71,11 @@ export type FileUploadState = typeof FileUploadStateSchema.Type;
 
 /** Manages file validation, selection state, and browser preview lifetimes. */
 export const useFileUpload = (
-  options: FileUploadOptions = {},
-  onError?: FileUploadErrorHandler,
-  onFilesAdded?: FileUploadAddedHandler,
-  onFilesChange?: FileUploadChangeHandler
+  options: FileUploadOptions & {
+    onError?: FileUploadErrorHandler;
+    onFilesAdded?: FileUploadAddedHandler;
+    onFilesChange?: FileUploadChangeHandler;
+  } = {}
 ) => {
   const t = useTranslations("File");
 
@@ -84,6 +85,9 @@ export const useFileUpload = (
     accept = "*",
     multiple = false,
     initialFiles = [],
+    onFilesChange,
+    onFilesAdded,
+    onError,
   } = options;
 
   const [state, setState] = useState<FileUploadState>({

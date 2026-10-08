@@ -62,18 +62,19 @@ function clampRange(
  * Owns the controlled or uncontrolled brush selection. Updates are clamped and
  * deduplicated before they reach the parent chart.
  */
-function useBrushSelection(
-  {
-    controlledEnd,
-    controlledStart,
-    defaultEndIndex,
-    defaultStartIndex,
-    minSpan,
-    totalPoints,
-  }: BrushSelectionInput,
-  containerRef: RefObject<HTMLDivElement | null>,
-  onChange?: OnBrushChange
-) {
+function useBrushSelection({
+  containerRef,
+  controlledEnd,
+  controlledStart,
+  defaultEndIndex,
+  defaultStartIndex,
+  minSpan,
+  onChange,
+  totalPoints,
+}: BrushSelectionInput & {
+  containerRef: RefObject<HTMLDivElement | null>;
+  onChange?: OnBrushChange | undefined;
+}) {
   const isControlled =
     controlledStart !== undefined && controlledEnd !== undefined;
   const [internalRange, setInternalRange] = useState<EvilBrushRange>(() =>
@@ -120,11 +121,12 @@ function useBrushSelection(
     },
     [isControlled, minSpan, onChange, totalPoints]
   );
-  const { bind } = useBrushDrag(
-    { endIndex: rangeEndIndex, startIndex: rangeStartIndex, totalPoints },
+  const { bind } = useBrushDrag({
+    commit,
     containerRef,
-    commit
-  );
+    range,
+    totalPoints,
+  });
 
   return { bind, range };
 }

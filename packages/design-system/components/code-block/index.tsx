@@ -26,11 +26,13 @@ export function CodeBlock({
   data,
   ...props
 }: CodeBlockProps) {
-  const [value, onValueChange] = useControllableState(
-    defaultValue ?? "",
-    controlledValue,
-    controlledOnValueChange
-  );
+  const [value, onValueChange] = useControllableState({
+    defaultProp: defaultValue ?? "",
+    prop: controlledValue,
+    ...(controlledOnValueChange === undefined
+      ? {}
+      : { onChange: controlledOnValueChange }),
+  });
   const contextValue = useCodeBlockContextValue(data, value, onValueChange);
 
   return (

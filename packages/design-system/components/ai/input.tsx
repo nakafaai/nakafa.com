@@ -60,15 +60,13 @@ export function PromptInput({
 }: PromptInputProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { attachments, files } = usePromptInputFiles(
-    {
-      ...(accept === undefined ? {} : { accept }),
-      maxFiles,
-      ...(maxFileSize === undefined ? {} : { maxFileSize }),
-    },
+  const { attachments, files } = usePromptInputFiles({
+    ...(accept === undefined ? {} : { accept }),
     inputRef,
-    onError
-  );
+    maxFiles,
+    ...(maxFileSize === undefined ? {} : { maxFileSize }),
+    onError,
+  });
   const addFiles = attachments.add;
 
   useEffect(() => {
@@ -121,19 +119,20 @@ export function PromptInput({
     // Admission may commit after Activity hides this form. Let settlement clear
     // accepted files so returning to the draft cannot resend old attachments.
     runPromptInputProgram(
-      submitPromptInput(
-        { files: submittedFiles, text },
+      submitPromptInput({
         event,
+        files: submittedFiles,
         onSubmit,
-        () => {
+        onSuccess: () => {
           if (readPromptInputText(form) === text) {
             form.reset();
           }
           for (const file of submittedFiles) {
             attachments.remove(file.id);
           }
-        }
-      )
+        },
+        text,
+      })
     );
   };
 
