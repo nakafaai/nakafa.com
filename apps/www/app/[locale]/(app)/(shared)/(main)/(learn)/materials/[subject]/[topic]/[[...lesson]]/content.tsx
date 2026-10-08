@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 import type { MaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { resolveMaterialOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
 import { getMaterialPublication } from "@/lib/content/material/publication";
@@ -13,15 +12,6 @@ export type MaterialPageContent = Awaited<ReturnType<typeof readMaterialPage>>;
 export type MaterialMetadataContent = Awaited<
   ReturnType<typeof readMaterialMetadata>
 >;
-
-/**
- * Types one rendered body as the page shell's React children. Bodies stay
- * JSX inside Effect, where a ReactNode would put a Promise in the success
- * channel, so the page content widens them here, outside Effect.
- */
-function toPageChildren(body: ReactNode): ReactNode {
-  return body;
-}
 
 /** Reads metadata from the same signed delivery the page body renders. */
 export async function readMaterialMetadata(params: MaterialParams) {
@@ -67,7 +57,7 @@ export async function readMaterialPage(params: MaterialParams) {
     return {
       alternates: [owner.preview.projection],
       body: owner.preview.rawMdx,
-      children: toPageChildren(<Content />),
+      children: <Content />,
       copySourceUrl: null,
       kind: owner.kind,
       appLocale: owner.appLocale,
@@ -90,7 +80,7 @@ export async function readMaterialPage(params: MaterialParams) {
   return {
     alternates: model.alternates,
     body: published.rawMdx,
-    children: toPageChildren(published.body),
+    children: published.body,
     copySourceUrl: published.sourceRevision
       ? getLlmsMarkdownPath({
           locale: owner.locale,
