@@ -3,6 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { SEARCH_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
+import { CursorSchema } from "@repo/backend/confect/contentRelease/models/reconcile";
 import { reconcileSearchModel } from "@repo/backend/confect/contentRelease/models/search";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -11,8 +12,9 @@ import { insertModelBuild } from "@repo/backend/test/content/model";
 import type { WithoutSystemFields } from "convex/server";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 type SearchRow = WithoutSystemFields<Doc<"contentIndex">>;
 function searchRow(index: number): SearchRow {
   return {
@@ -221,14 +223,17 @@ describe("contentRelease/models/search", () => {
       expect(writes).toBe(large === "both" ? 0 : 12);
     }
   );
+  // The version-2 cursor is outside the cursor contract, so it is written with
+  // the plain JSON codec. The phase cursor passes that contract and fails the
+  // phase check in decodeCursor.
   it.each([
     "an-old-native-cursor",
-    JSON.stringify({
+    Schema.encodeSync(JsonTextSchema)({
       version: 2,
       phase: "search",
       position: ["a", "en"],
     }),
-    JSON.stringify({
+    Schema.encodeSync(CursorSchema)({
       version: 1,
       phase: "articleCatalog",
       position: ["a", "en"],

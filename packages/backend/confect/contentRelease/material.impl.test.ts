@@ -19,7 +19,7 @@ import { Array as Arr, Effect, Schema } from "effect";
 const publication = api.contentRelease.material.publication;
 const publications = api.contentRelease.material.publications;
 const decodeProjection = Schema.decodeUnknownSync(
-  MaterialLessonProjectionSchema
+  Schema.fromJsonString(MaterialLessonProjectionSchema)
 );
 describe("contentRelease/material", () => {
   it.effect(
@@ -333,7 +333,7 @@ describe("contentRelease/material", () => {
         stale: false,
       });
       for (const source of [...first.result.page, ...second.result.page]) {
-        const projection = decodeProjection(JSON.parse(source), {
+        const projection = decodeProjection(source, {
           onExcessProperty: "error",
         });
         expect(projection.appLocale).toBe(appLocale);
@@ -371,7 +371,7 @@ describe("contentRelease/material", () => {
         ...result.alternateJson,
         ...result.siblingJson,
       ]) {
-        const projection = decodeProjection(JSON.parse(source), {
+        const projection = decodeProjection(source, {
           onExcessProperty: "error",
         });
         expect(projection.metadata).toHaveProperty("datePublished");
