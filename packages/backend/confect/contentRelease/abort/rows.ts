@@ -10,14 +10,18 @@ import {
   hasAbortTransactionHeadroom,
 } from "@repo/backend/confect/contentRelease/abort/budget";
 import { retainOrphanedArtifacts } from "@repo/backend/confect/contentRelease/retention";
-import { Effect, Option } from "effect";
+import { releaseProgress } from "@repo/backend/confect/contentRelease/schema";
+import { Effect, Option, Schema, Struct } from "effect";
 
-interface AbortCounts {
-  readonly checkedItems: number;
-  readonly stagedItems: number;
-  readonly stagedRoutes: number;
-  readonly stagedSnapshotBatches: number;
-}
+const AbortCountsSchema = Schema.Struct(
+  Struct.pick(releaseProgress, [
+    "checkedItems",
+    "stagedItems",
+    "stagedRoutes",
+    "stagedSnapshotBatches",
+  ])
+);
+type AbortCounts = typeof AbortCountsSchema.Type;
 
 /** Counts durable release-owned rows processed by an abort. */
 export function abortRowCount(release: AbortCounts) {

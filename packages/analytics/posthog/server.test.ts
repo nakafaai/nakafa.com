@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const postHogMocks = vi.hoisted(() => ({
   captureExceptionImmediate: vi.fn(),
@@ -10,7 +10,8 @@ const postHogMocks = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock("@repo/analytics/keys", () => ({
+vi.mock("@repo/analytics/keys", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@repo/analytics/keys")>()),
   keys: postHogMocks.keys,
 }));
 
@@ -109,12 +110,11 @@ describe("PostHog server reporting", () => {
         properties
       );
       expect(postHogMocks.captureExceptionImmediate).toHaveBeenCalledTimes(3);
-      expect(
-        JSON.stringify(postHogMocks.captureExceptionImmediate.mock.calls)
-      ).not.toContain("user@example.com");
-      expect(
-        JSON.stringify(postHogMocks.captureExceptionImmediate.mock.calls)
-      ).not.toContain("object secret");
+      const encodedCalls = yield* Schema.encodeUnknownEffect(
+        Schema.fromJsonString(Schema.Unknown)
+      )(postHogMocks.captureExceptionImmediate.mock.calls);
+      expect(encodedCalls).not.toContain("user@example.com");
+      expect(encodedCalls).not.toContain("object secret");
     })
   );
 

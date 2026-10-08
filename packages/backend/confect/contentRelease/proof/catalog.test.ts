@@ -3,7 +3,12 @@ import {
   GitCommitShaSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
+import {
+  ContentReleaseManifestSchema,
+  PublicationReceiptSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
@@ -34,6 +39,15 @@ import { convexTest } from "convex-test";
 import { Array as Arr, Order, Schema, Struct } from "effect";
 
 const readCatalog = internal.contentRelease.proof.catalog.page;
+const encodeReceiptJson = Schema.encodeSync(
+  Schema.fromJsonString(PublicationReceiptSchema)
+);
+const encodeRendererJson = Schema.encodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+);
+const encodeReleaseJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentReleaseSchema)
+);
 
 /** Inserts a complete staged catalog with an optional measured query budget. */
 async function insertCatalogFixture(
@@ -102,7 +116,7 @@ async function insertBaseFixture(role: "candidate" | "recovery") {
       ctx,
       baseSigned.manifest.releaseId,
       baseSigned,
-      JSON.stringify(TEST_PROOF_RENDERER)
+      encodeRendererJson(TEST_PROOF_RENDERER)
     );
     const base = await ctx.db.query("contentReleases").unique();
     const state = await ctx.db.query("contentState").unique();
@@ -116,10 +130,15 @@ async function insertBaseFixture(role: "candidate" | "recovery") {
       ...(role === "candidate"
         ? {
             completedAt: 1,
-            receiptJson: JSON.stringify(
-              makePublicationReceipt(
-                Schema.decodeSync(contentReleases.Doc)(base),
-                baseSigned
+            // makePublicationReceipt copies activeAppLocales into a plain
+            // array, which the contract types as a non-empty locale list. The
+            // receipt is decoded into that contract type before it is encoded.
+            receiptJson: encodeReceiptJson(
+              Schema.decodeUnknownSync(PublicationReceiptSchema)(
+                makePublicationReceipt(
+                  Schema.decodeSync(contentReleases.Doc)(base),
+                  baseSigned
+                )
               )
             ),
             status: "completed" as const,
@@ -130,7 +149,7 @@ async function insertBaseFixture(role: "candidate" | "recovery") {
       ...Struct.omit(base, ["_id", "_creationTime"]),
       ...releaseReachability(signed),
       releaseId,
-      releaseJson: JSON.stringify(signed),
+      releaseJson: encodeReleaseJson(signed),
       role,
       sequence: 2,
       status: "verifying",
@@ -179,7 +198,7 @@ describe("contentRelease/proof/catalog", () => {
     expect(first.nextCursor).not.toBeNull();
     expect(second).toMatchObject({ done: true, nextCursor: null });
     expect(second.heads).toHaveLength(1);
-    expect(new Set(keys).size).toBe(itemCount);
+    expect(Arr.dedupe(keys).length).toBe(itemCount);
     expect(keys).toEqual(Arr.sort(keys, Order.String));
     expect(keys).toContain(`test:head-${itemCount - 1}`);
   });
@@ -271,7 +290,7 @@ describe("contentRelease/proof/catalog", () => {
         ctx,
         releaseId,
         signed,
-        JSON.stringify(TEST_PROOF_RENDERER)
+        encodeRendererJson(TEST_PROOF_RENDERER)
       );
       const release = await ctx.db.query("contentReleases").unique();
       const state = await ctx.db.query("contentState").unique();
@@ -440,7 +459,7 @@ describe("contentRelease/proof/catalog", () => {
     );
     await t.mutation((ctx) =>
       ctx.db.patch("contentReleases", baseId, {
-        releaseJson: JSON.stringify(replacement),
+        releaseJson: encodeReleaseJson(replacement),
       })
     );
     await expect(

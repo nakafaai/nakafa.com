@@ -21,6 +21,7 @@ import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { stagePublication } from "@repo/backend/confect/contentRelease/ingress/stage";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
@@ -55,6 +56,9 @@ import {
 import { convexTest, type TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
+const encodeRendererJson = Schema.encodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+);
 const candidateId = ReleaseIdSchema.make("release-stage-candidate");
 const activeKeyId = SigningKeyIdSchema.make("test-active-key");
 const activeKeys = generateKeyPairSync("ed25519");
@@ -136,7 +140,7 @@ const storeIngressRelease = Effect.fn(
       ctx,
       ingressReleaseId,
       activeSignedRelease(),
-      JSON.stringify(TEST_PROOF_RENDERER)
+      encodeRendererJson(TEST_PROOF_RENDERER)
     )
   );
   if (role === "candidate") {
@@ -229,7 +233,7 @@ describe("content release staging ingress", () => {
             ctx,
             candidateId,
             other,
-            JSON.stringify(TEST_PROOF_RENDERER)
+            encodeRendererJson(TEST_PROOF_RENDERER)
           )
         )
       );
@@ -258,7 +262,7 @@ describe("content release staging ingress", () => {
             ctx,
             candidateId,
             signedRelease(),
-            JSON.stringify(TEST_PROOF_RENDERER)
+            encodeRendererJson(TEST_PROOF_RENDERER)
           )
         )
       );
@@ -360,7 +364,7 @@ describe("content release staging ingress", () => {
               ctx,
               candidateId,
               release,
-              JSON.stringify(TEST_PROOF_RENDERER)
+              encodeRendererJson(TEST_PROOF_RENDERER)
             )
           )
         );
@@ -432,7 +436,7 @@ describe("content release staging ingress", () => {
               ctx,
               candidateId,
               release,
-              JSON.stringify(TEST_PROOF_RENDERER)
+              encodeRendererJson(TEST_PROOF_RENDERER)
             )
           )
         );

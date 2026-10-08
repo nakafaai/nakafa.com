@@ -4,12 +4,16 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 
 import { assert, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
+import {
+  ContentReleaseManifestSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
 import {
   inheritContentSnapshots,
   invertContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { verifyReleaseSnapshots } from "@repo/backend/confect/contentRelease/proof/snapshot";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
@@ -29,7 +33,7 @@ import {
 } from "@repo/backend/test/program/snapshot";
 import { makeQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Signs one genesis release that replaces the technical program snapshot. */
 function programRelease(data: ProgramSnapshotData, releaseId: string) {
@@ -60,8 +64,12 @@ function insertCompletedRelease(
     proofAt: 1,
     proofJson: "{}",
     releaseId: release.manifest.releaseId,
-    releaseJson: JSON.stringify(release),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    releaseJson: Schema.encodeSync(
+      Schema.fromJsonString(SignedContentReleaseSchema)
+    )(release),
+    rendererJson: Schema.encodeSync(
+      Schema.fromJsonString(RendererManifestEnvelopeSchema)
+    )(TEST_PROOF_RENDERER),
     resultFamilies: [...release.manifest.scope.families],
     role: "candidate",
     sequence: 1,
@@ -407,9 +415,9 @@ describe("contentRelease/proof/snapshot", () => {
               data.rowJson.length
             );
             await ctx.db.patch("contentReleases", id, {
-              releaseJson: JSON.stringify(
-                programRelease(data, "release-other")
-              ),
+              releaseJson: Schema.encodeSync(
+                Schema.fromJsonString(SignedContentReleaseSchema)
+              )(programRelease(data, "release-other")),
             });
             assert(await ctx.db.get("contentReleases", id));
           })

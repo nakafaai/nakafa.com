@@ -1,15 +1,22 @@
+import { Schema } from "effect";
+
 /** The exact specs one reviewed dependency may declare. */
-type ApprovedSpecs =
-  | { readonly allowed: readonly [string, ...string[]] }
-  | { readonly approved: string };
+const ApprovedSpecsSchema = Schema.Union([
+  Schema.Struct({ allowed: Schema.NonEmptyArray(Schema.String) }),
+  Schema.Struct({ approved: Schema.String }),
+]);
 
 /** The manifests that must declare one reviewed dependency. */
-type DeclarationOwners =
-  | { readonly declarationPaths: readonly string[] }
-  | { readonly minimumDeclarations: number };
+const DeclarationOwnersSchema = Schema.Union([
+  Schema.Struct({ declarationPaths: Schema.Array(Schema.String) }),
+  Schema.Struct({ minimumDeclarations: Schema.Finite }),
+]);
 
-type DependencyHold = ApprovedSpecs &
-  DeclarationOwners & { readonly dependency: string };
+const DependencyNameSchema = Schema.Struct({ dependency: Schema.String });
+
+type DependencyHold = typeof ApprovedSpecsSchema.Type &
+  typeof DeclarationOwnersSchema.Type &
+  typeof DependencyNameSchema.Type;
 
 /** The exact package manager the root manifest pins for every checkout and CI job. */
 export const PACKAGE_MANAGER = "pnpm@11.28.4";
@@ -314,7 +321,7 @@ export const SCRIPT_DEPENDENCY_HOLDS = [
   },
 ];
 
-export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
+export const FORBIDDEN_EFFECT_DEPENDENCIES = [
   "@effect/cluster",
   "@effect/experimental",
   "@effect/language-service",
@@ -322,4 +329,4 @@ export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
   "@effect/rpc",
   "@effect/sql",
   "@effect/workflow",
-]);
+];

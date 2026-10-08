@@ -2,6 +2,7 @@ import {
   Array as Arr,
   Effect,
   FileSystem,
+  HashMap,
   Option,
   Order,
   Path,
@@ -215,7 +216,7 @@ export const readWorkflowActionUses = Effect.fn(
 export function validateGithubActionPolicy(
   actionUses: readonly GithubActionUse[]
 ) {
-  const reviews = new Map(
+  const reviews = HashMap.fromIterable(
     Arr.map(GITHUB_ACTION_REVIEWS, (review) => [review.action, review])
   );
   const inspected = Arr.map(actionUses, (use) => {
@@ -229,7 +230,7 @@ export function validateGithubActionPolicy(
       };
     }
 
-    const review = reviews.get(parsed.action);
+    const review = Option.getOrUndefined(HashMap.get(reviews, parsed.action));
     if (!review) {
       return {
         problems: [

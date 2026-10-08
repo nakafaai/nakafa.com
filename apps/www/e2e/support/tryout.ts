@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, MutableHashSet } from "effect";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/request-tracker";
 
 export const readinessTimeoutMilliseconds = 15_000;
 export const hubHref = "/en/try-out";
@@ -39,6 +40,47 @@ export function press(control: Locator, hasTouch: boolean) {
     ? control.tap({ noWaitAfter: true })
     : control.click({ noWaitAfter: true });
 }
+
+/**
+ * Records every pathname the page asks for beyond its shared shell. A try-out
+ * link in view only asks for the shell, which Next.js marks with "1"; it asks
+ * for the rest once intent reaches React. Start recording before the link can
+ * render, because a pointer that rests where the link appears shows intent on
+ * its own.
+ */
+export function recordIntentRequests(page: Page) {
+  const pathnames = MutableHashSet.empty<string>();
+  page.on("request", (request) => {
+    const headers = request.headers();
+    if (headers.rsc === "1" && headers[NEXT_ROUTER_PREFETCH_HEADER] !== "1") {
+      MutableHashSet.add(pathnames, new URL(request.url()).pathname);
+    }
+  });
+  return pathnames;
+}
+
+/**
+ * Rests on a link the way a pointer or a finger does before it presses, and
+ * waits until the link has asked for more than the shell. Playwright presses
+ * in the same instant as intent arrives, so a press without this step can
+ * navigate as if nobody had shown intent.
+ */
+export const intend = Effect.fn("NakafaE2E.intendTryoutLink")(function* (
+  link: Locator,
+  target: { hasTouch: boolean; pathname: string },
+  requested: MutableHashSet.MutableHashSet<string>
+) {
+  yield* Effect.promise(() =>
+    target.hasTouch ? link.dispatchEvent("touchstart") : link.hover()
+  );
+  yield* Effect.promise(() =>
+    expect
+      .poll(() => MutableHashSet.has(requested, target.pathname), {
+        timeout: readinessTimeoutMilliseconds,
+      })
+      .toBe(true)
+  );
+});
 
 /** Scrolls a control into view and activates it. */
 export const activate = Effect.fn("NakafaE2E.activateTryoutControl")(function* (
@@ -103,6 +145,22 @@ export const openTrack = Effect.fn("NakafaE2E.openTryoutTrack")(function* (
     yield* arrive(page, href, visibleLink(page, next));
   }
 });
+
+/**
+ * The set page's first section link once the learner's attempt has resolved.
+ * The resolved set replaces the catalog view's rows, and a row that is replaced
+ * in the middle of a press loses the press.
+ */
+export const settledSection = Effect.fn("NakafaE2E.settledTryoutSection")(
+  function* (page: Page) {
+    yield* arrive(
+      page,
+      setHref,
+      page.getByRole("button", { exact: true, name: "Start" })
+    );
+    return sectionLink(page);
+  }
+);
 
 /** Reads the href of a set's first section link. */
 export const readSectionHref = Effect.fn("NakafaE2E.readTryoutSectionHref")(

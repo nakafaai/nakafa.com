@@ -1,9 +1,21 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Effect, FileSystem, Layer, Ref, Stdio } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  Layer,
+  Ref,
+  Schema,
+  Stdio,
+} from "effect";
 import { capture, makeCapture } from "#scripts/capture";
 import { ProvenanceBundleVerifier } from "#scripts/github/provenance/bundle";
 import { verifyProvenanceAudit } from "#scripts/github/provenance/main";
+import {
+  AuditSchema,
+  ProvenanceStatementSchema,
+} from "#scripts/github/provenance/schema";
 
 const SLSA_PREDICATE = "https://slsa.dev/provenance/v1";
 const PACKAGE_SHA512 = "ab".repeat(64);
@@ -12,7 +24,7 @@ const SOURCE_SHA = "0123456789abcdef0123456789abcdef01234567";
 const WORKFLOW = ".github/workflows/cli-publish.yml";
 const BUNDLE = { evidence: "signed" };
 
-const AUDIT = JSON.stringify({
+const AUDIT = Schema.encodeSync(Schema.fromJsonString(AuditSchema))({
   invalid: [],
   missing: [],
   verified: [
@@ -28,7 +40,9 @@ const AUDIT = JSON.stringify({
   ],
 });
 
-const STATEMENT = JSON.stringify({
+const STATEMENT = Schema.encodeSync(
+  Schema.fromJsonString(ProvenanceStatementSchema)
+)({
   _type: "https://in-toto.io/Statement/v1",
   predicate: {
     buildDefinition: {
