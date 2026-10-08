@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import {
   readSelectedPublicRuntime,
@@ -11,7 +12,7 @@ import {
   createTestPublication,
   makePageRuntimeSource,
 } from "@repo/backend/test/content/publication";
-import { Effect, Struct } from "effect";
+import { Effect, HashMap, Struct } from "effect";
 
 describe("active public body selection", () => {
   it.effect(
@@ -19,39 +20,45 @@ describe("active public body selection", () => {
     () =>
       Effect.gen(function* () {
         const fixture = makePageRuntimeSource();
-        const published = new Map(fixture.source).set("contentReleases", [
-          {
-            ...fixture.release,
-            resultFamilies: ["page"],
-          },
-        ]);
+        const published = HashMap.set(
+          HashMap.fromIterable(fixture.source),
+          "contentReleases",
+          [
+            {
+              ...fixture.release,
+              resultFamilies: ["page"],
+            },
+          ]
+        );
         const sources = [
-          new Map(published).set("contentHeads", [
+          HashMap.set(published, "contentHeads", [
             {
               ...fixture.head,
               compilerConfigHash: `sha256:${"f".repeat(64)}`,
             },
           ]),
-          new Map(published).set("contentHeads", [
+          HashMap.set(published, "contentHeads", [
             {
               ...fixture.head,
               sourcePath: "outside-corpus.mdx",
             },
           ]),
-          new Map(published)
-            .set("contentState", [
+          HashMap.set(
+            HashMap.set(published, "contentState", [
               {
                 ...fixture.state,
                 activeReleaseId: "different-release",
               },
-            ])
-            .set("contentReleases", [
+            ]),
+            "contentReleases",
+            [
               {
                 ...fixture.release,
                 releaseId: "different-release",
                 resultFamilies: ["page"],
               },
-            ]),
+            ]
+          ),
         ];
         for (const source of sources) {
           const runtime = yield* createTestPublication(source);
@@ -73,7 +80,7 @@ describe("active public body selection", () => {
             }).pipe(Effect.provide(publicationLayer))
           );
         }
-        const empty = yield* createTestPublication(new Map());
+        const empty = yield* Confect.pipe(Effect.provide(confectLayer));
         yield* empty.run(
           resolveActiveRoute("page", "en", "missing").pipe(
             Effect.flatMap(readSelectedPublicRuntime),
@@ -88,7 +95,7 @@ describe("active public body selection", () => {
   );
   it.effect("preserves exact request order when no publication is active", () =>
     Effect.gen(function* () {
-      const target = yield* createTestPublication(new Map());
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
       const requests = [
         {
           appLocale: "en",
@@ -120,13 +127,14 @@ describe("active public body selection", () => {
           Struct.omit(fixture.head, ["sourceHash"]),
           Struct.omit(fixture.head, ["sourcePath"]),
         ];
+        const base = HashMap.fromIterable(fixture.source);
         const sources = [
-          new Map(fixture.source).set("contentBindings", [
+          HashMap.set(base, "contentBindings", [
             Struct.omit(fixture.binding, ["contentKey"]),
           ]),
-          new Map(fixture.source).set("contentHeads", []),
+          HashMap.set(base, "contentHeads", []),
           ...incomplete.map((head) =>
-            new Map(fixture.source).set("contentHeads", [head])
+            HashMap.set(base, "contentHeads", [head])
           ),
         ];
         for (const source of sources) {

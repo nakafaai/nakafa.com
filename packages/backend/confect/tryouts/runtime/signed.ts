@@ -16,14 +16,19 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
 import type { tryoutRuntimeBundleReceiptValidator } from "@repo/backend/confect/contentRelease/spec";
-import { encodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/wire";
+import {
+  encodeRendererJson,
+  encodeTryoutRuntimeBundleJson,
+} from "@repo/backend/confect/contentRelease/wire";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Schema } from "effect";
 export type ReadCtx = MutationCtx | QueryCtx;
 export type RuntimeReceipt = typeof tryoutRuntimeBundleReceiptValidator.Type;
+/** Encodes a value as JSON text, so a stored identity compares by its exact bytes. */
+const encodeJsonText = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Reads one permanent runtime bundle by its content-addressed identity. */
 export const findTryoutRuntimeBundleByHash = Effect.fn(
@@ -141,7 +146,7 @@ export const storeAuthenticatedTryoutRuntimeBundle = Effect.fn(
   const writer = yield* DatabaseWriter;
   const storedAt = createdAt ?? (yield* Clock.currentTimeMillis);
   const bundleJson = encodeTryoutRuntimeBundleJson(bundle);
-  const rendererJson = JSON.stringify(renderer);
+  const rendererJson = encodeRendererJson(renderer);
   if (renderer.hash !== bundle.payload.rendererManifestHash) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -171,8 +176,8 @@ export const storeAuthenticatedTryoutRuntimeBundle = Effect.fn(
   );
   if (pair) {
     if (
-      JSON.stringify(pair.bundle.payload.snapshot) !==
-        JSON.stringify(bundle.payload.snapshot) ||
+      encodeJsonText(pair.bundle.payload.snapshot) !==
+        encodeJsonText(bundle.payload.snapshot) ||
       pair.stored.rendererJson !== rendererJson
     ) {
       return yield* releaseFail(
@@ -221,7 +226,7 @@ export const stageTryoutRuntimeBundleProgram = Effect.fn(
 ) {
   const bundle = yield* decodeTryoutRuntimeBundleJson(sourceBundleJson);
   const renderer = yield* decodeRendererJson(sourceRendererJson);
-  const rendererJson = JSON.stringify(renderer);
+  const rendererJson = encodeRendererJson(renderer);
   const { release } = yield* loadStaged(bundle.payload.sourceReleaseId);
   const signedRelease = yield* decodeReleaseJson(release.releaseJson);
   const acceptsBundle =

@@ -22,7 +22,6 @@ update:
     - '@effect/tsgo'
     - '@effect/vitest'
     - '@nakafa/aksara-contracts'
-    - '@polar-sh/sdk'
     - '@react-three/fiber'
     - afdocs
     - '@next/third-parties'

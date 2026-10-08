@@ -1,6 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import {
   MASS_ARM_LENGTH,
   MASS_BALANCE_DAMPING,
@@ -21,6 +20,7 @@ import {
   OBJECT_COLOR,
   RULER_COLOR,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";

@@ -1,7 +1,6 @@
+import type { ChartContainerProps } from "@repo/design-system/components/evilcharts/ui/chart";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
-import type { ChartSeriesCue } from "@repo/design-system/lib/charts/series-cue";
-import { Predicate, Record as Rec } from "effect";
-import type * as React from "react";
+import { Predicate, Record as Rec, Schema } from "effect";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
@@ -14,17 +13,20 @@ type ThemeColorsBase = {
 };
 
 // Require at least one theme key
-type AtLeastOneThemeColor = {
+export type AtLeastOneThemeColor = {
   [K in ThemeKey]: Required<Pick<ThemeColorsBase, K>> &
     Partial<Omit<ThemeColorsBase, K>>;
 }[ThemeKey];
 
-type ChartConfigValidationInput = Record<
-  string,
-  {
-    colors?: object;
-  }
->;
+const ChartConfigValidationInputSchema = Schema.Record(
+  Schema.String,
+  Schema.Struct({
+    colors: Schema.optionalKey(
+      Schema.Record(Schema.String, Schema.Array(Schema.String))
+    ),
+  })
+);
+type ChartConfigValidationInput = typeof ChartConfigValidationInputSchema.Type;
 
 function isThemeKey(key: string): key is ThemeKey {
   return key in THEMES;
@@ -33,15 +35,7 @@ function isThemeKey(key: string): key is ThemeKey {
 const VALID_THEME_KEYS = Rec.keys(THEMES).filter(isThemeKey);
 const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/;
 
-export type ChartConfig = Record<
-  string,
-  {
-    cue?: ChartSeriesCue;
-    label?: React.ReactNode;
-    icon?: React.ComponentType;
-    colors?: AtLeastOneThemeColor;
-  }
->;
+export type ChartConfig = ChartContainerProps["config"];
 
 // Validation for chart config colors at runtime
 function validateChartConfigColors(config: ChartConfigValidationInput): void {

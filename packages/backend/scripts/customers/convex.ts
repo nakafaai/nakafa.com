@@ -1,6 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
 import { FetchClient } from "@repo/utilities/http/client";
@@ -11,17 +9,26 @@ import type {
   FunctionReturnType,
 } from "convex/server";
 import { getFunctionName } from "convex/server";
-import { Config, ConfigProvider, Effect, Option, Schema } from "effect";
+import {
+  Config,
+  ConfigProvider,
+  Effect,
+  FileSystem,
+  Option,
+  Path,
+  Schema,
+} from "effect";
 import {
   HttpClient,
   type HttpClientError,
   HttpClientRequest,
 } from "effect/http";
 
-interface CustomerConvexConfig {
-  accessToken: string;
-  url: string;
-}
+const CustomerConvexConfigSchema = Schema.Struct({
+  accessToken: Schema.String,
+  url: Schema.String,
+});
+type CustomerConvexConfig = typeof CustomerConvexConfigSchema.Type;
 type CustomerIntegrityQuery = FunctionReference<
   "query",
   "internal" | "public",
@@ -59,24 +66,33 @@ const toResponseError = (error: HttpClientError.HttpClientError) =>
   new CustomerConvexResponseError({
     message: getUnknownMessage(error.reason.cause),
   });
-const backendEnvPath = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../..",
-  ".env.local"
-);
+const toConfigError = (error: unknown) =>
+  new CustomerConvexConfigError({ message: getUnknownMessage(error) });
+/** Decodes UTF-8 and keeps a byte order mark, as Node's utf8 file reads did. */
+const decodeUtf8 = (bytes: Uint8Array) =>
+  new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes);
 const readBackendEnv = Effect.fn("customers.readBackendEnv")(function* () {
-  if (!existsSync(backendEnvPath)) {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const backendEnvPath = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "../..",
+    ".env.local"
+  );
+  // A path that cannot be checked counts as absent.
+  const exists = yield* fileSystem
+    .exists(backendEnvPath)
+    .pipe(Effect.orElseSucceed(() => false));
+  if (!exists) {
     return {};
   }
-  const content = yield* Effect.try({
-    try: () => readFileSync(backendEnvPath, "utf8"),
-    catch: (error) =>
-      new CustomerConvexConfigError({ message: getUnknownMessage(error) }),
-  });
+  const bytes = yield* fileSystem
+    .readFile(backendEnvPath)
+    .pipe(Effect.mapError(toConfigError));
+  const content = decodeUtf8(bytes);
   const parsed = yield* Effect.try({
     try: () => parseEnv(content),
-    catch: (error) =>
-      new CustomerConvexConfigError({ message: getUnknownMessage(error) }),
+    catch: toConfigError,
   });
   return parsed;
 });
@@ -103,25 +119,21 @@ const getConvexUrl = Effect.fn("customers.getConvexUrl")(function* (
 });
 const getLocalAccessToken = Effect.fn("customers.getLocalAccessToken")(
   function* () {
-    const configPath = resolve(homedir(), ".convex", "config.json");
-    const content = yield* Effect.try({
-      try: () => readFileSync(configPath, "utf8"),
-      catch: () =>
-        new CustomerConvexAuthError({
-          message:
-            "No CONVEX_DEPLOY_KEY and no local Convex login are available",
-        }),
-    });
-    const json = yield* Effect.try({
-      try: () => JSON.parse(content),
-      catch: () =>
-        new CustomerConvexAuthError({
-          message: "The local Convex configuration is invalid",
-        }),
-    });
-    const config = yield* Schema.decodeUnknownEffect(ConvexAuthConfigSchema)(
-      json
-    ).pipe(
+    const fileSystem = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const configPath = path.resolve(homedir(), ".convex", "config.json");
+    const bytes = yield* fileSystem.readFile(configPath).pipe(
+      Effect.mapError(
+        () =>
+          new CustomerConvexAuthError({
+            message:
+              "No CONVEX_DEPLOY_KEY and no local Convex login are available",
+          })
+      )
+    );
+    const config = yield* Schema.decodeEffect(
+      Schema.fromJsonString(ConvexAuthConfigSchema)
+    )(decodeUtf8(bytes)).pipe(
       Effect.mapError(
         () =>
           new CustomerConvexAuthError({

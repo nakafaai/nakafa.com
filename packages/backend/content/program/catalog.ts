@@ -8,7 +8,7 @@ import {
   verifyProgram,
 } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect } from "effect";
+import { Effect, HashSet } from "effect";
 
 /** Reads and authenticates the complete catalog with localized root closure. */
 export const readVerifiedProgramCatalog = Effect.fn(
@@ -53,16 +53,18 @@ export const readVerifiedProgramCatalog = Effect.fn(
     Effect.forEach(programRows, (row) => verifyProgram(row, snapshotId)),
     Effect.forEach(routeRows, (row) => verifyCurriculum(row, snapshotId)),
   ]);
-  const programKeys = new Set(programs.map(({ key }) => key));
+  const programKeys = HashSet.fromIterable(programs.map(({ key }) => key));
   const treeProgramKeys = programs.flatMap((program) =>
     program.navigation.model === "curriculum-tree" ? [program.key] : []
   );
-  const rootProgramKeys = new Set(routes.map(({ programKey }) => programKey));
+  const rootProgramKeys = HashSet.fromIterable(
+    routes.map(({ programKey }) => programKey)
+  );
   const invalidRoot = routes.find(
     (route) =>
       route.level !== "track" ||
       route.parentPath !== undefined ||
-      !programKeys.has(route.programKey)
+      !HashSet.has(programKeys, route.programKey)
   );
   if (invalidRoot) {
     return yield* releaseFail(
@@ -71,12 +73,12 @@ export const readVerifiedProgramCatalog = Effect.fn(
     );
   }
   const missingRoot = treeProgramKeys.find(
-    (programKey) => !rootProgramKeys.has(programKey)
+    (programKey) => !HashSet.has(rootProgramKeys, programKey)
   );
   if (
     missingRoot ||
-    rootProgramKeys.size !== routes.length ||
-    rootProgramKeys.size !== treeProgramKeys.length
+    HashSet.size(rootProgramKeys) !== routes.length ||
+    HashSet.size(rootProgramKeys) !== treeProgramKeys.length
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

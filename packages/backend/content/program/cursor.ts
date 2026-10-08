@@ -17,9 +17,10 @@ export function isProgramPosition(cursor: string) {
   return cursor.startsWith(PROGRAM_POSITION_PREFIX);
 }
 
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Encodes the immutable localized route boundary without database identities. */
 export function programPosition(row: RouteRow) {
-  return `${PROGRAM_POSITION_PREFIX}${JSON.stringify([row.snapshotId, row.appLocale, row.path])}`;
+  return `${PROGRAM_POSITION_PREFIX}${encodeJson([row.snapshotId, row.appLocale, row.path])}`;
 }
 
 /** Requires a curriculum cursor to belong to its exact snapshot and locale. */

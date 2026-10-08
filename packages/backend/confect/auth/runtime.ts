@@ -26,14 +26,22 @@ import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
 import { openAPI } from "better-auth/plugins";
-import { Config, Effect, Layer, Option, Redacted, Schema } from "effect";
+import {
+  Config,
+  Effect,
+  HashSet,
+  Layer,
+  Option,
+  Redacted,
+  Schema,
+} from "effect";
 
 const deletionUnavailableError = () =>
   APIError.from("INTERNAL_SERVER_ERROR", {
     code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
     message: "Account deletion is temporarily unavailable.",
   });
-const providerErrorRoutePathnames = new Set(
+const providerErrorRoutePathnames = HashSet.fromIterable(
   ACTIVE_APP_LOCALE_CODES.map((locale) => `/${locale}/auth/error`)
 );
 const disabledCredentialPaths = [
@@ -70,7 +78,7 @@ export function sanitizeProviderErrorRedirectResponse(
   const location = new URL(rawLocation, siteUrl);
   if (
     location.origin !== siteUrl.origin ||
-    !providerErrorRoutePathnames.has(location.pathname)
+    !HashSet.has(providerErrorRoutePathnames, location.pathname)
   ) {
     return;
   }

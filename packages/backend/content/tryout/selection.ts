@@ -1,18 +1,14 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type {
-  TryoutSection,
-  TryoutSet,
-} from "@nakafa/aksara-contracts/tryout/catalog";
+import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutSectionSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import {
   tryoutCatalogIdentity,
   tryoutCatalogNodeIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
-import type { PublishedCatalogIndex } from "@repo/backend/content/tryout/hierarchy";
+import { PublishedCatalogIndexSchema } from "@repo/backend/content/tryout/hierarchy";
 import {
   readTryoutCatalogRowByIdentity,
   readTryoutCatalogRowByPath,
@@ -20,16 +16,19 @@ import {
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { Effect, Schema } from "effect";
 
+const SelectedTryoutSectionSchema = Schema.Struct({
+  row: TryoutSectionSchema,
+  rowHash: Schema.String,
+});
 /** One authenticated section row with its signed immutable digest. */
-export interface SelectedTryoutSection {
-  readonly row: TryoutSection;
-  readonly rowHash: Docs["tryoutCatalog"]["rowHash"];
-}
+type SelectedTryoutSection = typeof SelectedTryoutSectionSchema.Type;
 
+const TryoutSetSelectionSchema = Schema.Struct({
+  ...PublishedCatalogIndexSchema.fields,
+  sectionRecords: Schema.Array(SelectedTryoutSectionSchema),
+});
 /** Complete verified set-local catalog needed by public and attempt reads. */
-export interface TryoutSetSelection extends PublishedCatalogIndex {
-  readonly sectionRecords: readonly SelectedTryoutSection[];
-}
+export type TryoutSetSelection = typeof TryoutSetSelectionSchema.Type;
 
 /** Reads the verified parent and section rows needed for one set route. */
 export const readTryoutSetSelection = Effect.fn(

@@ -11,8 +11,9 @@ import { insertModelBuild } from "@repo/backend/test/content/model";
 import type { WithoutSystemFields } from "convex/server";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 type SearchRow = WithoutSystemFields<Doc<"contentIndex">>;
 function searchRow(index: number): SearchRow {
   return {
@@ -221,14 +222,17 @@ describe("contentRelease/models/search", () => {
       expect(writes).toBe(large === "both" ? 0 : 12);
     }
   );
+  // CursorSchema stays private to reconcile.ts, so both cursors are written with
+  // the plain JSON codec. The version-2 cursor lies outside that contract; the
+  // phase cursor satisfies it and fails the phase check in decodeCursor.
   it.each([
     "an-old-native-cursor",
-    JSON.stringify({
+    Schema.encodeSync(JsonTextSchema)({
       version: 2,
       phase: "search",
       position: ["a", "en"],
     }),
-    JSON.stringify({
+    Schema.encodeSync(JsonTextSchema)({
       version: 1,
       phase: "articleCatalog",
       position: ["a", "en"],

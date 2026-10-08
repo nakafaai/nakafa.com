@@ -5,12 +5,17 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 
+const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
+
 describe("authenticated user query contracts", () => {
   it("returns the account projection only for an existing app user", async () => {
     const t = createConvexTestWithBetterAuth();
     expect(await t.query(api.auth.queries.getCurrentUser)).toBeNull();
     const user = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: Date.now(), suffix: "query-user" })
+      seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "query-user",
+      })
     );
     const authed = t.withIdentity({
       sessionId: user.sessionId,
@@ -36,7 +41,10 @@ describe("authenticated user query contracts", () => {
   it("exposes only public profile fields and handles absent images and users", async () => {
     const t = createConvexTestWithBetterAuth();
     const user = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: Date.now(), suffix: "public-profile" })
+      seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "public-profile",
+      })
     );
     const args = { userId: user.userId };
     expect(await t.query(api.auth.queries.getUserById, args)).toEqual({

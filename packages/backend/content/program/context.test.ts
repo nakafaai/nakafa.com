@@ -143,7 +143,7 @@ const stageRoutes = Effect.fn("test.stageProgramContextRoutes")(function* (
         yield* stageProgramRow(
           data.snapshotId,
           data.rowJson.length + offset,
-          source,
+          source.record,
           rowJson
         );
       }),

@@ -3,9 +3,10 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { sanitizeAcceptanceCommandError } from "@repo/backend/scripts/content/acceptance/error";
-import { Effect, FileSystem } from "effect";
+import { Effect, FileSystem, Schema } from "effect";
 
 const REDACTED_PERMISSION_FAILURE = /Permission denied \[redacted\]$/u;
+const JsonText = Schema.fromJsonString(Schema.Unknown);
 
 describe("acceptance command diagnostics", () => {
   afterEach(() => {
@@ -39,10 +40,13 @@ describe("acceptance command diagnostics", () => {
           });
           const stderrPath = `${root}/stderr.log`;
           const stdoutPath = `${root}/stdout.log`;
+          const permissionDenied = yield* Schema.encodeEffect(JsonText)(
+            `Permission denied for ${sensitiveValue}\n`
+          );
           const failure = yield* runAcceptanceCommand({
             args: [
               "-e",
-              `process.stderr.write(${JSON.stringify(`Permission denied for ${sensitiveValue}\n`)}); process.exit(7);`,
+              `process.stderr.write(${permissionDenied}); process.exit(7);`,
             ],
             command: process.execPath,
             operation: "Acceptance probe",
@@ -213,7 +217,7 @@ describe("acceptance command diagnostics", () => {
                 runAcceptanceCommand({
                   args: [
                     "-e",
-                    `process.stderr.write(${JSON.stringify(stderr)}); process.exit(7);`,
+                    `process.stderr.write(${Schema.encodeSync(JsonText)(stderr)}); process.exit(7);`,
                   ],
                   command: process.execPath,
                   operation: "Generic failure probe",

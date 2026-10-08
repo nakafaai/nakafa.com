@@ -1,7 +1,7 @@
 "use client";
 
 import { BacillusBacteriumModel } from "@repo/design-system/components/contents/biology/bacteria-parts";
-import type { BiologySceneProps } from "@repo/design-system/components/contents/biology/data";
+import type { BiologySceneProps } from "@repo/design-system/components/contents/biology/lab-frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { ReactNode } from "react";
 

@@ -15,22 +15,20 @@ const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 
 type SubscriptionInput = Pick<
   SubscriptionRecord,
-  "customerId" | "productId" | "status"
-> & {
-  subscriptionId: SubscriptionRecord["id"];
-};
+  "customerId" | "id" | "productId" | "status"
+>;
 
 /** Builds one subscription payload with stable webhook timestamps. */
 function buildSubscription({
   customerId,
+  id,
   productId,
   status,
-  subscriptionId,
 }: SubscriptionInput): SubscriptionRecord {
   const timestamp = new Date(NOW).toISOString();
 
   return {
-    id: subscriptionId,
+    id,
     customerId,
     createdAt: timestamp,
     modifiedAt: null,
@@ -111,7 +109,7 @@ describe("subscriptions/mutations", () => {
       customerId: "duplicate-customer",
       productId: products.pro.id,
       status: "active",
-      subscriptionId: "duplicate-subscription",
+      id: "duplicate-subscription",
     });
     await t.mutation(async (ctx) => {
       await insertBillingUser(ctx, {
@@ -146,7 +144,7 @@ describe("subscriptions/mutations", () => {
       customerId: "polar-create",
       productId: products.pro.id,
       status: "active",
-      subscriptionId: "sub-create",
+      id: "sub-create",
     });
 
     const firstId = await t.mutation(
@@ -178,7 +176,7 @@ describe("subscriptions/mutations", () => {
       customerId: "polar-out-of-order",
       productId: products.pro.id,
       status: "active",
-      subscriptionId: "sub-out-of-order",
+      id: "sub-out-of-order",
     });
 
     const result = await t.mutation(
@@ -203,7 +201,7 @@ describe("subscriptions/mutations", () => {
       customerId: "polar-update",
       productId: products.pro.id,
       status: "active",
-      subscriptionId: "sub-update",
+      id: "sub-update",
     });
 
     await t.mutation(internal.subscriptions.mutations.createSubscription, {
@@ -238,7 +236,7 @@ describe("subscriptions/mutations", () => {
       customerId: "polar-deleted",
       productId: products.pro.id,
       status: "active",
-      subscriptionId: "sub-deleted",
+      id: "sub-deleted",
     });
 
     await t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
@@ -286,7 +284,7 @@ describe("subscriptions/mutations", () => {
         customerId: "polar-trigger-create",
         productId: products.pro.id,
         status: "active",
-        subscriptionId: "sub-trigger-create",
+        id: "sub-trigger-create",
       }),
     });
 
@@ -326,7 +324,7 @@ describe("subscriptions/mutations", () => {
       customerId: "polar-trigger-update",
       productId: products.pro.id,
       status: "active",
-      subscriptionId: "sub-trigger-update",
+      id: "sub-trigger-update",
     });
 
     await t.mutation(internal.subscriptions.mutations.createSubscription, {
@@ -386,7 +384,7 @@ describe("subscriptions/mutations", () => {
         customerId: "polar-deleting-user",
         productId: products.pro.id,
         status: "canceled",
-        subscriptionId: "sub-deleting-user",
+        id: "sub-deleting-user",
       }),
     });
 

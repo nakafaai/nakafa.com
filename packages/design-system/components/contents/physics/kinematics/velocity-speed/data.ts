@@ -1,6 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Record as Rec } from "effect";
-import type { ReactNode } from "react";
+import { Record as Rec, Schema } from "effect";
 
 export const VELOCITY_SPEED_CAR_MODEL_PATH =
   "/models/physics/kinematics/poly-pizza-dodge-charger/dodge-charger.glb";
@@ -13,36 +12,20 @@ export const VELOCITY_SPEED_CASE_IDS = [
 
 export type VelocitySpeedCaseId = (typeof VELOCITY_SPEED_CASE_IDS)[number];
 
-export interface VelocitySpeedLabLabels {
-  chooseCase: string;
-  factLabels: {
-    displacement: ReactNode;
-    distance: ReactNode;
-    speed: ReactNode;
-    velocity: ReactNode;
-  };
-  modeLabels: Record<VelocitySpeedCaseId, ReactNode>;
-  viewLabel: string;
-}
+const MotionConfigSchema = Schema.Struct({
+  backDistance: Schema.Finite,
+  duration: Schema.Finite,
+  forwardDistance: Schema.Finite,
+});
+type MotionConfig = typeof MotionConfigSchema.Type;
 
-export interface VelocitySpeedLabProps {
-  description: ReactNode;
-  labels: VelocitySpeedLabLabels;
-  title: ReactNode;
-}
-
-interface MotionConfig {
-  backDistance: number;
-  duration: number;
-  forwardDistance: number;
-}
-
-export interface MotionSegment {
-  direction: -1 | 1;
-  distance: number;
-  endX: number;
-  startX: number;
-}
+const MotionSegmentSchema = Schema.Struct({
+  direction: Schema.Literals([-1, 1]),
+  distance: Schema.Finite,
+  endX: Schema.Finite,
+  startX: Schema.Finite,
+});
+type MotionSegment = typeof MotionSegmentSchema.Type;
 
 export const VELOCITY_SPEED_SCENE = {
   carScale: 0.36,

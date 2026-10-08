@@ -6,11 +6,12 @@ import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { getFunctionName, makeFunctionReference } from "convex/server";
-import { Array as Arr, pipe } from "effect";
+import { Array as Arr, pipe, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const BASE64_PADDING_PATTERN = /[=]+$/;
+const JsonText = Schema.fromJsonString(Schema.Unknown);
 const finalizeDeletedUserCleanupReference = makeFunctionReference<
   "mutation",
   {
@@ -19,7 +20,7 @@ const finalizeDeletedUserCleanupReference = makeFunctionReference<
   null
 >("customers/deletion/workflow:finalizeDeletedUserCleanup");
 function encodeGoogleTokenPart(value: object) {
-  return btoa(JSON.stringify(value))
+  return btoa(Schema.encodeSync(JsonText)(value))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
     .replace(BASE64_PADDING_PATTERN, "");
@@ -69,7 +70,7 @@ async function signUpGoogleLearner(
   });
   vi.stubGlobal("fetch", tokenExchange);
   const signInResponse = await test.fetch("/api/auth/sign-in/social", {
-    body: JSON.stringify({
+    body: Schema.encodeSync(JsonText)({
       callbackURL: "/en",
       provider: "google",
     }),

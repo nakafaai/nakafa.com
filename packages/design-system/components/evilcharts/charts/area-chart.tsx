@@ -19,12 +19,14 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/legend";
 import { LoadingArea } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
+import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import {
   ChartTooltip,
   ChartTooltipContent,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
+import { Schema } from "effect";
 import {
   type ComponentProps,
   createContext,
@@ -49,16 +51,58 @@ export type CurveType = NonNullable<
 >;
 type StackType = "default" | "expanded" | "stacked";
 
-interface AreaChartContextValue {
-  animationType: AreaAnimationType; // default intro reveal each <Area /> inherits
-  config: ChartConfig; // colors + labels for every series
-  curveType: CurveType; // default curve interpolation each <Area /> inherits
-  isExpanded: boolean; // whether the stack is normalized to 100%
-  isLoading: boolean; // whether the chart shows its loading skeleton
-  isStacked: boolean; // whether areas stack on top of each other
-  selectDataKey: (dataKey: string | null) => void; // sets the selected series
-  selectedDataKey: string | null; // currently selected series, or null when none
+const AreaChartStateSchema = Schema.Struct({
+  animationType: RevealAnimationSchema, // default intro reveal each <Area /> inherits
+  isExpanded: Schema.Boolean, // whether the stack is normalized to 100%
+  isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
+  isStacked: Schema.Boolean, // whether areas stack on top of each other
+  selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
+});
+
+type SelectDataKey = (dataKey: string | null) => void; // sets the selected series
+
+/**
+ * Builds the value every area part reads. `config` holds the colors and labels
+ * of every series, and `animationType` and `curveType` are the defaults each
+ * <Area /> inherits. The context type is derived from this hook.
+ */
+function useAreaChartValue(
+  {
+    animationType,
+    isExpanded,
+    isLoading,
+    isStacked,
+    selectedDataKey,
+  }: typeof AreaChartStateSchema.Type,
+  config: ChartConfig,
+  curveType: CurveType,
+  selectDataKey: SelectDataKey
+) {
+  return useMemo(
+    () => ({
+      animationType,
+      config,
+      curveType,
+      isExpanded,
+      isLoading,
+      isStacked,
+      selectDataKey,
+      selectedDataKey,
+    }),
+    [
+      animationType,
+      config,
+      curveType,
+      isExpanded,
+      isLoading,
+      isStacked,
+      selectDataKey,
+      selectedDataKey,
+    ]
+  );
 }
+
+type AreaChartContextValue = ReturnType<typeof useAreaChartValue>;
 
 const AreaChartContext = createContext<AreaChartContextValue | null>(null);
 
@@ -163,27 +207,11 @@ export function EvilAreaChart<
     [onSelectionChange]
   );
 
-  const contextValue = useMemo<AreaChartContextValue>(
-    () => ({
-      config,
-      curveType,
-      animationType,
-      isStacked,
-      isExpanded,
-      isLoading,
-      selectedDataKey,
-      selectDataKey,
-    }),
-    [
-      config,
-      curveType,
-      animationType,
-      isStacked,
-      isExpanded,
-      isLoading,
-      selectedDataKey,
-      selectDataKey,
-    ]
+  const contextValue = useAreaChartValue(
+    { animationType, isExpanded, isLoading, isStacked, selectedDataKey },
+    config,
+    curveType,
+    selectDataKey
   );
 
   return (

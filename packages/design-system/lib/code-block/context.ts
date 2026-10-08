@@ -1,20 +1,34 @@
 "use client";
 
-import { createContext, use } from "react";
+import { Schema } from "effect";
+import { createContext, use, useMemo } from "react";
+
+const CodeBlockDataSchema = Schema.Struct({
+  code: Schema.String,
+  filename: Schema.String,
+  language: Schema.String,
+});
 
 /** One named language source rendered by a tabbed code block. */
-export interface CodeBlockData {
-  code: string;
-  filename: string;
-  language: string;
+export type CodeBlockData = typeof CodeBlockDataSchema.Type;
+
+/** Receives the newly selected value when the code block changes its source. */
+type CodeBlockValueChange = (value: string) => void;
+
+/** Builds the state that every composed code-block control reads from its provider. */
+export function useCodeBlockContextValue(
+  data: CodeBlockData[],
+  value: string | undefined,
+  onValueChange: CodeBlockValueChange | undefined
+) {
+  return useMemo(
+    () => ({ data, onValueChange, value }),
+    [data, onValueChange, value]
+  );
 }
 
 /** State shared by the composed code-block controls. */
-export interface CodeBlockContextValue {
-  data: CodeBlockData[];
-  onValueChange: ((value: string) => void) | undefined;
-  value: string | undefined;
-}
+type CodeBlockContextValue = ReturnType<typeof useCodeBlockContextValue>;
 
 /** @internal Context consumed by CodeBlock and its composed controls. */
 export const CodeBlockContext = createContext<CodeBlockContextValue | null>(

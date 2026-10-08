@@ -3,6 +3,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type contentReleasesTable from "@repo/backend/confect/_generated/tables/contentReleases";
+import contentStateTable from "@repo/backend/confect/_generated/tables/contentState";
 import {
   type ReleaseError,
   releaseFail,
@@ -13,31 +15,32 @@ import {
 } from "@repo/backend/confect/contentRelease/model";
 import {
   COMPACTION_PAGE_BYTES,
+  compactionPhaseValidator,
   ROLLBACK_RETENTION_MS,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Array as Arr, Clock, Effect, Option, Predicate } from "effect";
+import { Array as Arr, Clock, Effect, Option, Predicate, Schema } from "effect";
 
 const RELEASE_SCAN_COUNT = 32;
-interface SlotIdentity {
-  readonly manifestHash: string;
-  readonly releaseId: string;
-  readonly sequence: number;
-}
+type SlotIdentity = Pick<
+  typeof contentReleasesTable.Doc.Type,
+  "manifestHash" | "releaseId" | "sequence"
+>;
 
 /** Checks one monotonic release-sequence value before index traversal. */
 function isSequence(value: number) {
   return Number.isSafeInteger(value) && value >= 1;
 }
 
+const CompactionCycleSchema = Schema.Struct({
+  cursor: Schema.NullOr(Schema.String),
+  floor: Schema.Finite,
+  from: Schema.Finite,
+  phase: compactionPhaseValidator,
+  startedAt: Schema.Finite,
+  state: contentStateTable.Doc,
+});
 /** One durable compaction range whose phase cursor may resume after a crash. */
-export interface CompactionCycle {
-  readonly cursor: null | string;
-  readonly floor: number;
-  readonly from: number;
-  readonly phase: NonNullable<Docs["contentState"]["compactPhase"]>;
-  readonly startedAt: number;
-  readonly state: Docs["contentState"];
-}
+export type CompactionCycle = typeof CompactionCycleSchema.Type;
 
 /** Decodes one optional singleton slot without accepting partial identity. */
 const slotIdentity = Effect.fn("contentRelease.compactionSlot")(function* (

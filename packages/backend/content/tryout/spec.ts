@@ -19,11 +19,11 @@ export const tryoutLocalizedPathArgsValidator = {
   publicPath: Schema.String,
   targetAppLocale: appLocaleValidator,
 };
-export const tryoutAlternateValidator = Schema.Struct({
+const tryoutAlternateValidator = Schema.Struct({
   appLocale: appLocaleValidator,
   publicPath: Schema.String,
 });
-export const tryoutSocialImageIdentityValidator = Schema.Struct({
+const tryoutSocialImageIdentityValidator = Schema.Struct({
   countryKey: Schema.String,
   examKey: Schema.String,
 });
@@ -49,11 +49,11 @@ export const tryoutPageArgsValidator = Schema.Struct({
   ...tryoutHubArgsValidator.fields,
   publicPath: Schema.String,
 });
-export const protectedDeliveryValidator = Schema.Union([
+const protectedDeliveryValidator = Schema.Union([
   Schema.Literal("authenticated"),
   Schema.Literal("entitled"),
 ]);
-export const protectedSelectorValidator = Schema.Struct({
+const protectedSelectorValidator = Schema.Struct({
   artifactHash: Schema.String,
   contentKey: Schema.String,
   delivery: protectedDeliveryValidator,

@@ -10,7 +10,7 @@ import {
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { TryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
-import { Array as Arr, Effect, flow, Option } from "effect";
+import { Array as Arr, Effect, flow, MutableHashMap, Option } from "effect";
 
 const IRT_MODEL = "2pl";
 const PROVISIONAL_DIFFICULTY = 0;
@@ -83,9 +83,11 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
     const previous = yield* loadPreviousScale(args.source);
     const previousItems = previous
       ? yield* loadScaleItemMap(previous)
-      : new Map<string, IrtScaleItem>();
+      : MutableHashMap.empty<string, IrtScaleItem>();
     const reusesEveryItem = Arr.every(placements, ({ identity, rowHash }) => {
-      const item = previousItems.get(identity);
+      const item = Option.getOrUndefined(
+        MutableHashMap.get(previousItems, identity)
+      );
       return item?.placementRowHash === rowHash;
     });
     const status =
@@ -125,7 +127,9 @@ const publishSignedScale = Effect.fn("tryouts.start.publishSignedScale")(
         .pipe(Effect.orDie);
       for (const placement of sectionPlacements) {
         const identity = tryoutPlacementIdentity(placement.row);
-        const previousItem = previousItems.get(identity);
+        const previousItem = Option.getOrUndefined(
+          MutableHashMap.get(previousItems, identity)
+        );
         const reusable =
           previousItem?.placementRowHash === placement.rowHash
             ? previousItem
@@ -184,9 +188,11 @@ const verifyScaleItems = Effect.fn("tryouts.start.verifyScaleItems")(function* (
   const placements = signedPlacements(source);
   const matches = Arr.every(
     placements,
-    ({ identity, rowHash }) => items.get(identity)?.placementRowHash === rowHash
+    ({ identity, rowHash }) =>
+      Option.getOrUndefined(MutableHashMap.get(items, identity))
+        ?.placementRowHash === rowHash
   );
-  if (!matches || items.size !== placements.length) {
+  if (!matches || MutableHashMap.size(items) !== placements.length) {
     return yield* scaleError(
       "Signed IRT scale does not cover the authenticated placement snapshot."
     );
@@ -208,14 +214,14 @@ const loadScaleItemMap = Effect.fn("tryouts.start.loadScaleItemMap")(function* (
   if (items.length !== scale.questionCount) {
     return yield* scaleError("Signed IRT scale has incomplete item coverage.");
   }
-  const itemsByIdentity = new Map<string, IrtScaleItem>();
+  const itemsByIdentity = MutableHashMap.empty<string, IrtScaleItem>();
   for (const item of items) {
-    if (itemsByIdentity.has(item.placementIdentity)) {
+    if (MutableHashMap.has(itemsByIdentity, item.placementIdentity)) {
       return yield* scaleError(
         "Signed IRT scale has a missing or duplicate item identity."
       );
     }
-    itemsByIdentity.set(item.placementIdentity, item);
+    MutableHashMap.set(itemsByIdentity, item.placementIdentity, item);
   }
   return itemsByIdentity;
 });

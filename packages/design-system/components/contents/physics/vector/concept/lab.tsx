@@ -7,7 +7,6 @@ import {
   formatSigned,
   getSceneColors,
   NARROW_CAMERA_POSITION,
-  type VectorConceptLabProps,
 } from "@repo/design-system/components/contents/physics/vector/concept/data";
 import { VectorConceptScene } from "@repo/design-system/components/contents/physics/vector/concept/scene";
 import {
@@ -38,6 +37,23 @@ import type { ReactNode } from "react";
 import { Suspense, useMemo, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.28;
+
+export interface VectorConceptLabProps {
+  description: ReactNode;
+  labels: {
+    bridgeView: string;
+    chooseLoadPosition: string;
+    direction: string;
+    directionValue: string;
+    leftCable: ReactNode;
+    magnitude: string;
+    magnitudeValue: string;
+    netIdea: string;
+    netIdeaValue: string;
+    rightCable: ReactNode;
+  };
+  title: ReactNode;
+}
 
 /**
  * Renders an interactive bridge-tension model for the first vector concept.

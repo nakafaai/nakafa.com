@@ -31,6 +31,8 @@ vi.mock("@repo/backend/scripts/content/acceptance/learner", () => ({
   createAcceptanceLearner: mocks.learner,
 }));
 
+/** Encodes test fixtures and generated scripts as JSON text. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const originalArgv = process.argv;
 const execute = Effect.fn("AcceptanceCliTest.execute")(function* (
   mode?: string,
@@ -113,7 +115,7 @@ describe("isolated acceptance CLI", () => {
         yield* fs.makeDirectory(`${directory}/backend`);
         yield* fs.writeFileString(
           `${directory}/package.json`,
-          JSON.stringify({
+          encodeJson({
             private: true,
             packageManager: manifest.packageManager,
             scripts: { start: "pnpm --dir backend acceptance start" },
@@ -121,18 +123,18 @@ describe("isolated acceptance CLI", () => {
         );
         yield* fs.writeFileString(
           `${directory}/backend/package.json`,
-          JSON.stringify({
+          encodeJson({
             private: true,
             scripts: { acceptance: "node entry.mjs" },
           })
         );
         yield* fs.writeFileString(
           `${directory}/backend/entry.mjs`,
-          `import { Effect, FileSystem } from ${JSON.stringify(import.meta.resolve("effect"))};
-import { ChildProcess } from ${JSON.stringify(import.meta.resolve("effect/process"))};
-import { runMain } from ${JSON.stringify(import.meta.resolve("@effect/platform-node/NodeRuntime"))};
-import { layer } from ${JSON.stringify(import.meta.resolve("@effect/platform-node/NodeServices"))};
-import { withTerminal } from ${JSON.stringify(new URL("./process.ts", import.meta.url).href)};
+          `import { Effect, FileSystem } from ${encodeJson(import.meta.resolve("effect"))};
+import { ChildProcess } from ${encodeJson(import.meta.resolve("effect/process"))};
+import { runMain } from ${encodeJson(import.meta.resolve("@effect/platform-node/NodeRuntime"))};
+import { layer } from ${encodeJson(import.meta.resolve("@effect/platform-node/NodeServices"))};
+import { withTerminal } from ${encodeJson(new URL("./process.ts", import.meta.url).href)};
 runMain(withTerminal(Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   yield* Effect.acquireRelease(

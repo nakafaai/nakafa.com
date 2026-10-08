@@ -4,15 +4,17 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { loadSnapshot } from "@repo/backend/confect/contentRelease/snapshot/manifest";
-import { Array as Arr, Effect, Order } from "effect";
-export interface StoredRow {
-  readonly index: number;
-  readonly rowJson: string;
-}
-export type SnapshotFamily = ContentSnapshotManifest["family"];
+import { Array as Arr, Effect, Order, Schema } from "effect";
+
+const StoredRowSchema = Schema.Struct({
+  index: Schema.Finite,
+  rowJson: Schema.String,
+});
+type StoredRow = typeof StoredRowSchema.Type;
+type SnapshotFamily = ContentSnapshotManifest["family"];
 
 /** Proves one stored page is complete and returns canonical row bytes. */
-export const exactRowJson = Effect.fn("contentRelease.exactSnapshotRowJson")(
+const exactRowJson = Effect.fn("contentRelease.exactSnapshotRowJson")(
   function* (
     rows: readonly StoredRow[],
     family: SnapshotFamily,
@@ -34,7 +36,7 @@ export const exactRowJson = Effect.fn("contentRelease.exactSnapshotRowJson")(
 );
 
 /** Reads exact row JSON for one immutable family batch. */
-export const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
+const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
   family: SnapshotFamily,
   snapshotId: string,
   firstIndex: number,

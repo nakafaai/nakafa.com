@@ -1,23 +1,51 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import irtScaleItemsTable from "@repo/backend/confect/_generated/tables/irtScaleItems";
+import irtScaleVersionsTable from "@repo/backend/confect/_generated/tables/irtScaleVersions";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
-import { Array as Arr, Effect } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashMap,
+  MutableHashSet,
+  Option,
+  Schema,
+  Struct,
+} from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 
+/** One calibrated item as scoring reads it, with the placement it calibrates. */
+const TryoutIrtItemSchema = irtScaleItemsTable.Fields.mapFields(
+  Struct.pick([
+    "difficulty",
+    "discrimination",
+    "placementIdentity",
+    "placementRowHash",
+    "scaleVersionId",
+  ])
+);
+
+/** The exact IRT scale version one frozen attempt or section is scored against. */
+const TryoutIrtScaleSchema = irtScaleVersionsTable.Doc;
+
 /** One exact IRT scale plus items validated against immutable placements. */
-export interface TryoutIrtSource {
-  readonly items: readonly {
-    readonly item: Docs["irtScaleItems"];
-    readonly placementId: TryoutPlacement["_id"];
-  }[];
-  readonly scale: Docs["irtScaleVersions"];
-}
+export const TryoutIrtSourceSchema = Schema.Struct({
+  items: Schema.Array(
+    Schema.Struct({
+      item: TryoutIrtItemSchema,
+      placementId: Id("tryoutAttemptPlacements"),
+    })
+  ),
+  scale: TryoutIrtScaleSchema,
+});
+export type TryoutIrtSource = typeof TryoutIrtSourceSchema.Type;
 
 /** Loads the complete frozen IRT source once for terminal attempt scoring. */
 export const loadAttemptIrtSource = Effect.fn(
@@ -170,26 +198,32 @@ const validateIrtScaleItems = Effect.fn(
       "IRT scale item count does not match the placement inventory."
     );
   }
-  const placementsByIdentity = new Map<string, TryoutPlacement>();
+  const placementsByIdentity = MutableHashMap.empty<string, TryoutPlacement>();
   for (const placement of args.placements) {
-    if (placementsByIdentity.has(placement.placementIdentity)) {
+    if (MutableHashMap.has(placementsByIdentity, placement.placementIdentity)) {
       return yield* new TryoutResponseIntegrityError({
         code: "TRYOUT_PLACEMENT_DUPLICATE",
         message: "Try-out placement has a duplicate immutable identity.",
       });
     }
-    placementsByIdentity.set(placement.placementIdentity, placement);
+    MutableHashMap.set(
+      placementsByIdentity,
+      placement.placementIdentity,
+      placement
+    );
   }
-  const itemIdentities = new Set<string>();
+  const itemIdentities = MutableHashSet.empty<string>();
   let validated: TryoutIrtSource["items"][number][] = [];
   for (const item of args.items) {
-    if (itemIdentities.has(item.placementIdentity)) {
+    if (MutableHashSet.has(itemIdentities, item.placementIdentity)) {
       return yield* irtRuntimeError(
         "TRYOUT_IRT_ITEM_DUPLICATE",
         "IRT scale contains a duplicate placement item."
       );
     }
-    const placement = placementsByIdentity.get(item.placementIdentity);
+    const placement = Option.getOrUndefined(
+      MutableHashMap.get(placementsByIdentity, item.placementIdentity)
+    );
     if (
       !(
         placement &&
@@ -202,7 +236,7 @@ const validateIrtScaleItems = Effect.fn(
         "IRT scale item is missing or stale for one try-out question."
       );
     }
-    itemIdentities.add(item.placementIdentity);
+    MutableHashSet.add(itemIdentities, item.placementIdentity);
     validated = Arr.append(validated, {
       item,
       placementId: placement._id,

@@ -1,27 +1,41 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import tryoutAttemptPlacementsTable from "@repo/backend/confect/_generated/tables/tryoutAttemptPlacements";
 import { evaluate } from "@repo/backend/confect/response/evaluation";
 import { Outcome } from "@repo/backend/confect/response/model";
 import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  HashMap,
+  MutableHashMap,
+  MutableHashSet,
+  Option,
+  Schema,
+} from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
-interface ResponsePlacementLink {
-  readonly placement: TryoutPlacement;
-  readonly sectionAttemptId: Id<"tryoutSectionAttempts">;
-}
+const ResponsePlacementLinkSchema = Schema.Struct({
+  placement: tryoutAttemptPlacementsTable.Doc,
+  sectionAttemptId: IdSchema("tryoutSectionAttempts"),
+});
+type ResponsePlacementLink = typeof ResponsePlacementLinkSchema.Type;
 /** Indexes one unique frozen section graph by immutable identity. */
 export const validateTryoutSectionSnapshots = Effect.fn(
   "tryouts.response.validateSectionSnapshots"
 )(function* (snapshots: readonly TryoutSectionSnapshot[]) {
-  const snapshotsByIdentity = new Map<string, TryoutSectionSnapshot>();
-  const sectionKeys = new Set<string>();
-  const sectionOrders = new Set<number>();
+  const snapshotsByIdentity = MutableHashMap.empty<
+    string,
+    TryoutSectionSnapshot
+  >();
+  const sectionKeys = MutableHashSet.empty<string>();
+  const sectionOrders = MutableHashSet.empty<number>();
   for (const snapshot of snapshots) {
     if (
       !Number.isSafeInteger(snapshot.questionCount) ||
@@ -33,18 +47,18 @@ export const validateTryoutSectionSnapshots = Effect.fn(
       );
     }
     if (
-      snapshotsByIdentity.has(snapshot.sectionIdentity) ||
-      sectionKeys.has(snapshot.sectionKey) ||
-      sectionOrders.has(snapshot.sectionOrder)
+      MutableHashMap.has(snapshotsByIdentity, snapshot.sectionIdentity) ||
+      MutableHashSet.has(sectionKeys, snapshot.sectionKey) ||
+      MutableHashSet.has(sectionOrders, snapshot.sectionOrder)
     ) {
       return yield* responseIntegrity(
         "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
         "Try-out section snapshots contain a duplicate identity, key, or order."
       );
     }
-    snapshotsByIdentity.set(snapshot.sectionIdentity, snapshot);
-    sectionKeys.add(snapshot.sectionKey);
-    sectionOrders.add(snapshot.sectionOrder);
+    MutableHashMap.set(snapshotsByIdentity, snapshot.sectionIdentity, snapshot);
+    MutableHashSet.add(sectionKeys, snapshot.sectionKey);
+    MutableHashSet.add(sectionOrders, snapshot.sectionOrder);
   }
   return snapshotsByIdentity;
 });
@@ -55,7 +69,9 @@ export const requireTryoutResponseSectionSnapshot = Effect.fn(
   const snapshotsByIdentity = yield* validateTryoutSectionSnapshots(
     attempt.sectionSnapshots
   );
-  const snapshot = snapshotsByIdentity.get(section.sectionIdentity);
+  const snapshot = Option.getOrUndefined(
+    MutableHashMap.get(snapshotsByIdentity, section.sectionIdentity)
+  );
   if (
     !snapshot ||
     section.tryoutAttemptId !== attempt._id ||
@@ -111,9 +127,7 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
       "Try-out attempts must contain a positive whole number of questions."
     );
   }
-  const snapshotsByIdentity = yield* validateTryoutSectionSnapshots(
-    input.snapshots
-  );
+  yield* validateTryoutSectionSnapshots(input.snapshots);
   const snapshotQuestionCount = Arr.reduce(
     input.snapshots,
     0,
@@ -128,18 +142,20 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
       "Try-out placement count does not match its frozen snapshot."
     );
   }
-  const sections = new Map(
-    Array.from(snapshotsByIdentity, ([identity, snapshot]) => [
-      identity,
+  const sections = MutableHashMap.fromIterable(
+    Arr.map(input.snapshots, (snapshot) => [
+      snapshot.sectionIdentity,
       {
-        questionOrders: new Set<number>(),
+        questionOrders: MutableHashSet.empty<number>(),
         snapshot,
       },
     ])
   );
-  const placementIdentities = new Set<string>();
+  const placementIdentities = MutableHashSet.empty<string>();
   for (const placement of input.placements) {
-    const section = sections.get(placement.sectionIdentity);
+    const section = Option.getOrUndefined(
+      MutableHashMap.get(sections, placement.sectionIdentity)
+    );
     if (
       !section ||
       placement.tryoutAttemptId !== input.attemptId ||
@@ -163,20 +179,20 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
     }
     const { questionOrders } = section;
     if (
-      questionOrders.has(questionOrder) ||
-      placementIdentities.has(placement.placementIdentity)
+      MutableHashSet.has(questionOrders, questionOrder) ||
+      MutableHashSet.has(placementIdentities, placement.placementIdentity)
     ) {
       return yield* responseIntegrity(
         "TRYOUT_PLACEMENT_DUPLICATE",
         "Try-out placement inventory contains a duplicate identity or slot."
       );
     }
-    questionOrders.add(questionOrder);
-    placementIdentities.add(placement.placementIdentity);
+    MutableHashSet.add(questionOrders, questionOrder);
+    MutableHashSet.add(placementIdentities, placement.placementIdentity);
   }
   return input.placements;
 });
-/** Validates response rows against the caller's verified placement inventory. */
+/** Validates response rows against the verified placement inventory and keeps their stored order. */
 export const indexTryoutResponses = Effect.fn(
   "tryouts.response.indexIntegrity"
 )(function* (input: {
@@ -184,15 +200,14 @@ export const indexTryoutResponses = Effect.fn(
   readonly links: readonly ResponsePlacementLink[];
   readonly responses: readonly TryoutResponse[];
 }) {
-  const linksByPlacement = new Map(
+  const linksByPlacement = HashMap.fromIterable(
     Arr.map(input.links, (link) => [link.placement._id, link])
   );
-  const responsesByPlacement = new Map<
-    Id<"tryoutAttemptPlacements">,
-    TryoutResponse
-  >();
+  const placementIds = MutableHashSet.empty<Id<"tryoutAttemptPlacements">>();
   for (const response of input.responses) {
-    const link = linksByPlacement.get(response.placementId);
+    const link = Option.getOrUndefined(
+      HashMap.get(linksByPlacement, response.placementId)
+    );
     if (
       !link ||
       response.tryoutAttemptId !== input.attemptId ||
@@ -203,7 +218,7 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out response links do not match its frozen attempt placement."
       );
     }
-    if (responsesByPlacement.has(response.placementId)) {
+    if (MutableHashSet.has(placementIds, response.placementId)) {
       return yield* responseIntegrity(
         "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
         "Try-out placement has more than one response."
@@ -228,9 +243,9 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out response evaluation differs from its stored result."
       );
     }
-    responsesByPlacement.set(response.placementId, response);
+    MutableHashSet.add(placementIds, response.placementId);
   }
-  return responsesByPlacement;
+  return input.responses;
 });
 const sameOutcome = Schema.toEquivalence(Outcome);
 

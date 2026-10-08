@@ -104,12 +104,7 @@ export const validateForumAttachmentPolicy = Effect.fn(
 const ensureDistinctUploadIds = Effect.fn(
   "classes.forums.attachments.ensureDistinctUploadIds"
 )(function* (uploadIds: Id<"schoolClassForumPendingUploads">[]) {
-  const seenUploadIds = new Set<Id<"schoolClassForumPendingUploads">>();
-  for (const uploadId of uploadIds) {
-    if (!seenUploadIds.has(uploadId)) {
-      seenUploadIds.add(uploadId);
-      continue;
-    }
+  if (Arr.dedupe(uploadIds).length < uploadIds.length) {
     return yield* failForumAttachment(
       forumAttachmentDuplicateCode,
       "Forum post attachments must reference distinct uploads."

@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const NEON_ID = "neon";
 export const MAGNESIUM_ID = "magnesium";
 export const CHLORINE_ID = "chlorine";
 export const ARGON_ID = "argon";
-export const POTASSIUM_ID = "potassium";
+const POTASSIUM_ID = "potassium";
 export const CALCIUM_ID = "calcium";
 
 export type AtomShellSampleId =
@@ -24,6 +24,11 @@ export const ATOM_SHELL_SAMPLE_IDS = [
   CALCIUM_ID,
 ] satisfies AtomShellSampleId[];
 
+const AtomShellSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  symbol: Schema.String,
+});
+
 export const ATOM_SHELL_SAMPLES = {
   [NEON_ID]: { atomicNumber: 10, symbol: "Ne" },
   [MAGNESIUM_ID]: { atomicNumber: 12, symbol: "Mg" },
@@ -31,46 +36,20 @@ export const ATOM_SHELL_SAMPLES = {
   [ARGON_ID]: { atomicNumber: 18, symbol: "Ar" },
   [POTASSIUM_ID]: { atomicNumber: 19, symbol: "K" },
   [CALCIUM_ID]: { atomicNumber: 20, symbol: "Ca" },
-} satisfies Record<
-  AtomShellSampleId,
-  {
-    atomicNumber: number;
-    symbol: string;
-  }
->;
+} satisfies Record<AtomShellSampleId, typeof AtomShellSampleSchema.Type>;
 
-export const EARLY_ELEMENT_FILL_LIMITS = [
+const EarlyElementFillLimitSchema = Schema.Struct({
+  fillLimit: Schema.Finite,
+  key: Schema.String,
+  principalQuantumNumber: Schema.Finite,
+});
+
+const EARLY_ELEMENT_FILL_LIMITS = [
   { key: "K", principalQuantumNumber: 1, fillLimit: 2 },
   { key: "L", principalQuantumNumber: 2, fillLimit: 8 },
   { key: "M", principalQuantumNumber: 3, fillLimit: 8 },
   { key: "N", principalQuantumNumber: 4, fillLimit: 2 },
-] satisfies readonly {
-  fillLimit: number;
-  key: string;
-  principalQuantumNumber: number;
-}[];
-
-export interface AtomShellSampleLabels {
-  name: string;
-  note: ReactNode;
-  tab: string;
-}
-
-export interface AtomShellLabLabels {
-  atomicNumber: string;
-  chooseAtom: string;
-  configuration: string;
-  electronTotal: string;
-  maximumCapacity: string;
-  outerShell: string;
-  samples: Record<AtomShellSampleId, AtomShellSampleLabels>;
-}
-
-export interface AtomShellLabProps {
-  description: ReactNode;
-  labels: AtomShellLabLabels;
-  title: ReactNode;
-}
+] satisfies readonly (typeof EarlyElementFillLimitSchema.Type)[];
 
 /**
  * Narrows ToggleGroup string values to the available atom-shell examples.
@@ -82,7 +61,7 @@ export function isAtomShellSampleId(value: string): value is AtomShellSampleId {
 /**
  * Calculates the maximum electron capacity of a shell from its shell number.
  */
-export function getShellMaximumElectrons(principalQuantumNumber: number) {
+function getShellMaximumElectrons(principalQuantumNumber: number) {
   if (!Number.isInteger(principalQuantumNumber) || principalQuantumNumber < 1) {
     throw new Error("Shell number must be a positive integer.");
   }

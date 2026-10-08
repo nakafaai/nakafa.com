@@ -1,7 +1,7 @@
 "use client";
 
 import { BacterialWallStack } from "@repo/design-system/components/contents/biology/bacteria-wall-stack";
-import type { BiologySceneProps } from "@repo/design-system/components/contents/biology/data";
+import type { BiologySceneProps } from "@repo/design-system/components/contents/biology/lab-frame";
 import type { ReactNode } from "react";
 
 /** Compares thick peptidoglycan and outer-membrane wall arrangements. */

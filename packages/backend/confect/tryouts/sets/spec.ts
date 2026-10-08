@@ -46,7 +46,6 @@ export const trackSetValidator = Schema.Struct({
   publishedScore: Schema.Union([Schema.Finite, Schema.Null]),
   runningAttempt: Schema.Union([Schema.Null, runningAttemptValidator]),
 });
-export type RunningAttempt = typeof runningAttemptValidator.Type;
 export const trackSetPageValidator = Schema.Struct({
   ...PaginationResultSchema(trackSetValidator).fields,
   ...{

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { canonicalizeQuestionProjection } from "@nakafa/aksara-contracts/projection/question";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import {
   type RollbackPage,
   RollbackPageSchema,
@@ -42,15 +44,24 @@ import { Schema } from "effect";
 
 const prepareRollback = internal.contentRelease.rollback.prepareRollback;
 const prepareRoutes = internal.contentRelease.rollback.prepareRoutes;
+const RollbackPageJsonSchema = Schema.fromJsonString(RollbackPageSchema);
+const RoutePageJsonSchema = Schema.fromJsonString(RoutePageSchema);
+const ContentProjectionJsonSchema = Schema.fromJsonString(
+  ContentProjectionSchema
+);
+const SignedArtifactJsonSchema = Schema.fromJsonString(
+  SignedContentArtifactSchema
+);
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Decodes the canonical body response through the shared contract. */
 function decodePage(source: string): RollbackPage {
-  return Schema.decodeUnknownSync(RollbackPageSchema)(JSON.parse(source));
+  return Schema.decodeSync(RollbackPageJsonSchema)(source);
 }
 
 /** Decodes the canonical route response through the shared contract. */
 function decodeRoutePage(source: string): RoutePage {
-  return Schema.decodeUnknownSync(RoutePageSchema)(JSON.parse(source));
+  return Schema.decodeSync(RoutePageJsonSchema)(source);
 }
 
 /** Reads one exact body rollback page from the active technical release. */
@@ -233,7 +244,9 @@ describe("contentRelease/rollback", () => {
         operation: "upsert",
         sourcePath: FUNCTION_MATERIAL_SOURCE,
       },
-      projection: JSON.parse(FUNCTION_MATERIAL_JSON),
+      projection: Schema.decodeSync(ContentProjectionJsonSchema)(
+        FUNCTION_MATERIAL_JSON
+      ),
     });
     expect(page.records[0]?.prior).toHaveProperty(
       "projection.topicTitle",
@@ -374,9 +387,13 @@ describe("contentRelease/rollback", () => {
       if (!prior) {
         throw new Error("Expected prior artifact.");
       }
-      const stored = JSON.parse(prior.artifactJson);
+      const stored = Schema.decodeSync(SignedArtifactJsonSchema)(
+        prior.artifactJson
+      );
       await ctx.db.patch("contentArtifacts", prior._id, {
-        artifactJson: JSON.stringify({
+        // The patched payload carries the retired requiredComponents shape,
+        // which the current contract rejects, so only the plain codec writes it.
+        artifactJson: encodeJson({
           ...stored,
           payload: {
             ...stored.payload,

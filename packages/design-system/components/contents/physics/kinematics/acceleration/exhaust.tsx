@@ -1,15 +1,12 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
+import type { RocketExhaust } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
 import { useRef } from "react";
 import type { Mesh, PointLight } from "three";
 
-export interface RocketExhaust {
-  anchor: [number, number, number];
-  radius: number;
-}
 const SPACE_COLORS = {
   flameCore: getColor("YELLOW"),
   flameOuter: getColor("ORANGE", 500),

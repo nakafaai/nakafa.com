@@ -1,35 +1,44 @@
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import irtScaleVersions from "@repo/backend/confect/_generated/tables/irtScaleVersions";
+import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttempts";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import { startSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
-import type { TryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
-import type {
-  AttemptAccessFields,
-  StartAttemptArgs,
+import { tryoutStartSourceSchema } from "@repo/backend/confect/tryouts/start/source";
+import {
+  startAttemptArgsValidator,
+  toTryoutStartError,
 } from "@repo/backend/confect/tryouts/start/spec";
-import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Duration, Effect, flow } from "effect";
+import { Array as Arr, Duration, Effect, flow, Schema, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
-interface CreateTryoutAttemptInput {
-  readonly access: AttemptAccessFields;
-  readonly args: StartAttemptArgs;
-  readonly attemptNumber: number;
-  readonly now: number;
-  readonly scaleVersion: Docs["irtScaleVersions"] | null;
-  readonly source: TryoutStartSource;
-  readonly userId: Id<"users">;
-}
+const createTryoutAttemptInputSchema = Schema.Struct({
+  access: tryoutAttempts.Doc.mapFields(
+    Struct.pick([
+      "accessEndsAt",
+      "accessSourceKind",
+      "accessSubscriptionId",
+      "countsForCompetition",
+    ])
+  ),
+  args: startAttemptArgsValidator,
+  attemptNumber: Schema.Finite,
+  now: Schema.Finite,
+  scaleVersion: Schema.NullOr(irtScaleVersions.Doc),
+  source: tryoutStartSourceSchema,
+  userId: IdSchema("users"),
+});
+type CreateTryoutAttemptInput = typeof createTryoutAttemptInputSchema.Type;
 
 /** Creates the attempt snapshot and all start-related rows atomically. */
 export const createTryoutAttempt = Effect.fn(

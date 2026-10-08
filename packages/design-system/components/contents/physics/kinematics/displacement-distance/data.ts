@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const DISPLACEMENT_DISTANCE_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/taxi.glb";
@@ -12,37 +12,22 @@ export const DISPLACEMENT_DISTANCE_CASE_IDS = [
 export type DisplacementDistanceCaseId =
   (typeof DISPLACEMENT_DISTANCE_CASE_IDS)[number];
 
-export interface DisplacementDistanceLabLabels {
-  chooseCase: string;
-  factLabels: {
-    displacement: ReactNode;
-    distance: ReactNode;
-    meaning: ReactNode;
-    vector: ReactNode;
-  };
-  meanings: Record<DisplacementDistanceCaseId, ReactNode>;
-  modeLabels: Record<DisplacementDistanceCaseId, ReactNode>;
-  viewLabel: string;
-}
+const RoutePointSchema = Schema.Struct({
+  x: Schema.Finite,
+  z: Schema.Finite,
+});
 
-export interface DisplacementDistanceLabProps {
-  description: ReactNode;
-  labels: DisplacementDistanceLabLabels;
-  title: ReactNode;
-}
+type RoutePoint = typeof RoutePointSchema.Type;
 
-interface RoutePoint {
-  x: number;
-  z: number;
-}
+const RouteSegmentSchema = Schema.Struct({
+  angle: Schema.Finite,
+  center: RoutePointSchema,
+  end: RoutePointSchema,
+  length: Schema.Finite,
+  start: RoutePointSchema,
+});
 
-export interface RouteSegment {
-  angle: number;
-  center: RoutePoint;
-  end: RoutePoint;
-  length: number;
-  start: RoutePoint;
-}
+export type RouteSegment = typeof RouteSegmentSchema.Type;
 
 export const DISPLACEMENT_DISTANCE_SCENE = {
   carScale: 0.52,

@@ -3,12 +3,14 @@ import { useFrame } from "@react-three/fiber";
 import {
   COMBINING_VOLUMES_MODELS,
   type CombiningVolumesElement,
+  CombiningVolumesElementSchema,
   type CombiningVolumesGasModel,
-  type CombiningVolumesLabLabels,
   type CombiningVolumesModeId,
   type CombiningVolumesMoleculeKind,
   type CombiningVolumesSceneColors,
+  type CombiningVolumesSceneLabelsSchema,
   type CombiningVolumesScenePoint,
+  CombiningVolumesScenePointSchema,
 } from "@repo/design-system/components/contents/chemistry/combining-volumes-law/data";
 import {
   CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
@@ -19,6 +21,7 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { HashMap, Option, Schema } from "effect";
 import { useRef } from "react";
 import { DoubleSide, type Group } from "three";
 
@@ -30,11 +33,12 @@ const VOLUME_UNIT_HEIGHT = 0.42;
 const COLUMN_GAP = 0.62;
 const BOND_LINE_WIDTH = 2.1;
 
-interface MoleculeAtom {
-  element: CombiningVolumesElement;
-  id: string;
-  position: CombiningVolumesScenePoint;
-}
+const MoleculeAtomSchema = Schema.Struct({
+  element: CombiningVolumesElementSchema,
+  id: Schema.String,
+  position: CombiningVolumesScenePointSchema,
+});
+type MoleculeAtom = typeof MoleculeAtomSchema.Type;
 
 const ATOM_STYLE = {
   hydrogen: { color: "hydrogen", radius: 0.045, symbol: "H" },
@@ -90,7 +94,7 @@ export function CombiningVolumesScene({
   modeId,
 }: {
   colors: CombiningVolumesSceneColors;
-  labels: CombiningVolumesLabLabels;
+  labels: typeof CombiningVolumesSceneLabelsSchema.Type;
   modeId: CombiningVolumesModeId;
 }) {
   const model = COMBINING_VOLUMES_MODELS[modeId];
@@ -302,15 +306,17 @@ function Molecule({
   kind: CombiningVolumesMoleculeKind;
 }) {
   const { atoms, bonds } = MOLECULE_SPECS[kind];
-  const atomsById = new Map(atoms.map((atomData) => [atomData.id, atomData]));
+  const atomsById = HashMap.fromIterable(
+    atoms.map((atomData) => [atomData.id, atomData])
+  );
 
   return (
     <group>
       {bonds.map(([startId, endId]) => {
-        const start = atomsById.get(startId);
-        const end = atomsById.get(endId);
+        const start = HashMap.get(atomsById, startId);
+        const end = HashMap.get(atomsById, endId);
 
-        if (!(start && end)) {
+        if (Option.isNone(start) || Option.isNone(end)) {
           return null;
         }
 
@@ -319,7 +325,7 @@ function Molecule({
             color={colors.bond}
             key={`${startId}-${endId}`}
             lineWidth={BOND_LINE_WIDTH}
-            points={[start.position, end.position]}
+            points={[start.value.position, end.value.position]}
           />
         );
       })}
