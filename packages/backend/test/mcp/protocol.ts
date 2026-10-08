@@ -5,7 +5,11 @@ import {
   modernPost,
   withHeaders,
 } from "@repo/backend/test/mcp/harness";
-import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
+import {
+  BODYLESS_RESPONSE_HEADERS,
+  JSON_RESPONSE_HEADERS,
+  NAKAFA_JSON_ERROR_HEADERS,
+} from "@repo/backend/test/mcp/headers";
 
 /** Protocol headers: the version and method headers a modern request must carry, and the predecessor handshake. */
 export const PROTOCOL_CASES: readonly McpCase[] = [
@@ -23,17 +27,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
           jsonrpc: "2.0",
         },
       },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        "content-type": "application/json; charset=utf-8",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: NAKAFA_JSON_ERROR_HEADERS,
       status: 400,
     },
     name: "a modern request without MCP-Protocol-Version is refused with the header requirement",
@@ -74,7 +68,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
       headers: JSON_RESPONSE_HEADERS,
       status: 400,
     },
-    name: "a modern request for a version the server does not support is refused with the supported versions",
+    name: "a modern request whose MCP-Protocol-Version header disagrees with its body envelope is refused with the mismatch",
     request: withHeaders(modernPost(60, "server/discover"), {
       "mcp-protocol-version": "2099-01-01",
     }),
@@ -156,17 +150,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
           jsonrpc: "2.0",
         },
       },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        "content-type": "application/json; charset=utf-8",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: NAKAFA_JSON_ERROR_HEADERS,
       status: 400,
     },
     name: "the predecessor 2025 initialize handshake without a protocol header is refused",
@@ -228,16 +212,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
   {
     answer: {
       body: { text: "" },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: BODYLESS_RESPONSE_HEADERS,
       status: 400,
     },
     name: "a notification whose Mcp-Method names another method is refused without a body",

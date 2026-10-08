@@ -39,7 +39,7 @@ afterEach(() => {
 const runGoldenCase = Effect.fn("TestMcp.runGoldenCase")(function* (
   testCase: McpCase
 ) {
-  const response = yield* Effect.promise(() => sendMcpCase(testCase));
+  const response = yield* sendMcpCase(testCase);
   const answer = yield* readMcpAnswer(response, testCase.answer.body);
   expect(answer).toStrictEqual(testCase.answer);
 });

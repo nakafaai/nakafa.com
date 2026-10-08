@@ -1,17 +1,11 @@
-import { jsonBody, type McpCase } from "@repo/backend/test/mcp/harness";
+import {
+  jsonBody,
+  type McpCase,
+  modernPost,
+} from "@repo/backend/test/mcp/harness";
+import { BODYLESS_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
 
-const BODYLESS_RESPONSE_HEADERS = {
-  "access-control-allow-headers":
-    "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-  "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-  "access-control-allow-origin": "*",
-  "access-control-expose-headers":
-    "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-  "cache-control": "no-store",
-  vary: "Origin, Access-Control-Request-Headers",
-};
-
-/** Limits: the body ceiling, the public-read budget, and an unavailable client identity. */
+/** Limits: the body ceiling, the public-read budget, an unavailable client identity, and an outage of the rate limiter. */
 export const LIMIT_CASES: readonly McpCase[] = [
   {
     answer: {
@@ -49,15 +43,8 @@ export const LIMIT_CASES: readonly McpCase[] = [
     answer: {
       body: { text: "" },
       headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
+        ...BODYLESS_RESPONSE_HEADERS,
         "retry-after": "1",
-        vary: "Origin, Access-Control-Request-Headers",
       },
       status: 429,
     },
@@ -90,5 +77,15 @@ export const LIMIT_CASES: readonly McpCase[] = [
       },
       method: "POST",
     },
+  },
+  {
+    answer: {
+      body: { text: "" },
+      headers: BODYLESS_RESPONSE_HEADERS,
+      status: 503,
+    },
+    arrangement: "limiter-down",
+    name: "a request whose rate-limit component fails is refused without a body",
+    request: modernPost(120, "server/discover"),
   },
 ];

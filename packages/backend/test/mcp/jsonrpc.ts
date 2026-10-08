@@ -4,7 +4,10 @@ import {
   type McpCase,
   modernPost,
 } from "@repo/backend/test/mcp/harness";
-import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
+import {
+  BODYLESS_RESPONSE_HEADERS,
+  JSON_RESPONSE_HEADERS,
+} from "@repo/backend/test/mcp/headers";
 
 /** JSON-RPC shape: malformed text, batches, missing members, unknown methods, and notifications. */
 export const JSON_RPC_CASES: readonly McpCase[] = [
@@ -117,16 +120,7 @@ export const JSON_RPC_CASES: readonly McpCase[] = [
   {
     answer: {
       body: { text: "" },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: BODYLESS_RESPONSE_HEADERS,
       status: 202,
     },
     name: "a notification with the protocol version header is accepted without a body",
@@ -148,16 +142,7 @@ export const JSON_RPC_CASES: readonly McpCase[] = [
   {
     answer: {
       body: { text: "" },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: BODYLESS_RESPONSE_HEADERS,
       status: 400,
     },
     name: "a notification without the protocol version header is refused without a body",

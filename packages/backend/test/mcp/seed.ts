@@ -12,6 +12,7 @@ import {
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
+import { Array as Arr } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
@@ -40,7 +41,7 @@ export async function seedQuran(test: BackendTest) {
   await test.mutation((ctx) =>
     activateQuranSnapshot(ctx, [
       makeQuranAttribution(),
-      ...Array.from({ length: 114 }, (_, index) =>
+      ...Arr.makeBy(114, (index) =>
         makeQuranSurah(index + 1, index === 0 ? 7 : 1)
       ),
       makeQuranChunk({

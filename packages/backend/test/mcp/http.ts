@@ -6,9 +6,32 @@ import {
   modernPost,
   withHeaders,
 } from "@repo/backend/test/mcp/harness";
-import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
+import {
+  BODYLESS_RESPONSE_HEADERS,
+  JSON_RESPONSE_HEADERS,
+} from "@repo/backend/test/mcp/headers";
 
 const JSON_ACCEPT = "application/json, text/event-stream";
+const DISCOVER_RESULT = {
+  supportedVersions: ["2026-07-28"],
+  capabilities: {
+    tools: { listChanged: true },
+    resources: { listChanged: true },
+    prompts: { listChanged: true },
+  },
+  instructions:
+    "Use Nakafa for cited educational content, lessons, articles, try-outs, and reviewed Quran references. Search first. Pass content_id to the content tool only when the result includes markdown_url. Cite try-out catalog results by URL without requesting private attempt content. Every capability is public and read-only.",
+  resultType: "complete",
+  ttlMs: 0,
+  cacheScope: "private",
+  _meta: {
+    "io.modelcontextprotocol/serverInfo": {
+      name: "nakafa-mcp-server",
+      title: "Nakafa",
+      version: "1.0.1",
+    },
+  },
+};
 
 /** HTTP shape: methods the endpoint does not serve, browser preflights, origins, media types, and the edge secret. */
 export const HTTP_CASES: readonly McpCase[] = [
@@ -61,15 +84,9 @@ export const HTTP_CASES: readonly McpCase[] = [
     answer: {
       body: { text: "" },
       headers: {
+        ...BODYLESS_RESPONSE_HEADERS,
         "access-control-allow-credentials": "true",
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
         "access-control-allow-origin": "https://nakafa.com",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        vary: "Origin, Access-Control-Request-Headers",
       },
       status: 204,
     },
@@ -94,16 +111,7 @@ export const HTTP_CASES: readonly McpCase[] = [
   {
     answer: {
       body: { text: "" },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: BODYLESS_RESPONSE_HEADERS,
       status: 204,
     },
     name: "an OPTIONS preflight without an Origin is answered for any origin",
@@ -157,26 +165,7 @@ export const HTTP_CASES: readonly McpCase[] = [
     answer: {
       body: {
         json: {
-          result: {
-            supportedVersions: ["2026-07-28"],
-            capabilities: {
-              tools: { listChanged: true },
-              resources: { listChanged: true },
-              prompts: { listChanged: true },
-            },
-            instructions:
-              "Use Nakafa for cited educational content, lessons, articles, try-outs, and reviewed Quran references. Search first. Pass content_id to the content tool only when the result includes markdown_url. Cite try-out catalog results by URL without requesting private attempt content. Every capability is public and read-only.",
-            resultType: "complete",
-            ttlMs: 0,
-            cacheScope: "private",
-            _meta: {
-              "io.modelcontextprotocol/serverInfo": {
-                name: "nakafa-mcp-server",
-                title: "Nakafa",
-                version: "1.0.1",
-              },
-            },
-          },
+          result: DISCOVER_RESULT,
           jsonrpc: "2.0",
           id: 92,
         },
@@ -184,7 +173,7 @@ export const HTTP_CASES: readonly McpCase[] = [
       headers: JSON_RESPONSE_HEADERS,
       status: 200,
     },
-    name: "a POST whose Accept header omits application/json is refused by the SDK",
+    name: "a modern POST whose Accept header omits application/json is still answered",
     request: withHeaders(modernPost(92, "server/discover"), {
       accept: "text/event-stream",
     }),
@@ -193,26 +182,7 @@ export const HTTP_CASES: readonly McpCase[] = [
     answer: {
       body: {
         json: {
-          result: {
-            supportedVersions: ["2026-07-28"],
-            capabilities: {
-              tools: { listChanged: true },
-              resources: { listChanged: true },
-              prompts: { listChanged: true },
-            },
-            instructions:
-              "Use Nakafa for cited educational content, lessons, articles, try-outs, and reviewed Quran references. Search first. Pass content_id to the content tool only when the result includes markdown_url. Cite try-out catalog results by URL without requesting private attempt content. Every capability is public and read-only.",
-            resultType: "complete",
-            ttlMs: 0,
-            cacheScope: "private",
-            _meta: {
-              "io.modelcontextprotocol/serverInfo": {
-                name: "nakafa-mcp-server",
-                title: "Nakafa",
-                version: "1.0.1",
-              },
-            },
-          },
+          result: DISCOVER_RESULT,
           jsonrpc: "2.0",
           id: 93,
         },
@@ -220,7 +190,7 @@ export const HTTP_CASES: readonly McpCase[] = [
       headers: JSON_RESPONSE_HEADERS,
       status: 200,
     },
-    name: "a POST whose Accept header omits text/event-stream is refused by the SDK",
+    name: "a modern POST whose Accept header omits text/event-stream is still answered",
     request: withHeaders(modernPost(93, "server/discover"), {
       accept: "application/json",
     }),

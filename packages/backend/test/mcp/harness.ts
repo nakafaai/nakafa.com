@@ -1,3 +1,4 @@
+import { RateLimiter } from "@convex-dev/rate-limiter";
 import { expect } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { seedArticle, seedQuran } from "@repo/backend/test/mcp/seed";
@@ -24,7 +25,7 @@ export const MCP_CLIENT_META = {
 const GOLDEN_REQUEST_ID = "golden-request";
 /** Fixed rate-limit identity for every request that does not replace it. */
 const GOLDEN_CLIENT_ADDRESS = "203.0.113.21";
-/** Clock for the public-read token bucket, so refill is identical on every run. */
+/** Clock for the public-read token bucket. A frozen clock never refills the bucket, so its budget is exact on every run. */
 const GOLDEN_NOW = 1_800_000_000_000;
 
 /** Headers the runtime adds on its own, which the golden contract does not pin. */
@@ -42,7 +43,7 @@ const encodeJson = Schema.encodeSync(JsonCodec);
 const decodeJson = Schema.decodeUnknownEffect(JsonCodec);
 
 /** One request as a client sends it. A header set to null is left out. */
-export const McpRequestSchema = Schema.Struct({
+const McpRequestSchema = Schema.Struct({
   body: Schema.optional(Schema.String),
   headers: Schema.optional(
     Schema.Record(Schema.String, Schema.NullOr(Schema.String))
@@ -52,31 +53,31 @@ export const McpRequestSchema = Schema.Struct({
 export type McpRequest = typeof McpRequestSchema.Type;
 
 /** The body as JSON when it is a JSON document, otherwise as exact text. */
-export const McpBodySchema = Schema.Union([
+const McpBodySchema = Schema.Union([
   Schema.Struct({ json: Schema.Unknown }),
   Schema.Struct({ text: Schema.String }),
 ]);
-export type McpBody = typeof McpBodySchema.Type;
+type McpBody = typeof McpBodySchema.Type;
 
 /** The complete observable answer: status, every pinned header, and the body. */
-export const McpAnswerSchema = Schema.Struct({
+const McpAnswerSchema = Schema.Struct({
   body: McpBodySchema,
   headers: Schema.Record(Schema.String, Schema.String),
   status: Schema.Int,
 });
-export type McpAnswer = typeof McpAnswerSchema.Type;
 
 /** The deployment state a case arranges before its request is sent. */
-export const McpArrangementSchema = Schema.Literals([
+const McpArrangementSchema = Schema.Literals([
   "article",
   "empty",
+  "limiter-down",
   "public-read-spent",
   "quran",
 ]);
-export type McpArrangement = typeof McpArrangementSchema.Type;
+type McpArrangement = typeof McpArrangementSchema.Type;
 
 /** One golden case: a behavior name, the request, the arranged state, and the exact answer. */
-export const McpCaseSchema = Schema.Struct({
+const McpCaseSchema = Schema.Struct({
   answer: McpAnswerSchema,
   arrangement: Schema.optional(McpArrangementSchema),
   name: Schema.String,
@@ -143,46 +144,69 @@ export function sendMcpRequest(
   });
 }
 
+/** Freezes Date for the public-read bucket. The setup file restores real timers after each test. */
+function pinMcpClock() {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(GOLDEN_NOW);
+}
+
 /**
  * Spends the public-read bucket of 30 tokens: 29 allowed discovery reads, then
  * one oversized request that is charged before its body is read.
  */
-async function spendPublicRead(test: BackendTest) {
-  pinMcpClock();
-  const allowed = await Promise.all(
-    Arr.makeBy(29, (index) =>
-      sendMcpRequest(test, modernPost(100 + index, "server/discover"))
-    )
-  );
-  const oversized = await sendMcpRequest(test, {
-    headers: {
-      "content-length": "65537",
-      "content-type": "application/json",
-    },
-    method: "POST",
+const spendPublicRead = (test: BackendTest) =>
+  Effect.gen(function* () {
+    pinMcpClock();
+    const allowed = yield* Effect.all(
+      Arr.makeBy(29, (index) =>
+        Effect.promise(() =>
+          sendMcpRequest(test, modernPost(100 + index, "server/discover"))
+        )
+      ),
+      { concurrency: "unbounded" }
+    );
+    const oversized = yield* Effect.promise(() =>
+      sendMcpRequest(test, {
+        headers: {
+          "content-length": "65537",
+          "content-type": "application/json",
+        },
+        method: "POST",
+      })
+    );
+    expect(Arr.map(allowed, ({ status }) => status)).toEqual(
+      Arr.makeBy(29, () => 200)
+    );
+    expect(oversized.status).toBe(413);
   });
-  expect(Arr.map(allowed, ({ status }) => status)).toEqual(
-    Arr.makeBy(29, () => 200)
-  );
-  expect(oversized.status).toBe(413);
-}
+
+/** Makes the rate-limit component fail on its next call, the outage the route answers with 503. */
+const limiterDown = () =>
+  Effect.sync(() => {
+    vi.spyOn(RateLimiter.prototype, "limit").mockRejectedValueOnce(
+      new Error("quota unavailable")
+    );
+  });
 
 const ARRANGEMENTS: Record<
   McpArrangement,
-  (test: BackendTest) => Promise<void>
+  (test: BackendTest) => Effect.Effect<void>
 > = {
-  article: seedArticle,
-  empty: () => Promise.resolve(),
+  article: (test) => Effect.promise(() => seedArticle(test)),
+  empty: () => Effect.void,
+  "limiter-down": limiterDown,
   "public-read-spent": spendPublicRead,
-  quran: seedQuran,
+  quran: (test) => Effect.promise(() => seedQuran(test)),
 };
 
 /** Runs one case against a fresh deployment and returns the raw response. */
-export async function sendMcpCase(testCase: McpCase): Promise<Response> {
+export const sendMcpCase = Effect.fn("TestMcp.sendCase")(function* (
+  testCase: McpCase
+) {
   const test = createConvexTestWithBetterAuth();
-  await ARRANGEMENTS[testCase.arrangement ?? "empty"](test);
-  return sendMcpRequest(test, testCase.request);
-}
+  yield* ARRANGEMENTS[testCase.arrangement ?? "empty"](test);
+  return yield* Effect.promise(() => sendMcpRequest(test, testCase.request));
+});
 
 /** Reads the complete answer, decoding the body in the shape the case expects. */
 export const readMcpAnswer = Effect.fn("TestMcp.readAnswer")(function* (
@@ -207,10 +231,4 @@ function pinnedHeaders(headers: Headers) {
       ([name]) => !Arr.contains(UNPINNED_HEADERS, name)
     )
   );
-}
-
-/** Freezes Date so the public-read bucket refills by the same amount on every run. */
-export function pinMcpClock() {
-  vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(GOLDEN_NOW);
 }
