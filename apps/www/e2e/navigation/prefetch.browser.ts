@@ -1,26 +1,24 @@
 import { instant } from "@next/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { withObservedPageErrors } from "@/e2e/support/browser-context";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   observeShell,
   readPageTime,
   readShellObservation,
 } from "@/e2e/support/shell";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
-const readinessTimeoutMilliseconds = 15_000;
 const lessonHref = pinnedRoutes.material.en;
 const articleHref = pinnedRoutes.article.en;
 const articleCategoryHref = articleHref.slice(0, articleHref.lastIndexOf("/"));
 const NEXT_LINK_PATTERN = /^Next/;
 
-const viewports = [
-  { hasTouch: false, height: 900, name: "desktop", width: 1440 },
-  { hasTouch: true, height: 844, name: "touch", width: 390 },
-] as const;
+const viewports = [desktopViewport, touchViewport] as const;
 
 /** Loads `href` with the frame recorder running and its router hydrated. */
 const open = Effect.fn("NakafaE2E.openObservedRoute")(function* (
@@ -145,7 +143,7 @@ const verifyArticleCard = Effect.fn("NakafaE2E.verifyArticleCard")(function* (
   page: Page,
   hasTouch: boolean
 ) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   yield* open(page, articleCategoryHref);
   yield* openPrefetched(
     page,
@@ -159,7 +157,7 @@ const verifyContentLink = Effect.fn("NakafaE2E.verifyContentLink")(function* (
   page: Page,
   hasTouch: boolean
 ) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   yield* open(page, lessonHref);
   yield* openPrefetched(
     page,
