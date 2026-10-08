@@ -6,8 +6,7 @@ import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/requests";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-export const hubHref = appRoutes.tryout;
-export const countryHref = `${hubHref}/indonesia`;
+export const countryHref = `${appRoutes.tryout}/indonesia`;
 export const examHref = `${countryHref}/snbt`;
 export const trackHref = `${examHref}/2027`;
 export const setHref = `${trackHref}/set-1`;
@@ -104,12 +103,12 @@ export const openHub = Effect.fn("NakafaE2E.openTryoutHub")(function* (
   page: Page
 ) {
   yield* Effect.promise(() =>
-    page.goto(hubHref, { waitUntil: "domcontentloaded" })
+    page.goto(appRoutes.tryout, { waitUntil: "domcontentloaded" })
   );
   yield* waitForCommittedAppRouter(
     page,
-    hubHref,
-    hubHref,
+    appRoutes.tryout,
+    appRoutes.tryout,
     readinessTimeoutMilliseconds
   );
   yield* Effect.promise(() =>

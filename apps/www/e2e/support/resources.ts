@@ -16,6 +16,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const JAVASCRIPT_RESOURCE_PATTERN =
   /^\/_next\/static\/(?:immutable\/)?chunks\/.+\.js$/;
 const RESOURCE_IDLE_MILLISECONDS = 1000;
+// Resource settling keeps its own budget, apart from readiness.
 const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 const RESOURCE_POLL_MILLISECONDS = 100;
 

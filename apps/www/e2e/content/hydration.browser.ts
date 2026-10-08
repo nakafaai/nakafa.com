@@ -67,6 +67,7 @@ const runs = [
 ] as const;
 
 const CONVEX_TOKEN_PATH = "/api/auth/convex/token";
+// Settling keeps its own budget, so it can change apart from readiness.
 const SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 
 /**

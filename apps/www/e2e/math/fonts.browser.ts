@@ -12,7 +12,6 @@ import {
   readinessTimeoutMilliseconds,
 } from "@/e2e/support/timeout";
 
-const lesson = pinnedRoutes.inverse.en;
 const lessonPath = /^\/en\/subjects\//;
 
 /**
@@ -26,7 +25,9 @@ const verifyCachedLessonFonts = Effect.fn("NakafaE2E.verifyCachedLessonFonts")(
       expect
         .poll(
           async () =>
-            (await page.request.get(lesson)).headers()["x-nextjs-cache"],
+            (await page.request.get(pinnedRoutes.inverse.en)).headers()[
+              "x-nextjs-cache"
+            ],
           { timeout: cacheTimeoutMilliseconds }
         )
         .toBe("HIT")
@@ -34,11 +35,11 @@ const verifyCachedLessonFonts = Effect.fn("NakafaE2E.verifyCachedLessonFonts")(
     const warnings = yield* collectUnusedPreloads(
       page,
       Effect.gen(function* () {
-        yield* Effect.promise(() => page.goto(lesson));
+        yield* Effect.promise(() => page.goto(pinnedRoutes.inverse.en));
         yield* waitForCommittedAppRouter(
           page,
-          lesson,
-          lesson,
+          pinnedRoutes.inverse.en,
+          pinnedRoutes.inverse.en,
           readinessTimeoutMilliseconds
         );
       })
@@ -65,11 +66,11 @@ const verifyCachedLessonFonts = Effect.fn("NakafaE2E.verifyCachedLessonFonts")(
 const verifyNavigationFonts = Effect.fn("NakafaE2E.verifyNavigationFonts")(
   function* (page: Page) {
     yield* seedAnalyticsConsent(page, "denied");
-    yield* Effect.promise(() => page.goto(lesson));
+    yield* Effect.promise(() => page.goto(pinnedRoutes.inverse.en));
     yield* waitForCommittedAppRouter(
       page,
-      lesson,
-      lesson,
+      pinnedRoutes.inverse.en,
+      pinnedRoutes.inverse.en,
       readinessTimeoutMilliseconds
     );
     const inserted = yield* Effect.promise(() =>
@@ -97,7 +98,7 @@ const verifyNavigationFonts = Effect.fn("NakafaE2E.verifyNavigationFonts")(
     const target = yield* Effect.promise(() => previous.getAttribute("href"));
     yield* Effect.sync(() => {
       expect(target).toMatch(lessonPath);
-      expect(target).not.toBe(lesson);
+      expect(target).not.toBe(pinnedRoutes.inverse.en);
     });
     const warnings = yield* collectUnusedPreloads(
       page,

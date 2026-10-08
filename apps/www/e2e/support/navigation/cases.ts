@@ -16,6 +16,7 @@ const ARTICLE_CATEGORY_HREF_PATTERN = /^\/en\/articles\/[^/.]+$/;
 const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
 const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;
 const LINK_POLL_MILLISECONDS = 100;
+// Navigation keeps its own budget, so it can change apart from readiness.
 const NAVIGATION_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 
 const linkedHrefRetrySchedule = Schedule.spaced(
