@@ -4,11 +4,6 @@ import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import {
-  ContentReleaseManifestSchema,
-  PublicationReceiptSchema,
-  SignedContentReleaseSchema,
-} from "@nakafa/aksara-contracts/release";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import {
@@ -16,7 +11,6 @@ import {
   inheritContentSnapshots,
   snapshotRowCount,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import {
   INITIAL_MODEL_SLOT,
   modelSlotValidator,
@@ -79,32 +73,12 @@ const TestStateOptionsSchema = Schema.Struct({
 });
 type TestStateOptions = typeof TestStateOptionsSchema.Type;
 
-// Receipts check at runtime rather than by type: fixture literals carry plain
-// strings and arrays where the contract wants branded or non-empty types.
-// Excess keys throw, so a misspelled receipt field cannot vanish silently.
-export const encodeReceiptJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(PublicationReceiptSchema),
-  { onExcessProperty: "error" }
-);
-export const encodeSignedReleaseJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentReleaseSchema)
-);
-/** Encodes a fixture renderer only after the contract validates it. */
-export const encodeFixtureRendererJson = Schema.encodeSync(
-  Schema.fromJsonString(RendererManifestEnvelopeSchema)
-);
-const decodeSignedReleaseJson = Schema.decodeUnknownSync(
-  Schema.fromJsonString(SignedContentReleaseSchema),
-  { onExcessProperty: "error" }
-);
-// Stored history keeps every contract field. It omits only the manifest
-// coherence check, which refuses the unrelated origin this fixture stores.
-const StoredHistorySchema = Schema.Struct({
-  ...SignedContentReleaseSchema.fields,
-  manifest: Schema.Struct(ContentReleaseManifestSchema.fields),
-});
-const encodeStoredHistoryJson = Schema.encodeSync(
-  Schema.fromJsonString(StoredHistorySchema)
+/** Plain codec: writes the same bytes as JSON.stringify, so every stored release matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+/** A JSON object whose fields are kept exactly as stored, so the patch keeps every key. */
+const StoredObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
+const decodeStoredObject = Schema.decodeUnknownSync(
+  Schema.fromJsonString(StoredObjectSchema)
 );
 
 /** Creates the exact zero-item signed envelope used by lifecycle tests. */
@@ -169,7 +143,7 @@ export async function insertZeroRelease(
     ...(terminal
       ? {
           completedAt: now,
-          receiptJson: encodeReceiptJson(receipt),
+          receiptJson: encodeJson(receipt),
         }
       : {}),
     baseFamilies: [...options.ownership.base],
@@ -270,7 +244,7 @@ export async function insertAbortedRelease(ctx: MutationCtx) {
     checkedItems: 0,
     createdAt: now,
     releaseId,
-    releaseJson: encodeSignedReleaseJson(signed),
+    releaseJson: encodeJson(signed),
     rendererJson: "{}",
     resultFamilies: [],
     role: "candidate",
@@ -307,16 +281,16 @@ export async function patchStoredOriginRelease(
   if (!release) {
     throw new Error(`Expected stored release ${releaseId}.`);
   }
-  const stored = decodeSignedReleaseJson(release.releaseJson);
+  const stored = decodeStoredObject(release.releaseJson);
+  const manifest = Schema.decodeUnknownSync(StoredObjectSchema)(
+    stored.manifest
+  );
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: encodeStoredHistoryJson({
+    releaseJson: encodeJson({
       ...stored,
       manifest: {
-        ...stored.manifest,
-        origin: {
-          kind: "rollback",
-          releaseId: ReleaseIdSchema.make(originReleaseId),
-        },
+        ...manifest,
+        origin: { kind: "rollback", releaseId: originReleaseId },
       },
     }),
   });
@@ -358,10 +332,10 @@ export async function insertActiveRelease(
     createdAt: now,
     proofAt: now,
     proofJson: "{}",
-    receiptJson: encodeReceiptJson(receipt),
+    receiptJson: encodeJson(receipt),
     releaseId: activeReleaseId,
-    releaseJson: encodeSignedReleaseJson(active),
-    rendererJson: encodeFixtureRendererJson(TEST_PROOF_RENDERER),
+    releaseJson: encodeJson(active),
+    rendererJson: encodeJson(TEST_PROOF_RENDERER),
     resultFamilies: [],
     role: "candidate",
     sequence: 1,

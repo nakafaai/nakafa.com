@@ -16,13 +16,11 @@ import {
   insertRollbackItem,
   insertRoute,
 } from "@repo/backend/test/content/rollback";
-import {
-  encodeFixtureRendererJson,
-  encodeReceiptJson,
-  encodeSignedReleaseJson,
-} from "@repo/backend/test/content/state";
 import type { TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
+
+/** Plain codec: writes the same bytes as JSON.stringify, so the stored release matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 type StoredRollbackEnvelope = typeof stageEnvelopeValidator.Type;
 export class UnexpectedRollbackTestState extends Data.TaggedError(
@@ -65,11 +63,9 @@ const storeAuthenticatedRelease = Effect.fn(
   );
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", stored._id, {
-      receiptJson: encodeReceiptJson(
-        makePublicationReceipt(releaseDocument, release)
-      ),
-      releaseJson: encodeSignedReleaseJson(release),
-      rendererJson: encodeFixtureRendererJson(TEST_PROOF_RENDERER),
+      receiptJson: encodeJson(makePublicationReceipt(releaseDocument, release)),
+      releaseJson: encodeJson(release),
+      rendererJson: encodeJson(TEST_PROOF_RENDERER),
     })
   );
   yield* Effect.promise(() =>

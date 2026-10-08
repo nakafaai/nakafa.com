@@ -1,10 +1,7 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import {
-  type SignedContentRelease,
-  SignedContentReleaseSchema,
-} from "@nakafa/aksara-contracts/release";
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { ContentSnapshotSetSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { INITIAL_MODEL_SLOT } from "@repo/backend/confect/contentRelease/models/slot";
@@ -21,9 +18,8 @@ import {
 } from "@repo/backend/test/content/release";
 import { Schema } from "effect";
 
-const SignedReleaseJsonSchema = Schema.fromJsonString(
-  SignedContentReleaseSchema
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so the stored envelope matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const StagedReleaseOptionsSchema = Schema.Struct({
   activeAppLocales: Schema.optionalKey(Schema.Array(ActiveAppLocaleCodeSchema)),
   baseFamilies: Schema.optionalKey(Schema.Array(ContentFamilySchema)),
@@ -71,7 +67,7 @@ export async function insertSignedCandidate(
     checkedItems: 0,
     createdAt: now,
     releaseId,
-    releaseJson: Schema.encodeSync(SignedReleaseJsonSchema)(release),
+    releaseJson: encodeJson(release),
     rendererJson,
     resultFamilies: [...release.manifest.scope.families],
     role: "candidate",

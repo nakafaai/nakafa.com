@@ -1,12 +1,7 @@
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
-import {
-  type SignedContentRelease,
-  SignedContentReleaseSchema,
-} from "@nakafa/aksara-contracts/release";
-import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import schema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
@@ -33,19 +28,8 @@ import {
   Schema,
 } from "effect";
 
-/** Encodes fixture JSON with the contracts production decodes, so each stored string has the wire shape production reads. */
-const encodeArtifactJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentArtifactSchema),
-  { onExcessProperty: "error" }
-);
-const encodeReleaseJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentReleaseSchema),
-  { onExcessProperty: "error" }
-);
-const encodeRendererJson = Schema.encodeSync(
-  Schema.fromJsonString(RendererManifestEnvelopeSchema),
-  { onExcessProperty: "error" }
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so every stored string matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 export const TEST_PUBLICATION_RELEASE = testSignedRelease(
   testEmptyManifest(ReleaseIdSchema.make("publication-active"))
@@ -85,8 +69,8 @@ export function makeRuntimeSource(
     checkedItems: 0,
     createdAt: 100,
     releaseId: signed.manifest.releaseId,
-    releaseJson: encodeReleaseJson(signed),
-    rendererJson: encodeRendererJson(TEST_PROOF_RENDERER),
+    releaseJson: encodeJson(signed),
+    rendererJson: encodeJson(TEST_PROOF_RENDERER),
     resultFamilies: [...resultFamilies],
     role: "candidate",
     sequence: 9,
@@ -153,7 +137,7 @@ export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
   MutableHashMap.set(fixture.source, "contentArtifacts", [
     {
       artifactHash: artifact.artifactHash,
-      artifactJson: encodeArtifactJson(artifact),
+      artifactJson: encodeJson(artifact),
     },
   ]);
   MutableHashMap.set(fixture.source, "contentKeys", [

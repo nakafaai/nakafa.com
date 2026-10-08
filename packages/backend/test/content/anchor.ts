@@ -1,7 +1,4 @@
-import {
-  PublicationReceiptSchema,
-  SignedContentReleaseSchema,
-} from "@nakafa/aksara-contracts/release";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -18,12 +15,12 @@ import { Schema } from "effect";
 
 /** Names one manifest field a retired content contract still carried. */
 const RETIRED_MANIFEST_FIELD = "rendererContractVersion";
-const UnknownJson = Schema.fromJsonString(Schema.Unknown);
-const decodeSignedRelease = Schema.decodeSync(
-  Schema.fromJsonString(SignedContentReleaseSchema)
-);
-const encodeReceiptJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(PublicationReceiptSchema)
+/** Plain codec: writes the same bytes as JSON.stringify, so the stored text matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+/** A JSON object whose top-level fields are kept as stored, so the retired payload keeps every key. */
+const StoredObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
+const decodeStoredObject = Schema.decodeUnknownSync(
+  Schema.fromJsonString(StoredObjectSchema)
 );
 
 /**
@@ -87,13 +84,14 @@ export async function retireStoredAnchorPayload(
   if (!release) {
     throw new Error(`Expected stored anchor ${releaseId}.`);
   }
-  const retired = Schema.decodeSync(UnknownJson)(release.releaseJson) as {
-    manifest: Record<string, unknown>;
-  };
+  const retired = decodeStoredObject(release.releaseJson);
+  const manifest = Schema.decodeUnknownSync(StoredObjectSchema)(
+    retired.manifest
+  );
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: Schema.encodeSync(UnknownJson)({
+    releaseJson: encodeJson({
       ...retired,
-      manifest: { ...retired.manifest, [RETIRED_MANIFEST_FIELD]: "1.0.0" },
+      manifest: { ...manifest, [RETIRED_MANIFEST_FIELD]: "1.0.0" },
     }),
   });
 }
@@ -144,14 +142,13 @@ export async function insertAnchoredActiveRelease(
   if (!active) {
     throw new Error("Expected the anchored active release fixture.");
   }
-  // makePublicationReceipt types activeAppLocales as a mutable array, which a
-  // typed encode of the contract's non-empty tuple rejects, so the
-  // unknown-input encode checks the receipt at runtime instead.
   await ctx.db.patch("contentReleases", activeId, {
-    receiptJson: encodeReceiptJson(
+    receiptJson: encodeJson(
       makePublicationReceipt(
         Schema.decodeSync(contentReleases.Doc)(active),
-        decodeSignedRelease(activeJson)
+        Schema.decodeUnknownSync(
+          Schema.fromJsonString(SignedContentReleaseSchema)
+        )(activeJson)
       )
     ),
   });
