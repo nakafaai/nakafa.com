@@ -21,6 +21,7 @@ import { InputGroupButton } from "@repo/design-system/components/ui/input-group"
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
+import { HashSet } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -97,8 +98,10 @@ export function NinaAttachments({
     (attachments) => attachments.remove
   );
   const t = useTranslations("Ai");
-  const submitted = new Set(submittedFiles);
-  const files = attachedFiles.filter((file) => !submitted.has(file.id));
+  const submitted = HashSet.fromIterable(submittedFiles);
+  const files = attachedFiles.filter(
+    (file) => !HashSet.has(submitted, file.id)
+  );
   if (files.length === 0) {
     return null;
   }

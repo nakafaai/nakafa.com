@@ -1,11 +1,9 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import "server-only";
-import {
-  type AppLocale,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
+import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
@@ -13,14 +11,12 @@ import { applyContentCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { httpLayer } from "@/lib/convex/http";
 
-type TryoutMetadataKind = Ref.Args<
-  typeof refs.public.tryouts.queries.catalog.getMetadata
->["kind"];
-interface TryoutMetadataArgs {
-  readonly appLocale: AppLocale;
-  readonly kind: TryoutMetadataKind;
-  readonly publicPath: string;
-}
+const TryoutMetadataArgsSchema = Schema.Struct({
+  appLocale: AppLocaleSchema,
+  kind: tryoutMetadataArgsValidator.kind,
+  publicPath: Schema.String,
+});
+type TryoutMetadataArgs = typeof TryoutMetadataArgsSchema.Type;
 
 /** Expected failure while reading one authenticated try-out page. */
 class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>()(

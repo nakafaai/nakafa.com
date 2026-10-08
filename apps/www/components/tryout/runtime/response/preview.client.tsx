@@ -5,8 +5,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {
-  type TryoutResponseFieldLabel,
   TryoutResponseFields,
+  type TryoutResponseFieldsProps,
 } from "@/components/tryout/runtime/response/fields.client";
 import {
   isPreviewComplete,
@@ -51,7 +51,9 @@ export function TryoutResponsePreview({
           renderLabel: ({
             correctness,
             id: labelId,
-          }: TryoutResponseFieldLabel) => (
+          }: Parameters<
+            TryoutResponseFieldsProps["value"]["renderLabel"]
+          >[0]) => (
             <>
               {labels[labelId]}
               {correctness === undefined ? null : (

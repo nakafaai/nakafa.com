@@ -17,6 +17,7 @@ export type NinaFailure =
   | Ref.Error<typeof refs.public.nina.lifecycle.cancel>
   | NinaConnectionError;
 
+/** The recovery the chat offers after a failure, with its localized message. */
 interface Feedback {
   action: "retry" | "edit" | "wait" | "credits" | "sign-in" | "new-chat";
   message: keyof AppConfig["Messages"]["Ai"]["failures"];

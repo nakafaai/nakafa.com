@@ -11,19 +11,23 @@ import {
 import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/protected/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
+  type ContentHttpTarget,
+  createContentEndpoint,
+  encodeContentRequest,
+} from "@repo/backend/client/content/endpoint";
+import {
   ContentRuntimeFailureError,
   ContentRuntimeMissingError,
   ContentRuntimeVerificationError,
   ContentTransportError,
 } from "@repo/backend/client/content/errors";
 import {
-  type ContentHttpTarget,
   createContentContractError,
-  createContentEndpoint,
-  encodeContentRequest,
+  validateContentRuntimeStatus,
+} from "@repo/backend/client/content/status";
+import {
   readContentResponse,
   requestContentResponse,
-  validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
 import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";

@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
   clearAiDraftText,
-  readAiDraftText,
   resolveAiDraftText,
   saveAiDraftText,
 } from "@/components/ai/store/draft";
@@ -13,16 +12,25 @@ afterEach(() => {
   window.sessionStorage.clear();
 });
 
+/** Reads the saved draft through the resolver's public path, with no new input. */
+function readSavedDraft(ownerId: string | null) {
+  return resolveAiDraftText({
+    ownerId,
+    pendingText: "",
+    pendingTextChanged: false,
+  });
+}
+
 describe("ai/store/draft", () => {
   it.effect("saves, reads, and clears the current tab draft", () =>
     Effect.gen(function* () {
       yield* saveAiDraftText("Explain this step", "learner-a");
 
-      expect(yield* readAiDraftText("learner-a")).toBe("Explain this step");
+      expect(yield* readSavedDraft("learner-a")).toBe("Explain this step");
 
       yield* clearAiDraftText;
 
-      expect(yield* readAiDraftText("learner-a")).toBeNull();
+      expect(yield* readSavedDraft("learner-a")).toBeNull();
     })
   );
 
@@ -32,8 +40,8 @@ describe("ai/store/draft", () => {
       Effect.gen(function* () {
         yield* saveAiDraftText("Carry this question", null);
 
-        expect(yield* readAiDraftText("learner-a")).toBe("Carry this question");
-        expect(yield* readAiDraftText("learner-a")).toBe("Carry this question");
+        expect(yield* readSavedDraft("learner-a")).toBe("Carry this question");
+        expect(yield* readSavedDraft("learner-a")).toBe("Carry this question");
       })
   );
 
@@ -41,7 +49,7 @@ describe("ai/store/draft", () => {
     Effect.gen(function* () {
       window.sessionStorage.setItem("nakafa-ai-draft", "Legacy question");
 
-      expect(yield* readAiDraftText("learner-a")).toBeNull();
+      expect(yield* readSavedDraft("learner-a")).toBeNull();
       expect(window.sessionStorage.getItem("nakafa-ai-draft")).toBeNull();
     })
   );
@@ -78,7 +86,7 @@ describe("ai/store/draft", () => {
           pendingTextChanged: true,
         })
       ).toBe("Newer question");
-      expect(yield* readAiDraftText("learner-a")).toBe("Newer question");
+      expect(yield* readSavedDraft("learner-a")).toBe("Newer question");
     })
   );
 
@@ -93,7 +101,7 @@ describe("ai/store/draft", () => {
           pendingTextChanged: true,
         })
       ).toBe("");
-      expect(yield* readAiDraftText("learner-a")).toBeNull();
+      expect(yield* readSavedDraft("learner-a")).toBeNull();
     })
   );
 
@@ -101,8 +109,8 @@ describe("ai/store/draft", () => {
     Effect.gen(function* () {
       yield* saveAiDraftText("Private question", "learner-a");
 
-      expect(yield* readAiDraftText("learner-b")).toBeNull();
-      expect(yield* readAiDraftText("learner-a")).toBeNull();
+      expect(yield* readSavedDraft("learner-b")).toBeNull();
+      expect(yield* readSavedDraft("learner-a")).toBeNull();
     })
   );
 
@@ -123,7 +131,7 @@ describe("ai/store/draft", () => {
           throw new DOMException("Storage blocked");
         });
 
-        expect(yield* readAiDraftText("learner-a")).toBeNull();
+        expect(yield* readSavedDraft("learner-a")).toBeNull();
 
         vi.restoreAllMocks();
         vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
@@ -139,7 +147,7 @@ describe("ai/store/draft", () => {
       vi.stubGlobal("window", undefined);
 
       expect(yield* saveAiDraftText("Server render", null)).toBeUndefined();
-      expect(yield* readAiDraftText(null)).toBeNull();
+      expect(yield* readSavedDraft(null)).toBeNull();
     })
   );
 });

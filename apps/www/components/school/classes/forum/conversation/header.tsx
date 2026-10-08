@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { format } from "date-fns";
-import { Effect } from "effect";
+import { Effect, HashSet } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context";
@@ -94,7 +94,7 @@ function ForumReactions() {
   if (!(forum && forum.reactionUsers.length > 0)) {
     return null;
   }
-  const myReactions = new Set(forum.myReactions);
+  const myReactions = HashSet.fromIterable(forum.myReactions);
 
   /** Toggles the current user's forum reaction without blocking transcript input. */
   const handleToggleReaction = (emoji: string) => {
@@ -124,7 +124,7 @@ function ForumReactions() {
   return (
     <div className="flex flex-wrap items-center gap-1">
       {forum.reactionUsers.map(({ emoji, count, reactors }) => {
-        const isMyReaction = myReactions.has(emoji);
+        const isMyReaction = HashSet.has(myReactions, emoji);
         const moreCount = count - reactors.length;
         return (
           <HoverCard key={emoji}>

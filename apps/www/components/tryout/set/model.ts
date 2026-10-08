@@ -5,8 +5,7 @@ import type { Locale } from "next-intl";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
 /** Convex query contract for the set discovery page. */
-export type SetPageQuery =
-  typeof refs.public.tryouts.queries.catalog.getSetPage;
+type SetPageQuery = typeof refs.public.tryouts.queries.catalog.getSetPage;
 
 type SetAttemptPageResult = Extract<
   NonNullable<

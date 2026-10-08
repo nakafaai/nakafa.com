@@ -1,13 +1,14 @@
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import { isToolUIPart } from "ai";
+import { isToolUIPart, type StepStartUIPart, type TextUIPart } from "ai";
+import { MutableHashMap, Option } from "effect";
 
 type MessagePart = NinaMessage["parts"][number];
 
 /** An answer text part, which paces while it streams. */
-export type AnswerPart = Extract<MessagePart, { type: "text" }>;
+export type AnswerPart = Extract<MessagePart, TextUIPart>;
 
 /** Every rendered part other than answer text. */
-export type OtherPart = Exclude<MessagePart, { type: "step-start" | "text" }>;
+export type OtherPart = Exclude<MessagePart, StepStartUIPart | TextUIPart>;
 
 interface PartEntry {
   readonly key: string;
@@ -43,7 +44,7 @@ export interface MessageGroup {
  */
 export function groupMessageParts(parts: readonly MessagePart[]) {
   const groups: MessageGroup[] = [];
-  const counts = new Map<string, number>();
+  const counts = MutableHashMap.empty<string, number>();
   for (const part of parts) {
     if (
       part.type === "step-start" ||
@@ -53,8 +54,11 @@ export function groupMessageParts(parts: readonly MessagePart[]) {
     }
     const tool = isToolUIPart(part);
     const kind = part.type === "reasoning" || tool ? "activity" : "response";
-    const count = counts.get(part.type) ?? 0;
-    counts.set(part.type, count + 1);
+    const count = Option.getOrElse(
+      MutableHashMap.get(counts, part.type),
+      () => 0
+    );
+    MutableHashMap.set(counts, part.type, count + 1);
     const key = tool ? part.toolCallId : `${part.type}-${count}`;
     const entry: MessageEntry =
       part.type === "text"

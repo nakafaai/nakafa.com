@@ -1,6 +1,7 @@
 "use client";
 
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
+import { HashMap, HashSet, Option } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import {
@@ -19,28 +20,28 @@ import {
 } from "@/components/tryout/runtime/response/state";
 import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 
-export interface TryoutResponseFieldLabel {
-  readonly correctness?: boolean | undefined;
-  readonly id: string;
-  readonly label: string;
-}
+type OnResponseChange = (selection: TryoutResponseSelection | null) => void;
 
-interface TryoutResponseFieldsValue {
-  readonly id: string;
-  readonly locked: boolean;
-  readonly onChange: (selection: TryoutResponseSelection | null) => void;
-  readonly renderLabel: (value: TryoutResponseFieldLabel) => ReactNode;
-  readonly responseSpec: TryoutRenderableResponseSpec;
-  readonly revealAnswers?: boolean;
-  readonly selection: TryoutResponseSelection | null;
+/** Props of one response field set: `value` holds the response and the callbacks it drives. */
+export interface TryoutResponseFieldsProps {
+  value: {
+    readonly id: string;
+    readonly locked: boolean;
+    readonly onChange: OnResponseChange;
+    /** Label of one response option or statement, marked correct or not once revealed. */
+    readonly renderLabel: (value: {
+      readonly correctness?: boolean | undefined;
+      readonly id: string;
+      readonly label: string;
+    }) => ReactNode;
+    readonly responseSpec: TryoutRenderableResponseSpec;
+    readonly revealAnswers?: boolean;
+    readonly selection: TryoutResponseSelection | null;
+  };
 }
 
 /** Renders every response kind through one persistence-neutral surface. */
-export function TryoutResponseFields({
-  value,
-}: {
-  value: TryoutResponseFieldsValue;
-}) {
+export function TryoutResponseFields({ value }: TryoutResponseFieldsProps) {
   const t = useTranslations("Tryouts");
   const answerLabel = t("answer");
   if (value.responseSpec.kind === "single-choice") {
@@ -57,7 +58,7 @@ function SingleChoiceFields({
   value,
 }: {
   answerLabel: string;
-  value: TryoutResponseFieldsValue;
+  value: TryoutResponseFieldsProps["value"];
 }) {
   const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "single-choice") {
@@ -111,13 +112,13 @@ function MultipleChoiceFields({
   value,
 }: {
   answerLabel: string;
-  value: TryoutResponseFieldsValue;
+  value: TryoutResponseFieldsProps["value"];
 }) {
   const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "multiple-choice") {
     return null;
   }
-  const selected = new Set(
+  const selected = HashSet.fromIterable(
     selection?.kind === "multiple-choice" ? selection.optionKeys : []
   );
   return (
@@ -126,7 +127,7 @@ function MultipleChoiceFields({
       {responseSpec.options.map((option) => (
         <TryoutSelectableMultipleChoice
           appearance={previewAppearance(value.revealAnswers, option.isCorrect)}
-          checked={selected.has(option.optionKey)}
+          checked={HashSet.has(selected, option.optionKey)}
           disabled={locked}
           id={optionLabelId(id, option.optionKey)}
           key={option.optionKey}
@@ -152,12 +153,16 @@ function MultipleChoiceFields({
   );
 }
 
-function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
+function CategoryFields({
+  value,
+}: {
+  value: TryoutResponseFieldsProps["value"];
+}) {
   const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "category") {
     return null;
   }
-  const assigned = new Map(
+  const assigned = HashMap.fromIterable(
     selection?.kind === "category"
       ? selection.assignments.map((assignment) => [
           assignment.statementKey,
@@ -170,6 +175,9 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
       {responseSpec.statements.map((statement) => {
         const statementId = statementLabelId(id, statement.statementKey);
         const statementHeadingId = `${statementId}-label`;
+        const assignedCategory = Option.getOrUndefined(
+          HashMap.get(assigned, statement.statementKey)
+        );
         return (
           <section className="space-y-3" key={statement.statementKey}>
             <div id={statementHeadingId}>
@@ -191,7 +199,7 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
                   )
                 )
               }
-              value={assigned.get(statement.statementKey) ?? ""}
+              value={assignedCategory ?? ""}
             >
               {responseSpec.categories.map((category) => (
                 <TryoutSelectableRadioOption
@@ -201,10 +209,7 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
                       ? undefined
                       : statement.correctCategoryKey === category.categoryKey
                   )}
-                  checked={
-                    assigned.get(statement.statementKey) ===
-                    category.categoryKey
-                  }
+                  checked={assignedCategory === category.categoryKey}
                   disabled={locked}
                   id={categoryLabelId(
                     id,

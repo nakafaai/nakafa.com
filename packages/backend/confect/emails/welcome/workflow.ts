@@ -1,27 +1,14 @@
+import type { WorkflowCtx } from "@convex-dev/workflow";
 import { WELCOME_EMAIL_RETRY } from "@repo/backend/confect/emails/welcome/spec";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
-import type { FunctionReference } from "convex/server";
 import { type ObjectType, v } from "convex/values";
 
 const welcomeEmailWorkflowArgs = {
   intentId: v.id("welcomeEmailIntents"),
 };
 type WelcomeEmailWorkflowArgs = ObjectType<typeof welcomeEmailWorkflowArgs>;
-type SendWelcomeEmail = FunctionReference<
-  "action",
-  "internal",
-  WelcomeEmailWorkflowArgs,
-  null
->;
-
-interface WelcomeEmailWorkflowStep {
-  readonly runAction: (
-    action: SendWelcomeEmail,
-    args: WelcomeEmailWorkflowArgs,
-    options: { readonly retry: typeof WELCOME_EMAIL_RETRY }
-  ) => Promise<null>;
-}
+type WelcomeEmailWorkflowStep = Pick<WorkflowCtx, "runAction">;
 
 /** Runs the durable provider action with the deletion-aware retry policy. */
 export async function runWelcomeEmailDelivery(

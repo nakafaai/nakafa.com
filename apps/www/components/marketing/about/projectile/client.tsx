@@ -88,23 +88,19 @@ const ProjectileScene = dynamic(
   { loading: ProjectileSceneLoading }
 );
 
-interface ProjectileFact {
-  readonly id: string;
-  readonly label: ReactNode;
-  readonly value: ReactNode;
-}
-
-interface ProjectileOption {
-  readonly facts: readonly ProjectileFact[];
-  readonly id: ProjectileScenarioId;
-  readonly label: ReactNode;
-  readonly motion: ProjectileMotionState;
-}
-
 interface ProjectileClientProps {
   readonly controlsLabel: string;
-  readonly initialScenario: ProjectileOption;
-  readonly scenarios: readonly ProjectileOption[];
+  readonly initialScenario: ProjectileClientProps["scenarios"][number];
+  readonly scenarios: readonly {
+    readonly facts: readonly {
+      readonly id: string;
+      readonly label: ReactNode;
+      readonly value: ReactNode;
+    }[];
+    readonly id: ProjectileScenarioId;
+    readonly label: ReactNode;
+    readonly motion: ProjectileMotionState;
+  }[];
   readonly title: ReactNode;
   readonly viewLabel: string;
 }
