@@ -43,27 +43,22 @@ describe("active public body selection", () => {
               sourcePath: "outside-corpus.mdx",
             },
           ]),
-          HashMap.setMany(published, [
+          HashMap.set(
+            HashMap.set(published, "contentState", [
+              {
+                ...fixture.state,
+                activeReleaseId: "different-release",
+              },
+            ]),
+            "contentReleases",
             [
-              "contentState",
-              [
-                {
-                  ...fixture.state,
-                  activeReleaseId: "different-release",
-                },
-              ],
-            ],
-            [
-              "contentReleases",
-              [
-                {
-                  ...fixture.release,
-                  releaseId: "different-release",
-                  resultFamilies: ["page"],
-                },
-              ],
-            ],
-          ]),
+              {
+                ...fixture.release,
+                releaseId: "different-release",
+                resultFamilies: ["page"],
+              },
+            ]
+          ),
         ];
         for (const source of sources) {
           const runtime = yield* createTestPublication(source);
