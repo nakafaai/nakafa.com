@@ -28,8 +28,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
+import { Array as Arr, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import type { ComponentProps, ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
 import { getArticleCategoryIcon } from "@/components/articles/category";
 import { SearchExcerpt } from "@/components/search/excerpt";
@@ -48,31 +49,45 @@ import { getErrorMessage } from "@/lib/utils/error";
 
 const DEBOUNCE_TIME = 500;
 
-type SearchCommandIcon = ComponentProps<typeof HugeIcons>["icon"];
+/** Icon data as HugeIcons renders it: element tuples with string or numeric attributes. */
+const SearchCommandIconSchema = Schema.Array(
+  Schema.Tuple([
+    Schema.String,
+    Schema.Record(Schema.String, Schema.Union([Schema.String, Schema.Finite])),
+  ])
+);
 
-type SearchCommandItem =
-  | {
-      excerpt: string;
-      href: string;
-      key: string;
-      label: string;
-      query: string;
-      type: "content";
-      value: string;
-    }
-  | {
-      href: string;
-      icon: SearchCommandIcon;
-      key: string;
-      label: string;
-      type: "navigation";
-      value: string;
-    };
+const SearchCommandContentItemSchema = Schema.Struct({
+  excerpt: Schema.String,
+  href: Schema.String,
+  key: Schema.String,
+  label: Schema.String,
+  query: Schema.String,
+  type: Schema.Literal("content"),
+  value: Schema.String,
+});
 
-interface SearchCommandGroup {
-  items: SearchCommandItem[];
-  value: string;
-}
+const SearchCommandNavigationItemSchema = Schema.Struct({
+  href: Schema.String,
+  icon: SearchCommandIconSchema,
+  key: Schema.String,
+  label: Schema.String,
+  type: Schema.Literal("navigation"),
+  value: Schema.String,
+});
+
+const SearchCommandItemSchema = Schema.Union([
+  SearchCommandContentItemSchema,
+  SearchCommandNavigationItemSchema,
+]);
+
+const SearchCommandGroupSchema = Schema.Struct({
+  items: Schema.Array(SearchCommandItemSchema),
+  value: Schema.String,
+});
+
+type SearchCommandItem = typeof SearchCommandItemSchema.Type;
+type SearchCommandGroup = typeof SearchCommandGroupSchema.Type;
 
 /**
  * Renders the global command menu used across the main app shell.
@@ -374,29 +389,20 @@ function getResultGroups(
   sectionLabels: Record<ContentSearchResultItem["section"], string>,
   query: string
 ): SearchCommandGroup[] {
-  const groups = new Map<
-    ContentSearchResultItem["section"],
-    SearchCommandGroup
-  >();
-
-  for (const result of results) {
-    const value = sectionLabels[result.section];
-    const group = groups.get(result.section) ?? { items: [], value };
-
-    group.items.push({
-      excerpt: result.excerpt,
-      href: `/${result.route}`,
-      key: result.content_id,
-      label: result.title,
-      query,
-      type: "content",
-      value: `${result.title} ${result.description} ${result.route}`,
-    });
-
-    groups.set(result.section, group);
-  }
-
-  return Array.from(groups.values());
+  return Arr.dedupe(results.map((result) => result.section)).map((section) => ({
+    items: results
+      .filter((result) => result.section === section)
+      .map((result) => ({
+        excerpt: result.excerpt,
+        href: `/${result.route}`,
+        key: result.content_id,
+        label: result.title,
+        query,
+        type: "content" as const,
+        value: `${result.title} ${result.description} ${result.route}`,
+      })),
+    value: sectionLabels[section],
+  }));
 }
 
 function searchCommandItemToString(item: SearchCommandItem) {

@@ -115,15 +115,16 @@ export default async function Page({
     <LayoutMaterial>
       <LayoutMaterialContent>
         <BreadcrumbHeader
+          action={
+            countryOptions.length > 0 ? (
+              <TryoutCountrySelector
+                currentValue={countryPath}
+                label={tTryouts("country-selector-label")}
+                options={countryOptions}
+              />
+            ) : undefined
+          }
           value={{
-            action:
-              countryOptions.length > 0 ? (
-                <TryoutCountrySelector
-                  currentValue={countryPath}
-                  label={tTryouts("country-selector-label")}
-                  options={countryOptions}
-                />
-              ) : undefined,
             homeLabel: tCommon("home"),
             items: [{ label: tCommon("try-out") }],
             menuLabel: tCommon("more"),

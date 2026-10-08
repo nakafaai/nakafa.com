@@ -89,14 +89,14 @@ export default async function Page({
     <LayoutMaterial>
       <LayoutMaterialContent>
         <BreadcrumbHeader
+          action={
+            <TryoutExamSelector
+              currentValue={examPath}
+              label={tTryouts("exam-selector-label")}
+              options={examOptions}
+            />
+          }
           value={{
-            action: (
-              <TryoutExamSelector
-                currentValue={examPath}
-                label={tTryouts("exam-selector-label")}
-                options={examOptions}
-              />
-            ),
             homeLabel: tCommon("home"),
             items: [
               {

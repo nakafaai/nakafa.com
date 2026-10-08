@@ -5,7 +5,7 @@ import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Option } from "effect";
+import { DateTime, Option } from "effect";
 import { updateMaterialGroupState } from "@/components/school/classes/materials/state";
 import { reorderPage } from "@/components/school/classes/order";
 
@@ -67,7 +67,7 @@ export function useUpdateMaterialGroupMutation() {
     refs.public.classes.materials.mutations.updateMaterialGroup
   );
   return (args: UpdateMaterialGroupArgs) => {
-    const updatedAt = Date.now();
+    const updatedAt = DateTime.toEpochMillis(DateTime.nowUnsafe());
     const optimisticMutation = updateMaterialGroup.withOptimisticUpdate(
       (localStore, optimisticArgs) => {
         updateMaterialGroupQueries(localStore, optimisticArgs, updatedAt);

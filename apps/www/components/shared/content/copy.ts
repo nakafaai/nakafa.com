@@ -16,10 +16,11 @@ export class OpenContentCopyError extends Schema.TaggedError<OpenContentCopyErro
     message: Schema.String,
   }
 ) {}
-interface OpenContentCopySource {
-  readonly content?: string;
-  readonly copySourceUrl?: null | string;
-}
+const OpenContentCopySourceSchema = Schema.Struct({
+  content: Schema.optionalKey(Schema.String),
+  copySourceUrl: Schema.optionalKey(Schema.NullOr(Schema.String)),
+});
+type OpenContentCopySource = typeof OpenContentCopySourceSchema.Type;
 /**
  * Loads the request module when a reader copies. It carries the HTTP client,
  * so a static import would add that client to the first JavaScript of every

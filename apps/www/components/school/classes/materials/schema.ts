@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { DateTime, Schema } from "effect";
 export const materialStatusSchema = Schema.Literals([
   "draft",
   "published",
@@ -19,7 +19,7 @@ const materialGroupForm = Schema.Struct({
       if (!data.scheduledAt) {
         return false;
       }
-      return data.scheduledAt > Date.now();
+      return data.scheduledAt > DateTime.toEpochMillis(DateTime.nowUnsafe());
     })
   )
 );
