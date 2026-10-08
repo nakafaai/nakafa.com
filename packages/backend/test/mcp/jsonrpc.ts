@@ -119,6 +119,39 @@ export const JSON_RPC_CASES: readonly McpCase[] = [
   },
   {
     answer: {
+      body: {
+        json: {
+          jsonrpc: "2.0",
+          id: 84,
+          error: { code: -32_601, message: "Method not found" },
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 404,
+    },
+    name: "a subscription request is refused as a method Nakafa does not serve",
+    request: modernPost(84, "subscriptions/listen"),
+  },
+  {
+    answer: {
+      body: {
+        json: {
+          jsonrpc: "2.0",
+          id: 85,
+          error: { code: -32_601, message: "Method not found" },
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 404,
+    },
+    name: "a completion request is refused as a method Nakafa does not serve",
+    request: modernPost(85, "completion/complete", {
+      argument: { name: "locale", value: "e" },
+      ref: { name: "nakafa_find_lesson", type: "ref/prompt" },
+    }),
+  },
+  {
+    answer: {
       body: { text: "" },
       headers: BODYLESS_RESPONSE_HEADERS,
       status: 202,
@@ -156,6 +189,82 @@ export const JSON_RPC_CASES: readonly McpCase[] = [
         accept: "application/json, text/event-stream",
         "content-type": "application/json",
         "mcp-method": "notifications/initialized",
+      },
+      method: "POST",
+    },
+  },
+  {
+    answer: {
+      body: {
+        json: {
+          error: {
+            code: -32_600,
+            message:
+              "Bad Request: the request body is not a valid JSON-RPC message",
+          },
+          id: null,
+          jsonrpc: "2.0",
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 400,
+    },
+    name: "an empty JSON object is refused as an invalid JSON-RPC message",
+    request: {
+      body: jsonBody({}),
+      headers: {
+        accept: "application/json, text/event-stream",
+        "content-type": "application/json",
+        "mcp-protocol-version": "2026-07-28",
+      },
+      method: "POST",
+    },
+  },
+  {
+    answer: {
+      body: {
+        json: {
+          error: {
+            code: -32_600,
+            message:
+              "Bad Request: the request body is not a valid JSON-RPC message",
+          },
+          id: 86,
+          jsonrpc: "2.0",
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 400,
+    },
+    name: "an object with an id and no method is refused as an invalid JSON-RPC message",
+    request: {
+      body: jsonBody({ id: 86, jsonrpc: "2.0" }),
+      headers: {
+        accept: "application/json, text/event-stream",
+        "content-type": "application/json",
+        "mcp-protocol-version": "2026-07-28",
+      },
+      method: "POST",
+    },
+  },
+  {
+    answer: {
+      body: { text: "" },
+      headers: BODYLESS_RESPONSE_HEADERS,
+      status: 202,
+    },
+    name: "a notification with an unknown method is accepted without a body",
+    request: {
+      body: jsonBody({
+        jsonrpc: "2.0",
+        method: "notifications/unknown",
+        params: { _meta: MCP_CLIENT_META },
+      }),
+      headers: {
+        accept: "application/json, text/event-stream",
+        "content-type": "application/json",
+        "mcp-method": "notifications/unknown",
+        "mcp-protocol-version": "2026-07-28",
       },
       method: "POST",
     },

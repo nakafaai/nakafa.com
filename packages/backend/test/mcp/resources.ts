@@ -137,7 +137,7 @@ export const RESOURCE_CASES: readonly McpCase[] = [
           id: 53,
           error: {
             code: -32_602,
-            message: "Resource not found: https://nakafa.com/en/articles",
+            message: "Resource 'https://nakafa.com/en/articles' not found",
             data: { uri: "https://nakafa.com/en/articles" },
           },
         },

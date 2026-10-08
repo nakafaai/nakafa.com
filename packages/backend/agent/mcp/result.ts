@@ -21,47 +21,60 @@ export function mcpToolOutputSchema<Success extends Schema.Constraint>(
   return Schema.Union([success, McpToolErrorStructuredContentSchema]);
 }
 
-/** Runs one Effect program at the MCP tool callback boundary. */
+/** Turns one Nakafa tool program into the CallToolResult a client receives. */
 export function runMcpTool<Output extends Readonly<Record<string, unknown>>>(
   program: Effect.Effect<Output, AgentToolError>,
   requestId: string
 ) {
-  return Effect.runPromise(
-    program.pipe(
-      Effect.matchCauseEffect({
-        onFailure: (cause) => {
-          const failure = cause.reasons.find(Cause.isFailReason);
-          if (failure) {
-            return Effect.succeed(toExpectedToolError(failure.error));
-          }
-          return Effect.logError(
-            "Unexpected Nakafa MCP tool failure.",
-            cause
-          ).pipe(
-            Effect.annotateLogs({
-              requestId,
-            }),
-            Effect.as(
-              toMcpToolError("Nakafa MCP could not complete this request.", [
-                `Retry later and include request ID ${requestId} with support.`,
-              ])
-            )
-          );
-        },
-        onSuccess: (output) =>
-          Effect.succeed({
-            content: [
-              {
-                text: JSON.stringify(output),
-                type: "text" as const,
-              },
-            ],
-            structuredContent: output,
+  return program.pipe(
+    Effect.matchCauseEffect({
+      onFailure: (cause) => {
+        const failure = cause.reasons.find(Cause.isFailReason);
+        if (failure) {
+          return Effect.succeed(toExpectedToolError(failure.error));
+        }
+        return Effect.logError(
+          "Unexpected Nakafa MCP tool failure.",
+          cause
+        ).pipe(
+          Effect.annotateLogs({
+            requestId,
           }),
-      })
-    )
+          Effect.as(
+            toMcpToolError("Nakafa MCP could not complete this request.", [
+              `Retry later and include request ID ${requestId} with support.`,
+            ])
+          )
+        );
+      },
+      onSuccess: toSuccessResult,
+    })
   );
 }
+
+const JsonText = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = Schema.fromJsonString(Schema.Json);
+
+/**
+ * Builds the successful result from the JSON text a client receives. The
+ * structured content is decoded from that same text: Nakafa's output types have
+ * optional fields that Schema.Json does not admit, and JSON encoding drops them
+ * exactly as the wire does.
+ */
+const toSuccessResult = Effect.fn("agent.mcp.toSuccessResult")(function* (
+  output: Readonly<Record<string, unknown>>
+) {
+  const text = yield* Schema.encodeUnknownEffect(JsonText)(output);
+  return {
+    content: [
+      {
+        text,
+        type: "text" as const,
+      },
+    ],
+    structuredContent: yield* Schema.decodeEffect(JsonValue)(text),
+  };
+}, Effect.orDie);
 
 /** Builds the established structured MCP tool error shape. */
 export function toMcpToolError(
@@ -77,7 +90,7 @@ export function toMcpToolError(
   return {
     content: [
       {
-        text: JSON.stringify(structuredContent),
+        text: Schema.encodeUnknownSync(JsonText)(structuredContent),
         type: "text" as const,
       },
     ],

@@ -158,7 +158,7 @@ describe("MCP response boundary", () => {
       const request = new Request("https://mcp.nakafa.com/mcp", {
         headers: {
           "access-control-request-headers":
-            "Content-Type, X-Unknown, MCP-Param-Topic",
+            "Content-Type, X-Unknown, MCP-Param-Topic, Mcp-Session-Id, Last-Event-ID",
           origin: "https://www.nakafa.com",
         },
       });

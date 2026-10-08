@@ -14,9 +14,9 @@ export const DISCOVERY_CASES: readonly McpCase[] = [
           result: {
             supportedVersions: ["2026-07-28"],
             capabilities: {
-              tools: { listChanged: true },
-              resources: { listChanged: true },
-              prompts: { listChanged: true },
+              prompts: {},
+              resources: {},
+              tools: {},
             },
             instructions:
               "Use Nakafa for cited educational content, lessons, articles, try-outs, and reviewed Quran references. Search first. Pass content_id to the content tool only when the result includes markdown_url. Cite try-out catalog results by URL without requesting private attempt content. Every capability is public and read-only.",

@@ -1,7 +1,7 @@
 import { type McpCase, modernPost } from "@repo/backend/test/mcp/harness";
 import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
 
-/** Tool calls the SDK refuses before any Nakafa handler runs, and a call to a tool that does not exist. */
+/** Tool calls refused before any Nakafa read, and a call to a tool that does not exist. */
 export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
   {
     answer: {
@@ -11,10 +11,16 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: "Input validation error: Invalid arguments for tool nakafa_search_content: data/queries must be array",
+                text: '{"error":{"message":"Invalid Nakafa content search options.","suggestions":["Expected array\\n  at [\\"queries\\"]"]}}',
               },
             ],
             isError: true,
+            structuredContent: {
+              error: {
+                message: "Invalid Nakafa content search options.",
+                suggestions: ['Expected array\n  at ["queries"]'],
+              },
+            },
             resultType: "complete",
             _meta: {
               "io.modelcontextprotocol/serverInfo": {
@@ -47,10 +53,18 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: "Input validation error: Invalid arguments for tool nakafa_search_content: data/limit must be <= 10, data/limit must be null, data/limit must match a schema in anyOf",
+                text: '{"error":{"message":"Invalid Nakafa content search options.","suggestions":["Expected a number between 1 and 10\\n  at [\\"limit\\"]"]}}',
               },
             ],
             isError: true,
+            structuredContent: {
+              error: {
+                message: "Invalid Nakafa content search options.",
+                suggestions: [
+                  'Expected a number between 1 and 10\n  at ["limit"]',
+                ],
+              },
+            },
             resultType: "complete",
             _meta: {
               "io.modelcontextprotocol/serverInfo": {
@@ -83,10 +97,16 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: "Input validation error: Invalid arguments for tool nakafa_get_content: data must have required property 'content_ref'",
+                text: '{"error":{"message":"Invalid Nakafa content read options.","suggestions":["Missing key\\n  at [\\"content_ref\\"]"]}}',
               },
             ],
             isError: true,
+            structuredContent: {
+              error: {
+                message: "Invalid Nakafa content read options.",
+                suggestions: ['Missing key\n  at ["content_ref"]'],
+              },
+            },
             resultType: "complete",
             _meta: {
               "io.modelcontextprotocol/serverInfo": {
@@ -119,10 +139,16 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: "Input validation error: Invalid arguments for tool nakafa_get_taxonomy: data/locale must be equal to one of the allowed values, data/locale must be null, data/locale must match a schema in anyOf",
+                text: '{"error":{"message":"Invalid Nakafa taxonomy options.","suggestions":["Expected \\"en\\" | \\"id\\" | \\"de\\"\\n  at [\\"locale\\"]"]}}',
               },
             ],
             isError: true,
+            structuredContent: {
+              error: {
+                message: "Invalid Nakafa taxonomy options.",
+                suggestions: ['Expected "en" | "id" | "de"\n  at ["locale"]'],
+              },
+            },
             resultType: "complete",
             _meta: {
               "io.modelcontextprotocol/serverInfo": {
@@ -155,10 +181,16 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: "Input validation error: Invalid arguments for tool nakafa_get_quran_reference: data must have required property 'surah'",
+                text: '{"error":{"message":"Invalid Nakafa Quran reference options.","suggestions":["Missing key\\n  at [\\"surah\\"]"]}}',
               },
             ],
             isError: true,
+            structuredContent: {
+              error: {
+                message: "Invalid Nakafa Quran reference options.",
+                suggestions: ['Missing key\n  at ["surah"]'],
+              },
+            },
             resultType: "complete",
             _meta: {
               "io.modelcontextprotocol/serverInfo": {
@@ -194,10 +226,18 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: "Input validation error: Invalid arguments for tool nakafa_get_quran_reference: data/surah must be <= 114",
+                text: '{"error":{"message":"Invalid Nakafa Quran reference options.","suggestions":["Surah number must be between 1 and 114.\\n  at [\\"surah\\"]"]}}',
               },
             ],
             isError: true,
+            structuredContent: {
+              error: {
+                message: "Invalid Nakafa Quran reference options.",
+                suggestions: [
+                  'Surah number must be between 1 and 114.\n  at ["surah"]',
+                ],
+              },
+            },
             resultType: "complete",
             _meta: {
               "io.modelcontextprotocol/serverInfo": {
@@ -230,10 +270,16 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: "Input validation error: Invalid arguments for tool nakafa_get_content: data/content_ref must be string",
+                text: '{"error":{"message":"Invalid Nakafa content read options.","suggestions":["Expected string\\n  at [\\"content_ref\\"]"]}}',
               },
             ],
             isError: true,
+            structuredContent: {
+              error: {
+                message: "Invalid Nakafa content read options.",
+                suggestions: ['Expected string\n  at ["content_ref"]'],
+              },
+            },
             resultType: "complete",
             _meta: {
               "io.modelcontextprotocol/serverInfo": {
@@ -266,10 +312,18 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: "Input validation error: Invalid arguments for tool nakafa_get_taxonomy: data/locale must be string, data/locale must be equal to one of the allowed values, data/locale must be null, data/locale must match a schema in anyOf",
+                text: '{"error":{"message":"Invalid Nakafa taxonomy options.","suggestions":["Expected \\"en\\" | \\"id\\" | \\"de\\" | undefined\\n  at [\\"locale\\"]"]}}',
               },
             ],
             isError: true,
+            structuredContent: {
+              error: {
+                message: "Invalid Nakafa taxonomy options.",
+                suggestions: [
+                  'Expected "en" | "id" | "de" | undefined\n  at ["locale"]',
+                ],
+              },
+            },
             resultType: "complete",
             _meta: {
               "io.modelcontextprotocol/serverInfo": {
@@ -302,10 +356,16 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
             content: [
               {
                 type: "text",
-                text: "Input validation error: Invalid arguments for tool nakafa_get_quran_reference: data/surah must be integer",
+                text: '{"error":{"message":"Invalid Nakafa Quran reference options.","suggestions":["Expected number\\n  at [\\"surah\\"]"]}}',
               },
             ],
             isError: true,
+            structuredContent: {
+              error: {
+                message: "Invalid Nakafa Quran reference options.",
+                suggestions: ['Expected number\n  at ["surah"]'],
+              },
+            },
             resultType: "complete",
             _meta: {
               "io.modelcontextprotocol/serverInfo": {
@@ -338,7 +398,7 @@ export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
           id: 37,
           error: {
             code: -32_602,
-            message: "Tool nakafa_unknown_tool not found",
+            message: "Tool 'nakafa_unknown_tool' not found",
           },
         },
       },

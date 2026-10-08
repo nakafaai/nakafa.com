@@ -16,6 +16,7 @@ import {
   readMcpAnswer,
   sendMcpCase,
   sendMcpRequest,
+  withHeaders,
 } from "@repo/backend/test/mcp/harness";
 import { HTTP_CASES } from "@repo/backend/test/mcp/http";
 import { INVALID_TOOL_CALL_CASES } from "@repo/backend/test/mcp/invalid";
@@ -39,7 +40,6 @@ beforeEach(() => {
   vi.stubEnv("NAKAFA_MCP_ALLOWED_ORIGINS", undefined);
 });
 afterEach(() => {
-  vi.doUnmock("@repo/backend/agent/mcp/server");
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
@@ -83,7 +83,73 @@ describe("Nakafa MCP golden contract", () => {
   });
 });
 describe("Nakafa MCP transport", () => {
-  it.effect("rejects mismatched body framing before the protocol loader", () =>
+  it.effect(
+    "declares exactly the capabilities Nakafa serves in discovery",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* send(
+          createConvexTestWithBetterAuth(),
+          modernPost(76, "server/discover")
+        );
+        expect(response.status).toBe(200);
+        expect(yield* json(response)).toEqual(
+          expect.objectContaining({
+            id: 76,
+            result: expect.objectContaining({
+              capabilities: { prompts: {}, resources: {}, tools: {} },
+            }),
+          })
+        );
+      })
+  );
+  it.effect(
+    "keeps the engine answer for a discovery request with a mismatched header",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* send(
+          createConvexTestWithBetterAuth(),
+          withHeaders(modernPost(78, "server/discover"), {
+            "mcp-protocol-version": "2099-01-01",
+          })
+        );
+        const answer = yield* json(response);
+        expect(response.status).toBe(400);
+        expect(answer).toMatchObject({ error: { code: -32_020 } });
+        expect(answer).not.toHaveProperty("result");
+      })
+  );
+  it.effect("answers a modern POST that sends no Accept header", () =>
+    Effect.gen(function* () {
+      const response = yield* send(
+        createConvexTestWithBetterAuth(),
+        withHeaders(modernPost(72, "tools/list"), { accept: null })
+      );
+      expect(response.status).toBe(200);
+      expect(yield* json(response)).toMatchObject({
+        id: 72,
+        result: {
+          tools: expect.arrayContaining([
+            expect.objectContaining({ name: "nakafa_search_content" }),
+          ]),
+        },
+      });
+    })
+  );
+  it.effect("answers an allowed browser origin with that origin", () =>
+    Effect.gen(function* () {
+      const response = yield* send(
+        createConvexTestWithBetterAuth(),
+        withHeaders(modernPost(73, "tools/list"), {
+          origin: "https://nakafa.com",
+        })
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("access-control-allow-origin")).toBe(
+        "https://nakafa.com"
+      );
+    })
+  );
+  it.effect("rejects mismatched body framing before the protocol engine", () =>
     Effect.gen(function* () {
       const response = yield* send(createConvexTestWithBetterAuth(), {
         body: "{}",
@@ -93,26 +159,5 @@ describe("Nakafa MCP transport", () => {
       expect(response.status).toBe(400);
       expect(yield* text(response)).toBe("");
     })
-  );
-  it.effect(
-    "returns a sanitized retryable failure if the protocol module fails to load",
-    () =>
-      Effect.gen(function* () {
-        vi.doMock("@repo/backend/agent/mcp/server", () => {
-          throw new Error("private module initialization failure");
-        });
-        const response = yield* send(
-          createConvexTestWithBetterAuth(),
-          modernPost(99, "server/discover")
-        );
-        expect(response.status).toBe(503);
-        expect(yield* json(response)).toMatchObject({
-          id: 99,
-          error: {
-            code: -32_603,
-            message: "The MCP protocol runtime is unavailable.",
-          },
-        });
-      })
   );
 });

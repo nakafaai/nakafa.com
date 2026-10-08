@@ -1,16 +1,10 @@
 import {
-  type GetPromptResult,
-  INVALID_PARAMS,
-  type McpServer,
-  ProtocolError,
-} from "@modelcontextprotocol/server";
-import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { toMcpObjectSchema } from "@repo/backend/agent/mcp/schema";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
-import { Effect, Schema, Struct } from "effect";
+import { Context, Effect, Schema } from "effect";
+import { McpSchema, McpServer } from "effect/ai";
 
 const NonEmptyPromptStringSchema = Schema.Trim.pipe(
   Schema.check(Schema.isMinLength(1))
@@ -18,78 +12,80 @@ const NonEmptyPromptStringSchema = Schema.Trim.pipe(
 const FindLessonPromptArgsSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema.pipe(
     Schema.withDecodingDefaultType(Effect.succeed(ACTIVE_APP_LOCALE_CODES[0]))
-  ).annotate({
-    description: "Preferred content locale.",
-  }),
-  topic: NonEmptyPromptStringSchema.annotate({
-    description: "Learning topic or question to search.",
-  }),
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+  ),
+  topic: NonEmptyPromptStringSchema,
+});
 const AnswerFromContentPromptArgsSchema = Schema.Struct({
   content_ref: NakafaAgentContentRefInputSchema,
-  question: NonEmptyPromptStringSchema.annotate({
-    description: "Question that must be answered from the content.",
-  }),
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+  question: NonEmptyPromptStringSchema,
+});
 const QuranReferencePromptArgsSchema = Schema.Struct({
   from_verse: NonEmptyPromptStringSchema.pipe(
     Schema.withDecodingDefaultType(Effect.succeed("1"))
-  ).annotate({
-    description: "First verse number to include.",
-  }),
+  ),
   locale: ActiveAppLocaleCodeSchema.pipe(
     Schema.withDecodingDefaultType(Effect.succeed(ACTIVE_APP_LOCALE_CODES[0]))
-  ).annotate({
-    description: "Translation locale.",
-  }),
-  question: Schema.optional(
-    NonEmptyPromptStringSchema.annotate({
-      description: "Optional question about the Quran reference.",
-    })
   ),
-  surah: NonEmptyPromptStringSchema.annotate({
-    description: "Surah number.",
-  }),
-  to_verse: Schema.optional(
-    NonEmptyPromptStringSchema.annotate({
-      description: "Optional last verse number to include.",
-    })
-  ),
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+  question: Schema.optional(NonEmptyPromptStringSchema),
+  surah: NonEmptyPromptStringSchema,
+  to_verse: Schema.optional(NonEmptyPromptStringSchema),
+});
 
 /** Registers the three established read-only Nakafa workflow prompts. */
-export function registerNakafaMcpPrompts(server: McpServer) {
-  server.registerPrompt(
-    "nakafa_find_lesson",
-    {
-      argsSchema: toMcpObjectSchema(FindLessonPromptArgsSchema),
+export const registerNakafaMcpPrompts = Effect.fn(
+  "agent.mcp.registerNakafaMcpPrompts"
+)(function* () {
+  const server = yield* McpServer.McpServer;
+  yield* server.addPrompt({
+    annotations: Context.empty(),
+    completions: {},
+    handle: getFindLessonPrompt,
+    prompt: new McpSchema.Prompt({
+      arguments: [
+        { name: "locale", required: false },
+        { name: "topic", required: true },
+      ],
       description:
         "Guide an agent to search Nakafa lessons and choose relevant public content.",
+      name: "nakafa_find_lesson",
       title: "Find Nakafa Lesson",
-    },
-    (input) => Effect.runPromise(getFindLessonPrompt(input))
-  );
-  server.registerPrompt(
-    "nakafa_answer_from_content",
-    {
-      argsSchema: toMcpObjectSchema(AnswerFromContentPromptArgsSchema),
+    }),
+  });
+  yield* server.addPrompt({
+    annotations: Context.empty(),
+    completions: {},
+    handle: getAnswerFromContentPrompt,
+    prompt: new McpSchema.Prompt({
+      arguments: [
+        { name: "content_ref", required: true },
+        { name: "question", required: true },
+      ],
       description:
         "Guide an agent to answer a question from one retrieved Nakafa content item.",
+      name: "nakafa_answer_from_content",
       title: "Answer From Nakafa Content",
-    },
-    (input) => Effect.runPromise(getAnswerFromContentPrompt(input))
-  );
-  server.registerPrompt(
-    "nakafa_quran_reference",
-    {
-      argsSchema: toMcpObjectSchema(QuranReferencePromptArgsSchema),
+    }),
+  });
+  yield* server.addPrompt({
+    annotations: Context.empty(),
+    completions: {},
+    handle: getQuranReferencePrompt,
+    prompt: new McpSchema.Prompt({
+      arguments: [
+        { name: "from_verse", required: false },
+        { name: "locale", required: false },
+        { name: "question", required: false },
+        { name: "surah", required: true },
+        { name: "to_verse", required: false },
+      ],
       description:
         "Guide an agent to retrieve Quran verses with translation and citation.",
+      name: "nakafa_quran_reference",
       title: "Nakafa Quran Reference",
-    },
-    (input) => Effect.runPromise(getQuranReferencePrompt(input))
-  );
-}
+    }),
+  });
+});
+
 const getFindLessonPrompt = Effect.fn("agent.mcp.getFindLessonPrompt")(
   function* (input: unknown) {
     const { locale, topic } = yield* decodePromptArguments(
@@ -104,6 +100,7 @@ const getFindLessonPrompt = Effect.fn("agent.mcp.getFindLessonPrompt")(
     ]);
   }
 );
+
 const getAnswerFromContentPrompt = Effect.fn(
   "agent.mcp.getAnswerFromContentPrompt"
 )(function* (input: unknown) {
@@ -118,6 +115,7 @@ const getAnswerFromContentPrompt = Effect.fn(
     "Use `nakafa_get_content`, answer only from the returned Markdown, and cite the canonical URL.",
   ]);
 });
+
 const getQuranReferencePrompt = Effect.fn("agent.mcp.getQuranReferencePrompt")(
   function* (input: unknown) {
     const { from_verse, locale, question, surah, to_verse } =
@@ -136,8 +134,9 @@ const getQuranReferencePrompt = Effect.fn("agent.mcp.getQuranReferencePrompt")(
     ]);
   }
 );
-function promptResult(lines: readonly string[]): GetPromptResult {
-  return {
+
+function promptResult(lines: readonly string[]) {
+  return new McpSchema.GetPromptResult({
     messages: [
       {
         content: {
@@ -147,8 +146,9 @@ function promptResult(lines: readonly string[]): GetPromptResult {
         role: "user",
       },
     ],
-  };
+  });
 }
+
 function decodePromptArguments<
   TSchema extends Schema.ConstraintDecoder<unknown, never>,
 >(schema: TSchema, input: unknown, promptName: string) {
@@ -157,10 +157,9 @@ function decodePromptArguments<
   })(input).pipe(
     Effect.mapError(
       (cause) =>
-        new ProtocolError(
-          INVALID_PARAMS,
-          `Invalid arguments for prompt ${promptName}: ${cause.message}`
-        )
+        new McpSchema.InvalidParams({
+          message: `Invalid arguments for prompt ${promptName}: ${cause.message}`,
+        })
     )
   );
 }
