@@ -4,8 +4,7 @@ import {
 } from "@repo/backend/confect/routes/agent/mcp/response";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Array as Arr, Option, Predicate, Schema } from "effect";
-import { McpProtocol } from "effect/ai";
+import { Array as Arr, HashSet, Option, Predicate, Schema } from "effect";
 
 const MCP_PROTOCOL_VERSION_HEADER = "mcp-protocol-version";
 const PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
@@ -101,16 +100,27 @@ const JsonRpcRequest = Schema.Struct({
   method: Schema.String,
 });
 
+/** The only methods Nakafa serves. The engine would serve more; every other method is refused here. */
+const SERVED_METHODS = HashSet.fromIterable<string>([
+  "server/discover",
+  "tools/list",
+  "tools/call",
+  "resources/list",
+  "resources/templates/list",
+  "resources/read",
+  "prompts/list",
+  "prompts/get",
+]);
+
 /**
- * Answers a request for a method the protocol does not serve, with the answer
- * the SDK gave. The engine answers the same status and code with its own
- * wording and an extra member, so Nakafa answers first from the request table
- * of the protocol the engine serves. Notifications never reach this check.
+ * Refuses a request for a method Nakafa does not serve, before the engine sees
+ * it, with the status, code, and message that Nakafa refuses an unknown method
+ * with. Notifications never reach this check: they are acknowledged first.
  */
 export function refuseUnservedMethod(parsedBody: unknown) {
   if (
     !Schema.is(JsonRpcRequest)(parsedBody) ||
-    McpProtocol.v2026_07_28.clientRpcs.requests.has(parsedBody.method)
+    HashSet.has(SERVED_METHODS, parsedBody.method)
   ) {
     return Option.none();
   }

@@ -119,6 +119,39 @@ export const JSON_RPC_CASES: readonly McpCase[] = [
   },
   {
     answer: {
+      body: {
+        json: {
+          jsonrpc: "2.0",
+          id: 84,
+          error: { code: -32_601, message: "Method not found" },
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 404,
+    },
+    name: "a subscription request is refused as a method Nakafa does not serve",
+    request: modernPost(84, "subscriptions/listen"),
+  },
+  {
+    answer: {
+      body: {
+        json: {
+          jsonrpc: "2.0",
+          id: 85,
+          error: { code: -32_601, message: "Method not found" },
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 404,
+    },
+    name: "a completion request is refused as a method Nakafa does not serve",
+    request: modernPost(85, "completion/complete", {
+      argument: { name: "locale", value: "e" },
+      ref: { name: "nakafa_find_lesson", type: "ref/prompt" },
+    }),
+  },
+  {
+    answer: {
       body: { text: "" },
       headers: BODYLESS_RESPONSE_HEADERS,
       status: 202,
