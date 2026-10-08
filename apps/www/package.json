@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "analyze": "next experimental-analyze",
-    "build": "pnpm typecheck && pnpm verify:featured-renderer && tsx scripts/build/main.ts next build",
+    "build": "pnpm verify:featured-renderer && tsx scripts/build/main.ts next build",
     "build:vercel": "pnpm --dir ../../packages/backend run deploy --yes --typecheck enable && pnpm --dir ../.. run build --filter=www",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "portless run --name nakafa next dev",

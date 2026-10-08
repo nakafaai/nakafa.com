@@ -1,23 +1,29 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, Schema } from "effect";
 
-interface TouchPoint {
-  readonly x: number;
-  readonly y: number;
-}
+const TouchPointSchema = Schema.Struct({
+  x: Schema.Finite,
+  y: Schema.Finite,
+});
+
+type TouchPoint = typeof TouchPointSchema.Type;
 
 const ACTIVATION_PROBE_TIMEOUT_MILLISECONDS = 1000;
 const TOUCH_MOVE_STEPS = 5;
 
 /** How a press reaches its control. Unset options keep Playwright's defaults. */
-interface PressOptions {
+const PressOptionsSchema = Schema.Struct({
   /** Skips the wait for a navigation that the press starts. */
-  readonly noWaitAfter?: boolean;
+  noWaitAfter: Schema.optionalKey(Schema.Boolean),
   /** Where the press lands, in CSS pixels from the control's corner. */
-  readonly position?: { readonly x: number; readonly y: number };
+  position: Schema.optionalKey(
+    Schema.Struct({ x: Schema.Finite, y: Schema.Finite })
+  ),
   /** How many milliseconds the press may take before it fails. */
-  readonly timeout?: number;
-}
+  timeout: Schema.optionalKey(Schema.Finite),
+});
+
+type PressOptions = typeof PressOptionsSchema.Type;
 
 /** Clicks or taps a control with the given options. */
 export function press(
@@ -136,23 +142,27 @@ const dragTouch = Effect.fn("NakafaE2E.dragTouch")(function* (
 const SWIPE_DISTANCE = 320;
 
 /** The rectangle of one surface, in CSS pixels. */
-interface SurfaceBounds {
-  readonly height: number;
-  readonly width: number;
-  readonly x: number;
-  readonly y: number;
-}
+const SurfaceBoundsSchema = Schema.Struct({
+  height: Schema.Finite,
+  width: Schema.Finite,
+  x: Schema.Finite,
+  y: Schema.Finite,
+});
+
+type SurfaceBounds = typeof SurfaceBoundsSchema.Type;
 
 /** Where a downward swipe starts and which edge stops it. */
-interface SwipeDown {
+const SwipeDownSchema = Schema.Struct({
   /** Pixels below the surface's top edge where the touch starts. */
-  readonly inset: number;
+  inset: Schema.Finite,
   /**
    * The edge that stops the swipe: the viewport's bottom, or the surface's
    * bottom less four pixels.
    */
-  readonly stopAt: "surface" | "viewport";
-}
+  stopAt: Schema.Literals(["surface", "viewport"]),
+});
+
+type SwipeDown = typeof SwipeDownSchema.Type;
 
 /**
  * Swipes down through the middle of a surface, the way a learner dismisses a

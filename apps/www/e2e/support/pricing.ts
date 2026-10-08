@@ -1,23 +1,31 @@
 import { expect, type Page } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
-interface PricingRect {
-  height: number;
-  width: number;
-  x: number;
-  y: number;
-}
+const PricingRectSchema = Schema.Struct({
+  height: Schema.Finite,
+  width: Schema.Finite,
+  x: Schema.Finite,
+  y: Schema.Finite,
+});
 
-interface PricingGeometry {
-  plans: Record<string, PricingRect>;
-  slots: Record<string, PricingRect>;
-}
+type PricingRect = typeof PricingRectSchema.Type;
 
-interface PricingTransitionObservation {
-  after: PricingGeometry | null;
-  before: PricingGeometry | null;
-  layoutShift: number;
-}
+const PricingGeometrySchema = Schema.Struct({
+  plans: Schema.Record(Schema.String, PricingRectSchema),
+  slots: Schema.Record(Schema.String, PricingRectSchema),
+});
+
+type PricingGeometry = typeof PricingGeometrySchema.Type;
+
+// The page's observer writes these fields in place, so they stay mutable.
+const PricingTransitionObservationSchema = Schema.Struct({
+  after: Schema.mutableKey(Schema.NullOr(PricingGeometrySchema)),
+  before: Schema.mutableKey(Schema.NullOr(PricingGeometrySchema)),
+  layoutShift: Schema.mutableKey(Schema.Finite),
+});
+
+type PricingTransitionObservation =
+  typeof PricingTransitionObservationSchema.Type;
 
 declare global {
   interface Window {

@@ -10,6 +10,7 @@ import {
 import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
   type AppLocaleCode,
   AppLocaleSchema,
   type ArtifactLocaleSchema,
@@ -26,6 +27,7 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import {
   type ContentSnapshotSet,
+  ContentSnapshotSetSchema,
   inheritContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
@@ -35,6 +37,8 @@ import { testMaterialPublicPath } from "@repo/backend/test/content/material";
 import { Effect, Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
 export const TEST_MANIFEST_HASH = Sha256HashSchema.make(
   `sha256:${"1".repeat(64)}`
@@ -69,7 +73,7 @@ export function testRendererJson(
   componentName = "p"
 ) {
   const base = [componentName];
-  return JSON.stringify({
+  return encodeJson({
     base,
     domains: RENDERER_DOMAINS.map((name) => ({
       components: [],
@@ -80,29 +84,30 @@ export function testRendererJson(
     publishedDomains: ["mathematics"],
   });
 }
-interface ReleaseOptions {
-  readonly activeAppLocales?: readonly ActiveAppLocaleCode[] | undefined;
-  readonly baseManifestHash?: null | string | undefined;
-  readonly baseReleaseId?: null | string | undefined;
-  readonly baseResultCount?: number | undefined;
-  readonly baseResultDigest?: string | undefined;
-  readonly deleteCount?: number | undefined;
-  readonly itemCount?: number | undefined;
-  readonly manifestHash?: string | undefined;
-  readonly originKind?: "git" | "rollback" | undefined;
-  readonly originReleaseId?: string | undefined;
-  readonly projectionCount?: number | undefined;
-  readonly releaseId?: string | undefined;
-  readonly rendererHash?: string | undefined;
-  readonly resultCount?: number | undefined;
-  readonly resultDigest?: string | undefined;
-  readonly rollbackDigest?: string | undefined;
-  readonly routeCount?: number | undefined;
-  readonly routeDigest?: string | undefined;
-  readonly scope?: PublicationScope | undefined;
-  readonly snapshots?: ContentSnapshotSet | undefined;
-  readonly upsertCount?: number | undefined;
-}
+const ReleaseOptionsSchema = Schema.Struct({
+  activeAppLocales: Schema.optional(Schema.Array(ActiveAppLocaleCodeSchema)),
+  baseManifestHash: Schema.optional(Schema.NullOr(Schema.String)),
+  baseReleaseId: Schema.optional(Schema.NullOr(Schema.String)),
+  baseResultCount: Schema.optional(Schema.Finite),
+  baseResultDigest: Schema.optional(Schema.String),
+  deleteCount: Schema.optional(Schema.Finite),
+  itemCount: Schema.optional(Schema.Finite),
+  manifestHash: Schema.optional(Schema.String),
+  originKind: Schema.optional(Schema.Literals(["git", "rollback"])),
+  originReleaseId: Schema.optional(Schema.String),
+  projectionCount: Schema.optional(Schema.Finite),
+  releaseId: Schema.optional(Schema.String),
+  rendererHash: Schema.optional(Schema.String),
+  resultCount: Schema.optional(Schema.Finite),
+  resultDigest: Schema.optional(Schema.String),
+  rollbackDigest: Schema.optional(Schema.String),
+  routeCount: Schema.optional(Schema.Finite),
+  routeDigest: Schema.optional(Schema.String),
+  scope: Schema.optional(PublicationScopeSchema),
+  snapshots: Schema.optional(ContentSnapshotSetSchema),
+  upsertCount: Schema.optional(Schema.Finite),
+});
+type ReleaseOptions = typeof ReleaseOptionsSchema.Type;
 /** Creates canonical broad test scope plus every replaced snapshot family. */
 export function testPublicationScope(options?: {
   readonly families?: PublicationScope["families"] | undefined;
@@ -144,7 +149,7 @@ export function testReleaseJson({
   const origin = rollback
     ? { kind: "rollback", releaseId: originReleaseId ?? baseReleaseId }
     : { kind: "git", sha: "a".repeat(40) };
-  return JSON.stringify({
+  return encodeJson({
     keyId: "test-key",
     manifest: {
       activeAppLocales,
@@ -188,8 +193,8 @@ export function testReleaseJson({
  */
 export function testStoredReachability(releaseJson: string) {
   return releaseReachability(
-    Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-      JSON.parse(releaseJson)
+    Schema.decodeSync(Schema.fromJsonString(SignedContentReleaseSchema))(
+      releaseJson
     )
   );
 }
@@ -203,7 +208,7 @@ export function testRollbackJson(options?: {
   readonly releaseId?: string | undefined;
 }) {
   const index = options?.index ?? 0;
-  return JSON.stringify({
+  return encodeJson({
     index,
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
     snapshot: {
@@ -228,7 +233,7 @@ export function testUpsertJson(options?: {
 }) {
   const index = options?.index ?? 0;
   const artifactLocale = options?.artifactLocale ?? "en";
-  return JSON.stringify({
+  return encodeJson({
     change: {
       artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
       artifactLocale,
@@ -264,7 +269,7 @@ export function testRouteJson(options?: {
     operation: options?.operation ?? "bind",
     publicPath: options?.publicPath ?? testMaterialPublicPath(index, appLocale),
   };
-  return JSON.stringify({
+  return encodeJson({
     change,
     index,
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
@@ -278,7 +283,7 @@ export function testDeleteJson(options?: {
   readonly index?: number | undefined;
   readonly releaseId?: string | undefined;
 }) {
-  return JSON.stringify({
+  return encodeJson({
     change: {
       artifactLocale: options?.artifactLocale ?? "en",
       contentKey: options?.contentKey ?? "test:deleted",

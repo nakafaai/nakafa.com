@@ -171,15 +171,15 @@ export const makeArticleRuntimeSource = Effect.fn(
     categoryCount: rows.reduce((count, item) => count + item.category, 0),
     slot: fixture.state.articleSlot,
   }));
-  fixture.source.set("contentHeads", heads);
-  fixture.source.set("contentBindings", bindings);
-  fixture.source.set("contentArtifacts", artifacts);
-  fixture.source.set("articleCatalog", catalog);
-  fixture.source.set("articleCategories", [
+  MutableHashMap.set(fixture.source, "contentHeads", heads);
+  MutableHashMap.set(fixture.source, "contentBindings", bindings);
+  MutableHashMap.set(fixture.source, "contentArtifacts", artifacts);
+  MutableHashMap.set(fixture.source, "articleCatalog", catalog);
+  MutableHashMap.set(fixture.source, "articleCategories", [
     ...MutableHashMap.values(categories),
   ]);
-  fixture.source.set("articleBuckets", buckets);
-  fixture.source.set("contentIndex", search);
+  MutableHashMap.set(fixture.source, "articleBuckets", buckets);
+  MutableHashMap.set(fixture.source, "contentIndex", search);
   return { ...fixture, projections };
 });
 

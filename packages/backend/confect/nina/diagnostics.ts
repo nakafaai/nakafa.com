@@ -30,7 +30,6 @@ export const reportFailure = Effect.fn("nina.diagnostics.report")(function* (
     gateway_error_type: error.gateway?.type,
     gateway_status_code: error.gateway?.status,
     gateway_retryable: error.gateway?.retryable,
-    gateway_generation_id: error.gateway?.generation,
   };
   yield* Effect.logError("Nina response interrupted", {
     turnId: turn._id,

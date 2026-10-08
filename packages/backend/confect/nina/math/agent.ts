@@ -63,7 +63,6 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   const { model, timeout } = (yield* Gateway).language({
     purpose: "specialist",
     model: modelId,
-    space: { kind: "personal", userId },
   });
   const math = yield* MathService.make.pipe(
     Effect.mapError(makeMathGenerationError)

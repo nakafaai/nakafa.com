@@ -3388,6 +3388,7 @@ export declare const api: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -3496,6 +3497,7 @@ export declare const api: {
                   | "title"
                   | "nina-repair";
                 calls: number;
+                cost?: number;
                 input: number;
                 model: string;
                 output: number;
@@ -8526,6 +8528,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -8696,6 +8699,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -8849,6 +8853,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -9011,6 +9016,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -9181,6 +9187,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -9334,6 +9341,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -9502,6 +9510,7 @@ export declare const internal: {
               | "suggestions"
               | "title"
               | "nina-repair";
+            cost?: number;
             input: number;
             model: string;
             output: number;

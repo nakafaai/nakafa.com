@@ -4,22 +4,47 @@ import { toContextualMaterialHref } from "@repo/contents/route/material/context"
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 
-/** Only route identity and visible labels are needed for sibling navigation. */
-type MaterialNavigationRoute = Pick<
+/** Route identity that addresses one signed material in navigation. */
+type MaterialNavigationIdentity = Pick<
   MaterialLessonProjection,
-  "appLocale" | "order" | "parentPath" | "publicPath"
-> & {
-  readonly metadata: Pick<MaterialLessonProjection["metadata"], "title">;
-};
+  "appLocale" | "contentKey" | "materialKey" | "parentPath" | "publicPath"
+>;
+
+/** Sibling route identity with the one visible label navigation shows. */
+type MaterialNavigationRoute = Readonly<
+  ReturnType<typeof toMaterialNavigationRoute>
+>;
 
 /** Small public navigation model shared by the static shell and client controls. */
-export interface MaterialNavigationPage {
-  readonly kind: MaterialPageContent["kind"];
-  readonly route: Pick<
-    MaterialLessonProjection,
-    "appLocale" | "contentKey" | "materialKey" | "parentPath" | "publicPath"
-  >;
-  readonly siblings: readonly MaterialNavigationRoute[];
+export type MaterialNavigationPage = Readonly<
+  ReturnType<typeof toMaterialNavigationPage>
+>;
+
+/** Projects one signed route to the identity and label siblings need. */
+function toMaterialNavigationRoute(route: MaterialLessonProjection) {
+  return {
+    appLocale: route.appLocale,
+    metadata: { title: route.metadata.title },
+    order: route.order,
+    parentPath: route.parentPath,
+    publicPath: route.publicPath,
+  };
+}
+
+/** Projects the signed page to the navigation model client controls receive. */
+export function toMaterialNavigationPage(page: MaterialPageContent) {
+  const identity: MaterialNavigationIdentity = {
+    appLocale: page.route.appLocale,
+    contentKey: page.route.contentKey,
+    materialKey: page.route.materialKey,
+    parentPath: page.route.parentPath,
+    publicPath: page.route.publicPath,
+  };
+  return {
+    kind: page.kind,
+    route: identity,
+    siblings: page.siblings.map(toMaterialNavigationRoute),
+  };
 }
 
 const emptyItem = { href: "", title: "" };

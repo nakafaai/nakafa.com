@@ -1,4 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { getIncludedAttemptAccess } from "@repo/backend/confect/tryouts/access/impl";
 import { tryoutAttemptAccessSourceKindFree } from "@repo/backend/confect/tryouts/access/source";
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
@@ -12,21 +13,22 @@ import {
 import { createTryoutAttempt } from "@repo/backend/confect/tryouts/start/attempt";
 import { selectAttemptScale } from "@repo/backend/confect/tryouts/start/scale";
 import { loadTryoutStartSource } from "@repo/backend/confect/tryouts/start/source";
-import type {
-  AttemptAccessFields,
-  StartAttemptArgs,
-  StartAttemptResult,
+import {
+  type AttemptAccessFields,
+  type StartAttemptArgs,
+  type StartAttemptResult,
+  startAttemptArgsValidator,
 } from "@repo/backend/confect/tryouts/start/spec";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const ATTEMPT_DURATION_MS = 3 * 24 * 60 * 60 * 1000;
 type TryoutAttempt = Docs["tryoutAttempts"];
-interface StartTryoutAttemptInput {
-  readonly args: StartAttemptArgs;
-  readonly now: number;
-  readonly userId: Id<"users">;
-}
+const startTryoutAttemptInputSchema = Schema.Struct({
+  args: startAttemptArgsValidator,
+  now: Schema.Finite,
+  userId: IdSchema("users"),
+});
+type StartTryoutAttemptInput = typeof startTryoutAttemptInputSchema.Type;
 
 /** Starts or resumes one try-out attempt in the caller's atomic mutation. */
 export const startTryoutAttempt = Effect.fn("tryouts.start.startTryoutAttempt")(

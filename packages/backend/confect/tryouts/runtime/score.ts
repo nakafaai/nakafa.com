@@ -1,4 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id } from "@repo/backend/confect/_generated/id";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -19,6 +20,7 @@ import {
   loadAttemptIrtSource,
   loadSectionIrtSource,
   type TryoutIrtSource,
+  TryoutIrtSourceSchema,
 } from "@repo/backend/confect/tryouts/runtime/irt/items";
 import type { TryoutResponseIndex } from "@repo/backend/confect/tryouts/runtime/response";
 import {
@@ -26,30 +28,46 @@ import {
   readScoredAnswers,
   scoreAnswers,
 } from "@repo/backend/confect/tryouts/runtime/result";
-import type { TryoutScoringStrategy } from "@repo/backend/confect/tryouts/score";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, Struct } from "effect";
+import { tryoutScoringStrategyValidator } from "@repo/backend/confect/tryouts/score";
+import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
-type AnswerCountScoringStrategy = Exclude<TryoutScoringStrategy, "irt">;
-interface AnswerCountScoreSource {
-  readonly attemptId: Id<"tryoutAttempts">;
-  readonly kind: "answer-count";
-  readonly scoringStrategy: AnswerCountScoringStrategy;
-}
-interface IrtScoreSource {
-  readonly attemptId: Id<"tryoutAttempts">;
-  readonly irt: TryoutIrtSource;
-  readonly kind: "irt";
-  readonly scoringStrategy: "irt";
-}
-export type TryoutScoreSource = AnswerCountScoreSource | IrtScoreSource;
-interface AttemptScoreOwner {
-  readonly setIdentity: string;
-  readonly tryoutSnapshotId: string;
-}
+/** Keeps every stored strategy that counts answers; IRT scores through calibrated items. */
+type AnswerCountScoringStrategy = Exclude<
+  typeof tryoutScoringStrategyValidator.Type,
+  "irt"
+>;
+const AnswerCountScoringStrategySchema = Schema.Literals(
+  Arr.filter(
+    tryoutScoringStrategyValidator.literals,
+    (strategy): strategy is AnswerCountScoringStrategy => strategy !== "irt"
+  )
+);
+const AnswerCountScoreSourceSchema = Schema.Struct({
+  attemptId: Id("tryoutAttempts"),
+  kind: Schema.Literal("answer-count"),
+  scoringStrategy: AnswerCountScoringStrategySchema,
+});
+type AnswerCountScoreSource = typeof AnswerCountScoreSourceSchema.Type;
+const IrtScoreSourceSchema = Schema.Struct({
+  attemptId: Id("tryoutAttempts"),
+  irt: TryoutIrtSourceSchema,
+  kind: Schema.Literal("irt"),
+  scoringStrategy: Schema.Literal("irt"),
+});
+type IrtScoreSource = typeof IrtScoreSourceSchema.Type;
+const TryoutScoreSourceSchema = Schema.Union([
+  AnswerCountScoreSourceSchema,
+  IrtScoreSourceSchema,
+]);
+export type TryoutScoreSource = typeof TryoutScoreSourceSchema.Type;
+/** Score ownership fields copied from the immutable attempt. */
+type AttemptScoreOwner = Pick<
+  TryoutAttempt,
+  "setIdentity" | "tryoutSnapshotId"
+>;
 
 /** Hides persistence diagnostics from the attempt ownership boundary. */
 function toAttemptReadError(cause: unknown) {
@@ -89,7 +107,10 @@ export const loadSectionScoreSource = Effect.fn(
 /** Loads one owned attempt or rejects it before mutating runtime rows. */
 export const requireOwnedAttempt = Effect.fn(
   "tryouts.runtime.requireOwnedAttempt"
-)(function* (args: { attemptId: Id<"tryoutAttempts">; userId: Id<"users"> }) {
+)(function* (args: {
+  attemptId: TryoutAttempt["_id"];
+  userId: TryoutAttempt["userId"];
+}) {
   const database = yield* DatabaseReader;
   const attempt = yield* database
     .table("tryoutAttempts")
@@ -189,7 +210,7 @@ export const finalizeAttemptScore = Effect.fn(
   const score = yield* scoreTryoutSection({
     attempt: args.attempt,
     placements: args.responseIndex.placements,
-    responses: [...args.responseIndex.responses.values()],
+    responses: args.responseIndex.responses,
     source: args.source,
     totalQuestions: args.attempt.totalQuestions,
   });

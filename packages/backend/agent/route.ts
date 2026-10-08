@@ -1,19 +1,21 @@
 import {
-  type AgentEdgeContract,
+  AgentEdgeContractSchema,
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_EDGE_RELEASE_SHA_HEADER,
   VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
 } from "@repo/backend/agent/edge";
 import { createRoutes, deploymentEnv } from "@vercel/config/v1";
+import { Schema } from "effect";
 
-interface AgentEdgePath {
-  readonly source: string;
-  readonly suffix: string;
-}
-interface AgentEdgeRouteOptions {
-  readonly contract: AgentEdgeContract;
-  readonly paths: readonly AgentEdgePath[];
-}
+const AgentEdgePathSchema = Schema.Struct({
+  source: Schema.String,
+  suffix: Schema.String,
+});
+const AgentEdgeRouteOptionsSchema = Schema.Struct({
+  contract: AgentEdgeContractSchema,
+  paths: Schema.Array(AgentEdgePathSchema),
+});
+type AgentEdgeRouteOptions = typeof AgentEdgeRouteOptionsSchema.Type;
 
 /** Versioned public API paths and their stable protected-runtime destinations. */
 export const NAKAFA_API_EDGE_PATHS = [

@@ -46,7 +46,14 @@ import {
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime/values";
 import type { FunctionReturnType } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+/** Plain codec: parses the same text as JSON.parse, so each expected response keeps its exact values. */
+const decodeJson = Schema.decodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
 
 type RuntimeRow = Exclude<
   FunctionReturnType<
@@ -160,19 +167,10 @@ export function runtimeContentKey(
 
 /** Creates one exact public runtime request body. */
 export function publicRuntimeRequest() {
-  return JSON.stringify({
+  return encodeJson({
     delivery: "public",
     appLocale: "en",
     publicPath: TEST_RUNTIME_PATH,
-  });
-}
-
-/** Creates the exact public runtime request for the real pair-grouped article. */
-export function articleRuntimeRequest() {
-  return JSON.stringify({
-    delivery: "public",
-    appLocale: "en",
-    publicPath: TEST_ARTICLE_PATH,
   });
 }
 
@@ -181,13 +179,13 @@ export function runtimeCases(row: RuntimeRow) {
   const response = {
     activeManifestHash: row.activeManifestHash,
     activeReleaseId: row.activeReleaseId,
-    artifact: JSON.parse(row.artifactJson),
+    artifact: decodeJson(row.artifactJson),
     delivery: row.delivery,
     kind: "found",
-    projection: JSON.parse(row.projectionJson),
+    projection: decodeJson(row.projectionJson),
     projectionHash: row.projectionHash,
-    release: JSON.parse(row.releaseJson),
-    rendererManifest: JSON.parse(row.rendererJson),
+    release: decodeJson(row.releaseJson),
+    rendererManifest: decodeJson(row.rendererJson),
     sourcePath: row.sourcePath,
   };
   const idArtifact = testArtifactJson({
@@ -200,8 +198,8 @@ export function runtimeCases(row: RuntimeRow) {
       "locale",
       {
         ...response,
-        artifact: JSON.parse(idArtifact),
-        projection: JSON.parse(
+        artifact: decodeJson(idArtifact),
+        projection: decodeJson(
           testProjectionJson({
             contentKey: runtimeContentKey("public"),
             appLocale: "id",
@@ -214,7 +212,7 @@ export function runtimeCases(row: RuntimeRow) {
       "publicPath",
       {
         ...response,
-        projection: JSON.parse(
+        projection: decodeJson(
           testProjectionJson({
             contentKey: runtimeContentKey("public"),
             publicPath: "subjects/test/foreign",
@@ -323,7 +321,7 @@ export async function insertSignedRelease(ctx: MutationCtx) {
     throw new Error("Expected one runtime release.");
   }
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: JSON.stringify(TEST_RUNTIME_ENVELOPE),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    releaseJson: encodeJson(TEST_RUNTIME_ENVELOPE),
+    rendererJson: encodeJson(TEST_PROOF_RENDERER),
   });
 }

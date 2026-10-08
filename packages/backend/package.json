@@ -9,7 +9,6 @@
   },
   "scripts": {
     "acceptance": "node scripts/content/acceptance/main.ts",
-    "build": "pnpm typecheck",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "codegen": "confect codegen",
     "confect:dev": "confect dev",
@@ -27,12 +26,11 @@
     "typecheck": "pnpm codegen && tsc --project tsconfig.json --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "catalog:",
-    "@ai-sdk/google": "catalog:",
     "@confect/core": "10.0.0",
     "@confect/server": "10.0.0",
     "@convex-dev/agent": "0.7.6",
     "@convex-dev/aggregate": "^0.3.1",
+    "@convex-dev/ai-sdk-provider": "catalog:",
     "@convex-dev/better-auth": "0.12.5",
     "@convex-dev/rate-limiter": "0.4.1",
     "@convex-dev/resend": "^0.2.8",

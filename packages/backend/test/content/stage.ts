@@ -1,9 +1,9 @@
-import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
-import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import { ContentSnapshotSetSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { INITIAL_MODEL_SLOT } from "@repo/backend/confect/contentRelease/models/slot";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -16,35 +16,41 @@ import {
   testRendererJson,
   testStoredReachability,
 } from "@repo/backend/test/content/release";
+import { Schema } from "effect";
 
-interface StagedReleaseOptions {
-  readonly activeAppLocales?: readonly ActiveAppLocaleCode[];
-  readonly baseFamilies?: readonly ContentFamily[];
-  readonly checkedIndex?: number;
-  readonly checkedItems?: number;
-  readonly deleteCount?: number;
-  readonly itemCount?: number;
-  readonly originKind?: "git" | "rollback";
-  readonly originReleaseId?: string;
-  readonly projectionCount?: number;
-  readonly releaseId?: string;
-  readonly resultFamilies?: readonly ContentFamily[];
-  readonly role?: "candidate" | "recovery";
-  readonly routeCount?: number;
-  readonly scope?: PublicationScope;
-  readonly sequence?: number;
-  readonly snapshots?: ContentSnapshotSet;
-  readonly stagedArtifacts?: number;
-  readonly stagedDeletes?: number;
-  readonly stagedItems?: number;
-  readonly stagedProjections?: number;
-  readonly stagedRoutes?: number;
-  readonly stagedSnapshotBatches?: number;
-  readonly stagedSnapshotRows?: number;
-  readonly stagedUpserts?: number;
-  readonly status?: "staging" | "verified" | "verifying";
-  readonly upsertCount?: number;
-}
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const StagedReleaseOptionsSchema = Schema.Struct({
+  activeAppLocales: Schema.optionalKey(Schema.Array(ActiveAppLocaleCodeSchema)),
+  baseFamilies: Schema.optionalKey(Schema.Array(ContentFamilySchema)),
+  checkedIndex: Schema.optionalKey(Schema.Finite),
+  checkedItems: Schema.optionalKey(Schema.Finite),
+  deleteCount: Schema.optionalKey(Schema.Finite),
+  itemCount: Schema.optionalKey(Schema.Finite),
+  originKind: Schema.optionalKey(Schema.Literals(["git", "rollback"])),
+  originReleaseId: Schema.optionalKey(Schema.String),
+  projectionCount: Schema.optionalKey(Schema.Finite),
+  releaseId: Schema.optionalKey(Schema.String),
+  resultFamilies: Schema.optionalKey(Schema.Array(ContentFamilySchema)),
+  role: Schema.optionalKey(Schema.Literals(["candidate", "recovery"])),
+  routeCount: Schema.optionalKey(Schema.Finite),
+  scope: Schema.optionalKey(PublicationScopeSchema),
+  sequence: Schema.optionalKey(Schema.Finite),
+  snapshots: Schema.optionalKey(ContentSnapshotSetSchema),
+  stagedArtifacts: Schema.optionalKey(Schema.Finite),
+  stagedDeletes: Schema.optionalKey(Schema.Finite),
+  stagedItems: Schema.optionalKey(Schema.Finite),
+  stagedProjections: Schema.optionalKey(Schema.Finite),
+  stagedRoutes: Schema.optionalKey(Schema.Finite),
+  stagedSnapshotBatches: Schema.optionalKey(Schema.Finite),
+  stagedSnapshotRows: Schema.optionalKey(Schema.Finite),
+  stagedUpserts: Schema.optionalKey(Schema.Finite),
+  status: Schema.optionalKey(
+    Schema.Literals(["staging", "verified", "verifying"])
+  ),
+  upsertCount: Schema.optionalKey(Schema.Finite),
+});
+type StagedReleaseOptions = typeof StagedReleaseOptionsSchema.Type;
 
 /** Inserts one pending candidate slot with caller-owned frozen envelope bytes. */
 export async function insertSignedCandidate(
@@ -61,7 +67,7 @@ export async function insertSignedCandidate(
     checkedItems: 0,
     createdAt: now,
     releaseId,
-    releaseJson: JSON.stringify(release),
+    releaseJson: encodeJson(release),
     rendererJson,
     resultFamilies: [...release.manifest.scope.families],
     role: "candidate",

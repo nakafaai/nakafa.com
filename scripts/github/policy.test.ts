@@ -124,8 +124,8 @@ describe("GitHub Action policy", () => {
             }),
           })
         );
-        // Only prepare generates the Convex bindings; the root build and start
-        // scripts would regenerate them twice more.
+        // Only prepare generates the Convex bindings; the acceptance:build and
+        // acceptance:start scripts would regenerate them again.
         expect(source).not.toContain("pnpm acceptance:build");
         expect(source).not.toContain("pnpm acceptance:start");
         expect(source).toContain(
@@ -136,6 +136,27 @@ describe("GitHub Action policy", () => {
         expect(source).toContain("pnpm acceptance:clean");
         expect(source).not.toContain("runtime:ci export");
       }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "checks the Convex bindings after the Quality typecheck, with no explicit codegen step",
+    () =>
+      readRepositoryFile("../../.github/workflows/ci.yml").pipe(
+        Effect.tap((source) =>
+          Effect.sync(() => {
+            const typecheck = source.indexOf("      - name: Typecheck\n");
+            const verify = source.indexOf(
+              "      - name: Verify generated backend contracts\n"
+            );
+            const tests = source.indexOf("      - name: Run tests\n");
+            expect(typecheck).toBeGreaterThan(-1);
+            expect(verify).toBeGreaterThan(typecheck);
+            expect(tests).toBeGreaterThan(verify);
+            expect(source).not.toContain("pnpm --filter @repo/backend codegen");
+          })
+        ),
+        Effect.provide(NodeServices.layer)
+      )
   );
 
   it.effect("runs every required check on each candidate head", () =>
