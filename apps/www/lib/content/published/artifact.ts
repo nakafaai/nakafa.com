@@ -18,7 +18,6 @@ import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/rendere
 
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Effect, Schema } from "effect";
-import type { ComponentType } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 import { resolveRendererComponents } from "@/lib/content/renderer/components";
@@ -42,51 +41,48 @@ const EvaluateCompiledCodeInputSchema = Schema.Struct({
   compiledCode: Schema.String,
   contentKey: ContentKeySchema,
 });
-type EvaluateCompiledCodeInput = typeof EvaluateCompiledCodeInputSchema.Type;
-
 /** Evaluates already-authenticated compiled code without changing its schema. */
-const evaluateCompiledCode: (
-  input: EvaluateCompiledCodeInput,
-  components: MDXComponents
-) => Effect.Effect<ComponentType, ContentExecutionError> = Effect.fn(
-  "NakafaContent.evaluateCompiledCode"
-)(function* (input: EvaluateCompiledCodeInput, components: MDXComponents) {
-  const module = yield* Effect.tryPromise({
-    catch: () =>
-      new ContentExecutionError({
-        contentKey: input.contentKey,
-        stage: "evaluate",
-      }),
-    try: () =>
-      run(input.compiledCode, {
-        Fragment,
-        jsx,
-        jsxs,
-        useMDXComponents: () => components,
-      }),
-  });
-
-  if (typeof module.default !== "function") {
-    return yield* new ContentExecutionError({
-      contentKey: input.contentKey,
-      stage: "module",
+const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
+  function* (
+    input: typeof EvaluateCompiledCodeInputSchema.Type & {
+      readonly components: MDXComponents;
+    }
+  ) {
+    const module = yield* Effect.tryPromise({
+      catch: () =>
+        new ContentExecutionError({
+          contentKey: input.contentKey,
+          stage: "evaluate",
+        }),
+      try: () =>
+        run(input.compiledCode, {
+          Fragment,
+          jsx,
+          jsxs,
+          useMDXComponents: () => input.components,
+        }),
     });
+
+    if (typeof module.default !== "function") {
+      return yield* new ContentExecutionError({
+        contentKey: input.contentKey,
+        stage: "module",
+      });
+    }
+    return module.default;
   }
-  return module.default;
-});
+);
 
 /** Evaluates an artifact already authenticated by its owning runtime boundary. */
 export const evaluateVerifiedArtifact = Effect.fn(
   "NakafaContent.evaluateVerifiedArtifact"
 )(function* (input: EvaluateArtifactInput) {
   const components = yield* resolveRendererComponents(input.artifact.payload);
-  const Content = yield* evaluateCompiledCode(
-    {
-      compiledCode: input.artifact.payload.compiledCode,
-      contentKey: input.artifact.payload.contentKey,
-    },
-    components
-  );
+  const Content = yield* evaluateCompiledCode({
+    compiledCode: input.artifact.payload.compiledCode,
+    components,
+    contentKey: input.artifact.payload.contentKey,
+  });
 
   return {
     Content,
