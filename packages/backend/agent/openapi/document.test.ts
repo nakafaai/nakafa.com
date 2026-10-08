@@ -12,14 +12,23 @@ import {
 } from "@repo/contents/agent/schema/api";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
 import { dereference, validate } from "@scalar/openapi-parser";
-import { Array as Arr, Effect, Predicate, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  HashSet,
+  Predicate,
+  Record as Rec,
+  Schema,
+} from "effect";
 
-interface OpenApiOperation {
-  readonly description: string;
-  readonly operationId: string;
-  readonly parameters: readonly unknown[];
-  readonly responses: Readonly<Record<string, unknown>>;
-}
+const OpenApiOperationSchema = Schema.Struct({
+  description: Schema.String,
+  operationId: Schema.String,
+  parameters: Schema.Array(Schema.Unknown),
+  responses: Schema.Record(Schema.String, Schema.Unknown),
+});
+type OpenApiOperation = typeof OpenApiOperationSchema.Type;
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Returns every method operation from the generated path map. */
 function readOperations() {
@@ -102,7 +111,7 @@ describe("Nakafa OpenAPI document", () => {
 
   it("resolves every schema without external or recursive references", () => {
     const result = dereference(NAKAFA_OPENAPI_DOCUMENT);
-    const serialized = JSON.stringify(result.schema);
+    const serialized = encodeJson(result.schema);
 
     expect(result.errors ?? []).toEqual([]);
     expect(result.schema).toBeDefined();
@@ -113,7 +122,7 @@ describe("Nakafa OpenAPI document", () => {
     const operations = readOperations();
     const operationIds = operations.map(({ operationId }) => operationId);
 
-    expect(new Set(operationIds).size).toBe(operationIds.length);
+    expect(Arr.dedupe(operationIds).length).toBe(operationIds.length);
     for (const operation of operations) {
       expect(operation.description.length).toBeGreaterThan(20);
       expect(operation.responses["200"]).toMatchObject({
@@ -132,7 +141,7 @@ describe("Nakafa OpenAPI document", () => {
           name: expect.any(String),
           schema: expect.any(Object),
         });
-        expect(JSON.stringify(parameter)).not.toContain('"type":"null"');
+        expect(encodeJson(parameter)).not.toContain('"type":"null"');
       }
     }
   });
@@ -161,7 +170,7 @@ describe("Nakafa OpenAPI document", () => {
         ],
       },
     });
-    expect(JSON.stringify(verse)).not.toContain('"translation":"');
+    expect(encodeJson(verse)).not.toContain('"translation":"');
   });
 
   it("derives the canonical public examples", () => {
@@ -211,13 +220,13 @@ describe("Nakafa OpenAPI document", () => {
         properties: expect.any(Object),
         type: "object",
       });
-      expect(JSON.stringify(definition)).not.toContain("$ref");
+      expect(encodeJson(definition)).not.toContain("$ref");
     }
   });
 
   it("documents the real edge and application rate-limit contracts", () => {
     const operations = readOperations();
-    const metered = new Set([
+    const metered = HashSet.fromIterable([
       "getNakafaContent",
       "getNakafaQuranReference",
       "searchNakafaContent",
@@ -228,7 +237,7 @@ describe("Nakafa OpenAPI document", () => {
     expect(NAKAFA_OPENAPI_DOCUMENT.components.securitySchemes).toEqual({});
     for (const operation of operations) {
       expect(operation.responses).toHaveProperty("403");
-      if (metered.has(operation.operationId)) {
+      if (HashSet.has(metered, operation.operationId)) {
         expect(operation.responses["429"]).toMatchObject({
           headers: { "Retry-After": { schema: { type: "string" } } },
         });

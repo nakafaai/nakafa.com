@@ -15,6 +15,10 @@ import { Schema } from "effect";
 
 /** Names one manifest field a retired content contract still carried. */
 const RETIRED_MANIFEST_FIELD = "rendererContractVersion";
+const UnknownJson = Schema.fromJsonString(Schema.Unknown);
+const decodeSignedRelease = Schema.decodeSync(
+  Schema.fromJsonString(SignedContentReleaseSchema)
+);
 
 /**
  * Inserts one stored release row that a later release treats as its base.
@@ -77,11 +81,11 @@ export async function retireStoredAnchorPayload(
   if (!release) {
     throw new Error(`Expected stored anchor ${releaseId}.`);
   }
-  const retired = JSON.parse(release.releaseJson) as {
+  const retired = Schema.decodeSync(UnknownJson)(release.releaseJson) as {
     manifest: Record<string, unknown>;
   };
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: JSON.stringify({
+    releaseJson: Schema.encodeSync(UnknownJson)({
       ...retired,
       manifest: { ...retired.manifest, [RETIRED_MANIFEST_FIELD]: "1.0.0" },
     }),
@@ -134,13 +138,13 @@ export async function insertAnchoredActiveRelease(
   if (!active) {
     throw new Error("Expected the anchored active release fixture.");
   }
+  // makePublicationReceipt types activeAppLocales as a mutable array, which the
+  // contract's non-empty tuple rejects, so the plain codec writes the same bytes.
   await ctx.db.patch("contentReleases", activeId, {
-    receiptJson: JSON.stringify(
+    receiptJson: Schema.encodeSync(UnknownJson)(
       makePublicationReceipt(
         Schema.decodeSync(contentReleases.Doc)(active),
-        Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-          JSON.parse(activeJson)
-        )
+        decodeSignedRelease(activeJson)
       )
     ),
   });

@@ -7,6 +7,9 @@ import {
   testRollbackJson,
   testStoredReachability,
 } from "@repo/backend/test/content/release";
+import { Schema } from "effect";
+
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 export const ABORT_RELEASE_ID = "release-abort";
 export const ABORT_ITEM_COUNT = 32;
@@ -20,7 +23,7 @@ export function abortContentKey(index: number) {
 /** Creates one staged upsert body with no authored educational content. */
 export function abortItemJson(index: number) {
   const contentKey = abortContentKey(index);
-  return JSON.stringify({
+  return encodeJson({
     change: {
       artifactHash: `sha256:${index.toString(16).padStart(64, "0")}`,
       artifactLocale: "en",
