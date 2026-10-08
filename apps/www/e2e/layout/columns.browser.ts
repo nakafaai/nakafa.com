@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
@@ -15,7 +15,7 @@ const visit = Effect.fn("NakafaE2E.visitLayoutRoute")(function* (
   page: Page,
   href: string
 ) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto(href));
   yield* waitForCommittedAppRouter(
     page,

@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
@@ -9,7 +9,7 @@ const readinessTimeoutMilliseconds = 15_000;
 const verifyCompactReferenceSheet = Effect.fn(
   "NakafaE2E.verifyCompactReferenceSheet"
 )(function* (page: Page, href: string, width: number) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(href, { waitUntil: "domcontentloaded" })
   );

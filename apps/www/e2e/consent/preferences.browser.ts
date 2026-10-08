@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -36,7 +36,7 @@ class ConsentDrawerBoundsMissing extends Schema.TaggedError<ConsentDrawerBoundsM
 const prepareConsentPage = Effect.fn("NakafaE2E.prepareConsentPage")(function* (
   page: Page
 ) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto("/en", { waitUntil: "domcontentloaded" })
   );

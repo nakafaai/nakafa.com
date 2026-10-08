@@ -1,6 +1,6 @@
 import { expect, type Page, type Request, test } from "@playwright/test";
 import { Effect, Option, Schema } from "effect";
-import { seedGrantedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -153,7 +153,7 @@ test("granted consent upgrades to attributed pageviews", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* seedGrantedAnalyticsConsent(page);
+              yield* seedAnalyticsConsent(page, "granted");
               const captured = yield* observeIngest(page);
               const response = yield* Effect.promise(() =>
                 page.goto("/en", { waitUntil: "domcontentloaded" })

@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 
 const LESSON =
@@ -102,7 +102,7 @@ const verifyComposer = Effect.fn("NakafaE2E.verifyNinaComposer")(function* (
 const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
   page: Page
 ) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto("/en"));
   yield* verifyComposer(page.locator('[data-slot="nina-showcase"]'));
 

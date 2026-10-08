@@ -1,7 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -81,7 +81,7 @@ function quranMeaningLocator(
 const verifyQuranInterpretationDrawer = Effect.fn(
   "NakafaE2E.verifyQuranInterpretationDrawer"
 )(function* (page: Page) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto("/id/quran/2", { waitUntil: "domcontentloaded" })
   );
@@ -141,7 +141,7 @@ const verifyQuranInterpretationDrawer = Effect.fn(
 const verifyQuranLocaleCoverage = Effect.fn(
   "NakafaE2E.verifyQuranLocaleCoverage"
 )(function* (page: Page, contract: QuranLocaleCase) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
 
   const href = `/${contract.locale}/quran/2`;
   const response = yield* Effect.promise(() =>
@@ -352,7 +352,7 @@ const verifyQuranLocaleCoverage = Effect.fn(
 const verifyQuranLayoutStability = Effect.fn(
   "NakafaE2E.verifyQuranLayoutStability"
 )(function* (page: Page) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
 
   // A short surah keeps the pagination in the first viewport, where a list
   // that grows after hydration would push it down.
@@ -380,7 +380,7 @@ const verifyQuranLayoutStability = Effect.fn(
  */
 const verifyQuranIndexEdges = Effect.fn("NakafaE2E.verifyQuranIndexEdges")(
   function* (page: Page) {
-    yield* seedDeniedAnalyticsConsent(page);
+    yield* seedAnalyticsConsent(page, "denied");
     const href = "/en/quran";
     yield* Effect.promise(() => page.goto(href));
     yield* waitForCommittedAppRouter(

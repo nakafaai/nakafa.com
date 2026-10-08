@@ -3,7 +3,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/interaction";
 
@@ -21,7 +21,7 @@ for (const viewport of targetViewports) {
       withObservedPageErrors(
         page,
         Effect.gen(function* () {
-          yield* seedDeniedAnalyticsConsent(page);
+          yield* seedAnalyticsConsent(page, "denied");
           yield* Effect.promise(() =>
             page.setViewportSize({
               height: viewport.height,
@@ -132,7 +132,7 @@ test("the language menu opens the same route in the chosen language", async ({
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedDeniedAnalyticsConsent(page);
+        yield* seedAnalyticsConsent(page, "denied");
         const response = yield* Effect.promise(() =>
           page.goto("/en/search", { waitUntil: "domcontentloaded" })
         );
@@ -171,7 +171,7 @@ test("provider failures land on one clean generic retry", async ({ page }) => {
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedDeniedAnalyticsConsent(page);
+        yield* seedAnalyticsConsent(page, "denied");
         const intent = "/en/search?q=geometry#results";
         const providerLanding = `/en/auth/error?${new URLSearchParams({
           error: "access_denied",
@@ -214,7 +214,7 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedDeniedAnalyticsConsent(page);
+        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.setViewportSize({ height: 900, width: 1440 })
         );
@@ -298,7 +298,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedDeniedAnalyticsConsent(page);
+        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.setViewportSize({ height: 900, width: 1440 })
         );
@@ -404,7 +404,7 @@ test("guest sidebar marks only the page the reader is on", async ({ page }) => {
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedDeniedAnalyticsConsent(page);
+        yield* seedAnalyticsConsent(page, "denied");
         yield* Effect.promise(() =>
           page.setViewportSize({ height: 900, width: 1440 })
         );

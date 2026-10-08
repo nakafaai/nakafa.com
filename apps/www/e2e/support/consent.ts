@@ -1,39 +1,28 @@
 import type { Page } from "@playwright/test";
 import {
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
+  type AnalyticsConsentDecision,
   createAnonymousAnalyticsConsent,
   encodeAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
 import { Effect } from "effect";
 
-/** Keeps non-consent browser suites isolated from the initial privacy prompt. */
-export const seedDeniedAnalyticsConsent = Effect.fn(
-  "NakafaE2E.seedDeniedAnalyticsConsent"
-)(function* (page: Page) {
-  const deniedConsent = yield* encodeAnonymousAnalyticsConsent(
-    createAnonymousAnalyticsConsent("denied", 1)
-  );
+/**
+ * Stores an anonymous consent decision before the first navigation. Suites
+ * that are not about consent seed a denial to keep the privacy prompt out of
+ * their way, and the analytics suite seeds a grant.
+ */
+export const seedAnalyticsConsent = Effect.fn("NakafaE2E.seedAnalyticsConsent")(
+  function* (page: Page, decision: AnalyticsConsentDecision) {
+    const consent = yield* encodeAnonymousAnalyticsConsent(
+      createAnonymousAnalyticsConsent(decision, 1)
+    );
 
-  yield* Effect.promise(() =>
-    page.addInitScript(({ key, value }) => localStorage.setItem(key, value), {
-      key: ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
-      value: deniedConsent,
-    })
-  );
-});
-
-/** Exercises the granted tier without depending on the privacy prompt. */
-export const seedGrantedAnalyticsConsent = Effect.fn(
-  "NakafaE2E.seedGrantedAnalyticsConsent"
-)(function* (page: Page) {
-  const grantedConsent = yield* encodeAnonymousAnalyticsConsent(
-    createAnonymousAnalyticsConsent("granted", 1)
-  );
-
-  yield* Effect.promise(() =>
-    page.addInitScript(({ key, value }) => localStorage.setItem(key, value), {
-      key: ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
-      value: grantedConsent,
-    })
-  );
-});
+    yield* Effect.promise(() =>
+      page.addInitScript(({ key, value }) => localStorage.setItem(key, value), {
+        key: ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
+        value: consent,
+      })
+    );
+  }
+);

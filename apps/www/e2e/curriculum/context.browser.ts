@@ -1,6 +1,6 @@
 import { expect, test, type WebSocketRoute } from "@playwright/test";
 import { Effect } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -58,7 +58,7 @@ test("material sidebar preserves verified curriculum context", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* seedDeniedAnalyticsConsent(page);
+              yield* seedAnalyticsConsent(page, "denied");
               const response = yield* Effect.promise(() =>
                 page.goto(CONTEXTUAL_MATERIAL_HREF, {
                   waitUntil: "domcontentloaded",

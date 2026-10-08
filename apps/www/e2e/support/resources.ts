@@ -1,6 +1,6 @@
 import type { Browser, Page, Request } from "@playwright/test";
 import { Clock, Duration, Effect, Option, Schema } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
   formatRequestFailure,
@@ -250,7 +250,7 @@ export const measureRouteJavascript = Effect.fn(
       (context) =>
         Effect.gen(function* () {
           const page = yield* Effect.promise(() => context.newPage());
-          yield* seedDeniedAnalyticsConsent(page);
+          yield* seedAnalyticsConsent(page, "denied");
           const applicationOrigin = new URL(baseURL).origin;
           const classifyRequest =
             createResourceRequestClassifier(applicationOrigin);

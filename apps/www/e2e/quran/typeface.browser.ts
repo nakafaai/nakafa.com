@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Deferred, Duration, Effect } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -44,7 +44,7 @@ const readTypefaceFiles = Effect.fn("NakafaE2E.readTypefaceFiles")(function* (
 const verifyQuranTypefaceScope = Effect.fn(
   "NakafaE2E.verifyQuranTypefaceScope"
 )(function* (page: Page) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
 
   const warnings = yield* collectUnusedPreloads(
     page,
@@ -118,7 +118,7 @@ const readQuranTextFonts = Effect.fn("NakafaE2E.readQuranTextFonts")(function* (
 const verifySurahPreloadsTypeface = Effect.fn(
   "NakafaE2E.verifySurahPreloadsTypeface"
 )(function* (page: Page) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const href = "/en/quran/2";
   yield* openSurah(page, href);
   const files = yield* readTypefaceFiles(page);
@@ -150,7 +150,7 @@ const verifySurahPreloadsTypeface = Effect.fn(
 const verifyLateTypefaceKeepsSurahStill = Effect.fn(
   "NakafaE2E.verifyLateTypefaceKeepsSurahStill"
 )(function* (page: Page, surah: number) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const href = `/en/quran/${surah}`;
   yield* openSurah(page, href);
   const files = yield* readTypefaceFiles(page);

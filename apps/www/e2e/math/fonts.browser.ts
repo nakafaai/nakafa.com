@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -69,7 +69,7 @@ const readMathFonts = Effect.fn("NakafaE2E.readMathFonts")(function* (
  */
 const verifyCachedLessonFonts = Effect.fn("NakafaE2E.verifyCachedLessonFonts")(
   function* (page: Page) {
-    yield* seedDeniedAnalyticsConsent(page);
+    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() =>
       expect
         .poll(
@@ -112,7 +112,7 @@ const verifyCachedLessonFonts = Effect.fn("NakafaE2E.verifyCachedLessonFonts")(
  */
 const verifyNavigationFonts = Effect.fn("NakafaE2E.verifyNavigationFonts")(
   function* (page: Page) {
-    yield* seedDeniedAnalyticsConsent(page);
+    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(lesson));
     yield* waitForCommittedAppRouter(
       page,

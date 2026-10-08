@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Duration, Effect } from "effect";
 import { waitForStableCanvas } from "@/e2e/support/canvas";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   readCumulativeLayoutShift,
   readPageLayoutShift,
@@ -50,7 +50,7 @@ export function hidePopoverApi() {
  */
 export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
   function* (page: Page, href: string, fullscreen: string) {
-    yield* seedDeniedAnalyticsConsent(page);
+    yield* seedAnalyticsConsent(page, "denied");
     const response = yield* Effect.promise(() =>
       page.goto(href, { waitUntil: "domcontentloaded" })
     );

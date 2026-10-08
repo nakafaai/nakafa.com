@@ -14,7 +14,7 @@ import {
   expectFramesToHold,
   waitForStableCanvas,
 } from "@/e2e/support/canvas";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 
@@ -100,7 +100,7 @@ const withObservedSceneDiagnostics = Effect.fn(
 const openLessonScenes = Effect.fn("NakafaE2E.openLessonScenes")(function* (
   page: Page
 ) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(pinnedRoutes.material.en, { waitUntil: "domcontentloaded" })
   );

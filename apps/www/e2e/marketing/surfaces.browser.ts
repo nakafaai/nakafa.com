@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/interaction";
 import {
@@ -53,7 +53,7 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
   page: Page,
   href: string
 ) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(href, { waitUntil: "domcontentloaded" })
   );
@@ -466,7 +466,7 @@ test("the footer theme selector loads its list on demand and applies a theme", a
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedDeniedAnalyticsConsent(page);
+        yield* seedAnalyticsConsent(page, "denied");
         const response = yield* Effect.promise(() =>
           page.goto("/en", { waitUntil: "domcontentloaded" })
         );

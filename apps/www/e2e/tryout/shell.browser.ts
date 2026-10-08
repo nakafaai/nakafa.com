@@ -1,7 +1,7 @@
 import { instant } from "@next/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, type MutableHashSet } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import {
   observeShell,
@@ -86,7 +86,7 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
   page: Page,
   hasTouch: boolean
 ) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   yield* observeShell(page);
   yield* openHub(page);
   const since = yield* readPageTime(page);
@@ -130,7 +130,7 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
 const verifyPrefetchedHeadings = Effect.fn(
   "NakafaE2E.verifyPrefetchedTryoutHeadings"
 )(function* (page: Page, hasTouch: boolean) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const requested = recordIntentRequests(page);
   yield* openHub(page);
   yield* openTrack(page, hasTouch);

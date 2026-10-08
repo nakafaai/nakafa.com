@@ -4,7 +4,7 @@ import { THREE_DIAGRAM_MINIMUM_FONT_SIZE } from "@repo/design-system/components/
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect, Schema } from "effect";
 import { expectCanvasToMove, waitForStableCanvas } from "@/e2e/support/canvas";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -122,7 +122,7 @@ const expectReadableLabel = Effect.fn("NakafaE2E.expectReadableLabel")(
 const expectBoundedTriangleZoom = Effect.fn(
   "NakafaE2E.expectBoundedTriangleZoom"
 )(function* (page: Page) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(TRIANGLE_ROUTE, { waitUntil: "domcontentloaded" })
   );
@@ -169,7 +169,7 @@ const expectBoundedTriangleZoom = Effect.fn(
 const expectStableCoordinateSystem = Effect.fn(
   "NakafaE2E.expectStableCoordinateSystem"
 )(function* (page: Page) {
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
     page.goto(LINEAR_SYSTEM_ROUTE, { waitUntil: "domcontentloaded" })
   );
@@ -324,7 +324,7 @@ test("published unit-circle controls preserve finite angles after clearing", asy
     withObservedPageErrors(
       page,
       Effect.gen(function* () {
-        yield* seedDeniedAnalyticsConsent(page);
+        yield* seedAnalyticsConsent(page, "denied");
         const response = yield* Effect.promise(() =>
           page.goto(UNIT_CIRCLE_ROUTE, { waitUntil: "domcontentloaded" })
         );

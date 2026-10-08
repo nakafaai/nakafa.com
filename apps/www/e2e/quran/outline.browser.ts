@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { expectUncovered, readLayoutShift } from "@/e2e/support/layout";
@@ -13,7 +13,7 @@ const appScriptPattern = /\/_next\/static\/chunks\/.+\.js$/;
 
 const verifyOutlineHydration = Effect.fn("NakafaE2E.verifyOutlineHydration")(
   function* (page: Page) {
-    yield* seedDeniedAnalyticsConsent(page);
+    yield* seedAnalyticsConsent(page, "denied");
     // Holding the app's scripts back paints the server-rendered outline first,
     // as a slow device does; its rows must not move when the page hydrates.
     const services = yield* Effect.context<never>();
@@ -92,7 +92,7 @@ const verifyVirtualVerseActive = Effect.fn(
   "NakafaE2E.verifyVirtualVerseActive"
 )(function* (page: Page) {
   const href = "/en/quran/2";
-  yield* seedDeniedAnalyticsConsent(page);
+  yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto(href));
   yield* waitForCommittedAppRouter(
     page,
@@ -147,7 +147,7 @@ test.describe("Desktop outline", () => {
 const verifyPhoneOutlineJump = Effect.fn("NakafaE2E.verifyPhoneOutlineJump")(
   function* (page: Page) {
     const href = pinnedRoutes.material.en;
-    yield* seedDeniedAnalyticsConsent(page);
+    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(href));
     yield* waitForCommittedAppRouter(
       page,
@@ -181,7 +181,7 @@ const verifyPhoneOutlineJump = Effect.fn("NakafaE2E.verifyPhoneOutlineJump")(
 const verifyPhoneVerseJump = Effect.fn("NakafaE2E.verifyPhoneVerseJump")(
   function* (page: Page) {
     const href = "/en/quran/2";
-    yield* seedDeniedAnalyticsConsent(page);
+    yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(href));
     yield* waitForCommittedAppRouter(
       page,
