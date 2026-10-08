@@ -136,29 +136,27 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     if (busy) {
       return;
     }
-    const program = startAttemptProgram(
-      {
-        args: {
-          countryKey: request.countryKey,
-          ...(directEntry
-            ? {}
-            : {
-                destinationSectionKey: request.destinationSectionKey,
-              }),
-          ...(request.entrySectionKey === undefined
-            ? {}
-            : {
-                entrySectionKey: request.entrySectionKey,
-              }),
-          examKey: request.examKey,
-          locale: request.locale,
-          setKey: request.setKey,
-          trackKey: request.trackKey,
-        },
-        failureMessage: t("start-error"),
+    const program = startAttemptProgram({
+      args: {
+        countryKey: request.countryKey,
+        ...(directEntry
+          ? {}
+          : {
+              destinationSectionKey: request.destinationSectionKey,
+            }),
+        ...(request.entrySectionKey === undefined
+          ? {}
+          : {
+              entrySectionKey: request.entrySectionKey,
+            }),
+        examKey: request.examKey,
+        locale: request.locale,
+        setKey: request.setKey,
+        trackKey: request.trackKey,
       },
-      startAttempt,
-      (result) =>
+      failureMessage: t("start-error"),
+      mutation: startAttempt,
+      onSuccess: (result) =>
         Effect.sync(() => {
           dialog.close();
           toast.success(
@@ -176,8 +174,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
             return;
           }
           router.push(href);
-        })
-    );
+        }),
+    });
     startTransition(() => Effect.runPromise(program));
   }
   return (

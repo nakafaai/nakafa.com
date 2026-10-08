@@ -27,15 +27,16 @@ type RestoreBody = (body: string) => void;
 type RestoreReplyTarget = (replyTarget: ForumReplyTarget) => void;
 
 /** Restores a failed optimistic submit without overwriting newer user input. */
-export function restoreForumPostInputDraft(
-  {
-    currentBody,
-    currentReplyTarget,
-    draft,
-  }: typeof RestoreForumPostInputDraftSchema.Type,
-  restoreBody: RestoreBody,
-  restoreReplyTarget: RestoreReplyTarget
-) {
+export function restoreForumPostInputDraft({
+  currentBody,
+  currentReplyTarget,
+  draft,
+  restoreBody,
+  restoreReplyTarget,
+}: typeof RestoreForumPostInputDraftSchema.Type & {
+  restoreBody: RestoreBody;
+  restoreReplyTarget: RestoreReplyTarget;
+}) {
   return Effect.sync(() => {
     if (currentBody.trim().length > 0 || currentReplyTarget) {
       return;

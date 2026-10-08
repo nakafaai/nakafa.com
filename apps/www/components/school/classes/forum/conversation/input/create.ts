@@ -49,7 +49,8 @@ export function useCreateForumPost() {
           { forumId: optimisticArgs.forumId },
           Option.some([
             ...posts,
-            createOptimisticForumPost(optimisticArgs, {
+            createOptimisticForumPost({
+              args: optimisticArgs,
               currentUser: {
                 _id: currentUser.appUser._id,
                 email: currentUser.appUser.email,

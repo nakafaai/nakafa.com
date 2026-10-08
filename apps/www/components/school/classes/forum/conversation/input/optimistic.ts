@@ -42,17 +42,15 @@ function getOptimisticForumPostSequence({
 }
 
 /** Builds the feed-row shape Convex returns so optimistic chat renders normally. */
-export function createOptimisticForumPost(
-  args: CreateForumPostArgs,
-  {
-    currentUser,
-    forum,
-    now,
-    parentPost,
-    postId,
-    posts,
-  }: OptimisticForumPostInput
-) {
+export function createOptimisticForumPost({
+  args,
+  currentUser,
+  forum,
+  now,
+  parentPost,
+  postId,
+  posts,
+}: OptimisticForumPostInput & { args: CreateForumPostArgs }) {
   return {
     _creationTime: now,
     _id: postId,

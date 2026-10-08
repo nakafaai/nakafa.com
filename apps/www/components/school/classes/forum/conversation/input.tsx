@@ -104,10 +104,13 @@ export function ForumPostInput() {
         replyTarget,
       } satisfies ForumPostInputDraft;
       /** Reports a failed submit without hiding already optimistic local feedback. */
-      const reportSubmitFailure = (
-        error: unknown,
-        draft?: ForumPostInputDraft
-      ) =>
+      const reportSubmitFailure = ({
+        draft,
+        error,
+      }: {
+        draft?: ForumPostInputDraft;
+        error: unknown;
+      }) =>
         Effect.all(
           [
             Effect.sync(() => {
@@ -117,22 +120,20 @@ export function ForumPostInput() {
               toast.error(t("create-post-failed"));
             }),
             draft
-              ? restoreForumPostInputDraft(
-                  {
-                    currentBody: form.state.values.body,
-                    currentReplyTarget:
-                      forumSessionStore.getState().replyTargetByForumId[
-                        forumId
-                      ] ?? null,
-                    draft,
-                  },
-                  (body) => {
+              ? restoreForumPostInputDraft({
+                  currentBody: form.state.values.body,
+                  currentReplyTarget:
+                    forumSessionStore.getState().replyTargetByForumId[
+                      forumId
+                    ] ?? null,
+                  draft,
+                  restoreBody: (body) => {
                     form.setFieldValue("body", body);
                   },
-                  (replyTarget) => {
+                  restoreReplyTarget: (replyTarget) => {
                     setForumReplyTarget(forumId, replyTarget);
-                  }
-                )
+                  },
+                })
               : Effect.void,
             Effect.sync(() => {
               requestAnimationFrame(() => {
@@ -164,24 +165,26 @@ export function ForumPostInput() {
       /** Clears the composer and keeps confirmed attachment posts visible. */
       const completeSubmit = () =>
         clearSubmittedDraft().pipe(Effect.andThen(placeConfirmedPost()));
-      const submitPost = submitForumPost(
-        {
+      const submitPost = submitForumPost({
+        files,
+        mutations: {
+          createPost,
+          discardForumUploads,
+          generateUploadUrl,
+          saveForumUpload,
+        },
+        post: {
           body: value.body,
           forumId,
           parentId: replyTarget?.postId,
         },
-        files,
-        createPost,
-        discardForumUploads,
-        generateUploadUrl,
-        saveForumUpload
-      ).pipe(Effect.provide(FetchClient));
+      }).pipe(Effect.provide(FetchClient));
       if (isTextOnlyPost) {
         Effect.runSync(clearSubmittedDraft());
         return Effect.runPromise(
           submitPost.pipe(
             Effect.matchEffect({
-              onFailure: (error) => reportSubmitFailure(error, draft),
+              onFailure: (error) => reportSubmitFailure({ draft, error }),
               onSuccess: placeConfirmedPost,
             })
           )
@@ -190,7 +193,7 @@ export function ForumPostInput() {
       return Effect.runPromise(
         submitPost.pipe(
           Effect.matchEffect({
-            onFailure: (error) => reportSubmitFailure(error),
+            onFailure: (error) => reportSubmitFailure({ error }),
             onSuccess: completeSubmit,
           })
         )

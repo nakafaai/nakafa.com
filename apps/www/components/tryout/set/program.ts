@@ -37,12 +37,13 @@ type StartAttemptSuccess = (result: StartAttemptResult) => Effect.Effect<void>;
 /** Runs the free start mutation and reports transport or source failures. */
 export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
   (
-    input: StartAttemptProgramInput,
-    mutation: StartAttemptMutation,
-    onSuccess: StartAttemptSuccess
+    input: StartAttemptProgramInput & {
+      readonly mutation: StartAttemptMutation;
+      readonly onSuccess: StartAttemptSuccess;
+    }
   ) =>
     Effect.tryPromise({
-      try: () => mutation(input.args),
+      try: () => input.mutation(input.args),
       catch: (cause) => new TryoutClientRequestError({ cause }),
     }).pipe(
       Effect.flatMap((result) =>
@@ -50,7 +51,7 @@ export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
           Effect.mapError((cause) => new TryoutClientRequestError({ cause }))
         )
       ),
-      Effect.tap((result) => onSuccess(result)),
+      Effect.tap((result) => input.onSuccess(result)),
       Effect.catchTag("TryoutClientRequestError", (error) =>
         reportRequestFailure(error, "tryout-start", input.failureMessage)
       ),

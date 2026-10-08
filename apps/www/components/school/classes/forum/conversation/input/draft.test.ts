@@ -14,18 +14,16 @@ describe("conversation/input/draft", () => {
       const restoreBody = vi.fn();
       const restoreReplyTarget = vi.fn();
 
-      yield* restoreForumPostInputDraft(
-        {
-          currentBody: "",
-          currentReplyTarget: null,
-          draft: {
-            body: "pending message",
-            replyTarget,
-          },
+      yield* restoreForumPostInputDraft({
+        currentBody: "",
+        currentReplyTarget: null,
+        draft: {
+          body: "pending message",
+          replyTarget,
         },
         restoreBody,
-        restoreReplyTarget
-      );
+        restoreReplyTarget,
+      });
 
       expect(restoreBody).toHaveBeenCalledWith("pending message");
       expect(restoreReplyTarget).toHaveBeenCalledWith(replyTarget);
@@ -37,18 +35,16 @@ describe("conversation/input/draft", () => {
       const restoreBody = vi.fn();
       const restoreReplyTarget = vi.fn();
 
-      yield* restoreForumPostInputDraft(
-        {
-          currentBody: "",
-          currentReplyTarget: null,
-          draft: {
-            body: "pending message",
-            replyTarget: null,
-          },
+      yield* restoreForumPostInputDraft({
+        currentBody: "",
+        currentReplyTarget: null,
+        draft: {
+          body: "pending message",
+          replyTarget: null,
         },
         restoreBody,
-        restoreReplyTarget
-      );
+        restoreReplyTarget,
+      });
 
       expect(restoreBody).toHaveBeenCalledWith("pending message");
       expect(restoreReplyTarget).not.toHaveBeenCalled();
@@ -60,21 +56,19 @@ describe("conversation/input/draft", () => {
       const restoreBody = vi.fn();
       const restoreReplyTarget = vi.fn();
 
-      yield* restoreForumPostInputDraft(
-        {
-          currentBody: "newer draft",
-          currentReplyTarget: replyTarget,
-          draft: {
-            body: "failed message",
-            replyTarget: {
-              postId: "post_2" as Id<"schoolClassForumPosts">,
-              userName: "Other User",
-            },
+      yield* restoreForumPostInputDraft({
+        currentBody: "newer draft",
+        currentReplyTarget: replyTarget,
+        draft: {
+          body: "failed message",
+          replyTarget: {
+            postId: "post_2" as Id<"schoolClassForumPosts">,
+            userName: "Other User",
           },
         },
         restoreBody,
-        restoreReplyTarget
-      );
+        restoreReplyTarget,
+      });
 
       expect(restoreBody).not.toHaveBeenCalled();
       expect(restoreReplyTarget).not.toHaveBeenCalled();
@@ -88,18 +82,16 @@ describe("conversation/input/draft", () => {
         const restoreBody = vi.fn();
         const restoreReplyTarget = vi.fn();
 
-        yield* restoreForumPostInputDraft(
-          {
-            currentBody: "new top-level draft",
-            currentReplyTarget: null,
-            draft: {
-              body: "failed reply",
-              replyTarget,
-            },
+        yield* restoreForumPostInputDraft({
+          currentBody: "new top-level draft",
+          currentReplyTarget: null,
+          draft: {
+            body: "failed reply",
+            replyTarget,
           },
           restoreBody,
-          restoreReplyTarget
-        );
+          restoreReplyTarget,
+        });
 
         expect(restoreBody).not.toHaveBeenCalled();
         expect(restoreReplyTarget).not.toHaveBeenCalled();

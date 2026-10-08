@@ -20,20 +20,18 @@ describe("conversation/input/optimistic", () => {
       ...createConversationTestForum(),
       nextPostSequence: 1,
     };
-    const post = createOptimisticForumPost(
-      {
+    const post = createOptimisticForumPost({
+      args: {
         body: "pesan pertama",
         forumId: forum._id,
       },
-      {
-        currentUser,
-        forum,
-        now: Date.UTC(2026, 6, 3, 12, 0, 0),
-        parentPost: undefined,
-        postId: optimisticPostId,
-        posts: [],
-      }
-    );
+      currentUser,
+      forum,
+      now: Date.UTC(2026, 6, 3, 12, 0, 0),
+      parentPost: undefined,
+      postId: optimisticPostId,
+      posts: [],
+    });
 
     expect(post.sequence).toBe(1);
   });
@@ -47,20 +45,18 @@ describe("conversation/input/optimistic", () => {
       createConversationTestPost({ postId: "post_1", sequence: 7 }),
       createConversationTestPost({ postId: "post_2", sequence: 8 }),
     ];
-    const post = createOptimisticForumPost(
-      {
+    const post = createOptimisticForumPost({
+      args: {
         body: "pesan baru",
         forumId: forum._id,
       },
-      {
-        currentUser,
-        forum,
-        now: Date.UTC(2026, 6, 3, 12, 0, 0),
-        parentPost: undefined,
-        postId: optimisticPostId,
-        posts,
-      }
-    );
+      currentUser,
+      forum,
+      now: Date.UTC(2026, 6, 3, 12, 0, 0),
+      parentPost: undefined,
+      postId: optimisticPostId,
+      posts,
+    });
 
     expect(post.sequence).toBe(20);
   });
@@ -72,21 +68,19 @@ describe("conversation/input/optimistic", () => {
       sequence: 8,
     });
     const posts = [parentPost];
-    const post = createOptimisticForumPost(
-      {
+    const post = createOptimisticForumPost({
+      args: {
         body: "reply sekarang",
         forumId: forum._id,
         parentId: parentPost._id,
       },
-      {
-        currentUser,
-        forum,
-        now: Date.UTC(2026, 6, 3, 12, 0, 0),
-        parentPost,
-        postId: optimisticPostId,
-        posts,
-      }
-    );
+      currentUser,
+      forum,
+      now: Date.UTC(2026, 6, 3, 12, 0, 0),
+      parentPost,
+      postId: optimisticPostId,
+      posts,
+    });
 
     expect(post).toMatchObject({
       _id: optimisticPostId,

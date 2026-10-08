@@ -7,13 +7,7 @@ import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload"
 import { Effect, Layer, Result, Schema } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import type { HttpClientRequest } from "effect/http/HttpClientRequest";
-import {
-  type CreateForumPostMutation,
-  type DiscardForumUploadsMutation,
-  type GenerateUploadUrlMutation,
-  type SaveForumUploadMutation,
-  submitForumPost,
-} from "@/components/school/classes/forum/conversation/input/submit";
+import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
 
 const mocks = vi.hoisted(() => ({
   captureException: vi.fn(),
@@ -28,9 +22,8 @@ const forumId = "forum_1" as Id<"schoolClassForums">;
 const postId = "post_1" as Id<"schoolClassForumPosts">;
 const storageId = "storage_1" as Id<"_storage">;
 const uploadUrl = "https://upload.example.test/file?token=signed-upload-secret";
+type SubmitForumPostInput = Parameters<typeof submitForumPost>[0];
 const failureJson = Schema.fromJsonString(Schema.Unknown);
-type SubmitForumPostDraft = Parameters<typeof submitForumPost>[0];
-type SubmitMutations = ReturnType<typeof makeDefaultMutations>;
 const TestHttpClient = Layer.succeed(
   HttpClient.HttpClient,
   HttpClient.make((request) =>
@@ -43,39 +36,23 @@ const TestHttpClient = Layer.succeed(
   )
 );
 /** Runs a forum submission with the deterministic test HTTP client. */
-function runSubmit(
-  post: SubmitForumPostDraft,
-  files: readonly FileWithPreview[],
-  mutations: SubmitMutations
+function runSubmit(input: SubmitForumPostInput) {
+  return submitForumPost(input).pipe(
+    Effect.provide(TestHttpClient),
+    Effect.result
+  );
+}
+/** Builds the default successful Convex mutation set for one submit test. */
+function makeMutations(
+  overrides: Partial<SubmitForumPostInput["mutations"]> = {}
 ) {
-  return submitForumPost(
-    post,
-    files,
-    mutations.createPost,
-    mutations.discardForumUploads,
-    mutations.generateUploadUrl,
-    mutations.saveForumUpload
-  ).pipe(Effect.provide(TestHttpClient), Effect.result);
-}
-/** Builds the default successful Convex mutation doubles for one submit test. */
-function makeDefaultMutations() {
   return {
-    createPost: vi.fn<CreateForumPostMutation>(() =>
-      Promise.resolve(Result.succeed(postId))
-    ),
-    discardForumUploads: vi.fn<DiscardForumUploadsMutation>(() =>
-      Promise.resolve(Result.succeed(null))
-    ),
-    generateUploadUrl: vi.fn<GenerateUploadUrlMutation>(),
-    saveForumUpload: vi.fn<SaveForumUploadMutation>(),
-  };
-}
-/** Builds the Convex mutation doubles for one submit test, with per-test overrides. */
-function makeMutations(overrides: Partial<SubmitMutations> = {}) {
-  return {
-    ...makeDefaultMutations(),
+    createPost: vi.fn(() => Promise.resolve(Result.succeed(postId))),
+    discardForumUploads: vi.fn(() => Promise.resolve(Result.succeed(null))),
+    generateUploadUrl: vi.fn(),
+    saveForumUpload: vi.fn(),
     ...overrides,
-  };
+  } satisfies SubmitForumPostInput["mutations"];
 }
 /** Builds one browser attachment fixture. */
 function makeFile(id: string) {
@@ -106,29 +83,29 @@ describe("submitForumPost", () => {
         const uploadId =
           "upload_native" as Id<"schoolClassForumPendingUploads">;
         const mutations = makeMutations({
-          generateUploadUrl: vi.fn<GenerateUploadUrlMutation>(async () =>
+          generateUploadUrl: vi.fn(async () =>
             stage === "url"
               ? Result.fail(rejected)
               : Result.succeed({ uploadId, uploadUrl })
           ),
-          saveForumUpload: vi.fn<SaveForumUploadMutation>(async () =>
+          saveForumUpload: vi.fn(async () =>
             stage === "save" ? Result.fail(rejected) : Result.succeed(uploadId)
           ),
-          createPost: vi.fn<CreateForumPostMutation>(async () =>
+          createPost: vi.fn(async () =>
             stage === "create" ? Result.fail(rejected) : Result.succeed(postId)
           ),
-          discardForumUploads: vi.fn<DiscardForumUploadsMutation>(async () =>
+          discardForumUploads: vi.fn(async () =>
             stage === "cleanup" ? Result.fail(rejected) : Result.succeed(null)
           ),
         });
         if (stage === "cleanup") {
           mocks.response.mockReturnValue(new Response(null, { status: 503 }));
         }
-        const result = yield* runSubmit(
-          { body: "Keep the draft", forumId, parentId: undefined },
-          [makeFile("native")],
-          mutations
-        );
+        const result = yield* runSubmit({
+          files: [makeFile("native")],
+          mutations,
+          post: { body: "Keep the draft", forumId, parentId: undefined },
+        });
         expect(Result.isFailure(result)).toBe(true);
         if (stage !== "create") {
           expect(mutations.createPost).not.toHaveBeenCalled();
@@ -153,11 +130,15 @@ describe("submitForumPost", () => {
     (parentId) =>
       Effect.gen(function* () {
         const mutations = makeMutations();
-        const result = yield* runSubmit(
-          { body: "hello", forumId, parentId },
-          [],
-          mutations
-        );
+        const result = yield* runSubmit({
+          files: [],
+          mutations,
+          post: {
+            body: "hello",
+            forumId,
+            parentId,
+          },
+        });
         expect(Result.isSuccess(result)).toBe(true);
         expect(vi.mocked(mutations.createPost).mock.calls).toStrictEqual([
           [
@@ -181,15 +162,17 @@ describe("submitForumPost", () => {
     () =>
       Effect.gen(function* () {
         const mutations = makeMutations({
-          createPost: vi.fn<CreateForumPostMutation>(() =>
-            Promise.reject(new Error("post failed"))
-          ),
+          createPost: vi.fn(() => Promise.reject(new Error("post failed"))),
         });
-        const result = yield* runSubmit(
-          { body: "hello", forumId, parentId: undefined },
-          [],
-          mutations
-        );
+        const result = yield* runSubmit({
+          files: [],
+          mutations,
+          post: {
+            body: "hello",
+            forumId,
+            parentId: undefined,
+          },
+        });
         expect(Result.isFailure(result)).toBe(true);
         expect(mutations.discardForumUploads).not.toHaveBeenCalled();
       })
@@ -212,7 +195,7 @@ describe("submitForumPost", () => {
         makeFile("fresh"),
       ] satisfies FileWithPreview[];
       const mutations = makeMutations({
-        generateUploadUrl: vi.fn<GenerateUploadUrlMutation>(() =>
+        generateUploadUrl: vi.fn(() =>
           Promise.resolve(
             Result.succeed({
               uploadId,
@@ -220,15 +203,17 @@ describe("submitForumPost", () => {
             })
           )
         ),
-        saveForumUpload: vi.fn<SaveForumUploadMutation>(() =>
-          Promise.resolve(Result.succeed(uploadId))
-        ),
+        saveForumUpload: vi.fn(() => Promise.resolve(Result.succeed(uploadId))),
       });
-      const result = yield* runSubmit(
-        { body: "with attachment", forumId, parentId: undefined },
+      const result = yield* runSubmit({
         files,
-        mutations
-      );
+        mutations,
+        post: {
+          body: "with attachment",
+          forumId,
+          parentId: undefined,
+        },
+      });
       expect(Result.isSuccess(result)).toBe(true);
       expect(mocks.request).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -269,7 +254,7 @@ describe("submitForumPost", () => {
         const files = [makeFile("first"), makeFile("second")];
         const mutations = makeMutations({
           generateUploadUrl: vi
-            .fn<GenerateUploadUrlMutation>()
+            .fn()
             .mockResolvedValueOnce(
               Result.succeed({
                 uploadId: successfulUploadId,
@@ -277,15 +262,19 @@ describe("submitForumPost", () => {
               })
             )
             .mockRejectedValueOnce(new Error("upload URL failed")),
-          saveForumUpload: vi.fn<SaveForumUploadMutation>(() =>
+          saveForumUpload: vi.fn(() =>
             Promise.resolve(Result.succeed(successfulUploadId))
           ),
         });
-        const result = yield* runSubmit(
-          { body: "", forumId, parentId: undefined },
+        const result = yield* runSubmit({
           files,
-          mutations
-        );
+          mutations,
+          post: {
+            body: "",
+            forumId,
+            parentId: undefined,
+          },
+        });
         expect(Result.isFailure(result)).toBe(true);
         expect(mutations.createPost).not.toHaveBeenCalled();
         expect(mutations.discardForumUploads).toHaveBeenCalledWith({
@@ -306,10 +295,8 @@ describe("submitForumPost", () => {
           })
         );
         const mutations = makeMutations({
-          discardForumUploads: vi.fn<DiscardForumUploadsMutation>(() =>
-            Promise.reject("cleanup failed")
-          ),
-          generateUploadUrl: vi.fn<GenerateUploadUrlMutation>(() =>
+          discardForumUploads: vi.fn(() => Promise.reject("cleanup failed")),
+          generateUploadUrl: vi.fn(() =>
             Promise.resolve(
               Result.succeed({
                 uploadId,
@@ -317,15 +304,19 @@ describe("submitForumPost", () => {
               })
             )
           ),
-          saveForumUpload: vi.fn<SaveForumUploadMutation>(() =>
+          saveForumUpload: vi.fn(() =>
             Promise.resolve(Result.succeed(uploadId))
           ),
         });
-        const result = yield* runSubmit(
-          { body: "", forumId, parentId: undefined },
+        const result = yield* runSubmit({
           files,
-          mutations
-        );
+          mutations,
+          post: {
+            body: "",
+            forumId,
+            parentId: undefined,
+          },
+        });
         expect(Result.isFailure(result)).toBe(true);
         if (Result.isSuccess(result)) {
           return;
@@ -353,7 +344,7 @@ describe("submitForumPost", () => {
         "upload_metadata" as Id<"schoolClassForumPendingUploads">;
       const files = [makeFile("metadata")];
       const mutations = makeMutations({
-        generateUploadUrl: vi.fn<GenerateUploadUrlMutation>(() =>
+        generateUploadUrl: vi.fn(() =>
           Promise.resolve(
             Result.succeed({
               uploadId,
@@ -361,15 +352,17 @@ describe("submitForumPost", () => {
             })
           )
         ),
-        saveForumUpload: vi.fn<SaveForumUploadMutation>(() =>
-          Promise.reject(new Error("save failed"))
-        ),
+        saveForumUpload: vi.fn(() => Promise.reject(new Error("save failed"))),
       });
-      const result = yield* runSubmit(
-        { body: "", forumId, parentId: undefined },
+      const result = yield* runSubmit({
         files,
-        mutations
-      );
+        mutations,
+        post: {
+          body: "",
+          forumId,
+          parentId: undefined,
+        },
+      });
       expect(Result.isFailure(result)).toBe(true);
       expect(mutations.discardForumUploads).toHaveBeenCalledWith({
         uploadIds: [uploadId],
@@ -383,10 +376,8 @@ describe("submitForumPost", () => {
         "upload_for_post" as Id<"schoolClassForumPendingUploads">;
       const files = [makeFile("attachment")];
       const mutations = makeMutations({
-        createPost: vi.fn<CreateForumPostMutation>(() =>
-          Promise.reject(new Error("post failed"))
-        ),
-        generateUploadUrl: vi.fn<GenerateUploadUrlMutation>(() =>
+        createPost: vi.fn(() => Promise.reject(new Error("post failed"))),
+        generateUploadUrl: vi.fn(() =>
           Promise.resolve(
             Result.succeed({
               uploadId,
@@ -394,15 +385,17 @@ describe("submitForumPost", () => {
             })
           )
         ),
-        saveForumUpload: vi.fn<SaveForumUploadMutation>(() =>
-          Promise.resolve(Result.succeed(uploadId))
-        ),
+        saveForumUpload: vi.fn(() => Promise.resolve(Result.succeed(uploadId))),
       });
-      const result = yield* runSubmit(
-        { body: "attachment", forumId, parentId: undefined },
+      const result = yield* runSubmit({
         files,
-        mutations
-      );
+        mutations,
+        post: {
+          body: "attachment",
+          forumId,
+          parentId: undefined,
+        },
+      });
       expect(Result.isFailure(result)).toBe(true);
       expect(mutations.discardForumUploads).toHaveBeenCalledWith({
         uploadIds: [uploadId],
