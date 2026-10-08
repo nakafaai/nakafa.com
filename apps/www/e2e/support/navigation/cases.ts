@@ -5,6 +5,7 @@ import { Duration, Effect, Schedule, Schema } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { activateUntilVisible, press } from "@/e2e/support/input";
 import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
+import { appRoutes } from "@/e2e/support/route";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;
@@ -293,7 +294,7 @@ const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>
     marker: { kind: "heading", text: HOMEPAGE_HEADING_PATTERN },
     name: "homepage",
     shell: "marketing",
-    sourceHref: "/en/quran",
+    sourceHref: appRoutes.quran,
   } satisfies NavigationTarget)
 );
 
@@ -309,7 +310,7 @@ const resolveQuran = Effect.fn("NakafaE2E.resolveQuran")(() =>
 
 const resolveTryout = Effect.fn("NakafaE2E.resolveTryout")(() =>
   Effect.succeed({
-    href: "/en/try-out",
+    href: appRoutes.tryout,
     marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
     name: "tryout",
     shell: "app",

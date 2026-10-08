@@ -3,9 +3,10 @@ import { Effect, MutableHashSet } from "effect";
 import { press } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/requests";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-export const hubHref = "/en/try-out";
+export const hubHref = appRoutes.tryout;
 export const countryHref = `${hubHref}/indonesia`;
 export const examHref = `${countryHref}/snbt`;
 export const trackHref = `${examHref}/2027`;

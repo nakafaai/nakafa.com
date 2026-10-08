@@ -5,6 +5,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const quranIndexUrlPattern = /\/id\/quran$/;
@@ -356,7 +357,7 @@ const verifyQuranLayoutStability = Effect.fn(
 
   // A short surah keeps the pagination in the first viewport, where a list
   // that grows after hydration would push it down.
-  for (const href of ["/en/quran/1", "/en/quran/2"]) {
+  for (const href of ["/en/quran/1", appRoutes.quranSurah]) {
     const response = yield* Effect.promise(() =>
       page.goto(href, { waitUntil: "domcontentloaded" })
     );
@@ -381,7 +382,7 @@ const verifyQuranLayoutStability = Effect.fn(
 const verifyQuranIndexEdges = Effect.fn("NakafaE2E.verifyQuranIndexEdges")(
   function* (page: Page) {
     yield* seedAnalyticsConsent(page, "denied");
-    const href = "/en/quran";
+    const href = appRoutes.quran;
     yield* Effect.promise(() => page.goto(href));
     yield* waitForCommittedAppRouter(
       page,

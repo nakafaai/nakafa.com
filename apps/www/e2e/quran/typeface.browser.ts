@@ -5,6 +5,7 @@ import { withObservedPageErrors } from "@/e2e/support/context";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** Longer than the 100 ms block period of optional display. */
@@ -53,11 +54,11 @@ const verifyQuranTypefaceScope = Effect.fn(
       // route; the prefetch must not preload the Quran typeface here.
       const quranPrefetch = page.waitForRequest(
         (request) =>
-          new URL(request.url()).pathname === "/en/quran" &&
+          new URL(request.url()).pathname === appRoutes.quran &&
           request.headers()["next-router-prefetch"] !== undefined,
         { timeout: readinessTimeoutMilliseconds }
       );
-      const href = "/en/try-out";
+      const href = appRoutes.tryout;
       yield* Effect.promise(() =>
         page.goto(href, { waitUntil: "domcontentloaded" })
       );
@@ -119,7 +120,7 @@ const verifySurahPreloadsTypeface = Effect.fn(
   "NakafaE2E.verifySurahPreloadsTypeface"
 )(function* (page: Page) {
   yield* seedAnalyticsConsent(page, "denied");
-  const href = "/en/quran/2";
+  const href = appRoutes.quranSurah;
   yield* openSurah(page, href);
   const files = yield* readTypefaceFiles(page);
   const preloads = yield* Effect.promise(() =>

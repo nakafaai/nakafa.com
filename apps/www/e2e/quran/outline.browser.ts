@@ -5,6 +5,7 @@ import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { expectUncovered, readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 // Long enough that the server-rendered page paints before it hydrates.
@@ -28,7 +29,7 @@ const verifyOutlineHydration = Effect.fn("NakafaE2E.verifyOutlineHydration")(
     );
 
     // Al-Baqarah virtualizes its long outline; Al-Fatihah renders all of it.
-    for (const href of ["/en/quran/2", "/en/quran/1"]) {
+    for (const href of [appRoutes.quranSurah, "/en/quran/1"]) {
       yield* Effect.promise(() =>
         page.goto(href, { waitUntil: "domcontentloaded" })
       );
@@ -91,7 +92,7 @@ const revealVerseEntry = Effect.fn("NakafaE2E.revealVerseEntry")(function* (
 const verifyVirtualVerseActive = Effect.fn(
   "NakafaE2E.verifyVirtualVerseActive"
 )(function* (page: Page) {
-  const href = "/en/quran/2";
+  const href = appRoutes.quranSurah;
   yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto(href));
   yield* waitForCommittedAppRouter(
@@ -180,7 +181,7 @@ const verifyPhoneOutlineJump = Effect.fn("NakafaE2E.verifyPhoneOutlineJump")(
  */
 const verifyPhoneVerseJump = Effect.fn("NakafaE2E.verifyPhoneVerseJump")(
   function* (page: Page) {
-    const href = "/en/quran/2";
+    const href = appRoutes.quranSurah;
     yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(href));
     yield* waitForCommittedAppRouter(

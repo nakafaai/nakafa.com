@@ -6,6 +6,7 @@ import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/input";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";
 
@@ -305,7 +306,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
           page.setViewportSize({ height: 900, width: 1440 })
         );
         const response = yield* Effect.promise(() =>
-          page.goto("/en/try-out", { waitUntil: "domcontentloaded" })
+          page.goto(appRoutes.tryout, { waitUntil: "domcontentloaded" })
         );
         yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
@@ -415,7 +416,7 @@ test("guest sidebar marks only the page the reader is on", async ({ page }) => {
         );
         const currentLinks = appSidebar.locator('a[aria-current="page"]');
         const response = yield* Effect.promise(() =>
-          page.goto("/en/quran", { waitUntil: "domcontentloaded" })
+          page.goto(appRoutes.quran, { waitUntil: "domcontentloaded" })
         );
         yield* Effect.sync(() => expect(response?.ok()).toBe(true));
         // The link to the page on screen is the only current one; the brand
@@ -427,7 +428,7 @@ test("guest sidebar marks only the page the reader is on", async ({ page }) => {
         // A surah keeps the Quran section highlighted, but the index link is
         // not the page the reader is on; the outline's link to this surah is.
         yield* Effect.promise(() =>
-          page.goto("/en/quran/2", { waitUntil: "domcontentloaded" })
+          page.goto(appRoutes.quranSurah, { waitUntil: "domcontentloaded" })
         );
         yield* Effect.promise(() =>
           expect(
@@ -437,7 +438,9 @@ test("guest sidebar marks only the page the reader is on", async ({ page }) => {
         yield* Effect.promise(() => expect(currentLinks).toHaveCount(0));
         yield* Effect.promise(() =>
           expect(
-            page.locator('[data-side="right"] a[href="/en/quran/2"]')
+            page.locator(
+              `[data-side="right"] a[href="${appRoutes.quranSurah}"]`
+            )
           ).toHaveAttribute("aria-current", "page")
         );
       })

@@ -3,6 +3,13 @@ import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 
+/** The English app routes that several suites open by name. */
+export const appRoutes = {
+  quran: "/en/quran",
+  quranSurah: "/en/quran/2",
+  tryout: "/en/try-out",
+} as const;
+
 /**
  * Seeds one consent decision before the first navigation, then opens `href`
  * and expects the server to answer it with a page.
