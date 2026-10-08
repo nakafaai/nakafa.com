@@ -10,9 +10,9 @@ import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import session from "@repo/backend/confect/middleware/session.impl";
+import type { StreamRequest } from "@repo/backend/confect/nina/contract/message";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/conversation.spec";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
-import type { StreamRequest } from "@repo/backend/confect/nina/schema";
 import {
   Array as Arr,
   Effect,
