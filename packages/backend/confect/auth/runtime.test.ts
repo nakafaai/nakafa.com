@@ -1,4 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
+import { convex } from "@convex-dev/better-auth/plugins";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
@@ -24,6 +25,15 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import type { User } from "better-auth";
 import { Array as Arr, Effect, pipe } from "effect";
+
+vi.mock("@convex-dev/better-auth/plugins", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@convex-dev/better-auth/plugins")>();
+  return {
+    ...actual,
+    convex: vi.fn(actual.convex),
+  };
+});
 
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -487,3 +497,30 @@ it("publishes only public key material from configured Better Auth signing keys"
   );
   expect(ids).toContain("convex");
 });
+it("passes a configured JWKS value to the convex plugin", async () => {
+  const jwks = JSON.stringify([{ id: "runtime-signing-key" }]);
+  vi.stubEnv("JWKS", jwks);
+  const t = createConvexTestWithBetterAuth();
+  await t.action((ctx) =>
+    Effect.runPromise(
+      Effect.sync(() => createAuthOptions(ctx)).pipe(Effect.asVoid)
+    )
+  );
+  expect(convex).toHaveBeenLastCalledWith(expect.objectContaining({ jwks }));
+});
+it.each([
+  ["unset", undefined],
+  ["empty", ""],
+])(
+  "leaves the convex plugin JWKS option out when JWKS is %s",
+  async (_label, jwks) => {
+    vi.stubEnv("JWKS", jwks);
+    const t = createConvexTestWithBetterAuth();
+    await t.action((ctx) =>
+      Effect.runPromise(
+        Effect.sync(() => createAuthOptions(ctx)).pipe(Effect.asVoid)
+      )
+    );
+    expect(vi.mocked(convex).mock.lastCall?.[0]).not.toHaveProperty("jwks");
+  }
+);
