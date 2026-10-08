@@ -18,24 +18,28 @@ import {
 } from "@/lib/content/preview/manifest";
 
 /** Exact public route identity checked before Convex route rejection. */
-interface PreviewRouteInput {
-  readonly appLocale: AppLocale;
-  readonly publicPath: string;
-}
+const PreviewRouteInputSchema = Schema.Struct({
+  appLocale: AppLocaleSchema,
+  publicPath: Schema.String,
+});
+type PreviewRouteInput = typeof PreviewRouteInputSchema.Type;
 /** Next-intl rewrite identity visible only on its internal second pass. */
-interface InternalRouteInput {
-  readonly localeHint: string | null;
-  readonly pathname: string;
-}
+const InternalRouteInputSchema = Schema.Struct({
+  localeHint: Schema.NullOr(Schema.String),
+  pathname: Schema.String,
+});
+type InternalRouteInput = typeof InternalRouteInputSchema.Type;
 /** Material page identity checked before consulting the static route catalog. */
-export interface MaterialPreviewRouteInput {
-  readonly params: {
-    readonly lesson?: readonly string[];
-    readonly locale: string;
-    readonly subject: string;
-    readonly topic: string;
-  };
-}
+const MaterialPreviewRouteInputSchema = Schema.Struct({
+  params: Schema.Struct({
+    lesson: Schema.optionalKey(Schema.Array(Schema.String)),
+    locale: Schema.String,
+    subject: Schema.String,
+    topic: Schema.String,
+  }),
+});
+export type MaterialPreviewRouteInput =
+  typeof MaterialPreviewRouteInputSchema.Type;
 /** Runtime contract for one concrete material preview route. */
 const MaterialPreviewStaticParamsSchema = Schema.Struct({
   lesson: Schema.NonEmptyArray(Schema.Trimmed.check(Schema.isNonEmpty())),
@@ -54,9 +58,10 @@ const ArticlePreviewStaticParamsSchema = Schema.Struct({
 export type ArticlePreviewStaticParams =
   typeof ArticlePreviewStaticParamsSchema.Type;
 /** Concrete child params Next prerenders for one selected Page preview. */
-export interface PagePreviewStaticParams {
-  readonly page: string[];
-}
+const PagePreviewStaticParamsSchema = Schema.Struct({
+  page: Schema.mutable(Schema.Array(Schema.String)),
+});
+export type PagePreviewStaticParams = typeof PagePreviewStaticParamsSchema.Type;
 /** Reads the single selected locale used to prerender the preview app shell. */
 export function readPreviewStaticLocaleParams() {
   return readPreviewManifestForPrerender().then((manifest) => {

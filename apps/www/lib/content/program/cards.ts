@@ -4,7 +4,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { MaterialList } from "@repo/contents/curriculum/list";
 import { toContextualMaterialHref } from "@repo/contents/route/material/context";
-import { Effect } from "effect";
+import { Array as Arr, Effect, MutableHashSet } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import type { PublishedCurriculumRoute } from "@/lib/content/program/decode";
@@ -57,10 +57,10 @@ const selectMaterialRoutes = Effect.fn("NakafaProgram.selectMaterialRoutes")(
     if (matchingParent.length > 0) {
       return materialGroup;
     }
-    const currentParents = new Set(
+    const currentParents = Arr.dedupe(
       materialGroup.map(({ parentPath }) => parentPath)
     );
-    if (currentParents.size === 1) {
+    if (currentParents.length === 1) {
       return materialGroup;
     }
     return yield* new PublishedProjectionError({ appLocale, publicPath });
@@ -72,13 +72,13 @@ const readGroupMaterialPaths = Effect.fn(
   "NakafaProgram.readGroupMaterialPaths"
 )(function* (
   contexts: readonly PublishedCurriculumRoute[],
-  materialsByKey: ReadonlyMap<string, readonly MaterialLessonProjection[]>,
+  materials: readonly MaterialLessonProjection[],
   locale: Locale,
   publicPath: PublishedCurriculumRoute["publicPath"]
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   let hasMaterialContext = false;
-  const selected = new Set<string>();
+  const selected = MutableHashSet.empty<string>();
   for (const context of contexts) {
     if (!context.materialKey) {
       continue;
@@ -90,11 +90,13 @@ const readGroupMaterialPaths = Effect.fn(
     const owned = yield* selectMaterialRoutes({
       canonicalPath: context.canonicalPath,
       locale,
-      materialGroup: materialsByKey.get(context.materialKey) ?? [],
+      materialGroup: materials.filter(
+        (material) => material.materialKey === context.materialKey
+      ),
       publicPath,
     });
     for (const material of owned) {
-      selected.add(material.publicPath);
+      MutableHashSet.add(selected, material.publicPath);
     }
   }
   return { hasMaterialContext, selected };
@@ -120,36 +122,19 @@ export const readPublishedMaterialCards = Effect.fn(
   if (!(route.level === "subject" || route.level === "course")) {
     return [] satisfies MaterialList;
   }
-  const contextsByGroup = new Map<
-    PublishedCurriculumRoute["materialContextPublicPath"],
-    PublishedCurriculumRoute[]
-  >();
-  for (const context of contexts) {
-    const members =
-      contextsByGroup.get(context.materialContextPublicPath) ?? [];
-    members.push(context);
-    contextsByGroup.set(context.materialContextPublicPath, members);
-  }
-  const materialsByKey = new Map<
-    MaterialLessonProjection["materialKey"],
-    MaterialLessonProjection[]
-  >();
-  for (const material of materials) {
-    const members = materialsByKey.get(material.materialKey) ?? [];
-    members.push(material);
-    materialsByKey.set(material.materialKey, members);
-  }
   const cards: MaterialList = [];
   for (const group of groups) {
     const { hasMaterialContext, selected } = yield* readGroupMaterialPaths(
-      contextsByGroup.get(group.publicPath) ?? [],
-      materialsByKey,
+      contexts.filter(
+        (context) => context.materialContextPublicPath === group.publicPath
+      ),
+      materials,
       locale,
       route.publicPath
     );
     const items: MaterialList[number]["items"] = [];
     for (const material of materials) {
-      if (!selected.has(material.publicPath)) {
+      if (!MutableHashSet.has(selected, material.publicPath)) {
         continue;
       }
       items.push({

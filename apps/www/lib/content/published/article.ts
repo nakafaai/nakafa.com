@@ -1,12 +1,6 @@
 import "server-only";
 
-import type {
-  ArticleMetadata,
-  ArticleProjection,
-  ArticleReference,
-} from "@nakafa/aksara-contracts/projection/article";
 import { Effect } from "effect";
-import type { ReactNode } from "react";
 import { readRenderedBody } from "@/lib/content/published/body";
 import {
   type PublishedContentData,
@@ -18,29 +12,6 @@ import { decodePublishedArticle } from "@/lib/content/published/projection";
 
 /** Exact public article identity pinned by an agent-facing catalog read. */
 export type PublishedArticleInput = PublishedContentInput;
-
-/** Verified article projection and signed artifact selected from active state. */
-export interface PublishedArticleData
-  extends Omit<PublishedContentData, "projection"> {
-  readonly projection: ArticleProjection;
-}
-
-/** Rendered article data consumed by the existing article page shell. */
-export interface PublishedArticleContent {
-  readonly activeReleaseId: PublishedArticleData["activeReleaseId"];
-  readonly artifactHash: PublishedArticleData["artifact"]["artifactHash"];
-  readonly body: ReactNode;
-  readonly categoryTitle: ArticleProjection["categoryTitle"];
-  readonly contentId: ArticleProjection["graph"]["assetId"];
-  readonly metadata: ArticleMetadata;
-  readonly official: boolean;
-  readonly projection: ArticleProjection;
-  readonly publicPath: string;
-  readonly rawMdx: string;
-  readonly references: readonly ArticleReference[];
-  readonly sourcePath: PublishedArticleData["sourcePath"];
-  readonly sourceRevision: PublishedArticleData["sourceRevision"];
-}
 
 /** Strictly narrows one verified runtime exchange to article data. */
 export const decodeArticleData = Effect.fn("NakafaContent.decodeArticleData")(
@@ -54,9 +25,14 @@ export const decodeArticleData = Effect.fn("NakafaContent.decodeArticleData")(
       rendererManifest: data.rendererManifest,
       sourcePath: data.sourcePath,
       sourceRevision: data.sourceRevision,
-    } satisfies PublishedArticleData;
+    };
   }
 );
+
+/** Verified article projection and signed artifact selected from active state. */
+export type PublishedArticleData = Effect.Success<
+  ReturnType<typeof decodeArticleData>
+>;
 
 /** Reads and narrows one article pinned to a selected signed release. */
 export const readPublishedArticle = Effect.fn(
@@ -86,5 +62,10 @@ export const renderArticleArtifact = Effect.fn(
     references: data.projection.references,
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,
-  } satisfies PublishedArticleContent;
+  };
 });
+
+/** Rendered article data consumed by the existing article page shell. */
+export type PublishedArticleContent = Effect.Success<
+  ReturnType<typeof renderArticleArtifact>
+>;

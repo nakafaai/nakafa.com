@@ -11,42 +11,41 @@ import "server-only";
 // https://mdxjs.com/packages/mdx/#run
 // react-doctor-disable-next-line react-doctor/mdx-ssr-execution-risk
 import { run } from "@mdx-js/mdx";
+import type { ArtifactVerificationRequest } from "@nakafa/aksara-contracts/artifact/spec";
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
-import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
-import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Effect } from "effect";
-import type { ComponentType } from "react";
+import { Effect, Schema } from "effect";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 import { resolveRendererComponents } from "@/lib/content/renderer/components";
 
-/** Inputs required to authenticate and execute one trusted content artifact. */
-interface ExecuteArtifactInput {
-  readonly artifact: unknown;
-  readonly rendererManifest: RendererManifestEnvelope;
-}
+/**
+ * Inputs required to authenticate and execute one trusted content artifact.
+ * The artifact stays unknown until the verifier decodes it against its contract.
+ */
+type ExecuteArtifactInput = Pick<
+  ArtifactVerificationRequest,
+  "rendererManifest"
+> &
+  Record<"artifact", unknown>;
 
-interface EvaluateArtifactInput {
-  readonly artifact: SignedContentArtifact;
-}
+const EvaluateArtifactInputSchema = Schema.Struct({
+  artifact: SignedContentArtifactSchema,
+});
+type EvaluateArtifactInput = typeof EvaluateArtifactInputSchema.Type;
 
-interface EvaluateCompiledCodeInput {
-  readonly compiledCode: string;
-  readonly components: MDXComponents;
-  readonly contentKey: SignedContentArtifact["payload"]["contentKey"];
-}
-
-/** Authenticated module and projections consumed by a Nakafa route shell. */
-export interface RenderableContent {
-  readonly artifact: SignedContentArtifact;
-  readonly Content: ComponentType;
-}
+const EvaluateCompiledCodeInputSchema = Schema.Struct({
+  compiledCode: Schema.String,
+  contentKey: ContentKeySchema,
+});
+type EvaluateCompiledCodeInput = typeof EvaluateCompiledCodeInputSchema.Type;
 
 /** Evaluates already-authenticated compiled code without changing its schema. */
 const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
-  function* (input: EvaluateCompiledCodeInput) {
+  function* (input: EvaluateCompiledCodeInput, components: MDXComponents) {
     const module = yield* Effect.tryPromise({
       catch: () =>
         new ContentExecutionError({
@@ -58,7 +57,7 @@ const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
           Fragment,
           jsx,
           jsxs,
-          useMDXComponents: () => input.components,
+          useMDXComponents: () => components,
         }),
     });
 
@@ -77,17 +76,24 @@ export const evaluateVerifiedArtifact = Effect.fn(
   "NakafaContent.evaluateVerifiedArtifact"
 )(function* (input: EvaluateArtifactInput) {
   const components = yield* resolveRendererComponents(input.artifact.payload);
-  const Content = yield* evaluateCompiledCode({
-    compiledCode: input.artifact.payload.compiledCode,
-    components,
-    contentKey: input.artifact.payload.contentKey,
-  });
+  const Content = yield* evaluateCompiledCode(
+    {
+      compiledCode: input.artifact.payload.compiledCode,
+      contentKey: input.artifact.payload.contentKey,
+    },
+    components
+  );
 
   return {
     Content,
     artifact: input.artifact,
-  } satisfies RenderableContent;
+  };
 });
+
+/** Authenticated module and projections consumed by a Nakafa route shell. */
+export type RenderableContent = Effect.Success<
+  ReturnType<typeof evaluateVerifiedArtifact>
+>;
 
 /**
  * Authenticates standalone reviewed MDX before server-only evaluation.
