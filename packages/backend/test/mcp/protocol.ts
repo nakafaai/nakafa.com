@@ -215,7 +215,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
       headers: BODYLESS_RESPONSE_HEADERS,
       status: 400,
     },
-    name: "a notification whose Mcp-Method names another method is refused without a body",
+    name: "a notification without the version header whose Mcp-Method names another method is refused without a body",
     request: {
       body: jsonBody({
         jsonrpc: "2.0",

@@ -21,9 +21,9 @@ import { HTTP_CASES } from "@repo/backend/test/mcp/http";
 import { INVALID_TOOL_CALL_CASES } from "@repo/backend/test/mcp/invalid";
 import { JSON_RPC_CASES } from "@repo/backend/test/mcp/jsonrpc";
 import { LIMIT_CASES } from "@repo/backend/test/mcp/limits";
-import { OPTIONS_TOOL_CALL_CASES } from "@repo/backend/test/mcp/options";
 import { PROMPT_CASES } from "@repo/backend/test/mcp/prompts";
 import { PROTOCOL_CASES } from "@repo/backend/test/mcp/protocol";
+import { REFUSED_TOOL_CALL_CASES } from "@repo/backend/test/mcp/refusals";
 import { RESOURCE_CASES } from "@repo/backend/test/mcp/resources";
 import { Effect } from "effect";
 
@@ -33,7 +33,11 @@ const text = (response: Response) => Effect.promise(() => response.text());
 function send(test: BackendTest, request: McpRequest) {
   return Effect.promise(() => sendMcpRequest(test, request));
 }
-beforeEach(() => vi.stubEnv(MCP_SECRET_ENVIRONMENT, MCP_SECRET));
+beforeEach(() => {
+  vi.stubEnv(MCP_SECRET_ENVIRONMENT, MCP_SECRET);
+  // The origin cases were recorded with no allowlist configured.
+  vi.stubEnv("NAKAFA_MCP_ALLOWED_ORIGINS", undefined);
+});
 afterEach(() => {
   vi.doUnmock("@repo/backend/agent/mcp/server");
   vi.restoreAllMocks();
@@ -57,7 +61,7 @@ describe("Nakafa MCP golden contract", () => {
     it.effect.each(TAXONOMY_CALL_CASES)("$name", runGoldenCase);
     it.effect.each(QURAN_CALL_CASES)("$name", runGoldenCase);
     it.effect.each(INVALID_TOOL_CALL_CASES)("$name", runGoldenCase);
-    it.effect.each(OPTIONS_TOOL_CALL_CASES)("$name", runGoldenCase);
+    it.effect.each(REFUSED_TOOL_CALL_CASES)("$name", runGoldenCase);
   });
   describe("prompts", () => {
     it.effect.each(PROMPT_CASES)("$name", runGoldenCase);

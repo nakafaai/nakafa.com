@@ -28,7 +28,7 @@ export const LIMIT_CASES: readonly McpCase[] = [
       headers: BODYLESS_RESPONSE_HEADERS,
       status: 413,
     },
-    name: "a streamed body that grows above the ceiling is refused without a JSON-RPC answer",
+    name: "a body above the ceiling with no declared length is refused without a JSON-RPC answer",
     request: {
       body: jsonBody({
         jsonrpc: "2.0",
