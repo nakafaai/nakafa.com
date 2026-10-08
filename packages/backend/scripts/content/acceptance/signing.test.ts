@@ -3,9 +3,10 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import {
   createLocalSigningIdentity,
+  LocalSigningIdentitySchema,
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
-import { Effect, FileSystem, Option } from "effect";
+import { Effect, FileSystem, Option, Schema } from "effect";
 
 const cryptoMock = vi.hoisted(() => ({ generateKeyPairSync: vi.fn() }));
 vi.mock("node:crypto", async (importOriginal) => {
@@ -18,6 +19,10 @@ vi.mock("node:crypto", async (importOriginal) => {
   };
 });
 
+/** Encodes a signing identity as JSON text to prove its private key stays out of it. */
+const encodeJson = Schema.encodeSync(
+  Schema.fromJsonString(LocalSigningIdentitySchema)
+);
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const temporary = yield* fs.makeTempDirectoryScoped({
@@ -64,7 +69,11 @@ describe("isolated acceptance signing identity", () => {
         );
         expect(privateKey).toContain("BEGIN PRIVATE KEY");
         expect(first.signing.publicKeyPem).toContain("BEGIN PUBLIC KEY");
-        expect(JSON.stringify(first.signing)).not.toContain(privateKey);
+        // JSON escapes the newlines of a PEM, so the whole PEM never appears in
+        // its text. A body line has nothing to escape and would appear verbatim.
+        const [, privateKeyBody] = privateKey.split("\n");
+        expect(privateKeyBody).toBeDefined();
+        expect(encodeJson(first.signing)).not.toContain(privateKeyBody);
         expect(first.signing.keyId).not.toBe(second.signing.keyId);
         expect(first.signing.publicKeyPem).not.toBe(
           second.signing.publicKeyPem
