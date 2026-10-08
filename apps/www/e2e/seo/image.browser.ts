@@ -11,7 +11,7 @@ const imageRouteTraces = [
 ];
 
 /** Reads the files Next.js ships with one route's function. */
-const readTracedFiles = Effect.fn("www.e2e.readTracedFiles")(function* (
+const readTracedFiles = Effect.fn("NakafaE2E.readTracedFiles")(function* (
   trace: string
 ) {
   const fs = yield* FileSystem.FileSystem;
