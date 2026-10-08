@@ -1,36 +1,47 @@
+import { Schema } from "effect";
+
+const ChartDotVariantSchema = Schema.Literals([
+  "default",
+  "border",
+  "colored-border",
+  "square",
+  "square-border",
+  "diamond",
+  "diamond-border",
+  "triangle",
+  "triangle-border",
+]);
+
 /** Marker geometries used to distinguish point-based chart series without color. */
-export type ChartDotVariant =
-  | "default"
-  | "border"
-  | "colored-border"
-  | "square"
-  | "square-border"
-  | "diamond"
-  | "diamond-border"
-  | "triangle"
-  | "triangle-border";
+export type ChartDotVariant = typeof ChartDotVariantSchema.Type;
+
+const ChartLineSeriesCueSchema = Schema.Struct({
+  activeDot: ChartDotVariantSchema,
+  dot: ChartDotVariantSchema,
+  kind: Schema.Literal("line"),
+  strokeDasharray: Schema.optionalKey(Schema.String),
+});
 
 /** A line cue shared by the plotted series and its legend indicator. */
-export interface ChartLineSeriesCue {
-  activeDot: ChartDotVariant;
-  dot: ChartDotVariant;
-  kind: "line";
-  strokeDasharray?: string;
-}
+export type ChartLineSeriesCue = typeof ChartLineSeriesCueSchema.Type;
+
+const ChartPointSeriesCueSchema = Schema.Struct({
+  activeDot: ChartDotVariantSchema,
+  dot: ChartDotVariantSchema,
+  kind: Schema.Literal("point"),
+});
 
 /** A point cue shared by the plotted series and its legend indicator. */
-export interface ChartPointSeriesCue {
-  activeDot: ChartDotVariant;
-  dot: ChartDotVariant;
-  kind: "point";
-}
+export type ChartPointSeriesCue = typeof ChartPointSeriesCueSchema.Type;
+
+const ChartBarSeriesCueSchema = Schema.Struct({
+  kind: Schema.Literal("bar"),
+  radius: Schema.Finite,
+  variant: Schema.Literals(["default", "hatched"]),
+});
 
 /** A bar cue shared by the plotted series and its legend indicator. */
-export interface ChartBarSeriesCue {
-  kind: "bar";
-  radius: number;
-  variant: "default" | "hatched";
-}
+export type ChartBarSeriesCue = typeof ChartBarSeriesCueSchema.Type;
 
 /** Non-color series metadata rendered by EvilCharts legends. */
 export type ChartSeriesCue =

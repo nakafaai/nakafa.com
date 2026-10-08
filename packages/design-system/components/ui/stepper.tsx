@@ -5,21 +5,54 @@ import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
+import { Schema } from "effect";
 import { createContext, use, useCallback, useMemo, useState } from "react";
 
-interface StepperContextValue {
-  activeStep: number;
-  setActiveStep: (step: number) => void;
+const StepStateSchema = Schema.Literals([
+  "active",
+  "completed",
+  "inactive",
+  "loading",
+]);
+
+type StepState = typeof StepStateSchema.Type;
+
+const StepItemContextValueSchema = Schema.Struct({
+  isDisabled: Schema.Boolean,
+  isLoading: Schema.Boolean,
+  state: StepStateSchema,
+  step: Schema.Finite,
+});
+
+type StepItemContextValue = typeof StepItemContextValueSchema.Type;
+
+type StepperValueChange = (value: number) => void;
+
+/** Builds the state a Stepper shares with its items and triggers. */
+function useStepperValue(
+  defaultValue: number,
+  value: number | undefined,
+  onValueChange: StepperValueChange | undefined
+) {
+  const [activeStep, setInternalStep] = useState(defaultValue);
+
+  const setActiveStep = useCallback(
+    (step: number) => {
+      if (value === undefined) {
+        setInternalStep(step);
+      }
+      onValueChange?.(step);
+    },
+    [value, onValueChange]
+  );
+
+  return useMemo(
+    () => ({ activeStep: value ?? activeStep, setActiveStep }),
+    [activeStep, setActiveStep, value]
+  );
 }
 
-interface StepItemContextValue {
-  isDisabled: boolean;
-  isLoading: boolean;
-  state: StepState;
-  step: number;
-}
-
-type StepState = "active" | "completed" | "inactive" | "loading";
+type StepperContextValue = ReturnType<typeof useStepperValue>;
 
 const StepperContext = createContext<StepperContextValue | null>(null);
 const StepItemContext = createContext<StepItemContextValue | null>(null);
@@ -57,21 +90,7 @@ function Stepper({
   className,
   ...props
 }: StepperProps) {
-  const [activeStep, setInternalStep] = useState(defaultValue);
-
-  const setActiveStep = useCallback(
-    (step: number) => {
-      if (value === undefined) {
-        setInternalStep(step);
-      }
-      onValueChange?.(step);
-    },
-    [value, onValueChange]
-  );
-  const stepper = useMemo(
-    () => ({ activeStep: value ?? activeStep, setActiveStep }),
-    [activeStep, setActiveStep, value]
-  );
+  const stepper = useStepperValue(defaultValue, value, onValueChange);
 
   return (
     <StepperContext value={stepper}>

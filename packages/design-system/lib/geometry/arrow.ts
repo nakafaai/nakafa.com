@@ -1,10 +1,14 @@
+import { Schema } from "effect";
+
 export type ArrowPosition = "both" | "end" | "start";
 
-interface ArrowPoint {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-}
+const ArrowPointSchema = Schema.Struct({
+  x: Schema.Finite,
+  y: Schema.Finite,
+  z: Schema.Finite,
+});
+
+type ArrowPoint = typeof ArrowPointSchema.Type;
 
 function distance(from: ArrowPoint, to: ArrowPoint) {
   return Math.hypot(to.x - from.x, to.y - from.y, to.z - from.z);

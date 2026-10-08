@@ -1,9 +1,15 @@
 "use client";
 
 import { selectFileBatch } from "@repo/design-system/lib/upload/selection";
-import { Array as Arr, Effect, HashSet, Result } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  HashSet,
+  MutableHashSet,
+  Result,
+  Schema,
+} from "effect";
 import { useTranslations } from "next-intl";
-import type React from "react";
 import {
   type ChangeEvent,
   type DragEvent,
@@ -14,64 +20,62 @@ import {
   useState,
 } from "react";
 
+const FileMetadataSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  size: Schema.Finite,
+  type: Schema.String,
+  url: Schema.String,
+});
+
 /** Describes a file that is already stored outside the browser. */
-export interface FileMetadata {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  url: string;
-}
+export type FileMetadata = typeof FileMetadataSchema.Type;
+
+const FileWithPreviewSchema = Schema.Struct({
+  file: Schema.Union([Schema.instanceOf(File), FileMetadataSchema]),
+  id: Schema.String,
+  preview: Schema.optional(Schema.String),
+});
 
 /** Associates a selected file with its stable ID and optional preview URL. */
-export interface FileWithPreview {
-  file: File | FileMetadata;
-  id: string;
-  preview?: string | undefined;
-}
+export type FileWithPreview = typeof FileWithPreviewSchema.Type;
+
+const FileUploadOptionsSchema = Schema.Struct({
+  accept: Schema.optionalKey(Schema.String),
+  initialFiles: Schema.optionalKey(Schema.Array(FileMetadataSchema)),
+  maxFiles: Schema.optionalKey(Schema.Finite),
+  maxSize: Schema.optionalKey(Schema.Finite),
+  multiple: Schema.optionalKey(Schema.Boolean),
+});
 
 /** Configures selection behavior; maxSize is bytes and maxFiles is for multiple mode. */
-export interface FileUploadOptions {
-  accept?: string;
-  initialFiles?: FileMetadata[];
-  maxFiles?: number;
-  maxSize?: number;
-  multiple?: boolean;
-  onError?: (errors: string[]) => void;
-  onFilesAdded?: (addedFiles: FileWithPreview[]) => void;
-  onFilesChange?: (files: FileWithPreview[]) => void;
-}
+export type FileUploadOptions = typeof FileUploadOptionsSchema.Type;
+
+/** Receives the validation messages of a selection that rejected files. */
+type FileUploadErrorHandler = (errors: string[]) => void;
+
+/** Receives the files that one selection added, with their IDs and previews. */
+type FileUploadAddedHandler = (addedFiles: FileWithPreview[]) => void;
+
+/** Receives the complete file list after it changes. */
+type FileUploadChangeHandler = (files: FileWithPreview[]) => void;
+
+const FileUploadStateSchema = Schema.Struct({
+  errors: Schema.Array(Schema.String),
+  files: Schema.Array(FileWithPreviewSchema),
+  isDragging: Schema.Boolean,
+});
 
 /** Represents selected files, drag state, and validation errors. */
-export interface FileUploadState {
-  errors: string[];
-  files: FileWithPreview[];
-  isDragging: boolean;
-}
-
-/** Exposes file selection and drag-and-drop actions for UI adapters. */
-export interface FileUploadActions {
-  addFiles: (files: FileList | File[]) => void;
-  clearErrors: () => void;
-  clearFiles: () => void;
-  getInputProps: (
-    props?: InputHTMLAttributes<HTMLInputElement>
-  ) => InputHTMLAttributes<HTMLInputElement> & {
-    ref: React.Ref<HTMLInputElement>;
-  };
-  handleDragEnter: (e: DragEvent<HTMLElement>) => void;
-  handleDragLeave: (e: DragEvent<HTMLElement>) => void;
-  handleDragOver: (e: DragEvent<HTMLElement>) => void;
-  handleDrop: (e: DragEvent<HTMLElement>) => void;
-  handleFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  openFileDialog: () => void;
-  removeFile: (id: string) => void;
-}
+export type FileUploadState = typeof FileUploadStateSchema.Type;
 
 /** Manages file validation, selection state, and browser preview lifetimes. */
 export const useFileUpload = (
-  options: FileUploadOptions = {}
-): [FileUploadState, FileUploadActions] => {
+  options: FileUploadOptions = {},
+  onError?: FileUploadErrorHandler,
+  onFilesAdded?: FileUploadAddedHandler,
+  onFilesChange?: FileUploadChangeHandler
+) => {
   const t = useTranslations("File");
 
   const {
@@ -80,9 +84,6 @@ export const useFileUpload = (
     accept = "*",
     multiple = false,
     initialFiles = [],
-    onFilesChange,
-    onFilesAdded,
-    onError,
   } = options;
 
   const [state, setState] = useState<FileUploadState>({
@@ -97,7 +98,7 @@ export const useFileUpload = (
 
   const inputRef = useRef<HTMLInputElement>(null);
   const filesRef = useRef(state.files);
-  const objectUrlsRef = useRef(new Set<string>());
+  const objectUrlsRef = useRef(MutableHashSet.empty<string>());
   const pickedCountRef = useRef(0);
 
   /** Keeps imperative file actions aligned with the next rendered file list. */
@@ -120,7 +121,7 @@ export const useFileUpload = (
       }
 
       const preview = URL.createObjectURL(file);
-      objectUrlsRef.current.add(preview);
+      MutableHashSet.add(objectUrlsRef.current, preview);
       return preview;
     },
     []
@@ -131,10 +132,11 @@ export const useFileUpload = (
       return;
     }
 
-    if (!objectUrlsRef.current.delete(file.preview)) {
+    if (!MutableHashSet.has(objectUrlsRef.current, file.preview)) {
       return;
     }
 
+    MutableHashSet.remove(objectUrlsRef.current, file.preview);
     URL.revokeObjectURL(file.preview);
   }, []);
 
@@ -145,7 +147,7 @@ export const useFileUpload = (
       for (const objectUrl of objectUrls) {
         URL.revokeObjectURL(objectUrl);
       }
-      objectUrls.clear();
+      MutableHashSet.clear(objectUrls);
     };
   }, []);
 
@@ -368,23 +370,25 @@ export const useFileUpload = (
     [accept, multiple, handleFileChange]
   );
 
-  return [
-    state,
-    {
-      addFiles,
-      removeFile,
-      clearFiles,
-      clearErrors,
-      handleDragEnter,
-      handleDragLeave,
-      handleDragOver,
-      handleDrop,
-      handleFileChange,
-      openFileDialog,
-      getInputProps,
-    },
-  ];
+  const actions = {
+    addFiles,
+    removeFile,
+    clearFiles,
+    clearErrors,
+    handleDragEnter,
+    handleDragLeave,
+    handleDragOver,
+    handleDrop,
+    handleFileChange,
+    openFileDialog,
+    getInputProps,
+  };
+
+  return [state, actions] satisfies [FileUploadState, typeof actions];
 };
+
+/** Exposes file selection and drag-and-drop actions for UI adapters. */
+export type FileUploadActions = ReturnType<typeof useFileUpload>[1];
 
 /** Formats a byte count for file validation messages. */
 export const formatBytes = (bytes: number, decimals = 2): string => {
