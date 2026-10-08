@@ -7,7 +7,10 @@ import {
 } from "@repo/backend/confect/nina/contract/tools";
 import { asSchema } from "ai";
 import dedent from "dedent";
-import { Predicate } from "effect";
+import { Predicate, Schema } from "effect";
+
+/** Encodes a tool schema as the JSON text a provider receives. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 function readJsonSchema(schema: ReturnType<typeof asSchema>) {
   const jsonSchema = schema.jsonSchema;
@@ -55,7 +58,7 @@ describe("LearningCapability tool schemas", () => {
       readJsonSchema(asSchema(mathToolInputSchema)),
       readJsonSchema(asSchema(researchToolInputSchema)),
     ];
-    const json = JSON.stringify(jsonSchema);
+    const json = encodeJson(jsonSchema);
 
     expect(nakafaJsonSchema).toMatchObject({
       properties: {
@@ -90,7 +93,7 @@ describe("LearningCapability tool schemas", () => {
     expect(json).toContain("Specialist job only");
     expect(json).toContain("Source requirements only");
     expect(json).toContain("versions");
-    expect(JSON.stringify(mathJsonSchema)).toContain(
+    expect(encodeJson(mathJsonSchema)).toContain(
       "Do not add derived formulas or solution methods"
     );
     expect(json).not.toContain("exact user wording");

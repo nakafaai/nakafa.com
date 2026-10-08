@@ -47,8 +47,8 @@ server sent.
   `use-context-selector`, React's `useContext`, and Zustand's module-level
   `create`. Biome's `noRestrictedImports` rejects the context-backed auth APIs
   of `convex/react` and `@convex-dev/better-auth`.
-- `apps/www/e2e/hydration.browser.ts` proves cold lessons and articles keep
-  their streamed content, signed out and signed in.
+- `apps/www/e2e/content/hydration.browser.ts` proves cold lessons and
+  articles keep their streamed content, signed out and signed in.
 
 ## Rejected Alternative
 
