@@ -21,9 +21,7 @@ import {
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Clock, Effect, flow } from "effect";
 
-type SaveConsentInput = ConsentWrite & {
-  readonly userId: Id<"users">;
-};
+type SaveConsentInput = ConsentWrite & Pick<Docs["accountConsents"], "userId">;
 
 /** Raised when account consent state cannot be read or persisted safely. */
 

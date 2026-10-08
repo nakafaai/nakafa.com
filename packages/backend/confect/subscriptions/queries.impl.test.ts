@@ -4,6 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { DateTime } from "effect";
 
 it("requires a session and grants subscription UI access only for the current customer's active product", async () => {
   const t = createConvexTestWithBetterAuth();
@@ -17,7 +18,9 @@ it("requires a session and grants subscription UI access only for the current cu
     },
   });
   const identity = await t.mutation((ctx) =>
-    seedAuthenticatedUser(ctx, { now: Date.now() })
+    seedAuthenticatedUser(ctx, {
+      now: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+    })
   );
   const authed = t.withIdentity({
     subject: identity.authUserId,
