@@ -74,7 +74,7 @@ export function readTryoutRouteAttemptCapability(
 }
 
 /** Classifies the attempt capability carried by a browser request URL. */
-export function readTryoutAttemptCapability(
+function readTryoutAttemptCapability(
   searchParams: Pick<URLSearchParams, "getAll">
 ): TryoutAttemptCapability {
   const attemptIds = searchParams.getAll(ATTEMPT_ID_PARAM);
