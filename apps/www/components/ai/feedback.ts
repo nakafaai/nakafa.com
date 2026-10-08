@@ -17,11 +17,23 @@ export type NinaFailure =
   | Ref.Error<typeof refs.public.nina.lifecycle.cancel>
   | NinaConnectionError;
 
-interface Feedback {
-  action: "retry" | "edit" | "wait" | "credits" | "sign-in" | "new-chat";
-  message: keyof AppConfig["Messages"]["Ai"]["failures"];
-  report: boolean;
-}
+/** Every key under Ai.failures in the translations, one per failure message. */
+type FailureMessage = keyof AppConfig["Messages"]["Ai"]["failures"];
+
+const FeedbackSchema = Schema.Struct({
+  action: Schema.Literals([
+    "retry",
+    "edit",
+    "wait",
+    "credits",
+    "sign-in",
+    "new-chat",
+  ]),
+  report: Schema.Boolean,
+});
+
+/** The recovery the chat offers after a failure, with its localized message. */
+type Feedback = typeof FeedbackSchema.Type & Record<"message", FailureMessage>;
 
 /** Every typed admission failure has localized copy and an appropriate recovery. */
 export const ninaFailureFeedback = {
