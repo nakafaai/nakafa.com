@@ -17,10 +17,10 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
-import { DateTime } from "effect";
+import { Clock, Effect } from "effect";
 
 export const COMPACTION_OLD_TIME =
-  DateTime.toEpochMillis(DateTime.nowUnsafe()) - ROLLBACK_RETENTION_MS - 1000;
+  Effect.runSync(Clock.currentTimeMillis) - ROLLBACK_RETENTION_MS - 1000;
 
 /** Creates one exact technical release identity for compaction tests. */
 export function compactionIdentity(sequence: number) {
@@ -122,9 +122,7 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
       ctx,
       release,
       releases[index - 1],
-      index < 3
-        ? COMPACTION_OLD_TIME
-        : DateTime.toEpochMillis(DateTime.nowUnsafe())
+      index < 3 ? COMPACTION_OLD_TIME : Effect.runSync(Clock.currentTimeMillis)
     );
   }
   const first = releases[0];
@@ -198,7 +196,7 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
     {
       artifactHash: `sha256:${"f".repeat(64)}`,
       retainUntil:
-        DateTime.toEpochMillis(DateTime.nowUnsafe()) + ROLLBACK_RETENTION_MS,
+        Effect.runSync(Clock.currentTimeMillis) + ROLLBACK_RETENTION_MS,
     },
   ]) {
     await insertTestArtifact(ctx, {

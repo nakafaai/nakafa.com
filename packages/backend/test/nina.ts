@@ -10,7 +10,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { MockLanguageModelV4 } from "ai/test";
-import { DateTime, Effect, Schema } from "effect";
+import { Clock, Effect, Schema } from "effect";
 
 /** Plain codec: writes the same bytes as JSON.stringify, even for tool input the contract rejects. */
 const encodePlainJson = Schema.encodeSync(
@@ -23,7 +23,7 @@ const encodePlainJson = Schema.encodeSync(
  */
 export async function createNinaTest({
   history = 0,
-  now = DateTime.toEpochMillis(DateTime.nowUnsafe()),
+  now = Effect.runSync(Clock.currentTimeMillis),
   prompt: text = "Explain a limit.",
   needsFetch = false,
 }: {

@@ -19,7 +19,7 @@ import {
 import { GatewayTest } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
 import type { MockLanguageModelV4 } from "ai/test";
-import { DateTime, Effect } from "effect";
+import { Clock, Effect } from "effect";
 
 export const specialistRequest = {
   context: {
@@ -44,7 +44,7 @@ export async function runSpecialist<A, E>(
     seedAuthenticatedUser(ctx, {
       // The real clock, which the credit ledger also reads. A fixed past time
       // would trigger the free plan's daily credit reset.
-      now: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+      now: Effect.runSync(Clock.currentTimeMillis),
     })
   );
   return t.action((ctx) =>
