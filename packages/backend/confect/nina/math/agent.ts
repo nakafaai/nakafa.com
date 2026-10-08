@@ -2,7 +2,8 @@ import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import type { MathAgentParams } from "@repo/backend/confect/nina/contract/agent";
+import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
+import type { TaskAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
 import {
   mathAlgebra,
@@ -54,7 +55,10 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   context,
   publish,
   usageHandler,
-}: MathAgentParams & { readonly usageHandler: UsageHandler }) {
+}: TaskAgentData & {
+  readonly publish: CapabilityProgress;
+  readonly usageHandler: UsageHandler;
+}) {
   const ctx = yield* ActionCtx;
   const { model, timeout } = (yield* Gateway).language({
     purpose: "specialist",
