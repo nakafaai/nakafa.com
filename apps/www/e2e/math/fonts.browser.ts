@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, HashSet } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readMathFonts } from "@/e2e/support/fonts";
@@ -48,7 +48,9 @@ const verifyCachedLessonFonts = Effect.fn("NakafaE2E.verifyCachedLessonFonts")(
 
     yield* Effect.sync(() => {
       expect(fonts.preloaded.length).toBeGreaterThan(0);
-      expect(new Set(fonts.preloaded).size).toBe(fonts.preloaded.length);
+      expect(HashSet.size(HashSet.fromIterable(fonts.preloaded))).toBe(
+        fonts.preloaded.length
+      );
       // The stylesheet's request reuses each preload instead of fetching again.
       expect([...fonts.fetched].sort()).toEqual(
         fonts.preloaded.map((face) => `${face} link`).sort()

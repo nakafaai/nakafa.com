@@ -31,11 +31,18 @@ const linkedHrefRetrySchedule = Schedule.spaced(
   })
 );
 
-type InstantMarker =
-  | { readonly kind: "heading"; readonly text?: RegExp }
-  | { readonly kind: "title"; readonly text: RegExp };
+const InstantMarkerSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("heading"),
+    text: Schema.optionalKey(Schema.RegExp),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("title"),
+    text: Schema.RegExp,
+  }),
+]);
 
-type InstantShell = "app" | "marketing";
+const InstantShellSchema = Schema.Literals(["app", "marketing"]);
 
 const instantShellSelector = {
   app: 'main[data-slot="sidebar-inset"]:visible',
@@ -55,20 +62,20 @@ export class NavigationLinkMissing extends Schema.TaggedError<NavigationLinkMiss
   }
 }
 
-export interface NavigationTarget {
-  readonly href: string;
-  readonly marker: InstantMarker;
-  readonly name: string;
-  readonly shell: InstantShell;
-  readonly sourceHref: string;
-}
+const NavigationTargetSchema = Schema.Struct({
+  href: Schema.String,
+  marker: InstantMarkerSchema,
+  name: Schema.String,
+  shell: InstantShellSchema,
+  sourceHref: Schema.String,
+});
 
-export interface NavigationCase {
-  readonly name: string;
-  readonly resolve: (
-    page: Page
-  ) => Effect.Effect<NavigationTarget, NavigationLinkMissing>;
-}
+export type NavigationTarget = typeof NavigationTargetSchema.Type;
+
+/** Finds the target of one navigation case from the page that starts it. */
+type NavigationResolve = (
+  page: Page
+) => Effect.Effect<NavigationTarget, NavigationLinkMissing>;
 
 const assertSettledNavigation = Effect.fn("NakafaE2E.assertSettledNavigation")(
   function* (page: Page, target: NavigationTarget) {
@@ -295,7 +302,9 @@ export const verifyHardAndClientNavigation = Effect.fn(
   yield* navigateClient(page, target, hasTouch);
 });
 
-const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>
+const resolveHomepage: NavigationResolve = Effect.fn(
+  "NakafaE2E.resolveHomepage"
+)(() =>
   Effect.succeed({
     href: "/en",
     marker: { kind: "heading", text: HOMEPAGE_HEADING_PATTERN },
@@ -305,29 +314,31 @@ const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>
   } satisfies NavigationTarget)
 );
 
-const resolveQuran = Effect.fn("NakafaE2E.resolveQuran")(() =>
-  Effect.succeed({
-    href: appRoutes.quranSurahId,
-    marker: { kind: "heading", text: QURAN_HEADING_PATTERN },
-    name: "Quran",
-    shell: "app",
-    sourceHref: appRoutes.quranId,
-  } satisfies NavigationTarget)
+const resolveQuran: NavigationResolve = Effect.fn("NakafaE2E.resolveQuran")(
+  () =>
+    Effect.succeed({
+      href: appRoutes.quranSurahId,
+      marker: { kind: "heading", text: QURAN_HEADING_PATTERN },
+      name: "Quran",
+      shell: "app",
+      sourceHref: appRoutes.quranId,
+    } satisfies NavigationTarget)
 );
 
-const resolveTryout = Effect.fn("NakafaE2E.resolveTryout")(() =>
-  Effect.succeed({
-    href: appRoutes.tryout,
-    marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
-    name: "tryout",
-    shell: "app",
-    sourceHref: "/en",
-  } satisfies NavigationTarget)
+const resolveTryout: NavigationResolve = Effect.fn("NakafaE2E.resolveTryout")(
+  () =>
+    Effect.succeed({
+      href: appRoutes.tryout,
+      marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
+      name: "tryout",
+      shell: "app",
+      sourceHref: "/en",
+    } satisfies NavigationTarget)
 );
 
-const resolveCurriculum = Effect.fn("NakafaE2E.resolveCurriculum")(function* (
-  page: Page
-) {
+const resolveCurriculum: NavigationResolve = Effect.fn(
+  "NakafaE2E.resolveCurriculum"
+)(function* (page: Page) {
   const sourceHref = "/en";
   const href = yield* discoverLinkedHref(
     page,
@@ -343,36 +354,36 @@ const resolveCurriculum = Effect.fn("NakafaE2E.resolveCurriculum")(function* (
   } satisfies NavigationTarget;
 });
 
-const resolveArticle = Effect.fn("NakafaE2E.resolveArticle")(function* (
-  page: Page
-) {
-  const categoryHref = yield* discoverLinkedHref(
-    page,
-    "/en/articles",
-    ARTICLE_CATEGORY_HREF_PATTERN
-  );
-  const sourceHref = categoryHref;
-  const href = yield* discoverLinkedHref(
-    page,
-    sourceHref,
-    ARTICLE_HREF_PATTERN
-  );
-  return {
-    href,
-    marker: { kind: "heading" },
-    name: "article",
-    shell: "app",
-    sourceHref,
-  } satisfies NavigationTarget;
-});
+const resolveArticle: NavigationResolve = Effect.fn("NakafaE2E.resolveArticle")(
+  function* (page: Page) {
+    const categoryHref = yield* discoverLinkedHref(
+      page,
+      "/en/articles",
+      ARTICLE_CATEGORY_HREF_PATTERN
+    );
+    const sourceHref = categoryHref;
+    const href = yield* discoverLinkedHref(
+      page,
+      sourceHref,
+      ARTICLE_HREF_PATTERN
+    );
+    return {
+      href,
+      marker: { kind: "heading" },
+      name: "article",
+      shell: "app",
+      sourceHref,
+    } satisfies NavigationTarget;
+  }
+);
 
 /**
  * The homepage links curriculums rather than lessons, so the material case
  * starts from the lesson the acceptance corpus pins.
  */
-const resolveMaterial = Effect.fn("NakafaE2E.resolveMaterial")(function* (
-  page: Page
-) {
+const resolveMaterial: NavigationResolve = Effect.fn(
+  "NakafaE2E.resolveMaterial"
+)(function* (page: Page) {
   const sourceHref = pinnedRoutes.material.en;
   const href = yield* discoverLinkedHref(
     page,
@@ -396,4 +407,4 @@ export const navigationCases = [
   { name: "curriculum", resolve: resolveCurriculum },
   { name: "article", resolve: resolveArticle },
   { name: "material", resolve: resolveMaterial },
-] as const satisfies readonly NavigationCase[];
+] as const;

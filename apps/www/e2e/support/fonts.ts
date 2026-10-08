@@ -1,16 +1,18 @@
 import type { Page } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 /** The link elements that ask the browser to preload a font file. */
 export const PRELOADED_FONT_SELECTOR = 'link[rel="preload"][as="font"]';
 
 const katexFile = /\/KaTeX_([^./]+)\.[^/]+\.woff2$/;
 
-interface LoadedFontFace {
-  readonly family: string;
-  readonly style: string;
-  readonly weight: string;
-}
+const LoadedFontFaceSchema = Schema.Struct({
+  family: Schema.String,
+  style: Schema.String,
+  weight: Schema.String,
+});
+
+type LoadedFontFace = typeof LoadedFontFaceSchema.Type;
 
 /** Names a KaTeX file the way KaTeX does, such as `Main-Regular`. */
 function fileFace(url: string) {
