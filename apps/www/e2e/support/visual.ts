@@ -132,20 +132,31 @@ export const revealLab = Effect.fn("NakafaE2E.revealVisualLab")(function* (
   return card;
 });
 
+/**
+ * Scrolls a card's deferred 3D scene into place and waits for its canvas to
+ * settle, returning the canvas.
+ */
+export const revealSceneCard = Effect.fn("NakafaE2E.revealVisualSceneCard")(
+  function* (card: Locator) {
+    const canvas = card.locator(`${LINE_SCENE} canvas`);
+    yield* Effect.promise(() =>
+      expect(async () => {
+        await scrollToElement(card.locator(LINE_SCENE), "start");
+        expect(await canvas.isVisible()).toBe(true);
+      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+    );
+    yield* waitForStableCanvas(canvas);
+    return canvas;
+  }
+);
+
 /** Reveals a card's deferred 3D scene and waits for its canvas to settle. */
 export const revealScene = Effect.fn("NakafaE2E.revealVisualScene")(function* (
   page: Page,
   index = 0
 ) {
   const card = yield* revealCard(page, LINE_SCENE, index);
-  const canvas = card.locator(`${LINE_SCENE} canvas`);
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await scrollToElement(card.locator(LINE_SCENE), "start");
-      expect(await canvas.isVisible()).toBe(true);
-    }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
-  );
-  yield* waitForStableCanvas(canvas);
+  const canvas = yield* revealSceneCard(card);
   return { canvas, card };
 });
 
