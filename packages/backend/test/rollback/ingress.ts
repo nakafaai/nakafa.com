@@ -19,6 +19,9 @@ import {
 import type { TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 type StoredRollbackEnvelope = typeof stageEnvelopeValidator.Type;
 export class UnexpectedRollbackTestState extends Data.TaggedError(
   "UnexpectedRollbackTestState"
@@ -60,11 +63,9 @@ const storeAuthenticatedRelease = Effect.fn(
   );
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", stored._id, {
-      receiptJson: JSON.stringify(
-        makePublicationReceipt(releaseDocument, release)
-      ),
-      releaseJson: JSON.stringify(release),
-      rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+      receiptJson: encodeJson(makePublicationReceipt(releaseDocument, release)),
+      releaseJson: encodeJson(release),
+      rendererJson: encodeJson(TEST_PROOF_RENDERER),
     })
   );
   yield* Effect.promise(() =>

@@ -24,7 +24,13 @@ import {
 } from "@repo/backend/test/content/proof";
 import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
-import { Array as Arr, Effect, Record as Rec, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashMap,
+  Record as Rec,
+  Stream,
+} from "effect";
 import {
   testPublishedCurriculumRoutes,
   testPublishedProgram,
@@ -66,7 +72,7 @@ export const makeProgramContextRuntimeSource = Effect.fn(
     snapshots,
   });
   const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
-  fixture.source.set("contentSnapshots", [
+  MutableHashMap.set(fixture.source, "contentSnapshots", [
     {
       createdAt: 1,
       family: "program",
@@ -76,7 +82,7 @@ export const makeProgramContextRuntimeSource = Effect.fn(
       verifiedAt: 1,
     },
   ]);
-  fixture.source.set("programCatalog", [
+  MutableHashMap.set(fixture.source, "programCatalog", [
     {
       displayOrder: catalog.row.displayOrder,
       index: 0,
@@ -126,7 +132,7 @@ export const makeProgramContextRuntimeSource = Effect.fn(
     routeCount: rows.length,
     snapshotId: manifest.snapshotId,
   }));
-  fixture.source.set("curriculumRoutes", storedRoutes);
-  fixture.source.set("programBuckets", buckets);
+  MutableHashMap.set(fixture.source, "curriculumRoutes", storedRoutes);
+  MutableHashMap.set(fixture.source, "programBuckets", buckets);
   return fixture;
 });

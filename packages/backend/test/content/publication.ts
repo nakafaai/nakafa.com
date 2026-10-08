@@ -19,7 +19,17 @@ import {
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { Data, Effect, Predicate, Record as Rec, Schema } from "effect";
+import {
+  Data,
+  Effect,
+  MutableHashMap,
+  Predicate,
+  Record as Rec,
+  Schema,
+} from "effect";
+
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 export const TEST_PUBLICATION_RELEASE = testSignedRelease(
   testEmptyManifest(ReleaseIdSchema.make("publication-active"))
@@ -30,7 +40,7 @@ export function makeRuntimeSource(
   signed: SignedContentRelease = TEST_PUBLICATION_RELEASE,
   resultFamilies: SignedContentRelease["manifest"]["scope"]["families"] = []
 ) {
-  const source = new Map<TableNames, readonly unknown[]>();
+  const source = MutableHashMap.empty<TableNames, readonly unknown[]>();
   const state = {
     activeManifestHash: signed.manifestHash,
     activeReleaseId: signed.manifest.releaseId,
@@ -51,7 +61,7 @@ export function makeRuntimeSource(
     searchSlot: "blue",
     updatedAt: 100,
   } satisfies PublicationRow<"contentState">;
-  source.set("contentState", [state]);
+  MutableHashMap.set(source, "contentState", [state]);
   const release = {
     ...releaseReachability(signed),
     baseFamilies: [],
@@ -59,8 +69,8 @@ export function makeRuntimeSource(
     checkedItems: 0,
     createdAt: 100,
     releaseId: signed.manifest.releaseId,
-    releaseJson: JSON.stringify(signed),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    releaseJson: encodeJson(signed),
+    rendererJson: encodeJson(TEST_PROOF_RENDERER),
     resultFamilies: [...resultFamilies],
     role: "candidate",
     sequence: 9,
@@ -75,7 +85,7 @@ export function makeRuntimeSource(
     status: "completed",
     updatedAt: 100,
   } satisfies PublicationRow<"contentReleases">;
-  source.set("contentReleases", [release]);
+  MutableHashMap.set(source, "contentReleases", [release]);
   return { source, state, release };
 }
 
@@ -122,15 +132,15 @@ export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
     }),
     sequence: head.sequence,
   } satisfies PublicationRow<"contentBindings">;
-  fixture.source.set("contentHeads", [head]);
-  fixture.source.set("contentBindings", [binding]);
-  fixture.source.set("contentArtifacts", [
+  MutableHashMap.set(fixture.source, "contentHeads", [head]);
+  MutableHashMap.set(fixture.source, "contentBindings", [binding]);
+  MutableHashMap.set(fixture.source, "contentArtifacts", [
     {
       artifactHash: artifact.artifactHash,
-      artifactJson: JSON.stringify(artifact),
+      artifactJson: encodeJson(artifact),
     },
   ]);
-  fixture.source.set("contentKeys", [
+  MutableHashMap.set(fixture.source, "contentKeys", [
     {
       artifactLocale: projection.artifactLocale,
       contentKey: projection.contentKey,
