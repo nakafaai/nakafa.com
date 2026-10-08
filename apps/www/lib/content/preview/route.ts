@@ -59,7 +59,7 @@ export type ArticlePreviewStaticParams =
   typeof ArticlePreviewStaticParamsSchema.Type;
 /** Concrete child params Next prerenders for one selected Page preview. */
 const PagePreviewStaticParamsSchema = Schema.Struct({
-  page: Schema.mutable(Schema.Array(Schema.String)),
+  page: Schema.Array(Schema.String),
 });
 export type PagePreviewStaticParams = typeof PagePreviewStaticParamsSchema.Type;
 /** Reads the single selected locale used to prerender the preview app shell. */
