@@ -1,65 +1,28 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-  CLIENT_CAPABILITIES_META_KEY,
-  CLIENT_INFO_META_KEY,
-  LATEST_PROTOCOL_VERSION as MCP_PREDECESSOR_PROTOCOL_VERSION,
-  PROTOCOL_VERSION_META_KEY,
-} from "@modelcontextprotocol/server";
-import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
+import {
+  jsonBody,
+  MCP_CLIENT_META,
+  MCP_PREDECESSOR_PROTOCOL_VERSION,
+  MCP_SECRET,
+  MCP_SECRET_ENVIRONMENT,
+  type McpRequest,
+  modernPost,
+  pinMcpClock,
+  sendMcpRequest,
+} from "@repo/backend/test/mcp/harness";
 import { Array as Arr, Effect } from "effect";
 
-const MCP_SECRET = "technical-mcp-edge-secret";
-const MCP_PATH = NAKAFA_MCP_EDGE_CONTRACT.originPath;
-const MCP_SECRET_ENVIRONMENT = NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment;
-const MODERN_META = {
-  [CLIENT_CAPABILITIES_META_KEY]: {},
-  [CLIENT_INFO_META_KEY]: { name: "nakafa-test-client", version: "1.0.0" },
-  [PROTOCOL_VERSION_META_KEY]: NAKAFA_MCP_PROTOCOL_VERSION,
-};
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 const json = (response: Response) => Effect.promise(() => response.json());
 const text = (response: Response) => Effect.promise(() => response.text());
 const allConcurrently = <const A extends Iterable<Effect.All.EffectAny>>(
   effects: A
 ) => Effect.all(effects, { concurrency: "unbounded" });
-function fetchMcp(test: BackendTest, init: RequestInit = {}) {
-  const headers = new Headers(init.headers);
-  headers.set(NAKAFA_MCP_EDGE_CONTRACT.secretHeader, MCP_SECRET);
-  const forwardedFor = headers.get("x-forwarded-for") ?? "203.0.113.21";
-  headers.set("x-forwarded-for", forwardedFor);
-  const request = { ...init, headers };
-  return Effect.promise(() => test.fetch(MCP_PATH, request));
-}
-function postModern(
-  test: BackendTest,
-  id: number,
-  method: string,
-  params: Readonly<Record<string, unknown>> = {},
-  name?: string
-) {
-  const headers = new Headers({
-    accept: "application/json, text/event-stream",
-    "content-type": "application/json",
-    "mcp-method": method,
-    "mcp-protocol-version": NAKAFA_MCP_PROTOCOL_VERSION,
-  });
-  if (name !== undefined) {
-    headers.set("mcp-name", name);
-  }
-  return fetchMcp(test, {
-    body: JSON.stringify({
-      id,
-      jsonrpc: "2.0",
-      method,
-      params: { ...params, _meta: MODERN_META },
-    }),
-    headers,
-    method: "POST",
-  });
+function send(test: BackendTest, request: McpRequest) {
+  return Effect.promise(() => sendMcpRequest(test, request));
 }
 beforeEach(() => vi.stubEnv(MCP_SECRET_ENVIRONMENT, MCP_SECRET));
 afterEach(() => {
@@ -71,9 +34,9 @@ describe("Nakafa MCP transport", () => {
   it.effect("serves current discovery and the established tool surface", () =>
     Effect.gen(function* () {
       const test = createConvexTestWithBetterAuth();
-      const discover = yield* postModern(test, 1, "server/discover");
+      const discover = yield* send(test, modernPost(1, "server/discover"));
       const discoverBody = yield* json(discover);
-      const tools = yield* postModern(test, 2, "tools/list");
+      const tools = yield* send(test, modernPost(2, "tools/list"));
       const toolsBody = yield* json(tools);
       expect(discover.status, JSON.stringify(discoverBody)).toBe(200);
       expect(discoverBody).toMatchObject({
@@ -106,44 +69,50 @@ describe("Nakafa MCP transport", () => {
       Effect.gen(function* () {
         const test = createConvexTestWithBetterAuth();
         const responses = yield* allConcurrently([
-          postModern(
+          send(
             test,
-            15,
-            "prompts/get",
-            {
-              arguments: {
-                content_ref: "https://nakafa.com/en/articles/math/algebra",
-                question: "What is the key idea?",
+            modernPost(
+              15,
+              "prompts/get",
+              {
+                arguments: {
+                  content_ref: "https://nakafa.com/en/articles/math/algebra",
+                  question: "What is the key idea?",
+                },
+                name: "nakafa_answer_from_content",
               },
-              name: "nakafa_answer_from_content",
-            },
-            "nakafa_answer_from_content"
+              "nakafa_answer_from_content"
+            )
           ),
-          postModern(
+          send(
             test,
-            16,
-            "prompts/get",
-            {
-              arguments: {
-                from_verse: "1",
-                locale: "id",
-                question: "Apa pesan ayat ini?",
-                surah: "1",
-                to_verse: "7",
+            modernPost(
+              16,
+              "prompts/get",
+              {
+                arguments: {
+                  from_verse: "1",
+                  locale: "id",
+                  question: "Apa pesan ayat ini?",
+                  surah: "1",
+                  to_verse: "7",
+                },
+                name: "nakafa_quran_reference",
               },
-              name: "nakafa_quran_reference",
-            },
-            "nakafa_quran_reference"
+              "nakafa_quran_reference"
+            )
           ),
-          postModern(
+          send(
             test,
-            17,
-            "prompts/get",
-            {
-              arguments: { topic: "" },
-              name: "nakafa_find_lesson",
-            },
-            "nakafa_find_lesson"
+            modernPost(
+              17,
+              "prompts/get",
+              {
+                arguments: { topic: "" },
+                name: "nakafa_find_lesson",
+              },
+              "nakafa_find_lesson"
+            )
           ),
         ]);
         const bodies = yield* allConcurrently(Arr.map(responses, json));
@@ -163,12 +132,9 @@ describe("Nakafa MCP transport", () => {
   it.effect("returns typed resource failures without inventing content", () =>
     Effect.gen(function* () {
       const missingUri = "nakafa://content/asset:en:article:missing";
-      const response = yield* postModern(
+      const response = yield* send(
         createConvexTestWithBetterAuth(),
-        18,
-        "resources/read",
-        { uri: missingUri },
-        missingUri
+        modernPost(18, "resources/read", { uri: missingUri }, missingUri)
       );
       expect(response.status).toBe(200);
       expect(yield* json(response)).toMatchObject({
@@ -185,49 +151,57 @@ describe("Nakafa MCP transport", () => {
     Effect.gen(function* () {
       const test = createConvexTestWithBetterAuth();
       const responses = yield* allConcurrently([
-        postModern(
+        send(
           test,
-          20,
-          "tools/call",
-          {
-            arguments: {
-              limit: 10,
-              locale: "en",
-              offset: 0,
-              queries: ["algebra"],
+          modernPost(
+            20,
+            "tools/call",
+            {
+              arguments: {
+                limit: 10,
+                locale: "en",
+                offset: 0,
+                queries: ["algebra"],
+              },
+              name: "nakafa_search_content",
             },
-            name: "nakafa_search_content",
-          },
-          "nakafa_search_content"
+            "nakafa_search_content"
+          )
         ),
-        postModern(
+        send(
           test,
-          21,
-          "tools/call",
-          {
-            arguments: {
-              content_ref: "https://nakafa.com/en/articles/missing/content",
+          modernPost(
+            21,
+            "tools/call",
+            {
+              arguments: {
+                content_ref: "https://nakafa.com/en/articles/missing/content",
+              },
+              name: "nakafa_get_content",
             },
-            name: "nakafa_get_content",
-          },
-          "nakafa_get_content"
+            "nakafa_get_content"
+          )
         ),
-        postModern(
+        send(
           test,
-          22,
-          "tools/call",
-          { arguments: { locale: "en" }, name: "nakafa_get_taxonomy" },
-          "nakafa_get_taxonomy"
+          modernPost(
+            22,
+            "tools/call",
+            { arguments: { locale: "en" }, name: "nakafa_get_taxonomy" },
+            "nakafa_get_taxonomy"
+          )
         ),
-        postModern(
+        send(
           test,
-          23,
-          "tools/call",
-          {
-            arguments: { from_verse: 1, locale: "en", surah: 1 },
-            name: "nakafa_get_quran_reference",
-          },
-          "nakafa_get_quran_reference"
+          modernPost(
+            23,
+            "tools/call",
+            {
+              arguments: { from_verse: 1, locale: "en", surah: 1 },
+              name: "nakafa_get_quran_reference",
+            },
+            "nakafa_get_quran_reference"
+          )
         ),
       ]);
       const bodies = yield* allConcurrently(Arr.map(responses, json));
@@ -261,7 +235,7 @@ describe("Nakafa MCP transport", () => {
   it.effect("rejects the predecessor 2025 initialize handshake", () =>
     Effect.gen(function* () {
       const test = createConvexTestWithBetterAuth();
-      const body = JSON.stringify({
+      const body = jsonBody({
         id: 30,
         jsonrpc: "2.0",
         method: "initialize",
@@ -271,8 +245,8 @@ describe("Nakafa MCP transport", () => {
           protocolVersion: MCP_PREDECESSOR_PROTOCOL_VERSION,
         },
       });
-      const request = (headers: HeadersInit) =>
-        fetchMcp(test, {
+      const request = (headers: Readonly<Record<string, string>>) =>
+        send(test, {
           body,
           headers: {
             accept: "application/json, text/event-stream",
@@ -306,8 +280,8 @@ describe("Nakafa MCP transport", () => {
     Effect.gen(function* () {
       const test = createConvexTestWithBetterAuth();
       const post = (body: Readonly<Record<string, unknown>>) =>
-        fetchMcp(test, {
-          body: JSON.stringify(body),
+        send(test, {
+          body: jsonBody(body),
           headers: {
             accept: "application/json, text/event-stream",
             "content-type": "application/json",
@@ -320,12 +294,12 @@ describe("Nakafa MCP transport", () => {
           id: 31,
           jsonrpc: "2.0",
           method: "server/discover",
-          params: { _meta: MODERN_META },
+          params: { _meta: MCP_CLIENT_META },
         }),
         post({
           jsonrpc: "2.0",
           method: "notifications/initialized",
-          params: { _meta: MODERN_META },
+          params: { _meta: MCP_CLIENT_META },
         }),
       ]);
       expect(response.status).toBe(400);
@@ -345,7 +319,7 @@ describe("Nakafa MCP transport", () => {
     Effect.gen(function* () {
       const test = createConvexTestWithBetterAuth();
       const [malformed, get] = yield* allConcurrently([
-        fetchMcp(test, {
+        send(test, {
           body: "{",
           headers: {
             accept: "application/json, text/event-stream",
@@ -353,7 +327,7 @@ describe("Nakafa MCP transport", () => {
           },
           method: "POST",
         }),
-        fetchMcp(test),
+        send(test, { method: "GET" }),
       ]);
       expect(malformed.status).toBe(400);
       expect(yield* json(malformed)).toMatchObject({
@@ -368,19 +342,19 @@ describe("Nakafa MCP transport", () => {
     () =>
       Effect.gen(function* () {
         const test = createConvexTestWithBetterAuth();
-        const notification = JSON.stringify({
+        const notification = jsonBody({
           jsonrpc: "2.0",
           method: "notifications/initialized",
           padding: "x".repeat(65_537),
         });
-        const declared = yield* fetchMcp(test, {
+        const declared = yield* send(test, {
           headers: {
             "content-length": "65537",
             "content-type": "application/json",
           },
           method: "POST",
         });
-        const streamed = yield* fetchMcp(test, {
+        const streamed = yield* send(test, {
           body: notification,
           headers: { "content-type": "application/json" },
           method: "POST",
@@ -395,30 +369,30 @@ describe("Nakafa MCP transport", () => {
     "charges rejected bodies and keeps transport failures bodyless",
     () =>
       Effect.gen(function* () {
-        vi.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
+        pinMcpClock();
         const test = createConvexTestWithBetterAuth();
-        const notificationBody = JSON.stringify({
+        const notificationBody = jsonBody({
           jsonrpc: "2.0",
           method: "notifications/initialized",
         });
         const allowed = yield* allConcurrently(
           Array.from({ length: 29 }, (_, index) =>
-            postModern(test, 100 + index, "server/discover")
+            send(test, modernPost(100 + index, "server/discover"))
           )
         );
-        const rejected = yield* fetchMcp(test, {
+        const rejected = yield* send(test, {
           headers: {
             "content-length": "65537",
             "content-type": "application/json",
           },
           method: "POST",
         });
-        const throttled = yield* fetchMcp(test, {
+        const throttled = yield* send(test, {
           body: notificationBody,
           headers: { "content-type": "application/json" },
           method: "POST",
         });
-        const unavailable = yield* fetchMcp(test, {
+        const unavailable = yield* send(test, {
           body: notificationBody,
           headers: {
             "content-type": "application/json",
@@ -438,7 +412,7 @@ describe("Nakafa MCP transport", () => {
   );
   it.effect("rejects mismatched body framing before the protocol loader", () =>
     Effect.gen(function* () {
-      const response = yield* fetchMcp(createConvexTestWithBetterAuth(), {
+      const response = yield* send(createConvexTestWithBetterAuth(), {
         body: "{}",
         headers: { "content-length": "1", "content-type": "application/json" },
         method: "POST",
@@ -454,10 +428,9 @@ describe("Nakafa MCP transport", () => {
         vi.doMock("@repo/backend/agent/mcp/server", () => {
           throw new Error("private module initialization failure");
         });
-        const response = yield* postModern(
+        const response = yield* send(
           createConvexTestWithBetterAuth(),
-          99,
-          "server/discover"
+          modernPost(99, "server/discover")
         );
         expect(response.status).toBe(503);
         expect(yield* json(response)).toMatchObject({
