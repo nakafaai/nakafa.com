@@ -1,7 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
 
 export const GROUP_ONE_FOCUS_ID = "group-one";
 export const PERIOD_THREE_FOCUS_ID = "period-three";
@@ -274,31 +273,6 @@ export const MODERN_PERIODIC_TABLE_FOCI = {
     symbols: string[];
   }
 >;
-
-export interface ModernPeriodicTableFocusLabels {
-  detail: ReactNode;
-  name: string;
-  tab: string;
-}
-
-export interface ModernPeriodicTableLabLabels {
-  atomicNumber: string;
-  categoryNames: Record<PeriodicElementCategoryId, string>;
-  chooseFocus: string;
-  focuses: Record<ModernPeriodicTableFocusId, ModernPeriodicTableFocusLabels>;
-  focusLabel: string;
-  group: string;
-  period: string;
-  periodPrefix: string;
-  seriesNames: Record<PeriodicSeriesRowKey, string>;
-  tableLabel: string;
-}
-
-export interface ModernPeriodicTableLabProps {
-  description: ReactNode;
-  labels: ModernPeriodicTableLabLabels;
-  title: ReactNode;
-}
 
 /**
  * Narrows ToggleGroup string values to the available periodic-table focus modes.

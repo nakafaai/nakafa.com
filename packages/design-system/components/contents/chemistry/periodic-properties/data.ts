@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const ATOMIC_RADIUS_MODE_ID = "atomic-radius";
 export const IONIZATION_ENERGY_MODE_ID = "ionization-energy";
@@ -21,20 +21,19 @@ export const PERIODIC_PROPERTY_MODE_IDS = [
   ELECTRONEGATIVITY_MODE_ID,
 ] satisfies PeriodicPropertyModeId[];
 
-type PeriodicPropertyColorKey = Parameters<typeof getColor>[0];
-type PeriodicPropertyMarker = "sphere" | "pillar";
+const PeriodicPropertySampleSchema = Schema.Struct({
+  symbol: Schema.String,
+  value: Schema.Finite,
+});
+export type PeriodicPropertySample = typeof PeriodicPropertySampleSchema.Type;
 
-export interface PeriodicPropertySample {
-  symbol: string;
-  value: number;
-}
-
-export interface PeriodicPropertyMode {
-  colorKey: PeriodicPropertyColorKey;
-  groupSamples: readonly PeriodicPropertySample[];
-  marker: PeriodicPropertyMarker;
-  periodSamples: readonly PeriodicPropertySample[];
-}
+const PeriodicPropertyModeSchema = Schema.Struct({
+  colorKey: Schema.Literals(["TEAL", "ORANGE", "VIOLET", "SKY"]),
+  groupSamples: Schema.Array(PeriodicPropertySampleSchema),
+  marker: Schema.Literals(["sphere", "pillar"]),
+  periodSamples: Schema.Array(PeriodicPropertySampleSchema),
+});
+export type PeriodicPropertyMode = typeof PeriodicPropertyModeSchema.Type;
 
 export const PERIODIC_PROPERTY_MODES = {
   [ATOMIC_RADIUS_MODE_ID]: {
@@ -118,34 +117,6 @@ export const PERIODIC_PROPERTY_MODES = {
     ],
   },
 } satisfies Record<PeriodicPropertyModeId, PeriodicPropertyMode>;
-
-export interface PeriodicPropertiesModeLabels {
-  cause: ReactNode;
-  groupTrend: ReactNode;
-  guidance: ReactNode;
-  name: string;
-  periodTrend: ReactNode;
-  question: ReactNode;
-  tab: string;
-}
-
-export interface PeriodicPropertiesLabLabels {
-  chooseTrend: string;
-  factLabels: {
-    cause: string;
-    group: string;
-    period: string;
-    question: string;
-  };
-  modes: Record<PeriodicPropertyModeId, PeriodicPropertiesModeLabels>;
-  sceneLabel: string;
-}
-
-export interface PeriodicPropertiesLabProps {
-  description: ReactNode;
-  labels: PeriodicPropertiesLabLabels;
-  title: ReactNode;
-}
 
 export type PeriodicPropertiesSceneColors = ReturnType<
   typeof getPeriodicPropertiesSceneColors
