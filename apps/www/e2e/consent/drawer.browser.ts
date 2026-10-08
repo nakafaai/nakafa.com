@@ -5,7 +5,12 @@ import { activateUntilVisible } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
-import { DRAWER_BAR, DRAWER_POPUP } from "@/e2e/support/selector";
+import {
+  DRAWER_BAR,
+  DRAWER_PANEL,
+  DRAWER_POPUP,
+  DRAWER_TITLE,
+} from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const usageDataName = "Usage data";
@@ -35,15 +40,13 @@ const verifyCompactConsentDrawer = Effect.fn(
   yield* activateUntilVisible(trigger, drawer, readinessTimeoutMilliseconds);
   yield* Effect.promise(() => expect(drawer.locator(DRAWER_BAR)).toBeVisible());
   yield* Effect.promise(() =>
-    expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText(
-      usageDataName
-    )
+    expect(drawer.locator(DRAWER_TITLE)).toHaveText(usageDataName)
   );
   yield* Effect.promise(() =>
     expect(drawer.locator('[data-slot="drawer-description"]')).toBeVisible()
   );
   yield* Effect.promise(() =>
-    expect(drawer.locator('[data-slot="drawer-panel"]')).toBeVisible()
+    expect(drawer.locator(DRAWER_PANEL)).toBeVisible()
   );
   yield* Effect.promise(() =>
     expect(drawer.locator('[data-slot="drawer-footer"]')).toBeVisible()

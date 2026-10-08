@@ -4,6 +4,7 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { scrollToElement } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
+import { NINA_SHOWCASE } from "@/e2e/support/selector";
 import {
   readinessTimeoutMilliseconds,
   revealTimeoutMilliseconds,
@@ -48,7 +49,7 @@ const clickCentered = Effect.fn("NakafaE2E.clickCentered")(function* (
 const expectNinaPageFlow = Effect.fn("NakafaE2E.expectNinaPageFlow")(function* (
   page: Page
 ) {
-  const conversation = page.locator('[data-slot="nina-showcase"]');
+  const conversation = page.locator(NINA_SHOWCASE);
   const reasoningTrigger = conversation.getByRole("button", {
     name: "Thought for a few seconds",
   });

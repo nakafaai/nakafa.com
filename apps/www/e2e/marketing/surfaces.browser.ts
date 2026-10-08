@@ -15,6 +15,7 @@ import {
   observeStablePricingReload,
 } from "@/e2e/support/pricing";
 import { openRoute } from "@/e2e/support/route";
+import { DRAWER_TITLE, MARKETING_PAGE } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
@@ -54,9 +55,10 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
    * @see https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming
    */
   yield* Effect.promise(() =>
-    expect(
-      page.locator('main[data-marketing-page="true"]').filter({ visible: true })
-    ).toHaveCount(1, { timeout: readinessTimeoutMilliseconds })
+    expect(page.locator(MARKETING_PAGE).filter({ visible: true })).toHaveCount(
+      1,
+      { timeout: readinessTimeoutMilliseconds }
+    )
   );
 });
 
@@ -206,9 +208,7 @@ const verifyContributorPayloads = Effect.fn(
       )
     );
     yield* Effect.promise(() =>
-      expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText(
-        contributor.name
-      )
+      expect(drawer.locator(DRAWER_TITLE)).toHaveText(contributor.name)
     );
     yield* Effect.promise(() =>
       expect(drawer).toHaveAccessibleName(contributor.name)

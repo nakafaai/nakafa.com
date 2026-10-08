@@ -9,7 +9,9 @@ import { appRoutes } from "@/e2e/support/route";
 import {
   CARD,
   DRAWER_BAR,
+  DRAWER_PANEL,
   DRAWER_POPUP,
+  DRAWER_TITLE,
   SHEET_POPUP,
   SURAH_SIDEBAR_TRIGGER,
 } from "@/e2e/support/selector";
@@ -116,10 +118,10 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   );
   yield* Effect.promise(() => expect(drawer.locator(DRAWER_BAR)).toBeVisible());
   yield* Effect.promise(() =>
-    expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText("Tafsir")
+    expect(drawer.locator(DRAWER_TITLE)).toHaveText("Tafsir")
   );
   yield* Effect.promise(() =>
-    expect(drawer.locator('[data-slot="drawer-panel"]')).not.toBeEmpty()
+    expect(drawer.locator(DRAWER_PANEL)).not.toBeEmpty()
   );
 
   yield* Effect.promise(() => page.keyboard.press("Escape"));

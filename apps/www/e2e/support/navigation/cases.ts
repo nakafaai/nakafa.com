@@ -6,6 +6,10 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { activateUntilVisible, press, visibleLink } from "@/e2e/support/input";
 import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
 import { appRoutes } from "@/e2e/support/route";
+import {
+  MARKETING_PAGE,
+  VISIBLE_SIDEBAR_TRIGGER,
+} from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
@@ -35,7 +39,7 @@ type InstantShell = "app" | "marketing";
 
 const instantShellSelector = {
   app: 'main[data-slot="sidebar-inset"]:visible',
-  marketing: 'main[data-marketing-page="true"]:visible',
+  marketing: `${MARKETING_PAGE}:visible`,
 } as const;
 
 /** A rendered source route has no visible link matching its signed catalog. */
@@ -144,9 +148,7 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
     return yield* waitForVisibleLocator(link, missingLink);
   }
 
-  const sidebarTrigger = page
-    .locator('[data-slot="sidebar-trigger"]:visible')
-    .first();
+  const sidebarTrigger = page.locator(VISIBLE_SIDEBAR_TRIGGER).first();
   yield* waitForVisibleLocator(sidebarTrigger, missingLink);
   return yield* activateUntilVisible(
     sidebarTrigger,

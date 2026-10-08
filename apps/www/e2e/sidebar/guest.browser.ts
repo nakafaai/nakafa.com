@@ -7,6 +7,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes } from "@/e2e/support/route";
+import { VISIBLE_SIDEBAR_TRIGGER } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";
 
@@ -48,7 +49,7 @@ for (const viewport of sidebarViewports) {
 
           if (viewport.name === "compact") {
             const sidebarTrigger = page
-              .locator('[data-slot="sidebar-trigger"]:visible')
+              .locator(VISIBLE_SIDEBAR_TRIGGER)
               .first();
             yield* activateUntilVisible(
               sidebarTrigger,
