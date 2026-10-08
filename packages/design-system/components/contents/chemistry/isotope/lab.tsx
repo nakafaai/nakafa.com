@@ -4,7 +4,7 @@ import {
   HYDROGEN_1_ID,
   ISOTOPE_SAMPLE_IDS,
   ISOTOPE_SAMPLES,
-  type IsotopeLabProps,
+  type IsotopeLabLabels,
   type IsotopeSampleId,
   isIsotopeSampleId,
 } from "@repo/design-system/components/contents/chemistry/isotope/data";
@@ -35,6 +35,12 @@ const particleDotVariants = cva(
     },
   }
 );
+
+export interface IsotopeLabProps {
+  description: ReactNode;
+  labels: IsotopeLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders a compact lab for comparing isotopes by their neutron count.

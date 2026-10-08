@@ -4,7 +4,7 @@ import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import {
   ION_SAMPLE_IDS,
   ION_SAMPLES,
-  type IonLabProps,
+  type IonLabLabels,
   type IonSampleId,
   isIonSampleId,
   SODIUM_CATION_ID,
@@ -24,6 +24,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+export interface IonLabProps {
+  description: ReactNode;
+  labels: IonLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders a compact lab for comparing a neutral atom with its ion.

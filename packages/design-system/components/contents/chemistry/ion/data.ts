@@ -72,12 +72,6 @@ export interface IonLabLabels {
   samples: Record<IonSampleId, IonSampleLabels>;
 }
 
-export interface IonLabProps {
-  description: ReactNode;
-  labels: IonLabLabels;
-  title: ReactNode;
-}
-
 /**
  * Narrows ToggleGroup string values to the available ion examples.
  */

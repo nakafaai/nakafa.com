@@ -8,7 +8,7 @@ import {
   MATTER_PARTICLE_MODE_IDS,
   MATTER_PARTICLE_SCENE_VIEW,
   type MatterParticleModeId,
-  type MatterParticleReaderLabProps,
+  type MatterParticleReaderLabels,
 } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/data";
 import { MatterParticleReaderScene } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
@@ -34,6 +34,12 @@ import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.28;
+
+export interface MatterParticleReaderLabProps {
+  description: ReactNode;
+  labels: MatterParticleReaderLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders a compact 3D reader for atom, element, and molecule categories.

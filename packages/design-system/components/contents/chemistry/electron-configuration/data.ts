@@ -71,12 +71,6 @@ export interface ElectronConfigurationLabLabels {
   >;
 }
 
-export interface ElectronConfigurationLabProps {
-  description: ReactNode;
-  labels: ElectronConfigurationLabLabels;
-  title: ReactNode;
-}
-
 export type ElectronConfigurationSample =
   (typeof ELECTRON_CONFIGURATION_SAMPLES)[ElectronConfigurationSampleId];
 

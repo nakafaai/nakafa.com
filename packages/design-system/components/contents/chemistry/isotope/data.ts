@@ -83,12 +83,6 @@ export interface IsotopeLabLabels {
   samples: Record<IsotopeSampleId, IsotopeSampleLabels>;
 }
 
-export interface IsotopeLabProps {
-  description: ReactNode;
-  labels: IsotopeLabLabels;
-  title: ReactNode;
-}
-
 /**
  * Narrows ToggleGroup string values to the available isotope examples.
  */

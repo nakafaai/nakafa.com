@@ -1,6 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const CLOSED_SYSTEM_MODE_ID = "closed";
@@ -17,7 +18,13 @@ export type MassConservationModeId =
 export type MassConservationSceneColors = ReturnType<
   typeof getMassConservationSceneColors
 >;
-export type MassConservationScenePoint = readonly [number, number, number];
+export const MassConservationScenePointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+export type MassConservationScenePoint =
+  typeof MassConservationScenePointSchema.Type;
 
 export interface MassConservationModeLabels {
   calculation: ReactNode;
@@ -36,12 +43,6 @@ export interface MassConservationLabLabels {
   modes: Record<MassConservationModeId, MassConservationModeLabels>;
   reactionView: string;
   systemLabel: string;
-}
-
-export interface MassConservationLabProps {
-  description: ReactNode;
-  labels: MassConservationLabLabels;
-  title: ReactNode;
 }
 
 export const MASS_CONSERVATION_MODES = {
