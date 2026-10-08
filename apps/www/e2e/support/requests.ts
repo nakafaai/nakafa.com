@@ -1,5 +1,5 @@
 import type { Page, Request } from "@playwright/test";
-import { Effect, MutableHashMap, Option, Schema } from "effect";
+import { Effect, Equal, MutableHashMap, Option, Schema } from "effect";
 
 export const TrackedRequestKindSchema = Schema.Literals([
   "javascript",
@@ -83,129 +83,148 @@ const readTrackedRequest = (request: Request): TrackedRequest => {
  * Starts listening to one page's requests and returns the tracker that reads
  * them, with the handlers that stop the listening.
  */
-function openRequestTracker(page: Page, classifyRequest: RequestClassifier) {
-  const failures = MutableHashMap.empty<TrackedRequestKind, RequestFailure>();
-  // Effect collections compare object keys by structure, and a Request must
-  // match by reference, so pending requests stay in a native Map.
-  const pendingRequests = new Map<Request, PendingRequest>();
-  const successfulCounts = MutableHashMap.empty<TrackedRequestKind, number>();
-  let revision = 0;
+const openRequestTracker = Effect.fn("NakafaE2E.openRequestTracker")(
+  (page: Page, classifyRequest: RequestClassifier) =>
+    Effect.sync(() => {
+      const failures = MutableHashMap.empty<
+        TrackedRequestKind,
+        RequestFailure
+      >();
+      // Playwright passes one Request object to every event of that request,
+      // so the object itself is the key. Effect hashes and compares an unmarked
+      // object by its structure, which would walk Playwright's object graph.
+      // Each Request is marked for reference equality before the map reads or
+      // stores it, so it matches only itself, as a native Map would. The mark
+      // stays on that object for good and changes nothing else about it.
+      const pendingRequests = MutableHashMap.empty<Request, PendingRequest>();
+      const successfulCounts = MutableHashMap.empty<
+        TrackedRequestKind,
+        number
+      >();
+      let revision = 0;
 
-  const countSuccessful = (kind: TrackedRequestKind) =>
-    Option.getOrElse(MutableHashMap.get(successfulCounts, kind), () => 0);
-  const handleRequest = (request: Request) => {
-    const requestKind = classifyRequest(request);
-    if (!requestKind) {
-      return;
-    }
-    pendingRequests.set(request, {
-      details: readTrackedRequest(request),
-      kind: requestKind,
-    });
-    revision += 1;
-  };
-  const settleRequest = (request: Request) => {
-    const pendingRequest = pendingRequests.get(request);
-    if (!pendingRequest) {
-      return;
-    }
-    pendingRequests.delete(request);
-    revision += 1;
-    return pendingRequest;
-  };
-  const recordFailure = (
-    pendingRequest: PendingRequest,
-    requestFailure: RequestFailure
-  ) => {
-    if (!MutableHashMap.has(failures, pendingRequest.kind)) {
-      MutableHashMap.set(failures, pendingRequest.kind, requestFailure);
-    }
-  };
-  const handleRequestFailed = (request: Request) => {
-    const pendingRequest = settleRequest(request);
-    if (!pendingRequest) {
-      return;
-    }
-    const requestFailure = request.failure();
-    recordFailure(
-      pendingRequest,
-      requestFailure
-        ? {
+      const countSuccessful = (kind: TrackedRequestKind) =>
+        Option.getOrElse(MutableHashMap.get(successfulCounts, kind), () => 0);
+      const handleRequest = (request: Request) => {
+        const requestKind = classifyRequest(request);
+        if (!requestKind) {
+          return;
+        }
+        Equal.byReferenceUnsafe(request);
+        MutableHashMap.set(pendingRequests, request, {
+          details: readTrackedRequest(request),
+          kind: requestKind,
+        });
+        revision += 1;
+      };
+      const settleRequest = (request: Request) => {
+        Equal.byReferenceUnsafe(request);
+        const pendingRequest = Option.getOrUndefined(
+          MutableHashMap.get(pendingRequests, request)
+        );
+        if (!pendingRequest) {
+          return;
+        }
+        MutableHashMap.remove(pendingRequests, request);
+        revision += 1;
+        return pendingRequest;
+      };
+      const recordFailure = (
+        pendingRequest: PendingRequest,
+        requestFailure: RequestFailure
+      ) => {
+        if (!MutableHashMap.has(failures, pendingRequest.kind)) {
+          MutableHashMap.set(failures, pendingRequest.kind, requestFailure);
+        }
+      };
+      const handleRequestFailed = (request: Request) => {
+        const pendingRequest = settleRequest(request);
+        if (!pendingRequest) {
+          return;
+        }
+        const requestFailure = request.failure();
+        recordFailure(
+          pendingRequest,
+          requestFailure
+            ? {
+                ...pendingRequest.details,
+                errorText: requestFailure.errorText,
+                outcome: "network",
+              }
+            : {
+                ...pendingRequest.details,
+                outcome: "network",
+              }
+        );
+      };
+      const handleRequestFinished = (request: Request) => {
+        const pendingRequest = settleRequest(request);
+        if (!pendingRequest) {
+          return;
+        }
+        const response = request.existingResponse();
+        if (!response) {
+          recordFailure(pendingRequest, {
             ...pendingRequest.details,
-            errorText: requestFailure.errorText,
-            outcome: "network",
-          }
-        : {
+            outcome: "missing-response",
+          });
+          return;
+        }
+        if (!response.ok()) {
+          recordFailure(pendingRequest, {
             ...pendingRequest.details,
-            outcome: "network",
-          }
-    );
-  };
-  const handleRequestFinished = (request: Request) => {
-    const pendingRequest = settleRequest(request);
-    if (!pendingRequest) {
-      return;
-    }
-    const response = request.existingResponse();
-    if (!response) {
-      recordFailure(pendingRequest, {
-        ...pendingRequest.details,
-        outcome: "missing-response",
-      });
-      return;
-    }
-    if (!response.ok()) {
-      recordFailure(pendingRequest, {
-        ...pendingRequest.details,
-        outcome: "http",
-        status: response.status(),
-      });
-      return;
-    }
-    MutableHashMap.set(
-      successfulCounts,
-      pendingRequest.kind,
-      countSuccessful(pendingRequest.kind) + 1
-    );
-  };
+            outcome: "http",
+            status: response.status(),
+          });
+          return;
+        }
+        MutableHashMap.set(
+          successfulCounts,
+          pendingRequest.kind,
+          countSuccessful(pendingRequest.kind) + 1
+        );
+      };
 
-  /**
-   * Playwright reports network failures through `requestfailed`, while
-   * HTTP error responses still finish through `requestfinished`.
-   *
-   * @see https://playwright.dev/docs/api/class-page#page-event-request-failed
-   * @see https://playwright.dev/docs/api/class-page#page-event-request-finished
-   */
-  page.on("request", handleRequest);
-  page.on("requestfailed", handleRequestFailed);
-  page.on("requestfinished", handleRequestFinished);
+      /**
+       * Playwright reports network failures through `requestfailed`, while
+       * HTTP error responses still finish through `requestfinished`.
+       *
+       * @see https://playwright.dev/docs/api/class-page#page-event-request-failed
+       * @see https://playwright.dev/docs/api/class-page#page-event-request-finished
+       */
+      page.on("request", handleRequest);
+      page.on("requestfailed", handleRequestFailed);
+      page.on("requestfinished", handleRequestFinished);
 
-  return {
-    handleRequest,
-    handleRequestFailed,
-    handleRequestFinished,
-    tracker: {
-      getFailure(kind: TrackedRequestKind) {
-        return Option.getOrUndefined(MutableHashMap.get(failures, kind));
-      },
-      pendingRequests(kind: TrackedRequestKind) {
-        return Array.from(pendingRequests.values())
-          .filter((request) => request.kind === kind)
-          .map((request) => request.details);
-      },
-      get pendingCount() {
-        return pendingRequests.size;
-      },
-      get revision() {
-        return revision;
-      },
-      successfulCount: countSuccessful,
-    },
-  };
-}
+      return {
+        handleRequest,
+        handleRequestFailed,
+        handleRequestFinished,
+        tracker: {
+          getFailure(kind: TrackedRequestKind) {
+            return Option.getOrUndefined(MutableHashMap.get(failures, kind));
+          },
+          pendingRequests(kind: TrackedRequestKind) {
+            return Array.from(MutableHashMap.values(pendingRequests))
+              .filter((request) => request.kind === kind)
+              .map((request) => request.details);
+          },
+          get pendingCount() {
+            return MutableHashMap.size(pendingRequests);
+          },
+          get revision() {
+            return revision;
+          },
+          successfulCount: countSuccessful,
+        },
+      };
+    })
+);
 
 /** The live view a suite reads while its page's requests settle. */
-export type RequestTracker = ReturnType<typeof openRequestTracker>["tracker"];
+export type RequestTracker = Effect.Success<
+  ReturnType<typeof openRequestTracker>
+>["tracker"];
 
 /** Owns one classified Playwright request lifecycle and its truthful outcome. */
 export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
@@ -215,7 +234,7 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
     use: (tracker: RequestTracker) => Effect.Effect<A, E, R>
   ) {
     return yield* Effect.acquireUseRelease(
-      Effect.sync(() => openRequestTracker(page, classifyRequest)),
+      openRequestTracker(page, classifyRequest),
       ({ tracker }) => use(tracker),
       ({ handleRequest, handleRequestFailed, handleRequestFinished }) =>
         Effect.sync(() => {
