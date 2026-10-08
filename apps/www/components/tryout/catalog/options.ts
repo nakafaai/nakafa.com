@@ -1,10 +1,5 @@
 import type { Ref } from "@confect/core";
 import type refs from "@repo/backend/confect/_generated/refs";
-import {
-  publicTryoutCountryValidator,
-  publicTryoutExamValidator,
-} from "@repo/backend/confect/tryouts/queries/catalogModel";
-import { Schema } from "effect";
 
 import type { Locale } from "next-intl";
 
@@ -14,25 +9,24 @@ type TryoutHubPage = Ref.Returns<
 type TryoutCountryPage = NonNullable<
   Ref.Returns<typeof refs.public.tryouts.queries.catalog.getCountryPage>
 >;
-const TryoutCountrySelectorOptionSchema = Schema.Struct({
-  countryCode: publicTryoutCountryValidator.fields.countryCode,
-  countryKey: publicTryoutCountryValidator.fields.countryKey,
-  href: Schema.String,
-  publicPath: publicTryoutCountryValidator.fields.publicPath,
-  title: publicTryoutCountryValidator.fields.title,
-  value: publicTryoutCountryValidator.fields.publicPath,
-});
-export type TryoutCountrySelectorOption =
-  typeof TryoutCountrySelectorOptionSchema.Type;
+type TryoutCountry = TryoutHubPage["countries"][number];
+type TryoutExam = TryoutCountryPage["exams"][number];
 
-const TryoutExamSelectorOptionSchema = Schema.Struct({
-  examKey: publicTryoutExamValidator.fields.examKey,
-  href: Schema.String,
-  title: publicTryoutExamValidator.fields.title,
-  value: publicTryoutExamValidator.fields.publicPath,
-});
-export type TryoutExamSelectorOption =
-  typeof TryoutExamSelectorOptionSchema.Type;
+export type TryoutCountrySelectorOption = Readonly<{
+  countryCode: TryoutCountry["countryCode"];
+  countryKey: TryoutCountry["countryKey"];
+  href: string;
+  publicPath: TryoutCountry["publicPath"];
+  title: TryoutCountry["title"];
+  value: TryoutCountry["publicPath"];
+}>;
+
+export type TryoutExamSelectorOption = Readonly<{
+  examKey: TryoutExam["examKey"];
+  href: string;
+  title: TryoutExam["title"];
+  value: TryoutExam["publicPath"];
+}>;
 
 /** Projects active country rows into localized selector options. */
 export function buildTryoutCountryOptions(
