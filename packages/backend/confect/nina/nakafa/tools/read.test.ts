@@ -8,7 +8,7 @@ import {
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/agent/content", () => ({ getNakafaContent: vi.fn() }));
 afterEach(() => vi.restoreAllMocks());
@@ -21,6 +21,7 @@ const content = {
 const input = {
   content_ref: NakafaAgentContentRefInputSchema.make(content.url),
 };
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 describe("Nina content evidence", () => {
   it("publishes a bounded preview while returning full verified content to the Agent", async () => {
@@ -40,7 +41,7 @@ describe("Nina content evidence", () => {
         },
       },
     ]);
-    expect(JSON.stringify(artifacts)).not.toContain(content.text);
+    expect(encodeJson(artifacts)).not.toContain(content.text);
   });
   it.each(["missing", "failed"] as const)(
     "publishes an honest %s result without inventing content",

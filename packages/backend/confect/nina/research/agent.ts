@@ -48,7 +48,7 @@ import {
   Output,
   wrapLanguageModel,
 } from "ai";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, MutableHashSet } from "effect";
 
 // Keep exact source fetching within the admitted count and provider concurrency.
 const exactSourceScrapeConcurrency = 3;
@@ -100,7 +100,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       publish,
     });
     let collectedEvidence = Arr.map(sourceOutputs, (output) => output.text);
-    const eligibleCitationUrls = new Set<string>();
+    const eligibleCitationUrls = MutableHashSet.empty<string>();
 
     for (const sourceOutput of sourceOutputs) {
       addEligibleSourceUrls(eligibleCitationUrls, sourceOutput.sources);
@@ -201,7 +201,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       });
     }
 
-    const sourceEvidenceAvailable = eligibleCitationUrls.size > 0;
+    const sourceEvidenceAvailable =
+      MutableHashSet.size(eligibleCitationUrls) > 0;
     const output = yield* Effect.tryPromise({
       try: (signal) =>
         agent
@@ -286,14 +287,8 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
 function getUniqueSourceReferences(
   sourceReferences: ResearchAgentParams["sourceReferences"]
 ) {
-  const seen = new Set<string>();
-
-  return Arr.flatMap(sourceReferences, (source) => {
-    if (seen.has(source.href)) {
-      return [];
-    }
-
-    seen.add(source.href);
-    return [source];
-  });
+  return Arr.dedupeWith(
+    sourceReferences,
+    (left, right) => left.href === right.href
+  );
 }
