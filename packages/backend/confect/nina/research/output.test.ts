@@ -6,6 +6,7 @@ import {
   normalizeResearchCitationUrl,
 } from "@repo/backend/confect/nina/research/citations";
 import { formatResearchOutput } from "@repo/backend/confect/nina/research/output";
+import { MutableHashSet } from "effect";
 
 describe("formatResearchOutput", () => {
   it("renders citations inline from structured research output", () => {
@@ -99,7 +100,7 @@ describe("formatResearchOutput", () => {
   });
 
   it("drops generated findings whose citations are not eligible source evidence", () => {
-    const eligibleUrls = new Set<string>();
+    const eligibleUrls = MutableHashSet.empty<string>();
     addEligibleCitationUrl(
       eligibleUrls,
       "https://ai-sdk.dev/docs/ai-sdk-core/devtools"
@@ -152,7 +153,7 @@ describe("formatResearchOutput", () => {
   });
 
   it("drops only unsupported citations when a finding keeps source-backed evidence", () => {
-    const eligibleUrls = new Set<string>();
+    const eligibleUrls = MutableHashSet.empty<string>();
     addEligibleCitationUrl(
       eligibleUrls,
       "https://ai-sdk.dev/docs/ai-sdk-core/devtools"
@@ -195,7 +196,7 @@ describe("formatResearchOutput", () => {
   });
 
   it("keeps findings unchanged when every citation is eligible", () => {
-    const eligibleUrls = new Set<string>();
+    const eligibleUrls = MutableHashSet.empty<string>();
     addEligibleSourceUrls(eligibleUrls, [
       { url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools" },
     ]);
