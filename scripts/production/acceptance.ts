@@ -158,7 +158,7 @@ function isDocumentationPath(path: string) {
   );
 }
 
-/** Whether one change is a modified TS test or documentation, which need no acceptance. */
+/** Whether one change is documentation or a modified TS test, so it needs no acceptance. */
 function needsNoProductionAcceptance(change: ProductionChange) {
   return (
     (change.status === "M" && change.path.endsWith(".test.ts")) ||
@@ -166,7 +166,7 @@ function needsNoProductionAcceptance(change: ProductionChange) {
   );
 }
 
-/** Requires production unless every change is a modified TS test or documentation. */
+/** Requires production unless every change is documentation or a modified TS test. */
 export function requiresProductionAcceptance(
   changes: readonly ProductionChange[]
 ) {
@@ -251,7 +251,7 @@ export const writeProductionAcceptanceDecision = Effect.fn(
   yield* writeOutput(
     required
       ? `Production acceptance required for ${changes.length} changed paths.\n`
-      : "Production acceptance skipped: every changed path is a modified test or documentation.\n"
+      : "Production acceptance skipped: every changed path is documentation or a modified test.\n"
   );
 });
 

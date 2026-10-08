@@ -408,7 +408,7 @@ describe("production acceptance scope", () => {
         "Success",
       ]);
       expect([...skipped.stdout, ...required.stdout]).toEqual([
-        "Production acceptance skipped: every changed path is a modified test or documentation.\n",
+        "Production acceptance skipped: every changed path is documentation or a modified test.\n",
         "Production acceptance required for 2 changed paths.\n",
       ]);
       expect(yield* fileSystem.readFileString(output)).toBe(
