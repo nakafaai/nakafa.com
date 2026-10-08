@@ -56,7 +56,7 @@ export const repairToolCall = Effect.fn("nina.repair")(
     });
     const acceptedSchema = yield* Schema.encodeEffect(jsonTextSchema)(
       schema
-    ).pipe(Effect.mapError(() => new NinaRepairError({ phase: "generation" })));
+    ).pipe(Effect.orDie);
     const result = yield* Effect.tryPromise({
       try: (signal) =>
         agent
