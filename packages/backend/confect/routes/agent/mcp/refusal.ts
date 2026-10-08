@@ -5,11 +5,13 @@ import {
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import { isJsonContentType } from "@repo/utilities/mime";
 import { Array as Arr, Option, Predicate, Schema } from "effect";
+import { McpProtocol } from "effect/ai";
 
 const MCP_PROTOCOL_VERSION_HEADER = "mcp-protocol-version";
 const PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
 const INVALID_REQUEST_CODE = -32_600;
 const METHOD_NOT_ALLOWED_CODE = -32_000;
+const METHOD_NOT_FOUND_CODE = -32_601;
 const PARSE_ERROR_CODE = -32_700;
 const UNSUPPORTED_PROTOCOL_VERSION_CODE = -32_022;
 
@@ -91,6 +93,36 @@ export function refuseMcpRequest(request: Request, parsedBody: unknown) {
     );
   }
   return Option.none();
+}
+
+/**
+ * Answers a request for a method the protocol does not serve, with the answer
+ * the SDK gave. The engine answers the same status and code with its own
+ * wording and an extra member, so Nakafa answers first from the request table
+ * of the protocol the engine serves. Notifications never reach this check.
+ */
+export function refuseUnservedMethod(parsedBody: unknown) {
+  if (
+    !(
+      Predicate.isObject(parsedBody) &&
+      Predicate.hasProperty(parsedBody, "id") &&
+      Predicate.hasProperty(parsedBody, "method") &&
+      Predicate.isString(parsedBody.method)
+    )
+  ) {
+    return Option.none();
+  }
+  if (McpProtocol.v2026_07_28.clientRpcs.requests.has(parsedBody.method)) {
+    return Option.none();
+  }
+  return Option.some(
+    mcpJsonRpcRefusal(
+      404,
+      METHOD_NOT_FOUND_CODE,
+      "Method not found",
+      readJsonRpcRequestId(parsedBody)
+    )
+  );
 }
 
 function isJsonRpcMessage(body: object) {

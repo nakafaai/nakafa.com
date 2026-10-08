@@ -4,7 +4,10 @@ import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { enforceAgentReadLimit } from "@repo/backend/confect/routes/agent/limit";
 import { guardMcpOrigin } from "@repo/backend/confect/routes/agent/mcp/guard";
 import { readMcpRequest } from "@repo/backend/confect/routes/agent/mcp/input";
-import { refuseMcpRequest } from "@repo/backend/confect/routes/agent/mcp/refusal";
+import {
+  refuseMcpRequest,
+  refuseUnservedMethod,
+} from "@repo/backend/confect/routes/agent/mcp/refusal";
 import {
   isJsonRpcNotification,
   mcpOptionsResponse,
@@ -81,6 +84,10 @@ const handleMcp = Effect.gen(function* () {
   }
   if (isJsonRpcNotification(parsedBody)) {
     return withMcpResponseHeaders(mcpTransportErrorResponse(202), request);
+  }
+  const unserved = refuseUnservedMethod(parsedBody);
+  if (Option.isSome(unserved)) {
+    return withMcpResponseHeaders(unserved.value, request);
   }
   const engine = yield* HttpRouter.toHttpEffect(
     nakafaMcpEngine({
