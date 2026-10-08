@@ -1,7 +1,13 @@
 import { RegisteredFunction } from "@confect/server";
-import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import {
+  RollbackSignedContentReleaseSchema,
+  type SignedContentRelease,
+} from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { PublicationRequestSchema } from "@nakafa/aksara-contracts/transport/request";
+import {
+  type PublicationRequest,
+  PublicationRequestSchema,
+} from "@nakafa/aksara-contracts/transport/request";
 import { PublicationResponseSchema } from "@nakafa/aksara-contracts/transport/response";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { dispatchPublication } from "@repo/backend/confect/contentRelease/ingress/dispatch";
@@ -28,19 +34,24 @@ import { FetchClient } from "@repo/utilities/http/client";
 import type { TestConvex } from "convex-test";
 import { Effect, Layer, Schema } from "effect";
 
-/** Validates one request against the publication contract, then encodes it as its wire body. */
-const encodeRequestJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(PublicationRequestSchema)
+/** Validates one request against the publication contract, then encodes it as its wire body, rejecting undeclared keys. */
+const encodeRequestJson = Schema.encodeSync(
+  Schema.fromJsonString(PublicationRequestSchema),
+  { onExcessProperty: "error" }
 );
 /** Decodes the dispatcher's response text through the response contract. */
 const decodePublicationResponse = Schema.decodeUnknownSync(
   Schema.fromJsonString(PublicationResponseSchema)
 );
+/** The retained recovery fixture narrowed to its rollback origin, the only origin its stage and activation requests accept. */
+const ingressRecoveryRelease = Schema.decodeSync(
+  RollbackSignedContentReleaseSchema
+)(ingressRecovery);
 
 /** Executes one request through the real Node dispatcher and technical key. */
 export async function sendPublication(
   target: TestConvex<typeof schema>,
-  request: unknown
+  request: PublicationRequest
 ) {
   const source = encodeRequestJson(request);
   const result = await target.action((ctx) =>
@@ -88,32 +99,6 @@ async function verifyPublication(
 export async function publishIngressCandidate(
   target: TestConvex<typeof schema>
 ) {
-  const stagedRequests = [
-    {
-      batchIndex: 0,
-      items: [ingressItem],
-      operation: "stageItemBatch",
-      releaseId: ingressReleaseId,
-    },
-    {
-      batchIndex: 0,
-      operation: "stageRouteBatch",
-      releaseId: ingressReleaseId,
-      routes: [ingressRoute],
-    },
-    {
-      batchIndex: 0,
-      operation: "stageProjectionBatch",
-      projections: [ingressProjection],
-      releaseId: ingressReleaseId,
-    },
-    {
-      artifacts: [ingressArtifact],
-      batchIndex: 0,
-      operation: "stageArtifactBatch",
-      releaseId: ingressReleaseId,
-    },
-  ];
   const requests = [
     {
       operation: "stageRelease",
@@ -126,14 +111,39 @@ export async function publishIngressCandidate(
     {
       operation: "stageGroup",
       releaseId: ingressReleaseId,
-      requests: stagedRequests,
+      requests: [
+        {
+          batchIndex: 0,
+          items: [ingressItem],
+          operation: "stageItemBatch",
+          releaseId: ingressReleaseId,
+        },
+        {
+          batchIndex: 0,
+          operation: "stageRouteBatch",
+          releaseId: ingressReleaseId,
+          routes: [ingressRoute],
+        },
+        {
+          batchIndex: 0,
+          operation: "stageProjectionBatch",
+          projections: [ingressProjection],
+          releaseId: ingressReleaseId,
+        },
+        {
+          artifacts: [ingressArtifact],
+          batchIndex: 0,
+          operation: "stageArtifactBatch",
+          releaseId: ingressReleaseId,
+        },
+      ],
     },
     {
       manifestHash: ingressRelease.manifestHash,
       operation: "status",
       releaseId: ingressReleaseId,
     },
-  ];
+  ] satisfies PublicationRequest[];
   const responses = await Effect.runPromise(
     Effect.forEach(requests, (request) =>
       Effect.promise(() => sendPublication(target, request))
@@ -155,7 +165,7 @@ export async function publishIngressCandidate(
       rollbackOf: ingressReleaseId,
       rollbackOfManifestHash: ingressRelease.manifestHash,
     },
-  ];
+  ] satisfies PublicationRequest[];
   responses.push(
     ...(await Effect.runPromise(
       Effect.forEach(afterVerification, (request) =>
@@ -170,32 +180,31 @@ export async function publishIngressCandidate(
 export async function publishIngressRecovery(
   target: TestConvex<typeof schema>
 ) {
-  const stagedRequests = [
-    {
-      batchIndex: 0,
-      items: [ingressRecoveryItem],
-      operation: "stageItemBatch",
-      releaseId: ingressRecoveryId,
-    },
-    {
-      batchIndex: 0,
-      operation: "stageRouteBatch",
-      releaseId: ingressRecoveryId,
-      routes: [ingressRecoveryRoute],
-    },
-  ];
   const staging = [
     {
       operation: "stageRecovery",
-      release: ingressRecovery,
+      release: ingressRecoveryRelease,
       rendererManifest: TEST_PROOF_RENDERER,
     },
     {
       operation: "stageGroup",
       releaseId: ingressRecoveryId,
-      requests: stagedRequests,
+      requests: [
+        {
+          batchIndex: 0,
+          items: [ingressRecoveryItem],
+          operation: "stageItemBatch",
+          releaseId: ingressRecoveryId,
+        },
+        {
+          batchIndex: 0,
+          operation: "stageRouteBatch",
+          releaseId: ingressRecoveryId,
+          routes: [ingressRecoveryRoute],
+        },
+      ],
     },
-  ];
+  ] satisfies PublicationRequest[];
   const responses = await Effect.runPromise(
     Effect.forEach(staging, (request) =>
       Effect.promise(() => sendPublication(target, request))
@@ -225,7 +234,7 @@ export async function publishIngressRecovery(
     },
     {
       operation: "activateRecovery",
-      release: ingressRecovery,
+      release: ingressRecoveryRelease,
     },
     {
       operation: "recovery",
@@ -243,7 +252,7 @@ export async function publishIngressRecovery(
       limit: 10,
       operation: "headPage",
     },
-  ];
+  ] satisfies PublicationRequest[];
   responses.push(
     ...(await Effect.runPromise(
       Effect.forEach(afterVerification, (request) =>

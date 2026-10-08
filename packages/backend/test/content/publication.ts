@@ -35,13 +35,16 @@ import {
 
 /** Encodes fixture JSON with the contracts production decodes, so each stored string has the wire shape production reads. */
 const encodeArtifactJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentArtifactSchema)
+  Schema.fromJsonString(SignedContentArtifactSchema),
+  { onExcessProperty: "error" }
 );
 const encodeReleaseJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentReleaseSchema)
+  Schema.fromJsonString(SignedContentReleaseSchema),
+  { onExcessProperty: "error" }
 );
 const encodeRendererJson = Schema.encodeSync(
-  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+  Schema.fromJsonString(RendererManifestEnvelopeSchema),
+  { onExcessProperty: "error" }
 );
 
 export const TEST_PUBLICATION_RELEASE = testSignedRelease(

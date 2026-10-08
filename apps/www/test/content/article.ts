@@ -1,4 +1,5 @@
 import type { Ref } from "@confect/core";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
@@ -32,12 +33,19 @@ import {
   Effect,
   MutableHashMap,
   Record as Rec,
+  Schema,
   Struct,
 } from "effect";
 import {
   testArticleProjection,
   testArticleSourcePath,
 } from "@/test/content-article";
+
+/** Encodes fixture JSON with the contract production decodes, so the stored string has the wire shape production reads. */
+const encodeArtifactJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentArtifactSchema),
+  { onExcessProperty: "error" }
+);
 
 /** Creates signed localized articles with their complete immutable discovery closure. */
 export const makeArticleRuntimeSource = Effect.fn(
@@ -58,7 +66,10 @@ export const makeArticleRuntimeSource = Effect.fn(
     const artifacts: PublicationRow<"contentArtifacts">[] = [];
     const catalog: PublicationRow<"articleCatalog">[] = [];
     const search: PublicationRow<"contentIndex">[] = [];
-    const categories = new Map<string, PublicationRow<"articleCategories">>();
+    const categories = MutableHashMap.empty<
+      string,
+      PublicationRow<"articleCategories">
+    >();
     for (const [index, projection] of projections.entries()) {
       const artifact = testSignedArtifact("politics", {
         artifactLocale: activeAppLocaleCode(projection.appLocale),
@@ -105,7 +116,7 @@ export const makeArticleRuntimeSource = Effect.fn(
       });
       artifacts.push({
         artifactHash: artifact.artifactHash,
-        artifactJson: JSON.stringify(artifact),
+        artifactJson: encodeArtifactJson(artifact),
       });
       const bucket = getHashBucket(projectionHash);
       catalog.push({
@@ -121,16 +132,20 @@ export const makeArticleRuntimeSource = Effect.fn(
         rendererDomain: "politics",
         slot: fixture.state.articleSlot,
       });
-      categories.set(`${projection.appLocale}/${projection.category}`, {
-        ...identity,
-        appLocale: projection.appLocale,
-        bucket,
-        category: projection.category,
-        rendererDomain: "politics",
-        route: projection.categoryRouteSlug,
-        slot: fixture.state.articleSlot,
-        title: projection.categoryTitle,
-      });
+      MutableHashMap.set(
+        categories,
+        `${projection.appLocale}/${projection.category}`,
+        {
+          ...identity,
+          appLocale: projection.appLocale,
+          bucket,
+          category: projection.category,
+          rendererDomain: "politics",
+          route: projection.categoryRouteSlug,
+          slot: fixture.state.articleSlot,
+          title: projection.categoryTitle,
+        }
+      );
       search.push({
         ...identity,
         appLocale: projection.appLocale,
@@ -142,7 +157,7 @@ export const makeArticleRuntimeSource = Effect.fn(
     }
     const partitionRows = [
       ...catalog.map((row) => ({ row, article: 1, category: 0 })),
-      ...[...categories.values()].map((row) => ({
+      ...[...MutableHashMap.values(categories)].map((row) => ({
         row,
         article: 0,
         category: 1,
@@ -162,7 +177,7 @@ export const makeArticleRuntimeSource = Effect.fn(
     MutableHashMap.set(fixture.source, "contentArtifacts", artifacts);
     MutableHashMap.set(fixture.source, "articleCatalog", catalog);
     MutableHashMap.set(fixture.source, "articleCategories", [
-      ...categories.values(),
+      ...MutableHashMap.values(categories),
     ]);
     MutableHashMap.set(fixture.source, "articleBuckets", buckets);
     MutableHashMap.set(fixture.source, "contentIndex", search);
