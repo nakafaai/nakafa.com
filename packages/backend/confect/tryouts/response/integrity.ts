@@ -128,9 +128,7 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
       "Try-out attempts must contain a positive whole number of questions."
     );
   }
-  const snapshotsByIdentity = yield* validateTryoutSectionSnapshots(
-    input.snapshots
-  );
+  yield* validateTryoutSectionSnapshots(input.snapshots);
   const snapshotQuestionCount = Arr.reduce(
     input.snapshots,
     0,
@@ -146,8 +144,8 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
     );
   }
   const sections = MutableHashMap.fromIterable(
-    Array.from(snapshotsByIdentity, ([identity, snapshot]) => [
-      identity,
+    Arr.map(input.snapshots, (snapshot) => [
+      snapshot.sectionIdentity,
       {
         questionOrders: MutableHashSet.empty<number>(),
         snapshot,
