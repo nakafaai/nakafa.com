@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  type TryoutResponseFieldLabel,
   TryoutResponseFields,
+  type TryoutResponseFieldsProps,
 } from "@/components/tryout/runtime/response/fields.client";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label.client";
 import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit.client";
@@ -19,7 +19,7 @@ function renderResponseLabel({
   correctness,
   id,
   label,
-}: TryoutResponseFieldLabel) {
+}: Parameters<TryoutResponseFieldsProps["value"]["renderLabel"]>[0]) {
   return (
     <TryoutResponseLabel correctness={correctness} id={id}>
       {label}

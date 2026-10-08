@@ -1,7 +1,7 @@
 "use client";
 
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
-import { HashMap, HashSet, Option, Schema } from "effect";
+import { HashMap, HashSet, Option } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import {
@@ -20,17 +20,7 @@ import {
 } from "@/components/tryout/runtime/response/state";
 import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 
-/** Label of one response option or statement, marked correct or not once revealed. */
-const TryoutResponseFieldLabelSchema = Schema.Struct({
-  correctness: Schema.optional(Schema.Boolean),
-  id: Schema.String,
-  label: Schema.String,
-});
-export type TryoutResponseFieldLabel =
-  typeof TryoutResponseFieldLabelSchema.Type;
-
 type OnResponseChange = (selection: TryoutResponseSelection | null) => void;
-type RenderResponseLabel = (value: TryoutResponseFieldLabel) => ReactNode;
 
 /** Props of one response field set: `value` holds the response and the callbacks it drives. */
 export interface TryoutResponseFieldsProps {
@@ -38,7 +28,12 @@ export interface TryoutResponseFieldsProps {
     readonly id: string;
     readonly locked: boolean;
     readonly onChange: OnResponseChange;
-    readonly renderLabel: RenderResponseLabel;
+    /** Label of one response option or statement, marked correct or not once revealed. */
+    readonly renderLabel: (value: {
+      readonly correctness?: boolean | undefined;
+      readonly id: string;
+      readonly label: string;
+    }) => ReactNode;
     readonly responseSpec: TryoutRenderableResponseSpec;
     readonly revealAnswers?: boolean;
     readonly selection: TryoutResponseSelection | null;
