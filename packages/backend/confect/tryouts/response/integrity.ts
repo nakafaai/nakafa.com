@@ -30,7 +30,10 @@ type ResponsePlacementLink = typeof ResponsePlacementLinkSchema.Type;
 export const validateTryoutSectionSnapshots = Effect.fn(
   "tryouts.response.validateSectionSnapshots"
 )(function* (snapshots: readonly TryoutSectionSnapshot[]) {
-  let snapshotsByIdentity = HashMap.empty<string, TryoutSectionSnapshot>();
+  const snapshotsByIdentity = MutableHashMap.empty<
+    string,
+    TryoutSectionSnapshot
+  >();
   const sectionKeys = MutableHashSet.empty<string>();
   const sectionOrders = MutableHashSet.empty<number>();
   for (const snapshot of snapshots) {
@@ -44,7 +47,7 @@ export const validateTryoutSectionSnapshots = Effect.fn(
       );
     }
     if (
-      HashMap.has(snapshotsByIdentity, snapshot.sectionIdentity) ||
+      MutableHashMap.has(snapshotsByIdentity, snapshot.sectionIdentity) ||
       MutableHashSet.has(sectionKeys, snapshot.sectionKey) ||
       MutableHashSet.has(sectionOrders, snapshot.sectionOrder)
     ) {
@@ -53,11 +56,7 @@ export const validateTryoutSectionSnapshots = Effect.fn(
         "Try-out section snapshots contain a duplicate identity, key, or order."
       );
     }
-    snapshotsByIdentity = HashMap.set(
-      snapshotsByIdentity,
-      snapshot.sectionIdentity,
-      snapshot
-    );
+    MutableHashMap.set(snapshotsByIdentity, snapshot.sectionIdentity, snapshot);
     MutableHashSet.add(sectionKeys, snapshot.sectionKey);
     MutableHashSet.add(sectionOrders, snapshot.sectionOrder);
   }
@@ -71,7 +70,7 @@ export const requireTryoutResponseSectionSnapshot = Effect.fn(
     attempt.sectionSnapshots
   );
   const snapshot = Option.getOrUndefined(
-    HashMap.get(snapshotsByIdentity, section.sectionIdentity)
+    MutableHashMap.get(snapshotsByIdentity, section.sectionIdentity)
   );
   if (
     !snapshot ||
