@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { getFunctionName } from "convex/server";
+import { type FunctionArgs, getFunctionName } from "convex/server";
 import { ConfigProvider, Effect, Schema } from "effect";
 
 const seam = vi.hoisted(() => ({
@@ -139,7 +139,9 @@ const answerQueries =
   (
     _config: unknown,
     query: Parameters<typeof getFunctionName>[0],
-    args: { readonly paginationOpts: { readonly cursor: string | null } },
+    args: FunctionArgs<
+      typeof internal.customers.integrity.internal.listUsersForCustomerIntegrity
+    >,
     schema: Schema.Top
   ) =>
     answers[getFunctionName(query)](args.paginationOpts.cursor).pipe(

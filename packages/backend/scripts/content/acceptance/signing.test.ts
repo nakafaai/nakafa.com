@@ -69,7 +69,11 @@ describe("isolated acceptance signing identity", () => {
         );
         expect(privateKey).toContain("BEGIN PRIVATE KEY");
         expect(first.signing.publicKeyPem).toContain("BEGIN PUBLIC KEY");
-        expect(encodeJson(first.signing)).not.toContain(privateKey);
+        // JSON escapes the newlines of a PEM, so the whole PEM never appears in
+        // its text. A body line has nothing to escape and would appear verbatim.
+        const [, privateKeyBody] = privateKey.split("\n");
+        expect(privateKeyBody).toBeDefined();
+        expect(encodeJson(first.signing)).not.toContain(privateKeyBody);
         expect(first.signing.keyId).not.toBe(second.signing.keyId);
         expect(first.signing.publicKeyPem).not.toBe(
           second.signing.publicKeyPem

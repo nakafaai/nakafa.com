@@ -45,9 +45,12 @@ const fetcher = vi.fn<typeof fetch>();
 const scriptedFiles = (fileSystem: Partial<FileSystem.FileSystem>) =>
   Layer.merge(Path.layer, FileSystem.layerNoop(fileSystem));
 
+/** The UTF-8 bytes that a file holding this text reads back as. */
+const fileBytes = (text: string) => new TextEncoder().encode(text);
+
 /** A file read that fails the test when the code under test reads a file it should not. */
 const unexpectedRead = () =>
-  vi.fn<FileSystem.FileSystem["readFileString"]>(() =>
+  vi.fn<FileSystem.FileSystem["readFile"]>(() =>
     Effect.die("unexpected file read")
   );
 
@@ -80,9 +83,11 @@ describe("customer audit configuration", () => {
       Effect.provide(
         scriptedFiles({
           exists: () => Effect.succeed(true),
-          readFileString: () =>
+          readFile: () =>
             Effect.succeed(
-              "CONVEX_URL=https://file.example\nCONVEX_PROD_URL=https://prod.example"
+              fileBytes(
+                "CONVEX_URL=https://file.example\nCONVEX_PROD_URL=https://prod.example"
+              )
             ),
         })
       )
@@ -90,7 +95,7 @@ describe("customer audit configuration", () => {
   );
 
   it.effect("works without a backend env file", () => {
-    const readFileString = unexpectedRead();
+    const readFile = unexpectedRead();
     return Effect.gen(function* () {
       vi.stubEnv("CONVEX_URL", "https://shell.example");
       const provider = yield* loadCustomerEnvProvider();
@@ -99,16 +104,48 @@ describe("customer audit configuration", () => {
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         )
       ).toBe("https://shell.example");
-      expect(readFileString).not.toHaveBeenCalled();
-    }).pipe(Effect.provide(scriptedFiles({ readFileString })));
+      expect(readFile).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(scriptedFiles({ readFile })));
   });
+
+  it.effect(
+    "keeps shell values when the backend env path cannot be checked",
+    () => {
+      const readFile = unexpectedRead();
+      return Effect.gen(function* () {
+        vi.stubEnv("CONVEX_URL", "https://shell.example");
+        const provider = yield* loadCustomerEnvProvider();
+        expect(
+          yield* Config.String("CONVEX_URL").pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          )
+        ).toBe("https://shell.example");
+        expect(readFile).not.toHaveBeenCalled();
+      }).pipe(
+        Effect.provide(
+          scriptedFiles({
+            exists: () =>
+              Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  module: "FileSystem",
+                  method: "access",
+                  description: "locked backend directory",
+                })
+              ),
+            readFile,
+          })
+        )
+      );
+    }
+  );
 
   it.effect.each([
     {
       failure: PlatformError.systemError({
         _tag: "PermissionDenied",
         module: "FileSystem",
-        method: "readFileString",
+        method: "readFile",
         description: "unreadable env",
       }),
       label: "a system failure",
@@ -116,7 +153,7 @@ describe("customer audit configuration", () => {
     {
       failure: PlatformError.badArgument({
         module: "FileSystem",
-        method: "readFileString",
+        method: "readFile",
         description: "unreadable env",
       }),
       label: "a bad argument",
@@ -135,7 +172,7 @@ describe("customer audit configuration", () => {
         Effect.provide(
           scriptedFiles({
             exists: () => Effect.succeed(true),
-            readFileString: () => Effect.fail(failure),
+            readFile: () => Effect.fail(failure),
           })
         )
       )
@@ -158,8 +195,8 @@ describe("customer audit configuration", () => {
         Effect.provide(
           scriptedFiles({
             exists: () => Effect.succeed(true),
-            readFileString: () =>
-              Effect.succeed("CONVEX_URL=https://example.com"),
+            readFile: () =>
+              Effect.succeed(fileBytes("CONVEX_URL=https://example.com")),
           })
         )
       )
@@ -168,16 +205,16 @@ describe("customer audit configuration", () => {
   it.effect.each([false, true])(
     "selects the exact deployment for prod=%s",
     (prod) => {
-      const readFileString = unexpectedRead();
+      const readFile = unexpectedRead();
       return Effect.gen(function* () {
         expect(yield* getCustomerConvexConfig(prod)).toEqual({
           accessToken: "test-key",
           url: prod ? "https://prod.example" : "https://dev.example",
         });
-        expect(readFileString).not.toHaveBeenCalled();
+        expect(readFile).not.toHaveBeenCalled();
       }).pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, configured),
-        Effect.provide(scriptedFiles({ readFileString }))
+        Effect.provide(scriptedFiles({ readFile }))
       );
     }
   );
@@ -214,7 +251,8 @@ describe("customer audit configuration", () => {
       ),
       Effect.provide(
         scriptedFiles({
-          readFileString: () => Effect.succeed('{"accessToken":"local-token"}'),
+          readFile: () =>
+            Effect.succeed(fileBytes('{"accessToken":"local-token"}')),
         })
       )
     )
@@ -234,6 +272,11 @@ describe("customer audit configuration", () => {
       source: "{}",
       message: "The local Convex configuration has no access token",
     },
+    {
+      // A byte order mark stays in the text, and JSON.parse rejects it.
+      source: `${String.fromCharCode(0xfe_ff)}{"accessToken":"local-token"}`,
+      message: "The local Convex configuration is invalid",
+    },
   ])("rejects unusable local login: $message", ({ source, message }) =>
     Effect.gen(function* () {
       expect(
@@ -249,16 +292,16 @@ describe("customer audit configuration", () => {
       ),
       Effect.provide(
         scriptedFiles({
-          readFileString: () =>
+          readFile: () =>
             source === undefined
               ? Effect.fail(
                   PlatformError.systemError({
                     _tag: "NotFound",
                     module: "FileSystem",
-                    method: "readFileString",
+                    method: "readFile",
                   })
                 )
-              : Effect.succeed(source),
+              : Effect.succeed(fileBytes(source)),
         })
       )
     )

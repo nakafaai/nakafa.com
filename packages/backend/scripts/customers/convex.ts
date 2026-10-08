@@ -68,6 +68,9 @@ const toResponseError = (error: HttpClientError.HttpClientError) =>
   });
 const toConfigError = (error: unknown) =>
   new CustomerConvexConfigError({ message: getUnknownMessage(error) });
+/** Decodes UTF-8 and keeps a byte order mark, as Node's utf8 file reads did. */
+const decodeUtf8 = (bytes: Uint8Array) =>
+  new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes);
 const readBackendEnv = Effect.fn("customers.readBackendEnv")(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -76,15 +79,17 @@ const readBackendEnv = Effect.fn("customers.readBackendEnv")(function* () {
     "../..",
     ".env.local"
   );
+  // A path that cannot be checked counts as absent, as existsSync reported it.
   const exists = yield* fileSystem
     .exists(backendEnvPath)
-    .pipe(Effect.mapError(toConfigError));
+    .pipe(Effect.orElseSucceed(() => false));
   if (!exists) {
     return {};
   }
-  const content = yield* fileSystem
-    .readFileString(backendEnvPath)
+  const bytes = yield* fileSystem
+    .readFile(backendEnvPath)
     .pipe(Effect.mapError(toConfigError));
+  const content = decodeUtf8(bytes);
   const parsed = yield* Effect.try({
     try: () => parseEnv(content),
     catch: toConfigError,
@@ -117,7 +122,7 @@ const getLocalAccessToken = Effect.fn("customers.getLocalAccessToken")(
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const configPath = path.resolve(homedir(), ".convex", "config.json");
-    const content = yield* fileSystem.readFileString(configPath).pipe(
+    const bytes = yield* fileSystem.readFile(configPath).pipe(
       Effect.mapError(
         () =>
           new CustomerConvexAuthError({
@@ -128,7 +133,7 @@ const getLocalAccessToken = Effect.fn("customers.getLocalAccessToken")(
     );
     const config = yield* Schema.decodeEffect(
       Schema.fromJsonString(ConvexAuthConfigSchema)
-    )(content).pipe(
+    )(decodeUtf8(bytes)).pipe(
       Effect.mapError(
         () =>
           new CustomerConvexAuthError({
