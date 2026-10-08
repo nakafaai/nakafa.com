@@ -1,44 +1,54 @@
 import "server-only";
 
-import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
-import type { AppLocale } from "@nakafa/aksara-contracts/locale";
-import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
-import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
+import {
+  GitCommitShaSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import {
+  type PublicContentRuntimeFound,
+  PublicContentRuntimeFoundSchema,
+} from "@nakafa/aksara-contracts/runtime/spec";
 
 import {
   readPublicContent,
   verifyPublicContentDelivery,
 } from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { env } from "@/env";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
   ContentRuntimeConfigurationError,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
+const PublishedContentRouteInputSchema = Schema.Struct({
+  appLocale: AppLocaleSchema,
+  publicPath: Schema.String,
+});
 /** Exact public identity sent to the server-only content runtime seam. */
-export interface PublishedContentRouteInput {
-  readonly appLocale: AppLocale;
-  readonly publicPath: string;
-}
+export type PublishedContentRouteInput =
+  typeof PublishedContentRouteInputSchema.Type;
 
+const PublishedContentInputSchema = Schema.Struct({
+  ...PublishedContentRouteInputSchema.fields,
+  activeReleaseId: ReleaseIdSchema,
+});
 /** Public identity pinned to one release selected by another trusted read. */
-export interface PublishedContentInput extends PublishedContentRouteInput {
-  readonly activeReleaseId: ActiveContentReleaseId;
-}
+export type PublishedContentInput = typeof PublishedContentInputSchema.Type;
 
 /** Verified family-neutral data safe to return from a Next Cache Component. */
-export interface PublishedContentData {
-  readonly activeReleaseId: PublicContentRuntimeFound["activeReleaseId"];
-  readonly artifact: PublicContentRuntimeFound["artifact"];
-  readonly projection: ContentProjection;
-  readonly rendererManifest: PublicContentRuntimeFound["rendererManifest"];
-  readonly sourcePath: PublicContentRuntimeFound["sourcePath"];
-  readonly sourceRevision: GitCommitSha | null;
-}
+const PublishedContentDataSchema = Schema.Struct({
+  activeReleaseId: PublicContentRuntimeFoundSchema.fields.activeReleaseId,
+  artifact: PublicContentRuntimeFoundSchema.fields.artifact,
+  projection: ContentProjectionSchema,
+  rendererManifest: PublicContentRuntimeFoundSchema.fields.rendererManifest,
+  sourcePath: PublicContentRuntimeFoundSchema.fields.sourcePath,
+  sourceRevision: Schema.NullOr(GitCommitShaSchema),
+});
+export type PublishedContentData = typeof PublishedContentDataSchema.Type;
 
 /** Returns exact Git provenance only for normal source-backed releases. */
 function readSourceRevision(found: PublicContentRuntimeFound) {
