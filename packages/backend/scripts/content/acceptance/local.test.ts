@@ -8,7 +8,6 @@ import {
   initializeLocalRuntime,
   leaseLocalRuntime,
   localApplicationEnvironment,
-  RuntimeManifest,
   readLocalRuntime,
   releaseLocalRuntime,
   reserveLocalRuntime,
@@ -20,10 +19,6 @@ vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
   runAcceptanceCommand: mocks.command,
 }));
 const encodeJson = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
-// The codec production decodes manifest.json with, so tampered files keep its wire shape.
-const encodeManifest = Schema.encodeEffect(
-  Schema.fromJsonString(RuntimeManifest)
-);
 const environment =
   "VITE_CONVEX_URL=http://127.0.0.1:43120\nVITE_CONVEX_SITE_URL=http://127.0.0.1:43121\n";
 const LOCAL_JWKS_LINE =
@@ -437,25 +432,25 @@ describe("owned signed acceptance runtime", () => {
         if (change === "database") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeManifest({ ...runtime, databaseInode: -1 })
+            yield* encodeJson({ ...runtime, databaseInode: -1 })
           );
         }
         if (change === "directory") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeManifest({ ...runtime, directory: "foreign" })
+            yield* encodeJson({ ...runtime, directory: "foreign" })
           );
         }
         if (change === "foreign-backend") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeManifest({ ...runtime, backend: "foreign" })
+            yield* encodeJson({ ...runtime, backend: "foreign" })
           );
         }
         if (change === "foreign-inode") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeManifest({ ...runtime, directoryInode: -1 })
+            yield* encodeJson({ ...runtime, directoryInode: -1 })
           );
         }
         if (change === "environment-link" || change === "database-link") {

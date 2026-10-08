@@ -37,7 +37,7 @@ const LoopbackUrl = Schema.String.check(
     (value) => Number(value.slice(value.lastIndexOf(":") + 1)) <= 65_535
   )
 );
-export const RuntimeManifest = Schema.Struct({
+const RuntimeManifest = Schema.Struct({
   analytics: LoopbackUrl,
   backend: Schema.String,
   configurationHash: Schema.String,
