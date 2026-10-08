@@ -2,6 +2,7 @@ import { RegisteredConvexFunction } from "@confect/server";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentSnapshotManifestSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
+import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { storeAuthenticatedTryoutRuntimeBundle } from "@repo/backend/confect/tryouts/runtime/signed";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -16,6 +17,16 @@ import type { TestConvex } from "convex-test";
 import { Effect, Schema } from "effect";
 
 const TEST_RENDERER_HASH = testTextHash("test-attempt-runtime-renderer");
+const SignedReleaseJsonSchema = Schema.fromJsonString(
+  SignedContentReleaseSchema
+);
+const RendererJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
+const SnapshotJsonSchema = Schema.fromJsonString(ContentSnapshotManifestSchema);
+const SignedBundleJsonSchema = Schema.fromJsonString(
+  SignedTryoutRuntimeBundleSchema
+);
 
 /** Stores one authenticated fixture through the production runtime capability. */
 export const storeRuntimeFixture = Effect.fn("test.runtime.storeFixture")(
@@ -95,15 +106,13 @@ export async function insertTestTryoutRuntimeBundle(
   if (!(release && snapshot)) {
     throw new Error("Expected active release and try-out snapshot fixtures.");
   }
-  const signedRelease = Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-    JSON.parse(release.releaseJson)
+  const signedRelease = Schema.decodeSync(SignedReleaseJsonSchema)(
+    release.releaseJson
   );
-  const renderer = Schema.decodeUnknownSync(RendererManifestEnvelopeSchema)(
-    JSON.parse(release.rendererJson)
+  const renderer = Schema.decodeSync(RendererJsonSchema)(release.rendererJson);
+  const decodedSnapshot = Schema.decodeSync(SnapshotJsonSchema)(
+    snapshot.snapshotJson
   );
-  const decodedSnapshot = Schema.decodeUnknownSync(
-    ContentSnapshotManifestSchema
-  )(JSON.parse(snapshot.snapshotJson));
   if (decodedSnapshot.family !== "tryout") {
     throw new Error("Expected a try-out snapshot fixture.");
   }
@@ -114,7 +123,7 @@ export async function insertTestTryoutRuntimeBundle(
   });
   const bundleId = await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: bundle.bundleHash,
-    bundleJson: JSON.stringify(bundle),
+    bundleJson: Schema.encodeSync(SignedBundleJsonSchema)(bundle),
     cleanupReleaseId: bundle.payload.sourceReleaseId,
     createdAt: 1,
     rendererJson: release.rendererJson,

@@ -16,9 +16,8 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import type { TestConvex } from "convex-test";
-import { Effect, Struct } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
-type SnapshotId = typeof Sha256HashSchema.Type;
 export const RETENTION_RELEASE_ID = "release-runtime-retention";
 export const RETENTION_MANIFEST_HASH = Sha256HashSchema.make(
   `sha256:${"1".repeat(64)}`
@@ -35,15 +34,16 @@ export const RETENTION_OTHER_SNAPSHOT = Sha256HashSchema.make(
 export const RETENTION_NEWER_SNAPSHOT = Sha256HashSchema.make(
   `sha256:${"f".repeat(64)}`
 );
-export interface RuntimeRetentionSeed {
-  readonly baseSnapshotId?: SnapshotId | null;
-  readonly cleanupReleaseId?: string;
-  readonly originKind: "git" | "rollback";
-  readonly rendererManifestHash?: string;
-  readonly resultSnapshotId?: SnapshotId;
-  readonly snapshotId: string;
-  readonly withState?: boolean;
-}
+const RuntimeRetentionSeedSchema = Schema.Struct({
+  baseSnapshotId: Schema.optionalKey(Schema.NullOr(Sha256HashSchema)),
+  cleanupReleaseId: Schema.optionalKey(Schema.String),
+  originKind: Schema.Literals(["git", "rollback"]),
+  rendererManifestHash: Schema.optionalKey(Schema.String),
+  resultSnapshotId: Schema.optionalKey(Sha256HashSchema),
+  snapshotId: Schema.String,
+  withState: Schema.optionalKey(Schema.Boolean),
+});
+export type RuntimeRetentionSeed = typeof RuntimeRetentionSeedSchema.Type;
 const RETENTION_BASE_RELEASE_ID = "release-runtime-base";
 
 /** Seeds one retained runtime pair plus the release that may keep it. */

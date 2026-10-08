@@ -1,16 +1,16 @@
 import { RegisteredConvexFunction } from "@confect/server";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
-  type AppLocale,
   AppLocaleSchema,
-  type ArtifactLocale,
+  ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import {
   ContentProjectionSchema,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
-import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { writeSearchEntry } from "@repo/backend/confect/contentRelease/search/write";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -31,22 +31,31 @@ import {
 } from "@repo/backend/test/runtime/values";
 import { Effect, Schema } from "effect";
 
+const RuntimeHeadOptionsSchema = Schema.Struct({
+  appLocale: Schema.optional(AppLocaleSchema),
+  artifactHash: Schema.optional(Schema.String),
+  artifactLocale: Schema.optional(ArtifactLocaleSchema),
+  bindingReleaseId: Schema.optional(Schema.String),
+  bindingSequence: Schema.optional(Schema.Finite),
+  compiledCode: Schema.optional(Schema.String),
+  headReleaseId: Schema.optional(Schema.String),
+  headSequence: Schema.optional(Schema.Finite),
+  plainText: Schema.optional(Schema.String),
+  projectionJson: Schema.optional(Schema.String),
+  publicPath: Schema.optional(Schema.String),
+  rendererDomain: Schema.optional(RendererDomainSchema),
+  sourcePath: Schema.optional(Schema.String),
+});
+
 /** Optional identities used to shape immutable runtime head fixtures. */
-export interface RuntimeHeadOptions {
-  readonly appLocale?: AppLocale | undefined;
-  readonly artifactHash?: string | undefined;
-  readonly artifactLocale?: ArtifactLocale | undefined;
-  readonly bindingReleaseId?: string | undefined;
-  readonly bindingSequence?: number | undefined;
-  readonly compiledCode?: string | undefined;
-  readonly headReleaseId?: string | undefined;
-  readonly headSequence?: number | undefined;
-  readonly plainText?: string | undefined;
-  readonly projectionJson?: string | undefined;
-  readonly publicPath?: string | undefined;
-  readonly rendererDomain?: RendererDomain | undefined;
-  readonly sourcePath?: string | undefined;
-}
+export type RuntimeHeadOptions = typeof RuntimeHeadOptionsSchema.Type;
+
+const ContentProjectionJsonSchema = Schema.fromJsonString(
+  ContentProjectionSchema
+);
+const SignedArtifactJsonSchema = Schema.fromJsonString(
+  SignedContentArtifactSchema
+);
 
 /** Builds one material projection that owns the requested runtime route. */
 function runtimeProjectionJson(
@@ -101,8 +110,8 @@ export async function insertRuntimeVersion(
 ) {
   const artifactHash = options?.artifactHash ?? `sha256:${"3".repeat(64)}`;
   const projectionJson = runtimeProjectionJson(contentKey, options);
-  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
-    JSON.parse(projectionJson)
+  const projection = Schema.decodeSync(ContentProjectionJsonSchema)(
+    projectionJson
   );
   const headSequence = options?.headSequence ?? TEST_RUNTIME_RELEASE.sequence;
   const headReleaseId =
@@ -144,8 +153,8 @@ export async function insertRuntimeKey(
   >
 ) {
   const projectionJson = runtimeProjectionJson(contentKey, options);
-  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
-    JSON.parse(projectionJson)
+  const projection = Schema.decodeSync(ContentProjectionJsonSchema)(
+    projectionJson
   );
   await ctx.db.insert("contentKeys", {
     contentKey,
@@ -178,8 +187,8 @@ export async function insertRuntimeIndex(
   if (!(head?.projectionJson && head.operation === "upsert")) {
     throw new Error("Expected one complete searchable runtime head.");
   }
-  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
-    JSON.parse(head.projectionJson)
+  const projection = Schema.decodeSync(ContentProjectionJsonSchema)(
+    head.projectionJson
   );
   await Effect.runPromise(
     writeSearchEntry(
@@ -273,8 +282,8 @@ export async function insertRuntimeHead(
   options?: RuntimeHeadOptions
 ) {
   const projectionJson = runtimeProjectionJson(contentKey, options);
-  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
-    JSON.parse(projectionJson)
+  const projection = Schema.decodeSync(ContentProjectionJsonSchema)(
+    projectionJson
   );
   if (projection.kind === "question-body") {
     throw new Error("A public runtime head cannot route a question body.");
@@ -306,8 +315,8 @@ export async function insertSignedHead(
   >
 ) {
   const projectionJson = runtimeProjectionJson(contentKey, options);
-  const projection = Schema.decodeUnknownSync(ContentProjectionSchema)(
-    JSON.parse(projectionJson)
+  const projection = Schema.decodeSync(ContentProjectionJsonSchema)(
+    projectionJson
   );
   const rendererDomain = options?.rendererDomain ?? "mathematics";
   const artifact = testSignedArtifact(rendererDomain, {
@@ -344,7 +353,7 @@ export async function insertSignedHead(
       sourceHash: artifact.payload.sourceHash,
     }),
     ctx.db.patch("contentArtifacts", storedArtifact._id, {
-      artifactJson: JSON.stringify(artifact),
+      artifactJson: Schema.encodeSync(SignedArtifactJsonSchema)(artifact),
     }),
   ]);
 }

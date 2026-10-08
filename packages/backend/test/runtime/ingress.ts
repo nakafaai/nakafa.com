@@ -8,6 +8,7 @@ import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import confectSchema from "@repo/backend/confect/_generated/schema";
@@ -26,9 +27,12 @@ import { testPublicationScope } from "@repo/backend/test/content/release";
 import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { makeTryoutSnapshotManifest } from "@repo/backend/test/tryout/snapshot";
 import type { TestConvex } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 export const TEST_RUNTIME_RELEASE_ID = ReleaseIdSchema.make(
   "release-runtime-bundle"
+);
+const RendererJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
 );
 
 /** Creates one coherent signed release and its permanent runtime bundle. */
@@ -155,7 +159,7 @@ export const insertRuntimeIngressSource = Effect.fn(
         ctx,
         fixture.release.manifest.releaseId,
         fixture.release,
-        JSON.stringify(fixture.rendererManifest)
+        Schema.encodeSync(RendererJsonSchema)(fixture.rendererManifest)
       )
     )
   );
