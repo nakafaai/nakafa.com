@@ -1,8 +1,9 @@
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog/browser";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type refs from "@repo/backend/confect/_generated/refs";
-import type { Id, TableNames } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import { Effect, Result, Schema } from "effect";
 import {
@@ -13,28 +14,19 @@ import {
 } from "effect/http";
 
 const STORAGE_UPLOAD_TIMEOUT = "10 seconds";
-const StorageIdSchema = Schema.declare(isConvexId<"_storage">, {
-  identifier: "ConvexStorageId",
-});
+const StorageIdSchema = Schema.declare(
+  (input): input is Id<"_storage"> =>
+    typeof input === "string" && input.length > 0,
+  {
+    identifier: "ConvexStorageId",
+  }
+);
 const StorageUploadResponseSchema = Schema.Struct({
   storageId: StorageIdSchema,
 });
-/** Checks that an unknown value is a non-empty Convex id, typed by its table. */
-function isConvexId<TableName extends TableNames | "_storage">(
-  input: unknown
-): input is Id<TableName> {
-  return typeof input === "string" && input.length > 0;
-}
-const ForumIdSchema = Schema.declare(isConvexId<"schoolClassForums">, {
-  identifier: "ConvexForumId",
-});
-const ForumPostIdSchema = Schema.declare(isConvexId<"schoolClassForumPosts">, {
-  identifier: "ConvexForumPostId",
-});
-const ForumPendingUploadIdSchema = Schema.declare(
-  isConvexId<"schoolClassForumPendingUploads">,
-  { identifier: "ConvexForumPendingUploadId" }
-);
+const ForumIdSchema = IdSchema("schoolClassForums");
+const ForumPostIdSchema = IdSchema("schoolClassForumPosts");
+const ForumPendingUploadIdSchema = IdSchema("schoolClassForumPendingUploads");
 const ForumPostSubmitDraftSchema = Schema.Struct({
   body: Schema.String,
   forumId: ForumIdSchema,

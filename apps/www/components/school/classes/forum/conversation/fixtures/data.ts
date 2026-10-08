@@ -1,4 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { HashMap } from "effect";
 import type {
   Forum,
   ForumPost,
@@ -26,13 +27,10 @@ export const conversationTestRows = [
   },
   { post: conversationTestSecondPost, type: "post" },
 ] satisfies ConversationRow[];
-export const conversationTestRowIndexByPostId = new Map<
-  Id<"schoolClassForumPosts">,
-  number
->([
+export const conversationTestRowIndexByPostId = HashMap.make(
   [conversationTestFirstPost._id, 2],
-  [conversationTestSecondPost._id, 4],
-]);
+  [conversationTestSecondPost._id, 4]
+);
 
 /** Creates one readable forum-post fixture for conversation tests. */
 export function createConversationTestPost({

@@ -1,3 +1,4 @@
+import { HashMap, Option } from "effect";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
 import type {
@@ -68,5 +69,7 @@ function getViewportViewRowIndex(
     return Math.max(0, activeTranscript.rows.length - 1);
   }
 
-  return activeTranscript.rowIndexByPostId.get(view.postId) ?? null;
+  return Option.getOrNull(
+    HashMap.get(activeTranscript.rowIndexByPostId, view.postId)
+  );
 }

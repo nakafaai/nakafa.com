@@ -1,11 +1,15 @@
-import { Effect } from "effect";
-import type { ForumReplyTarget } from "@/components/school/classes/forum/session/store";
+import { Effect, Schema } from "effect";
+import {
+  type ForumReplyTarget,
+  ForumReplyTargetSchema,
+} from "@/components/school/classes/forum/session/store";
 
 /** Composer draft captured before an optimistic submit clears the input. */
-export interface ForumPostInputDraft {
-  body: string;
-  replyTarget: ForumReplyTarget | null;
-}
+const ForumPostInputDraftSchema = Schema.Struct({
+  body: Schema.String,
+  replyTarget: Schema.NullOr(ForumReplyTargetSchema),
+});
+export type ForumPostInputDraft = typeof ForumPostInputDraftSchema.Type;
 
 /** Restores a failed optimistic submit without overwriting newer user input. */
 export function restoreForumPostInputDraft({

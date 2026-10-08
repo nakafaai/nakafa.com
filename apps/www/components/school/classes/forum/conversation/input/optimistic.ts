@@ -13,16 +13,6 @@ type CreateForumPostArgs = Ref.Args<
 
 type ForumPostUser = NonNullable<ForumPost["user"]>;
 
-interface OptimisticForumPostInput {
-  args: CreateForumPostArgs;
-  currentUser: ForumPostUser;
-  forum: Forum;
-  now: number;
-  parentPost: ForumPost | undefined;
-  postId: Id<"schoolClassForumPosts">;
-  posts: readonly ForumPost[];
-}
-
 /** Derives the next temporary sequence from the loaded transcript window. */
 function getOptimisticForumPostSequence({
   forum,
@@ -45,7 +35,15 @@ export function createOptimisticForumPost({
   parentPost,
   postId,
   posts,
-}: OptimisticForumPostInput) {
+}: {
+  args: CreateForumPostArgs;
+  currentUser: ForumPostUser;
+  forum: Forum;
+  now: number;
+  parentPost: ForumPost | undefined;
+  postId: Id<"schoolClassForumPosts">;
+  posts: readonly ForumPost[];
+}) {
   return {
     _creationTime: now,
     _id: postId,
