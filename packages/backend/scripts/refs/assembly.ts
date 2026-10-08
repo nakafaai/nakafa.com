@@ -215,7 +215,9 @@ const specNesting = Effect.fn("RefsAssembly.specNesting")(function* (
 ): Effect.fn.Return<readonly (typeof NestedLeaf.Type)[], RefsSourceError> {
   const declaration = Arr.findFirst(
     Arr.flatMap(sourceFile.statements, (statement) =>
-      isVariableStatement(statement) ? statement.declarationList.declarations : []
+      isVariableStatement(statement)
+        ? statement.declarationList.declarations
+        : []
     ),
     (candidate) =>
       isIdentifier(candidate.name) && candidate.name.text === "spec"
