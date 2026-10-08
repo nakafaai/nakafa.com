@@ -92,7 +92,7 @@ describe("signed Quran passage decoder", () => {
             {
               ...referenceResult(),
               preBismillah: {
-                arabic: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+                arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
                 translation: {
                   notes: [],
                   segments: [
