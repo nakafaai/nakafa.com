@@ -1,4 +1,4 @@
-import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -17,12 +17,8 @@ import {
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
-type QuranRow = Extract<
-  ContentSnapshotRow,
-  {
-    readonly family: "quran";
-  }
->;
+const QuranRowSchema = ContentSnapshotRowSchema.members[1];
+type QuranRow = typeof QuranRowSchema.Type;
 
 /** Validates the complete search companion of an existing immutable Quran row. */
 const verifySearchReplay = Effect.fn("contentRelease.verifyQuranSearchReplay")(

@@ -29,6 +29,9 @@ import {
 } from "@repo/backend/confect/contentRelease/spec";
 import { Array as Arr, Effect, Schema } from "effect";
 
+/** Encodes a built page to the same text as JSON.stringify, without re-walking a schema. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 /** Proves one release is an exact active or verified-candidate rollback source. */
 export const rollbackSource = Effect.fn("contentRelease.rollbackSource")(
   function* (releaseId: string, manifestHash: string) {
@@ -211,6 +214,6 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
       rollbackOfManifestHash: request.rollbackOfManifestHash,
       total,
     };
-    return JSON.stringify(page);
+    return encodeJson(page);
   }
 );
