@@ -113,7 +113,7 @@ export const openHub = Effect.fn("NakafaE2E.openTryoutHub")(function* (
     readinessTimeoutMilliseconds
   );
   yield* Effect.promise(() =>
-    expect(visibleLink(page, countryHref)).toBeVisible({
+    expect(visibleLink(page, countryHref, "main")).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     })
   );
@@ -133,8 +133,8 @@ export const openTrack = Effect.fn("NakafaE2E.openTryoutTrack")(function* (
     [examHref, trackHref],
     [trackHref, setHref],
   ] as const) {
-    yield* activate(visibleLink(page, href), hasTouch);
-    yield* arrive(page, onPath(href), visibleLink(page, next));
+    yield* activate(visibleLink(page, href, "main"), hasTouch);
+    yield* arrive(page, onPath(href), visibleLink(page, next, "main"));
   }
 });
 

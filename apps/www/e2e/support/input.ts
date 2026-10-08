@@ -33,9 +33,16 @@ export function press(
   return hasTouch ? control.tap(pressOptions) : control.click(pressOptions);
 }
 
-/** The first link to `href` that the page shows, wherever it sits on the page. */
-export function visibleLink(page: Page, href: string) {
-  return page.locator(`a[href="${href}"]`).filter({ visible: true }).first();
+/**
+ * The first link to `href` that the page shows. A `scope` selector, such as
+ * `main`, keeps the search inside that element.
+ */
+export function visibleLink(page: Page, href: string, scope?: string) {
+  const link = `a[href="${href}"]`;
+  return page
+    .locator(scope === undefined ? link : `${scope} ${link}`)
+    .filter({ visible: true })
+    .first();
 }
 
 /** Repeats a real activation until its client-owned surface becomes visible. */

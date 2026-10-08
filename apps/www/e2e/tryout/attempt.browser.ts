@@ -93,7 +93,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     page,
     [false, true],
     Effect.gen(function* () {
-      yield* activate(visibleLink(page, setHref), hasTouch);
+      yield* activate(visibleLink(page, setHref, "main"), hasTouch);
       yield* arrive(page, onPath(setHref), start);
       yield* Effect.promise(() =>
         expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
@@ -187,7 +187,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     page,
     [true, false],
     Effect.gen(function* () {
-      yield* activate(visibleLink(page, trackHref), hasTouch);
+      yield* activate(visibleLink(page, trackHref, "main"), hasTouch);
       yield* arrive(page, onPath(trackHref), runningRow);
     })
   );

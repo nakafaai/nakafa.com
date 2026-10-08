@@ -88,7 +88,7 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
   const since = yield* readPageTime(page);
 
   yield* openTrack(page, hasTouch);
-  yield* activate(visibleLink(page, setHref), hasTouch);
+  yield* activate(visibleLink(page, setHref, "main"), hasTouch);
   const section = yield* settledSection(page);
   const sectionHref = yield* readSectionHref(section);
   yield* activate(section, hasTouch);
@@ -101,7 +101,7 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
   yield* Effect.promise(() => page.goBack({ waitUntil: "commit" }));
   yield* arrive(page, onPath(setHref), section);
   yield* Effect.promise(() => page.goBack({ waitUntil: "commit" }));
-  yield* arrive(page, onPath(trackHref), visibleLink(page, setHref));
+  yield* arrive(page, onPath(trackHref), visibleLink(page, setHref, "main"));
   // Late streamed content would still move the page, so keep observing.
   yield* Effect.sleep("1 second");
 
@@ -123,7 +123,7 @@ const verifyPrefetchedHeadings = Effect.fn(
   yield* openHub(page);
   yield* openTrack(page, hasTouch);
 
-  const setLink = visibleLink(page, setHref);
+  const setLink = visibleLink(page, setHref, "main");
   const setTitle = yield* Effect.promise(() =>
     setLink.locator("[title]").getAttribute("title")
   ).pipe(Effect.flatMap(Effect.fromNullishOr));
