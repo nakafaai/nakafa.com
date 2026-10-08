@@ -19,8 +19,8 @@ export type TryoutRenderSelector = Pick<
 >;
 
 /** Pairs one verified artifact body with the immutable identity of its selector. */
-function makeRenderedTryoutContentEntry(
-  selector: TryoutSelector,
+export function makeRenderedTryoutContentEntry(
+  selector: TryoutRenderSelector,
   artifactHash: Sha256Hash,
   body: ReactNode
 ) {
