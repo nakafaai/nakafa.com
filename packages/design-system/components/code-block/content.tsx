@@ -47,7 +47,7 @@ export function CodeBlockContent({
       language,
       preClassName,
       syntaxHighlighting,
-      themes,
+      ...(themes === undefined ? {} : { themes }),
       transparentBackground,
     }),
     [
