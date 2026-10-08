@@ -12,7 +12,7 @@ import {
 import type { forumPostAttachmentValidator } from "@repo/backend/confect/classes/forums/validators";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, HashMap, Option } from "effect";
 
 export type PostAttachment = typeof forumPostAttachmentValidator.Type;
 
@@ -80,8 +80,8 @@ export const enrichForumPosts = Effect.fn(
     myReactions: myReactions[index],
     reactionUsers: reactionPreviews[index],
     replyToUser: post.replyToUserId
-      ? (userMap.get(post.replyToUserId) ?? null)
+      ? Option.getOrNull(HashMap.get(userMap, post.replyToUserId))
       : null,
-    user: userMap.get(post.createdBy) ?? null,
+    user: Option.getOrNull(HashMap.get(userMap, post.createdBy)),
   }));
 });
