@@ -90,18 +90,15 @@ const refusedIpv4Networks = Arr.map(
   (cidr) => IpNetwork.fromStringUnsafe(cidr)
 );
 
-/** IPv6 special-use blocks that no NetAddress predicate covers exactly. */
+/**
+ * IPv6 special-use blocks that no NetAddress predicate covers exactly.
+ * 2001::/23 (RFC 2928) holds Teredo, benchmarking, AMT, AS112, ORCHID, and the
+ * drone identity tags, so they need no entry of their own.
+ */
 const refusedIpv6Networks = Arr.map(
   [
     "100::/64",
     "2001::/23",
-    "2001::/32",
-    "2001:2::/48",
-    "2001:3::/32",
-    "2001:4:112::/48",
-    "2001:10::/28",
-    "2001:20::/28",
-    "2001:30::/28",
     "2001:db8::/32",
     "2002::/16",
     "2620:4f:8000::/48",
