@@ -8,16 +8,22 @@ import {
   initializeLocalRuntime,
   leaseLocalRuntime,
   localApplicationEnvironment,
+  RuntimeManifest,
   readLocalRuntime,
   releaseLocalRuntime,
   reserveLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
-import { Effect, FileSystem, Option } from "effect";
+import { Array as Arr, Effect, FileSystem, Option, Schema } from "effect";
 
 const mocks = vi.hoisted(() => ({ command: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
   runAcceptanceCommand: mocks.command,
 }));
+const encodeJson = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
+// The codec production decodes manifest.json with, so tampered files keep its wire shape.
+const encodeManifest = Schema.encodeEffect(
+  Schema.fromJsonString(RuntimeManifest)
+);
 const environment =
   "VITE_CONVEX_URL=http://127.0.0.1:43120\nVITE_CONVEX_SITE_URL=http://127.0.0.1:43121\n";
 const LOCAL_JWKS_LINE =
@@ -84,7 +90,7 @@ describe("owned signed acceptance runtime", () => {
         yield* reserveLocalRuntime(root);
         const runtime = yield* initializeLocalRuntime(root);
         // Each Convex command ran in its own root, removed once it stopped.
-        expect(new Set(temporaryRoots).size).toBe(2);
+        expect(Arr.dedupe(temporaryRoots).length).toBe(2);
         for (const temporaryRoot of temporaryRoots) {
           expect(yield* fs.exists(temporaryRoot)).toBe(false);
         }
@@ -99,10 +105,11 @@ describe("owned signed acceptance runtime", () => {
         expect(
           yield* fs.readFileString(`${runtime.directory}/manifest.json`)
         ).not.toContain(privateKey);
+        const publicKeyJson = yield* encodeJson(runtime.signing.publicKeyPem);
         expect(mocks.command).toHaveBeenLastCalledWith(
           expect.objectContaining({
             stdin: expect.stringContaining(
-              `AKSARA_AGENT_SIGNING_PUBLIC_KEY=${JSON.stringify(runtime.signing.publicKeyPem)}`
+              `AKSARA_AGENT_SIGNING_PUBLIC_KEY=${publicKeyJson}`
             ),
           })
         );
@@ -132,7 +139,7 @@ describe("owned signed acceptance runtime", () => {
         });
         expect(mocks.command).toHaveBeenCalledTimes(2);
         expect(yield* fs.readFileString(`${runtime.backend}/convex.json`)).toBe(
-          JSON.stringify({
+          yield* encodeJson({
             node: { nodeVersion: "24" },
             functions: "../../../packages/backend/convex",
           })
@@ -430,25 +437,25 @@ describe("owned signed acceptance runtime", () => {
         if (change === "database") {
           yield* fs.writeFileString(
             manifest,
-            JSON.stringify({ ...runtime, databaseInode: -1 })
+            yield* encodeManifest({ ...runtime, databaseInode: -1 })
           );
         }
         if (change === "directory") {
           yield* fs.writeFileString(
             manifest,
-            JSON.stringify({ ...runtime, directory: "foreign" })
+            yield* encodeManifest({ ...runtime, directory: "foreign" })
           );
         }
         if (change === "foreign-backend") {
           yield* fs.writeFileString(
             manifest,
-            JSON.stringify({ ...runtime, backend: "foreign" })
+            yield* encodeManifest({ ...runtime, backend: "foreign" })
           );
         }
         if (change === "foreign-inode") {
           yield* fs.writeFileString(
             manifest,
-            JSON.stringify({ ...runtime, directoryInode: -1 })
+            yield* encodeManifest({ ...runtime, directoryInode: -1 })
           );
         }
         if (change === "environment-link" || change === "database-link") {

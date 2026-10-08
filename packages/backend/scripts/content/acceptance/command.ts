@@ -3,25 +3,28 @@ import {
   sanitizeAcceptanceCommandError,
 } from "@repo/backend/scripts/content/acceptance/error";
 import { localConvexEnvironment } from "@repo/backend/scripts/content/acceptance/process";
-import { Effect, FileSystem, Stream } from "effect";
+import { Effect, FileSystem, Schema, Stream } from "effect";
 import { ChildProcess } from "effect/process";
 
 const SHARED_OUTPUT_REDIRECT =
   'output_path=$1; shift; exec "$@" >| "$output_path" 2>&1';
 const SPLIT_OUTPUT_REDIRECT =
   'stdout_path=$1; stderr_path=$2; shift 2; exec "$@" >| "$stdout_path" 2>| "$stderr_path"';
-interface AcceptanceCommand {
-  readonly args: readonly string[];
-  readonly command: string;
-  readonly cwd?: string;
-  readonly env?: Readonly<Record<string, string | undefined>>;
-  readonly operation: string;
-  readonly reportStderr?: boolean;
-  readonly sensitiveValues?: readonly string[];
-  readonly stderrPath: string;
-  readonly stdin?: string;
-  readonly stdoutPath: string;
-}
+const AcceptanceCommandSchema = Schema.Struct({
+  args: Schema.Array(Schema.String),
+  command: Schema.String,
+  cwd: Schema.optionalKey(Schema.String),
+  env: Schema.optionalKey(
+    Schema.Record(Schema.String, Schema.UndefinedOr(Schema.String))
+  ),
+  operation: Schema.String,
+  reportStderr: Schema.optionalKey(Schema.Boolean),
+  sensitiveValues: Schema.optionalKey(Schema.Array(Schema.String)),
+  stderrPath: Schema.String,
+  stdin: Schema.optionalKey(Schema.String),
+  stdoutPath: Schema.String,
+});
+type AcceptanceCommand = typeof AcceptanceCommandSchema.Type;
 
 /**
  * Runs one runtime command with mode-600 output captured at process startup.
