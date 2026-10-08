@@ -44,7 +44,9 @@ import { Array as Arr, Clock, Effect, Layer } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** Registers the protected read-only API and its machine-readable contract. */
-const nonReadMethods = ["POST", "PUT", "PATCH", "DELETE", "HEAD"] as const;
+// HEAD needs no row: when no HEAD route matches, the router dispatches to the
+// GET route, and its guard answers HEAD with the same 405 as the other methods.
+const nonReadMethods = ["POST", "PUT", "PATCH", "DELETE"] as const;
 const missingRoute = Effect.gen(function* () {
   const request = yield* HttpServerRequest.toWeb(
     yield* HttpServerRequest.HttpServerRequest
