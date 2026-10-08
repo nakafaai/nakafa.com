@@ -3,11 +3,18 @@
 import type { QuranViewTafsirAccess } from "@repo/backend/client/quran/view";
 import { createContext, type ReactNode, use } from "react";
 
-interface QuranVersesValue {
+/** Props of the verse provider: one surah's Tafsir access and verse labels. */
+interface QuranVersesProviderProps {
+  readonly children: ReactNode;
   readonly interpretationLabel: string;
   readonly tafsirAccess: QuranViewTafsirAccess;
   readonly translationNotesLabel: string;
 }
+
+type QuranVersesValue = Pick<
+  QuranVersesProviderProps,
+  "interpretationLabel" | "tafsirAccess" | "translationNotesLabel"
+>;
 
 const QuranVersesContext = createContext<QuranVersesValue | null>(null);
 
@@ -17,7 +24,7 @@ export function QuranVersesProvider({
   interpretationLabel,
   tafsirAccess,
   translationNotesLabel,
-}: QuranVersesValue & { children: ReactNode }) {
+}: QuranVersesProviderProps) {
   return (
     <QuranVersesContext
       value={{ interpretationLabel, tafsirAccess, translationNotesLabel }}

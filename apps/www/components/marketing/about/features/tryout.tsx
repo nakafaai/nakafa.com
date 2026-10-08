@@ -1,13 +1,10 @@
-import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import type { readFeaturedTryout } from "@/components/tryout/catalog/server";
 import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
 import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
 
-interface FeaturesTryoutModel {
-  readonly question: ReactNode;
-  readonly response: QuestionResponse;
-}
+/** The featured question and its response, as the catalog reads them. */
+type FeaturesTryoutModel = Awaited<ReturnType<typeof readFeaturedTryout>>;
 
 /** Shows one signed production question with the established landing surface. */
 export function FeaturesTryout({

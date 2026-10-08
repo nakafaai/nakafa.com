@@ -27,17 +27,22 @@ export type BreadcrumbHeaderItem = Readonly<{
   menuLabel?: string;
 }>;
 
-/** Complete render value for one sticky, bounded breadcrumb header. */
-export interface BreadcrumbHeaderValue {
-  action?: ReactNode;
-  homeLabel: string;
-  items: readonly BreadcrumbHeaderItem[];
-  menuLabel: string;
-  title: string;
+/** Props of one sticky, bounded breadcrumb header. */
+interface BreadcrumbHeaderProps {
+  /** Complete render value for one sticky, bounded breadcrumb header. */
+  value: {
+    action?: ReactNode;
+    homeLabel: string;
+    items: readonly BreadcrumbHeaderItem[];
+    menuLabel: string;
+    title: string;
+  };
 }
 
+type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
+
 /** Renders at most Home and the two nearest path items. */
-export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
+export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
   const { action, homeLabel, items, menuLabel, title } = value;
   return (
     <BreadcrumbHeaderFrame contentClassName="flex-col items-stretch justify-center sm:flex-row sm:items-center sm:justify-between sm:py-0">

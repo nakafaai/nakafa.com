@@ -10,36 +10,35 @@ import {
   type TryoutStatusValue,
 } from "@/components/tryout/status";
 
-type TryoutListRowVisual =
-  | Readonly<{
-      icon: IconSvgElement;
-      iconKey: string;
-      kind: "icon";
-    }>
-  | Readonly<{
-      keyString: string;
-      kind: "gradient";
-    }>;
+/** Props of the divided try-out row list; each row carries its own visual and status. */
+interface TryoutListProps {
+  emptyLabel: string;
+  rows: readonly {
+    current?: boolean;
+    description?: string;
+    href: string;
+    key: string;
+    meta?: ReactNode;
+    status?: TryoutStatusValue;
+    title: string;
+    visual:
+      | Readonly<{
+          icon: IconSvgElement;
+          iconKey: string;
+          kind: "icon";
+        }>
+      | Readonly<{
+          keyString: string;
+          kind: "gradient";
+        }>;
+  }[];
+}
 
-export type TryoutListRow = Readonly<{
-  current?: boolean;
-  description?: string;
-  href: string;
-  key: string;
-  meta?: ReactNode;
-  status?: TryoutStatusValue;
-  title: string;
-  visual: TryoutListRowVisual;
-}>;
+type TryoutListRow = TryoutListProps["rows"][number];
+type TryoutListRowVisual = TryoutListRow["visual"];
 
 /** Renders the established divided try-out row list with gradient icons. */
-export function TryoutList({
-  emptyLabel,
-  rows,
-}: {
-  emptyLabel: string;
-  rows: readonly TryoutListRow[];
-}) {
+export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
   if (rows.length === 0) {
     return (
       <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">

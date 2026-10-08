@@ -1,20 +1,23 @@
-interface ReactionCount {
-  count: number;
-  emoji: string;
-}
+import type {
+  forumPostWithMetadataValidator,
+  forumReactionUsersValidator,
+} from "@repo/backend/confect/classes/forums/validators";
+import type { schoolClassReactionCountValidator } from "@repo/backend/confect/classes/schema";
 
-interface ReactionPreview extends ReactionCount {
-  reactors: string[];
-}
+type ReactionCount = typeof schoolClassReactionCountValidator.Type;
+type ReactionPreview = typeof forumReactionUsersValidator.Type;
+type ReactionPost = typeof forumPostWithMetadataValidator.Type;
 
-interface ReactionState {
-  myReactions: string[];
-  reactionCounts: ReactionCount[];
-  reactionUsers?: ReactionPreview[];
-}
+/** Reaction fields of one forum post; its reactor previews may be absent. */
+type ReactionState = Pick<ReactionPost, "myReactions" | "reactionCounts"> &
+  Partial<Pick<ReactionPost, "reactionUsers">>;
 
 /** Apply one reaction delta while removing empty counters. */
-function updateCounts(counts: ReactionCount[], emoji: string, added: boolean) {
+function updateCounts(
+  counts: readonly ReactionCount[],
+  emoji: string,
+  added: boolean
+) {
   const current = counts.find((reaction) => reaction.emoji === emoji);
   const nextCount = (current?.count ?? 0) + (added ? 1 : -1);
 
@@ -33,7 +36,7 @@ function updateCounts(counts: ReactionCount[], emoji: string, added: boolean) {
 
 /** Update the bounded reactor-name preview for one reaction. */
 function updateReactors(
-  reactors: string[],
+  reactors: readonly string[],
   reactorName: string | undefined,
   added: boolean,
   count: number
@@ -61,7 +64,7 @@ function updateReactors(
 
 /** Apply one reaction delta to detailed reactor previews. */
 function updatePreviews(
-  previews: ReactionPreview[],
+  previews: readonly ReactionPreview[],
   emoji: string,
   reactorName: string | undefined,
   added: boolean

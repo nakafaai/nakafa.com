@@ -33,7 +33,7 @@ import {
 } from "@repo/backend/test/content/publication";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   readFeaturedTryout,
@@ -124,6 +124,9 @@ beforeEach(() => {
   transportMock.mockReset();
   vi.stubGlobal("fetch", transportMock);
 });
+/** Plain JSON codec: the body is the same bytes JSON.stringify writes, with every key kept. */
+const plainJson = Schema.fromJsonString(Schema.Unknown);
+
 describe("immutable try-out application catalog", () => {
   it.effect.each(APP_LOCALE_CODES)(
     "serves the complete signed %s hierarchy and route metadata",
@@ -303,7 +306,8 @@ describe("immutable try-out application catalog", () => {
           )
         );
         assert.isNotNull(found);
-        const response = new Response(JSON.stringify(found), {
+        const body = yield* Schema.encodeEffect(plainJson)(found);
+        const response = new Response(body, {
           headers: {
             "content-type": "application/json",
             [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,

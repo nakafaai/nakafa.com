@@ -36,7 +36,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
 import { startOfDay } from "date-fns";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState } from "react";
 import { toast } from "sonner";
@@ -179,7 +179,9 @@ function MaterialGroupDialogShell<E>({
   submitLabel,
   title,
 }: MaterialGroupDialogShellProps<E>) {
-  const [minimumDate] = useState(() => startOfDay(new Date()));
+  const [minimumDate] = useState(() =>
+    startOfDay(DateTime.toDate(DateTime.nowUnsafe()))
+  );
   const t = useTranslations("School.Classes");
   const locale = useLocale();
   const form = useForm({

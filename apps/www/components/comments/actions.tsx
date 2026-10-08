@@ -37,13 +37,6 @@ type ActionComment = Pick<
 
 type CommentVote = -1 | 1;
 
-interface CommentActionsValue {
-  readonly comment: ActionComment;
-  readonly isPending: boolean;
-  readonly remove: () => void;
-  readonly vote: (vote: CommentVote) => void;
-}
-
 const CommentActionsContext = createContext<CommentActionsValue | null>(null);
 
 /**
@@ -57,6 +50,15 @@ export function CommentActionsProvider({
   children: ReactNode;
   comment: ActionComment;
 }) {
+  const actions = useCommentActionsValue(comment);
+
+  return (
+    <CommentActionsContext value={actions}>{children}</CommentActionsContext>
+  );
+}
+
+/** Builds one comment's actions and their shared pending state from its mutations. */
+function useCommentActionsValue(comment: ActionComment) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const viewer = useViewer((state) => state.account);
   const [isPending, startTransition] = useTransition();
@@ -110,12 +112,11 @@ export function CommentActionsProvider({
     );
   }
 
-  const actions = { comment, isPending, remove, vote };
-
-  return (
-    <CommentActionsContext value={actions}>{children}</CommentActionsContext>
-  );
+  return { comment, isPending, remove, vote };
 }
+
+/** The value every comment action reads, as the hook that builds it returns it. */
+type CommentActionsValue = ReturnType<typeof useCommentActionsValue>;
 
 /** Selects one part of the surrounding comment's actions. */
 export function useCommentActions<T>(

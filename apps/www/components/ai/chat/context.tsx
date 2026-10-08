@@ -18,7 +18,7 @@ import type {
   FunctionReference,
   FunctionReturnType,
 } from "convex/server";
-import { Effect, Option, Result } from "effect";
+import { DateTime, Effect, Option, Result } from "effect";
 import {
   createContext,
   type PropsWithChildren,
@@ -38,7 +38,10 @@ import { useViewer } from "@/lib/identity/client";
 
 // Agent owns delta decoding, reconnection and pagination. Confect registers
 // and authorizes the query; the streaming hook uses the SDK reference boundary.
-type MessageFeed = UIMessagesQuery<{ chatId: Id<"chats"> }, NinaMessage>;
+type MessageFeed = UIMessagesQuery<
+  Pick<Ref.Args<typeof refs.public.nina.messages.list>, "chatId">,
+  NinaMessage
+>;
 type MessagesQuery = FunctionReference<
   "query",
   "public",
@@ -49,41 +52,9 @@ type MessagesQuery = FunctionReference<
 const messagesQuery: MessagesQuery = Ref.getFunctionReference(
   refs.public.nina.messages.list
 );
-type Conversation = Ref.Returns<typeof refs.public.nina.conversation.get>;
-type Submission = ReturnType<typeof useNinaSubmission>;
 // Declared outside the provider: a type query naming `cancel` inside it
 // stops the React Compiler from memoizing the provider's `cancel` action.
 type CancelError = Ref.Error<typeof refs.public.nina.lifecycle.cancel>;
-
-/**
- * The conversation's state and actions. It changes when a turn starts, ends
- * or fails, never with a streamed token, so the controls that read it stay
- * still while Nina writes.
- */
-interface ChatContextValue {
-  busy: boolean;
-  cancel: () => void;
-  canLoadMore: boolean;
-  canWrite: boolean;
-  chat: Docs["chats"] | undefined;
-  error: Submission["error"] | CancelError;
-  /** Whether the assistant's reply to the current turn failed in the transcript. */
-  hasTurnFailure: boolean;
-  /** Whether the transcript already ends with the reply to the current turn. */
-  hasTurnResponse: boolean;
-  isLoading: boolean;
-  isPending: boolean;
-  lastMessageId: string | undefined;
-  loadMore: () => void;
-  retry: (order?: number) => void;
-  send: (prompt: NinaDraft) => Promise<boolean>;
-  turn: Conversation["turn"];
-}
-
-/** The transcript itself, which changes with every streamed token. */
-interface ChatMessagesValue {
-  messages: NinaMessage[];
-}
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 const ChatMessagesContext = createContext<ChatMessagesValue | null>(null);
@@ -106,7 +77,10 @@ const optimisticCancel: OptimisticUpdate<
       ...current.value,
       turn: {
         ...turn,
-        state: { status: "cancelled", finishedAt: Date.now() },
+        state: {
+          status: "cancelled",
+          finishedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+        },
       },
     })
   );
@@ -209,11 +183,8 @@ function useConversation(chatId: Id<"chats">) {
   return { chat, turn, pagination };
 }
 
-/** One reactive conversation shared by the route, sheet and message controls. */
-export function ChatProvider({
-  chatId,
-  children,
-}: PropsWithChildren<{ chatId: Id<"chats"> }>) {
+/** Owns one conversation's reactive state and actions for ChatProvider. */
+function useChatState(chatId: Id<"chats">) {
   const { chat, turn, pagination } = useConversation(chatId);
   const submission = useNinaSubmission();
   const [isPending, startTransition] = useTransition();
@@ -272,7 +243,7 @@ export function ChatProvider({
             -1,
             ...latestMessages.current.map((message) => message.order)
           ),
-        createdAt: Date.now(),
+        createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
       });
       const receipt = await admission;
       if (!receipt) {
@@ -332,12 +303,14 @@ export function ChatProvider({
     isLoading,
     isPending,
     error: submission.error ?? cancelError,
+    /** Whether the assistant's reply to the current turn failed in the transcript. */
     hasTurnFailure: messages.some(
       (message) =>
         message.role === "assistant" &&
         message.order === turn?.order &&
         message.status === "failed"
     ),
+    /** Whether the transcript already ends with the reply to the current turn. */
     hasTurnResponse:
       lastMessage?.role === "assistant" && lastMessage.order === turn?.order,
     lastMessageId: lastMessage?.id,
@@ -348,6 +321,25 @@ export function ChatProvider({
     retry,
   };
   const feed = { messages };
+  return { feed, value };
+}
+
+/**
+ * The conversation's state and actions. It changes when a turn starts, ends
+ * or fails, never with a streamed token, so the controls that read it stay
+ * still while Nina writes.
+ */
+type ChatContextValue = ReturnType<typeof useChatState>["value"];
+
+/** The transcript itself, which changes with every streamed token. */
+type ChatMessagesValue = ReturnType<typeof useChatState>["feed"];
+
+/** One reactive conversation shared by the route, sheet and message controls. */
+export function ChatProvider({
+  chatId,
+  children,
+}: PropsWithChildren<{ chatId: Id<"chats"> }>) {
+  const { feed, value } = useChatState(chatId);
   return (
     <ChatContext value={value}>
       <ChatMessagesContext value={feed}>{children}</ChatMessagesContext>
