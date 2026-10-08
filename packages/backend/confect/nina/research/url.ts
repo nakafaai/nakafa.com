@@ -1,4 +1,4 @@
-import { Option, Result, Schema } from "effect";
+import { Array as Arr, Option, Result, Schema } from "effect";
 import { IpNetwork, NetAddress } from "effect/net";
 
 /** The verdict on an address: outside every refused range, or inside one. */
@@ -65,46 +65,55 @@ export function judgeAddress(text: string): Option.Option<AddressVerdict> {
   return Option.some(isRefusedAddress(parsed.success) ? "refused" : "public");
 }
 
-/** RFC 4291 section 2.5.5.1: IPv4-compatible IPv6 addresses (::a.b.c.d) are deprecated. */
+/**
+ * RFC 4291 section 2.5.5.1: IPv4-compatible IPv6 addresses (::a.b.c.d) are
+ * deprecated, so the whole block is refused.
+ */
 const ipv4CompatibleNetwork = IpNetwork.fromStringUnsafe("::/96");
 
 /** IPv4 special-use blocks that no NetAddress predicate covers exactly. */
-const refusedIpv4Networks = [
-  "0.0.0.0/8",
-  "100.64.0.0/10",
-  "192.0.0.0/24",
-  "192.0.2.0/24",
-  "192.31.196.0/24",
-  "192.52.193.0/24",
-  "192.88.99.0/24",
-  "192.175.48.0/24",
-  "198.18.0.0/15",
-  "198.51.100.0/24",
-  "203.0.113.0/24",
-  "240.0.0.0/4",
-].map((cidr) => IpNetwork.fromStringUnsafe(cidr));
+const refusedIpv4Networks = Arr.map(
+  [
+    "0.0.0.0/8",
+    "100.64.0.0/10",
+    "192.0.0.0/24",
+    "192.0.2.0/24",
+    "192.31.196.0/24",
+    "192.52.193.0/24",
+    "192.88.99.0/24",
+    "192.175.48.0/24",
+    "198.18.0.0/15",
+    "198.51.100.0/24",
+    "203.0.113.0/24",
+    "240.0.0.0/4",
+  ],
+  (cidr) => IpNetwork.fromStringUnsafe(cidr)
+);
 
 /** IPv6 special-use blocks that no NetAddress predicate covers exactly. */
-const refusedIpv6Networks = [
-  "100::/64",
-  "2001::/23",
-  "2001::/32",
-  "2001:2::/48",
-  "2001:3::/32",
-  "2001:4:112::/48",
-  "2001:10::/28",
-  "2001:20::/28",
-  "2001:30::/28",
-  "2001:db8::/32",
-  "2002::/16",
-  "2620:4f:8000::/48",
-  "3fff::/20",
-  "5f00::/16",
-  "64:ff9b::/96",
-  "64:ff9b:1::/48",
-  "fec0::/10",
-  "::ffff:0:0:0/96",
-].map((cidr) => IpNetwork.fromStringUnsafe(cidr));
+const refusedIpv6Networks = Arr.map(
+  [
+    "100::/64",
+    "2001::/23",
+    "2001::/32",
+    "2001:2::/48",
+    "2001:3::/32",
+    "2001:4:112::/48",
+    "2001:10::/28",
+    "2001:20::/28",
+    "2001:30::/28",
+    "2001:db8::/32",
+    "2002::/16",
+    "2620:4f:8000::/48",
+    "3fff::/20",
+    "5f00::/16",
+    "64:ff9b::/96",
+    "64:ff9b:1::/48",
+    "fec0::/10",
+    "::ffff:0:0:0/96",
+  ],
+  (cidr) => IpNetwork.fromStringUnsafe(cidr)
+);
 
 function isRefusedAddress(address: NetAddress.IpAddress): boolean {
   if (NetAddress.isIpv4Address(address)) {
@@ -124,7 +133,9 @@ function isRefusedIpv4(address: NetAddress.Ipv4Address): boolean {
     NetAddress.isLoopback(address) ||
     NetAddress.isMulticast(address) ||
     NetAddress.isPrivate(address) ||
-    refusedIpv4Networks.some((network) => IpNetwork.contains(network, address))
+    Arr.some(refusedIpv4Networks, (network) =>
+      IpNetwork.contains(network, address)
+    )
   );
 }
 
@@ -136,7 +147,9 @@ function isRefusedIpv6(address: NetAddress.Ipv6Address): boolean {
     NetAddress.isUniqueLocal(address) ||
     NetAddress.isUnspecified(address) ||
     IpNetwork.contains(ipv4CompatibleNetwork, address) ||
-    refusedIpv6Networks.some((network) => IpNetwork.contains(network, address))
+    Arr.some(refusedIpv6Networks, (network) =>
+      IpNetwork.contains(network, address)
+    )
   );
 }
 
