@@ -2,6 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { TOOL_CALL_CASES } from "@repo/backend/test/mcp/calls";
 import { DISCOVERY_CASES } from "@repo/backend/test/mcp/discovery";
 import {
   jsonBody,
@@ -17,6 +18,7 @@ import {
   sendMcpCase,
   sendMcpRequest,
 } from "@repo/backend/test/mcp/harness";
+import { INVALID_TOOL_CALL_CASES } from "@repo/backend/test/mcp/invalid";
 import { Array as Arr, Effect } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
@@ -45,6 +47,10 @@ const runGoldenCase = Effect.fn("TestMcp.runGoldenCase")(function* (
 describe("Nakafa MCP golden contract", () => {
   describe("discovery and lists", () => {
     it.effect.each(DISCOVERY_CASES)("$name", runGoldenCase);
+  });
+  describe("tool calls", () => {
+    it.effect.each(TOOL_CALL_CASES)("$name", runGoldenCase);
+    it.effect.each(INVALID_TOOL_CALL_CASES)("$name", runGoldenCase);
   });
 });
 describe("Nakafa MCP transport", () => {

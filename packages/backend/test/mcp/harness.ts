@@ -1,5 +1,6 @@
 import { expect } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { seedArticle, seedQuran } from "@repo/backend/test/mcp/seed";
 import { Array as Arr, Effect, Record, Schema } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
@@ -68,8 +69,10 @@ export type McpAnswer = typeof McpAnswerSchema.Type;
 
 /** The deployment state a case arranges before its request is sent. */
 export const McpArrangementSchema = Schema.Literals([
+  "article",
   "empty",
   "public-read-spent",
+  "quran",
 ]);
 export type McpArrangement = typeof McpArrangementSchema.Type;
 
@@ -161,8 +164,10 @@ const ARRANGEMENTS: Record<
   McpArrangement,
   (test: BackendTest) => Promise<void>
 > = {
+  article: seedArticle,
   empty: () => Promise.resolve(),
   "public-read-spent": spendPublicRead,
+  quran: seedQuran,
 };
 
 /** Runs one case against a fresh deployment and returns the raw response. */

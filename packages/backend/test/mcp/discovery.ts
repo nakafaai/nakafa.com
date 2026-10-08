@@ -3,6 +3,7 @@ import { NAKAFA_GET_QURAN_REFERENCE_TOOL } from "@repo/backend/test/mcp/descript
 import { NAKAFA_SEARCH_CONTENT_TOOL } from "@repo/backend/test/mcp/descriptors/search";
 import { NAKAFA_GET_TAXONOMY_TOOL } from "@repo/backend/test/mcp/descriptors/taxonomy";
 import { type McpCase, modernPost } from "@repo/backend/test/mcp/harness";
+import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
 
 /** Discovery and list answers: the server identity, and every tool, prompt, resource, and template. */
 export const DISCOVERY_CASES: readonly McpCase[] = [
@@ -34,17 +35,7 @@ export const DISCOVERY_CASES: readonly McpCase[] = [
           id: 1,
         },
       },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        "content-type": "application/json",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: JSON_RESPONSE_HEADERS,
       status: 200,
     },
     name: "server/discover answers the server identity and capabilities",
@@ -76,17 +67,7 @@ export const DISCOVERY_CASES: readonly McpCase[] = [
           id: 2,
         },
       },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        "content-type": "application/json",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: JSON_RESPONSE_HEADERS,
       status: 200,
     },
     name: "tools/list answers every tool with its schemas and annotations",
@@ -147,17 +128,7 @@ export const DISCOVERY_CASES: readonly McpCase[] = [
           id: 3,
         },
       },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        "content-type": "application/json",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: JSON_RESPONSE_HEADERS,
       status: 200,
     },
     name: "prompts/list answers every prompt with its argument schema",
@@ -201,17 +172,7 @@ export const DISCOVERY_CASES: readonly McpCase[] = [
           id: 4,
         },
       },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        "content-type": "application/json",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: JSON_RESPONSE_HEADERS,
       status: 200,
     },
     name: "resources/list answers the static resources",
@@ -246,17 +207,7 @@ export const DISCOVERY_CASES: readonly McpCase[] = [
           id: 5,
         },
       },
-      headers: {
-        "access-control-allow-headers":
-          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
-        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-        "access-control-allow-origin": "*",
-        "access-control-expose-headers":
-          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
-        "cache-control": "no-store",
-        "content-type": "application/json",
-        vary: "Origin, Access-Control-Request-Headers",
-      },
+      headers: JSON_RESPONSE_HEADERS,
       status: 200,
     },
     name: "resources/templates/list answers the content template",
