@@ -1,6 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const ATOM_MODE_ID = "atom";
@@ -15,35 +16,47 @@ export const MATTER_PARTICLE_MODE_IDS = [
   COMPOUND_MOLECULE_MODE_ID,
 ] as const;
 
-export type MatterParticleElement =
-  | "carbon"
-  | "hydrogen"
-  | "nitrogen"
-  | "oxygen";
+const MatterParticleElementSchema = Schema.Literals([
+  "carbon",
+  "hydrogen",
+  "nitrogen",
+  "oxygen",
+]);
+export type MatterParticleElement = typeof MatterParticleElementSchema.Type;
 export type MatterParticleModeId = (typeof MATTER_PARTICLE_MODE_IDS)[number];
 export type MatterParticleSceneColors = ReturnType<
   typeof getMatterParticleSceneColors
 >;
-export type MatterParticleScenePoint = readonly [number, number, number];
 
-export interface MatterParticleAtom {
-  element: MatterParticleElement;
-  id: string;
-  position: MatterParticleScenePoint;
-}
+const MatterParticleScenePointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+export type MatterParticleScenePoint =
+  typeof MatterParticleScenePointSchema.Type;
 
-export interface MatterParticleMolecule {
-  atoms: readonly MatterParticleAtom[];
-  bonds: readonly (readonly [string, string])[];
-  formula: string;
-  id: string;
-  position: MatterParticleScenePoint;
-  scale?: number;
-}
+const MatterParticleAtomSchema = Schema.Struct({
+  element: MatterParticleElementSchema,
+  id: Schema.String,
+  position: MatterParticleScenePointSchema,
+});
+export type MatterParticleAtom = typeof MatterParticleAtomSchema.Type;
 
-export interface MatterParticleModel {
-  molecules: readonly MatterParticleMolecule[];
-}
+const MatterParticleMoleculeSchema = Schema.Struct({
+  atoms: Schema.Array(MatterParticleAtomSchema),
+  bonds: Schema.Array(Schema.Tuple([Schema.String, Schema.String])),
+  formula: Schema.String,
+  id: Schema.String,
+  position: MatterParticleScenePointSchema,
+  scale: Schema.optionalKey(Schema.Finite),
+});
+export type MatterParticleMolecule = typeof MatterParticleMoleculeSchema.Type;
+
+const MatterParticleModelSchema = Schema.Struct({
+  molecules: Schema.Array(MatterParticleMoleculeSchema),
+});
+export type MatterParticleModel = typeof MatterParticleModelSchema.Type;
 
 export interface MatterParticleModeLabels {
   category: ReactNode;
@@ -59,12 +72,6 @@ export interface MatterParticleReaderLabels {
   modes: Record<MatterParticleModeId, MatterParticleModeLabels>;
   particleView: string;
   readingLabel: string;
-}
-
-export interface MatterParticleReaderLabProps {
-  description: ReactNode;
-  labels: MatterParticleReaderLabels;
-  title: ReactNode;
 }
 
 export const MATTER_PARTICLE_SCENE_VIEW = {

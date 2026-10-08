@@ -3,11 +3,12 @@ import {
   type MassConservationLabLabels,
   type MassConservationModeId,
   type MassConservationSceneColors,
-  type MassConservationScenePoint,
+  MassConservationScenePointSchema,
   OPEN_SYSTEM_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Schema } from "effect";
 import { useRef } from "react";
 import { DoubleSide, type Group, type MeshStandardMaterial } from "three";
 
@@ -88,28 +89,30 @@ const ESCAPED_GAS_PARTICLES = [
   },
 ] satisfies EscapedGasParticle[];
 
-type ParticleElement = "sulfur" | "zinc";
 type ReactionPhase = "after" | "before";
 
-interface ConservationParticle {
-  element: ParticleElement;
-  id: string;
-  position: MassConservationScenePoint;
-}
+const ConservationParticleSchema = Schema.Struct({
+  element: Schema.Literals(["sulfur", "zinc"]),
+  id: Schema.String,
+  position: MassConservationScenePointSchema,
+});
+type ConservationParticle = typeof ConservationParticleSchema.Type;
 
-interface ProductPairData {
-  id: string;
-  position: MassConservationScenePoint;
-  sulfurOffset: MassConservationScenePoint;
-}
+const ProductPairDataSchema = Schema.Struct({
+  id: Schema.String,
+  position: MassConservationScenePointSchema,
+  sulfurOffset: MassConservationScenePointSchema,
+});
+type ProductPairData = typeof ProductPairDataSchema.Type;
 
-interface EscapedGasParticle {
-  drift: number;
-  id: string;
-  phase: number;
-  position: MassConservationScenePoint;
-  speed: number;
-}
+const EscapedGasParticleSchema = Schema.Struct({
+  drift: Schema.Finite,
+  id: Schema.String,
+  phase: Schema.Finite,
+  position: MassConservationScenePointSchema,
+  speed: Schema.Finite,
+});
+type EscapedGasParticle = typeof EscapedGasParticleSchema.Type;
 
 export function MassConservationScene({
   colors,

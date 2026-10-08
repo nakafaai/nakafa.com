@@ -1,3 +1,4 @@
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const HYDROGEN_ID = "hydrogen";
@@ -30,6 +31,11 @@ export const ELECTRON_CONFIGURATION_SAMPLE_IDS = [
   CALCIUM_ID,
 ] satisfies ElectronConfigurationSampleId[];
 
+const ElectronConfigurationSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  symbol: Schema.String,
+});
+
 export const ELECTRON_CONFIGURATION_SAMPLES = {
   [HYDROGEN_ID]: { atomicNumber: 1, symbol: "H" },
   [HELIUM_ID]: { atomicNumber: 2, symbol: "He" },
@@ -41,18 +47,20 @@ export const ELECTRON_CONFIGURATION_SAMPLES = {
   [CALCIUM_ID]: { atomicNumber: 20, symbol: "Ca" },
 } satisfies Record<
   ElectronConfigurationSampleId,
-  {
-    atomicNumber: number;
-    symbol: string;
-  }
+  typeof ElectronConfigurationSampleSchema.Type
 >;
+
+const ElectronConfigurationShellSchema = Schema.Struct({
+  key: Schema.String,
+  patternLimit: Schema.Finite,
+});
 
 export const ELECTRON_CONFIGURATION_SHELLS = [
   { key: "K", patternLimit: 2 },
   { key: "L", patternLimit: 8 },
   { key: "M", patternLimit: 8 },
   { key: "N", patternLimit: 2 },
-] satisfies readonly { key: string; patternLimit: number }[];
+] satisfies readonly (typeof ElectronConfigurationShellSchema.Type)[];
 
 export interface ElectronConfigurationSampleLabels {
   name: string;
@@ -69,12 +77,6 @@ export interface ElectronConfigurationLabLabels {
     ElectronConfigurationSampleId,
     ElectronConfigurationSampleLabels
   >;
-}
-
-export interface ElectronConfigurationLabProps {
-  description: ReactNode;
-  labels: ElectronConfigurationLabLabels;
-  title: ReactNode;
 }
 
 export type ElectronConfigurationSample =

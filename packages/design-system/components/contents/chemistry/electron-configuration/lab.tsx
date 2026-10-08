@@ -3,7 +3,7 @@
 import {
   ELECTRON_CONFIGURATION_SAMPLE_IDS,
   ELECTRON_CONFIGURATION_SAMPLES,
-  type ElectronConfigurationLabProps,
+  type ElectronConfigurationLabLabels,
   type ElectronConfigurationSampleId,
   getSimpleShellConfiguration,
   HYDROGEN_ID,
@@ -24,6 +24,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+export interface ElectronConfigurationLabProps {
+  description: ReactNode;
+  labels: ElectronConfigurationLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders an interactive shell-model reader for simple electron configurations.
