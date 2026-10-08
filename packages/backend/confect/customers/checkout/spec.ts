@@ -9,7 +9,7 @@ import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const invalidCheckoutSuccessUrlCode = "INVALID_CHECKOUT_SUCCESS_URL";
 export const checkoutSessionIoErrorCode = "CHECKOUT_SESSION_IO_FAILED";
-const checkoutRequestInputValidator = Schema.Struct({
+export const checkoutRequestInputValidator = Schema.Struct({
   locale: checkoutLocaleValidator,
   successUrl: Schema.String,
 });
