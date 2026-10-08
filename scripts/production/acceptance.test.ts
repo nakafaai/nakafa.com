@@ -221,6 +221,10 @@ describe("production acceptance scope", () => {
       expected: true,
     },
     {
+      changes: [{ path: "repos/effect/LLMS.md", status: "M" }],
+      expected: true,
+    },
+    {
       changes: [
         { path: "docs/adr/0017-state.md", status: "M" },
         { path: "apps/www/example.ts", status: "M" },

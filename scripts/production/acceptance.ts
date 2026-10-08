@@ -139,12 +139,15 @@ const DOCUMENTATION_PATTERNS = [
 ] as const;
 
 /**
- * Documentation-shaped paths that still feed production: a test packs the CLI
- * README into the npm tarball, and Next.js serves every file under `public`.
+ * Documentation-shaped paths that a build, test, or check still reads: a test
+ * packs the CLI README into the npm tarball, Next.js serves every file under
+ * `public`, and the Effect source parity check compares the vendored `repos/`
+ * tree.
  */
 const READ_DOCUMENTATION_PATTERNS = [
   /^packages\/cli\/README\.md$/u,
   /(?:^|\/)public\//u,
+  /^repos\//u,
 ] as const;
 
 /** Whether a path is documentation that the signed acceptance does not read. */
