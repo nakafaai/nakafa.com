@@ -32,13 +32,13 @@ const Memory = Schema.Struct({
 type Memory = typeof Memory.Type;
 
 /** One heartbeat. An unavailable reading is `None`, never a made-up value. */
-export const Heartbeat = Schema.Struct({
+const Heartbeat = Schema.Struct({
   load: Schema.Option(Schema.String),
   memory: Memory,
   pressure: Schema.Option(Schema.String),
   silentSeconds: Schema.Finite,
 });
-export type Heartbeat = typeof Heartbeat.Type;
+type Heartbeat = typeof Heartbeat.Type;
 
 const decodeBytes = Schema.decodeUnknownOption(Schema.FiniteFromString);
 const decodeLimit = Schema.decodeUnknownOption(CgroupLimit);
