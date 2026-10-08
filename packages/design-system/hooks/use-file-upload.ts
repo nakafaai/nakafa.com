@@ -1,6 +1,5 @@
 "use client";
 
-import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { selectFileBatch } from "@repo/design-system/lib/upload/selection";
 import {
   Array as Arr,
@@ -103,9 +102,7 @@ export const useFileUpload = (
 
   const inputRef = useRef<HTMLInputElement>(null);
   const filesRef = useRef(state.files);
-  const objectUrls = useStableMutableValue(() =>
-    MutableHashSet.empty<string>()
-  );
+  const objectUrlsRef = useRef(MutableHashSet.empty<string>());
   const pickedCountRef = useRef(0);
 
   /** Keeps imperative file actions aligned with the next rendered file list. */
@@ -128,37 +125,35 @@ export const useFileUpload = (
       }
 
       const preview = URL.createObjectURL(file);
-      MutableHashSet.add(objectUrls, preview);
+      MutableHashSet.add(objectUrlsRef.current, preview);
       return preview;
     },
-    [objectUrls]
+    []
   );
 
-  const revokePreview = useCallback(
-    (file: FileWithPreview) => {
-      if (!(file.file instanceof File && file.preview)) {
-        return;
-      }
+  const revokePreview = useCallback((file: FileWithPreview) => {
+    if (!(file.file instanceof File && file.preview)) {
+      return;
+    }
 
-      if (!MutableHashSet.has(objectUrls, file.preview)) {
-        return;
-      }
+    if (!MutableHashSet.has(objectUrlsRef.current, file.preview)) {
+      return;
+    }
 
-      MutableHashSet.remove(objectUrls, file.preview);
-      URL.revokeObjectURL(file.preview);
-    },
-    [objectUrls]
-  );
+    MutableHashSet.remove(objectUrlsRef.current, file.preview);
+    URL.revokeObjectURL(file.preview);
+  }, []);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    const objectUrls = objectUrlsRef.current;
+
+    return () => {
       for (const objectUrl of objectUrls) {
         URL.revokeObjectURL(objectUrl);
       }
       MutableHashSet.clear(objectUrls);
-    },
-    [objectUrls]
-  );
+    };
+  }, []);
 
   const resetInput = useCallback(() => {
     if (!inputRef.current) {
