@@ -4,8 +4,9 @@ import { Effect, Option, Schema } from "effect";
 
 /** Nakafa policy ceiling for one JSON-RPC request, including batch payloads. */
 export const MAX_MCP_REQUEST_BYTES = 64 * 1024;
+const JsonBody = Schema.fromJsonString(Schema.Unknown);
 
-/** Expected failure while bounding an MCP request before SDK classification. */
+/** Expected failure while bounding an MCP request before protocol classification. */
 export class McpRequestBodyError extends Schema.TaggedError<McpRequestBodyError>()(
   "McpRequestBodyError",
   {
@@ -19,7 +20,7 @@ export interface BoundedMcpRequest {
   readonly request: Request;
 }
 
-/** Reads a POST once and keeps every SDK classification path under the cap. */
+/** Reads a POST once and keeps every protocol classification path under the cap. */
 export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
   request: Request
 ) {
@@ -76,10 +77,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
   const parsedBody =
     source.length === 0
       ? Option.none<unknown>()
-      : yield* Effect.try({
-          catch: () => undefined,
-          try: () => JSON.parse(source) as unknown,
-        }).pipe(Effect.option);
+      : Schema.decodeOption(JsonBody)(source);
   return {
     ...(Option.isSome(parsedBody)
       ? {

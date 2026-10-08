@@ -52,9 +52,8 @@ export function runMcpTool<Output extends Readonly<Record<string, unknown>>>(
   );
 }
 
-const decodeJsonText = Schema.decodeUnknownEffect(
-  Schema.fromJsonString(Schema.Json)
-);
+const JsonText = Schema.fromJsonString(Schema.Unknown);
+const JsonValue = Schema.fromJsonString(Schema.Json);
 
 /**
  * Builds the successful result from the JSON text a client receives. The
@@ -65,7 +64,7 @@ const decodeJsonText = Schema.decodeUnknownEffect(
 const toSuccessResult = Effect.fn("agent.mcp.toSuccessResult")(function* (
   output: Readonly<Record<string, unknown>>
 ) {
-  const text = JSON.stringify(output);
+  const text = yield* Schema.encodeUnknownEffect(JsonText)(output);
   return {
     content: [
       {
@@ -73,7 +72,7 @@ const toSuccessResult = Effect.fn("agent.mcp.toSuccessResult")(function* (
         type: "text" as const,
       },
     ],
-    structuredContent: yield* decodeJsonText(text),
+    structuredContent: yield* Schema.decodeEffect(JsonValue)(text),
   };
 }, Effect.orDie);
 
@@ -91,7 +90,7 @@ export function toMcpToolError(
   return {
     content: [
       {
-        text: JSON.stringify(structuredContent),
+        text: Schema.encodeUnknownSync(JsonText)(structuredContent),
         type: "text" as const,
       },
     ],

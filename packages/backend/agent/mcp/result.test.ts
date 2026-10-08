@@ -11,6 +11,8 @@ import {
 } from "@repo/contents/agent/errors";
 import { Effect, Logger, Schema } from "effect";
 
+const JsonText = Schema.fromJsonString(Schema.Unknown);
+
 describe("Nakafa MCP tool results", () => {
   it.effect(
     "provides recovery guidance when input failure has no extra cause",
@@ -54,9 +56,8 @@ describe("Nakafa MCP tool results", () => {
           },
         },
       });
-      expect(JSON.stringify(result)).not.toContain(
-        "private storage diagnostic"
-      );
+      const json = yield* Schema.encodeUnknownEffect(JsonText)(result);
+      expect(json).not.toContain("private storage diagnostic");
     })
   );
 
@@ -79,9 +80,8 @@ describe("Nakafa MCP tool results", () => {
             },
           },
         });
-        expect(JSON.stringify(result)).not.toContain(
-          "private defect diagnostic"
-        );
+        const json = yield* Schema.encodeUnknownEffect(JsonText)(result);
+        expect(json).not.toContain("private defect diagnostic");
       })
   );
 

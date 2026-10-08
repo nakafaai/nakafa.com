@@ -1,5 +1,8 @@
-import { Array as Arr, Predicate, pipe } from "effect";
+import { Array as Arr, Predicate, pipe, Schema } from "effect";
 
+const encodeJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
 const DEFAULT_ALLOWED_HEADERS = [
   "accept",
   "baggage",
@@ -32,7 +35,7 @@ export function mcpErrorResponse(
       ? undefined
       : Math.max(1, Math.ceil(retryAfterMilliseconds / 1000));
   return new Response(
-    JSON.stringify({
+    encodeJson({
       error: {
         code,
         data: {
@@ -63,7 +66,7 @@ export function mcpErrorResponse(
   );
 }
 
-/** Answers one refused request with the plain JSON-RPC error the SDK wrote before the engine existed. */
+/** Answers one refused request with a plain JSON-RPC error, without request identity. */
 export function mcpJsonRpcRefusal(
   status: number,
   code: number,
@@ -72,7 +75,7 @@ export function mcpJsonRpcRefusal(
   data?: unknown
 ) {
   return new Response(
-    JSON.stringify({
+    encodeJson({
       error: {
         code,
         message,
@@ -129,7 +132,7 @@ export function mcpParsedErrorResponse(
       );
 }
 
-/** Adds CORS and cache metadata without replacing SDK protocol headers. */
+/** Adds CORS and cache metadata without replacing the protocol headers. */
 export function withMcpResponseHeaders(response: Response, request: Request) {
   const headers = new Headers(response.headers);
   const origin = request.headers.get("origin");

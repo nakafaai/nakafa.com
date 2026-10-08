@@ -1,7 +1,7 @@
 import { type McpCase, modernPost } from "@repo/backend/test/mcp/harness";
 import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
 
-/** Tool calls the SDK refuses before any Nakafa handler runs, and a call to a tool that does not exist. */
+/** Tool calls refused before any Nakafa read, and a call to a tool that does not exist. */
 export const INVALID_TOOL_CALL_CASES: readonly McpCase[] = [
   {
     answer: {
