@@ -274,8 +274,8 @@ function declaredFunction(file: string, sourceFile: SourceFile, local: string) {
 
 /**
  * Returns the functions a Playwright module passes to the browser page by
- * reference, such as `page.addInitScript(patchWebGL, countCanvasFrames)`, each named by
- * the module that declares it.
+ * reference, such as `patchWebGL` in `page.addInitScript(patchWebGL, ...)`,
+ * each named by the module that declares it.
  */
 export function pageFunctionKeys(
   file: string,
