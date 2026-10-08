@@ -88,8 +88,7 @@ const decodeCursor = Effect.fn("contentRelease.decodeModelCursor")(function* (
 });
 const appendIdentity = Effect.fn("contentRelease.appendModelIdentity")(
   function* <Row extends ModelRow>(
-    input: ModelReconciliationInput,
-    positionOf: ModelPosition<Row>,
+    input: ModelReconciliationInput & { readonly position: ModelPosition<Row> },
     source: Row | undefined,
     target: Row | undefined,
     row: Row
@@ -108,7 +107,7 @@ const appendIdentity = Effect.fn("contentRelease.appendModelIdentity")(
     }
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Model phase ${input.build.phase} has duplicate identity ${Arr.join(positionOf(row), "/")}.`
+      `Model phase ${input.build.phase} has duplicate identity ${Arr.join(input.position(row), "/")}.`
     );
   }
 );
@@ -116,23 +115,25 @@ const appendIdentity = Effect.fn("contentRelease.appendModelIdentity")(
 /** Reconciles one complete identity without rewriting unchanged native rows. */
 const reconcileIdentity = Effect.fn("contentRelease.reconcileModelIdentity")(
   function* <Row extends ModelRow>(
-    insert: ModelInsert<Row>,
-    replace: ModelReplace<Row>,
-    remove: ModelRemove<Row>,
+    input: {
+      readonly insert: ModelInsert<Row>;
+      readonly remove: ModelRemove<Row>;
+      readonly replace: ModelReplace<Row>;
+    },
     source: Row | undefined,
     target: Row | undefined
   ) {
     if (source && target) {
       if (compareValues(modelValues(source), modelValues(target)) !== 0) {
-        yield* replace(target, source);
+        yield* input.replace(target, source);
       }
       return;
     }
     if (source) {
-      return yield* insert(source);
+      return yield* input.insert(source);
     }
     if (target) {
-      return yield* remove(target);
+      return yield* input.remove(target);
     }
   }
 );
@@ -143,17 +144,18 @@ export const reconcileModel = Effect.fn("contentRelease.reconcileModel")(
     Row extends ModelRow,
     Labels extends QueryStreamKeyLabels.QueryStreamKeyLabels,
   >(
-    input: ModelReconciliationInput,
-    sourceStream: ModelStream<Row, Labels>,
-    targetStream: ModelStream<Row, Labels>,
-    positionOf: ModelPosition<Row>,
-    insert: ModelInsert<Row>,
-    replace: ModelReplace<Row>,
-    remove: ModelRemove<Row>
+    input: ModelReconciliationInput & {
+      readonly insert: ModelInsert<Row>;
+      readonly position: ModelPosition<Row>;
+      readonly remove: ModelRemove<Row>;
+      readonly replace: ModelReplace<Row>;
+      readonly source: ModelStream<Row, Labels>;
+      readonly target: ModelStream<Row, Labels>;
+    }
   ) {
     const { build } = input;
     const cursor = yield* decodeCursor(build);
-    const merged = QueryStream.merge([sourceStream, targetStream]);
+    const merged = QueryStream.merge([input.source, input.target]);
     const rows = cursor
       ? QueryStream.narrow(merged, {
           start: {
@@ -181,9 +183,9 @@ export const reconcileModel = Effect.fn("contentRelease.reconcileModel")(
           const row = yield* Effect.fromNullishOr(
             Option.getOrUndefined(entry.doc)
           ).pipe(Effect.orDie);
-          const key = positionOf(row);
+          const key = input.position(row);
           if (position && (position[0] !== key[0] || position[1] !== key[1])) {
-            yield* reconcileIdentity(insert, replace, remove, source, target);
+            yield* reconcileIdentity(input, source, target);
             processed += 1;
             const counts = yield* budget.getReadCounts;
             if (
@@ -198,13 +200,7 @@ export const reconcileModel = Effect.fn("contentRelease.reconcileModel")(
           }
           position = key;
           scanned += 1;
-          const identity = yield* appendIdentity(
-            input,
-            positionOf,
-            source,
-            target,
-            row
-          );
+          const identity = yield* appendIdentity(input, source, target, row);
           source = identity.source;
           target = identity.target;
           return true;
@@ -233,7 +229,7 @@ export const reconcileModel = Effect.fn("contentRelease.reconcileModel")(
         processed,
       } satisfies ModelBuildPage;
     }
-    yield* reconcileIdentity(insert, replace, remove, source, target);
+    yield* reconcileIdentity(input, source, target);
     return {
       done: true,
       processed: processed + (position ? 1 : 0),

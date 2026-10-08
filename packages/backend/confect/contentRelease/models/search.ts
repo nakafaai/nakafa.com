@@ -14,16 +14,18 @@ export const reconcileSearchModel = Effect.fn(
   const sourceSlot = build.slots.searchBaseSlot;
   const targetSlot = build.slots.searchTargetSlot;
   const query = (yield* DatabaseReader).table("contentIndex");
-  return yield* reconcileModel(
-    { build, sourceSlot, targetSlot },
-    query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
+  return yield* reconcileModel({
+    build,
+    source: query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
       index.eq("slot", sourceSlot)
     ),
-    query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
+    target: query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
       index.eq("slot", targetSlot)
     ),
-    (row) => [row.contentKey, row.appLocale],
-    ({ _creationTime, _id, ...fields }) =>
+    sourceSlot,
+    targetSlot,
+    position: (row) => [row.contentKey, row.appLocale],
+    insert: ({ _creationTime, _id, ...fields }) =>
       writer
         .table("contentIndex")
         .insert({
@@ -31,7 +33,7 @@ export const reconcileSearchModel = Effect.fn(
           slot: targetSlot,
         })
         .pipe(Effect.orDie, Effect.asVoid),
-    (target, { _creationTime, _id, ...fields }) =>
+    replace: (target, { _creationTime, _id, ...fields }) =>
       writer
         .table("contentIndex")
         .replace(target._id, {
@@ -39,6 +41,6 @@ export const reconcileSearchModel = Effect.fn(
           slot: targetSlot,
         })
         .pipe(Effect.orDie),
-    (target) => writer.table("contentIndex").delete(target._id)
-  );
+    remove: (target) => writer.table("contentIndex").delete(target._id),
+  });
 });

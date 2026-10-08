@@ -15,16 +15,18 @@ export const reconcileMaterialModel = Effect.fn(
   const targetSlot = build.slots.materialTargetSlot;
   if (build.phase === "materialCatalog") {
     const query = (yield* DatabaseReader).table("materialCatalog");
-    return yield* reconcileModel(
-      { build, sourceSlot, targetSlot },
-      query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
+    return yield* reconcileModel({
+      build,
+      source: query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
         index.eq("slot", sourceSlot)
       ),
-      query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
+      target: query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
         index.eq("slot", targetSlot)
       ),
-      (row) => [row.contentKey, row.appLocale],
-      ({ _creationTime, _id, ...fields }) =>
+      sourceSlot,
+      targetSlot,
+      position: (row) => [row.contentKey, row.appLocale],
+      insert: ({ _creationTime, _id, ...fields }) =>
         writer
           .table("materialCatalog")
           .insert({
@@ -32,7 +34,7 @@ export const reconcileMaterialModel = Effect.fn(
             slot: targetSlot,
           })
           .pipe(Effect.orDie, Effect.asVoid),
-      (target, { _creationTime, _id, ...fields }) =>
+      replace: (target, { _creationTime, _id, ...fields }) =>
         writer
           .table("materialCatalog")
           .replace(target._id, {
@@ -40,20 +42,22 @@ export const reconcileMaterialModel = Effect.fn(
             slot: targetSlot,
           })
           .pipe(Effect.orDie),
-      (target) => writer.table("materialCatalog").delete(target._id)
-    );
+      remove: (target) => writer.table("materialCatalog").delete(target._id),
+    });
   }
   const query = (yield* DatabaseReader).table("materialBuckets");
-  return yield* reconcileModel(
-    { build, sourceSlot, targetSlot },
-    query.stream("by_slot_and_appLocale_and_bucket", (index) =>
+  return yield* reconcileModel({
+    build,
+    source: query.stream("by_slot_and_appLocale_and_bucket", (index) =>
       index.eq("slot", sourceSlot)
     ),
-    query.stream("by_slot_and_appLocale_and_bucket", (index) =>
+    target: query.stream("by_slot_and_appLocale_and_bucket", (index) =>
       index.eq("slot", targetSlot)
     ),
-    (row) => [row.appLocale, row.bucket],
-    ({ _creationTime, _id, ...fields }) =>
+    sourceSlot,
+    targetSlot,
+    position: (row) => [row.appLocale, row.bucket],
+    insert: ({ _creationTime, _id, ...fields }) =>
       writer
         .table("materialBuckets")
         .insert({
@@ -61,7 +65,7 @@ export const reconcileMaterialModel = Effect.fn(
           slot: targetSlot,
         })
         .pipe(Effect.orDie, Effect.asVoid),
-    (target, { _creationTime, _id, ...fields }) =>
+    replace: (target, { _creationTime, _id, ...fields }) =>
       writer
         .table("materialBuckets")
         .replace(target._id, {
@@ -69,6 +73,6 @@ export const reconcileMaterialModel = Effect.fn(
           slot: targetSlot,
         })
         .pipe(Effect.orDie),
-    (target) => writer.table("materialBuckets").delete(target._id)
-  );
+    remove: (target) => writer.table("materialBuckets").delete(target._id),
+  });
 });

@@ -15,16 +15,18 @@ export const reconcileArticleModel = Effect.fn(
   const targetSlot = build.slots.articleTargetSlot;
   if (build.phase === "articleCatalog") {
     const query = (yield* DatabaseReader).table("articleCatalog");
-    return yield* reconcileModel(
-      { build, sourceSlot, targetSlot },
-      query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
+    return yield* reconcileModel({
+      build,
+      source: query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
         index.eq("slot", sourceSlot)
       ),
-      query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
+      target: query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
         index.eq("slot", targetSlot)
       ),
-      (row) => [row.contentKey, row.appLocale],
-      ({ _creationTime, _id, ...fields }) =>
+      sourceSlot,
+      targetSlot,
+      position: (row) => [row.contentKey, row.appLocale],
+      insert: ({ _creationTime, _id, ...fields }) =>
         writer
           .table("articleCatalog")
           .insert({
@@ -32,7 +34,7 @@ export const reconcileArticleModel = Effect.fn(
             slot: targetSlot,
           })
           .pipe(Effect.orDie, Effect.asVoid),
-      (target, { _creationTime, _id, ...fields }) =>
+      replace: (target, { _creationTime, _id, ...fields }) =>
         writer
           .table("articleCatalog")
           .replace(target._id, {
@@ -40,21 +42,23 @@ export const reconcileArticleModel = Effect.fn(
             slot: targetSlot,
           })
           .pipe(Effect.orDie),
-      (target) => writer.table("articleCatalog").delete(target._id)
-    );
+      remove: (target) => writer.table("articleCatalog").delete(target._id),
+    });
   }
   if (build.phase === "articleCategories") {
     const query = (yield* DatabaseReader).table("articleCategories");
-    return yield* reconcileModel(
-      { build, sourceSlot, targetSlot },
-      query.stream("by_slot_and_appLocale_and_category", (index) =>
+    return yield* reconcileModel({
+      build,
+      source: query.stream("by_slot_and_appLocale_and_category", (index) =>
         index.eq("slot", sourceSlot)
       ),
-      query.stream("by_slot_and_appLocale_and_category", (index) =>
+      target: query.stream("by_slot_and_appLocale_and_category", (index) =>
         index.eq("slot", targetSlot)
       ),
-      (row) => [row.appLocale, row.category],
-      ({ _creationTime, _id, ...fields }) =>
+      sourceSlot,
+      targetSlot,
+      position: (row) => [row.appLocale, row.category],
+      insert: ({ _creationTime, _id, ...fields }) =>
         writer
           .table("articleCategories")
           .insert({
@@ -62,7 +66,7 @@ export const reconcileArticleModel = Effect.fn(
             slot: targetSlot,
           })
           .pipe(Effect.orDie, Effect.asVoid),
-      (target, { _creationTime, _id, ...fields }) =>
+      replace: (target, { _creationTime, _id, ...fields }) =>
         writer
           .table("articleCategories")
           .replace(target._id, {
@@ -70,20 +74,22 @@ export const reconcileArticleModel = Effect.fn(
             slot: targetSlot,
           })
           .pipe(Effect.orDie),
-      (target) => writer.table("articleCategories").delete(target._id)
-    );
+      remove: (target) => writer.table("articleCategories").delete(target._id),
+    });
   }
   const query = (yield* DatabaseReader).table("articleBuckets");
-  return yield* reconcileModel(
-    { build, sourceSlot, targetSlot },
-    query.stream("by_slot_and_appLocale_and_bucket", (index) =>
+  return yield* reconcileModel({
+    build,
+    source: query.stream("by_slot_and_appLocale_and_bucket", (index) =>
       index.eq("slot", sourceSlot)
     ),
-    query.stream("by_slot_and_appLocale_and_bucket", (index) =>
+    target: query.stream("by_slot_and_appLocale_and_bucket", (index) =>
       index.eq("slot", targetSlot)
     ),
-    (row) => [row.appLocale, row.bucket],
-    ({ _creationTime, _id, ...fields }) =>
+    sourceSlot,
+    targetSlot,
+    position: (row) => [row.appLocale, row.bucket],
+    insert: ({ _creationTime, _id, ...fields }) =>
       writer
         .table("articleBuckets")
         .insert({
@@ -91,7 +97,7 @@ export const reconcileArticleModel = Effect.fn(
           slot: targetSlot,
         })
         .pipe(Effect.orDie, Effect.asVoid),
-    (target, { _creationTime, _id, ...fields }) =>
+    replace: (target, { _creationTime, _id, ...fields }) =>
       writer
         .table("articleBuckets")
         .replace(target._id, {
@@ -99,6 +105,6 @@ export const reconcileArticleModel = Effect.fn(
           slot: targetSlot,
         })
         .pipe(Effect.orDie),
-    (target) => writer.table("articleBuckets").delete(target._id)
-  );
+    remove: (target) => writer.table("articleBuckets").delete(target._id),
+  });
 });

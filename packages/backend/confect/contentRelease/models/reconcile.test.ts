@@ -41,19 +41,23 @@ it.effect(
           expect(
             yield* Effect.gen(function* () {
               const query = (yield* DatabaseReader).table("contentIndex");
-              return yield* reconcileModel(
-                { build, sourceSlot: "blue", targetSlot: "green" },
-                query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
-                  index.eq("slot", "blue")
+              return yield* reconcileModel({
+                build,
+                source: query.stream(
+                  "by_slot_and_contentKey_and_appLocale",
+                  (index) => index.eq("slot", "blue")
                 ),
-                query.stream("by_slot_and_contentKey_and_appLocale", (index) =>
-                  index.eq("slot", "green")
+                target: query.stream(
+                  "by_slot_and_contentKey_and_appLocale",
+                  (index) => index.eq("slot", "green")
                 ),
-                (row) => [row.contentKey, row.appLocale],
+                sourceSlot: "blue",
+                targetSlot: "green",
+                position: (row) => [row.contentKey, row.appLocale],
                 insert,
                 replace,
-                remove
-              );
+                remove,
+              });
             }).pipe(Effect.flip)
           ).toMatchObject({
             code: "CONTENT_RELEASE_INTEGRITY",
