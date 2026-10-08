@@ -19,6 +19,7 @@ import {
   sendMcpRequest,
 } from "@repo/backend/test/mcp/harness";
 import { INVALID_TOOL_CALL_CASES } from "@repo/backend/test/mcp/invalid";
+import { PROMPT_CASES } from "@repo/backend/test/mcp/prompts";
 import { Array as Arr, Effect } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
@@ -51,6 +52,9 @@ describe("Nakafa MCP golden contract", () => {
   describe("tool calls", () => {
     it.effect.each(TOOL_CALL_CASES)("$name", runGoldenCase);
     it.effect.each(INVALID_TOOL_CALL_CASES)("$name", runGoldenCase);
+  });
+  describe("prompts", () => {
+    it.effect.each(PROMPT_CASES)("$name", runGoldenCase);
   });
 });
 describe("Nakafa MCP transport", () => {
