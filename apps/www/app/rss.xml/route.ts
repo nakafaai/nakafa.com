@@ -1,7 +1,7 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 import { Feed, type Item } from "feed";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
@@ -55,7 +55,7 @@ async function readFeed() {
     image: `${baseUrl}/og.png`,
     favicon: `${baseUrl}/icon.png`,
     copyright: tCommon("copyright", {
-      year: new Date().getFullYear(),
+      year: DateTime.toDate(DateTime.nowUnsafe()).getFullYear(),
       companyName: COMPANY_IDENTITY.legalName,
     }),
   });
