@@ -11,7 +11,6 @@ const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const AgentProblemStatusSchema = Schema.Literals([
   400, 403, 404, 405, 406, 415, 422, 429, 500, 503,
 ]);
-export type AgentProblemStatus = typeof AgentProblemStatusSchema.Type;
 export const PUBLIC_API_HEADERS = {
   "Access-Control-Allow-Headers":
     "Accept, Content-Type, traceparent, tracestate, baggage",
