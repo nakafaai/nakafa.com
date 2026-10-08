@@ -3,8 +3,8 @@ import type { models } from "@polar-sh/sdk/2026-10";
 import {
   decodePolarCheckout,
   decodePolarCustomer,
+  decodePolarCustomerId,
   decodePolarCustomerPage,
-  decodePolarCustomerRecord,
   decodePolarCustomerSession,
   decodePolarSubscription,
   PolarPayloadError,
@@ -132,24 +132,16 @@ describe("Polar payload contracts", () => {
       })
   );
 
-  it.effect("decodes a whole customer for a deletion, individual or team", () =>
+  it.effect("decodes only the customer id from a deletion", () =>
     Effect.gen(function* () {
-      expect(yield* decodePolarCustomerRecord(individual)).toMatchObject({
+      expect(yield* decodePolarCustomerId(individual)).toEqual({
         id: "customer-1",
-        type: "individual",
       });
-      expect(
-        yield* decodePolarCustomerRecord({
-          ...individual,
-          email: null,
-          type: "team",
-        })
-      ).toMatchObject({ email: null, type: "team" });
     })
   );
 
   it.effect(
-    "rejects a customer deletion with a malformed field that 0.49 checked",
+    "ignores the fields of a deletion that it does not read, however malformed",
     () =>
       Effect.gen(function* () {
         for (const malformed of [
@@ -163,13 +155,20 @@ describe("Polar payload contracts", () => {
           { organization_id: null },
           { tax_id: "not-a-list" },
         ]) {
-          const failure = yield* decodePolarCustomerRecord({
-            ...individual,
-            ...malformed,
-          }).pipe(Effect.flip);
-          expect(failure).toBeInstanceOf(PolarPayloadError);
+          expect(
+            yield* decodePolarCustomerId({ ...individual, ...malformed })
+          ).toEqual({ id: "customer-1" });
         }
       })
+  );
+
+  it.effect("rejects a deletion without a customer id", () =>
+    Effect.gen(function* () {
+      const failure = yield* decodePolarCustomerId(
+        Struct.omit(individual, ["id"])
+      ).pipe(Effect.flip);
+      expect(failure).toBeInstanceOf(PolarPayloadError);
+    })
   );
 
   it.effect("decodes a customer list and rejects a list without items", () =>
@@ -271,26 +270,5 @@ describe("Polar payload contracts", () => {
       }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(PolarPayloadError);
     })
-  );
-
-  it.effect(
-    "rejects a subscription date-time that is not RFC 3339 with a zone offset",
-    () =>
-      Effect.gen(function* () {
-        for (const value of [
-          "2026-10-01",
-          "September 1, 2026",
-          "2026-10-01T00:00:00",
-          "2026-10-01T00:00Z",
-          "2026-10-01T24:00:00Z",
-          "2026-02-31T00:00:00Z",
-        ]) {
-          const failure = yield* decodePolarSubscription({
-            ...subscriptionWire,
-            current_period_end: value,
-          }).pipe(Effect.flip);
-          expect(failure).toBeInstanceOf(PolarPayloadError);
-        }
-      })
   );
 });

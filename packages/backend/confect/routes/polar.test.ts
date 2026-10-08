@@ -304,7 +304,7 @@ describe("Polar webhook decoding at the route", () => {
   );
 
   it.effect(
-    "rejects a customer deletion whose field is malformed and deletes nothing",
+    "processes a customer deletion whose other fields are malformed and deletes the customer",
     () =>
       Effect.gen(function* () {
         const target = yield* Confect;
@@ -338,15 +338,15 @@ describe("Polar webhook decoding at the route", () => {
           method: "POST",
         });
 
-        expect(response.status).toBe(400);
-        expect(yield* readResponseText(response)).toBe("Bad Request");
+        expect(response.status).toBe(202);
+        expect(yield* readResponseText(response)).toBe("Accepted");
         const remaining = yield* target.run(
           Effect.flatMap(DatabaseReader, (reader) =>
             reader.table("customers").index("by_polarId").take(10)
           ).pipe(Effect.map((customers) => customers.length)),
           Schema.Int
         );
-        expect(remaining).toBe(1);
+        expect(remaining).toBe(0);
       }).pipe(Effect.provide(confectLayer))
   );
 

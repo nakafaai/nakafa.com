@@ -8,7 +8,7 @@ import { normalizeStoredCustomer } from "@repo/backend/confect/customers/polar/i
 import { polarGateway } from "@repo/backend/confect/customers/polar/live";
 import {
   decodePolarCustomer,
-  decodePolarCustomerRecord,
+  decodePolarCustomerId,
   decodePolarSubscription,
   type PolarCustomerSource,
 } from "@repo/backend/confect/customers/polar/payload";
@@ -163,7 +163,7 @@ export const processPolarWebhookEvent = Effect.fn(
       return disposition !== "missing";
     }
     case "customer.deleted": {
-      const customer = yield* decodePolarCustomerRecord(event.data);
+      const customer = yield* decodePolarCustomerId(event.data);
       yield* deletePolarCustomerWebhook(customer.id);
       return true;
     }

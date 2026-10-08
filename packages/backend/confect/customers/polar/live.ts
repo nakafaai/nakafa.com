@@ -84,14 +84,17 @@ export const polarGateway: PolarCustomerGateway = {
     return yield* request(
       (client) =>
         createCheckoutsService(client).create({
-          // The checkout body always carries these flags, so they are sent explicitly.
+          // Learners may apply discount codes at checkout.
           allow_discount_codes: true,
+          // The product's trial period, when it has one, applies at checkout.
           allow_trial: true,
           customer_id: input.customerId,
           customer_ip_address: input.customerIpAddress,
+          // Checkout is for individuals, so the billing name and address are not required.
           is_business_customer: false,
           locale: input.locale,
           products: input.productIds,
+          // Only the country is required at checkout; US customers still enter the full address.
           require_billing_address: false,
           success_url: input.successUrl,
           ...(input.embedOrigin === undefined
@@ -119,10 +122,10 @@ export const polarGateway: PolarCustomerGateway = {
     return yield* request(
       (client) =>
         createCustomersService(client).create({
-          // Customers are always created as individuals, so the type is sent explicitly.
           email: input.email,
           external_id: input.externalId,
           name: input.name,
+          // Polar leaves the type optional, so Nakafa always states individual.
           type: "individual",
           ...(input.metadata === undefined ? {} : { metadata: input.metadata }),
         }),
@@ -185,12 +188,12 @@ export const polarGateway: PolarCustomerGateway = {
   findCustomerByEmail: Effect.fn("polar.findCustomerByEmail")(function* (
     email: string
   ) {
-    // An empty sort sends no sorting parameter, so the SDK's created-at default does not apply.
     const page = yield* request(
       (client) =>
         createCustomersService(client).list({
           email,
           limit: 1,
+          // An empty list sends no sort, so the SDK's -created_at default does not apply.
           sorting: [],
         }),
       decodePolarCustomerPage
