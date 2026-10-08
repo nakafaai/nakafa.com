@@ -24,10 +24,10 @@ describe("customers/checkout/session", () => {
           kind: "unavailable",
         } satisfies CheckoutAdmission)
       );
-      const failure = yield* createAdmittedCheckoutSession({
-        admitCheckout: Effect.suspend(admitCheckout),
-        createCheckout: Effect.suspend(createCheckout),
-      }).pipe(Effect.flip);
+      const failure = yield* createAdmittedCheckoutSession(
+        Effect.suspend(createCheckout),
+        Effect.suspend(admitCheckout)
+      ).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(CheckoutUnavailable);
       expect(failure).toMatchObject({
         code: accountUnavailableCode,
@@ -49,10 +49,10 @@ describe("customers/checkout/session", () => {
         } satisfies CheckoutAdmission)
       );
       expect(
-        yield* createAdmittedCheckoutSession({
-          admitCheckout: Effect.suspend(admitCheckout),
-          createCheckout: Effect.suspend(createCheckout),
-        })
+        yield* createAdmittedCheckoutSession(
+          Effect.suspend(createCheckout),
+          Effect.suspend(admitCheckout)
+        )
       ).toEqual(checkout);
     })
   );
@@ -62,10 +62,10 @@ describe("customers/checkout/session", () => {
         code: checkoutSessionIoErrorCode,
         message: "Convex unavailable",
       });
-      const observed = yield* createAdmittedCheckoutSession({
-        admitCheckout: Effect.fail(failure),
-        createCheckout: Effect.succeed(checkout),
-      }).pipe(Effect.flip);
+      const observed = yield* createAdmittedCheckoutSession(
+        Effect.succeed(checkout),
+        Effect.fail(failure)
+      ).pipe(Effect.flip);
       expect(observed).toMatchObject({
         _tag: "CheckoutSessionIoError",
         code: checkoutSessionIoErrorCode,

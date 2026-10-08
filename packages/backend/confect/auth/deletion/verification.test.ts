@@ -78,7 +78,9 @@ describe("auth/deletion/verification", () => {
           }),
         };
         const interrupted = yield* drainDeletedUserVerificationsProgram(
-          operations
+          operations.deletePage,
+          operations.loadCursor,
+          operations.saveCursor
         ).pipe(Effect.result);
         expect(interrupted).toMatchObject({
           _tag: "Failure",
@@ -88,7 +90,11 @@ describe("auth/deletion/verification", () => {
         });
         expect(durableCursor).toBe("verification-cursor-1");
         expect(
-          yield* drainDeletedUserVerificationsProgram(operations)
+          yield* drainDeletedUserVerificationsProgram(
+            operations.deletePage,
+            operations.loadCursor,
+            operations.saveCursor
+          )
         ).toBeUndefined();
         expect(Arr.map(deletePage.mock.calls, ([cursor]) => cursor)).toEqual([
           null,
