@@ -237,6 +237,17 @@ describe("content runtime transport", () => {
     })
   );
 
+  it.effect("does not retry a terminal reader failure", () =>
+    Effect.gen(function* () {
+      fetchMock.mockResolvedValue(createResponse("{", 200));
+
+      expect(yield* runRetryRequest(requestJson().pipe(Effect.flip))).toEqual(
+        new ContentTransportError({ reason: "json-syntax" })
+      );
+      expect(fetchMock).toHaveBeenCalledOnce();
+    })
+  );
+
   it.effect("cancels only discarded unmarked platform responses", () =>
     Effect.gen(function* () {
       const first = createOpenResponse("first", 500);
@@ -365,19 +376,55 @@ describe("content runtime transport", () => {
     })
   );
 
-  it.effect("ends an attempt that gets no response before its deadline", () =>
+  it.effect(
+    "fails a read after three attempts miss their request deadline",
+    () =>
+      Effect.gen(function* () {
+        fetchMock.mockImplementation(
+          () => new Promise<Response>(() => undefined)
+        );
+
+        // Three attempts of ten seconds, with the 500 ms and 1 s delays between them.
+        expect(
+          yield* runRetryRequest(requestResponse().pipe(Effect.flip), 31.5)
+        ).toEqual(
+          new ContentTransportError({ networkCodes: [], reason: "fetch" })
+        );
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+        expect(attemptSignal(0)?.aborted).toBe(true);
+        expect(attemptSignal(1)?.aborted).toBe(true);
+        expect(attemptSignal(2)?.aborted).toBe(true);
+      })
+  );
+
+  it.effect(
+    "answers a read whose first attempt misses its request deadline",
+    () =>
+      Effect.gen(function* () {
+        fetchMock
+          .mockImplementationOnce(() => new Promise<Response>(() => undefined))
+          .mockResolvedValueOnce(createResponse("{}", 200));
+
+        expect((yield* runRetryRequest(requestResponse(), 11)).status).toBe(
+          200
+        );
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(attemptSignal(0)?.aborted).toBe(true);
+      })
+  );
+
+  it.effect("keeps an unknown network code final after a missed deadline", () =>
     Effect.gen(function* () {
-      fetchMock.mockImplementation(
-        () => new Promise<Response>(() => undefined)
-      );
+      fetchMock
+        .mockImplementationOnce(() => new Promise<Response>(() => undefined))
+        .mockRejectedValueOnce(createFetchFailure("UND_ERR_CONNECT_TIMEOUT"));
 
       expect(
-        yield* runRetryRequest(requestResponse().pipe(Effect.flip), 10)
+        yield* runRetryRequest(requestResponse().pipe(Effect.flip), 11)
       ).toEqual(
         new ContentTransportError({ networkCodes: [], reason: "fetch" })
       );
-      expect(fetchMock).toHaveBeenCalledOnce();
-      expect(attemptSignal(0)?.aborted).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
     })
   );
 
