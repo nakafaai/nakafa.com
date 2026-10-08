@@ -7,7 +7,7 @@ import {
   isValenceElectronSampleId,
   VALENCE_ELECTRON_SAMPLE_IDS,
   VALENCE_ELECTRON_SAMPLES,
-  type ValenceElectronLabProps,
+  type ValenceElectronLabLabels,
   type ValenceElectronSampleId,
 } from "@repo/design-system/components/contents/chemistry/valence-electron/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -25,6 +25,12 @@ import {
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+export interface ValenceElectronLabProps {
+  description: ReactNode;
+  labels: ValenceElectronLabLabels;
+  title: ReactNode;
+}
 
 /** Renders a 3D reader for valence electrons in neutral atoms. */
 export function ValenceElectronLab({

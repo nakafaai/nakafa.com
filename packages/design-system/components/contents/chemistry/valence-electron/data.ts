@@ -1,4 +1,5 @@
 import { getEarlyElementShellConfiguration } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const HYDROGEN_ID = "hydrogen";
@@ -31,6 +32,11 @@ export const VALENCE_ELECTRON_SAMPLE_IDS = [
   CALCIUM_ID,
 ] satisfies ValenceElectronSampleId[];
 
+const ValenceElectronSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  symbol: Schema.String,
+});
+
 export const VALENCE_ELECTRON_SAMPLES = {
   [HYDROGEN_ID]: { atomicNumber: 1, symbol: "H" },
   [HELIUM_ID]: { atomicNumber: 2, symbol: "He" },
@@ -42,10 +48,7 @@ export const VALENCE_ELECTRON_SAMPLES = {
   [CALCIUM_ID]: { atomicNumber: 20, symbol: "Ca" },
 } satisfies Record<
   ValenceElectronSampleId,
-  {
-    atomicNumber: number;
-    symbol: string;
-  }
+  typeof ValenceElectronSampleSchema.Type
 >;
 
 export interface ValenceElectronSampleLabels {
@@ -63,12 +66,6 @@ export interface ValenceElectronLabLabels {
   outerShell: string;
   samples: Record<ValenceElectronSampleId, ValenceElectronSampleLabels>;
   valenceElectron: string;
-}
-
-export interface ValenceElectronLabProps {
-  description: ReactNode;
-  labels: ValenceElectronLabLabels;
-  title: ReactNode;
 }
 
 /**
