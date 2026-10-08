@@ -5,6 +5,7 @@ import { withObservedPageErrors } from "@/e2e/support/context";
 import { visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import {
+  expectStillShell,
   observeShell,
   readPageTime,
   readShellObservation,
@@ -13,6 +14,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   activate,
   arrive,
+  onPath,
   openHub,
   openTrack,
   setHref,
@@ -30,22 +32,13 @@ const isSet = (pathname: string) => pathname === setHref;
 const isSection = (pathname: string) => pathname.startsWith(`${setHref}/`);
 
 /** Waits until the browser shows a page of an attempt, with the shell locked. */
-const arriveLocked = Effect.fn("NakafaE2E.arriveAtLockedAttempt")(function* (
-  page: Page,
-  matches: (pathname: string) => boolean
-) {
-  yield* Effect.promise(() =>
-    expect(page).toHaveURL(
-      (url) => matches(url.pathname) && url.searchParams.has("attemptId"),
-      { timeout: readinessTimeoutMilliseconds }
-    )
+const arriveLocked = (page: Page, matches: (pathname: string) => boolean) =>
+  arrive(
+    page,
+    (url) => matches(url.pathname) && url.searchParams.has("attemptId"),
+    page.locator(LOCKED_SHELL),
+    "attached"
   );
-  yield* Effect.promise(() =>
-    expect(page.locator(LOCKED_SHELL)).toBeAttached({
-      timeout: readinessTimeoutMilliseconds,
-    })
-  );
-});
 
 /**
  * Runs one navigation step while recording every frame, then requires a
@@ -66,17 +59,7 @@ const observeStep = Effect.fn("NakafaE2E.observeAttemptStep")(function* (
   yield* Effect.sleep("750 millis");
   page.off("framenavigated", record);
   const observation = yield* readShellObservation(page, since);
-  yield* Effect.sync(() => {
-    expect(observation.frames).toBeGreaterThan(0);
-    expect(observation.hiddenFrames).toBe(0);
-    expect(observation.headinglessFrames).toBe(0);
-    expect(observation.shells).toBe(1);
-    expect(observation.layoutShift).toBe(0);
-    expect(observation.locks).toEqual(locks);
-    // A client render locks through the shell alone, so no page, hidden or
-    // not, may carry the server's lock marker.
-    expect(observation.markedFrames).toBe(0);
-  });
+  yield* Effect.sync(() => expectStillShell(observation, locks));
   return urls;
 });
 
@@ -111,7 +94,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     [false, true],
     Effect.gen(function* () {
       yield* activate(visibleLink(page, setHref), hasTouch);
-      yield* arrive(page, setHref, start);
+      yield* arrive(page, onPath(setHref), start);
       yield* Effect.promise(() =>
         expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
       );
@@ -205,7 +188,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     [true, false],
     Effect.gen(function* () {
       yield* activate(visibleLink(page, trackHref), hasTouch);
-      yield* arrive(page, trackHref, runningRow);
+      yield* arrive(page, onPath(trackHref), runningRow);
     })
   );
 

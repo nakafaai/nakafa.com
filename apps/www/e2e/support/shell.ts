@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import {
   Array as Arr,
   Effect,
@@ -127,6 +127,25 @@ export const readPageTime = Effect.fn("NakafaE2E.readPageTime")(function* (
 /** Whether a frame shows any `<main>` at all. */
 const showsShell = (frame: typeof ShellFrame.Type) =>
   Arr.isReadonlyArrayNonEmpty(frame.mains);
+
+/**
+ * Expects the frames since one observation to show the app shell throughout: a
+ * mounted, visible shell with a heading in every frame, no layout shift, and
+ * exactly the expected lock states. A client render locks through the shell
+ * alone, so no page, hidden or not, may carry the server's lock marker.
+ */
+export function expectStillShell(
+  observation: typeof ShellObservation.Type,
+  locks: readonly boolean[]
+) {
+  expect(observation.frames).toBeGreaterThan(0);
+  expect(observation.hiddenFrames).toBe(0);
+  expect(observation.headinglessFrames).toBe(0);
+  expect(observation.shells).toBe(1);
+  expect(observation.layoutShift).toBe(0);
+  expect(observation.locks).toEqual(locks);
+  expect(observation.markedFrames).toBe(0);
+}
 
 /** Summarizes the frames and layout shifts recorded since `since`. */
 export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(

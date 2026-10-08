@@ -5,6 +5,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { press, visibleLink } from "@/e2e/support/input";
 import {
+  expectStillShell,
   observeShell,
   readPageTime,
   readShellObservation,
@@ -14,6 +15,7 @@ import {
   activate,
   arrive,
   intend,
+  onPath,
   openHub,
   openTrack,
   readSectionHref,
@@ -42,9 +44,11 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
     },
     requested: MutableHashSet.MutableHashSet<string>
   ) {
+    const run = Effect.runPromiseWith(yield* Effect.context<never>());
     yield* Effect.promise(() => link.scrollIntoViewIfNeeded());
     yield* intend(link, target, requested);
-    // @next/playwright owns this native Promise callback while its lock is held.
+    // @next/playwright owns this native Promise callback while its lock is held,
+    // so the arrival waits run inside it.
     yield* Effect.promise(() =>
       instant(page, () =>
         press(link, target.hasTouch)
@@ -52,9 +56,7 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
           // whatever the next page puts there, before the test asks for it.
           .then(() => page.mouse.move(-1, -1))
           .then(() =>
-            page.waitForURL((url) => url.pathname === target.pathname, {
-              timeout: readinessTimeoutMilliseconds,
-            })
+            run(arrive(page, onPath(target.pathname), target.content))
           )
           .then(() =>
             expect(
@@ -64,11 +66,6 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
                 name: target.title,
               })
             ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-          )
-          .then(() =>
-            expect(target.content).toBeVisible({
-              timeout: readinessTimeoutMilliseconds,
-            })
           )
       )
     );
@@ -96,28 +93,20 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
   const sectionHref = yield* readSectionHref(section);
   yield* activate(section, hasTouch);
   const start = page.getByRole("button", { exact: true, name: "Start" });
-  yield* arrive(page, sectionHref, start);
+  yield* arrive(page, onPath(sectionHref), start);
   yield* Effect.promise(() =>
     expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
   );
 
   yield* Effect.promise(() => page.goBack({ waitUntil: "commit" }));
-  yield* arrive(page, setHref, section);
+  yield* arrive(page, onPath(setHref), section);
   yield* Effect.promise(() => page.goBack({ waitUntil: "commit" }));
-  yield* arrive(page, trackHref, visibleLink(page, setHref));
+  yield* arrive(page, onPath(trackHref), visibleLink(page, setHref));
   // Late streamed content would still move the page, so keep observing.
   yield* Effect.sleep("1 second");
 
   const observation = yield* readShellObservation(page, since);
-  yield* Effect.sync(() => {
-    expect(observation.frames).toBeGreaterThan(0);
-    expect(observation.hiddenFrames).toBe(0);
-    expect(observation.shells).toBe(1);
-    expect(observation.headinglessFrames).toBe(0);
-    expect(observation.layoutShift).toBe(0);
-    expect(observation.locks).toEqual([false]);
-    expect(observation.markedFrames).toBe(0);
-  });
+  yield* Effect.sync(() => expectStillShell(observation, [false]));
 });
 
 /**

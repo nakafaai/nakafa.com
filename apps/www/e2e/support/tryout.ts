@@ -72,19 +72,30 @@ export const activate = Effect.fn("NakafaE2E.activateTryoutControl")(function* (
   yield* Effect.promise(() => press(control, hasTouch));
 });
 
-/** Waits until the browser shows `pathname` and the page's next control. */
+/** A URL predicate that matches one pathname. */
+export const onPath = (pathname: string) => (url: URL) =>
+  url.pathname === pathname;
+
+/**
+ * Waits until the browser shows a URL that `matches`, and the page's `ready`
+ * control at the given `readiness`: attached to the page, or visible to a
+ * learner.
+ */
 export const arrive = Effect.fn("NakafaE2E.arriveAtTryoutPage")(function* (
   page: Page,
-  pathname: string,
-  ready: Locator
+  matches: (url: URL) => boolean,
+  ready: Locator,
+  readiness: "attached" | "visible" = "visible"
 ) {
   yield* Effect.promise(() =>
-    expect(page).toHaveURL((url) => url.pathname === pathname, {
+    expect(page).toHaveURL(matches, {
       timeout: readinessTimeoutMilliseconds,
     })
   );
   yield* Effect.promise(() =>
-    expect(ready).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+    readiness === "visible"
+      ? expect(ready).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+      : expect(ready).toBeAttached({ timeout: readinessTimeoutMilliseconds })
   );
 });
 
@@ -123,7 +134,7 @@ export const openTrack = Effect.fn("NakafaE2E.openTryoutTrack")(function* (
     [trackHref, setHref],
   ] as const) {
     yield* activate(visibleLink(page, href), hasTouch);
-    yield* arrive(page, href, visibleLink(page, next));
+    yield* arrive(page, onPath(href), visibleLink(page, next));
   }
 });
 
@@ -136,7 +147,7 @@ export const settledSection = Effect.fn("NakafaE2E.settledTryoutSection")(
   function* (page: Page) {
     yield* arrive(
       page,
-      setHref,
+      onPath(setHref),
       page.getByRole("button", { exact: true, name: "Start" })
     );
     return sectionLink(page);
