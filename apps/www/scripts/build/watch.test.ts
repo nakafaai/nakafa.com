@@ -263,6 +263,7 @@ describe("build watch", () => {
           "\n"
         );
         expect(Number(grandchildLine)).toBeGreaterThan(0);
+        yield* expectProcessEnded(Number(grandchildLine));
         expect(done).toBe("done");
       }),
     15_000
