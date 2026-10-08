@@ -197,6 +197,7 @@ export const processPolarWebhookEvent = Effect.fn(
       return disposition !== "missing";
     }
     default: {
+      // No handler reads this type, so its data is never decoded and Polar stops retrying it.
       return true;
     }
   }

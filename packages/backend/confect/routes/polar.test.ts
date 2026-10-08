@@ -388,7 +388,7 @@ describe("Polar webhook decoding at the route", () => {
   );
 
   it.effect(
-    "acknowledges a signed known event type Nakafa does not handle with 202",
+    "acknowledges a malformed body of a known event type Nakafa does not handle with 202",
     () =>
       Effect.gen(function* () {
         const response = yield* postSignedWebhook(
