@@ -22,12 +22,6 @@ export interface VectorConceptLabLabels {
   rightCable: ReactNode;
 }
 
-export interface VectorConceptLabProps {
-  description: ReactNode;
-  labels: VectorConceptLabLabels;
-  title: ReactNode;
-}
-
 export function formatSigned(value: number) {
   if (value === 0) {
     return "0";

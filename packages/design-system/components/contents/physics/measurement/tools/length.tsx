@@ -1,5 +1,4 @@
 import { RoundedBox } from "@react-three/drei";
-import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import {
   OBJECT_COLOR,
   RULER_COLOR,
@@ -9,6 +8,7 @@ import {
   RULER_START_X,
   RULER_STEP_CM,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useMemo } from "react";

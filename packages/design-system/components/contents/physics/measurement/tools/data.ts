@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const LENGTH_TOOL_ID = "length";
 export const MASS_TOOL_ID = "mass";
@@ -49,10 +49,12 @@ export const TIME_FACE_COLOR = getColor("YELLOW");
 export const MASS_SCENE_SCALE = 1.1;
 export const TIME_SCENE_SCALE = 0.95;
 
-export type MeasurementToolId =
-  | typeof LENGTH_TOOL_ID
-  | typeof MASS_TOOL_ID
-  | typeof TIME_TOOL_ID;
+const MeasurementToolIdSchema = Schema.Literals([
+  LENGTH_TOOL_ID,
+  MASS_TOOL_ID,
+  TIME_TOOL_ID,
+]);
+export type MeasurementToolId = typeof MeasurementToolIdSchema.Type;
 export type CameraPoint = readonly [number, number, number];
 
 export const MEASUREMENT_CONTROLS = {
@@ -117,33 +119,24 @@ export const TOOL_VIEW_CONFIG = {
   }
 >;
 
-export interface ToolLabels {
-  control: string;
-  instrument: string;
-  object: string;
-  tab: string;
-}
+const ToolLabelsSchema = Schema.Struct({
+  control: Schema.String,
+  instrument: Schema.String,
+  object: Schema.String,
+  tab: Schema.String,
+});
+export type ToolLabels = typeof ToolLabelsSchema.Type;
 
-export interface MeasurementToolsLabLabels {
-  chooseTool: string;
-  decimalSeparator: "." | ",";
-  instrument: string;
-  measuredObject: string;
-  reading: string;
-  tools: Record<MeasurementToolId, ToolLabels>;
-}
-
-export interface MeasurementToolsLabProps {
-  description: ReactNode;
-  labels: MeasurementToolsLabLabels;
-  title: ReactNode;
-}
-
-export interface MeasurementSceneProps {
-  colors: SceneColors;
-  measurement: number;
-  reading: ReactNode;
-}
+const MeasurementToolsLabLabelsSchema = Schema.Struct({
+  chooseTool: Schema.String,
+  decimalSeparator: Schema.Literals([".", ","]),
+  instrument: Schema.String,
+  measuredObject: Schema.String,
+  reading: Schema.String,
+  tools: Schema.Record(MeasurementToolIdSchema, ToolLabelsSchema),
+});
+export type MeasurementToolsLabLabels =
+  typeof MeasurementToolsLabLabelsSchema.Type;
 
 export type MeasurementControl =
   (typeof MEASUREMENT_CONTROLS)[MeasurementToolId];
