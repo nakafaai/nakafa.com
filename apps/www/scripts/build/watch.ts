@@ -213,3 +213,45 @@ export const watchBuild = Effect.fn("BuildWatch.run")(function* (options: {
     })
   );
 });
+
+/**
+ * A production build prints a heartbeat every 15 seconds and stops after five
+ * minutes without output.
+ */
+const BUILD_CADENCE = {
+  heartbeatInterval: Duration.seconds(15),
+  stallLimit: Duration.minutes(5),
+};
+
+/** A build started without a command, so there is nothing to run. */
+export class MissingBuildCommand extends Data.TaggedError(
+  "MissingBuildCommand"
+)<{
+  readonly message: string;
+}> {}
+
+/**
+ * Runs the command named on the command line, such as `next build`, under the
+ * build watch and returns its exit status. A stall ends the command, writes its
+ * one-line report to standard error, and returns status 1.
+ */
+export const runWatchedBuild = Effect.fn("BuildWatch.runWatchedBuild")(
+  function* (cadence: typeof BUILD_CADENCE = BUILD_CADENCE) {
+    const stdio = yield* Stdio.Stdio;
+    const argv = yield* stdio.args;
+    if (!Arr.isReadonlyArrayNonEmpty(argv)) {
+      return yield* new MissingBuildCommand({
+        message: "A build needs a command, such as next build.",
+      });
+    }
+    const [command, ...args] = argv;
+    return yield* watchBuild({ command, args, ...cadence }).pipe(
+      Effect.catchTag("BuildStalled", (stalled) =>
+        Stream.succeed(`${stalled.message}\n`).pipe(
+          Stream.run(stdio.stderr()),
+          Effect.as(1)
+        )
+      )
+    );
+  }
+);

@@ -22,6 +22,7 @@ import {
 import { TestClock } from "effect/testing";
 import {
   printHeartbeats,
+  runWatchedBuild,
   watchBuild,
   watchSilence,
 } from "@/scripts/build/watch";
@@ -75,21 +76,22 @@ function collectInto(text: Ref.Ref<string>) {
     );
 }
 
-/** Captures the standard streams that the watch writes to, in memory. */
-const captureStreams = Effect.gen(function* () {
-  const stdout = yield* Ref.make("");
-  const stderr = yield* Ref.make("");
-  return {
-    stderr,
-    stdio: Stdio.make({
-      args: Effect.succeed([]),
-      stderr: collectInto(stderr),
-      stdin: Stream.empty,
-      stdout: collectInto(stdout),
-    }),
-    stdout,
-  };
-});
+/** Captures the standard streams and command line that the watch uses, in memory. */
+const captureStreams = (argv: readonly string[] = []) =>
+  Effect.gen(function* () {
+    const stdout = yield* Ref.make("");
+    const stderr = yield* Ref.make("");
+    return {
+      stderr,
+      stdio: Stdio.make({
+        args: Effect.succeed(argv),
+        stderr: collectInto(stderr),
+        stdin: Stream.empty,
+        stdout: collectInto(stdout),
+      }),
+      stdout,
+    };
+  });
 
 /**
  * Asserts which stall a failed watch reported. `toEqual` does not compare the
@@ -109,6 +111,17 @@ function runWatch(
   options: Parameters<typeof watchBuild>[0]
 ) {
   return watchBuild(options).pipe(
+    Effect.provideService(Stdio.Stdio, stdio),
+    Effect.provide(layer)
+  );
+}
+
+/** Runs one build with the real child-process and file services, reading its command line from the captured streams. */
+function runBuild(
+  stdio: Stdio.Stdio,
+  cadence: Parameters<typeof runWatchedBuild>[0]
+) {
+  return runWatchedBuild(cadence).pipe(
     Effect.provideService(Stdio.Stdio, stdio),
     Effect.provide(layer)
   );
@@ -158,7 +171,7 @@ describe("build watch", () => {
     "passes output through unchanged and returns a successful status",
     () =>
       Effect.gen(function* () {
-        const streams = yield* captureStreams;
+        const streams = yield* captureStreams();
         const status = yield* runWatch(streams.stdio, {
           args: [
             "-e",
@@ -177,7 +190,7 @@ describe("build watch", () => {
 
   it.live("returns the status of a failing command", () =>
     Effect.gen(function* () {
-      const streams = yield* captureStreams;
+      const streams = yield* captureStreams();
       const status = yield* runWatch(streams.stdio, {
         args: ["-e", "process.stdout.write('\\n'); process.exit(3)"],
         command: process.execPath,
@@ -193,7 +206,7 @@ describe("build watch", () => {
     "ends a silent command and its children, then names its last output",
     () =>
       Effect.gen(function* () {
-        const streams = yield* captureStreams;
+        const streams = yield* captureStreams();
         const failure = yield* runWatch(streams.stdio, {
           args: ["-e", SILENT_TREE],
           command: process.execPath,
@@ -221,7 +234,7 @@ describe("build watch", () => {
 
   it.live("ends a command whose output stays open after it exits", () =>
     Effect.gen(function* () {
-      const streams = yield* captureStreams;
+      const streams = yield* captureStreams();
       const failure = yield* runWatch(streams.stdio, {
         args: ["-e", OUTPUT_HELD],
         command: process.execPath,
@@ -243,7 +256,7 @@ describe("build watch", () => {
 
   it.live("reads a character split across two chunks in the stall line", () =>
     Effect.gen(function* () {
-      const streams = yield* captureStreams;
+      const streams = yield* captureStreams();
       const failure = yield* runWatch(streams.stdio, {
         args: ["-e", SPLIT_CHARACTER],
         command: process.execPath,
@@ -252,6 +265,55 @@ describe("build watch", () => {
       }).pipe(Effect.flip);
 
       expectStalled(failure, "build stalled: no output for 2s; last output: €");
+    })
+  );
+});
+
+describe("build status", () => {
+  const cadence = {
+    heartbeatInterval: Duration.seconds(15),
+    stallLimit: Duration.seconds(2),
+  };
+
+  it.live("returns the status of a failing build", () =>
+    Effect.gen(function* () {
+      const streams = yield* captureStreams([
+        process.execPath,
+        "-e",
+        "process.exit(3)",
+      ]);
+
+      expect(yield* runBuild(streams.stdio, cadence)).toBe(3);
+      expect(yield* Ref.get(streams.stderr)).toBe("");
+    })
+  );
+
+  it.live("writes one stall line to standard error and returns status 1", () =>
+    Effect.gen(function* () {
+      const streams = yield* captureStreams([
+        process.execPath,
+        "-e",
+        SILENT_TREE,
+      ]);
+
+      expect(yield* runBuild(streams.stdio, cadence)).toBe(1);
+      expect(yield* Ref.get(streams.stderr)).toBe(
+        "build stalled: no output for 2s; last output: compiling\n"
+      );
+    })
+  );
+
+  it.live("fails without starting anything when no command is named", () =>
+    Effect.gen(function* () {
+      const streams = yield* captureStreams();
+
+      const failure = yield* runBuild(streams.stdio, cadence).pipe(Effect.flip);
+
+      expect(failure._tag).toBe("MissingBuildCommand");
+      expect(failure.message).toBe(
+        "A build needs a command, such as next build."
+      );
+      expect(yield* Ref.get(streams.stdout)).toBe("");
     })
   );
 });
@@ -312,7 +374,7 @@ describe("silence watch", () => {
 describe("build heartbeats", () => {
   it.live("prints a heartbeat each interval while the command is silent", () =>
     Effect.gen(function* () {
-      const streams = yield* captureStreams;
+      const streams = yield* captureStreams();
       const quiet: Option.Option<string> = Option.none();
       const activity = yield* Ref.make({
         at: yield* Clock.currentTimeMillis,
