@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/routes/agent/mcp/response";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Array as Arr, Option, Predicate } from "effect";
+import { Array as Arr, Option, Predicate, Schema } from "effect";
 
 const MCP_PROTOCOL_VERSION_HEADER = "mcp-protocol-version";
 const PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
@@ -98,19 +98,12 @@ function isJsonRpcMessage(body: object) {
 }
 
 /** Whether the body's own metadata names a protocol version, which the engine checks against the header. */
-function claimsProtocolVersion(body: object) {
-  if (
-    !(Predicate.hasProperty(body, "params") && Predicate.isObject(body.params))
-  ) {
-    return false;
-  }
-  if (
-    !(
-      Predicate.hasProperty(body.params, "_meta") &&
-      Predicate.isObject(body.params._meta)
-    )
-  ) {
-    return false;
-  }
-  return Predicate.hasProperty(body.params._meta, PROTOCOL_VERSION_META_KEY);
-}
+const claimsProtocolVersion = Schema.is(
+  Schema.Struct({
+    params: Schema.Struct({
+      _meta: Schema.Struct({
+        [PROTOCOL_VERSION_META_KEY]: Schema.Unknown,
+      }),
+    }),
+  })
+);

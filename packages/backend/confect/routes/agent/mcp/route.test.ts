@@ -12,9 +12,11 @@ import {
   MCP_SECRET_ENVIRONMENT,
   type McpCase,
   type McpRequest,
+  modernPost,
   readMcpAnswer,
   sendMcpCase,
   sendMcpRequest,
+  withHeaders,
 } from "@repo/backend/test/mcp/harness";
 import { HTTP_CASES } from "@repo/backend/test/mcp/http";
 import { INVALID_TOOL_CALL_CASES } from "@repo/backend/test/mcp/invalid";
@@ -27,6 +29,7 @@ import { RESOURCE_CASES } from "@repo/backend/test/mcp/resources";
 import { Effect } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+const json = (response: Response) => Effect.promise(() => response.json());
 const text = (response: Response) => Effect.promise(() => response.text());
 function send(test: BackendTest, request: McpRequest) {
   return Effect.promise(() => sendMcpRequest(test, request));
@@ -80,6 +83,37 @@ describe("Nakafa MCP golden contract", () => {
   });
 });
 describe("Nakafa MCP transport", () => {
+  it.effect("answers a modern POST that sends no Accept header", () =>
+    Effect.gen(function* () {
+      const response = yield* send(
+        createConvexTestWithBetterAuth(),
+        withHeaders(modernPost(72, "tools/list"), { accept: null })
+      );
+      expect(response.status).toBe(200);
+      expect(yield* json(response)).toMatchObject({
+        id: 72,
+        result: {
+          tools: expect.arrayContaining([
+            expect.objectContaining({ name: "nakafa_search_content" }),
+          ]),
+        },
+      });
+    })
+  );
+  it.effect("answers an allowed browser origin with that origin", () =>
+    Effect.gen(function* () {
+      const response = yield* send(
+        createConvexTestWithBetterAuth(),
+        withHeaders(modernPost(73, "tools/list"), {
+          origin: "https://nakafa.com",
+        })
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("access-control-allow-origin")).toBe(
+        "https://nakafa.com"
+      );
+    })
+  );
   it.effect("rejects mismatched body framing before the protocol engine", () =>
     Effect.gen(function* () {
       const response = yield* send(createConvexTestWithBetterAuth(), {
