@@ -14,8 +14,3 @@ export type TryoutTrackPage = NonNullable<Ref.Returns<TrackPageQuery>>;
 export type TryoutSetAttemptStatus = NonNullable<TryoutSetRow["attemptStatus"]>;
 export type TryoutSetSort = TryoutSetListArgs["sort"];
 export type TryoutSetStatusFilter = TryoutSetListArgs["filter"];
-
-export interface TryoutCatalogBootstrap {
-  readonly args: TryoutSetListArgs;
-  readonly result: TryoutSetPage;
-}
