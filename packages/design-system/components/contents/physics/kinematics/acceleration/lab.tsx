@@ -29,6 +29,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 interface AccelerationLabProps {
@@ -101,7 +102,7 @@ export function AccelerationLab({
           value={caseId}
           variant="outline"
         >
-          {ACCELERATION_CASES.map((scenario) => (
+          {Arr.map(ACCELERATION_CASES, (scenario) => (
             <ToggleGroupItem key={scenario.id} value={scenario.id}>
               {labels.scenarioNames[scenario.id]}
             </ToggleGroupItem>
@@ -148,7 +149,7 @@ export function AccelerationLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          {facts.map((fact) => (
+          {Arr.map(facts, (fact) => (
             <LabFact
               indicatorColor={
                 "indicatorColor" in fact ? fact.indicatorColor : undefined
