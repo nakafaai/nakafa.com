@@ -124,16 +124,23 @@ const readPartnerRows = Effect.fn("contentRelease.readPartnerRows")(function* <
   R,
 >(
   input: ValidatedPartnerPageInput,
-  readDescendants: ReadDescendants<Row>,
-  readExact: ReadExact<Row>,
-  verify: VerifyRow<Row, R>
+  source: {
+    readonly readDescendants: ReadDescendants<Row>;
+    readonly readExact: ReadExact<Row>;
+    readonly verify: VerifyRow<Row, R>;
+  }
 ) {
   const exact =
-    input.cursor === null && input.prefix !== "" ? yield* readExact() : null;
+    input.cursor === null && input.prefix !== ""
+      ? yield* source.readExact()
+      : null;
   const remaining = input.limit + 1 - (exact === null ? 0 : 1);
-  const descendants = yield* readDescendants(prefixRange(input), remaining);
+  const descendants = yield* source.readDescendants(
+    prefixRange(input),
+    remaining
+  );
   const rows = exact === null ? descendants : [exact, ...descendants];
-  yield* Effect.forEach(rows, verify);
+  yield* Effect.forEach(rows, source.verify);
   return rows;
 });
 
@@ -171,9 +178,8 @@ export const readPartnerApiPage = Effect.fn(
   }
   let rows: readonly PartnerCatalogRow[];
   if (input.family === "article") {
-    rows = yield* readPartnerRows(
-      input,
-      (range, limit) =>
+    rows = yield* readPartnerRows(input, {
+      readDescendants: (range, limit) =>
         database
           .table("articleCatalog")
           .index("by_slot_and_appLocale_and_contentKey", (index) => {
@@ -187,7 +193,7 @@ export const readPartnerApiPage = Effect.fn(
           })
           .take(limit)
           .pipe(Effect.orDie),
-      () =>
+      readExact: () =>
         database
           .table("articleCatalog")
           .get(
@@ -200,13 +206,12 @@ export const readPartnerApiPage = Effect.fn(
             Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
             Effect.orDie
           ),
-      (row) =>
-        verifyArticle(row, active.sequence).pipe(Effect.provide(articleLayer))
-    );
+      verify: (row) =>
+        verifyArticle(row, active.sequence).pipe(Effect.provide(articleLayer)),
+    });
   } else {
-    rows = yield* readPartnerRows(
-      input,
-      (range, limit) =>
+    rows = yield* readPartnerRows(input, {
+      readDescendants: (range, limit) =>
         database
           .table("materialCatalog")
           .index("by_slot_and_appLocale_and_contentKey", (index) => {
@@ -220,7 +225,7 @@ export const readPartnerApiPage = Effect.fn(
           })
           .take(limit)
           .pipe(Effect.orDie),
-      () =>
+      readExact: () =>
         database
           .table("materialCatalog")
           .get(
@@ -233,8 +238,8 @@ export const readPartnerApiPage = Effect.fn(
             Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
             Effect.orDie
           ),
-      verifyMaterial
-    );
+      verify: verifyMaterial,
+    });
   }
   const selected = rows.slice(0, input.limit);
   const isDone = rows.length <= input.limit;
