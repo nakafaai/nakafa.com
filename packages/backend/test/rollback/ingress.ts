@@ -16,6 +16,11 @@ import {
   insertRollbackItem,
   insertRoute,
 } from "@repo/backend/test/content/rollback";
+import {
+  encodeFixtureRendererJson,
+  encodeReceiptJson,
+  encodeSignedReleaseJson,
+} from "@repo/backend/test/content/state";
 import type { TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
@@ -60,11 +65,11 @@ const storeAuthenticatedRelease = Effect.fn(
   );
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", stored._id, {
-      receiptJson: JSON.stringify(
+      receiptJson: encodeReceiptJson(
         makePublicationReceipt(releaseDocument, release)
       ),
-      releaseJson: JSON.stringify(release),
-      rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+      releaseJson: encodeSignedReleaseJson(release),
+      rendererJson: encodeFixtureRendererJson(TEST_PROOF_RENDERER),
     })
   );
   yield* Effect.promise(() =>
