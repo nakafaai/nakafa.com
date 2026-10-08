@@ -32,7 +32,10 @@ import {
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji";
 import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/previews";
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply";
-import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
+import {
+  ForumPostSubmitMutations,
+  submitForumPost,
+} from "@/components/school/classes/forum/conversation/input/submit";
 import { useControls } from "@/components/school/classes/forum/conversation/viewport/context";
 import {
   useForumSession,
@@ -163,20 +166,22 @@ export function ForumPostInput() {
       /** Clears the composer and keeps confirmed attachment posts visible. */
       const completeSubmit = () =>
         clearSubmittedDraft().pipe(Effect.andThen(placeConfirmedPost()));
-      const submitPost = submitForumPost({
-        files,
-        mutations: {
-          createPost,
-          discardForumUploads,
-          generateUploadUrl,
-          saveForumUpload,
-        },
-        post: {
+      const submitPost = submitForumPost(
+        {
           body: value.body,
           forumId,
           parentId: replyTarget?.postId,
         },
-      }).pipe(Effect.provide(FetchClient));
+        files
+      ).pipe(
+        Effect.provideService(ForumPostSubmitMutations, {
+          createPost,
+          discardForumUploads,
+          generateUploadUrl,
+          saveForumUpload,
+        }),
+        Effect.provide(FetchClient)
+      );
       if (isTextOnlyPost) {
         Effect.runSync(clearSubmittedDraft());
         return Effect.runPromise(

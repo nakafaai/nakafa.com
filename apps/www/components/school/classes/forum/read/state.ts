@@ -3,23 +3,18 @@ import type { ForumPost } from "@/components/school/classes/forum/conversation/d
 
 type ReadablePost = Pick<ForumPost, "_id" | "isUnread" | "sequence">;
 
-export interface ForumReadState<T> {
-  posts: T[];
-  unreadCount: number;
-}
-
 /** Mark loaded posts through one concrete sequence boundary as read. */
 export function markTranscriptRead<T extends ReadablePost>(
   posts: readonly T[],
   lastReadPostId: Id<"schoolClassForumPosts">
-): ForumReadState<T> | null {
+) {
   const boundary = posts.find((post) => post._id === lastReadPostId);
 
   if (!boundary) {
     return null;
   }
 
-  const nextPosts = posts.map((post) => {
+  const nextPosts: T[] = posts.map((post) => {
     if (!post.isUnread || post.sequence > boundary.sequence) {
       return post;
     }
@@ -33,3 +28,8 @@ export function markTranscriptRead<T extends ReadablePost>(
 
   return { posts: nextPosts, unreadCount };
 }
+
+/** Loaded posts and unread count after one read boundary is applied. */
+export type ForumReadState<T extends ReadablePost> = NonNullable<
+  ReturnType<typeof markTranscriptRead<T>>
+>;
