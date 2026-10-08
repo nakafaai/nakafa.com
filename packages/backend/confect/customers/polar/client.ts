@@ -1,5 +1,8 @@
-import { PolarCore } from "@polar-sh/sdk/core";
+import { createPolarCore, type PolarCore } from "@polar-sh/sdk/2026-04";
 import { Config, Effect, Redacted, Schema } from "effect";
+
+/** Seconds one Polar request may run; the SDK default of 5 is too short for checkout creation. */
+const POLAR_REQUEST_TIMEOUT_SECONDS = 30;
 
 /** Missing deployment configuration required for a Polar request. */
 class PolarConfigError extends Schema.TaggedError<PolarConfigError>()(
@@ -33,10 +36,11 @@ export const readPolarClient = Effect.fn("polar.readClient")(function* () {
     )
   );
   return yield* Effect.sync(
-    () =>
-      new PolarCore({
+    (): PolarCore =>
+      createPolarCore({
         accessToken: Redacted.value(accessToken),
-        server,
+        environment: server,
+        timeout: POLAR_REQUEST_TIMEOUT_SECONDS,
       })
   );
 });
