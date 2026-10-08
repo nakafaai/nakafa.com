@@ -31,11 +31,18 @@ const linkedHrefRetrySchedule = Schedule.spaced(
   })
 );
 
-type InstantMarker =
-  | { readonly kind: "heading"; readonly text?: RegExp }
-  | { readonly kind: "title"; readonly text: RegExp };
+const InstantMarkerSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("heading"),
+    text: Schema.optionalKey(Schema.RegExp),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("title"),
+    text: Schema.RegExp,
+  }),
+]);
 
-type InstantShell = "app" | "marketing";
+const InstantShellSchema = Schema.Literals(["app", "marketing"]);
 
 const instantShellSelector = {
   app: 'main[data-slot="sidebar-inset"]:visible',
@@ -55,20 +62,15 @@ export class NavigationLinkMissing extends Schema.TaggedError<NavigationLinkMiss
   }
 }
 
-export interface NavigationTarget {
-  readonly href: string;
-  readonly marker: InstantMarker;
-  readonly name: string;
-  readonly shell: InstantShell;
-  readonly sourceHref: string;
-}
+const NavigationTargetSchema = Schema.Struct({
+  href: Schema.String,
+  marker: InstantMarkerSchema,
+  name: Schema.String,
+  shell: InstantShellSchema,
+  sourceHref: Schema.String,
+});
 
-export interface NavigationCase {
-  readonly name: string;
-  readonly resolve: (
-    page: Page
-  ) => Effect.Effect<NavigationTarget, NavigationLinkMissing>;
-}
+export type NavigationTarget = typeof NavigationTargetSchema.Type;
 
 const assertSettledNavigation = Effect.fn("NakafaE2E.assertSettledNavigation")(
   function* (page: Page, target: NavigationTarget) {
@@ -396,4 +398,4 @@ export const navigationCases = [
   { name: "curriculum", resolve: resolveCurriculum },
   { name: "article", resolve: resolveArticle },
   { name: "material", resolve: resolveMaterial },
-] as const satisfies readonly NavigationCase[];
+] as const;
