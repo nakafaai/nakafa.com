@@ -42,6 +42,8 @@ export async function runSpecialist<A, E>(
   const t = createConvexTestWithBetterAuth();
   const { userId } = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, {
+      // The real clock, which the credit ledger also reads. A fixed past time
+      // would trigger the free plan's daily credit reset.
       now: DateTime.toEpochMillis(DateTime.nowUnsafe()),
     })
   );

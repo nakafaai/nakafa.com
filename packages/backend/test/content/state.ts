@@ -81,8 +81,10 @@ type TestStateOptions = typeof TestStateOptionsSchema.Type;
 
 // Receipts check at runtime rather than by type: fixture literals carry plain
 // strings and arrays where the contract wants branded or non-empty types.
+// Excess keys throw, so a misspelled receipt field cannot vanish silently.
 export const encodeReceiptJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(PublicationReceiptSchema)
+  Schema.fromJsonString(PublicationReceiptSchema),
+  { onExcessProperty: "error" }
 );
 export const encodeSignedReleaseJson = Schema.encodeSync(
   Schema.fromJsonString(SignedContentReleaseSchema)
