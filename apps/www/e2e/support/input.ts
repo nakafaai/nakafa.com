@@ -28,6 +28,15 @@ export function press(
   return hasTouch ? control.tap(options) : control.click(options);
 }
 
+/** Scrolls a control into view and activates it. */
+export const activate = Effect.fn("NakafaE2E.activateControl")(function* (
+  control: Locator,
+  hasTouch: boolean
+) {
+  yield* Effect.promise(() => control.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => press(control, hasTouch, { noWaitAfter: true }));
+});
+
 /** The first link to `href` that the page shows inside `scope`, such as `main`. */
 export function visibleLink(page: Page, href: string, scope: string) {
   return page

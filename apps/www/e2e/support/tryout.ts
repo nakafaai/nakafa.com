@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, MutableHashSet } from "effect";
-import { press, visibleLink } from "@/e2e/support/input";
+import { activate, visibleLink } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/requests";
 import { appRoutes } from "@/e2e/support/route";
@@ -60,15 +60,6 @@ export const intend = Effect.fn("NakafaE2E.intendTryoutLink")(function* (
       })
       .toBe(true)
   );
-});
-
-/** Scrolls a control into view and activates it. */
-export const activate = Effect.fn("NakafaE2E.activateTryoutControl")(function* (
-  control: Locator,
-  hasTouch: boolean
-) {
-  yield* Effect.promise(() => control.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => press(control, hasTouch, { noWaitAfter: true }));
 });
 
 /** A URL predicate that matches one pathname. */

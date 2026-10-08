@@ -2,7 +2,7 @@ import { instant } from "@next/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, type MutableHashSet } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { press, visibleLink } from "@/e2e/support/input";
+import { activate, press, visibleLink } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   expectStillShell,
@@ -12,7 +12,6 @@ import {
 } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
-  activate,
   arrive,
   intend,
   onPath,
