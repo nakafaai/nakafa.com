@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
+import { scrollToElement } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import {
@@ -36,25 +37,11 @@ const featureViewports = targetViewports.map((viewport) => ({
   reducedMotion: reducedMotionByViewport[viewport.name],
 }));
 
-/**
- * Centers one control instantly. The page scrolls smoothly, so letting the
- * pointer action scroll races the animation and hits the sticky header.
- */
-const centerControl = Effect.fn("NakafaE2E.centerControl")(function* (
-  control: Locator
-) {
-  yield* Effect.promise(() =>
-    control.evaluate((element) =>
-      element.scrollIntoView({ behavior: "instant", block: "center" })
-    )
-  );
-});
-
 /** Clicks one centered control without a second, smooth scroll. */
 const clickCentered = Effect.fn("NakafaE2E.clickCentered")(function* (
   control: Locator
 ) {
-  yield* centerControl(control);
+  yield* Effect.promise(() => scrollToElement(control, "center"));
   yield* Effect.promise(() => control.click({ scroll: "none" }));
 });
 
@@ -97,7 +84,7 @@ const expectNinaPageFlow = Effect.fn("NakafaE2E.expectNinaPageFlow")(function* (
   yield* Effect.promise(() => expect(mathTrigger).toBeHidden());
 
   // The marketing transcript belongs to the page, so wheel input must not be trapped.
-  yield* centerControl(activityTrigger);
+  yield* Effect.promise(() => scrollToElement(activityTrigger, "center"));
   yield* Effect.promise(() => activityTrigger.hover({ scroll: "none" }));
   const before = yield* Effect.promise(() =>
     page.evaluate(() => window.scrollY)

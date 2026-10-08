@@ -2,6 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { Duration, Effect } from "effect";
 import { waitForStableCanvas } from "@/e2e/support/canvas";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { scrollToElement } from "@/e2e/support/input";
 import {
   readCumulativeLayoutShift,
   readPageLayoutShift,
@@ -75,20 +76,6 @@ export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
     );
   }
 );
-
-/**
- * Scrolls the page until the element sits at `block` in the viewport, the way
- * the page's own scripts scroll. Playwright's scroll into view left a card
- * just below the fold out of view in WebKit on Linux, so no reveal relies on
- * it.
- */
-function scrollToElement(locator: Locator, block: ScrollLogicalPosition) {
-  return locator.evaluate(
-    (element, position) =>
-      element.scrollIntoView({ behavior: "instant", block: position }),
-    block
-  );
-}
 
 /**
  * Scrolls a visual card to the top of the viewport until its `content` shows.

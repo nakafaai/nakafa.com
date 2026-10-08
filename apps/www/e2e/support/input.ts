@@ -171,3 +171,20 @@ export const swipeDown = Effect.fn("NakafaE2E.swipeDown")(function* (
     { x, y: Math.min(startY + SWIPE_DISTANCE, stopY) }
   );
 });
+
+/**
+ * Scrolls the page until the element sits at `block` in the viewport, the way
+ * the page's own scripts scroll. Playwright's scroll into view left a card just
+ * below the fold out of view in WebKit on Linux, and a smooth scroll races a
+ * pointer action into the sticky header, so no suite relies on either.
+ */
+export function scrollToElement(
+  locator: Locator,
+  block: ScrollLogicalPosition
+) {
+  return locator.evaluate(
+    (element, position) =>
+      element.scrollIntoView({ behavior: "instant", block: position }),
+    block
+  );
+}
