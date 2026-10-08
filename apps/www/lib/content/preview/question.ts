@@ -30,7 +30,7 @@ const QuestionPreviewInputSchema = Schema.Struct({
   appLocale: AppLocaleSchema,
   publicPath: Schema.String,
 });
-export type QuestionPreviewInput = typeof QuestionPreviewInputSchema.Type;
+type QuestionPreviewInput = typeof QuestionPreviewInputSchema.Type;
 /** Decodes one prompt projection without leaking a generic parse failure. */
 function decodePromptProjection(artifact: PreviewArtifact) {
   return Schema.decodeUnknownEffect(QuestionPromptProjectionSchema)(

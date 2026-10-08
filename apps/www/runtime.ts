@@ -55,7 +55,7 @@ const RuntimeTargetSchema = Schema.Struct({
   site: Schema.UndefinedOr(Schema.String),
   vercel: VercelIdentitySchema,
 });
-export type RuntimeTarget = typeof RuntimeTargetSchema.Type;
+type RuntimeTarget = typeof RuntimeTargetSchema.Type;
 
 function failure(reason: Failure) {
   return new UnsafeRuntimeError({ reason });
