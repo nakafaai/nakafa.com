@@ -4,12 +4,8 @@ import refs from "@repo/backend/confect/_generated/refs";
 
 const layerMock = vi.hoisted(() => vi.fn());
 
-import {
-  decodeProtectedContentRuntimeRequest,
-  ProtectedContentRuntimeResponseSchema,
-} from "@nakafa/aksara-contracts/runtime/protected/spec";
+import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 
-const wireJson = Schema.fromJsonString(ProtectedContentRuntimeResponseSchema);
 // @vitest-environment node
 
 // Node tests isolate Next navigation imports while real semantic renderers execute.
@@ -202,6 +198,9 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
 });
+/** Plain JSON codec: the body is the same bytes JSON.stringify writes, with every key kept. */
+const plainJson = Schema.fromJsonString(Schema.Unknown);
+
 describe("signed try-out execution", () => {
   it.effect(
     "renders complete original question and answer bodies after release compaction",
@@ -285,7 +284,7 @@ describe("signed try-out execution", () => {
           )
         );
         assert.isNotNull(found);
-        const body = yield* Schema.encodeEffect(wireJson)(found);
+        const body = yield* Schema.encodeEffect(plainJson)(found);
         const response = new Response(body, {
           headers: {
             "content-type": "application/json",
@@ -293,7 +292,9 @@ describe("signed try-out execution", () => {
           },
           status: 200,
         });
-        Object.defineProperty(response, "url", { value: endpoint });
+        Object.defineProperty(response, "url", {
+          value: endpoint,
+        });
         fetchMock.mockResolvedValueOnce(response);
         runtimeKeysMock.mockReturnValue({
           CONTENT_RUNTIME_TOKEN: "technical-test-token",

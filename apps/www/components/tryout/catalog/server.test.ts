@@ -3,10 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 
 const layerMock = vi.hoisted(() => vi.fn());
 
-import {
-  decodeProtectedContentRuntimeRequest,
-  ProtectedContentRuntimeResponseSchema,
-} from "@nakafa/aksara-contracts/runtime/protected/spec";
+import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -127,6 +124,9 @@ beforeEach(() => {
   transportMock.mockReset();
   vi.stubGlobal("fetch", transportMock);
 });
+/** Plain JSON codec: the body is the same bytes JSON.stringify writes, with every key kept. */
+const plainJson = Schema.fromJsonString(Schema.Unknown);
+
 describe("immutable try-out application catalog", () => {
   it.effect.each(APP_LOCALE_CODES)(
     "serves the complete signed %s hierarchy and route metadata",
@@ -306,9 +306,7 @@ describe("immutable try-out application catalog", () => {
           )
         );
         assert.isNotNull(found);
-        const body = yield* Schema.encodeEffect(
-          Schema.fromJsonString(ProtectedContentRuntimeResponseSchema)
-        )(found);
+        const body = yield* Schema.encodeEffect(plainJson)(found);
         const response = new Response(body, {
           headers: {
             "content-type": "application/json",
