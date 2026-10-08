@@ -3,10 +3,13 @@
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { createContext, type PropsWithChildren, use } from "react";
 
-interface MessageContextValue {
+/** Props of the message provider: one AI message and the turn it displays. */
+interface MessageProviderProps {
   message: NinaMessage;
-  turn: NinaMessage["metadata"];
+  turn?: NinaMessage["metadata"];
 }
+
+type MessageContextValue = Pick<MessageProviderProps, "message" | "turn">;
 
 const MessageContext = createContext<MessageContextValue | null>(null);
 
@@ -15,10 +18,7 @@ export function MessageProvider({
   message,
   turn,
   children,
-}: PropsWithChildren<{
-  message: NinaMessage;
-  turn?: NinaMessage["metadata"];
-}>) {
+}: PropsWithChildren<MessageProviderProps>) {
   const value = { message, turn: turn ?? message.metadata };
 
   return <MessageContext value={value}>{children}</MessageContext>;
