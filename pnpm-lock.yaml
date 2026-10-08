@@ -478,9 +478,6 @@ importers:
       '@mendable/firecrawl-js':
         specifier: ^4.44.1
         version: 4.44.1(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
-      '@modelcontextprotocol/server':
-        specifier: 2.3.1
-        version: 2.3.1
       '@nakafa/aksara-contracts':
         specifier: 0.46.0
         version: 0.46.0(effect@4.0.1)
@@ -2717,14 +2714,6 @@ packages:
 
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
-
-  '@modelcontextprotocol/core@2.3.1':
-    resolution: {integrity: sha512-laVmIhPGpWi7rG9q+0UigblRN0Hws/Yjlb6qLFtVqryXVLkc4h+yN8z731POD2LnAGQlFe7/tXhUm7Bi0YB91g==}
-    engines: {node: '>=20'}
-
-  '@modelcontextprotocol/server@2.3.1':
-    resolution: {integrity: sha512-e59MfWuSssj6DoQ96JCTqdW1AXT5/XtnTl0WWd6MU1Ka434fFUGGosCLJbGNySDhHGvxQWoRWK137FXYFkYNWw==}
-    engines: {node: '>=20'}
 
   '@monogrid/gainmap-js@3.4.0':
     resolution: {integrity: sha512-2Z0FATFHaoYJ8b+Y4y4Hgfn3FRFwuU5zRrk+9dFWp4uGAdHGqVEdP7HP+gLA3X469KXHmfupJaUbKo1b/aDKIg==}
@@ -9304,15 +9293,6 @@ snapshots:
       '@chevrotain/types': 11.1.2
 
   '@mixmark-io/domino@2.2.0': {}
-
-  '@modelcontextprotocol/core@2.3.1':
-    dependencies:
-      zod: 4.6.5
-
-  '@modelcontextprotocol/server@2.3.1':
-    dependencies:
-      '@modelcontextprotocol/core': 2.3.1
-      zod: 4.6.5
 
   '@monogrid/gainmap-js@3.4.0(three@0.186.1)':
     dependencies:
