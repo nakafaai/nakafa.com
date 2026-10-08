@@ -1,25 +1,27 @@
-import type { TryoutSet } from "@nakafa/aksara-contracts/tryout/catalog";
+import { TryoutSetSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
+import tryoutSetProgress from "@repo/backend/confect/_generated/tables/tryoutSetProgress";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
-import type {
-  ListArgs,
-  RunningAttempt,
+import type { ListArgs } from "@repo/backend/confect/tryouts/sets/spec";
+import {
+  PublishedSetPaginationError,
+  runningAttemptValidator,
 } from "@repo/backend/confect/tryouts/sets/spec";
-import { PublishedSetPaginationError } from "@repo/backend/confect/tryouts/sets/spec";
 import type { PublishedCatalog } from "@repo/backend/content/tryout/hierarchy";
 import { toPublicPublishedSet } from "@repo/backend/content/tryout/published";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const SIGNED_CURSOR_PREFIX = "signed:";
+const PaginationJsonSchema = Schema.fromJsonString(Schema.Unknown);
+const publishedSetRowValidator = Schema.Struct({
+  durationSeconds: Schema.Finite,
+  progress: Schema.NullOr(tryoutSetProgress.Doc),
+  runningAttempt: Schema.NullOr(runningAttemptValidator),
+  set: TryoutSetSchema,
+});
 /** One authored set joined with the current user's optional progress. */
-export interface PublishedSetRow {
-  readonly durationSeconds: number;
-  readonly progress: Docs["tryoutSetProgress"] | null;
-  readonly runningAttempt: RunningAttempt | null;
-  readonly set: TryoutSet;
-}
+export type PublishedSetRow = typeof publishedSetRowValidator.Type;
 /** Stable client failure for invalid signed-catalog pagination. */
 
 /** Paginates one signed list and invalidates cursors when its rows move. */
@@ -55,7 +57,7 @@ const identifyRows = Effect.fn("tryouts.sets.identifyPublishedPage")(
   (rows: readonly PublishedSetRow[]) =>
     hashText(
       "the signed try-out pagination state",
-      JSON.stringify(
+      Schema.encodeSync(PaginationJsonSchema)(
         Arr.map(rows, ({ progress, set }) => ({
           attemptStatus: progress?.status ?? null,
           publishedScore: progress?.publishedScore ?? null,

@@ -1,22 +1,51 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
+import {
+  TryoutSectionSchema,
+  TryoutSetSchema,
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
+import tryoutRuntimeBundles from "@repo/backend/confect/_generated/tables/tryoutRuntimeBundles";
 import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/binding";
 import type { StartAttemptArgs } from "@repo/backend/confect/tryouts/start/spec";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
-import {
-  readTryoutSet,
-  type VerifiedTryoutSet,
-} from "@repo/backend/content/tryout/set";
-import { Effect } from "effect";
+import { readTryoutSet } from "@repo/backend/content/tryout/set";
+import { Effect, Schema } from "effect";
 
+/** Signed rows of one verified try-out set, exactly as readTryoutSet returns them. */
+const verifiedTryoutSetValidator = Schema.Struct({
+  sections: Schema.Array(
+    Schema.Struct({
+      placements: Schema.Array(
+        Schema.Struct({
+          row: TryoutPlacementSchema,
+          rowHash: Schema.String,
+        })
+      ),
+      section: Schema.Struct({
+        row: TryoutSectionSchema,
+        rowHash: Schema.String,
+      }),
+      snapshotId: Schema.String,
+    })
+  ),
+  set: Schema.Struct({
+    row: TryoutSetSchema,
+    rowHash: Schema.String,
+  }),
+  setIdentity: Schema.String,
+  snapshotId: Schema.String,
+});
+const tryoutSnapshotSourceValidator = Schema.Struct({
+  snapshot: verifiedTryoutSetValidator,
+});
 /** Authenticated immutable snapshot rows used by attempt-owned projections. */
-export interface TryoutSnapshotSource {
-  readonly snapshot: VerifiedTryoutSet;
-}
-export interface TryoutStartSource extends TryoutSnapshotSource {
-  readonly bundle: Docs["tryoutRuntimeBundles"];
-  readonly releaseId: string;
-}
+export type TryoutSnapshotSource = typeof tryoutSnapshotSourceValidator.Type;
+export const tryoutStartSourceValidator = Schema.Struct({
+  ...tryoutSnapshotSourceValidator.fields,
+  bundle: tryoutRuntimeBundles.Doc,
+  releaseId: Schema.String,
+});
+export type TryoutStartSource = typeof tryoutStartSourceValidator.Type;
 
 /** Loads the active signed snapshot through its explicit runtime binding. */
 export const loadTryoutStartSource = Effect.fn(
