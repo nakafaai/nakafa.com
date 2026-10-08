@@ -103,19 +103,23 @@ export interface Runtime {
       })
   );
 
-  it.effect("holds a value through an AI SDK message part", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* holds(`import type { TextUIPart } from "ai";
+  it.effect(
+    "holds a value through an AI SDK message part or a design system Markdown type",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* holds(`import type { TextUIPart } from "ai";
+import type { MDXComponents } from "@repo/design-system/types/markdown";
 import type { Row } from "./rows";
 export interface Entry {
   readonly part: TextUIPart;
+  readonly component: MDXComponents[string];
   readonly row: Row;
 }
 `),
-        [true, false]
-      );
-    })
+          [true, true, false]
+        );
+      })
   );
 
   it.effect(

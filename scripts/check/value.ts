@@ -32,9 +32,15 @@ import {
 
 /**
  * The modules whose types describe values that no Schema describes as data:
- * React and MDX values, and the message parts that the AI SDK owns.
+ * React and MDX values, the design system's Markdown types (each one names a
+ * React or MDX type), and the message parts that the AI SDK owns.
  */
-const FRAMEWORK_TYPE_MODULES = HashSet.make("ai", "mdx/types", "react");
+const FRAMEWORK_TYPE_MODULES = HashSet.make(
+  "@repo/design-system/types/markdown",
+  "ai",
+  "mdx/types",
+  "react"
+);
 
 /**
  * The Effect modules whose types are runtime handles: a computation, a fiber,
@@ -91,9 +97,10 @@ function handleNames(clause: ImportClause | undefined): readonly string[] {
 
 /**
  * Returns the local names that a module binds to value types through its
- * imports, type-only imports included: everything from React, MDX, and the AI
- * SDK, such as `ReactNode`, `MDXComponents`, and `TextUIPart`, and the handle
- * modules of `effect`, such as `Effect` and `Fiber`.
+ * imports, type-only imports included: everything from React, MDX, the design
+ * system's Markdown types, and the AI SDK, such as `ReactNode`,
+ * `MDXComponents`, and `TextUIPart`, and the handle modules of `effect`, such
+ * as `Effect` and `Fiber`.
  */
 export function valueNames(sourceFile: SourceFile): readonly string[] {
   return Arr.flatMap(sourceFile.statements, (statement) => {
