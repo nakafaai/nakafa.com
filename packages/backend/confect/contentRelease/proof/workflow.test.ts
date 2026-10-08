@@ -1,6 +1,11 @@
 // @vitest-environment node
 
 import { afterEach, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { ContentReleaseItemSchema } from "@nakafa/aksara-contracts/release";
+import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -17,6 +22,7 @@ import { TEST_PROOF_RENDERER } from "@repo/backend/test/content/proof";
 import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { registerWorkflow } from "@repo/backend/test/workflow";
 import { convexTest } from "convex-test";
+import { Schema } from "effect";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(
@@ -47,28 +53,46 @@ it("authenticates staged artifacts and final proof through the durable Workflow 
       ctx,
       ingressReleaseId,
       ingressRelease,
-      JSON.stringify(TEST_PROOF_RENDERER)
+      Schema.encodeSync(Schema.fromJsonString(RendererManifestEnvelopeSchema))(
+        TEST_PROOF_RENDERER
+      )
     )
   );
   await t.mutation(internal.contentRelease.items.stageItemBatch, {
     releaseId: ingressReleaseId,
     batchIndex: 0,
-    itemJson: [JSON.stringify(ingressItem)],
+    itemJson: [
+      Schema.encodeSync(Schema.fromJsonString(ContentReleaseItemSchema))(
+        ingressItem
+      ),
+    ],
   });
   await t.mutation(internal.contentRelease.routes.stageRouteBatch, {
     releaseId: ingressReleaseId,
     batchIndex: 0,
-    routeJson: [JSON.stringify(ingressRoute)],
+    routeJson: [
+      Schema.encodeSync(Schema.fromJsonString(ContentRouteItemSchema))(
+        ingressRoute
+      ),
+    ],
   });
   await t.mutation(internal.contentRelease.items.stageProjectionBatch, {
     releaseId: ingressReleaseId,
     batchIndex: 0,
-    projectionJson: [JSON.stringify(ingressProjection)],
+    projectionJson: [
+      Schema.encodeSync(Schema.fromJsonString(ContentProjectionSchema))(
+        ingressProjection
+      ),
+    ],
   });
   await t.mutation(internal.contentRelease.artifacts.stageArtifactBatch, {
     releaseId: ingressReleaseId,
     batchIndex: 0,
-    artifactJson: [JSON.stringify(ingressArtifact)],
+    artifactJson: [
+      Schema.encodeSync(Schema.fromJsonString(SignedContentArtifactSchema))(
+        ingressArtifact
+      ),
+    ],
   });
   const identity = {
     releaseId: ingressReleaseId,
