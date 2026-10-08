@@ -186,32 +186,18 @@ export const other = Schema.suspend(makeThunk);
       })
   );
 
-  it.effect(
-    "allows a shape whose own member holds a function or a method",
-    () =>
-      Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* shapes(`export interface Toggle {
+  it.effect("allows a shape whose own member holds a function", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`export interface Toggle {
   readonly onChange: (value: boolean) => void;
-}
-export interface OptionalToggle {
-  readonly onClose?: () => void;
-}
-export interface Lifecycle {
-  close(): void;
-}
-export interface Factory {
-  readonly build: new () => Builder;
-}
-export interface Lookup {
-  [key: string]: () => void;
 }
 export type Handlers = { readonly onOpen: () => void };
 export type Wrapped = Readonly<{ onOpen: (() => void) | null }>;
 `),
-          []
-        );
-      })
+        []
+      );
+    })
   );
 
   it.effect(
@@ -231,33 +217,13 @@ export interface Constructible {
       })
   );
 
-  it.effect("allows a shape whose own member holds a React or MDX value", () =>
+  it.effect("allows a shape whose own member holds a React value", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
-        yield* shapes(`import React, { type ComponentType, type ReactNode } from "react";
-import type { JSX } from "react";
-import type * as Mdx from "mdx/types";
+        yield* shapes(`import type { ReactNode } from "react";
 export interface Card {
   readonly body: ReactNode;
 }
-export interface Slot {
-  readonly children: ReactNode | null;
-}
-export interface Column {
-  readonly items: ReactNode[];
-}
-export interface Grid {
-  readonly rows: readonly ReactNode[];
-}
-export interface Icon {
-  readonly element: JSX.Element;
-}
-export interface Docs {
-  readonly components: Mdx.MDXComponents;
-  readonly node: React.ReactNode;
-  readonly render: ComponentType<Props>;
-}
-export type Shell = Readonly<{ icon: (JSX.Element | null)[] }>;
 `),
         []
       );

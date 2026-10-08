@@ -1,28 +1,18 @@
 import { Array as Arr, HashSet } from "effect";
 import {
-  type EntityName,
-  type Identifier,
-  type ImportClause,
   type InterfaceDeclaration,
   isArrayTypeNode,
   isArrowFunction,
   isCallExpression,
   isConditionalTypeNode,
-  isConstructorTypeNode,
   isDeclareKeyword,
-  isFunctionTypeNode,
   isIdentifier,
-  isImportDeclaration,
-  isIndexSignatureDeclaration,
   isInferTypeNode,
   isInterfaceDeclaration,
   isIntersectionTypeNode,
   isLiteralTypeNode,
-  isMethodSignatureDeclaration,
   isModuleDeclaration,
-  isNamedImports,
   isNamedTupleMember,
-  isNamespaceImport,
   isNumericLiteral,
   isOptionalTypeNode,
   isParenthesizedTypeNode,
@@ -51,6 +41,7 @@ import {
 } from "typescript/unstable/ast";
 import { candidate } from "#scripts/check/rules";
 import { children } from "#scripts/check/source";
+import { frameworkNames, holdsValueMember } from "#scripts/check/value";
 
 const JSX_PATTERN = /\.tsx$/u;
 const PROPS_PATTERN = /Props$/u;
@@ -58,8 +49,6 @@ const PROPS_PATTERN = /Props$/u;
 const SELECTOR_FILTERS = HashSet.make("Exclude", "Extract");
 /** The Schema types whose type argument a recursive `Schema.suspend` thunk returns. */
 const RECURSIVE_CODECS = HashSet.make("Codec", "Schema");
-/** The modules whose types describe React and MDX values, which no Schema describes as data. */
-const FRAMEWORK_TYPE_MODULES = HashSet.make("mdx/types", "react");
 
 /**
  * Whether a type is a string, number, or boolean literal, or a union of them,
@@ -223,95 +212,6 @@ function recursiveNames(nodes: readonly Node[]) {
       ? [argument.typeName.text]
       : [];
   });
-}
-
-/** Returns the local names that one import clause binds, such as `React` in `import type * as React from "react"`. */
-function clauseNames(clause: ImportClause | undefined): readonly string[] {
-  const bindings = clause?.namedBindings;
-  const named =
-    bindings !== undefined && isNamedImports(bindings)
-      ? Arr.map(bindings.elements, ({ name }) => name.text)
-      : [];
-  const namespace =
-    bindings !== undefined && isNamespaceImport(bindings)
-      ? [bindings.name.text]
-      : [];
-  return [...Arr.fromNullishOr(clause?.name?.text), ...named, ...namespace];
-}
-
-/**
- * Returns the local names that a module binds through its imports from React
- * and MDX, type-only imports included, such as `ReactNode`, `JSX`, and
- * `MDXComponents`.
- */
-function frameworkNames(sourceFile: SourceFile) {
-  return Arr.flatMap(sourceFile.statements, (statement) => {
-    if (
-      !(
-        isImportDeclaration(statement) &&
-        isStringLiteral(statement.moduleSpecifier) &&
-        HashSet.has(FRAMEWORK_TYPE_MODULES, statement.moduleSpecifier.text)
-      )
-    ) {
-      return [];
-    }
-    return clauseNames(statement.importClause);
-  });
-}
-
-/** Returns the identifier that begins a type name, such as `JSX` in `JSX.Element`. */
-function leading(name: EntityName): Identifier {
-  return isQualifiedName(name) ? leading(name.left) : name;
-}
-
-/**
- * Whether a member type holds a function, a constructor, or a React or MDX
- * value, directly or inside a union, an array, or a readonly array. A name
- * that the file does not import from React or MDX, such as a local alias, is
- * not followed.
- */
-function holdsValue(type: TypeNode, names: readonly string[]): boolean {
-  if (isParenthesizedTypeNode(type)) {
-    return holdsValue(type.type, names);
-  }
-  if (isUnionTypeNode(type)) {
-    return Arr.some(type.types, (member) => holdsValue(member, names));
-  }
-  if (isArrayTypeNode(type)) {
-    return holdsValue(type.elementType, names);
-  }
-  if (
-    isTypeOperatorNode(type) &&
-    type.operator === SyntaxKind.ReadonlyKeyword
-  ) {
-    return holdsValue(type.type, names);
-  }
-  if (isFunctionTypeNode(type) || isConstructorTypeNode(type)) {
-    return true;
-  }
-  return (
-    isTypeReferenceNode(type) &&
-    Arr.contains(names, leading(type.typeName).text)
-  );
-}
-
-/**
- * Whether one member of a shape holds a function, a constructor, or a React or
- * MDX value, or is a method signature. An index signature counts by its value
- * type, and call and construct signatures do not count. A Schema describes data
- * only, so such a member keeps its shape out of Schema candidates.
- */
-function holdsValueMember(
-  member: TypeElement,
-  names: readonly string[]
-): boolean {
-  if (
-    isPropertySignatureDeclaration(member) ||
-    isIndexSignatureDeclaration(member)
-  ) {
-    return member.type !== undefined && holdsValue(member.type, names);
-  }
-  return isMethodSignatureDeclaration(member);
 }
 
 /** Returns the members that a shape declares itself: an interface's body, or the object literals of a type alias. */
