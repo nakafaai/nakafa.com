@@ -13,8 +13,8 @@ const admitCheckoutSession = FunctionImpl.make(
   "admitCheckoutSession",
   Effect.fn("customers.checkout.admission.admitCheckoutSession")(
     function* (args) {
-      return yield* admitCheckoutProgram(
-        () =>
+      return yield* admitCheckoutProgram({
+        captureEvent: () =>
           captureProductEvent({
             distinctId: args.userId,
             event: args.event,
@@ -24,7 +24,7 @@ const admitCheckoutSession = FunctionImpl.make(
                   timestamp: new Date(args.timestamp),
                 }),
           }),
-        Effect.fn("customers.checkout.loadAdmissionUser")(
+        loadUser: Effect.fn("customers.checkout.loadAdmissionUser")(
           function* () {
             return yield* (yield* DatabaseReader)
               .table("users")
@@ -35,8 +35,8 @@ const admitCheckoutSession = FunctionImpl.make(
               );
           },
           Effect.catchDefect(flow(checkoutSessionIoError, Effect.fail))
-        )
-      );
+        ),
+      });
     }
   )
 );
