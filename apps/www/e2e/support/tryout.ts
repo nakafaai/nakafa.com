@@ -69,7 +69,7 @@ export const activate = Effect.fn("NakafaE2E.activateTryoutControl")(function* (
   hasTouch: boolean
 ) {
   yield* Effect.promise(() => control.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => press(control, hasTouch));
+  yield* Effect.promise(() => press(control, hasTouch, { noWaitAfter: true }));
 });
 
 /** A URL predicate that matches one pathname. */

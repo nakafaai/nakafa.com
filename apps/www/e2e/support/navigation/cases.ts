@@ -260,7 +260,10 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
   // @next/playwright owns this native Promise callback while its lock is held.
   yield* Effect.promise(() =>
     instant(page, () =>
-      press(link, hasTouch)
+      press(link, hasTouch, {
+        noWaitAfter: true,
+        timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+      })
         .then(() =>
           page.waitForURL((url) => url.pathname === target.href, {
             timeout: NAVIGATION_TIMEOUT_MILLISECONDS,

@@ -1,6 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, Schema } from "effect";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 interface TouchPoint {
   readonly x: number;
@@ -8,29 +7,25 @@ interface TouchPoint {
 }
 
 const ACTIVATION_PROBE_TIMEOUT_MILLISECONDS = 1000;
-const PRESS_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 const TOUCH_MOVE_STEPS = 5;
 
-/** Where a press lands on its control, in CSS pixels from the control's corner. */
+/** How a press reaches its control. Unset options keep Playwright's defaults. */
 interface PressOptions {
+  /** Skips the wait for a navigation that the press starts. */
+  readonly noWaitAfter?: boolean;
+  /** Where the press lands, in CSS pixels from the control's corner. */
   readonly position?: { readonly x: number; readonly y: number };
+  /** How many milliseconds the press may take before it fails. */
+  readonly timeout?: number;
 }
 
-/**
- * Clicks or taps a control without waiting for the navigation it starts. The
- * press gives up after 15 seconds.
- */
+/** Clicks or taps a control with the given options. */
 export function press(
   control: Locator,
   hasTouch: boolean,
   options: PressOptions = {}
 ) {
-  const pressOptions = {
-    noWaitAfter: true,
-    timeout: PRESS_TIMEOUT_MILLISECONDS,
-    ...options,
-  };
-  return hasTouch ? control.tap(pressOptions) : control.click(pressOptions);
+  return hasTouch ? control.tap(options) : control.click(options);
 }
 
 /**

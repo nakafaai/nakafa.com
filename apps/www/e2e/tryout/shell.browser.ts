@@ -49,7 +49,7 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
     // @next/playwright owns this native Promise callback while its lock is held.
     yield* Effect.promise(() =>
       instant(page, () =>
-        press(link, target.hasTouch)
+        press(link, target.hasTouch, { noWaitAfter: true })
           // A pointer that rests where it pressed would show intent on
           // whatever the next page puts there, before the test asks for it.
           .then(() => page.mouse.move(-1, -1))
