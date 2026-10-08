@@ -141,24 +141,28 @@ describe("customer audit configuration", () => {
       )
   );
 
-  it.effect("reports an env parser failure as a configuration error", () =>
-    Effect.gen(function* () {
-      vi.mocked(parseEnv).mockImplementationOnce(() => {
-        throw new Error("invalid env");
-      });
-      expect(yield* loadCustomerEnvProvider().pipe(Effect.flip)).toMatchObject({
-        _tag: "CustomerConvexConfigError",
-        message: "invalid env",
-      });
-    }).pipe(
-      Effect.provide(
-        scriptedFiles({
-          exists: () => Effect.succeed(true),
-          readFileString: () =>
-            Effect.succeed("CONVEX_URL=https://example.com"),
-        })
+  it.effect.each([new Error("invalid env"), "invalid env"])(
+    "reports an env parser failure as a configuration error: %s",
+    (failure) =>
+      Effect.gen(function* () {
+        vi.mocked(parseEnv).mockImplementationOnce(() => {
+          throw failure;
+        });
+        expect(
+          yield* loadCustomerEnvProvider().pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "CustomerConvexConfigError",
+          message: "invalid env",
+        });
+      }).pipe(
+        Effect.provide(
+          scriptedFiles({
+            exists: () => Effect.succeed(true),
+            readFileString: () =>
+              Effect.succeed("CONVEX_URL=https://example.com"),
+          })
+        )
       )
-    )
   );
 
   it.effect.each([false, true])(

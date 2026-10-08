@@ -3,6 +3,7 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import {
   createLocalSigningIdentity,
+  LocalSigningIdentitySchema,
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
 import { Effect, FileSystem, Option, Schema } from "effect";
@@ -19,7 +20,9 @@ vi.mock("node:crypto", async (importOriginal) => {
 });
 
 /** Encodes a signing identity as JSON text to prove its private key stays out of it. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const encodeJson = Schema.encodeSync(
+  Schema.fromJsonString(LocalSigningIdentitySchema)
+);
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const temporary = yield* fs.makeTempDirectoryScoped({

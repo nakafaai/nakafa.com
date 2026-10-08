@@ -50,6 +50,9 @@ const PaginationArgsSchema = Schema.Struct({
   paginationOpts: Schema.Struct({
     cursor: Schema.NullOr(Schema.String),
     numItems: Schema.Finite,
+    endCursor: Schema.optionalKey(Schema.NullOr(Schema.String)),
+    maximumRowsRead: Schema.optionalKey(Schema.Finite),
+    maximumBytesRead: Schema.optionalKey(Schema.Finite),
   }),
 });
 type CustomerIntegrityQuery = FunctionReference<
