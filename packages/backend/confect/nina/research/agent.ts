@@ -3,7 +3,8 @@ import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import type { ResearchAgentParams } from "@repo/backend/confect/nina/contract/agent";
+import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
+import type { ResearchAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import {
@@ -69,7 +70,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     toolCallId,
     publish,
     usageHandler,
-  }: ResearchAgentParams & { readonly usageHandler: UsageHandler }) {
+  }: ResearchAgentData & {
+    readonly publish: CapabilityProgress;
+    readonly usageHandler: UsageHandler;
+  }) {
     const sourceReferences = getUniqueSourceReferences([
       ...messageSourceReferences,
       ...getSourceReferences(task),
@@ -255,10 +259,9 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
     sourceReferences,
     toolCallId,
     publish,
-  }: Pick<
-    ResearchAgentParams,
-    "task" | "sourceReferences" | "toolCallId" | "publish"
-  >) {
+  }: Pick<ResearchAgentData, "task" | "sourceReferences" | "toolCallId"> & {
+    readonly publish: CapabilityProgress;
+  }) {
     return yield* Effect.forEach(
       sourceReferences,
       (source, index) =>
@@ -285,7 +288,7 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
  * Keeps source references unique while preserving the user's order.
  */
 function getUniqueSourceReferences(
-  sourceReferences: ResearchAgentParams["sourceReferences"]
+  sourceReferences: ResearchAgentData["sourceReferences"]
 ) {
   const seen = MutableHashSet.empty<string>();
   return Arr.filter(sourceReferences, (source) => {

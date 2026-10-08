@@ -83,10 +83,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   });
   const acceptedSchemaText = yield* Schema.encodeEffect(prettyJsonCodec)(
     schema.value
-  ).pipe(Effect.option);
-  if (Option.isNone(acceptedSchemaText)) {
-    return null;
-  }
+  ).pipe(Effect.orDie);
   const repaired = yield* Effect.tryPromise((signal) =>
     agent
       .generateText(
@@ -134,7 +131,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
 
         # Accepted Schema
 
-        ${acceptedSchemaText.value}
+        ${acceptedSchemaText}
 
         # Validation Error
 
