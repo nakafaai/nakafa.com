@@ -3,26 +3,31 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   type AnalyticsConsentState,
   type AnonymousAnalyticsConsentRecord,
+  AnonymousAnalyticsConsentRecordSchema,
   resolveAnalyticsConsentState,
 } from "@repo/analytics/consent";
 import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
 import type refs from "@repo/backend/confect/_generated/refs";
 
-import { Option } from "effect";
+import { Option, Schema } from "effect";
 
-export interface BrowserAnalyticsUser {
-  readonly appUser: {
-    readonly _id: string;
-    readonly plan: string;
-    readonly role?: string;
-  };
-}
+const BrowserAnalyticsUserSchema = Schema.Struct({
+  appUser: Schema.Struct({
+    _id: Schema.String,
+    plan: Schema.String,
+    role: Schema.optionalKey(Schema.String),
+  }),
+});
 
-export interface BrowserConsentSnapshot {
-  readonly anonymousConsent: Option.Option<AnonymousAnalyticsConsentRecord>;
-  readonly hasBrowserPrivacySignal: boolean;
-  readonly isResolved: boolean;
-}
+export type BrowserAnalyticsUser = typeof BrowserAnalyticsUserSchema.Type;
+
+const BrowserConsentSnapshotSchema = Schema.Struct({
+  anonymousConsent: Schema.Option(AnonymousAnalyticsConsentRecordSchema),
+  hasBrowserPrivacySignal: Schema.Boolean,
+  isResolved: Schema.Boolean,
+});
+
+export type BrowserConsentSnapshot = typeof BrowserConsentSnapshotSchema.Type;
 
 export type AccountConsentDecision = NonNullable<
   Ref.Returns<typeof refs.public.consents.current.get>["decision"]
