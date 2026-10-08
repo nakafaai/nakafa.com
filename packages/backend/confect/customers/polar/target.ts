@@ -7,15 +7,17 @@ import {
   type polarCustomerWebhookTargetValidator,
 } from "@repo/backend/confect/customers/polar/spec";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
-import { Effect, flow } from "effect";
+import { Effect, flow, Schema } from "effect";
 
 type PolarCustomerWebhookTarget =
   typeof polarCustomerWebhookTargetValidator.Type;
-interface PolarCustomerWebhookTargetInput {
-  readonly externalId?: string;
-  readonly metadataUserId?: string;
-  readonly polarCustomerId: string;
-}
+const polarCustomerWebhookTargetInputValidator = Schema.Struct({
+  externalId: Schema.optionalKey(Schema.String),
+  metadataUserId: Schema.optionalKey(Schema.String),
+  polarCustomerId: Schema.String,
+});
+type PolarCustomerWebhookTargetInput =
+  typeof polarCustomerWebhookTargetInputValidator.Type;
 /** Maps target lookup IO into one typed Convex failure. */
 function toWebhookTargetError(error: unknown) {
   return new PolarCustomerWebhookTargetIoError({
