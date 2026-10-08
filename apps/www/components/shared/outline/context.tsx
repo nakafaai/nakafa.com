@@ -2,7 +2,7 @@
 
 import type { ParsedHeading } from "@repo/contents/toc";
 import { extractAllHeadingIds } from "@repo/contents/toc";
-import { HashSet, MutableHashSet, Schema } from "effect";
+import { HashSet, Schema } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 
@@ -33,7 +33,7 @@ const WATCH_SEPARATOR = "\n";
  */
 function observeHeadings(store: TocStore, watch: readonly string[]) {
   const watched = HashSet.fromIterable(watch);
-  const visible = MutableHashSet.empty<Element>();
+  const visible = new Set<Element>();
 
   function publish(activeHeadings: readonly string[]) {
     const current = store.getState().activeHeadings;
@@ -48,7 +48,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
 
   /** Publishes the headings in the band, keeping the last ones between them. */
   function publishVisible() {
-    if (MutableHashSet.size(visible) > 0) {
+    if (visible.size > 0) {
       publish(Array.from(visible, (element) => element.id));
     }
   }
@@ -57,9 +57,9 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          MutableHashSet.add(visible, entry.target);
+          visible.add(entry.target);
         } else {
-          MutableHashSet.remove(visible, entry.target);
+          visible.delete(entry.target);
         }
       }
       publishVisible();
@@ -87,7 +87,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
       for (const node of record.removedNodes) {
         for (const heading of headingsWithin(node)) {
           observer.unobserve(heading);
-          MutableHashSet.remove(visible, heading);
+          visible.delete(heading);
         }
       }
     }
