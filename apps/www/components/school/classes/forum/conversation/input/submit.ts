@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog/browser";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
@@ -23,63 +24,53 @@ const StorageIdSchema = Schema.declare(
 const StorageUploadResponseSchema = Schema.Struct({
   storageId: StorageIdSchema,
 });
-type GenerateUploadUrlMutation = (
+const ForumPostSubmitDraftSchema = Schema.Struct({
+  body: Schema.String,
+  forumId: IdSchema("schoolClassForums"),
+  parentId: Schema.UndefinedOr(IdSchema("schoolClassForumPosts")),
+});
+const DiscardPendingUploadsInputSchema = Schema.Struct({
+  source: Schema.String,
+  uploadIds: Schema.mutable(
+    Schema.Array(IdSchema("schoolClassForumPendingUploads"))
+  ),
+});
+const UploadAttachmentFileInputSchema = Schema.Struct({
+  file: Schema.instanceOf(File),
+  forumId: IdSchema("schoolClassForums"),
+});
+type ForumPostSubmitDraft = typeof ForumPostSubmitDraftSchema.Type;
+type DiscardPendingUploadsInput = typeof DiscardPendingUploadsInputSchema.Type;
+type UploadAttachmentFileInput = typeof UploadAttachmentFileInputSchema.Type;
+export type GenerateUploadUrlMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
 >;
-type DiscardForumUploadsMutation = (
+export type DiscardForumUploadsMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
 >;
-type SaveForumUploadMutation = (
+export type SaveForumUploadMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
 >;
-type CreateForumPostMutation = (
+export type CreateForumPostMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.posts.createForumPost
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.posts.createForumPost
 >;
-interface ForumPostSubmitMutations {
-  createPost: CreateForumPostMutation;
-  discardForumUploads: DiscardForumUploadsMutation;
-  generateUploadUrl: GenerateUploadUrlMutation;
-  saveForumUpload: SaveForumUploadMutation;
-}
-interface ForumPostSubmitDraft {
-  body: string;
-  forumId: Id<"schoolClassForums">;
-  parentId: Id<"schoolClassForumPosts"> | undefined;
-}
-interface ForumPostSubmitInput {
-  files: readonly FileWithPreview[];
-  mutations: ForumPostSubmitMutations;
-  post: ForumPostSubmitDraft;
-}
-interface DiscardPendingUploadsInput {
-  mutations: Pick<ForumPostSubmitMutations, "discardForumUploads">;
-  source: string;
-  uploadIds: Id<"schoolClassForumPendingUploads">[];
-}
-interface UploadAttachmentFileInput {
-  file: File;
-  forumId: Id<"schoolClassForums">;
-  mutations: Pick<
-    ForumPostSubmitMutations,
-    "discardForumUploads" | "generateUploadUrl" | "saveForumUpload"
-  >;
-}
+
 class ForumAttachmentUploadError extends Schema.TaggedError<ForumAttachmentUploadError>()(
   "ForumAttachmentUploadError",
   {
@@ -117,14 +108,17 @@ function getUploadableFiles(files: readonly FileWithPreview[]) {
 }
 /** Discards pending uploads and captures cleanup failures without masking the original error. */
 const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
-  function* ({ mutations, source, uploadIds }: DiscardPendingUploadsInput) {
+  function* (
+    { source, uploadIds }: DiscardPendingUploadsInput,
+    discardForumUploads: DiscardForumUploadsMutation
+  ) {
     if (uploadIds.length === 0) {
       return;
     }
     const result = yield* Effect.result(
       Effect.tryPromise({
         try: () =>
-          mutations.discardForumUploads({
+          discardForumUploads({
             uploadIds,
           }),
         catch: (cause) =>
@@ -157,10 +151,15 @@ const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
 );
 /** Uploads one attachment and removes its pending record if the upload fails. */
 const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
-  function* ({ file, forumId, mutations }: UploadAttachmentFileInput) {
+  function* (
+    { file, forumId }: UploadAttachmentFileInput,
+    generateUploadUrl: GenerateUploadUrlMutation,
+    saveForumUpload: SaveForumUploadMutation,
+    discardForumUploads: DiscardForumUploadsMutation
+  ) {
     const { uploadId, uploadUrl } = yield* Effect.tryPromise({
       try: () =>
-        mutations.generateUploadUrl({
+        generateUploadUrl({
           forumId,
         }),
       catch: (cause) =>
@@ -202,16 +201,18 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
           })
       ),
       Effect.tapError(() =>
-        discardPendingUploads({
-          mutations,
-          source: "forum-upload-discard-single",
-          uploadIds: [uploadId],
-        })
+        discardPendingUploads(
+          {
+            source: "forum-upload-discard-single",
+            uploadIds: [uploadId],
+          },
+          discardForumUploads
+        )
       )
     );
     yield* Effect.tryPromise({
       try: () =>
-        mutations.saveForumUpload({
+        saveForumUpload({
           name: file.name,
           size: file.size,
           type: file.type,
@@ -236,30 +237,39 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
         )
       ),
       Effect.tapError(() =>
-        discardPendingUploads({
-          mutations,
-          source: "forum-upload-discard-single",
-          uploadIds: [uploadId],
-        })
+        discardPendingUploads(
+          {
+            source: "forum-upload-discard-single",
+            uploadIds: [uploadId],
+          },
+          discardForumUploads
+        )
       )
     );
     return uploadId;
   }
 );
 /** Uploads attachments, creates the post, and cleans partial uploads on failure. */
-export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
-  files,
-  mutations,
-  post,
-}: ForumPostSubmitInput) {
+export const submitForumPost = Effect.fn("www.forum.submitPost")(function* (
+  post: ForumPostSubmitDraft,
+  files: readonly FileWithPreview[],
+  createPost: CreateForumPostMutation,
+  discardForumUploads: DiscardForumUploadsMutation,
+  generateUploadUrl: GenerateUploadUrlMutation,
+  saveForumUpload: SaveForumUploadMutation
+) {
   const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
   const uploadResults = yield* Effect.all(
     getUploadableFiles(files).map((file) =>
-      uploadAttachmentFile({
-        file,
-        forumId: post.forumId,
-        mutations,
-      })
+      uploadAttachmentFile(
+        {
+          file,
+          forumId: post.forumId,
+        },
+        generateUploadUrl,
+        saveForumUpload,
+        discardForumUploads
+      )
     ),
     {
       mode: "result",
@@ -272,16 +282,18 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
   }
   const failedUpload = uploadResults.find(Result.isFailure);
   if (failedUpload) {
-    yield* discardPendingUploads({
-      mutations,
-      source: "forum-upload-discard-batch",
-      uploadIds: attachmentUploadIds,
-    });
+    yield* discardPendingUploads(
+      {
+        source: "forum-upload-discard-batch",
+        uploadIds: attachmentUploadIds,
+      },
+      discardForumUploads
+    );
     return yield* failedUpload.failure;
   }
   yield* Effect.tryPromise({
     try: () =>
-      mutations.createPost({
+      createPost({
         ...(attachmentUploadIds.length > 0
           ? {
               attachmentUploadIds,
@@ -313,11 +325,13 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
       )
     ),
     Effect.tapError(() =>
-      discardPendingUploads({
-        mutations,
-        source: "forum-upload-discard-batch",
-        uploadIds: attachmentUploadIds,
-      })
+      discardPendingUploads(
+        {
+          source: "forum-upload-discard-batch",
+          uploadIds: attachmentUploadIds,
+        },
+        discardForumUploads
+      )
     )
   );
 });

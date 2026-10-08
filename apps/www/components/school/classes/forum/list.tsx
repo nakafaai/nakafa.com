@@ -6,9 +6,8 @@ import {
   MessageMultiple02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { UserData } from "@repo/backend/confect/users/directory";
+import type { forumListItemValidator } from "@repo/backend/confect/classes/forums/validators";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -32,11 +31,7 @@ import { searchParsers } from "@/lib/nuqs/search";
 import { useClass } from "@/lib/school/classes/context";
 import { getLocale } from "@/lib/utils/date";
 
-type ForumListItem = Docs["schoolClassForums"] & {
-  user: UserData | null;
-  myReactions: string[];
-  unreadCount: number;
-};
+type ForumListItem = typeof forumListItemValidator.Type;
 const DEBOUNCE_TIME = 500;
 const FORUM_UNREAD_BADGE_LIMIT = 25;
 

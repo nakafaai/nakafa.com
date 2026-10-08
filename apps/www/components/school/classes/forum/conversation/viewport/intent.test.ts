@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { createActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
   conversationTestFirstPost as firstPost,
   conversationTestSecondPost as secondPost,
@@ -40,10 +41,10 @@ describe("conversation/viewport/intent", () => {
   });
 
   it("preserves pending post placement when the target cannot be mapped", () => {
-    const transcriptWithoutTargetIndex = {
-      ...viewportTestTranscript,
-      rowIndexByPostId: new Map([[secondPost._id, 1]]),
-    };
+    const transcriptWithoutTargetIndex = createActiveTranscriptModel({
+      forum: undefined,
+      posts: [secondPost],
+    });
 
     expect(
       hasScrollMeasurementInterruptedPlacement({

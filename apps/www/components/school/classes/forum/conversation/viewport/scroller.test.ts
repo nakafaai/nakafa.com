@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
+import {
+  type ActiveTranscriptModel,
+  createActiveTranscriptModel,
+} from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
   createConversationTestRowsHandle,
   conversationTestFirstPost as firstPost,
@@ -171,12 +174,10 @@ describe("conversation/viewport/scroller", () => {
     const { handle, scrollToIndex } = createConversationTestRowsHandle({
       scrollOffset: 0,
     });
-    const emptyTranscript = {
-      lastPostId: null,
-      postIds: [],
-      rowIndexByPostId: new Map(),
-      rows: [],
-    } satisfies ActiveTranscriptModel;
+    const emptyTranscript = createActiveTranscriptModel({
+      forum: undefined,
+      posts: [],
+    });
     const reducedMotionScroller = createViewportScroller({
       getHandle: () => handle,
       getTranscript: () => activeTranscript,

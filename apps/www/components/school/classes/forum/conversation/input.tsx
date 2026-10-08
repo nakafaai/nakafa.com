@@ -164,20 +164,18 @@ export function ForumPostInput() {
       /** Clears the composer and keeps confirmed attachment posts visible. */
       const completeSubmit = () =>
         clearSubmittedDraft().pipe(Effect.andThen(placeConfirmedPost()));
-      const submitPost = submitForumPost({
-        files,
-        mutations: {
-          createPost,
-          discardForumUploads,
-          generateUploadUrl,
-          saveForumUpload,
-        },
-        post: {
+      const submitPost = submitForumPost(
+        {
           body: value.body,
           forumId,
           parentId: replyTarget?.postId,
         },
-      }).pipe(Effect.provide(FetchClient));
+        files,
+        createPost,
+        discardForumUploads,
+        generateUploadUrl,
+        saveForumUpload
+      ).pipe(Effect.provide(FetchClient));
       if (isTextOnlyPost) {
         Effect.runSync(clearSubmittedDraft());
         return Effect.runPromise(
