@@ -8,7 +8,7 @@ import {
 import { decodeQuranSurahRow } from "@repo/backend/client/quran/rows";
 import {
   PublishedQuranMeaningSchema,
-  type PublishedQuranSurah,
+  PublishedQuranSurahSchema,
 } from "@repo/backend/content/quran/contract";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
@@ -18,18 +18,25 @@ type QuranCatalogResult = FunctionReturnType<
   typeof api.contentRelease.quran.surahs
 >;
 
+const PublishedQuranCatalogSurahsSchema = Schema.Struct({
+  surahs: Schema.Array(PublishedQuranSurahSchema),
+});
+
 /** Complete signed Quran metadata catalog in its canonical shape. */
-export type PublishedQuranCatalog = PublishedQuranSource & {
-  readonly surahs: readonly PublishedQuranSurah[];
-};
-interface QuranSurahTransportProjection {
-  readonly name: {
-    readonly arabic: string;
-    readonly sourceMeaning: unknown;
-    readonly transliteration: string;
-  };
-  readonly number: number;
-}
+export type PublishedQuranCatalog = PublishedQuranSource &
+  typeof PublishedQuranCatalogSurahsSchema.Type;
+
+// sourceMeaning stays unknown until decodePublishedQuranSurah validates it.
+const QuranSurahTransportProjectionSchema = Schema.Struct({
+  name: Schema.Struct({
+    arabic: Schema.String,
+    sourceMeaning: Schema.Unknown,
+    transliteration: Schema.String,
+  }),
+  number: Schema.Finite,
+});
+type QuranSurahTransportProjection =
+  typeof QuranSurahTransportProjectionSchema.Type;
 
 /** Normalizes the source transport field into the canonical meaning shape. */
 export const decodePublishedQuranSurah = Effect.fn(

@@ -10,6 +10,7 @@ const CategoryPositionSchema = Schema.Tuple([
   AppLocaleSchema,
   ArticleCategorySchema,
 ]);
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 type CategoryRow = PublicationRow<"articleCategories">;
 
 /** Recognizes semantic category positions inside the release cursor envelope. */
@@ -19,7 +20,12 @@ export function isCategoryPosition(cursor: string) {
 
 /** Encodes the unique localized category boundary shared by build and live reads. */
 export function categoryPosition(row: CategoryRow) {
-  return `${CATEGORY_POSITION_PREFIX}${JSON.stringify([row.slot, row.appLocale, row.category])}`;
+  const key = Schema.encodeSync(JsonTextSchema)([
+    row.slot,
+    row.appLocale,
+    row.category,
+  ]);
+  return `${CATEGORY_POSITION_PREFIX}${key}`;
 }
 
 /** Rejects a semantic category position that belongs to another query. */
