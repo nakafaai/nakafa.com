@@ -125,7 +125,8 @@ function stallMessage(silentMillis: number, lastLine: Option.Option<string>) {
 
 /**
  * Fails once the command has printed nothing for `limit`. The clock is read on
- * every wake-up, so output that arrives during a wait restarts the count.
+ * every wake-up, so output that arrives during a wait restarts the count. The
+ * export lets the tests check this decision with the test clock.
  */
 export const watchSilence = Effect.fn("BuildWatch.watchSilence")(function* (
   activity: Ref.Ref<Activity>,
@@ -174,7 +175,7 @@ const printHeartbeat = Effect.fn("BuildWatch.printHeartbeat")(function* (
 });
 
 /** Writes one heartbeat per interval for as long as it runs. */
-export const printHeartbeats = Effect.fn("BuildWatch.printHeartbeats")(
+const printHeartbeats = Effect.fn("BuildWatch.printHeartbeats")(
   function* (
     activity: Ref.Ref<Activity>,
     stdio: Stdio.Stdio,
@@ -217,7 +218,7 @@ const drainOutput = Effect.fn("BuildWatch.drainOutput")(function* (
  * children are ended when it prints nothing for the whole stall limit. The
  * result is the command's exit status.
  */
-export const watchBuild = Effect.fn("BuildWatch.run")(function* (options: {
+const watchBuild = Effect.fn("BuildWatch.run")(function* (options: {
   readonly command: string;
   readonly args: readonly string[];
   readonly stallLimit: Duration.Duration;
