@@ -30,10 +30,9 @@ export interface PageNavigationItem {
  * follows is predicted as a Page and loads nothing, and opening a lesson shows
  * the marketing layout until the server corrects the route. Opening a Page by
  * navigation teaches the same route later, and Next.js then corrects it on the
- * first runtime prefetch whose route the server contradicts, at the cost of
- * one extra request per link, which `prefetch.browser.ts` pins.
+ * first runtime prefetch whose route the server contradicts.
  *
- * https://github.com/vercel/next.js/blob/v16.3.7/packages/next/src/client/components/segment-cache/optimistic-routes.ts
+ * https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/optimistic-routes.ts
  */
 export interface PageNavigation {
   readonly developerItem: PageNavigationItem;

@@ -1,11 +1,10 @@
 "use client";
 
-import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
-import { Link } from "@repo/internationalization/src/navigation";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { ComponentProps, FocusEvent, MouseEvent, TouchEvent } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
-type LinkProps = ComponentProps<typeof Link>;
+type LinkProps = ComponentProps<typeof NavigationLink>;
 type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
   href: string;
   intentActive?: boolean;
@@ -20,6 +19,9 @@ type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
  * A click adds nothing: hover, focus, or touch always comes first, and the
  * navigation a click starts fetches whatever the prefetch has not.
  *
+ * It renders through NavigationLink, so a link to the page on screen keeps
+ * `aria-current="page"`.
+ *
  * https://nextjs.org/docs/app/guides/optimizing-prefetching#trade-offs
  */
 export function IntentLink({
@@ -31,10 +33,6 @@ export function IntentLink({
   ...props
 }: IntentLinkProps) {
   const [prefetchHref, setPrefetchHref] = useState<string | null>(null);
-  const normalizedHref = useMemo(
-    () => normalizeLocalizedInternalHref(href),
-    [href]
-  );
 
   function handleFocus(event: FocusEvent<HTMLAnchorElement>) {
     setPrefetchHref(href);
@@ -52,13 +50,13 @@ export function IntentLink({
   }
 
   return (
-    <Link
+    <NavigationLink
       {...props}
-      href={normalizedHref}
+      href={href}
       onFocus={handleFocus}
       onMouseEnter={handleMouseEnter}
       onTouchStart={handleTouchStart}
-      prefetch={intentActive || prefetchHref === href ? true : null}
+      prefetch={intentActive || prefetchHref === href ? true : "auto"}
     />
   );
 }
