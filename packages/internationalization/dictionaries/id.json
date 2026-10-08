@@ -692,6 +692,7 @@
       "context": "Nina belum bisa memuat materi belajar untuk percakapan ini. Silakan coba lagi.",
       "attachment-invalid": "Ada lampiran yang tidak valid atau sudah tidak tersedia. Pilih ulang berkasnya dan periksa jenis serta ukurannya.",
       "attachment-limit": "Batas lampiran sudah tercapai. Kirim berkas yang sudah diunggah atau tunggu sebelum mengunggah lagi.",
+      "attachment-size": "Dokumen dalam satu pesan dapat berukuran 10 MB secara total. Hapus salah satu dokumen atau kirim dalam pesan terpisah.",
       "attachment-failed": "Nina belum bisa membaca atau menyimpan lampiran. Coba unggah lagi.",
       "provider-busy": "Layanan AI sedang menerima terlalu banyak permintaan. Tunggu sebentar, lalu coba lagi.",
       "provider-unavailable": "Layanan AI sedang mengalami gangguan sementara. Coba lagi sebentar lagi.",

@@ -15,6 +15,7 @@ import type { FileUIPart } from "ai";
 import { Effect, Exit, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { exceedsDocumentLimit } from "@/components/ai/attachments";
 import { useAi } from "@/components/ai/context";
 import {
   NinaConnectionError,
@@ -267,11 +268,26 @@ export function useNinaSubmission() {
 
   function send(prompt: NinaDraft, chatId?: Id<"chats">) {
     const hint = getMaterialContextHint();
+    const files = prompt.files ?? [];
     return perform(
-      Effect.forEach(prompt.files ?? [], (attachment) =>
-        uploadAttachment(attachment, upload, uploaded.current, previews.current)
-      ).pipe(
-        Effect.map((uploadIds) => ({
+      Effect.gen(function* () {
+        // Refuse the message before any upload, so no document is stored for it.
+        if (exceedsDocumentLimit(files.map((attachment) => attachment.file))) {
+          return yield* new NinaUploadError({
+            code: "NINA_UPLOAD_SIZE",
+            message:
+              "The documents in one message can hold at most 10 MiB together.",
+          });
+        }
+        const uploadIds = yield* Effect.forEach(files, (attachment) =>
+          uploadAttachment(
+            attachment,
+            upload,
+            uploaded.current,
+            previews.current
+          )
+        );
+        return {
           kind: "message" as const,
           prompt: { text: prompt.text, uploadIds },
           page: {
@@ -280,8 +296,8 @@ export function useNinaSubmission() {
             ...(hint ? { materialContextHint: hint } : {}),
             ...(prompt.focus ? { focus: prompt.focus } : {}),
           },
-        }))
-      ),
+        };
+      }),
       chatId
     );
   }

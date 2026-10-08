@@ -692,6 +692,7 @@
       "context": "Nina konnte das Lernmaterial für dieses Gespräch nicht laden. Bitte versuche es erneut.",
       "attachment-invalid": "Ein Anhang ist ungültig oder nicht mehr verfügbar. Wähle die Datei erneut aus und prüfe ihren Typ und ihre Größe.",
       "attachment-limit": "Du hast das Limit für Anhänge erreicht. Sende die bereits hochgeladenen Dateien oder warte, bevor du weitere hochlädst.",
+      "attachment-size": "Die Dokumente einer Nachricht dürfen zusammen höchstens 10 MB groß sein. Entferne ein Dokument oder sende sie in getrennten Nachrichten.",
       "attachment-failed": "Nina konnte den Anhang nicht lesen oder speichern. Lade ihn bitte erneut hoch.",
       "provider-busy": "Der KI-Dienst erhält gerade zu viele Anfragen. Warte kurz und versuche es dann erneut.",
       "provider-unavailable": "Der KI-Dienst ist vorübergehend nicht verfügbar. Versuche es in Kürze erneut.",

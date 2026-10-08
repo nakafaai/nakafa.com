@@ -6,10 +6,17 @@ import {
   DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import { NinaUploadError } from "@repo/backend/confect/nina/uploads.spec";
+import {
+  NINA_DOCUMENT_SIZE,
+  NinaUploadError,
+} from "@repo/backend/confect/nina/uploads.spec";
 import { Array as Arr, Clock, Effect } from "effect";
 
-/** Resolves only this user's unexpired upload grants inside the send transaction. */
+/**
+ * Resolves only this user's unexpired upload grants inside the send transaction.
+ * The document size check runs before any grant is deleted, so a refused
+ * message keeps every upload available.
+ */
 export const consumeAttachments = Effect.fn("nina.attachments.consume")(
   function* (
     userId: Docs["users"]["_id"],
@@ -55,9 +62,31 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
               message: "Unable to read this attachment.",
             }),
         });
-        yield* writer.table("ninaUploads").delete(uploadId).pipe(Effect.orDie);
-        return { fileId, part: saved.imagePart ?? saved.filePart };
+        // getFile has just read this storage entry, so its system row exists.
+        const stored = yield* Effect.promise(() =>
+          ctx.db.system.get("_storage", saved.file.storageId)
+        ).pipe(Effect.flatMap(Effect.fromNullishOr), Effect.orDie);
+        return {
+          uploadId,
+          fileId,
+          part: saved.imagePart ?? saved.filePart,
+          size: stored.size,
+          document: saved.imagePart === undefined,
+        };
       })
+    );
+    const documentBytes = Arr.reduce(files, 0, (total, file) =>
+      file.document ? total + file.size : total
+    );
+    if (documentBytes > NINA_DOCUMENT_SIZE) {
+      return yield* new NinaUploadError({
+        code: "NINA_UPLOAD_SIZE",
+        message:
+          "The documents in one message can hold at most 10 MiB together.",
+      });
+    }
+    yield* Effect.forEach(files, (file) =>
+      writer.table("ninaUploads").delete(file.uploadId).pipe(Effect.orDie)
     );
     return {
       fileIds: Arr.map(files, (file) => file.fileId),
