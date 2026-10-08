@@ -16,3 +16,11 @@ export const proofPollValidator = Schema.Union([
     reason: proofFailureValidator,
   }),
 ]);
+
+/** Read-only poll state; `pending` names the one case that must run the poll mutation. */
+export const proofStatusValidator = Schema.Union([
+  proofPollValidator,
+  Schema.Struct({
+    phase: Schema.Literal("pending"),
+  }),
+]);
