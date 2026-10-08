@@ -146,9 +146,9 @@ export async function insertAnchoredActiveRelease(
     receiptJson: encodeJson(
       makePublicationReceipt(
         Schema.decodeSync(contentReleases.Doc)(active),
-        Schema.decodeUnknownSync(
-          Schema.fromJsonString(SignedContentReleaseSchema)
-        )(activeJson)
+        Schema.decodeSync(Schema.fromJsonString(SignedContentReleaseSchema))(
+          activeJson
+        )
       )
     ),
   });

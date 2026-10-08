@@ -58,9 +58,9 @@ export async function sendPublication(
       )
     )
   );
-  return Schema.decodeUnknownSync(
-    Schema.fromJsonString(PublicationResponseSchema)
-  )(result.body);
+  return Schema.decodeSync(Schema.fromJsonString(PublicationResponseSchema))(
+    result.body
+  );
 }
 
 /** Polls one durable ingress proof after its scheduled workflow completes. */

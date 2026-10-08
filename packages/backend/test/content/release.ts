@@ -193,7 +193,7 @@ export function testReleaseJson({
  */
 export function testStoredReachability(releaseJson: string) {
   return releaseReachability(
-    Schema.decodeUnknownSync(Schema.fromJsonString(SignedContentReleaseSchema))(
+    Schema.decodeSync(Schema.fromJsonString(SignedContentReleaseSchema))(
       releaseJson
     )
   );
