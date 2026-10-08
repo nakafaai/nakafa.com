@@ -1,31 +1,28 @@
-import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import {
+  tryoutAttemptStateValidator,
+  tryoutCurrentSectionValidator,
+  tryoutSectionRuntimeValidator,
+} from "@repo/backend/confect/tryouts/runtime/spec";
+import { Schema, Struct } from "effect";
 
-type TryoutStatus = TryoutSectionRuntime["section"]["status"];
+/** Attempt fields that decide whether a timer-bound attempt is still active. */
+const TryoutAttemptClockSchema = tryoutAttemptStateValidator.mapFields(
+  Struct.pick(["expiresAt", "status"])
+);
+type TryoutAttemptClock = typeof TryoutAttemptClockSchema.Type;
 
-interface TryoutAttemptClock {
-  expiresAt: number;
-  status: TryoutStatus;
-}
+/** Section runtime fields that decide whether its timer has reached its end. */
+const TryoutRuntimeClockSchema = Schema.Struct({
+  ...tryoutSectionRuntimeValidator.mapFields(Struct.pick(["expiresAt"])).fields,
+  section: tryoutCurrentSectionValidator.mapFields(Struct.pick(["status"])),
+});
+type TryoutRuntimeClock = typeof TryoutRuntimeClockSchema.Type;
 
-interface TryoutRuntimeClock {
-  expiresAt: number;
-  section: {
-    status: TryoutStatus;
-  };
-}
-
-interface TryoutReactiveState {
-  attempt: {
-    status: TryoutStatus;
-  };
-}
-
-/** Render state for a Convex section runtime around its local timer boundary. */
-export type TryoutRuntimeState<Runtime> =
-  | { kind: "none" }
-  | { kind: "active"; runtime: Runtime }
-  | { kind: "pending"; runtime: Runtime }
-  | { kind: "review"; runtime: Runtime };
+/** Attempt status that decides whether the section state still mutates. */
+const TryoutReactiveStateSchema = Schema.Struct({
+  attempt: tryoutAttemptStateValidator.mapFields(Struct.pick(["status"])),
+});
+type TryoutReactiveState = typeof TryoutReactiveStateSchema.Type;
 
 /** Subscribes only while one exact attempt can still mutate. */
 export function isTryoutStateLive(state: TryoutReactiveState | null) {
@@ -57,18 +54,23 @@ export function getTryoutRuntimeState<Runtime extends TryoutRuntimeClock>({
   activeAttempt: TryoutAttemptClock | null;
   now: number;
   runtime: Runtime | null;
-}): TryoutRuntimeState<Runtime> {
+}) {
   if (!runtime) {
-    return { kind: "none" };
+    return { kind: "none" } as const;
   }
 
   if (runtime.section.status !== "in-progress") {
-    return { kind: "review", runtime };
+    return { kind: "review", runtime } as const;
   }
 
   if (!activeAttempt || now >= runtime.expiresAt) {
-    return { kind: "pending", runtime };
+    return { kind: "pending", runtime } as const;
   }
 
-  return { kind: "active", runtime };
+  return { kind: "active", runtime } as const;
 }
+
+/** Render state for a Convex section runtime around its local timer boundary. */
+export type TryoutRuntimeState<Runtime extends TryoutRuntimeClock> = ReturnType<
+  typeof getTryoutRuntimeState<Runtime>
+>;

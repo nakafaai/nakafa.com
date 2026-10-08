@@ -1,10 +1,14 @@
 import type { Ref } from "@confect/core";
+import { QuestionResponseSchema } from "@nakafa/aksara-contracts/question/response";
 import type refs from "@repo/backend/confect/_generated/refs";
+import {
+  RenderableSpec,
+  Selection,
+} from "@repo/backend/confect/response/model";
 import { select } from "@repo/backend/confect/response/selection";
-import { Result } from "effect";
+import { MutableHashMap, MutableHashSet, Option, Result, Schema } from "effect";
 
 import type {
-  TryoutRenderableResponseSpec,
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
@@ -16,10 +20,18 @@ export type TryoutResponseSelection = NonNullable<
   TryoutRuntimeQuestion["response"]
 >["selection"];
 
-interface TryoutResponseState {
-  readonly responseSpec: TryoutRenderableResponseSpec;
-  readonly selection: TryoutResponseSelection | null;
-}
+/** Response definition a learner sees, from a signed preview or an attempt. */
+export const TryoutRenderableResponseSpecSchema = Schema.Union([
+  QuestionResponseSchema,
+  RenderableSpec,
+]);
+
+/** Response definition and the selection a learner made against it. */
+export const TryoutResponseStateSchema = Schema.Struct({
+  responseSpec: TryoutRenderableResponseSpecSchema,
+  selection: Schema.NullOr(Selection),
+});
+type TryoutResponseState = typeof TryoutResponseStateSchema.Type;
 
 /** Applies one local response while Convex remains authoritative for time. */
 export function applyOptimisticTryoutResponse(
@@ -82,18 +94,18 @@ export function toggleMultipleChoiceSelection(
   if (state.responseSpec.kind !== "multiple-choice") {
     return null;
   }
-  const selected = new Set(
+  const selected = MutableHashSet.fromIterable(
     state.selection?.kind === "multiple-choice"
       ? state.selection.optionKeys
       : []
   );
-  if (selected.has(optionKey)) {
-    selected.delete(optionKey);
+  if (MutableHashSet.has(selected, optionKey)) {
+    MutableHashSet.remove(selected, optionKey);
   } else {
-    selected.add(optionKey);
+    MutableHashSet.add(selected, optionKey);
   }
   const optionKeys = state.responseSpec.options.flatMap(({ optionKey }) =>
-    selected.has(optionKey) ? [optionKey] : []
+    MutableHashSet.has(selected, optionKey) ? [optionKey] : []
   );
   return optionKeys.length > 0 ? { kind: "multiple-choice", optionKeys } : null;
 }
@@ -107,7 +119,7 @@ export function assignCategorySelection(
   if (state.responseSpec.kind !== "category") {
     return null;
   }
-  const assignments = new Map(
+  const assignments = MutableHashMap.fromIterable(
     state.selection?.kind === "category"
       ? state.selection.assignments.map((assignment) => [
           assignment.statementKey,
@@ -115,10 +127,12 @@ export function assignCategorySelection(
         ])
       : []
   );
-  assignments.set(statementKey, categoryKey);
+  MutableHashMap.set(assignments, statementKey, categoryKey);
   return {
     assignments: state.responseSpec.statements.flatMap((statement) => {
-      const assignedCategory = assignments.get(statement.statementKey);
+      const assignedCategory = Option.getOrUndefined(
+        MutableHashMap.get(assignments, statement.statementKey)
+      );
       return assignedCategory
         ? [
             {

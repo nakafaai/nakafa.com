@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
-import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import type refs from "@repo/backend/confect/_generated/refs";
+import type { TryoutRenderableResponseSpecSchema } from "@/components/tryout/runtime/response/state";
 
 /** Cohesive reactive state returned for one try-out section route. */
 export type TryoutSectionState = NonNullable<
@@ -21,5 +21,4 @@ export type TryoutRuntimeResponseSpec = TryoutRuntimeQuestion["responseSpec"];
 
 /** Response definition rendered from either signed preview or attempt state. */
 export type TryoutRenderableResponseSpec =
-  | QuestionResponse
-  | TryoutRuntimeResponseSpec;
+  typeof TryoutRenderableResponseSpecSchema.Type;

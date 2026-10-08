@@ -95,7 +95,7 @@ export const tryoutSetAttemptPageResultValidator = Schema.Union([
 ]);
 export type TryoutSetAttemptPageResult =
   typeof tryoutSetAttemptPageResultValidator.Type;
-const retainedSectionResultValidator = Schema.Struct({
+export const retainedSectionResultValidator = Schema.Struct({
   activeSectionPublicPath: Schema.Union([Schema.String, Schema.Null]),
   activeSetPublicPath: Schema.Union([Schema.String, Schema.Null]),
   attemptId: IdSchema("tryoutAttempts"),
