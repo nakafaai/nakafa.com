@@ -3,6 +3,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { NodeHttpServer, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
+  Array as Arr,
   Deferred,
   Effect,
   Fiber,
@@ -68,7 +69,7 @@ const runCommand = Effect.fn("NakafaCli.test.runCommand")(function* (
   const { exitCode, stderr, stdout } = yield* readCommand(command, args, cwd);
   if (exitCode !== 0) {
     return yield* new CliTestCommandError({
-      command: [command, ...args].join(" "),
+      command: Arr.join([command, ...args], " "),
       exitCode,
       stderr: stderr.trim(),
     });
@@ -134,7 +135,7 @@ describe("Nakafa CLI package", () => {
           packageRoot
         );
         const [pack] = yield* Schema.decodeEffect(PackResultSchema)(packOutput);
-        const files = pack.files.map(({ path: file }) => file);
+        const files = Arr.map(pack.files, ({ path: file }) => file);
         const tarballPath = path.join(directory, pack.filename);
 
         yield* fileSystem.writeFileString(
@@ -223,9 +224,9 @@ describe("Nakafa CLI package", () => {
         );
 
         expect(
-          REQUIRED_PACKED_FILES.every((file) => files.includes(file))
+          Arr.every(REQUIRED_PACKED_FILES, (file) => files.includes(file))
         ).toBe(true);
-        expect(files.every(isAllowedPackedFile)).toBe(true);
+        expect(Arr.every(files, isAllowedPackedFile)).toBe(true);
         expect(help).toContain("Nakafa CLI");
         expect(version).toBe(`${packageVersion}\n`);
         expect(invalid.exitCode).toBe(2);
