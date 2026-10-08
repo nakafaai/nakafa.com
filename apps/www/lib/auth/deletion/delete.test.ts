@@ -6,6 +6,7 @@ import {
   ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import {
+  type AccountDeletionBrowserAttempt,
   accountDeletionAttemptStatus,
   accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
@@ -13,15 +14,24 @@ import {
 } from "@repo/backend/confect/auth/deletion/spec";
 import { Effect, Result } from "effect";
 import { authClient } from "@/lib/auth/client";
-import { deleteCurrentAccount } from "@/lib/auth/deletion/delete";
+import {
+  type DeleteUserRequest,
+  deleteCurrentAccount,
+  type ReconcileAccountDeletionRequest,
+} from "@/lib/auth/deletion/delete";
 import {
   AccountDeletionFailed,
   AccountDeletionRequestUncertain,
   AccountDeletionSchoolMemberRequired,
   AccountDeletionSessionExpired,
 } from "@/lib/auth/deletion/errors";
+import type {
+  CancelAccountDeletionRequest,
+  ClearAccountDeletionAttempt,
+  PersistAccountDeletionAttempt,
+  PrepareAccountDeletionRequest,
+} from "@/lib/auth/deletion/prepare";
 
-type AccountDeletionOperations = Parameters<typeof deleteCurrentAccount>[0];
 vi.mock("@/lib/auth/client", () => ({
   authClient: {
     deleteUser: vi.fn(),
@@ -30,30 +40,51 @@ vi.mock("@/lib/auth/client", () => ({
 }));
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const USER_ID = "user-1";
-function createDeletionOperations(
-  overrides: Partial<AccountDeletionOperations> = {}
-): AccountDeletionOperations {
-  return {
-    attempt: {
-      attemptId: ATTEMPT_ID,
-      phase: accountDeletionRequestPhase.preparation,
-      userId: USER_ID,
-    },
-    cancelPreparation: vi.fn(() =>
-      Promise.resolve(
-        Result.succeed(accountDeletionCancellationOutcome.complete)
-      )
-    ),
-    clearAttempt: Effect.void,
-    persist: vi.fn(() => Effect.void),
-    prepare: vi.fn(() =>
-      Promise.resolve(Result.succeed(accountDeletionPreparationOutcome.ready))
-    ),
-    reconcile: vi.fn(() =>
-      Effect.succeed(accountDeletionAttemptStatus.pending)
-    ),
-    ...overrides,
+/** The default browser operations; each test overrides only what it observes. */
+function defaultDeletionOperations() {
+  const attempt: AccountDeletionBrowserAttempt = {
+    attemptId: ATTEMPT_ID,
+    phase: accountDeletionRequestPhase.preparation,
+    userId: USER_ID,
   };
+  const cancelPreparation: CancelAccountDeletionRequest = vi.fn(() =>
+    Promise.resolve(Result.succeed(accountDeletionCancellationOutcome.complete))
+  );
+  const clearAttempt: ClearAccountDeletionAttempt = Effect.void;
+  const persist: PersistAccountDeletionAttempt = vi.fn(() => Effect.void);
+  const prepare: PrepareAccountDeletionRequest = vi.fn(() =>
+    Promise.resolve(Result.succeed(accountDeletionPreparationOutcome.ready))
+  );
+  const reconcile: ReconcileAccountDeletionRequest = vi.fn(() =>
+    Effect.succeed(accountDeletionAttemptStatus.pending)
+  );
+  return {
+    attempt,
+    cancelPreparation,
+    clearAttempt,
+    persist,
+    prepare,
+    reconcile,
+  };
+}
+type DeletionOperations = ReturnType<typeof defaultDeletionOperations> &
+  Partial<Record<"request", DeleteUserRequest>>;
+function createDeletionOperations(
+  overrides: Partial<DeletionOperations> = {}
+): DeletionOperations {
+  return { ...defaultDeletionOperations(), ...overrides };
+}
+/** Passes one operations bag to deleteCurrentAccount's positional parameters. */
+function runDeletion(operations: DeletionOperations) {
+  return deleteCurrentAccount(
+    operations.attempt,
+    operations.cancelPreparation,
+    operations.clearAttempt,
+    operations.persist,
+    operations.prepare,
+    operations.reconcile,
+    operations.request
+  );
 }
 function requestFailure(code: string, status = 400) {
   return () =>
@@ -67,10 +98,8 @@ function requestFailure(code: string, status = 400) {
       },
     });
 }
-function deletionFailure(overrides: Partial<AccountDeletionOperations>) {
-  return deleteCurrentAccount(createDeletionOperations(overrides)).pipe(
-    Effect.flip
-  );
+function deletionFailure(overrides: Partial<DeletionOperations>) {
+  return runDeletion(createDeletionOperations(overrides)).pipe(Effect.flip);
 }
 describe("account deletion", () => {
   beforeEach(() => {
@@ -85,9 +114,7 @@ describe("account deletion", () => {
         },
         error: null,
       });
-      expect(
-        yield* deleteCurrentAccount(createDeletionOperations())
-      ).toBeUndefined();
+      expect(yield* runDeletion(createDeletionOperations())).toBeUndefined();
       expect(authClient.deleteUser).toHaveBeenCalledWith({
         fetchOptions: {
           headers: {
@@ -106,7 +133,7 @@ describe("account deletion", () => {
             Result.succeed(accountDeletionCancellationOutcome.complete)
           )
         );
-        const failure = yield* deleteCurrentAccount(
+        const failure = yield* runDeletion(
           createDeletionOperations({
             cancelPreparation,
             request: () =>
@@ -152,7 +179,7 @@ describe("account deletion", () => {
       );
       const request = vi.fn();
       expect(
-        yield* deleteCurrentAccount(
+        yield* runDeletion(
           createDeletionOperations({
             prepare,
             reconcile: vi.fn(() =>
@@ -179,7 +206,7 @@ describe("account deletion", () => {
         )
       );
       expect(
-        yield* deleteCurrentAccount(
+        yield* runDeletion(
           createDeletionOperations({
             cancelPreparation,
             reconcile: vi.fn(() =>
@@ -202,7 +229,7 @@ describe("account deletion", () => {
           )
         );
         const reconcile = vi
-          .fn<AccountDeletionOperations["reconcile"]>()
+          .fn<ReconcileAccountDeletionRequest>()
           .mockReturnValueOnce(
             Effect.succeed(accountDeletionAttemptStatus.pending)
           )
@@ -210,7 +237,7 @@ describe("account deletion", () => {
             Effect.succeed(accountDeletionAttemptStatus.committed)
           );
         expect(
-          yield* deleteCurrentAccount(
+          yield* runDeletion(
             createDeletionOperations({
               cancelPreparation,
               reconcile,
@@ -230,7 +257,7 @@ describe("account deletion", () => {
   it.effect("keeps a deletion retry uncertain when proof is unavailable", () =>
     Effect.gen(function* () {
       const request = vi.fn();
-      const failure = yield* deleteCurrentAccount(
+      const failure = yield* runDeletion(
         createDeletionOperations({
           reconcile: () =>
             Effect.fail(
@@ -319,7 +346,7 @@ describe("account deletion", () => {
     () =>
       Effect.gen(function* () {
         const cancelPreparation = vi
-          .fn<AccountDeletionOperations["cancelPreparation"]>()
+          .fn<CancelAccountDeletionRequest>()
           .mockResolvedValueOnce(
             Result.succeed(accountDeletionCancellationOutcome.continue)
           )
@@ -398,7 +425,7 @@ describe("account deletion", () => {
         const cancelPreparation = vi.fn(() =>
           Promise.reject(new Error("cancellation unavailable"))
         );
-        const failure = yield* deleteCurrentAccount(
+        const failure = yield* runDeletion(
           createDeletionOperations({
             cancelPreparation,
             request: () => Promise.reject(new Error("network unavailable")),

@@ -16,16 +16,6 @@ const accountStorageKeyPrefix = "nakafa-";
 type SignOutResult = Awaited<ReturnType<typeof authClient.signOut>>;
 type SignOutRequest = () => Promise<SignOutResult>;
 
-interface BrowserAccountIdentityCleanup {
-  readonly removePersistedAccountState: () => void;
-  readonly resetAnalytics: () => void;
-}
-
-interface DeletedAccountIdentityCleanup extends BrowserAccountIdentityCleanup {
-  readonly denyAnonymousAnalytics: () => EffectType.Effect<void, unknown>;
-  readonly revokeAnalytics: () => EffectType.Effect<void, unknown>;
-}
-
 const denyAnonymousAnalytics = Clock.currentTimeMillis.pipe(
   Effect.map((decidedAt) =>
     createAnonymousAnalyticsConsent("denied", decidedAt)
@@ -41,7 +31,7 @@ export class AccountSignOutFailed extends Schema.TaggedError<AccountSignOutFaile
   }
 ) {}
 
-const defaultBrowserAccountIdentityCleanup: BrowserAccountIdentityCleanup = {
+const defaultBrowserAccountIdentityCleanup = {
   removePersistedAccountState: () => {
     for (const storage of [window.localStorage, window.sessionStorage]) {
       for (let index = storage.length - 1; index >= 0; index -= 1) {
@@ -58,6 +48,22 @@ const defaultBrowserAccountIdentityCleanup: BrowserAccountIdentityCleanup = {
   },
   resetAnalytics: () => resetBrowserAnalyticsIdentity(true),
 };
+
+/** The browser cleanup seam, shaped by its default implementation. */
+type BrowserAccountIdentityCleanup =
+  typeof defaultBrowserAccountIdentityCleanup;
+
+const defaultDeletedAccountIdentityCleanup = {
+  ...defaultBrowserAccountIdentityCleanup,
+  denyAnonymousAnalytics: (): EffectType.Effect<void, unknown> =>
+    denyAnonymousAnalytics,
+  revokeAnalytics: (): EffectType.Effect<void, unknown> =>
+    revokeToBaselineAnalytics(),
+};
+
+/** The deleted-account cleanup seam, shaped by its default implementation. */
+type DeletedAccountIdentityCleanup =
+  typeof defaultDeletedAccountIdentityCleanup;
 
 /** Clears account state before another browser identity can take over. */
 export const clearAccountBrowserIdentity = Effect.fn(
@@ -81,11 +87,7 @@ export const clearAccountBrowserIdentity = Effect.fn(
 export const clearDeletedAccountBrowserIdentity = Effect.fn(
   "www.auth.clearDeletedAccountBrowserIdentity"
 )(function* (
-  cleanup: DeletedAccountIdentityCleanup = {
-    denyAnonymousAnalytics: () => denyAnonymousAnalytics,
-    revokeAnalytics: () => revokeToBaselineAnalytics(),
-    ...defaultBrowserAccountIdentityCleanup,
-  }
+  cleanup: DeletedAccountIdentityCleanup = defaultDeletedAccountIdentityCleanup
 ) {
   yield* cleanup.revokeAnalytics().pipe(Effect.ignore);
   yield* cleanup.denyAnonymousAnalytics().pipe(Effect.ignore);

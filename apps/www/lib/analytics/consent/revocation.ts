@@ -2,39 +2,41 @@
 
 import { Effect, Fiber, Option } from "effect";
 import { useEffect, useRef } from "react";
+import type { useAnalyticsConsentModel } from "@/lib/analytics/consent/model";
 import {
-  type AnalyticsConsentPromptIdentity,
   type AnalyticsConsentSessionOperation,
   canCommitAnalyticsConsentRevocation,
   setAnalyticsConsentSessionOverride,
 } from "@/lib/analytics/consent/session";
 import { revokeAccountAnalyticsGrant } from "@/lib/analytics/consent/signal";
-import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
-interface AccountAnalyticsConsentRevocationOptions {
-  readonly currentAccountUserId:
-    | Parameters<typeof revokeAccountAnalyticsGrant>[1]
-    | null;
-  readonly currentBrowserPrivacySignal: Effect.Effect<boolean>;
-  readonly isOnline: boolean;
-  readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
-  readonly readLatestSave: () => AnalyticsConsentSessionOperation | null;
-  readonly setAccountConsent: Parameters<typeof revokeAccountAnalyticsGrant>[0];
-  readonly setSessionOverrides: AnalyticsConsentStoreState["setSessionOverrides"];
-  readonly shouldRevokeAccountGrant: boolean;
-}
+type AnalyticsConsentModel = ReturnType<typeof useAnalyticsConsentModel>;
+
+/** The consent model fields that decide and perform one account revocation. */
+type AccountAnalyticsConsentRevocationSource = Pick<
+  AnalyticsConsentModel,
+  | "currentAccountUserId"
+  | "currentBrowserPrivacySignal"
+  | "promptIdentity"
+  | "readLatestSave"
+  | "setAccountConsent"
+  | "setSessionOverrides"
+  | "shouldRevokeAccountGrant"
+>;
 
 /** Revokes an account grant when the browser begins enforcing DNT or GPC. */
-export function useAccountAnalyticsConsentRevocation({
-  currentAccountUserId,
-  currentBrowserPrivacySignal,
-  isOnline,
-  promptIdentity,
-  readLatestSave,
-  setAccountConsent,
-  setSessionOverrides,
-  shouldRevokeAccountGrant,
-}: AccountAnalyticsConsentRevocationOptions) {
+export function useAccountAnalyticsConsentRevocation(
+  {
+    currentAccountUserId,
+    currentBrowserPrivacySignal,
+    promptIdentity,
+    readLatestSave,
+    setAccountConsent,
+    setSessionOverrides,
+    shouldRevokeAccountGrant,
+  }: AccountAnalyticsConsentRevocationSource,
+  isOnline: boolean
+) {
   const revocationRef = useRef<AnalyticsConsentSessionOperation | null>(null);
 
   useEffect(() => {

@@ -6,10 +6,7 @@ import {
 } from "@repo/analytics/consent";
 import { Effect, Option, Schema } from "effect";
 
-interface AnalyticsConsentStorage {
-  readonly getItem: (key: string) => string | null;
-  readonly setItem: (key: string, value: string) => void;
-}
+type AnalyticsConsentStorage = Pick<Storage, "getItem" | "setItem">;
 
 const analyticsConsentStorageFailedCode = "ANALYTICS_CONSENT_STORAGE_FAILED";
 

@@ -8,11 +8,11 @@ describe("billing navigation", () => {
       const navigate = vi.fn();
       const onFailure = vi.fn(() => Effect.void);
 
-      yield* billingNavigationProgram({
+      yield* billingNavigationProgram(
+        Effect.succeed({ url: "https://checkout.polar.sh/test" }),
         navigate,
-        onFailure,
-        request: Effect.succeed({ url: "https://checkout.polar.sh/test" }),
-      });
+        onFailure
+      );
 
       expect(navigate).toHaveBeenCalledWith("https://checkout.polar.sh/test");
       expect(onFailure).not.toHaveBeenCalled();
@@ -27,11 +27,11 @@ describe("billing navigation", () => {
         const navigate = vi.fn();
         const onFailure = vi.fn(() => Effect.void);
 
-        yield* billingNavigationProgram({
+        yield* billingNavigationProgram(
+          Effect.fail(failure),
           navigate,
-          onFailure,
-          request: Effect.fail(failure),
-        });
+          onFailure
+        );
 
         expect(onFailure).toHaveBeenCalledWith(failure);
         expect(navigate).not.toHaveBeenCalled();
