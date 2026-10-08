@@ -16,7 +16,7 @@ function projectionError(locale: Locale, publicPath: string) {
 /** Parses one backend-verified snapshot row without thrown JSON failures. */
 const decodeSnapshotRow = Effect.fn("NakafaProgram.decodeSnapshotRow")(
   function* (source: string, locale: Locale, publicPath: string) {
-    return yield* Schema.decodeUnknownEffect(
+    return yield* Schema.decodeEffect(
       Schema.fromJsonString(ContentSnapshotRowSchema)
     )(source, { onExcessProperty: "error" }).pipe(
       Effect.mapError(() => projectionError(locale, publicPath))

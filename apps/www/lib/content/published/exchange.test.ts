@@ -93,7 +93,7 @@ describe("published content exchange", () => {
     "verifies a coherent query delivery against the live renderer",
     () =>
       Effect.gen(function* () {
-        const source = Schema.encodeUnknownSync(
+        const source = yield* Schema.encodeEffect(
           Schema.fromJsonString(Schema.Unknown)
         )(found);
         verifyPublicContentDeliveryMock.mockReturnValue(Effect.succeed(found));

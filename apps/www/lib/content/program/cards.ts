@@ -4,7 +4,13 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { MaterialList } from "@repo/contents/curriculum/list";
 import { toContextualMaterialHref } from "@repo/contents/route/material/context";
-import { Array as Arr, Effect, MutableHashSet } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashSet,
+  Option,
+  Record as Rec,
+} from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import type { PublishedCurriculumRoute } from "@/lib/content/program/decode";
@@ -72,7 +78,10 @@ const readGroupMaterialPaths = Effect.fn(
   "NakafaProgram.readGroupMaterialPaths"
 )(function* (
   contexts: readonly PublishedCurriculumRoute[],
-  materials: readonly MaterialLessonProjection[],
+  materialsByKey: Rec.ReadonlyRecord<
+    string,
+    readonly MaterialLessonProjection[]
+  >,
   locale: Locale,
   publicPath: PublishedCurriculumRoute["publicPath"]
 ) {
@@ -90,8 +99,9 @@ const readGroupMaterialPaths = Effect.fn(
     const owned = yield* selectMaterialRoutes({
       canonicalPath: context.canonicalPath,
       locale,
-      materialGroup: materials.filter(
-        (material) => material.materialKey === context.materialKey
+      materialGroup: Option.getOrElse(
+        Rec.get(materialsByKey, context.materialKey),
+        () => []
       ),
       publicPath,
     });
@@ -122,13 +132,17 @@ export const readPublishedMaterialCards = Effect.fn(
   if (!(route.level === "subject" || route.level === "course")) {
     return [] satisfies MaterialList;
   }
+  const materialsByKey = Arr.groupBy(
+    materials,
+    (material): string => material.materialKey
+  );
   const cards: MaterialList = [];
   for (const group of groups) {
     const { hasMaterialContext, selected } = yield* readGroupMaterialPaths(
       contexts.filter(
         (context) => context.materialContextPublicPath === group.publicPath
       ),
-      materials,
+      materialsByKey,
       locale,
       route.publicPath
     );

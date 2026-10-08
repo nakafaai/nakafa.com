@@ -1,15 +1,9 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
-import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
-import {
-  LearningProgramSchema,
-  ProgramTranslationSchema,
-} from "@nakafa/aksara-contracts/program/spec";
 import refs from "@repo/backend/confect/_generated/refs";
 import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import {
@@ -19,19 +13,6 @@ import {
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { httpLayer } from "@/lib/convex/http";
-
-const PublishedProgramCatalogSchema = Schema.Struct({
-  entries: Schema.Array(
-    Schema.Struct({
-      program: LearningProgramSchema,
-      route: CurriculumRouteSchema,
-      translation: ProgramTranslationSchema,
-    })
-  ),
-  sourceRevision: Schema.NullOr(GitCommitShaSchema),
-});
-/** Complete bounded program catalog used by root curriculum navigation. */
-export type PublishedProgramCatalog = typeof PublishedProgramCatalogSchema.Type;
 
 /** Reads and validates the bounded published program catalog. */
 export const readPublishedProgramCatalog = Effect.fn(
@@ -88,8 +69,13 @@ export const readPublishedProgramCatalog = Effect.fn(
   return {
     entries,
     sourceRevision,
-  } satisfies PublishedProgramCatalog;
+  };
 });
+
+/** Complete bounded program catalog used by root curriculum navigation. */
+export type PublishedProgramCatalog = Effect.Success<
+  ReturnType<typeof readPublishedProgramCatalog>
+>;
 
 /** Selects one renderable root from the authenticated bounded program catalog. */
 export const readPublishedProgramPrerenderRoute = Effect.fn(

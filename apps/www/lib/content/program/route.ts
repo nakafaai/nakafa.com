@@ -1,13 +1,7 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
-import {
-  GitCommitShaSchema,
-  ReleaseIdSchema,
-} from "@nakafa/aksara-contracts/ids";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
-import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
-import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -21,20 +15,6 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { httpLayer } from "@/lib/convex/http";
 
-const PublishedProgramRouteSchema = Schema.Struct({
-  activeReleaseId: Schema.NullOr(ReleaseIdSchema),
-  alternates: Schema.Array(CurriculumRouteSchema),
-  ancestors: Schema.Array(CurriculumRouteSchema),
-  children: Schema.Array(CurriculumRouteSchema),
-  contexts: Schema.Array(CurriculumRouteSchema),
-  groups: Schema.Array(CurriculumRouteSchema),
-  materials: Schema.Array(MaterialLessonProjectionSchema),
-  program: Schema.NullOr(LearningProgramSchema),
-  route: Schema.NullOr(CurriculumRouteSchema),
-  sourceRevision: Schema.NullOr(GitCommitShaSchema),
-});
-/** Complete immutable data needed by one curriculum route page. */
-export type PublishedProgramRoute = typeof PublishedProgramRouteSchema.Type;
 /** Decodes one array of immutable curriculum rows from the runtime query. */
 const decodeRoutes = Effect.fn("NakafaProgram.decodeRoutes")(function* (
   sources: readonly string[],
@@ -95,7 +75,7 @@ export const readPublishedProgramRoute = Effect.fn(
       program: null,
       route: null,
       sourceRevision,
-    } satisfies PublishedProgramRoute;
+    };
   }
   if (result.programJson === null) {
     return yield* new PublishedProjectionError({
@@ -149,8 +129,14 @@ export const readPublishedProgramRoute = Effect.fn(
     program,
     route,
     sourceRevision,
-  } satisfies PublishedProgramRoute;
+  };
 });
+
+/** Complete immutable data needed by one curriculum route page. */
+export type PublishedProgramRoute = Effect.Success<
+  ReturnType<typeof readPublishedProgramRoute>
+>;
+
 /** Caches one complete curriculum route under program publication invalidation. */
 export async function getPublishedProgramRoute(
   locale: Locale,

@@ -11,13 +11,14 @@ import "server-only";
 // https://mdxjs.com/packages/mdx/#run
 // react-doctor-disable-next-line react-doctor/mdx-ssr-execution-risk
 import { run } from "@mdx-js/mdx";
-import type { ArtifactVerificationRequest } from "@nakafa/aksara-contracts/artifact/spec";
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Effect, Schema } from "effect";
+import type { ComponentType } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 import { resolveRendererComponents } from "@/lib/content/renderer/components";
@@ -26,11 +27,11 @@ import { resolveRendererComponents } from "@/lib/content/renderer/components";
  * Inputs required to authenticate and execute one trusted content artifact.
  * The artifact stays unknown until the verifier decodes it against its contract.
  */
-type ExecuteArtifactInput = Pick<
-  ArtifactVerificationRequest,
-  "rendererManifest"
-> &
-  Record<"artifact", unknown>;
+const ExecuteArtifactInputSchema = Schema.Struct({
+  artifact: Schema.Unknown,
+  rendererManifest: RendererManifestEnvelopeSchema,
+});
+type ExecuteArtifactInput = typeof ExecuteArtifactInputSchema.Type;
 
 const EvaluateArtifactInputSchema = Schema.Struct({
   artifact: SignedContentArtifactSchema,
@@ -76,7 +77,7 @@ export const evaluateVerifiedArtifact = Effect.fn(
   "NakafaContent.evaluateVerifiedArtifact"
 )(function* (input: EvaluateArtifactInput) {
   const components = yield* resolveRendererComponents(input.artifact.payload);
-  const Content = yield* evaluateCompiledCode(
+  const Content: ComponentType = yield* evaluateCompiledCode(
     {
       compiledCode: input.artifact.payload.compiledCode,
       contentKey: input.artifact.payload.contentKey,
