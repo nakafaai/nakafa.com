@@ -1,5 +1,5 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { HashMap, Schema, Tuple } from "effect";
+import { Array as Arr, HashMap, Schema, Tuple } from "effect";
 import type {
   Forum,
   ForumPost,
@@ -39,7 +39,7 @@ export function createActiveTranscriptModel({
   });
   const postIds = posts.map((post) => post._id);
   const rowIndexByPostId = HashMap.fromIterable(
-    rows.flatMap((row, index) =>
+    Arr.flatMap(rows, (row, index) =>
       row.type === "post" ? [Tuple.make(row.post._id, index)] : []
     )
   );
