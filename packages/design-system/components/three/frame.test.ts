@@ -5,7 +5,7 @@ import {
   createGridGeometry,
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Order, Schema } from "effect";
 
 const PlainJsonSchema = Schema.fromJsonString(Schema.Unknown);
 
@@ -86,9 +86,9 @@ describe("coordinate frame geometry", () => {
         visible: true,
       },
     });
-    expect(grid.xy.boundary.every(([, , z]) => z === origin.z)).toBe(true);
-    expect(grid.xz.boundary.every(([, y]) => y === origin.y)).toBe(true);
-    expect(grid.yz.boundary.every(([x]) => x === origin.x)).toBe(true);
+    expect(Arr.every(grid.xy.boundary, ([, , z]) => z === origin.z)).toBe(true);
+    expect(Arr.every(grid.xz.boundary, ([, y]) => y === origin.y)).toBe(true);
+    expect(Arr.every(grid.yz.boundary, ([x]) => x === origin.x)).toBe(true);
     expect(grid.xy.sections).toContainEqual([
       origin.x,
       asymmetricFrame.y.min,
@@ -200,11 +200,17 @@ describe("coordinate frame geometry", () => {
       z: { max: half, min: -half },
     });
     const points = [...grid.xy.cells, ...grid.xy.sections];
-    const verticalLines = points
-      .flatMap((point, index) =>
+    const verticalLines = Arr.sort(
+      Arr.flatMap(points, (point, index) =>
         index % 2 === 0 && point[0] === points[index + 1]?.[0] ? [point[0]] : []
-      )
-      .sort((left, right) => left - right);
+      ),
+      Order.make<number>((left, right) => {
+        if (left < right) {
+          return -1;
+        }
+        return left > right ? 1 : 0;
+      })
+    );
     const [first, second] = verticalLines;
 
     expect(first).toBeDefined();
@@ -222,7 +228,7 @@ describe("coordinate frame geometry", () => {
     };
     const grid = createGridGeometry(frame);
     const axes = createAxisGeometry(frame, Number.MAX_VALUE);
-    const coordinates = [
+    const coordinates = Arr.flatten([
       ...grid.xy.boundary,
       ...grid.xy.cells,
       ...grid.xy.sections,
@@ -232,21 +238,24 @@ describe("coordinate frame geometry", () => {
       ...grid.yz.boundary,
       ...grid.yz.cells,
       ...grid.yz.sections,
-    ].flat();
+    ]);
 
-    expect(coordinates.every(Number.isFinite)).toBe(true);
+    expect(Arr.every(coordinates, Number.isFinite)).toBe(true);
     expect(grid.xy.cells.length + grid.xy.sections.length).toBeLessThanOrEqual(
       808
     );
     expect(
-      [
-        axes.x.negativeLabel?.x,
-        axes.x.positiveLabel?.x,
-        axes.y.negativeLabel?.y,
-        axes.y.positiveLabel?.y,
-        axes.z.negativeLabel?.z,
-        axes.z.positiveLabel?.z,
-      ].every((value) => value !== undefined && Number.isFinite(value))
+      Arr.every(
+        [
+          axes.x.negativeLabel?.x,
+          axes.x.positiveLabel?.x,
+          axes.y.negativeLabel?.y,
+          axes.y.positiveLabel?.y,
+          axes.z.negativeLabel?.z,
+          axes.z.positiveLabel?.z,
+        ],
+        (value) => value !== undefined && Number.isFinite(value)
+      )
     ).toBe(true);
   });
 
@@ -262,7 +271,10 @@ describe("coordinate frame geometry", () => {
       8
     );
     expect(
-      [...grid.xy.cells, ...grid.xy.sections].flat().every(Number.isFinite)
+      Arr.every(
+        Arr.flatten([...grid.xy.cells, ...grid.xy.sections]),
+        Number.isFinite
+      )
     ).toBe(true);
   });
 
@@ -284,7 +296,7 @@ describe("coordinate frame geometry", () => {
     expect(points.length).toBeLessThanOrEqual(8);
     const encodeSegment = Schema.encodeSync(PlainJsonSchema);
     expect(
-      Arr.dedupe(segments.map((segment) => encodeSegment(segment))).length
+      Arr.dedupe(Arr.map(segments, (segment) => encodeSegment(segment))).length
     ).toBe(segments.length);
   });
 });
