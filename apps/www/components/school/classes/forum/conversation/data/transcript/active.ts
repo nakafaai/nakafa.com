@@ -1,4 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Array as Arr } from "effect";
 import type {
   Forum,
   ForumPost,
@@ -25,13 +26,15 @@ export function createActiveTranscriptModel({
     ...(unreadCue === undefined ? {} : { unreadCue }),
   });
   const postIds = posts.map((post) => post._id);
-  const rowIndexByPostId = new Map<Id<"schoolClassForumPosts">, number>();
-
-  for (const [index, row] of rows.entries()) {
-    if (row.type === "post") {
-      rowIndexByPostId.set(row.post._id, index);
-    }
-  }
+  const rowIndexEntries = Arr.flatMap(
+    rows,
+    (row, index): [Id<"schoolClassForumPosts">, number][] =>
+      row.type === "post" ? [[row.post._id, index]] : []
+  );
+  const rowIndexByPostId: ReadonlyMap<
+    Id<"schoolClassForumPosts">,
+    number
+  > = new Map(rowIndexEntries);
 
   return {
     lastPostId: getLastConversationPostId(posts),
