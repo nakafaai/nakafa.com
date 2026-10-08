@@ -60,12 +60,8 @@ function ClimateObservationScene({ colors }: BiologySceneProps) {
 }
 
 function EarthIndicators() {
-  const loadedEarthTexture = useTexture(BLUE_MARBLE_EARTH_TEXTURE_ASSET.path);
-  const earthTexture = useMemo(() => {
-    const texture = loadedEarthTexture.clone();
-    texture.colorSpace = SRGBColorSpace;
-    return texture;
-  }, [loadedEarthTexture]);
+  const earthTexture = useTexture(BLUE_MARBLE_EARTH_TEXTURE_ASSET.path);
+  earthTexture.colorSpace = SRGBColorSpace;
 
   return (
     <group>

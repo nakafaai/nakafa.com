@@ -312,29 +312,22 @@ function RoadSegment({ segment }: { segment: RouteSegment }) {
 }
 
 function RouteLines({ motion }: { motion: DisplacementDistanceState }) {
-  const routePoints = useMemo(
-    () =>
-      motion.route.map(
-        (point) =>
-          new Vector3(point.x, DISPLACEMENT_DISTANCE_SCENE.routeLineY, point.z)
-      ),
-    [motion]
+  const routePoints = motion.route.map(
+    (point) =>
+      new Vector3(point.x, DISPLACEMENT_DISTANCE_SCENE.routeLineY, point.z)
   );
-  const displacementPoints = useMemo(
-    () => [
-      new Vector3(
-        motion.start.x,
-        DISPLACEMENT_DISTANCE_SCENE.displacementLineY,
-        motion.start.z
-      ),
-      new Vector3(
-        motion.end.x,
-        DISPLACEMENT_DISTANCE_SCENE.displacementLineY,
-        motion.end.z
-      ),
-    ],
-    [motion]
-  );
+  const displacementPoints = [
+    new Vector3(
+      motion.start.x,
+      DISPLACEMENT_DISTANCE_SCENE.displacementLineY,
+      motion.start.z
+    ),
+    new Vector3(
+      motion.end.x,
+      DISPLACEMENT_DISTANCE_SCENE.displacementLineY,
+      motion.end.z
+    ),
+  ];
 
   return (
     <>

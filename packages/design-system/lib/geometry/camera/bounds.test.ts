@@ -130,7 +130,6 @@ describe("camera subjects", () => {
       expect(bounds.min.x).toBe(-4);
       expect(bounds.max.x).toBe(5);
       root.setMatrixAt(1, new Matrix4().makeTranslation(6, 0, 0));
-      root.instanceMatrix.needsUpdate = true;
       expect(Option.getOrThrow(yield* sample(root)).max.x).toBe(7);
     })
   );

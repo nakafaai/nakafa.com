@@ -66,16 +66,6 @@ const NUCLEON_POSITIONS = [
   { kind: "proton", math: "p^+", position: [0.48, -0.34, 0.16] },
 ];
 const ATOM_MAP_SCALE = 1.1;
-const GOLD_NUCLEUS_POSITION = new Vector3(0, 0, 0.1);
-const NUCLEON_PARTICLES = NUCLEON_POSITIONS.map((particle) => ({
-  ...particle,
-  key: particle.position.join(","),
-  position: new Vector3(...particle.position),
-}));
-const ELECTRON_PARTICLES = ELECTRON_POSITIONS.map((position) => ({
-  key: position.join(","),
-  position: new Vector3(...position),
-}));
 
 /**
  * Generates a fixed-resolution 3D path from a continuous point function.
@@ -260,7 +250,7 @@ function GoldFoilScene({ colors, labels }: SceneProps) {
         color={colors.nucleus}
         labelColor={colors.sphereText}
         math=""
-        position={GOLD_NUCLEUS_POSITION}
+        position={new Vector3(0, 0, 0.1)}
         radius={0.16}
       />
       <Line
@@ -304,24 +294,24 @@ function AtomMapScene({ colors, labels }: SceneProps) {
           rotation={[Math.PI / 2.6, 0, Math.PI / 5]}
         />
 
-        {NUCLEON_PARTICLES.map((particle) => (
+        {NUCLEON_POSITIONS.map((particle) => (
           <Particle
             color={particle.kind === "proton" ? colors.proton : colors.neutron}
-            key={`${particle.kind}-${particle.key}`}
+            key={`${particle.kind}-${particle.position.join(",")}`}
             labelColor={colors.sphereText}
             math={particle.math}
-            position={particle.position}
+            position={new Vector3(...particle.position)}
             radius={0.2}
           />
         ))}
 
-        {ELECTRON_PARTICLES.map((particle) => (
+        {ELECTRON_POSITIONS.map((position) => (
           <Particle
             color={colors.electron}
-            key={`electron-${particle.key}`}
+            key={`electron-${position.join(",")}`}
             labelColor={colors.sphereText}
             math="e^-"
-            position={particle.position}
+            position={new Vector3(...position)}
             radius={0.16}
           />
         ))}
