@@ -1,24 +1,26 @@
 import {
   APP_LOCALE_CODES,
-  type AppLocaleCode,
+  AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
-import { Record as Rec } from "effect";
+import { Record as Rec, Schema } from "effect";
 
-type AlternateLanguagePath = Partial<{
-  [Key in AppLocaleCode | "x-default"]: string;
-}>;
-type AlternateTypePath = Readonly<{ [mediaType: string]: string }>;
+const AlternateLanguagePathSchema = Schema.Record(
+  Schema.Literals([...APP_LOCALE_CODES, "x-default"]),
+  Schema.optionalKey(Schema.String)
+);
+const AlternateTypePathSchema = Schema.Record(Schema.String, Schema.String);
+const LocalizedAlternatesOptionsSchema = Schema.Struct({
+  languages: Schema.optionalKey(AlternateLanguagePathSchema),
+  types: Schema.optionalKey(AlternateTypePathSchema),
+});
+type LocalizedAlternatesOptions = typeof LocalizedAlternatesOptionsSchema.Type;
 
-interface LocalizedAlternatesOptions {
-  languages?: AlternateLanguagePath;
-  types?: AlternateTypePath;
-}
-
-interface ResolvedAlternateRoute {
-  readonly appLocale: AppLocaleCode;
-  readonly publicPath: string;
-}
+const ResolvedAlternateRouteSchema = Schema.Struct({
+  appLocale: AppLocaleCodeSchema,
+  publicPath: Schema.String,
+});
+type ResolvedAlternateRoute = typeof ResolvedAlternateRouteSchema.Type;
 
 /** Removes an existing locale prefix before building language alternates. */
 function getPathWithoutLocale(canonical: string) {
@@ -74,18 +76,22 @@ export function createResolvedRouteAlternates(
   alternates: readonly ResolvedAlternateRoute[],
   options: Omit<LocalizedAlternatesOptions, "languages"> = {}
 ) {
-  const languages: AlternateLanguagePath = {};
+  const routePath = `/${route.appLocale}/${route.publicPath}`;
+  const languages = Rec.fromEntries(
+    alternates.map(
+      (alternate) =>
+        [
+          alternate.appLocale,
+          `/${alternate.appLocale}/${alternate.publicPath}`,
+        ] as const
+    )
+  );
 
-  for (const alternate of alternates) {
-    languages[alternate.appLocale] =
-      `/${alternate.appLocale}/${alternate.publicPath}`;
-  }
-  languages["x-default"] =
-    languages[routing.defaultLocale] ??
-    `/${route.appLocale}/${route.publicPath}`;
-
-  return createLocalizedAlternates(`/${route.appLocale}/${route.publicPath}`, {
+  return createLocalizedAlternates(routePath, {
     ...options,
-    languages,
+    languages: {
+      ...languages,
+      "x-default": languages[routing.defaultLocale] ?? routePath,
+    },
   });
 }

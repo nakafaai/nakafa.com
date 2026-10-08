@@ -1,8 +1,9 @@
 import { SCHOOL_ROUTE_SLUGS } from "@repo/backend/confect/schools/slug";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
+import { HashSet } from "effect";
 
-const APPLICATION_ROUTE_ROOTS = new Set([
+const APPLICATION_ROUTE_ROOTS = HashSet.make(
   "articles",
   "auth",
   "chat",
@@ -14,8 +15,8 @@ const APPLICATION_ROUTE_ROOTS = new Set([
   "quran",
   "school",
   "search",
-  "user",
-]);
+  "user"
+);
 
 type PublicLocale = (typeof routing.locales)[number];
 
@@ -104,7 +105,7 @@ function isSchoolPath(segments: readonly string[]) {
 
 /** Checks whether one root belongs to a concrete application route. */
 export function isApplicationRouteRoot(locale: PublicLocale, root: string) {
-  if (APPLICATION_ROUTE_ROOTS.has(root)) {
+  if (HashSet.has(APPLICATION_ROUTE_ROOTS, root)) {
     return true;
   }
 
