@@ -1,12 +1,13 @@
 "use client";
 
-import { Array as Arr, DateTime, MutableHashSet } from "effect";
+import { DateTime, MutableHashSet } from "effect";
 import {
   createContext,
   type ReactNode,
   use,
   useSyncExternalStore,
 } from "react";
+import { notifyTickListeners } from "@/components/tryout/runtime/tick";
 
 const InitialClock = createContext<number | null>(null);
 
@@ -89,13 +90,7 @@ function startClock() {
   currentNow = readEpochMillis();
   timer = window.setInterval(() => {
     currentNow = readEpochMillis();
-
-    // Iterates a snapshot, so a listener added during a tick is first called on the next tick.
-    for (const listener of Arr.fromIterable(listeners)) {
-      if (MutableHashSet.has(listeners, listener)) {
-        listener();
-      }
-    }
+    notifyTickListeners(listeners);
   }, TICK_MS);
 }
 
