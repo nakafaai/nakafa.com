@@ -22,7 +22,10 @@ const content = {
 const input = {
   content_ref: NakafaAgentContentRefInputSchema.make(content.url),
 };
-const encodeArtifacts = Schema.encodeSync(
+// The plain codec keeps every key, so a leak in any field fails the check.
+// The contract codec drops undeclared keys: it proves only the artifact shape.
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const encodeContract = Schema.encodeSync(
   Schema.fromJsonString(Schema.Array(CapabilityArtifactSchema))
 );
 
@@ -44,7 +47,8 @@ describe("Nina content evidence", () => {
         },
       },
     ]);
-    expect(encodeArtifacts(artifacts)).not.toContain(content.text);
+    expect(() => encodeContract(artifacts)).not.toThrow();
+    expect(encodeJson(artifacts)).not.toContain(content.text);
   });
   it.each(["missing", "failed"] as const)(
     "publishes an honest %s result without inventing content",
