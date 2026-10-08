@@ -7,7 +7,7 @@ import {
   LOAD_MIN_X,
   LOAD_STEP,
 } from "@repo/design-system/components/contents/physics/vector/concept/tension";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 describe("cable tension projection", () => {
   it.effect("solves symmetric tension and projects both force arrows", () =>
@@ -35,7 +35,7 @@ describe("cable tension projection", () => {
           expect(state.loadPoint[0]).toBe(loadX);
           for (const cable of [state.left, state.right]) {
             expect(cable.tension).toBeGreaterThan(0);
-            expect(cable.arrowEnd.every(Number.isFinite)).toBe(true);
+            expect(Arr.every(cable.arrowEnd, Number.isFinite)).toBe(true);
             const dx = cable.anchor[0] - loadX;
             const dy = cable.anchor[1] - state.loadPoint[1];
             const length = Math.hypot(dx, dy);
