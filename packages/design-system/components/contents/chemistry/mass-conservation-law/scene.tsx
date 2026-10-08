@@ -8,7 +8,7 @@ import {
 import type { MassConservationLabProps } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/lab";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useRef } from "react";
 import { DoubleSide, type Group, type MeshStandardMaterial } from "three";
 
@@ -255,7 +255,7 @@ function Particles({
   if (phase === "before") {
     return (
       <group>
-        {BEFORE_PARTICLES.map((particle) => (
+        {Arr.map(BEFORE_PARTICLES, (particle) => (
           <Particle colors={colors} key={particle.id} particle={particle} />
         ))}
       </group>
@@ -264,10 +264,10 @@ function Particles({
 
   return (
     <group>
-      {AFTER_PRODUCTS.map((pair) => (
+      {Arr.map(AFTER_PRODUCTS, (pair) => (
         <ProductPair colors={colors} key={pair.id} pair={pair} />
       ))}
-      {LEFTOVER_ZINC.map((particle) => (
+      {Arr.map(LEFTOVER_ZINC, (particle) => (
         <Particle colors={colors} key={particle.id} particle={particle} />
       ))}
     </group>
@@ -330,7 +330,7 @@ function Particle({
 function EscapedGas({ colors }: { colors: MassConservationSceneColors }) {
   return (
     <group>
-      {ESCAPED_GAS_PARTICLES.map((particle) => (
+      {Arr.map(ESCAPED_GAS_PARTICLES, (particle) => (
         <AnimatedEscapedGas
           color={colors.escapedGas}
           key={particle.id}

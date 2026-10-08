@@ -32,6 +32,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
@@ -92,7 +93,7 @@ export function RelativeMovementLab({
           value={caseId}
           variant="outline"
         >
-          {RELATIVE_MOVEMENT_CASE_IDS.map((caseOption) => (
+          {Arr.map(RELATIVE_MOVEMENT_CASE_IDS, (caseOption) => (
             <ToggleGroupItem key={caseOption} value={caseOption}>
               {labels.modeLabels[caseOption]}
             </ToggleGroupItem>
@@ -322,7 +323,7 @@ function Road() {
         <meshStandardMaterial color={getColor("SLATE", 700)} roughness={0.74} />
       </mesh>
 
-      {stripePositions.map((x) => (
+      {Arr.map(stripePositions, (x) => (
         <mesh key={x} position={[x, 0.035, 0]}>
           <boxGeometry args={[0.38, 0.018, 0.06]} />
           <meshStandardMaterial

@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -94,7 +95,7 @@ export function MatterParticleReaderLab({
           value={selectedModeId}
           variant="outline"
         >
-          {MATTER_PARTICLE_MODE_IDS.map((modeId) => (
+          {Arr.map(MATTER_PARTICLE_MODE_IDS, (modeId) => (
             <ToggleGroupItem
               aria-label={labels.modes[modeId].tabLabel}
               key={modeId}

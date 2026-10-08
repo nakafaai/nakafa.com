@@ -19,7 +19,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { ReactNode } from "react";
 
 interface DiagramProps {
@@ -52,7 +52,7 @@ interface RelationVisualizerProps {
   mappings: RelationMapping[];
 }
 
-const ELLIPSE_POINTS = createCircleOutlinePoints(1).map((point) => ({
+const ELLIPSE_POINTS = Arr.map(createCircleOutlinePoints(1), (point) => ({
   ...point,
   y: point.y * 2.5,
 }));
@@ -68,8 +68,8 @@ export function RelationVisualizer({
 }: RelationVisualizerProps) {
   const relation = Effect.runSync(
     resolveRelation({
-      domain: domain.map(({ id }) => id),
-      codomain: codomain.map(({ id }) => id),
+      domain: Arr.map(domain, ({ id }) => id),
+      codomain: Arr.map(codomain, ({ id }) => id),
       mappings,
     })
   );
@@ -101,11 +101,11 @@ export function RelationVisualizer({
       >
         {/* Keep every element on its arrow row, above the X axis. */}
         <group position={[0, 3, 0]}>
-          {sets.map((set) => (
+          {Arr.map(sets, (set) => (
             <group key={set.id}>
               <LineEquation
                 color={set.color}
-                points={ELLIPSE_POINTS.map((point) => ({
+                points={Arr.map(ELLIPSE_POINTS, (point) => ({
                   ...point,
                   x: point.x + set.x,
                 }))}
@@ -121,7 +121,7 @@ export function RelationVisualizer({
               >
                 {set.label}
               </ThreeLabel>
-              {set.points.map((point, index) => (
+              {Arr.map(set.points, (point, index) => (
                 <ThreeLabel
                   color={set.color}
                   fontSize="diagram"
@@ -133,7 +133,7 @@ export function RelationVisualizer({
               ))}
             </group>
           ))}
-          {relation.mappings.map((mapping) => (
+          {Arr.map(relation.mappings, (mapping) => (
             <LineEquation
               color={COLORS.ORANGE}
               cone={{ position: "end", size: 0.25 }}
@@ -146,7 +146,7 @@ export function RelationVisualizer({
         </group>
       </CoordinateSystem>
       <ul className="sr-only">
-        {relation.mappings.map((mapping) => (
+        {Arr.map(relation.mappings, (mapping) => (
           <li key={mapping.id}>
             {domain[mapping.domainIndex].label} →{" "}
             {codomain[mapping.codomainIndex].label}

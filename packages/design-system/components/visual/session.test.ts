@@ -7,7 +7,7 @@ import {
   raiseSession,
   returnFocus,
 } from "@repo/design-system/components/visual/session";
-import { Effect, Exit } from "effect";
+import { Array as Arr, Effect, Exit } from "effect";
 
 /** The space the test card takes in the page, as its slot keeps it. */
 const CARD_PLACE = { height: 480, marginBottom: "24px", marginTop: "16px" };
@@ -107,7 +107,7 @@ describe("opening a stay across the screen", () => {
       const { session } = yield* openTestSession();
 
       expect(session.place).toEqual(CARD_PLACE);
-      expect(added.mock.calls.map(([type]) => type)).toEqual([
+      expect(Arr.map(added.mock.calls, ([type]) => type)).toEqual([
         "fullscreenchange",
         "keydown",
         "focusin",
@@ -117,7 +117,7 @@ describe("opening a stay across the screen", () => {
       yield* closeSession(session);
 
       // The stay stops listening in the reverse order it started.
-      expect(removed.mock.calls.map(([type]) => type)).toEqual([
+      expect(Arr.map(removed.mock.calls, ([type]) => type)).toEqual([
         "focusin",
         "keydown",
         "fullscreenchange",
@@ -141,7 +141,7 @@ describe("opening a stay across the screen", () => {
       );
 
       expect(Exit.isFailure(exit)).toBe(true);
-      expect(removed.mock.calls.map(([type]) => type)).toEqual([
+      expect(Arr.map(removed.mock.calls, ([type]) => type)).toEqual([
         "fullscreenchange",
       ]);
     })
@@ -247,9 +247,11 @@ describe("a stay across the screen", () => {
   it.effect("returns the card to the page before it releases the page", () =>
     Effect.gen(function* () {
       const { card, session } = yield* openTestSession();
-      const lowered: string[][] = [];
+      let lowered: string[][] = [];
       Object.assign(card, {
-        hidePopover: () => lowered.push(inertIds()),
+        hidePopover: () => {
+          lowered = Arr.append(lowered, inertIds());
+        },
         showPopover: () => undefined,
       });
       yield* holdSession(session);

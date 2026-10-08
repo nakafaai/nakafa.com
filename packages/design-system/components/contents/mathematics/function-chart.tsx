@@ -21,7 +21,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { getFormatter } from "next-intl/server";
 import type { ReactNode } from "react";
 
@@ -70,7 +70,7 @@ export async function FunctionChart({
               <TableHead scope="col">
                 <InlineMath math="x" />
               </TableHead>
-              {plot.values.map(({ x }) => (
+              {Arr.map(plot.values, ({ x }) => (
                 <TableHead key={x} scope="col">
                   <InlineMath math={String(x)} />
                 </TableHead>
@@ -82,7 +82,7 @@ export async function FunctionChart({
               <TableHead scope="row">
                 <InlineMath math="f(x)" />
               </TableHead>
-              {plot.values.map(({ x, y }) => (
+              {Arr.map(plot.values, ({ x, y }) => (
                 <TableCell key={x}>
                   <InlineMath math={numberMath(y, formatNumber)} />
                 </TableCell>

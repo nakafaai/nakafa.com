@@ -7,6 +7,7 @@ import {
 import type { ChartLegendVariant } from "@repo/design-system/components/evilcharts/ui/legend";
 import { ChartSeriesCueIndicator } from "@repo/design-system/components/evilcharts/ui/series-cue-indicator";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import type * as React from "react";
 import type * as RechartsPrimitive from "recharts";
 
@@ -172,10 +173,13 @@ function getLegendFillStyle(
     return { backgroundColor: getChartColorVariable(dataKey, 0) };
   }
 
-  const stops = Array.from({ length: colorsCount }, (_, index) => {
-    const offset = (index / (colorsCount - 1)) * 100;
-    return `${getChartColorVariable(dataKey, index)} ${offset}%`;
-  }).join(", ");
+  const stops = Arr.join(
+    Array.from({ length: colorsCount }, (_, index) => {
+      const offset = (index / (colorsCount - 1)) * 100;
+      return `${getChartColorVariable(dataKey, index)} ${offset}%`;
+    }),
+    ", "
+  );
 
   return { background: `linear-gradient(to right, ${stops})` };
 }
@@ -200,10 +204,13 @@ function getLegendOutlineStyle(
     };
   }
 
-  const stops = Array.from({ length: colorsCount }, (_, index) => {
-    const offset = (index / (colorsCount - 1)) * 100;
-    return `${getChartColorVariable(dataKey, index)} ${offset}%`;
-  }).join(", ");
+  const stops = Arr.join(
+    Array.from({ length: colorsCount }, (_, index) => {
+      const offset = (index / (colorsCount - 1)) * 100;
+      return `${getChartColorVariable(dataKey, index)} ${offset}%`;
+    }),
+    ", "
+  );
 
   return {
     background: `linear-gradient(to right, ${stops})`,

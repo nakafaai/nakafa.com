@@ -17,6 +17,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
@@ -166,7 +167,7 @@ function WindGustField({
 }) {
   return (
     <group>
-      {WIND_GUSTS.map((gust) => (
+      {Arr.map(WIND_GUSTS, (gust) => (
         <WindGust
           color={color}
           index={gust.index}
@@ -296,7 +297,7 @@ function WindTurbine({
       </mesh>
       <group position={[-0.08, 1.23, 0.26]}>
         <group ref={rotorRef}>
-          {[0, 1, 2].map((bladeIndex) => (
+          {Arr.map([0, 1, 2], (bladeIndex) => (
             <WindBlade
               color={colors.blade}
               key={bladeIndex}

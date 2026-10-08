@@ -27,6 +27,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -116,7 +117,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
             value={String(selectedIndex)}
             variant="outline"
           >
-            {labels.items.map((item, index) => (
+            {Arr.map(labels.items, (item, index) => (
               <ToggleGroupItem key={item.tab} value={String(index)}>
                 {item.tab}
               </ToggleGroupItem>

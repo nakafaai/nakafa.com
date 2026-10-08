@@ -201,10 +201,10 @@ function CombustionScene({
       >
         {labels.products}
       </ThreeLabel>
-      {INSTANCES.map((item) => (
+      {Arr.map(INSTANCES, (item) => (
         <Molecule colors={colors} instance={item} key={item.id} />
       ))}
-      {OPERATOR_LABELS.map((label) => (
+      {Arr.map(OPERATOR_LABELS, (label) => (
         <ThreeLabel
           color={colors.text}
           fontSize="reading"
@@ -214,7 +214,7 @@ function CombustionScene({
           <InlineMath math={label.text} />
         </ThreeLabel>
       ))}
-      {FORMULA_LABELS.map((label) => (
+      {Arr.map(FORMULA_LABELS, (label) => (
         <ThreeLabel
           color={colors.text}
           fontSize="reading"
@@ -249,7 +249,7 @@ function Molecule({
           })}
     >
       <group scale={MOLECULE_SCALE}>
-        {model.bonds.map((bondData) => {
+        {Arr.map(model.bonds, (bondData) => {
           const atoms = Option.all([
             Arr.findFirst(model.atoms, ({ id }) => id === bondData.start),
             Arr.findFirst(model.atoms, ({ id }) => id === bondData.end),
@@ -270,7 +270,7 @@ function Molecule({
             />
           );
         })}
-        {model.atoms.map((atomData) => (
+        {Arr.map(model.atoms, (atomData) => (
           <Atom colors={colors} data={atomData} key={atomData.id} />
         ))}
       </group>

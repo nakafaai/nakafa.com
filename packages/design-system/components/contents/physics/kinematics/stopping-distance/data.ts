@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 
 export const STOPPING_DISTANCE_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/suv.glb";
@@ -61,7 +62,7 @@ export function getStoppingDistanceState(speed: StoppingDistanceSpeed) {
 export function isStoppingDistanceSpeed(
   value: number
 ): value is StoppingDistanceSpeed {
-  return STOPPING_DISTANCE_SPEEDS.some((speed) => speed === value);
+  return Arr.some(STOPPING_DISTANCE_SPEEDS, (speed) => speed === value);
 }
 
 export function formatMeterMath(value: number) {

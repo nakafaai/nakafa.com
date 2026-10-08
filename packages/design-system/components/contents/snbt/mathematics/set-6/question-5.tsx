@@ -1,6 +1,7 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 interface GraphProps {
@@ -43,7 +44,8 @@ export function Graph({ title, description }: GraphProps) {
   // Cone 1 Geometry (Center P1 at C1_X, 0, 0)
   const cone1Base = createCircle(C1_X, 0, R1);
   const cone1Apex = { x: C1_X, y: H1, z: 0 };
-  const cone1Slants = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].map(
+  const cone1Slants = Arr.map(
+    [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2],
     (angle) => [
       cone1Apex,
       {
@@ -62,7 +64,8 @@ export function Graph({ title, description }: GraphProps) {
   // Cone 2 Geometry (Center P2 at OFFSET, 0, 0)
   const cone2Base = createCircle(OFFSET, 0, R2);
   const cone2Apex = { x: OFFSET, y: H2, z: 0 };
-  const cone2Slants = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].map(
+  const cone2Slants = Arr.map(
+    [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2],
     (angle) => [
       cone2Apex,
       {
@@ -91,7 +94,7 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: false,
           lineWidth: 2,
         },
-        ...cone1Slants.map((points) => ({
+        ...Arr.map(cone1Slants, (points) => ({
           points,
           color: COLOR_CONE_1,
           showPoints: false,
@@ -139,7 +142,7 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: false,
           lineWidth: 2,
         },
-        ...cone2Slants.map((points) => ({
+        ...Arr.map(cone2Slants, (points) => ({
           points,
           color: COLOR_CONE_2,
           showPoints: false,

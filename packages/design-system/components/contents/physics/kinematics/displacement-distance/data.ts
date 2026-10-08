@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const DISPLACEMENT_DISTANCE_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/taxi.glb";
@@ -60,9 +60,10 @@ export function getDisplacementDistanceState(
   const segments = getRouteSegments(route);
   const start = route[0];
   const end = route.at(-1) ?? start;
-  const distance = segments.reduce(
-    (total, segment) => total + segment.length,
-    0
+  const distance = Arr.reduce(
+    segments,
+    0,
+    (total, segment) => total + segment.length
   );
   const displacementVector = {
     x: end.x - start.x,
@@ -142,7 +143,7 @@ export function getRouteSampleAtProgress(
 export function isDisplacementDistanceCaseId(
   value: string
 ): value is DisplacementDistanceCaseId {
-  return DISPLACEMENT_DISTANCE_CASE_IDS.some((caseId) => caseId === value);
+  return Arr.some(DISPLACEMENT_DISTANCE_CASE_IDS, (caseId) => caseId === value);
 }
 
 export function formatMeterMath(value: number) {
@@ -191,7 +192,7 @@ function createLoopRoute(width: number, height: number) {
 }
 
 function getRouteSegments(route: RoutePoint[]): RouteSegment[] {
-  return route.slice(0, -1).map((start, index) => {
+  return Arr.map(route.slice(0, -1), (start, index) => {
     const end = route[index + 1];
     const length = getPointDistance(start, end);
 
@@ -209,27 +210,25 @@ function getRouteSegments(route: RoutePoint[]): RouteSegment[] {
 }
 
 function getRouteWeightedCenter(segments: RouteSegment[]) {
-  const totalLength = segments.reduce(
-    (total, segment) => total + segment.length,
-    0
+  const totalLength = Arr.reduce(
+    segments,
+    0,
+    (total, segment) => total + segment.length
   );
 
   if (totalLength === 0) {
     return { x: 0, z: 0 };
   }
 
-  return segments.reduce(
-    (center, segment) => ({
-      x: center.x + (segment.center.x * segment.length) / totalLength,
-      z: center.z + (segment.center.z * segment.length) / totalLength,
-    }),
-    { x: 0, z: 0 }
-  );
+  return Arr.reduce(segments, { x: 0, z: 0 }, (center, segment) => ({
+    x: center.x + (segment.center.x * segment.length) / totalLength,
+    z: center.z + (segment.center.z * segment.length) / totalLength,
+  }));
 }
 
 function getRouteSpan(route: RoutePoint[]) {
-  const xValues = route.map((point) => point.x);
-  const zValues = route.map((point) => point.z);
+  const xValues = Arr.map(route, (point) => point.x);
+  const zValues = Arr.map(route, (point) => point.z);
   const xSpan = Math.max(...xValues) - Math.min(...xValues);
   const zSpan = Math.max(...zValues) - Math.min(...zValues);
 

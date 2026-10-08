@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -99,7 +100,7 @@ export function ChemicalReactionCharacteristicsLab({
           value={selectedCueId}
           variant="outline"
         >
-          {REACTION_CUE_IDS.map((cueId) => (
+          {Arr.map(REACTION_CUE_IDS, (cueId) => (
             <ToggleGroupItem key={cueId} value={cueId}>
               {labels.cues[cueId].tab}
             </ToggleGroupItem>

@@ -2,6 +2,7 @@
 
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
 const SPACE_COLORS = {
@@ -69,7 +70,7 @@ function StarField({ length }: { length: number }) {
 
   return (
     <group>
-      {stars.map((star) => (
+      {Arr.map(stars, (star) => (
         <mesh key={star.id} position={[star.x, star.y, star.z]}>
           <sphereGeometry args={[star.scale, 8, 8]} />
           <meshBasicMaterial color={SPACE_COLORS.star} />
@@ -101,7 +102,7 @@ function SpaceRocks({ length }: { length: number }) {
 
   return (
     <group>
-      {rocks.map((rock) => (
+      {Arr.map(rocks, (rock) => (
         <mesh
           key={rock.id}
           position={[rock.x, rock.y, rock.z]}
@@ -139,7 +140,7 @@ function SpeedParticles({ length }: { length: number }) {
 
   return (
     <group>
-      {particles.map((particle) => (
+      {Arr.map(particles, (particle) => (
         <mesh key={particle.id} position={[particle.x, particle.y, particle.z]}>
           <boxGeometry args={[particle.size, 0.01, 0.01]} />
           <meshBasicMaterial

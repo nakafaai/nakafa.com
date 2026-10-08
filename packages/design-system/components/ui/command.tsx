@@ -44,7 +44,7 @@ function hasGroupedItems(
 function isGroupedCommandItems<ItemValue>(
   items: CommandProps<ItemValue>["items"]
 ): items is readonly { items: readonly ItemValue[] }[] {
-  return Arr.isArray(items) && items.some(hasGroupedItems);
+  return Arr.isArray(items) && Arr.some(items, hasGroupedItems);
 }
 
 function CommandDialogTrigger(props: CommandDialogPrimitive.Trigger.Props) {

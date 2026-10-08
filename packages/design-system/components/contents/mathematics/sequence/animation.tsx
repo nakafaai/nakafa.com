@@ -14,6 +14,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import {
   AnimatePresence,
   domMax,
@@ -158,7 +159,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                     <LayoutGroup>
                       {/* Tables */}
                       <AnimatePresence mode="popLayout">
-                        {arrangement.tables.map((table) => (
+                        {Arr.map(arrangement.tables, (table) => (
                           <MotionDiv
                             animate={{ opacity: 1, scale: 1 }}
                             className="absolute rounded-md bg-teal-300 shadow-sm transition-colors hover:bg-teal-400 dark:bg-teal-500"
@@ -185,7 +186,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
 
                       {/* Chairs */}
                       <AnimatePresence mode="popLayout">
-                        {arrangement.chairs.map((chair) => (
+                        {Arr.map(arrangement.chairs, (chair) => (
                           <MotionDiv
                             animate={{ opacity: 1, scale: 1 }}
                             className="absolute rounded-full bg-cyan-300 shadow-sm transition-colors hover:bg-cyan-400 dark:bg-cyan-500"
@@ -245,7 +246,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
-            {SPEED_VALUES.map((speedValue) => (
+            {Arr.map(SPEED_VALUES, (speedValue) => (
               <Choice
                 aria-label={`${labels.setSpeed} ${speedValue}x`}
                 key={speedValue}
@@ -260,7 +261,8 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
 
         <div className="w-full border-t px-6 pt-4">
           <div className="flex flex-wrap justify-center gap-2">
-            {Array.from({ length: maxTables }, (_, index) => index + 1).map(
+            {Arr.map(
+              Array.from({ length: maxTables }, (_, index) => index + 1),
               (count) => (
                 <Choice
                   aria-label={`${labels.setTableCount} ${count}`}

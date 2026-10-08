@@ -15,6 +15,7 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin } from "@repo/math/angles";
+import { Array as Arr } from "effect";
 import { type ComponentProps, useMemo } from "react";
 import { Vector3 } from "three";
 
@@ -79,7 +80,7 @@ export function Triangle({
 
   // Vertices for instancing with semantic labels
   const triangleVertices = useMemo(() => {
-    const vertices = triangleSideLines.map((pts) => pts[0]);
+    const vertices = Arr.map(triangleSideLines, (pts) => pts[0]);
     return [
       { position: vertices[1], key: "adjacent" },
       { position: vertices[2], key: "opposite" },
@@ -121,7 +122,7 @@ export function Triangle({
   return (
     <group frustumCulled {...props}>
       {/* Draw the triangle sides - optimized with single color array access */}
-      {triangleSideLines.map((pts, i) => (
+      {Arr.map(triangleSideLines, (pts, i) => (
         <Line
           color={TRIANGLE_SIDES[i].color}
           frustumCulled
@@ -176,7 +177,7 @@ export function Triangle({
           args={[1, GRAPH_POINT_SEGMENTS, GRAPH_POINT_SEGMENTS]}
         />
         <meshBasicMaterial color={COLORS.SLATE} />
-        {triangleVertices.map((vertex) => (
+        {Arr.map(triangleVertices, (vertex) => (
           <Instance
             key={vertex.key}
             position={[vertex.position.x, vertex.position.y, vertex.position.z]}

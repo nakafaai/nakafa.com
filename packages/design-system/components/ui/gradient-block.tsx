@@ -1,5 +1,6 @@
 "use client";
 
+import { Array as Arr } from "effect";
 import type { CSSProperties, HTMLAttributes } from "react";
 import { useMemo } from "react";
 
@@ -81,15 +82,14 @@ function oklch(lightness: number, chroma: number, hue: number): string {
 
 // Helper function to generate interpolated color stops
 function generateColorStops(colors: string[]): string {
-  const result: string[] = [];
-
   // Add all colors as stops
-  for (let i = 0; i < colors.length; i += 1) {
-    const percentage = (i / (colors.length - 1)) * MAX_PERCENTAGE;
-    result.push(`${colors[i]} ${percentage}%`);
-  }
-
-  return result.join(", ");
+  return Arr.join(
+    Arr.map(colors, (color, i) => {
+      const percentage = (i / (colors.length - 1)) * MAX_PERCENTAGE;
+      return `${color} ${percentage}%`;
+    }),
+    ", "
+  );
 }
 
 export function GradientBlock({
@@ -103,32 +103,40 @@ export function GradientBlock({
   // Generate a consistent color palette based on the keyString
   const gradientStyle = useMemo(() => {
     // Create a more unique hash from the keyString that produces better variation
-    const hash = Array.from(keyString).reduce((acc, char, index) => {
-      // Use prime numbers, character code, character position, and bitwise operations
-      // to create significantly more variation between similar strings
-      const charCode = char.charCodeAt(0);
-      const position = index + 1;
-      // Use different prime numbers and bitwise operations for more randomness
-      return (
-        // biome-ignore lint/suspicious/noBitwiseOperators: Used for hashing
-        ((acc * HASH_PRIME_1) ^ (charCode * position * HASH_PRIME_2)) %
-        HASH_MODULO
-      );
-    }, HASH_SEED_1); // Start with a prime seed for better distribution
+    const hash = Arr.reduce(
+      Array.from(keyString),
+      HASH_SEED_1,
+      (acc, char, index) => {
+        // Use prime numbers, character code, character position, and bitwise operations
+        // to create significantly more variation between similar strings
+        const charCode = char.charCodeAt(0);
+        const position = index + 1;
+        // Use different prime numbers and bitwise operations for more randomness
+        return (
+          // biome-ignore lint/suspicious/noBitwiseOperators: Used for hashing
+          ((acc * HASH_PRIME_1) ^ (charCode * position * HASH_PRIME_2)) %
+          HASH_MODULO
+        );
+      }
+    ); // Start with a prime seed for better distribution
 
     // Create a secondary hash value for additional variation
-    const secondaryHash = Array.from(keyString).reduce((acc, char, index) => {
-      const charCode = char.charCodeAt(0);
-      // Use a different algorithm for this hash
-      return (
-        (acc +
-          // biome-ignore lint/suspicious/noBitwiseOperators: Used for hashing
-          (charCode << (index % HASH_SHIFT_LEFT)) +
-          // biome-ignore lint/suspicious/noBitwiseOperators: Used for hashing
-          (charCode >> (index % HASH_SHIFT_RIGHT))) %
-        HASH_MODULO
-      );
-    }, HASH_SEED_2); // Different prime seed
+    const secondaryHash = Arr.reduce(
+      Array.from(keyString),
+      HASH_SEED_2,
+      (acc, char, index) => {
+        const charCode = char.charCodeAt(0);
+        // Use a different algorithm for this hash
+        return (
+          (acc +
+            // biome-ignore lint/suspicious/noBitwiseOperators: Used for hashing
+            (charCode << (index % HASH_SHIFT_LEFT)) +
+            // biome-ignore lint/suspicious/noBitwiseOperators: Used for hashing
+            (charCode >> (index % HASH_SHIFT_RIGHT))) %
+          HASH_MODULO
+        );
+      }
+    ); // Different prime seed
 
     // Use both hashes to determine the base hue with more variation
     // biome-ignore lint/suspicious/noBitwiseOperators: Used for hashing

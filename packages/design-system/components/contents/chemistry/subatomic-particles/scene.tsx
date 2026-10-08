@@ -15,12 +15,14 @@ import {
 import type { SubatomicParticlesLabProps } from "@repo/design-system/components/contents/chemistry/subatomic-particles/lab";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 48;
 const CATHODE_RAY_POINTS = createPath(PATH_POINT_COUNT, getCathodeRayPoint);
-const CATHODE_ELECTRON_POINTS = [0.08, 0.26, 0.48, 0.72].map(
+const CATHODE_ELECTRON_POINTS = Arr.map(
+  [0.08, 0.26, 0.48, 0.72],
   getCathodeRayPoint
 );
 const ALPHA_STRAIGHT_POINTS = createPath(
@@ -194,7 +196,7 @@ function CathodeRayScene({ colors, labels }: SceneProps) {
       <Plate color={colors.negative} label={labels.negativePlate} y={-0.95} />
 
       <Line color={colors.ray} lineWidth={5} points={CATHODE_RAY_POINTS} />
-      {CATHODE_ELECTRON_POINTS.map((point) => (
+      {Arr.map(CATHODE_ELECTRON_POINTS, (point) => (
         <Particle
           color={colors.electron}
           key={`electron-${point.x}-${point.y}`}
@@ -239,7 +241,7 @@ function GoldFoilScene({ colors, labels }: SceneProps) {
         points={ALPHA_BACKSCATTER_POINTS}
       />
 
-      {ALPHA_MARKER_POINTS.map((point) => (
+      {Arr.map(ALPHA_MARKER_POINTS, (point) => (
         <mesh key={`alpha-${point.x}`} position={point}>
           <sphereGeometry args={[0.1, 32, 32]} />
           <meshStandardMaterial color={colors.alpha} roughness={0.4} />
@@ -294,10 +296,10 @@ function AtomMapScene({ colors, labels }: SceneProps) {
           rotation={[Math.PI / 2.6, 0, Math.PI / 5]}
         />
 
-        {NUCLEON_POSITIONS.map((particle) => (
+        {Arr.map(NUCLEON_POSITIONS, (particle) => (
           <Particle
             color={particle.kind === "proton" ? colors.proton : colors.neutron}
-            key={`${particle.kind}-${particle.position.join(",")}`}
+            key={`${particle.kind}-${Arr.join(Arr.map(particle.position, String), ",")}`}
             labelColor={colors.sphereText}
             math={particle.math}
             position={new Vector3(...particle.position)}
@@ -305,10 +307,10 @@ function AtomMapScene({ colors, labels }: SceneProps) {
           />
         ))}
 
-        {ELECTRON_POSITIONS.map((position) => (
+        {Arr.map(ELECTRON_POSITIONS, (position) => (
           <Particle
             color={colors.electron}
-            key={`electron-${position.join(",")}`}
+            key={`electron-${Arr.join(Arr.map(position, String), ",")}`}
             labelColor={colors.sphereText}
             math="e^-"
             position={new Vector3(...position)}

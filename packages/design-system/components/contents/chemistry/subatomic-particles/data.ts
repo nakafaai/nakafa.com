@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const CATHODE_RAY_MODE_ID = "cathode-ray";
 export const GOLD_FOIL_MODE_ID = "gold-foil";
@@ -54,7 +54,7 @@ export const SUBATOMIC_VIEW_CONFIG = {
 export function isSubatomicParticlesModeId(
   value: string
 ): value is SubatomicParticlesModeId {
-  return SUBATOMIC_PARTICLE_MODE_IDS.some((modeId) => modeId === value);
+  return Arr.some(SUBATOMIC_PARTICLE_MODE_IDS, (modeId) => modeId === value);
 }
 
 /**
