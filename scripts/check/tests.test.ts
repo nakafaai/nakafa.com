@@ -105,6 +105,8 @@ describe("test ownership policy", () => {
           'export declare const narrowed: typeof value === "object";\n',
         "scripts/tool.test.ts": CLEAN_TEST,
         "scripts/tool.ts": "export const tool = true;\n",
+        "scripts/tsconfig.json":
+          '{"extends":"../packages/typescript-config/base.json"}\n',
       });
 
       assert.deepStrictEqual(yield* checkFixture(root), {
@@ -216,7 +218,11 @@ describe("test ownership policy", () => {
       yield* writeFixtures(root, {
         "apps/web/value.ts": "export const value = 1;\n",
         "packages/core/value.ts": "export const value = 1;\n",
+        "packages/typescript-config/base.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
         "scripts/tool.ts": "export const tool = true;\n",
+        "tsconfig.json":
+          '{"extends":"./packages/typescript-config/base.json"}\n',
         ...files,
       });
 
