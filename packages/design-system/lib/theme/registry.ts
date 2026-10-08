@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const ThemeAppearanceSchema = Schema.Literals(["light", "dark"]);
 
@@ -203,7 +203,7 @@ export const THEME_STORAGE_KEY = "theme";
 export const DEFAULT_THEME = "system" satisfies ThemeValue;
 
 /** Concrete class names managed on the document root. */
-export const concreteThemeValues = themes.flatMap((theme) =>
+export const concreteThemeValues = Arr.flatMap(themes, (theme) =>
   theme.appearance === "dynamic" ? [] : [theme.value]
 );
 
@@ -214,9 +214,12 @@ export const concreteThemeValues = themes.flatMap((theme) =>
 export function getThemeAppearance(
   resolvedTheme: string | undefined
 ): ThemeAppearance {
-  const definition = themes.find((theme) => theme.value === resolvedTheme);
+  const definition = Arr.findFirst(
+    themes,
+    (theme) => theme.value === resolvedTheme
+  );
 
-  if (definition?.appearance === "dark") {
+  if (Option.exists(definition, (theme) => theme.appearance === "dark")) {
     return "dark";
   }
 
@@ -225,9 +228,14 @@ export function getThemeAppearance(
 
 /** Returns the deterministic sRGB projection used by shader-only renderers. */
 export function getThemeShaderColor(resolvedTheme: string | undefined) {
-  const definition = themes.find((theme) => theme.value === resolvedTheme);
+  const definition = Arr.findFirst(
+    themes,
+    (theme) => theme.value === resolvedTheme
+  );
 
-  return definition?.shaderColor ?? LIGHT_SHADER_COLOR;
+  return Option.isSome(definition)
+    ? definition.value.shaderColor
+    : LIGHT_SHADER_COLOR;
 }
 
 /**

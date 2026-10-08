@@ -4,7 +4,7 @@ import type {
   resolveOrthographicZoom,
 } from "@repo/design-system/lib/geometry/camera";
 import type { CameraPixelLabel } from "@repo/design-system/lib/geometry/camera/bounds";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Schema } from "effect";
 import { type Box3, MathUtils, Matrix4, Vector3 } from "three";
 
 const VIEWPORT_EDGE_SPACE = 24;
@@ -67,8 +67,8 @@ export const resolveCameraFit = Effect.fn("camera.resolveFit")(function* ({
   const radius = Math.max(bounds.getSize(new Vector3()).length() / 2, 0.01);
   let distance = radius;
   let viewHeight = Math.max(radius * 0.02, minimumViewHeight);
-  const horizontal: AxisConstraint[] = [];
-  const vertical: AxisConstraint[] = [];
+  const horizontal = MutableList.make<AxisConstraint>();
+  const vertical = MutableList.make<AxisConstraint>();
   const pixelScale =
     projection === "perspective" ? height / (2 * verticalTangent) : height;
   const constrain = (
@@ -79,7 +79,8 @@ export const resolveCameraFit = Effect.fn("camera.resolveFit")(function* ({
     top = 0
   ) => {
     const depth = projection === "perspective" ? point.dot(backward) : 0;
-    horizontal.push(
+    MutableList.append(
+      horizontal,
       axisConstraint(
         point.dot(right),
         depth,
@@ -89,7 +90,8 @@ export const resolveCameraFit = Effect.fn("camera.resolveFit")(function* ({
         pixelScale
       )
     );
-    vertical.push(
+    MutableList.append(
+      vertical,
       axisConstraint(
         point.dot(up),
         depth,
@@ -132,8 +134,8 @@ export const resolveCameraFit = Effect.fn("camera.resolveFit")(function* ({
       }
     }
     const fitted = yield* solvePixelConstraints({
-      horizontal,
-      vertical,
+      horizontal: MutableList.toArray(horizontal),
+      vertical: MutableList.toArray(vertical),
       minimum: projection === "perspective" ? distance : viewHeight,
       projection,
       width,

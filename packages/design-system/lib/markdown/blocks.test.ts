@@ -8,7 +8,8 @@ import { Lexer, type Tokens } from "marked";
 
 function mockLexerBlocks(...blocks: string[]) {
   const tokens = Object.assign(
-    blocks.map(
+    Arr.map(
+      blocks,
       (raw): Tokens.Space => ({
         raw,
         type: "space",
@@ -27,7 +28,9 @@ describe("markdown blocks", () => {
   it("preserves the active block identity while streaming appends text", () => {
     const before = readMarkdownBlocks("answer", "First\n\nSec");
     const after = readMarkdownBlocks("answer", "First\n\nSecond");
-    expect(after.map(({ key }) => key)).toEqual(before.map(({ key }) => key));
+    expect(Arr.map(after, ({ key }) => key)).toEqual(
+      Arr.map(before, ({ key }) => key)
+    );
     expect(after.at(-1)?.content).toBe("Second");
   });
 
@@ -39,7 +42,7 @@ describe("markdown blocks", () => {
       "$$\nx + 1\n$$",
       "$$ closed $$\n\n$$",
     ]) {
-      expect(parseMarkdownIntoBlocks(markdown).join("")).toBe(markdown);
+      expect(Arr.join(parseMarkdownIntoBlocks(markdown), "")).toBe(markdown);
     }
   });
 
@@ -108,11 +111,13 @@ describe("markdown blocks", () => {
     const second = readMarkdownBlocks("answer", "Same\n\nSame");
 
     expect(first).toEqual(second);
-    expect(first.map(({ content }) => content)).toEqual([
+    expect(Arr.map(first, ({ content }) => content)).toEqual([
       "Same",
       "\n\n",
       "Same",
     ]);
-    expect(Arr.dedupe(first.map(({ key }) => key)).length).toBe(first.length);
+    expect(Arr.dedupe(Arr.map(first, ({ key }) => key)).length).toBe(
+      first.length
+    );
   });
 });

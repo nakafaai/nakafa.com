@@ -8,7 +8,7 @@ import {
   MathFontLoadError,
   readMathFonts,
 } from "@repo/design-system/lib/markdown/fonts";
-import { Effect, FileSystem } from "effect";
+import { Array as Arr, Effect, FileSystem } from "effect";
 import katex from "katex";
 
 const FONT_FAMILY = /font-family:\s*KaTeX_([A-Za-z0-9]+)/;
@@ -101,8 +101,11 @@ describe("math fonts", () => {
               .replace(CHILD_SPAN, "")
               .trim()
               .split(WHITESPACE);
-            const classes = compounds.at(-1)?.split(".").filter(Boolean) ?? [];
-            const html = `<span class="katex"><span class="${classes.join(" ")}"></span></span>`;
+            const classes = Arr.filter(
+              compounds.at(-1)?.split(".") ?? [],
+              Boolean
+            );
+            const html = `<span class="katex"><span class="${Arr.join(classes, " ")}"></span></span>`;
             expect(readMathFonts(html), selector).toContain(font);
             checked += 1;
           }

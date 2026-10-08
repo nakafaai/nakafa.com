@@ -16,12 +16,12 @@ describe("theme picker options", () => {
   });
 
   it("defines one icon for every selectable value", () => {
-    expect(themeOptions.map((option) => option.value)).toEqual(
-      themes.map((theme) => theme.value)
+    expect(Arr.map(themeOptions, (option) => option.value)).toEqual(
+      Arr.map(themes, (theme) => theme.value)
     );
     expect(
       Arr.dedupeWith(
-        themeOptions.map((option) => option.icon),
+        Arr.map(themeOptions, (option) => option.icon),
         (self, that) => self === that
       ).length
     ).toBe(themeOptions.length);
