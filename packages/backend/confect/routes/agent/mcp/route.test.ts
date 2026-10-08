@@ -12,7 +12,6 @@ import {
   MCP_SECRET_ENVIRONMENT,
   type McpCase,
   type McpRequest,
-  modernPost,
   readMcpAnswer,
   sendMcpCase,
   sendMcpRequest,
@@ -28,7 +27,6 @@ import { RESOURCE_CASES } from "@repo/backend/test/mcp/resources";
 import { Effect } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
-const json = (response: Response) => Effect.promise(() => response.json());
 const text = (response: Response) => Effect.promise(() => response.text());
 function send(test: BackendTest, request: McpRequest) {
   return Effect.promise(() => sendMcpRequest(test, request));
@@ -39,7 +37,6 @@ beforeEach(() => {
   vi.stubEnv("NAKAFA_MCP_ALLOWED_ORIGINS", undefined);
 });
 afterEach(() => {
-  vi.doUnmock("@repo/backend/agent/mcp/server");
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
@@ -83,7 +80,7 @@ describe("Nakafa MCP golden contract", () => {
   });
 });
 describe("Nakafa MCP transport", () => {
-  it.effect("rejects mismatched body framing before the protocol loader", () =>
+  it.effect("rejects mismatched body framing before the protocol engine", () =>
     Effect.gen(function* () {
       const response = yield* send(createConvexTestWithBetterAuth(), {
         body: "{}",
@@ -93,26 +90,5 @@ describe("Nakafa MCP transport", () => {
       expect(response.status).toBe(400);
       expect(yield* text(response)).toBe("");
     })
-  );
-  it.effect(
-    "returns a sanitized retryable failure if the protocol module fails to load",
-    () =>
-      Effect.gen(function* () {
-        vi.doMock("@repo/backend/agent/mcp/server", () => {
-          throw new Error("private module initialization failure");
-        });
-        const response = yield* send(
-          createConvexTestWithBetterAuth(),
-          modernPost(99, "server/discover")
-        );
-        expect(response.status).toBe(503);
-        expect(yield* json(response)).toMatchObject({
-          id: 99,
-          error: {
-            code: -32_603,
-            message: "The MCP protocol runtime is unavailable.",
-          },
-        });
-      })
   );
 });

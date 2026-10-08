@@ -1,4 +1,6 @@
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
+import { nakafaMcpEngine } from "@repo/backend/agent/mcp/server";
+import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { enforceAgentReadLimit } from "@repo/backend/confect/routes/agent/limit";
 import { guardMcpOrigin } from "@repo/backend/confect/routes/agent/mcp/guard";
 import { readMcpRequest } from "@repo/backend/confect/routes/agent/mcp/input";
@@ -9,16 +11,12 @@ import {
   withMcpResponseHeaders,
 } from "@repo/backend/confect/routes/agent/mcp/response";
 import { RequestIdentity } from "@repo/backend/confect/routes/middleware/identity";
-import {
-  getUnknownErrorMessage,
-  NakafaAgentDataReadError,
-} from "@repo/contents/agent/errors";
 import { Effect, Layer, Result } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
-/** Serves the protected Streamable HTTP MCP transport in native Effect. */
+/** Serves the protected Streamable HTTP MCP transport: Nakafa's checks, then Effect's engine. */
 const handleMcp = Effect.gen(function* () {
-  const runtimeServices = yield* Effect.context<never>();
+  const services = yield* Effect.context<QueryRunner>();
   const request = yield* HttpServerRequest.toWeb(
     yield* HttpServerRequest.HttpServerRequest
   );
@@ -60,19 +58,6 @@ const handleMcp = Effect.gen(function* () {
     );
   }
   const { parsedBody, request: boundedRequest } = bounded.success;
-  const runtime = yield* loadMcpRuntime().pipe(Effect.result);
-  if (Result.isFailure(runtime)) {
-    return withMcpResponseHeaders(
-      mcpParsedErrorResponse(
-        parsedBody,
-        503,
-        -32_603,
-        "The MCP protocol runtime is unavailable.",
-        requestId
-      ),
-      request
-    );
-  }
   if (
     parsedBody !== undefined &&
     !request.headers.has("mcp-protocol-version")
@@ -88,48 +73,30 @@ const handleMcp = Effect.gen(function* () {
       request
     );
   }
-  const server = yield* runtime.success.server.createNakafaMcpServer(requestId);
-  const handler = runtime.success.sdk.createMcpHandler(() => server, {
-    legacy: "reject",
-    onerror: (error) => {
-      Effect.runSyncWith(runtimeServices)(
-        Effect.logWarning("Nakafa MCP protocol request failed.").pipe(
-          Effect.annotateLogs({
-            errorName: error.name,
-            requestId,
-          })
-        )
-      );
-    },
-  });
-  return withMcpResponseHeaders(
-    yield* Effect.promise(() =>
-      handler.fetch(boundedRequest, {
-        parsedBody,
-      })
-    ),
-    request
+  const engine = yield* HttpRouter.toHttpEffect(
+    nakafaMcpEngine({
+      allowedOrigins: origins(request),
+      requestId,
+      services,
+    }).pipe(Layer.orDie)
   );
+  const response = yield* engine.pipe(
+    Effect.provideService(
+      HttpServerRequest.HttpServerRequest,
+      HttpServerRequest.fromWeb(boundedRequest)
+    )
+  );
+  return withMcpResponseHeaders(HttpServerResponse.toWeb(response), request);
 }).pipe(Effect.map(HttpServerResponse.fromWeb));
+
+/** The Origin the edge guard already accepted, which the engine must also accept. */
+function origins(request: Request): readonly string[] {
+  const origin = request.headers.get("origin");
+  return origin === null ? [] : [origin];
+}
+
 export const agentMcpRoutes = HttpRouter.add(
   "*",
   NAKAFA_MCP_EDGE_CONTRACT.originPath,
   handleMcp
 ).pipe(Layer.provide(guardMcpOrigin.layer));
-const loadMcpRuntime = Effect.fn("agent.mcp.loadRuntime")(() =>
-  Effect.tryPromise({
-    catch: (cause) =>
-      new NakafaAgentDataReadError({
-        cause: getUnknownErrorMessage(cause),
-        message: "Unable to load the MCP protocol runtime.",
-      }),
-    try: () =>
-      Promise.all([
-        import("@modelcontextprotocol/server"),
-        import("@repo/backend/agent/mcp/server"),
-      ]).then(([sdk, server]) => ({
-        sdk,
-        server,
-      })),
-  })
-);
