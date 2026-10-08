@@ -1,27 +1,33 @@
 "use client";
 
-import type { Locale } from "next-intl";
-import type {
-  CurrentAttempt,
-  SetEntrySection,
-  SetPage,
-  TryoutSetDestination,
-} from "@/components/tryout/set/model";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  publicTryoutSectionValidator,
+  publicTryoutSetValidator,
+} from "@repo/backend/confect/tryouts/queries/catalogModel";
+import { tryoutAttemptStateValidator } from "@repo/backend/confect/tryouts/runtime/spec";
+import { Schema, Struct } from "effect";
+import { TryoutSetDestinationSchema } from "@/components/tryout/set/model";
 import {
   StartTryoutButton,
   type StartTryoutRequest,
 } from "@/components/tryout/set/start";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-export interface TryoutSetActionValue {
-  activeAttempt: CurrentAttempt | null;
-  currentAttempt?: CurrentAttempt | null;
-  currentHref: string;
-  destination: TryoutSetDestination | null;
-  entrySection: SetEntrySection | null;
-  locale: Locale;
-  set: Pick<SetPage["set"], "countryKey" | "examKey" | "setKey" | "trackKey">;
-}
+const TryoutSetActionValueSchema = Schema.Struct({
+  activeAttempt: Schema.NullOr(tryoutAttemptStateValidator),
+  currentAttempt: Schema.optionalKey(
+    Schema.NullOr(tryoutAttemptStateValidator)
+  ),
+  currentHref: Schema.String,
+  destination: Schema.NullOr(TryoutSetDestinationSchema),
+  entrySection: Schema.NullOr(publicTryoutSectionValidator),
+  locale: AppLocaleCodeSchema,
+  set: publicTryoutSetValidator.mapFields(
+    Struct.pick(["countryKey", "examKey", "setKey", "trackKey"])
+  ),
+});
+export type TryoutSetActionValue = typeof TryoutSetActionValueSchema.Type;
 
 /** Renders the only valid set-page action for the current attempt state. */
 export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {

@@ -2,12 +2,13 @@
 
 import type { InvokeReturn } from "@confect/react";
 import type refs from "@repo/backend/confect/_generated/refs";
-import type {
-  StartAttemptArgs,
-  StartAttemptResult,
+import {
+  type StartAttemptArgs,
+  type StartAttemptResult,
+  startAttemptArgsValidator,
 } from "@repo/backend/confect/tryouts/start/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Data, Effect } from "effect";
+import { Data, Effect, Schema } from "effect";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -18,20 +19,30 @@ class TryoutClientRequestError extends Data.TaggedError(
   readonly cause: unknown;
 }> {}
 
-interface StartAttemptProgramInput {
-  readonly args: StartAttemptArgs;
-  readonly failureMessage: string;
-  readonly mutation: (
-    args: StartAttemptArgs
-  ) => InvokeReturn<typeof refs.public.tryouts.mutations.attempts.startAttempt>;
-  readonly onSuccess: (result: StartAttemptResult) => Effect.Effect<void>;
-}
+/** Arguments and failure copy of one free start, without its callbacks. */
+const StartAttemptProgramInputSchema = Schema.Struct({
+  args: startAttemptArgsValidator,
+  failureMessage: Schema.String,
+});
+type StartAttemptProgramInput = typeof StartAttemptProgramInputSchema.Type;
+
+/** Calls the Convex start mutation with the attempt arguments. */
+type StartAttemptMutation = (
+  args: StartAttemptArgs
+) => InvokeReturn<typeof refs.public.tryouts.mutations.attempts.startAttempt>;
+
+/** Continues the client flow with the result of a started attempt. */
+type StartAttemptSuccess = (result: StartAttemptResult) => Effect.Effect<void>;
 
 /** Runs the free start mutation and reports transport or source failures. */
 export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
-  (input: StartAttemptProgramInput) =>
+  (
+    input: StartAttemptProgramInput,
+    mutation: StartAttemptMutation,
+    onSuccess: StartAttemptSuccess
+  ) =>
     Effect.tryPromise({
-      try: () => input.mutation(input.args),
+      try: () => mutation(input.args),
       catch: (cause) => new TryoutClientRequestError({ cause }),
     }).pipe(
       Effect.flatMap((result) =>
@@ -39,7 +50,7 @@ export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
           Effect.mapError((cause) => new TryoutClientRequestError({ cause }))
         )
       ),
-      Effect.tap((result) => input.onSuccess(result)),
+      Effect.tap((result) => onSuccess(result)),
       Effect.catchTag("TryoutClientRequestError", (error) =>
         reportRequestFailure(error, "tryout-start", input.failureMessage)
       ),
