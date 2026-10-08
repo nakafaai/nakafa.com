@@ -195,7 +195,7 @@ jobs:
 
       # Prepare already generated the bindings and the step above proved them
       # unchanged, so build and start call the backend acceptance command
-      # directly instead of regenerating the bindings twice more.
+      # directly instead of regenerating the bindings again.
       - name: Build production app
         id: production_build
         run: pnpm --dir packages/backend acceptance build

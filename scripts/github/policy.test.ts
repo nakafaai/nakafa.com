@@ -124,8 +124,8 @@ describe("GitHub Action policy", () => {
             }),
           })
         );
-        // Only prepare generates the Convex bindings; the root build and start
-        // scripts would regenerate them twice more.
+        // Only prepare generates the Convex bindings; the acceptance:build and
+        // acceptance:start scripts would regenerate them again.
         expect(source).not.toContain("pnpm acceptance:build");
         expect(source).not.toContain("pnpm acceptance:start");
         expect(source).toContain(
