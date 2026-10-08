@@ -37,10 +37,10 @@ const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
 const betterAuthUserDeletedMessage = "User deleted";
 type DeleteUserResult = Awaited<ReturnType<typeof authClient.deleteUser>>;
 type AccountDeletionAttemptId = AccountDeletionBrowserAttempt["attemptId"];
-export type DeleteUserRequest = (
+type DeleteUserRequest = (
   attemptId: AccountDeletionAttemptId
 ) => Promise<DeleteUserResult>;
-export type ReconcileAccountDeletionRequest = (
+type ReconcileAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
 ) => Effect.Effect<
   AccountDeletionAttemptStatus,
