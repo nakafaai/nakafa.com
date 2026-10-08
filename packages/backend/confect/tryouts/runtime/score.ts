@@ -28,28 +28,20 @@ import {
   readScoredAnswers,
   scoreAnswers,
 } from "@repo/backend/confect/tryouts/runtime/result";
-import {
-  type TryoutScoringStrategy,
-  tryoutScoringStrategyValidator,
-} from "@repo/backend/confect/tryouts/score";
+import { tryoutScoringStrategyValidator } from "@repo/backend/confect/tryouts/score";
 import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
-type AnswerCountScoringStrategy = Exclude<TryoutScoringStrategy, "irt">;
 /** Keeps every stored strategy that counts answers; IRT scores through calibrated items. */
-function isAnswerCountScoringStrategy(
-  strategy: TryoutScoringStrategy
-): strategy is AnswerCountScoringStrategy {
-  return strategy !== "irt";
-}
 const AnswerCountScoringStrategySchema = Schema.Literals(
   Arr.filter(
     tryoutScoringStrategyValidator.literals,
-    isAnswerCountScoringStrategy
+    (strategy) => strategy !== "irt"
   )
 );
+type AnswerCountScoringStrategy = typeof AnswerCountScoringStrategySchema.Type;
 const AnswerCountScoreSourceSchema = Schema.Struct({
   attemptId: Id("tryoutAttempts"),
   kind: Schema.Literal("answer-count"),
