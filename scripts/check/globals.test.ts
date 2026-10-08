@@ -242,4 +242,16 @@ export const env = createEnv({ runtimeEnv: { SITE_URL: process.env.SITE_URL } })
       );
     })
   );
+
+  it.effect("leaves the other members of a global object alone", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`window.localStorage;
+globalThis.location;
+self.navigator.userAgent;
+`),
+        []
+      );
+    })
+  );
 });
