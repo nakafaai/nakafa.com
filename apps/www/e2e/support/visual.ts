@@ -89,6 +89,22 @@ function scrollToElement(locator: Locator, block: ScrollLogicalPosition) {
   );
 }
 
+/**
+ * Scrolls a visual card to the top of the viewport until its `content` shows.
+ * A content-visibility card lays out its content only near the viewport.
+ */
+export const revealCardContent = Effect.fn("NakafaE2E.revealVisualCardContent")(
+  function* (card: Locator, content: string) {
+    yield* Effect.promise(() =>
+      expect(async () => {
+        await scrollToElement(card, "start");
+        await expect(card.locator(content).first()).toBeVisible();
+      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+    );
+    return card;
+  }
+);
+
 /** Scrolls to the visual card that holds `content`, the first by default. */
 export const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
   page: Page,
@@ -99,14 +115,7 @@ export const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
     .locator('[data-slot="visual-card"] > [data-slot="card"]')
     .filter({ has: page.locator(content) })
     .nth(index);
-  // A content-visibility card lays out its content only near the viewport.
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await scrollToElement(card, "start");
-      await expect(card.locator(content).first()).toBeVisible();
-    }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
-  );
-  return card;
+  return yield* revealCardContent(card, content);
 });
 
 /**
@@ -133,14 +142,14 @@ export const revealLab = Effect.fn("NakafaE2E.revealVisualLab")(function* (
 
 /**
  * Scrolls a card's deferred 3D scene into place and waits for its canvas to
- * settle, returning the canvas.
+ * settle, returning the canvas. `scene` names the scene, a line scene by default.
  */
 export const revealSceneCard = Effect.fn("NakafaE2E.revealVisualSceneCard")(
-  function* (card: Locator) {
-    const canvas = card.locator(`${LINE_SCENE} canvas`);
+  function* (card: Locator, scene = LINE_SCENE) {
+    const canvas = card.locator(`${scene} canvas`);
     yield* Effect.promise(() =>
       expect(async () => {
-        await scrollToElement(card.locator(LINE_SCENE), "start");
+        await scrollToElement(card.locator(scene), "start");
         expect(await canvas.isVisible()).toBe(true);
       }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
     );

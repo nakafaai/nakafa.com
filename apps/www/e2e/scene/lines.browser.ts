@@ -15,8 +15,12 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
-import { COORDINATE_CONTROLS, lineSceneCards } from "@/e2e/support/selector";
-import { revealSceneCard } from "@/e2e/support/visual";
+import {
+  COORDINATE_CONTROLS,
+  LINE_SCENE,
+  lineSceneCards,
+} from "@/e2e/support/selector";
+import { revealCardContent, revealSceneCard } from "@/e2e/support/visual";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;
@@ -103,7 +107,8 @@ const renderLessonScenes = Effect.fn("NakafaE2E.renderLessonScenes")(function* (
   );
   const { cards, count } = yield* openLessonScenes(page);
   for (let index = 0; index < count; index += 1) {
-    yield* revealSceneCard(cards.nth(index));
+    const card = yield* revealCardContent(cards.nth(index), LINE_SCENE);
+    yield* revealSceneCard(card);
   }
   const readbacks = yield* Effect.promise(() =>
     page.evaluate((key) => Reflect.get(window, key), PIXEL_READBACKS)
@@ -119,7 +124,7 @@ const pauseSceneAway = Effect.fn("NakafaE2E.pauseSceneAway")(function* (
     page.addInitScript(patchWebGL, countCanvasFrames)
   );
   const { cards } = yield* openLessonScenes(page);
-  const card = cards.first();
+  const card = yield* revealCardContent(cards.first(), LINE_SCENE);
   const canvas = yield* revealSceneCard(card);
   const rotation = card
     .locator(COORDINATE_CONTROLS)

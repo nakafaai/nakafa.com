@@ -12,6 +12,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { CARD, COORDINATE_CONTROLS, LINE_SCENE } from "@/e2e/support/selector";
+import { revealCardContent, revealSceneCard } from "@/e2e/support/visual";
 
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
@@ -21,6 +22,7 @@ const TRIANGLE_ROUTE =
 const UNIT_CIRCLE_ROUTE =
   "/en/subjects/mathematics/trigonometry/trigonometry-concept";
 const HYPOTENUSE_LABEL = /^c$/;
+const TRIANGLE_SCENE = '[data-slot="triangle-scene"]';
 
 const observeDrawingBufferSize = Effect.fn(
   "NakafaE2E.observeDrawingBufferSize"
@@ -128,26 +130,18 @@ const expectBoundedTriangleZoom = Effect.fn(
     page.goto(TRIANGLE_ROUTE, { waitUntil: "domcontentloaded" })
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-  const scene = page.locator('[data-slot="triangle-scene"]');
+  const scene = page.locator(TRIANGLE_SCENE);
   const card = page.locator(CARD).filter({ has: scene });
-  const canvas = scene.locator("canvas");
+  // Reveal the content-visibility card before scrolling its deferred scene.
+  yield* revealCardContent(card, TRIANGLE_SCENE);
+  const canvas = yield* revealSceneCard(card, TRIANGLE_SCENE);
   const label = scene
     .locator(".katex-html")
     .filter({ hasText: HYPOTENUSE_LABEL });
-  // Reveal the content-visibility card before scrolling its deferred scene.
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await card.scrollIntoViewIfNeeded();
-      await expect(scene).toBeVisible();
-      await scene.scrollIntoViewIfNeeded();
-      expect(await canvas.isVisible()).toBe(true);
-    }).toPass({ timeout: 30_000 })
-  );
   yield* Effect.promise(() => expect(label).toBeVisible());
   yield* Effect.promise(() =>
     expect(card.locator(COORDINATE_CONTROLS)).toContainText("Hypotenuse")
   );
-  yield* waitForStableCanvas(canvas);
   yield* expectReadableLabel(label);
 
   yield* zoomScene(page, canvas, 240);
@@ -177,23 +171,15 @@ const expectStableCoordinateSystem = Effect.fn(
   const card = page.locator(CARD).filter({
     hasText: MANY_SOLUTIONS_TITLE,
   });
-  const scene = card.locator(LINE_SCENE);
-  const canvas = scene.locator("canvas");
   const footer = card.locator(COORDINATE_CONTROLS);
   const gridButton = footer.getByRole("button", { name: "Kisi" });
   const rotationButton = footer.getByRole("button", {
     name: "Rotasi otomatis",
   });
 
-  yield* Effect.promise(() =>
-    expect(async () => {
-      await expect(card).toHaveCount(1);
-      await expect(scene).toBeAttached();
-      await card.scrollIntoViewIfNeeded();
-      await scene.scrollIntoViewIfNeeded();
-      expect(await canvas.isVisible()).toBe(true);
-    }).toPass({ timeout: 30_000 })
-  );
+  yield* Effect.promise(() => expect(card).toHaveCount(1));
+  yield* revealCardContent(card, LINE_SCENE);
+  const canvas = yield* revealSceneCard(card);
   yield* Effect.promise(() =>
     expect(gridButton).toHaveAttribute("aria-pressed", "true")
   );
