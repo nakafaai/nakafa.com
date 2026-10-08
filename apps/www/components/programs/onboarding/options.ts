@@ -17,10 +17,7 @@ import { roleIconByValue } from "@/lib/data/roles";
 export type OnboardingAnswer = Ref.Args<
   typeof refs.public.onboarding.mutations.saveAnswer
 >["answer"];
-export type OnboardingRole = Extract<
-  OnboardingAnswer,
-  { kind: "role" }
->["value"];
+type OnboardingRole = Extract<OnboardingAnswer, { kind: "role" }>["value"];
 export type OnboardingRegion = Extract<
   OnboardingAnswer,
   { kind: "region" }

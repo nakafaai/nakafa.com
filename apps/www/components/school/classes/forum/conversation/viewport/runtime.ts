@@ -18,7 +18,7 @@ import {
 
 export const HIGHLIGHT_DURATION_MS = 5000;
 export const PERSIST_DELAY_MS = 160;
-export const VIEWPORT_EVENT_CAPACITY = 64;
+const VIEWPORT_EVENT_CAPACITY = 64;
 
 export type ActiveTranscript = ActiveTranscriptModel | null;
 export type ForumPostId = Id<"schoolClassForumPosts">;

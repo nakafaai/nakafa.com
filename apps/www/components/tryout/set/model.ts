@@ -84,8 +84,6 @@ export const TryoutSetDestinationSchema = Schema.Struct({
   href: Schema.String,
   sectionKey: Schema.String,
 });
-/** Section route and query identity selected for the current set action. */
-export type TryoutSetDestination = typeof TryoutSetDestinationSchema.Type;
 
 /** Verified entry and canonical set route for a new current-catalog attempt. */
 export type TryoutSetRestartTarget = NonNullable<

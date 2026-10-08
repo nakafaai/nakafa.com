@@ -16,9 +16,6 @@ export type TryoutSectionRuntime = NonNullable<TryoutSectionState["runtime"]>;
 /** One ordered question in an active try-out section runtime. */
 export type TryoutRuntimeQuestion = TryoutSectionRuntime["questions"][number];
 
-/** One public immutable response definition in an active question. */
-export type TryoutRuntimeResponseSpec = TryoutRuntimeQuestion["responseSpec"];
-
 /** Response definition rendered from either signed preview or attempt state. */
 export type TryoutRenderableResponseSpec =
   typeof TryoutRenderableResponseSpecSchema.Type;

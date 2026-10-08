@@ -20,7 +20,7 @@ const TryoutSummarySectionSchema = publicTryoutSectionValidator.mapFields(
   Struct.pick(["questionCount", "sectionKey", "timeLimitSeconds"])
 );
 /** Minimal section contract rendered by the shared summary surface. */
-export type TryoutSummarySection = typeof TryoutSummarySectionSchema.Type;
+type TryoutSummarySection = typeof TryoutSummarySectionSchema.Type;
 
 /** Renders shared section metrics around a composed action. */
 export function TryoutSectionSummary({

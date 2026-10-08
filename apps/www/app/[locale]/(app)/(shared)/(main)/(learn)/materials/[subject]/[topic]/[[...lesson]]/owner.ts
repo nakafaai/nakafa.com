@@ -28,7 +28,7 @@ function toPreviewOwner(appLocale: Locale, preview: MaterialPreviewContent) {
 }
 type PreviewOwner = ReturnType<typeof toPreviewOwner>;
 
-export type MaterialOwner = PreviewOwner | PublishedOwner;
+type MaterialOwner = PreviewOwner | PublishedOwner;
 
 /** Reads a local overlay only in the explicitly configured preview child. */
 async function readPreviewOwner(
