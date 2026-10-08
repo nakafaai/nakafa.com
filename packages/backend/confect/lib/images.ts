@@ -1,6 +1,10 @@
 import type { SchoolClassImage } from "@repo/backend/confect/classes/schema";
+import { HashMap } from "effect";
 
-const CLASS_IMAGE_ENTRIES: [SchoolClassImage, string][] = [
+export const CLASS_IMAGE_ENTRIES: readonly (readonly [
+  SchoolClassImage,
+  string,
+])[] = [
   ["retro", "/classes/retro.png"],
   ["time", "/classes/time.png"],
   ["stars", "/classes/stars.png"],
@@ -29,7 +33,7 @@ const CLASS_IMAGE_ENTRIES: [SchoolClassImage, string][] = [
   ["stamp", "/classes/stamp.png"],
   ["vintage", "/classes/vintage.png"],
 ] as const;
-export const CLASS_IMAGES = new Map(CLASS_IMAGE_ENTRIES);
+export const CLASS_IMAGES = HashMap.fromIterable(CLASS_IMAGE_ENTRIES);
 
 /**
  * Get a deterministic class image based on a text input.
@@ -57,5 +61,5 @@ export function getClassImageUrl(image: SchoolClassImage): string {
  * @returns True if the image is valid, false otherwise
  */
 export function isValidClassImage(image: SchoolClassImage): boolean {
-  return CLASS_IMAGES.has(image);
+  return HashMap.has(CLASS_IMAGES, image);
 }
