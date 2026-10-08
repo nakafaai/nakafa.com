@@ -1,4 +1,3 @@
-import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -14,11 +13,9 @@ import {
   QURAN_SEARCH_DOCUMENT_LIMIT,
   quranRowDocumentLimit,
 } from "@repo/backend/confect/contentRelease/quran/limits";
+import type { PublishedQuranRow } from "@repo/backend/content/quran/contract";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
-
-const QuranRowSchema = ContentSnapshotRowSchema.members[1];
-type QuranRow = typeof QuranRowSchema.Type;
 
 /** Validates the complete search companion of an existing immutable Quran row. */
 const verifySearchReplay = Effect.fn("contentRelease.verifyQuranSearchReplay")(
@@ -60,36 +57,35 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
   function* (
     snapshotId: string,
     index: number,
-    source: QuranRow,
+    record: PublishedQuranRow["record"],
     rowJson: string
   ) {
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    if (source.record.snapshotId !== snapshotId) {
+    if (record.snapshotId !== snapshotId) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Quran row ${index} is bound to another snapshot.`
       );
     }
     if (
-      source.record.payload.kind === "quran-search" &&
-      source.record.payload.route !==
-        `quran/${source.record.payload.surahNumber}`
+      record.payload.kind === "quran-search" &&
+      record.payload.route !== `quran/${record.payload.surahNumber}`
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Quran search row ${index} has a noncanonical route.`
       );
     }
-    const facts = quranRowFacts(source.record);
+    const facts = quranRowFacts(record);
     const searchFacts =
-      source.record.payload.kind === "quran-search"
-        ? quranSearchFacts(source.record.payload)
+      record.payload.kind === "quran-search"
+        ? quranSearchFacts(record.payload)
         : null;
     const stored = {
       ...facts,
       index,
-      rowHash: source.record.rowHash,
+      rowHash: record.rowHash,
       rowJson,
       snapshotId,
     };
@@ -99,13 +95,13 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
         : {
             ...searchFacts,
             index,
-            rowHash: source.record.rowHash,
+            rowHash: record.rowHash,
             snapshotId,
           };
     yield* ensureDocumentSize(
       `Quran snapshot ${snapshotId} row ${index}`,
       stored,
-      quranRowDocumentLimit(source.record.payload.kind)
+      quranRowDocumentLimit(record.payload.kind)
     );
     if (searchStored !== null) {
       yield* ensureDocumentSize(
@@ -162,7 +158,7 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
         byIndex.kind !== stored.kind ||
         byIndex.appLocale !== stored.appLocale ||
         byIndex.rowJson !== rowJson ||
-        byIndex.rowHash !== source.record.rowHash ||
+        byIndex.rowHash !== record.rowHash ||
         byIndex.surahNumber !== stored.surahNumber
       ) {
         return yield* releaseFail(

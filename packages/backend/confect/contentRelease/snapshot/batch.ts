@@ -37,10 +37,10 @@ export function stageRow(
   rowJson: string
 ) {
   if (row.family === "program") {
-    return stageProgramRow(snapshotId, index, row, rowJson);
+    return stageProgramRow(snapshotId, index, row.record, rowJson);
   }
   if (row.family === "quran") {
-    return stageQuranRow(snapshotId, index, row, rowJson);
+    return stageQuranRow(snapshotId, index, row.record, rowJson);
   }
   return row.rowKind === "catalog"
     ? stageTryoutCatalog(snapshotId, index, row.record, rowJson)

@@ -2,7 +2,6 @@ import type {
   CurriculumRouteRecordSchema,
   LearningProgramRecordSchema,
 } from "@nakafa/aksara-contracts/program/snapshot/row";
-import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -16,8 +15,6 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { addProgramBucketRoute } from "@repo/backend/confect/contentRelease/program/bucket";
 import { Effect } from "effect";
 
-const ProgramRowSchema = ContentSnapshotRowSchema.members[0];
-type ProgramRow = typeof ProgramRowSchema.Type;
 type ProgramRecord = typeof LearningProgramRecordSchema.Type;
 type CurriculumRecord = typeof CurriculumRouteRecordSchema.Type;
 
@@ -213,10 +210,10 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
 export function stageProgramRow(
   snapshotId: string,
   index: number,
-  source: ProgramRow,
+  record: ProgramRecord | CurriculumRecord,
   rowJson: string
 ) {
-  return source.record.kind === "program"
-    ? stageProgram(snapshotId, index, source.record, rowJson)
-    : stageCurriculum(snapshotId, index, source.record, rowJson);
+  return record.kind === "program"
+    ? stageProgram(snapshotId, index, record, rowJson)
+    : stageCurriculum(snapshotId, index, record, rowJson);
 }
