@@ -1,14 +1,11 @@
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
-import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { decodeSnapshotJson } from "@repo/backend/confect/contentRelease/parse";
 import { mergeManagedFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -30,21 +27,8 @@ import {
 import { convexTest } from "convex-test";
 import { Effect, MutableHashMap, Schema } from "effect";
 
-/** Encodes a signed artifact through the strict contract that production decodes. */
-const encodeArtifactJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentArtifactSchema),
-  { onExcessProperty: "error" }
-);
-/** Encodes a signed runtime bundle through the strict contract that production decodes. */
-const encodeBundleJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedTryoutRuntimeBundleSchema),
-  { onExcessProperty: "error" }
-);
-/** Encodes a renderer manifest through the strict contract that production decodes. */
-const encodeRendererJson = Schema.encodeSync(
-  Schema.fromJsonString(RendererManifestEnvelopeSchema),
-  { onExcessProperty: "error" }
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so each stored string matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates an inherited active try-out snapshot with authentic immutable bundle dependencies. */
 export const makeTryoutRuntimeSource = Effect.fn(
@@ -159,15 +143,15 @@ export const makeTryoutRuntimeSource = Effect.fn(
     "contentArtifacts",
     artifacts.map((artifact) => ({
       artifactHash: artifact.artifactHash,
-      artifactJson: encodeArtifactJson(artifact),
+      artifactJson: encodeJson(artifact),
     }))
   );
   MutableHashMap.set(fixture.source, "tryoutRuntimeBundles", [
     {
       bundleHash: bundle.bundleHash,
-      bundleJson: encodeBundleJson(bundle),
+      bundleJson: encodeJson(bundle),
       createdAt: 1,
-      rendererJson: encodeRendererJson(TEST_PROOF_RENDERER),
+      rendererJson: encodeJson(TEST_PROOF_RENDERER),
       rendererManifestHash: TEST_PROOF_RENDERER.hash,
       snapshotId,
       sourceGitSha: bundle.payload.sourceGitSha,

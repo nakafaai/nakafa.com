@@ -4,9 +4,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import { ModelId } from "@repo/backend/confect/gateway/model";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
-import { NakafaToolInputSchema } from "@repo/backend/confect/nina/contract/tools";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
-import { NinaSuggestions } from "@repo/backend/confect/nina/presentation.spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -14,15 +12,9 @@ import {
 import { MockLanguageModelV4 } from "ai/test";
 import { DateTime, Effect, Schema } from "effect";
 
-// Plain codec on purpose: the repair test sends invalid tool input the contract rejects.
+/** Plain codec: writes the same bytes as JSON.stringify, even for tool input the contract rejects. */
 const encodePlainJson = Schema.encodeSync(
   Schema.fromJsonString(Schema.Unknown)
-);
-const encodeNakafaToolInput = Schema.encodeSync(
-  Schema.fromJsonString(NakafaToolInputSchema)
-);
-const encodeSuggestions = Schema.encodeSync(
-  Schema.fromJsonString(Schema.Struct({ suggestions: NinaSuggestions }))
 );
 
 /**
@@ -31,8 +23,6 @@ const encodeSuggestions = Schema.encodeSync(
  */
 export async function createNinaTest({
   history = 0,
-  // The real clock, which the credit ledger also reads. A fixed past time would
-  // trigger the free plan's daily credit reset.
   now = DateTime.toEpochMillis(DateTime.nowUnsafe()),
   prompt: text = "Explain a limit.",
   needsFetch = false,
@@ -212,9 +202,9 @@ export function ninaModel(
     doGenerate: ({ responseFormat, prompt }) => {
       let text = "Understanding A Function Limit";
       if (encodePlainJson(prompt).includes("Repair the arguments for")) {
-        text = encodeNakafaToolInput(ninaToolInput);
+        text = encodePlainJson(ninaToolInput);
       } else if (responseFormat?.type === "json") {
-        text = encodeSuggestions({
+        text = encodePlainJson({
           suggestions: ["How does this relate to continuity?"],
         });
       }

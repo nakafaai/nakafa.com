@@ -43,7 +43,7 @@ const RuntimeRetentionSeedSchema = Schema.Struct({
   snapshotId: Schema.String,
   withState: Schema.optionalKey(Schema.Boolean),
 });
-export type RuntimeRetentionSeed = typeof RuntimeRetentionSeedSchema.Type;
+type RuntimeRetentionSeed = typeof RuntimeRetentionSeedSchema.Type;
 const RETENTION_BASE_RELEASE_ID = "release-runtime-base";
 
 /** Seeds one retained runtime pair plus the release that may keep it. */

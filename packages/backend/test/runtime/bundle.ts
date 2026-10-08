@@ -2,7 +2,6 @@ import { RegisteredConvexFunction } from "@confect/server";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentSnapshotManifestSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
-import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { storeAuthenticatedTryoutRuntimeBundle } from "@repo/backend/confect/tryouts/runtime/signed";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -24,9 +23,8 @@ const RendererJsonSchema = Schema.fromJsonString(
   RendererManifestEnvelopeSchema
 );
 const SnapshotJsonSchema = Schema.fromJsonString(ContentSnapshotManifestSchema);
-const SignedBundleJsonSchema = Schema.fromJsonString(
-  SignedTryoutRuntimeBundleSchema
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so the stored bundle matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Stores one authenticated fixture through the production runtime capability. */
 export const storeRuntimeFixture = Effect.fn("test.runtime.storeFixture")(
@@ -123,7 +121,7 @@ export async function insertTestTryoutRuntimeBundle(
   });
   const bundleId = await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: bundle.bundleHash,
-    bundleJson: Schema.encodeSync(SignedBundleJsonSchema)(bundle),
+    bundleJson: encodeJson(bundle),
     cleanupReleaseId: bundle.payload.sourceReleaseId,
     createdAt: 1,
     rendererJson: release.rendererJson,

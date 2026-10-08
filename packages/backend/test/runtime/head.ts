@@ -1,5 +1,4 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   AppLocaleSchema,
@@ -48,14 +47,13 @@ const RuntimeHeadOptionsSchema = Schema.Struct({
 });
 
 /** Optional identities used to shape immutable runtime head fixtures. */
-export type RuntimeHeadOptions = typeof RuntimeHeadOptionsSchema.Type;
+type RuntimeHeadOptions = typeof RuntimeHeadOptionsSchema.Type;
 
 const ContentProjectionJsonSchema = Schema.fromJsonString(
   ContentProjectionSchema
 );
-const SignedArtifactJsonSchema = Schema.fromJsonString(
-  SignedContentArtifactSchema
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so the stored artifact matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Builds one material projection that owns the requested runtime route. */
 function runtimeProjectionJson(
@@ -353,7 +351,7 @@ export async function insertSignedHead(
       sourceHash: artifact.payload.sourceHash,
     }),
     ctx.db.patch("contentArtifacts", storedArtifact._id, {
-      artifactJson: Schema.encodeSync(SignedArtifactJsonSchema)(artifact),
+      artifactJson: encodeJson(artifact),
     }),
   ]);
 }

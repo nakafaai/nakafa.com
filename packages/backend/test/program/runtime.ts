@@ -1,7 +1,6 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
-import { encodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/wire";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   testEmptyManifest,
@@ -10,7 +9,10 @@ import {
 import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
-import { Effect, MutableHashMap } from "effect";
+import { Effect, MutableHashMap, Schema } from "effect";
+
+/** Plain codec: writes the same bytes as JSON.stringify, so each stored row matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates the complete active program publication and its indexed consumer rows. */
 export const makeProgramRuntimeSource = Effect.fn(
@@ -22,12 +24,7 @@ export const makeProgramRuntimeSource = Effect.fn(
     Effect.forEach(
       data.rows,
       (row, index) =>
-        stageProgramRow(
-          data.snapshotId,
-          index,
-          row,
-          encodeSnapshotRowJson(row)
-        ),
+        stageProgramRow(data.snapshotId, index, row, encodeJson(row)),
       { discard: true }
     )
   );
