@@ -1,35 +1,17 @@
+import type { PolarCustomerSource } from "@repo/backend/confect/customers/polar/payload";
 import {
   type EnsurePolarCustomerInput,
   PolarCustomerEmailConflict,
   PolarCustomerError,
   type PolarCustomerGateway,
-  type PolarCustomerSource,
-  type PolarMetadata,
   type PolarUpdateError,
   polarCustomerEmailConflictCode,
   polarCustomerErrorCode,
   type StoredPolarCustomer,
 } from "@repo/backend/confect/customers/polar/spec";
-import { Array as Arr, Effect, Record as Rec, Result } from "effect";
+import { Effect, Result } from "effect";
 
-/** Keep only Polar metadata values that can be persisted in Convex. */
-function normalizeMetadata(
-  metadata: Record<string, unknown> | null | undefined
-) {
-  const entries = Arr.filter(
-    Rec.toEntries(metadata ?? {}),
-    (entry): entry is [string, PolarMetadata[string]] => {
-      const value = entry[1];
-      return (
-        typeof value === "string" ||
-        typeof value === "number" ||
-        typeof value === "boolean"
-      );
-    }
-  );
-  return Rec.fromEntries(entries);
-}
-/** Normalizes one Polar customer response into the subset persisted locally. */
+/** Normalizes one decoded Polar customer into the subset persisted locally. */
 export const normalizeStoredCustomer: (
   customer: PolarCustomerSource
 ) => Effect.Effect<StoredPolarCustomer, PolarCustomerError> = Effect.fn(
@@ -45,8 +27,8 @@ export const normalizeStoredCustomer: (
     email: customer.email,
     externalId: customer.externalId ?? null,
     id: customer.id,
-    metadata: normalizeMetadata(customer.metadata),
-    name: customer.name ?? null,
+    metadata: customer.metadata,
+    name: customer.name,
   };
 });
 /** Aligns an existing Polar customer with the app user's current identity. */

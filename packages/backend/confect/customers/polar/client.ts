@@ -1,5 +1,13 @@
-import { PolarCore } from "@polar-sh/sdk/core";
+// Polar removes an API version about nine months after it appears. 2026-10 is
+// the current version since October 2026 and is removed at the April 2027
+// rotation, so every @polar-sh/sdk/<version> import moves to the then-current
+// version before that. Source:
+// https://handbook.polar.sh/engineering/backend-development/api-versioning
+import { createPolarCore, type PolarCore } from "@polar-sh/sdk/2026-10";
 import { Config, Effect, Redacted, Schema } from "effect";
+
+/** Seconds one Polar request may run; the SDK default of 5 is too short for checkout creation. */
+const POLAR_REQUEST_TIMEOUT_SECONDS = 30;
 
 /** Missing deployment configuration required for a Polar request. */
 class PolarConfigError extends Schema.TaggedError<PolarConfigError>()(
@@ -33,10 +41,11 @@ export const readPolarClient = Effect.fn("polar.readClient")(function* () {
     )
   );
   return yield* Effect.sync(
-    () =>
-      new PolarCore({
+    (): PolarCore =>
+      createPolarCore({
         accessToken: Redacted.value(accessToken),
-        server,
+        environment: server,
+        timeout: POLAR_REQUEST_TIMEOUT_SECONDS,
       })
   );
 });

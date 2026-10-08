@@ -1,5 +1,6 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type { PolarCheckoutLocale } from "@repo/backend/confect/customers/checkout/localization";
+import type { PolarCustomerSource } from "@repo/backend/confect/customers/polar/payload";
 import type { polarMetadataValidator } from "@repo/backend/confect/customers/schema";
 import { publicFailure } from "@repo/backend/confect/failure";
 import type { Effect } from "effect";
@@ -17,13 +18,6 @@ export const checkoutSessionResultValidator = Schema.Struct({
 });
 export type PolarMetadata = typeof polarMetadataValidator.Type;
 export type CheckoutSessionResult = typeof checkoutSessionResultValidator.Type;
-export interface PolarCustomerSource {
-  readonly email?: string | null | undefined;
-  readonly externalId?: string | null | undefined;
-  readonly id: string;
-  readonly metadata?: Record<string, unknown> | null | undefined;
-  readonly name?: string | null | undefined;
-}
 export interface StoredPolarCustomer {
   readonly email: string;
   readonly externalId: string | null;

@@ -11,8 +11,11 @@ import { products } from "@repo/backend/confect/utils/polar/products";
 import {
   buildSubscription,
   buildWebhookCustomer,
+  buildWebhookEvent,
   createWebhookTestConvex,
   insertCustomerTombstone,
+  polarCustomer,
+  polarProduct,
   polarSubscription,
   readPurchaseCompletionState,
   readWebhookState,
@@ -353,9 +356,9 @@ it.effect.each([
     const t = createWebhookTestConvex();
     const userId = yield* seedWebhookUser(t, "dispatch");
     const data = {
-      ...polarSubscription.customer,
+      ...polarCustomer,
       email: "dispatch@example.com",
-      externalId: null,
+      external_id: null,
       metadata: {
         userId,
       },
@@ -364,11 +367,9 @@ it.effect.each([
       yield* Effect.promise(() =>
         t.action((ctx) =>
           Effect.runPromiseWith(runtimeServices)(
-            processPolarWebhookEvent({
-              type,
-              timestamp: new Date(NOW),
-              data,
-            }).pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+            processPolarWebhookEvent(buildWebhookEvent(type, data)).pipe(
+              Effect.provide(actionLayer(confectSchema, ctx))
+            )
           )
         )
       )
@@ -397,7 +398,7 @@ it.effect.each([
     polarGateway.getCustomerById.mockReturnValue(
       Effect.succeed(
         buildWebhookCustomer("dispatch", {
-          id: polarSubscription.customerId,
+          id: polarSubscription.customer_id,
           metadata: {
             userId,
           },
@@ -408,11 +409,9 @@ it.effect.each([
       yield* Effect.promise(() =>
         t.action((ctx) =>
           Effect.runPromiseWith(runtimeServices)(
-            processPolarWebhookEvent({
-              type,
-              timestamp: new Date(NOW),
-              data: polarSubscription,
-            }).pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+            processPolarWebhookEvent(
+              buildWebhookEvent(type, polarSubscription)
+            ).pipe(Effect.provide(actionLayer(confectSchema, ctx)))
           )
         )
       )
@@ -425,7 +424,7 @@ it.effect.each([
     expect(state.subscriptions).toMatchObject([
       {
         id: polarSubscription.id,
-        currentPeriodEnd: polarSubscription.currentPeriodEnd.toISOString(),
+        currentPeriodEnd: polarSubscription.current_period_end,
       },
     ]);
   })
@@ -435,11 +434,9 @@ it("acknowledges unrelated verified product events without billing writes", asyn
   expect(
     await t.action((ctx) =>
       Effect.runPromise(
-        processPolarWebhookEvent({
-          type: "product.updated",
-          timestamp: new Date(NOW),
-          data: polarSubscription.product,
-        }).pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+        processPolarWebhookEvent(
+          buildWebhookEvent("product.updated", polarProduct)
+        ).pipe(Effect.provide(actionLayer(confectSchema, ctx)))
       )
     )
   ).toBe(true);
