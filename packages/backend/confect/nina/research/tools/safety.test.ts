@@ -72,4 +72,51 @@ describe("assertPublicResearchUrl", () => {
         });
       })
   );
+  it.effect("rejects hostnames when an answer carries a zone suffix", () =>
+    Effect.gen(function* () {
+      lookup.mockResolvedValue([{ address: "fe80::1%eth0", family: 6 }]);
+      const result = yield* Effect.result(
+        assertPublicResearchUrl("https://example.com/docs")
+      );
+      expect(Result.isFailure(result)).toBe(true);
+    })
+  );
+  it.effect("rejects hostnames when one of several answers is refused", () =>
+    Effect.gen(function* () {
+      lookup.mockResolvedValue([
+        { address: "93.184.216.34", family: 4 },
+        { address: "127.0.0.1", family: 4 },
+      ]);
+      const result = yield* Effect.result(
+        assertPublicResearchUrl("https://example.com/docs")
+      );
+      expect(Result.isFailure(result)).toBe(true);
+    })
+  );
+  it.effect(
+    "allows hostnames when every one of several answers is public",
+    () =>
+      Effect.gen(function* () {
+        lookup.mockResolvedValue([
+          { address: "93.184.216.34", family: 4 },
+          { address: "2606:4700:4700::1111", family: 6 },
+        ]);
+        const result = yield* assertPublicResearchUrl(
+          "https://example.com/docs"
+        );
+        expect(result).toEqual({
+          nativeFetchUrl: null,
+          publicUrl: "https://example.com/docs",
+        });
+      })
+  );
+  it.effect("rejects IPv4-compatible IPv6 literals before DNS lookup", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.result(
+        assertPublicResearchUrl("https://[::8.8.8.8]/")
+      );
+      expect(Result.isFailure(result)).toBe(true);
+      expect(lookup).not.toHaveBeenCalled();
+    })
+  );
 });
