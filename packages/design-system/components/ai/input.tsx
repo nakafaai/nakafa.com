@@ -119,20 +119,19 @@ export function PromptInput({
     // Admission may commit after Activity hides this form. Let settlement clear
     // accepted files so returning to the draft cannot resend old attachments.
     runPromptInputProgram(
-      submitPromptInput({
+      submitPromptInput(
+        { files: submittedFiles, text },
         event,
-        files: submittedFiles,
         onSubmit,
-        onSuccess: () => {
+        () => {
           if (readPromptInputText(form) === text) {
             form.reset();
           }
           for (const file of submittedFiles) {
             attachments.remove(file.id);
           }
-        },
-        text,
-      })
+        }
+      )
     );
   };
 
