@@ -238,6 +238,14 @@ const nextConfig = {
     // persistent compiler graph for disk-cache serialization.
     // https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopackFileSystemCache
     turbopackFileSystemCacheForBuild: false,
+    // A page whose render returns an error gets this many attempts, each with
+    // its own 60 second budget, so one failed content read does not end the
+    // build. Next 16.4.0 counts attempts rather than retries: the export worker
+    // loops while `attempt < maxAttempts` (next/dist/export/worker.js), so 2
+    // allows one retry. The option defaults to undefined, one attempt
+    // (next/dist/server/config-shared.js).
+    // https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
+    staticGenerationRetryCount: 2,
     ...(configEnv.NEXT_EXPOSE_TESTING_API === "true"
       ? { exposeTestingApiInProductionBuild: true }
       : {}),
