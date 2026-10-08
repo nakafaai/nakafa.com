@@ -4,15 +4,15 @@ import {
   decodeOperationalExceptionProperties,
   operationalRequestProperties,
 } from "@repo/analytics/posthog/exception";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 describe("operational exception privacy", () => {
   it("removes messages and retains stack frames", () => {
     const input = new Error("secret user@example.com");
-    input.stack = [
-      "Error: secret user@example.com",
-      "    at submit (/app/chunk.js:10:5)",
-    ].join("\n");
+    input.stack = Arr.join(
+      ["Error: secret user@example.com", "    at submit (/app/chunk.js:10:5)"],
+      "\n"
+    );
 
     const operational = createOperationalException(input, {
       source: "chat-api",
