@@ -211,12 +211,12 @@ describe("build watch", () => {
           args: ["-e", SILENT_TREE],
           command: process.execPath,
           heartbeatInterval: Duration.seconds(15),
-          stallLimit: Duration.seconds(1),
+          stallLimit: Duration.seconds(2),
         }).pipe(Effect.flip);
 
         expectStalled(
           failure,
-          "build stalled: no output for 1s; last output: compiling"
+          "build stalled: no output for 2s; last output: compiling"
         );
         const [pidLine = "", compiling = ""] = Str.split(
           yield* Ref.get(streams.stdout),
