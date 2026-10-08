@@ -13,7 +13,7 @@ import {
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { getHashBucket } from "@repo/backend/confect/contentRelease/bucket";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import {
@@ -189,10 +189,10 @@ export const activeManifestHash = Sha256HashSchema.make(
 );
 export const activeReleaseId = ReleaseIdSchema.make("release-article");
 type ArticleRow = Ref.Returns<
-  typeof refs.public.contentRelease.article.publications
+  typeof contentRelease.article.publications
 >["result"]["page"][number];
 type CategoryRow = Ref.Returns<
-  typeof refs.public.contentRelease.article.categories
+  typeof contentRelease.article.categories
 >["result"]["page"][number];
 
 /** Builds one backend projection row from a reviewed article projection. */
