@@ -89,15 +89,20 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
         isIdentifier
       );
       const symbols = project.checker.getSymbolAtLocation(identifiers);
-      const lexicalSymbols = new Map(Arr.zip(identifiers, symbols));
-      for (const node of nodes) {
-        if (isShorthandPropertyAssignment(node) && isIdentifier(node.name)) {
-          lexicalSymbols.set(
-            node.name,
-            project.checker.getShorthandAssignmentValueSymbol(node)
-          );
-        }
-      }
+      const shorthands = Arr.flatMap(nodes, (node) =>
+        isShorthandPropertyAssignment(node) && isIdentifier(node.name)
+          ? [
+              [
+                node.name,
+                project.checker.getShorthandAssignmentValueSymbol(node),
+              ] as const,
+            ]
+          : []
+      );
+      const lexicalSymbols = Arr.appendAll(
+        Arr.zip(identifiers, symbols),
+        shorthands
+      );
       return effectRunnerViolation(nodes, lexicalSymbols)
         ? [
             `${file}: return the Effect to @effect/vitest instead of running it.`,

@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, HashMap, HashSet, Option } from "effect";
 import {
   type BindingElement,
   type Identifier,
@@ -37,16 +37,47 @@ import {
 import type { Symbol as NativeSymbol } from "typescript/unstable/sync";
 import { children } from "#scripts/check/source";
 
-type Origin = "client" | ReadonlyMap<string, Origin>;
-type Symbols = ReadonlyMap<Node, NativeSymbol | undefined>;
-const methods = new Set(["query", "mutation", "action", "run"]);
+type Origin = "client" | HashMap.HashMap<string, Origin>;
+/**
+ * The native symbol each identifier of a module resolves to, one entry per
+ * identifier. Symbols compare by their numeric id and nodes by reference, so a
+ * lookup never hashes a compiler object's whole tree.
+ */
+export type Symbols = ReadonlyArray<readonly [Node, NativeSymbol | undefined]>;
+const methods = HashSet.make("query", "mutation", "action", "run");
 const callbacks = (node: Node) =>
   isArrowFunction(node) ||
   isFunctionExpression(node) ||
   isFunctionDeclaration(node);
 
+/**
+ * Returns the native symbol recorded for a node. When several entries name the
+ * node, the last one wins, so a shorthand property overrides its name's entry.
+ */
+export function symbolAt(symbols: Symbols, node: Node) {
+  return Option.getOrUndefined(
+    Option.flatMap(
+      Arr.findLast(symbols, ([key]) => key === node),
+      ([, symbol]) => Option.fromNullishOr(symbol)
+    )
+  );
+}
+
+/** Returns the declaration a native symbol names, the last one recorded for it. */
+function declarationOf(
+  declarations: readonly (readonly [NativeSymbol, Node])[],
+  symbol: NativeSymbol
+) {
+  return Option.getOrUndefined(
+    Option.map(
+      Arr.findLast(declarations, ([key]) => key.id === symbol.id),
+      ([, node]) => node
+    )
+  );
+}
+
 /** Component fixtures expose real convex-test clients, not application adapters. */
-const factories = new Map<string, Origin>([
+const factories = HashMap.fromIterable<string, Origin>([
   ["convex-test:convexTest", "client"],
   ["convex-test:TestConvex", "client"],
   [
@@ -56,28 +87,28 @@ const factories = new Map<string, Origin>([
   ["@repo/backend/test/polar:createWebhookTestConvex", "client"],
   [
     "@repo/backend/test/nina:createNinaTest",
-    new Map([
+    HashMap.fromIterable<string, Origin>([
       ["t", "client"],
       ["owner", "client"],
     ]),
   ],
   [
     "@repo/backend/test/nina/focus:createFocusTest",
-    new Map([
+    HashMap.fromIterable<string, Origin>([
       ["t", "client"],
       ["owner", "client"],
     ]),
   ],
   [
     "@repo/backend/test/forum/upload:createPendingUpload",
-    new Map([
+    HashMap.fromIterable<string, Origin>([
       ["t", "client"],
       ["owner", "client"],
     ]),
   ],
   [
     "@repo/backend/test/classes:createClassFixture",
-    new Map([
+    HashMap.fromIterable<string, Origin>([
       ["t", "client"],
       ["admin", "client"],
       ["student", "client"],
@@ -86,14 +117,14 @@ const factories = new Map<string, Origin>([
   ],
   [
     "@repo/backend/test/onboarding:createOnboardingTest",
-    new Map([
+    HashMap.fromIterable<string, Origin>([
       ["test", "client"],
       ["authenticated", "client"],
     ]),
   ],
   [
     "@repo/backend/test/tryout/catalog:activateTryoutSetCatalog",
-    new Map([
+    HashMap.fromIterable<string, Origin>([
       ["t", "client"],
       ["authed", "client"],
     ]),
@@ -117,13 +148,14 @@ function importedName(node: Node) {
 }
 
 function property(origin: Origin | undefined, key: string) {
-  return origin && origin !== "client" ? origin.get(key) : undefined;
+  return origin && origin !== "client"
+    ? Option.getOrUndefined(HashMap.get(origin, key))
+    : undefined;
 }
 
 /** Resolve lexical client provenance through fixture construction and aliases. */
 function resolver(nodes: readonly Node[], symbols: Symbols) {
-  const declarations = new Map<NativeSymbol, Node>();
-  for (const node of nodes) {
+  const declarations = Arr.flatMap(nodes, (node) => {
     if (
       !(
         isVariableDeclaration(node) ||
@@ -134,23 +166,23 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
         isTypeAliasDeclaration(node)
       )
     ) {
-      continue;
+      return [];
     }
     const symbol =
-      node.name && isIdentifier(node.name) ? symbols.get(node.name) : undefined;
-    if (symbol) {
-      declarations.set(symbol, node);
-    }
-  }
+      node.name && isIdentifier(node.name)
+        ? symbolAt(symbols, node.name)
+        : undefined;
+    return symbol ? [[symbol, node] as const] : [];
+  });
 
   function resolve(
     node: Node | undefined,
-    seen: ReadonlySet<Node> = new Set()
+    seen: readonly Node[] = []
   ): Origin | undefined {
-    if (!node || seen.has(node)) {
+    if (!node || Arr.some(seen, (entry) => entry === node)) {
       return;
     }
-    const next = new Set(seen).add(node);
+    const next = Arr.append(seen, node);
     if (
       isAwaitExpression(node) ||
       isYieldExpression(node) ||
@@ -190,14 +222,18 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
 
   function resolveBinding(
     node: BindingElement | Identifier | ImportSpecifier | VariableDeclaration,
-    next: ReadonlySet<Node>
+    next: readonly Node[]
   ): Origin | undefined {
     if (isIdentifier(node)) {
-      const symbol = symbols.get(node);
-      return symbol ? resolve(declarations.get(symbol), next) : undefined;
+      const symbol = symbolAt(symbols, node);
+      return symbol
+        ? resolve(declarationOf(declarations, symbol), next)
+        : undefined;
     }
     if (isImportSpecifier(node)) {
-      return factories.get(importedName(node) ?? "");
+      return Option.getOrUndefined(
+        HashMap.get(factories, importedName(node) ?? "")
+      );
     }
     if (isVariableDeclaration(node)) {
       return resolve(node.initializer, next);
@@ -215,7 +251,7 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
       | TypeAliasDeclaration
       | TypeQueryNode
       | TypeReferenceNode,
-    next: ReadonlySet<Node>
+    next: readonly Node[]
   ): Origin | undefined {
     if (isParameterDeclaration(node) || isTypeAliasDeclaration(node)) {
       return resolve(node.type, next);
@@ -236,8 +272,10 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
     if (!(isPropertyAccessExpression(node) && isIdentifier(node.expression))) {
       return;
     }
-    const symbol = symbols.get(node.expression);
-    const declaration = symbol ? declarations.get(symbol) : undefined;
+    const symbol = symbolAt(symbols, node.expression);
+    const declaration = symbol
+      ? declarationOf(declarations, symbol)
+      : undefined;
     return declaration && importedName(declaration) === "effect:Effect"
       ? node.name.text
       : undefined;
@@ -245,7 +283,7 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
 
   function resolveCall(
     node: import("typescript/unstable/ast").CallExpression,
-    next: ReadonlySet<Node>
+    next: readonly Node[]
   ): Origin | undefined {
     const method = effectMember(node.expression);
     if (method === "promise" || method === "sync") {
@@ -270,30 +308,22 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
 
   function resolveObject(
     node: import("typescript/unstable/ast").ObjectLiteralExpression,
-    next: ReadonlySet<Node>
+    next: readonly Node[]
   ): Origin {
-    const fields = new Map<string, Origin>();
-    for (const field of node.properties) {
-      if (isSpreadAssignment(field)) {
-        const spread = resolve(field.expression, next);
-        if (spread && spread !== "client") {
-          for (const [key, value] of spread) {
-            fields.set(key, value);
-          }
+    return HashMap.fromIterable(
+      Arr.flatMap(node.properties, (field) => {
+        if (isSpreadAssignment(field)) {
+          const spread = resolve(field.expression, next);
+          return spread && spread !== "client" ? Arr.fromIterable(spread) : [];
         }
-        continue;
-      }
-      const entry = resolveField(field, next);
-      if (entry) {
-        fields.set(...entry);
-      }
-    }
-    return fields;
+        return Arr.fromNullishOr(resolveField(field, next));
+      })
+    );
   }
 
   function resolveField(
     field: Node,
-    next: ReadonlySet<Node>
+    next: readonly Node[]
   ): [string, Origin] | undefined {
     if (
       !(
@@ -315,7 +345,7 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
       | import("typescript/unstable/ast").ArrowFunction
       | import("typescript/unstable/ast").FunctionExpression
       | import("typescript/unstable/ast").FunctionDeclaration,
-    next: ReadonlySet<Node>
+    next: readonly Node[]
   ): Origin | undefined {
     const body = node.body;
     if (!body) {
@@ -378,21 +408,21 @@ export function convexTestBoundary(
     !isCallExpression(call) ||
     call.arguments[0] !== callback ||
     !isPropertyAccessExpression(call.expression) ||
-    !methods.has(call.expression.name.text)
+    !HashSet.has(methods, call.expression.name.text)
   ) {
     return false;
   }
   const parameter = callback.parameters[0];
   const context =
     parameter && isIdentifier(parameter.name)
-      ? symbols.get(parameter.name)
+      ? symbolAt(symbols, parameter.name)
       : undefined;
   if (!context) {
     return false;
   }
   let usesContext = false;
   const inspect = (node: Node): void => {
-    if (isIdentifier(node) && symbols.get(node) === context) {
+    if (isIdentifier(node) && symbolAt(symbols, node) === context) {
       usesContext = true;
     }
     node.forEachChild(inspect);

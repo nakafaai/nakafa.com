@@ -1,4 +1,4 @@
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, HashMap, HashSet, MutableHashMap, Option } from "effect";
 import {
   type ArrowFunction,
   type Expression,
@@ -33,7 +33,7 @@ type RenderFunction = ArrowFunction | FunctionDeclaration | FunctionExpression;
 
 const JSX_MODULE_PATTERN = /\.tsx$/u;
 /** Wrappers whose callback becomes a component or a render function. */
-const FUNCTION_WRAPPERS = new Set(["forwardRef", "memo", "useCallback"]);
+const FUNCTION_WRAPPERS = HashSet.make("forwardRef", "memo", "useCallback");
 
 /** Whether an expression evaluates to JSX, directly or through a branch. */
 function isJsxValue(node: Expression | undefined): boolean {
@@ -101,7 +101,7 @@ function declaredFunction(initializer: Expression | undefined) {
     return;
   }
   const name = wrapperName(initializer.expression);
-  if (name === undefined || !FUNCTION_WRAPPERS.has(name)) {
+  if (name === undefined || !HashSet.has(FUNCTION_WRAPPERS, name)) {
     return;
   }
   return Option.getOrUndefined(
@@ -151,16 +151,19 @@ export function inspectReactSource(file: string, sourceFile: SourceFile) {
 }
 
 /** Shared-state APIs the codebase does not use, by module, with the rule that replaces each. */
-const STATE_APIS = new Map([
+const STATE_APIS = HashMap.fromIterable<
+  string,
+  HashMap.HashMap<string, string>
+>([
   [
     "react",
-    new Map([
+    HashMap.fromIterable([
       ["useContext", "read contexts with use() instead of React's useContext"],
     ]),
   ],
   [
     "zustand",
-    new Map([
+    HashMap.fromIterable([
       [
         "create",
         "create Zustand stores per provider with createStore and read them with useStore, instead of a module-level store from create",
@@ -182,7 +185,10 @@ const REMOVED_STATE_RULE =
 function inspectStateImport(
   file: string,
   statement: Statement,
-  namespaces: Map<string, ReadonlyMap<string, string>>
+  namespaces: MutableHashMap.MutableHashMap<
+    string,
+    HashMap.HashMap<string, string>
+  >
 ) {
   if (
     !(
@@ -195,23 +201,27 @@ function inspectStateImport(
   if (statement.moduleSpecifier.text === REMOVED_STATE_MODULE) {
     return [`${file}: ${REMOVED_STATE_RULE}.`];
   }
-  const apis = STATE_APIS.get(statement.moduleSpecifier.text);
+  const apis = Option.getOrUndefined(
+    HashMap.get(STATE_APIS, statement.moduleSpecifier.text)
+  );
   const clause = statement.importClause;
   if (!(apis && clause)) {
     return [];
   }
   if (clause.name !== undefined) {
-    namespaces.set(clause.name.text, apis);
+    MutableHashMap.set(namespaces, clause.name.text, apis);
   }
   const bindings = clause.namedBindings;
   if (bindings !== undefined && isNamespaceImport(bindings)) {
-    namespaces.set(bindings.name.text, apis);
+    MutableHashMap.set(namespaces, bindings.name.text, apis);
   }
   if (!(bindings !== undefined && isNamedImports(bindings))) {
     return [];
   }
   return Arr.flatMap(bindings.elements, (element) => {
-    const rule = apis.get((element.propertyName ?? element.name).text);
+    const rule = Option.getOrUndefined(
+      HashMap.get(apis, (element.propertyName ?? element.name).text)
+    );
     return rule === undefined ? [] : [`${file}: ${rule}.`];
   });
 }
@@ -222,7 +232,10 @@ function inspectStateImport(
  * imported by name or reached through a default or namespace import.
  */
 export function inspectStateSource(file: string, sourceFile: SourceFile) {
-  const namespaces = new Map<string, ReadonlyMap<string, string>>();
+  const namespaces = MutableHashMap.empty<
+    string,
+    HashMap.HashMap<string, string>
+  >();
   const imports = Arr.flatMap(sourceFile.statements, (statement) =>
     inspectStateImport(file, statement, namespaces)
   );
@@ -230,7 +243,12 @@ export function inspectStateSource(file: string, sourceFile: SourceFile) {
   const visit = (node: Node): string[] => {
     const rule =
       isPropertyAccessExpression(node) && isIdentifier(node.expression)
-        ? namespaces.get(node.expression.text)?.get(node.name.text)
+        ? Option.getOrUndefined(
+            Option.flatMap(
+              MutableHashMap.get(namespaces, node.expression.text),
+              (apis) => HashMap.get(apis, node.name.text)
+            )
+          )
         : undefined;
     return Arr.appendAll(
       rule === undefined ? [] : [`${file}: ${rule}.`],

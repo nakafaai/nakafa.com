@@ -139,7 +139,10 @@ export const names = Object.keys(text);
 `,
           },
         ]),
-        ["apps/www/lib/cache.ts:5 map-set", "apps/www/lib/cache.ts:6 object-helper"]
+        [
+          "apps/www/lib/cache.ts:5 map-set",
+          "apps/www/lib/cache.ts:6 object-helper",
+        ]
       );
     })
   );
