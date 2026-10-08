@@ -7,14 +7,6 @@ export interface ForumPostInputDraft {
   replyTarget: ForumReplyTarget | null;
 }
 
-interface RestoreForumPostInputDraftInput {
-  currentBody: string;
-  currentReplyTarget: ForumReplyTarget | null;
-  draft: ForumPostInputDraft;
-  restoreBody: (body: string) => void;
-  restoreReplyTarget: (replyTarget: ForumReplyTarget) => void;
-}
-
 /** Restores a failed optimistic submit without overwriting newer user input. */
 export function restoreForumPostInputDraft({
   currentBody,
@@ -22,7 +14,13 @@ export function restoreForumPostInputDraft({
   draft,
   restoreBody,
   restoreReplyTarget,
-}: RestoreForumPostInputDraftInput) {
+}: {
+  currentBody: string;
+  currentReplyTarget: ForumReplyTarget | null;
+  draft: ForumPostInputDraft;
+  restoreBody: (body: string) => void;
+  restoreReplyTarget: (replyTarget: ForumReplyTarget) => void;
+}) {
   return Effect.sync(() => {
     if (currentBody.trim().length > 0 || currentReplyTarget) {
       return;

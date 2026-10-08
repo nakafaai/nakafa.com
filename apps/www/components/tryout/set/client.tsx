@@ -34,14 +34,12 @@ import { TryoutSetOverview } from "@/components/tryout/set/overview";
 
 type SetState = TryoutSetInitialState | null;
 
-interface TryoutSetPageBinding {
-  attemptId: Id<"tryoutAttempts">;
-  initialState: TryoutSetInitialState;
-  sectionRoutes: readonly SetPage["sections"][number][];
-}
-
 interface TryoutSetPageClientProps {
-  binding: TryoutSetPageBinding | null;
+  binding: {
+    attemptId: Id<"tryoutAttempts">;
+    initialState: TryoutSetInitialState;
+    sectionRoutes: readonly SetPage["sections"][number][];
+  } | null;
   children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
   page: SetPage;
@@ -110,7 +108,9 @@ function LiveTryoutSetPage({
   page,
   restartTarget,
   route,
-}: TryoutSetPageClientProps & { binding: TryoutSetPageBinding }) {
+}: TryoutSetPageClientProps & {
+  binding: NonNullable<TryoutSetPageClientProps["binding"]>;
+}) {
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const locale = useLocale();
   const [terminalState, setTerminalState] = useState<SetState | undefined>();
