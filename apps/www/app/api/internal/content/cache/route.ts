@@ -64,13 +64,11 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
     catch: () => new CacheRequestError({ reason: "body" }),
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
   });
-  const input = yield* Effect.try({
-    catch: () => new CacheRequestError({ reason: "body" }),
-    try: (): unknown => JSON.parse(source),
-  });
-  return yield* Schema.decodeUnknownEffect(ContentCacheRequestSchema)(input, {
-    onExcessProperty: "error",
-  }).pipe(Effect.mapError(() => new CacheRequestError({ reason: "body" })));
+  return yield* Schema.decodeEffect(
+    Schema.fromJsonString(ContentCacheRequestSchema)
+  )(source, { onExcessProperty: "error" }).pipe(
+    Effect.mapError(() => new CacheRequestError({ reason: "body" }))
+  );
 });
 /**
  * Revalidates Convex-backed content runtime cache tags for trusted sync scripts.
