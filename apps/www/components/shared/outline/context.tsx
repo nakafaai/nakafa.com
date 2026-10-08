@@ -2,7 +2,7 @@
 
 import type { ParsedHeading } from "@repo/contents/toc";
 import { extractAllHeadingIds } from "@repo/contents/toc";
-import { HashSet, Schema } from "effect";
+import { Array as Arr, HashSet, MutableHashSet, Schema } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 
@@ -33,7 +33,8 @@ const WATCH_SEPARATOR = "\n";
  */
 function observeHeadings(store: TocStore, watch: readonly string[]) {
   const watched = HashSet.fromIterable(watch);
-  const visible = new Set<Element>();
+  /** Ids of the headings in the reading band, in the order they entered it. */
+  const visible = MutableHashSet.empty<string>();
 
   function publish(activeHeadings: readonly string[]) {
     const current = store.getState().activeHeadings;
@@ -48,8 +49,8 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
 
   /** Publishes the headings in the band, keeping the last ones between them. */
   function publishVisible() {
-    if (visible.size > 0) {
-      publish(Array.from(visible, (element) => element.id));
+    if (MutableHashSet.size(visible) > 0) {
+      publish(Arr.fromIterable(visible));
     }
   }
 
@@ -57,9 +58,9 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          visible.add(entry.target);
+          MutableHashSet.add(visible, entry.target.id);
         } else {
-          visible.delete(entry.target);
+          MutableHashSet.remove(visible, entry.target.id);
         }
       }
       publishVisible();
@@ -87,7 +88,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
       for (const node of record.removedNodes) {
         for (const heading of headingsWithin(node)) {
           observer.unobserve(heading);
-          visible.delete(heading);
+          MutableHashSet.remove(visible, heading.id);
         }
       }
     }
@@ -104,10 +105,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     ) {
       return;
     }
-    const visibleIds = HashSet.fromIterable(
-      Array.from(visible, (item) => item.id)
-    );
-    const inView = watch.filter((id) => HashSet.has(visibleIds, id));
+    const inView = watch.filter((id) => MutableHashSet.has(visible, id));
     const lastId = watch.at(-1);
     if (inView.length > 0) {
       publish(inView);
