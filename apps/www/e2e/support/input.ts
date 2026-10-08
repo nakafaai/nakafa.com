@@ -86,7 +86,7 @@ export const readBounds = Effect.fn("NakafaE2E.readBounds")(function* (
 });
 
 /** Dispatches one real touch drag while always releasing its CDP session. */
-export const dragTouch = Effect.fn("NakafaE2E.dragTouch")(function* (
+const dragTouch = Effect.fn("NakafaE2E.dragTouch")(function* (
   page: Page,
   start: TouchPoint,
   end: TouchPoint
