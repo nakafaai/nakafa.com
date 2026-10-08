@@ -7,8 +7,8 @@ import {
 } from "@repo/design-system/lib/prompt-input/files";
 import {
   Effect,
-  HashSet,
   MutableHashMap,
+  MutableHashSet,
   Option,
   Result,
   Schema,
@@ -49,11 +49,16 @@ export function usePromptInputFiles({
   );
   const files = items;
   const fileCountRef = useRef(files.length);
-  const fileIdsRef = useRef(HashSet.empty<string>());
+  const fileIds = useStableMutableValue(() =>
+    MutableHashSet.fromIterable(files.map((file) => file.id))
+  );
   useLayoutEffect(() => {
     fileCountRef.current = files.length;
-    fileIdsRef.current = HashSet.fromIterable(files.map((file) => file.id));
-  }, [files]);
+    MutableHashSet.clear(fileIds);
+    for (const file of files) {
+      MutableHashSet.add(fileIds, file.id);
+    }
+  }, [fileIds, files]);
   const openFileDialogLocal = useCallback(() => {
     inputRef.current?.click();
   }, [inputRef]);
@@ -129,19 +134,19 @@ export function usePromptInputFiles({
   );
   const remove = useCallback(
     (id: string) => {
-      if (HashSet.has(fileIdsRef.current, id)) {
-        fileIdsRef.current = HashSet.remove(fileIdsRef.current, id);
+      if (MutableHashSet.has(fileIds, id)) {
+        MutableHashSet.remove(fileIds, id);
         fileCountRef.current = Math.max(0, fileCountRef.current - 1);
       }
       removeLocal(id);
     },
-    [removeLocal]
+    [fileIds, removeLocal]
   );
   const clear = useCallback(() => {
     fileCountRef.current = 0;
-    fileIdsRef.current = HashSet.empty();
+    MutableHashSet.clear(fileIds);
     clearLocal();
-  }, [clearLocal]);
+  }, [clearLocal, fileIds]);
   const openFileDialog = openFileDialogLocal;
   useLayoutEffect(() => {
     // Activity preserves the draft while releasing effects. Restore preview
