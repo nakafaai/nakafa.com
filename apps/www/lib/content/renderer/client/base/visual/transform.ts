@@ -11,25 +11,15 @@ import type {
 const WORLD_EXTENT = BigDecimal.fromBigInt(10n);
 const TWO = BigDecimal.fromBigInt(2n);
 const ZERO = BigDecimal.fromBigInt(0n);
-interface ExactRange {
-  readonly max: BigDecimal.BigDecimal;
-  readonly min: BigDecimal.BigDecimal;
-}
-export interface VisualProjection {
-  readonly center: {
-    readonly x: BigDecimal.BigDecimal;
-    readonly y: BigDecimal.BigDecimal;
-    readonly z: BigDecimal.BigDecimal;
-  };
-  readonly extent: BigDecimal.BigDecimal;
-}
+type ExactRange = ReturnType<typeof range>;
+export type VisualProjection = ReturnType<typeof resolveVisualProjection>;
 function decimal(value: number) {
   return BigDecimal.fromNumberUnsafe(value);
 }
 function range(
   bounds: { readonly min: number; readonly max: number },
   padding: number
-): ExactRange {
+) {
   return {
     min: BigDecimal.subtract(decimal(bounds.min), decimal(padding)),
     max: BigDecimal.sum(decimal(bounds.max), decimal(padding)),
@@ -60,9 +50,7 @@ function frameRanges(scene: PlaneVisual | SpaceVisual, padded: boolean) {
   };
 }
 /** Uses one exact uniform scale before converting authored values to GPU units. */
-export function resolveVisualProjection(
-  scene: PlaneVisual | SpaceVisual
-): VisualProjection {
+export function resolveVisualProjection(scene: PlaneVisual | SpaceVisual) {
   let { x, y, z } = frameRanges(scene, true);
   let points: readonly SpacePoint[] = [];
   if (scene.view.kind === "camera") {

@@ -39,17 +39,16 @@ const currentWeatherResponse = {
     },
   ],
 };
-interface WeatherClientInput {
-  makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response;
-  observeRequest?:
-    | ((request: HttpClientRequest.HttpClientRequest) => void)
-    | undefined;
-}
+type MakeResponse = (request: HttpClientRequest.HttpClientRequest) => Response;
+type ObserveRequest = (request: HttpClientRequest.HttpClientRequest) => void;
 /** Builds an Effect HTTP client with a deterministic OpenWeather response. */
 function makeWeatherClient({
   makeResponse,
   observeRequest = () => undefined,
-}: WeatherClientInput) {
+}: {
+  readonly makeResponse: MakeResponse;
+  readonly observeRequest?: ObserveRequest | undefined;
+}) {
   return Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make((request) =>
@@ -62,8 +61,8 @@ function makeWeatherClient({
 }
 /** Provides a deterministic HTTP layer to the public weather program. */
 function runWeather(
-  makeResponse: WeatherClientInput["makeResponse"],
-  observeRequest?: WeatherClientInput["observeRequest"]
+  makeResponse: MakeResponse,
+  observeRequest?: ObserveRequest
 ) {
   return getCurrentWeather({ latitude, longitude }).pipe(
     Effect.provide(makeWeatherClient({ makeResponse, observeRequest })),

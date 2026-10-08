@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { PreviewEventSchema } from "@nakafa/aksara-contracts/preview/spec";
 import { Data, Effect, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import {
@@ -24,6 +25,9 @@ const route = {
   appLocale: previewRoute.appLocale,
   publicPath: previewRoute.publicPath,
 };
+const encodePreviewEvent = Schema.encodeSync(
+  Schema.fromJsonString(PreviewEventSchema)
+);
 
 class UnexpectedPreviewStreamError extends Data.TaggedError(
   "UnexpectedPreviewStreamError"
@@ -229,13 +233,13 @@ describe("local preview events", () => {
     "forwards only complete schema-validated updates and heartbeats",
     () =>
       Effect.gen(function* () {
-        const pending = JSON.stringify({
+        const pending = encodePreviewEvent({
           format: "aksara-local-preview",
           revision: 1,
           route,
           status: "pending",
         });
-        const ready = JSON.stringify({
+        const ready = encodePreviewEvent({
           format: "aksara-local-preview",
           revision: 2,
           route,

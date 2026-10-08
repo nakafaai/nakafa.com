@@ -1,16 +1,22 @@
 import "server-only";
 
-import type { ContentFamily } from "@nakafa/aksara-contracts/content";
-import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
-import type { AppLocale } from "@nakafa/aksara-contracts/locale";
+import {
+  type ContentFamily,
+  ContentFamilySchema,
+} from "@nakafa/aksara-contracts/content";
+import {
+  type GitCommitSha,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  type AppLocale,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
 import { decodeMaterialProjection } from "@/lib/content/material/decode";
-import {
-  type PublishedContentInput,
-  readPublishedContent,
-} from "@/lib/content/published/exchange";
+import { readPublishedContent } from "@/lib/content/published/exchange";
 import {
   decodePublishedArticle,
   decodePublishedPage,
@@ -24,13 +30,21 @@ type PublishedMarkdownFamily = Extract<
   "article" | "material" | "page"
 >;
 
+const PublishedMarkdownFamilySchema = Schema.Literals(
+  Arr.filter(
+    ContentFamilySchema.literals,
+    (family): family is PublishedMarkdownFamily => family !== "question"
+  )
+);
+
 /** Exact public content identity required for agent-facing markdown. */
-export interface PublishedMarkdownInput {
-  readonly activeReleaseId: PublishedContentInput["activeReleaseId"];
-  readonly appLocale: AppLocale;
-  readonly family: PublishedMarkdownFamily;
-  readonly publicPath: string;
-}
+const PublishedMarkdownInputSchema = Schema.Struct({
+  activeReleaseId: ReleaseIdSchema,
+  appLocale: AppLocaleSchema,
+  family: PublishedMarkdownFamilySchema,
+  publicPath: Schema.String,
+});
+export type PublishedMarkdownInput = typeof PublishedMarkdownInputSchema.Type;
 
 /** Builds agent markdown from reviewed MDX and immutable Git provenance. */
 const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({

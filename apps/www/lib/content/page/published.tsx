@@ -1,8 +1,9 @@
 import "server-only";
 
-import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
-import { Effect, Option } from "effect";
-import type { ReactNode } from "react";
+import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
+import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
+import { Effect, Option, Schema } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
 import { readRenderedBody } from "@/lib/content/published/body";
 import {
@@ -20,21 +21,14 @@ export type PublishedPageInput = PublishedContentInput;
 /** Current public Page identity resolved from signed runtime state. */
 export type CurrentPublishedPageInput = PublishedContentRouteInput;
 
-/** Verified signed runtime data narrowed to the Page projection contract. */
-export interface PublishedPageData
-  extends Omit<PublishedContentData, "projection"> {
-  readonly projection: PublicPageProjection;
-}
-
-/** Reviewed Page body and its immutable publication evidence. */
-export interface PublishedPageContent {
-  readonly artifactHash: PublishedPageData["artifact"]["artifactHash"];
-  readonly body: ReactNode;
-  readonly projection: PublicPageProjection;
-  readonly rawMdx: string;
-  readonly sourcePath: PublishedPageData["sourcePath"];
-  readonly sourceRevision: PublishedPageData["sourceRevision"];
-}
+const PublishedPageDataSchema = Schema.Struct({
+  activeReleaseId: PublicContentRuntimeFoundSchema.fields.activeReleaseId,
+  artifact: PublicContentRuntimeFoundSchema.fields.artifact,
+  projection: PublicPageProjectionSchema,
+  rendererManifest: PublicContentRuntimeFoundSchema.fields.rendererManifest,
+  sourcePath: PublicContentRuntimeFoundSchema.fields.sourcePath,
+  sourceRevision: Schema.NullOr(GitCommitShaSchema),
+});
 
 /** Narrows one authenticated runtime exchange to a signed Page. */
 const decodePageData = Effect.fn("NakafaContent.decodePageData")(function* (
@@ -51,6 +45,9 @@ const decodePageData = Effect.fn("NakafaContent.decodePageData")(function* (
     sourceRevision: data.sourceRevision,
   } satisfies PublishedPageData;
 });
+
+/** Verified signed runtime data narrowed to the Page projection contract. */
+export type PublishedPageData = typeof PublishedPageDataSchema.Type;
 
 /** Reads a Page pinned to a release selected by another trusted read. */
 export const readPublishedPage = Effect.fn("NakafaContent.readPublishedPage")(
@@ -79,9 +76,14 @@ const renderPageArtifact = Effect.fn("NakafaContent.renderPageArtifact")(
       rawMdx: data.artifact.payload.rawMdx,
       sourcePath: data.sourcePath,
       sourceRevision: data.sourceRevision,
-    } satisfies PublishedPageContent;
+    };
   }
 );
+
+/** Reviewed Page body and its immutable publication evidence. */
+export type PublishedPageContent = Effect.Success<
+  ReturnType<typeof renderPageArtifact>
+>;
 
 /** Caches one current Page while preserving a truthful signed absence. */
 export async function getCurrentPublishedPage(

@@ -1,4 +1,5 @@
 import type { Ref } from "@confect/core";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
@@ -32,6 +33,7 @@ import {
   Effect,
   MutableHashMap,
   Record as Rec,
+  Schema,
   Struct,
 } from "effect";
 import {
@@ -39,143 +41,147 @@ import {
   testArticleSourcePath,
 } from "@/test/content-article";
 
+const SignedArtifactJsonSchema = Schema.fromJsonString(
+  SignedContentArtifactSchema
+);
+
 /** Creates signed localized articles with their complete immutable discovery closure. */
 export const makeArticleRuntimeSource = Effect.fn(
   "TestContent.articleRuntimeSource"
-)(() =>
-  Effect.sync(() => {
-    const signed = testSignedRelease({
-      ...testEmptyManifest(ReleaseIdSchema.make("app-article-snapshot")),
-      scope: testPublicationScope({ families: ["article"] }),
+)(function* () {
+  const signed = testSignedRelease({
+    ...testEmptyManifest(ReleaseIdSchema.make("app-article-snapshot")),
+    scope: testPublicationScope({ families: ["article"] }),
+  });
+  const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
+  const projections = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
+    testLocalizedArticleProjection(1, locale),
+    testLocalizedArticleProjection(2, locale),
+  ]);
+  const heads: PublicationRow<"contentHeads">[] = [];
+  const bindings: PublicationRow<"contentBindings">[] = [];
+  const artifacts: PublicationRow<"contentArtifacts">[] = [];
+  const catalog: PublicationRow<"articleCatalog">[] = [];
+  const search: PublicationRow<"contentIndex">[] = [];
+  const categories = MutableHashMap.empty<
+    string,
+    PublicationRow<"articleCategories">
+  >();
+  for (const [index, projection] of projections.entries()) {
+    const artifact = testSignedArtifact("politics", {
+      artifactLocale: activeAppLocaleCode(projection.appLocale),
+      contentKey: projection.contentKey,
     });
-    const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
-    const projections = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
-      testLocalizedArticleProjection(1, locale),
-      testLocalizedArticleProjection(2, locale),
-    ]);
-    const heads: PublicationRow<"contentHeads">[] = [];
-    const bindings: PublicationRow<"contentBindings">[] = [];
-    const artifacts: PublicationRow<"contentArtifacts">[] = [];
-    const catalog: PublicationRow<"articleCatalog">[] = [];
-    const search: PublicationRow<"contentIndex">[] = [];
-    const categories = MutableHashMap.empty<
-      string,
-      PublicationRow<"articleCategories">
-    >();
-    for (const [index, projection] of projections.entries()) {
-      const artifact = testSignedArtifact("politics", {
-        artifactLocale: activeAppLocaleCode(projection.appLocale),
-        contentKey: projection.contentKey,
-      });
-      const projectionHash = hashContentProjection(projection);
-      const identity = {
-        contentKey: projection.contentKey,
-        projectionHash,
-        releaseId: signed.manifest.releaseId,
-        sequence: fixture.state.activeSequence,
-      };
-      heads.push({
-        ...identity,
-        artifactHash: artifact.artifactHash,
-        artifactLocale: projection.artifactLocale,
-        compilerConfigHash: artifact.payload.compilerConfigHash,
-        delivery: "public",
-        family: "article",
-        index,
-        operation: "upsert",
-        projectionJson: canonicalizeArticleProjection(projection),
-        rendererDomain: "politics",
-        sourceHash: artifact.payload.sourceHash,
-        sourcePath: `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`,
-      });
-      bindings.push({
+    const projectionHash = hashContentProjection(projection);
+    const identity = {
+      contentKey: projection.contentKey,
+      projectionHash,
+      releaseId: signed.manifest.releaseId,
+      sequence: fixture.state.activeSequence,
+    };
+    heads.push({
+      ...identity,
+      artifactHash: artifact.artifactHash,
+      artifactLocale: projection.artifactLocale,
+      compilerConfigHash: artifact.payload.compilerConfigHash,
+      delivery: "public",
+      family: "article",
+      index,
+      operation: "upsert",
+      projectionJson: canonicalizeArticleProjection(projection),
+      rendererDomain: "politics",
+      sourceHash: artifact.payload.sourceHash,
+      sourcePath: `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`,
+    });
+    bindings.push({
+      appLocale: projection.appLocale,
+      batchHash: testTextHash("article snapshot routes"),
+      batchIndex: 0,
+      contentKey: projection.contentKey,
+      index,
+      operation: "bind",
+      publicPath: projection.publicPath,
+      releaseId: signed.manifest.releaseId,
+      routeJson: testRouteJson({
         appLocale: projection.appLocale,
-        batchHash: testTextHash("article snapshot routes"),
-        batchIndex: 0,
         contentKey: projection.contentKey,
         index,
-        operation: "bind",
         publicPath: projection.publicPath,
         releaseId: signed.manifest.releaseId,
-        routeJson: testRouteJson({
-          appLocale: projection.appLocale,
-          contentKey: projection.contentKey,
-          index,
-          publicPath: projection.publicPath,
-          releaseId: signed.manifest.releaseId,
-        }),
-        sequence: fixture.state.activeSequence,
-      });
-      artifacts.push({
-        artifactHash: artifact.artifactHash,
-        artifactJson: JSON.stringify(artifact),
-      });
-      const bucket = getHashBucket(projectionHash);
-      catalog.push({
+      }),
+      sequence: fixture.state.activeSequence,
+    });
+    artifacts.push({
+      artifactHash: artifact.artifactHash,
+      artifactJson: yield* Schema.encodeEffect(SignedArtifactJsonSchema)(
+        artifact
+      ),
+    });
+    const bucket = getHashBucket(projectionHash);
+    catalog.push({
+      ...identity,
+      ...Struct.pick(projection.metadata, ["dateModified"]),
+      appLocale: projection.appLocale,
+      assetId: projection.graph.assetId,
+      bucket,
+      category: projection.category,
+      categoryTitle: projection.categoryTitle,
+      datePublished: projection.metadata.datePublished,
+      publicPath: projection.publicPath,
+      rendererDomain: "politics",
+      slot: fixture.state.articleSlot,
+    });
+    MutableHashMap.set(
+      categories,
+      `${projection.appLocale}/${projection.category}`,
+      {
         ...identity,
-        ...Struct.pick(projection.metadata, ["dateModified"]),
         appLocale: projection.appLocale,
-        assetId: projection.graph.assetId,
         bucket,
         category: projection.category,
-        categoryTitle: projection.categoryTitle,
-        datePublished: projection.metadata.datePublished,
-        publicPath: projection.publicPath,
         rendererDomain: "politics",
+        route: projection.categoryRouteSlug,
         slot: fixture.state.articleSlot,
-      });
-      MutableHashMap.set(
-        categories,
-        `${projection.appLocale}/${projection.category}`,
-        {
-          ...identity,
-          appLocale: projection.appLocale,
-          bucket,
-          category: projection.category,
-          rendererDomain: "politics",
-          route: projection.categoryRouteSlug,
-          slot: fixture.state.articleSlot,
-          title: projection.categoryTitle,
-        }
-      );
-      search.push({
-        ...identity,
-        appLocale: projection.appLocale,
-        family: "article",
-        publicPath: projection.publicPath,
-        slot: fixture.state.searchSlot,
-        text: projection.metadata.title,
-      });
-    }
-    const partitionRows = [
-      ...catalog.map((row) => ({ row, article: 1, category: 0 })),
-      ...[...MutableHashMap.values(categories)].map((row) => ({
-        row,
-        article: 0,
-        category: 1,
-      })),
-    ];
-    const buckets: PublicationRow<"articleBuckets">[] = Rec.values(
-      Arr.groupBy(partitionRows, ({ row }) => `${row.appLocale}/${row.bucket}`)
-    ).map((rows) => ({
-      appLocale: rows[0].row.appLocale,
-      articleCount: rows.reduce((count, item) => count + item.article, 0),
-      bucket: rows[0].row.bucket,
-      categoryCount: rows.reduce((count, item) => count + item.category, 0),
-      slot: fixture.state.articleSlot,
-    }));
-    MutableHashMap.set(fixture.source, "contentHeads", heads);
-    MutableHashMap.set(fixture.source, "contentBindings", bindings);
-    MutableHashMap.set(fixture.source, "contentArtifacts", artifacts);
-    MutableHashMap.set(fixture.source, "articleCatalog", catalog);
-    MutableHashMap.set(fixture.source, "articleCategories", [
-      ...MutableHashMap.values(categories),
-    ]);
-    MutableHashMap.set(fixture.source, "articleBuckets", buckets);
-    MutableHashMap.set(fixture.source, "contentIndex", search);
-    return { ...fixture, projections };
-  })
-);
+        title: projection.categoryTitle,
+      }
+    );
+    search.push({
+      ...identity,
+      appLocale: projection.appLocale,
+      family: "article",
+      publicPath: projection.publicPath,
+      slot: fixture.state.searchSlot,
+      text: projection.metadata.title,
+    });
+  }
+  const partitionRows = [
+    ...catalog.map((row) => ({ row, article: 1, category: 0 })),
+    ...[...MutableHashMap.values(categories)].map((row) => ({
+      row,
+      article: 0,
+      category: 1,
+    })),
+  ];
+  const buckets: PublicationRow<"articleBuckets">[] = Rec.values(
+    Arr.groupBy(partitionRows, ({ row }) => `${row.appLocale}/${row.bucket}`)
+  ).map((rows) => ({
+    appLocale: rows[0].row.appLocale,
+    articleCount: rows.reduce((count, item) => count + item.article, 0),
+    bucket: rows[0].row.bucket,
+    categoryCount: rows.reduce((count, item) => count + item.category, 0),
+    slot: fixture.state.articleSlot,
+  }));
+  MutableHashMap.set(fixture.source, "contentHeads", heads);
+  MutableHashMap.set(fixture.source, "contentBindings", bindings);
+  MutableHashMap.set(fixture.source, "contentArtifacts", artifacts);
+  MutableHashMap.set(fixture.source, "articleCatalog", catalog);
+  MutableHashMap.set(fixture.source, "articleCategories", [
+    ...MutableHashMap.values(categories),
+  ]);
+  MutableHashMap.set(fixture.source, "articleBuckets", buckets);
+  MutableHashMap.set(fixture.source, "contentIndex", search);
+  return { ...fixture, projections };
+});
 
 export const revision = "a".repeat(40);
 export const activeManifestHash = Sha256HashSchema.make(

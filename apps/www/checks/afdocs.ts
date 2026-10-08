@@ -1,6 +1,6 @@
 import { type CheckResult, getChecksSorted, runChecks } from "afdocs";
 import { loadConfig } from "afdocs/helpers";
-import { Effect, Schema } from "effect";
+import { Effect, HashMap, Option, Schema } from "effect";
 
 /** Expected failure while running the external AFDocs site contract. */
 export class AfdocsError extends Schema.TaggedError<AfdocsError>()(
@@ -38,12 +38,12 @@ export const runAfdocs = Effect.fn("www.checks.runAfdocs")(function* () {
     catch: (cause) =>
       new AfdocsError({ cause, message: "AFDocs site checks failed to run." }),
   });
-  const results = new Map<string, CheckResult>(
+  const results = HashMap.fromIterable<string, CheckResult>(
     report.results.map((result) => [result.id, result])
   );
 
   return getChecksSorted().map((check) => ({
     check,
-    result: results.get(check.id),
+    result: Option.getOrUndefined(HashMap.get(results, check.id)),
   }));
 });

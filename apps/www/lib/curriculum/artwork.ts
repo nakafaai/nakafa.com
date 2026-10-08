@@ -1,5 +1,12 @@
-import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
-import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
+import {
+  type CurriculumRoute,
+  CurriculumRouteSchema,
+} from "@nakafa/aksara-contracts/program/curriculum";
+import {
+  type LearningProgramKey,
+  LearningProgramKeySchema,
+} from "@nakafa/aksara-contracts/program/spec";
+import { Option, Record as Rec, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   type ArtworkIdentity,
@@ -13,48 +20,54 @@ import { getOgUrl } from "@/lib/utils/metadata";
  * Material domains and icons describe shared content, not course identity.
  * Add a node only when its own title matches reviewed public artwork.
  */
-const CURRICULUM_ARTWORK_BY_IDENTITY = new Map<string, ArtworkIdentity>([
-  ["cambridge-international", "curriculum/cambridge-international"],
-  ["cambridge-international/upper-secondary", "grade/upper-secondary"],
-  ["cambridge-international/mathematics-0580", "subject/mathematics"],
-  ["cambridge-international/biology-0610", "subject/biology"],
-  ["cambridge-international/chemistry-0620", "subject/chemistry"],
-  ["cambridge-international/physics-0625", "subject/physics"],
-  ["merdeka", "curriculum/merdeka"],
-  ["merdeka/class-9", "grade/9"],
-  ["merdeka/class-10", "grade/10"],
-  ["merdeka/class-11", "grade/11"],
-  ["merdeka/class-12", "grade/12"],
-  ["merdeka/class-10-biology", "subject/biology"],
-  ["merdeka/class-10-chemistry", "subject/chemistry"],
-  ["merdeka/class-10-mathematics", "subject/mathematics"],
-  ["merdeka/class-10-physics", "subject/physics"],
-  ["merdeka/class-11-mathematics", "subject/mathematics"],
-  ["merdeka/class-11-physics", "subject/physics"],
-  ["merdeka/class-12-mathematics", "subject/mathematics"],
-  ["singapore-moe", "curriculum/singapore-moe"],
-  ["singapore-moe/secondary", "grade/secondary"],
-  ["singapore-moe/secondary-mathematics", "subject/mathematics"],
-  ["singapore-moe/secondary-science-physics", "subject/physics"],
-  ["singapore-moe/secondary-science-chemistry", "subject/chemistry"],
-  ["singapore-moe/secondary-science-biology", "subject/biology"],
-  ["singapore-moe/secondary-science", "subject/science"],
-  ["united-states", "curriculum/united-states"],
-  ["united-states/high-school", "grade/high-school"],
-  ["united-states/high-school-mathematics", "subject/mathematics"],
-  ["united-states/high-school-science", "subject/science"],
-]);
+const CURRICULUM_ARTWORK_BY_IDENTITY: Record<string, ArtworkIdentity> = {
+  "cambridge-international": "curriculum/cambridge-international",
+  "cambridge-international/upper-secondary": "grade/upper-secondary",
+  "cambridge-international/mathematics-0580": "subject/mathematics",
+  "cambridge-international/biology-0610": "subject/biology",
+  "cambridge-international/chemistry-0620": "subject/chemistry",
+  "cambridge-international/physics-0625": "subject/physics",
+  merdeka: "curriculum/merdeka",
+  "merdeka/class-9": "grade/9",
+  "merdeka/class-10": "grade/10",
+  "merdeka/class-11": "grade/11",
+  "merdeka/class-12": "grade/12",
+  "merdeka/class-10-biology": "subject/biology",
+  "merdeka/class-10-chemistry": "subject/chemistry",
+  "merdeka/class-10-mathematics": "subject/mathematics",
+  "merdeka/class-10-physics": "subject/physics",
+  "merdeka/class-11-mathematics": "subject/mathematics",
+  "merdeka/class-11-physics": "subject/physics",
+  "merdeka/class-12-mathematics": "subject/mathematics",
+  "singapore-moe": "curriculum/singapore-moe",
+  "singapore-moe/secondary": "grade/secondary",
+  "singapore-moe/secondary-mathematics": "subject/mathematics",
+  "singapore-moe/secondary-science-physics": "subject/physics",
+  "singapore-moe/secondary-science-chemistry": "subject/chemistry",
+  "singapore-moe/secondary-science-biology": "subject/biology",
+  "singapore-moe/secondary-science": "subject/science",
+  "united-states": "curriculum/united-states",
+  "united-states/high-school": "grade/high-school",
+  "united-states/high-school-mathematics": "subject/mathematics",
+  "united-states/high-school-science": "subject/science",
+};
 
 type CurriculumSocialImageRoute = Pick<CurriculumRoute, "level" | "publicPath">;
 
+const CurriculumCatalogArtworkSourceSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("program"),
+    programKey: LearningProgramKeySchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("route"),
+    programKey: CurriculumRouteSchema.fields.programKey,
+    nodeKey: CurriculumRouteSchema.fields.nodeKey,
+  }),
+]);
+
 type CurriculumCatalogArtworkSource =
-  | {
-      readonly kind: "program";
-      readonly programKey: LearningProgramKey;
-    }
-  | ({
-      readonly kind: "route";
-    } & Pick<CurriculumRoute, "programKey" | "nodeKey">);
+  typeof CurriculumCatalogArtworkSourceSchema.Type;
 
 /** Resolves reviewed card artwork from one signed curriculum identity. */
 export function resolveCurriculumCatalogArtwork(
@@ -66,7 +79,10 @@ export function resolveCurriculumCatalogArtwork(
       ? source.programKey
       : `${source.programKey}/${source.nodeKey}`;
 
-  return resolveStaticArtwork(CURRICULUM_ARTWORK_BY_IDENTITY.get(key), locale);
+  return resolveStaticArtwork(
+    Option.getOrUndefined(Rec.get(CURRICULUM_ARTWORK_BY_IDENTITY, key)),
+    locale
+  );
 }
 
 /** Keeps the curriculum index on its localized generated social artwork. */
@@ -91,7 +107,9 @@ export function getCurriculumRouteSocialImage(
   }
 
   return resolveSocialArtwork({
-    identity: CURRICULUM_ARTWORK_BY_IDENTITY.get(programKey),
+    identity: Option.getOrUndefined(
+      Rec.get(CURRICULUM_ARTWORK_BY_IDENTITY, programKey)
+    ),
     locale,
     publicPath: route.publicPath,
   });

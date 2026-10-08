@@ -4,7 +4,7 @@ import type { SigningKeyId } from "@nakafa/aksara-contracts/ids";
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
 import type { PreviewArtifact } from "@nakafa/aksara-contracts/preview/artifact";
 import type { PreviewDocument } from "@nakafa/aksara-contracts/preview/document";
-import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
+import type { PreviewReadySchema } from "@nakafa/aksara-contracts/preview/spec";
 import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
 
 import {
@@ -18,10 +18,7 @@ import { fetchPreviewJson } from "@/lib/content/preview/request";
 import { executeSignedArtifact } from "@/lib/content/published/artifact";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
-type ReadyPreviewManifest = Extract<
-  LocalPreviewManifest,
-  { readonly status: "ready" }
->;
+type ReadyPreviewManifest = typeof PreviewReadySchema.Type;
 
 /** Confirms the provider compiled against the renderer running this app. */
 function validateRenderer(

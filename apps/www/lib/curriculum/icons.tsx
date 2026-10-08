@@ -28,13 +28,26 @@ import {
   Target01Icon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import type { ProgramNavigationIconKey } from "@nakafa/aksara-contracts/program/spec";
+import {
+  type ProgramNavigationIconKey,
+  ProgramNavigationIconKeySchema,
+} from "@nakafa/aksara-contracts/program/spec";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
+import { Schema } from "effect";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 
-type CurriculumVisualSource =
-  | Readonly<{ kind: "material"; key: string }>
-  | Readonly<{ kind: "navigation"; key: ProgramNavigationIconKey }>;
+const CurriculumVisualSourceSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("material"),
+    key: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("navigation"),
+    key: ProgramNavigationIconKeySchema,
+  }),
+]);
+
+type CurriculumVisualSource = typeof CurriculumVisualSourceSchema.Type;
 
 const navigationIcons: {
   readonly [Key in ProgramNavigationIconKey]: IconSvgElement;

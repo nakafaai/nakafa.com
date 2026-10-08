@@ -3,20 +3,18 @@
 import { useAction } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { billingNavigationProgram } from "@/lib/billing/navigation";
 
-interface BillingSource {
-  readonly source: string;
-}
+const BillingSourceSchema = Schema.Struct({
+  source: Schema.String,
+});
 
-interface CheckoutNavigation extends BillingSource {
-  readonly locale: PublicAppLocale;
-}
+type BillingSource = typeof BillingSourceSchema.Type;
 
 /** Owns checkout and customer-portal requests for every client purchase CTA. */
 export function useBillingNavigation() {
@@ -55,7 +53,10 @@ export function useBillingNavigation() {
 
   return {
     isPending,
-    openCheckout: ({ locale, ...failure }: CheckoutNavigation) =>
+    openCheckout: ({
+      locale,
+      ...failure
+    }: BillingSource & { readonly locale: PublicAppLocale }) =>
       runBillingRequest(
         Effect.tryPromise(() =>
           createCheckout({ locale, successUrl: window.location.href })

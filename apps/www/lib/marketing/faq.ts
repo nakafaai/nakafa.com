@@ -1,8 +1,11 @@
+import { Schema } from "effect";
+
 /** One FAQ question and answer pair rendered on a marketing surface. */
-export interface MarketingFaqItem {
-  answer: string;
-  question: string;
-}
+const MarketingFaqItemSchema = Schema.Struct({
+  answer: Schema.String,
+  question: Schema.String,
+});
+export type MarketingFaqItem = typeof MarketingFaqItemSchema.Type;
 
 /**
  * FAQ numbers rendered by each marketing surface, in display order.

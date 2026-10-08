@@ -1,13 +1,23 @@
 import { HeartAddIcon, UserIcon } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
+import { Schema } from "effect";
 
-/** One addressable section of the private user settings surface. */
-export interface UserSettingsSection {
-  readonly href: string;
-  readonly icon: IconSvgElement;
+const UserSettingsSectionSchema = Schema.Struct({
+  href: Schema.String,
+  /** The Hugeicons SVG tree that `HugeIcons` renders for the section. */
+  icon: Schema.Array(
+    Schema.Tuple([
+      Schema.String,
+      Schema.Record(
+        Schema.String,
+        Schema.Union([Schema.String, Schema.Finite])
+      ),
+    ])
+  ),
   /** Message key owned by the `Auth` dictionary. */
-  readonly labelKey: "account" | "billing";
-}
+  labelKey: Schema.Literals(["account", "billing"]),
+});
+/** One addressable section of the private user settings surface. */
+export type UserSettingsSection = typeof UserSettingsSectionSchema.Type;
 
 /** Root route of the private settings surface. */
 const userSettingsRootHref = "/user/settings";

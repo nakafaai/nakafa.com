@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, HashMap, Option } from "effect";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
 
 const TRYOUT_ROOT = "try-out";
@@ -9,25 +9,25 @@ const SNBT_ROUTE = "snbt";
  * official names, mapped to their successors in each app locale.
  */
 const RETIRED_SNBT_SECTIONS = {
-  de: new Map([
+  de: HashMap.make(
     ["allgemeines-logisches-denken", "allgemeines-schlussfolgern"],
     ["allgemeinwissen", "allgemeines-wissen-und-verstaendnis"],
     ["englische-sprache", "lesekompetenz-in-englischer-sprache"],
     ["indonesische-sprache", "lesekompetenz-in-indonesischer-sprache"],
-    ["lese-und-schreibkompetenz", "leseverstaendnis-und-schreiben"],
-  ]),
-  en: new Map([
+    ["lese-und-schreibkompetenz", "leseverstaendnis-und-schreiben"]
+  ),
+  en: HashMap.make(
     ["english-language", "literacy-in-english"],
     ["general-knowledge", "general-knowledge-and-understanding"],
     ["indonesian-language", "literacy-in-indonesian"],
-    ["reading-and-writing-skills", "reading-comprehension-and-writing"],
-  ]),
-  id: new Map([
+    ["reading-and-writing-skills", "reading-comprehension-and-writing"]
+  ),
+  id: HashMap.make(
     ["bahasa-indonesia", "literasi-dalam-bahasa-indonesia"],
     ["bahasa-inggris", "literasi-dalam-bahasa-inggris"],
     ["literasi-membaca-menulis", "pemahaman-bacaan-dan-menulis"],
-    ["pengetahuan-umum", "pengetahuan-dan-pemahaman-umum"],
-  ]),
+    ["pengetahuan-umum", "pengetahuan-dan-pemahaman-umum"]
+  ),
 };
 
 type RetiredSectionLocale = keyof typeof RETIRED_SNBT_SECTIONS;
@@ -56,15 +56,15 @@ function readRetiredSnbtSection(pathname: string) {
   ) {
     return null;
   }
-  const successor = RETIRED_SNBT_SECTIONS[appLocale].get(section);
-  if (successor === undefined) {
+  const successor = HashMap.get(RETIRED_SNBT_SECTIONS[appLocale], section);
+  if (Option.isNone(successor)) {
     return null;
   }
   const setPath = [root, country, exam, track, set].join("/");
   return {
     appLocale,
     previousPath: `${setPath}/${section}`,
-    successorPath: `${setPath}/${successor}`,
+    successorPath: `${setPath}/${successor.value}`,
   };
 }
 
