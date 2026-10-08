@@ -16,7 +16,7 @@ import {
 import { TryoutContentHashSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import type { TryoutSnapshotSource } from "@repo/backend/confect/tryouts/start/source";
 import { testTextHash } from "@repo/backend/test/content/release";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const TRYOUT_TEST_CONTENT_HASH = TryoutContentHashSchema.make(
   "3".repeat(64)
@@ -92,7 +92,7 @@ export function makeSignedTryoutSection(
   }
 
   const signed: TryoutSnapshotSource["snapshot"]["sections"][number] = {
-    placements: placements.map(makeTryoutPlacementRecord),
+    placements: Arr.map(placements, makeTryoutPlacementRecord),
     section: { row: record.row, rowHash: record.rowHash },
     snapshotId: testTextHash("tryout-runtime-snapshot"),
   };
@@ -119,7 +119,7 @@ export function makeSignedTryoutSource(
 
   return {
     snapshot: {
-      sections: sections.map(({ signed }) => signed),
+      sections: Arr.map(sections, ({ signed }) => signed),
       set: setRecord,
       setIdentity: tryoutCatalogIdentity(setRecord.row),
       snapshotId,
