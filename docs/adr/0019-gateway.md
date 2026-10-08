@@ -132,9 +132,11 @@ Not yet established:
   teams have the paid plan that the gateway requires were not measured here.
 - `reasoning_effort` `low` and `high` on `google/gemini-3.5-flash-lite`, plain
   and with function tools. No probe measured them on the lite model, which is
-  the default. Nine call sites send `low` to it and chat sends `high`, so a
-  rejected value would fail each call that sends it. Until a probe records both
-  values, those defaults stay unverified.
+  the default. Five call sites always send `low` to it. The four specialist and
+  math repair calls send `low`, and chat sends `high`, to the turn's model,
+  which is lite unless the learner picks Pro. A rejected value would fail each
+  call that sends it. Until a probe records both values, those defaults stay
+  unverified.
 
 ## Implementation Contract
 
