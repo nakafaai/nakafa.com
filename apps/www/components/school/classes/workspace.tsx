@@ -43,9 +43,7 @@ const SCHOOL_CLASSES_WORKSPACE_EMPTY_LAYOUT_STORAGE = {
 } as const;
 const COMPACT_WORKSPACE_MODE = { isCompact: true };
 const DESKTOP_WORKSPACE_MODE = { isCompact: false };
-type SchoolClassesWorkspaceModeContextValue =
-  | typeof COMPACT_WORKSPACE_MODE
-  | typeof DESKTOP_WORKSPACE_MODE;
+type SchoolClassesWorkspaceModeContextValue = typeof COMPACT_WORKSPACE_MODE;
 const SchoolClassesWorkspaceModeContext =
   createContext<SchoolClassesWorkspaceModeContextValue | null>(null);
 

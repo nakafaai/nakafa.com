@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, type Fiber, Queue, Ref, SubscriptionRef } from "effect";
+import { Effect, Queue, Ref, SubscriptionRef } from "effect";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/data/view/model";
 import {
@@ -22,6 +22,7 @@ import { deriveViewportState } from "@/components/school/classes/forum/conversat
 import type {
   ActiveTranscript,
   ForumPostId,
+  RuntimeFiber,
   ViewportRuntime,
 } from "@/components/school/classes/forum/conversation/viewport/runtime";
 import type { ConversationViewport } from "@/components/school/classes/forum/conversation/viewport/service";
@@ -157,13 +158,13 @@ export function createViewportRuntime({
       activeTranscriptRef: yield* Ref.make<ActiveTranscript>(activeTranscript),
       adapters,
       eventQueue: yield* Queue.bounded<ViewportEvent>(1),
-      highlightFiberRef: yield* Ref.make<Fiber.Fiber<void, never> | null>(null),
+      highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
       highlightTokenRef: yield* Ref.make(0),
       lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
         measurement
       ),
       lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
-      persistFiberRef: yield* Ref.make<Fiber.Fiber<void, never> | null>(null),
+      persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
       scope,
       stateRef: yield* SubscriptionRef.make(state),
     } satisfies ViewportRuntime;

@@ -1,12 +1,4 @@
-import {
-  Effect,
-  Exit,
-  type Fiber,
-  Queue,
-  Ref,
-  Scope,
-  SubscriptionRef,
-} from "effect";
+import { Effect, Exit, Queue, Ref, Scope, SubscriptionRef } from "effect";
 import { ConversationViewportAdapters } from "@/components/school/classes/forum/conversation/viewport/adapter";
 import { runViewportEventLoop } from "@/components/school/classes/forum/conversation/viewport/events";
 import {
@@ -18,6 +10,7 @@ import { flushCurrentSnapshot } from "@/components/school/classes/forum/conversa
 import {
   type ActiveTranscript,
   type ForumPostId,
+  type RuntimeFiber,
   VIEWPORT_EVENT_CAPACITY,
   type ViewportRuntime,
 } from "@/components/school/classes/forum/conversation/viewport/runtime";
@@ -31,13 +24,9 @@ export const makeConversationViewport = Effect.gen(function* () {
   const scope = yield* Scope.make();
   const stateRef = yield* SubscriptionRef.make(initialViewportState);
   const activeTranscriptRef = yield* Ref.make<ActiveTranscript>(null);
-  const highlightFiberRef = yield* Ref.make<Fiber.Fiber<void, never> | null>(
-    null
-  );
+  const highlightFiberRef = yield* Ref.make<RuntimeFiber | null>(null);
   const highlightTokenRef = yield* Ref.make(0);
-  const persistFiberRef = yield* Ref.make<Fiber.Fiber<void, never> | null>(
-    null
-  );
+  const persistFiberRef = yield* Ref.make<RuntimeFiber | null>(null);
   const lastMeasurementRef = yield* Ref.make<ViewportMeasurement | null>(null);
   const lastReadPostIdRef = yield* Ref.make<ForumPostId | null>(null);
   const runtime = {

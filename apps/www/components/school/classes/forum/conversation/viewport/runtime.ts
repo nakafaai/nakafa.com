@@ -14,7 +14,7 @@ export const VIEWPORT_EVENT_CAPACITY = 64;
 
 export type ActiveTranscript = ActiveTranscriptModel | null;
 export type ForumPostId = Id<"schoolClassForumPosts">;
-type RuntimeFiber = Fiber.Fiber<void, never>;
+export type RuntimeFiber = Fiber.Fiber<void, never>;
 export type ViewportStateDraft = Omit<ViewportState, "jumpControl"> & {
   jumpControl?: ViewportState["jumpControl"];
 };
