@@ -126,7 +126,7 @@ function TryoutRowStatus({
 }
 
 /** Renders the optional compact metadata slot. */
-function TryoutRowMeta({ meta }: { meta: ReactNode }) {
+function TryoutRowMeta({ meta }: { readonly meta: ReactNode }) {
   if (!meta) {
     return null;
   }
