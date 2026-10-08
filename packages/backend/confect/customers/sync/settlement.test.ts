@@ -55,7 +55,8 @@ describe("customers/sync/settlement", () => {
             kind: "stored",
           },
           userId,
-          operations
+          operations.deleteLocalCustomer,
+          operations.deletePolarCustomer
         )
       ).toBe(customerId);
       expect(operations.deletePolarCustomer).not.toHaveBeenCalled();
@@ -73,7 +74,8 @@ describe("customers/sync/settlement", () => {
             kind: "prepared",
           },
           userId,
-          operations
+          operations.deleteLocalCustomer,
+          operations.deletePolarCustomer
         ).pipe(Effect.flip);
         expect(failure).toMatchObject({
           _tag: "UserNotFound",
@@ -97,7 +99,8 @@ describe("customers/sync/settlement", () => {
       const failure = yield* settleCustomerSync(
         result,
         userId,
-        operations
+        operations.deleteLocalCustomer,
+        operations.deletePolarCustomer
       ).pipe(Effect.flip);
       expect(failure).toMatchObject({
         _tag: "UserNotFound",

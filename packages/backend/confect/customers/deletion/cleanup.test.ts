@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, DateTime, Schema } from "effect";
 // @vitest-environment node
 
 import { afterEach, expect, it } from "@effect/vitest";
@@ -6,6 +6,8 @@ import { components } from "@repo/backend/confect/_generated/components";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { registerWorkflow } from "@repo/backend/test/workflow";
+
+const JsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -48,7 +50,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
   );
   const t = createConvexTestWithBetterAuth();
   await registerWorkflow(t);
-  const now = Date.now();
+  const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
   const authId = "removed-auth-user";
   const userId = await t.mutation(async (ctx) => {
     const id = await ctx.db.insert("users", {
@@ -143,7 +145,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
       analyticsRequests,
       (request) =>
         request.body ===
-        JSON.stringify({
+        Schema.encodeSync(JsonSchema)({
           delete_events: true,
           delete_recordings: true,
           distinct_ids: [userId],
