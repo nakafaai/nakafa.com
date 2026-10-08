@@ -118,7 +118,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Access decision**: The outcome of one action on one subject: allowed, or refused for the resource, a role, or a condition.
 - **Viewer capabilities**: The actions the server computed the caller may perform, returned with a query as `can` so the UI never guesses.
 - **Object reference**: A typed `{ kind, id }` pointer to an object of any declared kind, checked for access whenever it is read.
-- **Space**: Whose data a row or a model call belongs to: one account (personal) or one tenant.
+- **Space**: Whose data a row belongs to: one account (personal) or one tenant.
 - **Journal**: The one record of audited changes for every space, written in the same transaction as the change and read by the audit log and by consumers.
 - **Journal entry**: One immutable audited change: its owner space, actor, subject, and change, holding IDs and codes only.
 - **Published change type**: A change type its kind exposes to journal consumers such as notifications, webhooks, and exports.
