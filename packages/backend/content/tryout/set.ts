@@ -1,28 +1,17 @@
-import {
-  type AppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
-import {
-  type TryoutSet,
-  TryoutSetSchema,
-} from "@nakafa/aksara-contracts/tryout/catalog";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { TryoutSetSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { TRYOUT_SET_QUESTION_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { verifyTryoutCatalog } from "@repo/backend/confect/contentRelease/tryout/verify";
+import type { tryoutSetIdentityValidator } from "@repo/backend/confect/tryouts/route";
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { readTryoutSectionRows } from "@repo/backend/content/tryout/section";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
 import { Effect, Option, Schema } from "effect";
 /** Stable authored keys that select one localized signed try-out set. */
-export interface TryoutSetIdentity {
-  readonly countryKey: TryoutSet["countryKey"];
-  readonly examKey: TryoutSet["examKey"];
-  readonly locale: AppLocaleCode;
-  readonly setKey: TryoutSet["setKey"];
-  readonly trackKey: TryoutSet["trackKey"];
-}
+export type TryoutSetIdentity = typeof tryoutSetIdentityValidator.Type;
 /** Loads one complete verified set snapshot for immutable attempt creation. */
 export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
   function* (identity: TryoutSetIdentity) {
