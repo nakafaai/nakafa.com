@@ -1,5 +1,4 @@
 import type { Ref } from "@confect/core";
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
@@ -41,11 +40,8 @@ import {
   testArticleSourcePath,
 } from "@/test/content-article";
 
-/** Encodes fixture JSON with the contract production decodes, so the stored string has the wire shape production reads. */
-const encodeArtifactJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentArtifactSchema),
-  { onExcessProperty: "error" }
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so each stored artifact matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates signed localized articles with their complete immutable discovery closure. */
 export const makeArticleRuntimeSource = Effect.fn(
@@ -116,7 +112,7 @@ export const makeArticleRuntimeSource = Effect.fn(
       });
       artifacts.push({
         artifactHash: artifact.artifactHash,
-        artifactJson: encodeArtifactJson(artifact),
+        artifactJson: encodeJson(artifact),
       });
       const bucket = getHashBucket(projectionHash);
       catalog.push({

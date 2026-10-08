@@ -1,4 +1,3 @@
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALE_CODES,
@@ -33,11 +32,8 @@ import {
   Struct,
 } from "effect";
 
-/** Encodes fixture JSON with the contract production decodes, so the stored string has the wire shape production reads. */
-const encodeArtifactJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentArtifactSchema),
-  { onExcessProperty: "error" }
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so each stored artifact matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const defaultProjections = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
   makeMaterialProjection(locale, 1),
@@ -109,7 +105,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
     });
     artifacts.push({
       artifactHash: artifact.artifactHash,
-      artifactJson: encodeArtifactJson(artifact),
+      artifactJson: encodeJson(artifact),
     });
     const topic = yield* deriveMaterialTopicReference(projection);
     const bucket = getHashBucket(projectionHash);

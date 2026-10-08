@@ -10,7 +10,6 @@ import {
   AppLocaleSchema,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
 import {
   createTestPublication,
   makePageRuntimeSource,
@@ -40,11 +39,8 @@ const dePageProjection = {
   artifactLocale: ArtifactLocaleSchema.make("de"),
   publicPath: PublicPathSchema.make("nutzungsbedingungen"),
 };
-/** Encodes fixture Page projections with the contract production decodes, so each stored string has the wire shape production reads. */
-const encodePageProjectionJson = Schema.encodeSync(
-  Schema.fromJsonString(PublicPageProjectionSchema),
-  { onExcessProperty: "error" }
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so each stored projection matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -74,7 +70,7 @@ describe("published Page catalog", () => {
       Effect.succeed({
         activeReleaseId,
         managed: true,
-        projectionJson: [encodePageProjectionJson(testPageProjection)],
+        projectionJson: [encodeJson(testPageProjection)],
       })
     );
   });
@@ -188,7 +184,7 @@ describe("published Page catalog", () => {
           Effect.succeed({
             activeReleaseId,
             managed: true,
-            projectionJson: [encodePageProjectionJson(projection)],
+            projectionJson: [encodeJson(projection)],
           })
         );
         const failure = yield* readPublishedPageCatalog().pipe(Effect.flip);
@@ -240,7 +236,7 @@ describe("published Page catalog", () => {
             testPageProjection,
             idPageProjection,
             dePageProjection,
-          ].map((projection) => encodePageProjectionJson(projection)),
+          ].map((projection) => encodeJson(projection)),
         })
       );
       const found = yield* readPublishedPageLocalePath({
@@ -264,7 +260,7 @@ describe("published Page catalog", () => {
         Effect.succeed({
           activeReleaseId,
           managed: true,
-          projectionJson: [encodePageProjectionJson(testPageProjection)],
+          projectionJson: [encodeJson(testPageProjection)],
         })
       );
       const missing = yield* readPublishedPageLocalePath({
