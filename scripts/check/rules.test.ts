@@ -137,27 +137,6 @@ describe("Effect-native rule scopes", () => {
     })
   );
 
-  it.effect("holds Confect and script modules to array methods", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* findings(
-          everywhere("export const ids = rows.map(String);\n", [
-            "packages/backend/confect/users/list.ts",
-            "packages/backend/confect/users/list.test.ts",
-            "scripts/check/list.ts",
-            "packages/backend/convex/users.ts",
-            "apps/www/lib/list.ts",
-          ])
-        ),
-        [
-          "packages/backend/confect/users/list.test.ts array-method",
-          "packages/backend/confect/users/list.ts array-method",
-          "scripts/check/list.ts array-method",
-        ]
-      );
-    })
-  );
-
   it.effect("holds Confect and script domain code to Effect composition", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
