@@ -1,14 +1,9 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr } from "effect";
 
 const HIGHLIGHT_TOKEN_LIMIT = 8;
 const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
 
-const SearchExcerptPartSchema = Schema.Struct({
-  highlighted: Schema.Boolean,
-  key: Schema.String,
-  text: Schema.String,
-});
-export type SearchExcerptPart = typeof SearchExcerptPartSchema.Type;
+export type SearchExcerptPart = ReturnType<typeof createPart>;
 
 /** Returns whether one Convex excerpt contains visible text. */
 export function hasSearchExcerpt(excerpt: string) {

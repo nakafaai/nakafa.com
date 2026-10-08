@@ -1,5 +1,5 @@
 import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
-import { BigDecimal, Schema } from "effect";
+import { BigDecimal } from "effect";
 
 import type {
   PlanePoint,
@@ -11,27 +11,15 @@ import type {
 const WORLD_EXTENT = BigDecimal.fromBigInt(10n);
 const TWO = BigDecimal.fromBigInt(2n);
 const ZERO = BigDecimal.fromBigInt(0n);
-const ExactRangeSchema = Schema.Struct({
-  max: Schema.BigDecimal,
-  min: Schema.BigDecimal,
-});
-type ExactRange = typeof ExactRangeSchema.Type;
-const VisualProjectionSchema = Schema.Struct({
-  center: Schema.Struct({
-    x: Schema.BigDecimal,
-    y: Schema.BigDecimal,
-    z: Schema.BigDecimal,
-  }),
-  extent: Schema.BigDecimal,
-});
-export type VisualProjection = typeof VisualProjectionSchema.Type;
+type ExactRange = ReturnType<typeof range>;
+export type VisualProjection = ReturnType<typeof resolveVisualProjection>;
 function decimal(value: number) {
   return BigDecimal.fromNumberUnsafe(value);
 }
 function range(
   bounds: { readonly min: number; readonly max: number },
   padding: number
-): ExactRange {
+) {
   return {
     min: BigDecimal.subtract(decimal(bounds.min), decimal(padding)),
     max: BigDecimal.sum(decimal(bounds.max), decimal(padding)),
@@ -62,9 +50,7 @@ function frameRanges(scene: PlaneVisual | SpaceVisual, padded: boolean) {
   };
 }
 /** Uses one exact uniform scale before converting authored values to GPU units. */
-export function resolveVisualProjection(
-  scene: PlaneVisual | SpaceVisual
-): VisualProjection {
+export function resolveVisualProjection(scene: PlaneVisual | SpaceVisual) {
   let { x, y, z } = frameRanges(scene, true);
   let points: readonly SpacePoint[] = [];
   if (scene.view.kind === "camera") {
