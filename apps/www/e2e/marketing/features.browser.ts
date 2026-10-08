@@ -3,6 +3,10 @@ import { Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
+import {
+  readinessTimeoutMilliseconds,
+  revealTimeoutMilliseconds,
+} from "@/e2e/support/timeout";
 import { targetViewports } from "@/e2e/support/viewport";
 
 const NINA_ANSWER_TEXT = "Subtract the first equation";
@@ -237,7 +241,9 @@ const expectProjectileInteraction = Effect.fn(
 
   yield* Effect.promise(() => expect(visual).toHaveCount(1));
   yield* Effect.promise(() => visual.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => expect(canvas).toBeVisible({ timeout: 30_000 }));
+  yield* Effect.promise(() =>
+    expect(canvas).toBeVisible({ timeout: revealTimeoutMilliseconds })
+  );
   yield* Effect.promise(() => highArc.click());
   yield* Effect.promise(() =>
     expect(highArc).toHaveAttribute("aria-pressed", "true")
@@ -258,7 +264,9 @@ const expectProjectileRecovery = Effect.fn(
     page.route(NEXT_CHUNK_PATH, (route) => route.abort("failed"))
   );
   yield* Effect.promise(() => visual.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => expect(error).toBeVisible({ timeout: 15_000 }));
+  yield* Effect.promise(() =>
+    expect(error).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+  );
   yield* Effect.promise(() =>
     expect(error.getByRole("button", { name: "Retry" })).toBeVisible()
   );

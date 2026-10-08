@@ -12,6 +12,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { CARD, COORDINATE_CONTROLS, LINE_SCENE } from "@/e2e/support/selector";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { revealCardContent, revealSceneCard } from "@/e2e/support/visual";
 
 const LINEAR_SYSTEM_ROUTE =
@@ -366,7 +367,7 @@ test("published unit-circle controls preserve finite angles after clearing", asy
                 await angle.scrollIntoViewIfNeeded();
                 await expect(angle).toBeVisible();
                 await expect(angle).toHaveValue("30");
-              }).toPass({ timeout: 30_000 })
+              }).toPass({ timeout: revealTimeoutMilliseconds })
             );
             yield* verifyUnitCircleEditing(circle, angle, locale);
           })

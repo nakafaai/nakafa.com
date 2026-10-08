@@ -3,6 +3,7 @@ import { Effect, Record as Rec } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { cacheTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const revealChart = Effect.fn("NakafaE2E.revealChart")(function* (
   chart: Locator
@@ -119,7 +120,7 @@ test("chart articles retain server HTML after caching in every locale", async ({
                           status: response.status(),
                         };
                       },
-                      { timeout: 30_000 }
+                      { timeout: cacheTimeoutMilliseconds }
                     )
                     .toEqual({
                       articles: 1,

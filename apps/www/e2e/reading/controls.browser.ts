@@ -5,6 +5,7 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { paginationNavigation } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const NINA_DIALOG_NAME = /^Nina/;
 const INTER_FONT = /Inter/;
@@ -43,7 +44,12 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
   function* (page: Page, href: string, width: number) {
     yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(href));
-    yield* waitForCommittedAppRouter(page, href, href, 15_000);
+    yield* waitForCommittedAppRouter(
+      page,
+      href,
+      href,
+      readinessTimeoutMilliseconds
+    );
     const title = page.getByRole("heading", { level: 1 });
     yield* Effect.promise(() => expect(title).toHaveCount(1));
     yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "36px"));
@@ -246,7 +252,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     );
     yield* Effect.promise(() =>
       expect(page.getByText("Copied!", { exact: true })).toBeVisible({
-        timeout: 15_000,
+        timeout: readinessTimeoutMilliseconds,
       })
     );
     const copiedContent = yield* Effect.promise(() =>
@@ -307,7 +313,12 @@ test("reading outline replaces an existing fragment", async ({ page }) => {
           page.setViewportSize({ width: 1440, height: 900 })
         );
         yield* Effect.promise(() => page.goto(`${href}#exercises`));
-        yield* waitForCommittedAppRouter(page, href, href, 15_000);
+        yield* waitForCommittedAppRouter(
+          page,
+          href,
+          href,
+          readinessTimeoutMilliseconds
+        );
         const exercises = page.getByRole("link", {
           name: "Exercises",
           exact: true,
@@ -383,7 +394,12 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
     )
   );
   yield* Deferred.succeed(released, undefined);
-  yield* waitForCommittedAppRouter(page, href, href, 15_000);
+  yield* waitForCommittedAppRouter(
+    page,
+    href,
+    href,
+    readinessTimeoutMilliseconds
+  );
   yield* Effect.promise(() => page.waitForLoadState("networkidle"));
   const controls = yield* Effect.promise(() =>
     page.evaluate(

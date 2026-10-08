@@ -7,6 +7,7 @@ import {
 } from "@repo/analytics/consent";
 import { Effect } from "effect";
 import { activateUntilVisible } from "@/e2e/support/input";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
  * Stores an anonymous consent decision before the first navigation. Suites
@@ -46,7 +47,7 @@ export const openConsentPreferences = Effect.fn(
   yield* Effect.promise(() => trigger.scrollIntoViewIfNeeded());
   yield* Effect.promise(() => trigger.focus());
   const popup = page.locator(`[data-slot="${slot}"]`);
-  yield* activateUntilVisible(trigger, popup, 15_000);
+  yield* activateUntilVisible(trigger, popup, readinessTimeoutMilliseconds);
   yield* Effect.promise(() =>
     expect(page.getByRole("heading", { name: "Usage data" })).toBeVisible()
   );

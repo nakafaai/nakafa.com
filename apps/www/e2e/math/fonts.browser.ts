@@ -7,9 +7,11 @@ import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
 import { paginationNavigation } from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import {
+  cacheTimeoutMilliseconds,
+  readinessTimeoutMilliseconds,
+} from "@/e2e/support/timeout";
 
-const cacheTimeoutMilliseconds = 30_000;
 const lesson = pinnedRoutes.inverse.en;
 const lessonPath = /^\/en\/subjects\//;
 

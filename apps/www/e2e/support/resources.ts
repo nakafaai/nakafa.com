@@ -11,11 +11,12 @@ import {
   type TrackedRequestKind,
   withRequestTracker,
 } from "@/e2e/support/requests";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const JAVASCRIPT_RESOURCE_PATTERN =
   /^\/_next\/static\/(?:immutable\/)?chunks\/.+\.js$/;
 const RESOURCE_IDLE_MILLISECONDS = 1000;
-const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = 15_000;
+const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 const RESOURCE_POLL_MILLISECONDS = 100;
 
 const createResourceRequestClassifier = (applicationOrigin: string) =>

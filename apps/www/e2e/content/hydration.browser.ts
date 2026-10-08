@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, MutableRef, Schema } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 declare global {
   interface Window {
@@ -66,7 +67,7 @@ const runs = [
 ] as const;
 
 const CONVEX_TOKEN_PATH = "/api/auth/convex/token";
-const SETTLE_TIMEOUT_MILLISECONDS = 15_000;
+const SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 
 /**
  * Runs in the page before its scripts. React's streaming runtime reveals

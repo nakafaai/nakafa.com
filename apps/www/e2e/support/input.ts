@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, Schema } from "effect";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 interface TouchPoint {
   readonly x: number;
@@ -7,7 +8,7 @@ interface TouchPoint {
 }
 
 const ACTIVATION_PROBE_TIMEOUT_MILLISECONDS = 1000;
-const PRESS_TIMEOUT_MILLISECONDS = 15_000;
+const PRESS_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 const TOUCH_MOVE_STEPS = 5;
 
 /** Where a press lands on its control, in CSS pixels from the control's corner. */

@@ -102,12 +102,18 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   );
 
   const trigger = page.locator("[data-quran-interpretation-verse]").first();
-  yield* Effect.promise(() => expect(trigger).toBeVisible({ timeout: 15_000 }));
-  yield* Effect.promise(() => expect(trigger).toBeEnabled({ timeout: 15_000 }));
+  yield* Effect.promise(() =>
+    expect(trigger).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+  );
+  yield* Effect.promise(() =>
+    expect(trigger).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
+  );
   yield* Effect.promise(() => trigger.click());
 
   const drawer = page.locator(DRAWER_POPUP);
-  yield* Effect.promise(() => expect(drawer).toBeVisible({ timeout: 15_000 }));
+  yield* Effect.promise(() =>
+    expect(drawer).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+  );
   yield* Effect.promise(() => expect(drawer.locator(DRAWER_BAR)).toBeVisible());
   yield* Effect.promise(() =>
     expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText("Tafsir")
@@ -139,7 +145,9 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => expect(trigger).toBeEnabled());
   yield* Effect.promise(() => expect(trigger).toHaveCSS("opacity", "1"));
   yield* Effect.promise(() => trigger.click());
-  yield* Effect.promise(() => expect(drawer).toBeVisible({ timeout: 15_000 }));
+  yield* Effect.promise(() =>
+    expect(drawer).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+  );
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
 });

@@ -6,6 +6,7 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { activateUntilVisible, press, visibleLink } from "@/e2e/support/input";
 import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
 import { appRoutes } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;
@@ -15,7 +16,7 @@ const ARTICLE_CATEGORY_HREF_PATTERN = /^\/en\/articles\/[^/.]+$/;
 const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
 const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;
 const LINK_POLL_MILLISECONDS = 100;
-const NAVIGATION_TIMEOUT_MILLISECONDS = 15_000;
+const NAVIGATION_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 
 const linkedHrefRetrySchedule = Schedule.spaced(
   Duration.millis(LINK_POLL_MILLISECONDS)

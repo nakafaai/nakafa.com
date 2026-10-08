@@ -451,7 +451,11 @@ test("the footer theme selector loads its list on demand and applies a theme", a
           .getByRole("button", { exact: true, name: "Theme" });
         const dark = page.getByRole("menuitem", { exact: true, name: "Dark" });
         yield* Effect.promise(() => expect(dark).toHaveCount(0));
-        yield* activateUntilVisible(selector, dark, 15_000);
+        yield* activateUntilVisible(
+          selector,
+          dark,
+          readinessTimeoutMilliseconds
+        );
         yield* Effect.promise(() => dark.click());
         yield* Effect.promise(() =>
           expect(page.locator("html")).toHaveClass(DARK_THEME_CLASS)

@@ -7,8 +7,8 @@ import {
   readPageLayoutShift,
 } from "@/e2e/support/layout";
 import { LINE_SCENE } from "@/e2e/support/selector";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const REVEAL_TIMEOUT_MILLISECONDS = 30_000;
 /** How long one attempt of a retried check waits before the next one. */
 const ATTEMPT_TIMEOUT_MILLISECONDS = 1000;
 /** Readings of the session's layout shift that must agree before a step. */
@@ -70,7 +70,7 @@ export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
             name: fullscreen,
           })
         ).toHaveCount(count, { timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
-      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+      }).toPass({ timeout: revealTimeoutMilliseconds })
     );
   }
 );
@@ -99,7 +99,7 @@ export const revealCardContent = Effect.fn("NakafaE2E.revealVisualCardContent")(
       expect(async () => {
         await scrollToElement(card, "start");
         await expect(card.locator(content).first()).toBeVisible();
-      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+      }).toPass({ timeout: revealTimeoutMilliseconds })
     );
     return card;
   }
@@ -135,7 +135,7 @@ export const revealLab = Effect.fn("NakafaE2E.revealVisualLab")(function* (
       await expect(
         card.getByRole("button", { name: FIRST_GENERATION, pressed: false })
       ).toBeVisible({ timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
-    }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+    }).toPass({ timeout: revealTimeoutMilliseconds })
   );
   return card;
 });
@@ -151,7 +151,7 @@ export const revealSceneCard = Effect.fn("NakafaE2E.revealVisualSceneCard")(
       expect(async () => {
         await scrollToElement(card.locator(scene), "start");
         expect(await canvas.isVisible()).toBe(true);
-      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+      }).toPass({ timeout: revealTimeoutMilliseconds })
     );
     yield* waitForStableCanvas(canvas);
     return canvas;
@@ -352,7 +352,7 @@ export const expectLabStill = Effect.fn("NakafaE2E.expectVisualLabStill")(
         await expect(
           card.getByRole("button", { exact: true, name: play })
         ).toBeVisible({ timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
-      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+      }).toPass({ timeout: revealTimeoutMilliseconds })
     );
     const after = yield* readSettledLayoutShift(page);
     yield* Effect.sync(() => expect(after).toBe(before));

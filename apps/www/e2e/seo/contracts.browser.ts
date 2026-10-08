@@ -13,6 +13,7 @@ import {
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { LINE_SCENE, lineSceneCards } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { revealCardContent, revealSceneCard } from "@/e2e/support/visual";
 
 const APP_ORIGIN = "https://nakafa.com";
@@ -262,7 +263,12 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
   if (group.kind !== "material") {
     return;
   }
-  yield* waitForCommittedAppRouter(page, route.href, route.href, 15_000);
+  yield* waitForCommittedAppRouter(
+    page,
+    route.href,
+    route.href,
+    readinessTimeoutMilliseconds
+  );
   const card = lineSceneCards(page).filter({ visible: true }).first();
   const scene = card.locator(LINE_SCENE);
   const canvases = page.locator("canvas");
@@ -337,7 +343,12 @@ const openPage = Effect.fn("NakafaE2E.openPage")(function* (
 ) {
   const response = yield* Effect.promise(() => page.goto(href));
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-  yield* waitForCommittedAppRouter(page, href, href, 15_000);
+  yield* waitForCommittedAppRouter(
+    page,
+    href,
+    href,
+    readinessTimeoutMilliseconds
+  );
 });
 
 /** The browser has not recorded the expected number of content views yet. */

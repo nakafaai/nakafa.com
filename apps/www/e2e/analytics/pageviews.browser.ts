@@ -6,6 +6,7 @@ import {
 } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const CapturedIngestSchema = Schema.Struct({
   event: Schema.String,
@@ -79,7 +80,11 @@ function pageviews(captured: CapturedIngest[]) {
 
 const waitForPageviews = (captured: CapturedIngest[], count: number) =>
   Effect.promise(() =>
-    expect.poll(() => pageviewCount(captured), { timeout: 15_000 }).toBe(count)
+    expect
+      .poll(() => pageviewCount(captured), {
+        timeout: readinessTimeoutMilliseconds,
+      })
+      .toBe(count)
   );
 
 test("baseline counts one cookieless pageview without consent", async ({
@@ -199,7 +204,7 @@ test("grant keeps exact counts and attributes the next view", async ({
               yield* Effect.promise(() =>
                 expect(
                   page.getByRole("heading", { name: "Usage data" })
-                ).toBeHidden({ timeout: 15_000 })
+                ).toBeHidden({ timeout: readinessTimeoutMilliseconds })
               );
               expect(pageviewCount(captured)).toBe(1);
 
