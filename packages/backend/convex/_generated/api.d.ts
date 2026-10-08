@@ -6871,6 +6871,15 @@ export declare const internal: {
           | { phase: "verified"; proofJson: string }
           | { phase: "failed"; reason: "canceled" | "failed" }
         >;
+        status: FunctionReference<
+          "query",
+          "internal",
+          { manifestHash: string; releaseId: string },
+          | { phase: "verifying" }
+          | { phase: "verified"; proofJson: string }
+          | { phase: "failed"; reason: "canceled" | "failed" }
+          | { phase: "pending" }
+        >;
       };
       read: {
         artifactBatch: FunctionReference<
