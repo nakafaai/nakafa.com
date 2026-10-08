@@ -4,21 +4,37 @@ import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
 import {
+  ContentKeySchema,
+  CorpusSourcePathSchema,
+  Ed25519SignatureSchema,
+  GitCommitShaSchema,
+  PublicPathSchema,
   ReleaseIdSchema,
   Sha256HashSchema,
+  SigningKeyIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
+  ActiveAppLocaleListSchema,
+  ActiveAppLocaleSchema,
   type AppLocaleCode,
   AppLocaleSchema,
-  type ArtifactLocaleSchema,
+  ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import {
   CONTENT_RELEASE_FORMAT,
+  ContentReleaseItemSchema,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
+import {
+  ContentRouteBindSchema,
+  ContentRouteDeleteSchema,
+  ContentRouteItemSchema,
+} from "@nakafa/aksara-contracts/release/route/spec";
 import {
   ContentSnapshotKindSchema,
   type PublicationScope,
@@ -26,15 +42,68 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import {
   type ContentSnapshotSet,
+  ContentSnapshotSetSchema,
   inheritContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { testMaterialPublicPath } from "@repo/backend/test/content/material";
-import { Effect, Schema } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
+const SignedReleaseJsonSchema = Schema.fromJsonString(
+  SignedContentReleaseSchema
+);
+const RendererManifestJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
+const RollbackEntryJsonSchema = Schema.fromJsonString(
+  RollbackSnapshotEntrySchema
+);
+const ReleaseItemJsonSchema = Schema.fromJsonString(ContentReleaseItemSchema);
+/**
+ * Route fixtures validate against the contract's route owners, except for
+ * contentKey. The rollback test in confect/contentRelease/rollback.test.ts
+ * stores an empty content key that ContentKeySchema cannot encode, so the bind
+ * member accepts any string there and the production decoder must reject it.
+ * Declaring contentKey first keeps the bind bytes in their original order.
+ */
+const RouteBindFixtureSchema = Schema.Struct({
+  contentKey: Schema.String,
+  ...Struct.omit(ContentRouteBindSchema.fields, ["contentKey"]),
+});
+const RouteItemFixtureSchema = ContentRouteItemSchema.mapFields(
+  Struct.assign({
+    change: Schema.Union([RouteBindFixtureSchema, ContentRouteDeleteSchema]),
+  })
+);
+const RouteItemJsonSchema = Schema.fromJsonString(RouteItemFixtureSchema);
+const ReleaseOptionsSchema = Schema.Struct({
+  activeAppLocales: Schema.optional(Schema.Array(ActiveAppLocaleCodeSchema)),
+  baseManifestHash: Schema.optional(Schema.NullOr(Schema.String)),
+  baseReleaseId: Schema.optional(Schema.NullOr(Schema.String)),
+  baseResultCount: Schema.optional(Schema.Finite),
+  baseResultDigest: Schema.optional(Schema.String),
+  deleteCount: Schema.optional(Schema.Finite),
+  itemCount: Schema.optional(Schema.Finite),
+  manifestHash: Schema.optional(Schema.String),
+  originKind: Schema.optional(Schema.Literals(["git", "rollback"])),
+  originReleaseId: Schema.optional(Schema.String),
+  projectionCount: Schema.optional(Schema.Finite),
+  releaseId: Schema.optional(Schema.String),
+  rendererHash: Schema.optional(Schema.String),
+  resultCount: Schema.optional(Schema.Finite),
+  resultDigest: Schema.optional(Schema.String),
+  rollbackDigest: Schema.optional(Schema.String),
+  routeCount: Schema.optional(Schema.Finite),
+  routeDigest: Schema.optional(Schema.String),
+  scope: Schema.optional(PublicationScopeSchema),
+  snapshots: Schema.optional(ContentSnapshotSetSchema),
+  upsertCount: Schema.optional(Schema.Finite),
+});
+type ReleaseOptions = typeof ReleaseOptionsSchema.Type;
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
 export const TEST_MANIFEST_HASH = Sha256HashSchema.make(
   `sha256:${"1".repeat(64)}`
@@ -68,40 +137,16 @@ export function testRendererJson(
   hash: string = TEST_DIGEST,
   componentName = "p"
 ) {
-  const base = [componentName];
-  return JSON.stringify({
-    base,
+  return Schema.encodeSync(RendererManifestJsonSchema)({
+    base: [componentName],
     domains: RENDERER_DOMAINS.map((name) => ({
       components: [],
       name,
     })),
     format: "nakafa-mdx-renderer",
-    hash,
+    hash: Sha256HashSchema.make(hash),
     publishedDomains: ["mathematics"],
   });
-}
-interface ReleaseOptions {
-  readonly activeAppLocales?: readonly ActiveAppLocaleCode[] | undefined;
-  readonly baseManifestHash?: null | string | undefined;
-  readonly baseReleaseId?: null | string | undefined;
-  readonly baseResultCount?: number | undefined;
-  readonly baseResultDigest?: string | undefined;
-  readonly deleteCount?: number | undefined;
-  readonly itemCount?: number | undefined;
-  readonly manifestHash?: string | undefined;
-  readonly originKind?: "git" | "rollback" | undefined;
-  readonly originReleaseId?: string | undefined;
-  readonly projectionCount?: number | undefined;
-  readonly releaseId?: string | undefined;
-  readonly rendererHash?: string | undefined;
-  readonly resultCount?: number | undefined;
-  readonly resultDigest?: string | undefined;
-  readonly rollbackDigest?: string | undefined;
-  readonly routeCount?: number | undefined;
-  readonly routeDigest?: string | undefined;
-  readonly scope?: PublicationScope | undefined;
-  readonly snapshots?: ContentSnapshotSet | undefined;
-  readonly upsertCount?: number | undefined;
 }
 /** Creates canonical broad test scope plus every replaced snapshot family. */
 export function testPublicationScope(options?: {
@@ -141,43 +186,53 @@ export function testReleaseJson({
   scope = testPublicationScope({ snapshots }),
 }: ReleaseOptions = {}) {
   const rollback = originKind ? originKind === "rollback" : !!originReleaseId;
-  const origin = rollback
-    ? { kind: "rollback", releaseId: originReleaseId ?? baseReleaseId }
-    : { kind: "git", sha: "a".repeat(40) };
-  return JSON.stringify({
-    keyId: "test-key",
+  const appLocales = Schema.decodeUnknownSync(ActiveAppLocaleListSchema)(
+    activeAppLocales
+  );
+  return Schema.encodeSync(SignedReleaseJsonSchema)({
+    keyId: SigningKeyIdSchema.make("test-key"),
     manifest: {
-      activeAppLocales,
-      baseActiveAppLocales: baseReleaseId === null ? null : activeAppLocales,
+      activeAppLocales: appLocales,
+      baseActiveAppLocales: baseReleaseId === null ? null : appLocales,
       baseManifestHash:
         baseReleaseId === null
           ? null
-          : (baseManifestHash ?? TEST_MANIFEST_HASH),
-      baseReleaseId,
+          : Sha256HashSchema.make(baseManifestHash ?? TEST_MANIFEST_HASH),
+      baseReleaseId:
+        baseReleaseId === null ? null : ReleaseIdSchema.make(baseReleaseId),
       baseResultCount: baseReleaseId === null ? 0 : baseResultCount,
       baseResultDigest:
-        baseReleaseId === null ? EMPTY_RESULT_CATALOG_DIGEST : baseResultDigest,
+        baseReleaseId === null
+          ? EMPTY_RESULT_CATALOG_DIGEST
+          : Sha256HashSchema.make(baseResultDigest),
       deleteCount,
+      format: CONTENT_RELEASE_FORMAT,
       itemCount,
       itemsDigest: TEST_DIGEST,
-      origin,
+      origin: rollback
+        ? {
+            kind: "rollback",
+            releaseId: Schema.decodeUnknownSync(ReleaseIdSchema)(
+              originReleaseId ?? baseReleaseId
+            ),
+          }
+        : { kind: "git", sha: GitCommitShaSchema.make("a".repeat(40)) },
       projectionCount,
       projectionDigest: TEST_DIGEST,
-      releaseId,
-      rendererManifestHash: rendererHash,
+      releaseId: ReleaseIdSchema.make(releaseId),
+      rendererManifestHash: Sha256HashSchema.make(rendererHash),
       resultCount,
-      resultDigest,
+      resultDigest: Sha256HashSchema.make(resultDigest),
       rollbackCount: itemCount,
-      rollbackDigest,
+      rollbackDigest: Sha256HashSchema.make(rollbackDigest),
       routeCount,
-      routeDigest,
+      routeDigest: Sha256HashSchema.make(routeDigest),
       scope,
       snapshots,
       upsertCount,
-      format: CONTENT_RELEASE_FORMAT,
     },
-    manifestHash,
-    signature: "A".repeat(86),
+    manifestHash: Sha256HashSchema.make(manifestHash),
+    signature: Ed25519SignatureSchema.make("A".repeat(86)),
   });
 }
 /**
@@ -188,9 +243,7 @@ export function testReleaseJson({
  */
 export function testStoredReachability(releaseJson: string) {
   return releaseReachability(
-    Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-      JSON.parse(releaseJson)
-    )
+    Schema.decodeSync(SignedReleaseJsonSchema)(releaseJson)
   );
 }
 
@@ -203,12 +256,16 @@ export function testRollbackJson(options?: {
   readonly releaseId?: string | undefined;
 }) {
   const index = options?.index ?? 0;
-  return JSON.stringify({
+  return Schema.encodeSync(RollbackEntryJsonSchema)({
     index,
-    releaseId: options?.releaseId ?? TEST_RELEASE_ID,
+    releaseId: ReleaseIdSchema.make(options?.releaseId ?? TEST_RELEASE_ID),
     snapshot: {
-      artifactLocale: options?.artifactLocale ?? "en",
-      contentKey: options?.contentKey ?? `test:head-${index}`,
+      artifactLocale: ArtifactLocaleSchema.make(
+        options?.artifactLocale ?? "en"
+      ),
+      contentKey: ContentKeySchema.make(
+        options?.contentKey ?? `test:head-${index}`
+      ),
       family: options?.family ?? "material",
       state: "absent",
     },
@@ -228,21 +285,26 @@ export function testUpsertJson(options?: {
 }) {
   const index = options?.index ?? 0;
   const artifactLocale = options?.artifactLocale ?? "en";
-  return JSON.stringify({
+  return Schema.encodeSync(ReleaseItemJsonSchema)({
     change: {
-      artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
-      artifactLocale,
-      contentKey: options?.contentKey ?? `test:head-${index}`,
+      artifactHash: Sha256HashSchema.make(
+        options?.artifactHash ?? TEST_ARTIFACT_HASH
+      ),
+      artifactLocale: ArtifactLocaleSchema.make(artifactLocale),
+      contentKey: ContentKeySchema.make(
+        options?.contentKey ?? `test:head-${index}`
+      ),
       delivery: options?.delivery ?? "public",
       family: options?.family ?? "material",
       operation: "upsert",
       rendererDomain: options?.rendererDomain ?? "mathematics",
-      sourcePath:
+      sourcePath: CorpusSourcePathSchema.make(
         options?.sourcePath ??
-        `packages/corpus/test/head-${index}/${artifactLocale}.mdx`,
+          `packages/corpus/test/head-${index}/${artifactLocale}.mdx`
+      ),
     },
     index,
-    releaseId: options?.releaseId ?? TEST_RELEASE_ID,
+    releaseId: ReleaseIdSchema.make(options?.releaseId ?? TEST_RELEASE_ID),
   });
 }
 /** Creates one canonical technical route change. */
@@ -255,19 +317,24 @@ export function testRouteJson(options?: {
   readonly releaseId?: string | undefined;
 }) {
   const index = options?.index ?? 0;
-  const appLocale = options?.appLocale ?? "en";
-  const change = {
-    ...(options?.operation === "delete"
-      ? {}
-      : { contentKey: options?.contentKey ?? `test:head-${index}` }),
-    appLocale,
-    operation: options?.operation ?? "bind",
-    publicPath: options?.publicPath ?? testMaterialPublicPath(index, appLocale),
-  };
-  return JSON.stringify({
+  const appLocale = ActiveAppLocaleSchema.make(options?.appLocale ?? "en");
+  const operation = options?.operation ?? "bind";
+  const publicPath = PublicPathSchema.make(
+    options?.publicPath ?? testMaterialPublicPath(index, appLocale)
+  );
+  const change =
+    operation === "delete"
+      ? { appLocale, operation, publicPath }
+      : {
+          contentKey: options?.contentKey ?? `test:head-${index}`,
+          appLocale,
+          operation,
+          publicPath,
+        };
+  return Schema.encodeSync(RouteItemJsonSchema)({
     change,
     index,
-    releaseId: options?.releaseId ?? TEST_RELEASE_ID,
+    releaseId: ReleaseIdSchema.make(options?.releaseId ?? TEST_RELEASE_ID),
   });
 }
 /** Creates one canonical technical delete item. */
@@ -278,14 +345,16 @@ export function testDeleteJson(options?: {
   readonly index?: number | undefined;
   readonly releaseId?: string | undefined;
 }) {
-  return JSON.stringify({
+  return Schema.encodeSync(ReleaseItemJsonSchema)({
     change: {
-      artifactLocale: options?.artifactLocale ?? "en",
-      contentKey: options?.contentKey ?? "test:deleted",
+      artifactLocale: ArtifactLocaleSchema.make(
+        options?.artifactLocale ?? "en"
+      ),
+      contentKey: ContentKeySchema.make(options?.contentKey ?? "test:deleted"),
       family: options?.family ?? "material",
       operation: "delete",
     },
     index: options?.index ?? 0,
-    releaseId: options?.releaseId ?? TEST_RELEASE_ID,
+    releaseId: ReleaseIdSchema.make(options?.releaseId ?? TEST_RELEASE_ID),
   });
 }

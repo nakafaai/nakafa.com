@@ -2,6 +2,7 @@ import { RegisteredConvexFunction } from "@confect/server";
 import {
   type ContentFamily,
   ContentFamilySchema,
+  SignedContentArtifactSchema,
 } from "@nakafa/aksara-contracts/content";
 import {
   ContentKeySchema,
@@ -19,6 +20,10 @@ import {
   ArticleSlugSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
+import { PublicContentRuntimeRequestSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { writeArticle } from "@repo/backend/confect/contentRelease/article/write";
 import type { internal } from "@repo/backend/convex/_generated/api";
@@ -46,7 +51,7 @@ import {
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime/values";
 import type { FunctionReturnType } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 type RuntimeRow = Exclude<
   FunctionReturnType<
@@ -54,6 +59,29 @@ type RuntimeRow = Exclude<
   >,
   null
 >;
+/**
+ * The public runtime request contract declares appLocale before delivery, so
+ * encoding through the contract would reorder the body. This wire struct takes
+ * every field schema from that contract and keeps the body's original order,
+ * delivery first.
+ */
+const PublicRuntimeRequestJsonSchema = Schema.fromJsonString(
+  Schema.Struct({
+    delivery: PublicContentRuntimeRequestSchema.fields.delivery,
+    appLocale: PublicContentRuntimeRequestSchema.fields.appLocale,
+    publicPath: PublicContentRuntimeRequestSchema.fields.publicPath,
+  })
+);
+const SignedArtifactJsonSchema = Schema.fromJsonString(
+  SignedContentArtifactSchema
+);
+const ProjectionJsonSchema = Schema.fromJsonString(ContentProjectionSchema);
+const SignedReleaseJsonSchema = Schema.fromJsonString(
+  SignedContentReleaseSchema
+);
+const RendererManifestJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
 export const TEST_ARTICLE_KEY = ContentKeySchema.make(
   "articles/politics/dynastic-politics-asian-values"
 );
@@ -160,18 +188,18 @@ export function runtimeContentKey(
 
 /** Creates one exact public runtime request body. */
 export function publicRuntimeRequest() {
-  return JSON.stringify({
+  return Schema.encodeSync(PublicRuntimeRequestJsonSchema)({
     delivery: "public",
-    appLocale: "en",
-    publicPath: TEST_RUNTIME_PATH,
+    appLocale: ActiveAppLocaleSchema.make("en"),
+    publicPath: PublicPathSchema.make(TEST_RUNTIME_PATH),
   });
 }
 
 /** Creates the exact public runtime request for the real pair-grouped article. */
 export function articleRuntimeRequest() {
-  return JSON.stringify({
+  return Schema.encodeSync(PublicRuntimeRequestJsonSchema)({
     delivery: "public",
-    appLocale: "en",
+    appLocale: ActiveAppLocaleSchema.make("en"),
     publicPath: TEST_ARTICLE_PATH,
   });
 }
@@ -181,13 +209,15 @@ export function runtimeCases(row: RuntimeRow) {
   const response = {
     activeManifestHash: row.activeManifestHash,
     activeReleaseId: row.activeReleaseId,
-    artifact: JSON.parse(row.artifactJson),
+    artifact: Schema.decodeSync(SignedArtifactJsonSchema)(row.artifactJson),
     delivery: row.delivery,
     kind: "found",
-    projection: JSON.parse(row.projectionJson),
+    projection: Schema.decodeSync(ProjectionJsonSchema)(row.projectionJson),
     projectionHash: row.projectionHash,
-    release: JSON.parse(row.releaseJson),
-    rendererManifest: JSON.parse(row.rendererJson),
+    release: Schema.decodeSync(SignedReleaseJsonSchema)(row.releaseJson),
+    rendererManifest: Schema.decodeSync(RendererManifestJsonSchema)(
+      row.rendererJson
+    ),
     sourcePath: row.sourcePath,
   };
   const idArtifact = testArtifactJson({
@@ -200,8 +230,8 @@ export function runtimeCases(row: RuntimeRow) {
       "locale",
       {
         ...response,
-        artifact: JSON.parse(idArtifact),
-        projection: JSON.parse(
+        artifact: Schema.decodeSync(SignedArtifactJsonSchema)(idArtifact),
+        projection: Schema.decodeSync(ProjectionJsonSchema)(
           testProjectionJson({
             contentKey: runtimeContentKey("public"),
             appLocale: "id",
@@ -214,7 +244,7 @@ export function runtimeCases(row: RuntimeRow) {
       "publicPath",
       {
         ...response,
-        projection: JSON.parse(
+        projection: Schema.decodeSync(ProjectionJsonSchema)(
           testProjectionJson({
             contentKey: runtimeContentKey("public"),
             publicPath: "subjects/test/foreign",
@@ -323,7 +353,11 @@ export async function insertSignedRelease(ctx: MutationCtx) {
     throw new Error("Expected one runtime release.");
   }
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: JSON.stringify(TEST_RUNTIME_ENVELOPE),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    releaseJson: Schema.encodeSync(SignedReleaseJsonSchema)(
+      TEST_RUNTIME_ENVELOPE
+    ),
+    rendererJson: Schema.encodeSync(RendererManifestJsonSchema)(
+      TEST_PROOF_RENDERER
+    ),
   });
 }
