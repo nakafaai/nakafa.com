@@ -96,7 +96,16 @@ function AnalyticsConsentController({
     );
   }, [durableStatus]);
 
-  useAnalyticsRuntimeAlignment(consent, setHasRuntimeError);
+  useAnalyticsRuntimeAlignment({
+    accountConsent: consent.accountConsent,
+    anonymousConsent: consent.browserConsent.anonymousConsent,
+    isAuthenticated: consent.isAuthenticated,
+    isPreviewChild: consent.isPreviewChild,
+    isRuntimeSuppressed: consent.isRuntimeSuppressed,
+    setHasRuntimeError,
+    status: durableStatus,
+    user: consent.user,
+  });
 
   useEffect(() => {
     if (!promptIdentity) {
@@ -109,7 +118,16 @@ function AnalyticsConsentController({
     };
   }, [interruptDepartedSave, promptIdentity]);
 
-  useAccountAnalyticsConsentRevocation(consent, isOnline);
+  useAccountAnalyticsConsentRevocation({
+    currentAccountUserId: consent.currentAccountUserId,
+    currentBrowserPrivacySignal: consent.currentBrowserPrivacySignal,
+    isOnline,
+    promptIdentity,
+    readLatestSave: consent.readLatestSave,
+    setAccountConsent: consent.setAccountConsent,
+    setSessionOverrides: consent.setSessionOverrides,
+    shouldRevokeAccountGrant: consent.shouldRevokeAccountGrant,
+  });
 
   return null;
 }

@@ -1,5 +1,9 @@
 "use client";
 
+import type {
+  AnalyticsConsentState,
+  AnonymousAnalyticsConsentRecord,
+} from "@repo/analytics/consent";
 import {
   admitConsentedIdentity,
   type BrowserAnalyticsLoadFailed,
@@ -7,26 +11,13 @@ import {
   revokeToBaselineAnalytics,
   suspendBrowserAnalyticsIdentity,
 } from "@repo/analytics/posthog/browser";
-import { Effect, Fiber, Schedule } from "effect";
+import { Effect, Fiber, type Option, Schedule } from "effect";
 import { useEffect } from "react";
-import type { useAnalyticsConsentModel } from "@/lib/analytics/consent/model";
-import { createBrowserAnalyticsIdentity } from "@/lib/analytics/consent/state";
-
-type AnalyticsConsentModel = ReturnType<typeof useAnalyticsConsentModel>;
-
-/** The consent model fields that decide which analytics identity may run. */
-type AnalyticsRuntimeAlignmentSource = Pick<
-  AnalyticsConsentModel,
-  | "accountConsent"
-  | "browserConsent"
-  | "durableStatus"
-  | "isAuthenticated"
-  | "isPreviewChild"
-  | "isRuntimeSuppressed"
-  | "user"
->;
-
-type SetHasRuntimeError = (hasRuntimeError: boolean) => void;
+import {
+  type AccountConsentDecision,
+  type BrowserAnalyticsUser,
+  createBrowserAnalyticsIdentity,
+} from "@/lib/analytics/consent/state";
 
 /**
  * Owns the baseline-to-granted runtime alignment for one consent state.
@@ -36,19 +27,25 @@ type SetHasRuntimeError = (hasRuntimeError: boolean) => void;
  * before surfacing. Preview children skip the SDK; cleanup only suspends
  * authorization, never SDK consent.
  */
-export function useAnalyticsRuntimeAlignment(
-  {
-    accountConsent,
-    browserConsent,
-    durableStatus: status,
-    isAuthenticated,
-    isPreviewChild,
-    isRuntimeSuppressed,
-    user,
-  }: AnalyticsRuntimeAlignmentSource,
-  setHasRuntimeError: SetHasRuntimeError
-) {
-  const anonymousConsent = browserConsent.anonymousConsent;
+export function useAnalyticsRuntimeAlignment({
+  accountConsent,
+  anonymousConsent,
+  isAuthenticated,
+  isPreviewChild,
+  isRuntimeSuppressed,
+  setHasRuntimeError,
+  status,
+  user,
+}: {
+  readonly accountConsent: AccountConsentDecision | null;
+  readonly anonymousConsent: Option.Option<AnonymousAnalyticsConsentRecord>;
+  readonly isAuthenticated: boolean;
+  readonly isPreviewChild: boolean;
+  readonly isRuntimeSuppressed: boolean;
+  readonly setHasRuntimeError: (hasRuntimeError: boolean) => void;
+  readonly status: AnalyticsConsentState["status"];
+  readonly user: BrowserAnalyticsUser | null;
+}) {
   useEffect(() => {
     if (isPreviewChild) {
       return;
