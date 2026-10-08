@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   agentFailureResponse,
+  agentJsonResponse,
   logInternalFailure,
 } from "@repo/backend/confect/routes/agent/response";
 import { NakafaAgentInputError } from "@repo/contents/agent/errors";
@@ -29,6 +30,11 @@ describe("agent responses", () => {
       resolution: "Choose a published locale.",
       request_id: "request-locale",
     });
+  });
+  it("sends an empty 200 when the body is undefined", async () => {
+    const response = agentJsonResponse(undefined);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("");
   });
   it.effect("logs unexpected causes with the public request identity", () =>
     Effect.gen(function* () {

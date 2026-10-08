@@ -22,9 +22,17 @@ export const PUBLIC_API_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
   Vary: "Accept, Accept-Encoding",
 } as const;
+const HeadersInitSchema = Schema.Union([
+  Schema.mutable(
+    Schema.Array(Schema.mutable(Schema.Tuple([Schema.String, Schema.String])))
+  ),
+  Schema.Record(Schema.String, Schema.String),
+  Schema.instanceOf(Headers),
+]);
 const ProblemInputSchema = Schema.Struct({
   code: Schema.String,
   detail: Schema.String,
+  headers: Schema.optionalKey(HeadersInitSchema),
   instance: Schema.String,
   requestId: Schema.String,
   resolution: Schema.String,
@@ -40,7 +48,7 @@ export function agentJsonResponse(
   status = 200,
   headers?: HeadersInit
 ) {
-  return new Response(encodeJson(body), {
+  return new Response(body === undefined ? undefined : encodeJson(body), {
     headers: {
       ...PUBLIC_API_HEADERS,
       ...headers,
@@ -50,7 +58,7 @@ export function agentJsonResponse(
 }
 
 /** Returns one RFC 9457 response with stable machine recovery fields. */
-export function problemResponse(input: ProblemInput, headers?: HeadersInit) {
+export function problemResponse(input: ProblemInput) {
   const body: NakafaProblemDetails = {
     code: input.code,
     detail: input.detail,
@@ -62,7 +70,7 @@ export function problemResponse(input: ProblemInput, headers?: HeadersInit) {
     type: new URL(`/problems/${input.type}`, "https://nakafa.com").href,
   };
   return agentJsonResponse(body, input.status, {
-    ...headers,
+    ...input.headers,
     "Content-Type": "application/problem+json; charset=utf-8",
   });
 }
@@ -74,24 +82,22 @@ export function agentFailureResponse(
   requestId: string
 ) {
   if (error._tag === "AgentRateLimitError") {
-    return problemResponse(
-      {
-        code: "RATE_LIMITED",
-        detail: "The client exceeded the bounded public read quota.",
-        instance,
-        requestId,
-        resolution: "Wait for Retry-After, then retry with backoff.",
-        status: 429,
-        title: "Too many requests",
-        type: "rate-limited",
-      },
-      {
+    return problemResponse({
+      code: "RATE_LIMITED",
+      detail: "The client exceeded the bounded public read quota.",
+      headers: {
         "Retry-After": Math.max(
           1,
           Math.ceil(error.retryAfterMs / 1000)
         ).toString(),
-      }
-    );
+      },
+      instance,
+      requestId,
+      resolution: "Wait for Retry-After, then retry with backoff.",
+      status: 429,
+      title: "Too many requests",
+      type: "rate-limited",
+    });
   }
   if (error._tag === "NakafaAgentInputError") {
     return problemResponse({

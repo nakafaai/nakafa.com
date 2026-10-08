@@ -63,21 +63,19 @@ export const guardAgentApi = HttpRouter.middleware((handler) =>
     }
     if (request.method !== "GET" && request.method !== "OPTIONS") {
       return HttpServerResponse.fromWeb(
-        problemResponse(
-          {
-            code: "METHOD_NOT_ALLOWED",
-            detail: "The Nakafa public API supports GET and OPTIONS only.",
-            instance,
-            requestId,
-            resolution: "Retry this endpoint with GET or OPTIONS.",
-            status: 405,
-            title: "Method not allowed",
-            type: "method-not-allowed",
-          },
-          {
+        problemResponse({
+          code: "METHOD_NOT_ALLOWED",
+          detail: "The Nakafa public API supports GET and OPTIONS only.",
+          headers: {
             Allow: "GET, OPTIONS",
-          }
-        )
+          },
+          instance,
+          requestId,
+          resolution: "Retry this endpoint with GET or OPTIONS.",
+          status: 405,
+          title: "Method not allowed",
+          type: "method-not-allowed",
+        })
       );
     }
     if (
