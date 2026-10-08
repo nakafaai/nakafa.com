@@ -3,8 +3,14 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
-import { activateUntilVisible } from "@/e2e/support/interaction";
+import { activateUntilVisible, press } from "@/e2e/support/input";
 import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
+import { appRoutes } from "@/e2e/support/route";
+import {
+  MARKETING_PAGE,
+  VISIBLE_SIDEBAR_TRIGGER,
+} from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;
@@ -14,7 +20,8 @@ const ARTICLE_CATEGORY_HREF_PATTERN = /^\/en\/articles\/[^/.]+$/;
 const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
 const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;
 const LINK_POLL_MILLISECONDS = 100;
-const NAVIGATION_TIMEOUT_MILLISECONDS = 15_000;
+// Navigation keeps its own budget, so it can change apart from readiness.
+const NAVIGATION_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 
 const linkedHrefRetrySchedule = Schedule.spaced(
   Duration.millis(LINK_POLL_MILLISECONDS)
@@ -32,7 +39,7 @@ type InstantShell = "app" | "marketing";
 
 const instantShellSelector = {
   app: 'main[data-slot="sidebar-inset"]:visible',
-  marketing: 'main[data-marketing-page="true"]:visible',
+  marketing: `${MARKETING_PAGE}:visible`,
 } as const;
 
 /** A rendered source route has no visible link matching its signed catalog. */
@@ -141,9 +148,7 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
     return yield* waitForVisibleLocator(link, missingLink);
   }
 
-  const sidebarTrigger = page
-    .locator('[data-slot="sidebar-trigger"]:visible')
-    .first();
+  const sidebarTrigger = page.locator(VISIBLE_SIDEBAR_TRIGGER).first();
   yield* waitForVisibleLocator(sidebarTrigger, missingLink);
   return yield* activateUntilVisible(
     sidebarTrigger,
@@ -208,8 +213,8 @@ const discoverLinkedHref = Effect.fn("NakafaE2E.discoverLinkedHref")(function* (
  * The callback therefore verifies the committed route shell, while the Effect
  * program verifies destination-specific content after release.
  *
- * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/segment-cache/navigation.ts
- * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next-playwright/README.md
+ * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/navigation-testing-lock.ts
+ * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next-playwright/README.md
  */
 const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
   page: Page,
@@ -258,16 +263,10 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
   // @next/playwright owns this native Promise callback while its lock is held.
   yield* Effect.promise(() =>
     instant(page, () =>
-      (hasTouch
-        ? link.tap({
-            noWaitAfter: true,
-            timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-          })
-        : link.click({
-            noWaitAfter: true,
-            timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-          })
-      )
+      press(link, hasTouch, {
+        noWaitAfter: true,
+        timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+      })
         .then(() =>
           page.waitForURL((url) => url.pathname === target.href, {
             timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
@@ -302,23 +301,23 @@ const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>
     marker: { kind: "heading", text: HOMEPAGE_HEADING_PATTERN },
     name: "homepage",
     shell: "marketing",
-    sourceHref: "/en/quran",
+    sourceHref: appRoutes.quran,
   } satisfies NavigationTarget)
 );
 
 const resolveQuran = Effect.fn("NakafaE2E.resolveQuran")(() =>
   Effect.succeed({
-    href: "/id/quran/2",
+    href: appRoutes.quranSurahId,
     marker: { kind: "heading", text: QURAN_HEADING_PATTERN },
     name: "Quran",
     shell: "app",
-    sourceHref: "/id/quran",
+    sourceHref: appRoutes.quranId,
   } satisfies NavigationTarget)
 );
 
 const resolveTryout = Effect.fn("NakafaE2E.resolveTryout")(() =>
   Effect.succeed({
-    href: "/en/try-out",
+    href: appRoutes.tryout,
     marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
     name: "tryout",
     shell: "app",

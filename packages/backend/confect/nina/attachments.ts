@@ -15,7 +15,7 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
     userId: Docs["users"]["_id"],
     uploadIds: readonly Docs["ninaUploads"]["_id"][]
   ) {
-    if (new Set(uploadIds).size !== uploadIds.length) {
+    if (Arr.dedupe(uploadIds).length !== uploadIds.length) {
       return yield* new NinaUploadError({
         code: "NINA_UPLOAD_INVALID",
         message: "An attachment cannot be submitted twice.",

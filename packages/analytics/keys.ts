@@ -9,6 +9,9 @@ const urlSchema = Schema.toStandardSchemaV1(
     Schema.check(Schema.makeFilter((value) => URL.canParse(value)))
   )
 );
+const optionalStringSchema = Schema.toStandardSchemaV1(
+  Schema.UndefinedOr(Schema.String)
+);
 /**
  * Validates the PostHog managed reverse proxy host read by Next config.
  */
@@ -46,4 +49,19 @@ export const keys = () =>
   createEnv({
     extends: [postHogProxyKeys(), postHogPublicKeys()],
     runtimeEnv: {},
+  });
+/**
+ * Reads the deployment fields that decide whether server reporting runs. Both
+ * accept any text, and this owner never validates the PostHog configuration.
+ */
+export const deploymentKeys = () =>
+  createEnv({
+    server: {
+      NEXT_PHASE: optionalStringSchema,
+      VERCEL_ENV: optionalStringSchema,
+    },
+    runtimeEnv: {
+      NEXT_PHASE: process.env.NEXT_PHASE,
+      VERCEL_ENV: process.env.VERCEL_ENV,
+    },
   });

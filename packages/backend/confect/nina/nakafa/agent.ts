@@ -5,7 +5,8 @@ import {
   type QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import type { NakafaAgentParams } from "@repo/backend/confect/nina/contract/agent";
+import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
+import type { TaskAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { NinaReadOptionsSchema } from "@repo/backend/confect/nina/contract/data";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
@@ -53,7 +54,8 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   modelId,
   locale,
   context,
-}: NakafaAgentParams & {
+}: TaskAgentData & {
+  readonly publish: CapabilityProgress;
   readonly usageHandler: UsageHandler;
 }) {
   const ctx = yield* ActionCtx;

@@ -1,9 +1,15 @@
-import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
+import {
+  ActiveAppLocaleCodeSchema,
+  type ActiveAppLocaleCode as Locale,
+} from "@nakafa/aksara-contracts/locale";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
+import { Schema } from "effect";
 
-interface Params {
-  locale: Locale;
-}
+const ParamsSchema = Schema.Struct({
+  locale: ActiveAppLocaleCodeSchema,
+});
+
+type Params = typeof ParamsSchema.Type;
 
 const localeInstructions = {
   de: {
