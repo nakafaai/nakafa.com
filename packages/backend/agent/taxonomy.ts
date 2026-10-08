@@ -16,7 +16,7 @@ import {
   NakafaAgentDataReadError,
 } from "@repo/contents/agent/errors";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 type ReleasePin = typeof activeIdentityValidator.Type;
 const articleCategoriesReference =
@@ -63,7 +63,7 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
         articles: {
           categories: articleCategories,
         },
-        content_counts: inventories.contentCounts.map((item) => ({
+        content_counts: Arr.map(inventories.contentCounts, (item) => ({
           ...item,
           count: item.count + quran.surahs.length,
         })),
@@ -117,20 +117,24 @@ const readInventories = Effect.fn("agent.readInventories")(function* (
   const [selected, remaining] = yield* Effect.all([
     readLocaleInventory(selectedLocale),
     Effect.forEach(
-      ACTIVE_APP_LOCALE_CODES.filter((locale) => locale !== selectedLocale),
+      Arr.filter(
+        ACTIVE_APP_LOCALE_CODES,
+        (locale) => locale !== selectedLocale
+      ),
       (locale) => readLocaleInventory(locale),
       {
         concurrency: ACTIVE_APP_LOCALE_CODES.length,
       }
     ),
   ]);
-  const inventories = [selected, ...remaining].sort(
-    (left, right) =>
-      ACTIVE_APP_LOCALE_CODES.indexOf(left.locale) -
-      ACTIVE_APP_LOCALE_CODES.indexOf(right.locale)
+  const byLocaleOrder = Order.mapInput(
+    Order.Number,
+    (inventory: typeof selected) =>
+      ACTIVE_APP_LOCALE_CODES.indexOf(inventory.locale)
   );
+  const inventories = Arr.sort([selected, ...remaining], byLocaleOrder);
   return {
-    contentCounts: inventories.map(({ count, locale }) => ({
+    contentCounts: Arr.map(inventories, ({ count, locale }) => ({
       count,
       locale,
     })),

@@ -2,7 +2,7 @@ import { readQuranTafsir } from "@repo/backend/confect/contentRelease/quran/tran
 import { loadQuranPassage } from "@repo/backend/content/quran/reference";
 import type { quranInterpretationValidator } from "@repo/backend/content/quran/response";
 import { readQuranLocaleSources } from "@repo/backend/content/quran/sources";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Exact signed tafsir response returned only after one verse is requested. */
 
@@ -28,9 +28,12 @@ export const readQuranInterpretation = Effect.fn(
     Effect.orDie
   );
   const verse = yield* Effect.fromNullishOr(
-    passage.chunks.rows
-      .flatMap((chunk) => chunk.verses)
-      .find(({ number }) => number.inSurah === loaded.input.fromVerse)
+    Option.getOrUndefined(
+      Arr.findFirst(
+        Arr.flatMap(passage.chunks.rows, (chunk) => chunk.verses),
+        ({ number }) => number.inSurah === loaded.input.fromVerse
+      )
+    )
   ).pipe(Effect.orDie);
   const { tafsirAccess } = yield* readQuranLocaleSources(
     expectedSnapshotId,

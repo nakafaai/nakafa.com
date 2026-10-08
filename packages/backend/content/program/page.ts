@@ -9,7 +9,7 @@ import { loadProgramOwner } from "@repo/backend/content/program/owner";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Returns a stable empty page before Aksara owns programs and materials. */
 function emptyPage() {
@@ -89,7 +89,7 @@ export const readProgramPage = Effect.fn("contentRelease.readProgramPage")(
       managed: true,
       result: {
         ...stored,
-        page: stored.page.map(({ rowJson }) => rowJson),
+        page: Arr.map(stored.page, ({ rowJson }) => rowJson),
       },
       snapshotId: owner.selected.snapshotId,
       sourceRevision: readSourceRevision(owner.selected.active),

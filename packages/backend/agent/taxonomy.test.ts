@@ -12,7 +12,7 @@ import {
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { type FunctionReturnType, getFunctionName } from "convex/server";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const PIN = {
   manifestHash: `sha256:${"1".repeat(64)}`,
@@ -186,12 +186,14 @@ describe("agent/taxonomy", () => {
             ],
           },
         });
-        const taxonomyLocales = queries.mock.calls
-          .filter(
+        const taxonomyLocales = Arr.map(
+          Arr.filter(
+            queries.mock.calls,
             ([reference]) =>
               getFunctionName(reference) === "contentRelease/tryout:taxonomy"
-          )
-          .map(([, args]) => args);
+          ),
+          ([, args]) => args
+        );
         expect(taxonomyLocales).toHaveLength(3);
         expect(taxonomyLocales).toContainEqual({
           appLocale: locale ?? "en",

@@ -35,27 +35,35 @@ import {
   makeQuranSearch,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import { Effect, MutableHashMap, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashMap,
+  MutableList,
+  Stream,
+} from "effect";
 
 /** Complete synthetic protocol corpus, with authentic row and snapshot hashes. */
 export const makeQuranRuntimeSource = Effect.fn(
   "RuntimeSnapshotTest.quranSource"
 )(function* () {
-  const payloads: QuranRowPayload[] = [makeQuranAttribution()];
+  const payloads = MutableList.make<QuranRowPayload>();
+  MutableList.append(payloads, makeQuranAttribution());
   let firstQuranNumber = 1;
   for (let number = 1; number <= QURAN_SURAH_COUNT; number += 1) {
     // Evenly distributed test verses exercise the full bounded protocol, not authored text.
     const verseCount =
       Math.floor(QURAN_VERSE_COUNT / QURAN_SURAH_COUNT) +
       (number <= QURAN_VERSE_COUNT % QURAN_SURAH_COUNT ? 1 : 0);
-    payloads.push(makeQuranSurah(number, verseCount));
+    MutableList.append(payloads, makeQuranSurah(number, verseCount));
     for (
       let firstVerse = 1;
       firstVerse <= verseCount;
       firstVerse += QURAN_CHUNK_SIZE
     ) {
       const count = Math.min(QURAN_CHUNK_SIZE, verseCount - firstVerse + 1);
-      payloads.push(
+      MutableList.append(
+        payloads,
         makeQuranChunk({
           firstQuranNumber,
           firstVerse,
@@ -67,12 +75,17 @@ export const makeQuranRuntimeSource = Effect.fn(
     }
   }
   for (let number = 1; number <= QURAN_SURAH_COUNT; number += 1) {
-    payloads.push(
-      ...ACTIVE_APP_LOCALES.map((locale) => makeQuranSearch(locale, number))
+    MutableList.appendAll(
+      payloads,
+      Arr.map(ACTIVE_APP_LOCALES, (locale) => makeQuranSearch(locale, number))
     );
   }
-  const hashed = yield* Effect.forEach(payloads, (payload) =>
-    hashQuranRow(payload).pipe(Effect.map((rowHash) => ({ payload, rowHash })))
+  const hashed = yield* Effect.forEach(
+    MutableList.toArray(payloads),
+    (payload) =>
+      hashQuranRow(payload).pipe(
+        Effect.map((rowHash) => ({ payload, rowHash }))
+      )
   );
   const digest = yield* digestQuranRows({
     activeAppLocales: ACTIVE_APP_LOCALES,
@@ -118,7 +131,7 @@ export const makeQuranRuntimeSource = Effect.fn(
   MutableHashMap.set(
     fixture.source,
     "quranRows",
-    hashed.map((row, index) => {
+    Arr.map(hashed, (row, index) => {
       const record = { ...row, snapshotId: manifest.snapshotId };
       return {
         ...quranRowFacts(record),
@@ -132,7 +145,7 @@ export const makeQuranRuntimeSource = Effect.fn(
   MutableHashMap.set(
     fixture.source,
     "quranSearch",
-    hashed.flatMap((row, index) =>
+    Arr.flatMap(hashed, (row, index) =>
       row.payload.kind === "quran-search"
         ? [
             {

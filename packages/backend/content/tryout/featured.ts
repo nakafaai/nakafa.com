@@ -22,7 +22,7 @@ import {
   readTryoutSectionRows,
 } from "@repo/backend/content/tryout/section";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /**
  * Public model for the signed landing demo, including its visible answer feedback.
@@ -66,13 +66,15 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       set
     );
     const resolved = yield* readTryoutSectionRows(snapshotId, section);
-    const placement = resolved.placements.find(
+    const placementEntry = Arr.findFirst(
+      resolved.placements,
       ({ row }) => row.questionContentKey === target.questionContentKey
-    )?.row;
+    );
     const bundleHash = owner.active.release.tryoutRuntimeBundleHash ?? null;
-    if (!(placement && bundleHash)) {
+    if (!(Option.isSome(placementEntry) && bundleHash)) {
       return yield* missingFeaturedTryout("question");
     }
+    const placement = placementEntry.value.row;
     const question: TryoutQuestionSelector = {
       appLocale: locale,
       artifactHash: placement.questionArtifactHash,
@@ -172,7 +174,8 @@ const readLandingFeaturedSection = Effect.fn(
       }))
     )
   );
-  const section = sections.find(
+  const section = Arr.findFirst(
+    sections,
     ({ row }) =>
       row.sectionKey === target.sectionKey && row.visibility === "visible"
   );
@@ -180,13 +183,13 @@ const readLandingFeaturedSection = Effect.fn(
     !(
       provesSetInventory(
         set,
-        sections.map(({ row }) => row)
-      ) && section
+        Arr.map(sections, ({ row }) => row)
+      ) && Option.isSome(section)
     )
   ) {
     return yield* missingFeaturedTryout("section");
   }
-  return section.stored;
+  return section.value.stored;
 });
 type FeaturedMissingKind =
   | "country"

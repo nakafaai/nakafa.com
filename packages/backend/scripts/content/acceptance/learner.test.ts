@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
-import { Effect, FileSystem, Schema } from "effect";
+import { Array as Arr, Effect, FileSystem, MutableList, Schema } from "effect";
 
 const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
@@ -44,10 +44,10 @@ const Cookie = Schema.fromJsonString(
 
 /** Answers each Convex command the way the local backend does. */
 function answerCommands(createdUser = '{"_creationTime":1,"_id":"user-1"}') {
-  const specs: CommandSpec[] = [];
+  const specs = MutableList.make<CommandSpec>();
   mocks.command.mockImplementation((spec: CommandSpec) =>
     Effect.gen(function* () {
-      specs.push(spec);
+      MutableList.append(specs, spec);
       const fs = yield* FileSystem.FileSystem;
       const output = spec.args.includes("auth/lifecycle:onCreate")
         ? "null"
@@ -85,7 +85,8 @@ describe("synthetic acceptance learner", () => {
         yield* createAcceptanceLearner(root, `${root}/first.json`);
         yield* createAcceptanceLearner(root, `${root}/second.json`);
 
-        expect(specs.map((spec) => spec.args.slice(1, -1))).toEqual([
+        const calls = MutableList.toArray(specs);
+        expect(Arr.map(calls, (spec) => spec.args.slice(1, -1))).toEqual([
           ["run", "--component", "betterAuth", "adapter:create"],
           ["run", "auth/lifecycle:onCreate"],
           ["run", "--component", "betterAuth", "adapter:create"],
@@ -93,14 +94,14 @@ describe("synthetic acceptance learner", () => {
           ["run", "auth/lifecycle:onCreate"],
           ["run", "--component", "betterAuth", "adapter:create"],
         ]);
-        for (const spec of specs) {
+        for (const spec of calls) {
           expect(spec.args[0]).toBe("node_modules/convex/bin/main.js");
           expect(spec.cwd).toBe(`${root}/backend`);
           expect(spec.env?.TMPDIR).toEqual(expect.any(String));
           expect(spec.env?.CONVEX_DEPLOY_KEY).toBeUndefined();
         }
         const [account, profile, session, other] = yield* Effect.forEach(
-          [specs[0], specs[1], specs[2], specs[3]],
+          [calls[0], calls[1], calls[2], calls[3]],
           readInput
         );
         expect(account?.input?.model).toBe("user");
@@ -111,7 +112,7 @@ describe("synthetic acceptance learner", () => {
         expect(session?.input?.data.userId).toBe("user-1");
         const token = session?.input?.data.token ?? "";
         expect(token).toHaveLength(43);
-        expect(specs[2]?.sensitiveValues).toEqual([token]);
+        expect(calls[2]?.sensitiveValues).toEqual([token]);
 
         const cookie = yield* fs
           .readFileString(`${root}/first.json`)

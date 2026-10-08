@@ -19,7 +19,7 @@ import {
 import { GatewayTest } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
 import type { MockLanguageModelV4 } from "ai/test";
-import { DateTime, Effect } from "effect";
+import { DateTime, Effect, MutableList } from "effect";
 
 export const specialistRequest = {
   context: {
@@ -60,11 +60,11 @@ export async function runSpecialist<A, E>(
 }
 
 export function recordProgress() {
-  const artifacts: CapabilityArtifact[] = [];
+  const artifacts = MutableList.make<CapabilityArtifact>();
   const publish: CapabilityProgress = Effect.fn("test.nina.publish")(
     (artifact) =>
       Effect.sync(() => {
-        artifacts.push(artifact);
+        MutableList.append(artifacts, artifact);
       })
   );
   return { artifacts, publish };

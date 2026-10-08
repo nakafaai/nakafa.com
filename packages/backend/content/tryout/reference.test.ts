@@ -12,7 +12,7 @@ import {
   makeTryoutStartPlacement,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Layer, Struct } from "effect";
+import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
 describe("try-out reference visibility", () => {
   it.effect(
@@ -22,13 +22,13 @@ describe("try-out reference visibility", () => {
         const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         const catalog = makeTryoutStartHierarchy("id", "internal-entry");
-        const section = catalog.find((row) => row.kind === "section");
-        if (section === undefined) {
+        const section = Arr.findFirst(catalog, (row) => row.kind === "section");
+        if (Option.isNone(section)) {
           return yield* Effect.die("Expected a technical section.");
         }
         const input = yield* resolveReferenceInput({
           kind: "content",
-          contentId: section.graph.assetId,
+          contentId: section.value.graph.assetId,
         });
         if (input === null) {
           return yield* Effect.die("Expected a classified try-out asset.");
@@ -75,7 +75,7 @@ describe("try-out reference visibility", () => {
         ).toBeNull();
         const absent = yield* resolveReferenceInput({
           kind: "content",
-          contentId: `${section.graph.assetId}:absent`,
+          contentId: `${section.value.graph.assetId}:absent`,
         });
         if (absent === null) {
           return yield* Effect.die(
@@ -107,12 +107,15 @@ it.effect(
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
-      const catalog = makeTryoutStartHierarchy("id", "visible").map((row) => ({
-        ...row,
-        description: "Signed description",
-      }));
-      const country = catalog.find((row) => row.kind === "country");
-      assert(country);
+      const catalog = Arr.map(
+        makeTryoutStartHierarchy("id", "visible"),
+        (row) => ({
+          ...row,
+          description: "Signed description",
+        })
+      );
+      const country = Arr.findFirst(catalog, (row) => row.kind === "country");
+      assert(Option.isSome(country));
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           activateTryoutSnapshot(ctx, {
@@ -123,7 +126,7 @@ it.effect(
       );
       const input = yield* resolveReferenceInput({
         kind: "content",
-        contentId: country.graph.assetId,
+        contentId: country.value.graph.assetId,
       });
       assert(input);
       const read = () =>
@@ -146,7 +149,9 @@ it.effect(
         t.mutation(async (ctx) => {
           const row = await ctx.db
             .query("tryoutCatalog")
-            .filter((q) => q.eq(q.field("assetId"), country.graph.assetId))
+            .filter((q) =>
+              q.eq(q.field("assetId"), country.value.graph.assetId)
+            )
             .first();
           assert(row);
           await ctx.db.insert(

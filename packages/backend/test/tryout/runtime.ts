@@ -49,7 +49,7 @@ import {
   TRYOUT_SECTION_PATH,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
-import { Effect, Schema, Struct } from "effect";
+import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 /** Returns the coherent terminal reason for one fixture status. */
 function getEndReason(
@@ -126,14 +126,16 @@ export async function seedTryoutContentAccessState(
     ...signedSection.signed.section.row,
     appLocale: "en",
   });
-  const englishPlacements = signedSection.signed.placements.map(({ row }) =>
-    Schema.decodeSync(TryoutPlacementSchema)({
-      ...row,
-      answerArtifactLocale: "en",
-      appLocale: "en",
-      deliveryLanguage: "en",
-      questionArtifactLocale: "en",
-    })
+  const englishPlacements = Arr.map(
+    signedSection.signed.placements,
+    ({ row }) =>
+      Schema.decodeSync(TryoutPlacementSchema)({
+        ...row,
+        answerArtifactLocale: "en",
+        appLocale: "en",
+        deliveryLanguage: "en",
+        questionArtifactLocale: "en",
+      })
   );
   const snapshotId = await activateTryoutSnapshot(ctx, {
     catalog: [
@@ -143,7 +145,7 @@ export async function seedTryoutContentAccessState(
       englishSection,
     ],
     placements: [
-      ...signedSection.signed.placements.map(({ row }) => row),
+      ...Arr.map(signedSection.signed.placements, ({ row }) => row),
       ...englishPlacements,
     ],
   });
@@ -335,9 +337,10 @@ export async function insertTryoutAttempt(
     startedAt: TRYOUT_TEST_NOW - 20_000,
     status: args.status ?? "in-progress",
     totalCorrect: 0,
-    totalQuestions: args.sectionSnapshots.reduce(
-      (total, section) => total + section.questionCount,
-      0
+    totalQuestions: Arr.reduce(
+      args.sectionSnapshots,
+      0,
+      (total, section) => total + section.questionCount
     ),
     userId: args.userId,
     countryKey: args.set.countryKey,

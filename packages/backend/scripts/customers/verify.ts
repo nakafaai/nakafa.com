@@ -13,9 +13,11 @@ import type {
   FunctionReturnType,
 } from "convex/server";
 import {
+  Array as Arr,
   ConfigProvider,
   Effect,
   HashMap,
+  MutableList,
   Option,
   Schema,
   Struct,
@@ -106,7 +108,7 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
     schema: Schema.Codec<FunctionReturnType<TFunction>, Encoded, never, never>
   ) {
     const config = yield* getCustomerConvexConfig(prod);
-    const rows: PageRow<TFunction>[] = [];
+    const rows = MutableList.make<PageRow<TFunction>>();
     let continueCursor: string | null = null;
     while (true) {
       const args: FunctionArgs<TFunction> = {
@@ -121,9 +123,9 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
         args,
         schema
       );
-      rows.push(...result.page);
+      MutableList.appendAll(rows, result.page);
       if (result.isDone) {
-        return rows;
+        return MutableList.toArray(rows);
       }
       continueCursor = result.continueCursor;
     }
@@ -151,27 +153,32 @@ const getCustomerIntegrityReport = Effect.fn(
     ),
   ]);
   const usersById = HashMap.fromIterable(
-    users.map((user) => Tuple.make(user.userId, user))
+    Arr.map(users, (user) => Tuple.make(user.userId, user))
   );
   const customerByUserId = HashMap.fromIterable(
-    customers.map((customer) => Tuple.make(customer.userId, customer))
+    Arr.map(customers, (customer) => Tuple.make(customer.userId, customer))
   );
   const customerByPolarId = HashMap.fromIterable(
-    customers.map((customer) => Tuple.make(customer.polarCustomerId, customer))
+    Arr.map(customers, (customer) =>
+      Tuple.make(customer.polarCustomerId, customer)
+    )
   );
-  const usersWithoutCustomer = users.filter(
+  const usersWithoutCustomer = Arr.filter(
+    users,
     (user) => !HashMap.has(customerByUserId, user.userId)
   );
-  const orphanCustomers = customers.filter(
+  const orphanCustomers = Arr.filter(
+    customers,
     (customer) => !HashMap.has(usersById, customer.userId)
   );
-  const customersWithExternalIdMismatch = customers.filter((customer) =>
+  const customersWithExternalIdMismatch = Arr.filter(customers, (customer) =>
     Option.exists(
       HashMap.get(usersById, customer.userId),
       (user) => customer.externalId !== user.authId
     )
   );
-  const subscriptionsWithoutLocalCustomer = subscriptions.filter(
+  const subscriptionsWithoutLocalCustomer = Arr.filter(
+    subscriptions,
     (subscription) => !HashMap.has(customerByPolarId, subscription.customerId)
   );
   return {

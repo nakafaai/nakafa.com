@@ -1,4 +1,5 @@
 import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/notes";
+import { Array as Arr } from "effect";
 
 /** Projects semantic notes into a stable text-and-definitions contract. */
 export function projectQuranTranslation(
@@ -7,17 +8,18 @@ export function projectQuranTranslation(
     `[translation note ${number}]`
 ) {
   return {
-    notes: translation.notes.map(({ number, text }) => ({
+    notes: Arr.map(translation.notes, ({ number, text }) => ({
       number,
       text,
     })),
-    text: translation.segments
-      .map((segment) =>
+    text: Arr.join(
+      Arr.map(translation.segments, (segment) =>
         segment.kind === "text"
           ? segment.value
           : renderReference(segment.number)
-      )
-      .join(""),
+      ),
+      ""
+    ),
   };
 }
 
@@ -33,6 +35,6 @@ export function renderQuranTranslationMarkdown(
     `Translation: ${text}`,
     "",
     "Translation notes:",
-    ...notes.map((note) => `- ${note.number}. ${note.text}`),
+    ...Arr.map(notes, (note) => `- ${note.number}. ${note.text}`),
   ];
 }

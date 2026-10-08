@@ -25,7 +25,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 
 /** Activates the smallest coherent two-locale catalog. */
 async function activateCatalog() {
@@ -106,7 +106,7 @@ describe("tryouts/catalog/metadata", () => {
   it("returns stable exam identity with a localized German route", async () => {
     const t = convexTest(schema, convexModules);
     const catalog = Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
-      makeTryoutStartHierarchy("de", "visible").map((row) => {
+      Arr.map(makeTryoutStartHierarchy("de", "visible"), (row) => {
         if (!row.publicPath) {
           return row;
         }
@@ -337,14 +337,17 @@ describe("tryouts/catalog/metadata", () => {
         ],
       })
     );
-    const publicPath = [
-      "try-out",
-      TRYOUT_START_COUNTRY,
-      TRYOUT_START_EXAM,
-      TRYOUT_START_TRACK,
-      TRYOUT_START_SET,
-      TRYOUT_START_SECTION,
-    ].join("/");
+    const publicPath = Arr.join(
+      [
+        "try-out",
+        TRYOUT_START_COUNTRY,
+        TRYOUT_START_EXAM,
+        TRYOUT_START_TRACK,
+        TRYOUT_START_SET,
+        TRYOUT_START_SECTION,
+      ],
+      "/"
+    );
     await expect(
       t.query((ctx) =>
         Effect.runPromise(

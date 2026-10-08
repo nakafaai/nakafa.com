@@ -28,7 +28,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 export const TRYOUT_START_NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
 export const TRYOUT_START_COUNTRY = "indonesia";
@@ -65,34 +65,47 @@ export async function activateTryoutStartSource(
   visibility: "internal-entry" | "visible",
   scoringStrategy: TryoutScoring = "raw"
 ) {
-  const catalog = tryoutStartLocales.flatMap((locale) =>
+  const catalog = Arr.flatMap(tryoutStartLocales, (locale) =>
     makeTryoutStartHierarchy(locale, visibility, scoringStrategy)
   );
-  const placements = tryoutStartLocales.map(makeTryoutStartPlacement);
+  const placements = Arr.map(tryoutStartLocales, makeTryoutStartPlacement);
   const snapshotId = await activateTryoutSnapshot(ctx, {
     catalog,
     placements,
   });
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-  const section = catalog.find(
+  const section = Arr.findFirst(
+    catalog,
     (row) => row.kind === "section" && row.appLocale === "id"
   );
-  const set = catalog.find(
+  const set = Arr.findFirst(
+    catalog,
     (row) => row.kind === "set" && row.appLocale === "id"
   );
-  const placement = placements.find(({ appLocale }) => appLocale === "id");
-  if (!(section?.kind === "section" && set?.kind === "set" && placement)) {
+  const placement = Arr.findFirst(
+    placements,
+    ({ appLocale }) => appLocale === "id"
+  );
+  if (
+    !(
+      Option.isSome(section) &&
+      section.value.kind === "section" &&
+      Option.isSome(set) &&
+      set.value.kind === "set" &&
+      Option.isSome(placement)
+    )
+  ) {
     throw new Error("Expected one Indonesian signed try-out source.");
   }
 
-  const sectionIdentity = tryoutCatalogIdentity(section);
+  const sectionIdentity = tryoutCatalogIdentity(section.value);
   const storedSection = await ctx.db
     .query("tryoutCatalog")
     .withIndex("by_snapshotId_and_identity", (index) =>
       index.eq("snapshotId", snapshotId).eq("identity", sectionIdentity)
     )
     .unique();
-  const placementIdentity = tryoutPlacementIdentity(placement);
+  const placementIdentity = tryoutPlacementIdentity(placement.value);
   const storedPlacement = await ctx.db
     .query("tryoutPlacements")
     .withIndex("by_snapshotId_and_identity", (index) =>
@@ -109,8 +122,8 @@ export async function activateTryoutStartSource(
     sectionCatalogId: storedSection._id,
     sectionIdentity,
     sectionRowHash: storedSection.rowHash,
-    set,
-    setIdentity: tryoutCatalogIdentity(set),
+    set: set.value,
+    setIdentity: tryoutCatalogIdentity(set.value),
     snapshotId,
   };
 }
@@ -119,8 +132,8 @@ export async function activateTryoutStartSource(
 export async function activateRenamedTryoutStartSource(ctx: MutationCtx) {
   await clearActiveTryoutSnapshot(ctx);
 
-  const catalog = tryoutStartLocales.flatMap((locale) =>
-    makeTryoutStartHierarchy(locale, "visible").map((row) => {
+  const catalog = Arr.flatMap(tryoutStartLocales, (locale) =>
+    Arr.map(makeTryoutStartHierarchy(locale, "visible"), (row) => {
       if (row.kind === "set") {
         return { ...row, publicPath: TRYOUT_RENAMED_SET_PATH };
       }
@@ -132,7 +145,7 @@ export async function activateRenamedTryoutStartSource(ctx: MutationCtx) {
   );
   const snapshotId = await activateTryoutSnapshot(ctx, {
     catalog,
-    placements: tryoutStartLocales.map(makeTryoutStartPlacement),
+    placements: Arr.map(tryoutStartLocales, makeTryoutStartPlacement),
   });
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
 }
@@ -141,9 +154,9 @@ export async function activateRenamedTryoutStartSource(ctx: MutationCtx) {
 export async function activateRevisedTryoutStartEntry(ctx: MutationCtx) {
   await clearActiveTryoutSnapshot(ctx);
 
-  const catalog = tryoutStartLocales.flatMap((locale) =>
+  const catalog = Arr.flatMap(tryoutStartLocales, (locale) =>
     Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
-      makeTryoutStartHierarchy(locale, "internal-entry").map((row) => {
+      Arr.map(makeTryoutStartHierarchy(locale, "internal-entry"), (row) => {
         if (row.kind === "set") {
           return {
             ...row,
@@ -167,7 +180,7 @@ export async function activateRevisedTryoutStartEntry(ctx: MutationCtx) {
   );
   const snapshotId = await activateTryoutSnapshot(ctx, {
     catalog,
-    placements: tryoutStartLocales.map(makeRevisedTryoutStartPlacement),
+    placements: Arr.map(tryoutStartLocales, makeRevisedTryoutStartPlacement),
   });
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
 }
@@ -176,9 +189,9 @@ export async function activateRevisedTryoutStartEntry(ctx: MutationCtx) {
 export async function activateReusedTryoutStartPath(ctx: MutationCtx) {
   await clearActiveTryoutSnapshot(ctx);
 
-  const catalog = tryoutStartLocales.flatMap((locale) =>
+  const catalog = Arr.flatMap(tryoutStartLocales, (locale) =>
     Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
-      makeTryoutStartHierarchy(locale, "visible").map((row) => {
+      Arr.map(makeTryoutStartHierarchy(locale, "visible"), (row) => {
         if (row.kind === "set") {
           return {
             ...row,
@@ -203,7 +216,7 @@ export async function activateReusedTryoutStartPath(ctx: MutationCtx) {
   );
   const snapshotId = await activateTryoutSnapshot(ctx, {
     catalog,
-    placements: tryoutStartLocales.map(makeReusedTryoutStartPlacement),
+    placements: Arr.map(tryoutStartLocales, makeReusedTryoutStartPlacement),
   });
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
 }
