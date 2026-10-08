@@ -14,7 +14,7 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Creates one isolated authenticated boundary for onboarding behavior. */
 export const createOnboardingTest = Effect.fn("test.onboarding.create")(
@@ -82,7 +82,7 @@ function makeOnboardingProgram(index: number, key: string, publicSlug: string) {
         ...firstTranslation,
         publicSlug,
       },
-      ...remainingTranslations.map((translation) => ({
+      ...Arr.map(remainingTranslations, (translation) => ({
         ...translation,
         publicSlug,
       })),

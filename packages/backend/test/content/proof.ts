@@ -77,7 +77,7 @@ import {
   testRouteJson,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
-import { Effect, Schema, Stream } from "effect";
+import { Array as Arr, Effect, Order, Schema, Stream } from "effect";
 
 const keys = generateKeyPairSync("ed25519");
 const digest = Schema.decodeSync(Sha256HashSchema)(TEST_DIGEST);
@@ -94,11 +94,11 @@ export function testProofRenderer(
   const components = [componentName];
   const contract = {
     base: components,
-    domains: RENDERER_DOMAINS.map((name) => ({
+    domains: Arr.map(RENDERER_DOMAINS, (name) => ({
       name,
       components: [],
     })),
-    publishedDomains: [...publishedDomains].sort(),
+    publishedDomains: Arr.sort(publishedDomains, Order.String),
   };
   const hash = Sha256HashSchema.make(
     `sha256:${createHash("sha256")
