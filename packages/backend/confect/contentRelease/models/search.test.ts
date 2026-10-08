@@ -3,7 +3,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { SEARCH_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
-import { CursorSchema } from "@repo/backend/confect/contentRelease/models/reconcile";
 import { reconcileSearchModel } from "@repo/backend/confect/contentRelease/models/search";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -223,9 +222,9 @@ describe("contentRelease/models/search", () => {
       expect(writes).toBe(large === "both" ? 0 : 12);
     }
   );
-  // The version-2 cursor is outside the cursor contract, so it is written with
-  // the plain JSON codec. The phase cursor passes that contract and fails the
-  // phase check in decodeCursor.
+  // CursorSchema stays private to reconcile.ts, so both cursors are written with
+  // the plain JSON codec. The version-2 cursor lies outside that contract; the
+  // phase cursor satisfies it and fails the phase check in decodeCursor.
   it.each([
     "an-old-native-cursor",
     Schema.encodeSync(JsonTextSchema)({
@@ -233,7 +232,7 @@ describe("contentRelease/models/search", () => {
       phase: "search",
       position: ["a", "en"],
     }),
-    Schema.encodeSync(CursorSchema)({
+    Schema.encodeSync(JsonTextSchema)({
       version: 1,
       phase: "articleCatalog",
       position: ["a", "en"],

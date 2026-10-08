@@ -20,7 +20,7 @@ import { compareValues } from "convex/values";
 import { Array as Arr, Effect, Option, Schema, Stream, Struct } from "effect";
 
 const PositionSchema = Schema.Tuple([Schema.String, Schema.String]);
-export const CursorSchema = Schema.fromJsonString(
+const CursorSchema = Schema.fromJsonString(
   Schema.Struct({
     phase: Schema.String,
     position: PositionSchema,
