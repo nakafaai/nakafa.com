@@ -1,28 +1,41 @@
-import { Effect } from "effect";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { Effect, Schema } from "effect";
 import type { ForumReplyTarget } from "@/components/school/classes/forum/session/store";
 
-/** Composer draft captured before an optimistic submit clears the input. */
-export interface ForumPostInputDraft {
-  body: string;
-  replyTarget: ForumReplyTarget | null;
-}
+/** Reply target the composer keeps while a reply is being written. */
+const ForumReplyTargetSchema = Schema.Struct({
+  postId: IdSchema("schoolClassForumPosts"),
+  userName: Schema.String,
+});
 
-interface RestoreForumPostInputDraftInput {
-  currentBody: string;
-  currentReplyTarget: ForumReplyTarget | null;
-  draft: ForumPostInputDraft;
-  restoreBody: (body: string) => void;
-  restoreReplyTarget: (replyTarget: ForumReplyTarget) => void;
-}
+/** Composer draft captured before an optimistic submit clears the input. */
+const ForumPostInputDraftSchema = Schema.Struct({
+  body: Schema.String,
+  replyTarget: Schema.NullOr(ForumReplyTargetSchema),
+});
+
+export type ForumPostInputDraft = typeof ForumPostInputDraftSchema.Type;
+
+const RestoreForumPostInputDraftSchema = Schema.Struct({
+  currentBody: Schema.String,
+  currentReplyTarget: Schema.NullOr(ForumReplyTargetSchema),
+  draft: ForumPostInputDraftSchema,
+});
+
+type RestoreBody = (body: string) => void;
+
+type RestoreReplyTarget = (replyTarget: ForumReplyTarget) => void;
 
 /** Restores a failed optimistic submit without overwriting newer user input. */
-export function restoreForumPostInputDraft({
-  currentBody,
-  currentReplyTarget,
-  draft,
-  restoreBody,
-  restoreReplyTarget,
-}: RestoreForumPostInputDraftInput) {
+export function restoreForumPostInputDraft(
+  {
+    currentBody,
+    currentReplyTarget,
+    draft,
+  }: typeof RestoreForumPostInputDraftSchema.Type,
+  restoreBody: RestoreBody,
+  restoreReplyTarget: RestoreReplyTarget
+) {
   return Effect.sync(() => {
     if (currentBody.trim().length > 0 || currentReplyTarget) {
       return;

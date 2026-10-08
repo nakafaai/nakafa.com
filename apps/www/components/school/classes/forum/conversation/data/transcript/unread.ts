@@ -1,11 +1,16 @@
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Schema } from "effect";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 
-export interface ConversationUnreadCue {
-  count: number;
-  postId: Id<"schoolClassForumPosts">;
-  status: "history" | "new";
-}
+/** Unread backlog anchor the transcript renders before the first unread post. */
+export const ConversationUnreadCueSchema = Schema.Struct({
+  count: Schema.Finite,
+  postId: IdSchema("schoolClassForumPosts"),
+  status: Schema.Literals(["history", "new"]),
+});
+
+export type ConversationUnreadCue = typeof ConversationUnreadCueSchema.Type;
 
 type InitialConversationUnreadCue = Omit<ConversationUnreadCue, "status">;
 
