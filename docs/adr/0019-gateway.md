@@ -37,7 +37,7 @@ path `convexGateway` uses.
 | Plain chat, both models | 200 in 0.6 s and 2.3 s. `usage.cost` holds the US dollar cost of the call. |
 | `reasoning_effort: "high"` on `gemini-3.7-flash` | 200. 357 reasoning tokens, and the reasoning summary comes back in `message.reasoning` without asking for it. `"low"` gives 189 reasoning tokens, no setting gives 377. |
 | `reasoning_effort: "minimal"` on `gemini-3.5-flash-lite` | 200, 0 reasoning tokens. `"none"` is rejected with 400 ("Reasoning is mandatory for this endpoint"). |
-| Function tools, `tool_choice: "required"`, and a tool result sent back | 200 on both models, also with high reasoning and without sending reasoning details back. |
+| Function tools, `tool_choice: "required"`, and a tool result sent back | On `google/gemini-3.5-flash-lite` with no effort set, and on `google/gemini-3.7-flash` with `reasoning_effort: "high"`: 200 for both steps. No step sends reasoning details back. |
 | `response_format` with a strict JSON schema | 200, valid JSON. |
 | Streaming with `stream_options.include_usage` | 200. The last chunk carries `usage` with `cost`. Reasoning arrives in `delta.reasoning`. |
 | A PDF as a `file` part with a data URL, a PNG as an `image_url` data URL | 200, both read correctly. |
@@ -106,6 +106,21 @@ Given up:
   agent, model, and provider, not from gateway tags. Usage rows stored before
   this change have no cost.
 
+Changed:
+
+- **Failure reading.** A token read that fails inside a request, after the
+  build-time check passed, reaches `classify` as a plain `Error` and reads as
+  `unknown`. The provider reads the service token inside its own fetch, and the
+  `@ai-sdk/provider-utils` that `@ai-sdk/openai-compatible` uses returns that
+  error unchanged. Under the Vercel gateway a rejected key read as `auth`, which
+  Nina stores as `service-configuration`. `GatewayLive` still fails a deployment
+  that cannot call the gateway before any request.
+- **Duplicate provider packages.** `@convex-dev/ai-sdk-provider` brings its own
+  copies of the provider packages beside the AI SDK's: `@ai-sdk/provider` 4.0.3
+  and 4.0.7 beside 4.0.24, and `@ai-sdk/provider-utils` 5.0.12 and 5.0.28 beside
+  5.0.56. It also loads `@ai-sdk/openai` and `@ai-sdk/anthropic` when it is
+  imported. Their bundle size is not measured.
+
 Not yet established:
 
 - Convex's public pages state zero data retention on every request. They state
@@ -115,6 +130,11 @@ Not yet established:
   request.
 - Cost and latency figures, bundle size, and whether the dev and production
   teams have the paid plan that the gateway requires were not measured here.
+- `reasoning_effort` `low` and `high` on `google/gemini-3.5-flash-lite`, plain
+  and with function tools. No probe measured them on the lite model, which is
+  the default. Nine call sites send `low` to it and chat sends `high`, so a
+  rejected value would fail each call that sends it. Until a probe records both
+  values, those defaults stay unverified.
 
 ## Implementation Contract
 
