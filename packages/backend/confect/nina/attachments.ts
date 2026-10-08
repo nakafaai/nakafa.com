@@ -62,21 +62,32 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
               message: "Unable to read this attachment.",
             }),
         });
-        // getFile has just read this storage entry, so its system row exists.
-        const stored = yield* Effect.promise(() =>
-          ctx.db.system.get("_storage", saved.file.storageId)
-        ).pipe(Effect.flatMap(Effect.fromNullishOr), Effect.orDie);
         return {
           uploadId,
           fileId,
           part: saved.imagePart ?? saved.filePart,
-          size: stored.size,
+          storageId: saved.file.storageId,
           document: saved.imagePart === undefined,
         };
       })
     );
-    const documentBytes = Arr.reduce(files, 0, (total, file) =>
-      file.document ? total + file.size : total
+    // Only documents count toward the limit, so images never read their size.
+    // getFile has just read these storage entries, so their system rows exist.
+    const documentSizes = yield* Effect.forEach(
+      Arr.filter(files, (file) => file.document),
+      (file) =>
+        Effect.promise(() =>
+          ctx.db.system.get("_storage", file.storageId)
+        ).pipe(
+          Effect.flatMap(Effect.fromNullishOr),
+          Effect.map((stored) => stored.size),
+          Effect.orDie
+        )
+    );
+    const documentBytes = Arr.reduce(
+      documentSizes,
+      0,
+      (total, size) => total + size
     );
     if (documentBytes > NINA_DOCUMENT_SIZE) {
       return yield* new NinaUploadError({
