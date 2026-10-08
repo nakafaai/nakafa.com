@@ -1,4 +1,5 @@
 import type { ActiveAppLocale } from "@nakafa/aksara-contracts/locale";
+import { compareCodeUnits } from "@nakafa/aksara-contracts/text/order";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { PAGE_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/page/limits";
 import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
@@ -44,7 +45,10 @@ const readLocalePages = Effect.fn("contentRelease.readLocalePages")(function* (
   }
   return Arr.sort(
     MutableList.toArray(rows),
-    Order.mapInput(Order.String, (row: PageCatalogRow) => row.contentKey)
+    Order.mapInput(
+      Order.make(compareCodeUnits),
+      (row: PageCatalogRow) => row.contentKey
+    )
   );
 });
 
