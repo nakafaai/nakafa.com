@@ -1,5 +1,4 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { HashMap } from "effect";
 import {
   getConversationDistanceToViewportCenter,
   getConversationPostTargetIndex,
@@ -58,7 +57,7 @@ export function isConversationViewVisible({
   view,
 }: {
   handle: ConversationGeometryHandle;
-  rowIndexByPostId: HashMap.HashMap<Id<"schoolClassForumPosts">, number>;
+  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
   view: ConversationView;
 }) {
   if (view.kind === "bottom") {
@@ -87,7 +86,7 @@ export function isConversationViewSettled({
   view,
 }: {
   handle: ConversationGeometryHandle;
-  rowIndexByPostId: HashMap.HashMap<Id<"schoolClassForumPosts">, number>;
+  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
   view: ConversationView;
 }) {
   if (view.kind === "bottom") {
@@ -144,7 +143,7 @@ export function hasConversationViewReached({
   view,
 }: {
   handle: ConversationGeometryHandle;
-  rowIndexByPostId: HashMap.HashMap<Id<"schoolClassForumPosts">, number>;
+  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
   view: ConversationView;
 }) {
   if (isConversationViewVisible({ handle, rowIndexByPostId, view })) {

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { HashMap } from "effect";
 import {
   captureConversationView,
   hasConversationViewReached,
@@ -72,7 +71,7 @@ describe("conversation/data/view/position", () => {
     expect(
       hasConversationViewReached({
         handle: createHandle({ scrollOffset: 0 }).handle,
-        rowIndexByPostId: HashMap.empty(),
+        rowIndexByPostId: new Map(),
         view: { kind: "post", postId: firstPost._id },
       })
     ).toBe(false);
@@ -128,7 +127,7 @@ describe("conversation/data/view/position", () => {
     expect(
       isConversationViewSettled({
         handle: createHandle({ scrollOffset: 150 }).handle,
-        rowIndexByPostId: HashMap.empty(),
+        rowIndexByPostId: new Map(),
         view: { kind: "post", postId: firstPost._id },
       })
     ).toBe(false);

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { HashMap, Option } from "effect";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import { createActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
@@ -45,15 +44,9 @@ describe("conversation/data/transcript/active", () => {
     ]);
     expect(model.postIds).toEqual([first._id, second._id, third._id]);
     expect(model.lastPostId).toBe(third._id);
-    expect(
-      Option.getOrUndefined(HashMap.get(model.rowIndexByPostId, first._id))
-    ).toBe(2);
-    expect(
-      Option.getOrUndefined(HashMap.get(model.rowIndexByPostId, second._id))
-    ).toBe(4);
-    expect(
-      Option.getOrUndefined(HashMap.get(model.rowIndexByPostId, third._id))
-    ).toBe(6);
+    expect(model.rowIndexByPostId.get(first._id)).toBe(2);
+    expect(model.rowIndexByPostId.get(second._id)).toBe(4);
+    expect(model.rowIndexByPostId.get(third._id)).toBe(6);
   });
 
   it("keeps optimistic rows out of restorable transcript metadata", () => {
@@ -78,9 +71,7 @@ describe("conversation/data/transcript/active", () => {
     });
 
     expect(model.lastPostId).toBe(confirmed._id);
-    expect(
-      Option.getOrUndefined(HashMap.get(model.rowIndexByPostId, optimistic._id))
-    ).toBe(3);
+    expect(model.rowIndexByPostId.get(optimistic._id)).toBe(3);
   });
 
   it("returns empty row metadata when the transcript has no loaded rows", () => {
@@ -93,6 +84,6 @@ describe("conversation/data/transcript/active", () => {
     expect(model.rows).toEqual([]);
     expect(model.postIds).toEqual([]);
     expect(model.lastPostId).toBeNull();
-    expect(HashMap.size(model.rowIndexByPostId)).toBe(0);
+    expect(model.rowIndexByPostId.size).toBe(0);
   });
 });

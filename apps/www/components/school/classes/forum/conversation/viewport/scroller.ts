@@ -1,4 +1,3 @@
-import { HashMap, Option } from "effect";
 import type { VirtualizerHandle } from "virtua";
 import {
   CONVERSATION_EDGE_TOLERANCE,
@@ -162,8 +161,8 @@ export function createViewportScroller({
         return true;
       }
 
-      const targetIndex = Option.getOrUndefined(
-        HashMap.get(activeTranscript.rowIndexByPostId, placement.view.postId)
+      const targetIndex = activeTranscript.rowIndexByPostId.get(
+        placement.view.postId
       );
 
       if (targetIndex === undefined) {

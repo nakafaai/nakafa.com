@@ -1,5 +1,4 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { HashMap } from "effect";
 import type { ScrollToIndexOpts } from "virtua";
 import { CONVERSATION_EDGE_TOLERANCE } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
@@ -224,10 +223,7 @@ export function getOpeningPlacement({
     } satisfies ViewportPlacement;
   }
 
-  if (
-    unreadCue &&
-    HashMap.has(activeTranscript.rowIndexByPostId, unreadCue.postId)
-  ) {
+  if (unreadCue && activeTranscript.rowIndexByPostId.has(unreadCue.postId)) {
     return {
       align: "start",
       highlightPostId: null,

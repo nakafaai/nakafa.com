@@ -1,4 +1,4 @@
-import { Effect, HashMap, Ref, SubscriptionRef } from "effect";
+import { Effect, Ref, SubscriptionRef } from "effect";
 import {
   type ConversationView,
   isConversationViewAtPost,
@@ -24,12 +24,7 @@ export function handlePostNavigation(
   return Effect.gen(function* () {
     const activeTranscript = yield* Ref.get(runtime.activeTranscriptRef);
 
-    if (
-      !(
-        activeTranscript &&
-        HashMap.has(activeTranscript.rowIndexByPostId, postId)
-      )
-    ) {
+    if (!activeTranscript?.rowIndexByPostId.has(postId)) {
       return;
     }
 
