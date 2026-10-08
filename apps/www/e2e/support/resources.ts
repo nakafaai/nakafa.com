@@ -36,17 +36,14 @@ const createResourceRequestClassifier = (applicationOrigin: string) =>
     }
   };
 
-export interface JavascriptRun {
-  readonly decodedBodySize: number;
-  readonly encodedBodySize: number;
-  readonly resourceCount: number;
-  readonly urls: readonly string[];
-}
+const JavascriptRunSchema = Schema.Struct({
+  decodedBodySize: Schema.Finite,
+  encodedBodySize: Schema.Finite,
+  resourceCount: Schema.Finite,
+  urls: Schema.Array(Schema.String),
+});
 
-export interface JavascriptMeasurement {
-  readonly runs: readonly JavascriptRun[];
-  readonly worst: Omit<JavascriptRun, "urls">;
-}
+export type JavascriptRun = typeof JavascriptRunSchema.Type;
 
 /** A route did not return one successful document response. */
 export class JavascriptResourceResponseError extends Schema.TaggedError<JavascriptResourceResponseError>()(
