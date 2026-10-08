@@ -1,8 +1,8 @@
 import type { Ref } from "@confect/core";
 import type refs from "@repo/backend/confect/_generated/refs";
+import { routing } from "@repo/internationalization/src/routing";
 
 import { Schema } from "effect";
-import type { Locale } from "next-intl";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 
 /** Convex query contract for the set discovery page. */
@@ -38,14 +38,16 @@ export type LoadedRuntime = NonNullable<
   >["runtime"]
 >;
 
+const TryoutSetRouteSchema = Schema.Struct({
+  country: Schema.String,
+  exam: Schema.String,
+  locale: Schema.Literals(routing.locales),
+  set: Schema.String,
+  track: Schema.String,
+});
+
 /** URL route coordinates for one try-out set page. */
-export interface TryoutSetRoute {
-  country: string;
-  exam: string;
-  locale: Locale;
-  set: string;
-  track: string;
-}
+export type TryoutSetRoute = typeof TryoutSetRouteSchema.Type;
 
 const TryoutSetDestinationSchema = Schema.Struct({
   href: Schema.String,
