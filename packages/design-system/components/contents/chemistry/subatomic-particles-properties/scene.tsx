@@ -11,8 +11,8 @@ import {
   MASS_MODE_ID,
   type SubatomicParticlePropertiesColors,
   type SubatomicParticlePropertiesModeId,
-  type SubatomicParticlePropertiesSceneLabels,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
+import type { SubatomicParticlePropertiesLabProps } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { ReactNode } from "react";
@@ -60,7 +60,7 @@ const MASS_BARS = [
   >;
   height: number;
   label: keyof Pick<
-    SubatomicParticlePropertiesSceneLabels,
+    SubatomicParticlePropertiesLabProps["labels"]["scene"],
     "electron" | "neutron" | "proton"
   >;
   x: number;
@@ -116,7 +116,7 @@ function createQuadraticPath(start: Vector3, control: Vector3, end: Vector3) {
 
 interface SubatomicParticlePropertiesSceneProps {
   colors: SubatomicParticlePropertiesColors;
-  labels: SubatomicParticlePropertiesSceneLabels;
+  labels: SubatomicParticlePropertiesLabProps["labels"]["scene"];
   modeId: SubatomicParticlePropertiesModeId;
 }
 
@@ -151,7 +151,7 @@ function ChargeScene({
   labels,
 }: {
   colors: SubatomicParticlePropertiesColors;
-  labels: SubatomicParticlePropertiesSceneLabels;
+  labels: SubatomicParticlePropertiesLabProps["labels"]["scene"];
 }) {
   return (
     <group>
@@ -206,7 +206,7 @@ function MassScene({
   labels,
 }: {
   colors: SubatomicParticlePropertiesColors;
-  labels: SubatomicParticlePropertiesSceneLabels;
+  labels: SubatomicParticlePropertiesLabProps["labels"]["scene"];
 }) {
   return (
     <group position={[0, -0.15, 0]}>
@@ -241,7 +241,7 @@ function LocationScene({
   labels,
 }: {
   colors: SubatomicParticlePropertiesColors;
-  labels: SubatomicParticlePropertiesSceneLabels;
+  labels: SubatomicParticlePropertiesLabProps["labels"]["scene"];
 }) {
   return (
     <group>

@@ -2,7 +2,6 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const GAS_CUE_ID = "gas";
 export const PRECIPITATE_CUE_ID = "precipitate";
@@ -25,25 +24,6 @@ export const ReactionScenePointSchema = Schema.Tuple([
 ]);
 
 type ReactionScenePoint = typeof ReactionScenePointSchema.Type;
-
-export interface ReactionCueLabels {
-  helperCaption: ReactNode;
-  limit: ReactNode;
-  meaning: ReactNode;
-  observation: ReactNode;
-  tab: string;
-}
-
-export interface ReactionCharacteristicsLabLabels {
-  after: string;
-  before: string;
-  chooseCue: string;
-  cues: Record<ReactionCueId, ReactionCueLabels>;
-  limitLabel: string;
-  meaningLabel: string;
-  observationLabel: string;
-  transition: string;
-}
 
 const ReactionCueSchema = Schema.Struct({
   kind: Schema.Literals(REACTION_CUE_IDS),

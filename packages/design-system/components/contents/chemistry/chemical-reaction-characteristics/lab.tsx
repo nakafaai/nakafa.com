@@ -7,7 +7,6 @@ import {
   isReactionCueId,
   REACTION_CUE_IDS,
   REACTION_SCENE_VIEW,
-  type ReactionCharacteristicsLabLabels,
   type ReactionCueId,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import { ReactionCharacteristicsScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/scene";
@@ -35,9 +34,27 @@ import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.35;
 
-interface ReactionCharacteristicsLabProps {
+export interface ReactionCharacteristicsLabProps {
   description: ReactNode;
-  labels: ReactionCharacteristicsLabLabels;
+  labels: {
+    after: string;
+    before: string;
+    chooseCue: string;
+    cues: Record<
+      ReactionCueId,
+      {
+        helperCaption: ReactNode;
+        limit: ReactNode;
+        meaning: ReactNode;
+        observation: ReactNode;
+        tab: string;
+      }
+    >;
+    limitLabel: string;
+    meaningLabel: string;
+    observationLabel: string;
+    transition: string;
+  };
   title: ReactNode;
 }
 

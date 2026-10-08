@@ -1,11 +1,11 @@
 import { useFrame } from "@react-three/fiber";
 import {
-  type MassConservationLabLabels,
   type MassConservationModeId,
   type MassConservationSceneColors,
   MassConservationScenePointSchema,
   OPEN_SYSTEM_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
+import type { MassConservationLabProps } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/lab";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Schema } from "effect";
@@ -120,7 +120,7 @@ export function MassConservationScene({
   modeId,
 }: {
   colors: MassConservationSceneColors;
-  labels: MassConservationLabLabels;
+  labels: MassConservationLabProps["labels"];
   modeId: MassConservationModeId;
 }) {
   const modeLabels = labels.modes[modeId];

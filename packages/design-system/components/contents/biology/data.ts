@@ -2,7 +2,6 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const BiologyScenePointSchema = Schema.Tuple([
   Schema.Finite,
@@ -11,29 +10,6 @@ export const BiologyScenePointSchema = Schema.Tuple([
 ]);
 
 export type BiologyScenePoint = typeof BiologyScenePointSchema.Type;
-
-export interface BiologyLabCallout {
-  id: string;
-  label: ReactNode;
-}
-
-export interface BiologyLabItem {
-  callouts?: readonly BiologyLabCallout[];
-  caption: ReactNode;
-  focus: ReactNode;
-  tab: string;
-  takeaway: ReactNode;
-}
-
-export interface BiologyLabLabels<
-  Item extends BiologyLabItem = BiologyLabItem,
-> {
-  chooseMode: string;
-  focusLabel: string;
-  items: readonly [Item, ...Item[]];
-  takeawayLabel: string;
-  viewLabel: string;
-}
 
 const BiologySceneColorsSchema = Schema.Struct({
   animal: Schema.String,
@@ -117,12 +93,9 @@ export function getBiologySceneColors(theme?: string): BiologySceneColors {
 /**
  * Narrows ToggleGroup string values to valid biology item positions.
  */
-export function isBiologyItemIndex(
-  value: string,
-  items: readonly BiologyLabItem[]
-) {
+export function isBiologyItemIndex(value: string, itemCount: number) {
   const index = Number(value);
-  return Number.isInteger(index) && index >= 0 && index < items.length;
+  return Number.isInteger(index) && index >= 0 && index < itemCount;
 }
 
 /**

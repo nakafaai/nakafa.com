@@ -1,6 +1,6 @@
 "use client";
 
-import type { BacteriaLabItem } from "@repo/design-system/components/contents/biology/bacteria-scene";
+import type { BacteriaLabItemProps } from "@repo/design-system/components/contents/biology/bacteria-scene";
 import { BacteriaStructureScene } from "@repo/design-system/components/contents/biology/bacteria-scene";
 import type { BiologySceneView } from "@repo/design-system/components/contents/biology/data";
 import {
@@ -17,7 +17,9 @@ const BACTERIA_VIEW = {
 /**
  * Renders bacterial shape, structure, and cell-wall comparison views.
  */
-export function BacteriaStructureLab(props: BiologyLabProps<BacteriaLabItem>) {
+export function BacteriaStructureLab(
+  props: BiologyLabProps<BacteriaLabItemProps>
+) {
   return (
     <BiologyLabFrame
       scene={BacteriaStructureScene}

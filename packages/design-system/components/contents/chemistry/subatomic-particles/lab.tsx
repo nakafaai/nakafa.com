@@ -8,8 +8,6 @@ import {
   isSubatomicParticlesModeId,
   SUBATOMIC_PARTICLE_MODE_IDS,
   SUBATOMIC_VIEW_CONFIG,
-  type SubatomicParticlesFact,
-  type SubatomicParticlesLabLabels,
   type SubatomicParticlesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
 import { SubatomicParticlesScene } from "@repo/design-system/components/contents/chemistry/subatomic-particles/scene";
@@ -37,9 +35,31 @@ import { type ReactNode, Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
 
-interface SubatomicParticlesLabProps {
+export interface SubatomicParticlesLabProps {
   description: ReactNode;
-  labels: SubatomicParticlesLabLabels;
+  labels: {
+    chooseMode: string;
+    modes: Record<
+      SubatomicParticlesModeId,
+      {
+        description: ReactNode;
+        facts: readonly {
+          label: string;
+          value: ReactNode;
+        }[];
+        tab: string;
+      }
+    >;
+    scene: {
+      alphaParticle: ReactNode;
+      anode: ReactNode;
+      cathode: ReactNode;
+      cathodeRay: ReactNode;
+      negativePlate: ReactNode;
+      nucleus: ReactNode;
+      positivePlate: ReactNode;
+    };
+  };
   title: ReactNode;
 }
 
@@ -148,7 +168,7 @@ export function SubatomicParticlesLab({
   );
 }
 
-function LabFact({ fact }: { fact: SubatomicParticlesFact }) {
+function LabFact({ fact }: { fact: { label: string; value: ReactNode } }) {
   return (
     <div className="flex min-h-12 min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground text-sm">{fact.label}</dt>

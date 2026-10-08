@@ -1,3 +1,4 @@
+import type { CircleArcLineProps } from "@repo/design-system/components/contents/mathematics/line/equation";
 import type {
   ResolvedLine,
   ResolvedLineLabel,
@@ -33,12 +34,6 @@ const CircleRadiusSchema = Schema.Struct({
   radius: Schema.Finite,
 });
 type CircleRadius = typeof CircleRadiusSchema.Type;
-
-interface CircleArcLine extends CircleArc {
-  color: NonNullable<ResolvedLine["color"]>;
-  label?: CircleLineLabel;
-  lineWidth?: ResolvedLine["lineWidth"];
-}
 
 const FULL_CIRCLE_DEGREES = 360;
 const DEFAULT_SEGMENT_LINE_WIDTH = 4;
@@ -111,7 +106,7 @@ export function createCircleArcLine({
   label,
   lineWidth,
   ...arc
-}: CircleArcLine): ResolvedLine {
+}: Omit<CircleArcLineProps, "kind">): ResolvedLine {
   const points = createCircleArcPoints(arc);
 
   if (label) {
@@ -188,7 +183,7 @@ export function createCircleSegmentBoundaryLines({
   label,
   lineWidth = DEFAULT_SEGMENT_LINE_WIDTH,
   ...arc
-}: CircleArcLine): ResolvedLine[] {
+}: Omit<CircleArcLineProps, "kind">): ResolvedLine[] {
   const chordPoints = createCircleChordPoints(arc);
 
   return [

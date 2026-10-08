@@ -7,7 +7,6 @@ import {
   formatSigned,
   getSceneColors,
   NARROW_CAMERA_POSITION,
-  type VectorConceptLabLabels,
 } from "@repo/design-system/components/contents/physics/vector/concept/data";
 import { VectorConceptScene } from "@repo/design-system/components/contents/physics/vector/concept/scene";
 import {
@@ -39,9 +38,20 @@ import { Suspense, useMemo, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.28;
 
-interface VectorConceptLabProps {
+export interface VectorConceptLabProps {
   description: ReactNode;
-  labels: VectorConceptLabLabels;
+  labels: {
+    bridgeView: string;
+    chooseLoadPosition: string;
+    direction: string;
+    directionValue: string;
+    leftCable: ReactNode;
+    magnitude: string;
+    magnitudeValue: string;
+    netIdea: string;
+    netIdeaValue: string;
+    rightCable: ReactNode;
+  };
   title: ReactNode;
 }
 

@@ -4,7 +4,6 @@ import { useThree } from "@react-three/fiber";
 import {
   CONSTANT_COMPOSITION_MODE_IDS,
   CONSTANT_COMPOSITION_SCENE_VIEW,
-  type ConstantCompositionLabLabels,
   type ConstantCompositionModeId,
   EXACT_RATIO_MODE_ID,
   getConstantCompositionSceneColors,
@@ -35,9 +34,28 @@ import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.28;
 
-interface ConstantCompositionLabProps {
+export interface ConstantCompositionLabProps {
   description: ReactNode;
-  labels: ConstantCompositionLabLabels;
+  labels: {
+    after: string;
+    before: string;
+    chooseMode: string;
+    leftoverLabel: string;
+    modes: Record<
+      ConstantCompositionModeId,
+      {
+        helperCaption: ReactNode;
+        leftover: ReactNode;
+        ratio: ReactNode;
+        readoutAfter: ReactNode;
+        readoutBefore: ReactNode;
+        tab: ReactNode;
+        tabLabel: string;
+      }
+    >;
+    ratioLabel: string;
+    reactionView: string;
+  };
   title: ReactNode;
 }
 

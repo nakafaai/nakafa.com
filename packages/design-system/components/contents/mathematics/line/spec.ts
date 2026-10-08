@@ -1,3 +1,4 @@
+import type { CircleArcLineProps } from "@repo/design-system/components/contents/mathematics/line/equation";
 import type {
   Props as LineEquationProps,
   LineLabel,
@@ -91,30 +92,22 @@ const CircleArcLineSchema = Schema.Struct({
   lineWidth: Schema.optionalKey(Schema.Finite),
   segments: Schema.optionalKey(Schema.Finite),
 });
-type CircleArcFields = typeof CircleArcLineSchema.Type;
+export type CircleArcFields = typeof CircleArcLineSchema.Type;
 
 const CircleArcLabelSchema = Schema.Struct({
   progress: Schema.optionalKey(Schema.Finite),
 });
-
-/**
- * The label holds React nodes, which no Schema can describe, so the interface
- * stays hand-written. Its `progress` is plain data from `CircleArcLabelSchema`.
- */
-interface CircleArcLine extends CircleArcFields {
-  readonly label?: Omit<ResolvedLineLabel, "at"> &
-    typeof CircleArcLabelSchema.Type;
-}
+export type CircleArcLabelFields = typeof CircleArcLabelSchema.Type;
 
 const CircleSegmentLineSchema = Schema.Struct({
   kind: Schema.Literal("circle-segment"),
 });
-type CircleSegmentLine = Omit<CircleArcLine, "kind"> &
+type CircleSegmentLine = Omit<CircleArcLineProps, "kind"> &
   typeof CircleSegmentLineSchema.Type;
 
 /** Declarative or already-resolved line accepted by the public card. */
 export type AuthoredLine =
-  | CircleArcLine
+  | CircleArcLineProps
   | CircleChordLine
   | CircleOutlineLine
   | CircleRadiusLine

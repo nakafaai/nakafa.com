@@ -1,26 +1,12 @@
 import type { CoordinateTuple as ScenePoint } from "@repo/design-system/components/three/frame";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
 
 export const CAMERA_POSITION = [0, 2.35, 5.5] satisfies ScenePoint;
 export const NARROW_CAMERA_POSITION = [0, 2.75, 7.8] satisfies ScenePoint;
 export const CAMERA_TARGET = [0, 0.8, 0] satisfies ScenePoint;
 
 export type VectorConceptSceneColors = ReturnType<typeof getSceneColors>;
-
-export interface VectorConceptLabLabels {
-  bridgeView: string;
-  chooseLoadPosition: string;
-  direction: string;
-  directionValue: string;
-  leftCable: ReactNode;
-  magnitude: string;
-  magnitudeValue: string;
-  netIdea: string;
-  netIdeaValue: string;
-  rightCable: ReactNode;
-}
 
 export function formatSigned(value: number) {
   if (value === 0) {

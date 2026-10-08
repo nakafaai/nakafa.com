@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  type BiologyLabCallout,
   type BiologyScenePoint,
   BiologyScenePointSchema,
 } from "@repo/design-system/components/contents/biology/data";
+import type { BiologyLabCalloutProps } from "@repo/design-system/components/contents/biology/lab-frame";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import {
   THREE_FONT_SIZE,
@@ -42,7 +42,7 @@ export function BiologyCallouts({
   color,
   targets,
 }: {
-  callouts?: readonly BiologyLabCallout[] | undefined;
+  callouts?: readonly BiologyLabCalloutProps[] | undefined;
   color: string;
   targets: readonly BiologyCalloutTarget[];
 }) {

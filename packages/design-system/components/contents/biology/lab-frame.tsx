@@ -3,8 +3,6 @@
 import { useThree } from "@react-three/fiber";
 import {
   BIOLOGY_DEFAULT_VIEW,
-  type BiologyLabItem,
-  type BiologyLabLabels,
   type BiologySceneColors,
   type BiologySceneView,
   getBiologySceneColors,
@@ -35,14 +33,35 @@ import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.3;
 
-export interface BiologyLabProps<Item extends BiologyLabItem = BiologyLabItem> {
+export interface BiologyLabCalloutProps {
+  id: string;
+  label: ReactNode;
+}
+
+export interface BiologyLabItemProps {
+  callouts?: readonly BiologyLabCalloutProps[];
+  caption: ReactNode;
+  focus: ReactNode;
+  tab: string;
+  takeaway: ReactNode;
+}
+
+export interface BiologyLabProps<
+  Item extends BiologyLabItemProps = BiologyLabItemProps,
+> {
   description: ReactNode;
-  labels: BiologyLabLabels<Item>;
+  labels: {
+    chooseMode: string;
+    focusLabel: string;
+    items: readonly [Item, ...Item[]];
+    takeawayLabel: string;
+    viewLabel: string;
+  };
   title: ReactNode;
 }
 
 export interface BiologySceneProps<
-  Item extends BiologyLabItem = BiologyLabItem,
+  Item extends BiologyLabItemProps = BiologyLabItemProps,
 > {
   colors: BiologySceneColors;
   item: Item;
@@ -52,7 +71,7 @@ export interface BiologySceneProps<
 /**
  * Renders the shared card, controls, and camera frame for one biology 3D lab.
  */
-export function BiologyLabFrame<Item extends BiologyLabItem>({
+export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   description,
   labels,
   scene: Scene,
@@ -76,7 +95,7 @@ export function BiologyLabFrame<Item extends BiologyLabItem>({
       return;
     }
 
-    if (!isBiologyItemIndex(value, labels.items)) {
+    if (!isBiologyItemIndex(value, labels.items.length)) {
       return;
     }
 

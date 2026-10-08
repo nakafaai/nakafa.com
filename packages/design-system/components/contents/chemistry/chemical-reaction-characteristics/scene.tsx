@@ -4,11 +4,11 @@ import {
   ENERGY_CUE_ID,
   GAS_CUE_ID,
   PRECIPITATE_CUE_ID,
-  type ReactionCharacteristicsLabLabels,
   type ReactionCueId,
   type ReactionSceneColors,
   ReactionScenePointSchema,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
+import type { ReactionCharacteristicsLabProps } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Schema } from "effect";
@@ -140,7 +140,7 @@ export function ReactionCharacteristicsScene({
 }: {
   colors: ReactionSceneColors;
   cueId: ReactionCueId;
-  labels: ReactionCharacteristicsLabLabels;
+  labels: ReactionCharacteristicsLabProps["labels"];
 }) {
   return (
     <group position={[0, SCENE_Y, 0]} scale={SCENE_SCALE}>

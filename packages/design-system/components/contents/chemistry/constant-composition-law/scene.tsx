@@ -1,6 +1,5 @@
 import { Line } from "@react-three/drei";
 import {
-  type ConstantCompositionLabLabels,
   type ConstantCompositionModeId,
   type ConstantCompositionSceneColors,
   type ConstantCompositionScenePoint,
@@ -9,6 +8,7 @@ import {
   HYDROGEN_EXCESS_MODE_ID,
   OXYGEN_EXCESS_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/constant-composition-law/data";
+import type { ConstantCompositionLabProps } from "@repo/design-system/components/contents/chemistry/constant-composition-law/lab";
 import {
   CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
   ChemistryParticleLabel,
@@ -117,7 +117,7 @@ export function ConstantCompositionScene({
   modeId,
 }: {
   colors: ConstantCompositionSceneColors;
-  labels: Pick<ConstantCompositionLabLabels, "after" | "before" | "modes">;
+  labels: Pick<ConstantCompositionLabProps["labels"], "after" | "before" | "modes">;
   modeId: ConstantCompositionModeId;
 }) {
   const modeLabels = labels.modes[modeId];

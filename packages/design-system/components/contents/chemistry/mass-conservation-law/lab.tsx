@@ -7,7 +7,6 @@ import {
   isMassConservationModeId,
   MASS_CONSERVATION_MODE_IDS,
   MASS_CONSERVATION_SCENE_VIEW,
-  type MassConservationLabLabels,
   type MassConservationModeId,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
 import { MassConservationScene } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/scene";
@@ -35,9 +34,27 @@ import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.22;
 
-interface MassConservationLabProps {
+export interface MassConservationLabProps {
   description: ReactNode;
-  labels: MassConservationLabLabels;
+  labels: {
+    after: string;
+    before: string;
+    calculationLabel: string;
+    chooseMode: string;
+    modes: Record<
+      MassConservationModeId,
+      {
+        calculation: ReactNode;
+        helperCaption: ReactNode;
+        readoutAfter: ReactNode;
+        readoutBefore: ReactNode;
+        system: ReactNode;
+        tab: string;
+      }
+    >;
+    reactionView: string;
+    systemLabel: string;
+  };
   title: ReactNode;
 }
 

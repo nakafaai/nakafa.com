@@ -2,7 +2,6 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
-import type { ReactNode } from "react";
 
 export const CATHODE_RAY_MODE_ID = "cathode-ray";
 export const GOLD_FOIL_MODE_ID = "gold-foil";
@@ -52,33 +51,6 @@ export const SUBATOMIC_VIEW_CONFIG = {
   SubatomicParticlesModeId,
   typeof SubatomicViewConfigSchema.Type
 >;
-
-export interface SubatomicParticlesFact {
-  label: string;
-  value: ReactNode;
-}
-
-export interface SubatomicParticlesModeLabels {
-  description: ReactNode;
-  facts: readonly SubatomicParticlesFact[];
-  tab: string;
-}
-
-export interface SubatomicParticlesSceneLabels {
-  alphaParticle: ReactNode;
-  anode: ReactNode;
-  cathode: ReactNode;
-  cathodeRay: ReactNode;
-  negativePlate: ReactNode;
-  nucleus: ReactNode;
-  positivePlate: ReactNode;
-}
-
-export interface SubatomicParticlesLabLabels {
-  chooseMode: string;
-  modes: Record<SubatomicParticlesModeId, SubatomicParticlesModeLabels>;
-  scene: SubatomicParticlesSceneLabels;
-}
 
 export function isSubatomicParticlesModeId(
   value: string
