@@ -5,8 +5,8 @@ import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { expectUncovered, readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const readinessTimeoutMilliseconds = 15_000;
 // Long enough that the server-rendered page paints before it hydrates.
 const heldScriptMilliseconds = 1000;
 const appScriptPattern = /\/_next\/static\/chunks\/.+\.js$/;

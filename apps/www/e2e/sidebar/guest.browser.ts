@@ -6,12 +6,12 @@ import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/input";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const targetViewports = [
   { height: 844, name: "compact", width: 390 },
   { height: 900, name: "desktop", width: 1440 },
 ] as const;
-const readinessTimeoutMilliseconds = 15_000;
 
 for (const viewport of targetViewports) {
   test(`guest sidebar keeps account actions clear at ${viewport.name}`, async ({

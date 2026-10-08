@@ -9,13 +9,13 @@ import {
   readPageTime,
   readShellObservation,
 } from "@/e2e/support/shell";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   activate,
   arrive,
   intend,
   openHub,
   openTrack,
-  readinessTimeoutMilliseconds,
   readSectionHref,
   recordIntentRequests,
   sectionLink,

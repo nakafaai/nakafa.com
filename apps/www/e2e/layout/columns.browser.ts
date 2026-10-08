@@ -3,8 +3,8 @@ import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const readinessTimeoutMilliseconds = 15_000;
 // The shared content column's cap, Tailwind's max-w-3xl.
 const columnMaxWidth = 768;
 // Pages whose lists are narrower than the column, so a shrinking column shows.

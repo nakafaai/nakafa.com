@@ -5,8 +5,8 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const readinessTimeoutMilliseconds = 15_000;
 const quranIndexUrlPattern = /\/id\/quran$/;
 const quranSurahUrlPattern = /\/id\/quran\/2$/;
 const quranTranslationNoteHrefPattern = /^#.+-translation-note-\d+$/u;

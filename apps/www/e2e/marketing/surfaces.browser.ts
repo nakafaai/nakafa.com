@@ -15,6 +15,7 @@ import {
   expectStablePricingTransition,
   observeStablePricingReload,
 } from "@/e2e/support/pricing";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { contributors } from "@/lib/data/contributor";
 
 /**
@@ -32,7 +33,6 @@ const COMMUNITY_MAX_DESCENDANTS = 800;
 const COMMUNITY_MAX_HTML_BYTES = 223_000;
 const HOMEPAGE_MAX_DESCENDANTS = 2540;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
-const READINESS_TIMEOUT_MILLISECONDS = 15_000;
 
 const targetViewports = [
   { height: 800, name: "compact", width: 320 },
@@ -62,7 +62,7 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
     page,
     href,
     href,
-    READINESS_TIMEOUT_MILLISECONDS
+    readinessTimeoutMilliseconds
   );
   /**
    * Next.js may commit App Router history before React reveals a streamed route.
@@ -72,7 +72,7 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
   yield* Effect.promise(() =>
     expect(
       page.locator('main[data-marketing-page="true"]').filter({ visible: true })
-    ).toHaveCount(1, { timeout: READINESS_TIMEOUT_MILLISECONDS })
+    ).toHaveCount(1, { timeout: readinessTimeoutMilliseconds })
   );
 });
 
@@ -382,7 +382,7 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
     yield* Effect.promise(() => pricingLink.click());
     yield* Effect.promise(() =>
       expect(page).toHaveURL(PRICING_PATH_PATTERN, {
-        timeout: READINESS_TIMEOUT_MILLISECONDS,
+        timeout: readinessTimeoutMilliseconds,
       })
     );
     yield* Effect.promise(() =>
@@ -394,7 +394,7 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
 
     const observation = yield* observeStablePricingReload(
       page,
-      READINESS_TIMEOUT_MILLISECONDS
+      readinessTimeoutMilliseconds
     );
     yield* Effect.sync(() => expectStablePricingTransition(observation));
   }

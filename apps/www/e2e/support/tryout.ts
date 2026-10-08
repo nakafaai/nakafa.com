@@ -3,8 +3,8 @@ import { Effect, MutableHashSet } from "effect";
 import { press } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/requests";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-export const readinessTimeoutMilliseconds = 15_000;
 export const hubHref = "/en/try-out";
 export const countryHref = `${hubHref}/indonesia`;
 export const examHref = `${countryHref}/snbt`;

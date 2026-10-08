@@ -5,8 +5,8 @@ import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const readinessTimeoutMilliseconds = 15_000;
 const cacheTimeoutMilliseconds = 30_000;
 const lesson = pinnedRoutes.inverse.en;
 const katexFile = /\/KaTeX_([^./]+)\.[^/]+\.woff2$/;

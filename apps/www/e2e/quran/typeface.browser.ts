@@ -5,8 +5,8 @@ import { withObservedPageErrors } from "@/e2e/support/context";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const readinessTimeoutMilliseconds = 15_000;
 /** Longer than the 100 ms block period of optional display. */
 const lateTypefaceMilliseconds = 1000;
 
