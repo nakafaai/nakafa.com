@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** A real exponential model and the integer observations shown beside it. */
 export const ExponentialSchema = Schema.Struct({
@@ -30,7 +30,7 @@ export const resolveExponential = Effect.fn("Exponential.resolve")(function* (
     Effect.mapError((error) => new ExponentialError({ message: error.message }))
   );
   const values = Array.from({ length: n }, (_, x) => ({ x, y: p * a ** x }));
-  if (values.some(({ y }) => !Number.isFinite(y))) {
+  if (Arr.some(values, ({ y }) => !Number.isFinite(y))) {
     return yield* new ExponentialError({
       message: "The exponential model exceeds finite chart values.",
     });

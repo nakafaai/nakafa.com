@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -94,7 +95,7 @@ export function CombiningVolumesLab({
           value={selectedModeId}
           variant="outline"
         >
-          {COMBINING_VOLUMES_MODE_IDS.map((modeId) => (
+          {Arr.map(COMBINING_VOLUMES_MODE_IDS, (modeId) => (
             <ToggleGroupItem
               aria-label={labels.modes[modeId].tabLabel}
               key={modeId}

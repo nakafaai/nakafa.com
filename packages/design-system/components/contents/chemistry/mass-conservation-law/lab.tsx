@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -95,7 +96,7 @@ export function MassConservationLab({
           value={selectedModeId}
           variant="outline"
         >
-          {MASS_CONSERVATION_MODE_IDS.map((modeId) => (
+          {Arr.map(MASS_CONSERVATION_MODE_IDS, (modeId) => (
             <ToggleGroupItem key={modeId} value={modeId}>
               {labels.modes[modeId].tab}
             </ToggleGroupItem>

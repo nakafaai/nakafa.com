@@ -13,6 +13,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -37,7 +38,7 @@ export function Stage({ title, labels }: Props) {
       <VisualCardHeader title={title} />
       <VisualCardBody>
         <Stepper defaultValue={2}>
-          {stages.map((stage) => (
+          {Arr.map(stages, (stage) => (
             <StepperItem
               className="relative flex-1 flex-col!"
               key={stage.step}

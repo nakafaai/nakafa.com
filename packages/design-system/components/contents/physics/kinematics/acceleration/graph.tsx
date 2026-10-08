@@ -15,7 +15,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 interface AccelerationGraphProps {
   labels: AccelerationLabels;
@@ -23,9 +23,11 @@ interface AccelerationGraphProps {
 }
 
 const MOTION_POINTS = getMotionPoints();
-const MAX_OBSERVED_TIME = Math.max(...MOTION_POINTS.map((point) => point.time));
+const MAX_OBSERVED_TIME = Math.max(
+  ...Arr.map(MOTION_POINTS, (point) => point.time)
+);
 const MAX_OBSERVED_VELOCITY = Math.max(
-  ...MOTION_POINTS.map((point) => point.velocity)
+  ...Arr.map(MOTION_POINTS, (point) => point.velocity)
 );
 const TIME_TICK_STEP = getNiceTickStep(MAX_OBSERVED_TIME, 7);
 const VELOCITY_TICK_STEP = getNiceTickStep(MAX_OBSERVED_VELOCITY, 6);
@@ -51,7 +53,7 @@ export function AccelerationGraph({
     },
   } satisfies ChartConfig;
 
-  const motionData = MOTION_POINTS.map((point) => ({
+  const motionData = Arr.map(MOTION_POINTS, (point) => ({
     time: point.time,
     motion: point.velocity,
     selected: null,

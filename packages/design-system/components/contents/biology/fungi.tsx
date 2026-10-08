@@ -12,6 +12,7 @@ import {
 } from "@repo/design-system/components/contents/biology/lab-frame";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import { BiologyTube } from "@repo/design-system/components/contents/biology/parts";
+import { Array as Arr } from "effect";
 
 const FUNGI_VIEW = {
   cameraPosition: [2.25, 1.7, 3.05],
@@ -134,7 +135,7 @@ function FungiMyceliumScene({ colors, item }: BiologySceneProps) {
 function Substrate({ color }: { color: string }) {
   return (
     <group>
-      {SUBSTRATE_GRAINS.map((grain) => (
+      {Arr.map(SUBSTRATE_GRAINS, (grain) => (
         <mesh key={grain.id} position={grain.position} scale={grain.scale}>
           <sphereGeometry args={[1, 28, 18]} />
           <meshStandardMaterial color={color} roughness={0.92} />
@@ -153,7 +154,7 @@ function HyphaNetwork({
 }) {
   return (
     <group>
-      {HYPHA_PATHS.map(([id, points]) => (
+      {Arr.map(HYPHA_PATHS, ([id, points]) => (
         <group key={id}>
           <BiologyTube
             color={wallColor}
@@ -171,8 +172,12 @@ function HyphaNetwork({
           />
         </group>
       ))}
-      {SEPTA_POINTS.map((point) => (
-        <mesh key={point.join("-")} position={point} scale={[1, 0.34, 1]}>
+      {Arr.map(SEPTA_POINTS, (point) => (
+        <mesh
+          key={Arr.join(Arr.map(point, String), "-")}
+          position={point}
+          scale={[1, 0.34, 1]}
+        >
           <sphereGeometry args={[0.052, 14, 10]} />
           <meshStandardMaterial
             color={wallColor}
@@ -197,8 +202,11 @@ const ENZYME_DROPLETS = [
 function EnzymeDroplets({ color }: { color: string }) {
   return (
     <group>
-      {ENZYME_DROPLETS.map((position) => (
-        <mesh key={position.join("-")} position={position}>
+      {Arr.map(ENZYME_DROPLETS, (position) => (
+        <mesh
+          key={Arr.join(Arr.map(position, String), "-")}
+          position={position}
+        >
           <sphereGeometry args={[0.026, 12, 8]} />
           <meshStandardMaterial
             color={color}
@@ -222,9 +230,9 @@ function SporeHead({ color, stemColor }: { color: string; stemColor: string }) {
         radius={0.025}
         segments={38}
       />
-      {SPORE_POINTS.map((point, index) => (
+      {Arr.map(SPORE_POINTS, (point, index) => (
         <FloatingGroup
-          key={point.join("-")}
+          key={Arr.join(Arr.map(point, String), "-")}
           phase={index * 0.44}
           travel={0.035}
         >

@@ -22,6 +22,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -85,7 +86,7 @@ export function ValenceElectronLab({
           value={selectedSampleId}
           variant="outline"
         >
-          {VALENCE_ELECTRON_SAMPLE_IDS.map((sampleId) => {
+          {Arr.map(VALENCE_ELECTRON_SAMPLE_IDS, (sampleId) => {
             const sample = VALENCE_ELECTRON_SAMPLES[sampleId];
 
             return (

@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import type { RocketExhaust } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Mesh, PointLight } from "three";
 
@@ -101,7 +102,7 @@ export function AnimatedExhaust({
 function SmokeTrail({ exhaustRadius }: { exhaustRadius: number }) {
   return (
     <group>
-      {SMOKE_PARTICLES.map((particle) => (
+      {Arr.map(SMOKE_PARTICLES, (particle) => (
         <SmokePuff
           exhaustRadius={exhaustRadius}
           index={particle.index}

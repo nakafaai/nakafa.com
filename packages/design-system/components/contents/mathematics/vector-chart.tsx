@@ -18,7 +18,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -60,7 +60,7 @@ export function VectorChart({ title, description, vectors }: Props) {
             showOrigin={false}
             showZAxis={false}
           >
-            {vectors.map((vector, index) => {
+            {Arr.map(vectors, (vector, index) => {
               const geometry = Effect.runSync(resolveVectorGeometry(vector));
               const arrow = VECTOR_ARROWS[geometry.direction];
               const color =
@@ -74,11 +74,12 @@ export function VectorChart({ title, description, vectors }: Props) {
                   <LineEquation
                     color={color}
                     cone={arrow ? { position: arrow } : undefined}
-                    points={geometry.points.map((point) => ({
+                    points={Arr.map(geometry.points, (point) => ({
                       ...point,
                       z: 0,
                     }))}
-                    showPoints={geometry.points.every(
+                    showPoints={Arr.every(
+                      geometry.points,
                       (point) => point.x === tip.x && point.y === tip.y
                     )}
                     smooth={false}
@@ -98,15 +99,14 @@ export function VectorChart({ title, description, vectors }: Props) {
             })}
           </CoordinateSystem>
           <div className="sr-only">
-            {vectors.map((vector) => (
+            {Arr.map(vectors, (vector) => (
               <p key={vector.id}>
                 {vector.name}:{" "}
                 <InlineMath
-                  math={vector.points
-                    .map(({ x, y }) => `(${x}, ${y})`)
-                    .join(
-                      ` ${VECTOR_NOTATION[vector.direction ?? "forward"]} `
-                    )}
+                  math={Arr.join(
+                    Arr.map(vector.points, ({ x, y }) => `(${x}, ${y})`),
+                    ` ${VECTOR_NOTATION[vector.direction ?? "forward"]} `
+                  )}
                 />
               </p>
             ))}

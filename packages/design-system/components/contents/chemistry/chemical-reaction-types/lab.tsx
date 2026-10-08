@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -102,7 +103,7 @@ export function ChemicalReactionTypesLab({
           value={selectedTypeId}
           variant="outline"
         >
-          {CHEMICAL_REACTION_TYPE_IDS.map((typeId) => (
+          {Arr.map(CHEMICAL_REACTION_TYPE_IDS, (typeId) => (
             <ToggleGroupItem key={typeId} value={typeId}>
               {labels.types[typeId].tab}
             </ToggleGroupItem>

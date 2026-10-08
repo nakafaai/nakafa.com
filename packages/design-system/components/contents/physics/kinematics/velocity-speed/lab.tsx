@@ -121,7 +121,7 @@ export function VelocitySpeedLab({
           value={caseId}
           variant="outline"
         >
-          {VELOCITY_SPEED_CASE_IDS.map((caseOption) => (
+          {Arr.map(VELOCITY_SPEED_CASE_IDS, (caseOption) => (
             <ToggleGroupItem key={caseOption} value={caseOption}>
               {labels.modeLabels[caseOption]}
             </ToggleGroupItem>
@@ -172,7 +172,7 @@ export function VelocitySpeedLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          {facts.map((fact) => (
+          {Arr.map(facts, (fact) => (
             <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
               <dt className="flex items-center gap-2 text-muted-foreground">
                 {"markerColor" in fact ? (
@@ -236,7 +236,7 @@ function Road() {
         />
       </mesh>
 
-      {stripePositions.map((x) => (
+      {Arr.map(stripePositions, (x) => (
         <mesh key={x} position={[x, 0.035, 0]}>
           <boxGeometry
             args={[
@@ -269,7 +269,7 @@ function RouteCones({ motion }: { motion: VelocitySpeedState }) {
 
   return (
     <group>
-      {routeWaypoints.map((x) => (
+      {Arr.map(routeWaypoints, (x) => (
         <TrafficCone key={x} x={x} />
       ))}
     </group>
@@ -324,7 +324,7 @@ function getRouteWaypoints(motion: VelocitySpeedState) {
 function DistanceGuide({ motion }: { motion: VelocitySpeedState }) {
   return (
     <group>
-      {motion.segments.map((segment, index) => (
+      {Arr.map(motion.segments, (segment, index) => (
         <GuideSegment
           color={VELOCITY_SPEED_COLORS.distanceGuide}
           endX={segment.endX}

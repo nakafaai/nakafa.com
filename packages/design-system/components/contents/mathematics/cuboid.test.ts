@@ -29,11 +29,12 @@ describe("cuboid visual geometry", () => {
     });
 
     expect(lines).toHaveLength(12);
-    expect(lines.map(getEdgeLength).sort((a, b) => a - b)).toEqual([
+    expect(Arr.sort(Arr.map(lines, getEdgeLength), Order.Number)).toEqual([
       4, 4, 4, 4, 6, 6, 6, 6, 8, 8, 8, 8,
     ]);
     expect(lines).toSatisfy((edges: typeof lines) =>
-      edges.every(
+      Arr.every(
+        edges,
         (edge) =>
           edge.color === "slategray" &&
           edge.lineWidth === 2 &&
@@ -51,16 +52,16 @@ describe("cuboid visual geometry", () => {
       length: 4,
       width: 8,
     });
-    const vertices = lines.flatMap((line) => line.points);
+    const vertices = Arr.flatMap(lines, (line) => line.points);
 
     expect(
-      Arr.sort(Arr.dedupe(vertices.map(({ x }) => x)), Order.Number)
+      Arr.sort(Arr.dedupe(Arr.map(vertices, ({ x }) => x)), Order.Number)
     ).toEqual([-2, 2]);
     expect(
-      Arr.sort(Arr.dedupe(vertices.map(({ y }) => y)), Order.Number)
+      Arr.sort(Arr.dedupe(Arr.map(vertices, ({ y }) => y)), Order.Number)
     ).toEqual([-3, 3]);
     expect(
-      Arr.sort(Arr.dedupe(vertices.map(({ z }) => z)), Order.Number)
+      Arr.sort(Arr.dedupe(Arr.map(vertices, ({ z }) => z)), Order.Number)
     ).toEqual([-4, 4]);
   });
 });

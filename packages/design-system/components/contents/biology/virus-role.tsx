@@ -11,6 +11,7 @@ import {
   BacteriophageModel,
   MiniEnvelopedVirion,
 } from "@repo/design-system/components/contents/biology/virus-parts";
+import { Array as Arr } from "effect";
 
 const ROLE_VIEW = {
   cameraPosition: [0, 1.5, 3.18],
@@ -82,7 +83,7 @@ function PathogenRole({ colors }: Pick<BiologySceneProps, "colors">) {
         <sphereGeometry args={[1, 40, 24]} />
         <meshStandardMaterial color={colors.host} opacity={0.2} transparent />
       </mesh>
-      {[-0.8, -0.38, 0.05, 0.52, 0.9].map((x, index) => (
+      {Arr.map([-0.8, -0.38, 0.05, 0.52, 0.9], (x, index) => (
         <group
           key={x}
           position={[x, 0.36 - Math.abs(x) * 0.24, 0.44 + index * 0.01]}
@@ -100,7 +101,7 @@ function PathogenRole({ colors }: Pick<BiologySceneProps, "colors">) {
 function EcologyRole({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
-      {TARGET_BACTERIA.map((bacterium) => (
+      {Arr.map(TARGET_BACTERIA, (bacterium) => (
         <group
           key={bacterium.id}
           position={bacterium.position}

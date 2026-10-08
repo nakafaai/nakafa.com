@@ -17,7 +17,7 @@ import {
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { getColor } from "@repo/design-system/lib/color";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { Suspense, useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
 
@@ -196,7 +196,8 @@ function RouteTube({
   radius: number;
 }) {
   const curve = useMemo(() => {
-    const vectors = points.map(
+    const vectors = Arr.map(
+      points,
       (point) => new Vector3(point.x, TRACK_Y, point.z)
     );
 
@@ -355,13 +356,13 @@ function RollingBall({ motion }: { motion: AverageVelocitySpeedState }) {
         rotation: "y",
         translation: {
           x: {
-            min: Math.min(...route.map((point) => point.x)),
-            max: Math.max(...route.map((point) => point.x)),
+            min: Math.min(...Arr.map(route, (point) => point.x)),
+            max: Math.max(...Arr.map(route, (point) => point.x)),
           },
           y: { min: BALL_Y, max: BALL_Y },
           z: {
-            min: Math.min(...route.map((point) => point.z)),
-            max: Math.max(...route.map((point) => point.z)),
+            min: Math.min(...Arr.map(route, (point) => point.z)),
+            max: Math.max(...Arr.map(route, (point) => point.z)),
           },
         },
       }}
@@ -428,19 +429,20 @@ function getTrackGeometry(motion: AverageVelocitySpeedState) {
 }
 
 function getPlatformBounds(points: readonly WorldPoint2[]): PlatformBounds {
-  const bounds = points.reduce(
-    (nextBounds, point) => ({
-      maxX: Math.max(nextBounds.maxX, point.x),
-      maxZ: Math.max(nextBounds.maxZ, point.z),
-      minX: Math.min(nextBounds.minX, point.x),
-      minZ: Math.min(nextBounds.minZ, point.z),
-    }),
+  const bounds = Arr.reduce(
+    points,
     {
       maxX: Number.NEGATIVE_INFINITY,
       maxZ: Number.NEGATIVE_INFINITY,
       minX: Number.POSITIVE_INFINITY,
       minZ: Number.POSITIVE_INFINITY,
-    }
+    },
+    (nextBounds, point) => ({
+      maxX: Math.max(nextBounds.maxX, point.x),
+      maxZ: Math.max(nextBounds.maxZ, point.z),
+      minX: Math.min(nextBounds.minX, point.x),
+      minZ: Math.min(nextBounds.minZ, point.z),
+    })
   );
   const width = bounds.maxX - bounds.minX + PLATFORM_PADDING * 2;
   const depth = bounds.maxZ - bounds.minZ + PLATFORM_PADDING * 2;
