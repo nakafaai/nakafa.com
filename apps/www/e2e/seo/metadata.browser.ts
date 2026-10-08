@@ -1,11 +1,15 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Record as Rec } from "effect";
+import { Effect, Record as Rec, Schema } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readHeadLinks } from "@/e2e/support/crawler";
-import { NavigationLinkMissing } from "@/e2e/support/navigation/cases";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { paginationNavigation } from "@/e2e/support/selector";
+
+class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing>()(
+  "LessonNavigationMissing",
+  { href: Schema.String }
+) {}
 
 /** Captures the rendered lesson identity and its canonical metadata. */
 const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
@@ -50,10 +54,7 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
                   next.getAttribute("href")
                 );
                 if (!destination || destination === href) {
-                  return yield* new NavigationLinkMissing({
-                    hrefPattern: "the next lesson",
-                    sourceHref: href,
-                  });
+                  return yield* new LessonNavigationMissing({ href });
                 }
 
                 const reference = yield* Effect.promise(() =>
