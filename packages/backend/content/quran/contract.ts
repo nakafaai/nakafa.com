@@ -15,17 +15,20 @@ import { Schema } from "effect";
 
 /** Current signed attribution contract served by the active Quran snapshot. */
 export const PublishedQuranAttributionSchema = QuranAttributionRowSchema;
-export type PublishedQuranAttribution =
-  typeof PublishedQuranAttributionSchema.Type;
 
 /** Complete localized meaning map served by the active Quran snapshot. */
 export const PublishedQuranMeaningSchema =
   QuranSurahRowSchema.fields.name.fields.meaning;
-export type PublishedQuranMeaning = typeof PublishedQuranMeaningSchema.Type;
+type PublishedQuranMeaning = typeof PublishedQuranMeaningSchema.Type;
 
 /** Current signed surah contract served by the active Quran snapshot. */
 export const PublishedQuranSurahSchema = QuranSurahRowSchema;
 export type PublishedQuranSurah = typeof PublishedQuranSurahSchema.Type;
+
+/** Complete signed surah list served by the active Quran snapshot. */
+export const PublishedQuranSurahsSchema = Schema.Struct({
+  surahs: Schema.Array(PublishedQuranSurahSchema),
+});
 
 /** Current signed Quran row envelope stored by the active snapshot. */
 export const PublishedQuranRowSchema = Schema.Struct({
@@ -60,7 +63,7 @@ export const quranBismillahValidator = Schema.Struct({
 
 /** Reads one locale's canonical Bismillah from authenticated source rows. */
 
-export const quranMarkdownSurahValidator = Schema.Struct({
+const quranMarkdownSurahValidator = Schema.Struct({
   name: Schema.Struct({
     arabic: Schema.String,
     sourceMeaning: quranSurahMeaningValidator,
@@ -72,7 +75,7 @@ export const quranMarkdownSurahValidator = Schema.Struct({
     place: quranRevelationPlaceValidator,
   }),
 });
-export const quranMarkdownVerseValidator = Schema.Struct({
+const quranMarkdownVerseValidator = Schema.Struct({
   arabic: Schema.String,
   number: Schema.Struct({
     inSurah: Schema.Finite,

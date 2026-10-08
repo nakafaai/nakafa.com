@@ -1,15 +1,12 @@
-interface NumberedSurah {
-  readonly number: number;
-}
-interface NumberedVerse {
-  readonly number: {
-    readonly inSurah: number;
-  };
-}
+import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
+
+type NumberedSurah = Pick<PublishedQuranSurah, "number">;
+type VerseNumber = Pick<QuranRuntimeVerse["number"], "inSurah">;
 
 /** Checks that one verse list exactly covers the requested local range. */
 export function hasExactQuranVerseRange(
-  verses: readonly NumberedVerse[],
+  verses: readonly { readonly number: VerseNumber }[],
   fromVerse: number,
   toVerse: number
 ) {

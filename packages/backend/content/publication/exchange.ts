@@ -67,6 +67,7 @@ export const decodePublicRuntimeRow = Effect.fn(
   return response;
 });
 
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Binds one public body to the route model read in the same query transaction. */
 export const encodePublicDelivery = Effect.fn(
   "contentRelease.encodePublicDelivery"
@@ -88,5 +89,5 @@ export const encodePublicDelivery = Effect.fn(
       "The public body and route model do not share one publication."
     );
   }
-  return runtime === null ? null : JSON.stringify(runtime.response);
+  return runtime === null ? null : encodeJson(runtime.response);
 });

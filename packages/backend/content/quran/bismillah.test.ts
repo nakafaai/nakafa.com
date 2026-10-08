@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   separateQuranBismillah,
   separateQuranRuntimeBismillah,
-  splitQuranBismillahPrefix,
 } from "@repo/backend/content/quran/bismillah";
 import { makeQuranChunk } from "@repo/backend/test/quran/rows";
 
@@ -88,16 +87,20 @@ describe("Quran Bismillah presentation", () => {
   it("accepts source diacritic variants while preserving exact verse bytes", () => {
     const verse = "وَٱلتِّينِ وَٱلزَّيْتُونِ";
     expect(
-      splitQuranBismillahPrefix(
-        `بِّسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ${verse}`,
-        bismillah.arabic
-      )
-    ).toBe(verse);
+      separateQuranBismillah(bismillah, [
+        { arabic: `بِّسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ${verse}` },
+      ])
+    ).toEqual({
+      preBismillah: bismillah,
+      verses: [{ arabic: verse }],
+    });
   });
 
   it("rejects a lookalike prefix without a source separator", () => {
-    expect(
-      splitQuranBismillahPrefix(`${bismillah.arabic}وَٱلتِّينِ`, bismillah.arabic)
-    ).toBeNull();
+    const verse = `${bismillah.arabic}وَٱلتِّينِ`;
+    expect(separateQuranBismillah(bismillah, [{ arabic: verse }])).toEqual({
+      preBismillah: null,
+      verses: [{ arabic: verse }],
+    });
   });
 });

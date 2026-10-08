@@ -5,11 +5,16 @@ import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
+import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { materialLayer } from "@repo/backend/content/material/confect";
 import { readMaterialModel } from "@repo/backend/content/material/read";
 import { api } from "@repo/backend/convex/_generated/api";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content/runtime";
@@ -17,28 +22,53 @@ import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
 import { Effect, Layer, Schema } from "effect";
 
+// Strict decoding rejects undeclared keys instead of stripping them.
 const decodeProjection = Schema.decodeUnknownSync(
-  Schema.fromJsonString(MaterialLessonProjectionSchema)
+  Schema.fromJsonString(MaterialLessonProjectionSchema),
+  { onExcessProperty: "error" }
 );
+const decodeFoundRuntime = Schema.decodeUnknownSync(
+  Schema.fromJsonString(PublicContentRuntimeFoundSchema),
+  { onExcessProperty: "error" }
+);
+
+/** Builds the activation of the signed material catalog for one mutation. */
+const activateCatalog = (
+  ctx: MutationCtx,
+  projections?: Parameters<typeof activateMaterialCatalog>[0]
+) =>
+  activateMaterialCatalog(projections).pipe(
+    Effect.provide(mutationLayer(confectSchema, ctx))
+  );
+
+/** Builds one material model read through the production layers for a query. */
+const readModel = (
+  ctx: QueryCtx,
+  appLocale: Parameters<typeof readMaterialModel>[0],
+  publicPath: string
+) =>
+  readMaterialModel(appLocale, publicPath).pipe(
+    Effect.provide(
+      Layer.provideMerge(
+        materialLayer,
+        ConfectDatabaseReader.layer(confectSchema, ctx.db)
+      )
+    )
+  );
+
 describe("contentRelease/material/model", () => {
   it("delivers coherent lesson metadata and its signed public body", async () => {
     const target = convexTest(schema, convexModules);
-    await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog().pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
-    );
+    await target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)));
     const projection = makeMaterialProjection("en", 1);
     const result = await target.query(api.contentRelease.material.lesson, {
       appLocale: projection.appLocale,
       publicPath: projection.publicPath,
     });
-    const runtime = JSON.parse(result.runtimeJson ?? "");
+    const runtime = decodeFoundRuntime(result.runtimeJson ?? "");
     expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
     expect(runtime.projection).toEqual(
-      JSON.parse(result.model.projectionJson ?? "")
+      decodeProjection(result.model.projectionJson ?? "")
     );
     expect(runtime.delivery).toBe("public");
     const missing = await target.query(api.contentRelease.material.lesson, {
@@ -52,16 +82,7 @@ describe("contentRelease/material/model", () => {
     const target = convexTest(schema, convexModules);
     await expect(
       target.query((ctx) =>
-        Effect.runPromise(
-          readMaterialModel("en", "subjects/test/missing").pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                materialLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
-        )
+        Effect.runPromise(readModel(ctx, "en", "subjects/test/missing"))
       )
     ).rejects.toMatchObject({
       code: "CONTENT_RELEASE_MISSING",
@@ -70,23 +91,10 @@ describe("contentRelease/material/model", () => {
   it("returns the route, locale counterparts, and ordered siblings", async () => {
     const target = convexTest(schema, convexModules);
     const requested = makeMaterialProjection("en", 1);
-    await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog().pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
-    );
+    await target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)));
     const result = await target.query((ctx) =>
       Effect.runPromise(
-        readMaterialModel(requested.appLocale, requested.publicPath).pipe(
-          Effect.provide(
-            Layer.provideMerge(
-              materialLayer,
-              ConfectDatabaseReader.layer(confectSchema, ctx.db)
-            )
-          )
-        )
+        readModel(ctx, requested.appLocale, requested.publicPath)
       )
     );
     expect(result).toMatchObject({
@@ -132,22 +140,11 @@ describe("contentRelease/material/model", () => {
     );
     const requested = projections[0];
     await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog(projections).pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
+      Effect.runPromise(activateCatalog(ctx, projections))
     );
     const { metrics, result } = await target.query(async (ctx) => {
       const material = await Effect.runPromise(
-        readMaterialModel(requested.appLocale, requested.publicPath).pipe(
-          Effect.provide(
-            Layer.provideMerge(
-              materialLayer,
-              ConfectDatabaseReader.layer(confectSchema, ctx.db)
-            )
-          )
-        )
+        readModel(ctx, requested.appLocale, requested.publicPath)
       );
       return {
         metrics: await ctx.meta.getTransactionMetrics(),
@@ -199,13 +196,7 @@ describe("contentRelease/material/model", () => {
   ])("rejects a corrupted %s row", async (_label, stale, patch) => {
     const target = convexTest(schema, convexModules);
     const requested = makeMaterialProjection("en", 1);
-    await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog().pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
-    );
+    await target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)));
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
@@ -224,14 +215,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         Effect.runPromise(
-          readMaterialModel(requested.appLocale, requested.publicPath).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                materialLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
+          readModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -241,13 +225,7 @@ describe("contentRelease/material/model", () => {
   it("rejects a published route whose catalog row was removed", async () => {
     const target = convexTest(schema, convexModules);
     const requested = makeMaterialProjection("en", 1);
-    await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog().pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
-    );
+    await target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)));
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
@@ -266,14 +244,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         Effect.runPromise(
-          readMaterialModel(requested.appLocale, requested.publicPath).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                materialLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
+          readModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -282,25 +253,10 @@ describe("contentRelease/material/model", () => {
   });
   it("returns a missing route inside the current signed family", async () => {
     const target = convexTest(schema, convexModules);
-    await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog().pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
-    );
+    await target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)));
     await expect(
       target.query((ctx) =>
-        Effect.runPromise(
-          readMaterialModel("en", "subjects/test/missing").pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                materialLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
-        )
+        Effect.runPromise(readModel(ctx, "en", "subjects/test/missing"))
       )
     ).resolves.toMatchObject({
       projectionJson: null,
@@ -311,23 +267,12 @@ describe("contentRelease/material/model", () => {
     const target = convexTest(schema, convexModules);
     const projection = makeMaterialProjection("en", 1);
     await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog([projection]).pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
+      Effect.runPromise(activateCatalog(ctx, [projection]))
     );
     await expect(
       target.query((ctx) =>
         Effect.runPromise(
-          readMaterialModel(projection.appLocale, projection.publicPath).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                materialLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
+          readModel(ctx, projection.appLocale, projection.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -337,13 +282,7 @@ describe("contentRelease/material/model", () => {
   it("rejects non-material and mismatched catalog projections", async () => {
     const target = convexTest(schema, convexModules);
     const requested = makeMaterialProjection("en", 1);
-    await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog().pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
-    );
+    await target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)));
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
@@ -364,14 +303,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         Effect.runPromise(
-          readMaterialModel(requested.appLocale, requested.publicPath).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                materialLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
+          readModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -398,14 +330,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         Effect.runPromise(
-          readMaterialModel(requested.appLocale, requested.publicPath).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                materialLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
+          readModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -423,25 +348,18 @@ describe("contentRelease/material/model", () => {
     });
     await target.mutation((ctx) =>
       Effect.runPromise(
-        activateMaterialCatalog([
+        activateCatalog(ctx, [
           requested,
           conflicting,
           makeMaterialProjection("id", 1),
           makeMaterialProjection("de", 1),
-        ]).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
+        ])
       )
     );
     await expect(
       target.query((ctx) =>
         Effect.runPromise(
-          readMaterialModel(requested.appLocale, requested.publicPath).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                materialLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
+          readModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -451,13 +369,7 @@ describe("contentRelease/material/model", () => {
   it("rejects a material group beyond the bounded read contract", async () => {
     const target = convexTest(schema, convexModules);
     const requested = makeMaterialProjection("en", 1);
-    await target.mutation((ctx) =>
-      Effect.runPromise(
-        activateMaterialCatalog().pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
-    );
+    await target.mutation((ctx) => Effect.runPromise(activateCatalog(ctx)));
     await target.mutation(async (ctx) => {
       for (let order = 3; order <= 101; order += 1) {
         const projection = makeMaterialProjection("en", order);
@@ -485,14 +397,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         Effect.runPromise(
-          readMaterialModel(requested.appLocale, requested.publicPath).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                materialLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
+          readModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({

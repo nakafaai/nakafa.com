@@ -16,7 +16,7 @@ export const LocalSigningIdentitySchema = Schema.Struct({
   privateKeyInode: Schema.Finite,
   privateKeyHash: Schema.String,
 });
-export type LocalSigningIdentity = typeof LocalSigningIdentitySchema.Type;
+type LocalSigningIdentity = typeof LocalSigningIdentitySchema.Type;
 
 /** Generates one acceptance-only Ed25519 identity without exposing private bytes. */
 export const createLocalSigningIdentity = Effect.fn(
