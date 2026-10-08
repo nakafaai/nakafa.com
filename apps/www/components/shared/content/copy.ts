@@ -23,7 +23,7 @@ interface OpenContentCopySource {
 /**
  * Loads the request module when a reader copies. It carries the HTTP client,
  * so a static import would add that client to the first JavaScript of every
- * content page, which `apps/www/e2e/resources.browser.ts` budgets.
+ * content page, which `apps/www/e2e/budget/javascript.browser.ts` budgets.
  */
 const loadSourceRequest = Effect.tryPromise({
   catch: () =>

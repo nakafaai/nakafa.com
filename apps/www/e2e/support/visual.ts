@@ -1,13 +1,15 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Duration, Effect } from "effect";
 import { waitForStableCanvas } from "@/e2e/support/canvas";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { scrollToElement } from "@/e2e/support/input";
 import {
   readCumulativeLayoutShift,
   readPageLayoutShift,
 } from "@/e2e/support/layout";
+import { CARD, LINE_SCENE, VISUAL_CARD } from "@/e2e/support/selector";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const REVEAL_TIMEOUT_MILLISECONDS = 30_000;
 /** How long one attempt of a retried check waits before the next one. */
 const ATTEMPT_TIMEOUT_MILLISECONDS = 1000;
 /** Readings of the session's layout shift that must agree before a step. */
@@ -18,8 +20,6 @@ const SETTLE_ATTEMPTS = 10;
 export const BACTERIA_SCENE = "[data-bacteria-count]";
 /** The animated lab's generation option that names the start, such as "0 h". */
 const FIRST_GENERATION = /^0\s/;
-/** A deferred 3D line scene of a lesson card. */
-export const LINE_SCENE = '[data-slot="line-scene"]';
 
 /** Hides the Fullscreen API the way iPhone Safari does for everything but video. */
 export function hideFullscreenApi() {
@@ -50,13 +50,13 @@ export function hidePopoverApi() {
  */
 export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
   function* (page: Page, href: string, fullscreen: string) {
-    yield* seedDeniedAnalyticsConsent(page);
+    yield* seedAnalyticsConsent(page, "denied");
     const response = yield* Effect.promise(() =>
       page.goto(href, { waitUntil: "domcontentloaded" })
     );
     yield* Effect.sync(() => expect(response?.ok()).toBe(true));
     yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-    const cards = page.locator('[data-slot="visual-card"]');
+    const cards = page.locator(VISUAL_CARD);
     // A card the server streamed can wait hidden beside the lesson React
     // renders, so each attempt counts the cards again.
     yield* Effect.promise(() =>
@@ -71,24 +71,10 @@ export const openVisualLesson = Effect.fn("NakafaE2E.openVisualLesson")(
             name: fullscreen,
           })
         ).toHaveCount(count, { timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
-      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+      }).toPass({ timeout: revealTimeoutMilliseconds })
     );
   }
 );
-
-/**
- * Scrolls the page until the element sits at `block` in the viewport, the way
- * the page's own scripts scroll. Playwright's scroll into view left a card
- * just below the fold out of view in WebKit on Linux, so no reveal relies on
- * it.
- */
-function scrollToElement(locator: Locator, block: ScrollLogicalPosition) {
-  return locator.evaluate(
-    (element, position) =>
-      element.scrollIntoView({ behavior: "instant", block: position }),
-    block
-  );
-}
 
 /** Scrolls to the visual card that holds `content`, the first by default. */
 export const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
@@ -97,7 +83,7 @@ export const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
   index = 0
 ) {
   const card = page
-    .locator('[data-slot="visual-card"] > [data-slot="card"]')
+    .locator(`${VISUAL_CARD} > ${CARD}`)
     .filter({ has: page.locator(content) })
     .nth(index);
   // A content-visibility card lays out its content only near the viewport.
@@ -105,7 +91,7 @@ export const revealCard = Effect.fn("NakafaE2E.revealVisualCard")(function* (
     expect(async () => {
       await scrollToElement(card, "start");
       await expect(card.locator(content).first()).toBeVisible();
-    }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+    }).toPass({ timeout: revealTimeoutMilliseconds })
   );
   return card;
 });
@@ -127,7 +113,7 @@ export const revealLab = Effect.fn("NakafaE2E.revealVisualLab")(function* (
       await expect(
         card.getByRole("button", { name: FIRST_GENERATION, pressed: false })
       ).toBeVisible({ timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
-    }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+    }).toPass({ timeout: revealTimeoutMilliseconds })
   );
   return card;
 });
@@ -143,7 +129,7 @@ export const revealScene = Effect.fn("NakafaE2E.revealVisualScene")(function* (
     expect(async () => {
       await scrollToElement(card.locator(LINE_SCENE), "start");
       expect(await canvas.isVisible()).toBe(true);
-    }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+    }).toPass({ timeout: revealTimeoutMilliseconds })
   );
   yield* waitForStableCanvas(canvas);
   return { canvas, card };
@@ -163,14 +149,14 @@ export const revealAction = Effect.fn("NakafaE2E.revealVisualAction")(
 
 /** Reads where the card's slot and the lesson around it sit in the page. */
 export function readPlacement(card: Locator) {
-  return card.evaluate((element) => ({
-    article: element.closest("article")?.getBoundingClientRect().height,
-    scrollY: window.scrollY,
-    slot: element
-      .closest('[data-slot="visual-card"]')
-      ?.getBoundingClientRect()
-      .toJSON(),
-  }));
+  return card.evaluate(
+    (element, visualCard) => ({
+      article: element.closest("article")?.getBoundingClientRect().height,
+      scrollY: window.scrollY,
+      slot: element.closest(visualCard)?.getBoundingClientRect().toJSON(),
+    }),
+    VISUAL_CARD
+  );
 }
 
 /**
@@ -333,7 +319,7 @@ export const expectLabStill = Effect.fn("NakafaE2E.expectVisualLabStill")(
         await expect(
           card.getByRole("button", { exact: true, name: play })
         ).toBeVisible({ timeout: ATTEMPT_TIMEOUT_MILLISECONDS });
-      }).toPass({ timeout: REVEAL_TIMEOUT_MILLISECONDS })
+      }).toPass({ timeout: revealTimeoutMilliseconds })
     );
     const after = yield* readSettledLayoutShift(page);
     yield* Effect.sync(() => expect(after).toBe(before));

@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
-import { researchMaxSources } from "@repo/backend/confect/nina/research/schema";
+import {
+  ResearchOutputSchema,
+  researchMaxSources,
+  WebSearchInputSchema,
+} from "@repo/backend/confect/nina/research/schema";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { provider } from "@repo/backend/test/gateway";
@@ -11,7 +15,7 @@ import {
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/nina/research/tools/search", () => ({
   searchWeb: vi.fn(),
@@ -48,13 +52,20 @@ const output = {
   noEvidenceAnswer:
     "I could not verify this from the requested direct sources.",
 };
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const encodeSearchInput = Schema.encodeSync(
+  Schema.fromJsonString(WebSearchInputSchema)
+);
+const encodeResearchOutput = Schema.encodeSync(
+  Schema.fromJsonString(ResearchOutputSchema)
+);
 const searchCall = providerStep(
   [
     {
       type: "tool-call",
       toolCallId: "search",
       toolName: "webSearch",
-      input: JSON.stringify({
+      input: encodeSearchInput({
         queries: ["official agents"],
         sourcePreference: "primary",
       }),
@@ -80,7 +91,9 @@ const groundingCall = providerStep(
   ],
   "tool-calls"
 );
-const final = providerStep([{ type: "text", text: JSON.stringify(output) }]);
+const final = providerStep([
+  { type: "text", text: encodeResearchOutput(output) },
+]);
 
 describe("research Agent evidence boundary", () => {
   it.each([
@@ -258,7 +271,7 @@ describe("research Agent evidence boundary", () => {
       })
     );
     expect(result).toEqual({ text: output.noEvidenceAnswer });
-    expect(JSON.stringify(model.doGenerateCalls[2]?.prompt)).not.toContain(
+    expect(encodeJson(model.doGenerateCalls[2]?.prompt)).not.toContain(
       "Unverified provider claim."
     );
   });

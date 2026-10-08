@@ -1,6 +1,14 @@
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { DataPartSchema } from "@repo/backend/confect/nina/contract/data";
-import { Effect, Exit, Queue, Schema, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Exit,
+  MutableHashMap,
+  Queue,
+  Schema,
+  Stream,
+} from "effect";
 
 /** Evidence cards keep their existing identities across progressive updates. */
 export const CapabilityArtifactSchema = Schema.Union([
@@ -66,13 +74,17 @@ export function streamCapability<E, R>(
   return Stream.callback<CapabilityOutput, E, R>(
     (queue) =>
       Effect.gen(function* () {
-        const artifacts = new Map<string, CapabilityArtifact>();
+        const artifacts = MutableHashMap.empty<string, CapabilityArtifact>();
         const publish = Effect.fn("nina.capability.progress")(function* (
           artifact: CapabilityArtifact
         ) {
-          artifacts.set(`${artifact.type}:${artifact.id}`, artifact);
+          MutableHashMap.set(
+            artifacts,
+            `${artifact.type}:${artifact.id}`,
+            artifact
+          );
           yield* Queue.offer(queue, {
-            artifacts: [...artifacts.values()],
+            artifacts: Arr.fromIterable(MutableHashMap.values(artifacts)),
             text: "",
           });
         });
@@ -80,7 +92,7 @@ export function streamCapability<E, R>(
         yield* run(publish).pipe(
           Effect.tap(({ text, failure }) =>
             Queue.offer(queue, {
-              artifacts: [...artifacts.values()],
+              artifacts: Arr.fromIterable(MutableHashMap.values(artifacts)),
               ...(failure ? { failure } : {}),
               text: boundText(text, NINA_BUDGET.evidence, continuation),
             })

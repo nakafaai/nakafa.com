@@ -7,7 +7,7 @@ import {
   createGroundingEvidence,
   createGroundingWebSearchData,
 } from "@repo/backend/confect/nina/research/grounding";
-import { Array as Arr } from "effect";
+import { Array as Arr, MutableHashSet } from "effect";
 
 describe("research Google Search grounding", () => {
   it("drops query-only Google grounding when redirect sources are unusable", () => {
@@ -306,7 +306,7 @@ describe("research Google Search grounding", () => {
       throw new Error("Expected direct Google grounding source data.");
     }
 
-    const eligibleUrls = new Set<string>();
+    const eligibleUrls = MutableHashSet.empty<string>();
     addEligibleSourceUrls(eligibleUrls, data.sources);
 
     const output = filterResearchOutputCitations(
@@ -368,7 +368,7 @@ describe("research Google Search grounding", () => {
     }
 
     const evidence = createGroundingEvidence(data);
-    const eligibleUrls = new Set<string>();
+    const eligibleUrls = MutableHashSet.empty<string>();
     addEligibleSourceUrls(eligibleUrls, data.sources);
 
     const output = filterResearchOutputCitations(
@@ -391,7 +391,7 @@ describe("research Google Search grounding", () => {
     );
 
     expect(evidence).toContain("https://ai-sdk.dev/docs/ai-sdk-core/devtools");
-    expect(eligibleUrls.size).toBe(1);
+    expect(MutableHashSet.size(eligibleUrls)).toBe(1);
     expect(output.findings).toHaveLength(1);
   });
 
