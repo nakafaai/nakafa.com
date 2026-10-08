@@ -11,7 +11,7 @@ import {
   seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -95,7 +95,7 @@ describe("native Nina admission", () => {
     const jobs = await t.query((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );
-    const events = jobs.filter((job) =>
+    const events = Arr.filter(jobs, (job) =>
       job.name.includes("deliverProductEvent")
     );
     expect(events).toHaveLength(1);
@@ -144,9 +144,11 @@ describe("native Nina admission", () => {
       usage: [],
       state: { status: "queued" },
     });
-    expect(state.ledger.filter((row) => row.type === "usage")).toHaveLength(1);
     expect(
-      state.schedules.filter((row) => row.name === "nina/response:run")
+      Arr.filter(state.ledger, (row) => row.type === "usage")
+    ).toHaveLength(1);
+    expect(
+      Arr.filter(state.schedules, (row) => row.name === "nina/response:run")
     ).toHaveLength(1);
     expect(state.messages.page).toHaveLength(1);
   });

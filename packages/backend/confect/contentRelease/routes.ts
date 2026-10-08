@@ -26,7 +26,7 @@ import {
 import { stageRouteVersion } from "@repo/backend/confect/contentRelease/route";
 import { encodeRouteJson } from "@repo/backend/confect/contentRelease/wire";
 import { getConvexSize } from "convex/values";
-import { Clock, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Effect, Schema } from "effect";
 
 /** Decodes one bounded route batch through the shared wire contract. */
 export const decodeBatch = Effect.fn("contentRelease.decodeRouteBatch")(
@@ -75,11 +75,11 @@ export const stageProgram = Effect.fn("contentRelease.stageRouteBatch")(
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const { routes } = yield* decodeBatch(releaseId, batchIndex, sources);
-    const entries = routes.map((route) => ({
+    const entries = Arr.map(routes, (route) => ({
       route,
       routeJson: encodeRouteJson(route),
     }));
-    const values = entries.map(({ routeJson }) => routeJson);
+    const values = Arr.map(entries, ({ routeJson }) => routeJson);
     const batchHash = yield* hashBatch("route", releaseId, batchIndex, values);
     const { release, state } = yield* loadStaged(releaseId);
     const signed = yield* decodeReleaseJson(release.releaseJson);
@@ -100,7 +100,7 @@ export const stageProgram = Effect.fn("contentRelease.stageRouteBatch")(
       yield* validateStoredBatch(
         existing.length,
         values.length,
-        existing.map(({ batchHash: storedHash }) => storedHash),
+        Arr.map(existing, ({ batchHash: storedHash }) => storedHash),
         batchHash,
         releaseId,
         batchIndex

@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { ProvenanceBundleVerifier } from "#scripts/github/provenance/bundle";
 import {
   AuditSchema,
@@ -40,7 +40,8 @@ export const verifyProvenance = Effect.fn("GithubProvenance.verify")(function* (
   }
 
   const expectedUrl = expectedAttestationUrl(expectation);
-  const publications = audit.verified.filter(
+  const publications = Arr.filter(
+    audit.verified,
     (entry) =>
       entry.name === expectation.packageName &&
       entry.version === expectation.packageVersion &&
@@ -53,7 +54,8 @@ export const verifyProvenance = Effect.fn("GithubProvenance.verify")(function* (
     });
   }
 
-  const bundles = publications[0].attestationBundles.filter(
+  const bundles = Arr.filter(
+    publications[0].attestationBundles,
     ({ predicateType }) => predicateType === SLSA_PREDICATE
   );
   if (bundles.length !== 1) {

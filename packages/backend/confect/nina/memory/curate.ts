@@ -17,20 +17,23 @@ import {
 } from "@repo/backend/confect/nina/memory.spec";
 import { formatLearnerProfile } from "@repo/backend/confect/nina/prompt/learner";
 import { Output } from "ai";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Learner text one curation reads. */
 const MESSAGE_TOKENS = 1000;
 
-const INSTRUCTIONS = [
-  "You keep the long-term memory that Nina, Nakafa's AI tutor, holds about one learner.",
-  "Read the learner's newest message and decide whether it reveals a durable fact that helps Nina teach this learner in later conversations: their grade or level, the exams they target and when, their goals, the subjects or topics they find hard or easy, and how they like to learn.",
-  "Record only what the learner states about themself. Never record the question itself, exercise answers, or anything about other people.",
-  "Never record sensitive information: health, religion, ethnicity, political views, precise location, contact details, passwords, or financial details.",
-  "Most messages reveal nothing durable; then return empty lists.",
-  "Use update when the message changes a known fact and forget when the learner contradicts or withdraws one. Never repeat a known fact or an account fact.",
-  "Write each fact as one short statement in the learner's language, at most 160 characters.",
-].join("\n");
+const INSTRUCTIONS = Arr.join(
+  [
+    "You keep the long-term memory that Nina, Nakafa's AI tutor, holds about one learner.",
+    "Read the learner's newest message and decide whether it reveals a durable fact that helps Nina teach this learner in later conversations: their grade or level, the exams they target and when, their goals, the subjects or topics they find hard or easy, and how they like to learn.",
+    "Record only what the learner states about themself. Never record the question itself, exercise answers, or anything about other people.",
+    "Never record sensitive information: health, religion, ethnicity, political views, precise location, contact details, passwords, or financial details.",
+    "Most messages reveal nothing durable; then return empty lists.",
+    "Use update when the message changes a known fact and forget when the learner contradicts or withdraws one. Never repeat a known fact or an account fact.",
+    "Write each fact as one short statement in the learner's language, at most 160 characters.",
+  ],
+  "\n"
+);
 
 class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
   "NinaMemoryError",
@@ -42,15 +45,21 @@ function formatKnown(
   profile: typeof NinaLearner.Type.profile,
   facts: readonly { readonly key: number; readonly text: string }[]
 ) {
-  return [
-    formatLearnerProfile(profile) ?? "Account: none",
-    facts.length > 0
-      ? [
-          "Known facts:",
-          ...facts.map((fact) => `- [${fact.key}] ${fact.text}`),
-        ].join("\n")
-      : "Known facts: none",
-  ].join("\n\n");
+  return Arr.join(
+    [
+      formatLearnerProfile(profile) ?? "Account: none",
+      facts.length > 0
+        ? Arr.join(
+            [
+              "Known facts:",
+              ...Arr.map(facts, (fact) => `- [${fact.key}] ${fact.text}`),
+            ],
+            "\n"
+          )
+        : "Known facts: none",
+    ],
+    "\n\n"
+  );
 }
 
 /**

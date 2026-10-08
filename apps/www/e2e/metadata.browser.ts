@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Schema } from "effect";
+import { Effect, Record as Rec, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -39,7 +39,7 @@ const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
   );
 });
 
-for (const [locale, href] of Object.entries(pinnedRoutes.material)) {
+for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
   test(`adjacent ${locale} lessons navigate with their own metadata`, async ({
     baseURL,
     browser,

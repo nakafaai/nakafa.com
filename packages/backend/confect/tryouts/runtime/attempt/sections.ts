@@ -1,7 +1,7 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 
@@ -31,16 +31,22 @@ export function readAttemptResume(
   attempt: TryoutAttempt,
   sections: readonly Docs["tryoutSectionAttempts"][]
 ) {
-  const inProgressSection = sections.find(
-    (section) => section.status === "in-progress"
+  const inProgressSection = Option.getOrUndefined(
+    Arr.findFirst(sections, (section) => section.status === "in-progress")
   );
   const completedSections = new Set(attempt.completedSectionKeys);
-  const nextSection = attempt.sectionSnapshots.find(
-    (snapshot) => !completedSections.has(snapshot.sectionKey)
+  const nextSection = Option.getOrUndefined(
+    Arr.findFirst(
+      attempt.sectionSnapshots,
+      (snapshot) => !completedSections.has(snapshot.sectionKey)
+    )
   );
   const resumeSection = inProgressSection
-    ? attempt.sectionSnapshots.find(
-        (snapshot) => snapshot.sectionKey === inProgressSection.sectionKey
+    ? Option.getOrUndefined(
+        Arr.findFirst(
+          attempt.sectionSnapshots,
+          (snapshot) => snapshot.sectionKey === inProgressSection.sectionKey
+        )
       )
     : nextSection;
   return {

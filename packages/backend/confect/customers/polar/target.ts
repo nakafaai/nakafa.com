@@ -7,11 +7,10 @@ import {
   type polarCustomerWebhookTargetValidator,
 } from "@repo/backend/confect/customers/polar/spec";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
-import { Effect, flow, type Schema } from "effect";
+import { Effect, flow } from "effect";
 
-type PolarCustomerWebhookTarget = Schema.Schema.Type<
-  typeof polarCustomerWebhookTargetValidator
->;
+type PolarCustomerWebhookTarget =
+  typeof polarCustomerWebhookTargetValidator.Type;
 interface PolarCustomerWebhookTargetInput {
   readonly externalId?: string;
   readonly metadataUserId?: string;

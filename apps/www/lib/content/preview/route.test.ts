@@ -61,7 +61,7 @@ class UnexpectedPreviewPromiseError extends Data.TaggedError(
 function fromPreviewPromise<A>(evaluate: () => Promise<A>) {
   return Effect.tryPromise({
     catch: (cause) =>
-      cause instanceof PreviewIntegrityError
+      Schema.is(PreviewIntegrityError)(cause)
         ? cause
         : new UnexpectedPreviewPromiseError({ cause }),
     try: evaluate,

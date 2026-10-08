@@ -5,7 +5,7 @@ import { MAX_FORUM_POST_MENTIONS } from "@repo/backend/confect/classes/forums/co
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 
 it("deduplicates authorized mentions and rejects stale school access atomically", async () => {
   const { t, admin, users, classId, schoolId } = await createClassFixture();
@@ -107,9 +107,10 @@ it("rejects oversized mention sets before writing a post", async () => {
     }
   );
   const mentions = await t.mutation(async (ctx) => {
-    const ids: Id<"users">[] = [];
+    let ids: Id<"users">[] = [];
     for (let i = 0; i <= MAX_FORUM_POST_MENTIONS; i += 1) {
-      ids.push(
+      ids = Arr.append(
+        ids,
         await ctx.db.insert("users", {
           authId: `mention-${i}`,
           credits: 0,

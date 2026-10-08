@@ -3,6 +3,7 @@ import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createClassFixture } from "@repo/backend/test/classes";
+import { Array as Arr } from "effect";
 
 const roster = Ref.getFunctionReference(refs.public.classes.roster.list);
 const now = Date.UTC(2026, 8, 1);
@@ -14,7 +15,7 @@ async function seedPeople(
   count: number
 ) {
   return await fixture.t.mutation(async (ctx) => {
-    const rows: {
+    let rows: {
       userId: Id<"users">;
       memberId: Id<"schoolClassMembers">;
     }[] = [];
@@ -34,7 +35,7 @@ async function seedPeople(
         role: index % 20 === 0 ? "teacher" : "student",
         updatedAt: now,
       });
-      rows.push({
+      rows = Arr.append(rows, {
         userId,
         memberId,
       });
@@ -50,7 +51,7 @@ describe("class roster stream", () => {
     const removed = seeded[0];
     assert(removed);
     await fixture.t.mutation((ctx) => ctx.db.delete("users", removed.userId));
-    const people: Ref.Returns<typeof refs.public.classes.roster.list>["page"] =
+    let people: Ref.Returns<typeof refs.public.classes.roster.list>["page"] =
       [];
     let cursor: string | null = null;
     for (let pageIndex = 0; pageIndex < 10; pageIndex += 1) {
@@ -66,7 +67,7 @@ describe("class roster stream", () => {
           .then((value) =>
             Ref.decodeReturnsSync(refs.public.classes.roster.list, value)
           );
-      people.push(...page.page);
+      people = Arr.appendAll(people, page.page);
       if (page.isDone) {
         break;
       }
@@ -74,15 +75,18 @@ describe("class roster stream", () => {
       cursor = page.continueCursor;
     }
     expect(people).toHaveLength(66);
-    expect(new Set(people.map((row) => row._id)).size).toBe(people.length);
-    expect(people.map((row) => row.userId)).not.toContain(removed.userId);
-    const teacherCount = people.filter((row) => row.role === "teacher").length;
+    expect(new Set(Arr.map(people, (row) => row._id)).size).toBe(people.length);
+    expect(Arr.map(people, (row) => row.userId)).not.toContain(removed.userId);
+    const teacherCount = Arr.filter(
+      people,
+      (row) => row.role === "teacher"
+    ).length;
     expect(teacherCount).toBe(4);
     expect(
-      people.slice(0, teacherCount).every((row) => row.role === "teacher")
+      Arr.every(people.slice(0, teacherCount), (row) => row.role === "teacher")
     ).toBe(true);
     expect(
-      people.slice(teacherCount).every((row) => row.role === "student")
+      Arr.every(people.slice(teacherCount), (row) => row.role === "student")
     ).toBe(true);
   });
   it("continues bounded sparse searches through empty pages beyond 500 members", async () => {
@@ -99,9 +103,8 @@ describe("class roster stream", () => {
       let cursor: string | null = null;
       let done = false;
       let emptyPages = 0;
-      const people: Ref.Returns<
-        typeof refs.public.classes.roster.list
-      >["page"] = [];
+      let people: Ref.Returns<typeof refs.public.classes.roster.list>["page"] =
+        [];
       for (let pageIndex = 0; pageIndex < 40 && !done; pageIndex += 1) {
         const page: Ref.Returns<typeof refs.public.classes.roster.list> =
           await fixture.admin
@@ -117,7 +120,7 @@ describe("class roster stream", () => {
             .then((value) =>
               Ref.decodeReturnsSync(refs.public.classes.roster.list, value)
             );
-        people.push(...page.page);
+        people = Arr.appendAll(people, page.page);
         if (page.page.length === 0 && !page.isDone) {
           emptyPages += 1;
         }
@@ -129,7 +132,7 @@ describe("class roster stream", () => {
       }
       expect(done).toBe(true);
       expect(emptyPages).toBeGreaterThan(0);
-      expect(people.map((row) => row.userId)).toEqual(
+      expect(Arr.map(people, (row) => row.userId)).toEqual(
         q === "absent-name" ? [] : [selected.userId]
       );
     }
@@ -197,8 +200,8 @@ describe("class roster stream", () => {
       .then((value) =>
         Ref.decodeReturnsSync(refs.public.classes.roster.list, value)
       );
-    expect([...pinned.page, ...rest.page].map((row) => row._id)).toEqual(
-      complete.page.map((row) => row._id)
+    expect(Arr.map([...pinned.page, ...rest.page], (row) => row._id)).toEqual(
+      Arr.map(complete.page, (row) => row._id)
     );
     expect(complete.page).toHaveLength(13);
   });

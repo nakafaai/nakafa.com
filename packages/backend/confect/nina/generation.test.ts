@@ -16,7 +16,7 @@ import {
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -105,7 +105,8 @@ describe("Nina generation through the real Agent component", () => {
           )
         );
         expect(
-          page.page.some(
+          Arr.some(
+            page.page,
             (message) =>
               message.metadata?.state.status === "failed" &&
               message.metadata.state.reason === reason
@@ -179,9 +180,9 @@ describe("Nina generation through the real Agent component", () => {
         reason: "provider-busy",
       });
       expect(state.user?.credits).toBe(10);
-      expect(state.ledger.filter((row) => row.type === "refund")).toHaveLength(
-        1
-      );
+      expect(
+        Arr.filter(state.ledger, (row) => row.type === "refund")
+      ).toHaveLength(1);
     })
   );
 
@@ -218,7 +219,9 @@ describe("Nina generation through the real Agent component", () => {
       const state = yield* Effect.promise(f.inspect);
       expect(state.turn?.state.status).toBe("complete");
       expect(
-        state.turn?.usage.find((row) => row.agent === "nina")
+        Option.getOrUndefined(
+          Arr.findFirst(state.turn?.usage ?? [], (row) => row.agent === "nina")
+        )
       ).toMatchObject({ input: 0, output: 0 });
     })
   );
@@ -271,13 +274,18 @@ describe("Nina generation through the real Agent component", () => {
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
     expect(state.turn?.suggestions).toBeUndefined();
-    expect(state.turn?.usage.map((row) => row.agent)).toEqual(["nina"]);
+    expect(Arr.map(state.turn?.usage ?? [], (row) => row.agent)).toEqual([
+      "nina",
+    ]);
     expect(state.chat?.activeTurnId).toBeUndefined();
     expect(languageModel.doGenerateCalls).toHaveLength(0);
     expect(state.user?.credits).toBe(8);
     expect(state.messages.page).toHaveLength(2);
-    const answer = state.messages.page.find(
-      (message) => message.role === "assistant"
+    const answer = Option.getOrUndefined(
+      Arr.findFirst(
+        state.messages.page,
+        (message) => message.role === "assistant"
+      )
     );
     expect(answer?.parts).toEqual(
       expect.arrayContaining([
@@ -333,7 +341,8 @@ describe("Nina generation through the real Agent component", () => {
     expect(state.turn?.state.status).toBe("complete");
     expect(languageModel.doStreamCalls).toHaveLength(2);
     expect(
-      languageModel.doStreamCalls[1]?.prompt.filter(
+      Arr.filter(
+        languageModel.doStreamCalls[1]?.prompt,
         (message) => message.role === "tool"
       )
     ).toEqual([
@@ -348,8 +357,11 @@ describe("Nina generation through the real Agent component", () => {
         ],
       },
     ]);
-    const answer = state.messages.page.find(
-      (message) => message.role === "assistant"
+    const answer = Option.getOrUndefined(
+      Arr.findFirst(
+        state.messages.page,
+        (message) => message.role === "assistant"
+      )
     );
     expect(answer?.parts).toEqual(
       expect.arrayContaining([
@@ -374,9 +386,11 @@ describe("Nina generation through the real Agent component", () => {
         }),
       ])
     );
-    expect(state.turn?.usage.find((row) => row.agent === "nina")?.calls).toBe(
-      2
-    );
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(state.turn?.usage ?? [], (row) => row.agent === "nina")
+      )?.calls
+    ).toBe(2);
   });
 
   it("refunds an interrupted provider without generating a title or follow-up", async () => {
@@ -387,7 +401,9 @@ describe("Nina generation through the real Agent component", () => {
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("failed");
     expect(state.user?.credits).toBe(10);
-    expect(state.ledger.filter((row) => row.type === "refund")).toHaveLength(1);
+    expect(
+      Arr.filter(state.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
     expect(languageModel.doGenerateCalls).toHaveLength(0);
   });
 
@@ -411,7 +427,7 @@ describe("Nina generation through the real Agent component", () => {
     expect(JSON.stringify(languageModel.doGenerateCalls[0]?.prompt)).toContain(
       "Repair the arguments for nakafa"
     );
-    expect(state.turn?.usage.map((entry) => entry.agent)).toContain(
+    expect(Arr.map(state.turn?.usage ?? [], (entry) => entry.agent)).toContain(
       "nina-repair"
     );
   });

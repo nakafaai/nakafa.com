@@ -2,7 +2,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
@@ -22,7 +22,7 @@ export const readSectionCompletion = Effect.fn(
     });
   }
   const snapshotKeys = new Set(
-    attempt.sectionSnapshots.map((snapshot) => snapshot.sectionKey)
+    Arr.map(attempt.sectionSnapshots, (snapshot) => snapshot.sectionKey)
   );
   const completedKeys = new Set<string>();
   for (const sectionKey of attempt.completedSectionKeys) {

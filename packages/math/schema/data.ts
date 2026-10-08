@@ -29,4 +29,4 @@ export const MathDataSchema = Schema.Union([
 ]).annotate({
   description: "Math evidence data part streamed to the chat UI.",
 });
-export type MathData = Schema.Schema.Type<typeof MathDataSchema>;
+export type MathData = typeof MathDataSchema.Type;

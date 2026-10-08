@@ -30,19 +30,20 @@ import {
   MAX_FORUM_ATTACHMENT_BYTES,
 } from "@repo/backend/confect/classes/forums/constants";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, flow, Option } from "effect";
+import { Array as Arr, Effect, flow, Option } from "effect";
 
 function hasAllowedForumAttachmentMimeType(mimeType: string) {
   if (mimeType.startsWith("image/")) {
     return true;
   }
-  return FORUM_ATTACHMENT_ALLOWED_MIME_TYPES.some(
+  return Arr.some(
+    FORUM_ATTACHMENT_ALLOWED_MIME_TYPES,
     (allowedMimeType) => allowedMimeType === mimeType
   );
 }
 function hasAllowedForumAttachmentExtension(fileName: string) {
   const normalizedFileName = fileName.trim().toLowerCase();
-  return FORUM_ATTACHMENT_ALLOWED_EXTENSIONS.some((extension) =>
+  return Arr.some(FORUM_ATTACHMENT_ALLOWED_EXTENSIONS, (extension) =>
     normalizedFileName.endsWith(extension)
   );
 }
@@ -159,8 +160,11 @@ export const validateForumAttachmentStorageClaim = Effect.fn(
       .index("by_storageId", (q) => q.eq("storageId", storageId))
       .take(2)
       .pipe(Effect.orDie);
-    const conflictingPendingUpload = matchingPendingUploads.find(
-      (pendingUpload) => pendingUpload._id !== uploadId
+    const conflictingPendingUpload = Option.getOrUndefined(
+      Arr.findFirst(
+        matchingPendingUploads,
+        (pendingUpload) => pendingUpload._id !== uploadId
+      )
     );
     if (conflictingPendingUpload) {
       return yield* failForumAttachment(
@@ -232,26 +236,31 @@ export const resolveForumAttachmentUploads = Effect.fn(
   const uploads = yield* Effect.forEach(uploadIds, (uploadId) =>
     getPendingUpload(uploadId)
   );
-  const finalizedUploads: ForumAttachmentUpload[] = [];
-  for (const upload of uploads) {
-    if (!upload || upload.uploadedBy !== userId || upload.forumId !== forumId) {
-      return yield* failForumAttachment(
-        forumAttachmentUploadNotFoundCode,
-        "Forum post attachment upload not found."
-      );
-    }
-    if (!isForumAttachmentUpload(upload)) {
-      return yield* failForumAttachment(
-        forumAttachmentIncompleteCode,
-        "Forum post attachment upload has not finished yet."
-      );
-    }
-    const finalizedUpload: ForumAttachmentUpload = upload;
-    yield* validateForumAttachmentPolicy(finalizedUpload);
-    yield* validateStoredForumAttachmentMetadata(finalizedUpload);
-    finalizedUploads.push(finalizedUpload);
-  }
-  return finalizedUploads;
+  return yield* Effect.forEach(
+    uploads,
+    Effect.fnUntraced(function* (upload) {
+      if (
+        !upload ||
+        upload.uploadedBy !== userId ||
+        upload.forumId !== forumId
+      ) {
+        return yield* failForumAttachment(
+          forumAttachmentUploadNotFoundCode,
+          "Forum post attachment upload not found."
+        );
+      }
+      if (!isForumAttachmentUpload(upload)) {
+        return yield* failForumAttachment(
+          forumAttachmentIncompleteCode,
+          "Forum post attachment upload has not finished yet."
+        );
+      }
+      const finalizedUpload: ForumAttachmentUpload = upload;
+      yield* validateForumAttachmentPolicy(finalizedUpload);
+      yield* validateStoredForumAttachmentMetadata(finalizedUpload);
+      return finalizedUpload;
+    })
+  );
 });
 
 /**

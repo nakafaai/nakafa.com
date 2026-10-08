@@ -2,13 +2,16 @@ import { getNakafaContent } from "@repo/backend/agent/content";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { formatRead } from "@repo/backend/confect/nina/nakafa/sections";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
-const UNAVAILABLE = [
-  "# Current Page",
-  "",
-  "The signed current page could not be read for this turn. Retrieve it with Nakafa before relying on its content.",
-].join("\n");
+const UNAVAILABLE = Arr.join(
+  [
+    "# Current Page",
+    "",
+    "The signed current page could not be read for this turn. Retrieve it with Nakafa before relying on its content.",
+  ],
+  "\n"
+);
 
 /**
  * Reads the signed current page once per turn into a bounded prompt block.
@@ -30,11 +33,14 @@ export const readPageContext = Effect.fn("nina.page.read")(function* (
   if (Option.isNone(content)) {
     return UNAVAILABLE;
   }
-  return [
-    "# Current Page",
-    "",
-    "The learner is viewing this signed Nakafa page. Answer from it when it covers the question. For another listed section, ask Nakafa to read that Content ID at that section.",
-    "",
-    formatRead(content.value, { budget: NINA_BUDGET.page }),
-  ].join("\n");
+  return Arr.join(
+    [
+      "# Current Page",
+      "",
+      "The learner is viewing this signed Nakafa page. Answer from it when it covers the question. For another listed section, ask Nakafa to read that Content ID at that section.",
+      "",
+      formatRead(content.value, { budget: NINA_BUDGET.page }),
+    ],
+    "\n"
+  );
 });

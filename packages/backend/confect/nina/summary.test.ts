@@ -15,7 +15,7 @@ import {
 import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect, Predicate } from "effect";
+import { Array as Arr, Effect, Predicate } from "effect";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -38,7 +38,7 @@ async function fixture(turns: number) {
       visibility: "private",
       updatedAt: Date.now(),
     });
-    const prompts: string[] = [];
+    let prompts: string[] = [];
     for (let order = 0; order < turns; order += 1) {
       const { messages } = await saveMessages(ctx, components.nina, {
         threadId,
@@ -49,7 +49,7 @@ async function fixture(turns: number) {
         ],
       });
       const promptMessageId = messages[0]?._id ?? "";
-      prompts.push(promptMessageId);
+      prompts = Arr.append(prompts, promptMessageId);
       await ctx.db.insert("ninaTurns", {
         chatId,
         order,
@@ -154,7 +154,7 @@ describe("Nina rolling summary", () => {
     const f = await fixture(56);
     await f.refresh(55);
     await f.refresh(55);
-    const [first, second] = model.doGenerateCalls.map((call) =>
+    const [first, second] = Arr.map(model.doGenerateCalls, (call) =>
       JSON.stringify(call.prompt)
     );
     expect(first).toContain("Question 0");
@@ -240,7 +240,7 @@ describe("Nina rolling summary", () => {
           ])
         )
       );
-      return runQuery.mock.calls.flatMap(([, args]) =>
+      return Arr.flatMap(runQuery.mock.calls, ([, args]) =>
         Predicate.hasProperty(args, "upToAndIncludingMessageId")
           ? [String(args.upToAndIncludingMessageId)]
           : []

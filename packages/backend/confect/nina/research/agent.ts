@@ -48,7 +48,7 @@ import {
   Output,
   wrapLanguageModel,
 } from "ai";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 // Keep exact source fetching within the admitted count and provider concurrency.
 const exactSourceScrapeConcurrency = 3;
@@ -99,7 +99,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       toolCallId,
       publish,
     });
-    const collectedEvidence = sourceOutputs.map((output) => output.text);
+    let collectedEvidence = Arr.map(sourceOutputs, (output) => output.text);
     const eligibleCitationUrls = new Set<string>();
 
     for (const sourceOutput of sourceOutputs) {
@@ -139,7 +139,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                     }).pipe(
                       Effect.tap((output) =>
                         Effect.sync(() => {
-                          collectedEvidence.push(output.text);
+                          collectedEvidence = Arr.append(
+                            collectedEvidence,
+                            output.text
+                          );
                           addEligibleSourceUrls(
                             eligibleCitationUrls,
                             output.result.sources
@@ -158,8 +161,9 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
              * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
              */
             prepareStep: ({ messages, steps }) => {
-              const hasWebSearchToolCall = steps.some((step) =>
-                step.toolCalls.some(
+              const hasWebSearchToolCall = Arr.some(steps, (step) =>
+                Arr.some(
+                  step.toolCalls,
                   (toolCall) => toolCall.toolName === "webSearch"
                 )
               );
@@ -188,7 +192,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     if (groundedSearchData) {
       const groundingEvidence = createGroundingEvidence(groundedSearchData);
 
-      collectedEvidence.push(groundingEvidence);
+      collectedEvidence = Arr.append(collectedEvidence, groundingEvidence);
       addEligibleSourceUrls(eligibleCitationUrls, groundedSearchData.sources);
       yield* publish({
         id: `${toolCallId}-grounding`,
@@ -284,7 +288,7 @@ function getUniqueSourceReferences(
 ) {
   const seen = new Set<string>();
 
-  return sourceReferences.flatMap((source) => {
+  return Arr.flatMap(sourceReferences, (source) => {
     if (seen.has(source.href)) {
       return [];
     }

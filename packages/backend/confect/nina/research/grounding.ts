@@ -1,6 +1,6 @@
 import type { DataPart } from "@repo/backend/confect/nina/contract/data";
 import { normalizeResearchCitationUrl } from "@repo/backend/confect/nina/research/citations";
-import { Array as Arr, Result, Schema, Struct } from "effect";
+import { Array as Arr, pipe, Result, Schema, Struct } from "effect";
 
 const GroundingWebChunkSchema = Schema.Struct({
   web: Schema.optional(
@@ -41,16 +41,19 @@ export function createGroundingWebSearchData({
   const groundingMetadata = getGroundingMetadata(providerMetadata);
   const seen = new Set<string>();
   // A source shared by multiple queries owns one evidence identity and chip.
-  const groundedSources = getGroundedSources({
-    ...(groundingMetadata === undefined ? {} : { groundingMetadata }),
-    sources,
-  }).filter((source) => {
-    if (seen.has(source.url)) {
-      return false;
+  const groundedSources = Arr.filter(
+    getGroundedSources({
+      ...(groundingMetadata === undefined ? {} : { groundingMetadata }),
+      sources,
+    }),
+    (source) => {
+      if (seen.has(source.url)) {
+        return false;
+      }
+      seen.add(source.url);
+      return true;
     }
-    seen.add(source.url);
-    return true;
-  });
+  );
   if (!Arr.isArrayNonEmpty(groundedSources)) {
     return;
   }
@@ -74,11 +77,14 @@ export function createGroundingWebSearchData({
 export function createGroundingEvidence(
   data: NonNullable<ReturnType<typeof createGroundingWebSearchData>>
 ) {
-  return [
-    "# Google Search Grounding Sources",
-    ...formatGroundingQueries(data.queries),
-    ...data.sources.map(formatGroundingSource),
-  ].join("\n");
+  return Arr.join(
+    [
+      "# Google Search Grounding Sources",
+      ...formatGroundingQueries(data.queries),
+      ...Arr.map(data.sources, formatGroundingSource),
+    ],
+    "\n"
+  );
 }
 /** Reads Gemini grounding metadata from either Vercel Gateway provider shape. */
 function getGroundingMetadata(providerMetadata: unknown) {
@@ -99,14 +105,14 @@ function getGroundedSources({
   groundingMetadata,
   sources,
 }: {
-  groundingMetadata?: Schema.Schema.Type<typeof GroundingMetadataSchema>;
+  groundingMetadata?: typeof GroundingMetadataSchema.Type;
   sources: unknown;
 }) {
   const decoded = Schema.decodeUnknownResult(Schema.Array(SourceSchema))(
     sources
   );
   if (Result.isSuccess(decoded)) {
-    const resultSources = decoded.success.flatMap((source) => {
+    const resultSources = Arr.flatMap(decoded.success, (source) => {
       if (source.sourceType !== "url" || !source.url) {
         return [];
       }
@@ -116,7 +122,7 @@ function getGroundedSources({
       return resultSources;
     }
   }
-  return (groundingMetadata?.groundingChunks ?? []).flatMap((chunk) => {
+  return Arr.flatMap(groundingMetadata?.groundingChunks ?? [], (chunk) => {
     if (!chunk.web) {
       return [];
     }
@@ -125,13 +131,15 @@ function getGroundedSources({
 }
 /** Normalizes Google Search queries so the UI shows the actual searched term. */
 function getGroundingSearchQueries(
-  groundingMetadata: Schema.Schema.Type<typeof GroundingMetadataSchema>
+  groundingMetadata: typeof GroundingMetadataSchema.Type
 ) {
   return [
     ...new Set(
-      (groundingMetadata.webSearchQueries ?? [])
-        .map((item) => item.trim().replace(/^"+|"+$/g, ""))
-        .filter(Boolean)
+      pipe(
+        groundingMetadata.webSearchQueries ?? [],
+        Arr.map((item) => item.trim().replace(/^"+|"+$/g, "")),
+        Arr.filter(Boolean)
+      )
     ),
   ];
 }
@@ -182,12 +190,16 @@ function formatGroundingQueries(queries: string[]) {
     return [];
   }
   return [
-    `Queries: ${queries.map((query) => JSON.stringify(query)).join(", ")}`,
+    `Queries: ${pipe(
+      queries,
+      Arr.map((query) => JSON.stringify(query)),
+      Arr.join(", ")
+    )}`,
   ];
 }
 /** Formats one grounded source for the research synthesis evidence block. */
 function formatGroundingSource(
   source: DataPart["web-search"]["sources"][number]
 ) {
-  return [`- ${source.title}`, `  URL: ${source.url}`].join("\n");
+  return Arr.join([`- ${source.title}`, `  URL: ${source.url}`], "\n");
 }

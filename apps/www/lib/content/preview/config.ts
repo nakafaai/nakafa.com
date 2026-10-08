@@ -7,8 +7,15 @@ import {
   type PreviewRendererSecret,
   PreviewRendererSecretSchema,
 } from "@nakafa/aksara-contracts/preview/auth";
-import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
-import { Effect, Option, Redacted, Result, Schema } from "effect";
+import { hasPreviewProvider } from "@repo/next-config/preview";
+import {
+  Effect,
+  Option,
+  Record as Rec,
+  Redacted,
+  Result,
+  Schema,
+} from "effect";
 import {
   readPreviewEnvironment,
   readPreviewRendererEnvironment,
@@ -125,7 +132,7 @@ export const previewUrl = Effect.fn("NakafaContent.previewUrl")(function* (
  * returns true so strict decoding exposes the error instead of falling back.
  */
 export function hasPreviewConfig() {
-  return hasCandidateLocalePreview();
+  return hasPreviewProvider();
 }
 /** Reads the complete ephemeral connection only in the development child. */
 export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
@@ -134,7 +141,7 @@ export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
       return Option.none<PreviewConfig>();
     }
     const environment = readPreviewEnvironment();
-    if (Object.values(environment).every((value) => value === undefined)) {
+    if (Rec.values(environment).every((value) => value === undefined)) {
       return Option.none<PreviewConfig>();
     }
     const decoded = decodePreviewEnvironment(environment);
@@ -152,7 +159,7 @@ export const readPreviewRendererConfig = Effect.fn(
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }
   const environment = readPreviewRendererEnvironment();
-  if (Object.values(environment).every((value) => value === undefined)) {
+  if (Rec.values(environment).every((value) => value === undefined)) {
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }
   return Schema.decodeUnknownEffect(PreviewRendererEnvironmentSchema)(

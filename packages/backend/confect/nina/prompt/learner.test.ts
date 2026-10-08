@@ -4,6 +4,7 @@ import {
   formatLearnerProfile,
   formatLearnerPrompt,
 } from "@repo/backend/confect/nina/prompt/learner";
+import { Array as Arr } from "effect";
 
 const profile: typeof NinaLearnerProfile.Type = {
   focus: "tryout",
@@ -28,14 +29,17 @@ describe("Nina learner prompt", () => {
       "Account:\n- Focus: learning lessons"
     );
     expect(formatLearnerProfile(profile)).toBe(
-      [
-        "Account:",
-        "- Focus: preparing for try-outs",
-        "- Region: indonesia",
-        "- Preferred try-out country: indonesia",
-        "- Latest finished try-out: snbt set-1 on 2026-09-12, score 612 (provisional), 45 of 120 correct",
-        "  - penalaran-umum: 12 of 30 correct",
-      ].join("\n")
+      Arr.join(
+        [
+          "Account:",
+          "- Focus: preparing for try-outs",
+          "- Region: indonesia",
+          "- Preferred try-out country: indonesia",
+          "- Latest finished try-out: snbt set-1 on 2026-09-12, score 612 (provisional), 45 of 120 correct",
+          "  - penalaran-umum: 12 of 30 correct",
+        ],
+        "\n"
+      )
     );
   });
 

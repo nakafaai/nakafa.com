@@ -2,11 +2,9 @@ import { buildContentSearchExcerpt } from "@repo/backend/confect/contents/helper
 import type { ContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/groups";
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { NAKAFA_AGENT_MAX_OFFSET } from "@repo/contents/agent/search";
-import type { Schema } from "effect";
+import { Array as Arr } from "effect";
 
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 
 /** Builds the stable paginated search response shape used by tools and UI. */
 export function buildContentSearchResult(
@@ -14,9 +12,9 @@ export function buildContentSearchResult(
   ranked: readonly ContentSearchDocument[],
   queryTexts: readonly string[]
 ) {
-  const items = ranked
-    .slice(args.offset, args.offset + args.limit)
-    .map((document) => ({
+  const items = Arr.map(
+    ranked.slice(args.offset, args.offset + args.limit),
+    (document) => ({
       alignmentId: document.alignmentId,
       assetId: document.assetId,
       conceptId: document.conceptId,
@@ -35,7 +33,8 @@ export function buildContentSearchResult(
       section: document.section,
       title: document.title,
       url: document.url,
-    }));
+    })
+  );
   const nextOffset = args.offset + items.length;
   const hasMore =
     ranked.length > nextOffset && nextOffset <= NAKAFA_AGENT_MAX_OFFSET;

@@ -177,7 +177,7 @@ describe("tryouts/runtime/result", () => {
         1
       ).pipe(Effect.flip);
 
-      assert.ok(failure instanceof TryoutRuntimeError);
+      assert.ok(Schema.is(TryoutRuntimeError)(failure));
       assert.strictEqual(failure.code, "TRYOUT_SCORE_SOURCE_MISMATCH");
     })
   );
@@ -213,7 +213,7 @@ describe("tryouts/runtime/result", () => {
         Struct.omit(completeScore, ["thetaSE"])
       ).pipe(Effect.flip);
 
-      assert.ok(failure instanceof TryoutRuntimeError);
+      assert.ok(Schema.is(TryoutRuntimeError)(failure));
       assert.strictEqual(failure.code, "TRYOUT_SCORE_ESTIMATE_INCOMPLETE");
       assert.strictEqual(
         failure.message,

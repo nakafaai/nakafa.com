@@ -10,7 +10,7 @@ import {
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Complete turns kept verbatim after the summary. */
 export const RECENT_TURNS = 4;
@@ -25,13 +25,16 @@ const FOLD_LIMIT = 16;
 const MESSAGE_TOKENS = 1500;
 const MESSAGE_PAGE = 100;
 
-const INSTRUCTIONS = [
-  "You maintain the running summary of a tutoring conversation between a learner and Nina, Nakafa's AI tutor.",
-  "Rewrite the previous summary so it also covers the new turns.",
-  "Keep the learner's goals, level, and preferences; every question with the method and final answers Nina gave; open problems; and anything Nina promised to follow up.",
-  "Drop greetings, filler, and tool or system mechanics. Never invent facts.",
-  "Write compact bullet points in the conversation's language, at most 250 words.",
-].join("\n");
+const INSTRUCTIONS = Arr.join(
+  [
+    "You maintain the running summary of a tutoring conversation between a learner and Nina, Nakafa's AI tutor.",
+    "Rewrite the previous summary so it also covers the new turns.",
+    "Keep the learner's goals, level, and preferences; every question with the method and final answers Nina gave; open problems; and anything Nina promised to follow up.",
+    "Drop greetings, filler, and tool or system mechanics. Never invent facts.",
+    "Write compact bullet points in the conversation's language, at most 250 words.",
+  ],
+  "\n"
+);
 
 class NinaSummaryError extends Schema.TaggedError<NinaSummaryError>()(
   "NinaSummaryError",
@@ -62,7 +65,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
   anchor: string
 ) {
   const ctx = yield* ActionCtx;
-  const lines: string[] = [];
+  let lines: string[] = [];
   let cursor: string | null = null;
   let done = false;
   while (!done) {
@@ -81,15 +84,17 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
     for (const message of page.page) {
       if (message.order > from && message.order <= through && message.text) {
         const speaker = message.message?.role === "user" ? "Learner" : "Nina";
-        lines.push(
+        lines = Arr.append(
+          lines,
           `${speaker}: ${boundText(message.text, MESSAGE_TOKENS, "Message shortened.")}`
         );
       }
     }
-    done = page.isDone || page.page.some((message) => message.order <= from);
+    done =
+      page.isDone || Arr.some(page.page, (message) => message.order <= from);
     cursor = page.continueCursor;
   }
-  return lines.reverse().join("\n\n");
+  return Arr.join(Arr.reverse(lines), "\n\n");
 });
 
 /**
@@ -139,10 +144,13 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
           { userId: turn.userId },
           {
             abortSignal: signal,
-            prompt: [
-              `# Previous Summary\n\n${current?.text ?? "None yet."}`,
-              `# New Turns\n\n${transcript}`,
-            ].join("\n\n"),
+            prompt: Arr.join(
+              [
+                `# Previous Summary\n\n${current?.text ?? "None yet."}`,
+                `# New Turns\n\n${transcript}`,
+              ],
+              "\n\n"
+            ),
             timeout: handle.timeout,
           },
           { storageOptions: { saveMessages: "none" } }

@@ -29,15 +29,61 @@ parts.join(", ");
 path.join(root, file);
 text.slice(1);
 items.push(2);
+items.find(Boolean);
+items["map"](String);
+items[name](String);
+run();
+items.sort();
+Arr.sort(items, order);
+items.toSorted(order);
+items.fill(0);
 `;
       assert.deepStrictEqual(yield* findings(source, SCRIPT), [
         "3 array-method",
         "5 array-method",
         "6 array-method",
-        "9 array-method",
+        "9 array-mutation",
+        "10 array-search",
+        "11 array-method",
+        "14 array-mutation",
+        "16 array-method",
+        "17 array-mutation",
       ]);
       assert.deepStrictEqual(yield* findings(source), []);
     })
+  );
+
+  it.effect(
+    "reports array methods on values imported from repository modules",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { Chunk } from "some-package";
+import { rows, other as renamed } from "#scripts/data";
+import list from "./list";
+import * as space from "./space";
+import type { Shape } from "@repo/backend/shape";
+import "./setup";
+rows.map(String);
+renamed.filter(Boolean);
+list.find(Boolean);
+space.map(String);
+Chunk.map(String);
+function local(rows: Shape) {
+  return rows.map(String);
+}
+`,
+            SCRIPT
+          ),
+          [
+            "7 array-method",
+            "8 array-method",
+            "9 array-search",
+            "13 array-method",
+          ]
+        );
+      })
   );
 
   it.effect("reports Promise syntax in strict domain modules", () =>

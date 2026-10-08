@@ -23,7 +23,7 @@ import {
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { Array as Arr, Effect, Struct } from "effect";
+import { Array as Arr, Effect, Record as Rec, Struct } from "effect";
 
 const defaultProjections = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
   makeMaterialProjection(locale, 1),
@@ -123,7 +123,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
       text: projection.metadata.title,
     });
   }
-  const buckets = Object.values(
+  const buckets = Rec.values(
     Arr.groupBy(catalog, (row) => `${row.appLocale}/${row.bucket}`)
   ).map((rows) => ({
     appLocale: rows[0].appLocale,

@@ -24,7 +24,7 @@ import {
   summarizeResponses,
   type TryoutScoreSource,
 } from "@repo/backend/confect/tryouts/runtime/score";
-import { Effect, flow } from "effect";
+import { Array as Arr, Effect, flow } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
@@ -82,7 +82,7 @@ const createMissingExpiredSectionAttempts = Effect.fn(
   sections: readonly TryoutSectionAttempt[];
 }) {
   const attemptedSectionKeys = new Set(
-    args.sections.map((section) => section.sectionKey)
+    Arr.map(args.sections, (section) => section.sectionKey)
   );
   for (const snapshot of args.attempt.sectionSnapshots) {
     if (attemptedSectionKeys.has(snapshot.sectionKey)) {
@@ -250,7 +250,8 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
     yield* writer
       .table("tryoutAttempts")
       .patch(args.attempt._id, {
-        completedSectionKeys: args.attempt.sectionSnapshots.map(
+        completedSectionKeys: Arr.map(
+          args.attempt.sectionSnapshots,
           (section) => section.sectionKey
         ),
         lastActivityAt: args.now,
@@ -259,7 +260,8 @@ export const expireAttempt = Effect.fn("tryouts.runtime.expireAttempt")(
     return yield* finalizeAttemptScore({
       attempt: {
         ...args.attempt,
-        completedSectionKeys: args.attempt.sectionSnapshots.map(
+        completedSectionKeys: Arr.map(
+          args.attempt.sectionSnapshots,
           (section) => section.sectionKey
         ),
         lastActivityAt: args.now,
@@ -303,12 +305,15 @@ function selectSectionResponseIndex(
   responseIndex: TryoutResponseIndex,
   sectionIdentity: string
 ): TryoutResponseIndex {
-  const placements = responseIndex.placements.filter(
+  const placements = Arr.filter(
+    responseIndex.placements,
     (placement) => placement.sectionIdentity === sectionIdentity
   );
-  const placementIds = new Set(placements.map((placement) => placement._id));
+  const placementIds = new Set(
+    Arr.map(placements, (placement) => placement._id)
+  );
   const responses = new Map(
-    [...responseIndex.responses].filter(([placementId]) =>
+    Arr.filter([...responseIndex.responses], ([placementId]) =>
       placementIds.has(placementId)
     )
   );

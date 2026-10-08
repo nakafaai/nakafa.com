@@ -9,7 +9,6 @@ import {
   NakafaAgentMarkdownUrlSchema,
   NakafaAgentSectionSchema,
 } from "@repo/contents/agent/schema/ref";
-import type { Locale } from "@repo/contents/content";
 import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Option, Schema } from "effect";
@@ -31,14 +30,15 @@ const NakafaContentGraphProjectionSchema =
   );
 
 /** Persisted graph projection fields derived from the runtime schema. */
-type NakafaContentGraphProjection = Schema.Schema.Type<
-  typeof NakafaContentGraphProjectionSchema
->;
+type NakafaContentGraphProjection =
+  typeof NakafaContentGraphProjectionSchema.Type;
 
-interface NakafaUrlRoute {
-  locale: Locale;
-  route: string;
-}
+const NakafaUrlRouteSchema = Schema.Struct({
+  locale: LocaleSchema,
+  route: Schema.String,
+});
+
+type NakafaUrlRoute = typeof NakafaUrlRouteSchema.Type;
 
 /** Parses a Nakafa URL into locale and route without assuming source shape. */
 export function parseNakafaUrlRoute(input: string) {

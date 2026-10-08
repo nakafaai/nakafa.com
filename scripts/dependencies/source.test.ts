@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import { Effect, FileSystem, Path, Record as Rec } from "effect";
 import { PACKAGE_MANAGER } from "#scripts/dependencies/policy";
 import {
   inspectDependencyPolicy,
@@ -14,7 +14,7 @@ const writeFixtures = Effect.fn("DependencySourceTest.writeFixtures")(
   function* (root: string, files: Record<string, string>) {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    for (const [file, content] of Object.entries(files)) {
+    for (const [file, content] of Rec.toEntries(files)) {
       const filePath = path.join(root, file);
       yield* fileSystem.makeDirectory(path.dirname(filePath), {
         recursive: true,

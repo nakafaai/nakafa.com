@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -39,7 +39,7 @@ test("chart articles retain server HTML after caching in every locale", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              for (const href of Object.values(pinnedRoutes.cabinet)) {
+              for (const href of Rec.values(pinnedRoutes.cabinet)) {
                 yield* Effect.promise(() => page.goto(href));
                 // Streamed segments can briefly retain a hidden article copy.
                 yield* Effect.promise(() =>
@@ -179,7 +179,7 @@ test("function charts retain their tables and hydrate after a cached reload", as
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              for (const href of Object.values(pinnedRoutes.growth)) {
+              for (const href of Rec.values(pinnedRoutes.growth)) {
                 yield* Effect.promise(() => page.goto(href));
                 for (const width of [1280, 390]) {
                   yield* Effect.promise(() =>

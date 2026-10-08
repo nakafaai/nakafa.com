@@ -13,6 +13,7 @@ import {
 import { Ocean } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/ocean";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
+import { Record as Rec } from "effect";
 import { useMemo, useRef } from "react";
 import {
   CatmullRomCurve3,
@@ -434,4 +435,4 @@ function toSceneTuple(x: number, y: number, z: number): VectorTuple {
   ];
 }
 
-useGLTF.preload(Object.values(PROJECTILE_ASSET_PATHS));
+useGLTF.preload(Rec.values(PROJECTILE_ASSET_PATHS));

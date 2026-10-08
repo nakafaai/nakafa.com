@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /**
  * Trigger handler for schoolClassForumPostReactions table changes.
@@ -27,9 +27,10 @@ export const postReactionsHandler = Effect.fn(
       const post = yield* database
         .table("schoolClassForumPosts")
         .get(reaction.postId);
-      const reactionCounts = [...post.reactionCounts];
-      const existingIndex = reactionCounts.findIndex(
-        (r) => r.emoji === reaction.emoji
+      let reactionCounts = [...post.reactionCounts];
+      const existingIndex = Option.getOrElse(
+        Arr.findFirstIndex(reactionCounts, (r) => r.emoji === reaction.emoji),
+        () => -1
       );
       if (existingIndex >= 0) {
         reactionCounts[existingIndex] = {
@@ -37,7 +38,7 @@ export const postReactionsHandler = Effect.fn(
           count: reactionCounts[existingIndex].count + 1,
         };
       } else {
-        reactionCounts.push({
+        reactionCounts = Arr.append(reactionCounts, {
           emoji: reaction.emoji,
           count: 1,
         });
@@ -55,23 +56,31 @@ export const postReactionsHandler = Effect.fn(
         .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
       if (post) {
         const reactionCounts = [...post.reactionCounts];
-        const existingIndex = reactionCounts.findIndex(
-          (r) => r.emoji === oldReaction.emoji
+        const existingIndex = Option.getOrElse(
+          Arr.findFirstIndex(
+            reactionCounts,
+            (r) => r.emoji === oldReaction.emoji
+          ),
+          () => -1
         );
         if (existingIndex >= 0) {
           const newCount = reactionCounts[existingIndex].count - 1;
-          if (newCount <= 0) {
-            reactionCounts.splice(existingIndex, 1);
-          } else {
-            reactionCounts[existingIndex] = {
-              emoji: oldReaction.emoji,
-              count: newCount,
-            };
-          }
+          const before = Arr.take(reactionCounts, existingIndex);
+          const after = Arr.drop(reactionCounts, existingIndex + 1);
+          const remaining =
+            newCount <= 0
+              ? Arr.appendAll(before, after)
+              : Arr.appendAll(
+                  Arr.append(before, {
+                    emoji: oldReaction.emoji,
+                    count: newCount,
+                  }),
+                  after
+                );
           yield* writer
             .table("schoolClassForumPosts")
             .patch(oldReaction.postId, {
-              reactionCounts,
+              reactionCounts: remaining,
             });
         }
       }

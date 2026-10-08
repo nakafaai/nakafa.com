@@ -6,9 +6,7 @@ export const FileDownloadRequest = Schema.Struct({
   mimeType: Schema.String,
 });
 /** Schema-derived input accepted by the browser download program. */
-export type FileDownloadRequest = Schema.Schema.Type<
-  typeof FileDownloadRequest
->;
+export type FileDownloadRequest = typeof FileDownloadRequest.Type;
 /** Expected browser failure while preparing, activating, or cleaning a download. */
 export class BrowserFileDownloadError extends Schema.TaggedError<BrowserFileDownloadError>()(
   "BrowserFileDownloadError",

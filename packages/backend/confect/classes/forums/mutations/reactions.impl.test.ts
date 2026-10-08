@@ -4,7 +4,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { triggers } from "@repo/backend/confect/functions";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const reactions = api.classes.forums.mutations.reactions;
 async function createForumFixture() {
@@ -98,7 +98,9 @@ describe("registered forum reactions", () => {
         forumId,
       }
     );
-    expect(posts.find((post) => post._id === postId)).toMatchObject({
+    expect(
+      Option.getOrUndefined(Arr.findFirst(posts, (post) => post._id === postId))
+    ).toMatchObject({
       user: null,
       reactionUsers: [
         {
@@ -108,7 +110,11 @@ describe("registered forum reactions", () => {
         },
       ],
     });
-    expect(posts.find((post) => post._id === replyId)).toMatchObject({
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(posts, (post) => post._id === replyId)
+      )
+    ).toMatchObject({
       user: null,
       replyToUser: null,
     });

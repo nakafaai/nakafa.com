@@ -11,7 +11,7 @@ import { insertModelBuild } from "@repo/backend/test/content/model";
 import type { WithoutSystemFields } from "convex/server";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type SearchRow = WithoutSystemFields<Doc<"contentIndex">>;
 function searchRow(index: number): SearchRow {
@@ -87,9 +87,10 @@ describe("contentRelease/models/search", () => {
     const initial = await t.query((ctx) =>
       ctx.db.query("contentIndex").take(count * 2)
     );
-    const preparationBytes = initial.reduce(
-      (sum, row) => sum + getDocumentSize(row),
-      0
+    const preparationBytes = Arr.reduce(
+      initial,
+      0,
+      (sum, row) => sum + getDocumentSize(row)
     );
     let cursor: string | undefined;
     let pages = 0;
@@ -159,13 +160,18 @@ describe("contentRelease/models/search", () => {
     }
     expect(writes).toBe(4);
     const rows = await t.query((ctx) => ctx.db.query("contentIndex").take(101));
-    const source = rows.filter((row) => row.slot === "blue");
-    const target = rows.filter((row) => row.slot === "green");
+    const source = Arr.filter(rows, (row) => row.slot === "blue");
+    const target = Arr.filter(rows, (row) => row.slot === "green");
     expect(target).toHaveLength(source.length);
     for (const row of source) {
       const { _id, _creationTime, ...fields } = row;
       expect(
-        target.find((candidate) => candidate.contentKey === row.contentKey)
+        Option.getOrUndefined(
+          Arr.findFirst(
+            target,
+            (candidate) => candidate.contentKey === row.contentKey
+          )
+        )
       ).toMatchObject({
         ...fields,
         slot: "green",
@@ -257,7 +263,11 @@ describe("contentRelease/models/search", () => {
         code: "CONTENT_RELEASE_INTEGRITY",
       });
       const rows = await t.query((ctx) => ctx.db.query("contentIndex").take(4));
-      expect(rows.find((row) => row.slot === "green")?.text).toBe("Aborted");
+      expect(
+        Option.getOrUndefined(
+          Arr.findFirst(rows, (row) => row.slot === "green")
+        )?.text
+      ).toBe("Aborted");
     }
   );
   it("completes an empty buffer without inventing a continuation", async () => {

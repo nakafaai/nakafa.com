@@ -446,6 +446,30 @@ describe("providerCompatibleObjectSchema", () => {
       },
     });
   });
+  it("reads array minimums nested in an intersection and relaxes them across branches", () => {
+    const modelSchema = providerCompatibleObjectSchema(
+      Schema.Union([
+        jsonSchemaFixture({
+          properties: {
+            values: {
+              allOf: [{ minItems: 2 }, { minItems: 3 }],
+              type: "array",
+            },
+          },
+          required: ["values"],
+          type: "object",
+        }),
+        jsonSchemaFixture({
+          properties: { values: { minItems: 1, type: "array" } },
+          required: ["values"],
+          type: "object",
+        }),
+      ])
+    );
+    expect(modelSchema).toMatchObject({
+      properties: { values: { minItems: 1, type: "array" } },
+    });
+  });
   it("rejects unsupported generated property schemas", () => {
     expect(() =>
       providerCompatibleObjectSchema(

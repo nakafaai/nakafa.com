@@ -8,7 +8,7 @@ import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { loadReadableSnapshot } from "@repo/backend/confect/contentRelease/snapshot";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolveContentHead } from "@repo/backend/content/publication/projection";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /**
  * Maximum content keys one head page resolves.
@@ -67,17 +67,14 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
       numItems: pageSize,
     })
     .pipe(Effect.orDie);
-  const heads: ContentHead[] = [];
-  for (const key of stored.page) {
-    const head = yield* resolveContentHead(
-      key.contentKey,
-      key.artifactLocale,
-      sequence
-    ).pipe(Effect.provide(publicationLayer));
-    if (head) {
-      heads.push(head);
-    }
-  }
+  const resolved = yield* Effect.forEach(stored.page, (key) =>
+    resolveContentHead(key.contentKey, key.artifactLocale, sequence).pipe(
+      Effect.provide(publicationLayer)
+    )
+  );
+  const heads: ContentHead[] = Arr.flatMap(resolved, (head) =>
+    head ? [head] : []
+  );
   const page = {
     activeManifestHash: request.activeManifestHash,
     activeReleaseId: request.activeReleaseId,
@@ -99,7 +96,7 @@ export const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
     ),
     Effect.map((decoded) => ({
       ...decoded,
-      heads: decoded.heads.map(({ publicPath, ...head }) => ({
+      heads: Arr.map(decoded.heads, ({ publicPath, ...head }) => ({
         ...head,
         ...(publicPath === undefined
           ? {}

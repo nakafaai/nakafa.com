@@ -48,6 +48,4 @@ export const NakafaProblemDetailsSchema = Schema.Struct({
   type: HttpsUrlSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 
-export type NakafaProblemDetails = Schema.Schema.Type<
-  typeof NakafaProblemDetailsSchema
->;
+export type NakafaProblemDetails = typeof NakafaProblemDetailsSchema.Type;

@@ -22,7 +22,7 @@ import {
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { loadVerifiedSnapshot } from "@repo/backend/content/publication/snapshot";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Reads a bounded signed batch under fresh session, ownership and phase checks. */
 export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
@@ -49,7 +49,7 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
   if (!attempt) {
     return null;
   }
-  const placements: NonNullable<
+  let placements: NonNullable<
     Effect.Success<ReturnType<typeof readHistoryPlacement>>
   >[] = [];
   for (const selector of request.selectors) {
@@ -57,7 +57,7 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
     if (!placement) {
       return null;
     }
-    placements.push(placement);
+    placements = Arr.append(placements, placement);
   }
   const stored = yield* loadAttemptRuntimeBundle(attempt);
   const [bundle, renderer] = yield* Effect.all([
@@ -81,23 +81,25 @@ export const readTryoutHistory = Effect.fn("tryouts.history.read")(function* (
   yield* loadVerifiedSnapshot("tryout", attempt.tryoutSnapshotId).pipe(
     Effect.provide(publicationLayer)
   );
-  const result: TryoutBodyBatch = {
+  const empty: TryoutBodyBatch = {
     bundleJson: stored.bundleJson,
     items: [],
     rendererJson: stored.rendererJson,
   };
-  let responseBytes = protectedRuntimeResponseBytes(result);
+  let items = empty.items;
+  let responseBytes = protectedRuntimeResponseBytes(empty);
   for (const placement of placements) {
     const item = yield* readHistoryArtifact(placement);
     responseBytes +=
-      protectedRuntimeResponseBytes(item) + (result.items.length > 0 ? 1 : 0);
+      protectedRuntimeResponseBytes(item) + (items.length > 0 ? 1 : 0);
     if (responseBytes > MAX_PROTECTED_RUNTIME_RESPONSE_BYTES) {
       return yield* new TryoutHistoryError({
         code: "TRYOUT_HISTORY_RESPONSE_TOO_LARGE",
         message: "Try-out history exceeds its response byte limit.",
       });
     }
-    result.items.push(item);
+    items = Arr.append(items, item);
   }
+  const result: TryoutBodyBatch = { ...empty, items };
   return result;
 });

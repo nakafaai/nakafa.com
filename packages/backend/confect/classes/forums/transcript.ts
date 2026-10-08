@@ -2,7 +2,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { enrichForumPosts } from "@repo/backend/confect/classes/forums/posts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 export const getForumReadState = Effect.fn(
   "classes.forums.transcript.getForumReadState"
 )(function* (forumId: Id<"schoolClassForums">, currentUserId: Id<"users">) {
@@ -39,7 +39,7 @@ export const createForumFeedPosts = Effect.fn(
     getForumReadState(forumId, currentUserId),
   ]);
   const lastReadSequence = readState?.lastReadSequence ?? 0;
-  return enrichedPosts.map((post) => ({
+  return Arr.map(enrichedPosts, (post) => ({
     ...post,
     isUnread:
       post.createdBy !== currentUserId && post.sequence > lastReadSequence,

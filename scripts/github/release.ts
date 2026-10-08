@@ -1,4 +1,11 @@
-import { Effect, Option, Redacted, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashMap,
+  Option,
+  Redacted,
+  Schema,
+} from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import {
   GITHUB_ACTION_REVIEWS,
@@ -12,9 +19,8 @@ export const GithubActionReleaseReviewSchema = Schema.Struct({
   reason: Schema.String,
   repository: Schema.String,
 });
-export type GithubActionReleaseReview = Schema.Schema.Type<
-  typeof GithubActionReleaseReviewSchema
->;
+export type GithubActionReleaseReview =
+  typeof GithubActionReleaseReviewSchema.Type;
 
 /** Expected failure while reading upstream GitHub Action release metadata. */
 export class GithubActionReleaseError extends Schema.TaggedError<GithubActionReleaseError>()(
@@ -26,7 +32,7 @@ export class GithubActionReleaseError extends Schema.TaggedError<GithubActionRel
 ) {}
 
 function actionRepository(action: string) {
-  return action.split("/").slice(0, 2).join("/");
+  return Arr.join(action.split("/").slice(0, 2), "/");
 }
 
 /** Returns one consistent latest-release review for each upstream repository. */
@@ -35,11 +41,13 @@ export const githubActionReleaseReviews = Effect.fn(
 )(function* (
   actionReviews: readonly GithubActionReview[] = GITHUB_ACTION_REVIEWS
 ) {
-  const reviews = new Map<string, GithubActionReleaseReview>();
+  const reviews = MutableHashMap.empty<string, GithubActionReleaseReview>();
 
   for (const actionReview of actionReviews) {
     const repository = actionRepository(actionReview.action);
-    const existing = reviews.get(repository);
+    const existing = Option.getOrUndefined(
+      MutableHashMap.get(reviews, repository)
+    );
     const review = {
       expectedTag: actionReview.expectedTag,
       reason: actionReview.reason,
@@ -52,10 +60,10 @@ export const githubActionReleaseReviews = Effect.fn(
         message: `${repository} has conflicting action release reviews.`,
       });
     }
-    reviews.set(repository, existing ?? review);
+    MutableHashMap.set(reviews, repository, existing ?? review);
   }
 
-  return [...reviews.values()];
+  return Arr.fromIterable(MutableHashMap.values(reviews));
 });
 
 /** Fetches the current stable tag for one reviewed GitHub Action repository. */

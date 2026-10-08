@@ -1,17 +1,20 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
 import {
+  Array as Arr,
   ConfigProvider,
   Effect,
   FileSystem,
   Layer,
   PlatformError,
+  Ref,
   Schema,
   Sink,
   Stdio,
   Stream,
 } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import { capture, makeCapture } from "#scripts/capture";
 import {
   readProductionChanges,
   requiresProductionAcceptance,
@@ -35,17 +38,19 @@ const runGit = Effect.fn("ProductionAcceptanceTest.runGit")(function* (
     stdout: "ignore",
   }).pipe(
     Effect.mapError(
-      () => new GitFixtureError({ message: `git ${args.join(" ")} failed.` })
+      () =>
+        new GitFixtureError({ message: `git ${Arr.join(args, " ")} failed.` })
     )
   );
   const exitCode = yield* command.exitCode.pipe(
     Effect.mapError(
-      () => new GitFixtureError({ message: `git ${args.join(" ")} failed.` })
+      () =>
+        new GitFixtureError({ message: `git ${Arr.join(args, " ")} failed.` })
     )
   );
   if (exitCode !== 0) {
     return yield* new GitFixtureError({
-      message: `git ${args.join(" ")} exited with ${exitCode}.`,
+      message: `git ${Arr.join(args, " ")} exited with ${exitCode}.`,
     });
   }
 });
@@ -110,16 +115,11 @@ function scriptedGit(result: {
 /** Writes the decision with one CI environment and captured job output. */
 const writeDecision = Effect.fn("ProductionAcceptanceTest.writeDecision")(
   function* (repository: string, environment: Record<string, string>) {
-    const stdout: Array<string | Uint8Array> = [];
+    const stdout = yield* makeCapture;
     const result = yield* writeProductionAcceptanceDecision(repository).pipe(
       Effect.provide(
         Stdio.layerTest({
-          stdout: () =>
-            Sink.forEachArray((chunks) =>
-              Effect.sync(() => {
-                stdout.push(...chunks);
-              })
-            ),
+          stdout: capture(stdout),
         })
       ),
       Effect.provideService(
@@ -128,7 +128,7 @@ const writeDecision = Effect.fn("ProductionAcceptanceTest.writeDecision")(
       ),
       Effect.result
     );
-    return { result, stdout };
+    return { result, stdout: yield* Ref.get(stdout) };
   }
 );
 
@@ -280,15 +280,12 @@ describe("production acceptance scope", () => {
         { exitCode: 0, stdout: Stream.make(encoder.encode("M\0a.ts\0D\0")) },
         { exitCode: 0, stdout: Stream.make(encoder.encode("M\0\0")) },
       ];
-      const failures: { readonly message: string }[] = [];
-      for (const result of scripted) {
-        failures.push(
-          yield* readProductionChanges(repository, "HEAD", "HEAD").pipe(
-            Effect.provide(scriptedGit(result)),
-            Effect.flip
-          )
-        );
-      }
+      const failures = yield* Effect.forEach(scripted, (result) =>
+        readProductionChanges(repository, "HEAD", "HEAD").pipe(
+          Effect.provide(scriptedGit(result)),
+          Effect.flip
+        )
+      );
 
       assert.strictEqual(
         unavailable.message,
@@ -296,7 +293,7 @@ describe("production acceptance scope", () => {
       );
       assert.match(badRevision.message, UNKNOWN_REVISION);
       assert.deepStrictEqual(
-        failures.map(({ message }) => message),
+        Arr.map(failures, ({ message }) => message),
         [
           "Unable to finish inspecting the pull request changes.",
           "usage",
@@ -376,8 +373,7 @@ describe("production acceptance scope", () => {
     Effect.gen(function* () {
       const repository = yield* makeRepository("production-acceptance-config-");
       const head = yield* readRevision(repository, "HEAD");
-      const failures: string[] = [];
-      for (const environment of [
+      const environments: readonly Record<string, string>[] = [
         { BASE_SHA: head, HEAD_SHA: head },
         { GITHUB_OUTPUT: `${repository}/output`, HEAD_SHA: head },
         {
@@ -386,14 +382,18 @@ describe("production acceptance scope", () => {
           HEAD_SHA: head,
         },
         { BASE_SHA: head, GITHUB_OUTPUT: `${repository}/apps`, HEAD_SHA: head },
-      ]) {
-        const { result, stdout } = yield* writeDecision(
-          repository,
-          environment
-        );
-        assert.deepStrictEqual(stdout, []);
-        failures.push(result._tag === "Failure" ? result.failure.message : "");
-      }
+      ];
+      const failures = yield* Effect.forEach(
+        environments,
+        Effect.fnUntraced(function* (environment) {
+          const { result, stdout } = yield* writeDecision(
+            repository,
+            environment
+          );
+          assert.deepStrictEqual(stdout, []);
+          return result._tag === "Failure" ? result.failure.message : "";
+        })
+      );
 
       assert.deepStrictEqual(failures, [
         "Production acceptance configuration is incomplete.",

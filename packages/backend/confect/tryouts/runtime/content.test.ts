@@ -10,7 +10,7 @@ import {
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("try-out review entitlement", () => {
   it.effect(
@@ -94,7 +94,10 @@ describe("try-out review entitlement", () => {
         assert.strictEqual(proQuestion.responseSpec.kind, "single-choice");
         if (proQuestion.responseSpec.kind === "single-choice") {
           assert.isTrue(
-            proQuestion.responseSpec.options.some((option) => option.isCorrect)
+            Arr.some(
+              proQuestion.responseSpec.options,
+              (option) => option.isCorrect === true
+            )
           );
         }
         yield* Effect.promise(() =>

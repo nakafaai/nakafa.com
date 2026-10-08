@@ -18,7 +18,7 @@ import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/rendere
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { decodeStoredSnapshotRow } from "@repo/backend/confect/contentRelease/tryout/row";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
   Schema.check(
@@ -27,7 +27,8 @@ const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
         snapshot.family !== "quran" ||
         (snapshot.manifest.activeAppLocales.length ===
           ACTIVE_APP_LOCALES.length &&
-          snapshot.manifest.activeAppLocales.every(
+          Arr.every(
+            snapshot.manifest.activeAppLocales,
             (locale, index) => locale === ACTIVE_APP_LOCALES[index]
           ) &&
           snapshot.manifest.sourceFileCount ===

@@ -38,7 +38,7 @@ import {
   makeTryoutSnapshotManifest,
 } from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
-import { Effect, Struct } from "effect";
+import { Array as Arr, Effect, Struct } from "effect";
 
 describe("contentRelease/snapshot/batch", () => {
   it.live.each(["manifest", "ledger"] as const)(
@@ -138,7 +138,7 @@ describe("contentRelease/snapshot/batch", () => {
           batchIndex: 0,
           family,
           releaseId: TEST_RELEASE_ID,
-          rowJson: rows.map(canonicalizeContentSnapshotRow),
+          rowJson: Arr.map(rows, canonicalizeContentSnapshotRow),
           snapshotId,
         };
         expect(
@@ -298,10 +298,12 @@ describe("contentRelease/snapshot/batch", () => {
             release: await ctx.db.query("contentReleases").unique(),
           }))
         );
-        const programCount = data.rows.filter(
+        const programCount = Arr.filter(
+          data.rows,
           ({ record }) => record.kind === "program"
         ).length;
-        const curriculumCount = data.rows.filter(
+        const curriculumCount = Arr.filter(
+          data.rows,
           ({ record }) => record.kind === "curriculum"
         ).length;
         expect(stored.batches).toHaveLength(1);
@@ -377,9 +379,7 @@ describe("contentRelease/snapshot/batch", () => {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
         const [firstRow] = data.rowJson;
-        if (!firstRow) {
-          throw new Error("Expected one program snapshot row.");
-        }
+        assert(firstRow, "Expected one program snapshot row.");
         const changed = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           changed.mutation((ctx) =>
@@ -396,7 +396,7 @@ describe("contentRelease/snapshot/batch", () => {
               batchIndex: 0,
               family: "program",
               releaseId: TEST_RELEASE_ID,
-              rowJson: [...data.rowJson].reverse(),
+              rowJson: Arr.reverse(data.rowJson),
               snapshotId: data.snapshotId,
             })
           ).rejects.toMatchObject({

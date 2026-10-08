@@ -19,7 +19,7 @@ import {
 import type { TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
-type StoredRollbackEnvelope = Schema.Schema.Type<typeof stageEnvelopeValidator>;
+type StoredRollbackEnvelope = typeof stageEnvelopeValidator.Type;
 export class UnexpectedRollbackTestState extends Data.TaggedError(
   "UnexpectedRollbackTestState"
 )<{

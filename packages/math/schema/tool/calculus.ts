@@ -12,7 +12,7 @@ function hasSafeCalculusVariable(value: MathCalculusInput) {
   if (value.variable) {
     return true;
   }
-  return getExpressionSymbols(value.expression).size < 2;
+  return getExpressionSymbols(value.expression).length < 2;
 }
 /** Keeps derivative-order input aligned with the only CAS operation that uses it. */
 function hasValidCalculusOrder(value: MathCalculusInput) {
@@ -40,7 +40,7 @@ const MathCalculusStructSchema = Schema.Struct({
   upper: Schema.optionalKey(boundInputSchema),
   variable: Schema.optionalKey(variableInputSchema),
 }).annotate({ description: "Calculus tool input." });
-type MathCalculusInput = Schema.Schema.Type<typeof MathCalculusStructSchema>;
+type MathCalculusInput = typeof MathCalculusStructSchema.Type;
 export const MathCalculusInputSchema = MathCalculusStructSchema.mapFields(
   Struct.map(Schema.mutableKey)
 )

@@ -1,5 +1,16 @@
-import { Effect, FileSystem, Option, Path, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  HashMap,
+  Option,
+  Order,
+  Path,
+  Record as Rec,
+  Schema,
+} from "effect";
 import { parse as yamlParse } from "yaml";
+import { problemWhen } from "#scripts/problem";
 
 const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
 const UnknownRecord = Schema.Record(Schema.String, Schema.Unknown);
@@ -16,16 +27,14 @@ export const GithubActionReviewSchema = Schema.Struct({
   expectedUsages: NonNegativeInteger,
   reason: Schema.String,
 });
-export type GithubActionReview = Schema.Schema.Type<
-  typeof GithubActionReviewSchema
->;
+export type GithubActionReview = typeof GithubActionReviewSchema.Type;
 
 export const GithubActionUseSchema = Schema.Struct({
   inputs: UnknownRecord,
   reference: Schema.String,
   workflowPath: Schema.String,
 });
-export type GithubActionUse = Schema.Schema.Type<typeof GithubActionUseSchema>;
+export type GithubActionUse = typeof GithubActionUseSchema.Type;
 
 export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   Schema.Array(GithubActionReviewSchema)
@@ -91,35 +100,35 @@ export class GithubActionPolicyError extends Schema.TaggedError<GithubActionPoli
   }
 ) {}
 
+/** Returns every action one workflow value uses, at any depth, in document order. */
 function collectActionUses(
   value: unknown,
-  workflowPath: string,
-  uses: GithubActionUse[]
-) {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      collectActionUses(item, workflowPath, uses);
-    }
-    return;
+  workflowPath: string
+): GithubActionUse[] {
+  if (Arr.isArray(value)) {
+    return Arr.flatMap(value, (item) => collectActionUses(item, workflowPath));
   }
 
   const record = Schema.decodeUnknownOption(UnknownRecord)(value);
   if (Option.isNone(record)) {
-    return;
+    return [];
   }
 
-  if (typeof record.value.uses === "string") {
-    const inputs = Schema.decodeUnknownOption(UnknownRecord)(record.value.with);
-    uses.push({
-      inputs: Option.getOrElse(inputs, () => ({})),
-      reference: record.value.uses,
-      workflowPath,
-    });
-  }
-
-  for (const child of Object.values(record.value)) {
-    collectActionUses(child, workflowPath, uses);
-  }
+  const inputs = Schema.decodeUnknownOption(UnknownRecord)(record.value.with);
+  return Arr.appendAll(
+    typeof record.value.uses === "string"
+      ? [
+          {
+            inputs: Option.getOrElse(inputs, () => ({})),
+            reference: record.value.uses,
+            workflowPath,
+          },
+        ]
+      : [],
+    Arr.flatMap(Rec.values(record.value), (child) =>
+      collectActionUses(child, workflowPath)
+    )
+  );
 }
 
 function parseActionReference(reference: string) {
@@ -139,22 +148,20 @@ function inputProblems(
   action: string,
   expectedInputs: Readonly<Record<string, string>>
 ) {
-  const problems: string[] = [];
-  for (const [input, expected] of Object.entries(expectedInputs)) {
-    if (String(use.inputs[input] ?? "") !== expected) {
-      problems.push(
+  return Arr.appendAll(
+    Arr.flatMap(Rec.toEntries(expectedInputs), ([input, expected]) =>
+      problemWhen(
+        String(use.inputs[input] ?? "") !== expected,
         `${use.workflowPath} configures ${action} ${input} as ${String(use.inputs[input] ?? "missing")}; approved ${expected}.`
-      );
-    }
-  }
-  for (const input of Object.keys(use.inputs)) {
-    if (!Object.hasOwn(expectedInputs, input)) {
-      problems.push(
+      )
+    ),
+    Arr.flatMap(Rec.keys(use.inputs), (input) =>
+      problemWhen(
+        !Object.hasOwn(expectedInputs, input),
         `${use.workflowPath} configures unreviewed ${action} input ${input}.`
-      );
-    }
-  }
-  return problems;
+      )
+    )
+  );
 }
 
 function policyError(message: string, cause: unknown) {
@@ -170,83 +177,97 @@ export const readWorkflowActionUses = Effect.fn(
   const workflowRoot = path.join(root, ".github", "workflows");
   const workflowFiles = yield* fileSystem.readDirectory(workflowRoot).pipe(
     Effect.map((files) =>
-      files.filter((fileName) => WORKFLOW_FILE_PATTERN.test(fileName)).sort()
+      Arr.sort(
+        Arr.filter(files, (fileName) => WORKFLOW_FILE_PATTERN.test(fileName)),
+        Order.String
+      )
     ),
     Effect.mapError((cause) =>
       policyError("Unable to read GitHub workflow files.", cause)
     )
   );
-  const uses: GithubActionUse[] = [];
+  const uses = yield* Effect.forEach(
+    workflowFiles,
+    Effect.fnUntraced(function* (fileName) {
+      const workflowPath = path.join(".github", "workflows", fileName);
+      const source = yield* fileSystem
+        .readFileString(path.join(root, workflowPath))
+        .pipe(
+          Effect.mapError((cause) =>
+            policyError(`Unable to read ${workflowPath}.`, cause)
+          )
+        );
+      const workflow = yield* Effect.try({
+        try: () => yamlParse(source),
+        catch: (cause) =>
+          policyError(`Unable to decode ${workflowPath}.`, cause),
+      });
+      return collectActionUses(workflow, workflowPath);
+    })
+  );
 
-  for (const fileName of workflowFiles) {
-    const workflowPath = path.join(".github", "workflows", fileName);
-    const source = yield* fileSystem
-      .readFileString(path.join(root, workflowPath))
-      .pipe(
-        Effect.mapError((cause) =>
-          policyError(`Unable to read ${workflowPath}.`, cause)
-        )
-      );
-    const workflow = yield* Effect.try({
-      try: () => yamlParse(source),
-      catch: (cause) => policyError(`Unable to decode ${workflowPath}.`, cause),
-    });
-    collectActionUses(workflow, workflowPath, uses);
-  }
-
-  return uses.filter(({ reference }) => !reference.startsWith("./"));
+  return Arr.filter(
+    Arr.flatten(uses),
+    ({ reference }) => !reference.startsWith("./")
+  );
 });
 
 /** Validates immutable revisions, exact reviewed inputs, and complete action coverage. */
 export function validateGithubActionPolicy(
   actionUses: readonly GithubActionUse[]
 ) {
-  const problems: string[] = [];
-  const reviews = new Map(
-    GITHUB_ACTION_REVIEWS.map((review) => [review.action, review])
+  const reviews = HashMap.fromIterable(
+    Arr.map(GITHUB_ACTION_REVIEWS, (review) => [review.action, review])
   );
-  const usageCounts = new Map<string, number>();
-
-  for (const use of actionUses) {
+  const inspected = Arr.map(actionUses, (use) => {
     const parsed = parseActionReference(use.reference);
     if (!parsed) {
-      problems.push(
-        `${use.workflowPath} has an unpinned external action ${use.reference}.`
-      );
-      continue;
+      return {
+        problems: [
+          `${use.workflowPath} has an unpinned external action ${use.reference}.`,
+        ],
+        reviewed: [],
+      };
     }
 
-    const review = reviews.get(parsed.action);
+    const review = Option.getOrUndefined(HashMap.get(reviews, parsed.action));
     if (!review) {
-      problems.push(
-        `${use.workflowPath} uses unreviewed GitHub Action ${parsed.action}.`
-      );
-      continue;
+      return {
+        problems: [
+          `${use.workflowPath} uses unreviewed GitHub Action ${parsed.action}.`,
+        ],
+        reviewed: [],
+      };
     }
 
-    usageCounts.set(parsed.action, (usageCounts.get(parsed.action) ?? 0) + 1);
-    if (parsed.revision !== review.approvedSha) {
-      problems.push(
-        `${use.workflowPath} pins ${parsed.action} to ${parsed.revision}; approved ${review.approvedSha}.`
-      );
-    }
-    if (review.expectedInputs) {
-      problems.push(
-        ...inputProblems(use, parsed.action, review.expectedInputs)
-      );
-    }
-  }
+    return {
+      problems: Arr.appendAll(
+        problemWhen(
+          parsed.revision !== review.approvedSha,
+          `${use.workflowPath} pins ${parsed.action} to ${parsed.revision}; approved ${review.approvedSha}.`
+        ),
+        review.expectedInputs
+          ? inputProblems(use, parsed.action, review.expectedInputs)
+          : []
+      ),
+      reviewed: [parsed.action],
+    };
+  });
+  const reviewedActions = Arr.flatMap(inspected, ({ reviewed }) => reviewed);
 
-  for (const review of GITHUB_ACTION_REVIEWS) {
-    const actualUsages = usageCounts.get(review.action) ?? 0;
-    if (actualUsages !== review.expectedUsages) {
-      problems.push(
+  return Arr.appendAll(
+    Arr.flatMap(inspected, ({ problems }) => problems),
+    Arr.flatMap(GITHUB_ACTION_REVIEWS, (review) => {
+      const actualUsages = Arr.filter(
+        reviewedActions,
+        (action) => action === review.action
+      ).length;
+      return problemWhen(
+        actualUsages !== review.expectedUsages,
         `${review.action} has ${actualUsages} workflow usages; expected ${review.expectedUsages}.`
       );
-    }
-  }
-
-  return problems;
+    })
+  );
 }
 
 /** Reads and validates the repository GitHub Action policy. */

@@ -6,7 +6,7 @@ import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { SchoolReadError } from "@repo/backend/confect/schools/errors";
 import { getSchoolMembership } from "@repo/backend/confect/schools/membership";
 import spec from "@repo/backend/confect/schools/queries.spec";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 /** Return the authenticated school route snapshot resolved from one slug. */
 const getSchoolBySlug = FunctionImpl.make(
@@ -120,7 +120,7 @@ const getMySchoolsPage = FunctionImpl.make(
     );
     return {
       ...memberships,
-      page: schools.map((school) => ({
+      page: Arr.map(schools, (school) => ({
         _id: school._id,
         name: school.name,
         slug: school.slug,

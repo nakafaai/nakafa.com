@@ -1,4 +1,6 @@
 # Advisories with no patched release that reach only development tooling.
+# Add an entry in its own change, with ignoreUntil at most 14 days out and a reason
+# that names the dependency path and why the advisory cannot be exploited.
 # Each entry expires on its ignoreUntil date and the audit fails again, so it is reviewed
 # then; delete it as soon as a patched release ships.
 

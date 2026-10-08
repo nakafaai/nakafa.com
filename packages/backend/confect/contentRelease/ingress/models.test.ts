@@ -25,7 +25,15 @@ import {
 } from "@repo/backend/test/activation/fixture";
 import { testRendererJson } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
-import { Data, Duration, Effect, Fiber, Layer } from "effect";
+import {
+  Array as Arr,
+  Data,
+  Duration,
+  Effect,
+  Fiber,
+  Layer,
+  MutableRef,
+} from "effect";
 import { TestClock } from "effect/testing";
 
 const releaseId = ReleaseIdSchema.make("release-model-waiter");
@@ -64,12 +72,12 @@ function makeCoordinator(
   statuses: readonly ModelBuildStatus[],
   restartResults: readonly ModelBuildRestartResult[] = []
 ) {
-  const restarts: ModelBuildRestartArgs[] = [];
+  const restarted = MutableRef.make<readonly ModelBuildRestartArgs[]>([]);
   let restartIndex = 0;
   let statusIndex = 0;
   const service: ModelBuildCoordinatorService = {
     restart: (args) => {
-      restarts.push(args);
+      MutableRef.update(restarted, Arr.append(args));
       const result = restartResults[restartIndex];
       restartIndex += 1;
       return result
@@ -93,7 +101,7 @@ function makeCoordinator(
     },
   };
   return {
-    restarts,
+    restarts: () => MutableRef.get(restarted),
     service,
   };
 }
@@ -191,7 +199,7 @@ describe("contentRelease/ingress/models", () => {
         _tag: "ReleaseError",
         code: "CONTENT_RELEASE_INTEGRITY",
       });
-      expect(restarts).toEqual([]);
+      expect(restarts()).toEqual([]);
     })
   );
   it.effect("restarts one failed build and follows its winning lineage", () =>
@@ -219,7 +227,7 @@ describe("contentRelease/ingress/models", () => {
         ]
       );
       expect(yield* runWait("restart-failed-once", service)).toBeUndefined();
-      expect(restarts).toEqual([
+      expect(restarts()).toEqual([
         {
           expectedGeneration: 1,
           expectedJobId: failedJobId,
@@ -251,7 +259,7 @@ describe("contentRelease/ingress/models", () => {
         ]
       );
       expect(yield* runWait("restart-failed-once", service)).toBeUndefined();
-      expect(restarts).toHaveLength(1);
+      expect(restarts()).toHaveLength(1);
     })
   );
   it.effect("fails after the sole restarted lineage also fails", () =>
@@ -285,7 +293,7 @@ describe("contentRelease/ingress/models", () => {
       ).toMatchObject({
         code: "CONTENT_RELEASE_INTEGRITY",
       });
-      expect(restarts).toHaveLength(1);
+      expect(restarts()).toHaveLength(1);
     })
   );
   it.effect("polls actual running state until the build is ready", () =>
@@ -306,7 +314,7 @@ describe("contentRelease/ingress/models", () => {
       const waiting = yield* runWait("observe", service).pipe(Effect.forkChild);
       yield* TestClock.adjust(Duration.millis(100));
       expect(yield* Fiber.join(waiting)).toBeUndefined();
-      expect(restarts).toEqual([]);
+      expect(restarts()).toEqual([]);
     })
   );
 });

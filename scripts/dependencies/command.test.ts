@@ -1,13 +1,26 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, PlatformError, Sink, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Layer,
+  PlatformError,
+  Ref,
+  Sink,
+  Stream,
+} from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { runPnpm } from "#scripts/dependencies/command";
 
-interface ScriptedProcess {
-  readonly exitCode: Effect.Effect<number, PlatformError.PlatformError>;
-  readonly stderr: Stream.Stream<Uint8Array, PlatformError.PlatformError>;
-  readonly stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>;
+/** Builds one scripted child process from its exit code and output streams. */
+function scriptedProcess(
+  exitCode: Effect.Effect<number, PlatformError.PlatformError>,
+  stderr: Stream.Stream<Uint8Array, PlatformError.PlatformError>,
+  stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>
+) {
+  return { exitCode, stderr, stdout };
 }
+
+type ScriptedProcess = ReturnType<typeof scriptedProcess>;
 
 const encoder = new TextEncoder();
 const brokenPipe = PlatformError.systemError({
@@ -18,15 +31,13 @@ const brokenPipe = PlatformError.systemError({
 
 /** Answers every spawn with one scripted process and records its command. */
 function scriptedSpawner(
-  spawned: ChildProcess.Command[],
+  spawned: Ref.Ref<readonly ChildProcess.Command[]>,
   process: Effect.Effect<ScriptedProcess, PlatformError.PlatformError>
 ) {
   return Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) =>
-      Effect.sync(() => {
-        spawned.push(command);
-      }).pipe(
+      Ref.update(spawned, Arr.append(command)).pipe(
         Effect.andThen(process),
         Effect.map(({ exitCode, stderr, stdout }) =>
           ChildProcessSpawner.makeHandle({
@@ -50,7 +61,7 @@ function scriptedSpawner(
 
 /** Returns the options pnpm was started with. */
 function startedOptions(spawned: readonly ChildProcess.Command[]) {
-  return spawned.map((command) =>
+  return Arr.map(spawned, (command) =>
     ChildProcess.isStandardCommand(command)
       ? {
           args: command.args,
@@ -66,7 +77,7 @@ function startedOptions(spawned: readonly ChildProcess.Command[]) {
 describe("pnpm command", () => {
   it.effect("captures exact output without a shell", () =>
     Effect.gen(function* () {
-      const spawned: ChildProcess.Command[] = [];
+      const spawned = yield* Ref.make<readonly ChildProcess.Command[]>([]);
       const result = yield* runPnpm(
         "/repository",
         ["view", "effect@rc", "version", "--json"],
@@ -75,14 +86,16 @@ describe("pnpm command", () => {
         Effect.provide(
           scriptedSpawner(
             spawned,
-            Effect.succeed({
-              exitCode: Effect.succeed(0),
-              stderr: Stream.make(encoder.encode("warn\n")),
-              stdout: Stream.make(
-                encoder.encode('"4.0.0-'),
-                encoder.encode('rc.117"\n')
-              ),
-            })
+            Effect.succeed(
+              scriptedProcess(
+                Effect.succeed(0),
+                Stream.make(encoder.encode("warn\n")),
+                Stream.make(
+                  encoder.encode('"4.0.0-'),
+                  encoder.encode('rc.117"\n')
+                )
+              )
+            )
           )
         )
       );
@@ -92,7 +105,7 @@ describe("pnpm command", () => {
         stderr: "warn\n",
         stdout: '"4.0.0-rc.117"\n',
       });
-      assert.deepStrictEqual(startedOptions(spawned), [
+      assert.deepStrictEqual(startedOptions(yield* Ref.get(spawned)), [
         {
           args: ["view", "effect@rc", "version", "--json"],
           command: "pnpm",
@@ -106,7 +119,7 @@ describe("pnpm command", () => {
 
   it.effect("inherits the terminal and preserves the exit code", () =>
     Effect.gen(function* () {
-      const spawned: ChildProcess.Command[] = [];
+      const spawned = yield* Ref.make<readonly ChildProcess.Command[]>([]);
       const result = yield* runPnpm("/repository", [
         "update",
         "--recursive",
@@ -115,17 +128,15 @@ describe("pnpm command", () => {
         Effect.provide(
           scriptedSpawner(
             spawned,
-            Effect.succeed({
-              exitCode: Effect.succeed(23),
-              stderr: Stream.empty,
-              stdout: Stream.empty,
-            })
+            Effect.succeed(
+              scriptedProcess(Effect.succeed(23), Stream.empty, Stream.empty)
+            )
           )
         )
       );
 
       assert.deepStrictEqual(result, { exitCode: 23, stderr: "", stdout: "" });
-      assert.deepStrictEqual(startedOptions(spawned), [
+      assert.deepStrictEqual(startedOptions(yield* Ref.get(spawned)), [
         {
           args: ["update", "--recursive", "--latest"],
           command: "pnpm",
@@ -139,21 +150,24 @@ describe("pnpm command", () => {
 
   it.effect("reports processes that cannot start or finish", () =>
     Effect.gen(function* () {
+      const spawned = yield* Ref.make<readonly ChildProcess.Command[]>([]);
       const spawnFailure = yield* runPnpm("/repository", ["install"], {
         capture: true,
       }).pipe(
-        Effect.provide(scriptedSpawner([], Effect.fail(brokenPipe))),
+        Effect.provide(scriptedSpawner(spawned, Effect.fail(brokenPipe))),
         Effect.flip
       );
       const exitFailure = yield* runPnpm("/repository", ["update"]).pipe(
         Effect.provide(
           scriptedSpawner(
-            [],
-            Effect.succeed({
-              exitCode: Effect.fail(brokenPipe),
-              stderr: Stream.empty,
-              stdout: Stream.empty,
-            })
+            spawned,
+            Effect.succeed(
+              scriptedProcess(
+                Effect.fail(brokenPipe),
+                Stream.empty,
+                Stream.empty
+              )
+            )
           )
         ),
         Effect.flip
@@ -163,19 +177,21 @@ describe("pnpm command", () => {
       }).pipe(
         Effect.provide(
           scriptedSpawner(
-            [],
-            Effect.succeed({
-              exitCode: Effect.succeed(0),
-              stderr: Stream.empty,
-              stdout: Stream.fail(brokenPipe),
-            })
+            spawned,
+            Effect.succeed(
+              scriptedProcess(
+                Effect.succeed(0),
+                Stream.empty,
+                Stream.fail(brokenPipe)
+              )
+            )
           )
         ),
         Effect.flip
       );
 
       assert.deepStrictEqual(
-        [spawnFailure, exitFailure, outputFailure].map((failure) => [
+        Arr.map([spawnFailure, exitFailure, outputFailure], (failure) => [
           failure._tag,
           failure.cause,
           failure.message,

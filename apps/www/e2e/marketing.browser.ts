@@ -1,7 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { activateUntilVisible } from "@/e2e/support/interaction";
 import {
   legacyAvatarFragmentIds,
   measureMarketingPage,
@@ -242,7 +243,9 @@ const verifyContributorPayloads = Effect.fn(
           links.map((link) => link.getAttribute("href")).sort()
         )
     );
-    const expectedSocialLinks = Object.values(contributor.social ?? {})
+    const expectedSocialLinks = Rec.values<string, string | undefined>(
+      contributor.social ?? {}
+    )
       .filter((href) => href !== undefined)
       .sort();
     yield* Effect.sync(() =>
@@ -452,4 +455,34 @@ test.describe("dedicated pricing page", () => {
       withObservedPageErrors(page, verifyPricingNavigation(page))
     );
   });
+});
+
+const DARK_THEME_CLASS = /(^|\s)dark(\s|$)/;
+
+test("the footer theme selector loads its list on demand and applies a theme", async ({
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        const response = yield* Effect.promise(() =>
+          page.goto("/en", { waitUntil: "domcontentloaded" })
+        );
+        yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+
+        const selector = page
+          .locator("footer")
+          .getByRole("button", { exact: true, name: "Theme" });
+        const dark = page.getByRole("menuitem", { exact: true, name: "Dark" });
+        yield* Effect.promise(() => expect(dark).toHaveCount(0));
+        yield* activateUntilVisible(selector, dark, 15_000);
+        yield* Effect.promise(() => dark.click());
+        yield* Effect.promise(() =>
+          expect(page.locator("html")).toHaveClass(DARK_THEME_CLASS)
+        );
+      })
+    )
+  );
 });

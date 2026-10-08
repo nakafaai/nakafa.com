@@ -1,10 +1,10 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import {
   previewRouting,
   routing,
 } from "@repo/internationalization/src/routing";
+import { hasPreviewProvider } from "@repo/next-config/preview";
 import { notFound } from "next/navigation";
 import { locale as getRootLocale } from "next/root-params";
 import { hasLocale } from "next-intl";
@@ -16,9 +16,7 @@ function hasRequestLocale(locale: string | undefined): locale is AppLocaleCode {
     return true;
   }
 
-  return (
-    hasCandidateLocalePreview() && hasLocale(previewRouting.locales, locale)
-  );
+  return hasPreviewProvider() && hasLocale(previewRouting.locales, locale);
 }
 
 /**

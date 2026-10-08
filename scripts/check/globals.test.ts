@@ -73,6 +73,64 @@ self.console.info(value);
     })
   );
 
+  it.effect("reads Object and Array members through global objects", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`Object.keys(value);
+Object.entries(value);
+Object.values(value);
+Object.fromEntries(value);
+Array.isArray(value);
+globalThis.Object.keys(value);
+window.Array.isArray(value);
+self.Object.values(value);
+Object["keys"](value);
+Array['isArray'](value);
+globalThis.Object["values"](value);
+globalThis["Object"].entries(value);
+(Object).keys(value);
+(globalThis.Object).values(value);
+Object!.keys(value);
+(Array as typeof Array).isArray(value);
+(globalThis).Object.keys(value);
+(Object satisfies unknown).keys(value);
+global.Object.keys(value);
+global.Array.isArray(value);
+const { keys } = Object;
+const { isArray: check, from } = Array;
+const { values: read } = globalThis.Object;
+const { "entries": list } = (Object);
+`),
+        [
+          "1 object-helper",
+          "2 object-helper",
+          "3 object-helper",
+          "4 object-helper",
+          "5 array-check",
+          "6 object-helper",
+          "7 array-check",
+          "8 object-helper",
+          "9 object-helper",
+          "10 array-check",
+          "11 object-helper",
+          "12 object-helper",
+          "13 object-helper",
+          "14 object-helper",
+          "15 object-helper",
+          "16 array-check",
+          "17 object-helper",
+          "18 object-helper",
+          "19 object-helper",
+          "20 array-check",
+          "21 object-helper",
+          "22 array-check",
+          "23 object-helper",
+          "24 object-helper",
+        ]
+      );
+    })
+  );
+
   it.effect("ignores other members, shadowed names, and lookalikes", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
@@ -99,6 +157,39 @@ function read(process: Source) {
         []
       );
     })
+  );
+
+  it.effect(
+    "ignores shadowed Object and Array names and unrelated members",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { Array as Arr, Record } from "effect";
+const Object = Record;
+Object.keys(value);
+Arr.isArray(value);
+Array.from(items);
+Array;
+Math.max(1, 2);
+client.Object.keys(value);
+globalThis.Math.max(1, 2);
+globalThis.Array.from(items);
+globalThis.Array;
+Object[name](value);
+const { [name]: dynamic, ...rest } = Object;
+const { max } = Math;
+const [first] = Object;
+const copy = Object;
+globalThis[name].keys(value);
+globalThis["Math"].max(1, 2);
+client["Object"].keys(value);
+function read(Array: Source) {
+  return Array.isArray(value);
+}
+`),
+          []
+        );
+      })
   );
 });
 

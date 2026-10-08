@@ -1,6 +1,7 @@
-import { Array as Arr, HashSet, Option, Record as Rec } from "effect";
+import { Array as Arr, HashSet, Option, Record as Rec, Result } from "effect";
 import {
   type ExpressionWithTypeArguments,
+  isAsExpression,
   isBinaryExpression,
   isCallExpression,
   isClassDeclaration,
@@ -13,9 +14,15 @@ import {
   isImportDeclaration,
   isNamedImports,
   isNewExpression,
+  isNonNullExpression,
+  isObjectBindingPattern,
+  isParenthesizedExpression,
   isPropertyAccessExpression,
   isPropertyAssignment,
+  isSatisfiesExpression,
   isStringLiteral,
+  isStringLiteralLikeNode,
+  isVariableDeclaration,
   type Node,
   type SourceFile,
   SyntaxKind,
@@ -76,7 +83,7 @@ const GLOBALS = HashSet.union(
   ERROR_CLASSES
 );
 /** Global objects whose members are the same platform globals. */
-const GLOBAL_OBJECTS = HashSet.make("globalThis", "self", "window");
+const GLOBAL_OBJECTS = HashSet.make("global", "globalThis", "self", "window");
 /** Variables bundlers replace at build time, which no runtime Config read can stand in for. */
 const BUILD_CONSTANTS = HashSet.make("NEXT_RUNTIME", "NODE_ENV");
 const ENV_FACTORIES = HashSet.make("@t3-oss/env-core", "@t3-oss/env-nextjs");
@@ -87,6 +94,68 @@ const ASSIGNMENTS = HashSet.make(
   SyntaxKind.EqualsToken,
   SyntaxKind.QuestionQuestionEqualsToken
 );
+
+/** Whether a node only wraps an expression: parentheses, a non-null assertion, or a type assertion. */
+function isWrapper(node: Node) {
+  return (
+    isParenthesizedExpression(node) ||
+    isNonNullExpression(node) ||
+    isAsExpression(node) ||
+    isSatisfiesExpression(node)
+  );
+}
+
+/** Returns the outermost expression that only wraps `node`, such as `(Object)`. */
+function wrapped(node: Node): Node {
+  return isWrapper(node.parent) ? wrapped(node.parent) : node;
+}
+
+/** Returns the expression inside every wrapper around it. */
+function unwrapped(node: Node): Node {
+  return isWrapper(node) ? unwrapped(node.expression) : node;
+}
+
+/**
+ * Returns the member a node reads from `owner`, written as a property or as an
+ * element access with a string literal, such as `Object.keys` or
+ * `Object["keys"]`.
+ */
+function memberRead(node: Node, owner: Node): Option.Option<string> {
+  if (isPropertyAccessExpression(node) && node.expression === owner) {
+    return Option.some(node.name.text);
+  }
+  return isElementAccessExpression(node) &&
+    node.expression === owner &&
+    isStringLiteralLikeNode(node.argumentExpression)
+    ? Option.some(node.argumentExpression.text)
+    : Option.none();
+}
+
+/**
+ * Returns the members a declaration destructures from `outer`, such as `keys`
+ * and `values` in `const { keys, values: read } = Object`.
+ */
+function destructured(outer: Node) {
+  const declaration = outer.parent;
+  if (
+    !(
+      isVariableDeclaration(declaration) &&
+      declaration.initializer === outer &&
+      isObjectBindingPattern(declaration.name)
+    )
+  ) {
+    return [];
+  }
+  return Arr.flatMap(declaration.name.elements, (element) =>
+    Arr.filterMap(
+      Arr.fromNullishOr(element.propertyName ?? element.name),
+      (property) =>
+        isIdentifier(property) || isStringLiteralLikeNode(property)
+          ? Result.succeed({ at: element, member: property.text })
+          : Result.failVoid
+    )
+  );
+}
 
 /** Whether `node` reads a member or element of `owner`. */
 function accesses(node: Node, owner: Node) {
@@ -175,41 +244,44 @@ function importsEnvFactory(sourceFile: SourceFile) {
   });
 }
 
+/** Returns the rule that a member of the platform namespace `name` breaks, such as `Object.keys`. */
+function memberRule(name: string, member: string) {
+  return Option.flatMap(Rec.get(MEMBERS, name), (members) =>
+    Rec.get(members, member)
+  );
+}
+
 /**
- * Returns the rule that a reference to the platform global `name` breaks
- * through its use, such as `new Map()`, `JSON.parse`, or `fetch(...)`.
+ * Returns the rule that the platform global `name` breaks through a direct
+ * use of its wrapped expression `outer`: a constructor, a call, or a member it
+ * reads.
  */
-function globalRule(
+function directRule(
   name: string,
-  reference: Node,
+  outer: Node,
   envSeam: boolean
 ): Option.Option<RuleId> {
-  const { parent } = reference;
-  if (isNewExpression(parent) && parent.expression === reference) {
+  const { parent } = outer;
+  if (isNewExpression(parent) && parent.expression === outer) {
     const dated =
       name === "Date" && !Arr.isReadonlyArrayEmpty(parent.arguments ?? []);
     return dated ? Option.none() : Rec.get(CONSTRUCTED, name);
   }
-  if (isCallExpression(parent) && parent.expression === reference) {
+  if (isCallExpression(parent) && parent.expression === outer) {
     return Rec.get(CALLED, name);
   }
-  if (
-    !(isPropertyAccessExpression(parent) && parent.expression === reference)
-  ) {
-    return Option.none();
-  }
-  if (name === "console") {
-    return Option.some("console");
-  }
-  if (
-    name === "process" &&
-    (bypassesConfig(parent) || (envSeam && isRuntimeEnv(parent)))
-  ) {
-    return Option.none();
-  }
-  return Option.flatMap(Rec.get(MEMBERS, name), (members) =>
-    Rec.get(members, parent.name.text)
-  );
+  return Option.flatMap(memberRead(parent, outer), (member) => {
+    if (name === "console") {
+      return Option.some("console");
+    }
+    if (
+      name === "process" &&
+      (bypassesConfig(parent) || (envSeam && isRuntimeEnv(parent)))
+    ) {
+      return Option.none();
+    }
+    return memberRule(name, member);
+  });
 }
 
 /** Whether a heritage expression names the class a class declaration or expression extends. */
@@ -222,45 +294,73 @@ function extendsClass(node: ExpressionWithTypeArguments) {
   );
 }
 
+/**
+ * Returns each use of the platform global `name` through `reference`, with the
+ * node that names it: a direct use, or a member that a declaration
+ * destructures from it.
+ */
+function globalUses(name: string, reference: Node, envSeam: boolean) {
+  const outer = wrapped(reference);
+  return [
+    ...Option.toArray(
+      Option.map(directRule(name, outer, envSeam), (rule) => ({
+        at: reference,
+        rule,
+      }))
+    ),
+    ...Arr.filterMap(destructured(outer), ({ at, member }) =>
+      Option.match(memberRule(name, member), {
+        onNone: () => Result.failVoid,
+        onSome: (rule) => Result.succeed({ at, rule }),
+      })
+    ),
+  ];
+}
+
 /** Returns the platform globals one node uses, directly or through a global object. */
 function referenceCandidates(
   sourceFile: SourceFile,
   node: Node,
   envSeam: boolean
 ) {
-  if (isIdentifier(node) && HashSet.has(GLOBALS, node.text)) {
-    return Option.toArray(
-      Option.map(globalRule(node.text, node, envSeam), (rule) =>
-        candidate(rule, sourceFile, node, node)
-      )
-    );
+  if (isIdentifier(node)) {
+    return HashSet.has(GLOBALS, node.text)
+      ? Arr.map(globalUses(node.text, node, envSeam), ({ at, rule }) =>
+          candidate(rule, sourceFile, at, node)
+        )
+      : [];
   }
-  if (
-    isPropertyAccessExpression(node) &&
-    isIdentifier(node.expression) &&
-    HashSet.has(GLOBAL_OBJECTS, node.expression.text) &&
-    HashSet.has(GLOBALS, node.name.text)
-  ) {
-    const owner = node.expression;
-    return Option.toArray(
-      Option.map(globalRule(node.name.text, node, envSeam), (rule) =>
-        candidate(rule, sourceFile, node, owner)
-      )
-    );
+  if (isExpressionWithTypeArguments(node)) {
+    return isIdentifier(node.expression) &&
+      HashSet.has(ERROR_CLASSES, node.expression.text) &&
+      extendsClass(node)
+      ? [candidate("error-class", sourceFile, node, node.expression)]
+      : [];
   }
-  return isExpressionWithTypeArguments(node) &&
-    isIdentifier(node.expression) &&
-    HashSet.has(ERROR_CLASSES, node.expression.text) &&
-    extendsClass(node)
-    ? [candidate("error-class", sourceFile, node, node.expression)]
-    : [];
+  if (!(isPropertyAccessExpression(node) || isElementAccessExpression(node))) {
+    return [];
+  }
+  const owner = unwrapped(node.expression);
+  if (!(isIdentifier(owner) && HashSet.has(GLOBAL_OBJECTS, owner.text))) {
+    return [];
+  }
+  return Arr.flatMap(
+    Option.toArray(memberRead(node, node.expression)),
+    (name) =>
+      HashSet.has(GLOBALS, name)
+        ? Arr.map(globalUses(name, node, envSeam), ({ at, rule }) =>
+            candidate(rule, sourceFile, at, owner)
+          )
+        : []
+  );
 }
 
 /**
  * Returns the platform globals among one module's value-position `nodes` that
  * an Effect module replaces, such as `Map`, `JSON`, `fetch`, `process.env`,
- * `Date.now`, timers, `console`, and classes that extend `Error`. Each counts
- * only while its name binds to the platform global.
+ * `Date.now`, timers, `console`, `Array.isArray`, the `Object` helpers, and
+ * classes that extend `Error`. Each counts only while its name binds to the
+ * platform global.
  */
 export function globalCandidates(
   sourceFile: SourceFile,

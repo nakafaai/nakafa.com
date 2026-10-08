@@ -14,7 +14,7 @@ import {
 import { formatTaskPrompt } from "@repo/backend/confect/nina/prompt/task";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import dedent from "dedent";
-import { Schema } from "effect";
+import { Array as Arr, pipe, Schema } from "effect";
 
 /** Runtime context, authenticated role, current page, learner, and focus. */
 const SystemPromptPropsSchema = RuntimePromptContextSchema.mapFields(
@@ -28,7 +28,7 @@ const SystemPromptPropsSchema = RuntimePromptContextSchema.mapFields(
   })
 );
 
-type SystemPromptProps = Schema.Schema.Type<typeof SystemPromptPropsSchema>;
+type SystemPromptProps = typeof SystemPromptPropsSchema.Type;
 
 /**
  * Builds Nina's system prompt with internal LearningCapability policy. Stable
@@ -49,20 +49,22 @@ export function createNinaPrompt({
     toneContext: formatTonePrompt(),
     toolUsageGuidelines: formatToolPolicyPrompt(),
     detailedTaskInstructions: focus
-      ? [formatTaskPrompt(), formatFocusTaskPrompt()].join("\n\n")
+      ? Arr.join([formatTaskPrompt(), formatFocusTaskPrompt()], "\n\n")
       : formatTaskPrompt(),
     examples: formatExamplesPrompt(),
     outputFormatting: formatAnswerPrompt(),
   });
-  return [
-    instructions,
-    pageContent,
-    learner,
-    focus,
-    summary &&
-      `# Conversation Summary\n\nEarlier turns of this conversation:\n\n${summary}`,
-    dedent(formatRuntimePrompt(runtime)),
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  return pipe(
+    [
+      instructions,
+      pageContent,
+      learner,
+      focus,
+      summary &&
+        `# Conversation Summary\n\nEarlier turns of this conversation:\n\n${summary}`,
+      dedent(formatRuntimePrompt(runtime)),
+    ],
+    Arr.filter((part): part is string => Boolean(part)),
+    Arr.join("\n\n")
+  );
 }

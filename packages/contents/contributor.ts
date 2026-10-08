@@ -20,4 +20,4 @@ const ContributorSchema = Schema.Struct({
     }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   ),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type Contributor = Schema.Schema.Type<typeof ContributorSchema>;
+export type Contributor = typeof ContributorSchema.Type;

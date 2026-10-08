@@ -38,6 +38,17 @@ describe("sitemap XML serialization", () => {
     expect(xml).not.toContain("hreflang");
   });
 
+  it("writes a Date modification time as an ISO timestamp", () => {
+    const xml = buildSitemapUrlSetXml([
+      {
+        lastModified: new Date("2025-01-01T00:00:00.000Z"),
+        url: "https://nakafa.com/en",
+      },
+    ]);
+
+    expect(xml).toContain("<lastmod>2025-01-01T00:00:00.000Z</lastmod>");
+  });
+
   it("omits optional metadata and escapes canonical URLs", () => {
     const xml = buildSitemapUrlSetXml([
       {

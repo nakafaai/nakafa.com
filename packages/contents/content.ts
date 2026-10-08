@@ -2,7 +2,7 @@ import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Schema, Struct } from "effect";
 /** Locale validation schema - single source of truth */
 export const LocaleSchema = ActiveAppLocaleCodeSchema;
-export type Locale = Schema.Schema.Type<typeof LocaleSchema>;
+export type Locale = typeof LocaleSchema.Type;
 const ReferenceSchema = Schema.Struct({
   title: Schema.String,
   authors: Schema.String,
@@ -12,7 +12,7 @@ const ReferenceSchema = Schema.Struct({
   publication: Schema.optional(Schema.String),
   details: Schema.optional(Schema.String),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type Reference = Schema.Schema.Type<typeof ReferenceSchema>;
+export type Reference = typeof ReferenceSchema.Type;
 const ContentPaginationItemSchema = Schema.Struct({
   href: Schema.String,
   title: Schema.String,
@@ -21,6 +21,4 @@ const ContentPaginationSchema = Schema.Struct({
   prev: ContentPaginationItemSchema,
   next: ContentPaginationItemSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type ContentPagination = Schema.Schema.Type<
-  typeof ContentPaginationSchema
->;
+export type ContentPagination = typeof ContentPaginationSchema.Type;

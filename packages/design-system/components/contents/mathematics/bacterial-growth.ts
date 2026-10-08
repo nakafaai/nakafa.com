@@ -13,9 +13,7 @@ export const BacterialFormulaTypeSchema = Schema.Literals([
   "geometric",
   "exponential",
 ]);
-export type BacterialFormulaType = Schema.Schema.Type<
-  typeof BacterialFormulaTypeSchema
->;
+export type BacterialFormulaType = typeof BacterialFormulaTypeSchema.Type;
 
 export const BacterialGrowthFrameInputSchema = Schema.Struct({
   formulaType: BacterialFormulaTypeSchema,
@@ -30,9 +28,7 @@ export const BacterialGrowthFrameInputSchema = Schema.Struct({
     })
   )
 );
-type BacterialGrowthFrameInput = Schema.Schema.Type<
-  typeof BacterialGrowthFrameInputSchema
->;
+type BacterialGrowthFrameInput = typeof BacterialGrowthFrameInputSchema.Type;
 interface BacteriaCountGroup {
   bacteriaCount: number;
   generationCount: number;

@@ -22,7 +22,7 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { isStepCount } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -167,7 +167,7 @@ describe("Nina capability execution policy", () => {
                 { prompt: "Use the requested capability." }
               )
             );
-            return generated.toolResults.map(({ output }) => output);
+            return Arr.map(generated.toolResults, ({ output }) => output);
           })
         );
         expect(result).toHaveLength(1);

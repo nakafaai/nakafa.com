@@ -182,9 +182,7 @@ export const quranReferenceArgsValidator = Schema.Struct({
   surahNumber: Schema.Finite,
   toVerse: Schema.optionalKey(Schema.Finite),
 });
-export type QuranReferenceArgs = Schema.Schema.Type<
-  typeof quranReferenceArgsValidator
->;
+export type QuranReferenceArgs = typeof quranReferenceArgsValidator.Type;
 
 /** Shared active-source fields returned by every signed Quran read. */
 export const quranSourceFields = {
@@ -208,6 +206,4 @@ export const quranSourceFields = {
 
 /** Complete validator-owned source envelope shared by Quran projections. */
 export const quranSourceValidator = Schema.Struct(quranSourceFields);
-export type QuranSourceEnvelope = Schema.Schema.Type<
-  typeof quranSourceValidator
->;
+export type QuranSourceEnvelope = typeof quranSourceValidator.Type;

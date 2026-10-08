@@ -1,6 +1,6 @@
-import { Schema, Struct } from "effect";
+import { Array as Arr, HashSet, Schema, Struct } from "effect";
 
-const expressionReservedNames = new Set([
+const expressionReservedNames = HashSet.make(
   "Abs",
   "E",
   "I",
@@ -19,8 +19,8 @@ const expressionReservedNames = new Set([
   "pi",
   "sin",
   "sqrt",
-  "tan",
-]);
+  "tan"
+);
 const symbolPattern = /[A-Za-z_][A-Za-z0-9_]*/gu;
 /** Builds a non-empty string with model-facing metadata on its base schema. */
 function describedNonEmptyString(description: string) {
@@ -30,10 +30,10 @@ function describedNonEmptyString(description: string) {
 }
 /** Returns variable-looking identifiers while ignoring supported functions. */
 export function getExpressionSymbols(expression: string) {
-  return new Set(
+  return Arr.dedupe(
     [...expression.matchAll(symbolPattern)]
       .map(([symbol]) => symbol)
-      .filter((symbol) => !expressionReservedNames.has(symbol))
+      .filter((symbol) => !HashSet.has(expressionReservedNames, symbol))
   );
 }
 export const expressionInputSchema = describedNonEmptyString(
@@ -141,6 +141,6 @@ export const matrixSchema = Schema.Array(matrixRowSchema)
     description:
       "Matrix rows as nested arrays of exact string values, for example [[1, 2], [3, 4]].",
   });
-export type MathExpression = Schema.Schema.Type<typeof MathExpressionSchema>;
-export type MathItem = Schema.Schema.Type<typeof MathItemSchema>;
-export type MathStep = Schema.Schema.Type<typeof MathStepSchema>;
+export type MathExpression = typeof MathExpressionSchema.Type;
+export type MathItem = typeof MathItemSchema.Type;
+export type MathStep = typeof MathStepSchema.Type;

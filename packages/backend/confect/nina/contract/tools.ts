@@ -1,7 +1,7 @@
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { type InferUITools, tool } from "ai";
-import { Schema, Struct } from "effect";
+import { Array as Arr, pipe, Schema, Struct } from "effect";
 
 /** Builds a non-empty string with direct model-facing metadata. */
 function describedNonEmptyString(description: string) {
@@ -139,33 +139,34 @@ export const MathToolInputSchema = Schema.Struct({
       `,
     }),
   });
-export type NakafaToolInput = Schema.Schema.Type<typeof NakafaToolInputSchema>;
-export type ResearchToolInput = Schema.Schema.Type<
-  typeof ResearchToolInputSchema
->;
-export type MathToolInput = Schema.Schema.Type<typeof MathToolInputSchema>;
+export type NakafaToolInput = typeof NakafaToolInputSchema.Type;
+export type ResearchToolInput = typeof ResearchToolInputSchema.Type;
+export type MathToolInput = typeof MathToolInputSchema.Type;
 type SpecialistToolInput = MathToolInput | NakafaToolInput | ResearchToolInput;
 /**
  * Builds the internal Markdown task after the public tool input has separated
  * routing concerns from answer wording.
  */
 export function formatSpecialistToolTask(input: SpecialistToolInput) {
-  const sections = [
-    formatTextSection("Request", input.request),
-    formatTextSection("Objective", input.objective),
-    formatListSection("Requirements", input.requirements ?? []),
-    formatListSection(
-      "Source Requirements",
-      "sourceRequirements" in input ? input.sourceRequirements : []
-    ),
-    formatListSection(
-      "Deliverables",
-      "deliverables" in input ? input.deliverables : []
-    ),
-    formatListSection("Given", "given" in input ? input.given : []),
-  ].filter(Boolean);
+  const sections = Arr.filter(
+    [
+      formatTextSection("Request", input.request),
+      formatTextSection("Objective", input.objective),
+      formatListSection("Requirements", input.requirements ?? []),
+      formatListSection(
+        "Source Requirements",
+        "sourceRequirements" in input ? input.sourceRequirements : []
+      ),
+      formatListSection(
+        "Deliverables",
+        "deliverables" in input ? input.deliverables : []
+      ),
+      formatListSection("Given", "given" in input ? input.given : []),
+    ],
+    Boolean
+  );
   return createPrompt({
-    taskContext: sections.join("\n\n"),
+    taskContext: Arr.join(sections, "\n\n"),
   });
 }
 /** Formats a single prose section for the internal specialist task. */
@@ -187,7 +188,11 @@ function formatListSection(heading: string, items: readonly string[]) {
     taskContext: `
       # ${heading}
 
-      ${items.map((item) => `- ${item}`).join("\n")}
+      ${pipe(
+        items,
+        Arr.map((item) => `- ${item}`),
+        Arr.join("\n")
+      )}
     `,
   });
 }

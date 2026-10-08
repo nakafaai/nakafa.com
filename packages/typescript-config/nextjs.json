@@ -10,6 +10,17 @@
         "ignoreEffectSuggestionsInTscExitCode": false,
         "diagnosticSeverity": {
           "experimentalApiUsage": "off",
+          "extendsNativeError": "error",
+          "globalConsole": "error",
+          "globalConsoleInEffect": "error",
+          "globalFetch": "error",
+          "cryptoRandomUUID": "error",
+          "cryptoRandomUUIDInEffect": "error",
+          "globalFetchInEffect": "error",
+          "globalRandom": "error",
+          "globalRandomInEffect": "error",
+          "instanceOfSchema": "error",
+          "preferSchemaTypeProperty": "error",
           "unstableApiUsage": "off"
         }
       }

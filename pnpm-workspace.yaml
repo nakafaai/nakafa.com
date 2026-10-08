@@ -17,6 +17,7 @@ update:
     - '@ai-sdk/google'
     - '@biomejs/biome'
     - '@convex-dev/better-auth'
+    - '@effect/platform-browser'
     - '@effect/platform-node'
     - '@effect/tsgo'
     - '@effect/vitest'
@@ -43,13 +44,14 @@ update:
     - vitest
 
 catalog:
-  '@ai-sdk/gateway': 4.0.104
-  '@ai-sdk/google': 4.0.88
+  '@ai-sdk/gateway': 4.0.106
+  '@ai-sdk/google': 4.0.90
+  '@effect/platform-browser': 4.0.1
   '@effect/platform-node': 4.0.1
   '@effect/vitest': 4.0.1
   '@vitest/coverage-istanbul': 5.0.3
   '@vitest/ui': 5.0.3
-  ai: 7.0.128
+  ai: 7.0.130
   effect: 4.0.1
   typescript: 7.0.2
   vitest: 5.0.3
@@ -63,7 +65,7 @@ overrides:
   "@effect/ai-openrouter": "4.0.1"
   "@effect/platform-node": "4.0.1"
   "@effect/platform-node-shared": "4.0.1"
-  "@react-email/ui@6.11.0>next": "16.3.8"
+  "@react-email/ui@6.11.1>next": "16.4.0"
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
   "auth@1.6.33>@babel/core": "7.29.7"
   "axios": "1.20.0"
@@ -74,7 +76,7 @@ overrides:
   "mermaid@11.17.2>dompurify": "^3.4.16"
   "mermaid@11.17.2>katex": "0.19.0"
   "micromark-extension-math@3.1.0>katex": "0.19.0"
-  "next@16.3.8>postcss": "8.5.29"
+  "next@16.4.0>postcss": "8.5.29"
   "solid-js@1.9.15>seroval": "1.6.8"
   "solid-js@1.9.15>seroval-plugins": "1.6.8"
   "source-map-js": "1.2.2"

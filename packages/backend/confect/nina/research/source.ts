@@ -1,6 +1,6 @@
 import { getLatestUserText } from "@repo/backend/confect/nina/prompt/user";
 import type { ModelMessage } from "ai";
-import { Schema, Struct } from "effect";
+import { Array as Arr, Schema, Struct } from "effect";
 import { ParseResultType, parseDomain } from "parse-domain";
 
 const whitespacePattern = /\s+/;
@@ -35,14 +35,14 @@ export const SourceReferenceSchema = Schema.Struct({
   hostname: Schema.String,
   text: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type SourceReference = Schema.Schema.Type<typeof SourceReferenceSchema>;
+export type SourceReference = typeof SourceReferenceSchema.Type;
 /**
  * Extracts every unique external source reference from plain user text.
  */
 export function getSourceReferences(text: string) {
   const seen = new Set<string>();
-  return text.split(whitespacePattern).flatMap((token) =>
-    splitSourceToken(token).flatMap((segment) => {
+  return Arr.flatMap(text.split(whitespacePattern), (token) =>
+    Arr.flatMap(splitSourceToken(token), (segment) => {
       const reference = parseSourceReference(segment);
       if (!reference) {
         return [];

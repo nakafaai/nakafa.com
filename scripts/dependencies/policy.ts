@@ -1,18 +1,25 @@
+import { Schema } from "effect";
+
 /** The exact specs one reviewed dependency may declare. */
-type ApprovedSpecs =
-  | { readonly allowed: readonly [string, ...string[]] }
-  | { readonly approved: string };
+const ApprovedSpecsSchema = Schema.Union([
+  Schema.Struct({ allowed: Schema.NonEmptyArray(Schema.String) }),
+  Schema.Struct({ approved: Schema.String }),
+]);
 
 /** The manifests that must declare one reviewed dependency. */
-type DeclarationOwners =
-  | { readonly declarationPaths: readonly string[] }
-  | { readonly minimumDeclarations: number };
+const DeclarationOwnersSchema = Schema.Union([
+  Schema.Struct({ declarationPaths: Schema.Array(Schema.String) }),
+  Schema.Struct({ minimumDeclarations: Schema.Finite }),
+]);
 
-type DependencyHold = ApprovedSpecs &
-  DeclarationOwners & { readonly dependency: string };
+const DependencyNameSchema = Schema.Struct({ dependency: Schema.String });
+
+type DependencyHold = typeof ApprovedSpecsSchema.Type &
+  typeof DeclarationOwnersSchema.Type &
+  typeof DependencyNameSchema.Type;
 
 /** The exact package manager the root manifest pins for every checkout and CI job. */
-export const PACKAGE_MANAGER = "pnpm@11.28.2";
+export const PACKAGE_MANAGER = "pnpm@11.28.4";
 export const CONTRACT_PACKAGE_VERSION = "0.46.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.1";
@@ -35,9 +42,9 @@ export const VITEST_COHORT_VERSION = "5.0.3";
  * the gateway module's provider contracts (confect/gateway).
  */
 export const AI_SDK_COHORT = {
-  "@ai-sdk/gateway": "4.0.104",
-  "@ai-sdk/google": "4.0.88",
-  ai: "7.0.128",
+  "@ai-sdk/gateway": "4.0.106",
+  "@ai-sdk/google": "4.0.90",
+  ai: "7.0.130",
 } as const;
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
@@ -53,6 +60,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     approved: "catalog:",
     dependency: "effect",
+    minimumDeclarations: 1,
+  },
+  {
+    approved: "catalog:",
+    dependency: "@effect/platform-browser",
     minimumDeclarations: 1,
   },
   {
@@ -82,9 +94,9 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "typescript",
     minimumDeclarations: 1,
   },
-  { approved: "16.3.8", dependency: "next", minimumDeclarations: 1 },
+  { approved: "16.4.0", dependency: "next", minimumDeclarations: 1 },
   {
-    approved: "16.3.8",
+    approved: "16.4.0",
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
@@ -157,7 +169,7 @@ export const REGISTRY_REVIEWS = [
   [
     "react@latest",
     "19.3.0",
-    "Fiber 9.7.0 requires React below 19.3 and bundles the 19.2 reconciler.",
+    "Fiber 9.7.0 requires React below 19.3, and Fiber 9.8 cannot move yet (see @react-three/fiber), so the declared React stays on 19.2 while Next.js bundles its own React 19.3 build for App Router routes.",
   ],
   [
     "react-dom@latest",
@@ -183,6 +195,11 @@ export const REGISTRY_REVIEWS = [
     "effect@latest",
     EFFECT_COHORT_VERSION,
     "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts peers on one exact Effect version.",
+  ],
+  [
+    "@effect/platform-browser@latest",
+    EFFECT_COHORT_VERSION,
+    "The platform package must match the Effect cohort.",
   ],
   [
     "@effect/platform-node@latest",
@@ -233,8 +250,8 @@ export const REGISTRY_REVIEWS = [
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "next@latest",
-    "16.3.8",
-    "Stable 16.3.8 is a security release: it fixes server-side request forgery in image optimization (GHSA-cjq9-62q9-8jv4) and cache leaks across `use cache` fills and root params (GHSA-3w37-wq28-93x7, GHSA-h694-7cp9-m8p3).",
+    "16.4.0",
+    "Next.js 16.4 recommends Cache Components with partial prefetching for every app, which Nakafa already runs, adds `ensureStatic` and the `navigation()` and `prefetch()` deferral APIs, and ships one shared Turbopack runtime chunk with export mangling. It follows the 16.3.8 security release.",
   ],
   [
     "convex@latest",
@@ -273,12 +290,12 @@ export const REGISTRY_REVIEWS = [
   [
     "pnpm@latest",
     "12.9.1",
-    "OSV Scanner skipped the application graph after pnpm 12 added a package-manager YAML document (seen with 2.5.1), and the 2.6.0 release notes do not address it; pnpm 12 moves in its own change once a scan of its lockfile is proven complete.",
+    "pnpm 12 records its own packages in a second YAML document at the top of the lockfile. OSV Scanner 2.6.0 reads both documents and Turborepo hashes each workspace as before, but GitHub's dependency graph reads only the first (dependabot/dependabot-core#15904), so it would report no application dependencies and close Aksara's Dependabot alerts. The one setting that keeps a single document, `pmOnFail: ignore`, also stops pnpm from enforcing the pinned version. pnpm 12 moves in both repositories once GitHub reads both documents.",
   ],
   [
     "react-doctor@latest",
     "0.9.17",
-    "The local and CI scanners move as one reviewed cohort. The doctor script installs only releases older than a day, and 0.9.17 was published on 2026-10-05T05:05Z, so the script runs 0.9.16 until 0.9.17 settles.",
+    "The local and CI scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled.",
   ],
   [
     "turbo@latest",
@@ -288,7 +305,7 @@ export const REGISTRY_REVIEWS = [
   [
     "@react-three/fiber@latest",
     "9.8.1",
-    "Fiber 9.8 widens React support to 19.3 and moves to the React 19.3 scheduler, so it moves with the React 19.3 upgrade; with React 19.2 it broke DOM removal during lesson navigation. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
+    "Fiber 9.8 accepts React 19.3 and mounts a scene inside the React DOM commit that renders its canvas. Drei's Html replaces its React root during that mount, and React DOM then commits the first label's replaced root last: it clears the label and makes the label's removal throw on lesson navigation, on React 19.2 and 19.3 alike (pmndrs/drei#2867). Fiber 9.8 and React 19.3 move together once Html keeps one root or scene labels stop using it. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
   ],
   [
     "@polar-sh/sdk@latest",
@@ -308,13 +325,13 @@ export const SCRIPT_DEPENDENCY_HOLDS = [
     // throwaway install took versions npm was still propagating: a 4-minute-old
     // electron-to-chromium tarball returned 404 and failed Doctor. The pnpm 11
     // default of one day keeps that install on settled releases.
-    approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.16",
+    approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },
 ];
 
-export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
+export const FORBIDDEN_EFFECT_DEPENDENCIES = [
   "@effect/cluster",
   "@effect/experimental",
   "@effect/language-service",
@@ -322,4 +339,4 @@ export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
   "@effect/rpc",
   "@effect/sql",
   "@effect/workflow",
-]);
+];

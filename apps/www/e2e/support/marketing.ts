@@ -128,7 +128,7 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
 
 const readBounds = Effect.fn("NakafaE2E.readMarketingBounds")(function* (
   locator: Locator,
-  surface: Schema.Schema.Type<typeof MarketingSurfaceSchema>
+  surface: typeof MarketingSurfaceSchema.Type
 ) {
   const bounds = yield* Effect.promise(() => locator.boundingBox());
   if (!bounds) {

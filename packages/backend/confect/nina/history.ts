@@ -6,7 +6,7 @@ import {
 import { CapabilityOutputSchema } from "@repo/backend/confect/nina/capability/progress";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /**
  * Gemini's flat input cost for one image. Documents count the same, since only
@@ -39,7 +39,11 @@ function messageTokens(message: ModelMessage) {
 }
 
 function turnTokens(turn: readonly ModelMessage[]) {
-  return turn.reduce((total, message) => total + messageTokens(message), 0);
+  return Arr.reduce(
+    turn,
+    0,
+    (total, message) => total + messageTokens(message)
+  );
 }
 
 /** Returns validated capability evidence text, when the result carries one. */
@@ -66,8 +70,8 @@ function evidenceText(part: ToolResultPart) {
  */
 function projectMessages(messages: readonly ModelMessage[]) {
   const unavailableTools = new Set<string>();
-  const projected = messages.flatMap((message): ModelMessage[] => {
-    if (message.role === "assistant" && Array.isArray(message.content)) {
+  const projected = Arr.flatMap(messages, (message): ModelMessage[] => {
+    if (message.role === "assistant" && Arr.isArray(message.content)) {
       for (const part of message.content) {
         if (
           part.type === "tool-call" &&
@@ -80,8 +84,8 @@ function projectMessages(messages: readonly ModelMessage[]) {
     if (message.role !== "tool") {
       return [message];
     }
-    const retained: ModelMessage[] = [];
-    const content = message.content.map((part) => {
+    let retained: ModelMessage[] = [];
+    const content = Arr.map(message.content, (part) => {
       if (part.type !== "tool-result") {
         return part;
       }
@@ -93,7 +97,7 @@ function projectMessages(messages: readonly ModelMessage[]) {
       if (!Schema.is(LearningCapabilityNameSchema)(part.toolName)) {
         unavailableTools.add(part.toolName);
         if (capabilityText(part) !== undefined) {
-          retained.push({ role: "assistant", content: text });
+          retained = Arr.append(retained, { role: "assistant", content: text });
         }
       }
       return { ...part, output: { type: "text" as const, value: text } };
@@ -115,7 +119,7 @@ function excerptMessage(message: ModelMessage): ModelMessage {
   }
   return {
     ...message,
-    content: message.content.map((part) =>
+    content: Arr.map(message.content, (part) =>
       part.type === "tool-result"
         ? {
             ...part,
@@ -144,7 +148,7 @@ function noteDocuments(message: ModelMessage): ModelMessage {
   }
   return {
     ...message,
-    content: message.content.map((part) =>
+    content: Arr.map(message.content, (part) =>
       part.type === "file" && !part.mediaType.startsWith("image/")
         ? {
             type: "text" as const,
@@ -156,17 +160,19 @@ function noteDocuments(message: ModelMessage): ModelMessage {
 }
 
 /** Splits a conversation into whole turns; each turn opens with a user message. */
-function splitTurns(messages: readonly ModelMessage[]) {
-  const turns: ModelMessage[][] = [];
-  for (const message of messages) {
-    if (message.role === "user") {
-      turns.push([message]);
-      continue;
-    }
-    // Messages before the first prompt belong to a turn cut by the fetch window.
-    turns.at(-1)?.push(message);
-  }
-  return turns;
+function splitTurns(messages: readonly ModelMessage[]): ModelMessage[][] {
+  // Messages before the first prompt belong to a turn cut by the fetch window.
+  const fromFirstPrompt = Arr.dropWhile(
+    messages,
+    (message) => message.role !== "user"
+  );
+  return Arr.chop(fromFirstPrompt, ([prompt, ...rest]) => {
+    const [replies, later] = Arr.splitWhere(
+      rest,
+      (message) => message.role === "user"
+    );
+    return [[prompt, ...replies], later];
+  });
 }
 
 /**
@@ -177,7 +183,7 @@ function splitTurns(messages: readonly ModelMessage[]) {
 export function boundStep(messages: readonly ModelMessage[]) {
   const projected = projectMessages(messages);
   const start = Math.max(
-    projected.map((message) => message.role).lastIndexOf("user"),
+    Arr.map(projected, (message) => message.role).lastIndexOf("user"),
     0
   );
   let turn = projected.slice(start);
@@ -186,7 +192,7 @@ export function boundStep(messages: readonly ModelMessage[]) {
     index < turn.length - 1 && turnTokens(turn) > NINA_BUDGET.turnEvidence;
     index += 1
   ) {
-    turn = turn.map((message, position) =>
+    turn = Arr.map(turn, (message, position) =>
       position === index ? excerptMessage(message) : message
     );
   }
@@ -211,11 +217,11 @@ export function assembleContext({
   readonly recent: readonly ModelMessage[];
   readonly throughOrder: number | null;
 }) {
-  const newestFirst = splitTurns(
-    projectMessages(recent).map(noteDocuments)
-  ).reverse();
+  const newestFirst = Arr.reverse(
+    splitTurns(Arr.map(projectMessages(recent), noteDocuments))
+  );
   const covered = throughOrder ?? -1;
-  const selected: ModelMessage[][] = [];
+  let selected: ModelMessage[][] = [];
   let used = 0;
   for (const [offset, turn] of newestFirst.entries()) {
     const cost = turnTokens(turn);
@@ -225,9 +231,10 @@ export function assembleContext({
     ) {
       break;
     }
-    const kept = cost > NINA_BUDGET.history ? turn.map(excerptMessage) : turn;
-    selected.unshift(kept);
+    const kept =
+      cost > NINA_BUDGET.history ? Arr.map(turn, excerptMessage) : turn;
+    selected = Arr.prepend(selected, kept);
     used += turnTokens(kept);
   }
-  return [...selected.flat(), ...boundStep(current)];
+  return [...Arr.flatten(selected), ...boundStep(current)];
 }

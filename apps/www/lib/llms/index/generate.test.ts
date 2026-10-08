@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import { getLlmsSectionIndexText } from "@/lib/llms/index/generate";
@@ -37,7 +37,7 @@ vi.mock("@/lib/llms/entries", async () => {
     Object.hasOwn(constants.SECTION_LABELS, section);
 
   return {
-    getLlmsSections: () => Object.keys(constants.SECTION_LABELS),
+    getLlmsSections: () => Rec.keys(constants.SECTION_LABELS),
     isLlmsSection,
   };
 });

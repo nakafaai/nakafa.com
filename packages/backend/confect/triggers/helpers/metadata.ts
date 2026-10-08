@@ -1,4 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { Array as Arr } from "effect";
 
 /**
  * Build changed fields metadata for school updates
@@ -17,15 +18,18 @@ export function buildSchoolChangesMetadata(
   const cityChanged = oldSchool.city !== school.city;
   const provinceChanged = oldSchool.province !== school.province;
   const typeChanged = oldSchool.type !== school.type;
-  const hasChanges = [
-    nameChanged,
-    emailChanged,
-    phoneChanged,
-    addressChanged,
-    cityChanged,
-    provinceChanged,
-    typeChanged,
-  ].some(Boolean);
+  const hasChanges = Arr.some(
+    [
+      nameChanged,
+      emailChanged,
+      phoneChanged,
+      addressChanged,
+      cityChanged,
+      provinceChanged,
+      typeChanged,
+    ],
+    Boolean
+  );
   if (!hasChanges) {
     return null;
   }
@@ -87,12 +91,10 @@ export function buildClassChangesMetadata(
   const subjectChanged = oldClassDoc.subject !== classDoc.subject;
   const yearChanged = oldClassDoc.year !== classDoc.year;
   const visibilityChanged = oldClassDoc.visibility !== classDoc.visibility;
-  const hasChanges = [
-    nameChanged,
-    subjectChanged,
-    yearChanged,
-    visibilityChanged,
-  ].some(Boolean);
+  const hasChanges = Arr.some(
+    [nameChanged, subjectChanged, yearChanged, visibilityChanged],
+    Boolean
+  );
   if (!hasChanges) {
     return null;
   }

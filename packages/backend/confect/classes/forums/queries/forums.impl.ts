@@ -15,7 +15,7 @@ import {
 import { getForumUnreadCounts } from "@repo/backend/confect/classes/forums/unread";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 /**
  * List forums for one class with user reaction and unread metadata.
@@ -52,9 +52,9 @@ const getForums = FunctionImpl.make(
             )
             .paginate(args.paginationOpts)
             .pipe(Effect.orDie);
-    const forumIds = forumsPage.page.map((forum) => forum._id);
+    const forumIds = Arr.map(forumsPage.page, (forum) => forum._id);
     const [userMap, myReactions, unreadCounts] = yield* Effect.all([
-      getUserMap(forumsPage.page.map((forum) => forum.createdBy)),
+      getUserMap(Arr.map(forumsPage.page, (forum) => forum.createdBy)),
       getMyForumReactions(forumIds, user.appUser._id),
       getForumUnreadCounts({
         forums: forumsPage.page,
@@ -63,7 +63,7 @@ const getForums = FunctionImpl.make(
     ]);
     return {
       ...forumsPage,
-      page: forumsPage.page.map((forum, index) => ({
+      page: Arr.map(forumsPage.page, (forum, index) => ({
         ...forum,
         myReactions: myReactions[index],
         unreadCount: unreadCounts[index],

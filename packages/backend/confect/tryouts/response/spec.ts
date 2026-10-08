@@ -9,9 +9,8 @@ export const saveTryoutResponseArgsValidator = Schema.Struct({
   placementId: IdSchema("tryoutAttemptPlacements"),
   selection: Schema.Union([Selection, Schema.Null]),
 });
-export type SaveTryoutResponseArgs = Schema.Schema.Type<
-  typeof saveTryoutResponseArgsValidator
->;
+export type SaveTryoutResponseArgs =
+  typeof saveTryoutResponseArgsValidator.Type;
 export const saveTryoutResponseResultValidator = Schema.Null;
 
 /** Expected failure while saving one selected try-out response. */

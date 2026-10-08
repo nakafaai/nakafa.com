@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { scopeSources } from "@repo/backend/confect/nina/research/search/scope";
+import { Array as Arr } from "effect";
 
 function makeSearchSource(title: string, url: string) {
   return {
@@ -32,7 +33,7 @@ describe("scopeSources", () => {
       ],
     });
 
-    expect(sources.map((source) => source.url)).toEqual([
+    expect(Arr.map(sources, (source) => source.url)).toEqual([
       "https://nextjs.org/blog/next-16",
     ]);
   });
@@ -82,7 +83,7 @@ describe("scopeSources", () => {
       ],
     });
 
-    expect(sources.map((source) => source.url)).toEqual([
+    expect(Arr.map(sources, (source) => source.url)).toEqual([
       "https://react.dev/reference/react/useTransition",
     ]);
   });
@@ -90,12 +91,15 @@ describe("scopeSources", () => {
   it("does not treat generic words as first-party domain keys", () => {
     const sources = scopeSources({
       query: "Next.js 16 Cache Components",
-      task: [
-        "# User Request",
-        "info pembuat Next.js sendiri",
-        "# Constraints",
-        "- Gunakan sumber resmi dari Next.js (vercel.com, nextjs.org).",
-      ].join("\n"),
+      task: Arr.join(
+        [
+          "# User Request",
+          "info pembuat Next.js sendiri",
+          "# Constraints",
+          "- Gunakan sumber resmi dari Next.js (vercel.com, nextjs.org).",
+        ],
+        "\n"
+      ),
       sourcePreference: "primary",
       sources: [
         {
@@ -113,7 +117,7 @@ describe("scopeSources", () => {
       ],
     });
 
-    expect(sources.map((source) => source.url)).toEqual([
+    expect(Arr.map(sources, (source) => source.url)).toEqual([
       "https://nextjs.org/blog/next-16",
     ]);
   });
@@ -139,7 +143,7 @@ describe("scopeSources", () => {
       ],
     });
 
-    expect(sources.map((source) => source.url)).toEqual([
+    expect(Arr.map(sources, (source) => source.url)).toEqual([
       "https://react.dev/reference/react/useTransition",
     ]);
   });
@@ -165,7 +169,7 @@ describe("scopeSources", () => {
       ],
     });
 
-    expect(sources.map((source) => source.url)).toEqual([
+    expect(Arr.map(sources, (source) => source.url)).toEqual([
       "https://example.com/snbt",
     ]);
   });
@@ -257,7 +261,7 @@ describe("scopeSources", () => {
       ],
     });
 
-    expect(sources.map((source) => source.url)).toEqual([
+    expect(Arr.map(sources, (source) => source.url)).toEqual([
       "https://react.dev/blog/2024/12/05/react-19",
     ]);
   });
@@ -330,6 +334,8 @@ describe("scopeSources", () => {
       task,
     });
 
-    expect(scopedSources.map((source) => source.url)).toEqual(expectedUrls);
+    expect(Arr.map(scopedSources, (source) => source.url)).toEqual(
+      expectedUrls
+    );
   });
 });

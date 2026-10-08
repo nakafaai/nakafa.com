@@ -10,7 +10,7 @@ import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -74,7 +74,7 @@ describe("Nina memory curation", () => {
       "space:personal",
       "purpose:background",
     ]);
-    const [first, second] = model.doGenerateCalls.map((call) =>
+    const [first, second] = Arr.map(model.doGenerateCalls, (call) =>
       JSON.stringify(call.prompt)
     );
     expect(first).toContain("Aku kelas 12 dan mau ikut SNBT 2027.");

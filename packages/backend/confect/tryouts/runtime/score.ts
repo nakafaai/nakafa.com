@@ -28,7 +28,7 @@ import {
 } from "@repo/backend/confect/tryouts/runtime/result";
 import type { TryoutScoringStrategy } from "@repo/backend/confect/tryouts/score";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, Struct } from "effect";
+import { Array as Arr, Effect, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -110,7 +110,12 @@ export const requireOwnedAttempt = Effect.fn(
 
 /** Counts complete answers and correct outcomes for a section or attempt. */
 export function summarizeResponses(responses: readonly TryoutResponse[]) {
-  return responses.reduce(
+  return Arr.reduce(
+    responses,
+    {
+      answeredCount: 0,
+      correctAnswers: 0,
+    },
     (summary, response) => {
       if (!response.isComplete) {
         return summary;
@@ -121,10 +126,6 @@ export function summarizeResponses(responses: readonly TryoutResponse[]) {
           summary.correctAnswers +
           (readOutcome(response).status === "correct" ? 1 : 0),
       };
-    },
-    {
-      answeredCount: 0,
-      correctAnswers: 0,
     }
   );
 }

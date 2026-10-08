@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@nakafa/aksara-contracts": "0.46.0",
-    "@repo/utilities": "workspace:*",
-    "next": "16.3.8",
+    "@repo/next-config": "workspace:*",
+    "next": "16.4.0",
     "next-intl": "^4.14.9"
   },
   "devDependencies": {

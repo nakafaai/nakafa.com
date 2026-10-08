@@ -6,7 +6,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { settleTurn } from "@repo/backend/confect/nina/settlement";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option, pipe } from "effect";
 
 vi.mock("@repo/backend/confect/nina/settlement", async (load) => {
   const actual =
@@ -80,7 +80,9 @@ describe("native Nina settlement", () => {
       reason: "interrupted",
     });
     expect(state.chat?.activeTurnId).toBeUndefined();
-    expect(state.ledger.filter((row) => row.type === "refund")).toHaveLength(1);
+    expect(
+      Arr.filter(state.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
     expect(state.messages.page[0]?.message).toEqual({
       role: "user",
       content: "Explain a limit.",
@@ -89,12 +91,14 @@ describe("native Nina settlement", () => {
       ctx.db.system.query("_scheduled_functions").collect()
     );
     expect(
-      events.filter((job) => job.name === "nina/response:present")
+      Arr.filter(events, (job) => job.name === "nina/response:present")
     ).toHaveLength(0);
     expect(
-      events
-        .filter((job) => job.name.includes("deliverProductEvent"))
-        .map((job) => job.args)
+      pipe(
+        events,
+        Arr.filter((job) => job.name.includes("deliverProductEvent")),
+        Arr.map((job) => job.args)
+      )
     ).toEqual([
       [
         expect.objectContaining({
@@ -146,21 +150,32 @@ describe("native Nina settlement", () => {
       turnId: f.turnId,
     });
     expect(
-      state.turn?.usage.reduce((sum, row) => sum + row.input + row.output, 0)
+      Arr.reduce(
+        state.turn?.usage ?? [],
+        0,
+        (sum, row) => sum + row.input + row.output
+      )
     ).toBe(64);
     expect(
-      state.turn?.usage.find((row) => row.agent === "research")
+      Option.getOrUndefined(
+        Arr.findFirst(
+          state.turn?.usage ?? [],
+          (row) => row.agent === "research"
+        )
+      )
     ).toMatchObject({ calls: 2, input: 24, output: 8 });
     const events = await f.t.query((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );
     expect(
-      events.filter((job) => job.name === "nina/response:present")
+      Arr.filter(events, (job) => job.name === "nina/response:present")
     ).toHaveLength(1);
     expect(
-      events
-        .filter((job) => job.name.includes("deliverProductEvent"))
-        .map((job) => job.args)
+      pipe(
+        events,
+        Arr.filter((job) => job.name.includes("deliverProductEvent")),
+        Arr.map((job) => job.args)
+      )
     ).toEqual([
       [
         expect.objectContaining({
@@ -203,8 +218,12 @@ describe("native Nina settlement", () => {
     expect(state.user?.credits).toBe(10);
     expect(state.turn?.state).toEqual({ status: "cancelled", finishedAt: NOW });
     expect(
-      state.messages.page.find((row) => row.message?.role === "assistant")
-        ?.status
+      Option.getOrUndefined(
+        Arr.findFirst(
+          state.messages.page,
+          (row) => row.message?.role === "assistant"
+        )
+      )?.status
     ).toBe("failed");
     const streams = await f.t.query((ctx) =>
       listStreams(ctx, components.nina, {
@@ -322,6 +341,8 @@ describe("native Nina settlement", () => {
     );
     const state = await f.inspect();
     expect(state.user?.credits).toBe(10);
-    expect(state.ledger.filter((row) => row.type === "refund")).toHaveLength(1);
+    expect(
+      Arr.filter(state.ledger, (row) => row.type === "refund")
+    ).toHaveLength(1);
   });
 });

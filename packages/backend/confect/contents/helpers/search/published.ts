@@ -12,11 +12,9 @@ import { rankContentSearchDocuments } from "@repo/backend/confect/contents/helpe
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { getExactRouteQuery } from "@repo/backend/confect/contents/helpers/search/terms";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
-import { Effect, type Schema } from "effect";
+import { Array as Arr, Effect } from "effect";
 
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 type PublishedSearchOwner = NonNullable<
   Effect.Success<ReturnType<typeof loadSearchOwner>>
 >;
@@ -29,18 +27,18 @@ export function getPublishedSearchFamilies(
   if (!owner) {
     return [];
   }
-  const families: PublishedFamily[] = [];
+  let families: PublishedFamily[] = [];
   if (
     owner.families.includes("article") &&
     (section === undefined || section === "articles")
   ) {
-    families.push("article");
+    families = Arr.append(families, "article");
   }
   if (
     owner.families.includes("material") &&
     (section === undefined || section === "material")
   ) {
-    families.push("material");
+    families = Arr.append(families, "material");
   }
   return families;
 }
@@ -74,7 +72,10 @@ export const readPublishedSearchDocuments = Effect.fn(
       (row) => row._id
     );
     const authenticated = yield* authenticateSearchRows(rows, owner);
-    return authenticated.map(({ document }) => document).slice(0, scanLimit);
+    return Arr.map(authenticated, ({ document }) => document).slice(
+      0,
+      scanLimit
+    );
   }
   const groups = yield* Effect.forEach(
     queryTexts,
@@ -96,20 +97,20 @@ export const readPublishedSearchDocuments = Effect.fn(
     }
   );
   const rows = interleaveSearchGroups(
-    groups.map((group) => group.rows),
+    Arr.map(groups, (group) => group.rows),
     NAKAFA_AGENT_SEARCH_WINDOW,
     (row) => row._id
   );
   const authenticated = yield* authenticateSearchRows(rows, owner);
   const documentsByRow = new Map(
-    authenticated.map(({ document, row }) => [row._id, document])
+    Arr.map(authenticated, ({ document, row }) => [row._id, document])
   );
-  const rankedGroups = groups.map(({ queryText, rows: queryRows }) => {
-    const documents: ContentSearchDocument[] = [];
+  const rankedGroups = Arr.map(groups, ({ queryText, rows: queryRows }) => {
+    let documents: ContentSearchDocument[] = [];
     for (const row of queryRows) {
       const document = documentsByRow.get(row._id);
       if (document) {
-        documents.push(document);
+        documents = Arr.append(documents, document);
       }
     }
     return rankContentSearchDocuments(documents, queryText);
@@ -177,7 +178,7 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
       )
       .take(scanLimit);
     const rows = exact
-      ? [exact, ...hits.filter((row) => row._id !== exact._id)]
+      ? [exact, ...Arr.filter(hits, (row) => row._id !== exact._id)]
       : hits;
     return rows.slice(0, scanLimit);
   },

@@ -11,7 +11,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option, pipe } from "effect";
 
 const DAY = Date.parse("2026-01-08T00:00:00.000Z");
 
@@ -283,12 +283,16 @@ describe("contents/metrics/cycle", () => {
         .unique(),
     }));
     expect(
-      completed.counters.find(({ windowKey }) => windowKey === "1d")?.score
+      Option.getOrUndefined(
+        Arr.findFirst(completed.counters, ({ windowKey }) => windowKey === "1d")
+      )?.score
     ).toBe(1);
     expect(
-      completed.counters
-        .filter(({ windowKey }) => windowKey !== "1d")
-        .map(({ score }) => score)
+      pipe(
+        completed.counters,
+        Arr.filter(({ windowKey }) => windowKey !== "1d"),
+        Arr.map(({ score }) => score)
+      )
     ).toEqual(
       Array.from(
         {
@@ -297,7 +301,7 @@ describe("contents/metrics/cycle", () => {
         () => 2
       )
     );
-    expect(completed.ranking.page.map(({ key }) => key[0])).toEqual([-1]);
+    expect(Arr.map(completed.ranking.page, ({ key }) => key[0])).toEqual([-1]);
     expect(completed.cycle).toMatchObject({
       completedDay: nextDay,
       mode: "repair",

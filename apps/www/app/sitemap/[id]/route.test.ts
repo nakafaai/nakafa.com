@@ -7,16 +7,6 @@ import { GET } from "@/app/sitemap/[id]/route";
 const mockGetCachedSitemapEntries = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
 const mockCaptureServerExceptionSafely = vi.hoisted(() => vi.fn());
-const mockSitemapPageNotFoundError = vi.hoisted(() => {
-  class SitemapPageNotFoundError extends Error {
-    readonly pageId: string;
-    constructor(options: { pageId: string }) {
-      super(`Sitemap page ${options.pageId} does not exist.`);
-      this.pageId = options.pageId;
-    }
-  }
-  return SitemapPageNotFoundError;
-});
 
 /** Test-only typed sitemap page failure. */
 class TestSitemapPageError extends Data.TaggedError("TestSitemapPageError")<{
@@ -29,11 +19,6 @@ vi.mock("@/lib/sitemap/entries", () => ({
 
 vi.mock("@/lib/sitemap/identity", () => ({
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
-}));
-
-vi.mock("@/lib/sitemap/routes", () => ({
-  /** Matches the handler's 404 discrimination without loading Convex. */
-  SitemapPageNotFoundError: mockSitemapPageNotFoundError,
 }));
 
 vi.mock("@/lib/analytics/server", () => ({
@@ -49,12 +34,15 @@ describe("sitemap page route", () => {
     mockGetSitemapPageDescriptor.mockImplementation((pageId) =>
       pageId === "base" ? { id: "base" } : null
     );
-    mockGetCachedSitemapEntries.mockResolvedValue([
-      {
-        lastModified: new Date("2025-01-01T00:00:00.000Z"),
-        url: "https://nakafa.com/en",
-      },
-    ]);
+    mockGetCachedSitemapEntries.mockResolvedValue({
+      _tag: "Found",
+      entries: [
+        {
+          lastModified: "2025-01-01T00:00:00.000Z",
+          url: "https://nakafa.com/en",
+        },
+      ],
+    });
   });
 
   it("serves one bounded sitemap page by .xml id", async () => {
@@ -112,9 +100,7 @@ describe("sitemap page route", () => {
       locale: "en",
       partition: 7,
     });
-    mockGetCachedSitemapEntries.mockRejectedValueOnce(
-      new mockSitemapPageNotFoundError({ pageId: "material_en_p7" })
-    );
+    mockGetCachedSitemapEntries.mockResolvedValueOnce({ _tag: "Missing" });
 
     const response = await GET(
       new Request("https://nakafa.com/sitemap/material_en_p7.xml"),

@@ -1,9 +1,16 @@
-import { Effect, type PlatformError, Schema, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  type PlatformError,
+  Schema,
+  Stream,
+} from "effect";
 import { ChildProcess } from "effect/process";
 
-interface RunOptions {
-  readonly capture?: boolean;
-}
+const RunOptionsSchema = Schema.Struct({
+  capture: Schema.optionalKey(Schema.Boolean),
+});
+type RunOptions = typeof RunOptionsSchema.Type;
 
 /** Expected failure while running pnpm for dependency maintenance. */
 class DependencyCommandError extends Schema.TaggedError<DependencyCommandError>()(
@@ -45,7 +52,7 @@ export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
           (cause) =>
             new DependencyCommandError({
               cause,
-              message: `Unable to run pnpm ${args.join(" ")}.`,
+              message: `Unable to run pnpm ${Arr.join(args, " ")}.`,
             })
         )
       );
@@ -56,7 +63,7 @@ export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
             (cause) =>
               new DependencyCommandError({
                 cause,
-                message: `Unable to finish pnpm ${args.join(" ")}.`,
+                message: `Unable to finish pnpm ${Arr.join(args, " ")}.`,
               })
           )
         );
@@ -75,7 +82,7 @@ export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
           (cause) =>
             new DependencyCommandError({
               cause,
-              message: `Unable to finish pnpm ${args.join(" ")}.`,
+              message: `Unable to finish pnpm ${Arr.join(args, " ")}.`,
             })
         )
       );

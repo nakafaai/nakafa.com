@@ -20,6 +20,7 @@ import {
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
 import { convexTest, type TestConvex } from "convex-test";
+import { Array as Arr, Option } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 
@@ -98,8 +99,11 @@ describe("contentRelease/items", () => {
       stagedItems: 2,
       stagedUpserts: 1,
     });
-    const deleted = state.items.find(
-      ({ contentKey }) => contentKey === "test:deleted"
+    const deleted = Option.getOrUndefined(
+      Arr.findFirst(
+        state.items,
+        ({ contentKey }) => contentKey === "test:deleted"
+      )
     );
     expect(deleted?.priorSequence).toBe(1);
     expect(JSON.parse(deleted?.rollbackJson ?? "{}")).toMatchObject({

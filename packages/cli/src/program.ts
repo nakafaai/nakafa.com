@@ -3,7 +3,7 @@ import {
   NAKAFA_MCP_PROTOCOL_VERSION,
   NAKAFA_PUBLIC_API_PATH,
 } from "@repo/contents/agent/constants";
-import { Console, Effect, Layer, MutableRef } from "effect";
+import { Console, Effect, Layer, MutableRef, Schema } from "effect";
 import {
   CliConfig,
   CliError,
@@ -21,9 +21,11 @@ const INVOCATION_EXIT_CODE = 2;
 const API_EXIT_CODE = 3;
 const NETWORK_OR_SERVER_EXIT_CODE = 4;
 
-interface CliOptions {
-  readonly version: string;
-}
+const CliOptionsSchema = Schema.Struct({
+  version: Schema.String,
+});
+
+type CliOptions = typeof CliOptionsSchema.Type;
 
 /** Executes one CLI invocation and returns its stable process exit category. */
 export const runCli = Effect.fn("NakafaCli.run")(function* (

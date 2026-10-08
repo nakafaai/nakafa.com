@@ -1,3 +1,4 @@
+import { Record as Rec } from "effect";
 import "server-only";
 
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
@@ -20,26 +21,26 @@ import {
 
 /** Authenticated renderer envelope derived without loading React implementations. */
 export const rendererManifest = createRendererManifest({
-  base: Object.values(baseComponentNames),
+  base: Rec.values(baseComponentNames),
   domains: [
-    { name: "ai-ds", components: Object.values(aiDsComponentNames) },
-    { name: "biology", components: Object.values(biologyComponentNames) },
-    { name: "chemistry", components: Object.values(chemistryComponentNames) },
+    { name: "ai-ds", components: Rec.values(aiDsComponentNames) },
+    { name: "biology", components: Rec.values(biologyComponentNames) },
+    { name: "chemistry", components: Rec.values(chemistryComponentNames) },
     {
       name: "mathematics",
-      components: Object.values(mathematicsComponentNames),
+      components: Rec.values(mathematicsComponentNames),
     },
-    { name: "physics", components: Object.values(physicsComponentNames) },
-    { name: "politics", components: Object.values(politicsComponentNames) },
-    { name: "site", components: Object.values(siteComponentNames) },
+    { name: "physics", components: Rec.values(physicsComponentNames) },
+    { name: "politics", components: Rec.values(politicsComponentNames) },
+    { name: "site", components: Rec.values(siteComponentNames) },
     {
       name: "snbt-general",
-      components: Object.values(snbtGeneralComponentNames),
+      components: Rec.values(snbtGeneralComponentNames),
     },
-    { name: "snbt-math", components: Object.values(snbtMathComponentNames) },
-    { name: "snbt-plain", components: Object.values(snbtPlainComponentNames) },
-    { name: "snbt-quant", components: Object.values(snbtQuantComponentNames) },
-    { name: "tka-math", components: Object.values(tkaMathComponentNames) },
+    { name: "snbt-math", components: Rec.values(snbtMathComponentNames) },
+    { name: "snbt-plain", components: Rec.values(snbtPlainComponentNames) },
+    { name: "snbt-quant", components: Rec.values(snbtQuantComponentNames) },
+    { name: "tka-math", components: Rec.values(tkaMathComponentNames) },
   ],
   publishedDomains: RENDERER_DOMAINS,
 });

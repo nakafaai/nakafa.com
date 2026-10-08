@@ -131,6 +131,4 @@ export const productAnalyticsEventValidator = Schema.Union([
     }),
   }),
 ]);
-export type ProductAnalyticsEvent = Schema.Schema.Type<
-  typeof productAnalyticsEventValidator
->;
+export type ProductAnalyticsEvent = typeof productAnalyticsEventValidator.Type;

@@ -125,6 +125,47 @@ for (const viewport of targetViewports) {
   });
 }
 
+test("the language menu opens the same route in the chosen language", async ({
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        const response = yield* Effect.promise(() =>
+          page.goto("/en/search", { waitUntil: "domcontentloaded" })
+        );
+        yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+
+        const languageButton = page
+          .locator('[data-sidebar="sidebar"]:visible')
+          .getByRole("button", { exact: true, name: "Language" });
+        const german = page.getByRole("menuitem", {
+          exact: true,
+          name: "Deutsch (Deutschland)",
+        });
+        yield* activateUntilVisible(
+          languageButton,
+          german,
+          readinessTimeoutMilliseconds
+        );
+        // The pick loads the request module on demand, asks the route-owned
+        // endpoint for the localized href, and replaces the route with it.
+        yield* Effect.promise(() => german.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL("/de/search", page.url()).toString(), {
+            timeout: readinessTimeoutMilliseconds,
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(page.locator("html")).toHaveAttribute("lang", "de")
+        );
+      })
+    )
+  );
+});
+
 test("provider failures land on one clean generic retry", async ({ page }) => {
   await Effect.runPromise(
     withObservedPageErrors(
@@ -197,33 +238,45 @@ test("guest auth link preserves a dynamic query and hash for native actions", as
           expect(loginLink).toHaveAttribute("href", fallbackHref)
         );
 
-        const nativeUrl = new URL(exactHref, page.url()).toString();
-        // Background document responses can precede Playwright's page event.
-        const [nativeResponse, nativePage] = yield* Effect.all(
-          [
-            Effect.promise(() =>
-              page
-                .context()
-                .waitForEvent(
-                  "response",
-                  (candidate) =>
-                    candidate.request().isNavigationRequest() &&
-                    candidate.url() === nativeUrl
-                )
-            ),
-            Effect.promise(() => page.context().waitForEvent("page")),
-            Effect.promise(() => loginLink.click({ button: "middle" })),
-          ],
-          { concurrency: "unbounded" }
+        // A middle click opens the link in a background tab, and the browser
+        // reads the href when the auxclick's default action runs. The last
+        // listener records that href and whether the app left the default
+        // action alone, then cancels the tab: Playwright does not always
+        // report a background tab, and its animated shader competes for a
+        // small runner's CPU.
+        const nativeClick = yield* Effect.promise(() =>
+          loginLink.evaluateHandle((link) => {
+            const observed: {
+              cancelled: boolean | null;
+              href: string | null;
+            } = { cancelled: null, href: null };
+            window.addEventListener(
+              "auxclick",
+              (event) => {
+                observed.cancelled = event.defaultPrevented;
+                observed.href = link.getAttribute("href");
+                event.preventDefault();
+              },
+              { once: true }
+            );
+            return observed;
+          })
+        );
+        yield* Effect.promise(() => loginLink.click({ button: "middle" }));
+        const native = yield* Effect.promise(() => nativeClick.jsonValue());
+        yield* Effect.sync(() =>
+          expect(native).toStrictEqual({ cancelled: false, href: exactHref })
+        );
+        // The tab would load this exact URL, so a redirect must not pass.
+        const nativeResponse = yield* Effect.promise(() =>
+          page.request.get(new URL(exactHref, page.url()).toString(), {
+            maxRedirects: 0,
+          })
         );
         yield* Effect.sync(() => expect(nativeResponse.ok()).toBe(true));
         yield* Effect.promise(() =>
           expect(page).toHaveURL(new URL(intent, page.url()).toString())
         );
-        // The middle click opened the auth page in a background tab. Its
-        // animated shader competes for a small runner's CPU and delays this
-        // page's hydration past the assertion timeout, so the tab closes first.
-        yield* Effect.promise(() => nativePage.close());
 
         yield* Effect.promise(() =>
           page.reload({ waitUntil: "domcontentloaded" })

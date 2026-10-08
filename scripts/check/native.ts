@@ -4,6 +4,7 @@ import {
   isAwaitExpression,
   isBinaryExpression,
   isCallExpression,
+  isElementAccessExpression,
   isForOfStatement,
   isFunctionLikeDeclaration,
   isIdentifier,
@@ -18,36 +19,42 @@ import {
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { candidate } from "#scripts/check/rules";
+import { candidate, REPOSITORY_SPECIFIER_PATTERN } from "#scripts/check/rules";
 import type { Binding } from "#scripts/check/source";
 
-/** Array methods with no String counterpart, so a call names an array. */
+/** Array methods that return a new array and have no String counterpart, so a call names an array. */
 const ARRAY_METHODS = HashSet.make(
-  "copyWithin",
   "every",
-  "fill",
   "filter",
-  "find",
-  "findIndex",
-  "findLast",
-  "findLastIndex",
   "flat",
   "flatMap",
   "forEach",
   "map",
-  "pop",
-  "push",
   "reduce",
   "reduceRight",
-  "reverse",
-  "shift",
   "some",
-  "sort",
-  "splice",
   "toReversed",
   "toSorted",
-  "toSpliced",
+  "toSpliced"
+);
+/** Array methods that change their array in place. */
+const MUTATION_METHODS = HashSet.make(
+  "copyWithin",
+  "fill",
+  "pop",
+  "push",
+  "reverse",
+  "shift",
+  "sort",
+  "splice",
   "unshift"
+);
+/** Array methods that search for one element, which Effect returns as an Option. */
+const SEARCH_METHODS = HashSet.make(
+  "find",
+  "findIndex",
+  "findLast",
+  "findLastIndex"
 );
 const NODE_MODULES = HashSet.make(
   "child_process",
@@ -71,19 +78,91 @@ const EQUALITY_OPERATORS = HashSet.make(
 );
 /** Receivers that are not module imports, so an array method transforms a value. */
 const VALUE_BINDINGS: readonly (typeof Binding.Type)[] = ["global", "local"];
+/** Every binding, for a receiver that a repository module exports as a value. */
+const ANY_BINDING: readonly (typeof Binding.Type)[] = [
+  "global",
+  "import",
+  "local",
+];
 
-/** Returns the receiver of a call to an array method that has no String counterpart. */
-function arrayReceiver(node: Node) {
-  if (
-    !(isCallExpression(node) && isPropertyAccessExpression(node.expression))
-  ) {
+/**
+ * Returns the method a call invokes and its receiver, for a callee written as
+ * a property or as an element access with a string literal, such as
+ * `rows.map(format)` or `rows["map"](format)`.
+ */
+function calledMethod(node: Node) {
+  if (!isCallExpression(node)) {
     return;
   }
-  const method = node.expression.name.text;
-  return HashSet.has(ARRAY_METHODS, method) ||
-    (method === "join" && node.arguments.length <= 1)
-    ? node.expression.expression
+  const callee = node.expression;
+  if (isPropertyAccessExpression(callee)) {
+    return {
+      count: node.arguments.length,
+      method: callee.name.text,
+      receiver: callee.expression,
+    };
+  }
+  return isElementAccessExpression(callee) &&
+    isStringLiteralLikeNode(callee.argumentExpression)
+    ? {
+        count: node.arguments.length,
+        method: callee.argumentExpression.text,
+        receiver: callee.expression,
+      }
     : undefined;
+}
+
+/**
+ * Returns the receiver of a call to an array method and the rule it breaks:
+ * a method that transforms its array, changes it in place, or searches it. `join` counts
+ * with at most one argument, which tells it from the path helper of the same
+ * name.
+ */
+function arrayCall(node: Node) {
+  const call = calledMethod(node);
+  if (call === undefined) {
+    return;
+  }
+  if (
+    HashSet.has(ARRAY_METHODS, call.method) ||
+    (call.method === "join" && call.count <= 1)
+  ) {
+    return { receiver: call.receiver, rule: "array-method" as const };
+  }
+  if (HashSet.has(MUTATION_METHODS, call.method)) {
+    return { receiver: call.receiver, rule: "array-mutation" as const };
+  }
+  return HashSet.has(SEARCH_METHODS, call.method)
+    ? { receiver: call.receiver, rule: "array-search" as const }
+    : undefined;
+}
+
+/**
+ * Whether a module imports `name` as a value from a repository module, by a
+ * default or a named import. Such an import is a value like any local one,
+ * while a namespace import or a package import may be a module of functions,
+ * such as `Arr` from `effect`.
+ */
+function importsRepositoryValue(sourceFile: SourceFile, name: string) {
+  return Arr.some(sourceFile.statements, (statement) => {
+    if (
+      !(
+        isImportDeclaration(statement) &&
+        isStringLiteral(statement.moduleSpecifier) &&
+        REPOSITORY_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
+      )
+    ) {
+      return false;
+    }
+    const clause = statement.importClause;
+    const bindings = clause?.namedBindings;
+    return (
+      clause?.name?.text === name ||
+      (bindings !== undefined &&
+        isNamedImports(bindings) &&
+        Arr.some(bindings.elements, (element) => element.name.text === name))
+    );
+  });
 }
 
 /** Whether a node declares an async function or waits on a Promise. */
@@ -152,12 +231,20 @@ function isTypeofObjectComparison(node: Node) {
 
 /** Returns the native array, Promise, module, and failure syntax at one node. */
 function syntaxCandidates(sourceFile: SourceFile, node: Node) {
-  const receiver = arrayReceiver(node);
-  if (receiver !== undefined) {
+  const call = arrayCall(node);
+  if (call !== undefined) {
     return [
-      isIdentifier(receiver)
-        ? candidate("array-method", sourceFile, node, receiver, VALUE_BINDINGS)
-        : candidate("array-method", sourceFile, node),
+      isIdentifier(call.receiver)
+        ? candidate(
+            call.rule,
+            sourceFile,
+            node,
+            call.receiver,
+            importsRepositoryValue(sourceFile, call.receiver.text)
+              ? ANY_BINDING
+              : VALUE_BINDINGS
+          )
+        : candidate(call.rule, sourceFile, node),
     ];
   }
   if (isPromiseSyntax(node)) {
@@ -176,8 +263,8 @@ function syntaxCandidates(sourceFile: SourceFile, node: Node) {
 
 /**
  * Returns the native syntax among one module's value-position `nodes` that
- * an Effect module replaces: array methods, Promise syntax, Node module
- * imports, raw failure handling, and hand-rolled narrowing.
+ * Effect replaces: array methods, Promise syntax, Node module imports, raw
+ * failure handling, and hand-rolled narrowing.
  */
 export function nativeCandidates(
   sourceFile: SourceFile,

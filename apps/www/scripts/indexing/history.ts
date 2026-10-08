@@ -1,11 +1,6 @@
-import fs from "node:fs";
-import { Effect, Schema } from "effect";
+import { Effect, FileSystem, Schema } from "effect";
 import { SubmissionHistoryError } from "@/scripts/indexing/errors";
-import {
-  INDEXING_STATE_FOLDER,
-  SUBMISSION_HISTORY_FILE,
-} from "@/scripts/indexing/paths";
-import { logger } from "@/scripts/utils";
+import { indexingFiles } from "@/scripts/indexing/paths";
 
 const SubmissionServiceSchema = Schema.Literals([
   "bing",
@@ -24,12 +19,8 @@ const decodeSubmissionHistory = Schema.decodeUnknownEffect(
 const decodeEmptySubmissionHistory = Schema.decodeUnknownEffect(
   SubmissionHistorySchema
 );
-export type SubmissionHistory = Schema.Schema.Type<
-  typeof SubmissionHistorySchema
->;
-export type SubmissionService = Schema.Schema.Type<
-  typeof SubmissionServiceSchema
->;
+export type SubmissionHistory = typeof SubmissionHistorySchema.Type;
+export type SubmissionService = typeof SubmissionServiceSchema.Type;
 /** Builds an empty local submission-history value for a first script run. */
 export function emptySubmissionHistory(): SubmissionHistory {
   return {
@@ -42,28 +33,30 @@ export function emptySubmissionHistory(): SubmissionHistory {
 export const ensureSubmissionHistoryFolder = Effect.fn(
   "scripts.indexing.history.ensureFolder"
 )(function* () {
-  const exists = yield* Effect.try({
-    catch: (cause) =>
-      new SubmissionHistoryError({
-        cause,
-        message: `Failed to inspect ${INDEXING_STATE_FOLDER}.`,
-      }),
-    try: () => fs.existsSync(INDEXING_STATE_FOLDER),
-  });
+  const fs = yield* FileSystem.FileSystem;
+  const { stateFolder } = yield* indexingFiles;
+  const exists = yield* fs.exists(stateFolder).pipe(
+    Effect.mapError(
+      (cause) =>
+        new SubmissionHistoryError({
+          cause,
+          message: `Failed to inspect ${stateFolder}.`,
+        })
+    )
+  );
   if (exists) {
     return;
   }
-  yield* Effect.try({
-    catch: (cause) =>
-      new SubmissionHistoryError({
-        cause,
-        message: `Failed to create ${INDEXING_STATE_FOLDER}.`,
-      }),
-    try: () => {
-      fs.mkdirSync(INDEXING_STATE_FOLDER, { recursive: true });
-      logger.info(`Created script state folder at: ${INDEXING_STATE_FOLDER}`);
-    },
-  });
+  yield* fs.makeDirectory(stateFolder, { recursive: true }).pipe(
+    Effect.mapError(
+      (cause) =>
+        new SubmissionHistoryError({
+          cause,
+          message: `Failed to create ${stateFolder}.`,
+        })
+    )
+  );
+  yield* Effect.logInfo(`Created script state folder at: ${stateFolder}`);
 });
 /**
  * Loads ignored submission history for IndexNow, Bing, and Google adapters.
@@ -73,31 +66,35 @@ export const ensureSubmissionHistoryFolder = Effect.fn(
  */
 export const loadSubmissionHistory = Effect.fn("scripts.indexing.history.load")(
   function* () {
-    const exists = yield* Effect.try({
-      catch: (cause) =>
-        new SubmissionHistoryError({
-          cause,
-          message: `Failed to inspect ${SUBMISSION_HISTORY_FILE}.`,
-        }),
-      try: () => fs.existsSync(SUBMISSION_HISTORY_FILE),
-    });
+    const fs = yield* FileSystem.FileSystem;
+    const { submissionHistory } = yield* indexingFiles;
+    const exists = yield* fs.exists(submissionHistory).pipe(
+      Effect.mapError(
+        (cause) =>
+          new SubmissionHistoryError({
+            cause,
+            message: `Failed to inspect ${submissionHistory}.`,
+          })
+      )
+    );
     if (!exists) {
       return yield* decodeEmptySubmissionHistory(emptySubmissionHistory());
     }
-    const data = yield* Effect.try({
-      catch: (cause) =>
-        new SubmissionHistoryError({
-          cause,
-          message: `Failed to read ${SUBMISSION_HISTORY_FILE}.`,
-        }),
-      try: () => fs.readFileSync(SUBMISSION_HISTORY_FILE, "utf8"),
-    });
+    const data = yield* fs.readFileString(submissionHistory).pipe(
+      Effect.mapError(
+        (cause) =>
+          new SubmissionHistoryError({
+            cause,
+            message: `Failed to read ${submissionHistory}.`,
+          })
+      )
+    );
     return yield* decodeSubmissionHistory(data).pipe(
       Effect.mapError(
         (cause) =>
           new SubmissionHistoryError({
             cause,
-            message: `Failed to decode ${SUBMISSION_HISTORY_FILE}.`,
+            message: `Failed to decode ${submissionHistory}.`,
           })
       )
     );
@@ -106,20 +103,19 @@ export const loadSubmissionHistory = Effect.fn("scripts.indexing.history.load")(
 /** Persists ignored local submission history after successful notifications. */
 export const saveSubmissionHistory = Effect.fn("scripts.indexing.history.save")(
   function* (history: SubmissionHistory) {
-    yield* Effect.try({
-      catch: (cause) =>
-        new SubmissionHistoryError({
-          cause,
-          message: `Failed to write ${SUBMISSION_HISTORY_FILE}.`,
-        }),
-      try: () => {
-        fs.writeFileSync(
-          SUBMISSION_HISTORY_FILE,
-          JSON.stringify(history, null, 2),
-          "utf8"
-        );
-      },
-    });
+    const fs = yield* FileSystem.FileSystem;
+    const { submissionHistory } = yield* indexingFiles;
+    yield* fs
+      .writeFileString(submissionHistory, JSON.stringify(history, null, 2))
+      .pipe(
+        Effect.mapError(
+          (cause) =>
+            new SubmissionHistoryError({
+              cause,
+              message: `Failed to write ${submissionHistory}.`,
+            })
+        )
+      );
   }
 );
 /**

@@ -8,6 +8,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
+import { Array as Arr, Option } from "effect";
 
 const DAY = Date.parse("2026-01-08T00:00:00.000Z");
 const ROUTE = "material/lesson/mathematics/vector/addition";
@@ -166,7 +167,7 @@ describe("contents/metrics/repair", () => {
     );
 
     expect(recovery).toEqual({ scheduledWindows: 14 });
-    expect(recoveryJobs.map(({ args }) => args[0])).toContainEqual({
+    expect(Arr.map(recoveryJobs, ({ args }) => args[0])).toContainEqual({
       cursor: first.continueCursor,
       day: DAY,
       scopeMode: "global",
@@ -289,16 +290,23 @@ describe("contents/metrics/repair", () => {
     }));
     expect(result).toMatchObject({ refreshedCounters: 1, removedCounters: 0 });
     expect(
-      state.counters.find(({ windowKey }) => windowKey === "lifetime")
+      Option.getOrUndefined(
+        Arr.findFirst(
+          state.counters,
+          ({ windowKey }) => windowKey === "lifetime"
+        )
+      )
     ).toEqual(lifetimeBefore);
     expect(
-      state.counters.find(({ windowKey }) => windowKey === "7d")
+      Option.getOrUndefined(
+        Arr.findFirst(state.counters, ({ windowKey }) => windowKey === "7d")
+      )
     ).toMatchObject({
       latestDay: DAY,
       score: 3,
       title: "Signal title",
     });
-    expect(state.ranking.page.map(({ key }) => key)).toEqual([
+    expect(Arr.map(state.ranking.page, ({ key }) => key)).toEqual([
       [-3, graph().content_id],
     ]);
   });

@@ -10,7 +10,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -25,16 +24,28 @@ import {
   type SidebarContextValue,
   useSidebar,
 } from "@repo/design-system/lib/sidebar/context";
-import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { languages } from "@repo/internationalization/data/lang";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { cn } from "cn";
+import dynamic from "next/dynamic";
 import { type Locale, useLocale, useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
-const BASE_THEMES_COUNT = 3;
+/**
+ * Loads the theme submenu when the account menu opens. Its list carries one
+ * icon for each theme, which no page needs before that.
+ */
+const ThemeSubmenuContent = dynamic(
+  () =>
+    import("@/components/sidebar/menu/theme").then(
+      (module) => module.ThemeSubmenuContent
+    ),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
 
 /** Opens menus beside the sidebar, or above their trigger on phones, where the sidebar fills the screen. */
 function selectMenuSide(sidebar: SidebarContextValue) {
@@ -144,57 +155,10 @@ function LanguageSubmenuContent() {
   );
 }
 
-/** Renders the nested theme submenu while keeping theme state owned by next-themes. */
-function ThemeSubmenuContent() {
-  const side = useSidebar(selectMenuSide);
-  const { theme: currentTheme, setTheme } = useTheme();
-  const t = useTranslations("Common");
-
-  function isActive(value: string) {
-    return currentTheme === value;
-  }
-
-  return (
-    <DropdownMenuSubContent
-      className="max-h-[min(var(--available-height),24rem)] w-max max-w-[calc(100vw-2rem)]"
-      side={side}
-    >
-      <DropdownMenuGroup>
-        {themeOptions.slice(0, BASE_THEMES_COUNT).map((theme) => (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            key={theme.value}
-            onClick={() => setTheme(theme.value)}
-          >
-            <HugeIcons className="shrink-0" icon={theme.icon} />
-            <span className="truncate">{t(theme.value)}</span>
-            <ActiveBadge isActive={isActive(theme.value)} />
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuGroup>
-
-      <DropdownMenuSeparator />
-
-      <DropdownMenuGroup>
-        {themeOptions.slice(BASE_THEMES_COUNT).map((theme) => (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            key={theme.value}
-            onClick={() => setTheme(theme.value)}
-          >
-            <HugeIcons className="shrink-0" icon={theme.icon} />
-            <span className="truncate">{t(theme.value)}</span>
-            <ActiveBadge isActive={isActive(theme.value)} />
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuGroup>
-    </DropdownMenuSubContent>
-  );
-}
-
 /** Provides preference submenus that can be mounted from account menu surfaces. */
 export function SidebarPreferenceSubmenus() {
   const t = useTranslations("Common");
+  const side = useSidebar(selectMenuSide);
 
   return (
     <DropdownMenuGroup>
@@ -210,7 +174,7 @@ export function SidebarPreferenceSubmenus() {
           <HugeIcons icon={PaintBoardIcon} />
           <span className="truncate">{t("theme")}</span>
         </DropdownMenuSubTrigger>
-        <ThemeSubmenuContent />
+        <ThemeSubmenuContent side={side} />
       </DropdownMenuSub>
     </DropdownMenuGroup>
   );

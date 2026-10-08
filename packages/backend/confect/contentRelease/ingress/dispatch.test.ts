@@ -2,8 +2,13 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  Ed25519SignatureSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
+import { PublicationResponseSchema } from "@nakafa/aksara-contracts/transport/response";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -30,7 +35,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_ID, TEST_KEY_RESOLVER } = await import(
@@ -41,6 +46,14 @@ vi.mock("@repo/backend/content/trust", async () => {
     contentKeyResolver: TEST_KEY_RESOLVER,
   };
 });
+
+const ReleaseJsonSchema = Schema.fromJsonString(SignedContentReleaseSchema);
+const RendererJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
+const ResponsesJsonSchema = Schema.fromJsonString(
+  Schema.Array(PublicationResponseSchema)
+);
 
 describe("content publication Node dispatch", () => {
   it("reports explicit active absence when a candidate assumes a nonexistent base", async () => {
@@ -67,11 +80,14 @@ describe("content publication Node dispatch", () => {
     const t = convexTest(schema, convexModules);
     const candidateResponses = await publishIngressCandidate(t);
     expect(
-      candidateResponses.every(({ ok }) => ok),
-      JSON.stringify(candidateResponses)
+      Arr.every(candidateResponses, ({ ok }) => ok),
+      Schema.encodeSync(ResponsesJsonSchema)(candidateResponses)
     ).toBe(true);
     expect(
-      candidateResponses.map((response) => response.ok && response.operation)
+      Arr.map(
+        candidateResponses,
+        (response) => response.ok && response.operation
+      )
     ).toEqual([
       "stageRelease",
       "current",
@@ -84,8 +100,8 @@ describe("content publication Node dispatch", () => {
 
     const recoveryResponses = await publishIngressRecovery(t);
     expect(
-      recoveryResponses.every(({ ok }) => ok),
-      JSON.stringify(recoveryResponses)
+      Arr.every(recoveryResponses, ({ ok }) => ok),
+      Schema.encodeSync(ResponsesJsonSchema)(recoveryResponses)
     ).toBe(true);
     expect(recoveryResponses[3]).toMatchObject({
       ok: true,
@@ -238,16 +254,21 @@ describe("content publication Node dispatch", () => {
         }
         if (corruption === "renderer") {
           await ctx.db.patch("contentReleases", active._id, {
-            rendererJson: JSON.stringify(testProofRenderer("h1")),
+            rendererJson: Schema.encodeSync(RendererJsonSchema)(
+              testProofRenderer("h1")
+            ),
           });
           return activeHash;
         }
-        const parsed = Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-          JSON.parse(active.releaseJson)
+        const parsed = Schema.decodeSync(ReleaseJsonSchema)(active.releaseJson);
+        const signature = Ed25519SignatureSchema.make(
+          `${parsed.signature.startsWith("A") ? "B" : "A"}${parsed.signature.slice(1)}`
         );
-        const signature = `${parsed.signature.startsWith("A") ? "B" : "A"}${parsed.signature.slice(1)}`;
         await ctx.db.patch("contentReleases", active._id, {
-          releaseJson: JSON.stringify({ ...parsed, signature }),
+          releaseJson: Schema.encodeSync(ReleaseJsonSchema)({
+            ...parsed,
+            signature,
+          }),
         });
         return activeHash;
       });

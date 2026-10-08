@@ -36,7 +36,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import type { FunctionArgs } from "convex/server";
-import { Array as Arr, Effect, Schema, Struct } from "effect";
+import { Array as Arr, Effect, Option, Schema, Struct } from "effect";
 
 describe("tryouts/sets/published", () => {
   it.effect(
@@ -62,7 +62,9 @@ describe("tryouts/sets/published", () => {
               },
             })
           );
-          expect(result.page.map(({ setKey }) => setKey)).toEqual(expected);
+          expect(Arr.map(result.page, ({ setKey }) => setKey)).toEqual(
+            expected
+          );
         }
         const anonymous = yield* Effect.promise(() =>
           t.query(api.tryouts.queries.sets.list, {
@@ -73,11 +75,14 @@ describe("tryouts/sets/published", () => {
             },
           })
         );
-        expect(anonymous.page.map(({ setKey }) => setKey)).toEqual(
+        expect(Arr.map(anonymous.page, ({ setKey }) => setKey)).toEqual(
           orders[0][2]
         );
         expect(
-          anonymous.page.every(({ publishedScore }) => publishedScore === null)
+          Arr.every(
+            anonymous.page,
+            ({ publishedScore }) => publishedScore === null
+          )
         ).toBe(true);
         const unauthenticated = yield* Effect.promise(() =>
           t.query(api.tryouts.queries.sets.list, {
@@ -117,7 +122,9 @@ describe("tryouts/sets/published", () => {
           yield* Effect.promise(() =>
             t.mutation(async (ctx) => {
               const rows = await ctx.db.query("tryoutSetProgress").collect();
-              const row = rows.find((progress) => progress.setKey === "set-1");
+              const row = Option.getOrUndefined(
+                Arr.findFirst(rows, (progress) => progress.setKey === "set-1")
+              );
               if (!row) {
                 return;
               }
@@ -167,9 +174,13 @@ describe("tryouts/sets/published", () => {
                 const rows = yield* Effect.promise(() =>
                   ctx.db.query("tryoutCatalog").collect()
                 );
-                const stored = rows.find(
-                  (row) =>
-                    row.kind === "set" && row.publicPath?.endsWith("/set-2")
+                const stored = Option.getOrUndefined(
+                  Arr.findFirst(
+                    rows,
+                    (row) =>
+                      row.kind === "set" &&
+                      row.publicPath?.endsWith("/set-2") === true
+                  )
                 );
                 if (!stored) {
                   return yield* Effect.die(

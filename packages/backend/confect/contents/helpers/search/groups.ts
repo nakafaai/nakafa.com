@@ -1,9 +1,7 @@
 import type { contentSearchDocumentValidator } from "@repo/backend/confect/contents/helpers/search/schema";
-import type { Schema } from "effect";
+import { Array as Arr } from "effect";
 /** Search document shape shared by source-owned and release-owned read models. */
-export type ContentSearchDocument = Schema.Schema.Type<
-  typeof contentSearchDocumentValidator
->;
+export type ContentSearchDocument = typeof contentSearchDocumentValidator.Type;
 
 /** Interleaves unique group items fairly up to one explicit global limit. */
 export function interleaveSearchGroups<Item>(
@@ -14,9 +12,12 @@ export function interleaveSearchGroups<Item>(
   if (limit <= 0) {
     return [];
   }
-  const ranked: Item[] = [];
+  let ranked: Item[] = [];
   const seen = new Set<string>();
-  const maxLength = Math.max(0, ...groups.map((documents) => documents.length));
+  const maxLength = Math.max(
+    0,
+    ...Arr.map(groups, (documents) => documents.length)
+  );
   for (let index = 0; index < maxLength; index += 1) {
     for (const documents of groups) {
       const document = documents[index];
@@ -27,7 +28,7 @@ export function interleaveSearchGroups<Item>(
       if (seen.has(identity)) {
         continue;
       }
-      ranked.push(document);
+      ranked = Arr.append(ranked, document);
       seen.add(identity);
       if (ranked.length >= limit) {
         return ranked;

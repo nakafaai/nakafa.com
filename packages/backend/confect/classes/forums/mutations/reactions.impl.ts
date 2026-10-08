@@ -12,7 +12,7 @@ import { validateForumReactionValue } from "@repo/backend/confect/classes/forums
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 /**
  * Toggle one reaction on a forum post.
@@ -57,7 +57,8 @@ const togglePostReaction = FunctionImpl.make(
           added: false,
         };
       }
-      const hasReactionVariant = post.reactionCounts.some(
+      const hasReactionVariant = Arr.some(
+        post.reactionCounts,
         (reactionCount) => reactionCount.emoji === emoji
       );
       if (
@@ -110,7 +111,8 @@ const toggleForumReaction = FunctionImpl.make(
           added: false,
         };
       }
-      const hasReactionVariant = forum.reactionCounts.some(
+      const hasReactionVariant = Arr.some(
+        forum.reactionCounts,
         (reactionCount) => reactionCount.emoji === emoji
       );
       if (

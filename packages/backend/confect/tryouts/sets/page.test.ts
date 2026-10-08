@@ -30,7 +30,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** Creates another valid set in the same signed track for pagination tests. */
 const makeSecondSet = Effect.fn("tryouts.sets.page.test.makeSecondSet")(
@@ -112,8 +112,11 @@ describe("tryouts/sets/page", () => {
                 const catalog = yield* loadTryoutCatalog("id").pipe(
                   Effect.provide(tryoutLayer)
                 );
-                const firstSet = catalog.entries.find(
-                  ({ row }) => row.kind === "set" && row.appLocale === "id"
+                const firstSet = Option.getOrUndefined(
+                  Arr.findFirst(
+                    catalog.entries,
+                    ({ row }) => row.kind === "set" && row.appLocale === "id"
+                  )
                 )?.row;
                 const progress = yield* Effect.promise(() =>
                   ctx.db.get(progressId)

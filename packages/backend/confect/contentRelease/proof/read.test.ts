@@ -22,7 +22,7 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { Struct } from "effect";
+import { Array as Arr, Struct } from "effect";
 
 const proofState = internal.contentRelease.proof.read.state;
 const proofPage = internal.contentRelease.proof.read.page;
@@ -455,5 +455,5 @@ it("returns artifact rows in signed item order inside the publisher batch", asyn
     releaseId: TEST_RELEASE_ID,
     batchIndex: 0,
   });
-  expect(batch.rows.map((row) => row.index)).toEqual([0, 1]);
+  expect(Arr.map(batch.rows, (row) => row.index)).toEqual([0, 1]);
 });

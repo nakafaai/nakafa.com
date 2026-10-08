@@ -11,9 +11,7 @@ export const trendingSubjectValidator = Schema.Struct({
   materialDomain: materialDomainValidator,
   viewCount: Schema.Finite,
 });
-export type TrendingSubject = Schema.Schema.Type<
-  typeof trendingSubjectValidator
->;
+export type TrendingSubject = typeof trendingSubjectValidator.Type;
 
 /**
  * Validator for graph-backed recently viewed subject items.

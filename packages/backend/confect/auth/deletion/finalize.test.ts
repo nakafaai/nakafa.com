@@ -12,7 +12,7 @@ import {
   seedPreparedDeletionSchool,
 } from "@repo/backend/test/deletion/seed";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 10, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -59,7 +59,8 @@ describe("auth/deletion/finalize", () => {
     );
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+        Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
           (job) =>
             job.name ===
             Ref.getConvexFunctionName(
@@ -157,7 +158,8 @@ describe("auth/deletion/finalize", () => {
     expect(state.transfers).toHaveLength(0);
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+        Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
           (job) =>
             job.name ===
             Ref.getConvexFunctionName(
@@ -214,7 +216,8 @@ describe("auth/deletion/finalize", () => {
     expect(state.school?.createdBy).toBe(seeded.ownerId);
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+        Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
           (job) =>
             job.name ===
             Ref.getConvexFunctionName(
@@ -247,7 +250,8 @@ describe("auth/deletion/finalize", () => {
     );
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+        Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
           (job) =>
             job.name ===
             Ref.getConvexFunctionName(
@@ -294,7 +298,8 @@ describe("auth/deletion/finalize", () => {
     );
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+        Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
           (job) =>
             job.name ===
             Ref.getConvexFunctionName(
@@ -306,7 +311,8 @@ describe("auth/deletion/finalize", () => {
     ).toHaveLength(1);
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+        Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
           (job) =>
             job.name ===
             Ref.getConvexFunctionName(
@@ -340,7 +346,8 @@ describe("auth/deletion/finalize", () => {
     expect(state.transfers).toEqual([]);
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+        Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
           (job) =>
             job.name ===
             Ref.getConvexFunctionName(
@@ -393,7 +400,8 @@ describe("auth/deletion/finalize", () => {
     expect(state.receipt).toBeNull();
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+        Arr.filter(
+          await ctx.db.system.query("_scheduled_functions").collect(),
           (job) =>
             job.name ===
             Ref.getConvexFunctionName(
@@ -472,7 +480,8 @@ describe("auth/deletion/finalize", () => {
       ]);
       expect(
         await t.query(async (ctx) =>
-          (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+          Arr.filter(
+            await ctx.db.system.query("_scheduled_functions").collect(),
             (job) =>
               job.name ===
               Ref.getConvexFunctionName(

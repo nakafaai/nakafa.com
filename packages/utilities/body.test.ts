@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
-import { Deferred, Effect, Fiber } from "effect";
+import {
+  parseContentLength,
+  readBoundedBody,
+  readBoundedStream,
+} from "@repo/utilities/body";
+import { Deferred, Effect, Fiber, Stream } from "effect";
 
 /** Builds one bounded body read for the Effect test runtime. */
 function read(body: ReadableStream<Uint8Array> | null, maxBytes = 8) {
@@ -83,6 +87,24 @@ describe("bounded response body", () => {
       });
       expect(yield* reject(stream)).toMatchObject({
         _tag: "BodyReadError",
+      });
+    })
+  );
+  it.effect("bounds a byte stream while keeping its own failure", () =>
+    Effect.gen(function* () {
+      const bytes = new TextEncoder().encode("abcd");
+      expect(yield* readBoundedStream(Stream.make(bytes), 8)).toEqual(bytes);
+      expect(
+        yield* readBoundedStream(Stream.fail("source failed"), 8).pipe(
+          Effect.flip
+        )
+      ).toBe("source failed");
+      expect(
+        yield* readBoundedStream(Stream.make(bytes), 2).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "BodyLimitError",
+        actualBytes: 4,
+        maxBytes: 2,
       });
     })
   );

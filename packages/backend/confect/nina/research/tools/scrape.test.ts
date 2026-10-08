@@ -8,7 +8,7 @@ import {
   isSuccessfulScrapeOutput,
   scrapeUrl,
 } from "@repo/backend/confect/nina/research/tools/scrape";
-import { Effect } from "effect";
+import { Array as Arr, Effect, MutableRef } from "effect";
 
 const firecrawlApp = vi.hoisted(() => ({
   scrape: vi.fn(),
@@ -34,15 +34,21 @@ type WrittenPart = CapabilityArtifact;
 
 /** Creates a stream publish harness that records scrape data parts for assertions. */
 function createProgress() {
-  const parts: WrittenPart[] = [];
+  const written = MutableRef.make<readonly WrittenPart[]>([]);
   const publish: CapabilityProgress = Effect.fn("test.publish")((part) =>
     Effect.sync(() => {
-      parts.push(part);
+      MutableRef.update(written, Arr.append(part));
     })
   );
 
-  return { parts, publish };
+  return { parts: () => MutableRef.get(written), publish };
 }
+
+/**
+ * One fetch for the whole file: the tool provides its own HTTP client, so the
+ * double is global, and Effect's client keeps the first global fetch it reads.
+ */
+const fetcher = vi.fn<typeof fetch>();
 
 describe("research scrape tool", () => {
   beforeEach(() => {
@@ -50,10 +56,11 @@ describe("research scrape tool", () => {
     lookup.mockReset();
     lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
     selectRelevantContent.mockClear();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.resolve(new Response("", { status: 404 })))
+    fetcher.mockReset();
+    fetcher.mockImplementation(() =>
+      Promise.resolve(new Response("", { status: 404 }))
     );
+    vi.stubGlobal("fetch", fetcher);
   });
 
   afterEach(() => {
@@ -88,7 +95,7 @@ describe("research scrape tool", () => {
         "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
         expect.objectContaining({ formats: ["markdown"] })
       );
-      expect(parts).toEqual([
+      expect(parts()).toEqual([
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({ status: "loading" }),
@@ -121,7 +128,7 @@ describe("research scrape tool", () => {
       expect(text).toContain("Only public http(s) URLs can be scraped");
       expect(fetch).not.toHaveBeenCalled();
       expect(firecrawlApp.scrape).not.toHaveBeenCalled();
-      expect(parts).toEqual([
+      expect(parts()).toEqual([
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({ status: "loading" }),
@@ -156,34 +163,33 @@ describe("research scrape tool", () => {
 
   it.effect("prefers source-native markdown for IP-literal URLs", () =>
     Effect.gen(function* () {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn((input: Parameters<typeof fetch>[0]) => {
-          if (
-            String(input) ===
-            "https://93.184.216.34/docs/ai-sdk-core/devtools.md"
-          ) {
-            return Promise.resolve(
-              new Response(
+      fetcher.mockImplementation((input: Parameters<typeof fetch>[0]) => {
+        if (
+          String(input) === "https://93.184.216.34/docs/ai-sdk-core/devtools.md"
+        ) {
+          return Promise.resolve(
+            new Response(
+              Arr.join(
                 [
                   "# DevTools",
                   "",
                   "AI SDK DevTools gives you full visibility over your AI SDK calls with generateText, streamText, and ToolLoopAgent.",
-                ].join("\n"),
-                {
-                  headers: { "content-type": "text/markdown" },
-                }
-              )
-            );
-          }
-
-          return Promise.resolve(
-            new Response("<html>docs shell</html>", {
-              headers: { "content-type": "text/html" },
-            })
+                ],
+                "\n"
+              ),
+              {
+                headers: { "content-type": "text/markdown" },
+              }
+            )
           );
-        })
-      );
+        }
+
+        return Promise.resolve(
+          new Response("<html>docs shell</html>", {
+            headers: { "content-type": "text/html" },
+          })
+        );
+      });
       firecrawlApp.scrape.mockResolvedValue({
         markdown: "Search...\n\n# DevTools\n\n[Sign Up](https://vercel.com)",
         metadata: {
@@ -202,7 +208,7 @@ describe("research scrape tool", () => {
 
       expect(text).toContain("full visibility over your AI SDK calls");
       expect(text).not.toContain("Sign Up");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({
@@ -220,14 +226,11 @@ describe("research scrape tool", () => {
 
   it.effect("keeps source-native markdown when Firecrawl scrape fails", () =>
     Effect.gen(function* () {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(() =>
-          Promise.resolve(
-            new Response("# Native source\n\nDirect markdown evidence.", {
-              headers: { "content-type": "text/markdown" },
-            })
-          )
+      fetcher.mockImplementation(() =>
+        Promise.resolve(
+          new Response("# Native source\n\nDirect markdown evidence.", {
+            headers: { "content-type": "text/markdown" },
+          })
         )
       );
       firecrawlApp.scrape.mockRejectedValue(new Error("offline"));
@@ -241,7 +244,7 @@ describe("research scrape tool", () => {
 
       expect(output.error).toBeUndefined();
       expect(output.data.content).toContain("Direct markdown evidence.");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({
@@ -275,7 +278,7 @@ describe("research scrape tool", () => {
         expect(text).toContain("- Title: Fallback title");
         expect(text).toContain("- Description: Fallback description");
         expect(text).toContain("- Error: No content found.");
-        expect(parts.at(-1)).toEqual(
+        expect(parts().at(-1)).toEqual(
           expect.objectContaining({
             type: "data-scrape-url",
             data: expect.objectContaining({
@@ -305,7 +308,7 @@ describe("research scrape tool", () => {
 
       expect(text).not.toContain("- Title:");
       expect(text).not.toContain("- Description:");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: {
@@ -381,7 +384,7 @@ describe("research scrape tool", () => {
         "The page could not be retrieved. Please try again."
       );
       expect(text).not.toContain("- Title:");
-      expect(parts.at(-1)).toEqual(
+      expect(parts().at(-1)).toEqual(
         expect.objectContaining({
           type: "data-scrape-url",
           data: expect.objectContaining({ status: "error" }),

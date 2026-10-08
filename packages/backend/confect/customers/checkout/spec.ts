@@ -31,12 +31,8 @@ export const checkoutAdmissionValidator = Schema.Union([
     kind: Schema.Literal("unavailable"),
   }),
 ]);
-export type CheckoutAdmissionArgs = Schema.Schema.Type<
-  typeof checkoutAdmissionArgsValidator
->;
-export type CheckoutAdmission = Schema.Schema.Type<
-  typeof checkoutAdmissionValidator
->;
+export type CheckoutAdmissionArgs = typeof checkoutAdmissionArgsValidator.Type;
+export type CheckoutAdmission = typeof checkoutAdmissionValidator.Type;
 
 /** Raised when account revalidation withholds a newly created checkout. */
 export class CheckoutUnavailable extends Schema.TaggedError<CheckoutUnavailable>()(

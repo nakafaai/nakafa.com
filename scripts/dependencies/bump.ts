@@ -1,4 +1,12 @@
-import { Config, Effect, Result, Schema } from "effect";
+import {
+  Array as Arr,
+  Config,
+  Effect,
+  Order,
+  Record as Rec,
+  Result,
+  Schema,
+} from "effect";
 import { FetchHttpClient } from "effect/http";
 import { runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
@@ -10,14 +18,7 @@ import {
   githubActionReleaseReviews,
 } from "#scripts/github/release";
 import { writeError, writeOutput } from "#scripts/output";
-
-interface BumpDependenciesOptions {
-  readonly inspectPolicy?: typeof inspectRepositoryPolicy;
-  readonly root: string;
-  readonly run?: typeof runPnpm;
-  readonly writeError?: typeof writeError;
-  readonly writeOutput?: typeof writeOutput;
-}
+import { problemWhen } from "#scripts/problem";
 
 /** Expected failure while decoding package registry metadata. */
 class DependencyMetadataError extends Schema.TaggedError<DependencyMetadataError>()(
@@ -42,16 +43,11 @@ export const inspectRepositoryPolicy = Effect.fn(
   ]).pipe(Effect.map(([dependency, actions]) => [...dependency, ...actions]))
 );
 
+/** A registry answers with the resolved version as one JSON string. */
+export const RegistryVersionJson = Schema.fromJsonString(Schema.String);
+
 function decodeRegistryVersion(registry: string, source: string) {
-  return Effect.try({
-    try: (): unknown => JSON.parse(source),
-    catch: (cause) =>
-      new DependencyMetadataError({
-        cause,
-        message: `${registry} returned invalid registry metadata.`,
-      }),
-  }).pipe(
-    Effect.flatMap(Schema.decodeUnknownEffect(Schema.String)),
+  return Schema.decodeEffect(RegistryVersionJson)(source).pipe(
     Effect.mapError(
       (cause) =>
         new DependencyMetadataError({
@@ -62,23 +58,20 @@ function decodeRegistryVersion(registry: string, source: string) {
   );
 }
 
+/** pnpm outdated keys each package by name; the policy reads only the names. */
+const OutdatedDependenciesJson = Schema.fromJsonString(
+  Schema.Record(Schema.String, Schema.Unknown)
+);
+
 function decodeOutdatedDependencies(source: string) {
   if (!source.trim()) {
     return Effect.succeed<string[]>([]);
   }
 
-  return Effect.try({
-    try: (): unknown => JSON.parse(source),
-    catch: (cause) =>
-      new DependencyMetadataError({
-        cause,
-        message: "pnpm outdated returned invalid JSON.",
-      }),
-  }).pipe(
-    Effect.flatMap(
-      Schema.decodeUnknownEffect(Schema.Record(Schema.String, Schema.Unknown))
+  return Schema.decodeEffect(OutdatedDependenciesJson)(source).pipe(
+    Effect.map((dependencies) =>
+      Arr.sort(Rec.keys(dependencies), Order.String)
     ),
-    Effect.map((dependencies) => Object.keys(dependencies).sort()),
     Effect.mapError(
       (cause) =>
         new DependencyMetadataError({
@@ -96,52 +89,63 @@ const reviewRegistryDependencies = Effect.fn("RepositoryPolicy.reviewRegistry")(
     run: typeof runPnpm,
     writeOutputMessage: typeof writeOutput
   ) {
-    const problems: string[] = [];
-    for (const [registry, reviewedLatest, reason] of REGISTRY_REVIEWS) {
-      const result = yield* run(root, ["view", registry, "version", "--json"], {
-        capture: true,
-      });
-      if (result.exitCode !== 0) {
-        problems.push(
-          result.stderr.trim() ||
-            `Unable to inspect reviewed dependency ${registry}.`
+    const problems = yield* Effect.forEach(
+      REGISTRY_REVIEWS,
+      Effect.fnUntraced(function* ([registry, reviewedLatest, reason]) {
+        const result = yield* run(
+          root,
+          ["view", registry, "version", "--json"],
+          { capture: true }
         );
-        continue;
-      }
+        if (result.exitCode !== 0) {
+          return [
+            result.stderr.trim() ||
+              `Unable to inspect reviewed dependency ${registry}.`,
+          ];
+        }
 
-      const latest = yield* decodeRegistryVersion(registry, result.stdout).pipe(
-        Effect.result
-      );
-      if (Result.isFailure(latest)) {
-        problems.push(latest.failure.message);
-        continue;
-      }
+        const latest = yield* decodeRegistryVersion(
+          registry,
+          result.stdout
+        ).pipe(Effect.result);
+        if (Result.isFailure(latest)) {
+          return [latest.failure.message];
+        }
 
-      if (latest.success !== reviewedLatest) {
-        problems.push(
+        yield* writeOutputMessage(
+          `${registry}: reviewed ${reviewedLatest}. ${reason}\n`
+        );
+        return problemWhen(
+          latest.success !== reviewedLatest,
           `${registry} is now ${latest.success}; last reviewed ${reviewedLatest}.`
         );
-      }
-      yield* writeOutputMessage(
-        `${registry}: reviewed ${reviewedLatest}. ${reason}\n`
-      );
-    }
-    return problems;
+      })
+    );
+    return Arr.flatten(problems);
   }
 );
 
+const BumpDependenciesOptionsSchema = Schema.Struct({
+  root: Schema.String,
+});
+type BumpDependenciesOptions = typeof BumpDependenciesOptionsSchema.Type;
+type InspectPolicy = typeof inspectRepositoryPolicy;
+type RunPnpm = typeof runPnpm;
+type WriteError = typeof writeError;
+type WriteOutput = typeof writeOutput;
+
 /** Updates routine dependencies only after every safety policy passes. */
 export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
-  function* ({
-    inspectPolicy = inspectRepositoryPolicy,
-    root,
-    run = runPnpm,
-    writeError: writeErrorMessage = writeError,
-    writeOutput: writeOutputMessage = writeOutput,
-  }: BumpDependenciesOptions) {
+  function* (
+    { root }: BumpDependenciesOptions,
+    inspectPolicy: InspectPolicy = inspectRepositoryPolicy,
+    run: RunPnpm = runPnpm,
+    writeErrorMessage: WriteError = writeError,
+    writeOutputMessage: WriteOutput = writeOutput
+  ) {
     const preflightProblems = yield* inspectPolicy(root);
     if (preflightProblems.length > 0) {
-      yield* writeErrorMessage(`${preflightProblems.join("\n")}\n`);
+      yield* writeErrorMessage(`${Arr.join(preflightProblems, "\n")}\n`);
       return 1;
     }
 
@@ -150,10 +154,11 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
       return update.exitCode;
     }
 
-    const problems = [...(yield* inspectPolicy(root))];
-
-    problems.push(
-      ...(yield* reviewRegistryDependencies(root, run, writeOutputMessage))
+    const policyProblems = yield* inspectPolicy(root);
+    const registryProblems = yield* reviewRegistryDependencies(
+      root,
+      run,
+      writeOutputMessage
     );
 
     const token = yield* Config.option(Config.Redacted("GITHUB_TOKEN"));
@@ -168,44 +173,50 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
       { concurrency: "unbounded" }
     );
 
-    for (const check of actionChecks) {
-      if (Result.isFailure(check)) {
-        problems.push(check.failure.message);
-        continue;
-      }
-      const { latest, review } = check.success;
-      if (latest !== review.expectedTag) {
-        problems.push(
+    const actionProblems = yield* Effect.forEach(
+      actionChecks,
+      Effect.fnUntraced(function* (check) {
+        if (Result.isFailure(check)) {
+          return [check.failure.message];
+        }
+        const { latest, review } = check.success;
+        yield* writeOutputMessage(
+          `${review.repository}: reviewed ${review.expectedTag}. ${review.reason}\n`
+        );
+        return problemWhen(
+          latest !== review.expectedTag,
           `${review.repository} is now ${latest}; last reviewed ${review.expectedTag}.`
         );
-      }
-      yield* writeOutputMessage(
-        `${review.repository}: reviewed ${review.expectedTag}. ${review.reason}\n`
-      );
-    }
+      })
+    );
 
     const outdated = yield* run(
       root,
       ["outdated", "--recursive", "--format", "json"],
       { capture: true }
     );
-    if (outdated.exitCode === 0 || outdated.exitCode === 1) {
-      const unresolved = yield* decodeOutdatedDependencies(
-        outdated.stdout
-      ).pipe(Effect.result);
-      if (Result.isFailure(unresolved)) {
-        problems.push(unresolved.failure.message);
-      } else if (unresolved.success.length > 0) {
-        problems.push(
-          `Routine dependencies remain outdated: ${unresolved.success.join(", ")}.`
-        );
-      }
-    } else {
-      problems.push(outdated.stderr.trim() || "pnpm outdated failed.");
-    }
+    const outdatedProblems =
+      outdated.exitCode === 0 || outdated.exitCode === 1
+        ? yield* decodeOutdatedDependencies(outdated.stdout).pipe(
+            Effect.match({
+              onFailure: (failure) => [failure.message],
+              onSuccess: (unresolved) =>
+                problemWhen(
+                  unresolved.length > 0,
+                  `Routine dependencies remain outdated: ${Arr.join(unresolved, ", ")}.`
+                ),
+            })
+          )
+        : [outdated.stderr.trim() || "pnpm outdated failed."];
+    const problems = Arr.flatten([
+      policyProblems,
+      registryProblems,
+      Arr.flatten(actionProblems),
+      outdatedProblems,
+    ]);
 
     if (problems.length > 0) {
-      yield* writeErrorMessage(`${problems.join("\n")}\n`);
+      yield* writeErrorMessage(`${Arr.join(problems, "\n")}\n`);
       return 1;
     }
 

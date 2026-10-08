@@ -17,6 +17,8 @@ import type { Binding } from "#scripts/check/source";
 export const Rule = Schema.Literals([
   "array-check",
   "array-method",
+  "array-mutation",
+  "array-search",
   "clock",
   "console",
   "data-type",
@@ -62,7 +64,17 @@ export const RULES = {
   },
   "array-method": {
     message:
-      "transform arrays with the Array module from effect, such as Array.map, Array.filter, and Array.sort, instead of a native array method.",
+      "transform arrays with the Array module from effect, such as Array.map, Array.filter, and Array.join, instead of a native array method.",
+    scope: "strict",
+  },
+  "array-mutation": {
+    message:
+      "build a new array with the Array module from effect, such as Array.append, Array.sort, and Array.reverse, or collect into a MutableList, instead of changing an array in place.",
+    scope: "strict",
+  },
+  "array-search": {
+    message:
+      "search arrays with Array.findFirst, Array.findLast, or their index forms from effect, which return an Option, instead of a native find method.",
     scope: "strict",
   },
   clock: {
@@ -150,11 +162,11 @@ const REACT_PATTERN = /^react(?:-dom)?(?:\/|$)/u;
 const GLOBAL_ONLY: readonly (typeof Binding.Type)[] = ["global"];
 /** Framework configuration types name what they configure, such as `NextConfig` or Convex's `AuthConfig`. */
 const CONFIGURATION_TYPE_PATTERN = /Config$/u;
-/** Relative paths and app aliases name repository modules rather than framework packages. */
-const LOCAL_SPECIFIER_PATTERN = /^(?:\.|@\/|#)/u;
+/** Relative paths, app aliases, and workspace packages name repository modules rather than framework packages. */
+export const REPOSITORY_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;
 
 /** Whether a module imports a module specifier that `pattern` matches. */
-function imports(sourceFile: SourceFile, pattern: RegExp) {
+export function imports(sourceFile: SourceFile, pattern: RegExp) {
   return Arr.some(
     sourceFile.statements,
     (statement) =>
@@ -172,7 +184,7 @@ function importsFromPackage(sourceFile: SourceFile, name: string) {
         isImportDeclaration(statement) &&
         isStringLiteral(statement.moduleSpecifier)
       ) ||
-      LOCAL_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
+      REPOSITORY_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
     ) {
       return false;
     }

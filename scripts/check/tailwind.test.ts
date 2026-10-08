@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
 
 /** Returns the replacement messages for one class string on line one. */
@@ -101,13 +102,16 @@ describe("Tailwind built-in class policy", () => {
   it("accepts values that no built-in class renders", () => {
     expect(
       inspect(
-        [
-          "w-[calc(100%-2rem)] p-[1.5px] w-[33%] m-[50%] h-[50vh] size-[auto]",
-          "w-[-2px] text-[8px] rounded-[3px] border-[#fff] ring-[1.5px]",
-          "z-[auto] flex-[1_1_0%] opacity-[0.333] opacity-[half] scale-[1.005%] duration-[fast]",
-          "delay-[0.0005s] rotate-[0.5turn] aspect-[1.45] grid-cols-[1fr_auto]",
-          "data-[state=open]:bg-accent group-data-[collapsible=icon]/item:w-4",
-        ].join(" ")
+        Arr.join(
+          [
+            "w-[calc(100%-2rem)] p-[1.5px] w-[33%] m-[50%] h-[50vh] size-[auto]",
+            "w-[-2px] text-[8px] rounded-[3px] border-[#fff] ring-[1.5px]",
+            "z-[auto] flex-[1_1_0%] opacity-[0.333] opacity-[half] scale-[1.005%] duration-[fast]",
+            "delay-[0.0005s] rotate-[0.5turn] aspect-[1.45] grid-cols-[1fr_auto]",
+            "data-[state=open]:bg-accent group-data-[collapsible=icon]/item:w-4",
+          ],
+          " "
+        )
       )
     ).toEqual([]);
   });

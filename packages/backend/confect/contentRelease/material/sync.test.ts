@@ -14,7 +14,7 @@ import {
 } from "@repo/backend/test/content/model";
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const identity = {
   manifestHash: `sha256:${"6".repeat(64)}`,
@@ -105,15 +105,15 @@ describe("material inactive-buffer synchronization", () => {
         const rows = yield* Effect.promise(() =>
           t.query((ctx) => ctx.db.query("materialCatalog").collect())
         );
-        const active = rows.filter((row) => row.slot === "blue");
-        const candidate = rows.filter((row) => row.slot === "green");
+        const active = Arr.filter(rows, (row) => row.slot === "blue");
+        const candidate = Arr.filter(rows, (row) => row.slot === "green");
         expect(active).toHaveLength(2);
         expect(candidate).toHaveLength(2);
-        expect(candidate.map((row) => row.contentKey)).toEqual(
-          active.map((row) => row.contentKey)
+        expect(Arr.map(candidate, (row) => row.contentKey)).toEqual(
+          Arr.map(active, (row) => row.contentKey)
         );
-        expect(candidate.map((row) => row.projectionHash)).toEqual(
-          active.map((row) => row.projectionHash)
+        expect(Arr.map(candidate, (row) => row.projectionHash)).toEqual(
+          Arr.map(active, (row) => row.projectionHash)
         );
       })
   );
@@ -144,8 +144,11 @@ describe("material inactive-buffer synchronization", () => {
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const heads = await ctx.db.query("contentHeads").collect();
-            const head = heads.find(
-              (row) => row.contentKey === deleted.contentKey
+            const head = Option.getOrUndefined(
+              Arr.findFirst(
+                heads,
+                (row) => row.contentKey === deleted.contentKey
+              )
             );
             assert(head);
             await ctx.db.patch("contentHeads", head._id, {
@@ -169,8 +172,8 @@ describe("material inactive-buffer synchronization", () => {
         const rows = yield* Effect.promise(() =>
           t.query((ctx) => ctx.db.query("materialCatalog").collect())
         );
-        expect(rows.filter((row) => row.slot === "blue")).toHaveLength(2);
-        expect(rows.filter((row) => row.slot === "green")).toMatchObject([
+        expect(Arr.filter(rows, (row) => row.slot === "blue")).toHaveLength(2);
+        expect(Arr.filter(rows, (row) => row.slot === "green")).toMatchObject([
           {
             contentKey: makeMaterialProjection("en", 2).contentKey,
           },

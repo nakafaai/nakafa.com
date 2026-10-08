@@ -23,13 +23,11 @@ import {
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
 import { getConvexSize } from "convex/values";
-import { Effect, Option, type Schema, Struct } from "effect";
-export type ProofPage = Schema.Schema.Type<typeof proofPageValidator>;
-export type ProofState = Schema.Schema.Type<typeof proofStateValidator>;
-export type ArtifactProofPage = Schema.Schema.Type<
-  typeof artifactProofPageValidator
->;
-export type RouteProofPage = Schema.Schema.Type<typeof routePageValidator>;
+import { Array as Arr, Effect, Option, Order, Struct } from "effect";
+export type ProofPage = typeof proofPageValidator.Type;
+export type ProofState = typeof proofStateValidator.Type;
+export type ArtifactProofPage = typeof artifactProofPageValidator.Type;
+export type RouteProofPage = typeof routePageValidator.Type;
 
 /** Reads immutable staged counters after release ingestion has stopped. */
 export const stateProgram = Effect.fn("contentRelease.proofState")(function* (
@@ -99,7 +97,7 @@ export const routePageProgram = Effect.fn("contentRelease.routeProofPage")(
         numItems: PROOF_PAGE_LIMIT,
       })
       .pipe(Effect.orDie);
-    const rows = stored.page.map((row) => ({
+    const rows = Arr.map(stored.page, (row) => ({
       index: row.index,
       routeJson: row.routeJson,
     }));
@@ -223,7 +221,7 @@ export const artifactBatchProgram = Effect.fn(
       `Content release ${releaseId} has an invalid artifact batch ${batchIndex}.`
     );
   }
-  const rows = yield* Effect.forEach(stored, (row) =>
+  const loaded = yield* Effect.forEach(stored, (row) =>
     loadArtifactJson(row).pipe(
       Effect.map((artifactJson) => ({
         artifactJson,
@@ -232,7 +230,7 @@ export const artifactBatchProgram = Effect.fn(
       }))
     )
   );
-  rows.sort((left, right) => left.index - right.index);
+  const rows = Arr.sortWith(loaded, (row) => row.index, Order.Number);
   const result = {
     batchIndex,
     rows,
@@ -281,7 +279,7 @@ export const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       numItems: PROOF_PAGE_LIMIT,
     })
     .pipe(Effect.orDie);
-  const rows: ProofPage["rows"] = [];
+  let rows: ProofPage["rows"] = [];
   for (const row of stored.page) {
     const next = {
       index: row.index,
@@ -303,7 +301,7 @@ export const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       }
       break;
     }
-    rows.push(next);
+    rows = Arr.append(rows, next);
     const metrics = yield* Effect.promise(() =>
       ctx.meta.getTransactionMetrics()
     );

@@ -4,7 +4,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect, Schema } from "effect";
+import { Effect, Record as Rec, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
@@ -59,7 +59,7 @@ function readRejectedPublicRouteLocale(pathname: string) {
     const knownNamespaces = [
       surface.appSegment,
       surface.key,
-      ...Object.values(surface.routeSlugs),
+      ...Rec.values(surface.routeSlugs),
     ];
 
     return (

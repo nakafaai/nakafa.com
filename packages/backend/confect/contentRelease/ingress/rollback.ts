@@ -15,7 +15,10 @@ import {
   RoutePageSchema,
   type RouteRollbackRecord,
 } from "@nakafa/aksara-contracts/release/route/page";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import type {
+  PublicationRollbackRequest,
+  PublicationRoutePageRequest,
+} from "@nakafa/aksara-contracts/transport/request";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
@@ -31,28 +34,26 @@ import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
-type RollbackRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation: "rollbackPage" | "routePage";
-  }
->;
+type RollbackRequest = PublicationRollbackRequest | PublicationRoutePageRequest;
 const textEncoder = new TextEncoder();
 /** Decodes one canonical stored page through its exact shared schema. */
 const decodePage = Effect.fn("contentRelease.decodeRollbackPage")(function* <
   A,
   I,
 >(source: string, schema: Schema.Codec<A, I, never, never>, label: string) {
-  const unknownPage = yield* Effect.try({
-    catch: () =>
-      new ReleaseError({
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: `${label} is not valid JSON.`,
-      }),
-    try: (): unknown => JSON.parse(source),
-  });
+  const unknownPage = yield* Schema.decodeEffect(
+    Schema.fromJsonString(Schema.Unknown)
+  )(source).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `${label} is not valid JSON.`,
+        })
+    )
+  );
   return yield* Schema.decodeUnknownEffect(schema)(unknownPage, {
     onExcessProperty: "error",
   }).pipe(
@@ -67,12 +68,7 @@ const decodePage = Effect.fn("contentRelease.decodeRollbackPage")(function* <
 });
 /** Creates one coherent aggregate page from already validated records. */
 function makeRollbackPage(
-  request: Extract<
-    RollbackRequest,
-    {
-      readonly operation: "rollbackPage";
-    }
-  >,
+  request: PublicationRollbackRequest,
   total: number,
   records: readonly RollbackRecord[]
 ): RollbackPage {
@@ -88,12 +84,7 @@ function makeRollbackPage(
 }
 /** Creates one coherent route page from already validated records. */
 function makeRoutePage(
-  request: Extract<
-    RollbackRequest,
-    {
-      readonly operation: "routePage";
-    }
-  >,
+  request: PublicationRoutePageRequest,
   total: number,
   records: readonly RouteRollbackRecord[]
 ): RoutePage {
@@ -120,12 +111,7 @@ function rollbackPageBytes(page: RollbackPage, recordBytes: number) {
 const validateBodyChunk = Effect.fn("contentRelease.validateRollbackChunk")(
   function* (
     chunk: RollbackPage,
-    request: Extract<
-      RollbackRequest,
-      {
-        readonly operation: "rollbackPage";
-      }
-    >,
+    request: PublicationRollbackRequest,
     afterIndex: number,
     limit: number,
     total: number
@@ -150,12 +136,7 @@ const validateBodyChunk = Effect.fn("contentRelease.validateRollbackChunk")(
 const validateRouteChunk = Effect.fn("contentRelease.validateRouteChunk")(
   function* (
     chunk: RoutePage,
-    request: Extract<
-      RollbackRequest,
-      {
-        readonly operation: "routePage";
-      }
-    >,
+    request: PublicationRoutePageRequest,
     afterIndex: number,
     limit: number,
     total: number
@@ -193,15 +174,7 @@ const verifyRollbackArtifacts = Effect.fn(
 });
 /** Aggregates safe query transactions into one byte-bounded wire page. */
 const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
-  function* (
-    request: Extract<
-      RollbackRequest,
-      {
-        readonly operation: "rollbackPage";
-      }
-    >,
-    total: number
-  ) {
+  function* (request: PublicationRollbackRequest, total: number) {
     const { runQuery } = yield* QueryRunner;
     if (request.afterIndex >= total) {
       return yield* releaseFail(
@@ -209,7 +182,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
         `Rollback cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
       );
     }
-    const records: RollbackRecord[] = [];
+    let records: RollbackRecord[] = [];
     let afterIndex = request.afterIndex;
     let recordBytes = 0;
     while (records.length < request.limit && afterIndex < total - 1) {
@@ -236,13 +209,12 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
         const encodedBytes = textEncoder.encode(
           canonicalizeRollbackRecord(record)
         ).byteLength;
-        records.push(record);
-        const candidate = makeRollbackPage(request, total, records);
+        const extended = Arr.append(records, record);
+        const candidate = makeRollbackPage(request, total, extended);
         const candidateBytes = recordBytes + encodedBytes;
         if (
           rollbackPageBytes(candidate, candidateBytes) > MAX_ROLLBACK_PAGE_BYTES
         ) {
-          records.pop();
           if (records.length === 0) {
             return yield* releaseFail(
               "CONTENT_RELEASE_LIMIT",
@@ -253,6 +225,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
             makeRollbackPage(request, total, records)
           );
         }
+        records = extended;
         recordBytes = candidateBytes;
         afterIndex = record.index;
       }
@@ -267,15 +240,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
 );
 /** Aggregates safe route query transactions into one external page. */
 const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
-  function* (
-    request: Extract<
-      RollbackRequest,
-      {
-        readonly operation: "routePage";
-      }
-    >,
-    total: number
-  ) {
+  function* (request: PublicationRoutePageRequest, total: number) {
     const { runQuery } = yield* QueryRunner;
     if (request.afterIndex >= total) {
       return yield* releaseFail(
@@ -283,7 +248,7 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
         `Route cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
       );
     }
-    const records: RouteRollbackRecord[] = [];
+    let records: RouteRollbackRecord[] = [];
     let afterIndex = request.afterIndex;
     while (records.length < request.limit && afterIndex < total - 1) {
       const limit = Math.min(
@@ -305,7 +270,7 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
         "Route rollback query page"
       );
       yield* validateRouteChunk(chunk, request, afterIndex, limit, total);
-      records.push(...chunk.records);
+      records = Arr.appendAll(records, chunk.records);
       afterIndex = chunk.nextIndex;
       if (chunk.done) {
         break;

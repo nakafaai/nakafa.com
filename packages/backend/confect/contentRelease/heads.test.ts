@@ -52,7 +52,7 @@ import {
 } from "@repo/backend/test/content/verify";
 import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect, Result, Schema } from "effect";
+import { Array as Arr, Effect, Result, Schema } from "effect";
 
 const headPage = internal.contentRelease.heads.page;
 const verifyItems = internal.contentRelease.verify.verifyItems;
@@ -80,7 +80,7 @@ function readPage(
 }
 /** Selects the ordered content keys returned by one head page. */
 function headKeys(page: HeadPage) {
-  return page.heads.map(({ contentKey }) => contentKey);
+  return Arr.map(page.heads, ({ contentKey }) => contentKey);
 }
 
 describe("contentRelease/heads", () => {
@@ -372,7 +372,7 @@ describe("contentRelease/heads", () => {
         });
         const convexPage = {
           ...page,
-          heads: page.heads.map((head) => ({ ...head })),
+          heads: Arr.map(page.heads, (head) => ({ ...head })),
         };
         expect(getConvexSize(convexPage)).toBeLessThan(
           MAX_PUBLICATION_RESPONSE_BYTES

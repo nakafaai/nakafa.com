@@ -5,7 +5,10 @@ import {
   validateCandidate,
   validateRecovery,
 } from "@repo/backend/confect/contentRelease/activation/validate";
-import { encodeRendererJson } from "@repo/backend/confect/contentRelease/wire";
+import {
+  encodeReleaseJson,
+  encodeRendererJson,
+} from "@repo/backend/confect/contentRelease/wire";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   insertActivationPair,
@@ -22,7 +25,7 @@ describe("activation identity validation", () => {
       expect(
         yield* validateActivationRenderer(
           candidate.manifest.releaseId,
-          JSON.stringify(candidate),
+          encodeReleaseJson(candidate),
           rendererJson,
           rendererJson,
           recovery.manifestHash

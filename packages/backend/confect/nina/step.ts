@@ -5,6 +5,7 @@ import {
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { getSourceReferencesFromMessages } from "@repo/backend/confect/nina/research/source";
 import type { Tool, ToolLoopAgentSettings } from "ai";
+import { Array as Arr } from "effect";
 
 const firstStepNumber = 0;
 
@@ -34,16 +35,17 @@ export function createNinaPrepareStep({
   return ({ messages, stepNumber }) => {
     if (stepNumber !== firstStepNumber) {
       return {
-        instructions: [
-          instructions,
-          createPrompt({
-            taskContext: `
+        instructions: Arr.join(
+          [
+            instructions,
+            createPrompt({
+              taskContext: `
               # Continuation Source Policy
 
               Continue from the evidence already gathered in earlier steps.
               Preserve every source constraint from the user request and the specialist evidence.
             `,
-            toolUsageGuidelines: `
+              toolUsageGuidelines: `
               # Continuation Tool Guidance
 
               Continue with the model's tool choice, using gathered evidence as the decision source.
@@ -60,7 +62,7 @@ export function createNinaPrepareStep({
 
               After math returns, do not switch to different mathematical content unless you call math again for that replacement content.
             `,
-            outputFormatting: `
+              outputFormatting: `
               # User-Facing Citation Format
 
               Cite external research sources inline in the exact sentence they support.
@@ -75,8 +77,10 @@ export function createNinaPrepareStep({
               Never append a final source, reference, citation, or bibliography section in any language.
               Do not collect links at the end of the answer.
             `,
-          }),
-        ].join("\n\n"),
+            }),
+          ],
+          "\n\n"
+        ),
         messages,
       };
     }

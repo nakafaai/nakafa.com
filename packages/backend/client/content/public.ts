@@ -35,6 +35,7 @@ import {
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect, Array as ReadonlyArray, Schema } from "effect";
+import type { HttpClientResponse } from "effect/http";
 /** Server-owned connection values for the private content runtime endpoint. */
 export type ContentRuntimeTarget = ContentHttpTarget;
 /** Public route identity without its module-owned delivery discriminator. */
@@ -65,7 +66,10 @@ function getVerificationRenderer(
 /** Reads one public response without trusting its advertised size or shape. */
 const readPublicRuntimeResponse = Effect.fn(
   "NakafaContent.readPublicRuntimeResponse"
-)(function* (response: Response, endpoint: string) {
+)(function* (
+  response: HttpClientResponse.HttpClientResponse,
+  endpoint: string
+) {
   const input = yield* readContentResponse(
     response,
     endpoint,
@@ -158,7 +162,10 @@ const readPublicContentProgram = Effect.fn(
 /** Reads one batch response without trusting its outer wire contract. */
 const readPublicRuntimeBatchResponse = Effect.fn(
   "NakafaContent.readPublicRuntimeBatchResponse"
-)(function* (response: Response, endpoint: string) {
+)(function* (
+  response: HttpClientResponse.HttpClientResponse,
+  endpoint: string
+) {
   const input = yield* readContentResponse(
     response,
     endpoint,

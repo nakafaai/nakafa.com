@@ -7,6 +7,7 @@ import {
 } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useOptimistic } from "react";
@@ -49,7 +50,7 @@ export function CommentsList({ slug }: { slug: string }) {
       return false;
     }
     showDraft({
-      _id: crypto.randomUUID(),
+      _id: Effect.runSync(randomUuid),
       _creationTime: Date.now(),
       text,
       slug,

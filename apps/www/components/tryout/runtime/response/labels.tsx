@@ -1,3 +1,4 @@
+import { Record as Rec } from "effect";
 import "server-only";
 
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
@@ -16,7 +17,7 @@ export function renderTryoutResponseLabels(
   responseId: string,
   response: QuestionResponse
 ): Readonly<Record<string, ReactNode>> {
-  return Object.fromEntries(
+  return Rec.fromEntries(
     readLabelEntries(responseId, response).map(([id, label]) => [
       id,
       <MarkdownContent

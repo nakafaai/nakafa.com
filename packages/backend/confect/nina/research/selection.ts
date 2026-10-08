@@ -1,3 +1,5 @@
+import { Array as Arr, Order, pipe } from "effect";
+
 const DEFAULT_MAX_LENGTH = 2000;
 const MIN_KEYWORD_LENGTH = 3;
 const KEYWORD_BONUS_POINTS = 0.5;
@@ -37,7 +39,8 @@ interface SelectRelevantContentParams {
 function extractKeywords(query: string): string[] {
   const seen = new Set<string>();
 
-  return [...query.toLocaleLowerCase().matchAll(SEARCH_TOKEN_REGEX)].flatMap(
+  return Arr.flatMap(
+    [...query.toLocaleLowerCase().matchAll(SEARCH_TOKEN_REGEX)],
     ([word]) => {
       if (word.length < MIN_KEYWORD_LENGTH || seen.has(word)) {
         return [];
@@ -154,16 +157,18 @@ export function selectRelevantContent(
     return truncateAtBoundary(content, maxLength);
   }
 
-  const paragraphs = content
-    .split(PARAGRAPH_SPLIT_REGEX)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const paragraphs = pipe(
+    content.split(PARAGRAPH_SPLIT_REGEX),
+    Arr.map((p) => p.trim()),
+    Arr.filter(Boolean)
+  );
 
   if (paragraphs.length <= 2) {
     return truncateAtBoundary(content, maxLength);
   }
 
-  const analyzedParagraphs: ContentParagraph[] = paragraphs.map(
+  const analyzedParagraphs: ContentParagraph[] = Arr.map(
+    paragraphs,
     (text, index) => ({
       text,
       score: calculateRelevanceScore(text, keywords),
@@ -173,7 +178,7 @@ export function selectRelevantContent(
   );
 
   const intro = analyzedParagraphs[0];
-  const selectedParts = preserveStructure ? [intro.text] : [];
+  let selectedParts = preserveStructure ? [intro.text] : [];
   let currentLength = preserveStructure ? intro.length + 2 : 0;
   const targetLength = maxLength * TARGET_LENGTH_BUFFER;
   const candidates = preserveStructure
@@ -182,17 +187,20 @@ export function selectRelevantContent(
   const paragraphLimit = preserveStructure
     ? maxRelevantParagraphs
     : Math.max(minRelevantParagraphs, maxRelevantParagraphs);
-  const selectedParagraphs = candidates
-    .filter((paragraph) => paragraph.score > 0)
-    .sort((left, right) => right.score - left.score)
-    .slice(0, paragraphLimit);
-
-  if (preserveStructure) {
-    selectedParagraphs.sort((left, right) => left.index - right.index);
-  }
+  const topParagraphs = pipe(
+    Arr.filter(candidates, (paragraph) => paragraph.score > 0),
+    Arr.sortWith((paragraph) => paragraph.score, Order.flip(Order.Number)),
+    Arr.take(paragraphLimit)
+  );
+  const selectedParagraphs = preserveStructure
+    ? pipe(
+        topParagraphs,
+        Arr.sortWith((paragraph) => paragraph.index, Order.Number)
+      )
+    : topParagraphs;
   for (const paragraph of selectedParagraphs) {
     if (currentLength + paragraph.length + 2 < targetLength) {
-      selectedParts.push(paragraph.text);
+      selectedParts = Arr.append(selectedParts, paragraph.text);
       currentLength += paragraph.length + 2;
     }
   }
@@ -203,13 +211,13 @@ export function selectRelevantContent(
     conclusion &&
     currentLength + conclusion.length + 2 < targetLength
   ) {
-    selectedParts.push(conclusion.text);
+    selectedParts = Arr.append(selectedParts, conclusion.text);
   }
 
   if (selectedParts.length === 0) {
     return truncateAtBoundary(content, maxLength);
   }
 
-  const result = selectedParts.join("\n\n");
+  const result = Arr.join(selectedParts, "\n\n");
   return truncateAtBoundary(result, maxLength);
 }

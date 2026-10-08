@@ -13,10 +13,9 @@ import {
   ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import type { sweepAccountDeletionRecoveryArgsValidator } from "@repo/backend/confect/auth/deletion/recovery.spec";
-import { Clock, Duration, Effect, flow, type Schema } from "effect";
-export type SweepAccountDeletionRecoveryArgs = Schema.Schema.Type<
-  typeof sweepAccountDeletionRecoveryArgsValidator
->;
+import { Clock, Duration, Effect, flow } from "effect";
+export type SweepAccountDeletionRecoveryArgs =
+  typeof sweepAccountDeletionRecoveryArgsValidator.Type;
 export interface RecoveryOperations {
   readonly authUserExists: Effect.Effect<boolean, UserCleanupError>;
   readonly cancel: Effect.Effect<unknown, UserCleanupError>;

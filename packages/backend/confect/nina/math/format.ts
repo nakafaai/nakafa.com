@@ -6,6 +6,7 @@ import type {
   MathStep,
 } from "@repo/math/schema/shared";
 import dedent from "dedent";
+import { Array as Arr, pipe } from "effect";
 
 /** Formats deterministic checked work as model-readable markdown. */
 export function formatMathData(data: MathData, diagnostic?: string) {
@@ -90,13 +91,15 @@ function formatSteps(steps: readonly MathStep[]) {
     return "";
   }
 
-  return steps
-    .map((step) => {
+  return pipe(
+    steps,
+    Arr.map((step) => {
       const relation = step.relation ? ` ${step.relation.expression}` : "";
       const secondary = step.secondary ? ` ${step.secondary.expression}` : "";
       return `- Step (${step.action}): ${step.primary.expression}${relation}${secondary}`;
-    })
-    .join("\n");
+    }),
+    Arr.join("\n")
+  );
 }
 
 /** Formats supporting math rows as model-readable markdown bullets. */
@@ -105,7 +108,11 @@ function formatItems(items: readonly MathItem[]) {
     return "";
   }
 
-  return items.map((item) => `- ${item.label}: ${item.value}`).join("\n");
+  return pipe(
+    items,
+    Arr.map((item) => `- ${item.label}: ${item.value}`),
+    Arr.join("\n")
+  );
 }
 
 /** Formats math conditions such as domain restrictions. */
@@ -114,7 +121,9 @@ function formatConditions(conditions: readonly MathExpression[]) {
     return "";
   }
 
-  return conditions
-    .map((condition) => `- Condition: ${condition.expression}`)
-    .join("\n");
+  return pipe(
+    conditions,
+    Arr.map((condition) => `- Condition: ${condition.expression}`),
+    Arr.join("\n")
+  );
 }

@@ -1,12 +1,9 @@
-import type { ContentAuthor } from "@nakafa/aksara-contracts/content";
+import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import {
-  type PublicationDates,
+  PublicationDatesSchema,
   withPublicationDates,
 } from "@nakafa/aksara-contracts/date";
-import {
-  type AppLocaleCode,
-  AppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { ORGANIZATION_ID } from "@repo/seo/json-ld/constants";
 import { Schema } from "effect";
@@ -96,25 +93,27 @@ export const ArticleJsonLdSchema = Schema.Tuple([
 export type ArticleJsonLd = typeof ArticleJsonLdSchema.Type;
 
 /** One breadcrumb ancestor, addressed by its localized site path. */
-interface ArticleCrumb {
-  readonly name: string;
-  readonly path: string;
-}
+const ArticleCrumbSchema = Schema.Struct({
+  name: Schema.String,
+  path: Schema.String,
+});
+
+const ArticleJsonLdInputSchema = Schema.Struct({
+  authors: Schema.Array(ContentAuthorSchema),
+  dates: PublicationDatesSchema,
+  description: Schema.optional(Schema.String),
+  headline: Schema.String,
+  /** Site path of the page's social image, which represents the content. */
+  image: Schema.String,
+  locale: AppLocaleCodeSchema,
+  /** Canonical localized path of the page, such as `/id/materi/...`. */
+  path: Schema.String,
+  /** Visible ancestors from the site root; the page itself ends the trail. */
+  trail: Schema.Array(ArticleCrumbSchema),
+});
 
 /** Signed content fields that describe one published article page. */
-export interface ArticleJsonLdInput {
-  readonly authors: readonly ContentAuthor[];
-  readonly dates: PublicationDates;
-  readonly description?: string | undefined;
-  readonly headline: string;
-  /** Site path of the page's social image, which represents the content. */
-  readonly image: string;
-  readonly locale: AppLocaleCode;
-  /** Canonical localized path of the page, such as `/id/materi/...`. */
-  readonly path: string;
-  /** Visible ancestors from the site root; the page itself ends the trail. */
-  readonly trail: readonly ArticleCrumb[];
-}
+export type ArticleJsonLdInput = typeof ArticleJsonLdInputSchema.Type;
 
 /** Resolves one localized site path against the canonical origin. */
 function toSiteUrl(path: string) {

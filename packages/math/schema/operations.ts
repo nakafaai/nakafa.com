@@ -58,4 +58,4 @@ export const mathOperations = [
 export const MathOperationSchema = Schema.Literals(mathOperations).annotate({
   description: "Supported deterministic math operation.",
 });
-export type MathOperation = Schema.Schema.Type<typeof MathOperationSchema>;
+export type MathOperation = typeof MathOperationSchema.Type;

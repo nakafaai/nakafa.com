@@ -3,6 +3,7 @@ import {
   createResearchMessages,
   createResearchSynthesisMessages,
 } from "@repo/backend/confect/nina/research/messages";
+import { Array as Arr } from "effect";
 
 describe("research agent messages", () => {
   it("keeps search tools usable after source evidence is prefetched", () => {
@@ -29,12 +30,15 @@ describe("research agent messages", () => {
 
   it("accepts structured markdown as the single research task", () => {
     const messages = createResearchMessages(
-      [
-        "# User Request",
-        "Cache Components berubah apa menurut pihak pembuat Next.js sendiri?",
-        "# Research Objective",
-        "Find official Next.js 16 Cache Components changes.",
-      ].join("\n\n"),
+      Arr.join(
+        [
+          "# User Request",
+          "Cache Components berubah apa menurut pihak pembuat Next.js sendiri?",
+          "# Research Objective",
+          "Find official Next.js 16 Cache Components changes.",
+        ],
+        "\n\n"
+      ),
       []
     );
 

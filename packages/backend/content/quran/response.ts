@@ -99,4 +99,4 @@ export const quranViewValidator = Schema.Struct({
   tafsirAccess: Schema.Union([quranTafsirAccessValidator, Schema.Null]),
   verses: Schema.mutable(Schema.Array(quranViewVerseValidator)),
 });
-export type QuranView = Schema.Schema.Type<typeof quranViewValidator>;
+export type QuranView = typeof quranViewValidator.Type;

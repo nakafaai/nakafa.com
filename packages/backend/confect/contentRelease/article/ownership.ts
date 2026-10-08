@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import type { WithoutSystemFields } from "convex/server";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type AppLocale = Docs["articleCatalog"]["appLocale"];
 type ArticleEntry = WithoutSystemFields<Docs["articleCatalog"]>;
@@ -257,8 +257,8 @@ export const validateCategoryClaim = Effect.fn(
     claim.appLocale,
     claim.route
   );
-  const conflictingOwner = routeOwners.find(
-    (owner) => owner.category !== claim.category
+  const conflictingOwner = Option.getOrUndefined(
+    Arr.findFirst(routeOwners, (owner) => owner.category !== claim.category)
   );
   if (conflictingOwner) {
     return yield* releaseFail(

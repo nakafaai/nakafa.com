@@ -1,4 +1,4 @@
-import { Effect, FileSystem, Path, Schema } from "effect";
+import { Array as Arr, Effect, FileSystem, Path, Schema } from "effect";
 import { parse } from "yaml";
 import { validateDependencyPolicy } from "#scripts/dependencies/validate";
 
@@ -26,13 +26,21 @@ const WorkspaceManifest = Schema.Struct({
   ),
 });
 
-export type PackageManifest = Schema.Schema.Type<typeof PackageManifest>;
-export type WorkspaceManifest = Schema.Schema.Type<typeof WorkspaceManifest>;
+export type PackageManifest = typeof PackageManifest.Type;
+export type WorkspaceManifest = typeof WorkspaceManifest.Type;
 
-export interface FirstPartyManifest {
-  readonly manifest: PackageManifest;
-  readonly path: string;
-}
+const FirstPartyManifest = Schema.Struct({
+  manifest: PackageManifest,
+  path: Schema.String,
+});
+export type FirstPartyManifest = typeof FirstPartyManifest.Type;
+
+const DependencyPolicyInput = Schema.Struct({
+  manifests: Schema.Array(FirstPartyManifest),
+  rootManifest: PackageManifest,
+  workspace: WorkspaceManifest,
+});
+export type DependencyPolicyInput = typeof DependencyPolicyInput.Type;
 
 /** Expected failure while reading or decoding dependency policy files. */
 export class DependencyPolicyReadError extends Schema.TaggedError<DependencyPolicyReadError>()(
@@ -47,6 +55,9 @@ function readError(message: string, cause: unknown) {
   return new DependencyPolicyReadError({ cause, message });
 }
 
+/** Parses manifest text into a value whose shape PackageManifest narrows next. */
+const ManifestJson = Schema.fromJsonString(Schema.Unknown);
+
 const readPackageManifest = Effect.fn("RepositoryPolicy.readPackageManifest")(
   function* (manifestPath: string) {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -57,11 +68,11 @@ const readPackageManifest = Effect.fn("RepositoryPolicy.readPackageManifest")(
           readError(`Unable to read ${manifestPath}.`, cause)
         )
       );
-    const input = yield* Effect.try({
-      try: (): unknown => JSON.parse(source),
-      catch: (cause) =>
-        readError(`${manifestPath} does not contain valid JSON.`, cause),
-    });
+    const input = yield* Schema.decodeEffect(ManifestJson)(source).pipe(
+      Effect.mapError((cause) =>
+        readError(`${manifestPath} does not contain valid JSON.`, cause)
+      )
+    );
     return yield* Schema.decodeUnknownEffect(PackageManifest)(input).pipe(
       Effect.mapError((cause) =>
         readError(`${manifestPath} has an invalid package manifest.`, cause)
@@ -99,33 +110,37 @@ export const readFirstPartyManifests = Effect.fn(
 )(function* (root: string) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const manifestPaths = [path.join(root, "package.json")];
-
-  for (const workspaceDirectory of ["apps", "packages"]) {
-    const workspaceRoot = path.join(root, workspaceDirectory);
-    const entries = yield* fileSystem
-      .readDirectory(workspaceRoot)
-      .pipe(
-        Effect.mapError((cause) =>
-          readError(`Unable to read ${workspaceRoot}.`, cause)
-        )
-      );
-
-    for (const entry of entries) {
-      const entryPath = path.join(workspaceRoot, entry);
-      const info = yield* fileSystem
-        .stat(entryPath)
+  const workspaceManifestPaths = yield* Effect.forEach(
+    ["apps", "packages"],
+    Effect.fnUntraced(function* (workspaceDirectory) {
+      const workspaceRoot = path.join(root, workspaceDirectory);
+      const entries = yield* fileSystem
+        .readDirectory(workspaceRoot)
         .pipe(
           Effect.mapError((cause) =>
-            readError(`Unable to inspect ${entryPath}.`, cause)
+            readError(`Unable to read ${workspaceRoot}.`, cause)
           )
         );
-      if (info.type !== "Directory") {
-        continue;
-      }
-      manifestPaths.push(path.join(entryPath, "package.json"));
-    }
-  }
+      const directories = yield* Effect.filter(entries, (entry) =>
+        fileSystem.stat(path.join(workspaceRoot, entry)).pipe(
+          Effect.map((info) => info.type === "Directory"),
+          Effect.mapError((cause) =>
+            readError(
+              `Unable to inspect ${path.join(workspaceRoot, entry)}.`,
+              cause
+            )
+          )
+        )
+      );
+      return Arr.map(directories, (entry) =>
+        path.join(workspaceRoot, entry, "package.json")
+      );
+    })
+  );
+  const manifestPaths = Arr.prepend(
+    Arr.flatten(workspaceManifestPaths),
+    path.join(root, "package.json")
+  );
 
   return yield* Effect.forEach(manifestPaths, (manifestPath) =>
     readPackageManifest(manifestPath).pipe(

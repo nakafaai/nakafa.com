@@ -2,6 +2,7 @@ import type { NakafaAgentQuranReference } from "@repo/contents/agent/schema/qura
 import type { NakafaAgentSearchResult } from "@repo/contents/agent/schema/search";
 import type { NakafaAgentTaxonomy } from "@repo/contents/agent/schema/taxonomy";
 import dedent from "dedent";
+import { Array as Arr, pipe } from "effect";
 
 /** Formats one taxonomy value with its canonical ID and localized label. */
 function formatTaxonomyOption(option: { id: string; label: string }) {
@@ -16,8 +17,9 @@ export function formatSearch(result: NakafaAgentSearchResult) {
     - Offset: ${result.offset}
     - Next offset: ${result.next_offset ?? "none"}
 
-    ${result.items
-      .map(
+    ${pipe(
+      result.items,
+      Arr.map(
         (item, index) => `
     ## Result ${index + 1}
     - Title: ${item.title}
@@ -25,8 +27,9 @@ export function formatSearch(result: NakafaAgentSearchResult) {
     - Excerpt: ${item.excerpt}
     - Content ID: ${item.content_id}
     - Section: ${item.section}`
-      )
-      .join("\n")}
+      ),
+      Arr.join("\n")
+    )}
   `);
 }
 
@@ -34,16 +37,20 @@ export function formatSearch(result: NakafaAgentSearchResult) {
 function formatQuranTranslation(
   translation: NakafaAgentQuranReference["verses"][number]["translation"]
 ) {
-  const text = translation.segments
-    .map((segment) =>
+  const text = pipe(
+    translation.segments,
+    Arr.map((segment) =>
       segment.kind === "text"
         ? segment.value
         : `[translation note ${segment.number}]`
-    )
-    .join("");
-  const notes = translation.notes
-    .map((note) => `- Translation note ${note.number}: ${note.text}`)
-    .join("\n");
+    ),
+    Arr.join("")
+  );
+  const notes = pipe(
+    translation.notes,
+    Arr.map((note) => `- Translation note ${note.number}: ${note.text}`),
+    Arr.join("\n")
+  );
   return notes.length === 0
     ? `- Translation: ${text}`
     : `- Translation: ${text}\n${notes}`;
@@ -93,15 +100,17 @@ export function formatQuran(result: NakafaAgentQuranReference) {
 
     ${preBismillah}
 
-    ${result.verses
-      .map(
+    ${pipe(
+      result.verses,
+      Arr.map(
         (verse) => `
     ## Verse ${verse.number}
     - Arabic: ${verse.arabic}
     ${formatQuranTranslation(verse.translation)}
     ${verse.tafsir ? `- Tafsir: ${verse.tafsir}` : ""}`
-      )
-      .join("\n")}
+      ),
+      Arr.join("\n")
+    )}
   `);
 }
 
@@ -110,20 +119,22 @@ export function formatTaxonomy(result: NakafaAgentTaxonomy) {
   return dedent(`
     # Nakafa Taxonomy
     - Locale: ${result.locale}
-    - Locales: ${result.locales.join(", ")}
-    - Sections: ${result.sections.join(", ")}
-    - Tools: ${result.tools.join(", ")}
+    - Locales: ${Arr.join(result.locales, ", ")}
+    - Sections: ${Arr.join(result.sections, ", ")}
+    - Tools: ${Arr.join(result.tools, ", ")}
 
     ## Articles
-    - Categories: ${result.articles.categories.join(", ")}
+    - Categories: ${Arr.join(result.articles.categories, ", ")}
 
     ## Counts
-    ${result.content_counts
-      .map((item) => `- ${item.locale}: ${item.count}`)
-      .join("\n")}
+    ${pipe(
+      result.content_counts,
+      Arr.map((item) => `- ${item.locale}: ${item.count}`),
+      Arr.join("\n")
+    )}
 
     ## Try Out
-    - Countries: ${result.tryout.countries.map(formatTaxonomyOption).join(", ")}
-    - Exams: ${result.tryout.exams.map(formatTaxonomyOption).join(", ")}
+    - Countries: ${pipe(result.tryout.countries, Arr.map(formatTaxonomyOption), Arr.join(", "))}
+    - Exams: ${pipe(result.tryout.exams, Arr.map(formatTaxonomyOption), Arr.join(", "))}
   `);
 }

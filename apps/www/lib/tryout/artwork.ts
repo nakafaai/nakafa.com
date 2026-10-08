@@ -51,9 +51,7 @@ export const TryoutExamArtworkSchema = Schema.Struct({
   cardImageSrc: Schema.optionalKey(Schema.String),
   socialImageSrc: Schema.String,
 });
-export type TryoutExamArtwork = Schema.Schema.Type<
-  typeof TryoutExamArtworkSchema
->;
+export type TryoutExamArtwork = typeof TryoutExamArtworkSchema.Type;
 
 export class InvalidTryoutExamArtworkIdentityError extends Schema.TaggedError<InvalidTryoutExamArtworkIdentityError>()(
   "InvalidTryoutExamArtworkIdentityError",

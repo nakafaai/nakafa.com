@@ -18,7 +18,7 @@ import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { DEFAULT_TITLE } from "@repo/backend/confect/nina/presentation.spec";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
-import { Clock, Duration, Effect, Layer } from "effect";
+import { Array as Arr, Clock, Duration, Effect, Layer } from "effect";
 
 const writeFailure = () =>
   new NinaTurnError({
@@ -44,9 +44,12 @@ const start = FunctionImpl.make(
         ),
       catch: writeFailure,
     });
-    const fingerprint = Array.from(new Uint8Array(digest), (byte) =>
-      byte.toString(16).padStart(2, "0")
-    ).join("");
+    const fingerprint = Arr.join(
+      Array.from(new Uint8Array(digest), (byte) =>
+        byte.toString(16).padStart(2, "0")
+      ),
+      ""
+    );
     const existing = yield* reader
       .table("ninaTurns")
       .get("by_userId_and_requestId", appUser._id, args.requestId)
@@ -70,14 +73,16 @@ const start = FunctionImpl.make(
           }),
         catch: writeFailure,
       });
-      const [message] = toUIMessages(persisted.filter((item) => item !== null));
+      const [message] = toUIMessages(
+        Arr.filter(persisted, (item) => item !== null)
+      );
       if (!message) {
         return yield* writeFailure();
       }
       return {
         prompt: {
           text: message.text,
-          files: message.parts.filter((part) => part.type === "file"),
+          files: Arr.filter(message.parts, (part) => part.type === "file"),
         },
         chatId: existing.chatId,
         threadId: existing.threadId,
@@ -182,7 +187,7 @@ const start = FunctionImpl.make(
     return {
       prompt: {
         text: message.text,
-        files: message.parts.filter((part) => part.type === "file"),
+        files: Arr.filter(message.parts, (part) => part.type === "file"),
       },
       chatId,
       threadId,

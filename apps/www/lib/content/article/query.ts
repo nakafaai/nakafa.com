@@ -3,7 +3,7 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { hasArticlePublicationCursorPrefix } from "@repo/contents/publication";
-import { Option, Schema } from "effect";
+import { Option, Record as Rec, Schema } from "effect";
 import type { ArticlePageCursor } from "@/lib/content/article/catalog";
 
 const CursorSchema = Schema.String.pipe(
@@ -29,7 +29,7 @@ export interface ArticleNextPage {
 /** Removes source-release pagination before navigating to another locale. */
 export function stripArticlePagination(search: string) {
   const query = new URLSearchParams(search);
-  for (const parameter of Object.keys(articlePageQueryFields)) {
+  for (const parameter of Rec.keys(articlePageQueryFields)) {
     query.delete(parameter);
   }
   const suffix = query.toString();

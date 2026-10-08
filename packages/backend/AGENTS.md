@@ -32,10 +32,9 @@ the static client API. `pnpm acceptance:prepare` and `pnpm acceptance:build`
 refresh these bindings against the owned local backend. CI verifies the result
 before building consumers. Use the repository's pnpm CLI
 and never print secrets. Never copy `CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`,
-or generated Convex URL values out of this checkout. Production deploys through
-Vercel's Git integration after a protected merge to `main`; the configured
-production build deploys Convex before building the web app. Never deploy
-production from a dev command. Reach for an
+or generated Convex URL values out of this checkout. The root guide owns the
+deployment policy; the configured production build deploys Convex before
+building the web app, and a dev command never deploys production. Reach for an
 isolated expiring Agent Mode deployment whenever it is the better tool for
 the job, such as risky schema or function changes, destructive rehearsals, or
 parallel work that must not disturb the main dev loop. No explicit request
@@ -80,10 +79,9 @@ Use the installed Confect v10 source and matching documentation:
 - https://confect.dev/v10/concepts/file-naming-conventions
 - https://confect.dev/v10/server/plain-convex-functions
 
-Prefer one clear capability token per folder or filename. CamelCase domain
-terms such as `contentRelease` are acceptable when they name an
-established concept. `.spec.ts` and `.impl.ts` are Confect-owned conventions.
-Import the owning module directly; do not add facade modules or re-exports.
+The root guide's naming and import rules apply. CamelCase domain terms such as
+`contentRelease` are acceptable when they name an established concept, and
+`.spec.ts` and `.impl.ts` are Confect-owned conventions.
 
 Start authentication and app-user resolution from
 `confect/auth/session.ts`; do not add a second identity policy.
@@ -93,9 +91,8 @@ through Turborepo. Setup, deployment, typechecking, tests, and production
 acceptance generate contracts before consuming them. CI rejects generated
 output that differs from the committed source.
 
-Do not leave one-off migration, backfill, repair, maintenance, dead, redundant,
-or legacy code/data paths behind. After verifying dev and prod data, delete the
-obsolete Convex function and its tests before considering the work complete.
+A one-off migration, backfill, repair, or maintenance function is finished only
+when dev and prod data are verified and the function and its tests are deleted.
 
 History retention and compaction decide which stored releases must stay
 reachable, so they read small stored reachability facts (release identity, base
@@ -145,10 +142,9 @@ The root guide's Effect V4 Standard applies in full. In `confect/`:
 ## Type And Convex Source Of Truth
 
 Convex is the typed transactional source for app state and graph read models.
-Aksara signed snapshots are the exclusive authored input for every content
-scope. `packages/contents` contains no authored source and is never a Convex
-publication input. Do not make the Aksara corpus path layout the app-state
-identity.
+Aksara signed snapshots are its only authored input: `packages/contents` is
+never a Convex publication input, and the Aksara corpus path layout is not the
+app-state identity.
 
 Domain Effect schemas own backend value sets. Derive types from those schemas
 and Confect generated documents and references. Convex generated types describe

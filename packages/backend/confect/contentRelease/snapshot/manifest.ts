@@ -24,7 +24,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import type { WithoutSystemFields } from "convex/server";
-import { Clock, Effect, type Schema } from "effect";
+import { Clock, Effect } from "effect";
 export type ReadCtx = MutationCtx | QueryCtx;
 
 /** Loads one immutable family manifest through its exact content identity. */
@@ -99,7 +99,7 @@ export const stageManifest = Effect.fn("contentRelease.stageSnapshot")(
         releaseId,
         snapshotId,
         unchanged: 1,
-      } satisfies Schema.Schema.Type<typeof snapshotReceiptValidator>;
+      } satisfies typeof snapshotReceiptValidator.Type;
     }
     const now = yield* Clock.currentTimeMillis;
     const row = {
@@ -120,6 +120,6 @@ export const stageManifest = Effect.fn("contentRelease.stageSnapshot")(
       releaseId,
       snapshotId,
       unchanged: 0,
-    } satisfies Schema.Schema.Type<typeof snapshotReceiptValidator>;
+    } satisfies typeof snapshotReceiptValidator.Type;
   }
 );

@@ -1,5 +1,6 @@
 import { assert, describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Result, Sink, Stdio } from "effect";
+import { ConfigProvider, Effect, Ref, Result, Stdio } from "effect";
+import { capture, makeCapture } from "#scripts/capture";
 import { type GateInput, runGate, validateGate } from "#scripts/github/gate";
 
 const required: GateInput = {
@@ -24,16 +25,11 @@ const runCapturedGate = Effect.fn("CiGateTest.runCapturedGate")(function* (
   role: string,
   environment: Record<string, string>
 ) {
-  const stdout: Array<string | Uint8Array> = [];
+  const stdout = yield* makeCapture;
   const result = yield* runGate(role).pipe(
     Effect.provide(
       Stdio.layerTest({
-        stdout: () =>
-          Sink.forEachArray((chunks) =>
-            Effect.sync(() => {
-              stdout.push(...chunks);
-            })
-          ),
+        stdout: capture(stdout),
       })
     ),
     Effect.provideService(
@@ -42,7 +38,7 @@ const runCapturedGate = Effect.fn("CiGateTest.runCapturedGate")(function* (
     ),
     Effect.result
   );
-  return { result, stdout };
+  return { result, stdout: yield* Ref.get(stdout) };
 });
 
 describe("terminal CI gate", () => {

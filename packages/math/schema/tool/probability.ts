@@ -5,7 +5,7 @@ import {
   pointInputSchema,
   valueInputSchema,
 } from "@repo/math/schema/shared";
-import { Schema, Struct } from "effect";
+import { Array as Arr, Schema, Struct } from "effect";
 export const mathProbabilityDistributions = [
   "bernoulli",
   "binomial",
@@ -47,14 +47,14 @@ const MathProbabilityBaseInputSchema = Schema.Struct({
     }).pipe(Schema.check(Schema.isMinLength(1)))
   ),
 });
-type ProbabilityBaseInput = Schema.Schema.Type<
-  typeof MathProbabilityBaseInputSchema
->;
+type ProbabilityBaseInput = typeof MathProbabilityBaseInputSchema.Type;
 type ProbabilityParameter = keyof ProbabilityBaseInput["parameters"];
-type ProbabilityMomentInput = ProbabilityBaseInput & {
-  expression?: string;
-  operation: "expected_value" | "variance_probability";
-};
+const ProbabilityMomentFieldsSchema = Schema.Struct({
+  ...MathProbabilityBaseInputSchema.fields,
+  expression: Schema.optionalKey(Schema.String),
+  operation: Schema.Literals(["expected_value", "variance_probability"]),
+});
+type ProbabilityMomentInput = typeof ProbabilityMomentFieldsSchema.Type;
 const probabilityDistributionParameters = {
   bernoulli: ["p"],
   binomial: ["n", "p"],
@@ -77,13 +77,13 @@ function hasConsistentMomentExpression(value: ProbabilityMomentInput) {
     return true;
   }
   const symbols = getExpressionSymbols(value.expression);
-  if (symbols.size !== 1) {
+  if (symbols.length !== 1) {
     return false;
   }
   if (!value.variable) {
     return true;
   }
-  return symbols.has(value.variable);
+  return Arr.contains(symbols, value.variable);
 }
 const MathProbabilityDistributionInputSchema =
   MathProbabilityBaseInputSchema.mapFields((fields) => ({

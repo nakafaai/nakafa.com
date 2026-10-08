@@ -27,7 +27,7 @@ import {
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option, Order } from "effect";
 
 describe("contentRelease/compact", () => {
   it("yields a large expired snapshot backlog across bounded scheduled runs", async () => {
@@ -112,13 +112,18 @@ describe("contentRelease/compact", () => {
     });
     expect(stored.heads).toHaveLength(82);
     expect(
-      stored.heads.find((row) => row.contentKey === "test:anchor")
+      Option.getOrUndefined(
+        Arr.findFirst(stored.heads, (row) => row.contentKey === "test:anchor")
+      )
     ).toMatchObject({
       sequence: 3,
     });
-    expect(stored.bindings.map((row) => row.sequence).sort()).toEqual([
-      1, 3, 4,
-    ]);
+    expect(
+      Arr.sort(
+        Arr.map(stored.bindings, (row) => row.sequence),
+        Order.Number
+      )
+    ).toEqual([1, 3, 4]);
     expect(stored.items).toHaveLength(0);
     expect(stored.search).toMatchObject([
       {
@@ -126,23 +131,35 @@ describe("contentRelease/compact", () => {
         sequence: 4,
       },
     ]);
-    expect(stored.releases.map((row) => row.sequence).sort()).toEqual([
-      3, 4, 5,
-    ]);
+    expect(
+      Arr.sort(
+        Arr.map(stored.releases, (row) => row.sequence),
+        Order.Number
+      )
+    ).toEqual([3, 4, 5]);
     const retained = [
       `sha256:${"c".repeat(64)}`,
       `sha256:${"d".repeat(64)}`,
       `sha256:${"f".repeat(64)}`,
     ];
-    expect(stored.artifacts.map((row) => row.artifactHash).sort()).toEqual(
-      retained
-    );
-    expect(stored.facts.map((row) => row.artifactHash).sort()).toEqual(
-      retained
-    );
     expect(
-      stored.facts.find(
-        ({ artifactHash }) => artifactHash === `sha256:${"c".repeat(64)}`
+      Arr.sort(
+        Arr.map(stored.artifacts, (row) => row.artifactHash),
+        Order.String
+      )
+    ).toEqual(retained);
+    expect(
+      Arr.sort(
+        Arr.map(stored.facts, (row) => row.artifactHash),
+        Order.String
+      )
+    ).toEqual(retained);
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(
+          stored.facts,
+          ({ artifactHash }) => artifactHash === `sha256:${"c".repeat(64)}`
+        )
       )?.retainUntil
     ).toBeGreaterThan(Date.now());
     expect(stored.state).toMatchObject({
@@ -194,7 +211,8 @@ describe("contentRelease/compact", () => {
       )
     );
     const sequences = await t.run(async (ctx) =>
-      (await ctx.db.query("contentReleases").collect()).map(
+      Arr.map(
+        await ctx.db.query("contentReleases").collect(),
         (release) => release.sequence
       )
     );
@@ -202,7 +220,7 @@ describe("contentRelease/compact", () => {
       complete: true,
       floor: 2,
     });
-    expect(sequences.sort()).toEqual([2, 3, 4, 5]);
+    expect(Arr.sort(sequences, Order.Number)).toEqual([2, 3, 4, 5]);
   });
   it("protects exact active bases and retained recovery slots", async () => {
     const t = convexTest(schema, convexModules);
@@ -251,7 +269,8 @@ describe("contentRelease/compact", () => {
       )
     );
     const sequences = await t.run(async (ctx) =>
-      (await ctx.db.query("contentReleases").collect()).map(
+      Arr.map(
+        await ctx.db.query("contentReleases").collect(),
         (release) => release.sequence
       )
     );
@@ -259,7 +278,7 @@ describe("contentRelease/compact", () => {
       complete: true,
       floor: 2,
     });
-    expect(sequences.sort()).toEqual([2, 4, 5, 6, 7]);
+    expect(Arr.sort(sequences, Order.Number)).toEqual([2, 4, 5, 6, 7]);
   });
 });
 describe("contentRelease/compact permanent history", () => {
@@ -346,12 +365,13 @@ describe("contentRelease/compact permanent history", () => {
     );
     expect(
       await t.query(async (ctx) =>
-        (await ctx.db.query("contentReleases").collect()).map(
+        Arr.map(
+          await ctx.db.query("contentReleases").collect(),
           ({ sequence }) => sequence
         )
       )
     ).toEqual([3, 4, 5]);
-    expect(before.items.map(({ delivery }) => delivery)).toEqual([
+    expect(Arr.map(before.items, ({ delivery }) => delivery)).toEqual([
       "authenticated",
       "entitled",
     ]);

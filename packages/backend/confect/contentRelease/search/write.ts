@@ -11,7 +11,7 @@ import {
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import type { WithoutSystemFields } from "convex/server";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type SearchProjection = Extract<
   ContentProjection,
@@ -22,12 +22,15 @@ type SearchProjection = Extract<
 
 /** Builds deterministic searchable text from authenticated public source data. */
 function searchableText(projection: SearchProjection, plainText: string) {
-  return [
-    projection.metadata.title,
-    projection.metadata.description ?? "",
-    projection.publicPath,
-    plainText,
-  ].join("\n");
+  return Arr.join(
+    [
+      projection.metadata.title,
+      projection.metadata.description ?? "",
+      projection.publicPath,
+      plainText,
+    ],
+    "\n"
+  );
 }
 
 /** Loads the sole active search row for one locale-specific content identity. */

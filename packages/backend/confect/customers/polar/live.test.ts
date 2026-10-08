@@ -6,7 +6,7 @@ import type {
   PolarCustomerErrorUnion,
   PolarDuplicateEmailError,
 } from "@repo/backend/confect/customers/polar/spec";
-import { ConfigProvider, Effect } from "effect";
+import { Array as Arr, ConfigProvider, Effect } from "effect";
 
 const sdk = vi.hoisted(() => ({
   checkout: vi.fn(),
@@ -273,7 +273,8 @@ describe("live Polar gateway", () => {
     "treats only a provider 404 as an absent or already deleted customer",
     () =>
       Effect.gen(function* () {
-        for (const { mock, effect: operation } of operations.filter(
+        for (const { mock, effect: operation } of Arr.filter(
+          operations,
           ({ mock }) =>
             mock === sdk.get || mock === sdk.external || mock === sdk.delete
         )) {

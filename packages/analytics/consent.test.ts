@@ -36,6 +36,16 @@ const retainedAnonymousDenial = Schema.decodeSync(
   decision: "denied",
 });
 
+/** Encodes a current record through the production JSON codec. */
+const encodeConsentRecord = Schema.encodeSync(
+  Schema.fromJsonString(AnonymousAnalyticsConsentRecordSchema)
+);
+
+/** Encodes stale or malformed JSON that the production codec must reject. */
+const encodeUnvalidatedJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
+
 describe("analytics consent contract", () => {
   effectIt.effect("round-trips the current anonymous consent record", () =>
     Effect.gen(function* () {
@@ -68,7 +78,7 @@ describe("analytics consent contract", () => {
 
   it("rejects malformed or stale anonymous state", () => {
     const staleConsent = decodeAnonymousAnalyticsConsent(
-      JSON.stringify({
+      encodeUnvalidatedJson({
         ...grantedAnonymousConsent,
         noticeVersion: "privacy-2025-01-01",
       })
@@ -81,7 +91,7 @@ describe("analytics consent contract", () => {
     expect(
       Option.isNone(
         decodeAnonymousAnalyticsConsent(
-          JSON.stringify({
+          encodeUnvalidatedJson({
             ...grantedAnonymousConsent,
             mechanism: "browser-privacy-signal",
           })
@@ -91,7 +101,7 @@ describe("analytics consent contract", () => {
     expect(
       Option.getOrUndefined(
         decodeAnonymousAnalyticsConsent(
-          JSON.stringify(createAnonymousAnalyticsBrowserSignalDenial(200))
+          encodeConsentRecord(createAnonymousAnalyticsBrowserSignalDenial(200))
         )
       )
     ).toEqual(createAnonymousAnalyticsBrowserSignalDenial(200));
@@ -199,7 +209,7 @@ describe("analytics consent contract", () => {
 
   it("prompts for a missing anonymous decision", () => {
     const staleConsent = decodeAnonymousAnalyticsConsent(
-      JSON.stringify({
+      encodeUnvalidatedJson({
         ...grantedAnonymousConsent,
         noticeVersion: "privacy-2025-01-01",
       })
@@ -243,7 +253,9 @@ describe("analytics consent contract", () => {
   it("requires renewed grants while preserving prior anonymous denials", () => {
     expect(
       Option.getOrUndefined(
-        decodeAnonymousAnalyticsConsent(JSON.stringify(retainedAnonymousGrant))
+        decodeAnonymousAnalyticsConsent(
+          encodeConsentRecord(retainedAnonymousGrant)
+        )
       )
     ).toEqual(retainedAnonymousGrant);
     expect(

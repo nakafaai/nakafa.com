@@ -10,9 +10,7 @@ export const NEXT_ROUTER_PREFETCH_HEADER = "next-router-prefetch";
 export const NEXT_ROUTER_SEGMENT_PREFETCH_HEADER =
   "next-router-segment-prefetch";
 
-export type TrackedRequestKind = Schema.Schema.Type<
-  typeof TrackedRequestKindSchema
->;
+export type TrackedRequestKind = typeof TrackedRequestKindSchema.Type;
 
 export const RequestOutcomeSchema = Schema.Literals([
   "http",
@@ -26,7 +24,7 @@ export const TrackedRequestSchema = Schema.Struct({
   url: Schema.String,
 });
 
-export type TrackedRequest = Schema.Schema.Type<typeof TrackedRequestSchema>;
+export type TrackedRequest = typeof TrackedRequestSchema.Type;
 
 export const requestFailureFields = {
   errorText: Schema.optional(Schema.String),
@@ -39,7 +37,7 @@ export const requestFailureFields = {
 
 export const RequestFailureSchema = Schema.Struct(requestFailureFields);
 
-export type RequestFailure = Schema.Schema.Type<typeof RequestFailureSchema>;
+export type RequestFailure = typeof RequestFailureSchema.Type;
 
 export const formatRequestFailure = (failure: RequestFailure) => {
   const prefetchHeader =

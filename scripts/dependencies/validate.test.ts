@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { Array as Arr, Option, Order, Record as Rec } from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
@@ -20,7 +21,7 @@ const CONTRACT_MANIFEST_PATHS = [
   "packages/internationalization/package.json",
   "packages/seo/package.json",
 ] as const;
-const CONTRACT_OWNERS = CONTRACT_MANIFEST_PATHS.join(", ");
+const CONTRACT_OWNERS = Arr.join(CONTRACT_MANIFEST_PATHS, ", ");
 const WEB_MANIFEST = "apps/www/package.json";
 
 type PolicyInput = Parameters<typeof validateDependencyPolicy>[0];
@@ -28,43 +29,50 @@ type Manifest = PolicyInput["manifests"][number]["manifest"];
 
 /** Returns the reviewed spec of one exact hold. */
 function approvedSpec(dependency: string) {
-  const hold = DEPENDENCY_HOLDS.find(
-    (candidate) => candidate.dependency === dependency
+  const hold = Option.getOrUndefined(
+    Arr.findFirst(
+      DEPENDENCY_HOLDS,
+      (candidate) => candidate.dependency === dependency
+    )
   );
   return hold !== undefined && "approved" in hold ? hold.approved : "";
 }
 
 /** Builds manifests and workspace settings that satisfy every reviewed hold. */
 function validInput(): PolicyInput {
-  const manifests = CONTRACT_MANIFEST_PATHS.map((path, index) => ({
+  const manifests = Arr.map(CONTRACT_MANIFEST_PATHS, (path, index) => ({
     manifest: {
-      dependencies: Object.fromEntries(
-        DEPENDENCY_HOLDS.filter((hold) =>
-          "declarationPaths" in hold
-            ? hold.declarationPaths.includes(path)
-            : index === 0
-        ).map((hold) => [
-          hold.dependency,
-          "approved" in hold ? hold.approved : hold.allowed[0],
-        ])
+      dependencies: Rec.fromEntries(
+        Arr.map(
+          Arr.filter(DEPENDENCY_HOLDS, (hold) =>
+            "declarationPaths" in hold
+              ? hold.declarationPaths.includes(path)
+              : index === 0
+          ),
+          (hold) => [
+            hold.dependency,
+            "approved" in hold ? hold.approved : hold.allowed[0],
+          ]
+        )
       ),
       scripts:
         index === 0
           ? {
               doctor:
-                "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.16",
+                "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17",
             }
           : undefined,
     },
     path,
   }));
-  const ignoreDeps = [
-    ...new Set([
-      ...DEPENDENCY_HOLDS.map(({ dependency }) => dependency),
+  const ignoreDeps = Arr.sort(
+    Arr.dedupe([
+      ...Arr.map(DEPENDENCY_HOLDS, ({ dependency }) => dependency),
       "node",
       "pnpm",
     ]),
-  ].sort();
+    Order.String
+  );
   return {
     manifests,
     rootManifest: {
@@ -100,7 +108,7 @@ function updateWebManifest(
 ): PolicyInput {
   return {
     ...input,
-    manifests: input.manifests.map((entry) =>
+    manifests: Arr.map(input.manifests, (entry) =>
       entry.path === WEB_MANIFEST
         ? { ...entry, manifest: update(entry.manifest) }
         : entry
@@ -112,11 +120,12 @@ function updateWebManifest(
 function withoutDependency(input: PolicyInput, dependency: string) {
   return {
     ...input,
-    manifests: input.manifests.map(({ manifest, path }) => ({
+    manifests: Arr.map(input.manifests, ({ manifest, path }) => ({
       manifest: {
         ...manifest,
-        dependencies: Object.fromEntries(
-          Object.entries(manifest.dependencies ?? {}).filter(
+        dependencies: Rec.fromEntries(
+          Arr.filter(
+            Rec.toEntries(manifest.dependencies ?? {}),
             ([name]) => name !== dependency
           )
         ),
@@ -148,7 +157,7 @@ describe("dependency policy validation", () => {
     );
 
     assert.deepStrictEqual(
-      declarations.map(({ group }) => group),
+      Arr.map(declarations, ({ group }) => group),
       [
         "dependencies",
         "devDependencies",
@@ -232,7 +241,7 @@ describe("dependency policy validation", () => {
           scripts: { doctor: "pnpm dlx react-doctor@0.9.5" },
         })),
       problem:
-        "apps/www/package.json script doctor is pnpm dlx react-doctor@0.9.5; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.16.",
+        "apps/www/package.json script doctor is pnpm dlx react-doctor@0.9.5; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17.",
     },
     {
       name: "a missing reviewed script",
@@ -242,7 +251,7 @@ describe("dependency policy validation", () => {
           scripts: undefined,
         })),
       problem:
-        "apps/www/package.json script doctor is missing; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.16.",
+        "apps/www/package.json script doctor is missing; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17.",
     },
     {
       name: "missing update ignores",
@@ -292,7 +301,7 @@ describe("dependency policy validation", () => {
       }),
       problem: `The Effect Vitest catalog must match Effect ${EFFECT_COHORT_VERSION}.`,
     },
-    ...EFFECT_COHORT_OVERRIDES.map((dependency) => ({
+    ...Arr.map(EFFECT_COHORT_OVERRIDES, (dependency) => ({
       name: `a ${dependency} override drift`,
       change: (input: PolicyInput) => ({
         ...input,

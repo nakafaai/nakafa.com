@@ -4,6 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 18, 0, 0);
 
@@ -71,9 +72,11 @@ describe("triggers/comments/comments", () => {
     }));
     expect(state.comments).toEqual([]);
     expect(state.votes).toEqual([]);
-    expect(state.jobs.every((job) => job.state.kind === "success")).toBe(true);
+    expect(Arr.every(state.jobs, (job) => job.state.kind === "success")).toBe(
+      true
+    );
     expect(
-      state.jobs.filter((job) => job.args[0].commentId === parentId)
+      Arr.filter(state.jobs, (job) => job.args[0].commentId === parentId)
     ).toHaveLength(3);
   });
 

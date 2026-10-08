@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
-import { Deferred, Effect, Fiber, Ref } from "effect";
+import { Deferred, Effect, Fiber, Ref, Schema } from "effect";
 import type { CaptureResult } from "posthog-js";
 
 const client = {
@@ -127,8 +127,8 @@ describe("two-tier PostHog browser runtime", () => {
         Effect.as(client)
       );
 
-      yield* analytics.enableBaselineAnalytics({ load });
-      yield* analytics.enableBaselineAnalytics({ load });
+      yield* analytics.enableBaselineAnalytics(load);
+      yield* analytics.enableBaselineAnalytics(load);
 
       expect(yield* Ref.get(loadCount)).toBe(1);
       expect(client.init).toHaveBeenCalledOnce();
@@ -141,9 +141,7 @@ describe("two-tier PostHog browser runtime", () => {
       const analytics = yield* loadBrowserAnalytics();
 
       const failure = yield* analytics
-        .enableBaselineAnalytics({
-          load: Effect.fail("network unavailable"),
-        })
+        .enableBaselineAnalytics(Effect.fail("network unavailable"))
         .pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
@@ -158,7 +156,7 @@ describe("two-tier PostHog browser runtime", () => {
       });
 
       const failure = yield* analytics
-        .enableBaselineAnalytics({ load: loadClient })
+        .enableBaselineAnalytics(loadClient)
         .pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(analytics.BrowserAnalyticsLoadFailed);
@@ -174,7 +172,7 @@ describe("two-tier PostHog browser runtime", () => {
         Effect.andThen(Deferred.await(loading))
       );
       const enabling = yield* Effect.forkChild(
-        analytics.enableBaselineAnalytics({ load })
+        analytics.enableBaselineAnalytics(load)
       );
       yield* Deferred.await(started);
 
@@ -204,7 +202,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("admits a grant once without recounting the view", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
 
       yield* analytics.admitConsentedIdentity(anonymousIdentity);
       yield* analytics.admitConsentedIdentity(anonymousIdentity);
@@ -227,7 +225,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("counts an intervening navigation instead of recounting it", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
 
       window.location.href = "https://nakafa.com/id";
       window.history.pushState({}, "", "/id");
@@ -243,7 +241,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("routes automatic events through the live gate", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       const initConfig = client.init.mock.calls[0]?.[1];
       const probe: CaptureResult = {
         event: "$pageview",
@@ -273,7 +271,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("clears stale identity on anonymous admission", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       client.get_property.mockReturnValue("old-user");
 
       yield* analytics.admitConsentedIdentity(anonymousIdentity);
@@ -286,7 +284,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("updates person properties for the current user", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       client.get_property.mockReturnValue("user-1");
 
       yield* analytics.admitConsentedIdentity({
@@ -304,7 +302,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("identifies the resolved account on admission", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       client.get_property.mockReturnValue("other-user");
 
       yield* analytics.admitConsentedIdentity(identifiedIdentity);
@@ -320,7 +318,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("revokes a grant back to the baseline with one pageview", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       yield* analytics.admitConsentedIdentity(anonymousIdentity);
 
       yield* analytics.revokeToBaselineAnalytics();
@@ -335,7 +333,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("reconciles a persisted SDK opt-in without a gate grant", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       client.get_explicit_consent_status.mockReturnValue("granted");
 
       yield* analytics.revokeToBaselineAnalytics();
@@ -349,7 +347,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("revokes baseline callers without touching the SDK", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       analytics.suspendBrowserAnalyticsIdentity();
 
       yield* analytics.revokeToBaselineAnalytics();
@@ -363,7 +361,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("retries admission after a synchronization failure", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       client.register.mockImplementationOnce(() => {
         throw new Error("identity unavailable");
       });
@@ -387,7 +385,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("surfaces revoke failure instead of stranding opt-in", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       yield* analytics.admitConsentedIdentity(anonymousIdentity);
       client.opt_out_capturing.mockImplementationOnce(() => {
         throw new Error("opt-out unavailable");
@@ -412,7 +410,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("captures scrubbed exceptions through the baseline", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
 
       analytics.captureException(new Error("handled user@example.com"), {
         source: "browser-test",
@@ -426,9 +424,10 @@ describe("two-tier PostHog browser runtime", () => {
         }),
         { source: "browser-test" }
       );
-      expect(JSON.stringify(client.captureException.mock.calls)).not.toContain(
-        "user@example.com"
-      );
+      const encodedCalls = yield* Schema.encodeUnknownEffect(
+        Schema.fromJsonString(Schema.Unknown)
+      )(client.captureException.mock.calls);
+      expect(encodedCalls).not.toContain("user@example.com");
       expect(client.reset).toHaveBeenLastCalledWith(true);
     })
   );
@@ -436,7 +435,7 @@ describe("two-tier PostHog browser runtime", () => {
   it.effect("drops runtime context outside the exact privacy contract", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics({ load: loadClient });
+      yield* analytics.enableBaselineAnalytics(loadClient);
       const invalidProperties = {
         source: "browser-test",
         userId: "user-1",

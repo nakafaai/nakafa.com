@@ -9,9 +9,9 @@ import {
   PlatformError,
   Record as Rec,
   Ref,
-  Sink,
   Stdio,
 } from "effect";
+import { capture, makeCapture } from "#scripts/capture";
 import { RULES } from "#scripts/check/rules";
 import { checkTestPolicy } from "#scripts/check/tests";
 
@@ -38,20 +38,12 @@ const writeFixtures = Effect.fn("TestPolicyTest.writeFixtures")(function* (
   );
 });
 
-/** Appends captured stream chunks to `chunks`. */
-function capture(chunks: Ref.Ref<readonly (string | Uint8Array)[]>) {
-  return () =>
-    Sink.forEachArray((written: readonly (string | Uint8Array)[]) =>
-      Ref.update(chunks, Arr.appendAll(written))
-    );
-}
-
 /** Runs the test policy against a fixture with captured standard streams. */
 const checkFixture = Effect.fn("TestPolicyTest.checkFixture")(function* (
   root: string
 ) {
-  const stdout = yield* Ref.make<readonly (string | Uint8Array)[]>([]);
-  const stderr = yield* Ref.make<readonly (string | Uint8Array)[]>([]);
+  const stdout = yield* makeCapture;
+  const stderr = yield* makeCapture;
   const status = yield* checkTestPolicy(root).pipe(
     Effect.provide(
       Stdio.layerTest({ stderr: capture(stderr), stdout: capture(stdout) })
@@ -100,11 +92,15 @@ describe("test ownership policy", () => {
         "apps/web/style.test.ts":
           'import { it } from "@effect/vitest";\nit("keeps size-[4px]", () => {});\n',
         "apps/web/style.ts": 'export const style = "w-[calc(100%-2rem)]";\n',
+        "apps/web/tsconfig.json":
+          '{"extends":"@repo/typescript-config/base.json"}\n',
         "apps/web/value.test.ts": CLEAN_TEST,
         "apps/web/value.ts": "export const value = 1;\n",
         "packages/core/_generated/api.ts":
           "try {\n  run();\n} catch {\n  stop();\n}\n",
         "packages/core/node_modules/dependency/view.test.tsx": CLEAN_TEST,
+        "packages/typescript-config/base.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
         "packages/core/types.d.ts":
           'export declare const narrowed: typeof value === "object";\n',
         "scripts/tool.test.ts": CLEAN_TEST,
@@ -136,7 +132,11 @@ describe("test ownership policy", () => {
         "packages/core/runner.ts": "export const runner = true;\n",
         "scripts/raw.ts":
           "export function read() {\n  try {\n    return 1;\n  } catch {\n    return 0;\n  }\n}\n",
-        "apps/web/store.ts": "export const store = new Map();\n",
+        "apps/web/store.ts":
+          "export const store = new Map();\nexport const names = Object.keys(value);\n",
+        "apps/web/tsconfig.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
+        "tsconfig.json": '{"compilerOptions":{"plugins":[]}}\n',
       });
 
       assert.deepStrictEqual(yield* checkFixture(root), {
@@ -146,7 +146,8 @@ describe("test ownership policy", () => {
           "Final code must not contain .test.tsx files:\n  - apps/web/view.test.tsx\n",
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
           "packages/core/runner.test.ts: return the Effect to @effect/vitest instead of running it.\n",
-          `apps/web/store.ts:1: ${RULES["map-set"].message} (map-set)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
+          `apps/web/store.ts:1: ${RULES["map-set"].message} (map-set)\napps/web/store.ts:2: ${RULES["object-helper"].message} (object-helper)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
+          "apps/web/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\ntsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\n",
           "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
         stdout: [],
@@ -183,8 +184,14 @@ describe("test ownership policy", () => {
       files: { "apps/web/card.tsx": 'export const card = "ring-[3px]";\n' },
     },
     {
-      category: "an Effect-native violation",
+      category: "a native Map",
       files: { "apps/web/store.ts": "export const store = new Map();\n" },
+    },
+    {
+      category: "an Object helper",
+      files: {
+        "apps/web/store.ts": "export const store = Object.keys(value);\n",
+      },
     },
     {
       category: "a gateway client outside its module",

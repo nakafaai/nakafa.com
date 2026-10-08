@@ -41,9 +41,8 @@ export const OperationalExceptionPropertiesSchema = Schema.Struct({
   verseNumber: Schema.optional(Schema.Finite),
 });
 
-export type OperationalExceptionProperties = Schema.Schema.Type<
-  typeof OperationalExceptionPropertiesSchema
->;
+export type OperationalExceptionProperties =
+  typeof OperationalExceptionPropertiesSchema.Type;
 
 /** Rejects excess, malformed, or unbounded operational context. */
 export function decodeOperationalExceptionProperties(properties: unknown) {

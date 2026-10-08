@@ -13,18 +13,14 @@ export const startAttemptArgsValidator = Schema.Struct({
   setKey: tryoutRouteKeyValidator,
   trackKey: tryoutRouteKeyValidator,
 });
-export type StartAttemptArgs = Schema.Schema.Type<
-  typeof startAttemptArgsValidator
->;
+export type StartAttemptArgs = typeof startAttemptArgsValidator.Type;
 export const startAttemptResultValidator = Schema.Struct({
   attemptId: IdSchema("tryoutAttempts"),
   navigation: Schema.Struct({
     publicPath: Schema.String,
   }),
 });
-export type StartAttemptResult = Schema.Schema.Type<
-  typeof startAttemptResultValidator
->;
+export type StartAttemptResult = typeof startAttemptResultValidator.Type;
 export const startAccessArgsValidator = Schema.Struct({
   ...startAttemptArgsValidator.mapFields(Struct.omit(["entrySectionKey"]))
     .fields,
@@ -32,9 +28,7 @@ export const startAccessArgsValidator = Schema.Struct({
     now: Schema.Finite,
   },
 });
-export type StartAccessArgs = Schema.Schema.Type<
-  typeof startAccessArgsValidator
->;
+export type StartAccessArgs = typeof startAccessArgsValidator.Type;
 export const tryoutStartAccessValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("free-attempt"),
@@ -43,13 +37,9 @@ export const tryoutStartAccessValidator = Schema.Union([
     kind: Schema.Literal("included"),
   }),
 ]);
-export type TryoutStartAccess = Schema.Schema.Type<
-  typeof tryoutStartAccessValidator
->;
+export type TryoutStartAccess = typeof tryoutStartAccessValidator.Type;
 export const tryoutPaywallSourceValidator = Schema.Literal("review");
-export type TryoutPaywallSource = Schema.Schema.Type<
-  typeof tryoutPaywallSourceValidator
->;
+export type TryoutPaywallSource = typeof tryoutPaywallSourceValidator.Type;
 export type AttemptAccessFields = Pick<
   Docs["tryoutAttempts"],
   | "accessEndsAt"

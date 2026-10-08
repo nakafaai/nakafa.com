@@ -1,9 +1,9 @@
 import { routing } from "@repo/internationalization/src/routing";
-import { Option } from "effect";
+import { Option, Record as Rec } from "effect";
 import type { Locale } from "next-intl";
 
 const mappedPathnames = routing.pathnames;
-const mappedRoutePathnames = Object.keys(mappedPathnames).filter(
+const mappedRoutePathnames = Rec.keys(mappedPathnames).filter(
   isMappedRoutePathname
 );
 

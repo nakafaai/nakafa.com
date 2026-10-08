@@ -3,10 +3,8 @@ import { saveOnboardingAnswer } from "@repo/backend/confect/onboarding/impl";
 import { OnboardingRoleError } from "@repo/backend/confect/onboarding/mutations.spec";
 import type { onboardingAnswerValidator } from "@repo/backend/confect/onboarding/schema";
 import { isSelfSelectableUserRole } from "@repo/backend/confect/users/roles";
-import { Effect, type Schema } from "effect";
-export type OnboardingAnswer = Schema.Schema.Type<
-  typeof onboardingAnswerValidator
->;
+import { Effect } from "effect";
+export type OnboardingAnswer = typeof onboardingAnswerValidator.Type;
 /** Restricts self-service answers to roles owned by learner onboarding. */
 export const requireSelfSelectableOnboardingUser = Effect.fn(
   "onboarding.requireSelfSelectableUser"

@@ -7,7 +7,8 @@ import {
 } from "@repo/backend/scripts/content/acceptance/build";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { Effect, Exit } from "effect";
+import { FetchClient } from "@repo/utilities/http/client";
+import { Effect, Exit, Layer } from "effect";
 
 const mocks = vi.hoisted(() => ({
   discard: vi.fn(),
@@ -70,7 +71,9 @@ const reservation = {
   directoryInode: runtime.directoryInode,
 };
 
-layer(nodeServicesLayer)("signed acceptance lifecycle", (it) => {
+const services = Layer.merge(nodeServicesLayer, FetchClient);
+
+layer(services)("signed acceptance lifecycle", (it) => {
   beforeEach(() => {
     mocks.reserve.mockReturnValue(Effect.succeed(reservation));
     mocks.initialize.mockReturnValue(Effect.succeed(runtime));

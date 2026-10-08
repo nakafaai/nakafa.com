@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import { assembleContext, boundStep } from "@repo/backend/confect/nina/history";
 import type { ModelMessage } from "ai";
+import { Array as Arr, Option } from "effect";
 
 /** One complete turn with a verified capability result. */
 function turn(
@@ -327,7 +328,7 @@ describe("Nina provider context", () => {
     const evidence = "Approved evidence paragraph.\n\n".repeat(900);
     const result = boundStep([
       { role: "user", content: "Use the approved tool" },
-      ...[1, 2, 3, 4].flatMap((round): ModelMessage[] => [
+      ...Arr.flatMap([1, 2, 3, 4], (round): ModelMessage[] => [
         {
           role: "assistant",
           content: [
@@ -410,9 +411,13 @@ describe("Nina provider context", () => {
       ...toolRound("four"),
     ]);
     const current = result.slice(
-      result.findIndex(
-        (message) =>
-          message.role === "user" && message.content === "Gather everything"
+      Option.getOrElse(
+        Arr.findFirstIndex(
+          result,
+          (message) =>
+            message.role === "user" && message.content === "Gather everything"
+        ),
+        () => -1
       )
     );
     expect(tokens(current)).toBeLessThanOrEqual(NINA_BUDGET.turnEvidence + 400);

@@ -1,8 +1,21 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Sink, Stdio } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  Layer,
+  Ref,
+  Schema,
+  Stdio,
+} from "effect";
+import { capture, makeCapture } from "#scripts/capture";
 import { ProvenanceBundleVerifier } from "#scripts/github/provenance/bundle";
 import { verifyProvenanceAudit } from "#scripts/github/provenance/main";
+import {
+  AuditSchema,
+  ProvenanceStatementSchema,
+} from "#scripts/github/provenance/schema";
 
 const SLSA_PREDICATE = "https://slsa.dev/provenance/v1";
 const PACKAGE_SHA512 = "ab".repeat(64);
@@ -11,7 +24,7 @@ const SOURCE_SHA = "0123456789abcdef0123456789abcdef01234567";
 const WORKFLOW = ".github/workflows/cli-publish.yml";
 const BUNDLE = { evidence: "signed" };
 
-const AUDIT = JSON.stringify({
+const AUDIT = Schema.encodeSync(Schema.fromJsonString(AuditSchema))({
   invalid: [],
   missing: [],
   verified: [
@@ -27,7 +40,9 @@ const AUDIT = JSON.stringify({
   ],
 });
 
-const STATEMENT = JSON.stringify({
+const STATEMENT = Schema.encodeSync(
+  Schema.fromJsonString(ProvenanceStatementSchema)
+)({
   _type: "https://in-toto.io/Statement/v1",
   predicate: {
     buildDefinition: {
@@ -77,31 +92,30 @@ const cliArguments = (auditPath: string) => [
 const runVerifier = Effect.fn("ProvenanceMainTest.runVerifier")(function* (
   argv: readonly string[]
 ) {
-  const signed: unknown[] = [];
-  const stdout: Array<string | Uint8Array> = [];
+  const signed = yield* Ref.make<readonly unknown[]>([]);
+  const stdout = yield* makeCapture;
   const result = yield* verifyProvenanceAudit(argv).pipe(
     Effect.provide(
       Layer.mergeAll(
         Layer.succeed(ProvenanceBundleVerifier, {
           verify: (bundle, identity) =>
-            Effect.sync(() => {
-              signed.push([bundle, identity]);
-              return STATEMENT;
-            }),
+            Effect.as(
+              Ref.update(signed, Arr.append<unknown>([bundle, identity])),
+              STATEMENT
+            ),
         }),
         Stdio.layerTest({
-          stdout: () =>
-            Sink.forEachArray((chunks) =>
-              Effect.sync(() => {
-                stdout.push(...chunks);
-              })
-            ),
+          stdout: capture(stdout),
         })
       )
     ),
     Effect.result
   );
-  return { result, signed, stdout };
+  return {
+    result,
+    signed: yield* Ref.get(signed),
+    stdout: yield* Ref.get(stdout),
+  };
 });
 
 describe("provenance verifier CLI", () => {
@@ -154,7 +168,7 @@ describe("provenance verifier CLI", () => {
       );
 
       assert.deepStrictEqual(
-        [invalid, missing].map(({ result, signed, stdout }) => [
+        Arr.map([invalid, missing], ({ result, signed, stdout }) => [
           result._tag === "Failure" ? result.failure.message : result._tag,
           signed,
           stdout,

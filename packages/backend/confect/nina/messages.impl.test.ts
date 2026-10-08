@@ -14,6 +14,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { Array as Arr, Option } from "effect";
 
 vi.mock("@convex-dev/agent", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@convex-dev/agent")>();
@@ -116,7 +117,9 @@ describe("Nina message boundary", () => {
       await owner.query(query, args)
     );
     expect(page.streams).toEqual({ kind: "list", messages: [] });
-    const assistant = page.page.find((message) => message.role === "assistant");
+    const assistant = Option.getOrUndefined(
+      Arr.findFirst(page.page, (message) => message.role === "assistant")
+    );
     expect(assistant?.parts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -137,7 +140,7 @@ describe("Nina message boundary", () => {
       ])
     );
     expect(
-      page.page.some((message) => message.text === "Explain a limit.")
+      Arr.some(page.page, (message) => message.text === "Explain a limit.")
     ).toBe(true);
   });
 

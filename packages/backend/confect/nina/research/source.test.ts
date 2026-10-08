@@ -4,6 +4,7 @@ import {
   getSourceReferencesFromMessages,
 } from "@repo/backend/confect/nina/research/source";
 import type { ModelMessage } from "ai";
+import { Array as Arr } from "effect";
 
 const sourceMessages = [
   {
@@ -61,9 +62,12 @@ const staleSourceMessages = [
 describe("lib/source", () => {
   it("extracts full URLs, bare domains, and markdown-wrapped URLs", () => {
     expect(
-      getSourceReferences(
-        "Baca ai-sdk.dev/docs, [Convex](HTTPS://docs.convex.dev/database), [Example](http://example.com/research), dan www.google.com."
-      ).map((source) => source.href)
+      Arr.map(
+        getSourceReferences(
+          "Baca ai-sdk.dev/docs, [Convex](HTTPS://docs.convex.dev/database), [Example](http://example.com/research), dan www.google.com."
+        ),
+        (source) => source.href
+      )
     ).toEqual([
       "https://ai-sdk.dev/docs",
       "https://docs.convex.dev/database",
@@ -74,17 +78,23 @@ describe("lib/source", () => {
 
   it("deduplicates repeated source references in order", () => {
     expect(
-      getSourceReferences(
-        "Baca https://ai-sdk.dev/docs lalu ai-sdk.dev/docs lagi."
-      ).map((source) => source.href)
+      Arr.map(
+        getSourceReferences(
+          "Baca https://ai-sdk.dev/docs lalu ai-sdk.dev/docs lagi."
+        ),
+        (source) => source.href
+      )
     ).toEqual(["https://ai-sdk.dev/docs"]);
   });
 
   it("extracts multiple sources separated by punctuation", () => {
     expect(
-      getSourceReferences(
-        "Bandingkan ai-sdk.dev/docs,docs.convex.dev/understanding;https://effect.website/docs."
-      ).map((source) => source.href)
+      Arr.map(
+        getSourceReferences(
+          "Bandingkan ai-sdk.dev/docs,docs.convex.dev/understanding;https://effect.website/docs."
+        ),
+        (source) => source.href
+      )
     ).toEqual([
       "https://ai-sdk.dev/docs",
       "https://docs.convex.dev/understanding",
@@ -94,7 +104,8 @@ describe("lib/source", () => {
 
   it("keeps separator characters that belong to one URL", () => {
     expect(
-      getSourceReferences("Baca https://example.com/search?q=a,b.").map(
+      Arr.map(
+        getSourceReferences("Baca https://example.com/search?q=a,b."),
         (source) => source.href
       )
     ).toEqual(["https://example.com/search?q=a,b"]);
@@ -102,17 +113,23 @@ describe("lib/source", () => {
 
   it("preserves balanced parentheses that belong to one URL", () => {
     expect(
-      getSourceReferences(
-        "Baca [Function](https://en.wikipedia.org/wiki/Function_(mathematics))."
-      ).map((source) => source.href)
+      Arr.map(
+        getSourceReferences(
+          "Baca [Function](https://en.wikipedia.org/wiki/Function_(mathematics))."
+        ),
+        (source) => source.href
+      )
     ).toEqual(["https://en.wikipedia.org/wiki/Function_(mathematics)"]);
   });
 
   it("preserves at signs that belong to URL path segments", () => {
     expect(
-      getSourceReferences(
-        "Baca https://www.npmjs.com/package/@modelcontextprotocol/sdk."
-      ).map((source) => source.href)
+      Arr.map(
+        getSourceReferences(
+          "Baca https://www.npmjs.com/package/@modelcontextprotocol/sdk."
+        ),
+        (source) => source.href
+      )
     ).toEqual(["https://www.npmjs.com/package/@modelcontextprotocol/sdk"]);
   });
 
@@ -128,7 +145,8 @@ describe("lib/source", () => {
 
   it("reads only the latest user request", () => {
     expect(
-      getSourceReferencesFromMessages(sourceMessages).map(
+      Arr.map(
+        getSourceReferencesFromMessages(sourceMessages),
         (source) => source.href
       )
     ).toEqual(["https://ai-sdk.dev/docs", "https://docs.convex.dev/database"]);

@@ -27,7 +27,7 @@ export const PublisherIdentity = Schema.Struct({
   sourceSha: GitSha,
   workflow: Workflow,
 });
-export type PublisherIdentity = Schema.Schema.Type<typeof PublisherIdentity>;
+export type PublisherIdentity = typeof PublisherIdentity.Type;
 
 export const ProvenanceExpectation = Schema.Struct({
   ...PublisherIdentity.fields,
@@ -35,9 +35,7 @@ export const ProvenanceExpectation = Schema.Struct({
   packageSha512: Sha512,
   packageVersion: Version,
 });
-export type ProvenanceExpectation = Schema.Schema.Type<
-  typeof ProvenanceExpectation
->;
+export type ProvenanceExpectation = typeof ProvenanceExpectation.Type;
 
 export const AuditSchema = Schema.Struct({
   invalid: Schema.Array(Schema.Unknown),

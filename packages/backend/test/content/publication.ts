@@ -19,7 +19,7 @@ import {
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { Data, Effect, Predicate, Schema } from "effect";
+import { Data, Effect, Predicate, Record as Rec, Schema } from "effect";
 
 export const TEST_PUBLICATION_RELEASE = testSignedRelease(
   testEmptyManifest(ReleaseIdSchema.make("publication-active"))
@@ -156,8 +156,8 @@ export const createTestPublication = Effect.fn("TestContent.createPublication")(
                 cause: "Fixture row is not an object.",
               });
             }
-            const fields = Object.fromEntries(
-              Object.entries(input).filter(
+            const fields = Rec.fromEntries(
+              Rec.toEntries(input).filter(
                 ([field]) => field !== "_id" && field !== "_creationTime"
               )
             );

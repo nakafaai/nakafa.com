@@ -17,7 +17,7 @@ import {
 import type { TryoutSnapshotSource } from "@repo/backend/confect/tryouts/start/source";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
 import { getDocumentSize } from "convex/values";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
@@ -26,8 +26,11 @@ type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 export const requireSectionSnapshot = Effect.fn(
   "tryouts.runtime.requireSectionSnapshot"
 )(function* (attempt: TryoutAttempt, sectionKey: string) {
-  const snapshot = attempt.sectionSnapshots.find(
-    (section) => section.sectionKey === sectionKey
+  const snapshot = Option.getOrUndefined(
+    Arr.findFirst(
+      attempt.sectionSnapshots,
+      (section) => section.sectionKey === sectionKey
+    )
   );
   if (!snapshot) {
     return yield* new TryoutAttemptStateError({
@@ -81,8 +84,11 @@ export const createAttemptPlacements = Effect.fn(
   const writer = yield* DatabaseWriter;
   for (const source of args.source.snapshot.sections) {
     const sectionIdentity = tryoutCatalogIdentity(source.section.row);
-    const snapshot = args.attempt.sectionSnapshots.find(
-      (candidate) => candidate.sectionIdentity === sectionIdentity
+    const snapshot = Option.getOrUndefined(
+      Arr.findFirst(
+        args.attempt.sectionSnapshots,
+        (candidate) => candidate.sectionIdentity === sectionIdentity
+      )
     );
     if (
       !snapshot ||

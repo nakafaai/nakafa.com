@@ -4,6 +4,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { verifyArtifactBatch } from "@repo/backend/confect/contentRelease/proof/artifact";
 import {
+  encodeArtifactJson,
+  encodeItemJson,
+} from "@repo/backend/confect/contentRelease/wire";
+import {
   ingressArtifact,
   ingressItem,
   ingressReleaseId,
@@ -25,9 +29,9 @@ describe("authenticated artifact proof batches", () => {
           yield* verifyArtifactBatch(
             [
               {
-                artifactJson: JSON.stringify(ingressArtifact),
+                artifactJson: encodeArtifactJson(ingressArtifact),
                 index: 0,
-                itemJson: JSON.stringify(ingressItem),
+                itemJson: encodeItemJson(ingressItem),
               },
             ],
             ingressReleaseId,
@@ -45,7 +49,7 @@ describe("authenticated artifact proof batches", () => {
         yield* verifyArtifactBatch(
           [
             {
-              artifactJson: JSON.stringify(ingressArtifact),
+              artifactJson: encodeArtifactJson(ingressArtifact),
               index: 0,
               itemJson: testDeleteJson(),
             },
@@ -73,9 +77,9 @@ describe("authenticated artifact proof batches", () => {
           yield* verifyArtifactBatch(
             [
               {
-                artifactJson: JSON.stringify(artifact),
+                artifactJson: encodeArtifactJson(artifact),
                 index: 0,
-                itemJson: JSON.stringify(ingressItem),
+                itemJson: encodeItemJson(ingressItem),
               },
             ],
             ingressReleaseId,

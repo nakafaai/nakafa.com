@@ -2,6 +2,7 @@
 
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 
 /**
  * Renders a Base UI slider using the active shadcn base registry anatomy.
@@ -23,11 +24,11 @@ function Slider<Value extends number | readonly number[]>({
 }: SliderPrimitive.Root.Props<Value>) {
   let thumbCount = 1;
 
-  if (Array.isArray(defaultValue)) {
+  if (Arr.isArray(defaultValue)) {
     thumbCount = defaultValue.length;
   }
 
-  if (Array.isArray(value)) {
+  if (Arr.isArray(value)) {
     thumbCount = value.length;
   }
 

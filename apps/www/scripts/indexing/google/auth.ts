@@ -1,11 +1,10 @@
-import { webcrypto } from "node:crypto";
-import fs from "node:fs";
-import { Effect, Schema } from "effect";
+import { Effect, FileSystem, Schema } from "effect";
+import { HttpClient, HttpClientRequest } from "effect/http";
 import {
   GoogleAssertionSignError,
   GoogleTokenRequestError,
 } from "@/scripts/indexing/errors";
-import { GOOGLE_KEY_FILE } from "@/scripts/indexing/paths";
+import { indexingFiles } from "@/scripts/indexing/paths";
 
 const GOOGLE_INDEXING_SCOPE = "https://www.googleapis.com/auth/indexing";
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
@@ -30,14 +29,17 @@ const decodeGoogleTokenResponse = Schema.decodeUnknownEffect(
 const loadGoogleServiceAccount = Effect.fn(
   "scripts.google.auth.loadServiceAccount"
 )(function* () {
-  const keyFileContent = yield* Effect.try({
-    try: () => fs.readFileSync(GOOGLE_KEY_FILE, "utf8"),
-    catch: (cause) =>
-      new GoogleAssertionSignError({
-        cause,
-        message: `Failed to read ${GOOGLE_KEY_FILE}.`,
-      }),
-  });
+  const fs = yield* FileSystem.FileSystem;
+  const { googleKey } = yield* indexingFiles;
+  const keyFileContent = yield* fs.readFileString(googleKey).pipe(
+    Effect.mapError(
+      (cause) =>
+        new GoogleAssertionSignError({
+          cause,
+          message: `Failed to read ${googleKey}.`,
+        })
+    )
+  );
   return yield* decodeGoogleServiceAccount(keyFileContent).pipe(
     Effect.mapError(
       () =>
@@ -58,7 +60,7 @@ const signGoogleAccessTokenAssertion = Effect.fn(
   const encoder = new TextEncoder();
   const key = yield* Effect.tryPromise({
     try: () =>
-      webcrypto.subtle.importKey(
+      crypto.subtle.importKey(
         "pkcs8",
         Buffer.from(
           credentials.private_key
@@ -98,7 +100,7 @@ const signGoogleAccessTokenAssertion = Effect.fn(
   const signatureInput = `${encodedHeader}.${encodedPayload}`;
   const signature = yield* Effect.tryPromise({
     try: () =>
-      webcrypto.subtle.sign(
+      crypto.subtle.sign(
         "RSASSA-PKCS1-v1_5",
         key,
         encoder.encode(signatureInput)
@@ -111,45 +113,41 @@ const signGoogleAccessTokenAssertion = Effect.fn(
   });
   return `${signatureInput}.${Buffer.from(signature).toString("base64url")}`;
 });
-/** Reads a token endpoint response body, whether it grants or refuses. */
-const readGoogleTokenResponse = Effect.fn("scripts.google.auth.readResponse")(
-  (response: Response) =>
-    Effect.tryPromise({
-      try: () => response.text(),
-      catch: (cause) =>
-        new GoogleTokenRequestError({
-          cause,
-          message: "Google token response could not be read.",
-        }),
-    })
-);
-
 /** Exchanges a signed service-account assertion for a Google API access token. */
 export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
   function* () {
     const assertion = yield* signGoogleAccessTokenAssertion();
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch(GOOGLE_TOKEN_ENDPOINT, {
-          body: new URLSearchParams({
-            assertion,
-            grant_type: GOOGLE_JWT_GRANT_TYPE,
-          }),
-          method: "POST",
-        }),
-      catch: (cause) =>
-        new GoogleTokenRequestError({
-          cause,
-          message: "Google token request transport failed.",
-        }),
-    });
-    if (!response.ok) {
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* HttpClientRequest.post(GOOGLE_TOKEN_ENDPOINT).pipe(
+      HttpClientRequest.bodyUrlParams({
+        assertion,
+        grant_type: GOOGLE_JWT_GRANT_TYPE,
+      }),
+      client.execute,
+      Effect.mapError(
+        (cause) =>
+          new GoogleTokenRequestError({
+            cause,
+            message: "Google token request transport failed.",
+          })
+      )
+    );
+    // The body is read whether the endpoint grants or refuses the token.
+    const responseText = yield* response.text.pipe(
+      Effect.mapError(
+        (cause) =>
+          new GoogleTokenRequestError({
+            cause,
+            message: "Google token response could not be read.",
+          })
+      )
+    );
+    if (response.status < 200 || response.status >= 300) {
       return yield* new GoogleTokenRequestError({
         message: "Google token request failed.",
-        responseText: yield* readGoogleTokenResponse(response),
+        responseText,
       });
     }
-    const responseText = yield* readGoogleTokenResponse(response);
     return (yield* decodeGoogleTokenResponse(responseText)).access_token;
   }
 );

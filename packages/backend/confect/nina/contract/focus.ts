@@ -33,6 +33,6 @@ export const NinaFocusSourceSchema = Schema.Struct({
   outcome: Schema.NullOr(Outcome),
 });
 
-export type NinaFocusInput = Schema.Schema.Type<typeof NinaFocusInputSchema>;
-export type NinaFocus = Schema.Schema.Type<typeof NinaFocusSchema>;
-export type NinaFocusSource = Schema.Schema.Type<typeof NinaFocusSourceSchema>;
+export type NinaFocusInput = typeof NinaFocusInputSchema.Type;
+export type NinaFocus = typeof NinaFocusSchema.Type;
+export type NinaFocusSource = typeof NinaFocusSourceSchema.Type;

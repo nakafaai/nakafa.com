@@ -19,7 +19,7 @@ import {
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/agent/search";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("readContentSearchDocuments", () => {
   it("reads searchable articles only from the active signed projection", async () => {
@@ -120,9 +120,9 @@ describe("readContentSearchDocuments", () => {
       )
     );
     expect(documents).toHaveLength(NAKAFA_AGENT_SEARCH_WINDOW);
-    expect(documents.every((document) => document.section === "material")).toBe(
-      true
-    );
+    expect(
+      Arr.every(documents, (document) => document.section === "material")
+    ).toBe(true);
   });
   it("resolves exact route queries through current catalog identities", async () => {
     const t = createConvexTestWithBetterAuth();

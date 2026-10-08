@@ -46,7 +46,7 @@ export const trackSetValidator = Schema.Struct({
   publishedScore: Schema.Union([Schema.Finite, Schema.Null]),
   runningAttempt: Schema.Union([Schema.Null, runningAttemptValidator]),
 });
-export type RunningAttempt = Schema.Schema.Type<typeof runningAttemptValidator>;
+export type RunningAttempt = typeof runningAttemptValidator.Type;
 export const trackSetPageValidator = Schema.Struct({
   ...PaginationResultSchema(trackSetValidator).fields,
   ...{
@@ -54,8 +54,8 @@ export const trackSetPageValidator = Schema.Struct({
     viewerId: Schema.Union([Schema.String, Schema.Null]),
   },
 });
-export type ListArgs = Schema.Schema.Type<typeof listArgsValidator>;
-export type TrackIdentity = Schema.Schema.Type<typeof trackIdentityValidator>;
+export type ListArgs = typeof listArgsValidator.Type;
+export type TrackIdentity = typeof trackIdentityValidator.Type;
 export const emptySetPage = {
   continueCursor: "",
   isDone: true,

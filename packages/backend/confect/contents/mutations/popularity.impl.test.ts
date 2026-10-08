@@ -13,6 +13,7 @@ import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { testArticleGraph } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
+import { Array as Arr } from "effect";
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const ARTICLE_ROUTE = "articles/politics/dynastic-politics-asian-values";
@@ -246,7 +247,7 @@ describe("contents/mutations/popularity", () => {
     );
 
     expect(result).toEqual({ scheduledWindows: 14 });
-    expect(jobs.map((job) => job.args)).toEqual(
+    expect(Arr.map(jobs, (job) => job.args)).toEqual(
       expect.arrayContaining([
         [{ day, scopeMode: "global", windowKey: "1d" }],
         [{ day, scopeMode: "global", windowKey: "365d" }],

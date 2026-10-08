@@ -13,7 +13,7 @@ import {
 import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const readReference = Ref.getFunctionReference(
   refs.public.tryouts.queries.content.getBatch
@@ -64,8 +64,11 @@ describe("tryouts/runtime/history/read", () => {
     () =>
       Effect.gen(function* () {
         const { owned, seed, t } = yield* Effect.promise(() => setup());
-        const answer = seed.request.selectors.find(
-          (selector) => selector.delivery === "entitled"
+        const answer = Option.getOrUndefined(
+          Arr.findFirst(
+            seed.request.selectors,
+            (selector) => selector.delivery === "entitled"
+          )
         );
         assert.isDefined(answer);
         const later = answer.questionOrder + 2;
@@ -95,7 +98,7 @@ describe("tryouts/runtime/history/read", () => {
         );
         assert.isNotNull(freeResult);
         assert.deepStrictEqual(
-          freeResult.items.map((item) => item.delivery),
+          Arr.map(freeResult.items, (item) => item.delivery),
           ["authenticated", "entitled"]
         );
         assert.isNull(yield* Effect.promise(() => read(owned, laterAnswer)));
@@ -129,7 +132,7 @@ describe("tryouts/runtime/history/read", () => {
       assert.strictEqual(result.bundleJson, seed.runtime.bundleJson);
       assert.strictEqual(result.rendererJson, seed.runtime.rendererJson);
       assert.deepStrictEqual(
-        result.items.map((item) => item.delivery),
+        Arr.map(result.items, (item) => item.delivery),
         ["authenticated", "entitled"]
       );
       for (const [index, selector] of seed.request.selectors.entries()) {
@@ -167,7 +170,7 @@ describe("tryouts/runtime/history/read", () => {
         const result = yield* Effect.promise(() =>
           read(owned, {
             ...seed.request,
-            selectors: seed.request.selectors.map((selector) => ({
+            selectors: Arr.map(seed.request.selectors, (selector) => ({
               ...selector,
               snapshotReleaseId,
             })),
@@ -232,7 +235,7 @@ describe("tryouts/runtime/history/read", () => {
           yield* Effect.promise(() =>
             read(owned, {
               ...seed.request,
-              selectors: seed.request.selectors.map((selector) => ({
+              selectors: Arr.map(seed.request.selectors, (selector) => ({
                 ...selector,
                 sectionKey: "not-started",
               })),
@@ -250,7 +253,7 @@ describe("tryouts/runtime/history/read", () => {
           yield* Effect.promise(() =>
             read(owned, {
               ...seed.request,
-              selectors: seed.request.selectors.map((selector) => ({
+              selectors: Arr.map(seed.request.selectors, (selector) => ({
                 ...selector,
                 artifactHash: seed.fixture.answer.artifactHash,
                 contentKey: seed.fixture.answer.contentKey,
@@ -263,7 +266,7 @@ describe("tryouts/runtime/history/read", () => {
           yield* Effect.promise(() =>
             read(owned, {
               ...seed.request,
-              selectors: seed.request.selectors.map((selector) => ({
+              selectors: Arr.map(seed.request.selectors, (selector) => ({
                 ...selector,
                 questionOrder: 2,
               })),
@@ -274,7 +277,7 @@ describe("tryouts/runtime/history/read", () => {
           yield* Effect.promise(() =>
             read(owned, {
               ...seed.request,
-              selectors: seed.request.selectors.map((selector) => ({
+              selectors: Arr.map(seed.request.selectors, (selector) => ({
                 ...selector,
                 snapshotId: "another-snapshot",
               })),

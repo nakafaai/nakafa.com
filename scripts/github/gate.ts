@@ -17,7 +17,7 @@ export const GateInputSchema = Schema.Struct({
   scopeOutcome: GateOutcomeSchema,
   trusted: Schema.Boolean,
 });
-export type GateInput = Schema.Schema.Type<typeof GateInputSchema>;
+export type GateInput = typeof GateInputSchema.Type;
 
 export class CiGateError extends Schema.TaggedError<CiGateError>()(
   "CiGateError",

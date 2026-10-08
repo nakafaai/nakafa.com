@@ -11,7 +11,7 @@ import schema from "@repo/backend/convex/schema";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("contents/helpers/search/quran/candidates", () => {
   it("stops overlap expansion while preserving enough reads to authenticate selected results", async () => {
@@ -50,7 +50,7 @@ describe("contents/helpers/search/quran/candidates", () => {
       metrics: await ctx.meta.getTransactionMetrics(),
     }));
     expect(result.rows).toHaveLength(6);
-    expect(new Set(result.rows.map((row) => row.identity)).size).toBe(6);
+    expect(new Set(Arr.map(result.rows, (row) => row.identity)).size).toBe(6);
     expect(metrics.documentsRead.used + result.rows.length).toBeLessThanOrEqual(
       QURAN_SEARCH_DOCUMENT_READ_LIMIT
     );
@@ -77,7 +77,9 @@ describe("contents/helpers/search/quran/candidates", () => {
         )
       )
     );
-    expect(result.rows.map(({ surahNumber }) => surahNumber)).toEqual([1, 2]);
+    expect(Arr.map(result.rows, ({ surahNumber }) => surahNumber)).toEqual([
+      1, 2,
+    ]);
   });
   it("reserves capacity for a later variant after a broad first query", async () => {
     const target = convexTest(schema, convexModules);
@@ -108,7 +110,7 @@ describe("contents/helpers/search/quran/candidates", () => {
       )
     );
     expect(result.rows).toHaveLength(2);
-    expect(result.rows.some(({ surahNumber }) => surahNumber === 17)).toBe(
+    expect(Arr.some(result.rows, ({ surahNumber }) => surahNumber === 17)).toBe(
       true
     );
   });
@@ -186,14 +188,14 @@ describe("contents/helpers/search/quran/candidates", () => {
             length: QURAN_SEARCH_RESULT_LIMIT,
           },
           (_, index) => {
-            const terms = ["primary"];
+            let terms = ["primary"];
             if (index === 0 || index === 1 || index === 3) {
-              terms.push("secondary");
+              terms = Arr.append(terms, "secondary");
             }
             if (index === 0 || index === 1) {
-              terms.push("tertiary", "quaternary");
+              terms = Arr.appendAll(terms, ["tertiary", "quaternary"]);
             }
-            return makeQuranSearch("en", index + 1, terms.join(" "));
+            return makeQuranSearch("en", index + 1, Arr.join(terms, " "));
           }
         )
       )

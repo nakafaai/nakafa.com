@@ -24,12 +24,12 @@ describe("Effect-native rule scopes", () => {
           {
             file: "apps/www/next.config.ts",
             sourceText:
-              "export const config = JSON.parse(text);\ntry {\n  load();\n} catch {\n  skip();\n}\n",
+              "export const config = [JSON.parse(text), Object.keys(value)];\ntry {\n  load();\n} catch {\n  skip();\n}\n",
           },
           {
             file: "packages/testing/base.ts",
             sourceText:
-              'import { defineConfig } from "vitest/config";\nexport default defineConfig(JSON.parse(text));\n',
+              'import { defineConfig } from "vitest/config";\nexport default defineConfig(JSON.parse(text), Object.keys(value));\n',
           },
         ]),
         ["apps/www/next.config.ts try-catch"]
@@ -41,7 +41,7 @@ describe("Effect-native rule scopes", () => {
     "treats a default export that satisfies a framework configuration type as configuration",
     () =>
       Effect.gen(function* () {
-        const config = "{ jwks: process.env.JWKS }";
+        const config = "{ jwks: process.env.JWKS, keys: Object.keys(source) }";
         assert.deepStrictEqual(
           yield* findings([
             {
@@ -51,6 +51,10 @@ describe("Effect-native rule scopes", () => {
             {
               file: "packages/a/local.ts",
               sourceText: `import type { AuthConfig } from "./types";\nexport default ${config} satisfies AuthConfig;\n`,
+            },
+            {
+              file: "packages/a/workspace.ts",
+              sourceText: `import type { AuthConfig } from "@repo/backend/auth";\nexport default ${config} satisfies AuthConfig;\n`,
             },
             {
               file: "packages/a/options.ts",
@@ -83,13 +87,23 @@ describe("Effect-native rule scopes", () => {
           ]),
           [
             "packages/a/default.ts env",
+            "packages/a/default.ts object-helper",
             "packages/a/literal.ts env",
+            "packages/a/literal.ts object-helper",
             "packages/a/local.ts env",
+            "packages/a/local.ts object-helper",
             "packages/a/missing.ts env",
+            "packages/a/missing.ts object-helper",
             "packages/a/namespace.ts env",
+            "packages/a/namespace.ts object-helper",
             "packages/a/options.ts env",
+            "packages/a/options.ts object-helper",
             "packages/a/plain.ts env",
+            "packages/a/plain.ts object-helper",
             "packages/a/qualified.ts env",
+            "packages/a/qualified.ts object-helper",
+            "packages/a/workspace.ts env",
+            "packages/a/workspace.ts object-helper",
           ]
         );
       })
@@ -121,6 +135,142 @@ describe("Effect-native rule scopes", () => {
         ["apps/www/lib/poll.ts timer"]
       );
     })
+  );
+
+  it.effect(
+    "leaves functions that Playwright runs in the browser page alone",
+    () =>
+      Effect.gen(function* () {
+        const page = `page.evaluate(() => Object.keys(window.localStorage));
+page.addInitScript(function () {
+  const read = () => Object.values(window.state);
+  return Array.isArray(read());
+});
+links.evaluateAll((nodes) => Object.entries(nodes));
+page.$eval("main", (node) => Object.keys(node.dataset));
+page.waitForFunction((limit) => Object.keys(window.state).length > limit, 1);
+Object.keys(routes);
+run(() => Object.keys(routes));
+evaluate(() => Object.keys(routes));
+page.locator(() => Object.keys(routes));
+`;
+        assert.deepStrictEqual(
+          yield* findings([
+            {
+              file: "apps/www/e2e/page.browser.ts",
+              sourceText: `import { test } from "@playwright/test";\n${page}`,
+            },
+            { file: "apps/www/lib/page.ts", sourceText: page },
+          ]),
+          [
+            "apps/www/e2e/page.browser.ts object-helper",
+            "apps/www/e2e/page.browser.ts object-helper",
+            "apps/www/e2e/page.browser.ts object-helper",
+            "apps/www/e2e/page.browser.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts array-check",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+            "apps/www/lib/page.ts object-helper",
+          ]
+        );
+      })
+  );
+
+  it.effect(
+    "leaves a function alone when the module passes it to the browser page by name",
+    () =>
+      Effect.gen(function* () {
+        const page = `function countFrames() {
+  return Object.keys(window.frames);
+}
+const readState = () => Object.values(window.state);
+const local = function () {
+  return Array.isArray(window.state);
+};
+function nodeSide() {
+  return Object.keys(routes);
+}
+page.addInitScript(countFrames);
+page.evaluate(readState);
+page.evaluate(local);
+page.evaluate((limit) => limit, nodeSide);
+page.$eval("main", countMain);
+function countMain(node) {
+  return Object.keys(node.dataset);
+}
+let later;
+later = () => Object.keys(routes);
+page.evaluate(later);
+page.addInitScript(count);
+page.evaluate(upShared);
+page.evaluate(dotShared);
+page.evaluate(external);
+export default function () {
+  return Object.keys(routes);
+}
+const { length } = [() => Object.keys(routes)];
+`;
+        const shared = `export function countShared() {
+  return Object.keys(window.frames);
+}
+export function nodeHelper() {
+  return Object.keys(routes);
+}
+export function upShared() {
+  return Array.isArray(window.frames);
+}
+export const dotShared = () => Object.values(window.frames);
+`;
+        const imported = `import { test } from "@playwright/test";
+import { countShared as count } from "@/e2e/support/frames";
+import { upShared } from "../e2e/./support/frames";
+import { dotShared } from "./support/frames";
+import { external } from "some-package";
+import fallback, * as everything from "./support/frames";
+`;
+        assert.deepStrictEqual(
+          yield* findings([
+            {
+              file: "apps/www/e2e/named.browser.ts",
+              sourceText: `${imported}${page}`,
+            },
+            { file: "apps/www/lib/named.ts", sourceText: page },
+            { file: "apps/www/e2e/support/frames.ts", sourceText: shared },
+            { file: "apps/www/lib/frames.ts", sourceText: shared },
+            {
+              file: "apps/www/e2e/other.ts",
+              sourceText:
+                "export function count() {\n  return Object.keys(routes);\n}\n",
+            },
+          ]),
+          [
+            "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/e2e/named.browser.ts object-helper",
+            "apps/www/e2e/other.ts object-helper",
+            "apps/www/e2e/support/frames.ts object-helper",
+            "apps/www/lib/frames.ts object-helper",
+            "apps/www/lib/frames.ts object-helper",
+            "apps/www/lib/frames.ts array-check",
+            "apps/www/lib/frames.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts array-check",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+            "apps/www/lib/named.ts object-helper",
+          ]
+        );
+      })
   );
 
   it.effect("holds Confect and script modules to array methods", () =>

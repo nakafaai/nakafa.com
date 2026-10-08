@@ -7,17 +7,25 @@
  */
 
 // Environment variables loaded via Node.js --env-file flag.
-import { Effect } from "effect";
+import { NodeServices } from "@effect/platform-node";
+import { FetchClient } from "@repo/utilities/http/client";
+import { Effect, Layer } from "effect";
 import { runIndexNow } from "@/scripts/indexing/indexnow/run";
-import { logger } from "@/scripts/utils";
+import { IndexingLogger } from "@/scripts/indexing/logger";
 
 Effect.runPromise(
   runIndexNow().pipe(
     Effect.catch((error) =>
-      Effect.sync(() => {
-        logger.error(`Error running indexing script: ${error}`);
-        process.exitCode = 1;
-      })
+      Effect.logError(`Error running indexing script: ${error}`).pipe(
+        Effect.andThen(
+          Effect.sync(() => {
+            process.exitCode = 1;
+          })
+        )
+      )
+    ),
+    Effect.provide(
+      Layer.mergeAll(IndexingLogger, FetchClient, NodeServices.layer)
     )
   )
 );

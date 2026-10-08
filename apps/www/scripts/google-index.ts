@@ -13,17 +13,25 @@
  */
 
 // Environment variables loaded via Node.js --env-file flag.
-import { Effect } from "effect";
+import { NodeServices } from "@effect/platform-node";
+import { FetchClient } from "@repo/utilities/http/client";
+import { Effect, Layer } from "effect";
 import { runGoogleIndexing } from "@/scripts/indexing/google/run";
-import { logger } from "@/scripts/utils";
+import { IndexingLogger } from "@/scripts/indexing/logger";
 
 Effect.runPromise(
   runGoogleIndexing().pipe(
     Effect.catch((error) =>
-      Effect.sync(() => {
-        logger.error(`Error running Google indexing script: ${error}`);
-        process.exitCode = 1;
-      })
+      Effect.logError(`Error running Google indexing script: ${error}`).pipe(
+        Effect.andThen(
+          Effect.sync(() => {
+            process.exitCode = 1;
+          })
+        )
+      )
+    ),
+    Effect.provide(
+      Layer.mergeAll(IndexingLogger, FetchClient, NodeServices.layer)
     )
   )
 );

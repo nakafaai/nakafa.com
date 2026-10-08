@@ -2,6 +2,7 @@ import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { CLASS_IMAGES } from "@repo/backend/confect/lib/images";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
+import { Array as Arr, Option, Order } from "effect";
 
 const mutations = api.classes.mutations;
 describe("class membership and administration", () => {
@@ -57,10 +58,12 @@ describe("class membership and administration", () => {
         teacherRole: "primary",
       },
     ]);
-    expect(initial.invitations.map(({ role }) => role).sort()).toEqual([
-      "student",
-      "teacher",
-    ]);
+    expect(
+      Arr.sort(
+        Arr.map(initial.invitations, ({ role }) => role),
+        Order.String
+      )
+    ).toEqual(["student", "teacher"]);
     await expect(
       student.mutation(mutations.updateClassVisibility, {
         classId,
@@ -100,7 +103,9 @@ describe("class membership and administration", () => {
           )
           .collect()
       );
-      const code = invite.find((entry) => entry.role === role)?.code;
+      const code = Option.getOrUndefined(
+        Arr.findFirst(invite, (entry) => entry.role === role)
+      )?.code;
       assert(code, "Expected the class role's invite code.");
       await expect(
         student.mutation(mutations.joinClass, {

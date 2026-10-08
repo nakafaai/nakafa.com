@@ -13,10 +13,11 @@ import {
   type PublicationRequest,
 } from "@nakafa/aksara-contracts/transport/request";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 type BoundedPublicationRequest = PublicationRequest | StageOperation;
 type PublicationOperation = BoundedPublicationRequest["operation"];
+const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
 const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   accept: MAX_PUBLICATION_REQUEST_BYTES,
   abort: MAX_PUBLICATION_REQUEST_BYTES,
@@ -59,7 +60,8 @@ export function publicationRequestLimit(operation: PublicationOperation) {
 
 /** Measures one decoded request using its exact UTF-8 JSON representation. */
 function encodedRequestBytes(request: BoundedPublicationRequest) {
-  return new TextEncoder().encode(JSON.stringify(request)).byteLength;
+  return new TextEncoder().encode(Schema.encodeSync(UnknownJsonSchema)(request))
+    .byteLength;
 }
 
 /** Checks one decoded operation against its own transport ceiling. */
@@ -81,7 +83,8 @@ export function validateRequestBytes(
   if (request.operation !== "stageGroup") {
     return Effect.void;
   }
-  const hasOversizedChild = request.requests.some(
+  const hasOversizedChild = Arr.some(
+    request.requests,
     (child) => !hasValidRequestBytes(child, encodedRequestBytes(child))
   );
   return hasOversizedChild
@@ -104,10 +107,9 @@ export const decodePublicationBody = Effect.fn(
         : "CONTENT_RELEASE_INVALID_REQUEST"
     );
   }
-  const unknownBody = yield* Effect.try({
-    catch: () => decodeError("CONTENT_RELEASE_INVALID_REQUEST"),
-    try: (): unknown => JSON.parse(source),
-  });
+  const unknownBody = yield* Schema.decodeEffect(UnknownJsonSchema)(
+    source
+  ).pipe(Effect.mapError(() => decodeError("CONTENT_RELEASE_INVALID_REQUEST")));
   const request = yield* decodePublicationRequest(unknownBody).pipe(
     Effect.mapError(() => decodeError("CONTENT_RELEASE_INVALID_REQUEST"))
   );

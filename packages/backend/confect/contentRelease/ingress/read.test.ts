@@ -9,9 +9,9 @@ import { Effect, Schema } from "effect";
 describe("content publication authenticated reads", () => {
   it.live("accepts an exact manifest and rejects changed signed identity", () =>
     Effect.gen(function* () {
-      const unsigned = yield* Schema.decodeUnknownEffect(
-        SignedContentReleaseSchema
-      )(JSON.parse(testReleaseJson()));
+      const unsigned = yield* Schema.decodeEffect(
+        Schema.fromJsonString(SignedContentReleaseSchema)
+      )(testReleaseJson());
       const first = testSignedRelease(unsigned.manifest);
       const changed = testSignedRelease({
         ...unsigned.manifest,

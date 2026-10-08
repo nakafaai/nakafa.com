@@ -6,6 +6,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { Effect, FileSystem, Schedule, Stream } from "effect";
+import { HttpClient } from "effect/http";
 import { ChildProcess } from "effect/process";
 
 /** Keeps terminal hangup on NodeRuntime's graceful interruption path until cleanup finishes. */
@@ -196,6 +197,7 @@ export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
       Stream.run(fileSystem.sink(logPath, { flag: "a" })),
       Effect.forkScoped
     );
+    const client = yield* HttpClient.HttpClient;
     const ready = Effect.fn("contentAcceptance.waitForBackend")(function* () {
       if (!(yield* child.isRunning)) {
         const detail = sanitizeAcceptanceCommandError(
@@ -210,11 +212,14 @@ export const withLocalBackend = Effect.fn("contentAcceptance.withLocalBackend")(
       if (!log.includes("Convex functions ready!")) {
         return false;
       }
-      return yield* Effect.tryPromise({
-        try: (signal) => fetch(`${runtime.query}/instance_name`, { signal }),
-        catch: () =>
-          acceptanceRuntimeError("The local Convex readiness request failed."),
-      }).pipe(Effect.map((response) => response.ok));
+      return yield* client.get(`${runtime.query}/instance_name`).pipe(
+        Effect.map(
+          (response) => response.status >= 200 && response.status < 300
+        ),
+        Effect.mapError(() =>
+          acceptanceRuntimeError("The local Convex readiness request failed.")
+        )
+      );
     });
     yield* ready().pipe(
       Effect.repeat({
