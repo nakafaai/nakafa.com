@@ -30,9 +30,11 @@ export const EFFECT_COHORT_OVERRIDES = [
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.0.3";
 /**
- * The AI SDK core and the Convex AI gateway provider pin the same exact
- * provider packages, so they move as one catalog cohort. Each bump rechecks
- * the gateway module's provider contracts (confect/gateway).
+ * The AI SDK core and the Convex AI gateway provider move as one catalog
+ * cohort, and each bump rechecks the gateway module's provider contracts
+ * (confect/gateway). The provider brings its own provider packages, so the
+ * lockfile holds more than one version of @ai-sdk/provider and
+ * @ai-sdk/provider-utils.
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.2.1",
