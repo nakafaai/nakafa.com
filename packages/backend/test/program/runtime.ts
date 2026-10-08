@@ -9,7 +9,10 @@ import {
 import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
-import { Effect } from "effect";
+import { Effect, MutableHashMap, Schema } from "effect";
+
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates the complete active program publication and its indexed consumer rows. */
 export const makeProgramRuntimeSource = Effect.fn(
@@ -21,12 +24,7 @@ export const makeProgramRuntimeSource = Effect.fn(
     Effect.forEach(
       data.rows,
       (row, index) =>
-        stageProgramRow(
-          data.snapshotId,
-          index,
-          row.record,
-          JSON.stringify(row)
-        ),
+        stageProgramRow(data.snapshotId, index, row.record, encodeJson(row)),
       { discard: true }
     )
   );
@@ -38,7 +36,7 @@ export const makeProgramRuntimeSource = Effect.fn(
     snapshots: data.snapshots,
   });
   const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
-  fixture.source.set("contentSnapshots", [
+  MutableHashMap.set(fixture.source, "contentSnapshots", [
     {
       createdAt: 1,
       family: "program",
@@ -60,7 +58,7 @@ export const makeProgramRuntimeSource = Effect.fn(
           .table(table)
           .index("by_creation_time")
           .collect();
-        fixture.source.set(table, rows);
+        MutableHashMap.set(fixture.source, table, rows);
       }
     })
   );

@@ -25,7 +25,10 @@ import {
   makeTryoutStartPlacement,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, MutableHashMap, Schema } from "effect";
+
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates an inherited active try-out snapshot with authentic immutable bundle dependencies. */
 export const makeTryoutRuntimeSource = Effect.fn(
@@ -124,7 +127,7 @@ export const makeTryoutRuntimeSource = Effect.fn(
     rendererManifest: TEST_PROOF_RENDERER,
     snapshot: snapshot.manifest,
   });
-  fixture.source.set("contentReleases", [
+  MutableHashMap.set(fixture.source, "contentReleases", [
     {
       ...fixture.release,
       baseFamilies: [...origin.manifest.scope.families],
@@ -135,19 +138,20 @@ export const makeTryoutRuntimeSource = Effect.fn(
       tryoutRuntimeBundleHash: bundle.bundleHash,
     },
   ]);
-  fixture.source.set(
+  MutableHashMap.set(
+    fixture.source,
     "contentArtifacts",
     artifacts.map((artifact) => ({
       artifactHash: artifact.artifactHash,
-      artifactJson: JSON.stringify(artifact),
+      artifactJson: encodeJson(artifact),
     }))
   );
-  fixture.source.set("tryoutRuntimeBundles", [
+  MutableHashMap.set(fixture.source, "tryoutRuntimeBundles", [
     {
       bundleHash: bundle.bundleHash,
-      bundleJson: JSON.stringify(bundle),
+      bundleJson: encodeJson(bundle),
       createdAt: 1,
-      rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+      rendererJson: encodeJson(TEST_PROOF_RENDERER),
       rendererManifestHash: TEST_PROOF_RENDERER.hash,
       snapshotId,
       sourceGitSha: bundle.payload.sourceGitSha,
@@ -160,7 +164,8 @@ export const makeTryoutRuntimeSource = Effect.fn(
     "tryoutCatalog",
     "tryoutPlacements",
   ] as const) {
-    fixture.source.set(
+    MutableHashMap.set(
+      fixture.source,
       table,
       yield* Effect.promise(() =>
         t.query((ctx) => ctx.db.query(table).collect())

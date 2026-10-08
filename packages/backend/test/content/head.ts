@@ -18,12 +18,13 @@ import {
 } from "@repo/backend/test/runtime/head";
 import { Schema } from "effect";
 
-interface HeadOptions {
-  readonly contentKey: string;
-  readonly operation?: "delete" | "upsert";
-  readonly releaseId?: string;
-  readonly sequence?: number;
-}
+const HeadOptionsSchema = Schema.Struct({
+  contentKey: Schema.String,
+  operation: Schema.optionalKey(Schema.Literals(["delete", "upsert"])),
+  releaseId: Schema.optionalKey(Schema.String),
+  sequence: Schema.optionalKey(Schema.Finite),
+});
+type HeadOptions = typeof HeadOptionsSchema.Type;
 
 /** Inserts one permanent key plus its immutable head and route versions. */
 export async function insertTestHead(ctx: MutationCtx, options: HeadOptions) {

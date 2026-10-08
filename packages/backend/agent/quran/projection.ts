@@ -1,11 +1,11 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { projectQuranVerse } from "@repo/backend/agent/quran/verse";
 import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
-import type { NakafaAgentContentRef } from "@repo/contents/agent/schema/ref";
-import { Effect } from "effect";
+import { NakafaAgentContentRefSchema } from "@repo/contents/agent/schema/ref";
+import { Effect, Schema } from "effect";
 
 type QuranReferenceResult = PublishedQuranReference;
 type QuranEmbeddedProjection =
@@ -16,19 +16,19 @@ type QuranEmbeddedProjection =
         readonly kind: "embedded";
       }
     >["source"];
-interface QuranProjectionInput {
-  readonly appLocale: AppLocaleCode;
-  readonly includeTafsir: boolean;
-  readonly ref: NakafaAgentContentRef;
-}
-interface QuranReferenceProjectionInput extends QuranProjectionInput {
-  readonly reference: PublishedQuranReference;
-}
+const QuranProjectionInputSchema = Schema.Struct({
+  appLocale: AppLocaleCodeSchema,
+  includeTafsir: Schema.Boolean,
+  ref: NakafaAgentContentRefSchema,
+});
+type QuranProjectionInput = typeof QuranProjectionInputSchema.Type;
 
 /** Projects the canonical Quran contract with semantic notes and signed sources. */
 export const projectNakafaQuranReference = Effect.fn(
   "agent.quran.projectReference"
-)(function* (input: QuranReferenceProjectionInput) {
+)(function* (
+  input: QuranProjectionInput & { readonly reference: PublishedQuranReference }
+) {
   const { sources, tafsirAccess } = input.reference;
   const verses = yield* Effect.forEach(input.reference.verses, (verse) =>
     projectQuranVerse(verse, input.appLocale, input.includeTafsir)
