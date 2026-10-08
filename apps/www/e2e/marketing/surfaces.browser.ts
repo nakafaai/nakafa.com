@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec } from "effect";
-import { activateUntilVisible } from "@/e2e/support/input";
+import { activateUntilVisible, press } from "@/e2e/support/input";
 import {
   legacyAvatarFragmentIds,
   measureMarketingPage,
@@ -103,9 +103,7 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
     const { hasTouch } = viewport;
     const firstContributor = yield* readFirstContributor(contributors);
     const firstTrigger = triggers.first();
-    yield* Effect.promise(() =>
-      hasTouch ? firstTrigger.tap() : firstTrigger.click()
-    );
+    yield* Effect.promise(() => press(firstTrigger, hasTouch));
     const drawer = page.locator("[data-contributor-drawer]");
     yield* Effect.promise(() => expect(drawer).toHaveCount(1));
     yield* Effect.promise(() => expect(drawer).toBeVisible());
@@ -140,14 +138,10 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
     yield* Effect.promise(() => expect(drawer).toHaveCount(0));
     yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
 
-    yield* Effect.promise(() =>
-      hasTouch ? firstTrigger.tap() : firstTrigger.click()
-    );
+    yield* Effect.promise(() => press(firstTrigger, hasTouch));
     const outsideSurface = page.locator('[data-slot="drawer-viewport"]');
     yield* Effect.promise(() =>
-      hasTouch
-        ? outsideSurface.tap({ position: { x: 2, y: 2 } })
-        : outsideSurface.click({ position: { x: 2, y: 2 } })
+      press(outsideSurface, hasTouch, { position: { x: 2, y: 2 } })
     );
     yield* Effect.promise(() => expect(drawer).toHaveCount(0));
     yield* Effect.promise(() => expect(firstTrigger).toBeFocused());

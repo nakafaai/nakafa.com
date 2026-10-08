@@ -10,14 +10,26 @@ const ACTIVATION_PROBE_TIMEOUT_MILLISECONDS = 1000;
 const PRESS_TIMEOUT_MILLISECONDS = 15_000;
 const TOUCH_MOVE_STEPS = 5;
 
+/** Where a press lands on its control, in CSS pixels from the control's corner. */
+interface PressOptions {
+  readonly position?: { readonly x: number; readonly y: number };
+}
+
 /**
  * Clicks or taps a control without waiting for the navigation it starts. The
  * press gives up after 15 seconds.
  */
-export function press(control: Locator, hasTouch: boolean) {
-  return hasTouch
-    ? control.tap({ noWaitAfter: true, timeout: PRESS_TIMEOUT_MILLISECONDS })
-    : control.click({ noWaitAfter: true, timeout: PRESS_TIMEOUT_MILLISECONDS });
+export function press(
+  control: Locator,
+  hasTouch: boolean,
+  options: PressOptions = {}
+) {
+  const pressOptions = {
+    noWaitAfter: true,
+    timeout: PRESS_TIMEOUT_MILLISECONDS,
+    ...options,
+  };
+  return hasTouch ? control.tap(pressOptions) : control.click(pressOptions);
 }
 
 /** The first link to `href` that the page shows, wherever it sits on the page. */
