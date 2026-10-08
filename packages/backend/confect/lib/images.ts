@@ -33,7 +33,7 @@ export const CLASS_IMAGE_ENTRIES: readonly (readonly [
   ["stamp", "/classes/stamp.png"],
   ["vintage", "/classes/vintage.png"],
 ] as const;
-export const CLASS_IMAGES = HashMap.fromIterable(CLASS_IMAGE_ENTRIES);
+const CLASS_IMAGES = HashMap.fromIterable(CLASS_IMAGE_ENTRIES);
 
 /**
  * Get a deterministic class image based on a text input.

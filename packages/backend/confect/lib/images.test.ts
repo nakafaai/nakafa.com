@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { schoolClassImageValidator } from "@repo/backend/confect/classes/schema";
 import {
-  CLASS_IMAGES,
+  CLASS_IMAGE_ENTRIES,
   getClassImageUrl,
   getRandomClassImage,
   isValidClassImage,
@@ -9,6 +9,7 @@ import {
 import { HashMap, Option } from "effect";
 
 const CLASS_IMAGE_URL_PATTERN = /^\/classes\/[a-z]+\.png$/;
+const CLASS_IMAGES = HashMap.fromIterable(CLASS_IMAGE_ENTRIES);
 
 describe("lib/images", () => {
   it.each(schoolClassImageValidator.literals)(
