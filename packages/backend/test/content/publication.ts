@@ -1,15 +1,15 @@
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
-import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import {
+  type SignedContentRelease,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import schema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
-import {
-  encodeArtifactJson,
-  encodeReleaseJson,
-  encodeRendererJson,
-} from "@repo/backend/confect/contentRelease/wire";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
@@ -32,6 +32,17 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
+
+/** Encodes fixture JSON with the contracts production decodes, so each stored string has the wire shape production reads. */
+const encodeArtifactJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentArtifactSchema)
+);
+const encodeReleaseJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentReleaseSchema)
+);
+const encodeRendererJson = Schema.encodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+);
 
 export const TEST_PUBLICATION_RELEASE = testSignedRelease(
   testEmptyManifest(ReleaseIdSchema.make("publication-active"))

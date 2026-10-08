@@ -1,3 +1,4 @@
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
@@ -9,6 +10,7 @@ import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/project
 import {
   ContentReleaseItemSchema,
   ContentReleaseManifestSchema,
+  SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { digestItems } from "@nakafa/aksara-contracts/release/digest";
 import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
@@ -17,6 +19,7 @@ import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollbac
 import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { digestRoutes } from "@nakafa/aksara-contracts/release/route/digest";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { MAX_ITEM_BATCH_COUNT } from "@nakafa/aksara-contracts/transport/limits";
 import { stageProgram as stageArtifacts } from "@repo/backend/confect/contentRelease/artifacts";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
@@ -24,13 +27,6 @@ import { stageItemProgram } from "@repo/backend/confect/contentRelease/items";
 import { stageProgram as stageRelease } from "@repo/backend/confect/contentRelease/manifest";
 import { stageProjectionProgram } from "@repo/backend/confect/contentRelease/projection";
 import { stageProgram as stageRoutes } from "@repo/backend/confect/contentRelease/routes";
-import {
-  encodeArtifactJson,
-  encodeItemJson,
-  encodeReleaseJson,
-  encodeRendererJson,
-  encodeRouteJson,
-} from "@repo/backend/confect/contentRelease/wire";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_PROOF_RENDERER,
@@ -39,6 +35,23 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import { Effect, Schema, Stream } from "effect";
+
+/** Encodes fixture JSON with the contracts production decodes, so each stored string has the wire shape production reads. */
+const encodeArtifactJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentArtifactSchema)
+);
+const encodeItemJson = Schema.encodeSync(
+  Schema.fromJsonString(ContentReleaseItemSchema)
+);
+const encodeReleaseJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentReleaseSchema)
+);
+const encodeRendererJson = Schema.encodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+);
+const encodeRouteJson = Schema.encodeSync(
+  Schema.fromJsonString(ContentRouteItemSchema)
+);
 
 /** Stages a complete authenticated genesis release across real bounded batches. */
 export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(

@@ -1,6 +1,7 @@
 import { RegisteredFunction } from "@confect/server";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { PublicationRequestSchema } from "@nakafa/aksara-contracts/transport/request";
 import { PublicationResponseSchema } from "@nakafa/aksara-contracts/transport/response";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { dispatchPublication } from "@repo/backend/confect/contentRelease/ingress/dispatch";
@@ -27,9 +28,9 @@ import { FetchClient } from "@repo/utilities/http/client";
 import type { TestConvex } from "convex-test";
 import { Effect, Layer, Schema } from "effect";
 
-/** Encodes a request as it arrives on the wire, so malformed requests still reach the dispatcher. */
-const encodeRequestJson = Schema.encodeSync(
-  Schema.fromJsonString(Schema.Unknown)
+/** Validates one request against the publication contract, then encodes it as its wire body. */
+const encodeRequestJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(PublicationRequestSchema)
 );
 /** Decodes the dispatcher's response text through the response contract. */
 const decodePublicationResponse = Schema.decodeUnknownSync(

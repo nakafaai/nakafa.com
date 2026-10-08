@@ -1,12 +1,17 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { Ed25519SignatureSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  encodeArtifactJson,
-  encodeRendererJson,
-} from "@repo/backend/confect/contentRelease/wire";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testProofRenderer } from "@repo/backend/test/content/proof";
 import { Data, Effect, Schema } from "effect";
+
+/** Encodes fixture JSON with the contracts production decodes, so each stored string has the wire shape production reads. */
+const encodeArtifactJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentArtifactSchema)
+);
+const encodeRendererJson = Schema.encodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+);
 
 class InvalidDriftFixture extends Data.TaggedError("InvalidDriftFixture")<{
   operation: "load-proof-release" | "load-staged-artifact";
