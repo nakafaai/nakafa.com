@@ -1,4 +1,4 @@
-import { Array as Arr, HashSet, Result } from "effect";
+import { Array as Arr, type Effect, HashSet, Result } from "effect";
 import {
   isArrowFunction,
   isCallExpression,
@@ -15,6 +15,7 @@ import {
   type SourceFile,
 } from "typescript/unstable/ast";
 import { imports } from "#scripts/check/rules";
+import { descendants, type parseSources } from "#scripts/check/source";
 
 const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;
 const MODULE_EXTENSION_PATTERN = /\.[cm]?tsx?$/u;
@@ -126,6 +127,21 @@ function declaredFunction(file: string, sourceFile: SourceFile, local: string) {
     }
   }
   return Result.succeed(functionKey(moduleKey(file), local));
+}
+
+/**
+ * Returns the function keys that every given module passes to the browser page
+ * by reference, so a function declared in one module and passed from another
+ * still counts as running in the page.
+ */
+export function pageKeysOf(
+  modules: Effect.Success<ReturnType<typeof parseSources>>["modules"]
+) {
+  return HashSet.fromIterable(
+    Arr.flatMap(modules, ({ file, sourceFile }) =>
+      pageFunctionKeys(file, sourceFile, descendants(sourceFile))
+    )
+  );
 }
 
 /**
