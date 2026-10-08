@@ -1,12 +1,4 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import {
-  ContentKeySchema,
-  CorpusSourcePathSchema,
-  ReleaseIdSchema,
-  Sha256HashSchema,
-} from "@nakafa/aksara-contracts/ids";
-import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { ContentReleaseItemSchema } from "@nakafa/aksara-contracts/release";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_MANIFEST_HASH,
@@ -17,9 +9,8 @@ import {
 } from "@repo/backend/test/content/release";
 import { Schema } from "effect";
 
-const encodeItemJson = Schema.encodeSync(
-  Schema.fromJsonString(ContentReleaseItemSchema)
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so the staged body matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 export const ABORT_RELEASE_ID = "release-abort";
 export const ABORT_ITEM_COUNT = 32;
@@ -33,23 +24,18 @@ export function abortContentKey(index: number) {
 /** Creates one staged upsert body with no authored educational content. */
 export function abortItemJson(index: number) {
   const contentKey = abortContentKey(index);
-  return encodeItemJson({
+  return encodeJson({
     change: {
-      artifactHash: Sha256HashSchema.make(
-        `sha256:${index.toString(16).padStart(64, "0")}`
-      ),
-      artifactLocale: ArtifactLocaleSchema.make("en"),
-      contentKey: ContentKeySchema.make(contentKey),
+      artifactHash: `sha256:${index.toString(16).padStart(64, "0")}`,
+      artifactLocale: "en",
+      contentKey,
       delivery: "public",
-      family: "material",
       operation: "upsert",
       rendererDomain: "mathematics",
-      sourcePath: CorpusSourcePathSchema.make(
-        `packages/corpus/test/abort-${index}/en.mdx`
-      ),
+      sourcePath: `packages/corpus/test/abort-${index}/en.mdx`,
     },
     index,
-    releaseId: ReleaseIdSchema.make(ABORT_RELEASE_ID),
+    releaseId: ABORT_RELEASE_ID,
   });
 }
 

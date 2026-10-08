@@ -1,4 +1,3 @@
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
@@ -10,7 +9,6 @@ import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/project
 import {
   ContentReleaseItemSchema,
   ContentReleaseManifestSchema,
-  SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { digestItems } from "@nakafa/aksara-contracts/release/digest";
 import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
@@ -19,7 +17,6 @@ import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollbac
 import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { digestRoutes } from "@nakafa/aksara-contracts/release/route/digest";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
-import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { MAX_ITEM_BATCH_COUNT } from "@nakafa/aksara-contracts/transport/limits";
 import { stageProgram as stageArtifacts } from "@repo/backend/confect/contentRelease/artifacts";
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
@@ -36,27 +33,8 @@ import {
 } from "@repo/backend/test/content/proof";
 import { Effect, Schema, Stream } from "effect";
 
-/** Encodes fixture JSON with the contracts production decodes, so each stored string has the wire shape production reads. */
-const encodeArtifactJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentArtifactSchema),
-  { onExcessProperty: "error" }
-);
-const encodeItemJson = Schema.encodeSync(
-  Schema.fromJsonString(ContentReleaseItemSchema),
-  { onExcessProperty: "error" }
-);
-const encodeReleaseJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentReleaseSchema),
-  { onExcessProperty: "error" }
-);
-const encodeRendererJson = Schema.encodeSync(
-  Schema.fromJsonString(RendererManifestEnvelopeSchema),
-  { onExcessProperty: "error" }
-);
-const encodeRouteJson = Schema.encodeSync(
-  Schema.fromJsonString(ContentRouteItemSchema),
-  { onExcessProperty: "error" }
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so the staged rows match main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Stages a complete authenticated genesis release across real bounded batches. */
 export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
@@ -187,8 +165,8 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
     );
     yield* stageRelease(
       "candidate",
-      encodeReleaseJson(signed),
-      encodeRendererJson(TEST_PROOF_RENDERER)
+      encodeJson(signed),
+      encodeJson(TEST_PROOF_RENDERER)
     );
     for (let start = 0; start < count; start += MAX_ITEM_BATCH_COUNT) {
       const batchIndex = start / MAX_ITEM_BATCH_COUNT;
@@ -196,12 +174,12 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
       yield* stageItemProgram(
         releaseId,
         batchIndex,
-        batch.map(({ item }) => encodeItemJson(item))
+        batch.map(({ item }) => encodeJson(item))
       );
       yield* stageArtifacts(
         releaseId,
         batchIndex,
-        batch.map(({ artifact }) => encodeArtifactJson(artifact))
+        batch.map(({ artifact }) => encodeJson(artifact))
       );
       yield* stageProjectionProgram(
         releaseId,
@@ -215,7 +193,7 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
         start / MAX_ITEM_BATCH_COUNT,
         routes
           .slice(start, start + MAX_ITEM_BATCH_COUNT)
-          .map((route) => encodeRouteJson(route))
+          .map((route) => encodeJson(route))
       );
     }
     return signed.manifestHash;

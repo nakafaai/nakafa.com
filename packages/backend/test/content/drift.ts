@@ -1,16 +1,12 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { Ed25519SignatureSchema } from "@nakafa/aksara-contracts/ids";
-import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testProofRenderer } from "@repo/backend/test/content/proof";
 import { Data, Effect, Schema } from "effect";
 
-/** Encodes the fixture renderer with the contract production decodes, so its stored string has the wire shape production reads. */
-const encodeRendererJson = Schema.encodeSync(
-  Schema.fromJsonString(RendererManifestEnvelopeSchema),
-  { onExcessProperty: "error" }
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so the stored renderer matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 class InvalidDriftFixture extends Data.TaggedError("InvalidDriftFixture")<{
   operation: "load-proof-release" | "load-staged-artifact";
@@ -57,7 +53,7 @@ export const driftStoredRenderer = Effect.fn(
   const release = yield* loadProofRelease(ctx);
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", release._id, {
-      rendererJson: encodeRendererJson(testProofRenderer("h1")),
+      rendererJson: encodeJson(testProofRenderer("h1")),
     })
   );
 });

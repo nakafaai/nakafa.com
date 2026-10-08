@@ -1,4 +1,3 @@
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   ContentKeySchema,
@@ -7,10 +6,9 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
-  ACTIVE_APP_LOCALES,
+  ACTIVE_APP_LOCALE_CODES,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { PublicationReceiptSchema } from "@nakafa/aksara-contracts/release";
 import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
@@ -39,10 +37,9 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { Schema } from "effect";
 
-const ReceiptJsonSchema = Schema.fromJsonString(PublicationReceiptSchema);
-const SignedArtifactJsonSchema = Schema.fromJsonString(
-  SignedContentArtifactSchema
-);
+/** Plain codec: writes the same bytes as JSON.stringify, so the stored text matches main. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 const NOW = Date.UTC(2026, 6, 23, 12);
 type RollbackFixtureFamily = "material" | "question";
 
@@ -115,7 +112,7 @@ export async function activateRollbackFixture(
   }
   const receipt = {
     activatedHeads: itemCount,
-    activeAppLocales: ACTIVE_APP_LOCALES,
+    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
     deletedHeads: 0,
     manifestHash: TEST_MANIFEST_HASH,
     projectionDigest: TEST_DIGEST,
@@ -134,7 +131,7 @@ export async function activateRollbackFixture(
     completedAt: NOW,
     proofAt: NOW,
     proofJson: "{}",
-    receiptJson: Schema.encodeSync(ReceiptJsonSchema)(receipt),
+    receiptJson: encodeJson(receipt),
     status: "completed",
     verifiedAt: NOW,
   });
@@ -309,9 +306,7 @@ export async function insertRollbackItem(
       sourcePath: currentSourcePath,
     },
     compiledCode,
-    signedArtifact
-      ? Schema.encodeSync(SignedArtifactJsonSchema)(signedArtifact)
-      : undefined
+    signedArtifact ? encodeJson(signedArtifact) : undefined
   );
   if (previousExists) {
     await insertVersion(
