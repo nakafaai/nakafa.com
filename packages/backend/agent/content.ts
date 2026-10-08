@@ -12,7 +12,7 @@ import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
 import {
   formatQuranMeaning,
-  type QuranMarkdown,
+  quranMarkdownValidator,
 } from "@repo/backend/content/quran/contract";
 import {
   getUnknownErrorMessage,
@@ -35,6 +35,11 @@ const PublishedRefSchema = Schema.Struct({
   section: Schema.Literals(["articles", "material"]),
 });
 type PublishedRef = typeof PublishedRefSchema.Type;
+const QuranContentSourceSchema = Schema.Struct({
+  markdown: quranMarkdownValidator,
+  surahNumber: Schema.Finite,
+});
+type QuranContentSource = typeof QuranContentSourceSchema.Type;
 const contentSourceReference =
   refs.internal.contentRelease.reference.internal.readAgentContent;
 const publicRuntimeReference =
@@ -70,11 +75,7 @@ export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
     );
   }
   if (source.kind === "quran") {
-    return yield* renderQuranMarkdown(
-      ref.value,
-      source.markdown,
-      source.surahNumber
-    );
+    return yield* renderQuranMarkdown(ref.value, source);
   }
   if (isPublishedRef(ref.value)) {
     return yield* readPublishedMarkdown(ref.value);
@@ -146,12 +147,11 @@ const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
 /** Renders one signed Quran surah as agent-readable markdown. */
 const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
   ref: NakafaAgentContentRef,
-  quranMarkdown: QuranMarkdown,
-  surahNumber: number
+  source: QuranContentSource
 ) {
-  const publication = yield* decodePublishedQuranMarkdown(quranMarkdown, {
+  const publication = yield* decodePublishedQuranMarkdown(source.markdown, {
     appLocale: ref.locale,
-    surahNumber,
+    surahNumber: source.surahNumber,
   }).pipe(Effect.mapError(contentReadError));
   const surah = publication.surah;
   const title = surah.name.transliteration;
