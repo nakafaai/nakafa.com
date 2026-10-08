@@ -145,6 +145,11 @@ const makeRepository = Effect.fn("ProductionAcceptanceTest.makeRepository")(
     const fileSystem = yield* FileSystem.FileSystem;
     const repository = yield* fileSystem.makeTempDirectoryScoped({ prefix });
     yield* runGit(repository, ["init", "--initial-branch=main"]);
+    // After a commit Git can start detached maintenance, which takes a lock
+    // file under .git/objects while the scope is already removing this
+    // directory. The fixture never needs maintenance, so it is off.
+    yield* runGit(repository, ["config", "maintenance.auto", "false"]);
+    yield* runGit(repository, ["config", "gc.auto", "0"]);
     yield* runGit(repository, ["config", "user.name", "CI Fixture"]);
     yield* runGit(repository, [
       "config",
