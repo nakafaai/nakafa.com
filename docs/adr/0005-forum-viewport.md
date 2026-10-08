@@ -16,7 +16,7 @@ Pure deterministic helpers such as Transcript row construction, geometry, bottom
 
 ## Consequences
 
-- The split controller, leftover compatibility paths, duplicated state ownership, and legacy scroll hooks are deleted instead of preserved.
+- The current split controller, leftover compatibility paths, duplicated state ownership, and legacy scroll hooks should be deleted instead of preserved.
 - Viewport state, Placement intent, back navigation, latest-edge detection, read sync, and Snapshot persistence must be coordinated by one state machine.
 - Latest-control visibility is derived from the Effect-owned Viewport state. Virtua, Zustand, and in-flight Placement refs do not directly decide whether the latest button is shown.
 - React UI Modules consume a small provider/context Interface with state, actions, and meta. The provider is the only React Module that knows the Viewport Implementation is Effect-owned.
