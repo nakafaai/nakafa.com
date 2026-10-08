@@ -143,14 +143,14 @@ async function CurriculumTrackRoute({
   return (
     <CurriculumRouteFrame breadcrumbs={breadcrumbs} model={model}>
       <BreadcrumbHeader
-        action={
-          <CurriculumSelector
-            currentValue={route.publicPath}
-            label={tLearningPrograms("kind.school-curriculum")}
-            options={readRuntimeCurriculumOptions(catalog, locale)}
-          />
-        }
         value={{
+          action: (
+            <CurriculumSelector
+              currentValue={route.publicPath}
+              label={tLearningPrograms("kind.school-curriculum")}
+              options={readRuntimeCurriculumOptions(catalog, locale)}
+            />
+          ),
           homeLabel,
           items: [{ label: tCommon("subject") }],
           menuLabel: tCommon("more"),

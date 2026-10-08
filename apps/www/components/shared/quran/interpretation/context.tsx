@@ -1,22 +1,32 @@
 "use client";
 
-import { Schema } from "effect";
 import { createContext, type MouseEventHandler, use } from "react";
 
-const QuranInterpretationStateSchema = Schema.Struct({
-  isActive: Schema.Boolean,
-  pendingVerseNumber: Schema.NullOr(Schema.Finite),
-});
+/** Builds the value the tafsir triggers and drawer share: trigger state and the selection handler. */
+export function buildQuranInterpretationValue({
+  isControllerActive,
+  isPending,
+  pendingVerseNumber,
+  selectInterpretation,
+}: {
+  isControllerActive: boolean;
+  isPending: boolean;
+  pendingVerseNumber: number | null;
+  selectInterpretation: MouseEventHandler<HTMLButtonElement>;
+}) {
+  return {
+    isActive: isControllerActive,
+    pendingVerseNumber: isPending ? pendingVerseNumber : null,
+    selectInterpretation,
+  };
+}
 
-type QuranInterpretationState = typeof QuranInterpretationStateSchema.Type;
-
-type SelectQuranInterpretation = MouseEventHandler<HTMLButtonElement>;
+type QuranInterpretationContextValue = ReturnType<
+  typeof buildQuranInterpretationValue
+>;
 
 export const QuranInterpretationContext =
-  createContext<QuranInterpretationState | null>(null);
-
-export const QuranInterpretationSelectionContext =
-  createContext<SelectQuranInterpretation | null>(null);
+  createContext<QuranInterpretationContextValue | null>(null);
 
 /** Reads whether one tafsir trigger is inactive, idle, or loading. */
 export function useQuranInterpretationState(verseNumber: number) {
@@ -40,12 +50,12 @@ export function useQuranInterpretationState(verseNumber: number) {
 
 /** Reads the shared React event handler for selecting tafsir. */
 export function useQuranInterpretationSelection() {
-  const selectInterpretation = use(QuranInterpretationSelectionContext);
-  if (!selectInterpretation) {
+  const context = use(QuranInterpretationContext);
+  if (!context) {
     throw new Error(
       "Quran tafsir button must be rendered within QuranInterpretationControls."
     );
   }
 
-  return selectInterpretation;
+  return context.selectInterpretation;
 }

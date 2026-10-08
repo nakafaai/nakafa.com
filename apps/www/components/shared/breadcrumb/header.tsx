@@ -16,39 +16,34 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { Schema } from "effect";
 import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
-const BreadcrumbHeaderItemSchema = Schema.Struct({
-  href: Schema.optional(Schema.String),
-  label: Schema.String,
+export type BreadcrumbHeaderItem = Readonly<{
+  href?: string | undefined;
+  label: string;
   /** BCP 47 language of the label when it differs from the page. */
-  language: Schema.optionalKey(Schema.String),
-  menuLabel: Schema.optionalKey(Schema.String),
-});
+  language?: string;
+  menuLabel?: string;
+}>;
 
-export type BreadcrumbHeaderItem = typeof BreadcrumbHeaderItemSchema.Type;
+/** Props of one sticky, bounded breadcrumb header. */
+interface BreadcrumbHeaderProps {
+  /** Complete render value for one sticky, bounded breadcrumb header. */
+  value: {
+    action?: ReactNode;
+    homeLabel: string;
+    items: readonly BreadcrumbHeaderItem[];
+    menuLabel: string;
+    title: string;
+  };
+}
 
-const BreadcrumbHeaderValueSchema = Schema.Struct({
-  homeLabel: Schema.String,
-  items: Schema.Array(BreadcrumbHeaderItemSchema),
-  menuLabel: Schema.String,
-  title: Schema.String,
-});
+type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
 
-/** Render data for one sticky, bounded breadcrumb header; the optional action renders beside it as its own prop. */
-type BreadcrumbHeaderValue = typeof BreadcrumbHeaderValueSchema.Type;
-
-/** Renders at most Home and the two nearest path items, beside an optional action. */
-export function BreadcrumbHeader({
-  action,
-  value,
-}: {
-  action?: ReactNode;
-  value: BreadcrumbHeaderValue;
-}) {
-  const { homeLabel, items, menuLabel, title } = value;
+/** Renders at most Home and the two nearest path items. */
+export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
+  const { action, homeLabel, items, menuLabel, title } = value;
   return (
     <BreadcrumbHeaderFrame contentClassName="flex-col items-stretch justify-center sm:flex-row sm:items-center sm:justify-between sm:py-0">
       <h1 className="sr-only">{title}</h1>

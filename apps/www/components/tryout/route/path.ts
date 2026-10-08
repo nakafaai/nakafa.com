@@ -1,13 +1,9 @@
-import { Schema } from "effect";
+import type { TryoutSectionRoute } from "@/components/tryout/section/model";
 
-const TryoutHrefInputSchema = Schema.Struct({
-  country: Schema.optionalKey(Schema.String),
-  exam: Schema.optionalKey(Schema.String),
-  section: Schema.optionalKey(Schema.String),
-  set: Schema.optionalKey(Schema.String),
-  track: Schema.optionalKey(Schema.String),
-});
-type TryoutHrefInput = typeof TryoutHrefInputSchema.Type;
+/** Route coordinates of an href; each one is optional because a href can omit any of them. */
+type TryoutHrefInput = Partial<
+  Pick<TryoutSectionRoute, "country" | "exam" | "section" | "set" | "track">
+>;
 
 const ATTEMPT_ID_PARAM = "attemptId";
 
@@ -16,12 +12,10 @@ export type TryoutRouteSearchParams = Record<
   string | string[] | undefined
 >;
 
-const TryoutAttemptCapabilitySchema = Schema.Union([
-  Schema.Struct({ kind: Schema.Literal("absent") }),
-  Schema.Struct({ kind: Schema.Literal("invalid") }),
-  Schema.Struct({ attemptId: Schema.String, kind: Schema.Literal("valid") }),
-]);
-type TryoutAttemptCapability = typeof TryoutAttemptCapabilitySchema.Type;
+type TryoutAttemptCapability =
+  | { kind: "absent" }
+  | { kind: "invalid" }
+  | { attemptId: string; kind: "valid" };
 
 /** Builds a public try-out href from already-localized route segments. */
 export function getTryoutHref({

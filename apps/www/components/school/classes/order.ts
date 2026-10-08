@@ -1,11 +1,7 @@
-import { Schema } from "effect";
-
-const OrderedRowSchema = Schema.Struct({
-  _id: Schema.String,
-  order: Schema.Finite,
-});
-
-type OrderedRow = typeof OrderedRowSchema.Type;
+interface OrderedRow {
+  _id: string;
+  order: number;
+}
 
 /** Swap one row with its loaded neighbor while preserving server order values. */
 export function reorderPage<T extends OrderedRow>(

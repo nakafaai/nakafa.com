@@ -107,14 +107,14 @@ export default async function Page({
     <LayoutMaterial className="h-[calc(100svh-4rem)] flex-col overflow-clip lg:h-svh">
       <LayoutMaterialContent className="flex min-h-0 flex-1 flex-col">
         <BreadcrumbHeader
-          action={
-            <TryoutExamSelector
-              currentValue={examPath}
-              label={tTryouts("exam-selector-label")}
-              options={examOptions}
-            />
-          }
           value={{
+            action: (
+              <TryoutExamSelector
+                currentValue={examPath}
+                label={tTryouts("exam-selector-label")}
+                options={examOptions}
+              />
+            ),
             homeLabel: tCommon("home"),
             items: [
               {

@@ -30,8 +30,8 @@ import {
 } from "react";
 import { toast } from "sonner";
 import {
+  buildQuranInterpretationValue,
   QuranInterpretationContext,
-  QuranInterpretationSelectionContext,
 } from "@/components/shared/quran/interpretation/context";
 import { reportClientException } from "@/lib/analytics/client";
 import { httpLayer } from "@/lib/convex/http";
@@ -206,30 +206,30 @@ export function QuranInterpretationControls({
       await Effect.runPromise(program);
     });
   };
-  const interpretationState = {
-    isActive: isControllerActive,
-    pendingVerseNumber: isPending ? pendingVerseNumber : null,
-  };
+  const contextValue = buildQuranInterpretationValue({
+    isControllerActive,
+    isPending,
+    pendingVerseNumber,
+    selectInterpretation,
+  });
   return (
-    <QuranInterpretationContext value={interpretationState}>
-      <QuranInterpretationSelectionContext value={selectInterpretation}>
-        {children}
-        <Drawer onOpenChange={set} open={isOpen}>
-          <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
-            <DrawerHeader className="border-b">
-              <DrawerTitle className="text-center">{label}</DrawerTitle>
-            </DrawerHeader>
+    <QuranInterpretationContext value={contextValue}>
+      {children}
+      <Drawer onOpenChange={set} open={isOpen}>
+        <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
+          <DrawerHeader className="border-b">
+            <DrawerTitle className="text-center">{label}</DrawerTitle>
+          </DrawerHeader>
 
-            <DrawerPanel className="p-4">
-              <div className="rounded-md border bg-accent p-4">
-                <p className="text-pretty text-accent-foreground leading-relaxed">
-                  {selectedInterpretation}
-                </p>
-              </div>
-            </DrawerPanel>
-          </DrawerPopup>
-        </Drawer>
-      </QuranInterpretationSelectionContext>
+          <DrawerPanel className="p-4">
+            <div className="rounded-md border bg-accent p-4">
+              <p className="text-pretty text-accent-foreground leading-relaxed">
+                {selectedInterpretation}
+              </p>
+            </div>
+          </DrawerPanel>
+        </DrawerPopup>
+      </Drawer>
     </QuranInterpretationContext>
   );
 }
