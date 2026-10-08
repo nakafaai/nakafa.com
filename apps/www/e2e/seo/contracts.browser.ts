@@ -13,8 +13,10 @@ import {
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { LINE_SCENE, lineSceneCards } from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { revealCardContent, revealSceneCard } from "@/e2e/support/visual";
+import {
+  readinessTimeoutMilliseconds,
+  revealTimeoutMilliseconds,
+} from "@/e2e/support/timeout";
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;
@@ -275,8 +277,14 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
   yield* Effect.promise(() => expect(scene).toBeAttached());
   yield* Effect.promise(() => expect(canvases).toHaveCount(0));
   // Reveal the content-visibility card before scrolling its deferred scene.
-  yield* revealCardContent(card, LINE_SCENE);
-  yield* revealSceneCard(card);
+  yield* Effect.promise(() =>
+    expect(async () => {
+      await card.scrollIntoViewIfNeeded();
+      await expect(scene).toBeVisible();
+      await scene.scrollIntoViewIfNeeded();
+      expect(await scene.locator("canvas").isVisible()).toBe(true);
+    }).toPass({ timeout: revealTimeoutMilliseconds })
+  );
 });
 
 for (const group of contentRouteGroups) {
