@@ -4,14 +4,16 @@ import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { enforceAgentReadLimit } from "@repo/backend/confect/routes/agent/limit";
 import { guardMcpOrigin } from "@repo/backend/confect/routes/agent/mcp/guard";
 import { readMcpRequest } from "@repo/backend/confect/routes/agent/mcp/input";
+import { refuseMcpRequest } from "@repo/backend/confect/routes/agent/mcp/refusal";
 import {
+  isJsonRpcNotification,
   mcpOptionsResponse,
   mcpParsedErrorResponse,
   mcpTransportErrorResponse,
   withMcpResponseHeaders,
 } from "@repo/backend/confect/routes/agent/mcp/response";
 import { RequestIdentity } from "@repo/backend/confect/routes/middleware/identity";
-import { Effect, Layer, Result } from "effect";
+import { Array as Arr, Effect, Layer, Option, Result } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 /** Serves the protected Streamable HTTP MCP transport: Nakafa's checks, then Effect's engine. */
@@ -58,6 +60,10 @@ const handleMcp = Effect.gen(function* () {
     );
   }
   const { parsedBody, request: boundedRequest } = bounded.success;
+  const refusal = refuseMcpRequest(boundedRequest, parsedBody);
+  if (Option.isSome(refusal)) {
+    return withMcpResponseHeaders(refusal.value, request);
+  }
   if (
     parsedBody !== undefined &&
     !request.headers.has("mcp-protocol-version")
@@ -73,6 +79,9 @@ const handleMcp = Effect.gen(function* () {
       request
     );
   }
+  if (isJsonRpcNotification(parsedBody)) {
+    return withMcpResponseHeaders(mcpTransportErrorResponse(202), request);
+  }
   const engine = yield* HttpRouter.toHttpEffect(
     nakafaMcpEngine({
       allowedOrigins: origins(request),
@@ -83,7 +92,7 @@ const handleMcp = Effect.gen(function* () {
   const response = yield* engine.pipe(
     Effect.provideService(
       HttpServerRequest.HttpServerRequest,
-      HttpServerRequest.fromWeb(boundedRequest)
+      HttpServerRequest.fromWeb(withAcceptedMedia(boundedRequest))
     )
   );
   return withMcpResponseHeaders(HttpServerResponse.toWeb(response), request);
@@ -93,6 +102,48 @@ const handleMcp = Effect.gen(function* () {
 function origins(request: Request): readonly string[] {
   const origin = request.headers.get("origin");
   return origin === null ? [] : [origin];
+}
+
+/**
+ * The engine answers 406 unless Accept names both JSON and an event stream. This
+ * endpoint has never enforced Accept, so the engine receives both media types
+ * and every answer stays the same.
+ */
+function withAcceptedMedia(request: Request): Request {
+  const accept = request.headers.get("accept");
+  if (
+    acceptsMediaType(accept, "application/json") &&
+    acceptsMediaType(accept, "text/event-stream")
+  ) {
+    return request;
+  }
+  const headers = new Headers(request.headers);
+  headers.set("accept", "application/json, text/event-stream");
+  return new Request(request, { headers });
+}
+
+/** Whether an Accept header names one media type the way the engine reads it. */
+function acceptsMediaType(header: string | null, mediaType: string) {
+  return (
+    header !== null &&
+    Arr.some(header.split(","), (part) => {
+      const [name = "", ...parameters] = part.split(";");
+      return (
+        name.trim().toLowerCase() === mediaType &&
+        !Arr.some(parameters, isExcludedQuality)
+      );
+    })
+  );
+}
+
+/** A quality parameter outside (0, 1] excludes its media type, as the engine's negotiation does. */
+function isExcludedQuality(parameter: string) {
+  const value = parameter.trim().toLowerCase();
+  if (!value.startsWith("q=")) {
+    return false;
+  }
+  const quality = Number(value.slice(2));
+  return !(Number.isFinite(quality) && quality > 0 && quality <= 1);
 }
 
 export const agentMcpRoutes = HttpRouter.add(

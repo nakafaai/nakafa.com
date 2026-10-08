@@ -63,6 +63,33 @@ export function mcpErrorResponse(
   );
 }
 
+/** Answers one refused request with the plain JSON-RPC error the SDK wrote before the engine existed. */
+export function mcpJsonRpcRefusal(
+  status: number,
+  code: number,
+  message: string,
+  responseId: number | string | null,
+  data?: unknown
+) {
+  return new Response(
+    JSON.stringify({
+      error: {
+        code,
+        message,
+        ...(data === undefined ? {} : { data }),
+      },
+      id: responseId,
+      jsonrpc: "2.0",
+    }),
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      status,
+    }
+  );
+}
+
 /** Rejects an unprocessed transport request without emitting JSON-RPC. */
 export function mcpTransportErrorResponse(
   status: number,
@@ -141,7 +168,8 @@ export function readJsonRpcRequestId(body: unknown) {
   const { id } = body;
   return Predicate.isNumber(id) || Predicate.isString(id) ? id : null;
 }
-function isJsonRpcNotification(body: unknown) {
+/** Whether a parsed body is a JSON-RPC notification, which the server never answers with a body. */
+export function isJsonRpcNotification(body: unknown) {
   return (
     Predicate.isObject(body) &&
     !Predicate.hasProperty(body, "id") &&
