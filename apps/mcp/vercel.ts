@@ -12,7 +12,8 @@ export const config: VercelConfig = {
       main: true,
     },
   },
-  ...createAgentEdgeRoutes(NAKAFA_MCP_EDGE_CONTRACT, [
-    { source: "^/mcp$", suffix: "" },
-  ]),
+  ...createAgentEdgeRoutes({
+    contract: NAKAFA_MCP_EDGE_CONTRACT,
+    paths: [{ source: "^/mcp$", suffix: "" }],
+  }),
 };

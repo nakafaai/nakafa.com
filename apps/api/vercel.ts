@@ -15,5 +15,8 @@ export const config: VercelConfig = {
       main: true,
     },
   },
-  ...createAgentEdgeRoutes(NAKAFA_API_EDGE_CONTRACT, NAKAFA_API_EDGE_PATHS),
+  ...createAgentEdgeRoutes({
+    contract: NAKAFA_API_EDGE_CONTRACT,
+    paths: NAKAFA_API_EDGE_PATHS,
+  }),
 };

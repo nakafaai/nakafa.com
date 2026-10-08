@@ -1,4 +1,7 @@
-import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import {
+  PublicationReceiptSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
 import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -18,6 +21,9 @@ const RETIRED_MANIFEST_FIELD = "rendererContractVersion";
 const UnknownJson = Schema.fromJsonString(Schema.Unknown);
 const decodeSignedRelease = Schema.decodeSync(
   Schema.fromJsonString(SignedContentReleaseSchema)
+);
+const encodeReceiptJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(PublicationReceiptSchema)
 );
 
 /**
@@ -138,10 +144,11 @@ export async function insertAnchoredActiveRelease(
   if (!active) {
     throw new Error("Expected the anchored active release fixture.");
   }
-  // makePublicationReceipt types activeAppLocales as a mutable array, which the
-  // contract's non-empty tuple rejects, so the plain codec writes the same bytes.
+  // makePublicationReceipt types activeAppLocales as a mutable array, which a
+  // typed encode of the contract's non-empty tuple rejects, so the
+  // unknown-input encode checks the receipt at runtime instead.
   await ctx.db.patch("contentReleases", activeId, {
-    receiptJson: Schema.encodeSync(UnknownJson)(
+    receiptJson: encodeReceiptJson(
       makePublicationReceipt(
         Schema.decodeSync(contentReleases.Doc)(active),
         decodeSignedRelease(activeJson)

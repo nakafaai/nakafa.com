@@ -1,4 +1,11 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import {
+  ContentKeySchema,
+  CorpusSourcePathSchema,
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ContentReleaseItemSchema } from "@nakafa/aksara-contracts/release";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -10,7 +17,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { Schema } from "effect";
 
-const encodeItemJson = Schema.encodeUnknownSync(
+const encodeItemJson = Schema.encodeSync(
   Schema.fromJsonString(ContentReleaseItemSchema)
 );
 
@@ -28,17 +35,21 @@ export function abortItemJson(index: number) {
   const contentKey = abortContentKey(index);
   return encodeItemJson({
     change: {
-      artifactHash: `sha256:${index.toString(16).padStart(64, "0")}`,
-      artifactLocale: "en",
-      contentKey,
+      artifactHash: Sha256HashSchema.make(
+        `sha256:${index.toString(16).padStart(64, "0")}`
+      ),
+      artifactLocale: ArtifactLocaleSchema.make("en"),
+      contentKey: ContentKeySchema.make(contentKey),
       delivery: "public",
       family: "material",
       operation: "upsert",
       rendererDomain: "mathematics",
-      sourcePath: `packages/corpus/test/abort-${index}/en.mdx`,
+      sourcePath: CorpusSourcePathSchema.make(
+        `packages/corpus/test/abort-${index}/en.mdx`
+      ),
     },
     index,
-    releaseId: ABORT_RELEASE_ID,
+    releaseId: ReleaseIdSchema.make(ABORT_RELEASE_ID),
   });
 }
 

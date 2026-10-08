@@ -28,6 +28,8 @@ const OpenApiOperationSchema = Schema.Struct({
   responses: Schema.Record(Schema.String, Schema.Unknown),
 });
 type OpenApiOperation = typeof OpenApiOperationSchema.Type;
+/** Narrows one generated path value to the required operation surface. */
+const isOperation = Schema.is(OpenApiOperationSchema);
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Returns every method operation from the generated path map. */
@@ -42,17 +44,6 @@ function readOperations() {
     }
   }
   return operations;
-}
-
-/** Narrows one generated path value to the required operation surface. */
-function isOperation(value: unknown): value is OpenApiOperation {
-  return (
-    Predicate.isReadonlyObject(value) &&
-    typeof value.description === "string" &&
-    typeof value.operationId === "string" &&
-    Arr.isArray(value.parameters) &&
-    Predicate.isReadonlyObject(value.responses)
-  );
 }
 
 /** Projects one OpenAPI operation to a function-calling definition. */

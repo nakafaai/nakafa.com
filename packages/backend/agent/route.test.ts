@@ -59,7 +59,10 @@ function expectedRoute(
 describe("agent Vercel routes", () => {
   it("caches public discovery while keeping protected runtime routes live", () => {
     expect(
-      createAgentEdgeRoutes(NAKAFA_API_EDGE_CONTRACT, NAKAFA_API_EDGE_PATHS)
+      createAgentEdgeRoutes({
+        contract: NAKAFA_API_EDGE_CONTRACT,
+        paths: NAKAFA_API_EDGE_PATHS,
+      })
     ).toEqual({
       routes: [
         expectedRoute(
@@ -85,7 +88,9 @@ describe("agent Vercel routes", () => {
   it("maps the MCP endpoint to its protected transport", () => {
     const paths = [{ source: "^/mcp$", suffix: "" }] as const;
 
-    expect(createAgentEdgeRoutes(NAKAFA_MCP_EDGE_CONTRACT, paths)).toEqual({
+    expect(
+      createAgentEdgeRoutes({ contract: NAKAFA_MCP_EDGE_CONTRACT, paths })
+    ).toEqual({
       routes: [
         expectedRoute(
           NAKAFA_MCP_EDGE_CONTRACT,
