@@ -1,4 +1,7 @@
-import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import {
+  PublicationReceiptSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
 import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -15,6 +18,13 @@ import { Schema } from "effect";
 
 /** Names one manifest field a retired content contract still carried. */
 const RETIRED_MANIFEST_FIELD = "rendererContractVersion";
+const UnknownJson = Schema.fromJsonString(Schema.Unknown);
+const decodeSignedRelease = Schema.decodeSync(
+  Schema.fromJsonString(SignedContentReleaseSchema)
+);
+const encodeReceiptJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(PublicationReceiptSchema)
+);
 
 /**
  * Inserts one stored release row that a later release treats as its base.
@@ -77,11 +87,11 @@ export async function retireStoredAnchorPayload(
   if (!release) {
     throw new Error(`Expected stored anchor ${releaseId}.`);
   }
-  const retired = JSON.parse(release.releaseJson) as {
+  const retired = Schema.decodeSync(UnknownJson)(release.releaseJson) as {
     manifest: Record<string, unknown>;
   };
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: JSON.stringify({
+    releaseJson: Schema.encodeSync(UnknownJson)({
       ...retired,
       manifest: { ...retired.manifest, [RETIRED_MANIFEST_FIELD]: "1.0.0" },
     }),
@@ -134,13 +144,14 @@ export async function insertAnchoredActiveRelease(
   if (!active) {
     throw new Error("Expected the anchored active release fixture.");
   }
+  // makePublicationReceipt types activeAppLocales as a mutable array, which a
+  // typed encode of the contract's non-empty tuple rejects, so the
+  // unknown-input encode checks the receipt at runtime instead.
   await ctx.db.patch("contentReleases", activeId, {
-    receiptJson: JSON.stringify(
+    receiptJson: encodeReceiptJson(
       makePublicationReceipt(
         Schema.decodeSync(contentReleases.Doc)(active),
-        Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-          JSON.parse(activeJson)
-        )
+        decodeSignedRelease(activeJson)
       )
     ),
   });

@@ -3,6 +3,7 @@ import {
   ContentReleaseManifestSchema,
   RollbackSignedContentReleaseSchema,
   type SignedContentRelease,
+  SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { encodeRendererJson } from "@repo/backend/confect/contentRelease/wire";
@@ -16,11 +17,14 @@ import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-lifecycle-ingress");
 const recoveryReleaseId = ReleaseIdSchema.make(
   "release-lifecycle-ingress-recovery"
+);
+const encodeSignedRelease = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentReleaseSchema)
 );
 
 /** Inserts one authenticated zero-impact candidate and its exact inverse. */
@@ -72,7 +76,7 @@ export const insertActivationPair = Effect.fn(
       stored.releaseId === candidate.manifest.releaseId ? candidate : recovery;
     yield* Effect.promise(() =>
       ctx.db.patch("contentReleases", stored._id, {
-        releaseJson: JSON.stringify(signed),
+        releaseJson: encodeSignedRelease(signed),
         rendererJson,
       })
     );

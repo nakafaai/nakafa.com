@@ -1,4 +1,11 @@
-import type { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import {
+  ContentKeySchema,
+  Ed25519SignatureSchema,
+  Sha256HashSchema,
+  SigningKeyIdSchema,
+} from "@nakafa/aksara-contracts/ids";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -6,9 +13,12 @@ import {
   TEST_DIGEST,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import type { Schema } from "effect";
+import { Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
+const encodeArtifactJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentArtifactSchema)
+);
 
 /** Stores one artifact body with the facts that staging writes beside it. */
 export async function insertTestArtifact(
@@ -41,16 +51,20 @@ export function testArtifactJson(options?: {
   readonly rendererDomain?: RendererDomain | undefined;
 }) {
   const compiledCode = options?.compiledCode ?? "return {};";
-  return JSON.stringify({
-    artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
-    keyId: "test-key",
+  return encodeArtifactJson({
+    artifactHash: Sha256HashSchema.make(
+      options?.artifactHash ?? TEST_ARTIFACT_HASH
+    ),
+    keyId: SigningKeyIdSchema.make("test-key"),
     payload: {
-      artifactLocale: options?.artifactLocale ?? "en",
+      artifactLocale: ArtifactLocaleSchema.make(
+        options?.artifactLocale ?? "en"
+      ),
       byteLength: new TextEncoder().encode(compiledCode).byteLength,
       compiledCode,
       compilerConfigHash: TEST_DIGEST,
       compilerVersion: "0.1.0",
-      contentKey: options?.contentKey ?? "test:head-0",
+      contentKey: ContentKeySchema.make(options?.contentKey ?? "test:head-0"),
       format: "mdx-function-body",
       mdxCompilerVersion: "3.1.1",
       plainText: options?.plainText ?? "Technical fixture",
@@ -59,6 +73,6 @@ export function testArtifactJson(options?: {
       requiredComponents: [],
       sourceHash: TEST_DIGEST,
     },
-    signature: "A".repeat(86),
+    signature: Ed25519SignatureSchema.make("A".repeat(86)),
   });
 }

@@ -9,9 +9,11 @@ import {
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
-import type { agentContentSourceValidator } from "@repo/backend/confect/contentRelease/reference/spec";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
-import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
+import {
+  formatQuranMeaning,
+  type QuranMarkdown,
+} from "@repo/backend/content/quran/contract";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
@@ -21,23 +23,18 @@ import {
   type NakafaAgentMarkdown,
   NakafaAgentMarkdownSchema,
 } from "@repo/contents/agent/schema/read";
-import type {
-  NakafaAgentContentRef,
-  NakafaAgentReadableContentRef,
+import {
+  type NakafaAgentContentRef,
+  NakafaAgentReadableContentRefSchema,
 } from "@repo/contents/agent/schema/ref";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { Effect, Option, Schema } from "effect";
 
-type PublishedRef = NakafaAgentReadableContentRef & {
-  readonly section: "articles" | "material";
-};
-type AgentContentSource = typeof agentContentSourceValidator.Type;
-type QuranContentSource = Extract<
-  NonNullable<AgentContentSource>,
-  {
-    readonly kind: "quran";
-  }
->;
+const PublishedRefSchema = Schema.Struct({
+  ...NakafaAgentReadableContentRefSchema.fields,
+  section: Schema.Literals(["articles", "material"]),
+});
+type PublishedRef = typeof PublishedRefSchema.Type;
 const contentSourceReference =
   refs.internal.contentRelease.reference.internal.readAgentContent;
 const publicRuntimeReference =
@@ -73,7 +70,11 @@ export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
     );
   }
   if (source.kind === "quran") {
-    return yield* renderQuranMarkdown(ref.value, source);
+    return yield* renderQuranMarkdown(
+      ref.value,
+      source.markdown,
+      source.surahNumber
+    );
   }
   if (isPublishedRef(ref.value)) {
     return yield* readPublishedMarkdown(ref.value);
@@ -145,11 +146,12 @@ const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
 /** Renders one signed Quran surah as agent-readable markdown. */
 const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
   ref: NakafaAgentContentRef,
-  source: QuranContentSource
+  quranMarkdown: QuranMarkdown,
+  surahNumber: number
 ) {
-  const publication = yield* decodePublishedQuranMarkdown(source.markdown, {
+  const publication = yield* decodePublishedQuranMarkdown(quranMarkdown, {
     appLocale: ref.locale,
-    surahNumber: source.surahNumber,
+    surahNumber,
   }).pipe(Effect.mapError(contentReadError));
   const surah = publication.surah;
   const title = surah.name.transliteration;
