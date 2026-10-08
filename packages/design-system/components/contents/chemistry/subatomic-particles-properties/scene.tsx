@@ -114,6 +114,12 @@ function createQuadraticPath(start: Vector3, control: Vector3, end: Vector3) {
   });
 }
 
+export interface SubatomicParticlePropertiesSceneProps {
+  colors: SubatomicParticlePropertiesColors;
+  labels: SubatomicParticlePropertiesSceneLabels;
+  modeId: SubatomicParticlePropertiesModeId;
+}
+
 /**
  * Chooses the active 3D scene without mounting hidden property views.
  */
@@ -121,11 +127,7 @@ export function SubatomicParticlePropertiesScene({
   colors,
   labels,
   modeId,
-}: {
-  colors: SubatomicParticlePropertiesColors;
-  labels: SubatomicParticlePropertiesSceneLabels;
-  modeId: SubatomicParticlePropertiesModeId;
-}) {
+}: SubatomicParticlePropertiesSceneProps) {
   if (modeId === CHARGE_MODE_ID) {
     return <ChargeScene colors={colors} labels={labels} />;
   }

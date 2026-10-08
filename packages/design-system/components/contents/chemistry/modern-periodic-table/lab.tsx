@@ -8,7 +8,7 @@ import {
   isModernPeriodicTableFocusId,
   MODERN_PERIODIC_TABLE_FOCUS_IDS,
   type ModernPeriodicTableFocusId,
-  type ModernPeriodicTableLabProps,
+  type ModernPeriodicTableLabLabels,
   type ModernPeriodicTableSceneColors,
   PERIODIC_ELEMENT_CATEGORY_IDS,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
@@ -28,6 +28,12 @@ import {
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+export interface ModernPeriodicTableLabProps {
+  description: ReactNode;
+  labels: ModernPeriodicTableLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders a 3D reader for the modern periodic table.

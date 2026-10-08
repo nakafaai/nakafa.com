@@ -9,7 +9,7 @@ import {
   SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS,
   SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG,
   type SubatomicParticlePropertiesFact,
-  type SubatomicParticlePropertiesLabProps,
+  type SubatomicParticlePropertiesLabLabels,
   type SubatomicParticlePropertiesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import { SubatomicParticlePropertiesScene } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/scene";
@@ -33,9 +33,16 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { useTheme } from "next-themes";
+import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
+
+export interface SubatomicParticlePropertiesLabProps {
+  description: ReactNode;
+  labels: SubatomicParticlePropertiesLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders one 3D lab for reading charge, mass, and location of subatomic

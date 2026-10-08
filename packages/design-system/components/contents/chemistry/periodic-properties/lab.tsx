@@ -5,7 +5,7 @@ import {
   ATOMIC_RADIUS_MODE_ID,
   isPeriodicPropertyModeId,
   PERIODIC_PROPERTY_MODE_IDS,
-  type PeriodicPropertiesLabProps,
+  type PeriodicPropertiesLabLabels,
   type PeriodicPropertyModeId,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import {
@@ -21,6 +21,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+export interface PeriodicPropertiesLabProps {
+  description: ReactNode;
+  labels: PeriodicPropertiesLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders an interactive model for the main periodic-property trends.

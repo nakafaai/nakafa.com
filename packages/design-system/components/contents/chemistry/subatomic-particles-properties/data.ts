@@ -1,6 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const CHARGE_MODE_ID = "charge";
@@ -14,11 +15,13 @@ export type SubatomicParticlePropertiesModeId =
 export type SubatomicParticlePropertiesColors = ReturnType<
   typeof getSubatomicParticlePropertiesColors
 >;
-export type SubatomicParticlePropertiesCameraPoint = readonly [
-  number,
-  number,
-  number,
-];
+const SubatomicParticlePropertiesCameraPointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+export type SubatomicParticlePropertiesCameraPoint =
+  typeof SubatomicParticlePropertiesCameraPointSchema.Type;
 
 export const SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS = [
   CHARGE_MODE_ID,
@@ -79,12 +82,6 @@ export interface SubatomicParticlePropertiesLabLabels {
     SubatomicParticlePropertiesModeLabels
   >;
   scene: SubatomicParticlePropertiesSceneLabels;
-}
-
-export interface SubatomicParticlePropertiesLabProps {
-  description: ReactNode;
-  labels: SubatomicParticlePropertiesLabLabels;
-  title: ReactNode;
 }
 
 /**

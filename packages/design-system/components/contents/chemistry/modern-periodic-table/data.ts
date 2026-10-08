@@ -1,6 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const GROUP_ONE_FOCUS_ID = "group-one";
@@ -294,11 +295,13 @@ export interface ModernPeriodicTableLabLabels {
   tableLabel: string;
 }
 
-export interface ModernPeriodicTableLabProps {
-  description: ReactNode;
-  labels: ModernPeriodicTableLabLabels;
-  title: ReactNode;
-}
+const ModernPeriodicTableSceneLabelsSchema = Schema.Struct({
+  group: Schema.String,
+  period: Schema.String,
+  seriesNames: Schema.Record(Schema.String, Schema.String),
+});
+export type ModernPeriodicTableSceneLabels =
+  typeof ModernPeriodicTableSceneLabelsSchema.Type;
 
 /**
  * Narrows ToggleGroup string values to the available periodic-table focus modes.

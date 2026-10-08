@@ -1,6 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const WATER_PEROXIDE_MODE_ID = "water-peroxide";
@@ -16,39 +17,56 @@ export const MULTIPLE_PROPORTIONS_MODE_IDS = [
 export type MultipleProportionsModeId =
   (typeof MULTIPLE_PROPORTIONS_MODE_IDS)[number];
 
+const MultipleProportionsElementSchema = Schema.Literals([
+  "carbon",
+  "hydrogen",
+  "nitrogen",
+  "oxygen",
+]);
 export type MultipleProportionsElement =
-  | "carbon"
-  | "hydrogen"
-  | "nitrogen"
-  | "oxygen";
+  typeof MultipleProportionsElementSchema.Type;
 
 export type MultipleProportionsSceneColors = ReturnType<
   typeof getMultipleProportionsSceneColors
 >;
-export type MultipleProportionsScenePoint = readonly [number, number, number];
 
-export interface MultipleProportionsAtom {
-  element: MultipleProportionsElement;
-  id: string;
-  position: MultipleProportionsScenePoint;
-}
+const MultipleProportionsScenePointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+export type MultipleProportionsScenePoint =
+  typeof MultipleProportionsScenePointSchema.Type;
 
-export interface MultipleProportionsMolecule {
-  atoms: readonly MultipleProportionsAtom[];
-  bonds: readonly (readonly [string, string])[];
-  id: string;
-  position: MultipleProportionsScenePoint;
-}
+const MultipleProportionsAtomSchema = Schema.Struct({
+  element: MultipleProportionsElementSchema,
+  id: Schema.String,
+  position: MultipleProportionsScenePointSchema,
+});
+export type MultipleProportionsAtom = typeof MultipleProportionsAtomSchema.Type;
 
-export interface MultipleProportionsCompoundModel {
-  formula: string;
-  molecules: readonly MultipleProportionsMolecule[];
-}
+const MultipleProportionsMoleculeSchema = Schema.Struct({
+  atoms: Schema.Array(MultipleProportionsAtomSchema),
+  bonds: Schema.Array(Schema.Tuple([Schema.String, Schema.String])),
+  id: Schema.String,
+  position: MultipleProportionsScenePointSchema,
+});
+export type MultipleProportionsMolecule =
+  typeof MultipleProportionsMoleculeSchema.Type;
 
-export interface MultipleProportionsModeModel {
-  first: MultipleProportionsCompoundModel;
-  second: MultipleProportionsCompoundModel;
-}
+const MultipleProportionsCompoundModelSchema = Schema.Struct({
+  formula: Schema.String,
+  molecules: Schema.Array(MultipleProportionsMoleculeSchema),
+});
+export type MultipleProportionsCompoundModel =
+  typeof MultipleProportionsCompoundModelSchema.Type;
+
+const MultipleProportionsModeModelSchema = Schema.Struct({
+  first: MultipleProportionsCompoundModelSchema,
+  second: MultipleProportionsCompoundModelSchema,
+});
+export type MultipleProportionsModeModel =
+  typeof MultipleProportionsModeModelSchema.Type;
 
 export interface MultipleProportionsModeLabels {
   changing: ReactNode;
@@ -64,12 +82,6 @@ export interface MultipleProportionsLabLabels {
   comparisonView: string;
   fixedLabel: string;
   modes: Record<MultipleProportionsModeId, MultipleProportionsModeLabels>;
-}
-
-export interface MultipleProportionsLabProps {
-  description: ReactNode;
-  labels: MultipleProportionsLabLabels;
-  title: ReactNode;
 }
 
 export const MULTIPLE_PROPORTIONS_SCENE_VIEW = {
