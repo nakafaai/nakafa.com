@@ -1,5 +1,5 @@
 import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
-import { BigDecimal } from "effect";
+import { BigDecimal, Schema } from "effect";
 
 import type {
   PlanePoint,
@@ -11,18 +11,20 @@ import type {
 const WORLD_EXTENT = BigDecimal.fromBigInt(10n);
 const TWO = BigDecimal.fromBigInt(2n);
 const ZERO = BigDecimal.fromBigInt(0n);
-interface ExactRange {
-  readonly max: BigDecimal.BigDecimal;
-  readonly min: BigDecimal.BigDecimal;
-}
-export interface VisualProjection {
-  readonly center: {
-    readonly x: BigDecimal.BigDecimal;
-    readonly y: BigDecimal.BigDecimal;
-    readonly z: BigDecimal.BigDecimal;
-  };
-  readonly extent: BigDecimal.BigDecimal;
-}
+const ExactRangeSchema = Schema.Struct({
+  max: Schema.BigDecimal,
+  min: Schema.BigDecimal,
+});
+type ExactRange = typeof ExactRangeSchema.Type;
+const VisualProjectionSchema = Schema.Struct({
+  center: Schema.Struct({
+    x: Schema.BigDecimal,
+    y: Schema.BigDecimal,
+    z: Schema.BigDecimal,
+  }),
+  extent: Schema.BigDecimal,
+});
+export type VisualProjection = typeof VisualProjectionSchema.Type;
 function decimal(value: number) {
   return BigDecimal.fromNumberUnsafe(value);
 }

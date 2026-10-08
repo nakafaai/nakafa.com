@@ -4,10 +4,10 @@ import { useMutation } from "@confect/react";
 import { useDocumentVisibility } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { LearningContextInput } from "@repo/backend/confect/contents/context";
-import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
-import type { Locale } from "@repo/backend/confect/lib/validators/contents";
-import { Effect, Option, Result } from "effect";
+import { learningContextInputValidator } from "@repo/backend/confect/contents/context";
+import { contentViewSectionValidator } from "@repo/backend/confect/contents/views/section";
+import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
+import { Effect, Option, Result, Schema } from "effect";
 import { useEffect } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
@@ -20,14 +20,16 @@ import { createContentViewKey } from "@/lib/content/views/key";
 import { useViewer } from "@/lib/identity/client";
 
 /** Client-side graph content-view recording configuration. */
-interface UseRecordContentViewOptions {
-  contentId?: string | null;
-  context?: LearningContextInput;
-  delay?: number;
-  locale: Locale;
-  publicPath: string;
-  section: RecordContentViewArgs["section"];
-}
+const UseRecordContentViewOptionsSchema = Schema.Struct({
+  contentId: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  context: Schema.optionalKey(learningContextInputValidator),
+  delay: Schema.optionalKey(Schema.Finite),
+  locale: localeValidator,
+  publicPath: Schema.String,
+  section: contentViewSectionValidator,
+});
+type UseRecordContentViewOptions =
+  typeof UseRecordContentViewOptionsSchema.Type;
 
 /**
  * Records unique content views per account or consented device.
