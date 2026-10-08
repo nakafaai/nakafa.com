@@ -43,12 +43,12 @@ vi.mock("@repo/backend/confect/customers/polar/live", () => ({
 }));
 
 /** Signs a body the way Polar does, so the SDK verifies the signature for real. */
-async function signWebhook(body: string) {
+async function signWebhook(body: string, secret = WEBHOOK_SECRET) {
   const id = "msg_route_test";
   const timestamp = String(Math.floor(Date.now() / 1000));
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(WEBHOOK_SECRET),
+    new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
@@ -82,6 +82,59 @@ const postSignedWebhook = Effect.fn("routes.polar.test.postSignedWebhook")(
   function* (body: string) {
     const headers = yield* Effect.promise(() => signWebhook(body));
     return yield* postWebhook(body, headers);
+  }
+);
+
+/** Sends one signed customer deletion through the route, inside the deployment the test provides. */
+const postDeletion = Effect.fn("routes.polar.test.postDeletion")(function* (
+  data: unknown
+) {
+  const target = yield* Confect;
+  const body = JSON.stringify({ data, type: "customer.deleted" });
+  const headers = yield* Effect.promise(() => signWebhook(body));
+  return yield* target.fetch("/polar/events", {
+    body,
+    headers,
+    method: "POST",
+  });
+});
+
+/** Stores the local customer row that a Polar customer deletion removes. */
+const seedPolarCustomer = Effect.fn("routes.polar.test.seedPolarCustomer")(
+  function* () {
+    const target = yield* Confect;
+    yield* target.run(
+      Effect.gen(function* () {
+        const writer = yield* DatabaseWriter;
+        const userId = yield* writer.table("users").insert({
+          authId: "auth-deletion",
+          credits: 0,
+          creditsResetAt: 1,
+          email: "deletion@example.com",
+          name: "Deletion",
+          plan: "free",
+        });
+        yield* writer.table("customers").insert({
+          externalId: null,
+          id: polarCustomer.id,
+          metadata: {},
+          userId,
+        });
+      })
+    );
+  }
+);
+
+/** Counts the customer rows that remain in the deployment. */
+const countCustomers = Effect.fn("routes.polar.test.countCustomers")(
+  function* () {
+    const target = yield* Confect;
+    return yield* target.run(
+      Effect.flatMap(DatabaseReader, (reader) =>
+        reader.table("customers").index("by_polarId").take(10)
+      ).pipe(Effect.map((customers) => customers.length)),
+      Schema.Int
+    );
   }
 );
 
@@ -153,6 +206,23 @@ describe("Polar webhook route", () => {
   );
 
   it.effect(
+    "rejects a signature made with another secret before processing",
+    () =>
+      Effect.gen(function* () {
+        const body = '{"type":"customer.updated"}';
+        const headers = yield* Effect.promise(() =>
+          signWebhook(body, "polar_another_secret")
+        );
+
+        const response = yield* postWebhook(body, headers);
+
+        expect(response.status).toBe(403);
+        expect(yield* readResponseText(response)).toBe("Forbidden");
+        expect(mocks.processEvent).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
     "checks the signature before the event type, so an unsigned unknown type is forbidden",
     () =>
       Effect.gen(function* () {
@@ -187,7 +257,7 @@ describe("Polar webhook route", () => {
       })
   );
 
-  it.effect("maps a signed body that is not JSON to a server response", () =>
+  it.effect("answers 500 to a signed body that is not JSON", () =>
     Effect.gen(function* () {
       vi.spyOn(console, "error").mockImplementation(() => undefined);
       const response = yield* postSignedWebhook("not json");
@@ -303,51 +373,71 @@ describe("Polar webhook decoding at the route", () => {
     })
   );
 
+  it.effect("rejects a team customer created without an email", () =>
+    Effect.gen(function* () {
+      const response = yield* postSignedWebhook(
+        JSON.stringify({
+          data: { ...polarCustomer, email: null, type: "team" },
+          type: "customer.created",
+        })
+      );
+
+      expect(response.status).toBe(400);
+      expect(yield* readResponseText(response)).toBe("Bad Request");
+    })
+  );
+
+  it.effect(
+    "acknowledges a signed known event type Nakafa does not handle with 202",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* postSignedWebhook(
+          JSON.stringify({ data: {}, type: "order.created" })
+        );
+
+        expect(response.status).toBe(202);
+        expect(yield* readResponseText(response)).toBe("Accepted");
+      })
+  );
+
   it.effect(
     "processes a customer deletion whose other fields are malformed and deletes the customer",
     () =>
       Effect.gen(function* () {
-        const target = yield* Confect;
-        yield* target.run(
-          Effect.gen(function* () {
-            const writer = yield* DatabaseWriter;
-            const userId = yield* writer.table("users").insert({
-              authId: "auth-malformed",
-              credits: 0,
-              creditsResetAt: 1,
-              email: "malformed@example.com",
-              name: "Malformed",
-              plan: "free",
-            });
-            yield* writer.table("customers").insert({
-              externalId: null,
-              id: polarCustomer.id,
-              metadata: {},
-              userId,
-            });
-          })
-        );
-        const body = JSON.stringify({
-          data: { ...polarCustomer, created_at: "2026-09-01" },
-          type: "customer.deleted",
-        });
-        const headers = yield* Effect.promise(() => signWebhook(body));
-        const response = yield* target.fetch("/polar/events", {
-          body,
-          headers,
-          method: "POST",
+        yield* seedPolarCustomer();
+
+        const response = yield* postDeletion({
+          ...polarCustomer,
+          created_at: "2026-09-01",
         });
 
         expect(response.status).toBe(202);
         expect(yield* readResponseText(response)).toBe("Accepted");
-        const remaining = yield* target.run(
-          Effect.flatMap(DatabaseReader, (reader) =>
-            reader.table("customers").index("by_polarId").take(10)
-          ).pipe(Effect.map((customers) => customers.length)),
-          Schema.Int
-        );
-        expect(remaining).toBe(0);
+        expect(yield* countCustomers()).toBe(0);
       }).pipe(Effect.provide(confectLayer))
+  );
+
+  it.effect(
+    "processes a customer deletion that carries only the customer id",
+    () =>
+      Effect.gen(function* () {
+        yield* seedPolarCustomer();
+
+        const response = yield* postDeletion({ id: polarCustomer.id });
+
+        expect(response.status).toBe(202);
+        expect(yield* readResponseText(response)).toBe("Accepted");
+        expect(yield* countCustomers()).toBe(0);
+      }).pipe(Effect.provide(confectLayer))
+  );
+
+  it.effect("rejects a customer deletion without a customer id", () =>
+    Effect.gen(function* () {
+      const response = yield* postDeletion({ email: polarCustomer.email });
+
+      expect(response.status).toBe(400);
+      expect(yield* readResponseText(response)).toBe("Bad Request");
+    }).pipe(Effect.provide(confectLayer))
   );
 
   it.effect("rejects a subscription whose amount is not an integer", () =>

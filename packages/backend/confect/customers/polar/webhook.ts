@@ -11,6 +11,7 @@ import {
   decodePolarCustomerId,
   decodePolarSubscription,
   type PolarCustomerSource,
+  PolarPayloadError,
 } from "@repo/backend/confect/customers/polar/payload";
 import { convertToDatabaseCustomer } from "@repo/backend/confect/customers/records";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
@@ -159,7 +160,14 @@ export const processPolarWebhookEvent = Effect.fn(
     case "customer.created":
     case "customer.updated": {
       const customer = yield* decodePolarCustomer(event.data);
-      const disposition = yield* upsertPolarCustomerWebhook(customer);
+      // A customer the normalizer cannot store is a payload this handler cannot read.
+      const disposition = yield* upsertPolarCustomerWebhook(customer).pipe(
+        Effect.catchTag("PolarCustomerError", (error) =>
+          Effect.fail(
+            new PolarPayloadError({ cause: error, message: error.message })
+          )
+        )
+      );
       return disposition !== "missing";
     }
     case "customer.deleted": {
