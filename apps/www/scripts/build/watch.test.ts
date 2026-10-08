@@ -242,8 +242,9 @@ describe("build watch", () => {
         ).toBe(0);
         const lines = Str.split(yield* Ref.get(streams.stdout), "\n");
         expect(
-          Arr.filter(lines, (line) => line.startsWith("build heartbeat: silent"))
-            .length
+          Arr.filter(lines, (line) =>
+            line.startsWith("build heartbeat: silent")
+          ).length
         ).toBeGreaterThanOrEqual(2);
       }),
     15_000

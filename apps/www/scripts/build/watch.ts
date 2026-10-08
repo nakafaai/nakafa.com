@@ -175,22 +175,20 @@ const printHeartbeat = Effect.fn("BuildWatch.printHeartbeat")(function* (
 });
 
 /** Writes one heartbeat per interval for as long as it runs. */
-const printHeartbeats = Effect.fn("BuildWatch.printHeartbeats")(
-  function* (
-    activity: Ref.Ref<Activity>,
-    stdio: Stdio.Stdio,
-    interval: Duration.Duration,
-    gate: Semaphore.Semaphore
-  ) {
-    yield* Effect.sleep(interval).pipe(
-      Effect.andThen(
-        printHeartbeat(activity, stdio, gate).pipe(
-          Effect.repeat(Schedule.spaced(interval))
-        )
+const printHeartbeats = Effect.fn("BuildWatch.printHeartbeats")(function* (
+  activity: Ref.Ref<Activity>,
+  stdio: Stdio.Stdio,
+  interval: Duration.Duration,
+  gate: Semaphore.Semaphore
+) {
+  yield* Effect.sleep(interval).pipe(
+    Effect.andThen(
+      printHeartbeat(activity, stdio, gate).pipe(
+        Effect.repeat(Schedule.spaced(interval))
       )
-    );
-  }
-);
+    )
+  );
+});
 
 /**
  * How long a stopped command gets to exit after SIGTERM before it is killed,
@@ -291,9 +289,7 @@ const BUILD_CADENCE = {
 };
 
 /** A build started without a command, so there is nothing to run. */
-class MissingBuildCommand extends Data.TaggedError(
-  "MissingBuildCommand"
-)<{
+class MissingBuildCommand extends Data.TaggedError("MissingBuildCommand")<{
   readonly message: string;
 }> {}
 
