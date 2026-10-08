@@ -959,6 +959,9 @@ importers:
       '@nakafa/aksara-contracts':
         specifier: 0.46.0
         version: 0.46.0(effect@4.0.1)
+      '@repo/next-config':
+        specifier: workspace:*
+        version: link:../next-config
       next:
         specifier: 16.4.0
         version: 16.4.0(@babel/core@8.0.5)(@playwright/test@1.63.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

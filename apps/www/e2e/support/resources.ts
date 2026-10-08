@@ -1,7 +1,7 @@
 import type { Browser, Page, Request } from "@playwright/test";
 import { Clock, Duration, Effect, Option, Schema } from "effect";
-import { withBrowserContext } from "@/e2e/support/browser-context";
-import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { withBrowserContext } from "@/e2e/support/context";
 import {
   formatRequestFailure,
   NEXT_ROUTER_PREFETCH_HEADER,
@@ -10,12 +10,14 @@ import {
   requestFailureFields,
   type TrackedRequestKind,
   withRequestTracker,
-} from "@/e2e/support/request-tracker";
+} from "@/e2e/support/requests";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const JAVASCRIPT_RESOURCE_PATTERN =
   /^\/_next\/static\/(?:immutable\/)?chunks\/.+\.js$/;
 const RESOURCE_IDLE_MILLISECONDS = 1000;
-const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = 15_000;
+// Resource settling keeps its own budget, apart from readiness.
+const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
 const RESOURCE_POLL_MILLISECONDS = 100;
 
 const createResourceRequestClassifier = (applicationOrigin: string) =>
@@ -250,7 +252,7 @@ export const measureRouteJavascript = Effect.fn(
       (context) =>
         Effect.gen(function* () {
           const page = yield* Effect.promise(() => context.newPage());
-          yield* seedDeniedAnalyticsConsent(page);
+          yield* seedAnalyticsConsent(page, "denied");
           const applicationOrigin = new URL(baseURL).origin;
           const classifyRequest =
             createResourceRequestClassifier(applicationOrigin);

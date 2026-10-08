@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { getNakafaContent } from "@repo/backend/agent/content";
+import { CapabilityArtifactSchema } from "@repo/backend/confect/nina/capability/progress";
 import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
 import {
   recordProgress,
@@ -8,7 +9,7 @@ import {
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/agent/content", () => ({ getNakafaContent: vi.fn() }));
 afterEach(() => vi.restoreAllMocks());
@@ -21,6 +22,12 @@ const content = {
 const input = {
   content_ref: NakafaAgentContentRefInputSchema.make(content.url),
 };
+// The plain codec keeps every key, so a leak in any field fails the check.
+// The contract codec drops undeclared keys: it proves only the artifact shape.
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const encodeContract = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Array(CapabilityArtifactSchema))
+);
 
 describe("Nina content evidence", () => {
   it("publishes a bounded preview while returning full verified content to the Agent", async () => {
@@ -40,7 +47,8 @@ describe("Nina content evidence", () => {
         },
       },
     ]);
-    expect(JSON.stringify(artifacts)).not.toContain(content.text);
+    expect(() => encodeContract(artifacts)).not.toThrow();
+    expect(encodeJson(artifacts)).not.toContain(content.text);
   });
   it.each(["missing", "failed"] as const)(
     "publishes an honest %s result without inventing content",

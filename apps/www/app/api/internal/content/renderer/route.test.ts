@@ -24,7 +24,8 @@ const manifest = {
   publishedDomains: ["mathematics"],
 };
 
-vi.mock("@repo/next-config/keys", () => ({
+vi.mock("@repo/next-config/keys", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@repo/next-config/keys")>()),
   /** Provides the renderer route's narrow internal authentication contract. */
   publicationKeys: () => ({ AKSARA_PUBLICATION_TOKEN: "test-key" }),
 }));
