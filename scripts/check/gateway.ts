@@ -13,10 +13,8 @@ import {
   isNamedExports,
   isNamedImports,
   isNamespaceImport,
-  isObjectLiteralExpression,
   isPropertyAccessExpression,
   isPropertyAssignment,
-  isShorthandPropertyAssignment,
   isStringLiteralLikeNode,
   isTemplateExpression,
   isVariableDeclaration,
@@ -26,10 +24,13 @@ import {
 } from "typescript/unstable/ast";
 import { descendants } from "#scripts/check/source";
 
-/** The one module that owns the AI Gateway client, its credentials, and routing. */
+/** The one module that calls a model, through the Convex AI gateway provider. */
 const GATEWAY_MODULE = "packages/backend/confect/gateway/";
-const GATEWAY_PACKAGE = "@ai-sdk/gateway";
-/** The AI SDK's main entry re-exports the gateway client. */
+/** The Vercel AI Gateway client package, which no module imports. */
+const VERCEL_PACKAGE = "@ai-sdk/gateway";
+/** The Convex AI gateway provider, which only the Gateway service imports. */
+const PROVIDER_PACKAGE = "@convex-dev/ai-sdk-provider";
+/** The AI SDK's main entry re-exports its gateway client. */
 const SDK_MODULE = "ai";
 const CLIENT_EXPORTS = HashSet.make("createGateway", "gateway");
 /** Where the AI SDK and Agent take a model, which they resolve from a string through the default gateway. */
@@ -43,13 +44,12 @@ const MODEL_PROPERTIES = HashSet.make(
 const MODEL_ID_SEPARATOR = "/";
 const TEST_MODULE_PATTERN = /\.test\.tsx?$/u;
 
-const PACKAGE_RULE = `import ${GATEWAY_PACKAGE} only inside ${GATEWAY_MODULE}; take model handles from its Gateway service`;
+const PACKAGE_RULE = `never import ${VERCEL_PACKAGE}; the Convex AI gateway provider serves every model call`;
+const PROVIDER_RULE = `import ${PROVIDER_PACKAGE} only inside ${GATEWAY_MODULE}; take model handles from its Gateway service`;
 const CLIENT_RULE =
   "take model handles from the Gateway service in confect/gateway instead of the AI SDK's gateway client";
-const ROUTING_RULE =
-  "leave providerOptions.gateway to the Gateway service, whose routing replaces it";
 const MODEL_RULE =
-  "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK sends to its default gateway without routing";
+  "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK resolves through its default Vercel gateway";
 
 /** Whether a string literal names the module of an import, a re-export, an import type, or a dynamic import. */
 function namesModule(node: Node) {
@@ -138,30 +138,6 @@ function readsClient(node: Node, namespaces: HashSet.HashSet<string>) {
   );
 }
 
-/** Whether a value is an object literal with a `gateway` entry. */
-function setsGateway(value: Expression) {
-  return (
-    isObjectLiteralExpression(value) &&
-    Arr.some(
-      value.properties,
-      (property) =>
-        (isPropertyAssignment(property) ||
-          isShorthandPropertyAssignment(property)) &&
-        nameText(property.name) === "gateway"
-    )
-  );
-}
-
-/** `providerOptions` written with a `gateway` entry, or a write to `providerOptions.gateway`. */
-function buildsRouting(target: Node, value: Expression) {
-  return (
-    (accessedName(target) === "providerOptions" && setsGateway(value)) ||
-    (isPropertyAccessExpression(target) &&
-      target.name.text === "gateway" &&
-      accessedName(target.expression) === "providerOptions")
-  );
-}
-
 /** A string, or a template's literal text, in the `creator/model` form of a gateway model ID. */
 function namesGatewayModel(value: Expression) {
   const separates = Str.includes(MODEL_ID_SEPARATOR);
@@ -185,40 +161,38 @@ function passesModelId(target: Node, value: Expression) {
   );
 }
 
-/** The rules writing `value` to `target` breaks outside tests. */
-function writeRules(target: Node, value: Expression): readonly string[] {
-  if (buildsRouting(target, value)) {
-    return [ROUTING_RULE];
-  }
-  return passesModelId(target, value) ? [MODEL_RULE] : [];
-}
-
-/** The rules a property assignment, a variable declaration, or an `=` assignment breaks outside tests. */
-function brokenWriteRules(node: Node): readonly string[] {
+/** Whether a property assignment, a variable declaration, or an `=` assignment writes a gateway model ID to a model property. */
+function writesModelId(node: Node) {
   if (
     (isPropertyAssignment(node) || isVariableDeclaration(node)) &&
     node.initializer !== undefined
   ) {
-    return writeRules(node.name, node.initializer);
+    return passesModelId(node.name, node.initializer);
   }
-  return isBinaryExpression(node) &&
-    node.operatorToken.kind === SyntaxKind.EqualsToken
-    ? writeRules(node.left, node.right)
-    : [];
+  return (
+    isBinaryExpression(node) &&
+    node.operatorToken.kind === SyntaxKind.EqualsToken &&
+    passesModelId(node.left, node.right)
+  );
 }
 
 /**
- * The gateway rules one node breaks; `production` is false in tests, which
- * keep stored provider metadata and the model IDs recorded with it.
+ * The gateway rules one node breaks. `production` is false in tests, which keep
+ * recorded model IDs; `gatewayModule` is true inside confect/gateway, the only
+ * module the Convex provider may be imported from.
  */
 function brokenRules(
   node: Node,
   namespaces: HashSet.HashSet<string>,
-  production: boolean
+  production: boolean,
+  gatewayModule: boolean
 ): readonly string[] {
   if (isStringLiteralLikeNode(node) && namesModule(node)) {
     return Match.value(node.text).pipe(
-      Match.when(GATEWAY_PACKAGE, () => [PACKAGE_RULE]),
+      Match.when(VERCEL_PACKAGE, () => [PACKAGE_RULE]),
+      Match.when(PROVIDER_PACKAGE, () =>
+        gatewayModule ? [] : [PROVIDER_RULE]
+      ),
       Match.when(SDK_MODULE, () =>
         reachesClient(node.parent) ? [CLIENT_RULE] : []
       ),
@@ -228,24 +202,24 @@ function brokenRules(
   if (readsClient(node, namespaces)) {
     return [CLIENT_RULE];
   }
-  return production ? brokenWriteRules(node) : [];
+  return production && writesModelId(node) ? [MODEL_RULE] : [];
 }
 
 /**
- * Reports gateway access outside confect/gateway: any @ai-sdk/gateway
- * import, the gateway client from the AI SDK, and, outside tests, call
- * options that build `providerOptions.gateway` or give a model as a gateway
- * model ID.
+ * Reports the gateway rules a module breaks: any import of the Vercel gateway
+ * package, the AI SDK's gateway client, the Convex provider outside
+ * confect/gateway, and, outside tests, a gateway model ID where the AI SDK
+ * takes a model.
  */
 export function inspectGatewaySource(file: string, sourceFile: SourceFile) {
-  if (Str.startsWith(GATEWAY_MODULE)(file)) {
-    return [];
-  }
   const nodes = descendants(sourceFile, false);
   const namespaces = sdkNamespaces(nodes);
   const production = !TEST_MODULE_PATTERN.test(file);
+  const gatewayModule = Str.startsWith(GATEWAY_MODULE)(file);
   return Arr.map(
-    Arr.flatMap(nodes, (node) => brokenRules(node, namespaces, production)),
+    Arr.flatMap(nodes, (node) =>
+      brokenRules(node, namespaces, production, gatewayModule)
+    ),
     (rule) => `${file}: ${rule}.`
   );
 }

@@ -112,10 +112,6 @@ describe("Nina rolling summary", () => {
         usage: { calls: 1, input: 12, output: 4 },
       }),
     ]);
-    expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
-      "space:personal",
-      "purpose:background",
-    ]);
     const prompt = Schema.encodeSync(jsonTextSchema)(
       model.doGenerateCalls[0]?.prompt
     );

@@ -692,6 +692,7 @@
       "context": "Nina could not load the learning material for this conversation. Please try again.",
       "attachment-invalid": "An attachment is invalid or no longer available. Choose it again and check its file type and size.",
       "attachment-limit": "You have reached the attachment limit. Send the files already uploaded or wait before uploading more.",
+      "attachment-size": "The documents in one message can be at most 10 MB together. Remove a document or send them in separate messages.",
       "attachment-failed": "Nina could not read or save the attachment. Please try uploading it again.",
       "provider-busy": "The AI service is handling too many requests right now. Wait a moment, then try again.",
       "provider-unavailable": "The AI service is temporarily unavailable. Please try again shortly.",

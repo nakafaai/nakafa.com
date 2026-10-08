@@ -15,7 +15,6 @@ import {
   NinaTitle,
 } from "@repo/backend/confect/nina/presentation.spec";
 import { nakafaSuggestions } from "@repo/backend/confect/nina/prompt/suggestions";
-import type { Space } from "@repo/backend/confect/space";
 import { Output } from "ai";
 import { Effect, Schema } from "effect";
 
@@ -36,11 +35,9 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
     const ctx = yield* ActionCtx;
     const { runMutation: mutate } = yield* MutationRunner;
     const gateway = yield* Gateway;
-    const space: Space = { kind: "personal", userId: turn.userId };
     const suggestion = gateway.language({
       purpose: "suggestion",
       model: defaultModel,
-      space,
     });
     const suggestions = new Agent(components.nina, {
       name: "suggestions",
@@ -110,7 +107,6 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
     const naming = gateway.language({
       purpose: "presentation",
       model: defaultModel,
-      space,
     });
     const title = new Agent(components.nina, {
       name: "title",

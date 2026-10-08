@@ -130,7 +130,6 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     const handle = (yield* Gateway).language({
       purpose: "background",
       model: defaultModel,
-      space: { kind: "personal", userId: turn.userId },
     });
     const agent = new Agent(components.nina, {
       instructions: INSTRUCTIONS,

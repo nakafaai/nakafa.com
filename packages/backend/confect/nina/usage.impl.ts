@@ -7,6 +7,14 @@ import {
 import spec from "@repo/backend/confect/nina/usage.spec";
 import { Array as Arr, Effect, Layer, Option } from "effect";
 
+/** Adds a call's cost to its row's total; a row that no call has priced stays unpriced. */
+function sumCost(total: number | undefined, cost: number | undefined) {
+  if (total === undefined && cost === undefined) {
+    return {};
+  }
+  return { cost: (total ?? 0) + (cost ?? 0) };
+}
+
 /** Agent invokes this after every model response, including repair and synthesis. */
 const record = FunctionImpl.make(
   schema,
@@ -41,6 +49,7 @@ const record = FunctionImpl.make(
         input: previous.input + usage.input,
         output: previous.output + usage.output,
         calls: previous.calls + 1,
+        ...sumCost(previous.cost, usage.cost),
       };
     } else {
       totals = Arr.append(totals, { ...usage, calls: 1 });
