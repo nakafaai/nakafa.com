@@ -39,9 +39,11 @@ import { children } from "#scripts/check/source";
 
 type Origin = "client" | HashMap.HashMap<string, Origin>;
 /**
- * The native symbol each identifier of a module resolves to, one entry per
- * identifier. Symbols compare by their numeric id and nodes by reference, so a
- * lookup never hashes a compiler object's whole tree.
+ * The native symbol each identifier of a module resolves to: one entry per
+ * identifier, in the breadth-first order of `descendants`, and one more entry
+ * after them for each shorthand property name, holding the symbol of the value
+ * that the name reads. Entries match their node by reference, so a lookup never
+ * hashes a compiler object's whole tree.
  */
 export type Symbols = ReadonlyArray<readonly [Node, NativeSymbol | undefined]>;
 const methods = HashSet.make("query", "mutation", "action", "run");
