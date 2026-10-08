@@ -2,7 +2,7 @@ import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/content";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
@@ -10,15 +10,22 @@ import { useTranslations } from "next-intl";
 interface Props {
   className?: string;
   pagination: ContentPagination;
+  /**
+   * Whether the Next link prefetches its page as the link nears the viewport.
+   * A page that cannot name its final destination yet turns it off, so only
+   * that destination is prefetched.
+   */
+  prefetchNext?: boolean;
 }
 
 /**
  * Links one neighbouring page, or keeps its column without a link when there
  * is none.
  *
- * A reader who reaches the pagination is likely to open the next page, and a
- * phone gives no hover to prefetch on, so the link prefetches the page's own
- * cached content as it nears the viewport, not only the route's App Shell.
+ * A link with `prefetch` loads the page's own cached content as it nears the
+ * viewport, not only the route's App Shell, which costs one server render per
+ * link. Without it the link loads that content once the reader hovers,
+ * focuses, or touches it.
  *
  * https://nextjs.org/docs/app/guides/optimizing-prefetching
  */
@@ -29,6 +36,7 @@ function PaginationItem({
   icon,
   className,
   iconPosition = "right",
+  prefetch = false,
 }: {
   href: string;
   title: string;
@@ -36,6 +44,7 @@ function PaginationItem({
   icon: IconSvgElement;
   className?: string;
   iconPosition?: "left" | "right";
+  prefetch?: boolean;
 }) {
   const itemClassName = cn(
     buttonVariants({ variant: "outline" }),
@@ -79,18 +88,28 @@ function PaginationItem({
   }
 
   return (
-    <NavigationLink
+    <IntentLink
       className={itemClassName}
       href={href}
-      prefetch={true}
+      intentActive={prefetch}
       title={title}
     >
       {content}
-    </NavigationLink>
+    </IntentLink>
   );
 }
 
-export function PaginationContent({ pagination, className }: Props) {
+/**
+ * Links the previous and next page. A reader who reaches the end of a page is
+ * likely to continue, and a phone gives no hover to prefetch on, so the Next
+ * link prefetches its page in view. Previous waits for intent, which spares a
+ * reader who only moves forward the second server render.
+ */
+export function PaginationContent({
+  pagination,
+  className,
+  prefetchNext = true,
+}: Props) {
   const t = useTranslations("Common");
 
   return (
@@ -114,6 +133,7 @@ export function PaginationContent({ pagination, className }: Props) {
           icon={ArrowRight02Icon}
           iconPosition="right"
           label={t("next")}
+          prefetch={prefetchNext}
           title={pagination.next.title}
         />
       </div>
