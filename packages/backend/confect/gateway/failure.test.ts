@@ -195,6 +195,16 @@ describe("Gateway failure classification", () => {
       { error: { message: "private", type: "x".repeat(129) } },
       undefined,
     ],
+    [
+      "a code that is a sentence",
+      {
+        error: {
+          message: "private",
+          code: "Reasoning is mandatory for this endpoint",
+        },
+      },
+      undefined,
+    ],
     ["a body without an error object", { message: "private" }, undefined],
   ] as const)("keeps the gateway type for %s", (_, data, type) => {
     expect(classify(httpError(400, data)).type).toBe(type);

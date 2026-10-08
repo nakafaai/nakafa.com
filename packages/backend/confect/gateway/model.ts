@@ -24,7 +24,7 @@ export const models = {
 export const Effort = Schema.Literals(["fast", "interactive"]);
 export type Effort = typeof Effort.Type;
 
-/** How much the model reasons for each effort; summaries come back with every answer. */
+/** How much the model reasons for each effort. */
 export const reasoning = {
   fast: "low",
   interactive: "high",

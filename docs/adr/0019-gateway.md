@@ -43,6 +43,7 @@ path `convexGateway` uses.
 | Function tools, `tool_choice: "required"`, and a tool result sent back | On `google/gemini-3.5-flash-lite` with no effort set, and on `google/gemini-3.7-flash` with `reasoning_effort: "high"`: 200 for both steps. No step sends reasoning details back. |
 | `response_format` with a strict JSON schema | 200, valid JSON. |
 | Streaming with `stream_options.include_usage` | 200. The last chunk carries `usage` with `cost`. Reasoning arrives in `delta.reasoning`. |
+| Streaming with no `stream_options`, the request the adapter sends | 200. The last chunk still carries `usage` with `cost`, on both models (`streamPlainLite.json`, `streamPlainPro.json`, `streamPlainLiteLow.json`), so a streamed answer records its tokens and cost. |
 | A PDF as a `file` part with a data URL, a PNG as an `image_url` data URL | 200, both read correctly. |
 | A PNG and a JPEG, 96 by 96 pixels, by Convex storage URL | 200 for the PNG and the JPEG on `google/gemini-3.5-flash-lite`, and 200 for the JPEG on `google/gemini-3.7-flash` (`pngStored96.json`, `jpgStored96.json`, `jpgStored96Pro.json`). |
 | A PDF by Convex storage URL in a `file` part | 200. The gateway reads it (`pdfStored.json`). |
@@ -152,6 +153,15 @@ Given up:
 
 Changed:
 
+- **Reasoning summaries on fast calls.** Under the Vercel gateway only
+  `interactive` calls asked for summaries (`includeThoughts`). The Convex gateway
+  returns a summary whenever the model writes one: `google/gemini-3.5-flash-lite`
+  at `low` returned 239 characters in one plain call (`liteLow.json`) and none in
+  a call with a required tool or in a streamed call (`liteLowTool.json`,
+  `streamPlainLiteLow.json`). Nothing stores them: specialist and math repair
+  calls run without a thread, and the repair, summary, memory, suggestion, and
+  title calls save no messages. The Agent component saves a step only for a
+  call that has a thread and does not set `saveMessages: "none"`.
 - **Failure reading.** A token read that fails inside a request, after the
   build-time check passed, reaches `classify` as an error with no HTTP status,
   which reads as `unknown`. The provider reads the service token inside its own

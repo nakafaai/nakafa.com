@@ -4,7 +4,9 @@ import { Match, Number as Num, Option, Predicate, Schema } from "effect";
 /** Seconds the gateway asked to wait before retrying. */
 const Seconds = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0));
 /** The gateway's own error type or code: a bounded plain identifier, never free text. */
-const GatewayType = Schema.String.check(Schema.isMaxLength(128));
+const GatewayType = Schema.String.check(
+  Schema.isPattern(/^[A-Za-z0-9_.-]{1,128}$/)
+);
 
 /** The deployment cannot call the gateway, such as a free, local, or self-hosted deployment. */
 export class GatewayConfigurationError extends Schema.TaggedError<GatewayConfigurationError>()(
