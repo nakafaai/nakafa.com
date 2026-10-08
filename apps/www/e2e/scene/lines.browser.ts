@@ -6,6 +6,8 @@ import {
   expectCanvasToMove,
   expectFramesToAdvance,
   expectFramesToHold,
+  patchWebGL,
+  type WebGLPatch,
 } from "@/e2e/support/canvas";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -37,27 +39,13 @@ const PIXEL_READBACKS = "nakafaPixelReadbacks";
 
 /**
  * Records where each page-script pixel readback came from, which the
- * headless shell's own ReadPixels notice would otherwise hide. Pass it to
- * `page.addInitScript` with the global's name.
+ * headless shell's own ReadPixels notice would otherwise hide.
  */
-function recordPixelReadbacks(key: string) {
-  const readbacks: string[] = [];
-  Reflect.set(window, key, readbacks);
-  for (const { prototype } of [WebGLRenderingContext, WebGL2RenderingContext]) {
-    const readPixels = prototype.readPixels;
-    Object.defineProperty(prototype, "readPixels", {
-      configurable: true,
-      value(this: unknown, ...args: unknown[]) {
-        readbacks.push(
-          new Error("WebGL readPixels from a page script").stack ??
-            "WebGL readPixels from a page script"
-        );
-        return Reflect.apply(readPixels, this, args);
-      },
-      writable: true,
-    });
-  }
-}
+const recordPixelReadbacks = {
+  key: PIXEL_READBACKS,
+  method: "readPixels",
+  record: "stack",
+} as const satisfies WebGLPatch;
 
 /** Observes unexplained three.js and WebGL notices for the page program. */
 const withObservedSceneDiagnostics = Effect.fn(
@@ -112,7 +100,7 @@ const renderLessonScenes = Effect.fn("NakafaE2E.renderLessonScenes")(function* (
   page: Page
 ) {
   yield* Effect.promise(() =>
-    page.addInitScript(recordPixelReadbacks, PIXEL_READBACKS)
+    page.addInitScript(patchWebGL, recordPixelReadbacks)
   );
   const { cards, count } = yield* openLessonScenes(page);
   for (let index = 0; index < count; index += 1) {
@@ -128,7 +116,9 @@ const renderLessonScenes = Effect.fn("NakafaE2E.renderLessonScenes")(function* (
 const pauseSceneAway = Effect.fn("NakafaE2E.pauseSceneAway")(function* (
   page: Page
 ) {
-  yield* Effect.promise(() => page.addInitScript(countCanvasFrames));
+  yield* Effect.promise(() =>
+    page.addInitScript(patchWebGL, countCanvasFrames)
+  );
   const { cards } = yield* openLessonScenes(page);
   const card = cards.first();
   const canvas = yield* revealSceneCard(card);

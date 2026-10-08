@@ -61,28 +61,58 @@ export const expectCanvasToMove = Effect.fn("NakafaE2E.expectCanvasToMove")(
 );
 
 /**
- * Counts the frames each WebGL canvas clears on the canvas element. Pass it to
- * `page.addInitScript` before the page creates its contexts.
+ * One WebGL method a page patch wraps on both contexts, and what each call
+ * records: a `frame` counts the call on the canvas it draws to, and a `stack`
+ * appends the call's stack to the page global `key`.
  */
-export function countCanvasFrames() {
+export type WebGLPatch =
+  | { readonly method: "clear"; readonly record: "frame" }
+  | {
+      readonly key: string;
+      readonly method: "readPixels";
+      readonly record: "stack";
+    };
+
+/**
+ * Wraps one WebGL method on both contexts, so each call records itself before
+ * the browser runs the method. It runs in the page and cannot reach this
+ * module, so it takes its patch as data. Pass it to `page.addInitScript` with
+ * a `WebGLPatch` before the page creates its contexts.
+ */
+export function patchWebGL(patch: WebGLPatch) {
+  const stacks: string[] = [];
+  if (patch.record === "stack") {
+    Reflect.set(window, patch.key, stacks);
+  }
   for (const { prototype } of [WebGLRenderingContext, WebGL2RenderingContext]) {
-    const clear = prototype.clear;
-    Object.defineProperty(prototype, "clear", {
+    const original = prototype[patch.method];
+    Object.defineProperty(prototype, patch.method, {
       configurable: true,
       value(
         this: WebGLRenderingContext | WebGL2RenderingContext,
         ...args: unknown[]
       ) {
-        if (this.canvas instanceof HTMLCanvasElement) {
-          const frames = Number(this.canvas.dataset.frames ?? 0);
-          this.canvas.dataset.frames = String(frames + 1);
+        if (patch.record === "frame") {
+          if (this.canvas instanceof HTMLCanvasElement) {
+            const frames = Number(this.canvas.dataset.frames ?? 0);
+            this.canvas.dataset.frames = String(frames + 1);
+          }
+        } else {
+          const message = `WebGL ${patch.method} from a page script`;
+          stacks.push(new Error(message).stack ?? message);
         }
-        return Reflect.apply(clear, this, args);
+        return Reflect.apply(original, this, args);
       },
       writable: true,
     });
   }
 }
+
+/** Counts the frames each WebGL canvas clears, as `data-frames` on the canvas. */
+export const countCanvasFrames = {
+  method: "clear",
+  record: "frame",
+} as const satisfies WebGLPatch;
 
 /** Reads a canvas frame count without scrolling the canvas into view. */
 function readFrames(canvas: Locator) {

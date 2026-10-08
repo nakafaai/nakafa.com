@@ -11,6 +11,7 @@ import {
   expectFramesToAdvance,
   expectFramesToHold,
   orbitCanvas,
+  patchWebGL,
   readCanvasSize,
   waitForStableCanvas,
 } from "@/e2e/support/canvas";
@@ -297,7 +298,9 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
  */
 const pauseScenesBehind = Effect.fn("NakafaE2E.pauseVisualScenesBehind")(
   function* (page: Page, presentation: "fullscreen" | "immersive") {
-    yield* Effect.promise(() => page.addInitScript(countCanvasFrames));
+    yield* Effect.promise(() =>
+      page.addInitScript(patchWebGL, countCanvasFrames)
+    );
     yield* openVisualLesson(
       page,
       pinnedRoutes.material.en,
