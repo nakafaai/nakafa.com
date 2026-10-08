@@ -18,11 +18,10 @@ const decodePersistedAccountDeletionAttempt = Schema.decodeUnknownEffect(
 const encodePersistedAccountDeletionAttempt = Schema.encodeEffect(
   persistedAccountDeletionAttemptSchema
 );
-interface AccountDeletionAttemptStorage {
-  readonly getItem: (key: string) => string | null;
-  readonly removeItem: (key: string) => void;
-  readonly setItem: (key: string, value: string) => void;
-}
+type AccountDeletionAttemptStorage = Pick<
+  Storage,
+  "getItem" | "removeItem" | "setItem"
+>;
 /** Raised when the browser cannot durably retain its deletion capability. */
 export class AccountDeletionAttemptStorageFailed extends Schema.TaggedError<AccountDeletionAttemptStorageFailed>()(
   "AccountDeletionAttemptStorageFailed",

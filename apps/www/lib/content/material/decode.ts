@@ -1,20 +1,21 @@
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Schema } from "effect";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
   PublishedProjectionError,
   type PublishedProjectionIdentity,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
 
-interface MaterialPublicationRead {
-  readonly activeReleaseId: ActiveContentReleaseId;
-  readonly projection: MaterialLessonProjection;
-}
+const MaterialPublicationReadSchema = Schema.Struct({
+  activeReleaseId: ReleaseIdSchema,
+  projection: MaterialLessonProjectionSchema,
+});
+type MaterialPublicationRead = typeof MaterialPublicationReadSchema.Type;
 
 /** Creates the public failure returned for malformed material projection data. */
 export function makeMaterialProjectionError(
@@ -42,16 +43,11 @@ export const decodeMaterialProjection = Effect.fn(
 /** Parses one canonical material projection encoded by the backend. */
 export const decodeMaterialJson = Effect.fn("NakafaMaterial.decodeJson")(
   function* (source: string, identity: PublishedProjectionIdentity) {
-    const input = yield* Effect.try({
-      catch: () => makeMaterialProjectionError(identity),
-      try: (): unknown => JSON.parse(source),
-    });
-    return yield* Schema.decodeUnknownEffect(MaterialLessonProjectionSchema)(
-      input,
-      {
-        onExcessProperty: "error",
-      }
-    ).pipe(Effect.mapError(() => makeMaterialProjectionError(identity)));
+    return yield* Schema.decodeEffect(
+      Schema.fromJsonString(MaterialLessonProjectionSchema)
+    )(source, {
+      onExcessProperty: "error",
+    }).pipe(Effect.mapError(() => makeMaterialProjectionError(identity)));
   }
 );
 /** Proves two concurrent material reads selected one identical publication. */

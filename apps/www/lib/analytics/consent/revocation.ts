@@ -11,19 +11,6 @@ import {
 import { revokeAccountAnalyticsGrant } from "@/lib/analytics/consent/signal";
 import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
-interface AccountAnalyticsConsentRevocationOptions {
-  readonly currentAccountUserId:
-    | Parameters<typeof revokeAccountAnalyticsGrant>[1]
-    | null;
-  readonly currentBrowserPrivacySignal: Effect.Effect<boolean>;
-  readonly isOnline: boolean;
-  readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
-  readonly readLatestSave: () => AnalyticsConsentSessionOperation | null;
-  readonly setAccountConsent: Parameters<typeof revokeAccountAnalyticsGrant>[0];
-  readonly setSessionOverrides: AnalyticsConsentStoreState["setSessionOverrides"];
-  readonly shouldRevokeAccountGrant: boolean;
-}
-
 /** Revokes an account grant when the browser begins enforcing DNT or GPC. */
 export function useAccountAnalyticsConsentRevocation({
   currentAccountUserId,
@@ -34,7 +21,18 @@ export function useAccountAnalyticsConsentRevocation({
   setAccountConsent,
   setSessionOverrides,
   shouldRevokeAccountGrant,
-}: AccountAnalyticsConsentRevocationOptions) {
+}: {
+  readonly currentAccountUserId:
+    | Parameters<typeof revokeAccountAnalyticsGrant>[1]
+    | null;
+  readonly currentBrowserPrivacySignal: Effect.Effect<boolean>;
+  readonly isOnline: boolean;
+  readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
+  readonly readLatestSave: () => AnalyticsConsentSessionOperation | null;
+  readonly setAccountConsent: Parameters<typeof revokeAccountAnalyticsGrant>[0];
+  readonly setSessionOverrides: AnalyticsConsentStoreState["setSessionOverrides"];
+  readonly shouldRevokeAccountGrant: boolean;
+}) {
   const revocationRef = useRef<AnalyticsConsentSessionOperation | null>(null);
 
   useEffect(() => {

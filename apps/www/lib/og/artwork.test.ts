@@ -2,7 +2,7 @@
 
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import { Array as Arr, Effect, FileSystem, Path } from "effect";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import {
   listStaticArtworkPaths,
@@ -65,7 +65,7 @@ describe("public artwork", () => {
       );
 
       expect(manifestPaths).toHaveLength(101);
-      expect(new Set(manifestPaths).size).toBe(101);
+      expect(Arr.dedupe(manifestPaths)).toHaveLength(101);
       expect([...publicFilesystemPaths].sort()).toEqual(
         [...manifestPaths].sort()
       );

@@ -1,14 +1,7 @@
 "use client";
 
-import { createContext, type RefObject, use, useRef } from "react";
+import { createContext, use, useRef } from "react";
 import type { WindowVirtualizerHandle } from "virtua";
-
-interface VirtualContextType {
-  scrollToIndex: (index: number) => void;
-  virtualRef: RefObject<WindowVirtualizerHandle | null>;
-}
-
-const VirtualContext = createContext<VirtualContextType | null>(null);
 
 /**
  * The verse anchors' `scroll-mt-44` in rem, so a jump lands a verse where a
@@ -16,7 +9,8 @@ const VirtualContext = createContext<VirtualContextType | null>(null);
  */
 const VERSE_SCROLL_MARGIN_REM = 11;
 
-export function VirtualProvider({ children }: { children: React.ReactNode }) {
+/** Builds the virtualizer handle and the verse jump that the provider shares. */
+function useVirtualValue() {
   const virtualRef = useRef<WindowVirtualizerHandle>(null);
 
   const scrollToIndex = (index: number) => {
@@ -28,10 +22,18 @@ export function VirtualProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const value = {
+  return {
     virtualRef,
     scrollToIndex,
   };
+}
+
+type VirtualContextType = ReturnType<typeof useVirtualValue>;
+
+const VirtualContext = createContext<VirtualContextType | null>(null);
+
+export function VirtualProvider({ children }: { children: React.ReactNode }) {
+  const value = useVirtualValue();
 
   return <VirtualContext value={value}>{children}</VirtualContext>;
 }

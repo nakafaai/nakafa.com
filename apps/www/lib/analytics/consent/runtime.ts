@@ -19,17 +19,6 @@ import {
   createBrowserAnalyticsIdentity,
 } from "@/lib/analytics/consent/state";
 
-interface AnalyticsRuntimeAlignmentOptions {
-  readonly accountConsent: AccountConsentDecision | null;
-  readonly anonymousConsent: Option.Option<AnonymousAnalyticsConsentRecord>;
-  readonly isAuthenticated: boolean;
-  readonly isPreviewChild: boolean;
-  readonly isRuntimeSuppressed: boolean;
-  readonly setHasRuntimeError: (hasRuntimeError: boolean) => void;
-  readonly status: AnalyticsConsentState["status"];
-  readonly user: BrowserAnalyticsUser | null;
-}
-
 /**
  * Owns the baseline-to-granted runtime alignment for one consent state.
  *
@@ -47,7 +36,16 @@ export function useAnalyticsRuntimeAlignment({
   setHasRuntimeError,
   status,
   user,
-}: AnalyticsRuntimeAlignmentOptions) {
+}: {
+  readonly accountConsent: AccountConsentDecision | null;
+  readonly anonymousConsent: Option.Option<AnonymousAnalyticsConsentRecord>;
+  readonly isAuthenticated: boolean;
+  readonly isPreviewChild: boolean;
+  readonly isRuntimeSuppressed: boolean;
+  readonly setHasRuntimeError: (hasRuntimeError: boolean) => void;
+  readonly status: AnalyticsConsentState["status"];
+  readonly user: BrowserAnalyticsUser | null;
+}) {
   useEffect(() => {
     if (isPreviewChild) {
       return;

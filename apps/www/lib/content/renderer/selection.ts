@@ -8,7 +8,7 @@ import {
 } from "@nakafa/aksara-contracts/renderer/domain";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Effect, Schema } from "effect";
+import { Effect, HashSet, Schema } from "effect";
 import { domainRenderers as aiDsRenderers } from "@/lib/content/renderer/domain/ai";
 import { baseRenderers } from "@/lib/content/renderer/domain/base";
 import { domainRenderers as biologyRenderers } from "@/lib/content/renderer/domain/biology";
@@ -80,7 +80,7 @@ export const rendererDomainImplementations = {
   readonly [Domain in RendererDomain]: readonly RendererImplementation[];
 };
 
-const semanticNames = new Set<string>(semanticComponentNames);
+const semanticNames = HashSet.fromIterable<string>(semanticComponentNames);
 
 function findImplementations(
   componentName: string,
@@ -98,7 +98,7 @@ export const selectRendererImplementations = Effect.fn(
 
   const selected: SelectedRenderer[] = [];
   for (const name of selection.requiredComponents) {
-    const isSemantic = semanticNames.has(name);
+    const isSemantic = HashSet.has(semanticNames, name);
     const baseImplementations = findImplementations(name, baseRenderers);
     const domainImplementations = findImplementations(name, domainRenderers);
     const matchCount =

@@ -1,7 +1,8 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
+import { Effect, Schema } from "effect";
 import {
   decodePublishedArticle,
   decodePublishedPage,
@@ -9,6 +10,10 @@ import {
 } from "@/lib/content/published/projection";
 import { testArticleProjection } from "@/test/content-article";
 import { testPageProjection } from "@/test/content-page";
+
+const pageJson = Schema.encodeSync(
+  Schema.fromJsonString(PublicPageProjectionSchema)
+);
 
 const articleIdentity = {
   appLocale: testArticleProjection.appLocale,
@@ -69,10 +74,7 @@ describe("published projection", () => {
         ...identity,
       });
       expect(
-        yield* decodePublishedPageJson(
-          JSON.stringify(testPageProjection),
-          identity
-        )
+        yield* decodePublishedPageJson(pageJson(testPageProjection), identity)
       ).toEqual(testPageProjection);
       expect(
         yield* decodePublishedPageJson("{", identity).pipe(Effect.flip)

@@ -1,45 +1,49 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   type ActiveAppLocaleCode,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizePublicPageProjection,
-  type PublicPageProjection,
+  PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
 import refs from "@repo/backend/confect/_generated/refs";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
 import { decodeContentReleasePin } from "@/lib/content/published/release";
 import { httpLayer } from "@/lib/convex/http";
 import { isReservedPagePath } from "@/lib/routing/public/ownership";
 
+const PublishedPageCatalogSchema = Schema.Struct({
+  activeReleaseId: ReleaseIdSchema,
+  projections: Schema.Array(PublicPageProjectionSchema),
+});
 /** Complete signed Page catalog selected from one active release. */
-export interface PublishedPageCatalog {
-  readonly activeReleaseId: ActiveContentReleaseId;
-  readonly projections: readonly PublicPageProjection[];
-}
-interface PublishedPageRead {
-  readonly projection: PublicPageProjection;
-}
+export type PublishedPageCatalog = typeof PublishedPageCatalogSchema.Type;
+const PublishedPageReadSchema = Schema.Struct({
+  projection: PublicPageProjectionSchema,
+});
+type PublishedPageRead = typeof PublishedPageReadSchema.Type;
 
+const PublishedPageLocalePathSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("found"),
+    publicPath: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("missing"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("unmanaged"),
+  }),
+]);
 /** Result of resolving one Page identity into another active locale. */
-export type PublishedPageLocalePath =
-  | {
-      readonly kind: "found";
-      readonly publicPath: string;
-    }
-  | {
-      readonly kind: "missing";
-    }
-  | {
-      readonly kind: "unmanaged";
-    };
+export type PublishedPageLocalePath = typeof PublishedPageLocalePathSchema.Type;
 
 /** Reads and strictly decodes every locale-equivalent Page projection. */
 export const readPublishedPageCatalog = Effect.fn(
