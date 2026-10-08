@@ -42,28 +42,28 @@ const UploadAttachmentFileInputSchema = Schema.Struct({
 type ForumPostSubmitDraft = typeof ForumPostSubmitDraftSchema.Type;
 type DiscardPendingUploadsInput = typeof DiscardPendingUploadsInputSchema.Type;
 type UploadAttachmentFileInput = typeof UploadAttachmentFileInputSchema.Type;
-export type GenerateUploadUrlMutation = (
+type GenerateUploadUrlMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
 >;
-export type DiscardForumUploadsMutation = (
+type DiscardForumUploadsMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
 >;
-export type SaveForumUploadMutation = (
+type SaveForumUploadMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
 >;
-export type CreateForumPostMutation = (
+type CreateForumPostMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.posts.createForumPost
   >
