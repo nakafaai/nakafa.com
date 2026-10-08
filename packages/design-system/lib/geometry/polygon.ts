@@ -1,4 +1,5 @@
 import type { CoordinatePoint } from "@repo/design-system/components/three/frame";
+import { Array as Arr } from "effect";
 import { ShapeUtils, Vector2 } from "three";
 
 /** Triangulates a validated simple planar polygon, including concave outlines. */
@@ -13,7 +14,7 @@ export function triangulatePolygon(vertices: readonly CoordinatePoint[]) {
   const x = Math.abs(normal.x);
   const y = Math.abs(normal.y);
   const z = Math.abs(normal.z);
-  const contour = vertices.map((point) => {
+  const contour = Arr.map(vertices, (point) => {
     if (x >= y && x >= z) {
       return new Vector2(point.y, point.z);
     }
@@ -22,5 +23,5 @@ export function triangulatePolygon(vertices: readonly CoordinatePoint[]) {
     }
     return new Vector2(point.x, point.y);
   });
-  return ShapeUtils.triangulateShape(contour, []).flat();
+  return Arr.flatten(ShapeUtils.triangulateShape(contour, []));
 }

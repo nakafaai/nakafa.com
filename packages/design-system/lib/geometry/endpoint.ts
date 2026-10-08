@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { type Camera, Matrix4, Vector2, Vector3, Vector4 } from "three";
 
 const EndpointStateSchema = Schema.Literals(["open", "closed"]);
@@ -51,23 +51,15 @@ export const resolveLineEndpoints = Effect.fn("line.resolveEndpoints")(
         message: "A single point cannot be both included and excluded.",
       });
     }
-    const result: {
-      index: number;
-      point: Point;
-      state: typeof EndpointStateSchema.Type;
-    }[] = [];
-    if (declared.start) {
-      result.push({ index: 0, point: points[0], state: declared.start });
-    }
-    if (declared.end && !(points.length === 1 && declared.start)) {
-      const index = points.length - 1;
-      result.push({
-        index,
-        point: points[index],
-        state: declared.end,
-      });
-    }
-    return result;
+    const startEntries = declared.start
+      ? [{ index: 0, point: points[0], state: declared.start }]
+      : [];
+    const lastIndex = points.length - 1;
+    const endEntries =
+      declared.end && !(points.length === 1 && declared.start)
+        ? [{ index: lastIndex, point: points[lastIndex], state: declared.end }]
+        : [];
+    return Arr.appendAll(startEntries, endEntries);
   }
 );
 
@@ -85,20 +77,19 @@ export function clipOpenLineEnds(
   }
   const scale = new Vector3().setFromMatrixScale(worldMatrix);
   const worldRadius = new Vector2(radius * scale.x, radius * scale.y);
-  let clipped = points.map((point) => point.clone().applyMatrix4(worldMatrix));
+  let clipped = Arr.map(points, (point) =>
+    point.clone().applyMatrix4(worldMatrix)
+  );
   if (endpoints.start === "open") {
     clipped = clipStart(clipped, camera, worldRadius, stroke);
   }
   if (endpoints.end === "open") {
-    clipped = clipStart(
-      clipped.reverse(),
-      camera,
-      worldRadius,
-      stroke
-    ).reverse();
+    clipped = Arr.reverse(
+      clipStart(Arr.reverse(clipped), camera, worldRadius, stroke)
+    );
   }
   const inverse = worldMatrix.clone().invert();
-  return clipped.map((point) => point.clone().applyMatrix4(inverse));
+  return Arr.map(clipped, (point) => point.clone().applyMatrix4(inverse));
 }
 
 /** Finds the exact screen-circle crossing, including perspective division. */

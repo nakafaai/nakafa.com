@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { createCuboid } from "@repo/design-system/lib/geometry/cuboid";
-import { Array as Arr } from "effect";
+import { Array as Arr, Order } from "effect";
 
 describe("createCuboid", () => {
   it("creates eight exact vertices around an authored center", () => {
@@ -18,21 +18,23 @@ describe("createCuboid", () => {
 
   it("creates twelve unique straight axis-aligned edges", () => {
     const { edges } = createCuboid({ height: 4, length: 6, width: 8 });
-    const identities = edges.map(([start, end]) =>
-      [start, end]
-        .map(({ x, y, z }) => `${x},${y},${z}`)
-        .sort()
-        .join("|")
+    const identities = Arr.map(edges, ([start, end]) =>
+      Arr.join(
+        Arr.sort(
+          Arr.map([start, end], ({ x, y, z }) => `${x},${y},${z}`),
+          Order.String
+        ),
+        "|"
+      )
     );
 
     expect(edges).toHaveLength(12);
     expect(Arr.dedupe(identities).length).toBe(12);
     for (const [start, end] of edges) {
-      const changedAxes = [
-        start.x !== end.x,
-        start.y !== end.y,
-        start.z !== end.z,
-      ].filter(Boolean);
+      const changedAxes = Arr.filter(
+        [start.x !== end.x, start.y !== end.y, start.z !== end.z],
+        Boolean
+      );
       expect(changedAxes).toHaveLength(1);
     }
   });
@@ -45,7 +47,8 @@ describe("createCuboid", () => {
     });
 
     for (const vertex of vertices) {
-      const degree = edges.filter(
+      const degree = Arr.filter(
+        edges,
         ([start, end]) => start === vertex || end === vertex
       ).length;
       expect(degree).toBe(3);
@@ -60,9 +63,9 @@ describe("createCuboid", () => {
       width: minimum,
     });
 
-    expect(Arr.dedupe(vertices.map(({ x }) => x))).toHaveLength(2);
-    expect(Arr.dedupe(vertices.map(({ y }) => y))).toHaveLength(2);
-    expect(Arr.dedupe(vertices.map(({ z }) => z))).toHaveLength(2);
+    expect(Arr.dedupe(Arr.map(vertices, ({ x }) => x))).toHaveLength(2);
+    expect(Arr.dedupe(Arr.map(vertices, ({ y }) => y))).toHaveLength(2);
+    expect(Arr.dedupe(Arr.map(vertices, ({ z }) => z))).toHaveLength(2);
     expect(edges).toHaveLength(12);
     for (const [from, to] of edges) {
       expect(from).not.toEqual(to);

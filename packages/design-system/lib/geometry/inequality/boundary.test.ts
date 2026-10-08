@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { sampleInequalityBoundary } from "@repo/design-system/lib/geometry/inequality/boundary";
+import { Array as Arr } from "effect";
 
 const DOMAIN = {
   resolution: 2,
@@ -54,7 +55,8 @@ describe("inequality boundary segments", () => {
     });
     expect(points).toHaveLength(14);
     expect(
-      points.every(
+      Arr.every(
+        points,
         ([x, y, z]) =>
           x >= -1 && x <= 1 && y >= -1 && y <= 1 && Math.abs(z) === 1
       )

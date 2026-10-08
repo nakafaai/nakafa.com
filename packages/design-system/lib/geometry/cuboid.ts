@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 const CuboidPointSchema = Schema.Struct({
   x: Schema.Finite,
@@ -60,7 +60,8 @@ export function createCuboid({
     { x: x + halfLength, y: y + halfHeight, z: z + halfWidth },
     { x: x - halfLength, y: y + halfHeight, z: z + halfWidth },
   ] satisfies readonly CuboidPoint[];
-  const edges = EDGE_VERTEX_INDICES.map(
+  const edges = Arr.map(
+    EDGE_VERTEX_INDICES,
     ([startIndex, endIndex]) =>
       [vertices[startIndex], vertices[endIndex]] as const
   );
