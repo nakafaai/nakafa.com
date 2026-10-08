@@ -21,10 +21,11 @@ export const getLatestJwks = internalAction({
       alg: v.literal("RS256"),
     })
   ),
-  handler: async (ctx) => {
-    const auth = await Effect.runPromise(
-      createAuth(ctx).pipe(Effect.provide(ConvexConfigProvider.layer))
-    );
-    return auth.api.getLatestJwks();
-  },
+  handler: (ctx) =>
+    Effect.runPromise(
+      createAuth(ctx).pipe(
+        Effect.provide(ConvexConfigProvider.layer),
+        Effect.flatMap((auth) => Effect.promise(() => auth.api.getLatestJwks()))
+      )
+    ),
 });
