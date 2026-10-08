@@ -7,12 +7,14 @@ import {
   isArrayTypeNode,
   isArrowFunction,
   isCallExpression,
+  isConditionalTypeNode,
   isConstructorTypeNode,
   isDeclareKeyword,
   isFunctionTypeNode,
   isIdentifier,
   isImportDeclaration,
   isIndexSignatureDeclaration,
+  isInferTypeNode,
   isInterfaceDeclaration,
   isIntersectionTypeNode,
   isLiteralTypeNode,
@@ -35,6 +37,7 @@ import {
   isTypeAliasDeclaration,
   isTypeLiteralNode,
   isTypeOperatorNode,
+  isTypeParameterDeclaration,
   isTypeReferenceNode,
   isUnionTypeNode,
   type Node,
@@ -320,14 +323,50 @@ function ownMembers(
     : Arr.flatMap(objectLiterals(node.type), (literal) => literal.members);
 }
 
-/** Whether a node is a type reference to one of `names`, or contains one. */
-function mentions(node: Node, names: readonly string[]): boolean {
-  return (
-    (isTypeReferenceNode(node) &&
-      isIdentifier(node.typeName) &&
-      Arr.contains(names, node.typeName.text)) ||
-    Arr.some(children(node), (child) => mentions(child, names))
+/**
+ * Returns the type parameter names that a node declares for its own children,
+ * such as `T` in `<T>(value: T) => T` or in `{ [T in Keys]: T }`.
+ */
+function declaredNames(node: Node): readonly string[] {
+  return Arr.flatMap(children(node), (child) =>
+    isTypeParameterDeclaration(child) ? [child.name.text] : []
   );
+}
+
+/**
+ * Returns the names that `infer` declarations bind inside a type, such as `U`
+ * in `Promise<infer U>`.
+ */
+function inferredNames(node: Node): readonly string[] {
+  const own = isInferTypeNode(node) ? [node.typeParameter.name.text] : [];
+  return Arr.appendAll(own, Arr.flatMap(children(node), inferredNames));
+}
+
+/**
+ * Whether a node is a type reference to one of `names`, or contains one that no
+ * nearer declaration rebinds. A mapped type or a signature that declares a type
+ * parameter of the same name shadows it inside that node, and an `infer` of the
+ * same name shadows it in a conditional type's extends clause and true branch.
+ */
+function mentions(node: Node, names: readonly string[]): boolean {
+  if (
+    isTypeReferenceNode(node) &&
+    isIdentifier(node.typeName) &&
+    Arr.contains(names, node.typeName.text)
+  ) {
+    return true;
+  }
+  if (isConditionalTypeNode(node)) {
+    const trueNames = Arr.difference(names, inferredNames(node.extendsType));
+    return (
+      mentions(node.checkType, names) ||
+      mentions(node.extendsType, trueNames) ||
+      mentions(node.trueType, trueNames) ||
+      mentions(node.falseType, names)
+    );
+  }
+  const visible = Arr.difference(names, declaredNames(node));
+  return Arr.some(children(node), (child) => mentions(child, visible));
 }
 
 /**

@@ -324,6 +324,33 @@ export interface Other<T> {
       })
   );
 
+  it.effect(
+    "keeps a generic shape reported when a member rebinds its parameter",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`export interface Shadow<T> {
+  readonly map: { readonly [T in "a" | "b"]: T };
+}
+export interface Renders<T> {
+  readonly box: { readonly render: <T>(value: T) => T };
+}
+export interface Visitor<T> {
+  readonly api: { visit<T>(value: T): void };
+}
+export interface Unwrapped<T> {
+  readonly value: Promise<number> extends Promise<infer T> ? T : never;
+}
+export interface Used<T> {
+  readonly map: { readonly [K in "a"]: T };
+  readonly value: Promise<number> extends Promise<infer U> ? U | T : never;
+}
+`),
+          [1, 4, 7, 10]
+        );
+      })
+  );
+
   it.effect("leaves a shape that a browser page function declares alone", () =>
     Effect.gen(function* () {
       const found = yield* effectFindings(
