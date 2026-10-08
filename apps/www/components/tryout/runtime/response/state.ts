@@ -1,14 +1,10 @@
 import type { Ref } from "@confect/core";
-import { QuestionResponseSchema } from "@nakafa/aksara-contracts/question/response";
 import type refs from "@repo/backend/confect/_generated/refs";
-import {
-  RenderableSpec,
-  Selection,
-} from "@repo/backend/confect/response/model";
 import { select } from "@repo/backend/confect/response/selection";
-import { MutableHashMap, MutableHashSet, Option, Result, Schema } from "effect";
+import { MutableHashMap, MutableHashSet, Option, Result } from "effect";
 
 import type {
+  TryoutRenderableResponseSpec,
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
@@ -20,18 +16,10 @@ export type TryoutResponseSelection = NonNullable<
   TryoutRuntimeQuestion["response"]
 >["selection"];
 
-/** Response definition a learner sees, from a signed preview or an attempt. */
-export const TryoutRenderableResponseSpecSchema = Schema.Union([
-  QuestionResponseSchema,
-  RenderableSpec,
-]);
-
-/** Response definition and the selection a learner made against it. */
-export const TryoutResponseStateSchema = Schema.Struct({
-  responseSpec: TryoutRenderableResponseSpecSchema,
-  selection: Schema.NullOr(Selection),
-});
-type TryoutResponseState = typeof TryoutResponseStateSchema.Type;
+interface TryoutResponseState {
+  readonly responseSpec: TryoutRenderableResponseSpec;
+  readonly selection: TryoutResponseSelection | null;
+}
 
 /** Applies one local response while Convex remains authoritative for time. */
 export function applyOptimisticTryoutResponse(

@@ -1,10 +1,8 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import { tryoutRuntimeStateValidator } from "@repo/backend/confect/tryouts/runtime/spec";
-import { Schema } from "effect";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useLocale } from "next-intl";
 import { type ReactNode, Suspense, use, useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -50,14 +48,11 @@ interface TryoutSectionPageClientProps {
   setHref: string;
 }
 
-const TryoutSectionRouteBindingSchema = Schema.NullOr(
-  Schema.Struct({
-    attemptId: IdSchema("tryoutAttempts"),
-    initialState: tryoutRuntimeStateValidator,
-    startHref: Schema.NullOr(Schema.String),
-  })
-);
-type TryoutSectionRouteBinding = typeof TryoutSectionRouteBindingSchema.Type;
+type TryoutSectionRouteBinding = {
+  attemptId: Id<"tryoutAttempts">;
+  initialState: TryoutSectionInitialState;
+  startHref: string | null;
+} | null;
 
 interface TryoutSectionBodyProps {
   children: ReactNode;

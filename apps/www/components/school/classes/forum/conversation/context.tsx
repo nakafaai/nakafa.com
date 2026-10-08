@@ -1,15 +1,12 @@
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { forumDetailValidator } from "@repo/backend/confect/classes/forums/validators";
-import { Schema } from "effect";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createContext, type ReactNode, use } from "react";
+import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
 
-const DataValueSchema = Schema.Struct({
-  currentUserId: IdSchema("users"),
-  forum: Schema.UndefinedOr(forumDetailValidator),
-  forumId: IdSchema("schoolClassForums"),
-});
-
-type DataValue = typeof DataValueSchema.Type;
+interface DataValue {
+  currentUserId: Id<"users">;
+  forum: Forum | undefined;
+  forumId: Id<"schoolClassForums">;
+}
 
 const DataContext = createContext<DataValue | null>(null);
 

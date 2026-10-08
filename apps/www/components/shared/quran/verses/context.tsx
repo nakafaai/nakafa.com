@@ -1,15 +1,13 @@
 "use client";
 
-import { quranTafsirAccessValidator } from "@repo/backend/confect/contentRelease/quran/spec";
-import { Schema } from "effect";
+import type { QuranViewTafsirAccess } from "@repo/backend/client/quran/view";
 import { createContext, type ReactNode, use } from "react";
 
-const QuranVersesValueSchema = Schema.Struct({
-  interpretationLabel: Schema.String,
-  tafsirAccess: quranTafsirAccessValidator,
-  translationNotesLabel: Schema.String,
-});
-type QuranVersesValue = typeof QuranVersesValueSchema.Type;
+interface QuranVersesValue {
+  readonly interpretationLabel: string;
+  readonly tafsirAccess: QuranViewTafsirAccess;
+  readonly translationNotesLabel: string;
+}
 
 const QuranVersesContext = createContext<QuranVersesValue | null>(null);
 

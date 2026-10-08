@@ -1,16 +1,10 @@
-import {
-  type SchoolClassImage,
-  schoolClassImageValidator,
-} from "@repo/backend/confect/classes/schema";
-import { Schema } from "effect";
+import type { SchoolClassImage } from "@repo/backend/confect/classes/schema";
 
-const ClassImageStateSchema = Schema.Struct({
-  class: Schema.Struct({
-    image: schoolClassImageValidator,
-  }),
-});
-
-type ClassImageState = typeof ClassImageStateSchema.Type;
+interface ClassImageState {
+  class: {
+    image: SchoolClassImage;
+  };
+}
 
 /** Replace the selected class image while preserving the route state. */
 export function updateClassImageState<T extends ClassImageState>(

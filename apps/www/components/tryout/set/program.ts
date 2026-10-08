@@ -2,13 +2,12 @@
 
 import type { InvokeReturn } from "@confect/react";
 import type refs from "@repo/backend/confect/_generated/refs";
-import {
-  type StartAttemptArgs,
-  type StartAttemptResult,
-  startAttemptArgsValidator,
+import type {
+  StartAttemptArgs,
+  StartAttemptResult,
 } from "@repo/backend/confect/tryouts/start/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Data, Effect, Schema } from "effect";
+import { Data, Effect } from "effect";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -20,11 +19,10 @@ class TryoutClientRequestError extends Data.TaggedError(
 }> {}
 
 /** Arguments and failure copy of one free start, without its callbacks. */
-const StartAttemptProgramInputSchema = Schema.Struct({
-  args: startAttemptArgsValidator,
-  failureMessage: Schema.String,
-});
-type StartAttemptProgramInput = typeof StartAttemptProgramInputSchema.Type;
+interface StartAttemptProgramInput {
+  readonly args: StartAttemptArgs;
+  readonly failureMessage: string;
+}
 
 /** Calls the Convex start mutation with the attempt arguments. */
 type StartAttemptMutation = (

@@ -1,7 +1,6 @@
 "use client";
 
-import { quranViewVerseValidator } from "@repo/backend/content/quran/response";
-import { Schema } from "effect";
+import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import {
   QuranInterpretationButton,
   QuranInterpretationLink,
@@ -16,12 +15,11 @@ import {
 import { QuranTranslation } from "@/components/shared/quran/verses/translation";
 import { WindowVirtualized } from "@/components/shared/quran/verses/virtual";
 
-const VerseItemSchema = Schema.Struct({
-  id: Schema.String,
-  label: Schema.String,
-  verse: quranViewVerseValidator,
-});
-type VerseItem = typeof VerseItemSchema.Type;
+interface VerseItem {
+  id: string;
+  label: string;
+  verse: QuranViewVerse;
+}
 
 /**
  * Renders a surah's leading verses in document flow, so the server markup has

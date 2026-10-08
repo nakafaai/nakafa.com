@@ -1,32 +1,27 @@
 import type { Ref } from "@confect/core";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type refs from "@repo/backend/confect/_generated/refs";
-import {
-  forumDetailValidator,
-  forumUserValidator,
-} from "@repo/backend/confect/classes/forums/validators";
-import { Schema } from "effect";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
-import {
-  type Forum,
-  type ForumPost,
-  ForumPostSchema,
+import type {
+  Forum,
+  ForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
 
 type CreateForumPostArgs = Ref.Args<
   typeof refs.public.classes.forums.mutations.posts.createForumPost
 >;
 
-const OptimisticForumPostInputSchema = Schema.Struct({
-  currentUser: forumUserValidator,
-  forum: forumDetailValidator,
-  now: Schema.Finite,
-  parentPost: Schema.UndefinedOr(ForumPostSchema),
-  postId: IdSchema("schoolClassForumPosts"),
-  posts: Schema.Array(ForumPostSchema),
-});
+type ForumPostUser = NonNullable<ForumPost["user"]>;
 
-type OptimisticForumPostInput = typeof OptimisticForumPostInputSchema.Type;
+interface OptimisticForumPostInput {
+  args: CreateForumPostArgs;
+  currentUser: ForumPostUser;
+  forum: Forum;
+  now: number;
+  parentPost: ForumPost | undefined;
+  postId: Id<"schoolClassForumPosts">;
+  posts: readonly ForumPost[];
+}
 
 /** Derives the next temporary sequence from the loaded transcript window. */
 function getOptimisticForumPostSequence({
@@ -50,7 +45,7 @@ export function createOptimisticForumPost({
   parentPost,
   postId,
   posts,
-}: OptimisticForumPostInput & { args: CreateForumPostArgs }) {
+}: OptimisticForumPostInput) {
   return {
     _creationTime: now,
     _id: postId,

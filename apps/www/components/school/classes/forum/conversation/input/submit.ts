@@ -1,7 +1,6 @@
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog/browser";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
@@ -24,24 +23,19 @@ const StorageIdSchema = Schema.declare(
 const StorageUploadResponseSchema = Schema.Struct({
   storageId: StorageIdSchema,
 });
-const ForumPostSubmitDraftSchema = Schema.Struct({
-  body: Schema.String,
-  forumId: IdSchema("schoolClassForums"),
-  parentId: Schema.UndefinedOr(IdSchema("schoolClassForumPosts")),
-});
-const DiscardPendingUploadsInputSchema = Schema.Struct({
-  source: Schema.String,
-  uploadIds: Schema.mutable(
-    Schema.Array(IdSchema("schoolClassForumPendingUploads"))
-  ),
-});
-const UploadAttachmentFileInputSchema = Schema.Struct({
-  file: Schema.instanceOf(File),
-  forumId: IdSchema("schoolClassForums"),
-});
-type ForumPostSubmitDraft = typeof ForumPostSubmitDraftSchema.Type;
-type DiscardPendingUploadsInput = typeof DiscardPendingUploadsInputSchema.Type;
-type UploadAttachmentFileInput = typeof UploadAttachmentFileInputSchema.Type;
+interface ForumPostSubmitDraft {
+  body: string;
+  forumId: Id<"schoolClassForums">;
+  parentId: Id<"schoolClassForumPosts"> | undefined;
+}
+interface DiscardPendingUploadsInput {
+  source: string;
+  uploadIds: Id<"schoolClassForumPendingUploads">[];
+}
+interface UploadAttachmentFileInput {
+  file: File;
+  forumId: Id<"schoolClassForums">;
+}
 type GenerateUploadUrlMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl

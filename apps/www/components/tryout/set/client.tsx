@@ -1,11 +1,8 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import { publicTryoutSectionValidator } from "@repo/backend/confect/tryouts/queries/catalogModel";
-import { tryoutRuntimeStateValidator } from "@repo/backend/confect/tryouts/runtime/spec";
-import { Schema } from "effect";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useLocale } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -37,12 +34,11 @@ import { TryoutSetOverview } from "@/components/tryout/set/overview";
 
 type SetState = TryoutSetInitialState | null;
 
-const TryoutSetPageBindingSchema = Schema.Struct({
-  attemptId: IdSchema("tryoutAttempts"),
-  initialState: tryoutRuntimeStateValidator,
-  sectionRoutes: Schema.Array(publicTryoutSectionValidator),
-});
-type TryoutSetPageBinding = typeof TryoutSetPageBindingSchema.Type;
+interface TryoutSetPageBinding {
+  attemptId: Id<"tryoutAttempts">;
+  initialState: TryoutSetInitialState;
+  sectionRoutes: readonly SetPage["sections"][number][];
+}
 
 interface TryoutSetPageClientProps {
   binding: TryoutSetPageBinding | null;

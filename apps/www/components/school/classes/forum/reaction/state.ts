@@ -1,19 +1,14 @@
-import { forumReactionUsersValidator } from "@repo/backend/confect/classes/forums/validators";
-import { schoolClassReactionCountValidator } from "@repo/backend/confect/classes/schema";
-import { Schema } from "effect";
+import type { forumReactionUsersValidator } from "@repo/backend/confect/classes/forums/validators";
+import type { schoolClassReactionCountValidator } from "@repo/backend/confect/classes/schema";
 
-const ReactionStateSchema = Schema.Struct({
-  myReactions: Schema.mutable(Schema.Array(Schema.String)),
-  reactionCounts: Schema.mutable(
-    Schema.Array(schoolClassReactionCountValidator)
-  ),
-  reactionUsers: Schema.optionalKey(
-    Schema.mutable(Schema.Array(forumReactionUsersValidator))
-  ),
-});
 type ReactionCount = typeof schoolClassReactionCountValidator.Type;
 type ReactionPreview = typeof forumReactionUsersValidator.Type;
-type ReactionState = typeof ReactionStateSchema.Type;
+
+interface ReactionState {
+  myReactions: string[];
+  reactionCounts: ReactionCount[];
+  reactionUsers?: ReactionPreview[];
+}
 
 /** Apply one reaction delta while removing empty counters. */
 function updateCounts(
