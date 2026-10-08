@@ -18,9 +18,16 @@ export const PostHogBulkEraseResponseSchema = Schema.Struct({
   ),
   recordings_queued_for_deletion: Schema.Boolean,
 });
-export type PostHogErasureConfig = Effect.Success<
-  ReturnType<typeof readPostHogErasureConfig>
->;
+const PostHogErasureConfigSchema = Schema.Struct({
+  deletionApiKey: Schema.String,
+  host: Schema.String,
+  projectId: Schema.String,
+});
+export type PostHogErasureConfig = typeof PostHogErasureConfigSchema.Type;
+const PostHogErasureOptionsSchema = Schema.Struct({
+  config: PostHogErasureConfigSchema,
+});
+export type PostHogErasureOptions = typeof PostHogErasureOptionsSchema.Type;
 type PostHogRequest = typeof fetch;
 const JsonText = Schema.fromJsonString(Schema.Unknown);
 
@@ -102,10 +109,10 @@ export const erasePostHogPerson = Effect.fn(
   "analytics.erasure.erasePostHogPerson"
 )(function* (
   distinctId: string,
-  config?: PostHogErasureConfig,
+  options?: PostHogErasureOptions,
   request?: PostHogRequest
 ) {
-  const resolvedConfig = config ?? (yield* readPostHogErasureConfig());
+  const resolvedConfig = options?.config ?? (yield* readPostHogErasureConfig());
   const send = request ?? fetch;
   const { apiOrigin, deletionApiKey, projectId } =
     yield* validatePostHogErasureConfig(resolvedConfig);
