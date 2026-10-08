@@ -190,9 +190,13 @@ describe("array findings by project", () => {
         path.join(root, PROJECT_CONFIG),
         PROJECT
       );
-      yield* fileSystem.writeFileString(path.join(root, "value.ts"), CALL);
+      yield* fileSystem.makeDirectory(path.join(root, "scripts"));
+      yield* fileSystem.writeFileString(
+        path.join(root, "scripts/value.ts"),
+        CALL
+      );
       const parsed = yield* parseSources([
-        { file: "value.ts", sourceText: CALL },
+        { file: "scripts/value.ts", sourceText: CALL },
       ]);
       const api = yield* openRepositoryCompiler(
         root,
@@ -206,7 +210,7 @@ describe("array findings by project", () => {
       );
       assert.deepStrictEqual(
         Arr.map(found, ({ file, line, rule }) => `${file}:${line} ${rule}`),
-        ["value.ts:2 array-method"]
+        ["scripts/value.ts:2 array-method"]
       );
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
   );
@@ -235,7 +239,7 @@ describe("array findings by scope", () => {
   );
 
   it.effect(
-    "judges repository code in every workspace, reporting only arrays",
+    "judges only the strict folders, tests included, reporting only arrays",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -250,24 +254,24 @@ describe("array findings by scope", () => {
             "scripts/check/list.ts": CALL,
             "scripts/check/names.ts":
               "declare const names: Set<string>;\nexport const seen = names.forEach(() => {});\n",
+            "scripts/vitest.config.ts": `import { defineConfig } from "vitest/config";\n${CALL}`,
           }),
           [
-            "apps/www/lib/list.ts:2 array-method",
             "packages/backend/confect/users/list.test.ts:2 array-method",
             "packages/backend/confect/users/list.ts:2 array-method",
-            "packages/backend/convex/users.ts:2 array-method",
             "scripts/check/list.ts:2 array-method",
+            "scripts/vitest.config.ts:3 array-method",
           ]
         );
       })
   );
 
-  it.effect("needs no project for configuration", () =>
+  it.effect("needs no project outside the strict folders", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
         yield* judge({
           "apps/cas/vercel.ts": `import type { VercelConfig } from "@vercel/config/v1";\n${CALL}`,
-          "scripts/tools/vitest.config.ts": `import { defineConfig } from "vitest/config";\n${CALL}`,
+          "apps/www/vitest.config.ts": `import { defineConfig } from "vitest/config";\n${CALL}`,
         }),
         []
       );
