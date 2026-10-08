@@ -7,11 +7,13 @@ const AiDraftRecordSchema = Schema.Struct({
   owner: Schema.String,
   text: Schema.String,
 });
-interface AiDraftResolution {
-  ownerId: string | null;
-  pendingText: string;
-  pendingTextChanged: boolean;
-}
+const AiDraftJson = Schema.fromJsonString(Schema.Unknown);
+const AiDraftResolutionSchema = Schema.Struct({
+  ownerId: Schema.NullOr(Schema.String),
+  pendingText: Schema.String,
+  pendingTextChanged: Schema.Boolean,
+});
+type AiDraftResolution = typeof AiDraftResolutionSchema.Type;
 /** Describes an unavailable or rejected Nina draft storage operation. */
 class AiDraftStorageError extends Data.TaggedError("AiDraftStorageError")<{
   cause: unknown;
@@ -19,6 +21,10 @@ class AiDraftStorageError extends Data.TaggedError("AiDraftStorageError")<{
 /** Encodes a resolved account identity for tab-scoped draft ownership. */
 function encodeDraftOwner(ownerId: string | null) {
   return ownerId ?? ANONYMOUS_DRAFT_OWNER;
+}
+/** Encodes one draft record as the JSON text kept in session storage. */
+function encodeAiDraftRecord(owner: string, text: string) {
+  return Schema.encodeSync(AiDraftJson)({ owner, text });
 }
 /** Removes every tab-scoped value owned by the Nina draft handoff. */
 function removeAiDraft() {
@@ -41,10 +47,7 @@ export function saveAiDraftText(
       }
       window.sessionStorage.setItem(
         AI_DRAFT_STORAGE_KEY,
-        JSON.stringify({
-          owner: encodeDraftOwner(ownerId),
-          text,
-        })
+        encodeAiDraftRecord(encodeDraftOwner(ownerId), text)
       );
     },
   }).pipe(Effect.catchTag("AiDraftStorageError", () => Effect.void));
@@ -78,10 +81,7 @@ export function readAiDraftText(ownerId: string | null) {
       ) {
         window.sessionStorage.setItem(
           AI_DRAFT_STORAGE_KEY,
-          JSON.stringify({
-            owner: currentOwner,
-            text: draft.text,
-          })
+          encodeAiDraftRecord(currentOwner, draft.text)
         );
         return draft.text;
       }
