@@ -11,6 +11,10 @@ import {
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { advancePublication } from "@repo/backend/confect/contentRelease/ingress/lifecycle";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
+import {
+  encodeReleaseJson,
+  encodeRendererJson,
+} from "@repo/backend/confect/contentRelease/wire";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type {
   ActionCtx,
@@ -72,7 +76,7 @@ const insertRelease = Effect.fn("test.contentRelease.insertLifecycleRelease")(
         proofAt: now,
         proofJson: "{}",
         releaseId,
-        releaseJson: JSON.stringify(release),
+        releaseJson: encodeReleaseJson(release),
         rendererJson,
         resultFamilies: [...release.manifest.scope.families],
         role: "candidate",
@@ -200,7 +204,7 @@ describe("content release lifecycle ingress", () => {
               ctx,
               releaseId,
               release,
-              JSON.stringify(TEST_PROOF_RENDERER)
+              encodeRendererJson(TEST_PROOF_RENDERER)
             )
           )
         );
@@ -236,7 +240,7 @@ describe("content release lifecycle ingress", () => {
             ctx,
             releaseId,
             release,
-            JSON.stringify(TEST_PROOF_RENDERER)
+            encodeRendererJson(TEST_PROOF_RENDERER)
           )
         )
       );
@@ -271,7 +275,7 @@ describe("content release lifecycle ingress", () => {
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              insertRelease(ctx, JSON.stringify(TEST_PROOF_RENDERER)).pipe(
+              insertRelease(ctx, encodeRendererJson(TEST_PROOF_RENDERER)).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -306,7 +310,10 @@ describe("content release lifecycle ingress", () => {
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              insertRelease(ctx, JSON.stringify(testProofRenderer("h1"))).pipe(
+              insertRelease(
+                ctx,
+                encodeRendererJson(testProofRenderer("h1"))
+              ).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )

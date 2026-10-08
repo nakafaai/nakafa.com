@@ -11,7 +11,10 @@ import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import type {
+  StageSnapshotBatchRequest,
+  StageSnapshotRequest,
+} from "@nakafa/aksara-contracts/transport/snapshot";
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/hash/catalog";
 import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/hash/placement";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
@@ -25,18 +28,6 @@ import {
 } from "@repo/backend/confect/contentRelease/wire";
 import { Array as Arr, Effect } from "effect";
 
-type SnapshotRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation: "stageSnapshot";
-  }
->;
-type SnapshotBatchRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation: "stageSnapshotBatch";
-  }
->;
 /** Rejects one content identity mismatch before immutable storage. */
 function requireHash(
   actual: Sha256Hash,
@@ -169,7 +160,7 @@ export const verifySnapshotBatch = Effect.fn(
 
 /** Verifies and stages one immutable structured-family manifest. */
 export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
-  function* (request: SnapshotRequest) {
+  function* (request: StageSnapshotRequest) {
     const { runMutation } = yield* MutationRunner;
     yield* verifySnapshotManifest(request.snapshot);
     return yield* runMutation(
@@ -185,7 +176,7 @@ export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
 /** Verifies and stages one bounded structured-family row batch. */
 export const stageSnapshotBatch = Effect.fn(
   "contentRelease.stageSnapshotBatch"
-)(function* (request: SnapshotBatchRequest) {
+)(function* (request: StageSnapshotBatchRequest) {
   const { runMutation } = yield* MutationRunner;
   yield* verifySnapshotBatch(request.family, request.snapshotId, request.rows);
   return yield* runMutation(

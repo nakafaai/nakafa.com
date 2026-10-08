@@ -142,12 +142,16 @@ const rollbackFailure = Effect.fn("test.contentRelease.rollbackFailure")(
 
 /** Encodes one caller-owned body page through its exact shared contract. */
 function encodeBodyPage(page: unknown) {
-  return JSON.stringify(Schema.decodeUnknownSync(RollbackPageSchema)(page));
+  return Schema.encodeSync(Schema.fromJsonString(RollbackPageSchema))(
+    Schema.decodeUnknownSync(RollbackPageSchema)(page)
+  );
 }
 
 /** Encodes one caller-owned route page through its exact shared contract. */
 function encodeRoutePage(page: unknown) {
-  return JSON.stringify(Schema.decodeUnknownSync(RoutePageSchema)(page));
+  return Schema.encodeSync(Schema.fromJsonString(RoutePageSchema))(
+    Schema.decodeUnknownSync(RoutePageSchema)(page)
+  );
 }
 
 /** Builds one schema-valid empty body page that cannot continue a real cursor. */
@@ -328,7 +332,7 @@ describe("content publication rollback reads", () => {
       const envelope = yield* readRollbackEnvelope(t);
       const request = yield* makeBodyRequest(release.manifestHash, -1, 2);
       const message = yield* rollbackFailure(
-        readRollbackPages(t, request, envelope, [JSON.stringify({})])
+        readRollbackPages(t, request, envelope, ["{}"])
       );
       expect(message).toContain("violates its exact contract");
     })
@@ -394,7 +398,9 @@ describe("content publication rollback reads", () => {
           })
         );
       }
-      const oversized = JSON.stringify({
+      const oversized = yield* Schema.encodeEffect(
+        Schema.fromJsonString(RollbackPageSchema)
+      )({
         ...page,
         records: [inflateRecord(record, MAX_ROLLBACK_PAGE_BYTES)],
       });
@@ -445,11 +451,14 @@ describe("content publication rollback reads", () => {
             })
           );
         }
+        const inflated = yield* Schema.encodeEffect(
+          Schema.fromJsonString(RollbackPageSchema)
+        )({
+          ...page,
+          records: [first, inflateRecord(second, MAX_ROLLBACK_PAGE_BYTES)],
+        });
         const response = yield* readRollbackPages(t, request, envelope, [
-          JSON.stringify({
-            ...page,
-            records: [first, inflateRecord(second, MAX_ROLLBACK_PAGE_BYTES)],
-          }),
+          inflated,
         ]);
         expect(response.records).toHaveLength(1);
         expect(response.records[0]).toMatchObject({
