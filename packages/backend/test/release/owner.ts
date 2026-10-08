@@ -1,6 +1,6 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type schema from "@repo/backend/convex/schema";
 import {
@@ -8,8 +8,12 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
-import type { TestIdentity } from "@repo/backend/test/content/state";
+import {
+  type TestIdentity,
+  TestIdentitySchema,
+} from "@repo/backend/test/content/state";
 import type { TestConvex } from "convex-test";
+import { Schema } from "effect";
 
 export const TEST_OWNER_KEY = ContentKeySchema.make("test:owner");
 export const TEST_OWNER_SCOPE = testPublicationScope({
@@ -26,11 +30,12 @@ export const TEST_OWNER_RECOVERY = {
   sequence: 2,
 } satisfies TestIdentity;
 
-interface OwnerReleaseOptions {
-  readonly base?: TestIdentity;
-  readonly originReleaseId?: string;
-  readonly scope: PublicationScope;
-}
+const OwnerReleaseOptionsSchema = Schema.Struct({
+  base: Schema.optionalKey(TestIdentitySchema),
+  originReleaseId: Schema.optionalKey(Schema.String),
+  scope: PublicationScopeSchema,
+});
+type OwnerReleaseOptions = typeof OwnerReleaseOptionsSchema.Type;
 
 /** Creates one zero-body envelope whose signed scope owns a whole family. */
 export function ownerReleaseJson(

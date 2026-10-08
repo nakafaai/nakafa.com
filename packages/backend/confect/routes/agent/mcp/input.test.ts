@@ -180,37 +180,39 @@ describe("MCP request input", () => {
       })
   );
 
-  it.effect("preserves one explicitly empty JSON request for SDK parsing", () =>
-    Effect.gen(function* () {
-      const [absent, empty] = yield* Effect.all([
-        readMcpRequest(
-          new Request("https://example.test/internal/mcp", {
-            headers: {
-              "content-length": "0",
-              "content-type": "application/json",
-            },
-            method: "POST",
-          })
-        ),
-        readMcpRequest(
-          new Request("https://example.test/internal/mcp", {
-            body: "",
-            headers: {
-              "content-length": "0",
-              "content-type": "application/json",
-            },
-            method: "POST",
-          })
-        ),
-      ]);
+  it.effect(
+    "preserves one explicitly empty JSON request for protocol parsing",
+    () =>
+      Effect.gen(function* () {
+        const [absent, empty] = yield* Effect.all([
+          readMcpRequest(
+            new Request("https://example.test/internal/mcp", {
+              headers: {
+                "content-length": "0",
+                "content-type": "application/json",
+              },
+              method: "POST",
+            })
+          ),
+          readMcpRequest(
+            new Request("https://example.test/internal/mcp", {
+              body: "",
+              headers: {
+                "content-length": "0",
+                "content-type": "application/json",
+              },
+              method: "POST",
+            })
+          ),
+        ]);
 
-      expect("parsedBody" in absent).toBe(false);
-      expect("parsedBody" in empty).toBe(false);
-      expect(yield* Effect.promise(() => empty.request.text())).toBe("");
-    })
+        expect("parsedBody" in absent).toBe(false);
+        expect("parsedBody" in empty).toBe(false);
+        expect(yield* Effect.promise(() => empty.request.text())).toBe("");
+      })
   );
 
-  it.effect("bounds unsupported media types before SDK rejection", () =>
+  it.effect("bounds unsupported media types before protocol rejection", () =>
     Effect.gen(function* () {
       const unsupported = new Request("https://example.test/internal/mcp", {
         body: "plain text",

@@ -35,7 +35,7 @@ import {
   makeQuranSearch,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import { Effect, Stream } from "effect";
+import { Effect, MutableHashMap, Stream } from "effect";
 
 /** Complete synthetic protocol corpus, with authentic row and snapshot hashes. */
 export const makeQuranRuntimeSource = Effect.fn(
@@ -105,7 +105,7 @@ export const makeQuranRuntimeSource = Effect.fn(
     snapshots,
   });
   const fixture = makeRuntimeSource(signed);
-  fixture.source.set("contentSnapshots", [
+  MutableHashMap.set(fixture.source, "contentSnapshots", [
     {
       createdAt: 1,
       family: "quran",
@@ -115,7 +115,8 @@ export const makeQuranRuntimeSource = Effect.fn(
       verifiedAt: 1,
     },
   ]);
-  fixture.source.set(
+  MutableHashMap.set(
+    fixture.source,
     "quranRows",
     hashed.map((row, index) => {
       const record = { ...row, snapshotId: manifest.snapshotId };
@@ -128,7 +129,8 @@ export const makeQuranRuntimeSource = Effect.fn(
       };
     })
   );
-  fixture.source.set(
+  MutableHashMap.set(
+    fixture.source,
     "quranSearch",
     hashed.flatMap((row, index) =>
       row.payload.kind === "quran-search"

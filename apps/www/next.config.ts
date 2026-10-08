@@ -187,8 +187,9 @@ const nextConfig = {
   // https://nextjs.org/docs/app/api-reference/config/next-config-js/reactMaxHeadersLength
   reactMaxHeadersLength: 0,
   typescript: {
-    // pnpm build runs next typegen and the full two-checker tsc gate first.
-    // Keep that check outside the resident web compiler's memory footprint.
+    // CI typechecks www on every head through `pnpm -r run typecheck`, so the
+    // build does not repeat the two-checker tsc gate. Keep that check outside
+    // the resident web compiler's memory footprint.
     // https://nextjs.org/docs/app/api-reference/config/next-config-js/typescript
     ignoreBuildErrors: true,
   },
@@ -238,6 +239,21 @@ const nextConfig = {
     // persistent compiler graph for disk-cache serialization.
     // https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopackFileSystemCache
     turbopackFileSystemCacheForBuild: false,
+    // A page whose render returns an error gets this many attempts, each with
+    // its own 60 second budget, so one failed content read does not end the
+    // build. Next 16.4.0 counts attempts rather than retries: the export worker
+    // loops while `attempt < maxAttempts` (next/dist/export/worker.js), so 2
+    // allows one retry. The option defaults to undefined, one attempt
+    // (next/dist/server/config-shared.js).
+    // https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
+    staticGenerationRetryCount: 2,
+    // Each static worker runs at most this many pages at once, down from the
+    // default of 8 (next/dist/server/config-shared.js). The production builder
+    // has 8 GB. A healthy static phase takes 14 to 23 seconds for 257 pages, and
+    // two builds stalled in it on 8 October. The worker count stays as it is:
+    // this option only limits the pages in flight within each worker.
+    // https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
+    staticGenerationMaxConcurrency: 4,
     ...(configEnv.NEXT_EXPOSE_TESTING_API === "true"
       ? { exposeTestingApiInProductionBuild: true }
       : {}),

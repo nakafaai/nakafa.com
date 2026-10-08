@@ -1,16 +1,18 @@
 import type { Page } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 /** The link elements that ask the browser to preload a font file. */
 export const PRELOADED_FONT_SELECTOR = 'link[rel="preload"][as="font"]';
 
 const katexFile = /\/KaTeX_([^./]+)\.[^/]+\.woff2$/;
 
-interface LoadedFontFace {
-  readonly family: string;
-  readonly style: string;
-  readonly weight: string;
-}
+const LoadedFontFaceSchema = Schema.Struct({
+  family: Schema.String,
+  style: Schema.String,
+  weight: Schema.String,
+});
+
+type LoadedFontFace = typeof LoadedFontFaceSchema.Type;
 
 /** Names a KaTeX file the way KaTeX does, such as `Main-Regular`. */
 function fileFace(url: string) {
@@ -59,6 +61,26 @@ export const readMathFonts = Effect.fn("NakafaE2E.readMathFonts")(function* (
     loaded: state.loaded.flatMap((font) => loadedFace(font) ?? []),
     preloaded: state.preloaded.flatMap((url) => fileFace(url) ?? []),
   };
+});
+
+/**
+ * Loads the KaTeX faces the page declares. A formula's face loads the first
+ * time layout finds it, so a page that shows math for the first time reflows
+ * its text once the face arrives. A check that measures a navigation loads the
+ * faces first, so that reflow is not counted as the navigation's.
+ */
+export const loadMathFonts = Effect.fn("NakafaE2E.loadMathFonts")(function* (
+  page: Page
+) {
+  yield* Effect.promise(() =>
+    page.evaluate(() =>
+      Promise.all(
+        [...document.fonts]
+          .filter((face) => face.family.startsWith("KaTeX"))
+          .map((face) => face.load())
+      ).then(() => undefined)
+    )
+  );
 });
 
 /** Reads the Quran typeface's font files from the page's stylesheets. */

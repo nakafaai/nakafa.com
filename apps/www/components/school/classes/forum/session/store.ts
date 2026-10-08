@@ -1,31 +1,44 @@
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Schema } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view/model";
+import { ConversationViewSchema } from "@/components/school/classes/forum/conversation/data/view/model";
 
-export interface ForumReplyTarget {
-  postId: Id<"schoolClassForumPosts">;
-  userName: string;
-}
+/** A forum id as a record key: Confect's id Schema does not carry the key type that `Schema.Record` needs. */
+const ForumKeySchema = Schema.NonEmptyString.pipe(
+  Schema.refine(Schema.is(IdSchema("schoolClassForums")))
+);
 
-export interface ConversationScrollSnapshot {
-  lastPostId: Id<"schoolClassForumPosts"> | null;
-  offset: number;
-  renderedRowCount: number;
-  view: ConversationView;
-  wasAtBottom: boolean;
-}
+export const ForumReplyTargetSchema = Schema.Struct({
+  postId: IdSchema("schoolClassForumPosts"),
+  userName: Schema.String,
+});
+export type ForumReplyTarget = typeof ForumReplyTargetSchema.Type;
 
-interface State {
-  conversationScrollSnapshotByForumId: Partial<
-    Record<Id<"schoolClassForums">, ConversationScrollSnapshot>
-  >;
-  isHydrated: boolean;
-  replyTargetByForumId: Partial<
-    Record<Id<"schoolClassForums">, ForumReplyTarget>
-  >;
-}
+export const ConversationScrollSnapshotSchema = Schema.Struct({
+  lastPostId: Schema.NullOr(IdSchema("schoolClassForumPosts")),
+  offset: Schema.Finite,
+  renderedRowCount: Schema.Finite,
+  view: ConversationViewSchema,
+  wasAtBottom: Schema.Boolean,
+});
+export type ConversationScrollSnapshot =
+  typeof ConversationScrollSnapshotSchema.Type;
+
+const StateSchema = Schema.Struct({
+  conversationScrollSnapshotByForumId: Schema.Record(
+    ForumKeySchema,
+    Schema.UndefinedOr(ConversationScrollSnapshotSchema)
+  ),
+  isHydrated: Schema.Boolean,
+  replyTargetByForumId: Schema.Record(
+    ForumKeySchema,
+    Schema.UndefinedOr(ForumReplyTargetSchema)
+  ),
+});
+type State = typeof StateSchema.Type;
 
 interface Actions {
   saveConversationScrollSnapshot: (

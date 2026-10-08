@@ -43,24 +43,25 @@ function readSearch() {
 }
 
 /**
- * The prerendered shell and its hydration carry no context. Calling
- * useSearchParams would make Next client-render each control, so readers would
- * see an inert copy that React replaces on their first press, losing the click.
+ * The prerendered shell and its hydration know no address, so they carry no
+ * context and no pagination links to prefetch yet. Calling useSearchParams
+ * would make Next client-render each control, so readers would see an inert
+ * copy that React replaces on their first press, losing the click.
  */
 function readServerSearch() {
-  return "";
+  return null;
 }
 
 /** Convex deduplicates these identical subscriptions across the three controls. */
 function useMaterialNavigation({ page }: MaterialContextProps) {
   // React reads the address again after hydration, and after a navigation once
   // Next has committed its URL, so a context link still applies its context.
-  const search = useSyncExternalStore(
+  const search = useSyncExternalStore<string | null>(
     subscribeToHistory,
     readSearch,
     readServerSearch
   );
-  const hints = new URLSearchParams(search).getAll(
+  const hints = new URLSearchParams(search ?? "").getAll(
     MATERIAL_CONTEXT_QUERY_PARAM
   );
   const context = readMaterialContextHint(
@@ -97,7 +98,9 @@ function useMaterialNavigation({ page }: MaterialContextProps) {
       : null;
   return {
     navigation: readMaterialNavigation(page, published),
-    pending: enabled && QueryResult.isLoading(result),
+    // The pagination hrefs are final once the address is known and, for a
+    // learning path hint, its context has resolved.
+    pending: search === null || (enabled && QueryResult.isLoading(result)),
   };
 }
 
@@ -157,7 +160,10 @@ export function MaterialPagination({
         publicPath={page.route.publicPath}
         section="material"
       />
-      <PaginationContent pagination={navigation.pagination} />
+      <PaginationContent
+        pagination={navigation.pagination}
+        prefetchNext={!pending}
+      />
     </>
   );
 }

@@ -3,7 +3,7 @@ import { layer as nodeFileSystemLayer } from "@effect/platform-node/NodeFileSyst
 import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_MCP_REGISTRY_MANIFEST } from "@repo/backend/agent/mcp/manifest";
 import { NAKAFA_MCP_SERVER_VERSION } from "@repo/contents/agent/constants";
-import { Effect, FileSystem } from "effect";
+import { Effect, FileSystem, Schema } from "effect";
 
 const repositoryManifestUrl = new URL(
   "../../../../server.json",
@@ -19,7 +19,11 @@ describe("Nakafa MCP Registry manifest", () => {
         "utf8"
       );
 
-      expect(JSON.parse(source)).toEqual(NAKAFA_MCP_REGISTRY_MANIFEST);
+      const manifest = yield* Schema.decodeEffect(
+        Schema.fromJsonString(Schema.Unknown)
+      )(source);
+
+      expect(manifest).toEqual(NAKAFA_MCP_REGISTRY_MANIFEST);
       expect(NAKAFA_MCP_REGISTRY_MANIFEST).toMatchObject({
         $schema:
           "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",

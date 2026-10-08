@@ -1,24 +1,28 @@
-import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import type { tryoutAttemptStateValidator } from "@repo/backend/confect/tryouts/runtime/spec";
+import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
+import { Schema } from "effect";
 
-type TryoutStatus = TryoutSectionRuntime["section"]["status"];
+type TryoutAttemptClock = Pick<
+  typeof tryoutAttemptStateValidator.Type,
+  "expiresAt" | "status"
+>;
 
-interface TryoutAttemptClock {
-  expiresAt: number;
-  status: TryoutStatus;
-}
+const TryoutRuntimeClockSchema = Schema.Struct({
+  expiresAt: Schema.Finite,
+  section: Schema.Struct({
+    status: tryoutStatusValidator,
+  }),
+});
 
-interface TryoutRuntimeClock {
-  expiresAt: number;
-  section: {
-    status: TryoutStatus;
-  };
-}
+type TryoutRuntimeClock = typeof TryoutRuntimeClockSchema.Type;
 
-interface TryoutReactiveState {
-  attempt: {
-    status: TryoutStatus;
-  };
-}
+const TryoutReactiveStateSchema = Schema.Struct({
+  attempt: Schema.Struct({
+    status: tryoutStatusValidator,
+  }),
+});
+
+type TryoutReactiveState = typeof TryoutReactiveStateSchema.Type;
 
 /** Render state for a Convex section runtime around its local timer boundary. */
 export type TryoutRuntimeState<Runtime> =

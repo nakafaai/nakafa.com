@@ -196,7 +196,7 @@ describe("test ownership policy", () => {
       },
     },
     {
-      category: "a gateway client outside its module",
+      category: "the Vercel gateway package",
       files: {
         "packages/core/model.ts":
           'import { createGateway } from "@ai-sdk/gateway";\n',

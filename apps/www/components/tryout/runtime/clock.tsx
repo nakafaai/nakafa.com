@@ -1,11 +1,13 @@
 "use client";
 
+import { DateTime, MutableHashSet } from "effect";
 import {
   createContext,
   type ReactNode,
   use,
   useSyncExternalStore,
 } from "react";
+import { notifyTickListeners } from "@/components/tryout/runtime/tick";
 
 const InitialClock = createContext<number | null>(null);
 
@@ -24,7 +26,7 @@ const TICK_MS = 1000;
 
 let currentNow = 0;
 let timer: number | null = null;
-const listeners = new Set<() => void>();
+const listeners = MutableHashSet.empty<() => void>();
 
 /** Returns a shared realtime clock for active try-out timer UI. */
 export function useTryoutClock(active: boolean) {
@@ -41,11 +43,11 @@ export function useTryoutClock(active: boolean) {
 
 /** Subscribes one timer UI to the shared one-second browser clock. */
 function subscribe(listener: () => void) {
-  listeners.add(listener);
+  MutableHashSet.add(listeners, listener);
   startClock();
 
   return () => {
-    listeners.delete(listener);
+    MutableHashSet.remove(listeners, listener);
     stopClockIfIdle();
   };
 }
@@ -73,7 +75,7 @@ function getStaticSnapshot() {
 /** Lazily initializes the shared timestamp. */
 function getCurrentNow() {
   if (currentNow === 0) {
-    currentNow = Date.now();
+    currentNow = readEpochMillis();
   }
 
   return currentNow;
@@ -85,23 +87,25 @@ function startClock() {
     return;
   }
 
-  currentNow = Date.now();
+  currentNow = readEpochMillis();
   timer = window.setInterval(() => {
-    currentNow = Date.now();
-
-    for (const listener of listeners) {
-      listener();
-    }
+    currentNow = readEpochMillis();
+    notifyTickListeners(listeners);
   }, TICK_MS);
 }
 
 /** Stops the shared clock when no timer UI is mounted. */
 function stopClockIfIdle() {
-  if (listeners.size > 0 || !timer) {
+  if (MutableHashSet.size(listeners) > 0 || !timer) {
     return;
   }
 
   window.clearInterval(timer);
   timer = null;
   currentNow = 0;
+}
+
+/** Reads the browser clock synchronously for snapshots and timer ticks. */
+function readEpochMillis() {
+  return DateTime.toEpochMillis(DateTime.nowUnsafe());
 }

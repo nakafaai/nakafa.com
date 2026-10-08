@@ -1,12 +1,15 @@
+import { Schema } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-interface State {
-  activated: boolean;
-  open: boolean;
-  query: string;
-}
+const StateSchema = Schema.Struct({
+  activated: Schema.Boolean,
+  open: Schema.Boolean,
+  query: Schema.String,
+});
+
+type State = typeof StateSchema.Type;
 
 interface Actions {
   setOpen: (open: boolean) => void;

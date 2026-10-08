@@ -1,9 +1,8 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import type { PolarCheckoutLocale } from "@repo/backend/confect/customers/checkout/localization";
-import type { PolarCustomerSource } from "@repo/backend/confect/customers/polar/payload";
-import type { polarMetadataValidator } from "@repo/backend/confect/customers/schema";
+import { polarCheckoutLocaleValidator } from "@repo/backend/confect/customers/checkout/localization";
+import type { polarGateway } from "@repo/backend/confect/customers/polar/live";
+import { polarMetadataValidator } from "@repo/backend/confect/customers/schema";
 import { publicFailure } from "@repo/backend/confect/failure";
-import type { Effect } from "effect";
 import { Schema, Struct } from "effect";
 export const polarCheckoutErrorCode = "POLAR_CHECKOUT_ERROR";
 export const polarCustomerEmailConflictCode = "POLAR_CUSTOMER_EMAIL_CONFLICT";
@@ -18,63 +17,47 @@ export const checkoutSessionResultValidator = Schema.Struct({
 });
 export type PolarMetadata = typeof polarMetadataValidator.Type;
 export type CheckoutSessionResult = typeof checkoutSessionResultValidator.Type;
-export interface StoredPolarCustomer {
-  readonly email: string;
-  readonly externalId: string | null;
-  readonly id: string;
-  readonly metadata: PolarMetadata;
-  readonly name: string | null;
-}
-export interface EnsurePolarCustomerInput {
-  readonly email: string;
-  readonly externalId: string;
-  readonly localCustomerId?: string;
-  readonly metadata?: PolarMetadata;
-  readonly name: string;
-}
-export interface PolarCheckoutInput {
-  readonly customerId: string;
-  readonly customerIpAddress: string | null;
-  readonly embedOrigin?: string;
-  readonly locale: PolarCheckoutLocale;
-  readonly productIds: string[];
-  readonly subscriptionId?: string;
-  readonly successUrl: string;
-}
-export interface PolarCustomerGateway {
-  readonly createCheckoutSession: (
-    input: PolarCheckoutInput
-  ) => Effect.Effect<CheckoutSessionResult, PolarCheckoutError>;
-  readonly createCustomer: (
-    input: EnsurePolarCustomerInput
-  ) => Effect.Effect<
-    PolarCustomerSource,
-    PolarCustomerError | PolarDuplicateEmailError
-  >;
-  readonly createCustomerPortalSession: (
-    customerId: string
-  ) => Effect.Effect<CheckoutSessionResult, PolarPortalError>;
-  readonly deleteCustomer: (
-    polarCustomerId: string
-  ) => Effect.Effect<null, PolarDeleteError>;
-  readonly findCustomerByEmail: (
-    email: string
-  ) => Effect.Effect<PolarCustomerSource | null, PolarCustomerError>;
-  readonly getCustomerByExternalId: (
-    externalId: string
-  ) => Effect.Effect<PolarCustomerSource | null, PolarCustomerError>;
-  readonly getCustomerById: (
-    polarCustomerId: string
-  ) => Effect.Effect<PolarCustomerSource | null, PolarCustomerError>;
-  readonly updateCustomer: (input: {
-    readonly customer: StoredPolarCustomer;
-    readonly next: EnsurePolarCustomerInput;
-  }) => Effect.Effect<PolarCustomerSource, PolarUpdateError>;
-  readonly updateCustomerMetadata: (input: {
-    readonly polarCustomerId: string;
-    readonly metadata: PolarMetadata;
-  }) => Effect.Effect<PolarCustomerSource, PolarUpdateError>;
-}
+const storedPolarCustomerValidator = Schema.Struct({
+  email: Schema.String,
+  externalId: Schema.NullOr(Schema.String),
+  id: Schema.String,
+  metadata: polarMetadataValidator,
+  name: Schema.NullOr(Schema.String),
+});
+export type StoredPolarCustomer = typeof storedPolarCustomerValidator.Type;
+const ensurePolarCustomerInputValidator = Schema.Struct({
+  email: Schema.String,
+  externalId: Schema.String,
+  localCustomerId: Schema.optionalKey(Schema.String),
+  metadata: Schema.optionalKey(polarMetadataValidator),
+  name: Schema.String,
+});
+export type EnsurePolarCustomerInput =
+  typeof ensurePolarCustomerInputValidator.Type;
+const polarCheckoutInputValidator = Schema.Struct({
+  customerId: Schema.String,
+  customerIpAddress: Schema.NullOr(Schema.String),
+  embedOrigin: Schema.optionalKey(Schema.String),
+  locale: polarCheckoutLocaleValidator,
+  productIds: Schema.Array(Schema.String),
+  subscriptionId: Schema.optionalKey(Schema.String),
+  successUrl: Schema.String,
+});
+export type PolarCheckoutInput = typeof polarCheckoutInputValidator.Type;
+const polarCustomerUpdateInputValidator = Schema.Struct({
+  customer: storedPolarCustomerValidator,
+  next: ensurePolarCustomerInputValidator,
+});
+export type PolarCustomerUpdateInput =
+  typeof polarCustomerUpdateInputValidator.Type;
+const polarCustomerMetadataUpdateInputValidator = Schema.Struct({
+  metadata: polarMetadataValidator,
+  polarCustomerId: Schema.String,
+});
+export type PolarCustomerMetadataUpdateInput =
+  typeof polarCustomerMetadataUpdateInputValidator.Type;
+/** The Polar operations as live.ts builds them, so the gateway type cannot drift from its implementation. */
+export type PolarCustomerGateway = typeof polarGateway;
 export class PolarCheckoutError extends Schema.TaggedError<PolarCheckoutError>()(
   "PolarCheckoutError",
   {

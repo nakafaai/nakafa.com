@@ -24,6 +24,8 @@ const UNIT_CIRCLE_ROUTE =
   "/en/subjects/mathematics/trigonometry/trigonometry-concept";
 const HYPOTENUSE_LABEL = /^c$/;
 const TRIANGLE_SCENE = '[data-slot="triangle-scene"]';
+/** How long one edit may take to show in the field before it is tried again. */
+const EDIT_PROBE_TIMEOUT_MILLISECONDS = 1000;
 
 const orbitScene = Effect.fn("NakafaE2E.orbitScene")(function* (
   page: Page,
@@ -273,9 +275,18 @@ const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
         `\\theta = ${value}^\\circ`,
       ];
       for (const input of [formatted, ""]) {
-        yield* Effect.promise(() => angle.fill(input));
-        yield* Effect.promise(() => angle.press("Tab"));
-        yield* Effect.promise(() => expect(angle).toHaveValue(formatted));
+        // The client render can still replace the field after the reveal, and
+        // an edit made on the node it replaces is lost. The edit repeats until
+        // the live field keeps it.
+        yield* Effect.promise(() =>
+          expect(async () => {
+            await angle.fill(input);
+            await angle.press("Tab");
+            await expect(angle).toHaveValue(formatted, {
+              timeout: EDIT_PROBE_TIMEOUT_MILLISECONDS,
+            });
+          }).toPass({ intervals: [100], timeout: revealTimeoutMilliseconds })
+        );
         yield* Effect.promise(() => expect(card).not.toContainText("NaN"));
         yield* Effect.promise(() => expect(annotations).toHaveText(expected));
       }

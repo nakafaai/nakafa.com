@@ -56,7 +56,7 @@ const headings = {
   },
 } as const;
 
-interface SortControls {
+interface SortControlsProps {
   onSort: (sort: TryoutSetSort) => void;
   sort: TryoutSetSort;
 }
@@ -66,7 +66,7 @@ export function TryoutTableHeader({
   filter,
   onFilter,
   ...props
-}: SortControls & {
+}: SortControlsProps & {
   filter: TryoutSetStatusFilter;
   onFilter: (filter: TryoutSetStatusFilter) => void;
 }) {
@@ -88,7 +88,7 @@ function TryoutSortHeading({
   field,
   onSort,
   sort,
-}: SortControls & { field: keyof typeof headings }) {
+}: SortControlsProps & { field: keyof typeof headings }) {
   const t = useTranslations("Tryouts");
   const copy = headings[field];
   const direction = sort.field === field ? sort.direction : undefined;

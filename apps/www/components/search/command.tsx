@@ -28,6 +28,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
@@ -50,29 +51,34 @@ const DEBOUNCE_TIME = 500;
 
 type SearchCommandIcon = ComponentProps<typeof HugeIcons>["icon"];
 
-type SearchCommandItem =
-  | {
-      excerpt: string;
-      href: string;
-      key: string;
-      label: string;
-      query: string;
-      type: "content";
-      value: string;
-    }
-  | {
-      href: string;
-      icon: SearchCommandIcon;
-      key: string;
-      label: string;
-      type: "navigation";
-      value: string;
-    };
-
-interface SearchCommandGroup {
-  items: SearchCommandItem[];
-  value: string;
+/** Props of the result list: the groups it renders, with navigation icons. */
+interface SearchListProps {
+  groups: {
+    items: (
+      | {
+          excerpt: string;
+          href: string;
+          key: string;
+          label: string;
+          query: string;
+          type: "content";
+          value: string;
+        }
+      | {
+          href: string;
+          icon: SearchCommandIcon;
+          key: string;
+          label: string;
+          type: "navigation";
+          value: string;
+        }
+    )[];
+    value: string;
+  }[];
 }
+
+type SearchCommandGroup = SearchListProps["groups"][number];
+type SearchCommandItem = SearchCommandGroup["items"][number];
 
 /**
  * Renders the global command menu used across the main app shell.
@@ -210,7 +216,7 @@ function SearchEmpty({
   );
 }
 
-function SearchList({ groups }: { groups: SearchCommandGroup[] }) {
+function SearchList({ groups }: SearchListProps) {
   const router = useRouter();
   const setOpen = useSearch((state) => state.setOpen);
   const [isPending, startTransition] = useTransition();
@@ -374,29 +380,22 @@ function getResultGroups(
   sectionLabels: Record<ContentSearchResultItem["section"], string>,
   query: string
 ): SearchCommandGroup[] {
-  const groups = new Map<
-    ContentSearchResultItem["section"],
-    SearchCommandGroup
-  >();
-
-  for (const result of results) {
-    const value = sectionLabels[result.section];
-    const group = groups.get(result.section) ?? { items: [], value };
-
-    group.items.push({
-      excerpt: result.excerpt,
-      href: `/${result.route}`,
-      key: result.content_id,
-      label: result.title,
-      query,
-      type: "content",
-      value: `${result.title} ${result.description} ${result.route}`,
-    });
-
-    groups.set(result.section, group);
-  }
-
-  return Array.from(groups.values());
+  return Arr.dedupe(results.map((result) => result.section)).map((section) => ({
+    items: results
+      .filter((result) => result.section === section)
+      .map(
+        (result): SearchCommandItem => ({
+          excerpt: result.excerpt,
+          href: `/${result.route}`,
+          key: result.content_id,
+          label: result.title,
+          query,
+          type: "content",
+          value: `${result.title} ${result.description} ${result.route}`,
+        })
+      ),
+    value: sectionLabels[section],
+  }));
 }
 
 function searchCommandItemToString(item: SearchCommandItem) {

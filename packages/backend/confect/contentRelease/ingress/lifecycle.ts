@@ -65,6 +65,28 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   return envelope.rendererJson;
 });
 
+/** Answers verification from the read-only status query, and writes only when proof must start or settle. */
+const pollVerification = Effect.fn("contentRelease.pollVerification")(
+  function* (manifestHash: string, releaseId: string) {
+    const { runMutation } = yield* MutationRunner;
+    const { runQuery } = yield* QueryRunner;
+    const observed = yield* runQuery(
+      refs.internal.contentRelease.proof.poll.status,
+      {
+        manifestHash,
+        releaseId,
+      }
+    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    if (observed.phase !== "pending") {
+      return observed;
+    }
+    return yield* runMutation(refs.internal.contentRelease.proof.poll.poll, {
+      manifestHash,
+      releaseId,
+    }).pipe(Effect.catchTag("SchemaError", Effect.die));
+  }
+);
+
 /** Executes authenticated verification, activation, or recovery activation. */
 export const advancePublication = Effect.fn(
   "contentRelease.advancePublication"
@@ -100,13 +122,7 @@ export const advancePublication = Effect.fn(
   const release = yield* verifyRequest(request);
   const releaseId = release.manifest.releaseId;
   if (request.operation === "verify") {
-    const result = yield* runMutation(
-      refs.internal.contentRelease.proof.poll.poll,
-      {
-        manifestHash: release.manifestHash,
-        releaseId,
-      }
-    ).pipe(Effect.catchTag("SchemaError", Effect.die));
+    const result = yield* pollVerification(release.manifestHash, releaseId);
     if (result.phase === "failed") {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

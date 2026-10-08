@@ -4,12 +4,13 @@ import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { useConvexConnectionState } from "convex/react";
+import { Schema } from "effect";
 
 import { useState } from "react";
 import { useAuthSession } from "@/components/auth/session";
 import { useConvexAuth } from "@/components/providers/convex";
+import type { TryoutSetTableProps } from "@/components/tryout/catalog/table/table.client";
 import type {
-  TryoutCatalogBootstrap,
   TryoutSetListArgs,
   TryoutSetRow,
 } from "@/components/tryout/catalog/table/types";
@@ -17,11 +18,14 @@ import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 
 const EMPTY_ROWS: TryoutSetRow[] = [];
 
+/** Encodes one comparison key as JSON text, so equal keys compare equal as strings. */
+const encodeKey = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 function scope(
   args: Omit<TryoutSetListArgs, "paginationOpts">,
   viewer: string | null
 ) {
-  return JSON.stringify([
+  return encodeKey([
     viewer,
     args.countryKey,
     args.examKey,
@@ -31,22 +35,22 @@ function scope(
 }
 
 function selectionKey(args: Omit<TryoutSetListArgs, "paginationOpts">) {
-  return JSON.stringify([args.filter, args.sort.field, args.sort.direction]);
+  return encodeKey([args.filter, args.sort.field, args.sort.direction]);
 }
 
 function requestKey(args: TryoutSetListArgs) {
-  return JSON.stringify([selectionKey(args), args.paginationOpts.numItems]);
+  return encodeKey([selectionKey(args), args.paginationOpts.numItems]);
 }
 
 /** Retention is scoped to one principal and track, including while requests change. */
 function useCommittedResult(
-  bootstrap: TryoutCatalogBootstrap,
+  bootstrap: TryoutSetTableProps["bootstrap"],
   activeScope: string,
-  candidate: TryoutCatalogBootstrap | undefined
+  candidate: TryoutSetTableProps["bootstrap"] | undefined
 ) {
   const [committed, setCommitted] = useState<{
     scope: string;
-    value: TryoutCatalogBootstrap | undefined;
+    value: TryoutSetTableProps["bootstrap"] | undefined;
   }>({
     scope: scope(bootstrap.args, bootstrap.result.viewerId),
     value: bootstrap,
@@ -117,13 +121,13 @@ export function useTryoutSetData({
   bootstrap,
   request,
 }: {
-  bootstrap: TryoutCatalogBootstrap;
+  bootstrap: TryoutSetTableProps["bootstrap"];
   request: Omit<TryoutSetListArgs, "paginationOpts">;
 }) {
   const { id: activeViewer, ready } = useViewer(bootstrap.result.viewerId);
   const connection = useConvexConnectionState();
   const activeScope = scope(request, activeViewer);
-  const selection = JSON.stringify([activeScope, selectionKey(request)]);
+  const selection = encodeKey([activeScope, selectionKey(request)]);
   const window = useResultWindow(selection);
   const size = window.size;
 

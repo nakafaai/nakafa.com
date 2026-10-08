@@ -39,10 +39,6 @@ import {
   useForumSessionStoreApi,
 } from "@/components/school/classes/forum/session/context";
 
-interface ForumPostFailureReport {
-  draft?: ForumPostInputDraft;
-  error: unknown;
-}
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
 export function ForumPostInput() {
   const t = useTranslations("School.Classes");
@@ -108,7 +104,13 @@ export function ForumPostInput() {
         replyTarget,
       } satisfies ForumPostInputDraft;
       /** Reports a failed submit without hiding already optimistic local feedback. */
-      const reportSubmitFailure = ({ draft, error }: ForumPostFailureReport) =>
+      const reportSubmitFailure = ({
+        draft,
+        error,
+      }: {
+        draft?: ForumPostInputDraft;
+        error: unknown;
+      }) =>
         Effect.all(
           [
             Effect.sync(() => {

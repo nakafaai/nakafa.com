@@ -47,7 +47,6 @@ export const repairToolCall = Effect.fn("nina.repair")(
     const handle = (yield* Gateway).language({
       purpose: "background",
       model: defaultModel,
-      space: { kind: "personal", userId },
     });
     const agent = new Agent(components.nina, {
       name: "nina-repair",

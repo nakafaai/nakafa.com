@@ -4,8 +4,8 @@ import "next/dist/server/node-environment-baseline";
 
 import {
   afterAll,
-  afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -17,8 +17,14 @@ import { createRequestStore } from "next/dist/server/async-storage/request-store
 import { createWorkStore } from "next/dist/server/async-storage/work-store";
 import { getImplicitTags } from "next/dist/server/lib/implicit-tags";
 import type { getToken as getAuthToken } from "@/lib/auth/server";
+import { SessionTokenUnavailable } from "@/lib/auth/token";
 
 const CONVEX_SITE_URL = "https://test.convex.site";
+/**
+ * One fetch for the whole file: both readers end in a Promise, so the double is
+ * global, and Effect's client keeps the first global fetch it reads.
+ */
+const fetcher = vi.fn<typeof fetch>();
 
 const loadAuthServer = Effect.fn("auth.server.test.load")(() =>
   Effect.tryPromise(() => import("@/lib/auth/server"))
@@ -85,23 +91,23 @@ beforeAll(() => {
   vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "https://test.convex.cloud");
   vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", CONVEX_SITE_URL);
   vi.stubEnv("SITE_URL", "https://nakafa.com");
+  vi.stubGlobal("fetch", fetcher);
 });
 
-afterEach(() => {
-  vi.restoreAllMocks();
+beforeEach(() => {
+  fetcher.mockReset();
 });
 
 afterAll(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
 describe("Better Auth server boundary", () => {
   it.effect("forwards auth routes through the installed adapter", () =>
     Effect.gen(function* () {
       const { handler } = yield* loadAuthServer();
-      const fetchSpy = vi
-        .spyOn(globalThis, "fetch")
-        .mockResolvedValue(new Response(null, { status: 200 }));
+      fetcher.mockResolvedValue(new Response(null, { status: 200 }));
       const request = new Request(
         "https://nakafa.com/api/auth/sign-in/social",
         {
@@ -112,12 +118,12 @@ describe("Better Auth server boundary", () => {
       );
 
       const response = yield* Effect.tryPromise(() => handler.POST(request));
-      const [, init] = fetchSpy.mock.calls[0] ?? [];
+      const [, init] = fetcher.mock.calls[0] ?? [];
       const headers = new Headers(init?.headers);
 
       expect(response.status).toBe(200);
-      expect(fetchSpy).toHaveBeenCalledOnce();
-      expect(fetchSpy.mock.calls[0]?.[0]).toBe(
+      expect(fetcher).toHaveBeenCalledOnce();
+      expect(fetcher.mock.calls[0]?.[0]).toBe(
         `${CONVEX_SITE_URL}/api/auth/sign-in/social`
       );
       expect(headers.get("host")).toBe("test.convex.site");
@@ -135,20 +141,36 @@ describe("Better Auth server boundary", () => {
         "x-forwarded-host": "nakafa.com",
         "x-forwarded-proto": "https",
       });
-      const fetchSpy = vi
-        .spyOn(globalThis, "fetch")
-        .mockResolvedValue(Response.json({ token: "test-token" }));
+      fetcher.mockResolvedValue(Response.json({ token: "test-token" }));
 
       const token = yield* runWithRequestHeaders(requestHeaders, getToken);
       expect(token).toBe("test-token");
-      const [, init] = fetchSpy.mock.calls[0] ?? [];
+      const [, init] = fetcher.mock.calls[0] ?? [];
       const headers = new Headers(init?.headers);
 
-      expect(String(fetchSpy.mock.calls[0]?.[0])).toBe(
+      expect(String(fetcher.mock.calls[0]?.[0])).toBe(
         `${CONVEX_SITE_URL}/api/auth/convex/token`
       );
       expect(headers.get("host")).toBe("test.convex.site");
       expect(headers.get("cookie")).toBe(cookie);
+    })
+  );
+
+  it.effect("rejects when the token route refuses the request", () =>
+    Effect.gen(function* () {
+      const { getToken } = yield* loadAuthServer();
+      fetcher.mockResolvedValue(new Response(null, { status: 403 }));
+      const requestHeaders = new Headers({
+        cookie: "better-auth.session_token=session-cookie",
+      });
+
+      const error = yield* runWithRequestHeaders(requestHeaders, getToken).pipe(
+        Effect.flip
+      );
+      expect(error.cause).toStrictEqual(
+        new SessionTokenUnavailable({ reason: "status", status: 403 })
+      );
+      expect(fetcher).toHaveBeenCalledOnce();
     })
   );
 });

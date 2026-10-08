@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted. This is part one; the Jev evaluation handle follows as part two.
+Superseded by ADR 0019, which moves every model call to the Convex AI gateway.
+The Vercel routing, key, and spend tags described below no longer hold. This is
+part one; the Jev evaluation handle follows as part two.
 
 ## Context
 

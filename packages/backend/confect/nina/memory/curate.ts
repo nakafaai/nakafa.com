@@ -94,7 +94,6 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
     const handle = (yield* Gateway).language({
       purpose: "background",
       model: defaultModel,
-      space: { kind: "personal", userId: turn.userId },
     });
     const agent = new Agent(components.nina, {
       instructions: `${INSTRUCTIONS}\n\n${formatKnown(learner.profile, memory.facts)}`,

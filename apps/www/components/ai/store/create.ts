@@ -1,5 +1,6 @@
 "use client";
 
+import { DateTime } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -57,7 +58,7 @@ export function createAiStore() {
             state.openingChat = {
               receipt,
               prompt: receipt.prompt,
-              submittedAt: Date.now(),
+              submittedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
             };
           }),
         setActiveChatId: (activeChatId) => set({ activeChatId }),

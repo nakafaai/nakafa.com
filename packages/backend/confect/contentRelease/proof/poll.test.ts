@@ -12,7 +12,10 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
-import { resolveProofWorkflow } from "@repo/backend/confect/contentRelease/proof/poll";
+import {
+  type ProofStatus,
+  resolveProofWorkflow,
+} from "@repo/backend/confect/contentRelease/proof/poll";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -27,6 +30,7 @@ import {
   completeContentProof,
   recomputeContentProof,
 } from "@repo/backend/test/content/verify";
+import { makeFunctionReference } from "convex/server";
 import { convexTest, type TestConvex } from "convex-test";
 
 vi.mock("@repo/backend/content/trust", async () => {
@@ -41,6 +45,11 @@ const releaseId = ReleaseIdSchema.make("release-proof-workflow");
 const release = testSignedRelease(testEmptyManifest(releaseId));
 const abort = internal.contentRelease.manifest.abort;
 const poll = internal.contentRelease.proof.poll.poll;
+const pollStatus = makeFunctionReference<
+  "query",
+  { manifestHash: string; releaseId: string },
+  ProofStatus
+>("contentRelease/proof/poll:status");
 const status = internal.contentRelease.status.getStatus;
 
 /** Creates a candidate and its real Workflow component test runtime. */
@@ -69,6 +78,22 @@ function pollProof(
     manifestHash,
     releaseId,
   });
+}
+/** Reads the one stored release row that a poll may patch. */
+function storedRelease(t: TestConvex<typeof schema>) {
+  return t.run((ctx) => ctx.db.query("contentReleases").unique());
+}
+
+/** Reads the status query, then the poll mutation, for one release state. */
+async function observePoll(t: TestConvex<typeof schema>) {
+  const before = await storedRelease(t);
+  const observed = await t.query(pollStatus, {
+    manifestHash: release.manifestHash,
+    releaseId,
+  });
+  const polled = await pollProof(t);
+  const after = await storedRelease(t);
+  return { after, before, observed, polled };
 }
 afterEach(() => {
   vi.useRealTimers();
@@ -339,5 +364,119 @@ describe("contentRelease/proof/poll", () => {
     expect(
       await t.query((ctx) => ctx.db.query("contentReleases").unique())
     ).toEqual(before);
+  });
+  it("answers a stored proof from the status query without writing", async () => {
+    const t = await createCandidate();
+    await completeContentProof(t, release.manifestHash, releaseId);
+    const { after, before, observed, polled } = await observePoll(t);
+    expect(observed).toEqual({
+      phase: "verified",
+      proofJson: expect.any(String),
+    });
+    expect(polled).toEqual(observed);
+    expect(after).toEqual(before);
+  });
+  it("keeps a running proof workflow verifying without writing", async () => {
+    vi.useFakeTimers();
+    const t = await createCandidate();
+    await pollProof(t);
+    const { after, before, observed, polled } = await observePoll(t);
+    expect(observed).toEqual({
+      phase: "verifying",
+    });
+    expect(polled).toEqual(observed);
+    expect(after).toEqual(before);
+  });
+  it("answers a stored failure without writing", async () => {
+    const t = await createCandidate();
+    await t.mutation(async (ctx) => {
+      const stored = await ctx.db.query("contentReleases").unique();
+      if (!stored) {
+        throw new Error("Expected proof release.");
+      }
+      await ctx.db.patch("contentReleases", stored._id, {
+        proofFailure: "failed",
+        status: "verifying",
+      });
+    });
+    const { after, before, observed, polled } = await observePoll(t);
+    expect(observed).toEqual({
+      phase: "failed",
+      reason: "failed",
+    });
+    expect(polled).toEqual(observed);
+    expect(after).toEqual(before);
+  });
+  it("reports pending exactly where the poll starts a proof workflow", async () => {
+    vi.useFakeTimers();
+    const t = await createCandidate();
+    const { after, before, observed, polled } = await observePoll(t);
+    expect(observed).toEqual({
+      phase: "pending",
+    });
+    expect(polled).toEqual({
+      phase: "verifying",
+    });
+    expect(before).not.toHaveProperty("proofWorkflowId");
+    expect(after).toMatchObject({
+      proofWorkflowId: expect.any(String),
+      status: "verifying",
+    });
+  });
+  it("reports pending exactly where the poll finalizes a completed workflow", async () => {
+    vi.spyOn(workflow, "status").mockResolvedValue({
+      type: "completed",
+      result: null,
+    });
+    vi.spyOn(workflow, "cleanup").mockResolvedValue(true);
+    const t = await createCandidate();
+    await recomputeContentProof(t, release.manifestHash, releaseId);
+    const { after, before, observed, polled } = await observePoll(t);
+    expect(observed).toEqual({
+      phase: "pending",
+    });
+    expect(polled).toEqual({
+      phase: "verified",
+      proofJson: expect.any(String),
+    });
+    expect(before).toMatchObject({
+      status: "verifying",
+    });
+    expect(after).toMatchObject({
+      status: "verified",
+    });
+  });
+  it("reports pending exactly where the poll settles a canceled workflow", async () => {
+    vi.useFakeTimers();
+    const t = await createCandidate();
+    await pollProof(t);
+    const started = await t.query((ctx) =>
+      Effect.runPromise(
+        loadRelease(releaseId).pipe(
+          Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+        )
+      )
+    );
+    const workflowId = started?.proofWorkflowId;
+    if (!workflowId) {
+      throw new Error("Expected proof workflow.");
+    }
+    await t.mutation((ctx) => workflow.cancel(ctx, workflowId));
+    const { after, before, observed, polled } = await observePoll(t);
+    expect(observed).toEqual({
+      phase: "pending",
+    });
+    expect(polled).toEqual({
+      phase: "failed",
+      reason: "canceled",
+    });
+    expect(before).toMatchObject({
+      status: "verifying",
+    });
+    expect(after).toMatchObject({
+      proofFailure: "canceled",
+      status: "verifying",
+    });
+    expect(after).not.toHaveProperty("proofWorkflowId");
   });
 });

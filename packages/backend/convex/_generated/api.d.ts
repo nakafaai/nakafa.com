@@ -3388,6 +3388,7 @@ export declare const api: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -3496,6 +3497,7 @@ export declare const api: {
                   | "title"
                   | "nina-repair";
                 calls: number;
+                cost?: number;
                 input: number;
                 model: string;
                 output: number;
@@ -6869,6 +6871,15 @@ export declare const internal: {
           | { phase: "verified"; proofJson: string }
           | { phase: "failed"; reason: "canceled" | "failed" }
         >;
+        status: FunctionReference<
+          "query",
+          "internal",
+          { manifestHash: string; releaseId: string },
+          | { phase: "verifying" }
+          | { phase: "verified"; proofJson: string }
+          | { phase: "failed"; reason: "canceled" | "failed" }
+          | { phase: "pending" }
+        >;
       };
       read: {
         artifactBatch: FunctionReference<
@@ -8526,6 +8537,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -8696,6 +8708,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -8849,6 +8862,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -9011,6 +9025,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -9181,6 +9196,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -9334,6 +9350,7 @@ export declare const internal: {
                 | "title"
                 | "nina-repair";
               calls: number;
+              cost?: number;
               input: number;
               model: string;
               output: number;
@@ -9502,6 +9519,7 @@ export declare const internal: {
               | "suggestions"
               | "title"
               | "nina-repair";
+            cost?: number;
             input: number;
             model: string;
             output: number;

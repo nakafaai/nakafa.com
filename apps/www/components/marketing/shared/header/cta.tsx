@@ -7,12 +7,15 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useViewer } from "@/lib/identity/client";
 
-/** Renders the shared Nakafa mark used by both logo destinations. */
+/**
+ * Renders the shared Nakafa mark used by both logo destinations. The visible
+ * name beside the mark already names the link, so the mark is decorative.
+ */
 function LogoContent() {
   return (
     <>
       <Image
-        alt="Nakafa"
+        alt=""
         className="size-8 rounded-full border"
         height={32}
         src="/logo.svg"

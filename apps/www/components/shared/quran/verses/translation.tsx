@@ -32,7 +32,7 @@ export function QuranTranslation({
             >
               <a
                 aria-label={`${label} ${segment.number}`}
-                className="rounded-sm px-0.5 text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="-mx-2 rounded-sm px-2.5 py-1.5 text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 href={`#${id}-translation-note-${segment.number}`}
                 id={`${id}-translation-note-reference-${segment.number}-${segment.offset}`}
                 role="doc-noteref"
@@ -58,7 +58,7 @@ export function QuranTranslation({
               >
                 <a
                   aria-label={`${subjectLabel}: ${label} ${note.number}`}
-                  className="font-mono text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="-mx-1.5 -my-0.5 px-1.5 py-0.5 font-mono text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   href={`#${id}-translation-note-reference-${note.number}-${note.referenceOffset}`}
                   role="doc-backlink"
                 >

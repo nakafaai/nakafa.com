@@ -20,6 +20,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { HashMap, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -52,7 +53,10 @@ export function SchoolClassesPeopleInvite() {
     QueryResult.isSuccess(inviteCodes) ? inviteCodes.value : undefined
   );
 
-  const code = inviteCodesByRole.get(selectedRole)?.code ?? "";
+  const selectedInviteCode = Option.getOrUndefined(
+    HashMap.get(inviteCodesByRole, selectedRole)
+  );
+  const code = selectedInviteCode?.code ?? "";
 
   return (
     <ButtonGroup>

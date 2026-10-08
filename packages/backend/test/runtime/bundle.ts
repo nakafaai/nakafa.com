@@ -16,6 +16,15 @@ import type { TestConvex } from "convex-test";
 import { Effect, Schema } from "effect";
 
 const TEST_RENDERER_HASH = testTextHash("test-attempt-runtime-renderer");
+const SignedReleaseJsonSchema = Schema.fromJsonString(
+  SignedContentReleaseSchema
+);
+const RendererJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
+const SnapshotJsonSchema = Schema.fromJsonString(ContentSnapshotManifestSchema);
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Stores one authenticated fixture through the production runtime capability. */
 export const storeRuntimeFixture = Effect.fn("test.runtime.storeFixture")(
@@ -95,15 +104,13 @@ export async function insertTestTryoutRuntimeBundle(
   if (!(release && snapshot)) {
     throw new Error("Expected active release and try-out snapshot fixtures.");
   }
-  const signedRelease = Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-    JSON.parse(release.releaseJson)
+  const signedRelease = Schema.decodeSync(SignedReleaseJsonSchema)(
+    release.releaseJson
   );
-  const renderer = Schema.decodeUnknownSync(RendererManifestEnvelopeSchema)(
-    JSON.parse(release.rendererJson)
+  const renderer = Schema.decodeSync(RendererJsonSchema)(release.rendererJson);
+  const decodedSnapshot = Schema.decodeSync(SnapshotJsonSchema)(
+    snapshot.snapshotJson
   );
-  const decodedSnapshot = Schema.decodeUnknownSync(
-    ContentSnapshotManifestSchema
-  )(JSON.parse(snapshot.snapshotJson));
   if (decodedSnapshot.family !== "tryout") {
     throw new Error("Expected a try-out snapshot fixture.");
   }
@@ -114,7 +121,7 @@ export async function insertTestTryoutRuntimeBundle(
   });
   const bundleId = await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: bundle.bundleHash,
-    bundleJson: JSON.stringify(bundle),
+    bundleJson: encodeJson(bundle),
     cleanupReleaseId: bundle.payload.sourceReleaseId,
     createdAt: 1,
     rendererJson: release.rendererJson,

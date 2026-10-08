@@ -16,7 +16,7 @@ import {
   makePageRuntimeSource,
   TEST_PUBLICATION_RELEASE,
 } from "@repo/backend/test/content/publication";
-import { Effect, Layer, Schema } from "effect";
+import { Effect, Layer, MutableHashMap, Option, Schema } from "effect";
 import {
   getPublishedPageCatalog,
   readPublishedPageCatalog,
@@ -88,12 +88,15 @@ describe("published Page catalog", () => {
           "contentArtifacts",
           "contentKeys",
         ] as const) {
-          fixture.source.set(
+          MutableHashMap.set(
+            fixture.source,
             table,
-            locales.flatMap(({ source }) => source.get(table) ?? [])
+            locales.flatMap(({ source }) =>
+              Option.getOrElse(MutableHashMap.get(source, table), () => [])
+            )
           );
         }
-        fixture.source.set("contentReleases", [
+        MutableHashMap.set(fixture.source, "contentReleases", [
           {
             ...fixture.release,
             resultFamilies: TEST_PUBLICATION_RELEASE.manifest.scope.families,

@@ -2,16 +2,34 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   type AnalyticsConsentState,
 } from "@repo/analytics/consent";
-import { HashMap, Option } from "effect";
+import { HashMap, Option, Schema } from "effect";
+
+const AnalyticsConsentPromptIdentitySchema = Schema.Union([
+  Schema.TemplateLiteral([
+    "account:",
+    Schema.String,
+    `:${ANALYTICS_CONSENT_NOTICE_VERSION}`,
+  ]),
+  Schema.TemplateLiteral(["anonymous:", ANALYTICS_CONSENT_NOTICE_VERSION]),
+]);
 
 export type AnalyticsConsentPromptIdentity =
-  | `account:${string}:${typeof ANALYTICS_CONSENT_NOTICE_VERSION}`
-  | `anonymous:${typeof ANALYTICS_CONSENT_NOTICE_VERSION}`;
+  typeof AnalyticsConsentPromptIdentitySchema.Type;
+
+const AnalyticsConsentSessionOverrideSchema = Schema.Union([
+  Schema.Struct({
+    owner: Schema.Symbol,
+    persistence: Schema.Literal("pending"),
+  }),
+  Schema.Struct({ persistence: Schema.Literal("failed") }),
+  Schema.Struct({
+    decidedAt: Schema.Finite,
+    persistence: Schema.Literal("saved"),
+  }),
+]);
 
 export type AnalyticsConsentSessionOverride =
-  | { readonly owner: symbol; readonly persistence: "pending" }
-  | { readonly persistence: "failed" }
-  | { readonly decidedAt: number; readonly persistence: "saved" };
+  typeof AnalyticsConsentSessionOverrideSchema.Type;
 
 export type AnalyticsConsentSessionOverrides = HashMap.HashMap<
   AnalyticsConsentPromptIdentity,
@@ -22,10 +40,13 @@ export type AnalyticsConsentSessionOverrides = HashMap.HashMap<
 export const emptyAnalyticsConsentSessionOverrides: AnalyticsConsentSessionOverrides =
   HashMap.empty();
 
-export interface AnalyticsConsentSessionOperation {
-  readonly owner: symbol;
-  readonly promptIdentity: AnalyticsConsentPromptIdentity;
-}
+const AnalyticsConsentSessionOperationSchema = Schema.Struct({
+  owner: Schema.Symbol,
+  promptIdentity: AnalyticsConsentPromptIdentitySchema,
+});
+
+export type AnalyticsConsentSessionOperation =
+  typeof AnalyticsConsentSessionOperationSchema.Type;
 
 /** Identifies the current account or anonymous scope and consent notice. */
 export function createAnalyticsConsentPromptIdentity({

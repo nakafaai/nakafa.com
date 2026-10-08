@@ -6,6 +6,7 @@ import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
+import type { activeIdentityValidator } from "@repo/backend/content/publication/spec";
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_MCP_GUIDANCE,
@@ -17,11 +18,7 @@ import {
 import { NakafaAgentTaxonomySchema } from "@repo/contents/agent/schema/taxonomy";
 import { Effect } from "effect";
 
-type ReleasePin = {
-  readonly manifestHash: string;
-  readonly releaseId: string;
-  readonly sequence: number;
-} | null;
+type ReleasePin = typeof activeIdentityValidator.Type;
 const articleCategoriesReference =
   refs.internal.contentRelease.article.internal.readAgentTaxonomy;
 const articleBucketsReference =
