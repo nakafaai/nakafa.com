@@ -1,6 +1,10 @@
 import "server-only";
 
 import {
+  type ContentFamily,
+  ContentFamilySchema,
+} from "@nakafa/aksara-contracts/content";
+import {
   type GitCommitSha,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
@@ -9,7 +13,7 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { applyContentCache } from "@/lib/content/cache";
 import { decodeMaterialProjection } from "@/lib/content/material/decode";
 import { readPublishedContent } from "@/lib/content/published/exchange";
@@ -21,11 +25,17 @@ import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader, getMdxDescription } from "@/lib/llms/format";
 import { getRawAksaraUrl } from "@/lib/utils/github";
 
-const PublishedMarkdownFamilySchema = Schema.Literals([
-  "article",
-  "material",
-  "page",
-]);
+type PublishedMarkdownFamily = Extract<
+  ContentFamily,
+  "article" | "material" | "page"
+>;
+
+const PublishedMarkdownFamilySchema = Schema.Literals(
+  Arr.filter(
+    ContentFamilySchema.literals,
+    (family): family is PublishedMarkdownFamily => family !== "question"
+  )
+);
 
 /** Exact public content identity required for agent-facing markdown. */
 const PublishedMarkdownInputSchema = Schema.Struct({

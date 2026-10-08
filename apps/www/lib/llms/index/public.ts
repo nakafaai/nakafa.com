@@ -4,17 +4,24 @@ import {
   type PublicRouteSurface,
 } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
-import { Schema } from "effect";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { BASE_URL, SECTION_LABELS } from "@/lib/llms/constants";
+import {
+  BASE_URL,
+  type LlmsSection,
+  SECTION_LABELS,
+} from "@/lib/llms/constants";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import { renderLlmsIndexText } from "@/lib/llms/index/render";
 
-const LlmsContentSectionSchema = Schema.Literals([
-  "articles",
-  "material",
-  "quran",
-]);
+type LlmsContentSection = Exclude<LlmsSection, "site">;
+
+const LlmsContentSectionSchema = Schema.Literals(
+  Arr.filter(
+    Rec.keys(SECTION_LABELS),
+    (section): section is LlmsContentSection => section !== "site"
+  )
+);
 
 const PublicLlmsLocaleIndexRouteSchema = Schema.Literals(["", "llms"]);
 
