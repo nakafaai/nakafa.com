@@ -116,7 +116,9 @@ describe("Nina attachment document limit", () => {
       tag: "NinaUploadError",
       code: "NINA_UPLOAD_SIZE",
     });
-    // The size check runs before any grant is deleted, so every upload stays usable.
+    // Confect throws this failure as a ConvexError, which aborts the send
+    // transaction and rolls back the credits reserved before it. The check
+    // runs before any grant is deleted, so every upload stays usable.
     expect(await grantsKept(t, uploadIds)).toEqual([true, true]);
   });
 
