@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Fiber, Layer, Result } from "effect";
+import { Effect, Fiber, Layer, Result, Schema } from "effect";
 import {
   HttpClient,
   type HttpClientRequest,
@@ -8,15 +8,13 @@ import {
 import { TestClock } from "effect/testing";
 import { requestWeatherJson } from "@/lib/weather/transport";
 
-interface TestClientInput {
-  makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response;
-  observeRequest?: (request: HttpClientRequest.HttpClientRequest) => void;
-}
+type MakeResponse = (request: HttpClientRequest.HttpClientRequest) => Response;
+type ObserveRequest = (request: HttpClientRequest.HttpClientRequest) => void;
 /** Builds a deterministic Effect HTTP client for transport tests. */
-function makeTestClient({
-  makeResponse,
-  observeRequest = () => undefined,
-}: TestClientInput) {
+function makeTestClient(
+  makeResponse: MakeResponse,
+  observeRequest: ObserveRequest = () => undefined
+) {
   return Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make((request) =>
@@ -27,6 +25,7 @@ function makeTestClient({
     )
   );
 }
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 describe("requestWeatherJson", () => {
   it.effect("sends query parameters and returns decoded JSON", () =>
     Effect.gen(function* () {
@@ -41,10 +40,7 @@ describe("requestWeatherJson", () => {
         url: "https://weather.example.test/weather",
       }).pipe(
         Effect.provide(
-          makeTestClient({
-            makeResponse: () => Response.json({ cod: "200" }),
-            observeRequest,
-          })
+          makeTestClient(() => Response.json({ cod: "200" }), observeRequest)
         )
       );
       expect(result).toEqual({ cod: "200" });
@@ -71,12 +67,12 @@ describe("requestWeatherJson", () => {
         url: "https://weather.example.test/weather",
       }).pipe(
         Effect.provide(
-          makeTestClient({
-            makeResponse: () =>
+          makeTestClient(
+            () =>
               new Response("unauthorized", {
                 status: 401,
-              }),
-          })
+              })
+          )
         ),
         Effect.result
       );
@@ -89,8 +85,8 @@ describe("requestWeatherJson", () => {
         endpoint: "current-weather",
         message: "OpenWeather request failed for current-weather.",
       });
-      expect(JSON.stringify(result.failure)).not.toContain("weather-secret");
-      expect(JSON.stringify(result.failure)).not.toContain(
+      expect(encodeJson(result.failure)).not.toContain("weather-secret");
+      expect(encodeJson(result.failure)).not.toContain(
         "https://weather.example.test/weather"
       );
     })
@@ -105,10 +101,7 @@ describe("requestWeatherJson", () => {
         endpoint: "current-weather",
         searchParams: {},
         url: "https://weather.example.test/weather",
-      }).pipe(
-        Effect.provide(makeTestClient({ makeResponse })),
-        Effect.forkChild
-      );
+      }).pipe(Effect.provide(makeTestClient(makeResponse)), Effect.forkChild);
       yield* TestClock.adjust("300 millis");
       const result = yield* Fiber.join(resultFiber);
       expect(result).toEqual({ cod: "200" });

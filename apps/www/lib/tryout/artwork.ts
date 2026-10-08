@@ -5,7 +5,7 @@ import type {
   TryoutTrack,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutKeySchema } from "@nakafa/aksara-contracts/tryout/key";
-import { Effect, Result, Schema } from "effect";
+import { Effect, HashMap, Option, Result, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   type ArtworkIdentity,
@@ -13,7 +13,7 @@ import {
   resolveStaticArtwork,
 } from "@/lib/og/artwork";
 
-const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = new Map<
+const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = HashMap.fromIterable<
   TryoutCountry["countryKey"],
   ArtworkIdentity
 >([
@@ -21,7 +21,7 @@ const TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY = new Map<
   ["indonesia", "tryout/indonesia/index"],
 ]);
 
-const TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY = new Map<
+const TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY = HashMap.fromIterable<
   TryoutTrack["trackKey"],
   ArtworkIdentity
 >([
@@ -104,7 +104,9 @@ export function getTryoutCountryCatalogArtwork(
   locale: Locale,
   source: Pick<TryoutCountry, "countryKey">
 ) {
-  const identity = TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY.get(source.countryKey);
+  const identity = Option.getOrUndefined(
+    HashMap.get(TRYOUT_COUNTRY_ARTWORK_BY_COUNTRY_KEY, source.countryKey)
+  );
 
   return identity ? resolveStaticArtwork(identity, locale) : undefined;
 }
@@ -127,7 +129,9 @@ export function getTryoutTrackCatalogArtwork(
     source.examKey === "tka" &&
     source.trackKind === "subject"
   ) {
-    identity = TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY.get(source.trackKey);
+    identity = Option.getOrUndefined(
+      HashMap.get(TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY, source.trackKey)
+    );
   }
 
   return identity ? resolveStaticArtwork(identity, locale) : undefined;
