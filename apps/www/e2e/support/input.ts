@@ -66,7 +66,7 @@ const SwipeSurfaceSchema = Schema.Literals([
 ]);
 
 /** One interactive surface did not expose measurable bounds for a gesture. */
-export class SurfaceBoundsMissing extends Schema.TaggedError<SurfaceBoundsMissing>()(
+class SurfaceBoundsMissing extends Schema.TaggedError<SurfaceBoundsMissing>()(
   "SurfaceBoundsMissing",
   { surface: SwipeSurfaceSchema }
 ) {
