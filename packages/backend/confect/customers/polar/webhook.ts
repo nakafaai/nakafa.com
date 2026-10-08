@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { normalizeStoredCustomer } from "@repo/backend/confect/customers/polar/impl";
 import { polarGateway } from "@repo/backend/confect/customers/polar/live";
-import type { PolarCustomerSource } from "@repo/backend/confect/customers/polar/spec";
+import type { PolarCustomerSource } from "@repo/backend/confect/customers/polar/payload";
 import { convertToDatabaseCustomer } from "@repo/backend/confect/customers/records";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
