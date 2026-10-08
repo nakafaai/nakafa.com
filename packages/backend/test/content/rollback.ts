@@ -1,3 +1,4 @@
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   ContentKeySchema,
@@ -6,9 +7,10 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
-  ACTIVE_APP_LOCALE_CODES,
+  ACTIVE_APP_LOCALES,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
+import { PublicationReceiptSchema } from "@nakafa/aksara-contracts/release";
 import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
@@ -37,6 +39,10 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { Schema } from "effect";
 
+const ReceiptJsonSchema = Schema.fromJsonString(PublicationReceiptSchema);
+const SignedArtifactJsonSchema = Schema.fromJsonString(
+  SignedContentArtifactSchema
+);
 const NOW = Date.UTC(2026, 6, 23, 12);
 type RollbackFixtureFamily = "material" | "question";
 
@@ -109,7 +115,7 @@ export async function activateRollbackFixture(
   }
   const receipt = {
     activatedHeads: itemCount,
-    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
+    activeAppLocales: ACTIVE_APP_LOCALES,
     deletedHeads: 0,
     manifestHash: TEST_MANIFEST_HASH,
     projectionDigest: TEST_DIGEST,
@@ -128,7 +134,7 @@ export async function activateRollbackFixture(
     completedAt: NOW,
     proofAt: NOW,
     proofJson: "{}",
-    receiptJson: JSON.stringify(receipt),
+    receiptJson: Schema.encodeSync(ReceiptJsonSchema)(receipt),
     status: "completed",
     verifiedAt: NOW,
   });
@@ -303,7 +309,9 @@ export async function insertRollbackItem(
       sourcePath: currentSourcePath,
     },
     compiledCode,
-    signedArtifact ? JSON.stringify(signedArtifact) : undefined
+    signedArtifact
+      ? Schema.encodeSync(SignedArtifactJsonSchema)(signedArtifact)
+      : undefined
   );
   if (previousExists) {
     await insertVersion(
