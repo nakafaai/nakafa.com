@@ -90,11 +90,6 @@ export const evaluateVerifiedArtifact = Effect.fn(
   };
 });
 
-/** Authenticated module and projections consumed by a Nakafa route shell. */
-export type RenderableContent = Effect.Success<
-  ReturnType<typeof evaluateVerifiedArtifact>
->;
-
 /**
  * Authenticates standalone reviewed MDX before server-only evaluation.
  *
