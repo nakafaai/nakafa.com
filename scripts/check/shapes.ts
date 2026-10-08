@@ -49,6 +49,7 @@ import {
   type TypeReferenceNode,
 } from "typescript/unstable/ast";
 import { candidate } from "#scripts/check/rules";
+import { children } from "#scripts/check/source";
 
 const JSX_PATTERN = /\.tsx$/u;
 const PROPS_PATTERN = /Props$/u;
@@ -325,12 +326,39 @@ function ownMembers(
     : Arr.flatMap(objectLiterals(node.type), (literal) => literal.members);
 }
 
+/** Whether a node is a type reference to one of `names`, or contains one. */
+function mentions(node: Node, names: readonly string[]): boolean {
+  return (
+    (isTypeReferenceNode(node) &&
+      isIdentifier(node.typeName) &&
+      Arr.contains(names, node.typeName.text)) ||
+    Arr.some(children(node), (child) => mentions(child, names))
+  );
+}
+
+/**
+ * Whether a shape declares type parameters and uses one of them in a member's
+ * type, such as `T` in `interface Box<T> { readonly value: T }`. Its Schema
+ * takes the parameters as arguments, so no single `typeof X.Type` names it.
+ */
+function isGeneric(
+  node: InterfaceDeclaration | TypeAliasDeclaration,
+  members: readonly TypeElement[]
+): boolean {
+  const parameters = Arr.map(
+    node.typeParameters ?? [],
+    ({ name }) => name.text
+  );
+  return Arr.some(members, (member) => mentions(member, parameters));
+}
+
 /**
  * Returns the hand-written data shapes among one module's `nodes`: interfaces
  * that declare their own members and type aliases that spell out an object.
  * React component props in `.tsx` modules, ambient augmentations, interfaces
- * that only extend a derived type, the type a recursive schema names, and
- * shapes that hold a function or a React or MDX value stay allowed.
+ * that only extend a derived type, the type a recursive schema names, shapes
+ * that hold a function or a React or MDX value, and generic shapes that use a
+ * type parameter stay allowed.
  */
 export function shapeCandidates(
   file: string,
@@ -344,6 +372,7 @@ export function shapeCandidates(
     if (!(isInterfaceDeclaration(node) || isTypeAliasDeclaration(node))) {
       return [];
     }
+    const members = ownMembers(node);
     const handWritten = isInterfaceDeclaration(node)
       ? !Arr.isReadonlyArrayEmpty(node.members) ||
         node.heritageClauses === undefined
@@ -352,7 +381,8 @@ export function shapeCandidates(
       (props && PROPS_PATTERN.test(node.name.text)) ||
       isAmbient(node) ||
       Arr.contains(recursive, node.name.text) ||
-      Arr.some(ownMembers(node), (member) => holdsValueMember(member, names));
+      Arr.some(members, (member) => holdsValueMember(member, names)) ||
+      isGeneric(node, members);
     return handWritten && !allowed
       ? [candidate("data-type", sourceFile, node.name)]
       : [];

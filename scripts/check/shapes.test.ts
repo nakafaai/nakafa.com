@@ -274,4 +274,42 @@ export interface Data {
         );
       })
   );
+
+  it.effect("allows a generic shape that uses its type parameter", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`export interface Box<T> {
+  readonly value: T;
+}
+export type Pair<T> = { readonly left: T; readonly right: T[] };
+export interface Tree<T> {
+  readonly children: ReadonlyArray<Tree<T>>;
+}
+export type Lookup<K> = Readonly<{ key: K }>;
+export interface Visitor<T> {
+  visit(value: T): void;
+}
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "keeps a generic shape reported when no member uses its parameter",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`export interface Unused<T> {
+  readonly id: string;
+}
+export type Plain<T> = { readonly id: string };
+export interface Other<T> {
+  readonly value: Inner<U>;
+}
+`),
+          [1, 4, 5]
+        );
+      })
+  );
 });
