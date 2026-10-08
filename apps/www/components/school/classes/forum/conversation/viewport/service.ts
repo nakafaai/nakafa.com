@@ -1,19 +1,10 @@
-import {
-  Effect,
-  Exit,
-  Queue,
-  Ref,
-  Scope,
-  type Stream,
-  SubscriptionRef,
-} from "effect";
+import { Effect, Exit, Queue, Ref, Scope, SubscriptionRef } from "effect";
 import { ConversationViewportAdapters } from "@/components/school/classes/forum/conversation/viewport/adapter";
 import { runViewportEventLoop } from "@/components/school/classes/forum/conversation/viewport/events";
 import {
   initialViewportState,
   type ViewportEvent,
   type ViewportMeasurement,
-  type ViewportState,
 } from "@/components/school/classes/forum/conversation/viewport/model";
 import { flushCurrentSnapshot } from "@/components/school/classes/forum/conversation/viewport/persist";
 import {
@@ -23,19 +14,7 @@ import {
   VIEWPORT_EVENT_CAPACITY,
   type ViewportRuntime,
 } from "@/components/school/classes/forum/conversation/viewport/runtime";
-/** Public Effect-owned viewport interface exposed to React boundaries. */
-export interface ConversationViewport {
-  /** Emits each derived Viewport state update for React subscription. */
-  changes: Stream.Stream<ViewportState>;
-  /** Enqueues one serialized Viewport event. */
-  dispatch: (event: ViewportEvent) => Effect.Effect<void>;
-  /** Persists the current semantic snapshot immediately when one exists. */
-  flushSnapshot: Effect.Effect<void>;
-  /** Reads the current derived Viewport state. */
-  getState: Effect.Effect<ViewportState>;
-  /** Stops the event loop and releases all Viewport fibers. */
-  shutdown: Effect.Effect<void>;
-}
+
 /** Creates one Effect-owned Viewport service instance for an opened Forum Conversation. */
 export const makeConversationViewport = Effect.gen(function* () {
   const adapters = yield* ConversationViewportAdapters;
@@ -64,12 +43,23 @@ export const makeConversationViewport = Effect.gen(function* () {
   } satisfies ViewportRuntime;
   yield* Effect.forkIn(runViewportEventLoop(runtime), scope);
   return {
+    /** Emits each derived Viewport state update for React subscription. */
     changes: SubscriptionRef.changes(stateRef),
-    dispatch: (event) => Queue.offer(eventQueue, event).pipe(Effect.asVoid),
+    /** Enqueues one serialized Viewport event. */
+    dispatch: (event: ViewportEvent) =>
+      Queue.offer(eventQueue, event).pipe(Effect.asVoid),
+    /** Persists the current semantic snapshot immediately when one exists. */
     flushSnapshot: flushCurrentSnapshot(runtime),
+    /** Reads the current derived Viewport state. */
     getState: SubscriptionRef.get(stateRef),
+    /** Stops the event loop and releases all Viewport fibers. */
     shutdown: Queue.shutdown(eventQueue).pipe(
       Effect.andThen(Scope.close(scope, Exit.succeed(undefined)))
     ),
-  } satisfies ConversationViewport;
+  };
 });
+
+/** Public Effect-owned viewport interface exposed to React boundaries. */
+export type ConversationViewport = Effect.Success<
+  typeof makeConversationViewport
+>;

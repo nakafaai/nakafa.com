@@ -5,7 +5,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
-import { Effect } from "effect";
+import { Effect, HashSet } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import {
@@ -22,11 +22,11 @@ export function PostReactions({ post }: { post: ForumPost }) {
   if (isOptimisticForumPost(post) || post.reactionUsers.length === 0) {
     return null;
   }
-  const myReactions = new Set(post.myReactions);
+  const myReactions = HashSet.fromIterable(post.myReactions);
   return (
     <div className="flex flex-wrap items-center gap-1">
       {post.reactionUsers.map(({ emoji, count, reactors }) => {
-        const isMyReaction = myReactions.has(emoji);
+        const isMyReaction = HashSet.has(myReactions, emoji);
         const moreCount = count - reactors.length;
         return (
           <HoverCard key={emoji}>

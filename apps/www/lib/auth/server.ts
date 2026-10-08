@@ -1,5 +1,10 @@
 import { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
+import { Effect } from "effect";
+import { io } from "next/cache";
+import { headers } from "next/headers";
+import { cache } from "react";
 import { env } from "@/env";
+import { readSessionToken } from "@/lib/auth/token";
 
 const authServer = convexBetterAuthNextJs({
   convexUrl: env.NEXT_PUBLIC_CONVEX_URL,
@@ -9,16 +14,24 @@ const authServer = convexBetterAuthNextJs({
 export const { handler } = authServer;
 
 /**
- * Returns the current request's Better Auth token.
+ * Returns the current request's Better Auth token, or `undefined` for a visitor
+ * without a session. Any other failure rejects with `SessionTokenUnavailable`,
+ * so the page's error boundary handles an outage instead of showing a
+ * signed-out view.
  *
- * Better Auth reads `headers()` before decoding its JWT clock, so Next.js has
- * already entered request time without an extra `io()` boundary. The installed
- * integration already memoizes this read per request, so no local cache layer
- * is needed.
+ * `io()` tells Next.js that request-time work follows. A prerender or a link
+ * prefetch stops there, so the Effect runtime, which reads the clock when it
+ * starts, never runs inside one. React's `cache` shares the promise for the
+ * rest of the request, so one request reads the token once.
  *
- * @see https://github.com/get-convex/better-auth/blob/1977ce5737959f0ba61895211b04a532427bcfa9/src/nextjs/index.ts#L94-L105
+ * @see https://nextjs.org/docs/app/api-reference/functions/io
  * @see https://nextjs.org/docs/app/api-reference/functions/headers
  * @see https://react.dev/reference/react/cache
- * @see https://labs.convex.dev/better-auth/framework-guides/next#ssr-with-server-components
  */
-export const getToken = () => authServer.getToken();
+export const getToken = cache(async () => {
+  const requestHeaders = await headers();
+  await io();
+  return Effect.runPromise(
+    readSessionToken(env.NEXT_PUBLIC_CONVEX_SITE_URL, requestHeaders)
+  );
+});

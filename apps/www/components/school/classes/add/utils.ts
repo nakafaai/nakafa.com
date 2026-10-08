@@ -1,6 +1,8 @@
+import { DateTime } from "effect";
+
 /** Return the current academic year using a July school-year rollover. */
 export function getCurrentAcademicYear() {
-  const date = new Date();
+  const date = DateTime.toDate(DateTime.nowUnsafe());
   const currentYear = date.getFullYear();
   const currentMonth = date.getMonth();
   const startYear = currentMonth >= 6 ? currentYear : currentYear - 1;
@@ -10,7 +12,7 @@ export function getCurrentAcademicYear() {
 
 /** Return a small academic-year chooser centered around the current year. */
 export function getAcademicYearList() {
-  const date = new Date();
+  const date = DateTime.toDate(DateTime.nowUnsafe());
   const currentYear = date.getFullYear();
   const currentMonth = date.getMonth();
   const startYear = currentMonth >= 6 ? currentYear : currentYear - 1;

@@ -3,13 +3,18 @@
 import { HttpClient } from "@confect/js";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { Duration, Effect, Exit, Fiber, Layer, Logger, Schema } from "effect";
-import { TestClock } from "effect/testing";
 import {
-  httpLayer,
-  isTransientQueryFailure,
-  withQueryRetry,
-} from "@/lib/convex/http";
+  Duration,
+  Effect,
+  Exit,
+  Fiber,
+  Layer,
+  Logger,
+  Option,
+  Schema,
+} from "effect";
+import { TestClock } from "effect/testing";
+import { httpLayer, withQueryRetry } from "@/lib/convex/http";
 
 const DEPLOYMENT_URL = "https://example.convex.cloud";
 /** Writes Convex error bodies as JSON text, including codes the production refusal schema rejects. */
@@ -65,8 +70,11 @@ function scriptQuery(...outcomes: Effect.Effect<unknown, unknown>[]) {
   return { runs: () => runs };
 }
 
-/** Runs one query through the retrying client while test time passes. */
-function runQuery(messages: unknown[] = []) {
+/**
+ * Runs one query through the retrying client while the test clock passes
+ * `elapsed`, which must cover every attempt the scenario makes.
+ */
+function runQuery(messages: unknown[] = [], elapsed = Duration.seconds(2)) {
   return Effect.gen(function* () {
     const fiber = yield* Effect.forkChild(
       Effect.flatMap(HttpClient.HttpClient, (client) =>
@@ -85,8 +93,17 @@ function runQuery(messages: unknown[] = []) {
         Effect.exit
       )
     );
-    yield* TestClock.adjust(Duration.seconds(2));
+    yield* TestClock.adjust(elapsed);
     return yield* Fiber.join(fiber);
+  });
+}
+
+/** How many times a query that always fails with this error runs before the failure is final. */
+function runsBeforeFailure(failure: unknown) {
+  return Effect.gen(function* () {
+    const query = scriptQuery(Effect.fail(failure));
+    yield* runQuery();
+    return query.runs();
   });
 }
 
@@ -106,6 +123,47 @@ describe("Convex HTTP query retries", () => {
 
       expect(yield* runQuery()).toStrictEqual(Exit.succeed("surahs"));
       expect(query.runs()).toBe(3);
+    })
+  );
+
+  it.effect("fails a query that never answers after three attempts", () =>
+    Effect.gen(function* () {
+      const query = scriptQuery(Effect.never, Effect.never, Effect.never);
+      const messages: unknown[] = [];
+
+      // Three attempts of ten seconds, with the 500 ms and 1 s delays between them.
+      const exit = yield* runQuery(messages, Duration.millis(31_500));
+      expect(Option.getOrUndefined(Exit.findErrorOption(exit))).toMatchObject({
+        _tag: "HttpClientError",
+        cause: { _tag: "QueryDeadline" },
+      });
+      expect(query.runs()).toBe(3);
+      expect(messages).toEqual([["A Convex query failed after its retries."]]);
+    })
+  );
+
+  it.effect("answers a query whose first attempt missed its deadline", () =>
+    Effect.gen(function* () {
+      const query = scriptQuery(Effect.never, Effect.succeed("surahs"));
+
+      expect(yield* runQuery([], Duration.millis(10_500))).toStrictEqual(
+        Exit.succeed("surahs")
+      );
+      expect(query.runs()).toBe(2);
+    })
+  );
+
+  it.effect("returns a function error at once", () =>
+    Effect.gen(function* () {
+      const failure = new HttpClient.HttpClientError({
+        cause: new Error("Uncaught Error: Surah not found."),
+      });
+      const query = scriptQuery(Effect.fail(failure));
+      const messages: unknown[] = [];
+
+      expect(yield* runQuery(messages)).toStrictEqual(Exit.fail(failure));
+      expect(query.runs()).toBe(1);
+      expect(messages).toEqual([]);
     })
   );
 
@@ -133,6 +191,30 @@ describe("Convex HTTP query retries", () => {
     })
   );
 
+  it.effect(
+    "retries refusals and dropped connections, and no other failure",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* Effect.forEach(
+            [
+              refused("ExpiredInQueue"),
+              refused("ServiceUnavailable"),
+              dropped(),
+              refused("InternalServerError"),
+              new HttpClient.HttpClientError({
+                cause: new Error("Bad request"),
+              }),
+              new HttpClient.HttpClientError({ cause: "closed" }),
+              new Error(encodeJson({ code: "ExpiredInQueue" })),
+              { _tag: "HttpClientError", cause: dropped().cause },
+            ],
+            runsBeforeFailure
+          )
+        ).toEqual([3, 3, 3, 1, 1, 1, 1, 1]);
+      })
+  );
+
   it.effect("passes mutations through without retrying", () =>
     Effect.gen(function* () {
       const failure = refused("ExpiredInQueue");
@@ -146,23 +228,6 @@ describe("Convex HTTP query retries", () => {
       expect(mutationMock).toHaveBeenCalledTimes(1);
     })
   );
-});
-
-describe("transient query failures", () => {
-  it("accepts only refusals and dropped connections from the client", () => {
-    expect(
-      [
-        refused("ExpiredInQueue"),
-        refused("ServiceUnavailable"),
-        dropped(),
-        refused("InternalServerError"),
-        new HttpClient.HttpClientError({ cause: new Error("Bad request") }),
-        new HttpClient.HttpClientError({ cause: "closed" }),
-        new Error(encodeJson({ code: "ExpiredInQueue" })),
-        { _tag: "HttpClientError", cause: dropped().cause },
-      ].map(isTransientQueryFailure)
-    ).toEqual([true, true, true, false, false, false, false, false]);
-  });
 });
 
 describe("deployment client", () => {

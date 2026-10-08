@@ -9,6 +9,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { Fragment, type ReactElement } from "react";
 import { SearchExcerpt } from "@/components/search/excerpt";
@@ -22,10 +23,7 @@ interface Props {
   results: ContentSearchResultItem[];
 }
 
-interface SearchResultGroup {
-  items: ContentSearchResultItem[];
-  title: string;
-}
+type SearchResultGroup = ReturnType<typeof getSearchResultGroups>[number];
 
 /** Renders full-page Convex search states and grouped results. */
 export function SearchResults({
@@ -152,20 +150,8 @@ function getSearchResultGroups(
   results: ContentSearchResultItem[],
   sectionLabels: Record<ContentSearchResultItem["section"], string>
 ) {
-  const groups = new Map<
-    ContentSearchResultItem["section"],
-    SearchResultGroup
-  >();
-
-  for (const result of results) {
-    const group = groups.get(result.section) ?? {
-      items: [],
-      title: sectionLabels[result.section],
-    };
-
-    group.items.push(result);
-    groups.set(result.section, group);
-  }
-
-  return Array.from(groups.values());
+  return Arr.dedupe(results.map((result) => result.section)).map((section) => ({
+    items: results.filter((result) => result.section === section),
+    title: sectionLabels[section],
+  }));
 }

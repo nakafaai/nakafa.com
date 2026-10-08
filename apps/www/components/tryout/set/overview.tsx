@@ -4,16 +4,42 @@ import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import { TryoutSetAction } from "@/components/tryout/set/action.client";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
-import type { TryoutSetView } from "@/components/tryout/set/model";
+import type {
+  CurrentAttempt,
+  SetEntrySection,
+  SetPage,
+  TryoutSetDestination,
+  TryoutSetRoute,
+} from "@/components/tryout/set/model";
 import { TryoutSectionRows } from "@/components/tryout/set/rows.client";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
+
+/** Props of the set overview: one cohesive render model shared by its surfaces. */
+export interface TryoutSetOverviewProps {
+  /** Cohesive render model shared by set overview surfaces. */
+  value: {
+    actionAttempt?: CurrentAttempt | null;
+    activeAttempt: CurrentAttempt | null;
+    currentHref: string;
+    entrySection: SetEntrySection | null;
+    page: SetPage;
+    returnHref: string;
+    route: TryoutSetRoute;
+    sectionRoutes: readonly SetPage["sections"][number][];
+    start: {
+      destination: TryoutSetDestination | null;
+      entrySection: SetEntrySection | null;
+      set: SetPage["set"];
+    };
+  };
+}
 
 /**
  * Renders a set page that offers visible nested sections. The section list
  * comes first and the attempt's countdown or score follows it, so the list a
  * pending page paints from the catalog never moves when the attempt arrives.
  */
-export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
+export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
   return (
     <TryoutPage>
       <TryoutSetPageHeader
@@ -50,7 +76,7 @@ export function TryoutSetOverview({ value }: { value: TryoutSetView }) {
 }
 
 /** Composes the set action inside a score card only for terminal attempts. */
-function TryoutSetResult({ value }: { value: TryoutSetView }) {
+function TryoutSetResult({ value }: TryoutSetOverviewProps) {
   const attempt = value.actionAttempt;
 
   if (!attempt?.score) {

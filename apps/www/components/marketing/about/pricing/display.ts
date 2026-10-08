@@ -1,4 +1,5 @@
 import { products } from "@repo/backend/confect/utils/polar/products";
+import { HashSet } from "effect";
 
 export const pricingCountryHeaderName = "x-vercel-ip-country";
 
@@ -11,7 +12,7 @@ export const pricingCountryHeaderName = "x-vercel-ip-country";
  * - https://github.com/polarsource/polar/blob/11d0edae5ebad634a21c8fbe6bafc5626055951e/server/polar/kit/currency.py
  * - https://github.com/polarsource/polar/blob/11d0edae5ebad634a21c8fbe6bafc5626055951e/server/tests/kit/test_currency.py
  */
-const polarEuroTerritoryCodes = new Set([
+const polarEuroTerritoryCodes = HashSet.fromIterable([
   "AD",
   "AT",
   "AX",
@@ -100,7 +101,7 @@ function getProMonthlyPricing(countryCode: string | null) {
 
   if (
     normalizedCountryCode &&
-    polarEuroTerritoryCodes.has(normalizedCountryCode)
+    HashSet.has(polarEuroTerritoryCodes, normalizedCountryCode)
   ) {
     return eurPricing;
   }

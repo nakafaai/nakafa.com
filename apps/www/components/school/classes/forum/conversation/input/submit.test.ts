@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { SessionRequired } from "@repo/backend/confect/auth/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
-import { Effect, Layer, Result } from "effect";
+import { Effect, Layer, Result, Schema } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import type { HttpClientRequest } from "effect/http/HttpClientRequest";
 import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
@@ -23,6 +23,7 @@ const postId = "post_1" as Id<"schoolClassForumPosts">;
 const storageId = "storage_1" as Id<"_storage">;
 const uploadUrl = "https://upload.example.test/file?token=signed-upload-secret";
 type SubmitForumPostInput = Parameters<typeof submitForumPost>[0];
+const failureJson = Schema.fromJsonString(Schema.Unknown);
 const TestHttpClient = Layer.succeed(
   HttpClient.HttpClient,
   HttpClient.make((request) =>
@@ -320,10 +321,11 @@ describe("submitForumPost", () => {
         if (Result.isSuccess(result)) {
           return;
         }
-        expect(JSON.stringify(result.failure)).not.toContain(
-          "signed-upload-secret"
+        const encodedFailure = yield* Schema.encodeEffect(failureJson)(
+          result.failure
         );
-        expect(JSON.stringify(result.failure)).not.toContain(uploadUrl);
+        expect(encodedFailure).not.toContain("signed-upload-secret");
+        expect(encodedFailure).not.toContain(uploadUrl);
         expect(mutations.saveForumUpload).not.toHaveBeenCalled();
         expect(mocks.captureException).toHaveBeenCalledWith(
           expect.objectContaining({

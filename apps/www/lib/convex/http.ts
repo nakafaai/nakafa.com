@@ -3,9 +3,10 @@ import { HttpClient } from "@confect/js";
 import {
   createNetworkRequestError,
   isRetryableNetworkError,
-  NETWORK_RETRY_DELAYS_MILLISECONDS,
+  NETWORK_ATTEMPT_DEADLINE,
+  NETWORK_RETRY_SCHEDULE,
 } from "@repo/backend/client/network";
-import { Effect, Layer, Result, Schedule, Schema } from "effect";
+import { Data, Effect, Layer, Result, Schema } from "effect";
 import { env } from "@/env";
 
 type HttpClientOptions = Parameters<typeof HttpClient.layer>[1];
@@ -23,27 +24,27 @@ const RefusedQuery = Schema.fromJsonString(
   })
 );
 
-/** Two retries after 500 ms and 1 s, the delays the content transport uses. */
-const QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
-  Schedule.addDelay(({ attempt }) =>
-    Effect.succeed(
-      attempt === 1
-        ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
-        : NETWORK_RETRY_DELAYS_MILLISECONDS[1]
-    )
-  )
-);
+/**
+ * One attempt of a query that Convex did not answer within its deadline. It is
+ * the cause of the client's own error, so the retry policy treats it like any
+ * other transient failure.
+ */
+class QueryDeadline extends Data.TaggedError("QueryDeadline") {}
 
 /**
- * Whether a query failed before Convex ran it, so repeating it is safe: a
- * refused request, or a connection that dropped before Convex answered.
- * Function errors and decoding failures are never transient.
+ * Whether repeating a query is safe: Convex queries only read, and this
+ * failure either happened before Convex ran the query, or the attempt missed
+ * its deadline, or the connection dropped before Convex answered. Function
+ * errors and decoding failures are never transient.
  */
-export function isTransientQueryFailure(error: unknown) {
+function isTransientQueryFailure(error: unknown) {
   if (!Schema.is(HttpClient.HttpClientError)(error)) {
     return false;
   }
   const { cause } = error;
+  if (cause instanceof QueryDeadline) {
+    return true;
+  }
   if (
     cause instanceof Error &&
     Result.isSuccess(Schema.decodeResult(RefusedQuery)(cause.message))
@@ -54,8 +55,17 @@ export function isTransientQueryFailure(error: unknown) {
 }
 
 /**
- * Makes the provided client retry transient query failures. Mutations and
- * actions are not idempotent, so they pass through unchanged.
+ * Makes the provided client retry transient query failures, and gives each
+ * attempt its own deadline so a stalled query fails within its retry budget.
+ * Mutations and actions are not idempotent, so they pass through unchanged.
+ * The export lets the tests script the base client under the test clock, which
+ * httpLayer does not allow.
+ *
+ * The budget is per query. A cached function that makes one Convex query and
+ * then one protected content read, such as the featured try-out, can take about
+ * 63 seconds. Next.js stops a cache fill at 54 seconds (see
+ * next/dist/server/use-cache/use-cache-wrapper.js), so that attempt fails there,
+ * and the page's retry (`staticGenerationRetryCount`) runs it again.
  */
 export const withQueryRetry = <E, R>(
   base: Layer.Layer<HttpClient.HttpClient, E, R>
@@ -69,8 +79,15 @@ export const withQueryRetry = <E, R>(
         ...rest: OptionalArgs<Query>
       ) =>
         client.query(ref, ...rest).pipe(
+          Effect.timeoutOrElse({
+            duration: NETWORK_ATTEMPT_DEADLINE,
+            orElse: () =>
+              Effect.fail(
+                new HttpClient.HttpClientError({ cause: new QueryDeadline() })
+              ),
+          }),
           Effect.retry({
-            schedule: QUERY_RETRY_SCHEDULE,
+            schedule: NETWORK_RETRY_SCHEDULE,
             while: isTransientQueryFailure,
           }),
           Effect.tapError((error) =>

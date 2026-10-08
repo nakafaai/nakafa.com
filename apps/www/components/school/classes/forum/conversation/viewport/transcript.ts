@@ -1,4 +1,4 @@
-import { Effect, Ref, SubscriptionRef } from "effect";
+import { Effect, HashMap, Ref, SubscriptionRef } from "effect";
 import {
   getOpeningPlacement,
   type ViewportEvent,
@@ -33,7 +33,8 @@ export function handleViewportTranscript(
     if (currentState.latestAffinity !== "latest") {
       if (
         currentState.pendingPlacement?.view.kind === "post" &&
-        event.activeTranscript.rowIndexByPostId.has(
+        HashMap.has(
+          event.activeTranscript.rowIndexByPostId,
           currentState.pendingPlacement.view.postId
         )
       ) {
@@ -45,7 +46,10 @@ export function handleViewportTranscript(
 
       if (
         detachedView?.kind === "post" &&
-        event.activeTranscript.rowIndexByPostId.has(detachedView.postId)
+        HashMap.has(
+          event.activeTranscript.rowIndexByPostId,
+          detachedView.postId
+        )
       ) {
         return yield* startViewportPlacement(runtime, {
           highlightPostId: null,

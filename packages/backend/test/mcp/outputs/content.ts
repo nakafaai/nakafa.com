@@ -1,0 +1,15 @@
+export const GET_CONTENT_OUTPUT = {
+  alignmentId: "alignment:article:politics:article:politics:article-0",
+  assetId: "asset:en:article:politics:article:politics:article-0",
+  conceptId: "concept:article:politics",
+  content_id: "asset:en:article:politics:article:politics:article-0",
+  learningObjectId: "lo:article:politics:article-0",
+  lensId: "lens:article:politics",
+  locale: "en",
+  route: "articles/politics/article-0",
+  section: "articles",
+  url: "https://nakafa.com/en/articles/politics/article-0",
+  markdown_url: "https://nakafa.com/en/articles/politics/article-0.md",
+  text: "# Article 0\n\n## Technical fixture",
+  title: "Article 0",
+};

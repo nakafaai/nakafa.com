@@ -9,8 +9,8 @@ import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { routing } from "@repo/internationalization/src/routing";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -28,18 +28,20 @@ type StartAttempt = Pick<
   CurrentAttempt,
   "attemptId" | "resumeSectionKey" | "status"
 > | null;
-export interface StartTryoutRequest {
-  authRedirectHref: string;
-  countryKey: string;
-  destinationHref: string;
-  destinationSectionKey: string;
-  entrySectionKey?: string;
-  examKey: string;
-  locale: PublicAppLocale;
-  setKey: string;
-  successNavigation: "destination" | "stay";
-  trackKey: string;
-}
+const StartTryoutRequestSchema = Schema.Struct({
+  authRedirectHref: Schema.String,
+  countryKey: Schema.String,
+  destinationHref: Schema.String,
+  destinationSectionKey: Schema.String,
+  entrySectionKey: Schema.optionalKey(Schema.String),
+  examKey: Schema.String,
+  locale: Schema.Literals(routing.locales),
+  setKey: Schema.String,
+  successNavigation: Schema.Literals(["destination", "stay"]),
+  trackKey: Schema.String,
+});
+
+export type StartTryoutRequest = typeof StartTryoutRequestSchema.Type;
 interface StartTryoutButtonProps {
   attempt?: StartAttempt | undefined;
   request: StartTryoutRequest;

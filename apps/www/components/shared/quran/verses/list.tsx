@@ -15,11 +15,15 @@ import {
 import { QuranTranslation } from "@/components/shared/quran/verses/translation";
 import { WindowVirtualized } from "@/components/shared/quran/verses/virtual";
 
-interface VerseItem {
-  id: string;
-  label: string;
-  verse: QuranViewVerse;
+interface QuranVerseListProps {
+  items: readonly {
+    id: string;
+    label: string;
+    verse: QuranViewVerse;
+  }[];
 }
+
+type VerseItem = QuranVerseListProps["items"][number];
 
 /**
  * Renders a surah's leading verses in document flow, so the server markup has
@@ -27,7 +31,7 @@ interface VerseItem {
  * Verses arrive once as data, so the page payload carries each verse's text
  * rather than a rendered element tree for every verse.
  */
-export function QuranVerseList({ items }: { items: readonly VerseItem[] }) {
+export function QuranVerseList({ items }: QuranVerseListProps) {
   const last = items.at(-1);
   const tail = items.slice(QURAN_FLOW_VERSES);
 

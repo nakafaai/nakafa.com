@@ -10,6 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { HashSet } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 import {
@@ -105,7 +106,7 @@ export function HomeExplore() {
   const items = getForYouNavigationItems();
   const preferredCurriculumHref = usePreferredCurriculumHref(locale);
   const preferredTryoutHref = usePreferredTryoutHref(locale);
-  const visibleCardIds = new Set(items.map((item) => item.id));
+  const visibleCardIds = HashSet.fromIterable(items.map((item) => item.id));
   const subjectNavigationItem = items.find((item) => item.id === "subject");
   const tryoutNavigationItem = items.find((item) => item.id === "tryOut");
   const subjectHref = subjectNavigationItem
@@ -123,17 +124,17 @@ export function HomeExplore() {
   return (
     <section className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
-        {visibleCardIds.has("subject") && (
+        {HashSet.has(visibleCardIds, "subject") && (
           <ExploreCard href={subjectHref} title={tCommon("subject")}>
             <SubjectIcon />
           </ExploreCard>
         )}
-        {visibleCardIds.has("tryOut") && (
+        {HashSet.has(visibleCardIds, "tryOut") && (
           <ExploreCard href={tryoutHref} title={tCommon("try-out")}>
             <TryoutIcon />
           </ExploreCard>
         )}
-        {visibleCardIds.has("askNina") && (
+        {HashSet.has(visibleCardIds, "askNina") && (
           <ExploreCard href="/chat" title={tAi("ask-nina")}>
             <NinaIcon />
           </ExploreCard>

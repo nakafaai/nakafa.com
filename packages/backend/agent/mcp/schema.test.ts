@@ -1,23 +1,25 @@
 import { describe, expect, it } from "@effect/vitest";
-import { toMcpObjectSchema } from "@repo/backend/agent/mcp/schema";
-import { Schema } from "effect";
+import {
+  toMcpInputSchema,
+  toMcpOutputSchema,
+} from "@repo/backend/agent/mcp/schema";
+import { Effect, Schema } from "effect";
 
 describe("MCP object schemas", () => {
-  it("keeps input and output schemas object-rooted", () => {
-    const schema = toMcpObjectSchema(
-      Schema.Union([
+  it.effect("keeps input and output schemas object-rooted", () =>
+    Effect.gen(function* () {
+      const source = Schema.Union([
         Schema.Struct({ status: Schema.Literal("ok") }),
         Schema.Struct({ error: Schema.String }),
-      ])
-    );
-    const input = schema["~standard"].jsonSchema.input({
-      target: "draft-2020-12",
-    });
-    const output = schema["~standard"].jsonSchema.output({
-      target: "draft-2020-12",
-    });
+      ]);
+      const input = yield* toMcpInputSchema(source);
+      const output = yield* toMcpOutputSchema(source);
 
-    expect(input).toMatchObject({ anyOf: expect.any(Array), type: "object" });
-    expect(output).toMatchObject({ anyOf: expect.any(Array), type: "object" });
-  });
+      expect(input).toMatchObject({ anyOf: expect.any(Array), type: "object" });
+      expect(output).toMatchObject({
+        anyOf: expect.any(Array),
+        type: "object",
+      });
+    })
+  );
 });

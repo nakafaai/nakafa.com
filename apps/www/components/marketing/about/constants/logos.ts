@@ -1,9 +1,13 @@
-export interface School {
-  alt: string;
-  href: string;
-  logo: string;
-  name: string;
-}
+import { Schema } from "effect";
+
+const SchoolSchema = Schema.Struct({
+  alt: Schema.String,
+  href: Schema.String,
+  logo: Schema.String,
+  name: Schema.String,
+});
+
+export type School = typeof SchoolSchema.Type;
 
 export const schools: School[] = [
   // International Universities

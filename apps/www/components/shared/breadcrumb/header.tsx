@@ -16,28 +16,36 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
-export type BreadcrumbHeaderItem = Readonly<{
-  href?: string | undefined;
-  label: string;
+const BreadcrumbHeaderItemSchema = Schema.Struct({
+  href: Schema.optional(Schema.String),
+  label: Schema.String,
   /** BCP 47 language of the label when it differs from the page. */
-  language?: string;
-  menuLabel?: string;
-}>;
+  language: Schema.optionalKey(Schema.String),
+  menuLabel: Schema.optionalKey(Schema.String),
+});
 
-/** Complete render value for one sticky, bounded breadcrumb header. */
-export interface BreadcrumbHeaderValue {
-  action?: ReactNode;
-  homeLabel: string;
-  items: readonly BreadcrumbHeaderItem[];
-  menuLabel: string;
-  title: string;
+export type BreadcrumbHeaderItem = typeof BreadcrumbHeaderItemSchema.Type;
+
+/** Props of one sticky, bounded breadcrumb header. */
+interface BreadcrumbHeaderProps {
+  /** Complete render value for one sticky, bounded breadcrumb header. */
+  value: {
+    action?: ReactNode;
+    homeLabel: string;
+    items: readonly BreadcrumbHeaderItem[];
+    menuLabel: string;
+    title: string;
+  };
 }
 
+type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
+
 /** Renders at most Home and the two nearest path items. */
-export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
+export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
   const { action, homeLabel, items, menuLabel, title } = value;
   return (
     <BreadcrumbHeaderFrame contentClassName="flex-col items-stretch justify-center sm:flex-row sm:items-center sm:justify-between sm:py-0">

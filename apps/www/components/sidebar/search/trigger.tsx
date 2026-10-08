@@ -73,7 +73,6 @@ export function HeaderSearch() {
 
   return (
     <Button
-      aria-label={t("search")}
       className="w-full justify-between text-muted-foreground sm:w-80"
       onClick={(e) => {
         e.preventDefault();
