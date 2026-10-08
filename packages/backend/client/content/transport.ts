@@ -6,7 +6,8 @@ import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {
   createNetworkRequestError,
   isRetryableNetworkError,
-  NETWORK_RETRY_DELAYS_MILLISECONDS,
+  NETWORK_ATTEMPT_DEADLINE,
+  NETWORK_RETRY_SCHEDULE,
   NetworkRequestError,
 } from "@repo/backend/client/network";
 import {
@@ -16,7 +17,16 @@ import {
 import { parseContentLength, readBoundedStream } from "@repo/utilities/body";
 import { FetchClient } from "@repo/utilities/http/client";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Clock, Data, Effect, Layer, Schedule, Schema, Stream } from "effect";
+import {
+  Clock,
+  Data,
+  Duration,
+  Effect,
+  Layer,
+  Schedule,
+  Schema,
+  Stream,
+} from "effect";
 import {
   FetchHttpClient,
   HttpClient,
@@ -25,7 +35,6 @@ import {
   type HttpClientResponse,
 } from "effect/http";
 
-const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
 /**
  * The Fetch client for the private runtime: never cached, never redirected,
  * and kept out of telemetry because every request carries the runtime
@@ -112,14 +121,7 @@ const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
     Effect.scoped(Stream.toPull(failure.response.stream))
 );
 const CONTENT_RETRY_SCHEDULE: Schedule.Schedule<number, unknown> =
-  Schedule.recurs(2).pipe(
-    Schedule.addDelay(({ attempt }) =>
-      Effect.succeed(
-        attempt === 1
-          ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
-          : NETWORK_RETRY_DELAYS_MILLISECONDS[1]
-      )
-    ),
+  NETWORK_RETRY_SCHEDULE.pipe(
     Schedule.while(({ input }: Schedule.Metadata<number, unknown>) =>
       isRetryableContentFailure(input)
     ),
@@ -226,11 +228,12 @@ export const requestContentResponse = Effect.fn(
     });
   const attempt = Effect.gen(function* () {
     const deadline =
-      (yield* Clock.currentTimeMillis) + CONTENT_TIMEOUT_MILLISECONDS;
+      (yield* Clock.currentTimeMillis) +
+      Duration.toMillis(NETWORK_ATTEMPT_DEADLINE);
     const response = yield* client.execute(request).pipe(
       Effect.mapError(toNetworkRequestError),
       Effect.timeoutOrElse({
-        duration: CONTENT_TIMEOUT_MILLISECONDS,
+        duration: NETWORK_ATTEMPT_DEADLINE,
         orElse: () => Effect.fail(new RetryableContentDeadline()),
       }),
       Effect.filterOrFail(

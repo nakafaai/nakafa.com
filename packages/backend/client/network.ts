@@ -1,12 +1,35 @@
 import {
   Array as Arr,
+  Duration,
+  Effect,
   HashSet,
   MutableHashSet,
   Predicate,
   Result,
+  Schedule,
   Schema,
 } from "effect";
-export const NETWORK_RETRY_DELAYS_MILLISECONDS = [500, 1000] as const;
+
+const NETWORK_RETRY_DELAYS_MILLISECONDS = [500, 1000] as const;
+/**
+ * Two retries, after 500 milliseconds and then 1 second, for every transient
+ * read: Convex queries from the web app, content runtime reads, and the session
+ * token read.
+ */
+export const NETWORK_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
+  Schedule.addDelay(({ attempt }) =>
+    Effect.succeed(
+      attempt === 1
+        ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
+        : NETWORK_RETRY_DELAYS_MILLISECONDS[1]
+    )
+  )
+);
+/**
+ * Each attempt of a network read may take at most this long. With the two
+ * retries above, one read answers or fails within 31.5 seconds.
+ */
+export const NETWORK_ATTEMPT_DEADLINE = Duration.seconds(10);
 export const NetworkRetryCodeSchema = Schema.Literals([
   "ECONNRESET",
   "ECONNREFUSED",

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { HttpClient } from "@confect/js";
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import { httpLayer } from "@/lib/convex/http";
@@ -30,7 +31,12 @@ export const readOnboardingStatus = Effect.fn("www.onboarding.readStatus")(
   }
 );
 
-/** Records and returns authoritative onboarding admission for an account. */
+/**
+ * Records and returns authoritative onboarding admission for an account. The
+ * mutation gets one attempt within the shared deadline and is never retried:
+ * admission is idempotent by state, and a missed deadline is an admission
+ * failure like any other.
+ */
 export const recordOnboardingAdmission = Effect.fn(
   "www.onboarding.recordAdmission"
 )(function* (token: string) {
@@ -38,6 +44,7 @@ export const recordOnboardingAdmission = Effect.fn(
     const client = yield* HttpClient.HttpClient;
     return yield* client.mutation(refs.public.onboarding.mutations.admit, {});
   }).pipe(
+    Effect.timeout(NETWORK_ATTEMPT_DEADLINE),
     Effect.provide(httpLayer({ auth: token })),
     Effect.mapError((cause) => new OnboardingAdmissionError({ cause }))
   );

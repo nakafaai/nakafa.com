@@ -12,7 +12,8 @@ const { fetchMutation, fetchQuery } = vi.hoisted(() => ({
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { Effect, Layer } from "effect";
+import { Duration, Effect, Fiber, Layer } from "effect";
+import { TestClock } from "effect/testing";
 import {
   OnboardingAdmissionError,
   OnboardingStatusReadError,
@@ -103,6 +104,21 @@ describe("onboarding server adapter", () => {
       expect(error).toMatchObject({
         cause,
       });
+    })
+  );
+  it.effect("fails first-run admission at its deadline, without a retry", () =>
+    Effect.gen(function* () {
+      vi.mocked(fetchMutation).mockReturnValueOnce(Effect.never);
+      const fiber = yield* Effect.forkChild(
+        recordOnboardingAdmission("test-token").pipe(Effect.flip)
+      );
+
+      yield* TestClock.adjust(Duration.seconds(10));
+      const error = yield* Fiber.join(fiber);
+
+      expect(error).toBeInstanceOf(OnboardingAdmissionError);
+      expect(error).toMatchObject({ cause: { _tag: "TimeoutError" } });
+      expect(fetchMutation).toHaveBeenCalledOnce();
     })
   );
 });
