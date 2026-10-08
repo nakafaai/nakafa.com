@@ -1,5 +1,6 @@
 import { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
 import { Effect } from "effect";
+import { io } from "next/cache";
 import { headers } from "next/headers";
 import { cache } from "react";
 import { env } from "@/env";
@@ -18,15 +19,18 @@ export const { handler } = authServer;
  * so the page's error boundary handles an outage instead of showing a
  * signed-out view.
  *
- * `headers()` is awaited before the Effect runtime starts, so Next.js has
- * already entered request time. React's `cache` shares the promise for the rest
- * of the request, so one request reads the token once.
+ * `io()` tells Next.js that request-time work follows. A prerender or a link
+ * prefetch stops there, so the Effect runtime, which reads the clock when it
+ * starts, never runs inside one. React's `cache` shares the promise for the
+ * rest of the request, so one request reads the token once.
  *
+ * @see https://nextjs.org/docs/app/api-reference/functions/io
  * @see https://nextjs.org/docs/app/api-reference/functions/headers
  * @see https://react.dev/reference/react/cache
  */
 export const getToken = cache(async () => {
   const requestHeaders = await headers();
+  await io();
   return Effect.runPromise(
     readSessionToken(env.NEXT_PUBLIC_CONVEX_SITE_URL, requestHeaders)
   );
