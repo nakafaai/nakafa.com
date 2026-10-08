@@ -3,10 +3,12 @@
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { createContext, type PropsWithChildren, use } from "react";
 
-interface MessageContextValue {
-  message: NinaMessage;
-  turn: NinaMessage["metadata"];
+/** Pairs one message with the turn metadata that its parts read. */
+function messageValue(message: NinaMessage, turn?: NinaMessage["metadata"]) {
+  return { message, turn: turn ?? message.metadata };
 }
+
+type MessageContextValue = ReturnType<typeof messageValue>;
 
 const MessageContext = createContext<MessageContextValue | null>(null);
 
@@ -19,7 +21,7 @@ export function MessageProvider({
   message: NinaMessage;
   turn?: NinaMessage["metadata"];
 }>) {
-  const value = { message, turn: turn ?? message.metadata };
+  const value = messageValue(message, turn);
 
   return <MessageContext value={value}>{children}</MessageContext>;
 }

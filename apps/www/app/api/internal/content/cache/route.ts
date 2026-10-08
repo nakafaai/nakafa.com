@@ -14,6 +14,9 @@ import { readActiveContentIdentity } from "@/lib/content/published/active";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
 const MAX_CACHE_REQUEST_BYTES = 32 * 1024;
+const ContentCacheRequestJson = Schema.fromJsonString(
+  ContentCacheRequestSchema
+);
 /** A bounded cache invalidation request cannot be safely decoded. */
 class CacheRequestError extends Schema.TaggedError<CacheRequestError>()(
   "CacheRequestError",
@@ -64,11 +67,7 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
     catch: () => new CacheRequestError({ reason: "body" }),
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
   });
-  const input = yield* Effect.try({
-    catch: () => new CacheRequestError({ reason: "body" }),
-    try: (): unknown => JSON.parse(source),
-  });
-  return yield* Schema.decodeUnknownEffect(ContentCacheRequestSchema)(input, {
+  return yield* Schema.decodeEffect(ContentCacheRequestJson)(source, {
     onExcessProperty: "error",
   }).pipe(Effect.mapError(() => new CacheRequestError({ reason: "body" })));
 });

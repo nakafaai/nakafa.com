@@ -3,7 +3,6 @@ import { captureException } from "@repo/analytics/posthog/browser";
 import type refs from "@repo/backend/confect/_generated/refs";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/turns.spec";
 import { Effect, Schema } from "effect";
-import type { AppConfig } from "next-intl";
 import { toast } from "sonner";
 
 /** A transport failure leaves the mutation's outcome unconfirmed. */
@@ -17,11 +16,51 @@ export type NinaFailure =
   | Ref.Error<typeof refs.public.nina.lifecycle.cancel>
   | NinaConnectionError;
 
-interface Feedback {
-  action: "retry" | "edit" | "wait" | "credits" | "sign-in" | "new-chat";
-  message: keyof AppConfig["Messages"]["Ai"]["failures"];
-  report: boolean;
-}
+/** Every key under Ai.failures in the translations, one per failure message. */
+const FailureMessageSchema = Schema.Literals([
+  "connection",
+  "credits",
+  "rate-limit",
+  "session",
+  "account",
+  "authentication",
+  "missing-chat",
+  "chat-access",
+  "admission",
+  "busy",
+  "retry-unavailable",
+  "request-conflict",
+  "context",
+  "attachment-invalid",
+  "attachment-limit",
+  "attachment-failed",
+  "provider-busy",
+  "provider-unavailable",
+  "service-configuration",
+  "request-rejected",
+  "input-too-large",
+  "response-timeout",
+  "content-blocked",
+  "response-limit",
+  "interrupted",
+  "unknown",
+]);
+
+/** The recovery the chat offers after a failure, with its localized message. */
+const FeedbackSchema = Schema.Struct({
+  action: Schema.Literals([
+    "retry",
+    "edit",
+    "wait",
+    "credits",
+    "sign-in",
+    "new-chat",
+  ]),
+  message: FailureMessageSchema,
+  report: Schema.Boolean,
+});
+
+type Feedback = typeof FeedbackSchema.Type;
 
 /** Every typed admission failure has localized copy and an appropriate recovery. */
 export const ninaFailureFeedback = {

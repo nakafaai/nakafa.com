@@ -9,7 +9,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { Effect, Record as Rec } from "effect";
+import { Effect, Record as Rec, Schema } from "effect";
 import { NextRequest } from "next/server";
 import {
   ContentCacheInvalidationError,
@@ -23,6 +23,11 @@ const exactRequest = ContentCacheRequestSchema.make({
   scope: "material",
   releaseId,
 });
+const ContentCacheRequestJson = Schema.fromJsonString(
+  ContentCacheRequestSchema
+);
+/** Plain JSON text, for bodies that the request contract cannot encode. */
+const RawJson = Schema.fromJsonString(Schema.Unknown);
 
 const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const invalidateContentCacheMock = vi.hoisted(() =>
@@ -149,7 +154,7 @@ describe("content runtime cache revalidation route", () => {
     const { POST } = await import("@/app/api/internal/content/cache/route");
     const response = await POST(
       createBodyRequest(
-        JSON.stringify({
+        Schema.encodeSync(ContentCacheRequestJson)({
           scope: "material",
           releaseId,
         })
@@ -179,7 +184,7 @@ describe("content runtime cache revalidation route", () => {
 
   it("invalidates and echoes exactly one release-bound mutable scope", async () => {
     const { POST } = await import("@/app/api/internal/content/cache/route");
-    const body = JSON.stringify(exactRequest);
+    const body = Schema.encodeSync(ContentCacheRequestJson)(exactRequest);
     const response = await POST(
       createBodyRequest(body, {
         "Content-Length": String(new TextEncoder().encode(body).byteLength),
@@ -203,7 +208,9 @@ describe("content runtime cache revalidation route", () => {
     );
     const { POST } = await import("@/app/api/internal/content/cache/route");
     const response = await POST(
-      createBodyRequest(JSON.stringify(exactRequest))
+      createBodyRequest(
+        Schema.encodeSync(ContentCacheRequestJson)(exactRequest)
+      )
     );
 
     expect(response.status).toBe(503);
@@ -216,7 +223,7 @@ describe("content runtime cache revalidation route", () => {
   it.each([
     ["{", { "Content-Type": "application/json" }, 400],
     [
-      JSON.stringify({
+      Schema.encodeSync(RawJson)({
         extra: true,
         scope: "material",
         releaseId,
@@ -225,7 +232,7 @@ describe("content runtime cache revalidation route", () => {
       400,
     ],
     [
-      JSON.stringify({
+      Schema.encodeSync(RawJson)({
         scope: "material",
         releaseId,
         tags: ["unknown"],
@@ -234,7 +241,7 @@ describe("content runtime cache revalidation route", () => {
       400,
     ],
     [
-      JSON.stringify({
+      Schema.encodeSync(RawJson)({
         releaseId,
         scope: "material",
         tags: ["content-family:material", "content-runtime"],
@@ -243,7 +250,7 @@ describe("content runtime cache revalidation route", () => {
       400,
     ],
     [
-      JSON.stringify({
+      Schema.encodeSync(RawJson)({
         releaseId,
         scope: "material",
         tags: [
@@ -256,7 +263,7 @@ describe("content runtime cache revalidation route", () => {
       400,
     ],
     [
-      JSON.stringify({
+      Schema.encodeSync(ContentCacheRequestJson)({
         scope: "material",
         releaseId,
       }),
@@ -264,7 +271,7 @@ describe("content runtime cache revalidation route", () => {
       415,
     ],
     [
-      JSON.stringify({
+      Schema.encodeSync(ContentCacheRequestJson)({
         scope: "material",
         releaseId,
       }),
