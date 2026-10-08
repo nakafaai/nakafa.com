@@ -4,11 +4,13 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { loadSnapshot } from "@repo/backend/confect/contentRelease/snapshot/manifest";
-import { Array as Arr, Effect, Order } from "effect";
-export interface StoredRow {
-  readonly index: number;
-  readonly rowJson: string;
-}
+import { Array as Arr, Effect, Order, Schema } from "effect";
+
+const StoredRowSchema = Schema.Struct({
+  index: Schema.Finite,
+  rowJson: Schema.String,
+});
+export type StoredRow = typeof StoredRowSchema.Type;
 export type SnapshotFamily = ContentSnapshotManifest["family"];
 
 /** Proves one stored page is complete and returns canonical row bytes. */

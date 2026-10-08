@@ -2,6 +2,7 @@ import { Ref } from "@confect/core";
 import { afterEach, assert, beforeEach, describe, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { invertContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { activationResultValidator } from "@repo/backend/confect/contentRelease/activation/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { decodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/parse";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -41,6 +42,10 @@ const LOOKUP_RECOVERY = {
   releaseId: "release-recovery-lookup",
   sequence: 2,
 } satisfies TestIdentity;
+const ActivationResultJsonSchema = Schema.fromJsonString(
+  activationResultValidator
+);
+const encodeActivation = Schema.encodeSync(ActivationResultJsonSchema);
 
 /** Creates and stores the distinct result and retained-base runtime pairs. */
 const seedRuntimePair = Effect.fn("test.recovery.seedRuntimePair")(
@@ -120,8 +125,8 @@ describe("contentRelease/recovery", () => {
         Effect.promise(() => t.query(current, {})),
       ]);
       assert.strictEqual(
-        JSON.stringify(activation),
-        JSON.stringify({
+        encodeActivation(activation),
+        encodeActivation({
           kind: "activated",
           receipt: expectedReceipt(RECOVERY, invertContentSnapshots(snapshots)),
         })

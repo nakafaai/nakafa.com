@@ -1,3 +1,5 @@
+import type { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
+import type { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
@@ -13,12 +15,9 @@ import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot
 import type { WithoutSystemFields } from "convex/server";
 import { Array as Arr, Effect } from "effect";
 
-type SearchProjection = Extract<
-  ContentProjection,
-  {
-    readonly kind: "article" | "subject-lesson";
-  }
->;
+type SearchProjection =
+  | typeof ArticleProjectionSchema.Type
+  | typeof MaterialLessonProjectionSchema.Type;
 
 /** Builds deterministic searchable text from authenticated public source data. */
 function searchableText(projection: SearchProjection, plainText: string) {
