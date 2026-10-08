@@ -139,7 +139,7 @@ describe("GitHub Action policy", () => {
   );
 
   it.effect(
-    "generates the Convex bindings once, in the Quality typecheck",
+    "checks the Convex bindings after the Quality typecheck, with no explicit codegen step",
     () =>
       readRepositoryFile("../../.github/workflows/ci.yml").pipe(
         Effect.tap((source) =>
