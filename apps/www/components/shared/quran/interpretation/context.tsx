@@ -2,28 +2,11 @@
 
 import { createContext, type MouseEventHandler, use } from "react";
 
-/** Builds the value the tafsir triggers and drawer share: trigger state and the selection handler. */
-export function buildQuranInterpretationValue({
-  isControllerActive,
-  isPending,
-  pendingVerseNumber,
-  selectInterpretation,
-}: {
-  isControllerActive: boolean;
-  isPending: boolean;
+interface QuranInterpretationContextValue {
+  isActive: boolean;
   pendingVerseNumber: number | null;
   selectInterpretation: MouseEventHandler<HTMLButtonElement>;
-}) {
-  return {
-    isActive: isControllerActive,
-    pendingVerseNumber: isPending ? pendingVerseNumber : null,
-    selectInterpretation,
-  };
 }
-
-type QuranInterpretationContextValue = ReturnType<
-  typeof buildQuranInterpretationValue
->;
 
 export const QuranInterpretationContext =
   createContext<QuranInterpretationContextValue | null>(null);

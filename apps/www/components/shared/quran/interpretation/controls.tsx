@@ -29,10 +29,7 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
-import {
-  buildQuranInterpretationValue,
-  QuranInterpretationContext,
-} from "@/components/shared/quran/interpretation/context";
+import { QuranInterpretationContext } from "@/components/shared/quran/interpretation/context";
 import { reportClientException } from "@/lib/analytics/client";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -206,12 +203,11 @@ export function QuranInterpretationControls({
       await Effect.runPromise(program);
     });
   };
-  const contextValue = buildQuranInterpretationValue({
-    isControllerActive,
-    isPending,
-    pendingVerseNumber,
+  const contextValue = {
+    isActive: isControllerActive,
+    pendingVerseNumber: isPending ? pendingVerseNumber : null,
     selectInterpretation,
-  });
+  };
   return (
     <QuranInterpretationContext value={contextValue}>
       {children}
