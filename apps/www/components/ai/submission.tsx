@@ -163,6 +163,24 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   return id;
 });
 
+/** Uploads one message's attachments, refusing oversized documents before any upload starts. */
+const uploadAttachments = Effect.fn("nina.uploads")(function* (
+  files: NonNullable<NinaDraft["files"]>,
+  upload: ReturnType<typeof useAction<typeof refs.public.nina.uploads.save>>,
+  uploaded: WeakMap<File, Id<"ninaUploads">>,
+  previews: Map<Id<"ninaUploads">, FileUIPart>
+) {
+  if (exceedsDocumentLimit(files.map((attachment) => attachment.file))) {
+    return yield* new NinaUploadError({
+      code: "NINA_UPLOAD_SIZE",
+      message: "The documents in one message can hold at most 10 MiB together.",
+    });
+  }
+  return yield* Effect.forEach(files, (attachment) =>
+    uploadAttachment(attachment, upload, uploaded, previews)
+  );
+});
+
 /** Native admission with optimistic query updates and idempotent transport retry. */
 export function useNinaSubmission() {
   const upload = useAction(refs.public.nina.uploads.save);
@@ -268,26 +286,14 @@ export function useNinaSubmission() {
 
   function send(prompt: NinaDraft, chatId?: Id<"chats">) {
     const hint = getMaterialContextHint();
-    const files = prompt.files ?? [];
     return perform(
-      Effect.gen(function* () {
-        // Refuse the message before any upload, so no document is stored for it.
-        if (exceedsDocumentLimit(files.map((attachment) => attachment.file))) {
-          return yield* new NinaUploadError({
-            code: "NINA_UPLOAD_SIZE",
-            message:
-              "The documents in one message can hold at most 10 MiB together.",
-          });
-        }
-        const uploadIds = yield* Effect.forEach(files, (attachment) =>
-          uploadAttachment(
-            attachment,
-            upload,
-            uploaded.current,
-            previews.current
-          )
-        );
-        return {
+      uploadAttachments(
+        prompt.files ?? [],
+        upload,
+        uploaded.current,
+        previews.current
+      ).pipe(
+        Effect.map((uploadIds) => ({
           kind: "message" as const,
           prompt: { text: prompt.text, uploadIds },
           page: {
@@ -296,8 +302,8 @@ export function useNinaSubmission() {
             ...(hint ? { materialContextHint: hint } : {}),
             ...(prompt.focus ? { focus: prompt.focus } : {}),
           },
-        };
-      }),
+        }))
+      ),
       chatId
     );
   }
