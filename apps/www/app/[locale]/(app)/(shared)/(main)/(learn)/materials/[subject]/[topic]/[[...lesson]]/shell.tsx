@@ -10,7 +10,10 @@ import {
   MaterialPagination,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/context";
 import { toMaterialMetadataCopy } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/metadata";
-import { toMaterialHref } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
+import {
+  toMaterialHref,
+  toMaterialNavigationPage,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { DeferredAiSheetOpen } from "@/components/ai/sheet/trigger";
 import { DeferredComments } from "@/components/comments/deferred";
@@ -37,34 +40,20 @@ import { getOgUrl } from "@/lib/utils/metadata";
 
 /** Prerenders the signed lesson; optional curriculum context lives in client controls. */
 export async function MaterialShell({ page }: { page: MaterialPageContent }) {
-  const { appLocale: locale, kind, metadata, route, siblings } = page;
+  const { appLocale: locale, kind, metadata, route } = page;
   const tCommon = await getTranslations({ locale, namespace: "Common" });
   const headings = getHeadings(page.body);
   const allowsInteractions = kind === "published";
   const context: MaterialContextProps = {
     page: {
+      ...toMaterialNavigationPage(page),
       appLocale: locale,
       contentId: route.graph.assetId,
-      kind,
       metadata: {
         title: metadata.title,
         description: metadata.description,
         subject: metadata.subject,
       },
-      route: {
-        appLocale: route.appLocale,
-        contentKey: route.contentKey,
-        materialKey: route.materialKey,
-        parentPath: route.parentPath,
-        publicPath: route.publicPath,
-      },
-      siblings: siblings.map((sibling) => ({
-        appLocale: sibling.appLocale,
-        metadata: { title: sibling.metadata.title },
-        order: sibling.order,
-        parentPath: sibling.parentPath,
-        publicPath: sibling.publicPath,
-      })),
     },
   };
   const copy = toMaterialMetadataCopy(page);

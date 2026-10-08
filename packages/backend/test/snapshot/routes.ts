@@ -1,46 +1,34 @@
+import {
+  type snapshotBatchReceiptValidator,
+  snapshotFamilyValidator,
+  type snapshotReceiptValidator,
+} from "@repo/backend/confect/contentRelease/spec";
 import { makeFunctionReference } from "convex/server";
+import { Schema } from "effect";
 
-interface SnapshotArgs extends Record<string, string> {
-  readonly releaseId: string;
-  readonly snapshotJson: string;
-}
+const SnapshotArgsSchema = Schema.Struct({
+  releaseId: Schema.String,
+  snapshotJson: Schema.String,
+});
 
-interface SnapshotReceipt {
-  readonly created: number;
-  readonly family: "program" | "quran" | "tryout";
-  readonly releaseId: string;
-  readonly snapshotId: string;
-  readonly unchanged: number;
-}
-
-interface SnapshotBatchArgs
-  extends Record<string, number | readonly string[] | string> {
-  readonly batchIndex: number;
-  readonly family: "program" | "quran" | "tryout";
-  readonly releaseId: string;
-  readonly rowJson: readonly string[];
-  readonly snapshotId: string;
-}
-
-interface SnapshotBatchReceipt {
-  readonly batchIndex: number;
-  readonly created: number;
-  readonly family: "program" | "quran" | "tryout";
-  readonly releaseId: string;
-  readonly snapshotId: string;
-  readonly unchanged: number;
-}
+const SnapshotBatchArgsSchema = Schema.Struct({
+  batchIndex: Schema.Finite,
+  family: snapshotFamilyValidator,
+  releaseId: Schema.String,
+  rowJson: Schema.Array(Schema.String),
+  snapshotId: Schema.String,
+});
 
 /** Calls the internal snapshot-manifest staging mutation in backend tests. */
 export const TEST_STAGE_SNAPSHOT = makeFunctionReference<
   "mutation",
-  SnapshotArgs,
-  SnapshotReceipt
+  typeof SnapshotArgsSchema.Type,
+  typeof snapshotReceiptValidator.Type
 >("contentRelease/snapshot/manifest:stageSnapshot");
 
 /** Calls the internal snapshot-row staging mutation in backend tests. */
 export const TEST_STAGE_SNAPSHOT_BATCH = makeFunctionReference<
   "mutation",
-  SnapshotBatchArgs,
-  SnapshotBatchReceipt
+  typeof SnapshotBatchArgsSchema.Type,
+  typeof snapshotBatchReceiptValidator.Type
 >("contentRelease/snapshot/batch:stageSnapshotBatch");

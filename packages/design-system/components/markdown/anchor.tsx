@@ -1,4 +1,4 @@
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
 import { cn } from "cn";
 
@@ -20,14 +20,14 @@ export function Anchor({
 
   if (href.startsWith("/")) {
     return (
-      <NavigationLink
+      <IntentLink
         className={anchorClassName}
         href={href}
         title={href}
         {...props}
       >
         {children}
-      </NavigationLink>
+      </IntentLink>
     );
   }
 

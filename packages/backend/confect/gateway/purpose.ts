@@ -1,7 +1,7 @@
 import { Effort } from "@repo/backend/confect/gateway/model";
 import { Schema } from "effect";
 
-/** Why Nakafa calls a model. Spend reports split by it. */
+/** Why Nakafa calls a model. Its reasoning effort and deadlines follow from it. */
 export const Purpose = Schema.Literals([
   "chat",
   "specialist",

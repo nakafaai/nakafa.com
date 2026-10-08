@@ -1,5 +1,8 @@
 import type { PublicationDates } from "@nakafa/aksara-contracts/date";
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import {
+  type AppLocaleCode,
+  AppLocaleCodeSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec, Schedule, Schema } from "effect";
 import { usageDataTrigger } from "@/e2e/support/consent";
@@ -34,19 +37,31 @@ const ContentViewsRecord = Schema.fromJsonString(
     }),
   })
 );
-type DateLabels = Readonly<{ published: string; updated: string }>;
+const DateLabelsSchema = Schema.Struct({
+  published: Schema.String,
+  updated: Schema.String,
+});
+
+type DateLabels = typeof DateLabelsSchema.Type;
 const dateLabels = {
   de: { published: "Veröffentlicht", updated: "Aktualisiert" },
   en: { published: "Published", updated: "Updated" },
   id: { published: "Diterbitkan", updated: "Diperbarui" },
 } satisfies Record<AppLocaleCode, DateLabels>;
 
-type LocalizedContentRoute = Readonly<{ href: string; locale: AppLocaleCode }>;
+const LocalizedContentRouteSchema = Schema.Struct({
+  href: Schema.String,
+  locale: AppLocaleCodeSchema,
+});
 
-interface ContentRouteGroup {
-  readonly kind: "article" | "material";
-  readonly routes: readonly LocalizedContentRoute[];
-}
+type LocalizedContentRoute = typeof LocalizedContentRouteSchema.Type;
+
+const ContentRouteGroupSchema = Schema.Struct({
+  kind: Schema.Literals(["article", "material"]),
+  routes: Schema.Array(LocalizedContentRouteSchema),
+});
+
+type ContentRouteGroup = typeof ContentRouteGroupSchema.Type;
 
 const contentRouteGroups = [
   {

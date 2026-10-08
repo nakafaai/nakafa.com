@@ -15,6 +15,13 @@ import { Schema } from "effect";
 
 /** Names one manifest field a retired content contract still carried. */
 const RETIRED_MANIFEST_FIELD = "rendererContractVersion";
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+/** A JSON object whose top-level fields are kept as stored, so the retired payload keeps every key. */
+const StoredObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
+const decodeStoredObject = Schema.decodeUnknownSync(
+  Schema.fromJsonString(StoredObjectSchema)
+);
 
 /**
  * Inserts one stored release row that a later release treats as its base.
@@ -77,13 +84,14 @@ export async function retireStoredAnchorPayload(
   if (!release) {
     throw new Error(`Expected stored anchor ${releaseId}.`);
   }
-  const retired = JSON.parse(release.releaseJson) as {
-    manifest: Record<string, unknown>;
-  };
+  const retired = decodeStoredObject(release.releaseJson);
+  const manifest = Schema.decodeUnknownSync(StoredObjectSchema)(
+    retired.manifest
+  );
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: JSON.stringify({
+    releaseJson: encodeJson({
       ...retired,
-      manifest: { ...retired.manifest, [RETIRED_MANIFEST_FIELD]: "1.0.0" },
+      manifest: { ...manifest, [RETIRED_MANIFEST_FIELD]: "1.0.0" },
     }),
   });
 }
@@ -135,11 +143,11 @@ export async function insertAnchoredActiveRelease(
     throw new Error("Expected the anchored active release fixture.");
   }
   await ctx.db.patch("contentReleases", activeId, {
-    receiptJson: JSON.stringify(
+    receiptJson: encodeJson(
       makePublicationReceipt(
         Schema.decodeSync(contentReleases.Doc)(active),
-        Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-          JSON.parse(activeJson)
+        Schema.decodeSync(Schema.fromJsonString(SignedContentReleaseSchema))(
+          activeJson
         )
       )
     ),

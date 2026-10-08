@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { Duration, Effect } from "effect";
+import { Duration, Effect, Schema } from "effect";
 
 const VISUAL_ASSERTION_TIMEOUT = 5000;
 const REQUIRED_STABLE_SAMPLES = 2;
@@ -65,13 +65,19 @@ export const expectCanvasToMove = Effect.fn("NakafaE2E.expectCanvasToMove")(
  * records: a `frame` counts the call on the canvas it draws to, and a `stack`
  * appends the call's stack to the page global `key`.
  */
-type WebGLPatch =
-  | { readonly method: "clear"; readonly record: "frame" }
-  | {
-      readonly key: string;
-      readonly method: "readPixels";
-      readonly record: "stack";
-    };
+const WebGLPatchSchema = Schema.Union([
+  Schema.Struct({
+    method: Schema.Literal("clear"),
+    record: Schema.Literal("frame"),
+  }),
+  Schema.Struct({
+    key: Schema.String,
+    method: Schema.Literal("readPixels"),
+    record: Schema.Literal("stack"),
+  }),
+]);
+
+type WebGLPatch = typeof WebGLPatchSchema.Type;
 
 /**
  * Wraps one WebGL method on both contexts, so each call records itself before
@@ -217,10 +223,12 @@ export const observeDrawingBufferSize = Effect.fn(
 });
 
 /** A pointer position on the page, in CSS pixels. */
-interface PagePoint {
-  readonly x: number;
-  readonly y: number;
-}
+const PagePointSchema = Schema.Struct({
+  x: Schema.Finite,
+  y: Schema.Finite,
+});
+
+type PagePoint = typeof PagePointSchema.Type;
 
 /** Presses the mouse at `from`, drags it to `to` in six steps, and releases it. */
 export const dragMouse = Effect.fn("NakafaE2E.dragMouse")(function* (

@@ -3,7 +3,7 @@ import {
   makeLearningGraphIdentity,
 } from "@nakafa/aksara-contracts/graph/identity";
 import {
-  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
   ActiveAppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import {
@@ -49,29 +49,32 @@ type TryoutSectionFixtureOptions = Partial<
     | "visibility"
   >
 >;
-interface TryoutExamGraphInput {
-  readonly appLocale?: ActiveAppLocaleCode;
-  readonly countryKey: string;
-  readonly examKey: string;
-  readonly kind: "exam";
-}
-interface TryoutSetGraphInput {
-  readonly appLocale?: ActiveAppLocaleCode;
-  readonly countryKey: string;
-  readonly examKey: string;
-  readonly kind: "set";
-  readonly setKey: string;
-  readonly trackKey: string;
-}
-interface TryoutSectionGraphInput {
-  readonly appLocale?: ActiveAppLocaleCode;
-  readonly countryKey: string;
-  readonly examKey: string;
-  readonly kind: "section";
-  readonly sectionKey: string;
-  readonly setKey: string;
-  readonly trackKey: string;
-}
+const TryoutExamGraphInputSchema = Schema.Struct({
+  appLocale: Schema.optionalKey(ActiveAppLocaleCodeSchema),
+  countryKey: Schema.String,
+  examKey: Schema.String,
+  kind: Schema.Literal("exam"),
+});
+const TryoutSetGraphInputSchema = Schema.Struct({
+  appLocale: Schema.optionalKey(ActiveAppLocaleCodeSchema),
+  countryKey: Schema.String,
+  examKey: Schema.String,
+  kind: Schema.Literal("set"),
+  setKey: Schema.String,
+  trackKey: Schema.String,
+});
+const TryoutSectionGraphInputSchema = Schema.Struct({
+  appLocale: Schema.optionalKey(ActiveAppLocaleCodeSchema),
+  countryKey: Schema.String,
+  examKey: Schema.String,
+  kind: Schema.Literal("section"),
+  sectionKey: Schema.String,
+  setKey: Schema.String,
+  trackKey: Schema.String,
+});
+type TryoutExamGraphInput = typeof TryoutExamGraphInputSchema.Type;
+type TryoutSetGraphInput = typeof TryoutSetGraphInputSchema.Type;
+type TryoutSectionGraphInput = typeof TryoutSectionGraphInputSchema.Type;
 type TryoutGraphInput =
   | TryoutExamGraphInput
   | TryoutSetGraphInput

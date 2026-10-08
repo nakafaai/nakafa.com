@@ -38,9 +38,9 @@ export const RECOVERY = {
   sequence: 2,
 } satisfies TestIdentity;
 
-const ACTIVATION_RENDERER = Schema.decodeUnknownSync(
-  RendererManifestEnvelopeSchema
-)(JSON.parse(testRendererJson()));
+const ACTIVATION_RENDERER = Schema.decodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+)(testRendererJson());
 
 /** Seeds one verified genesis candidate and its exact verified inverse. */
 export async function seedVerifiedPair(

@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   Tooltip,
   TooltipContent,
@@ -29,7 +29,7 @@ export function CardArticle({ article }: Props) {
   const id = slugify(article.title);
 
   return (
-    <NavigationLink
+    <IntentLink
       className="group"
       href={`/${article.publicPath}`}
       title={article.title}
@@ -69,6 +69,6 @@ export function CardArticle({ article }: Props) {
           </Tooltip>
         </CardFooter>
       </Card>
-    </NavigationLink>
+    </IntentLink>
   );
 }

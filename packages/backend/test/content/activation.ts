@@ -16,7 +16,10 @@ import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const releaseId = ReleaseIdSchema.make("release-lifecycle-ingress");
 const recoveryReleaseId = ReleaseIdSchema.make(
@@ -72,7 +75,7 @@ export const insertActivationPair = Effect.fn(
       stored.releaseId === candidate.manifest.releaseId ? candidate : recovery;
     yield* Effect.promise(() =>
       ctx.db.patch("contentReleases", stored._id, {
-        releaseJson: JSON.stringify(signed),
+        releaseJson: encodeJson(signed),
         rendererJson,
       })
     );

@@ -187,8 +187,9 @@ const nextConfig = {
   // https://nextjs.org/docs/app/api-reference/config/next-config-js/reactMaxHeadersLength
   reactMaxHeadersLength: 0,
   typescript: {
-    // pnpm build runs next typegen and the full two-checker tsc gate first.
-    // Keep that check outside the resident web compiler's memory footprint.
+    // CI typechecks www on every head through `pnpm -r run typecheck`, so the
+    // build does not repeat the two-checker tsc gate. Keep that check outside
+    // the resident web compiler's memory footprint.
     // https://nextjs.org/docs/app/api-reference/config/next-config-js/typescript
     ignoreBuildErrors: true,
   },

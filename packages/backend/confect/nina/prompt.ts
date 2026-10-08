@@ -5,7 +5,10 @@ import {
   DatabaseReader,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import { consumeAttachments } from "@repo/backend/confect/nina/attachments";
+import {
+  consumeAttachments,
+  requireStoredDocumentLimit,
+} from "@repo/backend/confect/nina/attachments";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import {
   type NinaInput,
@@ -89,6 +92,7 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     catch: retryUnavailable,
   });
   const fileIds = stored.fileIds ?? [];
+  yield* requireStoredDocumentLimit(fileIds);
   if (!(original.page && original.user)) {
     if (!input.page) {
       return yield* retryUnavailable();

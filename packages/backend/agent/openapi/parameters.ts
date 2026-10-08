@@ -5,16 +5,24 @@ import {
   NAKAFA_AGENT_DEFAULT_LIMIT,
   NAKAFA_AGENT_MAX_LIMIT,
 } from "@repo/contents/agent/search";
+import { Schema } from "effect";
 
-interface ParameterInput {
-  readonly description: string;
-  readonly example: boolean | number | string | readonly string[];
-  readonly explode?: boolean;
-  readonly name: string;
-  readonly required?: boolean;
-  readonly schema: unknown;
-  readonly style?: "form";
-}
+const ParameterInputSchema = Schema.Struct({
+  description: Schema.String,
+  example: Schema.Union([
+    Schema.Boolean,
+    Schema.Finite,
+    Schema.String,
+    Schema.Array(Schema.String),
+  ]),
+  explode: Schema.optionalKey(Schema.Boolean),
+  name: Schema.String,
+  required: Schema.optionalKey(Schema.Boolean),
+  // An OpenAPI Schema Object: Effect's JsonSchema is a string-keyed record.
+  schema: Schema.Record(Schema.String, Schema.Unknown),
+  style: Schema.optionalKey(Schema.Literal("form")),
+});
+type ParameterInput = typeof ParameterInputSchema.Type;
 
 /** Builds one typed OpenAPI query parameter. */
 function queryParameter(input: ParameterInput) {

@@ -26,10 +26,12 @@ import { testPublicationScope } from "@repo/backend/test/content/release";
 import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { makeTryoutSnapshotManifest } from "@repo/backend/test/tryout/snapshot";
 import type { TestConvex } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 export const TEST_RUNTIME_RELEASE_ID = ReleaseIdSchema.make(
   "release-runtime-bundle"
 );
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates one coherent signed release and its permanent runtime bundle. */
 export const makeRuntimeIngressFixture = Effect.fn(
@@ -155,7 +157,7 @@ export const insertRuntimeIngressSource = Effect.fn(
         ctx,
         fixture.release.manifest.releaseId,
         fixture.release,
-        JSON.stringify(fixture.rendererManifest)
+        encodeJson(fixture.rendererManifest)
       )
     )
   );

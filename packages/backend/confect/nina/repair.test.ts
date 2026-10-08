@@ -90,10 +90,6 @@ describe("Nina tool repair with the Agent component", () => {
         userId: expect.any(String),
       })
     );
-    expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
-      "space:personal",
-      "purpose:background",
-    ]);
     expect(
       Schema.encodeSync(jsonTextSchema)(model.doGenerateCalls[0]?.prompt)
     ).toContain("Keep the original task and source constraints");

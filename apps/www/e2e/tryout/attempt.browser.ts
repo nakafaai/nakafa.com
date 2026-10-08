@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate, visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -109,15 +110,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   const startedSection = new URL(page.url()).pathname;
   // Questions render math, whose fonts load on first use. A font swapping in
   // late moves text, which is not what this suite measures.
-  yield* Effect.promise(() =>
-    page.evaluate(() =>
-      Promise.all(
-        [...document.fonts]
-          .filter((face) => face.family.startsWith("KaTeX"))
-          .map((face) => face.load())
-      ).then(() => undefined)
-    )
-  );
+  yield* loadMathFonts(page);
 
   // Running the section keeps the same locked page.
   const finish = page.getByRole("button", { exact: true, name: "Finish" });

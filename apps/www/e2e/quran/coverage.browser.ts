@@ -1,6 +1,9 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import {
+  type AppLocaleCode,
+  AppLocaleCodeSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Record as Rec } from "effect";
+import { Effect, HashSet, Record as Rec, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -22,18 +25,22 @@ const quranSurahUrlPattern = /\/id\/quran\/2$/;
 const quranTranslationNoteHrefPattern = /^#.+-translation-note-\d+$/u;
 const rawTranslationNotePattern = /\[\d+\]/u;
 
-interface QuranLocaleContract {
-  readonly bibliographyLabel: string;
-  readonly hasEmbeddedTafsir: boolean;
-  readonly hasTranslationNotes: boolean;
-  readonly meanings: readonly [QuranMeaningContract, ...QuranMeaningContract[]];
-  readonly translationNotesLabel: string;
-}
+const QuranMeaningContractSchema = Schema.Struct({
+  locale: AppLocaleCodeSchema,
+  text: Schema.String,
+});
 
-interface QuranMeaningContract {
-  readonly locale: AppLocaleCode;
-  readonly text: string;
-}
+type QuranMeaningContract = typeof QuranMeaningContractSchema.Type;
+
+const QuranLocaleContractSchema = Schema.Struct({
+  bibliographyLabel: Schema.String,
+  hasEmbeddedTafsir: Schema.Boolean,
+  hasTranslationNotes: Schema.Boolean,
+  meanings: Schema.NonEmptyArray(QuranMeaningContractSchema),
+  translationNotesLabel: Schema.String,
+});
+
+type QuranLocaleContract = typeof QuranLocaleContractSchema.Type;
 
 type QuranLocaleContracts = {
   readonly [Locale in AppLocaleCode]: QuranLocaleContract & {
@@ -254,7 +261,9 @@ const verifyQuranLocaleCoverage = Effect.fn(
     expect(interpretationNames.every((name) => name?.includes(": "))).toBe(
       true
     );
-    expect(new Set(interpretationNames).size).toBe(interpretationNames.length);
+    expect(HashSet.size(HashSet.fromIterable(interpretationNames))).toBe(
+      interpretationNames.length
+    );
   });
 
   const translationNotes = page.locator(
@@ -291,7 +300,9 @@ const verifyQuranLocaleCoverage = Effect.fn(
       )
     );
     yield* Effect.sync(() =>
-      expect(new Set(landmarkNames).size).toBe(landmarkNames.length)
+      expect(HashSet.size(HashSet.fromIterable(landmarkNames))).toBe(
+        landmarkNames.length
+      )
     );
     const visibleTranslations = yield* Effect.promise(() =>
       page
