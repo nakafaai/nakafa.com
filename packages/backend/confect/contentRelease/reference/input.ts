@@ -8,10 +8,7 @@ import {
   ActiveAppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
-import type {
-  ContentReferenceInput,
-  contentReferenceInputValidator,
-} from "@repo/backend/confect/contentRelease/reference/spec";
+import type { ContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/spec";
 import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Option, Schema } from "effect";
 
@@ -22,10 +19,7 @@ const ActiveReferenceFieldsSchema = Schema.Struct({
   publicLocale: LocaleSchema,
 });
 
-export type ActiveContentReferenceInput = (
-  | (typeof contentReferenceInputValidator.members)[0]["Type"]
-  | (typeof contentReferenceInputValidator.members)[1]["Type"]
-) &
+export type ActiveContentReferenceInput = ContentReferenceInput &
   typeof ActiveReferenceFieldsSchema.Type;
 
 /** Classifies one current public route through its locale-owned namespace. */

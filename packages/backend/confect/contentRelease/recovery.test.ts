@@ -125,11 +125,17 @@ describe("contentRelease/recovery", () => {
         Effect.promise(() => t.query(current, {})),
       ]);
       assert.strictEqual(
-        encodeActivation(activation),
-        encodeActivation({
-          kind: "activated",
-          receipt: expectedReceipt(RECOVERY, invertContentSnapshots(snapshots)),
-        })
+        encodeActivation(activation, { onExcessProperty: "error" }),
+        encodeActivation(
+          {
+            kind: "activated",
+            receipt: expectedReceipt(
+              RECOVERY,
+              invertContentSnapshots(snapshots)
+            ),
+          },
+          { onExcessProperty: "error" }
+        )
       );
       assert.ok(state);
       assert.strictEqual(state.activeManifestHash, RECOVERY.manifestHash);
