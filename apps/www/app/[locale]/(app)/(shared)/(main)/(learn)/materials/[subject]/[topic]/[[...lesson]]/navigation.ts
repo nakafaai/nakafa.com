@@ -4,23 +4,23 @@ import { toContextualMaterialHref } from "@repo/contents/route/material/context"
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 
-/** Only route identity and visible labels are needed for sibling navigation. */
+/** Route identity that addresses one signed material in navigation. */
+type MaterialNavigationIdentity = Pick<
+  MaterialLessonProjection,
+  "appLocale" | "contentKey" | "materialKey" | "parentPath" | "publicPath"
+>;
+
+/** Sibling route identity with the one visible label navigation shows. */
 type MaterialNavigationRoute = Pick<
   MaterialLessonProjection,
   "appLocale" | "order" | "parentPath" | "publicPath"
-> & {
-  readonly metadata: Pick<MaterialLessonProjection["metadata"], "title">;
-};
+> &
+  Record<"metadata", Pick<MaterialLessonProjection["metadata"], "title">>;
 
 /** Small public navigation model shared by the static shell and client controls. */
-export interface MaterialNavigationPage {
-  readonly kind: MaterialPageContent["kind"];
-  readonly route: Pick<
-    MaterialLessonProjection,
-    "appLocale" | "contentKey" | "materialKey" | "parentPath" | "publicPath"
-  >;
-  readonly siblings: readonly MaterialNavigationRoute[];
-}
+export type MaterialNavigationPage = Pick<MaterialPageContent, "kind"> &
+  Record<"route", MaterialNavigationIdentity> &
+  Record<"siblings", readonly MaterialNavigationRoute[]>;
 
 const emptyItem = { href: "", title: "" };
 

@@ -1,61 +1,30 @@
-import type {
-  MaterialLessonProjection,
-  MaterialMetadata,
-} from "@nakafa/aksara-contracts/projection/material";
-import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
 import type { MaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
-import {
-  type MaterialOwner,
-  resolveMaterialOwner,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
+import { resolveMaterialOwner } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/owner";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAksaraUrl } from "@/lib/utils/github";
 
-interface MaterialRouteFields {
-  readonly alternates: readonly MaterialLessonProjection[];
-  readonly appLocale: Locale;
-  readonly metadata: MaterialMetadata;
-  readonly route: MaterialLessonProjection;
-}
-
-interface MaterialFields extends MaterialRouteFields {
-  readonly rendererDomain: RendererDomain;
-}
-
-interface PreviewContent extends MaterialFields {
-  readonly body: string;
-  readonly children: ReactNode;
-  readonly copySourceUrl: null;
-  readonly kind: "preview";
-  readonly siblings: readonly MaterialLessonProjection[];
-  readonly sourceUrl: null;
-}
-
-interface PublishedContent extends MaterialFields {
-  readonly body: string;
-  readonly children: ReactNode;
-  readonly copySourceUrl: null | string;
-  readonly kind: "published";
-  readonly siblings: readonly MaterialLessonProjection[];
-  readonly sourceUrl: null | string;
-}
-
 /** Complete verified body and shell model consumed by the material page. */
-export type MaterialPageContent = PreviewContent | PublishedContent;
+export type MaterialPageContent = Awaited<ReturnType<typeof readMaterialPage>>;
 
 /** Metadata selected from the same exclusive owner as the page body. */
-export interface MaterialMetadataContent extends MaterialRouteFields {
-  readonly kind: MaterialOwner["kind"];
+export type MaterialMetadataContent = Awaited<
+  ReturnType<typeof readMaterialMetadata>
+>;
+
+/**
+ * Types one rendered body as the page shell's React children. Bodies stay
+ * JSX inside Effect, where a ReactNode would put a Promise in the success
+ * channel, so the page content widens them here, outside Effect.
+ */
+function toPageChildren(body: ReactNode): ReactNode {
+  return body;
 }
 
 /** Reads metadata from the same signed delivery the page body renders. */
-export async function readMaterialMetadata(
-  params: MaterialParams
-): Promise<MaterialMetadataContent> {
+export async function readMaterialMetadata(params: MaterialParams) {
   const owner = await resolveMaterialOwner(params);
   if (!owner) {
     notFound();
@@ -88,9 +57,7 @@ export async function readMaterialMetadata(
 }
 
 /** Loads the verified body, metadata, navigation model, and source link. */
-export async function readMaterialPage(
-  params: MaterialParams
-): Promise<MaterialPageContent> {
+export async function readMaterialPage(params: MaterialParams) {
   const owner = await resolveMaterialOwner(params);
   if (!owner) {
     notFound();
@@ -100,7 +67,7 @@ export async function readMaterialPage(
     return {
       alternates: [owner.preview.projection],
       body: owner.preview.rawMdx,
-      children: <Content />,
+      children: toPageChildren(<Content />),
       copySourceUrl: null,
       kind: owner.kind,
       appLocale: owner.appLocale,
@@ -123,7 +90,7 @@ export async function readMaterialPage(
   return {
     alternates: model.alternates,
     body: published.rawMdx,
-    children: published.body,
+    children: toPageChildren(published.body),
     copySourceUrl: published.sourceRevision
       ? getLlmsMarkdownPath({
           locale: owner.locale,
