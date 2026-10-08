@@ -204,12 +204,7 @@ describe("coordinate frame geometry", () => {
       Arr.flatMap(points, (point, index) =>
         index % 2 === 0 && point[0] === points[index + 1]?.[0] ? [point[0]] : []
       ),
-      Order.make<number>((left, right) => {
-        if (left < right) {
-          return -1;
-        }
-        return left > right ? 1 : 0;
-      })
+      Order.Number
     );
     const [first, second] = verticalLines;
 
