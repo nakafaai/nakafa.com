@@ -19,7 +19,7 @@ import {
 import { GatewayTest } from "@repo/backend/test/gateway";
 import { ninaUsage } from "@repo/backend/test/nina";
 import type { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 export const specialistRequest = {
   context: {
@@ -41,7 +41,9 @@ export async function runSpecialist<A, E>(
 ) {
   const t = createConvexTestWithBetterAuth();
   const { userId } = await t.mutation((ctx) =>
-    seedAuthenticatedUser(ctx, { now: Date.now() })
+    seedAuthenticatedUser(ctx, {
+      now: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+    })
   );
   return t.action((ctx) =>
     Effect.runPromise(

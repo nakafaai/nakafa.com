@@ -1,19 +1,25 @@
-import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALE_CODES,
-  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
-import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
+  ContentReleaseManifestSchema,
+  PublicationReceiptSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
+import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import {
+  ContentSnapshotSetSchema,
   inheritContentSnapshots,
   snapshotRowCount,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import {
   INITIAL_MODEL_SLOT,
-  type ModelSlot,
+  modelSlotValidator,
 } from "@repo/backend/confect/contentRelease/models/slot";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -28,43 +34,76 @@ import {
   testRendererJson,
   testStoredReachability,
 } from "@repo/backend/test/content/release";
+import { Schema } from "effect";
 
-export interface TestIdentity {
-  readonly manifestHash: string;
-  readonly releaseId: string;
-  readonly sequence: number;
-}
+export const TestIdentitySchema = Schema.Struct({
+  manifestHash: Schema.String,
+  releaseId: Schema.String,
+  sequence: Schema.Finite,
+});
+export type TestIdentity = typeof TestIdentitySchema.Type;
 
-interface TestReleaseEnvelope extends TestIdentity {
-  readonly activeAppLocales?: readonly ActiveAppLocaleCode[] | undefined;
-  readonly base?: TestIdentity | undefined;
-  readonly originKind?: "git" | "rollback" | undefined;
-  readonly originReleaseId?: string | undefined;
-  readonly role: "candidate" | "recovery";
-  readonly scope?: PublicationScope | undefined;
-  readonly snapshots?: ContentSnapshotSet | undefined;
-  readonly status: "aborted" | "completed" | "verified";
-}
+const TestReleaseEnvelopeSchema = Schema.Struct({
+  ...TestIdentitySchema.fields,
+  activeAppLocales: Schema.optional(Schema.Array(ActiveAppLocaleCodeSchema)),
+  base: Schema.optional(TestIdentitySchema),
+  originKind: Schema.optional(Schema.Literals(["git", "rollback"])),
+  originReleaseId: Schema.optional(Schema.String),
+  role: Schema.Literals(["candidate", "recovery"]),
+  scope: Schema.optional(PublicationScopeSchema),
+  snapshots: Schema.optional(ContentSnapshotSetSchema),
+  status: Schema.Literals(["aborted", "completed", "verified"]),
+});
+type TestReleaseEnvelope = typeof TestReleaseEnvelopeSchema.Type;
 
-interface TestReleaseOptions extends TestReleaseEnvelope {
-  readonly ownership: {
-    readonly base: readonly ContentFamily[];
-    readonly result: readonly ContentFamily[];
-  };
-}
+const TestReleaseOptionsSchema = Schema.Struct({
+  ...TestReleaseEnvelopeSchema.fields,
+  ownership: Schema.Struct({
+    base: Schema.Array(ContentFamilySchema),
+    result: Schema.Array(ContentFamilySchema),
+  }),
+});
+type TestReleaseOptions = typeof TestReleaseOptionsSchema.Type;
 
-interface TestStateOptions {
-  readonly active?: TestIdentity | undefined;
-  readonly article?: TestIdentity | undefined;
-  readonly articleSlot?: ModelSlot | undefined;
-  readonly candidate?: TestIdentity | undefined;
-  readonly material?: TestIdentity | undefined;
-  readonly materialSlot?: ModelSlot | undefined;
-  readonly nextSequence: number;
-  readonly recovery?: TestIdentity | undefined;
-  readonly search?: TestIdentity | undefined;
-  readonly searchSlot?: ModelSlot | undefined;
-}
+const TestStateOptionsSchema = Schema.Struct({
+  active: Schema.optional(TestIdentitySchema),
+  article: Schema.optional(TestIdentitySchema),
+  articleSlot: Schema.optional(modelSlotValidator),
+  candidate: Schema.optional(TestIdentitySchema),
+  material: Schema.optional(TestIdentitySchema),
+  materialSlot: Schema.optional(modelSlotValidator),
+  nextSequence: Schema.Finite,
+  recovery: Schema.optional(TestIdentitySchema),
+  search: Schema.optional(TestIdentitySchema),
+  searchSlot: Schema.optional(modelSlotValidator),
+});
+type TestStateOptions = typeof TestStateOptionsSchema.Type;
+
+// Receipts check at runtime rather than by type: fixture literals carry plain
+// strings and arrays where the contract wants branded or non-empty types.
+export const encodeReceiptJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(PublicationReceiptSchema)
+);
+export const encodeSignedReleaseJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentReleaseSchema)
+);
+/** Encodes a fixture renderer only after the contract validates it. */
+export const encodeFixtureRendererJson = Schema.encodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+);
+const decodeSignedReleaseJson = Schema.decodeUnknownSync(
+  Schema.fromJsonString(SignedContentReleaseSchema),
+  { onExcessProperty: "error" }
+);
+// Stored history keeps every contract field. It omits only the manifest
+// coherence check, which refuses the unrelated origin this fixture stores.
+const StoredHistorySchema = Schema.Struct({
+  ...SignedContentReleaseSchema.fields,
+  manifest: Schema.Struct(ContentReleaseManifestSchema.fields),
+});
+const encodeStoredHistoryJson = Schema.encodeSync(
+  Schema.fromJsonString(StoredHistorySchema)
+);
 
 /** Creates the exact zero-item signed envelope used by lifecycle tests. */
 export function zeroReleaseJson(options: TestReleaseEnvelope) {
@@ -128,7 +167,7 @@ export async function insertZeroRelease(
     ...(terminal
       ? {
           completedAt: now,
-          receiptJson: JSON.stringify(receipt),
+          receiptJson: encodeReceiptJson(receipt),
         }
       : {}),
     baseFamilies: [...options.ownership.base],
@@ -229,7 +268,7 @@ export async function insertAbortedRelease(ctx: MutationCtx) {
     checkedItems: 0,
     createdAt: now,
     releaseId,
-    releaseJson: JSON.stringify(signed),
+    releaseJson: encodeSignedReleaseJson(signed),
     rendererJson: "{}",
     resultFamilies: [],
     role: "candidate",
@@ -266,15 +305,16 @@ export async function patchStoredOriginRelease(
   if (!release) {
     throw new Error(`Expected stored release ${releaseId}.`);
   }
-  const stored: { manifest: Record<string, unknown> } = JSON.parse(
-    release.releaseJson
-  );
+  const stored = decodeSignedReleaseJson(release.releaseJson);
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: JSON.stringify({
+    releaseJson: encodeStoredHistoryJson({
       ...stored,
       manifest: {
         ...stored.manifest,
-        origin: { kind: "rollback", releaseId: originReleaseId },
+        origin: {
+          kind: "rollback",
+          releaseId: ReleaseIdSchema.make(originReleaseId),
+        },
       },
     }),
   });
@@ -316,10 +356,10 @@ export async function insertActiveRelease(
     createdAt: now,
     proofAt: now,
     proofJson: "{}",
-    receiptJson: JSON.stringify(receipt),
+    receiptJson: encodeReceiptJson(receipt),
     releaseId: activeReleaseId,
-    releaseJson: JSON.stringify(active),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    releaseJson: encodeSignedReleaseJson(active),
+    rendererJson: encodeFixtureRendererJson(TEST_PROOF_RENDERER),
     resultFamilies: [],
     role: "candidate",
     sequence: 1,

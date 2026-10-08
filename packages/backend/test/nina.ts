@@ -4,13 +4,25 @@ import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import { ModelId } from "@repo/backend/confect/gateway/model";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
+import { NakafaToolInputSchema } from "@repo/backend/confect/nina/contract/tools";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
+import { NinaSuggestions } from "@repo/backend/confect/nina/presentation.spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { DateTime, Effect, Schema } from "effect";
+
+const encodePlainJson = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
+const encodeNakafaToolInput = Schema.encodeSync(
+  Schema.fromJsonString(NakafaToolInputSchema)
+);
+const encodeSuggestions = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Struct({ suggestions: NinaSuggestions }))
+);
 
 /**
  * A real component thread with a reserved turn and its authenticated owner.
@@ -18,7 +30,7 @@ import { Effect } from "effect";
  */
 export async function createNinaTest({
   history = 0,
-  now = Date.now(),
+  now = DateTime.toEpochMillis(DateTime.nowUnsafe()),
   prompt: text = "Explain a limit.",
   needsFetch = false,
 }: {
@@ -183,7 +195,7 @@ export function ninaModel(
               type: "tool-call",
               toolCallId: "read-1",
               toolName: "nakafa",
-              input: JSON.stringify(input),
+              input: encodePlainJson(input),
             },
             {
               type: "finish",
@@ -196,10 +208,10 @@ export function ninaModel(
       : final,
     doGenerate: ({ responseFormat, prompt }) => {
       let text = "Understanding A Function Limit";
-      if (JSON.stringify(prompt).includes("Repair the arguments for")) {
-        text = JSON.stringify(ninaToolInput);
+      if (encodePlainJson(prompt).includes("Repair the arguments for")) {
+        text = encodeNakafaToolInput(ninaToolInput);
       } else if (responseFormat?.type === "json") {
-        text = JSON.stringify({
+        text = encodeSuggestions({
           suggestions: ["How does this relate to continuity?"],
         });
       }

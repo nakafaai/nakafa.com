@@ -1,6 +1,7 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { stageProgramRow } from "@repo/backend/confect/contentRelease/snapshot/program";
+import { encodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/wire";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
   testEmptyManifest,
@@ -21,7 +22,12 @@ export const makeProgramRuntimeSource = Effect.fn(
     Effect.forEach(
       data.rows,
       (row, index) =>
-        stageProgramRow(data.snapshotId, index, row, JSON.stringify(row)),
+        stageProgramRow(
+          data.snapshotId,
+          index,
+          row,
+          encodeSnapshotRowJson(row)
+        ),
       { discard: true }
     )
   );
