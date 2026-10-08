@@ -4,7 +4,10 @@ import refs from "@repo/backend/confect/_generated/refs";
 
 const layerMock = vi.hoisted(() => vi.fn());
 
-import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import {
+  decodeProtectedContentRuntimeRequest,
+  ProtectedContentRuntimeResponseSchema,
+} from "@nakafa/aksara-contracts/runtime/protected/spec";
 
 // @vitest-environment node
 
@@ -42,7 +45,7 @@ import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { type Context, Effect, Layer, Predicate } from "effect";
+import { type Context, Effect, Layer, Predicate, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
@@ -281,7 +284,10 @@ describe("signed try-out execution", () => {
           )
         );
         assert.isNotNull(found);
-        const response = new Response(JSON.stringify(found), {
+        const body = yield* Schema.encodeEffect(
+          Schema.fromJsonString(ProtectedContentRuntimeResponseSchema)
+        )(found);
+        const response = new Response(body, {
           headers: {
             "content-type": "application/json",
             [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,

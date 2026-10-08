@@ -1,26 +1,29 @@
 "use client";
 
-import type { TryoutQuestionContent } from "@/components/tryout/content/model";
+import { tryoutSectionRuntimeValidator } from "@repo/backend/confect/tryouts/runtime/spec";
+import { HashMap, Option, Schema } from "effect";
+import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutActiveQuestion } from "@/components/tryout/runtime/question.client";
-import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+
+const TryoutRuntimeValueSchema = Schema.Struct({
+  expired: Schema.Boolean,
+  runtime: tryoutSectionRuntimeValidator,
+});
 
 /** Cohesive render model for one loaded try-out runtime. */
-export interface TryoutRuntimeValue {
-  expired: boolean;
-  questions: readonly TryoutQuestionContent[];
-  runtime: TryoutSectionRuntime;
-}
+export type TryoutRuntimeValue = typeof TryoutRuntimeValueSchema.Type &
+  Pick<TryoutRuntimeContent, "questions">;
 
 /** Renders the active Convex-backed try-out section runtime. */
 export function TryoutRuntime({ value }: { value: TryoutRuntimeValue }) {
   const { expired, questions, runtime } = value;
   const isActive = runtime.section.status === "in-progress";
-  const questionBySnapshot = new Map(
+  const questionBySnapshot = HashMap.fromIterable(
     questions.map((question) => [getQuestionContentKey(question), question])
   );
   const runtimeQuestions = runtime.questions.map((question) => {
     const key = getQuestionContentKey(question);
-    const content = questionBySnapshot.get(key);
+    const content = Option.getOrUndefined(HashMap.get(questionBySnapshot, key));
 
     return {
       content: content?.content ?? null,
