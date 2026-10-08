@@ -139,6 +139,11 @@ export const effectTestViolations = Effect.fn("RepositoryPolicy.effectTests")(
   Effect.scoped
 );
 
+/** Orders findings by file, line, and rule, the order the check prints them in. */
+export function sortFindings(findings: readonly (typeof Finding.Type)[]) {
+  return Arr.sort(findings, FINDING_ORDER);
+}
+
 /** Describes each finding with the Effect replacement its rule names. */
 export function findingMessages(findings: readonly (typeof Finding.Type)[]) {
   return Arr.map(
@@ -149,12 +154,12 @@ export function findingMessages(findings: readonly (typeof Finding.Type)[]) {
 }
 
 /**
- * Finds every Effect-native rule a parsed authored module breaks. A construct
- * that names a platform global counts only when the compiler proves no import
- * or local declaration shadows the name, and an array method counts only when
- * its receiver is a value rather than an imported module. Code that Playwright
- * runs in the browser page keeps its platform globals and its declared shapes,
- * because no import reaches it.
+ * Finds every Effect-native rule a parsed authored module breaks, except the
+ * array rules, which the typed pass in `arrays.ts` judges by receiver type. A
+ * construct that names a platform global counts only when the compiler proves
+ * no import or local declaration shadows the name. Code that Playwright runs in
+ * the browser page keeps its platform globals and its declared shapes, because
+ * no import reaches it.
  */
 export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
   function* ({
