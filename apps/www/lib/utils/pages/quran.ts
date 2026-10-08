@@ -1,8 +1,18 @@
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
-import { Schema } from "effect";
+import {
+  type QuranSurahRow,
+  QuranSurahRowSchema,
+} from "@nakafa/aksara-contracts/quran/spec";
+import { Schema, Struct } from "effect";
 
 type QuranName = Pick<QuranSurahRow["name"], "transliteration">;
-type QuranSurahNavigation = Pick<QuranSurahRow, "name" | "number">;
+/** Surah link fields: the number and the transliterated name the links read. */
+const QuranSurahNavigationSchema = Schema.Struct({
+  name: QuranSurahRowSchema.fields.name.mapFields(
+    Struct.pick(["transliteration"])
+  ),
+  number: QuranSurahRowSchema.fields.number,
+});
+type QuranSurahNavigation = typeof QuranSurahNavigationSchema.Type;
 type QuranSurahMetadata = null | QuranSurahNavigation;
 
 const QuranPaginationItemSchema = Schema.Struct({

@@ -11,9 +11,25 @@ class WeatherClientRequestError extends Schema.TaggedError<WeatherClientRequestE
   }
 ) {}
 
+// Flat query values, as UrlParams reads them: a scalar, or an array that
+// repeats its key. UrlParams skips undefined values.
+const WeatherSearchParamScalarSchema = Schema.Union([
+  Schema.String,
+  Schema.Finite,
+  Schema.BigInt,
+  Schema.Boolean,
+  Schema.Null,
+  Schema.Undefined,
+]);
 const WeatherRequestInputSchema = Schema.Struct({
   endpoint: Schema.String,
-  searchParams: Schema.Record(Schema.String, Schema.String),
+  searchParams: Schema.Record(
+    Schema.String,
+    Schema.Union([
+      WeatherSearchParamScalarSchema,
+      Schema.Array(WeatherSearchParamScalarSchema),
+    ])
+  ),
   url: Schema.String,
 });
 type WeatherRequestInput = typeof WeatherRequestInputSchema.Type;

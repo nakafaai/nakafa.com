@@ -2,6 +2,7 @@ import { HttpClient } from "@confect/js";
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
+import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -16,11 +17,15 @@ class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
     namespace: Schema.String,
   }
 ) {}
+/** Route metadata: title and description are the Convex reference summary
+ * fields, while authors and date have no Convex source. */
 const SystemMetadataSchema = Schema.Struct({
   authors: Schema.Array(ContentAuthorSchema),
   date: Schema.String,
-  description: Schema.optionalKey(Schema.String),
-  title: Schema.String,
+  description: Schema.optionalKey(
+    contentSearchSummaryValidator.fields.description
+  ),
+  title: contentSearchSummaryValidator.fields.title,
 });
 type SystemMetadata = typeof SystemMetadataSchema.Type;
 
