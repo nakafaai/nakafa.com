@@ -8,7 +8,8 @@ import {
   isSuccessfulScrapeOutput,
   scrapeUrl,
 } from "@repo/backend/confect/nina/research/tools/scrape";
-import { Array as Arr, Effect, MutableRef } from "effect";
+import { Array as Arr, Effect, Fiber, MutableRef } from "effect";
+import { TestClock } from "effect/testing";
 
 const firecrawlApp = vi.hoisted(() => ({
   scrape: vi.fn(),
@@ -112,6 +113,35 @@ describe("research scrape tool", () => {
         }),
       ]);
     })
+  );
+
+  it.effect(
+    "ends a scrape that never answers at the specialist step deadline",
+    () =>
+      Effect.gen(function* () {
+        const url = "https://ai-sdk.dev/docs/ai-sdk-core/devtools";
+        firecrawlApp.scrape.mockImplementation(
+          () => new Promise(() => undefined)
+        );
+        const { parts, publish } = createProgress();
+        const fiber = yield* Effect.forkChild(
+          scrapeUrl({ toolCallId: "scrape-hung", url, publish })
+        );
+
+        // The specialist step allows 30 seconds, and the scrape waits for all of it.
+        yield* TestClock.adjust("29999 millis");
+        expect(parts()).toHaveLength(1);
+        yield* TestClock.adjust("1 millis");
+
+        const output = yield* Fiber.join(fiber);
+        expect(output.error).toBe(
+          "The page could not be retrieved. Please try again."
+        );
+        expect(firecrawlApp.scrape).toHaveBeenCalledWith(
+          url,
+          expect.objectContaining({ autoResume: false })
+        );
+      })
   );
 
   it.effect("rejects private scrape targets before fetching or crawling", () =>
