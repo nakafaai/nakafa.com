@@ -8,13 +8,14 @@ const prettyMeasurementJson = Schema.fromJsonString(Schema.Unknown, {
   space: 2,
 });
 
-const HOMEPAGE_MAX_ENCODED_BYTES = 1_168_654;
-const HOMEPAGE_MAX_DECODED_BYTES = 3_809_519;
+// Remeasured at 1,048,175 encoded / 3,090,993 decoded bytes. Limits keep the ~6% margin.
+const HOMEPAGE_MAX_ENCODED_BYTES = 1_112_000;
+const HOMEPAGE_MAX_DECODED_BYTES = 3_277_000;
 
 // The always-on baseline loads the SDK on every visit: remeasured at
-// 1,126,805 encoded / 3,467,447 decoded bytes. Limits keep the ~6% margin.
-const QURAN_MAX_ENCODED_BYTES = 1_195_000;
-const QURAN_MAX_DECODED_BYTES = 3_676_000;
+// 1,081,141 encoded / 3,187,819 decoded bytes. Limits keep the ~6% margin.
+const QURAN_MAX_ENCODED_BYTES = 1_147_000;
+const QURAN_MAX_DECODED_BYTES = 3_380_000;
 
 const routeBudgets = [
   {
