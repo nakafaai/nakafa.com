@@ -4,6 +4,8 @@ import { inspectRefsSource } from "#scripts/check/refs";
 import { parseSources } from "#scripts/check/source";
 
 const SWITCHER = "apps/www/components/school/sidebar/switcher.tsx";
+const SHIPPED_MODULE = "apps/www/lib/example.ts";
+const TEST_MODULE = "apps/www/components/example.test.ts";
 const SERVER = "packages/backend/confect/tenancy/viewer.impl.ts";
 const RULE =
   "import the per-domain refs of each domain the module uses, such as @repo/backend/confect/_generated/refs/nina for refs.public.nina, instead of the whole @repo/backend/confect/_generated/refs tree";
@@ -44,6 +46,30 @@ export { default } from "@repo/backend/confect/_generated/refs";
 type Tree = import("@repo/backend/confect/_generated/refs").default;
 const tree = await import("@repo/backend/confect/_generated/refs");`),
         Arr.replicate(`${SWITCHER}: ${RULE}.`, 5)
+      );
+    })
+  );
+
+  it.effect("rejects the whole refs tree in a shipped module", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect(
+          `import refs from "@repo/backend/confect/_generated/refs";`,
+          SHIPPED_MODULE
+        ),
+        [`${SHIPPED_MODULE}: ${RULE}.`]
+      );
+    })
+  );
+
+  it.effect("accepts the whole refs tree in a test module", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect(
+          `import refs from "@repo/backend/confect/_generated/refs";`,
+          TEST_MODULE
+        ),
+        []
       );
     })
   );

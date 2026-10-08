@@ -9,6 +9,7 @@ import { descendants, namesModule } from "#scripts/check/source";
 const WHOLE_TREE = "@repo/backend/confect/_generated/refs";
 /** The folders whose modules run in the browser, so their imports ship with the page. */
 const BROWSER_FOLDERS = ["apps/www/"];
+const TEST_MODULE_PATTERN = /\.test\.tsx?$/u;
 const RULE = `import the per-domain refs of each domain the module uses, such as ${WHOLE_TREE}/nina for refs.public.nina, instead of the whole ${WHOLE_TREE} tree`;
 
 /** Whether a module runs in the browser, where its imports ship with the page. */
@@ -17,12 +18,12 @@ function runsInBrowser(file: string) {
 }
 
 /**
- * Reports each import of the whole backend refs tree from a browser module: a
- * value or type import, a re-export, or a dynamic import. Server modules keep
- * the whole tree.
+ * Reports each import of the whole backend refs tree from a shipped browser
+ * module: a value or type import, a re-export, or a dynamic import. Test modules
+ * never ship, and server modules keep the whole tree.
  */
 export function inspectRefsSource(file: string, sourceFile: SourceFile) {
-  if (!runsInBrowser(file)) {
+  if (!runsInBrowser(file) || TEST_MODULE_PATTERN.test(file)) {
     return [];
   }
   return Arr.filterMap(descendants(sourceFile, false), (node) =>
