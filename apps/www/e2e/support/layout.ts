@@ -114,6 +114,20 @@ export const readPageLayoutShift = Effect.fn("NakafaE2E.readPageLayoutShift")(
 );
 
 /**
+ * Whether the topmost element at a point of the page is the element itself or
+ * one inside it. It runs in the page, so pass it to `locator.evaluate` with the
+ * point.
+ */
+export function topmostAt(
+  element: Element,
+  point: { readonly x: number; readonly y: number }
+) {
+  return element.contains(
+    element.ownerDocument.elementFromPoint(point.x, point.y)
+  );
+}
+
+/**
  * Waits until a reader sees the element rather than a sticky header over it:
  * the topmost element at its center is the element itself or one inside it.
  */
@@ -122,17 +136,16 @@ export const expectUncovered = Effect.fn("NakafaE2E.expectUncovered")(
     yield* Effect.promise(() =>
       expect
         .poll(
-          () =>
-            locator.evaluate((element) => {
-              const { height, left, top, width } =
-                element.getBoundingClientRect();
-              return element.contains(
-                element.ownerDocument.elementFromPoint(
-                  left + width / 2,
-                  top + height / 2
-                )
-              );
-            }),
+          async () => {
+            const bounds = await locator.boundingBox();
+            if (!bounds) {
+              return false;
+            }
+            return locator.evaluate(topmostAt, {
+              x: bounds.x + bounds.width / 2,
+              y: bounds.y + bounds.height / 2,
+            });
+          },
           { timeout }
         )
         .toBe(true)

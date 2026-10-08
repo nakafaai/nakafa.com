@@ -5,6 +5,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   readCumulativeLayoutShift,
   readPageLayoutShift,
+  topmostAt,
 } from "@/e2e/support/layout";
 import { LINE_SCENE } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -200,59 +201,65 @@ export function readPlacement(card: Locator) {
  * free height, so the card never scrolls. The page behind is inert when every
  * link and button outside the card sits in an inert subtree.
  */
-export function readPresentation(card: Locator) {
-  return card.evaluate((element) => {
-    const bounds = element.getBoundingClientRect();
-    const footer = element.querySelector('[data-slot="card-footer"]');
-    const paddingBottom = Number.parseFloat(
-      getComputedStyle(element).paddingBottom
-    );
-    const footerGap =
-      bounds.bottom -
-      paddingBottom -
-      (footer?.getBoundingClientRect().bottom ?? 0);
-    const outside = Array.from(
-      document.querySelectorAll("a[href], button")
-    ).filter((control) => !element.contains(control));
-    const footerBounds = footer?.getBoundingClientRect();
-    // The corners, and the footer where a phone's sticky bar would sit.
-    const probes = [
-      [2, 2],
-      [window.innerWidth - 3, 2],
-      [2, window.innerHeight - 3],
-      [window.innerWidth - 3, window.innerHeight - 3],
-      ...(footerBounds
-        ? [
-            [
-              footerBounds.left + footerBounds.width / 2,
-              footerBounds.top + footerBounds.height / 2,
-            ],
-          ]
-        : []),
-    ];
-    return {
-      covers:
-        bounds.left === 0 &&
-        bounds.top === 0 &&
-        bounds.width === window.innerWidth &&
-        bounds.height === window.innerHeight,
-      fills:
-        Math.abs(footerGap) <= 1 &&
-        element.scrollHeight <= element.clientHeight,
-      focusInside: element.contains(document.activeElement),
-      fullscreen: document.fullscreenElement === element,
-      pageInert:
-        outside.length > 0 &&
-        outside.every((control) => control.closest("[inert]") !== null),
-      position: getComputedStyle(element).position,
-      scrollLocked: document.documentElement.style.overflow === "hidden",
-      topmost:
-        footerBounds !== undefined &&
-        probes.every(([x, y]) =>
-          element.contains(document.elementFromPoint(x, y))
-        ),
-    };
-  });
+export async function readPresentation(card: Locator) {
+  const { hasFooter, probes, ...presentation } = await card.evaluate(
+    (element) => {
+      const bounds = element.getBoundingClientRect();
+      const footer = element.querySelector('[data-slot="card-footer"]');
+      const paddingBottom = Number.parseFloat(
+        getComputedStyle(element).paddingBottom
+      );
+      const footerGap =
+        bounds.bottom -
+        paddingBottom -
+        (footer?.getBoundingClientRect().bottom ?? 0);
+      const outside = Array.from(
+        document.querySelectorAll("a[href], button")
+      ).filter((control) => !element.contains(control));
+      const footerBounds = footer?.getBoundingClientRect();
+      // The corners, and the footer where a phone's sticky bar would sit.
+      const points = [
+        { x: 2, y: 2 },
+        { x: window.innerWidth - 3, y: 2 },
+        { x: 2, y: window.innerHeight - 3 },
+        { x: window.innerWidth - 3, y: window.innerHeight - 3 },
+        ...(footerBounds
+          ? [
+              {
+                x: footerBounds.left + footerBounds.width / 2,
+                y: footerBounds.top + footerBounds.height / 2,
+              },
+            ]
+          : []),
+      ];
+      return {
+        covers:
+          bounds.left === 0 &&
+          bounds.top === 0 &&
+          bounds.width === window.innerWidth &&
+          bounds.height === window.innerHeight,
+        fills:
+          Math.abs(footerGap) <= 1 &&
+          element.scrollHeight <= element.clientHeight,
+        focusInside: element.contains(document.activeElement),
+        fullscreen: document.fullscreenElement === element,
+        hasFooter: footerBounds !== undefined,
+        pageInert:
+          outside.length > 0 &&
+          outside.every((control) => control.closest("[inert]") !== null),
+        position: getComputedStyle(element).position,
+        probes: points,
+        scrollLocked: document.documentElement.style.overflow === "hidden",
+      };
+    }
+  );
+  // The card is topmost only where it has a footer and holds every probe.
+  const topmost =
+    hasFooter &&
+    (
+      await Promise.all(probes.map((point) => card.evaluate(topmostAt, point)))
+    ).every(Boolean);
+  return { ...presentation, topmost };
 }
 
 /** Reads the height of the card's scene frame. */
