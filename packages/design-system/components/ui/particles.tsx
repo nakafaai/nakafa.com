@@ -11,7 +11,7 @@ import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
-import { Schema } from "effect";
+import { Array as Arr, MutableList, Schema } from "effect";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react";
 
@@ -58,6 +58,16 @@ interface RemapValueProps {
   start1: number;
   start2: number;
   value: number;
+}
+
+/** Reports whether a circle has left the canvas, its radius included. */
+function isOutsideCanvas(circle: Circle, width: number, height: number) {
+  return (
+    circle.x < -circle.size ||
+    circle.x > width + circle.size ||
+    circle.y < -circle.size ||
+    circle.y > height + circle.size
+  );
 }
 
 /**
@@ -137,7 +147,7 @@ export function Particles({
   }, [rng]);
 
   const drawCircle = useCallback(
-    (circle: Circle, update = false) => {
+    (circle: Circle) => {
       if (context.current) {
         const { x, y, translateX, translateY, size, alpha } = circle;
         context.current.translate(translateX, translateY);
@@ -148,10 +158,6 @@ export function Particles({
           : `oklch(0.145 0 0 / ${alpha})`;
         context.current.fill();
         context.current.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        if (!update) {
-          circles.current.push(circle);
-        }
       }
     },
     [dpr, isThemeDark]
@@ -171,6 +177,7 @@ export function Particles({
   const drawParticles = useCallback(
     (showImmediately: boolean) => {
       clearContext();
+      const particles = MutableList.make<Circle>();
       const particleCount = quantity;
       for (let i = 0; i < particleCount; i += 1) {
         const circle = circleParams();
@@ -178,6 +185,14 @@ export function Particles({
           circle.alpha = circle.targetAlpha;
         }
         drawCircle(circle);
+        MutableList.append(particles, circle);
+      }
+      // The list keeps the new circles only where a canvas context draws them.
+      if (context.current) {
+        circles.current = Arr.appendAll(
+          circles.current,
+          MutableList.toArray(particles)
+        );
       }
     },
     [circleParams, clearContext, drawCircle, quantity]
@@ -217,7 +232,18 @@ export function Particles({
   const animate = useCallback(() => {
     onMouseMove();
     clearContext();
-    circles.current.forEach((circle: Circle, i: number) => {
+    // The frame visits the circles in the order the in-place loop did: a circle
+    // that leaves the canvas is replaced at the end, and the circle that slides
+    // into its slot is passed over for this frame. A queue replays that order.
+    const queue = MutableList.make<Circle>();
+    MutableList.appendAll(queue, circles.current);
+    const passed = MutableList.make<Circle>();
+    const visits = circles.current.length;
+    for (let visit = 0; visit < visits; visit += 1) {
+      const circle = MutableList.take(queue);
+      if (circle === MutableList.Empty) {
+        break;
+      }
       // Handle the alpha value
       const edge = [
         circle.x + circle.translateX - circle.size, // distance from left edge
@@ -225,7 +251,9 @@ export function Particles({
         circle.y + circle.translateY - circle.size, // distance from top edge
         canvasSize.current.h - circle.y - circle.translateY - circle.size, // distance from bottom edge
       ];
-      const closestEdge = edge.reduce((a, b) => Math.min(a, b));
+      const closestEdge = Arr.reduce(edge, Number.POSITIVE_INFINITY, (a, b) =>
+        Math.min(a, b)
+      );
       const remapClosestEdge = Number.parseFloat(
         remapValue({
           value: closestEdge,
@@ -263,32 +291,32 @@ export function Particles({
       }
 
       // circle gets out of the canvas
-      if (
-        circle.x < -circle.size ||
-        circle.x > canvasSize.current.w + circle.size ||
-        circle.y < -circle.size ||
-        circle.y > canvasSize.current.h + circle.size
-      ) {
-        // remove the circle from the array
-        circles.current.splice(i, 1);
-        // create a new circle
+      if (isOutsideCanvas(circle, canvasSize.current.w, canvasSize.current.h)) {
+        // the circle leaves the list and a new one joins at the end
         const newCircle = circleParams();
         drawCircle(newCircle);
-        // update the circle position
+        MutableList.append(queue, newCircle);
+        // the circle that slides into the freed slot is passed over this frame
+        const slid = MutableList.take(queue);
+        if (slid !== MutableList.Empty) {
+          MutableList.append(passed, slid);
+        }
       } else {
-        drawCircle(
-          {
-            ...circle,
-            x: circle.x,
-            y: circle.y,
-            translateX: circle.translateX,
-            translateY: circle.translateY,
-            alpha: circle.alpha,
-          },
-          true
-        );
+        MutableList.append(passed, circle);
+        drawCircle({
+          ...circle,
+          x: circle.x,
+          y: circle.y,
+          translateX: circle.translateX,
+          translateY: circle.translateY,
+          alpha: circle.alpha,
+        });
       }
-    });
+    }
+    circles.current = Arr.appendAll(
+      MutableList.toArray(passed),
+      MutableList.toArray(queue)
+    );
     animationFrameRef.current = window.requestAnimationFrame(animate);
   }, [
     circleParams,

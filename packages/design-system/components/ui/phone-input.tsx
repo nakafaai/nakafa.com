@@ -23,7 +23,7 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import { useMemo, useState } from "react";
@@ -94,17 +94,21 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      filtered = validOptions.filter(
+      filtered = Arr.filter(
+        validOptions,
         (c) =>
           c.label.toLowerCase().includes(q) || c.value.toLowerCase().includes(q)
       );
     }
 
     // Place selected country at the top
-    const selectedIndex = filtered.findIndex((c) => c.value === value);
-    if (selectedIndex > 0) {
-      const selected = filtered[selectedIndex];
-      return [selected, ...filtered.filter((c) => c.value !== value)];
+    const selectedIndex = Arr.findFirstIndex(
+      filtered,
+      (c) => c.value === value
+    );
+    if (Option.isSome(selectedIndex) && selectedIndex.value > 0) {
+      const selected = filtered[selectedIndex.value];
+      return [selected, ...Arr.filter(filtered, (c) => c.value !== value)];
     }
 
     return filtered;
