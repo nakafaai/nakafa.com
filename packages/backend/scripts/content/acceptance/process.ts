@@ -5,7 +5,7 @@ import {
   sanitizeAcceptanceCommandError,
 } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { Effect, FileSystem, Schedule, Stream } from "effect";
+import { Array as Arr, Effect, FileSystem, Schedule, Stream } from "effect";
 import { HttpClient } from "effect/http";
 import { ChildProcess } from "effect/process";
 
@@ -55,7 +55,7 @@ export const runBuildCommand = Effect.fn("contentAcceptance.runBuildCommand")(
     const code = yield* child.exitCode;
     if (code !== 0) {
       return yield* acceptanceRuntimeError(
-        `${command} ${args.join(" ")} failed with exit code ${code}.`
+        `${command} ${Arr.join(args, " ")} failed with exit code ${code}.`
       );
     }
   }
