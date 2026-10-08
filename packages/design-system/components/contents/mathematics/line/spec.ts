@@ -93,9 +93,17 @@ const CircleArcLineSchema = Schema.Struct({
 });
 type CircleArcFields = typeof CircleArcLineSchema.Type;
 
-/** The label holds React nodes, which no Schema can describe. */
+const CircleArcLabelSchema = Schema.Struct({
+  progress: Schema.optionalKey(Schema.Finite),
+});
+
+/**
+ * The label holds React nodes, which no Schema can describe, so the interface
+ * stays hand-written. Its `progress` is plain data from `CircleArcLabelSchema`.
+ */
 interface CircleArcLine extends CircleArcFields {
-  readonly label?: Omit<ResolvedLineLabel, "at"> & { progress?: number };
+  readonly label?: Omit<ResolvedLineLabel, "at"> &
+    typeof CircleArcLabelSchema.Type;
 }
 
 const CircleSegmentLineSchema = Schema.Struct({
