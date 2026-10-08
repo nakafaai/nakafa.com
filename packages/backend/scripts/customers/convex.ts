@@ -79,7 +79,7 @@ const readBackendEnv = Effect.fn("customers.readBackendEnv")(function* () {
     "../..",
     ".env.local"
   );
-  // A path that cannot be checked counts as absent, as existsSync reported it.
+  // A path that cannot be checked counts as absent.
   const exists = yield* fileSystem
     .exists(backendEnvPath)
     .pipe(Effect.orElseSucceed(() => false));

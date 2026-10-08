@@ -85,7 +85,7 @@ describe("Quran Bismillah presentation", () => {
   });
 
   it("accepts source diacritic variants while preserving exact verse bytes", () => {
-    const verse = "وَٱلتِّينِ وَٱلزَّيْتُونِ";
+    const verse = "وَٱلتِّينِ وَٱلزَّيْتُونِ";
     expect(
       separateQuranBismillah(bismillah, [
         { arabic: `بِّسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ${verse}` },
