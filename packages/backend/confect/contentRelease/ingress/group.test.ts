@@ -4,7 +4,11 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
+import {
+  ContentReleaseItemSchema,
+  ContentReleaseManifestSchema,
+} from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { StageGroupRequestSchema } from "@nakafa/aksara-contracts/transport/group";
 import { stagePublicationGroup } from "@repo/backend/confect/contentRelease/ingress/group";
@@ -37,6 +41,10 @@ import { convexTest } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-stage-group");
+const UpsertJsonSchema = Schema.fromJsonString(ContentReleaseItemSchema);
+const RendererJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
 class UnexpectedGroupTestState extends Data.TaggedError(
   "UnexpectedGroupTestState"
 )<{
@@ -48,23 +56,22 @@ describe("content release staging groups", () => {
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
+        const questionItem = yield* Schema.decodeEffect(UpsertJsonSchema)(
+          testUpsertJson({
+            contentKey: TEST_QUESTION_CONTENT_KEY,
+            family: "question",
+            releaseId,
+            rendererDomain: "snbt-general",
+            sourcePath: TEST_QUESTION_SOURCE,
+          })
+        );
         const request = yield* Schema.decodeEffect(StageGroupRequestSchema)({
           operation: "stageGroup",
           releaseId,
           requests: [
             {
               batchIndex: 0,
-              items: [
-                JSON.parse(
-                  testUpsertJson({
-                    contentKey: TEST_QUESTION_CONTENT_KEY,
-                    family: "question",
-                    releaseId,
-                    rendererDomain: "snbt-general",
-                    sourcePath: TEST_QUESTION_SOURCE,
-                  })
-                ),
-              ],
+              items: [questionItem],
               operation: "stageItemBatch",
               releaseId,
             },
@@ -166,7 +173,7 @@ describe("content release staging groups", () => {
             ctx,
             releaseId,
             release,
-            JSON.stringify(TEST_PROOF_RENDERER)
+            Schema.encodeSync(RendererJsonSchema)(TEST_PROOF_RENDERER)
           )
         )
       );

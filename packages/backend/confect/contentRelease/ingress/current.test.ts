@@ -3,8 +3,14 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { Ed25519SignatureSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  type SignedContentRelease,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import {
   readCurrentPublication,
   readRecovery,
@@ -23,14 +29,22 @@ import {
 } from "@repo/backend/test/content/proof";
 import { makeRuntimeIngressFixture } from "@repo/backend/test/runtime/ingress";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Record as Rec, Schema } from "effect";
+
+const ReleaseJsonSchema = Schema.fromJsonString(SignedContentReleaseSchema);
+const RendererJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
+const RuntimeBundleJsonSchema = Schema.fromJsonString(
+  SignedTryoutRuntimeBundleSchema
+);
 
 /** Builds exact receipt counters for a signed query response under test. */
 function completed(release: SignedContentRelease) {
   const m = release.manifest;
   return {
-    releaseJson: JSON.stringify(release),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    releaseJson: Schema.encodeSync(ReleaseJsonSchema)(release),
+    rendererJson: Schema.encodeSync(RendererJsonSchema)(TEST_PROOF_RENDERER),
     receipt: {
       activatedHeads: m.upsertCount,
       activeAppLocales: [...m.activeAppLocales],
@@ -94,13 +108,16 @@ describe("authenticated current publication evidence", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeRuntimeIngressFixture();
+        const tryoutRuntimeBundleJson = yield* Schema.encodeEffect(
+          RuntimeBundleJsonSchema
+        )(fixture.bundle);
         yield* Effect.promise(() =>
           expect(
             current({
               active: completed(fixture.release),
               candidate: null,
               recovery: null,
-              tryoutRuntimeBundleJson: JSON.stringify(fixture.bundle),
+              tryoutRuntimeBundleJson,
             })
           ).resolves.toMatchObject({
             tryoutRuntimeBundle: fixture.bundle,
@@ -111,13 +128,16 @@ describe("authenticated current publication evidence", () => {
   it.effect("rejects a permanent bundle without an active publication", () =>
     Effect.gen(function* () {
       const fixture = yield* makeRuntimeIngressFixture();
+      const tryoutRuntimeBundleJson = yield* Schema.encodeEffect(
+        RuntimeBundleJsonSchema
+      )(fixture.bundle);
       yield* Effect.promise(() =>
         expect(
           current({
             active: null,
             candidate: null,
             recovery: null,
-            tryoutRuntimeBundleJson: JSON.stringify(fixture.bundle),
+            tryoutRuntimeBundleJson,
           })
         ).rejects.toMatchObject({
           code: "CONTENT_RELEASE_INTEGRITY",
@@ -129,16 +149,21 @@ describe("authenticated current publication evidence", () => {
   it.effect("rejects a permanent bundle whose signed payload was changed", () =>
     Effect.gen(function* () {
       const fixture = yield* makeRuntimeIngressFixture();
+      const tryoutRuntimeBundleJson = yield* Schema.encodeEffect(
+        RuntimeBundleJsonSchema
+      )({
+        ...fixture.bundle,
+        signature: Ed25519SignatureSchema.make(
+          `${fixture.bundle.signature.startsWith("A") ? "B" : "A"}${fixture.bundle.signature.slice(1)}`
+        ),
+      });
       yield* Effect.promise(() =>
         expect(
           current({
             active: completed(fixture.release),
             candidate: null,
             recovery: null,
-            tryoutRuntimeBundleJson: JSON.stringify({
-              ...fixture.bundle,
-              signature: `${fixture.bundle.signature.startsWith("A") ? "B" : "A"}${fixture.bundle.signature.slice(1)}`,
-            }),
+            tryoutRuntimeBundleJson,
           })
         ).rejects.toMatchObject({
           code: "CONTENT_RELEASE_INTEGRITY",
