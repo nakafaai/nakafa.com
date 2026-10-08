@@ -1,19 +1,20 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import quranSearchTable from "@repo/backend/confect/_generated/tables/quranSearch";
 import {
   QURAN_SEARCH_DOCUMENT_READ_LIMIT,
   QURAN_SEARCH_RESULT_LIMIT,
 } from "@repo/backend/confect/contentRelease/quran/limits";
 import { interleaveSearchGroups } from "@repo/backend/confect/contents/helpers/search/groups";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, HashSet, Schema } from "effect";
 
-interface TextQueryState {
-  exhausted: boolean;
-  readonly query: string;
-  requested: number;
-  rows: readonly Docs["quranSearch"][];
-}
+const TextQueryStateSchema = Schema.Struct({
+  exhausted: Schema.Boolean,
+  query: Schema.String,
+  requested: Schema.Finite,
+  rows: Schema.Array(quranSearchTable.Doc),
+});
+type TextQueryState = typeof TextQueryStateSchema.Type;
 
 /** Reads fair per-query prefixes while reserving repeated and signed reads. */
 export const readTextCandidates = Effect.fn(
@@ -22,12 +23,12 @@ export const readTextCandidates = Effect.fn(
   snapshotId: string,
   appLocale: AppLocaleCode,
   queries: readonly string[],
-  exactIdentities: ReadonlySet<string>,
+  exactIdentities: HashSet.HashSet<string>,
   exactReadCount: number,
   resultLimit: number
 ) {
   const initialReadCount = Math.max(resultLimit, queries.length);
-  const states: TextQueryState[] = Arr.map(queries, (query, index) => ({
+  let states: readonly TextQueryState[] = Arr.map(queries, (query, index) => ({
     exhausted: false,
     query,
     requested:
@@ -52,10 +53,12 @@ export const readTextCandidates = Effect.fn(
       concurrency: "unbounded",
     }
   );
-  for (const { requested, rows, state } of initialPrefixes) {
+  for (const { rows } of initialPrefixes) {
     projectionReadCount += rows.length;
-    replaceRows(state, requested, rows, exactIdentities);
   }
+  states = Arr.map(initialPrefixes, ({ requested, rows, state }) =>
+    replaceRows(state, requested, rows, exactIdentities)
+  );
   let candidates = selectCandidates(states, resultLimit);
   let expansionStart = 0;
   while (candidates.length < resultLimit) {
@@ -87,7 +90,15 @@ export const readTextCandidates = Effect.fn(
       expansion.requested
     );
     projectionReadCount += rows.length;
-    replaceRows(expansion.state, expansion.requested, rows, exactIdentities);
+    const expanded = replaceRows(
+      expansion.state,
+      expansion.requested,
+      rows,
+      exactIdentities
+    );
+    states = Arr.map(states, (state) =>
+      state === expansion.state ? expanded : state
+    );
     candidates = selectCandidates(states, resultLimit);
     expansionStart = expansion.nextStart;
   }
@@ -170,16 +181,22 @@ const searchText = Effect.fn("contents.search.searchText")(function* (
     .take(requested)
     .pipe(Effect.orDie);
 });
-/** Replaces one query prefix and records whether its range is exhausted. */
+/** Returns one query prefix with its new rows and whether its range is exhausted. */
 function replaceRows(
   state: TextQueryState,
   requested: number,
-  rows: readonly Docs["quranSearch"][],
-  exactIdentities: ReadonlySet<string>
-) {
-  state.exhausted = rows.length < requested;
-  state.requested = requested;
-  state.rows = Arr.filter(rows, (row) => !exactIdentities.has(row.identity));
+  rows: TextQueryState["rows"],
+  exactIdentities: HashSet.HashSet<string>
+): TextQueryState {
+  return {
+    ...state,
+    exhausted: rows.length < requested,
+    requested,
+    rows: Arr.filter(
+      rows,
+      (row) => !HashSet.has(exactIdentities, row.identity)
+    ),
+  };
 }
 
 /** Selects unique candidates fairly across independently ranked indexes. */
