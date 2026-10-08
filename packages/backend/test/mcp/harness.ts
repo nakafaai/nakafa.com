@@ -110,6 +110,14 @@ export function modernPost(
   };
 }
 
+/** Returns the same request with the given headers replaced or removed (null removes). */
+export function withHeaders(
+  request: McpRequest,
+  headers: Readonly<Record<string, string | null>>
+): McpRequest {
+  return { ...request, headers: { ...request.headers, ...headers } };
+}
+
 /** Encodes one JSON-RPC value as the exact body text a client sends. */
 export function jsonBody(value: unknown): string {
   return encodeJson(value);
