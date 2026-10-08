@@ -14,9 +14,8 @@ const decodeContentViewDevice = Schema.decodeUnknownOption(
 const encodeContentViewDevice = Schema.encodeEffect(ContentViewDeviceSchema);
 
 /** The browser storage methods this module calls, so callers can supply another store. */
-type ContentViewDeviceStorage = Pick<
-  Storage,
-  "getItem" | "removeItem" | "setItem"
+type ContentViewDeviceStorage = Readonly<
+  Pick<Storage, "getItem" | "removeItem" | "setItem">
 >;
 
 const contentViewDeviceStorageFailedCode = "CONTENT_VIEW_DEVICE_STORAGE_FAILED";
