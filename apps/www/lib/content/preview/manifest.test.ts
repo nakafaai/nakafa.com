@@ -1,7 +1,8 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { LocalPreviewManifestSchema } from "@nakafa/aksara-contracts/preview/spec";
+import { Effect, Option, Schema } from "effect";
 import {
   readPreviewManifestForPrerender,
   readPreviewSnapshot,
@@ -9,6 +10,9 @@ import {
 import { makePendingManifest } from "@/test/content-preview";
 
 const target = "http://127.0.0.1:4000/manifest";
+const encodeManifest = Schema.encodeSync(
+  Schema.fromJsonString(LocalPreviewManifestSchema)
+);
 /**
  * One fetch for the whole file: these readers end in a Promise, so the double
  * is global, and Effect's client keeps the first global fetch it reads.
@@ -68,7 +72,7 @@ describe("local preview prerender manifest", () => {
       Effect.gen(function* () {
         stubPreviewEnvironment();
         const manifest = makePendingManifest();
-        fetcher.mockResolvedValue(response(JSON.stringify(manifest)));
+        fetcher.mockResolvedValue(response(encodeManifest(manifest)));
 
         const snapshot = yield* readPreviewSnapshot();
         expect(Option.map(snapshot, (value) => value.manifest)).toEqual(
@@ -104,7 +108,7 @@ describe("local preview prerender manifest", () => {
   it("reads the strict manifest behind the Promise boundary", async () => {
     stubPreviewEnvironment();
     const manifest = makePendingManifest();
-    fetcher.mockResolvedValue(response(JSON.stringify(manifest)));
+    fetcher.mockResolvedValue(response(encodeManifest(manifest)));
 
     await expect(readPreviewManifestForPrerender()).resolves.toEqual(manifest);
     expect(fetcher).toHaveBeenCalledWith(

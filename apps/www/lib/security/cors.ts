@@ -1,12 +1,12 @@
-import { Config, Effect, Option, Schema } from "effect";
+import { Config, Effect, HashSet, Option, Schema } from "effect";
 
 const NAKAFA_HOSTNAME = "nakafa.com";
 const DEVELOPMENT_ENVIRONMENT = "development";
-const developmentOrigins = new Set([
+const developmentOrigins = HashSet.make(
   "http://localhost:3000",
   "http://localhost:3001",
-  "http://localhost:3002",
-]);
+  "http://localhost:3002"
+);
 const corsEnvironment = Config.all({
   nodeEnvironment: Config.String("NODE_ENV").pipe(
     Config.withDefault("production")
@@ -19,7 +19,7 @@ const decodeUrl = Schema.decodeUnknownOption(Schema.URLFromString);
 
 /** Reports whether one parsed URL belongs to an allowed Nakafa origin. */
 function isAllowedUrl(url: URL, allowDevelopmentOrigins: boolean) {
-  if (allowDevelopmentOrigins && developmentOrigins.has(url.origin)) {
+  if (allowDevelopmentOrigins && HashSet.has(developmentOrigins, url.origin)) {
     return true;
   }
   if (url.protocol !== "https:" || url.port !== "") {

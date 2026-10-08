@@ -3,9 +3,10 @@
 import { HttpClient } from "@confect/js";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { RoutedContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { makeMaterialRuntimeSource } from "@/test/content/material";
 import { testArticleProjection } from "@/test/content-article";
@@ -18,6 +19,12 @@ const input = {
   family: "material",
   publicPath: previewProjection.publicPath,
 } satisfies Parameters<typeof readActiveContentRoute>[0];
+const routedJson = Schema.encodeSync(
+  Schema.fromJsonString(RoutedContentProjectionSchema)
+);
+// The contract codec throws on the locale and parent path mismatches and strips
+// the unexpected key, so those three fixtures keep the plain codec.
+const plainJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -123,14 +130,14 @@ describe("published content route", () => {
             Effect.succeed({
               activeReleaseId,
               kind: "found",
-              projectionJson: JSON.stringify(previewProjection),
+              projectionJson: routedJson(previewProjection),
             })
           )
           .mockReturnValueOnce(
             Effect.succeed({
               activeReleaseId: nextReleaseId,
               kind: "found",
-              projectionJson: JSON.stringify(previewProjection),
+              projectionJson: routedJson(previewProjection),
             })
           );
         expect(yield* readActiveContentRoute(input)).toEqual({
@@ -154,16 +161,16 @@ describe("published content route", () => {
   it.effect.each([
     "{",
     "{}",
-    JSON.stringify({
+    plainJson({
       ...previewProjection,
       publicPath: "subjects/mathematics/unrelated",
     }),
-    JSON.stringify({
+    plainJson({
       ...previewProjection,
       appLocale: "de",
     }),
-    JSON.stringify(testArticleProjection),
-    JSON.stringify({
+    routedJson(testArticleProjection),
+    plainJson({
       ...previewProjection,
       unexpected: true,
     }),

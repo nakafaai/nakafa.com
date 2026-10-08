@@ -1,13 +1,11 @@
-import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
 import { Effect, Schema } from "effect";
-import { PublishedProjectionError } from "@/lib/content/published/errors";
+import {
+  PublishedProjectionError,
+  type PublishedProjectionIdentity,
+} from "@/lib/content/published/errors";
 
-interface PublishedProjectionIdentity {
-  readonly appLocale: AppLocale;
-  readonly publicPath: string;
-}
 /** Decodes one exact article projection selected by its public identity. */
 export const decodePublishedArticle = Effect.fn(
   "NakafaContent.decodePublishedArticle"
@@ -47,11 +45,9 @@ export const decodePublishedPage = Effect.fn(
 export const decodePublishedPageJson = Effect.fn(
   "NakafaContent.decodePublishedPageJson"
 )(function* (source: string, identity: PublishedProjectionIdentity) {
-  const input = yield* Effect.try({
-    catch: () => new PublishedProjectionError(identity),
-    try: (): unknown => JSON.parse(source),
-  });
-  return yield* Schema.decodeUnknownEffect(PublicPageProjectionSchema)(input, {
+  return yield* Schema.decodeEffect(
+    Schema.fromJsonString(PublicPageProjectionSchema)
+  )(source, {
     onExcessProperty: "error",
   }).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
 });

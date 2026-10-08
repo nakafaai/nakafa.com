@@ -1,6 +1,5 @@
 import type { Ref } from "@confect/core";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type refs from "@repo/backend/confect/_generated/refs";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
@@ -17,19 +16,9 @@ export type PublishedMaterialIdentity = Pick<
 >;
 
 /** Verified curriculum return link for one material lesson. */
-export interface PublishedMaterialContext {
-  readonly context: MaterialContextIdentity;
-  readonly group: CurriculumRoute;
-  readonly href: string;
-  readonly label: string;
-  readonly mapping: CurriculumRoute;
-  readonly parent: CurriculumRoute;
-  readonly resolvedCanonicalPath: NonNullable<
-    Ref.Returns<
-      typeof refs.public.contentRelease.program.context
-    >["resolvedCanonicalPath"]
-  >;
-}
+export type PublishedMaterialContext = Readonly<
+  NonNullable<Effect.Success<ReturnType<typeof decodePublishedMaterialContext>>>
+>;
 
 /** Verifies the public query result before it can affect learner navigation. */
 export const decodePublishedMaterialContext = Effect.fn(
@@ -104,5 +93,5 @@ export const decodePublishedMaterialContext = Effect.fn(
     mapping,
     parent,
     resolvedCanonicalPath: result.resolvedCanonicalPath,
-  } satisfies PublishedMaterialContext;
+  };
 });

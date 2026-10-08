@@ -1,4 +1,4 @@
-import { Effect, FileSystem, Schema } from "effect";
+import { Clock, Effect, FileSystem, Schema } from "effect";
 import { SubmissionHistoryError } from "@/scripts/indexing/errors";
 import { indexingFiles } from "@/scripts/indexing/paths";
 
@@ -19,6 +19,7 @@ const decodeSubmissionHistory = Schema.decodeUnknownEffect(
 const decodeEmptySubmissionHistory = Schema.decodeUnknownEffect(
   SubmissionHistorySchema
 );
+const PrettyJsonSchema = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 export type SubmissionHistory = typeof SubmissionHistorySchema.Type;
 export type SubmissionService = typeof SubmissionServiceSchema.Type;
 /** Builds an empty local submission-history value for a first script run. */
@@ -105,17 +106,18 @@ export const saveSubmissionHistory = Effect.fn("scripts.indexing.history.save")(
   function* (history: SubmissionHistory) {
     const fs = yield* FileSystem.FileSystem;
     const { submissionHistory } = yield* indexingFiles;
-    yield* fs
-      .writeFileString(submissionHistory, JSON.stringify(history, null, 2))
-      .pipe(
-        Effect.mapError(
-          (cause) =>
-            new SubmissionHistoryError({
-              cause,
-              message: `Failed to write ${submissionHistory}.`,
-            })
-        )
-      );
+    const text = yield* Schema.encodeEffect(PrettyJsonSchema)(history).pipe(
+      Effect.orDie
+    );
+    yield* fs.writeFileString(submissionHistory, text).pipe(
+      Effect.mapError(
+        (cause) =>
+          new SubmissionHistoryError({
+            cause,
+            message: `Failed to write ${submissionHistory}.`,
+          })
+      )
+    );
   }
 );
 /**
@@ -136,7 +138,9 @@ export function listUnsubmittedUrls({
   return urls.filter((url) => !history[service][url]);
 }
 /** Adds successful notifications to one service's ignored local history. */
-export function updateSubmissionHistory({
+export const updateSubmissionHistory = Effect.fn(
+  "scripts.indexing.history.update"
+)(function* ({
   history,
   service,
   urls,
@@ -144,8 +148,8 @@ export function updateSubmissionHistory({
   history: SubmissionHistory;
   service: SubmissionService;
   urls: readonly string[];
-}): SubmissionHistory {
-  const timestamp = new Date().toISOString();
+}) {
+  const timestamp = new Date(yield* Clock.currentTimeMillis).toISOString();
   const serviceHistory = { ...history[service] };
   for (const url of urls) {
     serviceHistory[url] = timestamp;
@@ -154,4 +158,4 @@ export function updateSubmissionHistory({
     ...history,
     [service]: serviceHistory,
   };
-}
+});

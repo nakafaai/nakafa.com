@@ -102,7 +102,7 @@ const runIndexNowSubmission = Effect.fn(
     return history;
   }
 
-  const updatedHistory = updateSubmissionHistory({
+  const updatedHistory = yield* updateSubmissionHistory({
     history,
     service: "indexNow",
     urls: successfulUrls,
@@ -187,7 +187,7 @@ const submitBingBatch = Effect.fn("scripts.indexing.indexNow.runBingBatch")(
       return history;
     }
 
-    const updatedHistory = updateSubmissionHistory({
+    const updatedHistory = yield* updateSubmissionHistory({
       history,
       service: "bing",
       urls: successfulUrls,

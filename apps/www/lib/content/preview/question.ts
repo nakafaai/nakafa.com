@@ -1,19 +1,16 @@
 import "server-only";
-import type { AppLocale } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { PreviewArtifact } from "@nakafa/aksara-contracts/preview/artifact";
 import {
   previewDocumentRoute,
   type QuestionAnswerPreviewDocument,
   type QuestionPromptPreviewDocument,
 } from "@nakafa/aksara-contracts/preview/document";
-import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
-import type { TryoutPreviewTarget } from "@nakafa/aksara-contracts/preview/target";
+import type { PreviewReadySchema } from "@nakafa/aksara-contracts/preview/spec";
 import {
   QuestionAnswerProjectionSchema,
-  type QuestionMetadata,
   QuestionPromptProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/question";
-import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { Effect, Option, Schema } from "effect";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
@@ -23,32 +20,17 @@ import {
   PreviewPendingError,
 } from "@/lib/content/preview/errors";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
-import type { RenderableContent } from "@/lib/content/published/artifact";
 
 type QuestionPreviewDocument =
   | QuestionAnswerPreviewDocument
   | QuestionPromptPreviewDocument;
-type ReadyPreviewManifest = Extract<
-  LocalPreviewManifest,
-  {
-    readonly status: "ready";
-  }
->;
+type ReadyPreviewManifest = typeof PreviewReadySchema.Type;
 /** Exact try-out route identity requested by one Next server boundary. */
-export interface QuestionPreviewInput {
-  readonly appLocale: AppLocale;
-  readonly publicPath: string;
-}
-/** Authenticated prompt and optional answer rendered by the actual Nakafa app. */
-export interface QuestionPreviewContent {
-  readonly Answer: RenderableContent["Content"] | null;
-  readonly appLocale: AppLocale;
-  readonly metadata: QuestionMetadata;
-  readonly Question: RenderableContent["Content"];
-  readonly response: QuestionResponse;
-  readonly selectedBodyKind: QuestionPreviewDocument["identity"]["bodyKind"];
-  readonly target: TryoutPreviewTarget;
-}
+const QuestionPreviewInputSchema = Schema.Struct({
+  appLocale: AppLocaleSchema,
+  publicPath: Schema.String,
+});
+type QuestionPreviewInput = typeof QuestionPreviewInputSchema.Type;
 /** Decodes one prompt projection without leaking a generic parse failure. */
 function decodePromptProjection(artifact: PreviewArtifact) {
   return Schema.decodeUnknownEffect(QuestionPromptProjectionSchema)(
@@ -81,6 +63,30 @@ function executeArtifact(
     previewArtifact,
   });
 }
+/** Authenticates the answer of an answer question; prompt-only questions have none. */
+const readReadyAnswer = Effect.fn("NakafaContent.readReadyQuestionAnswer")(
+  function* (
+    manifest: ReadyPreviewManifest,
+    document: QuestionPreviewDocument,
+    config: PreviewConfig
+  ) {
+    if (document.identity.bodyKind === "question") {
+      return null;
+    }
+    const answerArtifact = manifest.artifacts[1];
+    if (answerArtifact === undefined) {
+      return yield* new PreviewIntegrityError({ check: "artifact" });
+    }
+    yield* decodeAnswerProjection(answerArtifact);
+    const renderedAnswer = yield* executeArtifact(
+      config,
+      document,
+      manifest,
+      answerArtifact
+    );
+    return renderedAnswer.Content;
+  }
+);
 /** Authenticates one ready prompt or the ordered prompt-answer closure. */
 const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
   function* (
@@ -96,39 +102,24 @@ const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
       manifest,
       promptArtifact
     );
-    if (document.identity.bodyKind === "question") {
-      return {
-        Answer: null,
-        Question: renderedPrompt.Content,
-        appLocale: document.target.section.appLocale,
-        metadata: promptProjection.metadata,
-        response: promptProjection.response,
-        selectedBodyKind: document.identity.bodyKind,
-        target: document.target,
-      } satisfies QuestionPreviewContent;
-    }
-    const answerArtifact = manifest.artifacts[1];
-    if (answerArtifact === undefined) {
-      return yield* new PreviewIntegrityError({ check: "artifact" });
-    }
-    yield* decodeAnswerProjection(answerArtifact);
-    const renderedAnswer = yield* executeArtifact(
-      config,
-      document,
-      manifest,
-      answerArtifact
-    );
+    const Answer = yield* readReadyAnswer(manifest, document, config);
     return {
-      Answer: renderedAnswer.Content,
+      Answer,
       Question: renderedPrompt.Content,
       appLocale: document.target.section.appLocale,
       metadata: promptProjection.metadata,
       response: promptProjection.response,
       selectedBodyKind: document.identity.bodyKind,
       target: document.target,
-    } satisfies QuestionPreviewContent;
+    };
   }
 );
+
+/** Authenticated prompt and optional answer rendered by the actual Nakafa app. */
+export type QuestionPreviewContent = Effect.Success<
+  ReturnType<typeof readReadyQuestion>
+>;
+
 /** Reports whether one selected question owns the requested public route. */
 function matchesQuestionRoute(
   document: QuestionPreviewDocument,
