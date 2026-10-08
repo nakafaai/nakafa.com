@@ -7,7 +7,7 @@ import spec from "@repo/backend/confect/comments/queries.spec";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Array as Arr, Effect, Layer, Struct } from "effect";
+import { Array as Arr, Effect, HashMap, Layer, Option, Struct } from "effect";
 
 const getCommentsBySlug = FunctionImpl.make(
   databaseSchema,
@@ -33,13 +33,17 @@ const getCommentsBySlug = FunctionImpl.make(
     return {
       ...comments,
       page: Arr.map(comments.page, (comment) => {
-        const user = userMap.get(comment.userId);
+        const user = Option.getOrUndefined(
+          HashMap.get(userMap, comment.userId)
+        );
         const replyToUser = comment.replyToUserId
-          ? replyToUserMap.get(comment.replyToUserId)
+          ? Option.getOrUndefined(
+              HashMap.get(replyToUserMap, comment.replyToUserId)
+            )
           : undefined;
         return {
           ...comment,
-          viewerVote: viewerVotes.get(comment._id) ?? null,
+          viewerVote: Option.getOrNull(HashMap.get(viewerVotes, comment._id)),
           user: user ? Struct.pick(user, ["_id", "image", "name"]) : null,
           replyToUser: replyToUser
             ? Struct.pick(replyToUser, ["_id", "image", "name"])
@@ -69,7 +73,7 @@ const getCommentsByUserId = FunctionImpl.make(
       ...comments,
       page: Arr.map(comments.page, (comment) => ({
         ...comment,
-        viewerVote: viewerVotes.get(comment._id) ?? null,
+        viewerVote: Option.getOrNull(HashMap.get(viewerVotes, comment._id)),
       })),
     };
   })

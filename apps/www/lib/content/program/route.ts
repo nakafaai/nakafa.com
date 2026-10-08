@@ -1,11 +1,13 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
 import {
-  type GitCommitShaSchema,
+  GitCommitShaSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
+import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -14,25 +16,11 @@ import { decodeMaterialJson } from "@/lib/content/material/decode";
 import {
   decodeCurriculumJson,
   decodeProgramJson,
-  type PublishedCurriculumRoute,
-  type PublishedLearningProgram,
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { httpLayer } from "@/lib/convex/http";
-/** Complete immutable data needed by one curriculum route page. */
-export interface PublishedProgramRoute {
-  readonly activeReleaseId: null | typeof ReleaseIdSchema.Type;
-  readonly alternates: readonly PublishedCurriculumRoute[];
-  readonly ancestors: readonly PublishedCurriculumRoute[];
-  readonly children: readonly PublishedCurriculumRoute[];
-  readonly contexts: readonly PublishedCurriculumRoute[];
-  readonly groups: readonly PublishedCurriculumRoute[];
-  readonly materials: readonly MaterialLessonProjection[];
-  readonly program: null | PublishedLearningProgram;
-  readonly route: null | PublishedCurriculumRoute;
-  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-}
+
 /** Decodes one array of immutable curriculum rows from the runtime query. */
 const decodeRoutes = Effect.fn("NakafaProgram.decodeRoutes")(function* (
   sources: readonly string[],
@@ -149,6 +137,24 @@ export const readPublishedProgramRoute = Effect.fn(
     sourceRevision,
   } satisfies PublishedProgramRoute;
 });
+
+/** Decoded projection of one curriculum route page, as the page consumes it. */
+const PublishedProgramRouteSchema = Schema.Struct({
+  activeReleaseId: Schema.NullOr(ReleaseIdSchema),
+  alternates: Schema.Array(CurriculumRouteSchema),
+  ancestors: Schema.Array(CurriculumRouteSchema),
+  children: Schema.Array(CurriculumRouteSchema),
+  contexts: Schema.Array(CurriculumRouteSchema),
+  groups: Schema.Array(CurriculumRouteSchema),
+  materials: Schema.Array(MaterialLessonProjectionSchema),
+  program: Schema.NullOr(LearningProgramSchema),
+  route: Schema.NullOr(CurriculumRouteSchema),
+  sourceRevision: Schema.NullOr(GitCommitShaSchema),
+});
+
+/** Complete immutable data needed by one curriculum route page. */
+export type PublishedProgramRoute = typeof PublishedProgramRouteSchema.Type;
+
 /** Caches one complete curriculum route under program publication invalidation. */
 export async function getPublishedProgramRoute(
   locale: Locale,

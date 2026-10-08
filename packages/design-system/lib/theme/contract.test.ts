@@ -16,7 +16,7 @@ import {
   ThemeStyleSourceLoadError,
 } from "@repo/design-system/lib/theme/contract";
 import { themes } from "@repo/design-system/lib/theme/registry";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import postcss from "postcss";
 
 const STATUS_NAMES = ["success", "warning", "info"];
@@ -107,9 +107,9 @@ describe("theme profile contract", () => {
   });
   it("defines the agreed 38-color and 47-declaration contracts", () => {
     expect(SEMANTIC_COLOR_TOKENS).toHaveLength(38);
-    expect(new Set(SEMANTIC_COLOR_TOKENS).size).toBe(38);
+    expect(Arr.dedupe(SEMANTIC_COLOR_TOKENS).length).toBe(38);
     expect(REQUIRED_THEME_TOKENS).toHaveLength(47);
-    expect(new Set(REQUIRED_THEME_TOKENS).size).toBe(47);
+    expect(Arr.dedupe(REQUIRED_THEME_TOKENS).length).toBe(47);
   });
   it("rejects an OKLCH color with an omitted numeric channel", () => {
     expect(() => readOklchChannels("oklch(none 0.1 240)")).toThrow(
@@ -121,7 +121,7 @@ describe("theme profile contract", () => {
     expect(
       registeredThemeNames.filter((name) => name === "system")
     ).toHaveLength(1);
-    expect(new Set(registeredThemeNames).size).toBe(themes.length);
+    expect(Arr.dedupe(registeredThemeNames).length).toBe(themes.length);
   });
   it.effect("keeps registry custom names synchronized with CSS selectors", () =>
     Effect.gen(function* () {
@@ -146,7 +146,7 @@ describe("theme profile contract", () => {
         ).join("|");
       });
 
-      expect(new Set(fingerprints).size).toBe(profiles.length);
+      expect(Arr.dedupe(fingerprints).length).toBe(profiles.length);
     })
   );
   it.effect("keeps each theme's feedback palette distinct", () =>
@@ -164,7 +164,7 @@ describe("theme profile contract", () => {
         ]).join("|");
       });
 
-      expect(new Set(fingerprints).size).toBe(profiles.length);
+      expect(Arr.dedupe(fingerprints).length).toBe(profiles.length);
     })
   );
   it.effect.each(concreteThemeNames)(

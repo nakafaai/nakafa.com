@@ -3,7 +3,9 @@ import {
   GoogleAuthConfigError,
   readGoogleAuthConfig,
 } from "@repo/backend/confect/auth/config";
-import { ConfigProvider, Effect, Redacted } from "effect";
+import { ConfigProvider, Effect, Redacted, Schema } from "effect";
+
+const JsonText = Schema.fromJsonString(Schema.Unknown);
 
 describe("auth/config", () => {
   it.effect("reads both credentials and keeps the secret redacted", () =>
@@ -20,7 +22,10 @@ describe("auth/config", () => {
 
       expect(config.clientId).toBe("client-id");
       expect(Redacted.value(config.clientSecret)).toBe("client-secret");
-      expect(JSON.stringify(config)).not.toContain("client-secret");
+      const serializedConfig = yield* Schema.encodeEffect(JsonText)(
+        config
+      ).pipe(Effect.orDie);
+      expect(serializedConfig).not.toContain("client-secret");
     })
   );
 
@@ -50,7 +55,10 @@ describe("auth/config", () => {
 
         expect(failure).toBeInstanceOf(GoogleAuthConfigError);
         expect(failure.code).toBe("AUTH_GOOGLE_CONFIG_INVALID");
-        expect(JSON.stringify(failure)).not.toContain("private-secret");
+        const serializedFailure = yield* Schema.encodeEffect(JsonText)(
+          failure
+        ).pipe(Effect.orDie);
+        expect(serializedFailure).not.toContain("private-secret");
       })
   );
 });

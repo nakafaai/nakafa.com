@@ -2,12 +2,14 @@
 
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import type {
-  BiologyLabProps,
   BiologySceneColors,
-  BiologySceneProps,
   BiologySceneView,
 } from "@repo/design-system/components/contents/biology/data";
-import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
+import {
+  BiologyLabFrame,
+  type BiologyLabProps,
+  type BiologySceneProps,
+} from "@repo/design-system/components/contents/biology/lab-frame";
 import { DnaDoubleHelix } from "@repo/design-system/components/contents/biology/parts";
 import {
   BacteriophageModel,

@@ -13,14 +13,6 @@ import { products } from "@repo/backend/confect/utils/polar/products";
 import { Effect } from "effect";
 
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];
-interface CheckoutAdmissionOperations<R = never> {
-  readonly captureEvent: () => Effect.Effect<void, never, R>;
-  readonly loadUser: () => Effect.Effect<
-    CheckoutAdmissionUser | null,
-    CheckoutSessionIoError,
-    R
-  >;
-}
 const checkoutProductIds = [products.pro.id] as const;
 const invalidSuccessUrl = (message: string) =>
   new InvalidCheckoutSuccessUrl({
@@ -57,7 +49,14 @@ export const validateCheckoutRequest = Effect.fn(
 /** Revalidates account access after Polar IO without gating sales on analytics. */
 export const admitCheckoutProgram = Effect.fn(
   "customers.checkout.admitCheckout"
-)(function* <R>(operations: CheckoutAdmissionOperations<R>) {
+)(function* <R>(operations: {
+  readonly captureEvent: () => Effect.Effect<void, never, R>;
+  readonly loadUser: () => Effect.Effect<
+    CheckoutAdmissionUser | null,
+    CheckoutSessionIoError,
+    R
+  >;
+}) {
   const user = yield* operations.loadUser();
   if (!user || isAccountDeletionPending(user)) {
     return {

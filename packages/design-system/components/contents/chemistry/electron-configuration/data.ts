@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
-export const CARBON_ID = "carbon";
+const CARBON_ID = "carbon";
 export const NEON_ID = "neon";
 export const SODIUM_ID = "sodium";
 export const MAGNESIUM_ID = "magnesium";
@@ -30,6 +30,11 @@ export const ELECTRON_CONFIGURATION_SAMPLE_IDS = [
   CALCIUM_ID,
 ] satisfies ElectronConfigurationSampleId[];
 
+const ElectronConfigurationSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  symbol: Schema.String,
+});
+
 export const ELECTRON_CONFIGURATION_SAMPLES = {
   [HYDROGEN_ID]: { atomicNumber: 1, symbol: "H" },
   [HELIUM_ID]: { atomicNumber: 2, symbol: "He" },
@@ -41,44 +46,20 @@ export const ELECTRON_CONFIGURATION_SAMPLES = {
   [CALCIUM_ID]: { atomicNumber: 20, symbol: "Ca" },
 } satisfies Record<
   ElectronConfigurationSampleId,
-  {
-    atomicNumber: number;
-    symbol: string;
-  }
+  typeof ElectronConfigurationSampleSchema.Type
 >;
 
-export const ELECTRON_CONFIGURATION_SHELLS = [
+const ElectronConfigurationShellSchema = Schema.Struct({
+  key: Schema.String,
+  patternLimit: Schema.Finite,
+});
+
+const ELECTRON_CONFIGURATION_SHELLS = [
   { key: "K", patternLimit: 2 },
   { key: "L", patternLimit: 8 },
   { key: "M", patternLimit: 8 },
   { key: "N", patternLimit: 2 },
-] satisfies readonly { key: string; patternLimit: number }[];
-
-export interface ElectronConfigurationSampleLabels {
-  name: string;
-  note: ReactNode;
-}
-
-export interface ElectronConfigurationLabLabels {
-  atomicNumber: string;
-  chooseAtom: string;
-  configuration: string;
-  electronTotal: string;
-  outerShell: string;
-  samples: Record<
-    ElectronConfigurationSampleId,
-    ElectronConfigurationSampleLabels
-  >;
-}
-
-export interface ElectronConfigurationLabProps {
-  description: ReactNode;
-  labels: ElectronConfigurationLabLabels;
-  title: ReactNode;
-}
-
-export type ElectronConfigurationSample =
-  (typeof ELECTRON_CONFIGURATION_SAMPLES)[ElectronConfigurationSampleId];
+] satisfies readonly (typeof ElectronConfigurationShellSchema.Type)[];
 
 /**
  * Narrows ToggleGroup string values to the available electron examples.
@@ -121,7 +102,3 @@ export function getSimpleShellConfiguration(atomicNumber: number) {
 
   return shellConfiguration;
 }
-
-export type ElectronConfigurationShellConfiguration = ReturnType<
-  typeof getSimpleShellConfiguration
->;

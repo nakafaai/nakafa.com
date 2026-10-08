@@ -20,7 +20,14 @@ import {
 } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
 import type { ContentViewer } from "@repo/backend/confect/contents/views/viewer";
-import { Array as Arr, Duration, Effect, flow, Struct } from "effect";
+import {
+  Array as Arr,
+  Duration,
+  Effect,
+  flow,
+  Predicate,
+  Struct,
+} from "effect";
 
 /** Creates one popularity signal scope from verified learning-context storage. */
 function createSignalScope(
@@ -177,14 +184,11 @@ export const enqueuePopularitySignals = Effect.fn(
     readonly viewer: ContentViewer;
   }
 ) {
-  const partitions = new Set<number>();
-  for (const scope of createSignalScopes(context)) {
-    const partition = yield* enqueueSignalScope(route, args, scope, input);
-    if (partition !== null) {
-      partitions.add(partition);
-    }
-  }
-  return [...partitions];
+  const partitions = yield* Effect.forEach(
+    createSignalScopes(context),
+    (scope) => enqueueSignalScope(route, args, scope, input)
+  );
+  return Arr.dedupe(Arr.filter(partitions, Predicate.isNotNull));
 });
 
 /** Schedules bounded popularity processing for every newly enqueued partition. */

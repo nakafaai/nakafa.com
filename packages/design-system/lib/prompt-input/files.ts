@@ -1,8 +1,41 @@
-import type { FileUIPart } from "ai";
+import type { JSONValue } from "ai";
 import { Effect, Schema } from "effect";
 
+/** JSON value typed exactly as the AI SDK's `JSONValue`. */
+const JsonValueSchema: Schema.Codec<JSONValue> = Schema.suspend(() =>
+  Schema.Union([
+    Schema.Null,
+    Schema.String,
+    Schema.Finite,
+    Schema.Boolean,
+    JsonObjectSchema,
+    Schema.Array(JsonValueSchema),
+  ])
+);
+/** JSON object whose members may be `undefined`, as the AI SDK's `JSONObject`. */
+const JsonObjectSchema = Schema.Record(
+  Schema.String,
+  Schema.UndefinedOr(JsonValueSchema)
+);
+/** Provider file ids keyed by provider; `type` stays absent, as the AI SDK requires. */
+const ProviderReferenceSchema = Schema.StructWithRest(
+  Schema.Struct({ type: Schema.optionalKey(Schema.Never) }),
+  [Schema.Record(Schema.String, Schema.String)]
+);
+export const PromptInputFileSchema = Schema.Struct({
+  file: Schema.instanceOf(File),
+  filename: Schema.optionalKey(Schema.String),
+  id: Schema.String,
+  mediaType: Schema.String,
+  providerMetadata: Schema.optionalKey(
+    Schema.Record(Schema.String, JsonObjectSchema)
+  ),
+  providerReference: Schema.optionalKey(ProviderReferenceSchema),
+  type: Schema.Literal("file"),
+  url: Schema.String,
+});
 /** A selected browser file with an input-owned preview. */
-export type PromptInputFile = FileUIPart & { id: string; file: File };
+export type PromptInputFile = typeof PromptInputFileSchema.Type;
 /** A local file constraint reported before an attachment is accepted. */
 export class PromptInputFileConstraintError extends Schema.TaggedError<PromptInputFileConstraintError>()(
   "PromptInputFileConstraintError",
@@ -11,19 +44,22 @@ export class PromptInputFileConstraintError extends Schema.TaggedError<PromptInp
     message: Schema.String,
   }
 ) {}
+const ValidatePromptInputFilesOptionsSchema = Schema.Struct({
+  accept: Schema.optional(Schema.String),
+  currentFileCount: Schema.Finite,
+  files: Schema.Array(Schema.instanceOf(File)),
+  maxFileSize: Schema.optional(Schema.Finite),
+  maxFiles: Schema.optional(Schema.Finite),
+});
 /** Inputs used to validate one picker, paste, or drop operation. */
-export interface ValidatePromptInputFilesOptions {
-  readonly accept?: string | undefined;
-  readonly currentFileCount: number;
-  readonly files: readonly File[];
-  readonly maxFileSize?: number | undefined;
-  readonly maxFiles?: number | undefined;
-}
+type ValidatePromptInputFilesOptions =
+  typeof ValidatePromptInputFilesOptionsSchema.Type;
+const PromptInputFileSelectionSchema = Schema.Struct({
+  files: Schema.Array(Schema.instanceOf(File)),
+  warning: Schema.optionalKey(PromptInputFileConstraintError),
+});
 /** Files accepted from one picker, paste, or drop operation. */
-export interface PromptInputFileSelection {
-  readonly files: File[];
-  readonly warning?: PromptInputFileConstraintError;
-}
+type PromptInputFileSelection = typeof PromptInputFileSelectionSchema.Type;
 /** Matches HTML accept syntax for extensions, exact MIME types, and MIME wildcards. */
 function matchesAccept(file: File, accept?: string) {
   if (!accept || accept.trim() === "") {

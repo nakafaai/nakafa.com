@@ -1,8 +1,10 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  ActiveAppLocaleCodeSchema,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { Effect, Option, Record as Rec, Schema } from "effect";
+import { Effect, HashSet, Option, Record as Rec, Schema } from "effect";
 import type { Locale } from "next-intl";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/index/cache";
 import {
@@ -16,20 +18,20 @@ import {
 } from "@/lib/llms/published";
 import { classifyQuranLlmsRoute, getQuranLlmsText } from "@/lib/llms/quran";
 
-const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
+const MATERIAL_ROUTE_SEGMENTS = HashSet.fromIterable(
   PUBLIC_ROUTE_SURFACES.flatMap((surface) =>
     surface.key === "subject" ? Rec.values(surface.routeSlugs) : []
   )
 );
-interface PublishedMarkdownSource {
-  readonly activeReleaseId: ActiveContentReleaseId;
-  readonly family: PublishedMarkdownInput["family"];
-  readonly publicPath: string;
-}
-interface LlmsMarkdownInput {
-  readonly cleanSlug: string;
-  readonly locale: Locale;
-}
+type PublishedMarkdownSource = Pick<
+  PublishedMarkdownInput,
+  "activeReleaseId" | "family" | "publicPath"
+>;
+const LlmsMarkdownInputSchema = Schema.Struct({
+  cleanSlug: Schema.String,
+  locale: ActiveAppLocaleCodeSchema,
+});
+type LlmsMarkdownInput = typeof LlmsMarkdownInputSchema.Type;
 /** One rejected Next cache read with its exact content owner preserved. */
 class CacheFailure extends Schema.TaggedError<CacheFailure>()("CacheFailure", {
   cause: Schema.Unknown,
@@ -142,7 +144,7 @@ function readPublishedFamily(
   if (routeSegment === "articles") {
     return "article";
   }
-  if (routeSegment && MATERIAL_ROUTE_SEGMENTS.has(routeSegment)) {
+  if (routeSegment && HashSet.has(MATERIAL_ROUTE_SEGMENTS, routeSegment)) {
     return "material";
   }
   if (segments.length > 0) {

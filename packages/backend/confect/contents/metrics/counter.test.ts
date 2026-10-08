@@ -13,7 +13,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const ROUTE = "material/lesson/mathematics/vector/addition";
@@ -110,10 +110,12 @@ describe("contents/metrics/counter", () => {
       const counter = Option.getOrUndefined(
         Arr.findFirst(
           [
-            ...buildMetricsBatch({
-              queueItems: [queueItem],
-              updatedAt: NOW,
-            }).counters.values(),
+            ...MutableHashMap.values(
+              buildMetricsBatch({
+                queueItems: [queueItem],
+                updatedAt: NOW,
+              }).counters
+            ),
           ],
           ({ windowKey }) => windowKey === "lifetime"
         )
@@ -163,10 +165,12 @@ describe("contents/metrics/counter", () => {
           throw new Error("Expected the ranking rollback queue fixture.");
         }
         const counter = [
-          ...buildMetricsBatch({
-            queueItems: [queueItem],
-            updatedAt: NOW,
-          }).counters.values(),
+          ...MutableHashMap.values(
+            buildMetricsBatch({
+              queueItems: [queueItem],
+              updatedAt: NOW,
+            }).counters
+          ),
         ][0];
         if (!counter) {
           throw new Error("Expected the ranking rollback counter delta.");
@@ -203,10 +207,12 @@ describe("contents/metrics/counter", () => {
       const counter = Option.getOrUndefined(
         Arr.findFirst(
           [
-            ...buildMetricsBatch({
-              queueItems: [queueItem],
-              updatedAt: NOW,
-            }).counters.values(),
+            ...MutableHashMap.values(
+              buildMetricsBatch({
+                queueItems: [queueItem],
+                updatedAt: NOW,
+              }).counters
+            ),
           ],
           ({ windowKey }) => windowKey === "lifetime"
         )

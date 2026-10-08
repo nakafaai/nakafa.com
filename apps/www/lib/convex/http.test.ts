@@ -3,7 +3,7 @@
 import { HttpClient } from "@confect/js";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { Duration, Effect, Exit, Fiber, Layer, Logger } from "effect";
+import { Duration, Effect, Exit, Fiber, Layer, Logger, Schema } from "effect";
 import { TestClock } from "effect/testing";
 import {
   httpLayer,
@@ -12,6 +12,8 @@ import {
 } from "@/lib/convex/http";
 
 const DEPLOYMENT_URL = "https://example.convex.cloud";
+/** Writes Convex error bodies as JSON text, including codes the production refusal schema rejects. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 vi.mock("@/env", () => ({
   env: { NEXT_PUBLIC_CONVEX_URL: "https://example.convex.cloud" },
@@ -33,7 +35,7 @@ const scripted = Layer.effect(
 /** A request Convex refused with one HTTP API error code. */
 function refused(code: string) {
   return new HttpClient.HttpClientError({
-    cause: new Error(JSON.stringify({ code, message: "Try again later." })),
+    cause: new Error(encodeJson({ code, message: "Try again later." })),
   });
 }
 
@@ -156,7 +158,7 @@ describe("transient query failures", () => {
         refused("InternalServerError"),
         new HttpClient.HttpClientError({ cause: new Error("Bad request") }),
         new HttpClient.HttpClientError({ cause: "closed" }),
-        new Error(JSON.stringify({ code: "ExpiredInQueue" })),
+        new Error(encodeJson({ code: "ExpiredInQueue" })),
         { _tag: "HttpClientError", cause: dropped().cause },
       ].map(isTransientQueryFailure)
     ).toEqual([true, true, true, false, false, false, false, false]);

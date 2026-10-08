@@ -1,20 +1,21 @@
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   type ArticleProjection,
   ArticleProjectionSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
 import { Effect, Schema } from "effect";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
   PublishedProjectionError,
   type PublishedProjectionIdentity,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
 
-interface ArticlePublicationRead {
-  readonly activeReleaseId: ActiveContentReleaseId;
-  readonly projection: ArticleProjection;
-}
+const ArticlePublicationReadSchema = Schema.Struct({
+  activeReleaseId: ReleaseIdSchema,
+  projection: ArticleProjectionSchema,
+});
+type ArticlePublicationRead = typeof ArticlePublicationReadSchema.Type;
 
 /** Creates the public failure returned for malformed article projection data. */
 export function makeArticleProjectionError(
@@ -26,11 +27,9 @@ export function makeArticleProjectionError(
 /** Parses one canonical article projection encoded by the backend. */
 export const decodeArticleJson = Effect.fn("NakafaArticle.decodeJson")(
   function* (source: string, identity: PublishedProjectionIdentity) {
-    const input = yield* Effect.try({
-      catch: () => makeArticleProjectionError(identity),
-      try: (): unknown => JSON.parse(source),
-    });
-    return yield* Schema.decodeUnknownEffect(ArticleProjectionSchema)(input, {
+    return yield* Schema.decodeEffect(
+      Schema.fromJsonString(ArticleProjectionSchema)
+    )(source, {
       onExcessProperty: "error",
     }).pipe(Effect.mapError(() => makeArticleProjectionError(identity)));
   }

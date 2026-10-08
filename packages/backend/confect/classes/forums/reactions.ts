@@ -8,7 +8,7 @@ import {
 import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, pipe } from "effect";
+import { Array as Arr, Effect, HashMap, Option, pipe } from "effect";
 
 const FORUM_REACTION_VALUE_PATTERN =
   /^(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))(?:\u200D(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))*$/u;
@@ -81,7 +81,9 @@ export const getForumReactionPreviews = Effect.fn(
     emoji,
     reactors: Arr.map(
       reactionsByEmoji[index],
-      (reaction) => userMap.get(reaction.userId)?.name ?? "Unknown"
+      (reaction) =>
+        Option.getOrUndefined(HashMap.get(userMap, reaction.userId))?.name ??
+        "Unknown"
     ),
   }));
 });

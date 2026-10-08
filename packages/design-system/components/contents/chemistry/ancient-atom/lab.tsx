@@ -2,8 +2,8 @@
 
 import {
   ANCIENT_ATOM_LEVELS,
-  type AncientAtomLabProps,
   type AncientAtomLevelId,
+  type AncientAtomLevelLabels,
   WHOLE_MATTER_LEVEL_ID,
 } from "@repo/design-system/components/contents/chemistry/ancient-atom/data";
 import {
@@ -28,6 +28,19 @@ import {
 import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+interface AncientAtomLabProps {
+  description: ReactNode;
+  labels: {
+    aristotleBody: ReactNode;
+    aristotleLabel: string;
+    chooseLevel: string;
+    democritusBody: ReactNode;
+    democritusLabel: string;
+    levels: Record<AncientAtomLevelId, AncientAtomLevelLabels>;
+  };
+  title: ReactNode;
+}
 
 /**
  * Renders an introductory thought experiment for Greek atomism.

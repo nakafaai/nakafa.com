@@ -1,11 +1,11 @@
 import { getEarlyElementShellConfiguration } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
 export const SODIUM_ID = "sodium";
 export const MAGNESIUM_ID = "magnesium";
-export const ALUMINUM_ID = "aluminum";
+const ALUMINUM_ID = "aluminum";
 export const CHLORINE_ID = "chlorine";
 export const ARGON_ID = "argon";
 export const CALCIUM_ID = "calcium";
@@ -31,6 +31,11 @@ export const VALENCE_ELECTRON_SAMPLE_IDS = [
   CALCIUM_ID,
 ] satisfies ValenceElectronSampleId[];
 
+const ValenceElectronSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  symbol: Schema.String,
+});
+
 export const VALENCE_ELECTRON_SAMPLES = {
   [HYDROGEN_ID]: { atomicNumber: 1, symbol: "H" },
   [HELIUM_ID]: { atomicNumber: 2, symbol: "He" },
@@ -42,34 +47,8 @@ export const VALENCE_ELECTRON_SAMPLES = {
   [CALCIUM_ID]: { atomicNumber: 20, symbol: "Ca" },
 } satisfies Record<
   ValenceElectronSampleId,
-  {
-    atomicNumber: number;
-    symbol: string;
-  }
+  typeof ValenceElectronSampleSchema.Type
 >;
-
-export interface ValenceElectronSampleLabels {
-  name: string;
-  note: ReactNode;
-  tab: string;
-  tendency: ReactNode;
-}
-
-export interface ValenceElectronLabLabels {
-  atomicNumber: string;
-  behavior: string;
-  chooseAtom: string;
-  configuration: string;
-  outerShell: string;
-  samples: Record<ValenceElectronSampleId, ValenceElectronSampleLabels>;
-  valenceElectron: string;
-}
-
-export interface ValenceElectronLabProps {
-  description: ReactNode;
-  labels: ValenceElectronLabLabels;
-  title: ReactNode;
-}
 
 /**
  * Narrows ToggleGroup string values to the available valence-electron examples.

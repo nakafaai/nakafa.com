@@ -1,3 +1,4 @@
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
@@ -33,19 +34,22 @@ export const SitemapPageRead = Schema.Union([
 ]);
 
 /** Optional settings shared by the Next route and standalone indexing scripts. */
-interface SitemapEntryOptions {
-  lastModified?: string;
-  locales: readonly Locale[];
-}
+const SitemapEntryOptions = Schema.Struct({
+  lastModified: Schema.optionalKey(Schema.String),
+  locales: Schema.Array(ActiveAppLocaleCodeSchema),
+});
+type SitemapEntryOptions = typeof SitemapEntryOptions.Type;
 
-interface SitemapPageEntryOptions {
-  pageId: string;
-}
+const SitemapPageEntryOptions = Schema.Struct({
+  pageId: Schema.String,
+});
+type SitemapPageEntryOptions = typeof SitemapPageEntryOptions.Type;
 
-interface SitemapRouteEntry {
-  readonly lastModified?: string;
-  readonly path: string;
-}
+const SitemapRouteEntry = Schema.Struct({
+  lastModified: Schema.optionalKey(Schema.String),
+  path: Schema.String,
+});
+type SitemapRouteEntry = typeof SitemapRouteEntry.Type;
 
 const host = `https://${MAIN_DOMAIN}`;
 

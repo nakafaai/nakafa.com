@@ -3,7 +3,7 @@ import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
-import { Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, HashSet, Record as Rec } from "effect";
 import { baseRenderers } from "@/lib/content/renderer/domain/base";
 import { rendererDomainImplementations } from "@/lib/content/renderer/selection";
 
@@ -36,7 +36,7 @@ describe("renderer manifest", () => {
         manifest.base,
         ...manifest.domains.map(({ components }) => components),
       ]) {
-        expect(new Set(names).size).toBe(names.length);
+        expect(Arr.dedupe(names).length).toBe(names.length);
       }
     })
   );
@@ -63,7 +63,7 @@ describe("renderer manifest", () => {
             rendererDomain: domain.name,
             requiredComponents,
           });
-          const expectedNames = [...new Set(requiredComponents)].sort();
+          const expectedNames = Arr.dedupe(requiredComponents).sort();
 
           expect(Rec.keys<string, unknown>(components).sort()).toEqual(
             expectedNames
@@ -81,9 +81,11 @@ describe("renderer manifest", () => {
           () => import("@/lib/content/renderer/manifest")
         );
         const manifest = yield* rendererManifest;
-        const semanticNames = new Set<string>(semanticComponentNames);
+        const semanticNames = HashSet.fromIterable<string>(
+          semanticComponentNames
+        );
         const expectedBaseNames = manifest.base
-          .filter((name) => !semanticNames.has(name))
+          .filter((name) => !HashSet.has(semanticNames, name))
           .sort();
 
         expect(baseRenderers.map(({ name }) => name).sort()).toEqual(

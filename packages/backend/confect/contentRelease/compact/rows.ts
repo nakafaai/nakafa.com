@@ -16,7 +16,7 @@ import {
   COMPACTION_PAGE_BYTES,
   COMPACTION_PAGE_COUNT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Array as Arr, Effect, flow } from "effect";
+import { Array as Arr, Effect, flow, MutableHashSet, Schema } from "effect";
 
 const compactionPage = {
   maximumBytesRead: COMPACTION_PAGE_BYTES,
@@ -33,11 +33,12 @@ const itemPage = {
   maximumRowsRead: COMPACTION_ITEM_COUNT,
   numItems: COMPACTION_ITEM_COUNT,
 };
-interface RowPage {
-  readonly cursor: null | string;
-  readonly deleted: number;
-  readonly done: boolean;
-}
+const RowPageSchema = Schema.Struct({
+  cursor: Schema.NullOr(Schema.String),
+  deleted: Schema.Finite,
+  done: Schema.Boolean,
+});
+type RowPage = typeof RowPageSchema.Type;
 
 /** Deletes one content version while retaining the exact floor anchor. */
 const compactHead = Effect.fn("contentRelease.compactHead")(function* (
@@ -53,11 +54,11 @@ const compactHead = Effect.fn("contentRelease.compactHead")(function* (
     floor
   ).pipe(Effect.flatMap(flow(Effect.fromNullishOr, Effect.orDie)));
   let deleted = 0;
-  const artifacts = new Set<string>();
+  const artifacts = MutableHashSet.empty<string>();
   if (anchor._id !== row._id) {
     yield* writer.table("contentHeads").delete(row._id);
     if (row.artifactHash) {
-      artifacts.add(row.artifactHash);
+      MutableHashSet.add(artifacts, row.artifactHash);
     }
     deleted += 1;
   }
@@ -69,7 +70,7 @@ const compactHead = Effect.fn("contentRelease.compactHead")(function* (
   if (prior && prior.sequence < from) {
     yield* writer.table("contentHeads").delete(prior._id);
     if (prior.artifactHash) {
-      artifacts.add(prior.artifactHash);
+      MutableHashSet.add(artifacts, prior.artifactHash);
     }
     deleted += 1;
   }

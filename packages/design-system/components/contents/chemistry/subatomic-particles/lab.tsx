@@ -8,8 +8,6 @@ import {
   isSubatomicParticlesModeId,
   SUBATOMIC_PARTICLE_MODE_IDS,
   SUBATOMIC_VIEW_CONFIG,
-  type SubatomicParticlesFact,
-  type SubatomicParticlesLabProps,
   type SubatomicParticlesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
 import { SubatomicParticlesScene } from "@repo/design-system/components/contents/chemistry/subatomic-particles/scene";
@@ -33,9 +31,37 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { useTheme } from "next-themes";
-import { Suspense, useState } from "react";
+import { type ReactNode, Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
+
+export interface SubatomicParticlesLabProps {
+  description: ReactNode;
+  labels: {
+    chooseMode: string;
+    modes: Record<
+      SubatomicParticlesModeId,
+      {
+        description: ReactNode;
+        facts: readonly {
+          label: string;
+          value: ReactNode;
+        }[];
+        tab: string;
+      }
+    >;
+    scene: {
+      alphaParticle: ReactNode;
+      anode: ReactNode;
+      cathode: ReactNode;
+      cathodeRay: ReactNode;
+      negativePlate: ReactNode;
+      nucleus: ReactNode;
+      positivePlate: ReactNode;
+    };
+  };
+  title: ReactNode;
+}
 
 /**
  * Renders one theme-aware 3D lab for the evidence behind electrons, nuclei,
@@ -142,7 +168,7 @@ export function SubatomicParticlesLab({
   );
 }
 
-function LabFact({ fact }: { fact: SubatomicParticlesFact }) {
+function LabFact({ fact }: { fact: { label: string; value: ReactNode } }) {
   return (
     <div className="flex min-h-12 min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground text-sm">{fact.label}</dt>

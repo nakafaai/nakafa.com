@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -18,7 +19,9 @@ import {
   zeroReleaseJson,
 } from "@repo/backend/test/content/state";
 import { convexTest, type TestConvex } from "convex-test";
+import { Schema } from "effect";
 
+const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
 const currentRelease = internal.contentRelease.status.current;
 const releaseStatus = internal.contentRelease.status.getStatus;
 const ACTIVE = {
@@ -271,9 +274,11 @@ describe("contentRelease/status", () => {
     await t.mutation(async (ctx) => {
       await insertTestRelease(ctx);
       const release = await requireRelease(ctx);
-      const stored = JSON.parse(testReleaseJson());
+      const stored = Schema.decodeSync(
+        Schema.fromJsonString(SignedContentReleaseSchema)
+      )(testReleaseJson());
       await ctx.db.patch(release._id, {
-        releaseJson: JSON.stringify({
+        releaseJson: Schema.encodeSync(UnknownJsonSchema)({
           ...stored,
           manifest: {
             ...stored.manifest,

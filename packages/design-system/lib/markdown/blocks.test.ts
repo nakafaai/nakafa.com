@@ -3,6 +3,7 @@ import {
   parseMarkdownIntoBlocks,
   readMarkdownBlocks,
 } from "@repo/design-system/lib/markdown/blocks";
+import { Array as Arr } from "effect";
 import { Lexer, type Tokens } from "marked";
 
 function mockLexerBlocks(...blocks: string[]) {
@@ -112,6 +113,6 @@ describe("markdown blocks", () => {
       "\n\n",
       "Same",
     ]);
-    expect(new Set(first.map(({ key }) => key)).size).toBe(first.length);
+    expect(Arr.dedupe(first.map(({ key }) => key)).length).toBe(first.length);
   });
 });

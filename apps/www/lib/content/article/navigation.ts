@@ -1,11 +1,11 @@
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type {
-  ArticleCategory,
-  ArticleCategoryTitle,
+import {
+  ArticleCategorySchema,
+  ArticleCategoryTitleSchema,
 } from "@nakafa/aksara-contracts/projection/article";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   type ArticlePageCursor,
@@ -16,12 +16,14 @@ import { applyContentCache } from "@/lib/content/cache";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
+const ArticleNavigationItemSchema = Schema.Struct({
+  category: ArticleCategorySchema,
+  href: Schema.String,
+  title: ArticleCategoryTitleSchema,
+});
+
 /** One signed article category projected into Nakafa's navigation contract. */
-export interface ArticleNavigationItem {
-  readonly category: ArticleCategory;
-  readonly href: string;
-  readonly title: ArticleCategoryTitle;
-}
+export type ArticleNavigationItem = typeof ArticleNavigationItemSchema.Type;
 
 /** Reads every signed article category under one immutable release identity. */
 export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(

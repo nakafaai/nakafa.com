@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { getTestInstance } from "better-auth/test";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
   getPostAuthDestination,
   getPostAuthIntentSource,
@@ -14,6 +14,8 @@ import {
   PostAuthIntentSchema,
   resolvePostAuthIntent,
 } from "@/lib/auth/admission";
+
+const SocialSignInBodyCodec = Schema.fromJsonString(Schema.Unknown);
 
 describe("post-auth admission", () => {
   it("uses localized onboarding without inventing an intent", () => {
@@ -106,14 +108,15 @@ describe("post-auth admission", () => {
         "/en/search?q=geometry#results",
         "en"
       );
+      const signInBody = yield* Schema.encodeEffect(SocialSignInBodyCodec)({
+        callbackURL: "/en/onboarding",
+        errorCallbackURL,
+        provider: "google",
+      });
       const signInResponse = yield* Effect.promise(() =>
         auth.handler(
           new Request("http://localhost:3000/api/auth/sign-in/social", {
-            body: JSON.stringify({
-              callbackURL: "/en/onboarding",
-              errorCallbackURL,
-              provider: "google",
-            }),
+            body: signInBody,
             headers: {
               "content-type": "application/json",
               origin: "http://localhost:3000",

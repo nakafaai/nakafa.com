@@ -1,5 +1,4 @@
 import { getColor } from "@repo/design-system/lib/color";
-import type { ReactNode } from "react";
 
 export const UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/race.glb";
@@ -14,22 +13,6 @@ export type UniformCircularMotionPeriod =
   (typeof UNIFORM_CIRCULAR_MOTION_PERIODS)[number];
 
 export type UniformCircularMotionDecimalSeparator = "comma" | "dot";
-
-export interface UniformCircularMotionLabLabels {
-  acceleration: ReactNode;
-  choosePeriod: string;
-  period: ReactNode;
-  radius: ReactNode;
-  speed: ReactNode;
-  viewLabel: string;
-}
-
-export interface UniformCircularMotionLabProps {
-  decimalSeparator?: UniformCircularMotionDecimalSeparator;
-  description: ReactNode;
-  labels: UniformCircularMotionLabLabels;
-  title: ReactNode;
-}
 
 const TRACK_RADIUS = 4;
 

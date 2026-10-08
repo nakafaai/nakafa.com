@@ -1,4 +1,7 @@
-import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type {
+  CurriculumRouteRecordSchema,
+  LearningProgramRecordSchema,
+} from "@nakafa/aksara-contracts/program/snapshot/row";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -12,24 +15,8 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { addProgramBucketRoute } from "@repo/backend/confect/contentRelease/program/bucket";
 import { Effect } from "effect";
 
-type ProgramRow = Extract<
-  ContentSnapshotRow,
-  {
-    readonly family: "program";
-  }
->;
-type ProgramRecord = Extract<
-  ProgramRow["record"],
-  {
-    readonly kind: "program";
-  }
->;
-type CurriculumRecord = Extract<
-  ProgramRow["record"],
-  {
-    readonly kind: "curriculum";
-  }
->;
+type ProgramRecord = typeof LearningProgramRecordSchema.Type;
+type CurriculumRecord = typeof CurriculumRouteRecordSchema.Type;
 
 /** Rejects any global row-index collision across the two program tables. */
 const loadProgramIndex = Effect.fn("contentRelease.loadProgramIndex")(
@@ -223,10 +210,10 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
 export function stageProgramRow(
   snapshotId: string,
   index: number,
-  source: ProgramRow,
+  record: ProgramRecord | CurriculumRecord,
   rowJson: string
 ) {
-  return source.record.kind === "program"
-    ? stageProgram(snapshotId, index, source.record, rowJson)
-    : stageCurriculum(snapshotId, index, source.record, rowJson);
+  return record.kind === "program"
+    ? stageProgram(snapshotId, index, record, rowJson)
+    : stageCurriculum(snapshotId, index, record, rowJson);
 }

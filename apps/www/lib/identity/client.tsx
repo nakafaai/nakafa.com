@@ -3,33 +3,21 @@
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import { useAuthSession } from "@/components/auth/session";
-import {
-  type AccountRecord,
-  toViewer,
-  type Viewer,
-} from "@/lib/identity/viewer";
+import { type AccountRecord, toViewer } from "@/lib/identity/viewer";
 
 export type { AccountRecord, Viewer } from "@/lib/identity/viewer";
 
 /** The stored account row, named for the surfaces that take it as a prop. */
 export type CurrentUser = AccountRecord;
 
-/** The resolved account, its projection, and whether it is still resolving. */
-export interface IdentityState {
-  readonly account: AccountRecord | null;
-  readonly isAuthenticated: boolean;
-  readonly isPending: boolean;
-  readonly viewer: Viewer | null;
-}
-
-const signedOutState: IdentityState = {
+const signedOutState = {
   account: null,
   isAuthenticated: false,
   isPending: false,
   viewer: null,
 };
 
-const pendingState: IdentityState = {
+const pendingState = {
   account: null,
   isAuthenticated: false,
   isPending: true,
@@ -37,7 +25,7 @@ const pendingState: IdentityState = {
 };
 
 /** Narrows one account row into the shared identity state. */
-function toIdentityState(account: AccountRecord): IdentityState {
+function toIdentityState(account: AccountRecord) {
   return {
     account,
     isAuthenticated: true,
@@ -45,6 +33,12 @@ function toIdentityState(account: AccountRecord): IdentityState {
     viewer: toViewer(account),
   };
 }
+
+/** The resolved account, its projection, and whether it is still resolving. */
+export type IdentityState =
+  | typeof pendingState
+  | typeof signedOutState
+  | ReturnType<typeof toIdentityState>;
 
 /**
  * Resolves identity from the session and its account query.

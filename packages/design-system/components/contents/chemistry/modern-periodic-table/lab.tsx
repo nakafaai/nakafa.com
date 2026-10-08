@@ -8,9 +8,10 @@ import {
   isModernPeriodicTableFocusId,
   MODERN_PERIODIC_TABLE_FOCUS_IDS,
   type ModernPeriodicTableFocusId,
-  type ModernPeriodicTableLabProps,
   type ModernPeriodicTableSceneColors,
   PERIODIC_ELEMENT_CATEGORY_IDS,
+  type PeriodicElementCategoryId,
+  type PeriodicSeriesRowKey,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -28,6 +29,30 @@ import {
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+export interface ModernPeriodicTableLabProps {
+  description: ReactNode;
+  labels: {
+    atomicNumber: string;
+    categoryNames: Record<PeriodicElementCategoryId, string>;
+    chooseFocus: string;
+    focuses: Record<
+      ModernPeriodicTableFocusId,
+      {
+        detail: ReactNode;
+        name: string;
+        tab: string;
+      }
+    >;
+    focusLabel: string;
+    group: string;
+    period: string;
+    periodPrefix: string;
+    seriesNames: Record<PeriodicSeriesRowKey, string>;
+    tableLabel: string;
+  };
+  title: ReactNode;
+}
 
 /**
  * Renders a 3D reader for the modern periodic table.

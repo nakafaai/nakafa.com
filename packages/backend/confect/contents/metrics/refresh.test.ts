@@ -15,7 +15,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest, type TestConvex } from "convex-test";
-import { Array as Arr, Order, pipe } from "effect";
+import { Array as Arr, HashSet, Order, pipe } from "effect";
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
@@ -114,13 +114,13 @@ async function insertBoundedHistory(
     "180d": 0,
     "365d": 0,
   };
-  const boundaries = new Set(
+  const boundaries = HashSet.fromIterable(
     Arr.map(getFinitePopularityWindows(), getPopularityWindowDayCount)
   );
   let lifetimeScore = 0;
 
   for (let offset = 0; offset <= 365; offset += 1) {
-    const viewCount = boundaries.has(offset) ? 2 : 1;
+    const viewCount = HashSet.has(boundaries, offset) ? 2 : 1;
     lifetimeScore += viewCount;
     const applied = appliedAt(offset, viewCount);
     for (const windowKey of getFinitePopularityWindows()) {

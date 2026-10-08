@@ -1,9 +1,11 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import customersTable from "@repo/backend/confect/_generated/tables/customers";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { deleteLocalCustomer } from "@repo/backend/confect/customers/deletion/billingState";
 import {
@@ -24,15 +26,17 @@ import {
 } from "@repo/backend/confect/customers/sync/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { WithoutSystemFields } from "convex/server";
-import { Effect, flow, Record as Rec } from "effect";
+import { Effect, flow, Record as Rec, Schema } from "effect";
 
 type CustomerSyncUser = Pick<
   Docs["users"],
   "_id" | "authId" | "deletedAt" | "deletionPreparedAt" | "email" | "name"
 >;
-export type RequiredCustomer = WithoutSystemFields<Docs["customers"]> & {
-  readonly localCustomerId: Id<"customers">;
-};
+const requiredCustomerValidator = Schema.Struct({
+  ...customersTable.Fields.fields,
+  localCustomerId: IdSchema("customers"),
+});
+export type RequiredCustomer = typeof requiredCustomerValidator.Type;
 
 /** Loads the app user and any already-linked local customer row. */
 const loadCustomerSyncState = Effect.fn("customers.sync.loadCustomerSyncState")(

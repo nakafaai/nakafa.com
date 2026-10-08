@@ -1,11 +1,7 @@
 import "server-only";
 import type { MaterialPreviewDocument } from "@nakafa/aksara-contracts/preview/document";
-import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
-import {
-  type MaterialLessonProjection,
-  MaterialLessonProjectionSchema,
-  type MaterialMetadata,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { PreviewReadySchema } from "@nakafa/aksara-contracts/preview/spec";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Option, Schema } from "effect";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
@@ -18,26 +14,11 @@ import {
   type MaterialPreviewRouteInput,
   matchesMaterialPreviewRoute,
 } from "@/lib/content/preview/route";
-import type { RenderableContent } from "@/lib/content/published/artifact";
 /** Exact material route identity requested by one Next server boundary. */
 export type MaterialPreviewInput = MaterialPreviewRouteInput;
-/** Authenticated local body plus metadata rendered by the actual Nakafa app. */
-export interface MaterialPreviewContent {
-  readonly appLocale: MaterialPreviewDocument["route"]["appLocale"];
-  readonly Content: RenderableContent["Content"];
-  readonly metadata: MaterialMetadata;
-  readonly projection: MaterialLessonProjection;
-  readonly rawMdx: string;
-  readonly rendererDomain: MaterialPreviewDocument["rendererDomain"];
-}
 /** Authenticates and executes the exact ready material artifact. */
 const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
-  manifest: Extract<
-    LocalPreviewManifest,
-    {
-      readonly status: "ready";
-    }
-  >,
+  manifest: typeof PreviewReadySchema.Type,
   document: MaterialPreviewDocument,
   config: PreviewConfig
 ) {
@@ -58,8 +39,13 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
     projection,
     rawMdx: rendered.artifact.payload.rawMdx,
     rendererDomain: document.rendererDomain,
-  } satisfies MaterialPreviewContent;
+  };
 });
+
+/** Authenticated local body plus metadata rendered by the actual Nakafa app. */
+export type MaterialPreviewContent = Effect.Success<
+  ReturnType<typeof readReadyContent>
+>;
 /** Reads a matching changed material route or leaves unchanged routes alone. */
 export const readMaterialPreview = Effect.fn(
   "NakafaContent.readMaterialPreview"

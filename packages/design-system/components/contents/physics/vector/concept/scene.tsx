@@ -1,8 +1,6 @@
 import { Line, RoundedBox } from "@react-three/drei";
-import type {
-  VectorConceptLabLabels,
-  VectorConceptSceneColors,
-} from "@repo/design-system/components/contents/physics/vector/concept/data";
+import type { VectorConceptSceneColors } from "@repo/design-system/components/contents/physics/vector/concept/data";
+import type { VectorConceptLabProps } from "@repo/design-system/components/contents/physics/vector/concept/lab";
 import type { VectorConceptState } from "@repo/design-system/components/contents/physics/vector/concept/tension";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
@@ -15,7 +13,7 @@ export function VectorConceptScene({
   vectorState,
 }: {
   colors: VectorConceptSceneColors;
-  labels: Pick<VectorConceptLabLabels, "leftCable" | "rightCable">;
+  labels: Pick<VectorConceptLabProps["labels"], "leftCable" | "rightCable">;
   vectorState: VectorConceptState;
 }) {
   const { left, loadPoint, right } = vectorState;

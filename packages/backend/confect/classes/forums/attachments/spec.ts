@@ -1,6 +1,8 @@
+import { GenericId } from "@confect/core";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import schoolClassForumPendingUploadsTable from "@repo/backend/confect/_generated/tables/schoolClassForumPendingUploads";
 import { publicFailure } from "@repo/backend/confect/failure";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Schema } from "effect";
 export type ForumPendingUploadDoc = Docs["schoolClassForumPendingUploads"];
 export const forumAttachmentLimitExceededCode =
@@ -40,16 +42,18 @@ export const forumAttachmentErrorCodeSchema = Schema.Literals([
 ]);
 export type ForumAttachmentErrorCode =
   typeof forumAttachmentErrorCodeSchema.Type;
+const ForumAttachmentUploadSchema = Schema.Struct({
+  ...schoolClassForumPendingUploadsTable.Doc.fields,
+  mimeType: Schema.String,
+  name: Schema.String,
+  size: Schema.Finite,
+  storageId: GenericId.GenericId("_storage"),
+});
 /**
  * One pending forum upload after the storage file and metadata have both been
  * finalized.
  */
-export type ForumAttachmentUpload = ForumPendingUploadDoc & {
-  mimeType: NonNullable<ForumPendingUploadDoc["mimeType"]>;
-  name: NonNullable<ForumPendingUploadDoc["name"]>;
-  size: NonNullable<ForumPendingUploadDoc["size"]>;
-  storageId: NonNullable<ForumPendingUploadDoc["storageId"]>;
-};
+export type ForumAttachmentUpload = typeof ForumAttachmentUploadSchema.Type;
 export type ForumAttachmentPolicyInput = Pick<
   ForumAttachmentUpload,
   "mimeType" | "name" | "size"
@@ -58,10 +62,12 @@ export type ForumAttachmentMetadataInput = Pick<
   ForumAttachmentUpload,
   "size" | "storageId"
 >;
-export interface ForumAttachmentStorageClaimInput {
-  readonly storageId: Id<"_storage">;
-  readonly uploadId: Id<"schoolClassForumPendingUploads">;
-}
+const ForumAttachmentStorageClaimInputSchema = Schema.Struct({
+  storageId: GenericId.GenericId("_storage"),
+  uploadId: IdSchema("schoolClassForumPendingUploads"),
+});
+export type ForumAttachmentStorageClaimInput =
+  typeof ForumAttachmentStorageClaimInputSchema.Type;
 /** Raised when a forum attachment violates an expected domain rule. */
 export class ForumAttachmentError extends Schema.TaggedError<ForumAttachmentError>()(
   "ForumAttachmentError",

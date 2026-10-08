@@ -10,9 +10,10 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 7, 31, 5, 0, 0);
+const JsonSchema = Schema.fromJsonString(Schema.Unknown);
 const checkoutStartedEvent = {
   name: "checkout started",
   properties: {
@@ -94,6 +95,9 @@ describe("customers/checkout/admission", () => {
             ctx.db.system.query("_scheduled_functions").collect()
           )
         );
+        const encodedProperties = yield* Schema.encodeEffect(JsonSchema)(
+          checkoutStartedEvent.properties
+        );
 
         expect(admitted).toEqual({ kind: "admitted" });
         expect(scheduledJobs).toEqual([
@@ -101,7 +105,7 @@ describe("customers/checkout/admission", () => {
             args: [
               expect.objectContaining({
                 event: checkoutStartedEvent.name,
-                properties: JSON.stringify(checkoutStartedEvent.properties),
+                properties: encodedProperties,
                 ...(timestamp === undefined ? {} : { timestamp }),
               }),
             ],
