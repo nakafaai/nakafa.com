@@ -52,7 +52,7 @@ const ROUTE_CONE_Z = DISTANCE_GUIDE_Z - DISTANCE_GUIDE_STEP * 1.35;
 const SHADOW_CAMERA_RADIUS =
   VELOCITY_SPEED_SCENE.laneLength / 2 + VELOCITY_SPEED_SCENE.laneWidth;
 
-export interface VelocitySpeedLabProps {
+interface VelocitySpeedLabProps {
   description: ReactNode;
   labels: {
     chooseCase: string;
@@ -67,8 +67,6 @@ export interface VelocitySpeedLabProps {
   };
   title: ReactNode;
 }
-
-export type VelocitySpeedLabLabels = VelocitySpeedLabProps["labels"];
 
 export function VelocitySpeedLab({
   title,

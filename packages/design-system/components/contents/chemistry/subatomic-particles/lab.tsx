@@ -37,7 +37,7 @@ import { type ReactNode, Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
 
-export interface SubatomicParticlesLabProps {
+interface SubatomicParticlesLabProps {
   description: ReactNode;
   labels: SubatomicParticlesLabLabels;
   title: ReactNode;

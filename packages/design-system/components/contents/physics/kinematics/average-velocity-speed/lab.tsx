@@ -29,7 +29,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { type ReactNode, useMemo, useState } from "react";
 
-export interface AverageVelocitySpeedLabProps {
+interface AverageVelocitySpeedLabProps {
   decimalSeparator?: AverageVelocitySpeedDecimalSeparator;
   description: ReactNode;
   labels: {
@@ -46,9 +46,6 @@ export interface AverageVelocitySpeedLabProps {
   };
   title: ReactNode;
 }
-
-export type AverageVelocitySpeedLabLabels =
-  AverageVelocitySpeedLabProps["labels"];
 
 export function AverageVelocitySpeedLab({
   decimalSeparator,

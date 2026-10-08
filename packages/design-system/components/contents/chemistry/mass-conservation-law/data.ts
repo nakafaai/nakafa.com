@@ -23,8 +23,7 @@ export const MassConservationScenePointSchema = Schema.Tuple([
   Schema.Finite,
   Schema.Finite,
 ]);
-export type MassConservationScenePoint =
-  typeof MassConservationScenePointSchema.Type;
+type MassConservationScenePoint = typeof MassConservationScenePointSchema.Type;
 
 export interface MassConservationModeLabels {
   calculation: ReactNode;

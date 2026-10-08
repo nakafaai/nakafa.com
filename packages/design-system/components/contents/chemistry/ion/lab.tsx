@@ -25,7 +25,7 @@ import {
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-export interface IonLabProps {
+interface IonLabProps {
   description: ReactNode;
   labels: IonLabLabels;
   title: ReactNode;

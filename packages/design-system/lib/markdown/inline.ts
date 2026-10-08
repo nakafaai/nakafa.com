@@ -41,7 +41,7 @@ export const InlineStateSchema = Schema.Struct({
   opener: Schema.UndefinedOr(Schema.Finite),
   strong: Schema.UndefinedOr(MarkerSpanSchema),
 });
-export type InlineState = typeof InlineStateSchema.Type;
+type InlineState = typeof InlineStateSchema.Type;
 
 /** Where scanning resumes after one step, and the spans open at that point. */
 const StepSchema = Schema.Struct({

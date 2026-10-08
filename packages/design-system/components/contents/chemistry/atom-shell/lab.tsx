@@ -25,7 +25,7 @@ import {
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-export interface AtomShellLabProps {
+interface AtomShellLabProps {
   description: ReactNode;
   labels: AtomShellLabLabels;
   title: ReactNode;

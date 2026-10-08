@@ -33,7 +33,7 @@ import {
 import { getColor } from "@repo/design-system/lib/color";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
-export interface ParabolicMovementLabProps {
+interface ParabolicMovementLabProps {
   decimalSeparator?: ParabolicMovementDecimalSeparator;
   description: ReactNode;
   labels: {
@@ -48,8 +48,6 @@ export interface ParabolicMovementLabProps {
   };
   title: ReactNode;
 }
-
-export type ParabolicMovementLabLabels = ParabolicMovementLabProps["labels"];
 
 export function ParabolicMovementLab({
   decimalSeparator,

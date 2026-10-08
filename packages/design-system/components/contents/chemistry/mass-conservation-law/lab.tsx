@@ -35,7 +35,7 @@ import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.22;
 
-export interface MassConservationLabProps {
+interface MassConservationLabProps {
   description: ReactNode;
   labels: MassConservationLabLabels;
   title: ReactNode;

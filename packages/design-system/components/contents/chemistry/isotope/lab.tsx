@@ -36,7 +36,7 @@ const particleDotVariants = cva(
   }
 );
 
-export interface IsotopeLabProps {
+interface IsotopeLabProps {
   description: ReactNode;
   labels: IsotopeLabLabels;
   title: ReactNode;

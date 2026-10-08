@@ -32,7 +32,7 @@ import {
 import { getColor } from "@repo/design-system/lib/color";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
-export interface AccelerationLabProps {
+interface AccelerationLabProps {
   description: ReactNode;
   labels: AccelerationLabLabels;
   title: ReactNode;

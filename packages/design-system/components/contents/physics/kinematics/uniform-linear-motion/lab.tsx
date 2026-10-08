@@ -42,7 +42,7 @@ const ROAD_Y = -0.02;
 const POSITION_MARK_Y = 0.08;
 const TRACK_Z = UNIFORM_LINEAR_MOTION_SCENE.roadWidth * 0.22;
 
-export interface UniformLinearMotionLabProps {
+interface UniformLinearMotionLabProps {
   description: ReactNode;
   labels: {
     chooseSpeed: string;
@@ -54,9 +54,6 @@ export interface UniformLinearMotionLabProps {
   };
   title: ReactNode;
 }
-
-export type UniformLinearMotionLabLabels =
-  UniformLinearMotionLabProps["labels"];
 
 export function UniformLinearMotionLab({
   title,

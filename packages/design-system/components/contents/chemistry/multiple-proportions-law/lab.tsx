@@ -35,7 +35,7 @@ import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.24;
 
-export interface MultipleProportionsLabProps {
+interface MultipleProportionsLabProps {
   description: ReactNode;
   labels: MultipleProportionsLabLabels;
   title: ReactNode;

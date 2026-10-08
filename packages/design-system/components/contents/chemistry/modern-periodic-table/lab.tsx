@@ -29,7 +29,7 @@ import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-export interface ModernPeriodicTableLabProps {
+interface ModernPeriodicTableLabProps {
   description: ReactNode;
   labels: ModernPeriodicTableLabLabels;
   title: ReactNode;

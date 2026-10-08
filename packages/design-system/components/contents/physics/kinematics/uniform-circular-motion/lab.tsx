@@ -43,7 +43,7 @@ const SHADOW_CAMERA_RADIUS =
   UNIFORM_CIRCULAR_MOTION_SCENE.outerRadius +
   UNIFORM_CIRCULAR_MOTION_SCENE.carScale;
 
-export interface UniformCircularMotionLabProps {
+interface UniformCircularMotionLabProps {
   decimalSeparator?: UniformCircularMotionDecimalSeparator;
   description: ReactNode;
   labels: {
@@ -56,9 +56,6 @@ export interface UniformCircularMotionLabProps {
   };
   title: ReactNode;
 }
-
-export type UniformCircularMotionLabLabels =
-  UniformCircularMotionLabProps["labels"];
 
 export function UniformCircularMotionLab({
   decimalSeparator,

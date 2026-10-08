@@ -26,7 +26,7 @@ import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-export interface ValenceElectronLabProps {
+interface ValenceElectronLabProps {
   description: ReactNode;
   labels: ValenceElectronLabLabels;
   title: ReactNode;

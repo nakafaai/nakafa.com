@@ -46,7 +46,7 @@ const END_PAUSE_SECONDS = 0.9;
 const MIN_TRAVEL_SECONDS = 4.8;
 const TRAVEL_SECONDS_PER_METER = 0.56;
 
-export interface DisplacementDistanceLabProps {
+interface DisplacementDistanceLabProps {
   description: ReactNode;
   labels: {
     chooseCase: string;
@@ -62,9 +62,6 @@ export interface DisplacementDistanceLabProps {
   };
   title: ReactNode;
 }
-
-export type DisplacementDistanceLabLabels =
-  DisplacementDistanceLabProps["labels"];
 
 export function DisplacementDistanceLab({
   title,

@@ -37,7 +37,7 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 const FLASH_COLOR = getColor("ORANGE", 500);
 
-export interface ProjectileAnalysisLabProps {
+interface ProjectileAnalysisLabProps {
   decimalSeparator?: ProjectileAnalysisDecimalSeparator;
   description: ReactNode;
   labels: {
@@ -55,8 +55,6 @@ export interface ProjectileAnalysisLabProps {
   };
   title: ReactNode;
 }
-
-export type ProjectileAnalysisLabLabels = ProjectileAnalysisLabProps["labels"];
 
 export function ParabolicMovementAnalysisLab({
   decimalSeparator,

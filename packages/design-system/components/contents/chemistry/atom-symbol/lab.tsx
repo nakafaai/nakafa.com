@@ -23,7 +23,7 @@ import {
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-export interface AtomSymbolLabProps {
+interface AtomSymbolLabProps {
   description: ReactNode;
   labels: AtomSymbolLabLabels;
   title: ReactNode;

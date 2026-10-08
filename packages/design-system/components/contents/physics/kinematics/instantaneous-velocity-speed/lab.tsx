@@ -41,7 +41,7 @@ import type { Group } from "three";
 
 const ROAD_Y = -0.03;
 
-export interface InstantaneousVelocitySpeedLabProps {
+interface InstantaneousVelocitySpeedLabProps {
   description: ReactNode;
   labels: {
     chooseMoment: string;
@@ -54,9 +54,6 @@ export interface InstantaneousVelocitySpeedLabProps {
   };
   title: ReactNode;
 }
-
-export type InstantaneousVelocitySpeedLabLabels =
-  InstantaneousVelocitySpeedLabProps["labels"];
 
 export function InstantaneousVelocitySpeedLab({
   title,

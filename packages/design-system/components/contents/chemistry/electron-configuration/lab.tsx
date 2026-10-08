@@ -25,7 +25,7 @@ import {
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-export interface ElectronConfigurationLabProps {
+interface ElectronConfigurationLabProps {
   description: ReactNode;
   labels: ElectronConfigurationLabLabels;
   title: ReactNode;

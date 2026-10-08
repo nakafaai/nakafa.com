@@ -45,7 +45,7 @@ const MAX_RELATIVE_SPEED = 24;
 const SHADOW_CAMERA_RADIUS =
   RELATIVE_MOVEMENT_SCENE.roadLength / 2 + RELATIVE_MOVEMENT_SCENE.roadWidth;
 
-export interface RelativeMovementLabProps {
+interface RelativeMovementLabProps {
   description: ReactNode;
   labels: {
     chooseCase: string;
@@ -61,8 +61,6 @@ export interface RelativeMovementLabProps {
   };
   title: ReactNode;
 }
-
-export type RelativeMovementLabLabels = RelativeMovementLabProps["labels"];
 
 export function RelativeMovementLab({
   title,

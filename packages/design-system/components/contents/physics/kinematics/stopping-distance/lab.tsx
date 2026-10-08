@@ -46,7 +46,7 @@ const REACTION_DISTANCE_COLOR = getColor("TEAL");
 const BRAKING_DISTANCE_COLOR = getColor("ORANGE", 500);
 const DISTANCE_MARKER_Z = STOPPING_DISTANCE_SCENE.roadWidth * 0.2;
 
-export interface StoppingDistanceLabProps {
+interface StoppingDistanceLabProps {
   description: ReactNode;
   labels: {
     brakingDistance: ReactNode;
@@ -58,8 +58,6 @@ export interface StoppingDistanceLabProps {
   };
   title: ReactNode;
 }
-
-export type StoppingDistanceLabLabels = StoppingDistanceLabProps["labels"];
 
 export function StoppingDistanceLab({
   title,

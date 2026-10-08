@@ -4,9 +4,7 @@ import type { usePromptInputFiles } from "@repo/design-system/components/ai/inpu
 import { createContext, use } from "react";
 
 /** Attachment state shared by prompt input composition components. */
-export type AttachmentsContext = ReturnType<
-  typeof usePromptInputFiles
->["attachments"];
+type AttachmentsContext = ReturnType<typeof usePromptInputFiles>["attachments"];
 
 /** Context consumed by the form and its composed attachment controls. */
 export const LocalAttachmentsContext = createContext<AttachmentsContext | null>(

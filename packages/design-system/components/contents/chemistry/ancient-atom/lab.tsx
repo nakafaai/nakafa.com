@@ -29,7 +29,7 @@ import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-export interface AncientAtomLabProps {
+interface AncientAtomLabProps {
   description: ReactNode;
   labels: AncientAtomLabLabels;
   title: ReactNode;

@@ -22,7 +22,7 @@ import {
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-export interface PeriodicPropertiesLabProps {
+interface PeriodicPropertiesLabProps {
   description: ReactNode;
   labels: PeriodicPropertiesLabLabels;
   title: ReactNode;

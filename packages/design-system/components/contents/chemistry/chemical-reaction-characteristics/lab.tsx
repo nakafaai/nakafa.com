@@ -35,7 +35,7 @@ import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.35;
 
-export interface ReactionCharacteristicsLabProps {
+interface ReactionCharacteristicsLabProps {
   description: ReactNode;
   labels: ReactionCharacteristicsLabLabels;
   title: ReactNode;

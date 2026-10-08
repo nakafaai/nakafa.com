@@ -24,7 +24,7 @@ export const ReactionScenePointSchema = Schema.Tuple([
   Schema.Finite,
 ]);
 
-export type ReactionScenePoint = typeof ReactionScenePointSchema.Type;
+type ReactionScenePoint = typeof ReactionScenePointSchema.Type;
 
 export interface ReactionCueLabels {
   helperCaption: ReactNode;

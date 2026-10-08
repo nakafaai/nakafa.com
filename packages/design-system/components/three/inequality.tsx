@@ -44,9 +44,6 @@ export interface InequalityProps {
   zRange?: [number, number];
 }
 
-/** Label of an inequality region, derived from its props. */
-export type InequalityLabel = NonNullable<InequalityProps["label"]>;
-
 /**
  * Renders 2D or 3D inequality regions with a wide boundary guide line.
  */
