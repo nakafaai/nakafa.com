@@ -14,7 +14,7 @@ import {
   readTryoutCatalogRowByPath,
 } from "@repo/backend/content/tryout/row";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Schema } from "effect";
 
 const SelectedTryoutSectionSchema = Schema.Struct({
   row: TryoutSectionSchema,
@@ -114,7 +114,7 @@ export const readTryoutSetSelection = Effect.fn(
     countries: [selectedRows.country],
     exams: [selectedRows.exam],
     sectionRecords: selectedRows.sectionRecords,
-    sections: selectedRows.sectionRecords.map(({ row }) => row),
+    sections: Arr.map(selectedRows.sectionRecords, ({ row }) => row),
     sets: [set],
     tracks: [selectedRows.track],
   };
@@ -145,18 +145,18 @@ export const readTryoutSetSections = Effect.fn(
       "Signed try-out set lost one or more sections."
     );
   }
-  const sections: SelectedTryoutSection[] = [];
+  const sections = MutableList.make<SelectedTryoutSection>();
   for (const storedSection of stored) {
     const catalogRow = yield* verifyTryoutCatalog(storedSection, snapshotId);
     const row = yield* Schema.decodeUnknownEffect(TryoutSectionSchema)(
       catalogRow
     ).pipe(Effect.orDie);
-    sections.push({
+    MutableList.append(sections, {
       row,
       rowHash: storedSection.rowHash,
     });
   }
-  return sections;
+  return MutableList.toArray(sections);
 });
 
 /** Rejects a malformed set-local catalog selection. */

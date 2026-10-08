@@ -14,7 +14,7 @@ import { tryoutSetIdentityValidator } from "@repo/backend/confect/tryouts/route"
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const TryoutSectionIdentitySchema = Schema.Struct({
   ...tryoutSetIdentityValidator.fields,
@@ -110,7 +110,8 @@ export const readTryoutSectionRows = Effect.fn(
       }))
     )
   );
-  const hasChangedOrder = placements.some(
+  const hasChangedOrder = Arr.some(
+    placements,
     ({ row }, index) => row.questionOrder !== index + 1
   );
   if (hasChangedOrder) {
