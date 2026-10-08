@@ -1,4 +1,5 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import { ContentReleaseItemSchema } from "@nakafa/aksara-contracts/release";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_MANIFEST_HASH,
@@ -9,7 +10,9 @@ import {
 } from "@repo/backend/test/content/release";
 import { Schema } from "effect";
 
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const encodeItemJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(ContentReleaseItemSchema)
+);
 
 export const ABORT_RELEASE_ID = "release-abort";
 export const ABORT_ITEM_COUNT = 32;
@@ -23,12 +26,13 @@ export function abortContentKey(index: number) {
 /** Creates one staged upsert body with no authored educational content. */
 export function abortItemJson(index: number) {
   const contentKey = abortContentKey(index);
-  return encodeJson({
+  return encodeItemJson({
     change: {
       artifactHash: `sha256:${index.toString(16).padStart(64, "0")}`,
       artifactLocale: "en",
       contentKey,
       delivery: "public",
+      family: "material",
       operation: "upsert",
       rendererDomain: "mathematics",
       sourcePath: `packages/corpus/test/abort-${index}/en.mdx`,

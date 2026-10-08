@@ -23,19 +23,17 @@ export const contentReferenceReturnValidator = Schema.Union([
   contentSearchSummaryValidator,
   Schema.Null,
 ]);
-/** Signed Quran member of an agent focused-read source, named for narrowing. */
-export const agentQuranContentSourceValidator = Schema.Struct({
-  kind: Schema.Literal("quran"),
-  markdown: quranMarkdownValidator,
-  reference: contentSearchSummaryValidator,
-  surahNumber: Schema.Finite,
-});
 /** One transactionally consistent source for an agent focused read. */
 export const agentContentSourceValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("reference"),
     reference: contentSearchSummaryValidator,
   }),
-  agentQuranContentSourceValidator,
+  Schema.Struct({
+    kind: Schema.Literal("quran"),
+    markdown: quranMarkdownValidator,
+    reference: contentSearchSummaryValidator,
+    surahNumber: Schema.Finite,
+  }),
   Schema.Null,
 ]);

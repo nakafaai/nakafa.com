@@ -111,10 +111,10 @@ describe("Nakafa OpenAPI document", () => {
 
   it("resolves every schema without external or recursive references", () => {
     const result = dereference(NAKAFA_OPENAPI_DOCUMENT);
-    const serialized = encodeJson(result.schema);
 
     expect(result.errors ?? []).toEqual([]);
     expect(result.schema).toBeDefined();
+    const serialized = encodeJson(result.schema);
     expect(serialized).not.toContain('"$ref"');
   });
 

@@ -1,3 +1,4 @@
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import type { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -9,7 +10,9 @@ import {
 import { Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const encodeArtifactJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(SignedContentArtifactSchema)
+);
 
 /** Stores one artifact body with the facts that staging writes beside it. */
 export async function insertTestArtifact(
@@ -42,7 +45,7 @@ export function testArtifactJson(options?: {
   readonly rendererDomain?: RendererDomain | undefined;
 }) {
   const compiledCode = options?.compiledCode ?? "return {};";
-  return encodeJson({
+  return encodeArtifactJson({
     artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
     keyId: "test-key",
     payload: {

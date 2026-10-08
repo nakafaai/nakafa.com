@@ -27,12 +27,9 @@ const McpEdgeContractSchema = Schema.Struct({
   secretEnvironment: Schema.Literal(MCP_EDGE_SECRET_ENVIRONMENT),
   secretHeader: Schema.Literal(MCP_EDGE_SECRET_HEADER),
 });
-/** Protected origin contract accepted by the Vercel bridges and Convex origin. */
-export const AgentEdgeContractSchema = Schema.Union([
-  ApiEdgeContractSchema,
-  McpEdgeContractSchema,
-]);
-export type AgentEdgeContract = typeof AgentEdgeContractSchema.Type;
+export type AgentEdgeContract =
+  | typeof ApiEdgeContractSchema.Type
+  | typeof McpEdgeContractSchema.Type;
 
 /** Server-only contract shared by the Vercel bridge and Convex origin. */
 export const NAKAFA_API_EDGE_CONTRACT: typeof ApiEdgeContractSchema.Type = {
