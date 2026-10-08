@@ -1,36 +1,74 @@
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
-import { Data } from "effect";
+import { Data, Schema } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 
+/** Stable identity for the sitemap containing application-level routes. */
+export const SITEMAP_BASE_ID = "base";
+
+const SitemapBasePageSchema = Schema.Struct({
+  id: Schema.Literal(SITEMAP_BASE_ID),
+});
+
+const SitemapFamilyPageFields = {
+  id: Schema.String,
+  locale: ActiveAppLocaleCodeSchema,
+  partition: Schema.Finite,
+};
+
+const ArticleSitemapPageSchema = Schema.Struct({
+  ...SitemapFamilyPageFields,
+  kind: Schema.Literal("article"),
+});
+
+const MaterialSitemapPageSchema = Schema.Struct({
+  ...SitemapFamilyPageFields,
+  kind: Schema.Literal("material"),
+});
+
+const ProgramSitemapPageSchema = Schema.Struct({
+  ...SitemapFamilyPageFields,
+  kind: Schema.Literal("program"),
+});
+
+const SitemapFamilyPageSchema = Schema.Union([
+  ArticleSitemapPageSchema,
+  MaterialSitemapPageSchema,
+  ProgramSitemapPageSchema,
+]);
+
+/** Article, material, and curriculum pages sharing one partition seam. */
+export type SitemapFamilyPage = typeof SitemapFamilyPageSchema.Type;
+
+const PageSitemapPageSchema = Schema.Struct({
+  id: Schema.String,
+  kind: Schema.Literal("page"),
+  locale: ActiveAppLocaleCodeSchema,
+});
+
+const QuranSitemapPageSchema = Schema.Struct({
+  id: Schema.String,
+  kind: Schema.Literal("quran"),
+  locale: ActiveAppLocaleCodeSchema,
+});
+
+const TryoutSitemapPageSchema = Schema.Struct({
+  id: Schema.String,
+  kind: Schema.Literal("tryout"),
+  locale: ActiveAppLocaleCodeSchema,
+  page: Schema.Finite,
+});
+
+const SitemapPageSchema = Schema.Union([
+  SitemapBasePageSchema,
+  SitemapFamilyPageSchema,
+  PageSitemapPageSchema,
+  QuranSitemapPageSchema,
+  TryoutSitemapPageSchema,
+]);
+
 /** One canonical sitemap XML page identity. */
-export type SitemapPage =
-  | { id: typeof SITEMAP_BASE_ID }
-  | {
-      id: string;
-      kind: "article";
-      locale: Locale;
-      partition: number;
-    }
-  | {
-      id: string;
-      kind: "material";
-      locale: Locale;
-      partition: number;
-    }
-  | {
-      id: string;
-      kind: "program";
-      locale: Locale;
-      partition: number;
-    }
-  | { id: string; kind: "page"; locale: Locale }
-  | { id: string; kind: "quran"; locale: Locale }
-  | {
-      id: string;
-      kind: "tryout";
-      locale: Locale;
-      page: number;
-    };
+export type SitemapPage = typeof SitemapPageSchema.Type;
 
 /** A canonical sitemap page id whose route page does not exist. */
 export class SitemapPageNotFoundError extends Data.TaggedError(
@@ -38,9 +76,6 @@ export class SitemapPageNotFoundError extends Data.TaggedError(
 )<{
   readonly pageId: string;
 }> {}
-
-/** Stable identity for the sitemap containing application-level routes. */
-export const SITEMAP_BASE_ID = "base";
 
 /** Content families served through capacity-owned sitemap partitions. */
 export type SitemapFamily = "article" | "material" | "program";
@@ -137,42 +172,42 @@ function describePartitionSitemapPage(
 /** Checks whether one page targets published article rows. */
 export function isArticleSitemapPage(
   page: SitemapPage
-): page is Extract<SitemapPage, { kind: "article" }> {
+): page is typeof ArticleSitemapPageSchema.Type {
   return "kind" in page && page.kind === "article";
 }
 
 /** Checks whether one page targets published material rows. */
 export function isMaterialSitemapPage(
   page: SitemapPage
-): page is Extract<SitemapPage, { kind: "material" }> {
+): page is typeof MaterialSitemapPageSchema.Type {
   return "kind" in page && page.kind === "material";
 }
 
 /** Checks whether one page targets published curriculum rows. */
 export function isProgramSitemapPage(
   page: SitemapPage
-): page is Extract<SitemapPage, { kind: "program" }> {
+): page is typeof ProgramSitemapPageSchema.Type {
   return "kind" in page && page.kind === "program";
 }
 
 /** Checks whether one sitemap page targets signed public Pages. */
 export function isPageSitemapPage(
   page: SitemapPage
-): page is Extract<SitemapPage, { kind: "page" }> {
+): page is typeof PageSitemapPageSchema.Type {
   return "kind" in page && page.kind === "page";
 }
 
 /** Checks whether one page targets the signed Quran catalog. */
 export function isQuranSitemapPage(
   page: SitemapPage
-): page is Extract<SitemapPage, { kind: "quran" }> {
+): page is typeof QuranSitemapPageSchema.Type {
   return "kind" in page && page.kind === "quran";
 }
 
 /** Checks whether one page targets signed try-out routes. */
 export function isTryoutSitemapPage(
   page: SitemapPage
-): page is Extract<SitemapPage, { kind: "tryout" }> {
+): page is typeof TryoutSitemapPageSchema.Type {
   return "kind" in page && page.kind === "tryout";
 }
 

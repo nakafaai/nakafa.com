@@ -1,44 +1,55 @@
-import { BigDecimal } from "effect";
+import { BigDecimal, Schema } from "effect";
 
-export interface CoordinateRange {
-  readonly max: number;
-  readonly min: number;
-}
+const CoordinateRangeSchema = Schema.Struct({
+  max: Schema.Finite,
+  min: Schema.Finite,
+});
+type CoordinateRange = typeof CoordinateRangeSchema.Type;
 
-export interface CoordinateFrame {
-  readonly x: CoordinateRange;
-  readonly y: CoordinateRange;
-  readonly z: CoordinateRange;
-}
+export const CoordinateFrameSchema = Schema.Struct({
+  x: CoordinateRangeSchema,
+  y: CoordinateRangeSchema,
+  z: CoordinateRangeSchema,
+});
+export type CoordinateFrame = typeof CoordinateFrameSchema.Type;
 
-export interface CoordinatePoint {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-}
+const CoordinatePointSchema = Schema.Struct({
+  x: Schema.Finite,
+  y: Schema.Finite,
+  z: Schema.Finite,
+});
+export type CoordinatePoint = typeof CoordinatePointSchema.Type;
 
-export type CoordinateTuple = readonly [number, number, number];
+const CoordinateTupleSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+export type CoordinateTuple = typeof CoordinateTupleSchema.Type;
 
-interface AxisGeometry {
-  readonly from: CoordinatePoint;
-  readonly negativeLabel: CoordinatePoint | undefined;
-  readonly positiveLabel: CoordinatePoint | undefined;
-  readonly to: CoordinatePoint;
-  readonly visible: boolean;
-}
+const AxisGeometrySchema = Schema.Struct({
+  from: CoordinatePointSchema,
+  negativeLabel: Schema.UndefinedOr(CoordinatePointSchema),
+  positiveLabel: Schema.UndefinedOr(CoordinatePointSchema),
+  to: CoordinatePointSchema,
+  visible: Schema.Boolean,
+});
+type AxisGeometry = typeof AxisGeometrySchema.Type;
 
-export interface GridPlaneGeometry {
-  readonly boundary: readonly CoordinateTuple[];
-  readonly cells: readonly CoordinateTuple[];
-  readonly sections: readonly CoordinateTuple[];
-  readonly visible: boolean;
-}
+const GridPlaneGeometrySchema = Schema.Struct({
+  boundary: Schema.Array(CoordinateTupleSchema),
+  cells: Schema.Array(CoordinateTupleSchema),
+  sections: Schema.Array(CoordinateTupleSchema),
+  visible: Schema.Boolean,
+});
+export type GridPlaneGeometry = typeof GridPlaneGeometrySchema.Type;
 
-export interface GridGeometry {
-  readonly xy: GridPlaneGeometry;
-  readonly xz: GridPlaneGeometry;
-  readonly yz: GridPlaneGeometry;
-}
+const GridGeometrySchema = Schema.Struct({
+  xy: GridPlaneGeometrySchema,
+  xz: GridPlaneGeometrySchema,
+  yz: GridPlaneGeometrySchema,
+});
+type GridGeometry = typeof GridGeometrySchema.Type;
 
 const ORIGIN: CoordinatePoint = { x: 0, y: 0, z: 0 };
 const MINIMUM_CELL_STEP = 0.5;

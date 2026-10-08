@@ -5,6 +5,7 @@ import {
   inheritContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { reconcileTryoutRuntimeAfterAttempt } from "@repo/backend/confect/contentRelease/tryout/runtime";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -29,7 +30,7 @@ import {
   seedRuntimeRetentionRow,
 } from "@repo/backend/test/runtime/retention";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
 const prepare = internal.contentRelease.activate.prepare;
@@ -159,9 +160,10 @@ describe("contentRelease/tryout runtime activation", () => {
       const activation = yield* Effect.promise(() => activateCandidate(t));
       const publication = yield* Effect.promise(() => t.query(current, {}));
       expect(activation.kind).toBe("activated");
-      expect(
-        JSON.parse(publication.tryoutRuntimeBundleJson ?? "{}")
-      ).toMatchObject({
+      const bundle = yield* Schema.decodeEffect(
+        Schema.fromJsonString(SignedTryoutRuntimeBundleSchema)
+      )(publication.tryoutRuntimeBundleJson ?? "{}");
+      expect(bundle).toMatchObject({
         bundleHash: result.bundle.bundleHash,
       });
       yield* Effect.promise(() =>

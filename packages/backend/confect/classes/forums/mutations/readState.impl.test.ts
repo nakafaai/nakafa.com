@@ -5,6 +5,8 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
 import { Option } from "effect";
 
+const now = Date.UTC(2026, 8, 1);
+
 it("rejects missing and foreign read boundaries without writes and keeps accepted progress monotone", async () => {
   const { t, admin, student, users, classId, schoolId } =
     await createClassFixture();
@@ -15,7 +17,7 @@ it("rejects missing and foreign read boundaries without writes and keeps accepte
       userId: users.student.userId,
       role: "student",
       enrollMethod: "public",
-      updatedAt: Date.now(),
+      updatedAt: now,
     })
   );
   const forumId = await admin.mutation(

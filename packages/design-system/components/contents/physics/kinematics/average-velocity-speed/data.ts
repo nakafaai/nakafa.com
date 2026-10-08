@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
   "straight",
@@ -11,72 +11,58 @@ export type AverageVelocitySpeedCaseId =
   (typeof AVERAGE_VELOCITY_SPEED_CASE_IDS)[number];
 export type AverageVelocitySpeedDecimalSeparator = "comma" | "dot";
 
-export interface AverageVelocitySpeedLabLabels {
-  chooseCase: string;
-  factLabels: {
-    displacement: ReactNode;
-    distance: ReactNode;
-    speed: ReactNode;
-    time: ReactNode;
-    velocity: ReactNode;
-  };
-  modeLabels: Record<AverageVelocitySpeedCaseId, ReactNode>;
-  viewLabel: string;
-}
+const Point2Schema = Schema.Struct({
+  x: Schema.Finite,
+  z: Schema.Finite,
+});
 
-export interface AverageVelocitySpeedLabProps {
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator;
-  description: ReactNode;
-  labels: AverageVelocitySpeedLabLabels;
-  title: ReactNode;
-}
+type Point2 = typeof Point2Schema.Type;
 
-interface Point2 {
-  x: number;
-  z: number;
-}
+export type WorldPoint2 = Point2;
 
-export interface WorldPoint2 {
-  x: number;
-  z: number;
-}
+const LineSegmentSchema = Schema.Struct({
+  end: Point2Schema,
+  kind: Schema.Literal("line"),
+  start: Point2Schema,
+});
 
-interface LineSegment {
-  end: Point2;
-  kind: "line";
-  start: Point2;
-}
+const ArcSegmentSchema = Schema.Struct({
+  center: Point2Schema,
+  kind: Schema.Literal("arc"),
+  radius: Schema.Finite,
+  startAngle: Schema.Finite,
+  sweepAngle: Schema.Finite,
+});
 
-interface ArcSegment {
-  center: Point2;
-  kind: "arc";
-  radius: number;
-  startAngle: number;
-  sweepAngle: number;
-}
+type LineSegment = typeof LineSegmentSchema.Type;
+type ArcSegment = typeof ArcSegmentSchema.Type;
 
-export type AverageMotionSegment = LineSegment | ArcSegment;
+type AverageMotionSegment = LineSegment | ArcSegment;
 
-interface StraightRouteConfig {
-  duration: number;
-  kind: "straight";
-  length: number;
-}
+const StraightRouteConfigSchema = Schema.Struct({
+  duration: Schema.Finite,
+  kind: Schema.Literal("straight"),
+  length: Schema.Finite,
+});
 
-interface DetourRouteConfig {
-  connectorLength: number;
-  duration: number;
-  kind: "detour";
-  leadLength: number;
-  radius: number;
-}
+const DetourRouteConfigSchema = Schema.Struct({
+  connectorLength: Schema.Finite,
+  duration: Schema.Finite,
+  kind: Schema.Literal("detour"),
+  leadLength: Schema.Finite,
+  radius: Schema.Finite,
+});
 
-interface ReturnRouteConfig {
-  duration: number;
-  kind: "return";
-  leadLength: number;
-  radius: number;
-}
+const ReturnRouteConfigSchema = Schema.Struct({
+  duration: Schema.Finite,
+  kind: Schema.Literal("return"),
+  leadLength: Schema.Finite,
+  radius: Schema.Finite,
+});
+
+type StraightRouteConfig = typeof StraightRouteConfigSchema.Type;
+type DetourRouteConfig = typeof DetourRouteConfigSchema.Type;
+type ReturnRouteConfig = typeof ReturnRouteConfigSchema.Type;
 
 type RouteConfig = DetourRouteConfig | ReturnRouteConfig | StraightRouteConfig;
 

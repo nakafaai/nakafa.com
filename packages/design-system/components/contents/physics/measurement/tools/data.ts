@@ -1,24 +1,24 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const LENGTH_TOOL_ID = "length";
 export const MASS_TOOL_ID = "mass";
 export const TIME_TOOL_ID = "time";
-export const TRAILING_DECIMAL_ZERO_PATTERN = /\.?0+$/;
+const TRAILING_DECIMAL_ZERO_PATTERN = /\.?0+$/;
 
 export const RULER_LENGTH_CM = 8;
-export const RULER_DEFAULT_LENGTH_CM = 3.8;
+const RULER_DEFAULT_LENGTH_CM = 3.8;
 export const RULER_START_X = -RULER_LENGTH_CM / 2;
 export const RULER_MAJOR_TICK_COUNT = RULER_LENGTH_CM + 1;
 export const RULER_MINOR_TICK_COUNT = RULER_LENGTH_CM * 5 + 1;
 export const RULER_STEP_CM = 0.2;
 
-export const MASS_MIN_GRAMS = 50;
+const MASS_MIN_GRAMS = 50;
 export const MASS_REFERENCE_GRAMS = 250;
-export const MASS_MAX_GRAMS = 500;
-export const MASS_STEP_GRAMS = 10;
+const MASS_MAX_GRAMS = 500;
+const MASS_STEP_GRAMS = 10;
 export const MASS_ARM_LENGTH = 1.7;
 export const MASS_PIVOT_Y = 1.75;
 export const MASS_PAN_DROP_Y = 0.7;
@@ -28,15 +28,15 @@ export const MASS_WEIGHT_TAPER_RATIO = 1.12;
 export const MASS_WEIGHT_HEIGHT = 0.5;
 export const MASS_BALANCE_MAX_TILT_RADIANS = Math.PI / 12;
 export const MASS_BALANCE_STIFFNESS = 18;
-export const MASS_BALANCE_DAMPING_RATIO = 0.75;
+const MASS_BALANCE_DAMPING_RATIO = 0.75;
 export const MASS_BALANCE_DAMPING =
   2 * Math.sqrt(MASS_BALANCE_STIFFNESS) * MASS_BALANCE_DAMPING_RATIO;
 export const MASS_BALANCE_MAX_FRAME_DELTA = 1 / 30;
 export const MASS_BALANCE_REST_EPSILON = 0.001;
 
-export const STOPWATCH_READING_SECONDS = 12.8;
+const STOPWATCH_READING_SECONDS = 12.8;
 export const STOPWATCH_SECONDS_PER_ROTATION = 60;
-export const STOPWATCH_STEP_SECONDS = 0.2;
+const STOPWATCH_STEP_SECONDS = 0.2;
 export const STOPWATCH_HAND_LENGTH = 0.95;
 export const STOPWATCH_HAND_CENTER = STOPWATCH_HAND_LENGTH / 2;
 
@@ -49,11 +49,13 @@ export const TIME_FACE_COLOR = getColor("YELLOW");
 export const MASS_SCENE_SCALE = 1.1;
 export const TIME_SCENE_SCALE = 0.95;
 
-export type MeasurementToolId =
-  | typeof LENGTH_TOOL_ID
-  | typeof MASS_TOOL_ID
-  | typeof TIME_TOOL_ID;
-export type CameraPoint = readonly [number, number, number];
+const MeasurementToolIdSchema = Schema.Literals([
+  LENGTH_TOOL_ID,
+  MASS_TOOL_ID,
+  TIME_TOOL_ID,
+]);
+export type MeasurementToolId = typeof MeasurementToolIdSchema.Type;
+type CameraPoint = readonly [number, number, number];
 
 export const MEASUREMENT_CONTROLS = {
   [LENGTH_TOOL_ID]: {
@@ -117,36 +119,25 @@ export const TOOL_VIEW_CONFIG = {
   }
 >;
 
-export interface ToolLabels {
-  control: string;
-  instrument: string;
-  object: string;
-  tab: string;
-}
+const ToolLabelsSchema = Schema.Struct({
+  control: Schema.String,
+  instrument: Schema.String,
+  object: Schema.String,
+  tab: Schema.String,
+});
 
-export interface MeasurementToolsLabLabels {
-  chooseTool: string;
-  decimalSeparator: "." | ",";
-  instrument: string;
-  measuredObject: string;
-  reading: string;
-  tools: Record<MeasurementToolId, ToolLabels>;
-}
+const MeasurementToolsLabLabelsSchema = Schema.Struct({
+  chooseTool: Schema.String,
+  decimalSeparator: Schema.Literals([".", ","]),
+  instrument: Schema.String,
+  measuredObject: Schema.String,
+  reading: Schema.String,
+  tools: Schema.Record(MeasurementToolIdSchema, ToolLabelsSchema),
+});
+export type MeasurementToolsLabLabels =
+  typeof MeasurementToolsLabLabelsSchema.Type;
 
-export interface MeasurementToolsLabProps {
-  description: ReactNode;
-  labels: MeasurementToolsLabLabels;
-  title: ReactNode;
-}
-
-export interface MeasurementSceneProps {
-  colors: SceneColors;
-  measurement: number;
-  reading: ReactNode;
-}
-
-export type MeasurementControl =
-  (typeof MEASUREMENT_CONTROLS)[MeasurementToolId];
+type MeasurementControl = (typeof MEASUREMENT_CONTROLS)[MeasurementToolId];
 export type SceneColors = ReturnType<typeof getSceneColors>;
 
 /**

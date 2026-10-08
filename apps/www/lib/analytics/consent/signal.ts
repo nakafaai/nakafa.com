@@ -20,19 +20,20 @@ type SetAccountConsent = (
   args: SetAccountConsentArgs
 ) => InvokeReturn<typeof refs.public.consents.current.set>;
 
-export interface BrowserPrivacySignalSource {
-  readonly read: () => {
-    readonly doNotTrack: string | null | undefined;
-    readonly globalPrivacyControl: unknown;
-  };
-}
+const BrowserPrivacySignalSchema = Schema.Struct({
+  doNotTrack: Schema.NullishOr(Schema.String),
+  globalPrivacyControl: Schema.Unknown,
+});
+
+/** Reads the browser's current DNT and GPC values. */
+type BrowserPrivacySignalSource = () => typeof BrowserPrivacySignalSchema.Type;
 
 /** Reads current DNT and GPC values each time the Effect executes. */
 export const readBrowserPrivacySignal = Effect.fn(
   "analytics.consent.readBrowserPrivacySignal"
-)((source: BrowserPrivacySignalSource) =>
+)((readSignal: BrowserPrivacySignalSource) =>
   Effect.sync(() => {
-    const signal = source.read();
+    const signal = readSignal();
 
     return hasBrowserPrivacySignal({
       doNotTrack: [signal.doNotTrack],

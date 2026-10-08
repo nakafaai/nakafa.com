@@ -1,38 +1,41 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import "server-only";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ActiveAppLocaleListSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
+import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import refs from "@repo/backend/confect/_generated/refs";
-import { Effect, Schema } from "effect";
+import { Effect, HashSet, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   decodeArticleJson,
   isArticleCounterpart,
   makeArticleProjectionError,
 } from "@/lib/content/article/decode";
-import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
 import { httpLayer } from "@/lib/convex/http";
 
+const PublishedArticleRouteSchema = Schema.Union([
+  Schema.Struct({
+    activeReleaseId: ReleaseIdSchema,
+    alternates: Schema.Tuple([]),
+    projection: Schema.Null,
+  }),
+  Schema.Struct({
+    activeReleaseId: ReleaseIdSchema,
+    alternates: Schema.Array(ArticleProjectionSchema),
+    projection: ArticleProjectionSchema,
+  }),
+]);
+
 /** Complete active article route or a signed missing-route tombstone. */
-export type PublishedArticleRoute =
-  | {
-      readonly activeReleaseId: ActiveContentReleaseId;
-      readonly alternates: readonly [];
-      readonly projection: null;
-    }
-  | {
-      readonly activeReleaseId: ActiveContentReleaseId;
-      readonly alternates: readonly ArticleProjection[];
-      readonly projection: ArticleProjection;
-    };
+export type PublishedArticleRoute = typeof PublishedArticleRouteSchema.Type;
 
 /** Reads and validates one complete signed article route model. */
 export const readPublishedArticleRoute = Effect.fn(
@@ -111,13 +114,13 @@ export const decodePublishedArticleRoute = Effect.fn(
       publicPath,
     })
   );
-  const alternateLocales = new Set(
+  const alternateLocales = HashSet.fromIterable(
     alternates.map((alternate) => alternate.appLocale)
   );
   const completeLocaleSet =
-    alternateLocales.size === activeAppLocales.length &&
+    HashSet.size(alternateLocales) === activeAppLocales.length &&
     activeAppLocales.every((alternateLocale) =>
-      alternateLocales.has(alternateLocale)
+      HashSet.has(alternateLocales, alternateLocale)
     );
   if (
     projection.appLocale !== appLocale ||
@@ -125,7 +128,7 @@ export const decodePublishedArticleRoute = Effect.fn(
     alternates.some(
       (alternate) => !isArticleCounterpart(projection, alternate)
     ) ||
-    alternateLocales.size !== alternates.length ||
+    HashSet.size(alternateLocales) !== alternates.length ||
     !alternates.some(
       (alternate) =>
         alternate.appLocale === projection.appLocale &&

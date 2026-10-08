@@ -1,5 +1,9 @@
-import type { ProtectedContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import type { PublicContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/spec";
+import type { ProtectedContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import type {
+  ContentRuntimeFailureSchema,
+  ContentRuntimeMissingSchema,
+} from "@nakafa/aksara-contracts/runtime/result";
+import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {
   createNetworkRequestError,
@@ -14,7 +18,16 @@ import {
 import { parseContentLength, readBoundedStream } from "@repo/utilities/body";
 import { FetchClient } from "@repo/utilities/http/client";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Clock, Data, Effect, Layer, Schedule, Schema, Stream } from "effect";
+import {
+  Clock,
+  Data,
+  Effect,
+  HashSet,
+  Layer,
+  Schedule,
+  Schema,
+  Stream,
+} from "effect";
 import {
   FetchHttpClient,
   HttpClient,
@@ -24,7 +37,9 @@ import {
 } from "effect/http";
 
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
-const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
+const LOOPBACK_HOSTS = HashSet.make("127.0.0.1", "[::1]", "localhost");
+/** Reads and writes unknown JSON text; its bytes match JSON.parse and JSON.stringify. */
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 /**
  * The Fetch client for the private runtime: never cached, never redirected,
  * and kept out of telemetry because every request carries the runtime
@@ -42,43 +57,17 @@ const ContentHttpClient = FetchClient.pipe(
     )
   )
 );
-type ContentRuntimeResponse =
-  | ProtectedContentRuntimeResponse
-  | PublicContentRuntimeResponse;
 type ContentRuntimeStatus =
-  | Pick<
-      Extract<
-        ContentRuntimeResponse,
-        {
-          readonly kind: "failure";
-        }
-      >,
-      "code" | "kind"
-    >
-  | Pick<
-      Extract<
-        ContentRuntimeResponse,
-        {
-          readonly kind: "found";
-        }
-      >,
-      "kind"
-    >
-  | Pick<
-      Extract<
-        ContentRuntimeResponse,
-        {
-          readonly kind: "missing";
-        }
-      >,
-      "kind"
-    >;
+  | Pick<typeof ContentRuntimeFailureSchema.Type, "code" | "kind">
+  | Pick<PublicContentRuntimeFound | ProtectedContentRuntimeFound, "kind">
+  | Pick<typeof ContentRuntimeMissingSchema.Type, "kind">;
 
+const ContentHttpTargetSchema = Schema.Struct({
+  siteUrl: Schema.String,
+  token: Schema.String,
+});
 /** Server-owned connection values for private Convex content endpoints. */
-export interface ContentHttpTarget {
-  readonly siteUrl: string;
-  readonly token: string;
-}
+export type ContentHttpTarget = typeof ContentHttpTargetSchema.Type;
 
 /**
  * One exact unmarked response may share the safe read retry budget. It keeps
@@ -263,7 +252,7 @@ export const createContentEndpoint = Effect.fn(
     try: () => new URL(baseUrl),
   });
   const isLocalHttp =
-    base.protocol === "http:" && LOOPBACK_HOSTS.has(base.hostname);
+    base.protocol === "http:" && HashSet.has(LOOPBACK_HOSTS, base.hostname);
   if (
     (base.protocol !== "https:" && !isLocalHttp) ||
     base.username.length + base.password.length > 0
@@ -279,18 +268,14 @@ export const createContentEndpoint = Effect.fn(
 export const encodeContentRequest = Effect.fn(
   "NakafaContent.encodeContentRequest"
 )(function* (input: unknown, maxBytes: number) {
-  const source = yield* Effect.try({
-    catch: () =>
-      new ContentTransportError({
-        reason: "request",
-      }),
-    try: () => JSON.stringify(input),
-  });
-  if (source === undefined) {
-    return yield* new ContentTransportError({
-      reason: "request",
-    });
-  }
+  const source = yield* Schema.encodeEffect(JsonTextSchema)(input).pipe(
+    Effect.mapError(
+      () =>
+        new ContentTransportError({
+          reason: "request",
+        })
+    )
+  );
   if (new TextEncoder().encode(source).byteLength > maxBytes) {
     return yield* new ContentTransportError({
       reason: "request-size",
@@ -475,8 +460,7 @@ export const readContentResponse = Effect.fn(
         fatal: true,
       }).decode(bytes),
   });
-  return yield* Effect.try({
-    catch: () => createContentSyntaxError(response),
-    try: (): unknown => JSON.parse(source),
-  });
+  return yield* Schema.decodeEffect(JsonTextSchema)(source).pipe(
+    Effect.mapError(() => createContentSyntaxError(response))
+  );
 });

@@ -11,7 +11,7 @@ import schema from "@repo/backend/convex/schema";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, HashSet } from "effect";
 
 describe("contents/helpers/search/quran/candidates", () => {
   it("stops overlap expansion while preserving enough reads to authenticate selected results", async () => {
@@ -40,7 +40,7 @@ describe("contents/helpers/search/quran/candidates", () => {
           snapshotId,
           "en",
           ["primary", "secondary", "tertiary", "quaternary"],
-          new Set(),
+          HashSet.empty(),
           0,
           QURAN_SEARCH_RESULT_LIMIT
         ).pipe(
@@ -50,7 +50,9 @@ describe("contents/helpers/search/quran/candidates", () => {
       metrics: await ctx.meta.getTransactionMetrics(),
     }));
     expect(result.rows).toHaveLength(6);
-    expect(new Set(Arr.map(result.rows, (row) => row.identity)).size).toBe(6);
+    expect(Arr.dedupe(Arr.map(result.rows, (row) => row.identity)).length).toBe(
+      6
+    );
     expect(metrics.documentsRead.used + result.rows.length).toBeLessThanOrEqual(
       QURAN_SEARCH_DOCUMENT_READ_LIMIT
     );
@@ -69,7 +71,7 @@ describe("contents/helpers/search/quran/candidates", () => {
           snapshotId,
           "en",
           ["merc", "wisd"],
-          new Set(),
+          HashSet.empty(),
           0,
           2
         ).pipe(
@@ -101,7 +103,7 @@ describe("contents/helpers/search/quran/candidates", () => {
           snapshotId,
           "en",
           ["common", "rare"],
-          new Set(),
+          HashSet.empty(),
           0,
           2
         ).pipe(
@@ -134,7 +136,7 @@ describe("contents/helpers/search/quran/candidates", () => {
           snapshotId,
           "en",
           ["missing", "needle", "absent", "unavailable"],
-          new Set(),
+          HashSet.empty(),
           0,
           QURAN_SEARCH_RESULT_LIMIT
         ).pipe(
@@ -168,7 +170,7 @@ describe("contents/helpers/search/quran/candidates", () => {
           snapshotId,
           "en",
           ["common", "result", "lesson", "common result"],
-          new Set(),
+          HashSet.empty(),
           0,
           QURAN_SEARCH_RESULT_LIMIT
         ).pipe(
@@ -206,7 +208,7 @@ describe("contents/helpers/search/quran/candidates", () => {
           snapshotId,
           "en",
           ["primary", "secondary", "tertiary", "quaternary"],
-          new Set(),
+          HashSet.empty(),
           0,
           QURAN_SEARCH_RESULT_LIMIT
         ).pipe(

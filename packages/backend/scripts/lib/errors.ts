@@ -1,11 +1,4 @@
-import { Cause, Option, Schema } from "effect";
-/** Represents a deliberate script failure that should make the CLI exit non-zero. */
-export class ScriptFailureError extends Schema.TaggedError<ScriptFailureError>()(
-  "ScriptFailureError",
-  {
-    message: Schema.String,
-  }
-) {}
+import { Cause, Option } from "effect";
 /** Converts an unknown failure value into a concise human-readable message. */
 export const getUnknownMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);

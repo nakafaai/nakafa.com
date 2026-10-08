@@ -3,12 +3,14 @@
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import {
   BIOLOGY_RING_POINT_COUNT,
-  type BiologyLabProps,
-  type BiologySceneProps,
   type BiologySceneView,
   createBiologySpherePoints,
 } from "@repo/design-system/components/contents/biology/data";
-import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
+import {
+  BiologyLabFrame,
+  type BiologyLabProps,
+  type BiologySceneProps,
+} from "@repo/design-system/components/contents/biology/lab-frame";
 import {
   FloatingGroup,
   PulsingGroup,

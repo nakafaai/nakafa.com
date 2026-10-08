@@ -17,9 +17,10 @@ export function isMaterialPosition(cursor: string) {
   return cursor.startsWith(MATERIAL_POSITION_PREFIX);
 }
 
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Encodes the unique localized material boundary shared by build and live reads. */
 export function materialPosition(row: MaterialRow) {
-  return `${MATERIAL_POSITION_PREFIX}${JSON.stringify([row.slot, row.appLocale, row.publicPath])}`;
+  return `${MATERIAL_POSITION_PREFIX}${encodeJson([row.slot, row.appLocale, row.publicPath])}`;
 }
 
 /** Rejects a semantic material position that belongs to another query. */

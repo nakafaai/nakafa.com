@@ -4,37 +4,35 @@ import { BacterialShapes } from "@repo/design-system/components/contents/biology
 import { BacterialStructure } from "@repo/design-system/components/contents/biology/bacteria-structure";
 import { GramWallComparison } from "@repo/design-system/components/contents/biology/bacteria-wall";
 import type {
-  BiologyLabItem,
+  BiologyLabItemProps,
   BiologySceneProps,
-} from "@repo/design-system/components/contents/biology/data";
+} from "@repo/design-system/components/contents/biology/lab-frame";
 import type { ReactNode } from "react";
 
-type BacteriaScene =
-  | {
-      bacillusLabel: ReactNode;
-      coccusLabel: ReactNode;
-      kind: "shape";
-      spiralLabel: ReactNode;
-    }
-  | {
-      kind: "structure";
-      nucleoidDnaLabel: ReactNode;
-    }
-  | {
-      gramNegativeLabel: ReactNode;
-      gramPositiveLabel: ReactNode;
-      kind: "wall";
-    };
-
-export interface BacteriaLabItem extends BiologyLabItem {
-  scene: BacteriaScene;
+export interface BacteriaLabItemProps extends BiologyLabItemProps {
+  scene:
+    | {
+        bacillusLabel: ReactNode;
+        coccusLabel: ReactNode;
+        kind: "shape";
+        spiralLabel: ReactNode;
+      }
+    | {
+        kind: "structure";
+        nucleoidDnaLabel: ReactNode;
+      }
+    | {
+        gramNegativeLabel: ReactNode;
+        gramPositiveLabel: ReactNode;
+        kind: "wall";
+      };
 }
 
 /** Uses distinct scenes for morphology, inner anatomy, and Gram wall logic. */
 export function BacteriaStructureScene({
   colors,
   item,
-}: BiologySceneProps<BacteriaLabItem>) {
+}: BiologySceneProps<BacteriaLabItemProps>) {
   const scene = item.scene;
 
   if (scene.kind === "structure") {

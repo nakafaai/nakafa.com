@@ -1,7 +1,12 @@
 import "server-only";
 
 import {
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
   ACTIVE_APP_LOCALE_CODES,
+  ActiveAppLocaleCodeSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
@@ -11,7 +16,6 @@ import {
   type ArticlePageCursor,
   type PublishedArticleCategory,
   type PublishedArticlePage,
-  type PublishedCategoryPage,
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
@@ -20,13 +24,15 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 
 type CategoryMatch = (category: PublishedArticleCategory) => boolean;
 
+const PublishedArticleCategoryGenerationSchema = Schema.Struct({
+  activeManifestHash: Sha256HashSchema,
+  activeReleaseId: ReleaseIdSchema,
+  appLocale: ActiveAppLocaleCodeSchema,
+});
+
 /** One localized category with the generation observed during its catalog read. */
-export interface PublishedArticleCategoryModel
-  extends PublishedArticleCategory {
-  readonly activeManifestHash: PublishedCategoryPage["activeManifestHash"];
-  readonly activeReleaseId: PublishedCategoryPage["activeReleaseId"];
-  readonly appLocale: Locale;
-}
+export type PublishedArticleCategoryModel = PublishedArticleCategory &
+  typeof PublishedArticleCategoryGenerationSchema.Type;
 
 /** Maps an incomplete signed category catalog to its public failure contract. */
 function categoryError(locale: Locale, route = "articles") {

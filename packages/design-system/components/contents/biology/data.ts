@@ -1,63 +1,42 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
-export type BiologyScenePoint = readonly [number, number, number];
+export const BiologyScenePointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
 
-export interface BiologyLabCallout {
-  id: string;
-  label: ReactNode;
-}
+export type BiologyScenePoint = typeof BiologyScenePointSchema.Type;
 
-export interface BiologyLabItem {
-  callouts?: readonly BiologyLabCallout[];
-  caption: ReactNode;
-  focus: ReactNode;
-  tab: string;
-  takeaway: ReactNode;
-}
+const BiologySceneColorsSchema = Schema.Struct({
+  animal: Schema.String,
+  arrow: Schema.String,
+  carbon: Schema.String,
+  decomposer: Schema.String,
+  genome: Schema.String,
+  grain: Schema.String,
+  heat: Schema.String,
+  host: Schema.String,
+  ice: Schema.String,
+  membrane: Schema.String,
+  microbe: Schema.String,
+  muted: Schema.String,
+  nucleus: Schema.String,
+  ocean: Schema.String,
+  pathogen: Schema.String,
+  plant: Schema.String,
+  skyLight: Schema.String,
+  soil: Schema.String,
+  spore: Schema.String,
+  text: Schema.String,
+  warning: Schema.String,
+  wood: Schema.String,
+});
 
-export interface BiologyLabLabels<
-  Item extends BiologyLabItem = BiologyLabItem,
-> {
-  chooseMode: string;
-  focusLabel: string;
-  items: readonly [Item, ...Item[]];
-  takeawayLabel: string;
-  viewLabel: string;
-}
-
-export interface BiologyLabProps<Item extends BiologyLabItem = BiologyLabItem> {
-  description: ReactNode;
-  labels: BiologyLabLabels<Item>;
-  title: ReactNode;
-}
-
-export interface BiologySceneColors {
-  animal: string;
-  arrow: string;
-  carbon: string;
-  decomposer: string;
-  genome: string;
-  grain: string;
-  heat: string;
-  host: string;
-  ice: string;
-  membrane: string;
-  microbe: string;
-  muted: string;
-  nucleus: string;
-  ocean: string;
-  pathogen: string;
-  plant: string;
-  skyLight: string;
-  soil: string;
-  spore: string;
-  text: string;
-  warning: string;
-  wood: string;
-}
+export type BiologySceneColors = typeof BiologySceneColorsSchema.Type;
 
 export const BIOLOGY_DEFAULT_VIEW = {
   cameraPosition: [2.85, 2.1, 4.15],
@@ -65,19 +44,13 @@ export const BIOLOGY_DEFAULT_VIEW = {
   cameraTarget: [0, 0.1, 0],
 } satisfies Record<string, BiologyScenePoint>;
 
-export interface BiologySceneView {
-  cameraPosition: BiologyScenePoint;
-  cameraTarget: BiologyScenePoint;
-  narrowCameraPosition: BiologyScenePoint;
-}
+const BiologySceneViewSchema = Schema.Struct({
+  cameraPosition: BiologyScenePointSchema,
+  cameraTarget: BiologyScenePointSchema,
+  narrowCameraPosition: BiologyScenePointSchema,
+});
 
-export interface BiologySceneProps<
-  Item extends BiologyLabItem = BiologyLabItem,
-> {
-  colors: BiologySceneColors;
-  item: Item;
-  selectedIndex: number;
-}
+export type BiologySceneView = typeof BiologySceneViewSchema.Type;
 
 export const BIOLOGY_RING_POINT_COUNT = 12;
 export const BIOLOGY_SMALL_RING_POINT_COUNT = 8;
@@ -120,30 +93,9 @@ export function getBiologySceneColors(theme?: string): BiologySceneColors {
 /**
  * Narrows ToggleGroup string values to valid biology item positions.
  */
-export function isBiologyItemIndex(
-  value: string,
-  items: readonly BiologyLabItem[]
-) {
+export function isBiologyItemIndex(value: string, itemCount: number) {
   const index = Number(value);
-  return Number.isInteger(index) && index >= 0 && index < items.length;
-}
-
-/**
- * Creates stable points around a horizontal ring.
- */
-export function createBiologyRingPoints(count: number, radius: number) {
-  return Array.from({ length: count }, (_, index) => {
-    const angle = (index / count) * Math.PI * 2;
-
-    return {
-      id: `ring-${index}`,
-      position: [
-        Math.cos(angle) * radius,
-        0,
-        Math.sin(angle) * radius,
-      ] satisfies BiologyScenePoint,
-    };
-  });
+  return Number.isInteger(index) && index >= 0 && index < itemCount;
 }
 
 /**
@@ -175,23 +127,6 @@ export function createBiologySpherePoints(count: number, radius: number) {
         y * radius,
         Math.sin(angle) * ringRadius * radius,
       ] satisfies BiologyScenePoint,
-    };
-  });
-}
-
-/**
- * Creates a compact front-facing grid for repeated particles or organisms.
- */
-export function createBiologyGridPoints(rows: number, columns: number) {
-  return Array.from({ length: rows * columns }, (_, index) => {
-    const row = Math.floor(index / columns);
-    const column = index % columns;
-    const x = column - (columns - 1) / 2;
-    const y = (rows - 1) / 2 - row;
-
-    return {
-      id: `grid-${index}`,
-      position: [x, y, 0] satisfies BiologyScenePoint,
     };
   });
 }

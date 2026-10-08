@@ -10,7 +10,7 @@ import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot
 import { RELEASE_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/spec";
 import { articleLayer } from "@repo/backend/content/article/confect";
 import { verifyArticle } from "@repo/backend/content/article/verify";
-import { Effect } from "effect";
+import { Effect, MutableHashMap, Option } from "effect";
 
 /** Validates one bounded active-catalog page against the final category model. */
 export const validateArticleModel = Effect.fn(
@@ -30,17 +30,17 @@ export const validateArticleModel = Effect.fn(
       numItems: RELEASE_PAGE_LIMIT,
     })
     .pipe(Effect.orDie);
-  const categoryClaims = new Map<string, ArticleCategoryClaim>();
+  const categoryClaims = MutableHashMap.empty<string, ArticleCategoryClaim>();
   for (const article of stored.page) {
     yield* verifyArticle(article, sequence).pipe(Effect.provide(articleLayer));
     const categoryIdentity = `${article.appLocale}/${article.category}`;
-    const existingClaim = categoryClaims.get(categoryIdentity);
-    if (existingClaim) {
-      yield* validateCategoryMember(article, existingClaim);
+    const existingClaim = MutableHashMap.get(categoryClaims, categoryIdentity);
+    if (Option.isSome(existingClaim)) {
+      yield* validateCategoryMember(article, existingClaim.value);
       continue;
     }
     const claim = yield* validateCategoryClaim(article);
-    categoryClaims.set(categoryIdentity, claim);
+    MutableHashMap.set(categoryClaims, categoryIdentity, claim);
   }
   return {
     cursor: stored.isDone ? undefined : stored.continueCursor,

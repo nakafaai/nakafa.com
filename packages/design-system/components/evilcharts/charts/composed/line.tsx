@@ -6,10 +6,10 @@ import {
   HorizontalColorGradient,
   LineGlowFilter,
 } from "@repo/design-system/components/evilcharts/charts/composed/lines";
+import { getOpacity } from "@repo/design-system/components/evilcharts/charts/composed/opacity";
 import {
   type ComposedAnimationType,
   type CurveType,
-  getOpacity,
   STROKE_WIDTH,
   useComposedChart,
 } from "@repo/design-system/components/evilcharts/charts/composed-chart";

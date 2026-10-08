@@ -7,6 +7,8 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createClassFixture } from "@repo/backend/test/classes";
 import { Array as Arr, Option } from "effect";
 
+const now = Date.UTC(2026, 8, 1);
+
 it("deduplicates authorized mentions and rejects stale school access atomically", async () => {
   const { t, admin, users, classId, schoolId } = await createClassFixture();
   const forumId = await admin.mutation(
@@ -25,7 +27,7 @@ it("deduplicates authorized mentions and rejects stale school access atomically"
       userId: users.student.userId,
       role: "student",
       enrollMethod: "public",
-      updatedAt: Date.now(),
+      updatedAt: now,
     })
   );
   const accepted = await admin.mutation(

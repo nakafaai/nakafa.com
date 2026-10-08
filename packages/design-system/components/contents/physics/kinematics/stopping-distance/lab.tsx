@@ -14,7 +14,6 @@ import {
   STOPPING_DISTANCE_REACTION_TIME,
   STOPPING_DISTANCE_SCENE,
   STOPPING_DISTANCE_SPEEDS,
-  type StoppingDistanceLabProps,
   type StoppingDistanceSpeed,
   type StoppingDistanceState,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/data";
@@ -46,6 +45,19 @@ const ROAD_STRIPE_SPACING = 1.6;
 const REACTION_DISTANCE_COLOR = getColor("TEAL");
 const BRAKING_DISTANCE_COLOR = getColor("ORANGE", 500);
 const DISTANCE_MARKER_Z = STOPPING_DISTANCE_SCENE.roadWidth * 0.2;
+
+interface StoppingDistanceLabProps {
+  description: ReactNode;
+  labels: {
+    brakingDistance: ReactNode;
+    chooseSpeed: string;
+    reactionDistance: ReactNode;
+    speed: ReactNode;
+    stoppingDistance: ReactNode;
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
 
 export function StoppingDistanceLab({
   title,

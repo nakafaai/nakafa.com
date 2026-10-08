@@ -29,7 +29,7 @@ import {
   isProgramSitemapPage,
   isQuranSitemapPage,
   isTryoutSitemapPage,
-  type SitemapPage,
+  type SitemapFamilyPage,
   SitemapPageNotFoundError,
 } from "@/lib/sitemap/identity";
 import { selectSitemapPartition } from "@/lib/sitemap/partition";
@@ -48,12 +48,6 @@ const familyBucketPages = {
   article: readPublishedArticleSitemap,
   program: readPublishedProgramSitemap,
 } as const;
-
-/** Article, material, and curriculum pages sharing one partition seam. */
-type SitemapFamilyPage = Extract<
-  SitemapPage,
-  { kind: "article" | "material" | "program" }
->;
 
 /** Static top-level routes in canonical lexical order. */
 export const baseRoutes: readonly string[] = [

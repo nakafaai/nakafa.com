@@ -9,16 +9,18 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { Effect, Schema } from "effect";
 
+const now = Date.UTC(2026, 8, 1);
+
 describe("private chat ownership", () => {
   it("loads only the owner's chat and preserves typed missing and forbidden failures", async () => {
     const t = createConvexTestWithBetterAuth();
     const { owner, outsider, chatId } = await t.mutation(async (ctx) => {
       const owner = await seedAuthenticatedUser(ctx, {
-        now: Date.now(),
+        now,
         suffix: "owner",
       });
       const outsider = await seedAuthenticatedUser(ctx, {
-        now: Date.now(),
+        now,
         suffix: "outsider",
       });
       const chatId = await ctx.db.insert("chats", {
@@ -27,7 +29,7 @@ describe("private chat ownership", () => {
         userId: owner.userId,
         type: "study",
         visibility: "private",
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
       return {
         owner,

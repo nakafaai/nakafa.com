@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const CONSERVATION_MODE_ID = "conservation";
-export const FIXED_MODE_ID = "fixed";
-export const MULTIPLE_MODE_ID = "multiple";
+const FIXED_MODE_ID = "fixed";
+const MULTIPLE_MODE_ID = "multiple";
 
 export type DaltonModeId =
   | typeof CONSERVATION_MODE_ID
@@ -15,42 +15,43 @@ export const DALTON_MODE_IDS = [
   MULTIPLE_MODE_ID,
 ] satisfies DaltonModeId[];
 
-export type AtomSymbol = "C" | "H" | "O";
+const AtomSymbolSchema = Schema.Literals(["C", "H", "O"]);
+export type AtomSymbol = typeof AtomSymbolSchema.Type;
 
-export interface Atom {
-  id: string;
-  symbol: AtomSymbol;
-}
+const AtomSchema = Schema.Struct({
+  id: Schema.String,
+  symbol: AtomSymbolSchema,
+});
+export type Atom = typeof AtomSchema.Type;
 
-export interface Molecule {
-  atoms: readonly Atom[];
-  id: string;
-  label: string;
-}
+const MoleculeSchema = Schema.Struct({
+  atoms: Schema.Array(AtomSchema),
+  id: Schema.String,
+  label: Schema.String,
+});
+export type Molecule = typeof MoleculeSchema.Type;
 
-export interface DaltonFact {
-  label: string;
-  value: string;
-}
+const DaltonFactSchema = Schema.Struct({
+  label: Schema.String,
+  value: Schema.String,
+});
 
-export interface DaltonModeLabels {
-  afterTitle: string;
-  beforeTitle: string;
-  expression: string;
-  facts: readonly DaltonFact[];
-  tab: string;
-}
+const DaltonModeLabelsSchema = Schema.Struct({
+  afterTitle: Schema.String,
+  beforeTitle: Schema.String,
+  expression: Schema.String,
+  facts: Schema.Array(DaltonFactSchema),
+  tab: Schema.String,
+});
 
-export interface DaltonEvidenceLabLabels {
-  chooseMode: string;
-  modes: Record<DaltonModeId, DaltonModeLabels>;
-}
-
-export interface DaltonEvidenceLabProps {
-  description: ReactNode;
-  labels: DaltonEvidenceLabLabels;
-  title: ReactNode;
-}
+const DaltonEvidenceLabLabelsSchema = Schema.Struct({
+  chooseMode: Schema.String,
+  modes: Schema.Record(
+    Schema.Literals(DALTON_MODE_IDS),
+    DaltonModeLabelsSchema
+  ),
+});
+export type DaltonEvidenceLabLabels = typeof DaltonEvidenceLabLabelsSchema.Type;
 
 function molecule(
   id: string,

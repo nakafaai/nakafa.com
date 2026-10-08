@@ -6,12 +6,13 @@ import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { PublicationSource } from "@repo/backend/content/publication/source";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
-interface PageCatalogRow {
-  readonly contentKey: string;
-  readonly projectionJson: string;
-}
+const PageCatalogRowSchema = Schema.Struct({
+  contentKey: Schema.String,
+  projectionJson: Schema.String,
+});
+type PageCatalogRow = typeof PageCatalogRowSchema.Type;
 
 /** Reads every current page projection for one signed application locale. */
 const readLocalePages = Effect.fn("contentRelease.readLocalePages")(function* (

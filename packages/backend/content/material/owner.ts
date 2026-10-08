@@ -25,7 +25,7 @@ export const requireMaterialState = Effect.fn(
   return active.state.materialSlot;
 });
 /** Loads active material catalog readiness and family ownership. */
-export const loadMaterialCatalogOwner = Effect.fn(
+const loadMaterialCatalogOwner = Effect.fn(
   "contentRelease.loadMaterialCatalogOwner"
 )(function* () {
   const active = yield* loadActiveIdentity();

@@ -12,15 +12,13 @@ import {
 } from "@/lib/auth/deletion/errors";
 import { prepareAccountDeletion } from "@/lib/auth/deletion/prepare";
 
-type AccountDeletionPreparationOperations = Parameters<
-  typeof prepareAccountDeletion
->[0];
+type PreparationOperations = Parameters<typeof prepareAccountDeletion>[0];
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const USER_ID = "user-1";
 const STORAGE_FAILED_CODE = "ACCOUNT_DELETION_ATTEMPT_STORAGE_FAILED";
 function createPreparationOperations(
-  overrides: Partial<AccountDeletionPreparationOperations> = {}
-): AccountDeletionPreparationOperations {
+  overrides: Partial<PreparationOperations> = {}
+): PreparationOperations {
   return {
     attempt: {
       attemptId: ATTEMPT_ID,
@@ -40,9 +38,7 @@ function createPreparationOperations(
     ...overrides,
   };
 }
-function preparationFailure(
-  overrides: Partial<AccountDeletionPreparationOperations>
-) {
+function preparationFailure(overrides: Partial<PreparationOperations>) {
   return prepareAccountDeletion(createPreparationOperations(overrides)).pipe(
     Effect.flip
   );
@@ -54,7 +50,7 @@ describe("account deletion preparation", () => {
       Effect.gen(function* () {
         const persist = vi.fn(() => Effect.void);
         const prepare = vi
-          .fn<AccountDeletionPreparationOperations["prepare"]>()
+          .fn<PreparationOperations["prepare"]>()
           .mockResolvedValueOnce(
             Result.succeed(accountDeletionPreparationOutcome.continue)
           )

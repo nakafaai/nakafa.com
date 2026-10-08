@@ -15,8 +15,9 @@ import {
   testSignedArtifact,
 } from "@repo/backend/test/content/proof";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const otherHash = Sha256HashSchema.make(`sha256:${"9".repeat(64)}`);
 describe("protected try-out exchange", () => {
   it.effect(
@@ -107,7 +108,7 @@ describe("protected try-out exchange", () => {
               },
               {
                 ...row,
-                bundleJson: JSON.stringify({
+                bundleJson: encodeJson({
                   ...bundle,
                   signature: "A".repeat(86),
                 }),
@@ -187,7 +188,7 @@ describe("protected try-out exchange", () => {
               }
               yield* Effect.promise(() =>
                 tCtx.db.patch(stored._id, {
-                  artifactJson: JSON.stringify(artifact),
+                  artifactJson: encodeJson(artifact),
                 })
               );
             });

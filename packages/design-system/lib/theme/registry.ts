@@ -1,16 +1,31 @@
-/** Concrete visual appearance used by runtime renderers and integrations. */
-export type ThemeAppearance = "light" | "dark";
+import { Schema } from "effect";
 
-type ThemeAppearancePolicy = ThemeAppearance | "dynamic";
+const ThemeAppearanceSchema = Schema.Literals(["light", "dark"]);
+
+/** Concrete visual appearance used by runtime renderers and integrations. */
+type ThemeAppearance = typeof ThemeAppearanceSchema.Type;
+
+const ThemeShaderColorSchema = Schema.TemplateLiteral([
+  "rgb(",
+  Schema.Finite,
+  ", ",
+  Schema.Finite,
+  ", ",
+  Schema.Finite,
+  ")",
+]);
 
 /** Concrete sRGB projection painted by shader-only renderers. */
-export type ThemeShaderColor = `rgb(${number}, ${number}, ${number})`;
+type ThemeShaderColor = typeof ThemeShaderColorSchema.Type;
 
-interface ThemeDefinition {
-  readonly appearance: ThemeAppearancePolicy;
-  readonly shaderColor: ThemeShaderColor;
-  readonly value: string;
-}
+/** One selectable Nakafa theme, its appearance policy, and its shader color. */
+const ThemeDefinitionSchema = Schema.Struct({
+  appearance: Schema.Union([ThemeAppearanceSchema, Schema.Literal("dynamic")]),
+  shaderColor: ThemeShaderColorSchema,
+  value: Schema.String,
+});
+
+type ThemeDefinition = typeof ThemeDefinitionSchema.Type;
 
 const LIGHT_SHADER_COLOR = "rgb(21, 41, 79)";
 
@@ -179,7 +194,7 @@ export const themes = [
 ] as const satisfies readonly ThemeDefinition[];
 
 /** Theme identifier accepted by the shared next-themes runtime. */
-export type ThemeValue = (typeof themes)[number]["value"];
+type ThemeValue = (typeof themes)[number]["value"];
 
 /** Local-storage key owned by the shared next-themes runtime. */
 export const THEME_STORAGE_KEY = "theme";

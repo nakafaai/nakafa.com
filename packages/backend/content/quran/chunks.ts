@@ -4,16 +4,17 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { QURAN_PAGE_CHUNK_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
 import { verifyQuranRow } from "@repo/backend/confect/contentRelease/quran/verify";
 import { QuranSource } from "@repo/backend/content/quran/source";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
-interface QuranChunkInput {
-  readonly fromVerse: number;
-  readonly numberOfVerses: number;
-  readonly snapshotId: string;
-  readonly surahNumber: number;
-  readonly toVerse: number;
-}
+const QuranChunkInputSchema = Schema.Struct({
+  fromVerse: Schema.Finite,
+  numberOfVerses: Schema.Finite,
+  snapshotId: Schema.String,
+  surahNumber: Schema.Finite,
+  toVerse: Schema.Finite,
+});
+type QuranChunkInput = typeof QuranChunkInputSchema.Type;
 
 /** Returns the first immutable chunk boundary containing one verse. */
 function chunkStart(verseNumber: number) {

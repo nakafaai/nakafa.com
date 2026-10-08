@@ -10,9 +10,9 @@ import {
   CATHODE_RAY_MODE_ID,
   GOLD_FOIL_MODE_ID,
   type SubatomicParticlesModeId,
-  type SubatomicParticlesSceneLabels,
   type SubatomicSceneColors,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
+import type { SubatomicParticlesLabProps } from "@repo/design-system/components/contents/chemistry/subatomic-particles/lab";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { ReactNode } from "react";
@@ -127,7 +127,7 @@ interface SubatomicParticlesSceneProps extends SceneProps {
 
 interface SceneProps {
   colors: SubatomicSceneColors;
-  labels: SubatomicParticlesSceneLabels;
+  labels: SubatomicParticlesLabProps["labels"]["scene"];
 }
 
 /**

@@ -13,7 +13,7 @@ import {
   snbtQuantComponentNames,
   tkaMathComponentNames,
 } from "@repo/design-system/lib/markdown/names";
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 
 const domainComponentNames = {
   "ai-ds": aiDsComponentNames,
@@ -62,7 +62,7 @@ describe("route-domain component names", () => {
     (_domain, componentNames) => {
       const values = Rec.values<string, string>(componentNames);
 
-      expect(new Set(values)).toHaveLength(values.length);
+      expect(Arr.dedupe(values)).toHaveLength(values.length);
     }
   );
 });

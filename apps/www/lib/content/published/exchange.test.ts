@@ -5,13 +5,14 @@ import {
   GitCommitShaSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
 import {
   ContentRuntimeMissingError,
   ContentRuntimeVerificationError,
 } from "@repo/backend/client/content/errors";
 import { readPublicContent } from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { PublishedContentInput } from "@/lib/content/published/exchange";
 import {
   decodePublishedDelivery,
@@ -37,34 +38,19 @@ const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
 const appLocale: PublishedContentInput["appLocale"] =
   previewProjection.appLocale;
 
-interface FoundFixture {
-  readonly activeReleaseId: ReturnType<typeof ReleaseIdSchema.make>;
-  readonly artifact: typeof previewWireArtifact;
-  readonly delivery: "public";
-  readonly kind: "found";
-  readonly projection: typeof previewProjection;
-  readonly release: {
-    readonly manifest: {
-      readonly origin:
-        | { readonly kind: "git"; readonly sha: typeof sourceRevision }
-        | {
-            readonly kind: "rollback";
-            readonly releaseId: ReturnType<typeof ReleaseIdSchema.make>;
-          };
-    };
-  };
-  readonly rendererManifest: typeof liveRenderer;
-  readonly sourcePath: typeof previewSourcePath;
-}
+/** Release origin of a found delivery, as the runtime Schema describes it. */
+type FoundOrigin = PublicContentRuntimeFound["release"]["manifest"]["origin"];
 
-const found: FoundFixture = {
+const found = {
   activeReleaseId: ReleaseIdSchema.make("release-function-concept"),
   artifact: previewWireArtifact,
-  delivery: "public",
-  kind: "found",
+  delivery: "public" satisfies PublicContentRuntimeFound["delivery"],
+  kind: "found" satisfies PublicContentRuntimeFound["kind"],
   projection: previewProjection,
   release: {
-    manifest: { origin: { kind: "git", sha: sourceRevision } },
+    manifest: {
+      origin: { kind: "git", sha: sourceRevision } satisfies FoundOrigin,
+    },
   },
   rendererManifest: liveRenderer,
   sourcePath: previewSourcePath,
@@ -107,7 +93,9 @@ describe("published content exchange", () => {
     "verifies a coherent query delivery against the live renderer",
     () =>
       Effect.gen(function* () {
-        const source = JSON.stringify(found);
+        const source = yield* Schema.encodeEffect(
+          Schema.fromJsonString(Schema.Unknown)
+        )(found);
         verifyPublicContentDeliveryMock.mockReturnValue(Effect.succeed(found));
 
         expect(yield* decodePublishedDelivery(routeInput, source)).toEqual({
@@ -175,14 +163,14 @@ describe("published content exchange", () => {
     "omits immutable Git provenance for a forward rollback release",
     () =>
       Effect.gen(function* () {
-        const rollback: FoundFixture = {
+        const rollback = {
           ...found,
           release: {
             manifest: {
               origin: {
                 kind: "rollback",
                 releaseId: found.activeReleaseId,
-              },
+              } satisfies FoundOrigin,
             },
           },
         };

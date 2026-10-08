@@ -4,10 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
-import {
-  type QuestionPreviewInput,
-  readQuestionPreview,
-} from "@/lib/content/preview/question";
+import { readQuestionPreview } from "@/lib/content/preview/question";
 import {
   makeReadyManifest,
   previewConfig,
@@ -33,6 +30,7 @@ vi.mock("@/lib/content/preview/manifest", () => ({
 
 const snapshotMock = vi.mocked(readPreviewSnapshot);
 const executeMock = vi.mocked(executePreviewArtifact);
+type QuestionPreviewInput = Parameters<typeof readQuestionPreview>[0];
 const input: QuestionPreviewInput = {
   appLocale: questionPreviewTarget.section.appLocale,
   publicPath: questionPreviewTarget.section.publicPath ?? "",

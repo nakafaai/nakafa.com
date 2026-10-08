@@ -1,14 +1,8 @@
 import "server-only";
 import type { ArticlePreviewDocument } from "@nakafa/aksara-contracts/preview/document";
-import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
-import {
-  type ArticleMetadata,
-  type ArticleProjection,
-  ArticleProjectionSchema,
-  type ArticleReference,
-} from "@nakafa/aksara-contracts/projection/article";
+import type { PreviewReadySchema } from "@nakafa/aksara-contracts/preview/spec";
+import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import { Effect, Option, Schema } from "effect";
-import type { ReactNode } from "react";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
@@ -18,20 +12,14 @@ import {
 } from "@/lib/content/preview/errors";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 /** Exact article route identity requested by the physical Next page. */
-export interface ArticlePreviewInput {
-  readonly appLocale: ArticlePreviewDocument["route"]["appLocale"];
-  readonly publicPath: ArticlePreviewDocument["route"]["publicPath"];
-}
+export type ArticlePreviewInput = Pick<
+  ArticlePreviewDocument["route"],
+  "appLocale" | "publicPath"
+>;
 /** Authenticated local article rendered by the actual Nakafa application. */
-export interface ArticlePreviewContent {
-  readonly body: string;
-  readonly categoryTitle: string;
-  readonly children: ReactNode;
-  readonly contentId: ArticleProjection["graph"]["assetId"];
-  readonly metadata: ArticleMetadata;
-  readonly projection: ArticleProjection;
-  readonly references: readonly ArticleReference[];
-}
+export type ArticlePreviewContent = Effect.Success<
+  ReturnType<typeof readReadyArticle>
+>;
 /** Checks whether one selected article owns the requested physical route. */
 function matchesArticleRoute(
   document: ArticlePreviewDocument,
@@ -44,12 +32,7 @@ function matchesArticleRoute(
 }
 /** Authenticates and renders the exact ready article artifact. */
 const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
-  manifest: Extract<
-    LocalPreviewManifest,
-    {
-      readonly status: "ready";
-    }
-  >,
+  manifest: typeof PreviewReadySchema.Type,
   document: ArticlePreviewDocument,
   config: PreviewConfig
 ) {
@@ -74,7 +57,7 @@ const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
     metadata: projection.metadata,
     projection,
     references: projection.references,
-  } satisfies ArticlePreviewContent;
+  };
 });
 /** Reads a matching changed article before consulting persistent ownership. */
 export const readArticlePreview = Effect.fn("NakafaContent.readArticlePreview")(

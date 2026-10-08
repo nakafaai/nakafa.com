@@ -6,16 +6,17 @@ import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 
-interface ProgramContextInput {
-  readonly contentKey: string;
-  readonly materialKey: string;
-  readonly nodeKey: string;
-  readonly parentPath: string;
-  readonly programKey: string;
-  readonly publicPath: string;
-}
+const ProgramContextInputSchema = Schema.Struct({
+  contentKey: Schema.String,
+  materialKey: Schema.String,
+  nodeKey: Schema.String,
+  parentPath: Schema.String,
+  programKey: Schema.String,
+  publicPath: Schema.String,
+});
+type ProgramContextInput = typeof ProgramContextInputSchema.Type;
 /** Checks whether one curriculum mapping owns the stable material identity. */
 function ownsMaterialIdentity(
   context: Effect.Success<ReturnType<typeof verifyCurriculum>>,

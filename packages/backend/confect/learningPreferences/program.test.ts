@@ -27,6 +27,8 @@ import {
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Schema } from "effect";
 
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 describe("learningPreferences/program", () => {
   it.effect("returns no curriculum for a retired saved key", () =>
     Effect.gen(function* () {
@@ -124,9 +126,7 @@ describe("learningPreferences/program", () => {
               _tag: "CurriculumPreferenceError",
               code: "CURRICULUM_PREFERENCE_IO_FAILED",
             });
-            expect(JSON.stringify(failure)).not.toContain(
-              "private query detail"
-            );
+            expect(encodeJson(failure)).not.toContain("private query detail");
           })
         );
         yield* Effect.promise(() =>
@@ -147,9 +147,7 @@ describe("learningPreferences/program", () => {
               _tag: "CurriculumPreferenceError",
               code: "CURRICULUM_PREFERENCE_IO_FAILED",
             });
-            expect(JSON.stringify(failure)).not.toContain(
-              "private write detail"
-            );
+            expect(encodeJson(failure)).not.toContain("private write detail");
           })
         );
       })

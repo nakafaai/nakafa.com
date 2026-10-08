@@ -1,32 +1,24 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
-import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { ProgramTranslation } from "@nakafa/aksara-contracts/program/spec";
+import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
+import {
+  LearningProgramSchema,
+  ProgramTranslationSchema,
+} from "@nakafa/aksara-contracts/program/spec";
 import refs from "@repo/backend/confect/_generated/refs";
 import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import {
   decodeCurriculumJson,
   decodeProgramJson,
-  type PublishedCurriculumRoute,
-  type PublishedLearningProgram,
 } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { httpLayer } from "@/lib/convex/http";
-
-/** Complete bounded program catalog used by root curriculum navigation. */
-export interface PublishedProgramCatalog {
-  readonly entries: readonly {
-    readonly program: PublishedLearningProgram;
-    readonly route: PublishedCurriculumRoute;
-    readonly translation: ProgramTranslation;
-  }[];
-  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-}
 
 /** Reads and validates the bounded published program catalog. */
 export const readPublishedProgramCatalog = Effect.fn(
@@ -85,6 +77,21 @@ export const readPublishedProgramCatalog = Effect.fn(
     sourceRevision,
   } satisfies PublishedProgramCatalog;
 });
+
+/** Decoded projection of the bounded program catalog, as root navigation consumes it. */
+const PublishedProgramCatalogSchema = Schema.Struct({
+  entries: Schema.Array(
+    Schema.Struct({
+      program: LearningProgramSchema,
+      route: CurriculumRouteSchema,
+      translation: ProgramTranslationSchema,
+    })
+  ),
+  sourceRevision: Schema.NullOr(GitCommitShaSchema),
+});
+
+/** Complete bounded program catalog used by root curriculum navigation. */
+export type PublishedProgramCatalog = typeof PublishedProgramCatalogSchema.Type;
 
 /** Selects one renderable root from the authenticated bounded program catalog. */
 export const readPublishedProgramPrerenderRoute = Effect.fn(

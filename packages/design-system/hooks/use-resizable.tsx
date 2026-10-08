@@ -1,13 +1,15 @@
 "use client";
 
+import { Schema } from "effect";
 import { useCallback, useEffect, useEffectEvent, useState } from "react";
 
-interface UseResizableOptions {
-  initialWidth: number;
-  maxWidth: number;
-  minWidth: number;
-  onResize?: (width: number) => void;
-}
+const UseResizableOptionsSchema = Schema.Struct({
+  initialWidth: Schema.Finite,
+  maxWidth: Schema.Finite,
+  minWidth: Schema.Finite,
+});
+
+type UseResizableOptions = typeof UseResizableOptionsSchema.Type;
 
 /**
  * Manages horizontal drag and keyboard resizing state for resizable panels.

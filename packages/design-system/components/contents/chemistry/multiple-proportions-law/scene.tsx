@@ -16,6 +16,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { HashMap, Option } from "effect";
 
 const FIRST_X = -0.78;
 const SECOND_X = 0.78;
@@ -73,17 +74,17 @@ function Molecule({
   colors: MultipleProportionsSceneColors;
   molecule: MultipleProportionsMolecule;
 }) {
-  const atomsById = new Map(
+  const atomsById = HashMap.fromIterable(
     molecule.atoms.map((atomData) => [atomData.id, atomData])
   );
 
   return (
     <group position={molecule.position}>
       {molecule.bonds.map(([startId, endId]) => {
-        const start = atomsById.get(startId);
-        const end = atomsById.get(endId);
+        const start = HashMap.get(atomsById, startId);
+        const end = HashMap.get(atomsById, endId);
 
-        if (!(start && end)) {
+        if (Option.isNone(start) || Option.isNone(end)) {
           return null;
         }
 
@@ -92,7 +93,7 @@ function Molecule({
             color={colors.bond}
             key={`${startId}-${endId}`}
             lineWidth={BOND_LINE_WIDTH}
-            points={[start.position, end.position]}
+            points={[start.value.position, end.value.position]}
           />
         );
       })}

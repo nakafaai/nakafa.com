@@ -1,7 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, MutableHashMap } from "effect";
 
 /** Reads localized options and route counts from one verified Tryout catalog. */
 export const readTryoutTaxonomy = Effect.fn(
@@ -13,10 +13,10 @@ export const readTryoutTaxonomy = Effect.fn(
   const countries = Arr.flatMap(catalog.entries, ({ row }) =>
     row.kind === "country" ? [{ id: row.countryKey, label: row.title }] : []
   );
-  const exams = new Map<string, string>();
+  const exams = MutableHashMap.empty<string, string>();
   for (const { row } of catalog.entries) {
     if (row.kind === "exam") {
-      exams.set(row.examKey, row.title);
+      MutableHashMap.set(exams, row.examKey, row.title);
     }
   }
   return {

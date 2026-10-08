@@ -1,14 +1,16 @@
-import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import {
   CURRICULUM_NAMESPACES,
+  CurriculumRouteSchema,
   isRenderableCurriculumLevel,
   type CurriculumRoute as PublishedCurriculumRoute,
 } from "@nakafa/aksara-contracts/program/curriculum";
-import type {
-  ProgramTranslation,
-  LearningProgram as PublishedLearningProgram,
+import {
+  LearningProgramSchema,
+  ProgramTranslationSchema,
+  type LearningProgram as PublishedLearningProgram,
 } from "@nakafa/aksara-contracts/program/spec";
-import type { MaterialList } from "@repo/contents/curriculum/list";
+import { Schema } from "effect";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";
@@ -27,30 +29,29 @@ export type CurriculumViewRoute = PublishedCurriculumRoute;
 export type CurriculumViewProgram = PublishedLearningProgram;
 
 /** One root curriculum card and its signed program metadata. */
-export interface CurriculumCatalogEntry {
-  readonly program: CurriculumViewProgram;
-  readonly route: CurriculumViewRoute;
-  readonly translation: ProgramTranslation;
-}
+const CurriculumCatalogEntrySchema = Schema.Struct({
+  program: LearningProgramSchema,
+  route: CurriculumRouteSchema,
+  translation: ProgramTranslationSchema,
+});
+export type CurriculumCatalogEntry = typeof CurriculumCatalogEntrySchema.Type;
 
 /** Complete signed curriculum catalog selected for one locale. */
-export interface CurriculumCatalogModel {
-  readonly entries: readonly CurriculumCatalogEntry[];
-  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-}
+const CurriculumCatalogModelSchema = Schema.Struct({
+  entries: Schema.Array(CurriculumCatalogEntrySchema),
+  sourceRevision: Schema.NullOr(GitCommitShaSchema),
+});
+export type CurriculumCatalogModel = typeof CurriculumCatalogModelSchema.Type;
 
-/** Complete presentation data for one signed curriculum route. */
-export interface CurriculumRouteModel {
-  readonly alternates: readonly CurriculumViewRoute[];
-  readonly ancestors: readonly CurriculumViewRoute[];
-  readonly childRoutes: readonly CurriculumViewRoute[];
-  readonly locale: Locale;
-  readonly materialCards: MaterialList;
-  readonly program: CurriculumViewProgram;
-  readonly route: CurriculumViewRoute;
-  readonly sourcePath: string;
-  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-}
+/**
+ * Complete presentation data for one signed curriculum route.
+ *
+ * The material cards come from a list schema owned by the contents package, so
+ * the model takes the resolver's inferred return type.
+ */
+export type CurriculumRouteModel = Awaited<
+  ReturnType<typeof resolveRuntimeCurriculumRoute>
+>;
 
 /** Checks whether one signed route owns a learner-renderable page. */
 export function isRenderableCurriculumView(route: CurriculumViewRoute) {
@@ -58,9 +59,7 @@ export function isRenderableCurriculumView(route: CurriculumViewRoute) {
 }
 
 /** Resolves one route through the signed Aksara owner. */
-export async function resolveRuntimeCurriculumRoute(
-  params: CurriculumParams
-): Promise<CurriculumRouteModel> {
+export async function resolveRuntimeCurriculumRoute(params: CurriculumParams) {
   const resolved = await params;
   const locale = getLocaleOrThrow(resolved.locale);
   const publicPath = [

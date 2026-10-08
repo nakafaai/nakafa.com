@@ -1,40 +1,32 @@
 import { getColor } from "@repo/design-system/lib/color";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
-export type GlbbScenarioId = "from-rest" | "speed-up" | "brake";
+const GlbbScenarioIdSchema = Schema.Literals([
+  "from-rest",
+  "speed-up",
+  "brake",
+]);
 
-export interface GlbbScenario {
-  acceleration: number;
-  color: string;
-  duration: number;
-  id: GlbbScenarioId;
-  initialVelocity: number;
-}
+export type GlbbScenarioId = typeof GlbbScenarioIdSchema.Type;
 
-export interface GlbbLabels {
-  chooseScenario: string;
-  scenarioNames: Record<GlbbScenarioId, string>;
-  timeAxis: string;
-  velocityAxis: string;
-}
+const GlbbScenarioSchema = Schema.Struct({
+  acceleration: Schema.Finite,
+  color: Schema.String,
+  duration: Schema.Finite,
+  id: GlbbScenarioIdSchema,
+  initialVelocity: Schema.Finite,
+});
 
-export interface GlbbLabLabels {
-  chooseScenario: string;
-  factLabels: {
-    acceleration: ReactNode;
-    displacement: ReactNode;
-    finalVelocity: ReactNode;
-    initialVelocity: ReactNode;
-  };
-  scenarioNames: Record<GlbbScenarioId, ReactNode>;
-  viewLabel: string;
-}
+export type GlbbScenario = typeof GlbbScenarioSchema.Type;
 
-export interface GlbbLabProps {
-  description: ReactNode;
-  labels: GlbbLabLabels;
-  title: ReactNode;
-}
+const GlbbLabelsSchema = Schema.Struct({
+  chooseScenario: Schema.String,
+  scenarioNames: Schema.Record(GlbbScenarioIdSchema, Schema.String),
+  timeAxis: Schema.String,
+  velocityAxis: Schema.String,
+});
+
+export type GlbbLabels = typeof GlbbLabelsSchema.Type;
 
 export const GLBB_TRAIN_MODEL_PATH =
   "/models/physics/kinematics/kenney-train-kit/train-electric-bullet-a.glb";
@@ -169,11 +161,11 @@ export function getGlbbLoopTime(state: GlbbMotionState, elapsed: number) {
   return progress * state.scenario.duration;
 }
 
-export function getVelocityAt(scenario: GlbbScenario, time: number) {
+function getVelocityAt(scenario: GlbbScenario, time: number) {
   return scenario.initialVelocity + scenario.acceleration * time;
 }
 
-export function getDisplacementAt(scenario: GlbbScenario, time: number) {
+function getDisplacementAt(scenario: GlbbScenario, time: number) {
   return (
     scenario.initialVelocity * time + (scenario.acceleration * time ** 2) / 2
   );

@@ -15,6 +15,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { HashMap, Option } from "effect";
 
 const SCENE_SCALE = 1.9;
 const FORMULA_LABEL_Y = 0.62;
@@ -45,7 +46,7 @@ function MoleculeStage({
   colors: MatterParticleSceneColors;
   molecule: MatterParticleMolecule;
 }) {
-  const atomsById = new Map(
+  const atomsById = HashMap.fromIterable(
     molecule.atoms.map((atomData) => [atomData.id, atomData])
   );
 
@@ -60,8 +61,8 @@ function MoleculeStage({
       </ThreeLabel>
 
       {molecule.bonds.map(([startId, endId]) => {
-        const start = atomsById.get(startId);
-        const end = atomsById.get(endId);
+        const start = Option.getOrUndefined(HashMap.get(atomsById, startId));
+        const end = Option.getOrUndefined(HashMap.get(atomsById, endId));
 
         if (!(start && end)) {
           return null;

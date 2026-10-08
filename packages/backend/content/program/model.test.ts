@@ -79,7 +79,7 @@ const stageRoutes = Effect.fn("program.model.test.stageRoutes")(function* (
       return stageProgramRow(
         snapshotId,
         index + 100,
-        source,
+        source.record,
         canonicalizeContentSnapshotRow(source)
       );
     },

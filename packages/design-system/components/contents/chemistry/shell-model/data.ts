@@ -1,16 +1,19 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Schema } from "effect";
 
-export interface ShellModelSample {
-  atomicNumber: number;
-  symbol: string;
-}
+const ShellModelSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  symbol: Schema.String,
+});
+export type ShellModelSample = typeof ShellModelSampleSchema.Type;
 
-export interface ShellModelShell {
-  electronCount: number;
-  key: string;
-}
+const ShellModelShellSchema = Schema.Struct({
+  electronCount: Schema.Finite,
+  key: Schema.String,
+});
+type ShellModelShell = typeof ShellModelShellSchema.Type;
 
 export type ShellModelShells = readonly ShellModelShell[];
 

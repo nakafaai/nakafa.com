@@ -39,48 +39,19 @@ function createGateway(overrides: Partial<PolarCustomerGateway>) {
   return { ...gateway, ...overrides };
 }
 describe("customers/polar/impl", () => {
-  it.effect(
-    "normalizes Polar customer metadata to Convex-storable primitive values",
-    () =>
-      Effect.gen(function* () {
-        const customer = yield* normalizeStoredCustomer({
-          email: "nakafaai@gmail.com",
-          externalId: null,
-          id: "polar-customer",
-          metadata: {
-            ignored: { nested: true },
-            isTeacher: false,
-            note: "active",
-            score: 10,
-          },
-          name: null,
-        });
-        expect(customer).toEqual({
-          email: "nakafaai@gmail.com",
-          externalId: null,
-          id: "polar-customer",
-          metadata: {
-            isTeacher: false,
-            note: "active",
-            score: 10,
-          },
-          name: null,
-        });
-      })
-  );
-  it.effect("normalizes missing Polar metadata to an empty record", () =>
+  it.effect("normalizes an absent Polar external ID to null", () =>
     Effect.gen(function* () {
       const customer = yield* normalizeStoredCustomer({
         email: "nakafaai@gmail.com",
-        externalId: undefined,
         id: "polar-customer",
-        name: undefined,
+        metadata: { isTeacher: false },
+        name: null,
       });
       expect(customer).toEqual({
         email: "nakafaai@gmail.com",
         externalId: null,
         id: "polar-customer",
-        metadata: {},
+        metadata: { isTeacher: false },
         name: null,
       });
     })
@@ -110,7 +81,7 @@ describe("customers/polar/impl", () => {
               email: input.email,
               externalId: input.externalId,
               id: "polar-local",
-              metadata: input.metadata,
+              metadata: input.metadata ?? {},
               name: input.name,
             }),
           updateCustomer: () => {
@@ -168,7 +139,7 @@ describe("customers/polar/impl", () => {
               email: next.email,
               externalId: next.externalId,
               id: "polar-created",
-              metadata: next.metadata,
+              metadata: next.metadata ?? {},
               name: next.name,
             }),
           getCustomerByExternalId: () => Effect.succeed(null),
@@ -195,7 +166,7 @@ describe("customers/polar/impl", () => {
               email: input.email,
               externalId: input.externalId,
               id: "polar-external",
-              metadata: input.metadata,
+              metadata: input.metadata ?? {},
               name: input.name,
             }),
         });
@@ -219,7 +190,7 @@ describe("customers/polar/impl", () => {
               email: next.email,
               externalId: next.externalId,
               id: "polar-created",
-              metadata: next.metadata,
+              metadata: next.metadata ?? {},
               name: next.name,
             });
           },
@@ -267,7 +238,7 @@ describe("customers/polar/impl", () => {
               email: update.next.email,
               externalId: update.next.externalId,
               id: update.customer.id,
-              metadata: update.next.metadata,
+              metadata: update.next.metadata ?? {},
               name: update.next.name,
             });
           },

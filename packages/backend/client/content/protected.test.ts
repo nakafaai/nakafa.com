@@ -35,9 +35,10 @@ import {
   testSignedTryoutRuntimeBundle,
 } from "@repo/backend/test/content/proof";
 import { testPublicationScope } from "@repo/backend/test/content/release";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const endpoint = `https://example.convex.site${PROTECTED_CONTENT_RUNTIME_PATH}`;
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const target = {
   siteUrl: "https://example.convex.site",
   token: "runtime-test-token",
@@ -124,7 +125,7 @@ function createResponse(body: unknown, status: number, marked = true) {
       CONTENT_RUNTIME_RESPONSE_MARKER
     );
   }
-  const response = new Response(JSON.stringify(body), {
+  const response = new Response(Schema.encodeSync(JsonTextSchema)(body), {
     headers,
     status,
   });

@@ -9,15 +9,12 @@ import {
   getMyPostReactions,
   getPostReactionPreviews,
 } from "@repo/backend/confect/classes/forums/postReactions";
+import type { forumPostAttachmentValidator } from "@repo/backend/confect/classes/forums/validators";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect } from "effect";
-export type PostAttachment = Pick<
-  Docs["schoolClassForumPostAttachments"],
-  "_id" | "mimeType" | "name" | "size"
-> & {
-  url: string | null;
-};
+import { Array as Arr, Effect, HashMap, Option } from "effect";
+
+export type PostAttachment = typeof forumPostAttachmentValidator.Type;
 
 /**
  * Enrich forum posts with user data, reactions, and attachments.
@@ -83,8 +80,8 @@ export const enrichForumPosts = Effect.fn(
     myReactions: myReactions[index],
     reactionUsers: reactionPreviews[index],
     replyToUser: post.replyToUserId
-      ? (userMap.get(post.replyToUserId) ?? null)
+      ? Option.getOrNull(HashMap.get(userMap, post.replyToUserId))
       : null,
-    user: userMap.get(post.createdBy) ?? null,
+    user: Option.getOrNull(HashMap.get(userMap, post.createdBy)),
   }));
 });

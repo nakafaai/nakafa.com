@@ -1,13 +1,16 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import contentItemsTable from "@repo/backend/confect/_generated/tables/contentItems";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadReleaseItems } from "@repo/backend/confect/contentRelease/model";
-import { Effect } from "effect";
-export interface ModelItemPage {
-  readonly done: boolean;
-  readonly nextIndex: number;
-  readonly rows: readonly Docs["contentItems"][];
-}
+import { Effect, Schema } from "effect";
+
+const ModelItemPageSchema = Schema.Struct({
+  done: Schema.Boolean,
+  nextIndex: Schema.Finite,
+  rows: Schema.Array(contentItemsTable.Doc),
+});
+type ModelItemPage = typeof ModelItemPageSchema.Type;
 
 /** Loads one bounded, contiguous page inside the signed release item count. */
 export const loadModelItems = Effect.fn("contentRelease.loadModelItems")(

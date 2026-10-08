@@ -28,6 +28,7 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
+import { DateTime } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
@@ -204,7 +205,9 @@ describe("contentRelease/artifacts", () => {
       artifactJsonHash: testTextHash(testArtifactJson()),
       retainUntil: expect.any(Number),
     });
-    expect(state.facts?.retainUntil).toBeGreaterThan(Date.now());
+    expect(state.facts?.retainUntil).toBeGreaterThan(
+      DateTime.toEpochMillis(DateTime.nowUnsafe())
+    );
     expect(state.item).toEqual({
       ...staged,
       artifactBatchHash: expect.any(String),

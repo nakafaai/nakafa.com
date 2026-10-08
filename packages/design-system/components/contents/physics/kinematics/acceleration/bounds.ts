@@ -3,13 +3,15 @@ import type {
   AccelerationMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { Box3, type Group, Matrix4, Vector3 } from "three";
 
+const RocketScaleSchema = Schema.Struct({ scale: Schema.Finite });
 type RocketPose = Pick<
   typeof ACCELERATION_ROCKET_MOTION,
   "modelRotationY" | "yawAmplitude" | "rollAmplitude" | "rollPerAcceleration"
-> & { scale: number };
+> &
+  typeof RocketScaleSchema.Type;
 
 /** Encloses the complete flight and authored sway without inventing tumbling. */
 export const measureRocketMotionBounds = Effect.fn(

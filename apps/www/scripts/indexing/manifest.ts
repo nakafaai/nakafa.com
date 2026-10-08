@@ -1,20 +1,25 @@
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 
 const DEFAULT_SITE_INDEX_BATCH_SIZE = 500;
 
+const SiteIndexManifestSummarySchema = Schema.Struct({
+  batchCount: Schema.Finite,
+  canonicalUrlCount: Schema.Finite,
+});
+
 /** Summary returned after processing canonical sitemap URLs in bounded batches. */
-export interface SiteIndexManifestSummary {
-  batchCount: number;
-  canonicalUrlCount: number;
-}
+export type SiteIndexManifestSummary =
+  typeof SiteIndexManifestSummarySchema.Type;
+
+const SiteIndexUrlBatchSchema = Schema.Struct({
+  batchIndex: Schema.Finite,
+  urls: Schema.Array(Schema.String),
+});
 
 /** One bounded set of canonical sitemap URLs for indexing adapters. */
-export interface SiteIndexUrlBatch {
-  batchIndex: number;
-  urls: readonly string[];
-}
+export type SiteIndexUrlBatch = typeof SiteIndexUrlBatchSchema.Type;
 
 /**
  * Processes canonical sitemap URLs from sitemap pages without exposing one list.

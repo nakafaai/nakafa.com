@@ -1,3 +1,5 @@
+import { MutableHashMap, Option } from "effect";
+
 const MERMAID_DEFAULT_DESCRIPTION = "Key ideas shown visually.";
 const MERMAID_DEFAULT_TITLE = "Diagram";
 const MERMAID_META_REGEX = /\b(title|description)=("[^"]*"|'[^']*'|[^\s]+)/g;
@@ -30,16 +32,22 @@ export function readMermaidMetadata(meta?: string | null) {
     return fallback;
   }
 
-  const values = new Map<string, string>();
+  const values = MutableHashMap.empty<string, string>();
   for (const match of meta.matchAll(MERMAID_META_REGEX)) {
     const key = match[1];
     const rawValue = match[2];
 
-    values.set(key, rawValue.replace(/^["']|["']$/g, "").trim());
+    MutableHashMap.set(
+      values,
+      key,
+      rawValue.replace(/^["']|["']$/g, "").trim()
+    );
   }
 
-  const title = values.get("title");
-  const description = values.get("description");
+  const title = Option.getOrUndefined(MutableHashMap.get(values, "title"));
+  const description = Option.getOrUndefined(
+    MutableHashMap.get(values, "description")
+  );
 
   return {
     description: description || fallback.description,

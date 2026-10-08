@@ -1,3 +1,4 @@
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id, TableNames } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -10,11 +11,19 @@ import type {
   FunctionArgs,
   FunctionReference,
   FunctionReturnType,
-  PaginationOptions,
 } from "convex/server";
-import { ConfigProvider, Effect, Schema, Struct } from "effect";
+import {
+  ConfigProvider,
+  Effect,
+  HashMap,
+  Option,
+  Schema,
+  Struct,
+  Tuple,
+} from "effect";
 
 const CUSTOMER_PAGE_SIZE = 100;
+const PrettyJsonSchema = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 const writeLine = (message: string) => {
   process.stdout.write(`${message}\n`);
 };
@@ -31,17 +40,25 @@ const ConvexIdSchema = <const TableName extends TableNames>(
   );
 const mutableArraySchema = <A, I>(schema: Schema.Codec<A, I, never, never>) =>
   Schema.mutable(Schema.Array(schema));
-interface PageResult {
-  continueCursor: string;
-  isDone: boolean;
-  page: unknown[];
-}
+const PageResultSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: Schema.Array(Schema.Unknown),
+});
+type PageResult = typeof PageResultSchema.Type;
+const PaginationArgsSchema = Schema.Struct({
+  paginationOpts: Schema.Struct({
+    cursor: Schema.NullOr(Schema.String),
+    numItems: Schema.Finite,
+    endCursor: Schema.optionalKey(Schema.NullOr(Schema.String)),
+    maximumRowsRead: Schema.optionalKey(Schema.Finite),
+    maximumBytesRead: Schema.optionalKey(Schema.Finite),
+  }),
+});
 type CustomerIntegrityQuery = FunctionReference<
   "query",
   "internal" | "public",
-  {
-    paginationOpts: PaginationOptions;
-  },
+  typeof PaginationArgsSchema.Type,
   PageResult
 >;
 type PageRow<TFunction extends CustomerIntegrityQuery> =
@@ -133,28 +150,29 @@ const getCustomerIntegrityReport = Effect.fn(
       customerIntegritySubscriptionPageSchema
     ),
   ]);
-  const usersById = new Map(users.map((user) => [user.userId, user]));
-  const customerByUserId = new Map(
-    customers.map((customer) => [customer.userId, customer])
+  const usersById = HashMap.fromIterable(
+    users.map((user) => Tuple.make(user.userId, user))
   );
-  const customerByPolarId = new Map(
-    customers.map((customer) => [customer.polarCustomerId, customer])
+  const customerByUserId = HashMap.fromIterable(
+    customers.map((customer) => Tuple.make(customer.userId, customer))
+  );
+  const customerByPolarId = HashMap.fromIterable(
+    customers.map((customer) => Tuple.make(customer.polarCustomerId, customer))
   );
   const usersWithoutCustomer = users.filter(
-    (user) => !customerByUserId.has(user.userId)
+    (user) => !HashMap.has(customerByUserId, user.userId)
   );
   const orphanCustomers = customers.filter(
-    (customer) => !usersById.has(customer.userId)
+    (customer) => !HashMap.has(usersById, customer.userId)
   );
-  const customersWithExternalIdMismatch = customers.filter((customer) => {
-    const user = usersById.get(customer.userId);
-    if (!user) {
-      return false;
-    }
-    return customer.externalId !== user.authId;
-  });
+  const customersWithExternalIdMismatch = customers.filter((customer) =>
+    Option.exists(
+      HashMap.get(usersById, customer.userId),
+      (user) => customer.externalId !== user.authId
+    )
+  );
   const subscriptionsWithoutLocalCustomer = subscriptions.filter(
-    (subscription) => !customerByPolarId.has(subscription.customerId)
+    (subscription) => !HashMap.has(customerByPolarId, subscription.customerId)
   );
   return {
     customerCount: customers.length,
@@ -170,28 +188,23 @@ const main = Effect.fn("customers.verify")(function* () {
   const args = yield* Effect.sync(() => process.argv.slice(2));
   const prod = args.includes("--prod");
   const report = yield* getCustomerIntegrityReport(prod);
-  writeLine(
-    JSON.stringify(
-      {
-        customerCount: report.customerCount,
-        customersWithExternalIdMismatchCount:
-          report.customersWithExternalIdMismatch.length,
-        orphanCustomerCount: report.orphanCustomers.length,
-        sampleCustomersWithExternalIdMismatch:
-          report.customersWithExternalIdMismatch.slice(0, 10),
-        sampleOrphanCustomers: report.orphanCustomers.slice(0, 10),
-        sampleSubscriptionsWithoutLocalCustomer:
-          report.subscriptionsWithoutLocalCustomer.slice(0, 10),
-        sampleUsersWithoutCustomer: report.usersWithoutCustomer.slice(0, 10),
-        subscriptionsWithoutLocalCustomerCount:
-          report.subscriptionsWithoutLocalCustomer.length,
-        userCount: report.userCount,
-        usersWithoutCustomerCount: report.usersWithoutCustomer.length,
-      },
-      null,
-      2
-    )
-  );
+  const json = yield* Schema.encodeEffect(PrettyJsonSchema)({
+    customerCount: report.customerCount,
+    customersWithExternalIdMismatchCount:
+      report.customersWithExternalIdMismatch.length,
+    orphanCustomerCount: report.orphanCustomers.length,
+    sampleCustomersWithExternalIdMismatch:
+      report.customersWithExternalIdMismatch.slice(0, 10),
+    sampleOrphanCustomers: report.orphanCustomers.slice(0, 10),
+    sampleSubscriptionsWithoutLocalCustomer:
+      report.subscriptionsWithoutLocalCustomer.slice(0, 10),
+    sampleUsersWithoutCustomer: report.usersWithoutCustomer.slice(0, 10),
+    subscriptionsWithoutLocalCustomerCount:
+      report.subscriptionsWithoutLocalCustomer.length,
+    userCount: report.userCount,
+    usersWithoutCustomerCount: report.usersWithoutCustomer.length,
+  }).pipe(Effect.orDie);
+  writeLine(json);
   const hasIntegrityIssues =
     report.usersWithoutCustomer.length > 0 ||
     report.orphanCustomers.length > 0 ||
@@ -213,6 +226,7 @@ Effect.runPromise(
         writeError(formatScriptCause(cause));
         process.exitCode = 1;
       })
-    )
+    ),
+    Effect.provide(nodeServicesLayer)
   )
 );

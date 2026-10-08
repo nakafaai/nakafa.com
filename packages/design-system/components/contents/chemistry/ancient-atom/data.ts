@@ -1,15 +1,23 @@
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const WHOLE_MATTER_LEVEL_ID = "whole";
-export const FIRST_CUT_LEVEL_ID = "first-cut";
-export const SECOND_CUT_LEVEL_ID = "second-cut";
-export const FINE_CUT_LEVEL_ID = "fine-cut";
+const FIRST_CUT_LEVEL_ID = "first-cut";
+const SECOND_CUT_LEVEL_ID = "second-cut";
+const FINE_CUT_LEVEL_ID = "fine-cut";
 
-export type AncientAtomLevelId =
-  | typeof WHOLE_MATTER_LEVEL_ID
-  | typeof FIRST_CUT_LEVEL_ID
-  | typeof SECOND_CUT_LEVEL_ID
-  | typeof FINE_CUT_LEVEL_ID;
+const AncientAtomLevelIdSchema = Schema.Literals([
+  WHOLE_MATTER_LEVEL_ID,
+  FIRST_CUT_LEVEL_ID,
+  SECOND_CUT_LEVEL_ID,
+  FINE_CUT_LEVEL_ID,
+]);
+
+export type AncientAtomLevelId = typeof AncientAtomLevelIdSchema.Type;
+
+const AncientAtomLevelSchema = Schema.Struct({
+  id: AncientAtomLevelIdSchema,
+  pieces: Schema.Finite,
+});
 
 export const ANCIENT_ATOM_LEVELS = [
   {
@@ -28,26 +36,10 @@ export const ANCIENT_ATOM_LEVELS = [
     id: FINE_CUT_LEVEL_ID,
     pieces: 8,
   },
-] satisfies {
-  id: AncientAtomLevelId;
-  pieces: number;
-}[];
+] satisfies (typeof AncientAtomLevelSchema.Type)[];
 
-export interface AncientAtomLevelLabels {
-  tab: string;
-}
+const AncientAtomLevelLabelsSchema = Schema.Struct({
+  tab: Schema.String,
+});
 
-export interface AncientAtomLabLabels {
-  aristotleBody: ReactNode;
-  aristotleLabel: string;
-  chooseLevel: string;
-  democritusBody: ReactNode;
-  democritusLabel: string;
-  levels: Record<AncientAtomLevelId, AncientAtomLevelLabels>;
-}
-
-export interface AncientAtomLabProps {
-  description: ReactNode;
-  labels: AncientAtomLabLabels;
-  title: ReactNode;
-}
+export type AncientAtomLevelLabels = typeof AncientAtomLevelLabelsSchema.Type;

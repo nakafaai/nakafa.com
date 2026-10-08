@@ -1,3 +1,4 @@
+import type { CircleArcLineProps } from "@repo/design-system/components/contents/mathematics/line/equation";
 import type {
   ResolvedLine,
   ResolvedLineLabel,
@@ -7,31 +8,32 @@ import {
   GRAPH_FULL_CIRCLE_SEGMENTS,
 } from "@repo/design-system/components/three/helpers/quality";
 import { getRadians } from "@repo/math/angles";
+import { Schema } from "effect";
 
-type CircleLineLabel = Omit<ResolvedLineLabel, "at"> & {
-  progress?: number;
-};
+const CircleLabelProgressSchema = Schema.Struct({
+  progress: Schema.optionalKey(Schema.Finite),
+});
+type CircleLineLabel = Omit<ResolvedLineLabel, "at"> &
+  typeof CircleLabelProgressSchema.Type;
 
-interface CircleAngle {
-  radius: number;
-  startDegrees: number;
-  sweepDegrees: number;
-}
+const CircleAngleSchema = Schema.Struct({
+  radius: Schema.Finite,
+  startDegrees: Schema.Finite,
+  sweepDegrees: Schema.Finite,
+});
+type CircleAngle = typeof CircleAngleSchema.Type;
 
-interface CircleArc extends CircleAngle {
-  segments?: number;
-}
+const CircleArcSchema = Schema.Struct({
+  ...CircleAngleSchema.fields,
+  segments: Schema.optionalKey(Schema.Finite),
+});
+type CircleArc = typeof CircleArcSchema.Type;
 
-interface CircleRadius {
-  degrees: number;
-  radius: number;
-}
-
-interface CircleArcLine extends CircleArc {
-  color: NonNullable<ResolvedLine["color"]>;
-  label?: CircleLineLabel;
-  lineWidth?: ResolvedLine["lineWidth"];
-}
+const CircleRadiusSchema = Schema.Struct({
+  degrees: Schema.Finite,
+  radius: Schema.Finite,
+});
+type CircleRadius = typeof CircleRadiusSchema.Type;
 
 const FULL_CIRCLE_DEGREES = 360;
 const DEFAULT_SEGMENT_LINE_WIDTH = 4;
@@ -104,7 +106,7 @@ export function createCircleArcLine({
   label,
   lineWidth,
   ...arc
-}: CircleArcLine): ResolvedLine {
+}: Omit<CircleArcLineProps, "kind">): ResolvedLine {
   const points = createCircleArcPoints(arc);
 
   if (label) {
@@ -181,7 +183,7 @@ export function createCircleSegmentBoundaryLines({
   label,
   lineWidth = DEFAULT_SEGMENT_LINE_WIDTH,
   ...arc
-}: CircleArcLine): ResolvedLine[] {
+}: Omit<CircleArcLineProps, "kind">): ResolvedLine[] {
   const chordPoints = createCircleChordPoints(arc);
 
   return [

@@ -10,11 +10,12 @@ export const LineEndpointsSchema = Schema.Struct({
 });
 export type LineEndpoints = typeof LineEndpointsSchema.Type;
 
-interface LineStroke {
-  readonly height: number;
-  readonly lineWidth: number;
-  readonly width: number;
-}
+const LineStrokeSchema = Schema.Struct({
+  height: Schema.Finite,
+  lineWidth: Schema.Finite,
+  width: Schema.Finite,
+});
+type LineStroke = typeof LineStrokeSchema.Type;
 
 /** Endpoint declarations must identify actual, unambiguous points. */
 export class LineEndpointError extends Schema.TaggedError<LineEndpointError>()(

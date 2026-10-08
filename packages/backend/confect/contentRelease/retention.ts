@@ -5,7 +5,7 @@ import {
 import { loadArtifactFacts } from "@repo/backend/confect/contentRelease/artifact/facts";
 import { hasSnapshotArtifactReference } from "@repo/backend/confect/contentRelease/snapshot/retention";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
-import { Clock, Effect, Option } from "effect";
+import { Array as Arr, Clock, Effect, Option } from "effect";
 
 /** Checks whether any retained immutable version still owns an artifact. */
 export const isArtifactReferenced = Effect.fn(
@@ -42,7 +42,7 @@ export const retainOrphanedArtifacts = Effect.fn(
 )(function* (artifactHashes: Iterable<string>, now?: number) {
   const writer = yield* DatabaseWriter;
   const timestamp = now ?? (yield* Clock.currentTimeMillis);
-  const hashes = [...new Set(artifactHashes)];
+  const hashes = Arr.dedupe(artifactHashes);
   for (const artifactHash of hashes) {
     if (yield* isArtifactReferenced(artifactHash)) {
       continue;
