@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr } from "effect";
+import { Array as Arr, HashMap } from "effect";
 import type {
   Forum,
   ForumPost,
@@ -31,10 +31,7 @@ export function createActiveTranscriptModel({
     (row, index): [Id<"schoolClassForumPosts">, number][] =>
       row.type === "post" ? [[row.post._id, index]] : []
   );
-  const rowIndexByPostId: ReadonlyMap<
-    Id<"schoolClassForumPosts">,
-    number
-  > = new Map(rowIndexEntries);
+  const rowIndexByPostId = HashMap.fromIterable(rowIndexEntries);
 
   return {
     lastPostId: getLastConversationPostId(posts),

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { HashMap, Option } from "effect";
 import {
   type ActiveTranscriptModel,
   createActiveTranscriptModel,
@@ -110,7 +111,7 @@ describe("conversation/viewport/scroller", () => {
       })
     ).toBe(true);
     expect(scrollToIndex).toHaveBeenLastCalledWith(
-      rowIndexByPostId.get(firstPost._id),
+      Option.getOrUndefined(HashMap.get(rowIndexByPostId, firstPost._id)),
       {
         align: "start",
         smooth: true,
@@ -202,7 +203,7 @@ describe("conversation/viewport/scroller", () => {
       })
     ).toBe(true);
     expect(scrollToIndex).toHaveBeenLastCalledWith(
-      rowIndexByPostId.get(firstPost._id),
+      Option.getOrUndefined(HashMap.get(rowIndexByPostId, firstPost._id)),
       {
         align: "center",
         smooth: false,
