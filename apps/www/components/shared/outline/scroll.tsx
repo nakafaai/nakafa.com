@@ -1,27 +1,26 @@
 "use client";
 
 import { SidebarContent } from "@repo/design-system/components/ui/sidebar-content";
-import {
-  createContext,
-  type ReactNode,
-  type RefObject,
-  use,
-  useRef,
-} from "react";
+import { createContext, type ReactNode, use, useRef } from "react";
 
-interface OutlineScrollValue {
-  readonly scrollRef: RefObject<HTMLDivElement | null>;
+/** Creates the ref that the outline body's scroll element fills and that virtualized entries read. */
+function useOutlineScrollValue() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  return { scrollRef };
 }
+
+type OutlineScrollValue = Readonly<ReturnType<typeof useOutlineScrollValue>>;
 
 const OutlineScrollContext = createContext<OutlineScrollValue | null>(null);
 
 /** The outline panel's scrolling body, shared with the entries that virtualize. */
 export function OutlineContent({ children }: { children: ReactNode }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const value = useOutlineScrollValue();
 
   return (
-    <OutlineScrollContext value={{ scrollRef }}>
-      <SidebarContent ref={scrollRef}>{children}</SidebarContent>
+    <OutlineScrollContext value={value}>
+      <SidebarContent ref={value.scrollRef}>{children}</SidebarContent>
     </OutlineScrollContext>
   );
 }

@@ -1,15 +1,22 @@
 "use client";
 
+import { Schema } from "effect";
 import { createContext, type MouseEventHandler, use } from "react";
 
-interface QuranInterpretationContextValue {
-  isActive: boolean;
-  pendingVerseNumber: number | null;
-  selectInterpretation: MouseEventHandler<HTMLButtonElement>;
-}
+const QuranInterpretationStateSchema = Schema.Struct({
+  isActive: Schema.Boolean,
+  pendingVerseNumber: Schema.NullOr(Schema.Finite),
+});
+
+type QuranInterpretationState = typeof QuranInterpretationStateSchema.Type;
+
+type SelectQuranInterpretation = MouseEventHandler<HTMLButtonElement>;
 
 export const QuranInterpretationContext =
-  createContext<QuranInterpretationContextValue | null>(null);
+  createContext<QuranInterpretationState | null>(null);
+
+export const QuranInterpretationSelectionContext =
+  createContext<SelectQuranInterpretation | null>(null);
 
 /** Reads whether one tafsir trigger is inactive, idle, or loading. */
 export function useQuranInterpretationState(verseNumber: number) {
@@ -33,12 +40,12 @@ export function useQuranInterpretationState(verseNumber: number) {
 
 /** Reads the shared React event handler for selecting tafsir. */
 export function useQuranInterpretationSelection() {
-  const context = use(QuranInterpretationContext);
-  if (!context) {
+  const selectInterpretation = use(QuranInterpretationSelectionContext);
+  if (!selectInterpretation) {
     throw new Error(
       "Quran tafsir button must be rendered within QuranInterpretationControls."
     );
   }
 
-  return context.selectInterpretation;
+  return selectInterpretation;
 }

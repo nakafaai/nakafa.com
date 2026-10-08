@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import { StudentIcon, TeacherIcon } from "@hugeicons/core-free-icons";
 import type refs from "@repo/backend/confect/_generated/refs";
+import { HashMap } from "effect";
 
 /** Role options available in the class invite menu. */
 export const inviteRoleList = [
@@ -19,10 +20,10 @@ export function mapInviteCodesByRole(
   inviteCodes: readonly InviteCode[] | undefined
 ) {
   if (!inviteCodes) {
-    return new Map<InviteRole, InviteCode>();
+    return HashMap.empty<InviteRole, InviteCode>();
   }
 
-  return new Map(
+  return HashMap.fromIterable(
     inviteCodes.map((inviteCode) => [inviteCode.role, inviteCode] as const)
   );
 }

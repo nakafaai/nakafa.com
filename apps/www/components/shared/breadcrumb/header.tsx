@@ -16,29 +16,39 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
-export type BreadcrumbHeaderItem = Readonly<{
-  href?: string | undefined;
-  label: string;
+const BreadcrumbHeaderItemSchema = Schema.Struct({
+  href: Schema.optional(Schema.String),
+  label: Schema.String,
   /** BCP 47 language of the label when it differs from the page. */
-  language?: string;
-  menuLabel?: string;
-}>;
+  language: Schema.optionalKey(Schema.String),
+  menuLabel: Schema.optionalKey(Schema.String),
+});
 
-/** Complete render value for one sticky, bounded breadcrumb header. */
-export interface BreadcrumbHeaderValue {
+export type BreadcrumbHeaderItem = typeof BreadcrumbHeaderItemSchema.Type;
+
+const BreadcrumbHeaderValueSchema = Schema.Struct({
+  homeLabel: Schema.String,
+  items: Schema.Array(BreadcrumbHeaderItemSchema),
+  menuLabel: Schema.String,
+  title: Schema.String,
+});
+
+/** Render data for one sticky, bounded breadcrumb header; the optional action renders beside it as its own prop. */
+export type BreadcrumbHeaderValue = typeof BreadcrumbHeaderValueSchema.Type;
+
+/** Renders at most Home and the two nearest path items, beside an optional action. */
+export function BreadcrumbHeader({
+  action,
+  value,
+}: {
   action?: ReactNode;
-  homeLabel: string;
-  items: readonly BreadcrumbHeaderItem[];
-  menuLabel: string;
-  title: string;
-}
-
-/** Renders at most Home and the two nearest path items. */
-export function BreadcrumbHeader({ value }: { value: BreadcrumbHeaderValue }) {
-  const { action, homeLabel, items, menuLabel, title } = value;
+  value: BreadcrumbHeaderValue;
+}) {
+  const { homeLabel, items, menuLabel, title } = value;
   return (
     <BreadcrumbHeaderFrame contentClassName="flex-col items-stretch justify-center sm:flex-row sm:items-center sm:justify-between sm:py-0">
       <h1 className="sr-only">{title}</h1>

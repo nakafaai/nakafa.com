@@ -29,7 +29,10 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
-import { QuranInterpretationContext } from "@/components/shared/quran/interpretation/context";
+import {
+  QuranInterpretationContext,
+  QuranInterpretationSelectionContext,
+} from "@/components/shared/quran/interpretation/context";
 import { reportClientException } from "@/lib/analytics/client";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -203,29 +206,30 @@ export function QuranInterpretationControls({
       await Effect.runPromise(program);
     });
   };
-  const contextValue = {
+  const interpretationState = {
     isActive: isControllerActive,
     pendingVerseNumber: isPending ? pendingVerseNumber : null,
-    selectInterpretation,
   };
   return (
-    <QuranInterpretationContext value={contextValue}>
-      {children}
-      <Drawer onOpenChange={set} open={isOpen}>
-        <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
-          <DrawerHeader className="border-b">
-            <DrawerTitle className="text-center">{label}</DrawerTitle>
-          </DrawerHeader>
+    <QuranInterpretationContext value={interpretationState}>
+      <QuranInterpretationSelectionContext value={selectInterpretation}>
+        {children}
+        <Drawer onOpenChange={set} open={isOpen}>
+          <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
+            <DrawerHeader className="border-b">
+              <DrawerTitle className="text-center">{label}</DrawerTitle>
+            </DrawerHeader>
 
-          <DrawerPanel className="p-4">
-            <div className="rounded-md border bg-accent p-4">
-              <p className="text-pretty text-accent-foreground leading-relaxed">
-                {selectedInterpretation}
-              </p>
-            </div>
-          </DrawerPanel>
-        </DrawerPopup>
-      </Drawer>
+            <DrawerPanel className="p-4">
+              <div className="rounded-md border bg-accent p-4">
+                <p className="text-pretty text-accent-foreground leading-relaxed">
+                  {selectedInterpretation}
+                </p>
+              </div>
+            </DrawerPanel>
+          </DrawerPopup>
+        </Drawer>
+      </QuranInterpretationSelectionContext>
     </QuranInterpretationContext>
   );
 }
