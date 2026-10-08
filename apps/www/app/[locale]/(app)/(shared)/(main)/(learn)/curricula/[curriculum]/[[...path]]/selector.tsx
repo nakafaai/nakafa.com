@@ -2,7 +2,6 @@
 
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
-import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type refs from "@repo/backend/confect/_generated/refs";
 import {
   Select,
@@ -21,19 +20,14 @@ import { toast } from "sonner";
 import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { reportClientException } from "@/lib/analytics/client";
+import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-const CurriculumSelectorOptionSchema = Schema.Struct({
-  countryCode: Schema.optionalKey(Schema.String),
-  href: Schema.String,
-  programKey: LearningProgramKeySchema,
-  publicSlug: Schema.optionalKey(Schema.String),
-  title: Schema.String,
-  value: Schema.String,
-});
-export type CurriculumSelectorOption =
-  typeof CurriculumSelectorOptionSchema.Type;
+/** One option as the server builds it from the signed program catalog. */
+export type CurriculumSelectorOption = ReturnType<
+  typeof readRuntimeCurriculumOptions
+>[number];
 type SavePreferredCurriculumArgs = Ref.Args<
   typeof refs.public.learningPreferences.mutations.setPreferredCurriculum
 >;

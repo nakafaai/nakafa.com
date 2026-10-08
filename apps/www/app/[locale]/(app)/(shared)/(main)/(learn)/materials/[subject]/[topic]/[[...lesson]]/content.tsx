@@ -4,7 +4,7 @@ import {
   MaterialMetadataSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 import { notFound } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import type { MaterialParams } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
@@ -38,6 +38,32 @@ const PublishedPageSchema = Schema.Struct({
   siblings: Schema.Array(MaterialLessonProjectionSchema),
   sourceUrl: Schema.NullOr(Schema.String),
 });
+
+/** Only route identity and visible labels are needed for sibling navigation. */
+const MaterialNavigationRouteSchema = Schema.Struct({
+  ...MaterialLessonProjectionSchema.mapFields(
+    Struct.pick(["appLocale", "order", "parentPath", "publicPath"])
+  ).fields,
+  metadata: MaterialLessonProjectionSchema.fields.metadata.mapFields(
+    Struct.pick(["title"])
+  ),
+});
+
+/** Small public navigation model shared by the static shell and client controls. */
+const MaterialNavigationPageSchema = Schema.Struct({
+  kind: Schema.Literals(["preview", "published"]),
+  route: MaterialLessonProjectionSchema.mapFields(
+    Struct.pick([
+      "appLocale",
+      "contentKey",
+      "materialKey",
+      "parentPath",
+      "publicPath",
+    ])
+  ),
+  siblings: Schema.Array(MaterialNavigationRouteSchema),
+});
+export type MaterialNavigationPage = typeof MaterialNavigationPageSchema.Type;
 
 /** React children hold the rendered body, which no Schema can describe. */
 type MaterialPageChildren = Required<Pick<PropsWithChildren, "children">>;
@@ -99,11 +125,11 @@ export async function readMaterialPage(
     const Content = owner.preview.Content;
     return {
       alternates: [owner.preview.projection],
-      appLocale: owner.appLocale,
       body: owner.preview.rawMdx,
       children: <Content />,
       copySourceUrl: null,
       kind: owner.kind,
+      appLocale: owner.appLocale,
       metadata: owner.preview.metadata,
       rendererDomain: owner.preview.rendererDomain,
       route: owner.preview.projection,
@@ -122,7 +148,6 @@ export async function readMaterialPage(
   const { model, published } = publication;
   return {
     alternates: model.alternates,
-    appLocale: owner.locale,
     body: published.rawMdx,
     children: published.body,
     copySourceUrl: published.sourceRevision
@@ -132,6 +157,7 @@ export async function readMaterialPage(
         })
       : null,
     kind: owner.kind,
+    appLocale: owner.locale,
     metadata: published.metadata,
     rendererDomain: published.rendererDomain,
     route: model.projection,

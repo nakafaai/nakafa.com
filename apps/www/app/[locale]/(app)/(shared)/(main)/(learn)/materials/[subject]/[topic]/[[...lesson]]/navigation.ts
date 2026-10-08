@@ -1,38 +1,11 @@
-import {
-  type MaterialLessonProjection,
-  MaterialLessonProjectionSchema,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentPagination } from "@repo/contents/content";
 import { toContextualMaterialHref } from "@repo/contents/route/material/context";
-import { Schema, Struct } from "effect";
+import type { MaterialNavigationPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 
 /** Only route identity and visible labels are needed for sibling navigation. */
-const MaterialNavigationRouteSchema = Schema.Struct({
-  ...MaterialLessonProjectionSchema.mapFields(
-    Struct.pick(["appLocale", "order", "parentPath", "publicPath"])
-  ).fields,
-  metadata: MaterialLessonProjectionSchema.fields.metadata.mapFields(
-    Struct.pick(["title"])
-  ),
-});
-type MaterialNavigationRoute = typeof MaterialNavigationRouteSchema.Type;
-
-/** Small public navigation model shared by the static shell and client controls. */
-const MaterialNavigationPageSchema = Schema.Struct({
-  kind: Schema.Literals(["preview", "published"]),
-  route: MaterialLessonProjectionSchema.mapFields(
-    Struct.pick([
-      "appLocale",
-      "contentKey",
-      "materialKey",
-      "parentPath",
-      "publicPath",
-    ])
-  ),
-  siblings: Schema.Array(MaterialNavigationRouteSchema),
-});
-export type MaterialNavigationPage = typeof MaterialNavigationPageSchema.Type;
+type MaterialNavigationRoute = MaterialNavigationPage["siblings"][number];
 
 const emptyItem = { href: "", title: "" };
 

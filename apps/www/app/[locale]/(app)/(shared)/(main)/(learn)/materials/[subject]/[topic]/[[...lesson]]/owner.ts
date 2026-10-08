@@ -17,7 +17,7 @@ const PublishedOwnerSchema = Schema.Struct({
   locale: AppLocaleCodeSchema,
   publicPath: Schema.String,
 });
-export type PublishedOwner = typeof PublishedOwnerSchema.Type;
+type PublishedOwner = typeof PublishedOwnerSchema.Type;
 
 /** Keeps the discriminant a literal type, so the owner union narrows on it. */
 const previewKind = "preview" as const;
@@ -26,7 +26,7 @@ const previewKind = "preview" as const;
 function toPreviewOwner(appLocale: Locale, preview: MaterialPreviewContent) {
   return { appLocale, kind: previewKind, preview };
 }
-export type PreviewOwner = ReturnType<typeof toPreviewOwner>;
+type PreviewOwner = ReturnType<typeof toPreviewOwner>;
 
 export type MaterialOwner = PreviewOwner | PublishedOwner;
 
