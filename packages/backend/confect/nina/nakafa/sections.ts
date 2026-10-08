@@ -5,7 +5,15 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
 import { slugify } from "@repo/utilities/slug";
-import { Array as Arr, MutableList, Option, Order, pipe } from "effect";
+import {
+  Array as Arr,
+  MutableHashMap,
+  MutableList,
+  Option,
+  Order,
+  pipe,
+  Schema,
+} from "effect";
 
 /** The implicit section before a document's first heading. */
 const READ_START_SECTION = "top";
@@ -14,16 +22,18 @@ const OUTLINE_LIMIT = 24;
 const HEADING = /^#{2,3}\s+(.+?)\s*#*$/;
 
 /** One readable markdown section, keyed by a stable heading slug. */
-interface ReadSection {
-  readonly slug: string;
-  readonly text: string;
-  readonly title: string;
-}
+const ReadSectionSchema = Schema.Struct({
+  slug: Schema.String,
+  text: Schema.String,
+  title: Schema.String,
+});
+
+type ReadSection = typeof ReadSectionSchema.Type;
 
 /** Splits agent markdown at level-two and level-three headings. */
 function splitSections(markdown: string) {
   const sections = MutableList.make<ReadSection>();
-  const counts = new Map<string, number>();
+  const counts = MutableHashMap.empty<string, number>();
   let title = "Start";
   let slug = READ_START_SECTION;
   const lines = MutableList.make<string>();
@@ -43,8 +53,9 @@ function splitSections(markdown: string) {
     close();
     title = heading[1];
     const base = slugify(title);
-    const seen = (counts.get(base) ?? 0) + 1;
-    counts.set(base, seen);
+    const seen =
+      Option.getOrElse(MutableHashMap.get(counts, base), () => 0) + 1;
+    MutableHashMap.set(counts, base, seen);
     slug = seen === 1 ? base : `${base}-${seen}`;
     MutableList.append(lines, line);
   }

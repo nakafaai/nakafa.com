@@ -1,4 +1,4 @@
-import { Array as Arr, Order, pipe } from "effect";
+import { Array as Arr, MutableHashSet, Order, pipe, Schema } from "effect";
 
 const DEFAULT_MAX_LENGTH = 2000;
 const MIN_KEYWORD_LENGTH = 3;
@@ -17,36 +17,39 @@ const TRUNCATION_THRESHOLDS = {
   word: 0.8,
 } as const;
 
-interface ContentParagraph {
-  index: number;
-  length: number;
-  score: number;
-  text: string;
-}
+const ContentParagraphSchema = Schema.Struct({
+  index: Schema.Finite,
+  length: Schema.Finite,
+  score: Schema.Finite,
+  text: Schema.String,
+});
+type ContentParagraph = typeof ContentParagraphSchema.Type;
 
-interface SelectRelevantContentParams {
-  content: string;
-  maxLength?: number;
-  maxRelevantParagraphs?: number;
-  minRelevantParagraphs?: number;
-  preserveStructure?: boolean;
-  query?: string;
-}
+const SelectRelevantContentParamsSchema = Schema.Struct({
+  content: Schema.String,
+  maxLength: Schema.optionalKey(Schema.Finite),
+  maxRelevantParagraphs: Schema.optionalKey(Schema.Finite),
+  minRelevantParagraphs: Schema.optionalKey(Schema.Finite),
+  preserveStructure: Schema.optionalKey(Schema.Boolean),
+  query: Schema.optionalKey(Schema.String),
+});
+type SelectRelevantContentParams =
+  typeof SelectRelevantContentParamsSchema.Type;
 
 /**
  * Extracts searchable terms without assuming the user's language.
  */
 function extractKeywords(query: string): string[] {
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
 
   return Arr.flatMap(
     [...query.toLocaleLowerCase().matchAll(SEARCH_TOKEN_REGEX)],
     ([word]) => {
-      if (word.length < MIN_KEYWORD_LENGTH || seen.has(word)) {
+      if (word.length < MIN_KEYWORD_LENGTH || MutableHashSet.has(seen, word)) {
         return [];
       }
 
-      seen.add(word);
+      MutableHashSet.add(seen, word);
       return [word];
     }
   );

@@ -179,9 +179,9 @@ export const prepareClientNavigation = Effect.fn(
    * installed `instant()` lock owns exact-target prefetch completion after the
    * interaction begins, so readiness only prepares the real target Link.
    *
-   * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/app-router.tsx
-   * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/app-dir/link.tsx
-   * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/segment-cache/navigation.ts
+   * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/app-router.tsx
+   * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/app-dir/link.tsx
+   * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/navigation-testing-lock.ts
    */
   yield* waitForCommittedAppRouter(
     page,

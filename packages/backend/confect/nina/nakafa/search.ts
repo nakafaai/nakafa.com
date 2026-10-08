@@ -3,7 +3,7 @@ import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
 } from "@repo/contents/agent/schema/search";
-import { Array as Arr, Order } from "effect";
+import { Array as Arr, HashSet, Order } from "effect";
 
 type SearchResultInput = Pick<NakafaAgentSearchInput, "queries">;
 
@@ -23,16 +23,14 @@ export function rankSearchResult(
 
 /** Tokenizes model-provided search text without language-specific rules. */
 export function getSearchTokens(queries: string[]) {
-  return [
-    ...new Set(
-      Arr.flatMap(queries, (query) =>
-        Arr.map(
-          Array.from(query.toLocaleLowerCase().matchAll(searchTokenPattern)),
-          ([token]) => token
-        )
+  return Arr.dedupe(
+    Arr.flatMap(queries, (query) =>
+      Arr.map(
+        Array.from(query.toLocaleLowerCase().matchAll(searchTokenPattern)),
+        ([token]) => token
       )
-    ),
-  ];
+    )
+  );
 }
 
 /** Adds query context to markdown returned to the Nakafa sub-agent. */
@@ -78,7 +76,7 @@ function getSearchScore(
   item: NakafaAgentSearchResult["items"][number],
   tokens: string[]
 ) {
-  const searchableTokens = new Set(
+  const searchableTokens = HashSet.fromIterable(
     getSearchTokens([
       item.title,
       item.description,
@@ -87,7 +85,7 @@ function getSearchScore(
   );
 
   return Arr.reduce(tokens, 0, (score, token) => {
-    if (searchableTokens.has(token)) {
+    if (HashSet.has(searchableTokens, token)) {
       return score + 1;
     }
 
