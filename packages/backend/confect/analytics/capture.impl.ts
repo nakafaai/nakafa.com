@@ -10,6 +10,7 @@ import {
 import {
   deliverProductAnalyticsProgram,
   hasProductAnalyticsConsent,
+  ProductAnalyticsDeliveryOperations,
   toProductAnalyticsCaptureError,
 } from "@repo/backend/confect/analytics/capture";
 import spec from "@repo/backend/confect/analytics/capture.spec";
@@ -49,31 +50,34 @@ const deliverProductEvent = FunctionImpl.make(
   Effect.fn("analytics.capture.deliverProductEvent")(function* (args) {
     const ctx = yield* ActionCtxService;
     const { runQuery } = yield* QueryRunner;
-    yield* deliverProductAnalyticsProgram({
-      capture: Effect.tryPromise({
-        try: () =>
-          ctx.runAction(components.posthog.lib.capture, {
-            disableGeoip: args.disableGeoip,
-            distinctId: args.distinctId,
-            event: args.event,
-            ...Struct.pick(args, ["properties"]),
-            ...Struct.pick(args, ["timestamp"]),
-          }),
-        catch: toProductAnalyticsCaptureError,
-      }),
-      isUserEligible: runQuery(
-        refs.internal.analytics.capture.isProductAnalyticsUserEligible,
-        {
-          userId: args.distinctId,
-        }
-      ).pipe(
-        Effect.mapError(toProductAnalyticsCaptureError),
-        Effect.catchDefect(flow(toProductAnalyticsCaptureError, Effect.fail))
-      ),
-      requestErasure: requestAnalyticsErasure(args.distinctId).pipe(
-        Effect.mapError(toProductAnalyticsCaptureError)
-      ),
-    });
+    yield* deliverProductAnalyticsProgram().pipe(
+      Effect.provideService(ProductAnalyticsDeliveryOperations, {
+        capture: Effect.tryPromise({
+          try: () =>
+            ctx.runAction(components.posthog.lib.capture, {
+              disableGeoip: args.disableGeoip,
+              distinctId: args.distinctId,
+              event: args.event,
+              ...Struct.pick(args, ["properties"]),
+              ...Struct.pick(args, ["timestamp"]),
+            }),
+          catch: toProductAnalyticsCaptureError,
+        }),
+        isUserEligible: runQuery(
+          refs.internal.analytics.capture.isProductAnalyticsUserEligible,
+          {
+            userId: args.distinctId,
+          }
+        ).pipe(
+          Effect.mapError(toProductAnalyticsCaptureError),
+          Effect.catchDefect(flow(toProductAnalyticsCaptureError, Effect.fail))
+        ),
+        requestErasure: requestAnalyticsErasure(args.distinctId).pipe(
+          Effect.mapError(toProductAnalyticsCaptureError),
+          Effect.provideService(ActionCtxService, ctx)
+        ),
+      })
+    );
     return null;
   })
 );
