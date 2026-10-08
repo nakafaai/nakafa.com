@@ -7,30 +7,13 @@ export type AccountRecord = NonNullable<
 >;
 
 /**
- * One resolved account as product surfaces read it.
- *
- * Every field derives from the query contract, so a backend change cannot
- * drift from this projection.
- */
-export interface Viewer {
-  readonly email: AccountRecord["authUser"]["email"];
-  readonly id: AccountRecord["appUser"]["_id"];
-  readonly image:
-    | AccountRecord["authUser"]["image"]
-    | AccountRecord["appUser"]["image"];
-  readonly name: AccountRecord["authUser"]["name"];
-  readonly plan: AccountRecord["appUser"]["plan"];
-  readonly role: AccountRecord["appUser"]["role"];
-}
-
-/**
  * Projects the stored account into the one snapshot surfaces read.
  *
  * Storage keeps separate app and auth rows, and a UI name, image, and email
  * come from the auth row. Projecting here keeps that layout inside the owning
  * module instead of every consumer.
  */
-export function toViewer(account: AccountRecord): Viewer {
+export function toViewer(account: AccountRecord) {
   return {
     email: account.authUser.email,
     id: account.appUser._id,
@@ -40,3 +23,11 @@ export function toViewer(account: AccountRecord): Viewer {
     role: account.appUser.role,
   };
 }
+
+/**
+ * One resolved account as product surfaces read it.
+ *
+ * Every field derives from the query contract through `toViewer`, so a backend
+ * change cannot drift from this projection.
+ */
+export type Viewer = ReturnType<typeof toViewer>;

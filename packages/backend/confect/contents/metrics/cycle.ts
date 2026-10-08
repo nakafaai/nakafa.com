@@ -3,25 +3,30 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import learningPopularityCycles from "@repo/backend/confect/_generated/tables/learningPopularityCycles";
 import { toContentAnalyticsIoError } from "@repo/backend/confect/contents/analytics/spec";
 import {
   getPopularitySignalDay,
-  type LearningPopularityFiniteWindow,
-  type LearningPopularityScope,
   POPULARITY_DAY_MS,
 } from "@repo/backend/confect/contents/popularity";
-import { Clock, Effect, flow, Struct } from "effect";
+import {
+  learningPopularityFiniteWindowValidator,
+  learningPopularityScopeValidator,
+} from "@repo/backend/confect/contents/schema";
+import { Clock, Effect, flow, Schema, Struct } from "effect";
 
-type PopularityCycleMode = Docs["learningPopularityCycles"]["mode"];
-interface CycleKey {
-  readonly day: number;
-  readonly scopeMode: LearningPopularityScope;
-  readonly windowKey: LearningPopularityFiniteWindow;
-}
-interface CyclePageKey extends CycleKey {
-  readonly cursor?: string;
-  readonly mode: PopularityCycleMode;
-}
+const CycleKeySchema = Schema.Struct({
+  day: Schema.Finite,
+  scopeMode: learningPopularityScopeValidator,
+  windowKey: learningPopularityFiniteWindowValidator,
+});
+type CycleKey = typeof CycleKeySchema.Type;
+const CyclePageKeySchema = Schema.Struct({
+  ...CycleKeySchema.fields,
+  cursor: Schema.optionalKey(Schema.String),
+  mode: learningPopularityCycles.Fields.fields.mode,
+});
+type CyclePageKey = typeof CyclePageKeySchema.Type;
 
 /** Reads the unique maintenance watermark for one popularity namespace. */
 const loadCycle = Effect.fn("contents.metrics.loadCycle")(

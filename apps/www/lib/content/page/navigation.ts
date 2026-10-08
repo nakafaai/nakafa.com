@@ -1,23 +1,30 @@
 import "server-only";
 
-import type {
-  PageKey,
-  PageMetadata,
+import type { PageKey } from "@nakafa/aksara-contracts/projection/page";
+import {
+  PageKeySchema,
+  PageMetadataSchema,
 } from "@nakafa/aksara-contracts/projection/page";
-import { PageKeySchema } from "@nakafa/aksara-contracts/projection/page";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
+const PageNavigationItemSchema = Schema.Struct({
+  href: Schema.String,
+  pageKey: PageKeySchema,
+  title: PageMetadataSchema.fields.title,
+});
 /** One signed Page projected into the shared site navigation contract. */
-export interface PageNavigationItem {
-  readonly href: string;
-  readonly pageKey: PageKey;
-  readonly title: PageMetadata["title"];
-}
+export type PageNavigationItem = typeof PageNavigationItemSchema.Type;
 
+const PageNavigationSchema = Schema.Struct({
+  developerItem: PageNavigationItemSchema,
+  legalItems: Schema.Array(PageNavigationItemSchema),
+  privacyPolicyHref: Schema.String,
+  termsOfServiceHref: Schema.String,
+});
 /**
  * Verified developer and legal destinations for one locale.
  *
@@ -34,12 +41,7 @@ export interface PageNavigationItem {
  *
  * https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/optimistic-routes.ts
  */
-export interface PageNavigation {
-  readonly developerItem: PageNavigationItem;
-  readonly legalItems: readonly PageNavigationItem[];
-  readonly privacyPolicyHref: string;
-  readonly termsOfServiceHref: string;
-}
+export type PageNavigation = typeof PageNavigationSchema.Type;
 
 /** Raised when a required Page is absent from an active publication. */
 export class PageNavigationMissingError extends Schema.TaggedError<PageNavigationMissingError>()(

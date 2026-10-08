@@ -16,16 +16,19 @@ const articlePageQueryFields = {
   release: ReleaseIdSchema,
 };
 const ArticlePageQuerySchema = Schema.Struct(articlePageQueryFields);
+const RawArticlePageQuerySchema = Schema.Record(
+  Schema.String,
+  Schema.Union([Schema.String, Schema.Array(Schema.String), Schema.Undefined])
+);
 /** Raw Next.js query values accepted by article catalog pages. */
-export interface ArticlePageQuery {
-  readonly [key: string]: string | string[] | undefined;
-}
+export type ArticlePageQuery = typeof RawArticlePageQuerySchema.Type;
+const ArticleNextPageSchema = Schema.Struct({
+  activeManifestHash: Schema.NullOr(Sha256HashSchema),
+  activeReleaseId: Schema.NullOr(ReleaseIdSchema),
+  nextCursor: Schema.NullOr(Schema.String),
+});
 /** Minimal active page identity used to build one continuation URL. */
-export interface ArticleNextPage {
-  readonly activeManifestHash: ArticlePageCursor["expectedManifestHash"] | null;
-  readonly activeReleaseId: ArticlePageCursor["expectedReleaseId"] | null;
-  readonly nextCursor: null | string;
-}
+export type ArticleNextPage = typeof ArticleNextPageSchema.Type;
 /** Removes source-release pagination before navigating to another locale. */
 export function stripArticlePagination(search: string) {
   const query = new URLSearchParams(search);

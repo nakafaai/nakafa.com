@@ -1,25 +1,15 @@
 "use client";
 
-import type { AnalyticsConsentState } from "@repo/analytics/consent";
 import { createContext, use } from "react";
 import { useAnalyticsConsentModel } from "@/lib/analytics/consent/model";
-import type { AnalyticsConsentPreferences } from "@/lib/analytics/consent/preferences";
 import type { AnalyticsConsentStore } from "@/lib/analytics/consent/store";
 
 export type AnalyticsConsentError = "load" | "runtime" | "save";
 
-export interface AnalyticsConsentContextValue {
-  readonly canDecline: boolean;
-  readonly canGrant: boolean;
-  readonly decide: (granted: boolean) => void;
-  readonly error: AnalyticsConsentError | null;
-  readonly isAvailable: boolean;
-  readonly isPromptOpen: boolean;
-  readonly isSaving: boolean;
-  readonly preferences: AnalyticsConsentPreferences;
-  readonly setPreferencesOpen: (open: boolean) => void;
-  readonly status: AnalyticsConsentState["status"];
-}
+/** The consent controller's value, derived from the model that builds it. */
+export type AnalyticsConsentContextValue = ReturnType<
+  typeof useAnalyticsConsentModel
+>["value"];
 
 /** Carries one provider's consent store, which never changes after mount. */
 export const AnalyticsConsentContext =

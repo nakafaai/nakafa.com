@@ -1,11 +1,12 @@
 // @vitest-environment node
 
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Effect, Predicate } from "effect";
+import { Array as Arr, Effect, HashSet, Predicate, Schema } from "effect";
 import { runAfdocs } from "@/checks/afdocs";
 
 const TIMEOUT_MS = 600_000;
-const ALLOWED_SKIPS = new Set(["auth-alternative-access"]);
+const ALLOWED_SKIPS = HashSet.make("auth-alternative-access");
+const PrettyJsonSchema = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 
 /** Keeps a failed CI check actionable without dumping every passing page. */
 function formatFailureDetails(details: Record<string, unknown> | undefined) {
@@ -15,7 +16,7 @@ function formatFailureDetails(details: Record<string, unknown> | undefined) {
 
   const { pageResults, ...summary } = details;
   if (!Arr.isArray(pageResults)) {
-    return `\n${JSON.stringify(details, null, 2)}`;
+    return `\n${Schema.encodeSync(PrettyJsonSchema)(details)}`;
   }
 
   const failures = pageResults.filter(
@@ -25,7 +26,7 @@ function formatFailureDetails(details: Record<string, unknown> | undefined) {
       page.status !== "pass"
   );
 
-  return `\n${JSON.stringify({ ...summary, pageResults: failures }, null, 2)}`;
+  return `\n${Schema.encodeSync(PrettyJsonSchema)({ ...summary, pageResults: failures })}`;
 }
 
 describe("AFDocs", () => {
@@ -41,7 +42,10 @@ describe("AFDocs", () => {
           if (!result || result.status === "pass") {
             continue;
           }
-          if (result.status === "skip" && ALLOWED_SKIPS.has(result.id)) {
+          if (
+            result.status === "skip" &&
+            HashSet.has(ALLOWED_SKIPS, result.id)
+          ) {
             continue;
           }
           assert.fail(

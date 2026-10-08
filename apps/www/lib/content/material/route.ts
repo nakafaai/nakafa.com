@@ -3,21 +3,18 @@ import { HttpClient } from "@confect/js";
 import "server-only";
 import {
   CorpusSourcePathSchema,
-  type GitCommitShaSchema,
-  type ReleaseIdSchema,
+  GitCommitShaSchema,
+  ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
   ActiveAppLocaleListSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import {
-  type RendererDomain,
-  RendererDomainSchema,
-} from "@nakafa/aksara-contracts/renderer/domain";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
+import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import refs from "@repo/backend/confect/_generated/refs";
-import { Effect, Schema } from "effect";
+import { Effect, HashSet, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   decodeMaterialJson,
@@ -32,27 +29,32 @@ import {
 } from "@/lib/content/published/release";
 import { httpLayer } from "@/lib/convex/http";
 
-interface PublishedMaterialIdentity {
-  readonly activeManifestHash: typeof Sha256HashSchema.Type;
-  readonly activeReleaseId: typeof ReleaseIdSchema.Type;
-  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-}
+const PublishedMaterialIdentitySchema = Schema.Struct({
+  activeManifestHash: Sha256HashSchema,
+  activeReleaseId: ReleaseIdSchema,
+  sourceRevision: Schema.NullOr(GitCommitShaSchema),
+});
+const PublishedMaterialRouteSchema = Schema.Union([
+  Schema.Struct({
+    ...PublishedMaterialIdentitySchema.fields,
+    alternates: Schema.Tuple([]),
+    projection: Schema.Null,
+    rendererDomain: Schema.Null,
+    siblings: Schema.Tuple([]),
+    sourcePath: Schema.Null,
+  }),
+  Schema.Struct({
+    ...PublishedMaterialIdentitySchema.fields,
+    alternates: Schema.Array(MaterialLessonProjectionSchema),
+    projection: MaterialLessonProjectionSchema,
+    rendererDomain: RendererDomainSchema,
+    siblings: Schema.Array(MaterialLessonProjectionSchema),
+    sourcePath: CorpusSourcePathSchema,
+  }),
+]);
+
 /** Complete immutable shell data for one signed material lesson or tombstone. */
-export type PublishedMaterialRoute =
-  | (PublishedMaterialIdentity & {
-      readonly alternates: readonly [];
-      readonly projection: null;
-      readonly rendererDomain: null;
-      readonly siblings: readonly [];
-      readonly sourcePath: null;
-    })
-  | (PublishedMaterialIdentity & {
-      readonly alternates: readonly MaterialLessonProjection[];
-      readonly projection: MaterialLessonProjection;
-      readonly rendererDomain: RendererDomain;
-      readonly siblings: readonly MaterialLessonProjection[];
-      readonly sourcePath: typeof CorpusSourcePathSchema.Type;
-    });
+export type PublishedMaterialRoute = typeof PublishedMaterialRouteSchema.Type;
 /** Decodes the coherent active release identifiers carried by one route model. */
 const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
   function* (
@@ -198,13 +200,13 @@ export const decodePublishedMaterialRoute = Effect.fn(
       })
     )
   );
-  const alternateLocales = new Set(
+  const alternateLocales = HashSet.fromIterable(
     alternates.map((alternate) => alternate.appLocale)
   );
   const completeLocaleSet =
-    alternateLocales.size === activeAppLocales.length &&
+    HashSet.size(alternateLocales) === activeAppLocales.length &&
     activeAppLocales.every((alternateLocale) =>
-      alternateLocales.has(alternateLocale)
+      HashSet.has(alternateLocales, alternateLocale)
     );
   if (
     projection.appLocale !== appLocale ||
@@ -212,7 +214,7 @@ export const decodePublishedMaterialRoute = Effect.fn(
     alternates.some(
       (alternate) => !isMaterialCounterpart(projection, alternate)
     ) ||
-    alternateLocales.size !== alternates.length ||
+    HashSet.size(alternateLocales) !== alternates.length ||
     !alternates.some(
       (alternate) =>
         alternate.appLocale === projection.appLocale &&

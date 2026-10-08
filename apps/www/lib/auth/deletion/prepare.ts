@@ -20,30 +20,23 @@ import {
 } from "@/lib/auth/deletion/errors";
 
 type AccountDeletionAttemptId = AccountDeletionBrowserAttempt["attemptId"];
-type CancelAccountDeletionRequest = (
+export type CancelAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
 ) => InvokeReturn<
   typeof refs.public.auth.deletion.cancelAccountDeletionAttempt
 >;
-type PrepareAccountDeletionRequest = (
+export type PrepareAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
 ) => InvokeReturn<
   typeof refs.public.auth.deletion.prepareCurrentAccountDeletion
 >;
-type PersistAccountDeletionAttempt = (
+export type PersistAccountDeletionAttempt = (
   attempt: AccountDeletionBrowserAttempt
 ) => Effect.Effect<void, AccountDeletionAttemptStorageFailed>;
-type ClearAccountDeletionAttempt = Effect.Effect<
+export type ClearAccountDeletionAttempt = Effect.Effect<
   void,
   AccountDeletionAttemptStorageFailed
 >;
-export interface AccountDeletionPreparationOperations {
-  readonly attempt: AccountDeletionBrowserAttempt;
-  readonly cancelPreparation: CancelAccountDeletionRequest;
-  readonly clearAttempt: ClearAccountDeletionAttempt;
-  readonly persist: PersistAccountDeletionAttempt;
-  readonly prepare: PrepareAccountDeletionRequest;
-}
 /** Cancels every bounded batch owned by one browser deletion attempt. */
 export const cancelPreparedAccountDeletion = Effect.fn(
   "www.auth.cancelPreparedAccountDeletion"
@@ -107,7 +100,13 @@ export const prepareAccountDeletion = Effect.fn(
   clearAttempt,
   persist,
   prepare,
-}: AccountDeletionPreparationOperations) {
+}: {
+  readonly attempt: AccountDeletionBrowserAttempt;
+  readonly cancelPreparation: CancelAccountDeletionRequest;
+  readonly clearAttempt: ClearAccountDeletionAttempt;
+  readonly persist: PersistAccountDeletionAttempt;
+  readonly prepare: PrepareAccountDeletionRequest;
+}) {
   const { attemptId } = attempt;
   let preparationOutcome: AccountDeletionPreparationOutcome =
     accountDeletionPreparationOutcome.continue;

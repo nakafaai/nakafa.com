@@ -1,13 +1,12 @@
 import "server-only";
 
 import type { PagePreviewDocument } from "@nakafa/aksara-contracts/preview/document";
-import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
+import type { PreviewReadySchema } from "@nakafa/aksara-contracts/preview/spec";
 import {
   type PublicPageProjection,
   PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
 import { Effect, Option, Schema } from "effect";
-import type { ReactNode } from "react";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
@@ -18,16 +17,15 @@ import {
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 
 /** Exact public Page identity requested by the physical Next route. */
-export interface PagePreviewInput {
-  readonly appLocale: PagePreviewDocument["route"]["appLocale"];
-  readonly publicPath: PagePreviewDocument["route"]["publicPath"];
-}
+export type PagePreviewInput = Pick<
+  PagePreviewDocument["route"],
+  "appLocale" | "publicPath"
+>;
 
 /** Authenticated local Page content rendered by the Nakafa application. */
-export interface PagePreviewContent {
-  readonly body: ReactNode;
-  readonly projection: PublicPageProjection;
-}
+export type PagePreviewContent = Effect.Success<
+  ReturnType<typeof readReadyPage>
+>;
 
 /** Checks whether one selected Page owns the requested physical route. */
 function matchesPageRoute(
@@ -57,7 +55,7 @@ function matchesPageProjection(
 
 /** Authenticates and renders the exact ready Page artifact. */
 const readReadyPage = Effect.fn("NakafaContent.readReadyPage")(function* (
-  manifest: Extract<LocalPreviewManifest, { readonly status: "ready" }>,
+  manifest: typeof PreviewReadySchema.Type,
   document: PagePreviewDocument,
   config: PreviewConfig
 ) {
@@ -79,7 +77,7 @@ const readReadyPage = Effect.fn("NakafaContent.readReadyPage")(function* (
   return {
     body: <rendered.Content />,
     projection,
-  } satisfies PagePreviewContent;
+  };
 });
 
 /** Reads a matching changed Page before consulting persistent ownership. */

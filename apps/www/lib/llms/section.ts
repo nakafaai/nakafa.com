@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import {
@@ -17,11 +17,12 @@ import { readQuranLlmsInventory } from "@/lib/llms/quran";
 
 type ContentSection = Exclude<LlmsSection, "site">;
 
+const LlmsSectionPagesSchema = Schema.Struct({
+  pageCount: Schema.Finite,
+  routeCount: Schema.Finite,
+});
 /** One bounded signed section inventory. */
-export interface LlmsSectionPages {
-  readonly pageCount: number;
-  readonly routeCount: number;
-}
+export type LlmsSectionPages = typeof LlmsSectionPagesSchema.Type;
 
 /** Reads bounded page counts from the active owner of one content section. */
 export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(

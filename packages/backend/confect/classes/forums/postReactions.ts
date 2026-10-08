@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/confect/classes/forums/constants";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, pipe } from "effect";
+import { Array as Arr, Effect, HashMap, Option, pipe } from "effect";
 /**
  * Get current user's emoji reactions for multiple posts.
  */
@@ -60,7 +60,9 @@ export const getPostReactionPreviews = Effect.fn(
       emoji,
       reactors: Arr.map(
         reactionsByPost[postIndex][reactionIndex],
-        (reaction) => userMap.get(reaction.userId)?.name ?? "Unknown"
+        (reaction) =>
+          Option.getOrUndefined(HashMap.get(userMap, reaction.userId))?.name ??
+          "Unknown"
       ),
     }))
   );

@@ -4,9 +4,6 @@ import { useMutation } from "@confect/react";
 import { useDocumentVisibility } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { LearningContextInput } from "@repo/backend/confect/contents/context";
-import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
-import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { Effect, Option, Result } from "effect";
 import { useEffect } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -17,17 +14,12 @@ import {
   resolveContentViewAttribution,
 } from "@/lib/content/views/device";
 import { createContentViewKey } from "@/lib/content/views/key";
+import type { UseRecordContentViewOptionsSchema } from "@/lib/content/views/options";
 import { useViewer } from "@/lib/identity/client";
 
 /** Client-side graph content-view recording configuration. */
-interface UseRecordContentViewOptions {
-  contentId?: string | null;
-  context?: LearningContextInput;
-  delay?: number;
-  locale: Locale;
-  publicPath: string;
-  section: RecordContentViewArgs["section"];
-}
+type UseRecordContentViewOptions =
+  typeof UseRecordContentViewOptionsSchema.Type;
 
 /**
  * Records unique content views per account or consented device.

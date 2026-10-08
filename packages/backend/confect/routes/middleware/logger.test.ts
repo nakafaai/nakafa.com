@@ -1,13 +1,15 @@
 import { expect, it } from "@effect/vitest";
 import { requestLogger } from "@repo/backend/confect/routes/middleware/logger";
-import { Array as Arr, Effect, Layer, Logger } from "effect";
+import { Array as Arr, Effect, Layer, Logger, Schema } from "effect";
 import { HttpRouter, HttpServerResponse } from "effect/http";
+
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 it.effect("logs request paths without OAuth query diagnostics", () =>
   Effect.gen(function* () {
     let messages: string[] = [];
     const capture = Logger.map(Logger.formatStructured, (entry) => {
-      messages = Arr.append(messages, JSON.stringify(entry));
+      messages = Arr.append(messages, encodeJson(entry));
     });
     const routes = HttpRouter.add(
       "GET",

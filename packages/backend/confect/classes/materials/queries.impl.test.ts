@@ -3,6 +3,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
 import { Array as Arr } from "effect";
 
+const now = Date.UTC(2026, 8, 1);
 const groups = api.classes.materials.queries.getMaterialGroups;
 describe("class material group query contracts", () => {
   it("preserves pagination and author joins while restricting student visibility", async () => {
@@ -13,7 +14,7 @@ describe("class material group query contracts", () => {
         classId,
         schoolId,
         role: "student",
-        updatedAt: Date.now(),
+        updatedAt: now,
         userId: users.student.userId,
       })
     );

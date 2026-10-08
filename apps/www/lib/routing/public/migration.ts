@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import refs from "@repo/backend/confect/_generated/refs";
-import { Effect, Option, Schema } from "effect";
+import { Effect, HashSet, Option, Schema } from "effect";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
@@ -9,23 +9,25 @@ import { httpLayer } from "@/lib/convex/http";
 import { readTryoutSectionRedirect } from "@/lib/routing/public/tryout";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
-const PREVIOUS_MATERIAL_LEVELS = new Set([
+const PREVIOUS_MATERIAL_LEVELS = HashSet.make(
   "high-school/10",
   "high-school/11",
   "high-school/12",
-  "university/bachelor",
-]);
-const REDIRECTABLE_METHODS = new Set(["GET", "HEAD"]);
-interface ArticleCategoryMigration {
-  readonly kind: "category";
-  readonly previousRoute: string;
-  readonly successorRoute: string;
-}
-interface ArticlePageMigration {
-  readonly kind: "article";
-  readonly previousPath: string;
-  readonly successorPath: string;
-}
+  "university/bachelor"
+);
+const REDIRECTABLE_METHODS = HashSet.make("GET", "HEAD");
+const ArticleCategoryMigrationSchema = Schema.Struct({
+  kind: Schema.Literal("category"),
+  previousRoute: Schema.String,
+  successorRoute: Schema.String,
+});
+type ArticleCategoryMigration = typeof ArticleCategoryMigrationSchema.Type;
+const ArticlePageMigrationSchema = Schema.Struct({
+  kind: Schema.Literal("article"),
+  previousPath: Schema.String,
+  successorPath: Schema.String,
+});
+type ArticlePageMigration = typeof ArticlePageMigrationSchema.Type;
 type ArticleMigration = ArticleCategoryMigration | ArticlePageMigration;
 
 /** Resolves the German article URLs exposed before localized routes shipped. */
@@ -167,7 +169,7 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   method: string;
   pathname: string;
 }) {
-  if (!REDIRECTABLE_METHODS.has(method)) {
+  if (!HashSet.has(REDIRECTABLE_METHODS, method)) {
     return null;
   }
   const articleMigration = readPreviousArticleMigration(pathname);
@@ -247,7 +249,7 @@ function isPreviousMaterialLocale(locale: string): locale is "en" | "id" {
 
 /** Accepts only curriculum levels that exposed the retired subject routes. */
 function isPreviousMaterialLevel(category: string, grade: string) {
-  return PREVIOUS_MATERIAL_LEVELS.has(`${category}/${grade}`);
+  return HashSet.has(PREVIOUS_MATERIAL_LEVELS, `${category}/${grade}`);
 }
 
 /** Resolves the two source-proven statistics topic splits. */

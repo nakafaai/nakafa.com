@@ -4,7 +4,7 @@ import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { SchoolClassImage } from "@repo/backend/confect/classes/schema";
 import {
-  CLASS_IMAGES,
+  CLASS_IMAGE_ENTRIES,
   getClassImageUrl,
 } from "@repo/backend/confect/lib/images";
 import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
@@ -155,8 +155,5 @@ function InfoCustomizeButton() {
 
 /** Return the selectable class cover images shown in the customization sheet. */
 function getImageList() {
-  return Array.from(CLASS_IMAGES.entries()).map(([key, src]) => ({
-    value: key,
-    src,
-  }));
+  return CLASS_IMAGE_ENTRIES.map(([value, src]) => ({ value, src }));
 }

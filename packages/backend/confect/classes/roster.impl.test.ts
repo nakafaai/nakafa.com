@@ -75,7 +75,9 @@ describe("class roster stream", () => {
       cursor = page.continueCursor;
     }
     expect(people).toHaveLength(66);
-    expect(new Set(Arr.map(people, (row) => row._id)).size).toBe(people.length);
+    expect(Arr.dedupe(Arr.map(people, (row) => row._id))).toHaveLength(
+      people.length
+    );
     expect(Arr.map(people, (row) => row.userId)).not.toContain(removed.userId);
     const teacherCount = Arr.filter(
       people,

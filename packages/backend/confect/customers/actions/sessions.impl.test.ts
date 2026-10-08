@@ -8,7 +8,10 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
+import { TestClock } from "effect/testing";
+
+const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 
 const polarGateway = vi.hoisted(() => ({
   createCheckoutSession: vi.fn(),
@@ -26,9 +29,14 @@ const request = {
 
 const setup = Effect.fn("customers.sessions.test.setup")(function* () {
   const t = createConvexTestWithBetterAuth();
+  yield* TestClock.setTime(NOW);
+  const now = yield* Clock.currentTimeMillis;
   const user = yield* Effect.promise(() =>
     t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: Date.now(), suffix: "billing" })
+      seedAuthenticatedUser(ctx, {
+        now,
+        suffix: "billing",
+      })
     )
   );
   const customer = {
@@ -131,10 +139,11 @@ describe("billing sessions", () => {
       const { authed, t, user } = yield* setup();
       polarGateway.createCheckoutSession.mockReturnValue(
         Effect.gen(function* () {
+          const now = yield* Clock.currentTimeMillis;
           yield* Effect.promise(() =>
             t.mutation((ctx) =>
               ctx.db.patch("users", user.userId, {
-                deletionPreparedAt: Date.now(),
+                deletionPreparedAt: now,
               })
             )
           );
