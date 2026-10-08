@@ -1,55 +1,64 @@
 "use client";
 
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { publicTryoutSectionValidator } from "@repo/backend/confect/tryouts/queries/catalogModel";
+import { tryoutSetIdentityValidator } from "@repo/backend/confect/tryouts/route";
+import { tryoutAttemptStateValidator } from "@repo/backend/confect/tryouts/runtime/spec";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
-import type { Locale } from "next-intl";
+import { Schema, Struct } from "effect";
 import { useTranslations } from "next-intl";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
-import type { TryoutSectionAttempt } from "@/components/tryout/runtime/types";
 import { StartSectionButton } from "@/components/tryout/section/start";
-import type { TryoutSummarySection } from "@/components/tryout/section/summary";
 import {
   StartTryoutButton,
   type StartTryoutRequest,
 } from "@/components/tryout/set/start";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-type CurrentAttempt = TryoutSectionAttempt | null;
-type CompletedAction = "restart" | "return";
-interface TryoutSummarySet {
-  countryKey: string;
-  examKey: string;
-  setKey: string;
-  trackKey: string;
-}
+const CompletedActionSchema = Schema.Literals(["restart", "return"]);
+
+const TryoutSummarySetSchema = tryoutSetIdentityValidator.mapFields(
+  Struct.pick(["countryKey", "examKey", "setKey", "trackKey"])
+);
+
+/** Minimal section contract rendered by the shared summary surface. */
+const TryoutSummarySectionSchema = publicTryoutSectionValidator.mapFields(
+  Struct.pick(["questionCount", "sectionKey", "timeLimitSeconds"])
+);
 
 /** Canonical destination and post-start behavior for one section route. */
-export interface TryoutStartDestination {
-  href: string;
-  successNavigation: StartTryoutRequest["successNavigation"];
-}
+const TryoutStartDestinationSchema = Schema.Struct({
+  href: Schema.String,
+  successNavigation: Schema.Literals(["destination", "stay"]),
+});
+export type TryoutStartDestination = typeof TryoutStartDestinationSchema.Type;
 
 /** Cohesive state needed to select one valid section summary action. */
-export interface TryoutSummaryActionValue {
-  activeAttempt: NonNullable<CurrentAttempt> | null;
-  attempt?: CurrentAttempt;
-  completedAction: CompletedAction;
-  locale: Locale;
-  returnHref: string;
-  section: TryoutSummarySection;
-  sectionFinished: boolean;
-  set: TryoutSummarySet;
-  startAttemptSectionKey?: string;
-  startDestination: TryoutStartDestination | null;
-}
-interface ResumeSectionValue {
-  activeAttempt: NonNullable<CurrentAttempt>;
-  returnHref: string;
-  section: TryoutSummarySection;
-}
+const TryoutSummaryActionValueSchema = Schema.Struct({
+  activeAttempt: Schema.NullOr(tryoutAttemptStateValidator),
+  attempt: Schema.optionalKey(Schema.NullOr(tryoutAttemptStateValidator)),
+  completedAction: CompletedActionSchema,
+  locale: AppLocaleCodeSchema,
+  returnHref: Schema.String,
+  section: TryoutSummarySectionSchema,
+  sectionFinished: Schema.Boolean,
+  set: TryoutSummarySetSchema,
+  startAttemptSectionKey: Schema.optionalKey(Schema.String),
+  startDestination: Schema.NullOr(TryoutStartDestinationSchema),
+});
+export type TryoutSummaryActionValue =
+  typeof TryoutSummaryActionValueSchema.Type;
+
+const ResumeSectionValueSchema = Schema.Struct({
+  activeAttempt: tryoutAttemptStateValidator,
+  returnHref: Schema.String,
+  section: TryoutSummarySectionSchema,
+});
+type ResumeSectionValue = typeof ResumeSectionValueSchema.Type;
 
 /** Renders the only valid action for the current section summary state. */
 export function TryoutSummaryAction({

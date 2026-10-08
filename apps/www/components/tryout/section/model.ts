@@ -1,18 +1,17 @@
 import type { Ref } from "@confect/core";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type refs from "@repo/backend/confect/_generated/refs";
+import { tryoutSectionAttemptPageResultValidator } from "@repo/backend/confect/tryouts/attemptPage/spec";
 import { Schema } from "effect";
 
 type PublicSectionPage = NonNullable<
   Ref.Returns<typeof refs.public.tryouts.queries.catalog.getSectionPage>
 >;
 
-type RetainedSectionAttemptPage = Extract<
-  NonNullable<
-    Ref.Returns<typeof refs.public.tryouts.queries.attemptPage.getSection>
-  >,
-  { kind: "retained" }
->;
+/** Retained section result, the third member of the section attempt page union. */
+const RetainedSectionAttemptPageSchema =
+  tryoutSectionAttemptPageResultValidator.members[2];
+type RetainedSectionAttemptPage = typeof RetainedSectionAttemptPageSchema.Type;
 
 type RetainedSectionPage = RetainedSectionAttemptPage["page"];
 

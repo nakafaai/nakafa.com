@@ -1,6 +1,8 @@
 "use client";
 
+import { Selection } from "@repo/backend/confect/response/model";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
+import { HashMap, HashSet, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import {
@@ -14,52 +16,88 @@ import {
 } from "@/components/tryout/runtime/response/id";
 import {
   assignCategorySelection,
+  TryoutRenderableResponseSpecSchema,
   type TryoutResponseSelection,
   toggleMultipleChoiceSelection,
 } from "@/components/tryout/runtime/response/state";
-import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 
-export interface TryoutResponseFieldLabel {
-  readonly correctness?: boolean | undefined;
-  readonly id: string;
-  readonly label: string;
-}
+/** Label of one response option or statement, marked correct or not once revealed. */
+const TryoutResponseFieldLabelSchema = Schema.Struct({
+  correctness: Schema.optional(Schema.Boolean),
+  id: Schema.String,
+  label: Schema.String,
+});
+export type TryoutResponseFieldLabel =
+  typeof TryoutResponseFieldLabelSchema.Type;
 
-interface TryoutResponseFieldsValue {
-  readonly id: string;
-  readonly locked: boolean;
-  readonly onChange: (selection: TryoutResponseSelection | null) => void;
-  readonly renderLabel: (value: TryoutResponseFieldLabel) => ReactNode;
-  readonly responseSpec: TryoutRenderableResponseSpec;
-  readonly revealAnswers?: boolean;
-  readonly selection: TryoutResponseSelection | null;
+/** Response data one field set renders; its callbacks arrive as separate props. */
+const TryoutResponseFieldsDataSchema = Schema.Struct({
+  id: Schema.String,
+  locked: Schema.Boolean,
+  responseSpec: TryoutRenderableResponseSpecSchema,
+  revealAnswers: Schema.optionalKey(Schema.Boolean),
+  selection: Schema.NullOr(Selection),
+});
+type TryoutResponseFieldsData = typeof TryoutResponseFieldsDataSchema.Type;
+
+type OnResponseChange = (selection: TryoutResponseSelection | null) => void;
+type RenderResponseLabel = (value: TryoutResponseFieldLabel) => ReactNode;
+
+interface TryoutResponseFieldsProps {
+  onChange: OnResponseChange;
+  renderLabel: RenderResponseLabel;
+  value: TryoutResponseFieldsData;
 }
 
 /** Renders every response kind through one persistence-neutral surface. */
 export function TryoutResponseFields({
+  onChange,
+  renderLabel,
   value,
-}: {
-  value: TryoutResponseFieldsValue;
-}) {
+}: TryoutResponseFieldsProps) {
   const t = useTranslations("Tryouts");
   const answerLabel = t("answer");
   if (value.responseSpec.kind === "single-choice") {
-    return <SingleChoiceFields answerLabel={answerLabel} value={value} />;
+    return (
+      <SingleChoiceFields
+        answerLabel={answerLabel}
+        onChange={onChange}
+        renderLabel={renderLabel}
+        value={value}
+      />
+    );
   }
   if (value.responseSpec.kind === "multiple-choice") {
-    return <MultipleChoiceFields answerLabel={answerLabel} value={value} />;
+    return (
+      <MultipleChoiceFields
+        answerLabel={answerLabel}
+        onChange={onChange}
+        renderLabel={renderLabel}
+        value={value}
+      />
+    );
   }
-  return <CategoryFields value={value} />;
+  return (
+    <CategoryFields
+      onChange={onChange}
+      renderLabel={renderLabel}
+      value={value}
+    />
+  );
 }
 
 function SingleChoiceFields({
   answerLabel,
+  onChange,
+  renderLabel,
   value,
 }: {
   answerLabel: string;
-  value: TryoutResponseFieldsValue;
+  onChange: OnResponseChange;
+  renderLabel: RenderResponseLabel;
+  value: TryoutResponseFieldsData;
 }) {
-  const { id, locked, onChange, responseSpec, selection } = value;
+  const { id, locked, responseSpec, selection } = value;
   if (responseSpec.kind !== "single-choice") {
     return null;
   }
@@ -90,7 +128,7 @@ function SingleChoiceFields({
             disabled={locked}
             id={optionLabelId(id, option.optionKey)}
             key={option.optionKey}
-            label={value.renderLabel({
+            label={renderLabel({
               correctness: previewCorrectness(
                 value.revealAnswers,
                 option.isCorrect
@@ -108,16 +146,20 @@ function SingleChoiceFields({
 
 function MultipleChoiceFields({
   answerLabel,
+  onChange,
+  renderLabel,
   value,
 }: {
   answerLabel: string;
-  value: TryoutResponseFieldsValue;
+  onChange: OnResponseChange;
+  renderLabel: RenderResponseLabel;
+  value: TryoutResponseFieldsData;
 }) {
-  const { id, locked, onChange, responseSpec, selection } = value;
+  const { id, locked, responseSpec, selection } = value;
   if (responseSpec.kind !== "multiple-choice") {
     return null;
   }
-  const selected = new Set(
+  const selected = HashSet.fromIterable(
     selection?.kind === "multiple-choice" ? selection.optionKeys : []
   );
   return (
@@ -126,11 +168,11 @@ function MultipleChoiceFields({
       {responseSpec.options.map((option) => (
         <TryoutSelectableMultipleChoice
           appearance={previewAppearance(value.revealAnswers, option.isCorrect)}
-          checked={selected.has(option.optionKey)}
+          checked={HashSet.has(selected, option.optionKey)}
           disabled={locked}
           id={optionLabelId(id, option.optionKey)}
           key={option.optionKey}
-          label={value.renderLabel({
+          label={renderLabel({
             correctness: previewCorrectness(
               value.revealAnswers,
               option.isCorrect
@@ -152,12 +194,20 @@ function MultipleChoiceFields({
   );
 }
 
-function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
-  const { id, locked, onChange, responseSpec, selection } = value;
+function CategoryFields({
+  onChange,
+  renderLabel,
+  value,
+}: {
+  onChange: OnResponseChange;
+  renderLabel: RenderResponseLabel;
+  value: TryoutResponseFieldsData;
+}) {
+  const { id, locked, responseSpec, selection } = value;
   if (responseSpec.kind !== "category") {
     return null;
   }
-  const assigned = new Map(
+  const assigned = HashMap.fromIterable(
     selection?.kind === "category"
       ? selection.assignments.map((assignment) => [
           assignment.statementKey,
@@ -170,10 +220,13 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
       {responseSpec.statements.map((statement) => {
         const statementId = statementLabelId(id, statement.statementKey);
         const statementHeadingId = `${statementId}-label`;
+        const assignedCategory = Option.getOrUndefined(
+          HashMap.get(assigned, statement.statementKey)
+        );
         return (
           <section className="space-y-3" key={statement.statementKey}>
             <div id={statementHeadingId}>
-              {value.renderLabel({
+              {renderLabel({
                 id: statementId,
                 label: statement.label,
               })}
@@ -191,7 +244,7 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
                   )
                 )
               }
-              value={assigned.get(statement.statementKey) ?? ""}
+              value={assignedCategory ?? ""}
             >
               {responseSpec.categories.map((category) => (
                 <TryoutSelectableRadioOption
@@ -201,10 +254,7 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
                       ? undefined
                       : statement.correctCategoryKey === category.categoryKey
                   )}
-                  checked={
-                    assigned.get(statement.statementKey) ===
-                    category.categoryKey
-                  }
+                  checked={assignedCategory === category.categoryKey}
                   disabled={locked}
                   id={categoryLabelId(
                     id,
@@ -212,7 +262,7 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
                     category.categoryKey
                   )}
                   key={category.categoryKey}
-                  label={value.renderLabel({
+                  label={renderLabel({
                     correctness: previewCorrectness(
                       value.revealAnswers,
                       statement.correctCategoryKey === undefined

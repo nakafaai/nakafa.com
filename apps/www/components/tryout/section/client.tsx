@@ -1,8 +1,10 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { tryoutRuntimeStateValidator } from "@repo/backend/confect/tryouts/runtime/spec";
+import { Schema } from "effect";
 import { useLocale } from "next-intl";
 import { type ReactNode, Suspense, use, useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -48,13 +50,17 @@ interface TryoutSectionPageClientProps {
   setHref: string;
 }
 
-type TryoutSectionRouteBinding = {
-  attemptId: Id<"tryoutAttempts">;
-  initialState: TryoutSectionInitialState;
-  startHref: string | null;
-} | null;
+const TryoutSectionRouteBindingSchema = Schema.NullOr(
+  Schema.Struct({
+    attemptId: IdSchema("tryoutAttempts"),
+    initialState: tryoutRuntimeStateValidator,
+    startHref: Schema.NullOr(Schema.String),
+  })
+);
+type TryoutSectionRouteBinding = typeof TryoutSectionRouteBindingSchema.Type;
 
-interface TryoutSectionBodyValue {
+interface TryoutSectionBodyProps {
+  children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
   runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
 }
@@ -239,7 +245,7 @@ function ResolvedTryoutSectionPage({
             }}
           />
         )}
-        <TryoutSectionBody value={{ content, runtimeState }}>
+        <TryoutSectionBody content={content} runtimeState={runtimeState}>
           {children}
         </TryoutSectionBody>
       </TryoutPageBody>
@@ -315,15 +321,13 @@ function TryoutSectionHeader({
 /** Keeps signed content loading separate from stable page controls. */
 function TryoutSectionBody({
   children,
-  value,
-}: {
-  children: ReactNode;
-  value: TryoutSectionBodyValue;
-}) {
-  if (value.runtimeState.kind === "none") {
+  content,
+  runtimeState,
+}: TryoutSectionBodyProps) {
+  if (runtimeState.kind === "none") {
     return null;
   }
-  if (value.runtimeState.kind === "review") {
+  if (runtimeState.kind === "review") {
     return (
       <Suspense fallback={null}>
         {children ?? <TryoutContentRefresh />}
@@ -332,37 +336,39 @@ function TryoutSectionBody({
   }
   return (
     <Suspense fallback={null}>
-      <TryoutSectionRuntimeContent value={value} />
+      <TryoutSectionRuntimeContent
+        content={content}
+        runtimeState={runtimeState}
+      />
     </Suspense>
   );
 }
 
 /** Resolves signed content only inside the section runtime region. */
 function TryoutSectionRuntimeContent({
-  value,
-}: {
-  value: TryoutSectionBodyValue;
-}) {
-  if (!value.content) {
+  content,
+  runtimeState,
+}: Pick<TryoutSectionBodyProps, "content" | "runtimeState">) {
+  if (!content) {
     return <TryoutContentRefresh />;
   }
 
-  const content = use(value.content);
-  if (content.questions.length === 0) {
+  const loadedContent = use(content);
+  if (loadedContent.questions.length === 0) {
     return <TryoutContentRefresh />;
   }
-  if (value.runtimeState.kind === "none") {
+  if (runtimeState.kind === "none") {
     return null;
   }
-  if (value.runtimeState.kind === "review") {
+  if (runtimeState.kind === "review") {
     return <TryoutContentRefresh />;
   }
   return (
     <TryoutRuntime
       value={{
-        expired: value.runtimeState.kind !== "active",
-        questions: content.questions,
-        runtime: value.runtimeState.runtime,
+        expired: runtimeState.kind !== "active",
+        questions: loadedContent.questions,
+        runtime: runtimeState.runtime,
       }}
     />
   );

@@ -1,3 +1,4 @@
+import { HashMap, HashSet, Option } from "effect";
 import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface.client";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label.client";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
@@ -25,12 +26,12 @@ export function TryoutReviewedResponse({
   if (responseSpec.kind === "short-answer" || responseSpec.kind === "rubric") {
     return null;
   }
-  const selected = new Set(readSelectedOptionKeys(selection));
+  const selected = HashSet.fromIterable(readSelectedOptionKeys(selection));
   return (
     <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
       {responseSpec.options.map((option) => (
         <TryoutReviewedChoice
-          checked={selected.has(option.optionKey)}
+          checked={HashSet.has(selected, option.optionKey)}
           id={`review-question-${questionOrder}-${option.optionKey}`}
           isCorrect={option.isCorrect}
           key={option.optionKey}
@@ -70,7 +71,7 @@ function ReviewedCategoryResponse({
   >;
   readonly selection: TryoutResponseSelection | null;
 }) {
-  const assigned = new Map(
+  const assigned = HashMap.fromIterable(
     selection?.kind === "category"
       ? selection.assignments.map((assignment) => [
           assignment.statementKey,
@@ -83,6 +84,9 @@ function ReviewedCategoryResponse({
       {responseSpec.statements.map((statement) => {
         const statementId = `review-question-${questionOrder}-${statement.statementKey}`;
         const statementLabelId = `${statementId}-label`;
+        const assignedCategory = Option.getOrUndefined(
+          HashMap.get(assigned, statement.statementKey)
+        );
         return (
           <section className="space-y-3" key={statement.statementKey}>
             <div id={statementLabelId}>
@@ -96,10 +100,7 @@ function ReviewedCategoryResponse({
             >
               {responseSpec.categories.map((category) => (
                 <TryoutReviewedChoice
-                  checked={
-                    assigned.get(statement.statementKey) ===
-                    category.categoryKey
-                  }
+                  checked={assignedCategory === category.categoryKey}
                   id={`${statementId}-${category.categoryKey}`}
                   isCorrect={
                     statement.correctCategoryKey === undefined
