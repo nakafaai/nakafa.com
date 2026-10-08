@@ -4,7 +4,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
-import { consumeAttachments } from "@repo/backend/confect/nina/attachments";
+import {
+  consumeAttachments,
+  requireStoredDocumentLimit,
+} from "@repo/backend/confect/nina/attachments";
 import { NINA_DOCUMENT_SIZE } from "@repo/backend/confect/nina/uploads.spec";
 import {
   createConvexTestWithBetterAuth,
@@ -69,6 +72,33 @@ function grantsKept(t: TestTransaction, uploadIds: UploadId[]) {
       Arr.map(
         uploadIds,
         async (uploadId) => (await ctx.db.get("ninaUploads", uploadId)) !== null
+      )
+    )
+  );
+}
+
+/** Reads the stored file of each upload, as a stored message names its files. */
+function storedFileIds(t: TestTransaction, uploadIds: UploadId[]) {
+  return t.run(async (ctx) => {
+    const uploads = await Promise.all(
+      Arr.map(uploadIds, (uploadId) => ctx.db.get("ninaUploads", uploadId))
+    );
+    return Arr.flatMap(uploads, (upload) =>
+      upload?.state.status === "ready" ? [upload.state.fileId] : []
+    );
+  });
+}
+
+/** Applies the limit to stored files and reports the refusal, if any. */
+function checkStored(t: TestTransaction, fileIds: readonly string[]) {
+  return t.run((ctx) =>
+    Effect.runPromise(
+      requireStoredDocumentLimit(fileIds).pipe(
+        Effect.match({
+          onFailure: (error) => error.code,
+          onSuccess: () => "accepted" as const,
+        }),
+        Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
       )
     )
   );
@@ -142,5 +172,28 @@ describe("Nina attachment document limit", () => {
 
     expect(partTypes).toEqual(["image", "file"]);
     expect(await grantsKept(t, uploadIds)).toEqual([false, false]);
+  });
+  it("refuses a stored message whose documents total 10.1 MiB before a retry sends it", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { uploadIds } = await seedUploads(t, [
+      { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE - 2 * MiB },
+      { mediaType: "text/plain", size: 2 * MiB + TENTH_MIB },
+    ]);
+
+    expect(await checkStored(t, await storedFileIds(t, uploadIds))).toBe(
+      "NINA_UPLOAD_SIZE"
+    );
+  });
+
+  it("accepts a stored message whose documents fit, whatever its images weigh", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { uploadIds } = await seedUploads(t, [
+      { mediaType: "image/png", size: 12 * MiB },
+      { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE },
+    ]);
+
+    expect(await checkStored(t, await storedFileIds(t, uploadIds))).toBe(
+      "accepted"
+    );
   });
 });

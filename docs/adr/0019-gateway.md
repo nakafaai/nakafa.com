@@ -96,7 +96,9 @@ tools with a warning.
   adapter inlines it as base64, which adds a third to its size. Images still go
   by Convex storage URL and are not counted. The consume step refuses the
   message before it deletes any upload grant, and the composer refuses it before
-  the first upload starts.
+  the first upload starts. A retry applies the same limit to the stored
+  message, because a turn stored before this change could hold up to 80 MiB of
+  documents.
 - **Availability.** `GatewayLive` reads the service token once per action. A
   deployment that cannot use the gateway, such as a free, local, or self-hosted
   one, fails with `GatewayConfigurationError` before any request.
