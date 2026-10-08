@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { measureRouteJavascript } from "@/e2e/support/resources";
 import { appRoutes } from "@/e2e/support/route";
+
+const measurementJson = Schema.fromJsonString(Schema.Unknown);
+const prettyMeasurementJson = Schema.fromJsonString(Schema.Unknown, {
+  space: 2,
+});
 
 const HOMEPAGE_MAX_ENCODED_BYTES = 1_168_654;
 const HOMEPAGE_MAX_DECODED_BYTES = 3_809_519;
@@ -35,12 +40,14 @@ for (const budget of routeBudgets) {
     const measurement = await Effect.runPromise(
       measureRouteJavascript(browser, baseURL ?? "", budget.href)
     );
-    const measurementEvidence = JSON.stringify(measurement);
+    const measurementEvidence = Schema.encodeSync(measurementJson)(measurement);
 
     await testInfo.attach(
       `${budget.href.replaceAll("/", "_")}-resources.json`,
       {
-        body: Buffer.from(JSON.stringify(measurement, null, 2)),
+        body: Buffer.from(
+          Schema.encodeSync(prettyMeasurementJson)(measurement)
+        ),
         contentType: "application/json",
       }
     );
