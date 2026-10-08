@@ -1,25 +1,22 @@
-interface QuranName {
-  readonly transliteration: string;
-}
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import { Schema } from "effect";
 
-interface QuranSurahNavigation {
-  readonly name: QuranName;
-  readonly number: number;
-}
-
+type QuranName = Pick<QuranSurahRow["name"], "transliteration">;
+type QuranSurahNavigation = Pick<QuranSurahRow, "name" | "number">;
 type QuranSurahMetadata = null | QuranSurahNavigation;
 
+const QuranPaginationItemSchema = Schema.Struct({
+  href: Schema.String,
+  title: Schema.String,
+});
+
+const QuranPaginationSchema = Schema.Struct({
+  next: QuranPaginationItemSchema,
+  prev: QuranPaginationItemSchema,
+});
+
 /** Navigation data for Quran previous and next links. */
-export interface QuranPagination {
-  next: {
-    href: string;
-    title: string;
-  };
-  prev: {
-    href: string;
-    title: string;
-  };
-}
+export type QuranPagination = typeof QuranPaginationSchema.Type;
 
 /** Creates pagination data for Quran surah navigation. */
 export function getQuranPagination({

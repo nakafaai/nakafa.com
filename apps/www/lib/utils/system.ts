@@ -1,4 +1,5 @@
 import { HttpClient } from "@confect/js";
+import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { Effect, Schema } from "effect";
@@ -15,14 +16,13 @@ class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
     namespace: Schema.String,
   }
 ) {}
-interface SystemMetadata {
-  authors: {
-    name: string;
-  }[];
-  date: string;
-  description?: string;
-  title: string;
-}
+const SystemMetadataSchema = Schema.Struct({
+  authors: Schema.Array(ContentAuthorSchema),
+  date: Schema.String,
+  description: Schema.optionalKey(Schema.String),
+  title: Schema.String,
+});
+type SystemMetadata = typeof SystemMetadataSchema.Type;
 
 /** Gets SEO metadata from the Convex route catalog with translation defaults. */
 export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(

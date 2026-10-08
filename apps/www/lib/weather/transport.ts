@@ -1,5 +1,5 @@
 import { Effect, Schedule, Schema } from "effect";
-import { HttpClient, HttpClientResponse, type UrlParams } from "effect/http";
+import { HttpClient, HttpClientResponse } from "effect/http";
 
 const WEATHER_REQUEST_TIMEOUT = "10 seconds";
 
@@ -11,11 +11,12 @@ class WeatherClientRequestError extends Schema.TaggedError<WeatherClientRequestE
   }
 ) {}
 
-interface WeatherRequestInput {
-  endpoint: string;
-  searchParams: UrlParams.Input;
-  url: string;
-}
+const WeatherRequestInputSchema = Schema.Struct({
+  endpoint: Schema.String,
+  searchParams: Schema.Record(Schema.String, Schema.String),
+  url: Schema.String,
+});
+type WeatherRequestInput = typeof WeatherRequestInputSchema.Type;
 
 /** Requests OpenWeather JSON through the injected Effect HTTP client. */
 export const requestWeatherJson = Effect.fn("weather.requestJson")(function* ({
