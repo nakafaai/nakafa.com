@@ -193,4 +193,53 @@ export const JSON_RPC_CASES: readonly McpCase[] = [
       method: "POST",
     },
   },
+  {
+    answer: {
+      body: {
+        json: {
+          error: {
+            code: -32_600,
+            message:
+              "Bad Request: the request body is not a valid JSON-RPC message",
+          },
+          id: null,
+          jsonrpc: "2.0",
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 400,
+    },
+    name: "an empty JSON object is refused as an invalid JSON-RPC message",
+    request: {
+      body: jsonBody({}),
+      headers: {
+        accept: "application/json, text/event-stream",
+        "content-type": "application/json",
+        "mcp-protocol-version": "2026-07-28",
+      },
+      method: "POST",
+    },
+  },
+  {
+    answer: {
+      body: { text: "" },
+      headers: BODYLESS_RESPONSE_HEADERS,
+      status: 202,
+    },
+    name: "a notification with an unknown method is accepted without a body",
+    request: {
+      body: jsonBody({
+        jsonrpc: "2.0",
+        method: "notifications/unknown",
+        params: { _meta: MCP_CLIENT_META },
+      }),
+      headers: {
+        accept: "application/json, text/event-stream",
+        "content-type": "application/json",
+        "mcp-method": "notifications/unknown",
+        "mcp-protocol-version": "2026-07-28",
+      },
+      method: "POST",
+    },
+  },
 ];
