@@ -23,7 +23,6 @@ import {
 } from "@repo/backend/test/content/runtime";
 import { Effect, Schema } from "effect";
 
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const localizedRoutes = [
   {
     appLocale: "en",
@@ -102,9 +101,9 @@ describe("contentRelease/article/model", () => {
               Schema.fromJsonString(PublicContentRuntimeFoundSchema)
             )(result.runtimeJson ?? "");
             expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
-            const projection = yield* Schema.decodeEffect(JsonTextSchema)(
-              result.model.projectionJson ?? ""
-            );
+            const projection = yield* Schema.decodeEffect(
+              Schema.fromJsonString(ArticleProjectionSchema)
+            )(result.model.projectionJson ?? "");
             expect(runtime.projection).toEqual(projection);
             expect(runtime.delivery).toBe("public");
             const missing = yield* (yield* QueryRunner).runQuery(
