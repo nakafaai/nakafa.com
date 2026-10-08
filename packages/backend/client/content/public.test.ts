@@ -1,8 +1,12 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import {
@@ -32,7 +36,7 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
 const batchEndpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_BATCH_PATH}`;
@@ -44,6 +48,13 @@ const input = {
   appLocale: AppLocaleSchema.make("en"),
   publicPath: PublicPathSchema.make("test/head-0"),
 };
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
+const ArtifactJsonSchema = Schema.fromJsonString(SignedContentArtifactSchema);
+const ProjectionJsonSchema = Schema.fromJsonString(ContentProjectionSchema);
+const ReleaseJsonSchema = Schema.fromJsonString(SignedContentReleaseSchema);
+const RendererJsonSchema = Schema.fromJsonString(
+  RendererManifestEnvelopeSchema
+);
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const verifyMock = vi.hoisted(() => vi.fn());
 
@@ -66,7 +77,7 @@ function createResponse(
       CONTENT_RUNTIME_RESPONSE_MARKER
     );
   }
-  const response = new Response(JSON.stringify(body), {
+  const response = new Response(Schema.encodeSync(JsonTextSchema)(body), {
     headers,
     status,
   });
@@ -79,15 +90,15 @@ function foundResponse(title?: string) {
   return {
     activeManifestHash: TEST_MANIFEST_HASH,
     activeReleaseId: TEST_RELEASE_ID,
-    artifact: JSON.parse(testArtifactJson()),
+    artifact: Schema.decodeSync(ArtifactJsonSchema)(testArtifactJson()),
     delivery: "public",
     kind: "found",
-    projection: JSON.parse(
+    projection: Schema.decodeSync(ProjectionJsonSchema)(
       testProjectionJson({ ...(title === undefined ? {} : { title }) })
     ),
     projectionHash: TEST_DIGEST,
-    release: JSON.parse(testReleaseJson()),
-    rendererManifest: JSON.parse(testRendererJson()),
+    release: Schema.decodeSync(ReleaseJsonSchema)(testReleaseJson()),
+    rendererManifest: Schema.decodeSync(RendererJsonSchema)(testRendererJson()),
     sourcePath: "packages/corpus/test/head-0/en.mdx",
   };
 }
@@ -116,11 +127,13 @@ describe("public content runtime client", () => {
     () =>
       Effect.gen(function* () {
         const response = foundResponse();
-        const renderer = JSON.parse(testRendererJson());
+        const renderer = yield* Schema.decodeEffect(RendererJsonSchema)(
+          testRendererJson()
+        );
         expect(
           yield* verifyPublicContentDelivery(
             input,
-            JSON.stringify(response),
+            yield* Schema.encodeEffect(JsonTextSchema)(response),
             renderer
           )
         ).toEqual(response);
@@ -157,7 +170,7 @@ describe("public content runtime client", () => {
       expect(
         yield* verifyPublicContentDelivery(
           input,
-          JSON.stringify(foundResponse()),
+          yield* Schema.encodeEffect(JsonTextSchema)(foundResponse()),
           {}
         ).pipe(Effect.flip)
       ).toMatchObject({

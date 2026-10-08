@@ -1,3 +1,4 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   decodePublicContentRuntimeRequest,
   decodePublicContentRuntimeResponse,
@@ -38,19 +39,24 @@ import { Effect, Array as ReadonlyArray, Schema } from "effect";
 import type { HttpClientResponse } from "effect/http";
 /** Server-owned connection values for the private content runtime endpoint. */
 export type ContentRuntimeTarget = ContentHttpTarget;
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
+const PublicContentRuntimeInputSchema = Schema.Struct({
+  appLocale: AppLocaleSchema,
+  publicPath: Schema.String,
+});
 /** Public route identity without its module-owned delivery discriminator. */
-export interface PublicContentRuntimeInput {
-  readonly appLocale: PublicContentRuntimeRequest["appLocale"];
-  readonly publicPath: string;
-}
-type PublicContentVerification =
-  | {
-      readonly kind: "frozen";
-    }
-  | {
-      readonly kind: "live";
-      readonly rendererManifest: unknown;
-    };
+export type PublicContentRuntimeInput =
+  typeof PublicContentRuntimeInputSchema.Type;
+const PublicContentVerificationSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("frozen"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("live"),
+    rendererManifest: Schema.Unknown,
+  }),
+]);
+type PublicContentVerification = typeof PublicContentVerificationSchema.Type;
 /** Selects the renderer authority required by one public read capability. */
 function getVerificationRenderer(
   verification: PublicContentVerification,
@@ -308,13 +314,14 @@ export const verifyPublicContentDelivery = Effect.fn(
       reason: "response-size",
     });
   }
-  const value = yield* Effect.try({
-    catch: () =>
-      new ContentTransportError({
-        reason: "json-syntax",
-      }),
-    try: (): unknown => JSON.parse(source),
-  });
+  const value = yield* Schema.decodeEffect(JsonTextSchema)(source).pipe(
+    Effect.mapError(
+      () =>
+        new ContentTransportError({
+          reason: "json-syntax",
+        })
+    )
+  );
   const response = yield* decodePublicContentRuntimeResponse(value).pipe(
     Effect.mapError(
       () =>

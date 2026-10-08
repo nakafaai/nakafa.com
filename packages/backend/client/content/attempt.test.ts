@@ -1,7 +1,13 @@
 import { Ref } from "@confect/core";
 import { assert, beforeEach, describe, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import {
+  Ed25519SignatureSchema,
+  GitCommitShaSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { MAX_PROTECTED_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import {
   ContentRuntimeMissingError,
@@ -19,7 +25,10 @@ import {
 } from "@repo/backend/test/content/proof";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+const ArtifactJsonSchema = Schema.fromJsonString(SignedContentArtifactSchema);
+const BundleJsonSchema = Schema.fromJsonString(SignedTryoutRuntimeBundleSchema);
 
 vi.mock("server-only", () => ({}));
 async function setup(historical = false) {
@@ -63,7 +72,7 @@ describe("attempt content verification", () => {
       const bundle = yield* decodeTryoutRuntimeBundleJson(row.bundleJson);
       const changedArtifact = {
         ...first,
-        artifactJson: JSON.stringify({
+        artifactJson: yield* Schema.encodeEffect(ArtifactJsonSchema)({
           ...artifact,
           payload: {
             ...artifact.payload,
@@ -71,11 +80,11 @@ describe("attempt content verification", () => {
           },
         }),
       };
-      const changedBundle = JSON.stringify({
+      const changedBundle = yield* Schema.encodeEffect(BundleJsonSchema)({
         ...bundle,
         payload: {
           ...bundle.payload,
-          sourceGitSha: "b".repeat(40),
+          sourceGitSha: GitCommitShaSchema.make("b".repeat(40)),
         },
       });
       for (const { bytes, expectedTag } of [
@@ -128,9 +137,14 @@ describe("attempt content verification", () => {
               TEST_KEY_RESOLVER
             )
           );
-          assert.strictEqual(JSON.stringify(verified.bundle), row.bundleJson);
           assert.strictEqual(
-            JSON.stringify(verified.items[0]?.artifact),
+            yield* Schema.encodeEffect(BundleJsonSchema)(verified.bundle),
+            row.bundleJson
+          );
+          const verifiedArtifact = verified.items[0]?.artifact;
+          assert.isDefined(verifiedArtifact);
+          assert.strictEqual(
+            yield* Schema.encodeEffect(ArtifactJsonSchema)(verifiedArtifact),
             row.items[0]?.artifactJson
           );
         })
@@ -210,7 +224,9 @@ describe("attempt content verification", () => {
         const first = row.items[0];
         assert.isDefined(first);
         const artifact = yield* decodeArtifactJson(first.artifactJson);
-        const signature = `${artifact.signature.startsWith("A") ? "B" : "A"}${artifact.signature.slice(1)}`;
+        const signature = Ed25519SignatureSchema.make(
+          `${artifact.signature.startsWith("A") ? "B" : "A"}${artifact.signature.slice(1)}`
+        );
         const error = yield* verifyAttemptContent(
           request,
           {
@@ -218,7 +234,7 @@ describe("attempt content verification", () => {
             items: [
               {
                 ...first,
-                artifactJson: JSON.stringify({
+                artifactJson: yield* Schema.encodeEffect(ArtifactJsonSchema)({
                   ...artifact,
                   signature,
                 }),
@@ -244,12 +260,14 @@ describe("attempt content verification", () => {
       Effect.gen(function* () {
         const { request, row } = yield* Effect.promise(() => setup(true));
         const bundle = yield* decodeTryoutRuntimeBundleJson(row.bundleJson);
-        const signature = `${bundle.signature.startsWith("A") ? "B" : "A"}${bundle.signature.slice(1)}`;
+        const signature = Ed25519SignatureSchema.make(
+          `${bundle.signature.startsWith("A") ? "B" : "A"}${bundle.signature.slice(1)}`
+        );
         const error = yield* verifyAttemptContent(
           request,
           {
             ...row,
-            bundleJson: JSON.stringify({
+            bundleJson: yield* Schema.encodeEffect(BundleJsonSchema)({
               ...bundle,
               signature,
             }),
