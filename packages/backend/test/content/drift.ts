@@ -1,6 +1,9 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { Ed25519SignatureSchema } from "@nakafa/aksara-contracts/ids";
-import { encodeArtifactJson } from "@repo/backend/confect/contentRelease/wire";
+import {
+  encodeArtifactJson,
+  encodeRendererJson,
+} from "@repo/backend/confect/contentRelease/wire";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testProofRenderer } from "@repo/backend/test/content/proof";
 import { Data, Effect, Schema } from "effect";
@@ -50,7 +53,7 @@ export const driftStoredRenderer = Effect.fn(
   const release = yield* loadProofRelease(ctx);
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", release._id, {
-      rendererJson: JSON.stringify(testProofRenderer("h1")),
+      rendererJson: encodeRendererJson(testProofRenderer("h1")),
     })
   );
 });

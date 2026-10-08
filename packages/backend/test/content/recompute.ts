@@ -24,6 +24,13 @@ import { stageItemProgram } from "@repo/backend/confect/contentRelease/items";
 import { stageProgram as stageRelease } from "@repo/backend/confect/contentRelease/manifest";
 import { stageProjectionProgram } from "@repo/backend/confect/contentRelease/projection";
 import { stageProgram as stageRoutes } from "@repo/backend/confect/contentRelease/routes";
+import {
+  encodeArtifactJson,
+  encodeItemJson,
+  encodeReleaseJson,
+  encodeRendererJson,
+  encodeRouteJson,
+} from "@repo/backend/confect/contentRelease/wire";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_PROOF_RENDERER,
@@ -162,8 +169,8 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
     );
     yield* stageRelease(
       "candidate",
-      JSON.stringify(signed),
-      JSON.stringify(TEST_PROOF_RENDERER)
+      encodeReleaseJson(signed),
+      encodeRendererJson(TEST_PROOF_RENDERER)
     );
     for (let start = 0; start < count; start += MAX_ITEM_BATCH_COUNT) {
       const batchIndex = start / MAX_ITEM_BATCH_COUNT;
@@ -171,12 +178,12 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
       yield* stageItemProgram(
         releaseId,
         batchIndex,
-        batch.map(({ item }) => JSON.stringify(item))
+        batch.map(({ item }) => encodeItemJson(item))
       );
       yield* stageArtifacts(
         releaseId,
         batchIndex,
-        batch.map(({ artifact }) => JSON.stringify(artifact))
+        batch.map(({ artifact }) => encodeArtifactJson(artifact))
       );
       yield* stageProjectionProgram(
         releaseId,
@@ -190,7 +197,7 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
         start / MAX_ITEM_BATCH_COUNT,
         routes
           .slice(start, start + MAX_ITEM_BATCH_COUNT)
-          .map((route) => JSON.stringify(route))
+          .map((route) => encodeRouteJson(route))
       );
     }
     return signed.manifestHash;

@@ -17,16 +17,18 @@ import {
 } from "@repo/backend/test/content/release";
 import { makeTryoutPlacementRow } from "@repo/backend/test/tryout/snapshot";
 import { getDocumentSize, type Value } from "convex/values";
+import { Schema } from "effect";
 
 type ArtifactHash = TryoutPlacement["questionArtifactHash"];
 
 /** One stored version or item naming an artifact at a release sequence. */
-interface ArtifactRow {
-  readonly artifactHash: string;
-  readonly contentKey: string;
-  readonly index: number;
-  readonly sequence: number;
-}
+const ArtifactRowSchema = Schema.Struct({
+  artifactHash: Schema.String,
+  contentKey: Schema.String,
+  index: Schema.Finite,
+  sequence: Schema.Finite,
+});
+type ArtifactRow = typeof ArtifactRowSchema.Type;
 
 /** Insignificant JSON whitespace filling one row to one byte below a ceiling. */
 export function ceilingPadding(limit: number, row: Record<string, Value>) {

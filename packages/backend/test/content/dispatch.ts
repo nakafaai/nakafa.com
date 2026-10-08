@@ -27,12 +27,21 @@ import { FetchClient } from "@repo/utilities/http/client";
 import type { TestConvex } from "convex-test";
 import { Effect, Layer, Schema } from "effect";
 
+/** Encodes a request as it arrives on the wire, so malformed requests still reach the dispatcher. */
+const encodeRequestJson = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
+/** Decodes the dispatcher's response text through the response contract. */
+const decodePublicationResponse = Schema.decodeUnknownSync(
+  Schema.fromJsonString(PublicationResponseSchema)
+);
+
 /** Executes one request through the real Node dispatcher and technical key. */
 export async function sendPublication(
   target: TestConvex<typeof schema>,
   request: unknown
 ) {
-  const source = JSON.stringify(request);
+  const source = encodeRequestJson(request);
   const result = await target.action((ctx) =>
     Effect.runPromise(
       dispatchPublication(
@@ -55,9 +64,7 @@ export async function sendPublication(
       )
     )
   );
-  return Schema.decodeUnknownSync(PublicationResponseSchema)(
-    JSON.parse(result.body)
-  );
+  return decodePublicationResponse(result.body);
 }
 
 /** Polls one durable ingress proof after its scheduled workflow completes. */

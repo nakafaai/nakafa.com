@@ -5,6 +5,11 @@ import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import schema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
+import {
+  encodeArtifactJson,
+  encodeReleaseJson,
+  encodeRendererJson,
+} from "@repo/backend/confect/contentRelease/wire";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
@@ -19,7 +24,14 @@ import {
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { Data, Effect, Predicate, Record as Rec, Schema } from "effect";
+import {
+  Data,
+  Effect,
+  MutableHashMap,
+  Predicate,
+  Record as Rec,
+  Schema,
+} from "effect";
 
 export const TEST_PUBLICATION_RELEASE = testSignedRelease(
   testEmptyManifest(ReleaseIdSchema.make("publication-active"))
@@ -30,7 +42,7 @@ export function makeRuntimeSource(
   signed: SignedContentRelease = TEST_PUBLICATION_RELEASE,
   resultFamilies: SignedContentRelease["manifest"]["scope"]["families"] = []
 ) {
-  const source = new Map<TableNames, readonly unknown[]>();
+  const source = MutableHashMap.empty<TableNames, readonly unknown[]>();
   const state = {
     activeManifestHash: signed.manifestHash,
     activeReleaseId: signed.manifest.releaseId,
@@ -51,7 +63,7 @@ export function makeRuntimeSource(
     searchSlot: "blue",
     updatedAt: 100,
   } satisfies PublicationRow<"contentState">;
-  source.set("contentState", [state]);
+  MutableHashMap.set(source, "contentState", [state]);
   const release = {
     ...releaseReachability(signed),
     baseFamilies: [],
@@ -59,8 +71,8 @@ export function makeRuntimeSource(
     checkedItems: 0,
     createdAt: 100,
     releaseId: signed.manifest.releaseId,
-    releaseJson: JSON.stringify(signed),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+    releaseJson: encodeReleaseJson(signed),
+    rendererJson: encodeRendererJson(TEST_PROOF_RENDERER),
     resultFamilies: [...resultFamilies],
     role: "candidate",
     sequence: 9,
@@ -75,7 +87,7 @@ export function makeRuntimeSource(
     status: "completed",
     updatedAt: 100,
   } satisfies PublicationRow<"contentReleases">;
-  source.set("contentReleases", [release]);
+  MutableHashMap.set(source, "contentReleases", [release]);
   return { source, state, release };
 }
 
@@ -122,15 +134,15 @@ export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
     }),
     sequence: head.sequence,
   } satisfies PublicationRow<"contentBindings">;
-  fixture.source.set("contentHeads", [head]);
-  fixture.source.set("contentBindings", [binding]);
-  fixture.source.set("contentArtifacts", [
+  MutableHashMap.set(fixture.source, "contentHeads", [head]);
+  MutableHashMap.set(fixture.source, "contentBindings", [binding]);
+  MutableHashMap.set(fixture.source, "contentArtifacts", [
     {
       artifactHash: artifact.artifactHash,
-      artifactJson: JSON.stringify(artifact),
+      artifactJson: encodeArtifactJson(artifact),
     },
   ]);
-  fixture.source.set("contentKeys", [
+  MutableHashMap.set(fixture.source, "contentKeys", [
     {
       artifactLocale: projection.artifactLocale,
       contentKey: projection.contentKey,
@@ -143,7 +155,7 @@ export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
 
 /** Decodes fixture rows through their native table contracts into a fresh Confect database. */
 export const createTestPublication = Effect.fn("TestContent.createPublication")(
-  function* (source: ReadonlyMap<TableNames, readonly unknown[]>) {
+  function* (source: Iterable<readonly [TableNames, readonly unknown[]]>) {
     const runtime = yield* Confect;
     yield* runtime.run(
       Effect.gen(function* () {
