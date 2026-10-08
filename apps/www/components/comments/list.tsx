@@ -8,7 +8,7 @@ import {
 import refs from "@repo/backend/confect/_generated/refs";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Effect, Schema } from "effect";
+import { DateTime, Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useOptimistic } from "react";
 import { toast } from "sonner";
@@ -51,7 +51,7 @@ export function CommentsList({ slug }: { slug: string }) {
     }
     showDraft({
       _id: Effect.runSync(randomUuid),
-      _creationTime: Date.now(),
+      _creationTime: DateTime.toEpochMillis(DateTime.nowUnsafe()),
       text,
       slug,
       user: {

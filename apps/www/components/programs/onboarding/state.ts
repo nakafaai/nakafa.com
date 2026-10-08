@@ -1,23 +1,20 @@
 import type { Ref } from "@confect/core";
 import type refs from "@repo/backend/confect/_generated/refs";
+import type { onboardingProfileValidator } from "@repo/backend/confect/onboarding/schema";
 
 import type {
   OnboardingAnswer,
-  OnboardingFocus,
   OnboardingItemName,
-  OnboardingRegion,
-  OnboardingRole,
 } from "@/components/programs/onboarding/options";
 
 export type OnboardingProfile = Ref.Returns<
   typeof refs.public.onboarding.queries.getStatus
 >["profile"];
 
-export interface OnboardingAnswers {
-  readonly focus?: OnboardingFocus;
-  readonly region?: OnboardingRegion;
-  readonly role?: OnboardingRole;
-}
+export type OnboardingAnswers = Pick<
+  typeof onboardingProfileValidator.Type,
+  "focus" | "region" | "role"
+>;
 
 /** Initializes controlled questionnaire answers from a resumable profile. */
 export function getOnboardingAnswers(

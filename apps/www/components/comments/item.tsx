@@ -22,6 +22,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "cn";
 import { formatDistanceToNow } from "date-fns";
+import { Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, type ReactNode, useState } from "react";
 import {
@@ -39,13 +40,17 @@ import { getInitialName } from "@/lib/utils/helper";
 export type CommentWithUser = Ref.Returns<
   typeof refs.public.comments.queries.getCommentsBySlug
 >["page"][number];
+/** The identity every displayed comment carries, including a pending draft. */
+const CommentDisplayIdentitySchema = Schema.Struct({
+  _id: Schema.String,
+  _creationTime: Schema.Finite,
+});
+
 export type CommentDisplay = Pick<
   CommentWithUser,
   "text" | "user" | "replyToUser" | "replyToText" | "parentId"
-> & {
-  _id: string;
-  _creationTime: number;
-};
+> &
+  typeof CommentDisplayIdentitySchema.Type;
 
 /** Compose one comment row with its optional reply editor. */
 export function CommentItem({

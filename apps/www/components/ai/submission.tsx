@@ -3,7 +3,7 @@
 import type { Ref } from "@confect/core";
 import { type OptimisticUpdate, useAction, useMutation } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { NinaFocusInput } from "@repo/backend/confect/nina/contract/focus";
+import { NinaFocusInputSchema } from "@repo/backend/confect/nina/contract/focus";
 import {
   NinaFileType,
   NinaUploadError,
@@ -12,7 +12,16 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { randomUuid } from "@repo/utilities/uuid";
 import type { FileUIPart } from "ai";
-import { Effect, Exit, Option, Result, Schema } from "effect";
+import {
+  DateTime,
+  Effect,
+  Exit,
+  HashMap,
+  MutableHashMap,
+  Option,
+  Result,
+  Schema,
+} from "effect";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useAi } from "@/components/ai/context";
@@ -29,14 +38,18 @@ import {
 } from "@/lib/utils/browser";
 
 type Start = typeof refs.public.nina.turns.start;
-export type NinaDraft = PromptInputMessage & {
-  focus?: NinaFocusInput;
-  text: string;
-};
+const NinaDraftSchema = Schema.Struct({
+  focus: Schema.optionalKey(NinaFocusInputSchema),
+  text: Schema.String,
+});
+export type NinaDraft = PromptInputMessage & typeof NinaDraftSchema.Type;
+
+/** Encodes a payload as JSON text, so two payloads match when their text does. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Confect replays this callback until the authoritative message arrives. */
 function optimisticPrompt(
-  previews: ReadonlyMap<Id<"ninaUploads">, FileUIPart>,
+  previews: HashMap.HashMap<Id<"ninaUploads">, FileUIPart>,
   createdAt: number
 ): OptimisticUpdate<Start> {
   return (store, args) => {
@@ -70,7 +83,7 @@ function optimisticPrompt(
             parts: [
               { type: "text", text: input.prompt.text },
               ...(input.prompt.uploadIds ?? []).flatMap((id) => {
-                const file = previews.get(id);
+                const file = Option.getOrUndefined(HashMap.get(previews, id));
                 return file ? [file] : [];
               }),
             ],
@@ -119,7 +132,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   attachment: NonNullable<NinaDraft["files"]>[number],
   upload: ReturnType<typeof useAction<typeof refs.public.nina.uploads.save>>,
   uploaded: WeakMap<File, Id<"ninaUploads">>,
-  previews: Map<Id<"ninaUploads">, FileUIPart>
+  previews: MutableHashMap.MutableHashMap<Id<"ninaUploads">, FileUIPart>
 ) {
   const cached = uploaded.get(attachment.file);
   if (cached) {
@@ -153,7 +166,7 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
       }),
   }).pipe(Effect.flatMap(Effect.fromResult));
   uploaded.set(attachment.file, id);
-  previews.set(id, {
+  MutableHashMap.set(previews, id, {
     type: "file",
     url: attachment.url,
     mediaType,
@@ -166,7 +179,9 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
 export function useNinaSubmission() {
   const upload = useAction(refs.public.nina.uploads.save);
   const uploaded = useRef(new WeakMap<File, Id<"ninaUploads">>());
-  const previews = useRef(new Map<Id<"ninaUploads">, FileUIPart>());
+  const previews = useRef(
+    MutableHashMap.empty<Id<"ninaUploads">, FileUIPart>()
+  );
   const start = useMutation(refs.public.nina.turns.start);
   const getModel = useAi((state) => state.getModel);
   const addChatDraft = useAi((state) => state.addChatDraft);
@@ -192,34 +207,40 @@ export function useNinaSubmission() {
     }
     const result = await Effect.runPromise(
       inputProgram.pipe(
-        Effect.flatMap((input) => {
-          const payload = {
-            ...(chatId ? { chatId } : {}),
-            input,
-            modelId: getModel(),
-          };
-          const previous = uncertain.current;
-          const same =
-            previous &&
-            JSON.stringify({ ...previous, requestId: undefined }) ===
-              JSON.stringify(payload);
-          const args = {
-            ...payload,
-            requestId: same ? previous.requestId : Effect.runSync(randomUuid),
-          };
-          uncertain.current = args;
-          const submit = start.withOptimisticUpdate(
-            optimisticPrompt(new Map(previews.current), Date.now())
-          );
-          return Effect.tryPromise({
-            try: () => submit(args),
-            catch: () =>
-              new NinaConnectionError({
-                code: "NINA_CONNECTION_FAILED",
-                message: "Nina admission could not be confirmed.",
-              }),
-          }).pipe(Effect.flatMap(Effect.fromResult));
-        }),
+        Effect.flatMap((input) =>
+          Effect.gen(function* () {
+            const payload = {
+              ...(chatId ? { chatId } : {}),
+              input,
+              modelId: getModel(),
+            };
+            const previous = uncertain.current;
+            const same =
+              previous &&
+              encodeJson({ ...previous, requestId: undefined }) ===
+                encodeJson(payload);
+            const args = {
+              ...payload,
+              requestId: same ? previous.requestId : yield* randomUuid,
+            };
+            uncertain.current = args;
+            const now = yield* DateTime.now;
+            const submit = start.withOptimisticUpdate(
+              optimisticPrompt(
+                HashMap.fromIterable(previews.current),
+                DateTime.toEpochMillis(now)
+              )
+            );
+            return yield* Effect.tryPromise({
+              try: () => submit(args),
+              catch: () =>
+                new NinaConnectionError({
+                  code: "NINA_CONNECTION_FAILED",
+                  message: "Nina admission could not be confirmed.",
+                }),
+            }).pipe(Effect.flatMap(Effect.fromResult));
+          })
+        ),
         Effect.onExit((exit) =>
           Effect.sync(() => {
             if (!draftKey) {
@@ -243,7 +264,7 @@ export function useNinaSubmission() {
     if (Result.isSuccess(result)) {
       uncertain.current = null;
       uploaded.current = new WeakMap();
-      previews.current.clear();
+      MutableHashMap.clear(previews.current);
       return result.success;
     }
     if (result.failure._tag !== "NinaConnectionError") {
@@ -254,7 +275,7 @@ export function useNinaSubmission() {
       result.failure.code === "NINA_UPLOAD_INVALID"
     ) {
       uploaded.current = new WeakMap();
-      previews.current.clear();
+      MutableHashMap.clear(previews.current);
     }
     setError(result.failure);
     await Effect.runPromise(

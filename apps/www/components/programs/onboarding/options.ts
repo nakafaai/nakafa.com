@@ -4,13 +4,13 @@ import {
   Globe02Icon,
   Quiz03Icon,
 } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
 import type refs from "@repo/backend/confect/_generated/refs";
 import {
   onboardingFocuses,
   onboardingRegions,
 } from "@repo/backend/confect/onboarding/values";
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
+import { Schema } from "effect";
 
 import { roleIconByValue } from "@/lib/data/roles";
 
@@ -31,13 +31,23 @@ export type OnboardingFocus = Extract<
 >["value"];
 export type OnboardingItemName = OnboardingAnswer["kind"];
 
-interface OnboardingOption<Value extends string> {
-  readonly countryCode?: string;
-  readonly descriptionKey?: string;
-  readonly icon?: IconSvgElement;
-  readonly titleKey: string;
-  readonly value: Value;
-}
+/** One hugeicons icon: its SVG elements, each a tag with its attributes. */
+const IconSvgElementSchema = Schema.Array(
+  Schema.Tuple([
+    Schema.String,
+    Schema.Record(Schema.String, Schema.Union([Schema.String, Schema.Finite])),
+  ])
+);
+
+/** The display metadata of one onboarding choice, before its value is added. */
+const OnboardingOptionMetadataSchema = Schema.Struct({
+  countryCode: Schema.optionalKey(Schema.String),
+  descriptionKey: Schema.optionalKey(Schema.String),
+  icon: Schema.optionalKey(IconSvgElementSchema),
+  titleKey: Schema.String,
+});
+
+type OnboardingOptionMetadata = typeof OnboardingOptionMetadataSchema.Type;
 
 const roleMetadata = {
   parent: {
@@ -55,10 +65,7 @@ const roleMetadata = {
     icon: roleIconByValue.teacher,
     titleKey: "onboarding.role.teacher.title",
   },
-} as const satisfies Record<
-  OnboardingRole,
-  Omit<OnboardingOption<OnboardingRole>, "value">
->;
+} as const satisfies Record<OnboardingRole, OnboardingOptionMetadata>;
 
 const regionMetadata = {
   germany: {
@@ -85,10 +92,7 @@ const regionMetadata = {
     countryCode: "US",
     titleKey: "onboarding.region.united-states.title",
   },
-} as const satisfies Record<
-  OnboardingRegion,
-  Omit<OnboardingOption<OnboardingRegion>, "value">
->;
+} as const satisfies Record<OnboardingRegion, OnboardingOptionMetadata>;
 
 const focusMetadata = {
   learning: {
@@ -101,10 +105,7 @@ const focusMetadata = {
     icon: Quiz03Icon,
     titleKey: "onboarding.focus.tryout.title",
   },
-} as const satisfies Record<
-  OnboardingFocus,
-  Omit<OnboardingOption<OnboardingFocus>, "value">
->;
+} as const satisfies Record<OnboardingFocus, OnboardingOptionMetadata>;
 
 export const roleOptions = selfSelectableUserRoles.map((value) => ({
   ...roleMetadata[value],
