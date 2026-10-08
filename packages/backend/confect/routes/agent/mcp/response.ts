@@ -3,23 +3,19 @@ import { Array as Arr, Predicate, pipe, Schema } from "effect";
 const encodeJson = Schema.encodeUnknownSync(
   Schema.fromJsonString(Schema.Unknown)
 );
+/** Request headers the endpoint reads: none for sessions or GET streams, which it does not serve. */
 const DEFAULT_ALLOWED_HEADERS = [
   "accept",
   "baggage",
   "content-type",
-  "last-event-id",
   "mcp-method",
   "mcp-name",
   "mcp-protocol-version",
-  "mcp-session-id",
   "traceparent",
   "tracestate",
 ] as const;
-const EXPOSED_HEADERS = [
-  "MCP-Protocol-Version",
-  "MCP-Session-ID",
-  "Retry-After",
-] as const;
+/** Response headers a browser may read. The endpoint sends no session identifier. */
+const EXPOSED_HEADERS = ["MCP-Protocol-Version", "Retry-After"] as const;
 
 /** Builds one no-store JSON-RPC error at the protected HTTP boundary. */
 export function mcpErrorResponse(
@@ -140,7 +136,7 @@ export function withMcpResponseHeaders(response: Response, request: Request) {
   if (origin !== null) {
     headers.set("Access-Control-Allow-Credentials", "true");
   }
-  headers.set("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
+  headers.set("Access-Control-Allow-Methods", "POST,OPTIONS");
   headers.set("Access-Control-Allow-Headers", readAllowedHeaders(request));
   headers.set("Access-Control-Expose-Headers", Arr.join(EXPOSED_HEADERS, ","));
   headers.set("Cache-Control", "no-store");
