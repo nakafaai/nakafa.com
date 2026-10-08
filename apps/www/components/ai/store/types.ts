@@ -1,38 +1,46 @@
 "use client";
 
 import type { Ref } from "@confect/core";
+import { Id } from "@repo/backend/confect/_generated/id";
 import type refs from "@repo/backend/confect/_generated/refs";
-import type { ModelId } from "@repo/backend/confect/gateway/model";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { ModelId } from "@repo/backend/confect/gateway/model";
+import { NinaReceipt } from "@repo/backend/confect/nina/turns.spec";
+import { Schema } from "effect";
 
 /** A prompt Nina is admitting for the learner, shown before its chat exists. */
-export interface AiAsk {
-  id: string;
-  text: string;
-}
+const AiAskSchema = Schema.Struct({
+  id: Schema.String,
+  text: Schema.String,
+});
 
-export interface AiState {
-  activeChatId: Id<"chats"> | null;
-  ask: AiAsk | null;
-  chatDrafts: string[];
-  contextTitle: string | null;
-  model: ModelId;
-  open: boolean;
-  openingChat: {
-    receipt: Ref.Returns<typeof refs.public.nina.turns.start>;
-    prompt: Ref.Returns<typeof refs.public.nina.turns.start>["prompt"];
-    submittedAt: number;
-  } | null;
-  sheetActivated: boolean;
-  text: string;
-}
+export type AiAsk = typeof AiAskSchema.Type;
+
+const AiStateSchema = Schema.Struct({
+  activeChatId: Schema.NullOr(Id("chats")),
+  ask: Schema.NullOr(AiAskSchema),
+  chatDrafts: Schema.Array(Schema.String),
+  contextTitle: Schema.NullOr(Schema.String),
+  model: ModelId,
+  open: Schema.Boolean,
+  openingChat: Schema.NullOr(
+    Schema.Struct({
+      receipt: NinaReceipt,
+      prompt: NinaReceipt.fields.prompt,
+      submittedAt: Schema.Finite,
+    })
+  ),
+  sheetActivated: Schema.Boolean,
+  text: Schema.String,
+});
+
+export type AiState = typeof AiStateSchema.Type;
 
 export interface AiActions {
   addChatDraft: (key: string) => void;
   getModel: () => AiState["model"];
   openAsk: (ask: AiAsk) => boolean;
   removeChatDraft: (key: string) => void;
-  resolveAsk: (id: AiAsk["id"], chatId: Id<"chats"> | null) => void;
+  resolveAsk: (id: AiAsk["id"], chatId: AiState["activeChatId"]) => void;
   resolveChatDraft: (
     key: string,
     receipt: Ref.Returns<typeof refs.public.nina.turns.start>
