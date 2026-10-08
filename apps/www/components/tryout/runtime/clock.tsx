@@ -1,6 +1,6 @@
 "use client";
 
-import { DateTime, MutableHashSet } from "effect";
+import { Array as Arr, DateTime, MutableHashSet } from "effect";
 import {
   createContext,
   type ReactNode,
@@ -90,8 +90,11 @@ function startClock() {
   timer = window.setInterval(() => {
     currentNow = readEpochMillis();
 
-    for (const listener of listeners) {
-      listener();
+    // Iterates a snapshot, so a listener added during a tick is first called on the next tick.
+    for (const listener of Arr.fromIterable(listeners)) {
+      if (MutableHashSet.has(listeners, listener)) {
+        listener();
+      }
     }
   }, TICK_MS);
 }
