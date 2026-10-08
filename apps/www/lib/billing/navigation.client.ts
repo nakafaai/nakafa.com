@@ -39,20 +39,20 @@ export function useBillingNavigation() {
   ) {
     startTransition(() =>
       Effect.runPromise(
-        billingNavigationProgram(
-          request,
-          (url) => {
+        billingNavigationProgram({
+          navigate: (url) => {
             window.location.href = url;
           },
-          (cause) =>
+          onFailure: (cause) =>
             reportClientException(cause, { source: failure.source }).pipe(
               Effect.tap(() =>
                 Effect.sync(() => {
                   toast.error(failure.message, { position: "bottom-center" });
                 })
               )
-            )
-        )
+            ),
+          request,
+        })
       )
     );
   }

@@ -10,16 +10,16 @@ type BillingFailureHandler<E> = (cause: E) => Effect.Effect<void>;
 
 /** Opens a successful billing destination or reports the typed request failure. */
 export const billingNavigationProgram = Effect.fn("www.billing.navigate")(
-  function* <E>(
-    request: Effect.Effect<BillingDestination, E>,
-    navigate: BillingNavigate,
-    onFailure: BillingFailureHandler<E>
-  ) {
-    yield* request.pipe(
+  function* <E>(input: {
+    readonly navigate: BillingNavigate;
+    readonly onFailure: BillingFailureHandler<E>;
+    readonly request: Effect.Effect<BillingDestination, E>;
+  }) {
+    yield* input.request.pipe(
       Effect.matchEffect({
         onSuccess: (destination) =>
-          Effect.sync(() => navigate(destination.url)),
-        onFailure,
+          Effect.sync(() => input.navigate(destination.url)),
+        onFailure: input.onFailure,
       })
     );
   }
