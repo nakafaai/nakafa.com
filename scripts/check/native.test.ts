@@ -5,6 +5,7 @@ import { parseSources } from "#scripts/check/source";
 
 const CODE = "apps/www/lib/example.ts";
 const SCRIPT = "scripts/tool.ts";
+const WORKFLOW = "packages/backend/confect/proof/workflow.ts";
 
 /** Lists the Effect-native findings of one module as `line rule`. */
 const findings = Effect.fn("NativePolicyTest.findings")(function* (
@@ -157,5 +158,72 @@ export const dynamic = import(name);
         ["2 try-catch", "5 typeof-object", "12 typeof-object"]
       );
     })
+  );
+
+  it.effect("lets a Confect workflow handler use native promise syntax", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          `import { workflow } from "@repo/backend/confect/workflow";
+export const verify = workflow.define({
+  handler: async (step) => {
+    await step.runAction(run);
+    const receipts = await Promise.all([step.runQuery(read)]);
+    return new Promise(finish);
+  },
+});
+export const deliver = workflow.define({ handler: send });
+export async function send(step) {
+  await step.runAction(deliver);
+}
+const retry = async (step) => {
+  await step.runAction(retry);
+};
+export const again = workflow.define({ handler: retry });
+`,
+          WORKFLOW
+        ),
+        ["6 promise"]
+      );
+    })
+  );
+
+  it.effect(
+    "keeps native promise syntax outside Confect workflow handlers",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { workflow } from "@repo/backend/confect/workflow";
+export const verify = workflow.define({
+  handler: async (step) => step.runAction(run),
+});
+export async function helper() {
+  await run();
+}
+export const other = somethingElse.define({
+  handler: async (step) => {
+    await step.runAction(run);
+  },
+});
+`,
+            WORKFLOW
+          ),
+          ["5 promise", "6 promise", "9 promise", "10 promise"]
+        );
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { workflow } from "./workflow";
+export const verify = workflow.define({
+  handler: async (step) => {
+    await step.runAction(run);
+  },
+});
+`,
+            WORKFLOW
+          ),
+          ["3 promise", "4 promise"]
+        );
+      })
   );
 });

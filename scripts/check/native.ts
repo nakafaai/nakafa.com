@@ -1,20 +1,29 @@
 import { Array as Arr, HashSet } from "effect";
 import {
+  type ArrowFunction,
+  type FunctionExpression,
+  isArrowFunction,
   isAsyncKeyword,
   isAwaitExpression,
   isBinaryExpression,
   isCallExpression,
   isElementAccessExpression,
   isForOfStatement,
+  isFunctionDeclaration,
+  isFunctionExpression,
   isFunctionLikeDeclaration,
   isIdentifier,
   isImportDeclaration,
   isNamedImports,
+  isObjectLiteralExpression,
   isPropertyAccessExpression,
+  isPropertyAssignment,
+  isSourceFile,
   isStringLiteral,
   isStringLiteralLikeNode,
   isTryStatement,
   isTypeOfExpression,
+  isVariableStatement,
   type Node,
   type SourceFile,
   SyntaxKind,
@@ -229,8 +238,128 @@ function isTypeofObjectComparison(node: Node) {
   );
 }
 
+/** The Confect module whose `workflow` export defines durable workflows. */
+const WORKFLOW_MODULE = "@repo/backend/confect/workflow";
+const WORKFLOW_EXPORT = "workflow";
+
+/**
+ * Returns the local names a module binds to the `workflow` export of the
+ * Confect workflow module, such as `workflow` in `import { workflow } from ...`.
+ */
+function workflowNames(sourceFile: SourceFile) {
+  return Arr.flatMap(sourceFile.statements, (statement) => {
+    if (
+      !(
+        isImportDeclaration(statement) &&
+        isStringLiteral(statement.moduleSpecifier) &&
+        statement.moduleSpecifier.text === WORKFLOW_MODULE
+      )
+    ) {
+      return [];
+    }
+    const bindings = statement.importClause?.namedBindings;
+    return bindings !== undefined && isNamedImports(bindings)
+      ? Arr.flatMap(bindings.elements, (element) =>
+          (element.propertyName ?? element.name).text === WORKFLOW_EXPORT
+            ? [element.name.text]
+            : []
+        )
+      : [];
+  });
+}
+
+/** Whether a node is an arrow function or a function expression. */
+function isFunctionValue(
+  node: Node | undefined
+): node is ArrowFunction | FunctionExpression {
+  return (
+    node !== undefined && (isArrowFunction(node) || isFunctionExpression(node))
+  );
+}
+
+/**
+ * Returns the function a handler names: the function itself when it is written
+ * inline, or the module's top-level function declaration or function-valued
+ * constant of that name.
+ */
+function handlerFunctions(
+  sourceFile: SourceFile,
+  handler: Node
+): readonly Node[] {
+  if (isFunctionValue(handler)) {
+    return [handler];
+  }
+  if (!isIdentifier(handler)) {
+    return [];
+  }
+  return Arr.flatMap(sourceFile.statements, (statement): readonly Node[] => {
+    if (isFunctionDeclaration(statement)) {
+      return statement.name?.text === handler.text ? [statement] : [];
+    }
+    return isVariableStatement(statement)
+      ? Arr.flatMap(statement.declarationList.declarations, (declaration) =>
+          isIdentifier(declaration.name) &&
+          declaration.name.text === handler.text &&
+          isFunctionValue(declaration.initializer)
+            ? [declaration.initializer]
+            : []
+        )
+      : [];
+  });
+}
+
+/**
+ * Returns the handler functions of each Confect workflow a module defines: the
+ * value of `handler` in the object that `workflow.define` receives, where
+ * `workflow` is bound to the Confect workflow module's export. The Convex
+ * workflow engine owns when a handler's steps start, because it starts them in
+ * parallel only when their requests are already buffered when it handles the
+ * first new one (`@convex-dev/workflow`, `src/client/step.ts`,
+ * `StepExecutor.run`). An Effect runtime would start them through its
+ * scheduler, so a handler keeps native promise syntax.
+ */
+function workflowHandlers(sourceFile: SourceFile, nodes: readonly Node[]) {
+  const names = workflowNames(sourceFile);
+  return Arr.flatMap(nodes, (node) => {
+    if (
+      !(
+        isCallExpression(node) &&
+        isPropertyAccessExpression(node.expression) &&
+        node.expression.name.text === "define" &&
+        isIdentifier(node.expression.expression) &&
+        Arr.contains(names, node.expression.expression.text)
+      )
+    ) {
+      return [];
+    }
+    const [options] = node.arguments;
+    if (options === undefined || !isObjectLiteralExpression(options)) {
+      return [];
+    }
+    return Arr.flatMap(options.properties, (property) =>
+      isPropertyAssignment(property) &&
+      isIdentifier(property.name) &&
+      property.name.text === "handler"
+        ? handlerFunctions(sourceFile, property.initializer)
+        : []
+    );
+  });
+}
+
+/** Whether a node is one of the handler functions or sits inside one. */
+function insideHandler(node: Node, handlers: readonly Node[]): boolean {
+  if (Arr.some(handlers, (handler) => handler === node)) {
+    return true;
+  }
+  return !isSourceFile(node) && insideHandler(node.parent, handlers);
+}
+
 /** Returns the native array, Promise, module, and failure syntax at one node. */
-function syntaxCandidates(sourceFile: SourceFile, node: Node) {
+function syntaxCandidates(
+  sourceFile: SourceFile,
+  node: Node,
+  handlers: readonly Node[]
+) {
   const call = arrayCall(node);
   if (call !== undefined) {
     return [
@@ -247,7 +376,7 @@ function syntaxCandidates(sourceFile: SourceFile, node: Node) {
         : candidate(call.rule, sourceFile, node),
     ];
   }
-  if (isPromiseSyntax(node)) {
+  if (isPromiseSyntax(node) && !insideHandler(node, handlers)) {
     return [candidate("promise", sourceFile, node)];
   }
   if (isNodeModuleImport(node)) {
@@ -263,12 +392,16 @@ function syntaxCandidates(sourceFile: SourceFile, node: Node) {
 
 /**
  * Returns the native syntax among one module's value-position `nodes` that
- * Effect replaces: array methods, Promise syntax, Node module imports, raw
- * failure handling, and hand-rolled narrowing.
+ * Effect replaces: array methods, Promise syntax outside Confect workflow
+ * handlers, Node module imports, raw failure handling, and hand-rolled
+ * narrowing.
  */
 export function nativeCandidates(
   sourceFile: SourceFile,
   nodes: readonly Node[]
 ) {
-  return Arr.flatMap(nodes, (node) => syntaxCandidates(sourceFile, node));
+  const handlers = workflowHandlers(sourceFile, nodes);
+  return Arr.flatMap(nodes, (node) =>
+    syntaxCandidates(sourceFile, node, handlers)
+  );
 }
