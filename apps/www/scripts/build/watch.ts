@@ -24,7 +24,7 @@ import {
 } from "@/scripts/build/heartbeat";
 
 /** A command that printed nothing for the whole stall limit. Its message is one line. */
-export class BuildStalled extends Data.TaggedError("BuildStalled")<{
+class BuildStalled extends Data.TaggedError("BuildStalled")<{
   readonly message: string;
 }> {}
 
@@ -202,8 +202,14 @@ const STOP_GRACE = Duration.seconds(5);
  * the command started can hold the output open after the command has exited,
  * so the wait is bounded. A read error still fails the build.
  */
-const drainOutput = (output: Fiber.Fiber<void, PlatformError.PlatformError>) =>
-  Fiber.join(output).pipe(Effect.timeoutOption(STOP_GRACE), Effect.asVoid);
+const drainOutput = Effect.fn("BuildWatch.drainOutput")(function* (
+  output: Fiber.Fiber<void, PlatformError.PlatformError>
+) {
+  yield* Fiber.join(output).pipe(
+    Effect.timeoutOption(STOP_GRACE),
+    Effect.asVoid
+  );
+});
 
 /**
  * Runs one command and watches it. Its output passes through unchanged, a
@@ -284,7 +290,7 @@ const BUILD_CADENCE = {
 };
 
 /** A build started without a command, so there is nothing to run. */
-export class MissingBuildCommand extends Data.TaggedError(
+class MissingBuildCommand extends Data.TaggedError(
   "MissingBuildCommand"
 )<{
   readonly message: string;
