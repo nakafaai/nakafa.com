@@ -121,15 +121,39 @@ describe("Polar payload contracts", () => {
   );
 
   it.effect(
-    "rejects a customer whose metadata holds a value that is not a string, number, or boolean",
+    "keeps the string, number, and boolean metadata of a customer and drops every other value",
     () =>
       Effect.gen(function* () {
-        const failure = yield* decodePolarCustomer({
+        const customer = yield* decodePolarCustomer({
           ...individual,
-          metadata: { nested: { value: true } },
-        }).pipe(Effect.flip);
-        expect(failure).toBeInstanceOf(PolarPayloadError);
+          metadata: {
+            active: true,
+            nested: { value: true },
+            nothing: null,
+            seats: 3,
+            userId: "user-1",
+          },
+        });
+        expect(customer.metadata).toEqual({
+          active: true,
+          seats: 3,
+          userId: "user-1",
+        });
       })
+  );
+
+  it.effect("reads missing or null customer metadata as empty", () =>
+    Effect.gen(function* () {
+      const missing = yield* decodePolarCustomer(
+        Struct.omit(individual, ["metadata"])
+      );
+      const empty = yield* decodePolarCustomer({
+        ...individual,
+        metadata: null,
+      });
+      expect(missing.metadata).toEqual({});
+      expect(empty.metadata).toEqual({});
+    })
   );
 
   it.effect("decodes only the customer id from a deletion", () =>

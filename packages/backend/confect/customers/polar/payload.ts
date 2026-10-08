@@ -1,5 +1,12 @@
 import { polarMetadataValidator } from "@repo/backend/confect/customers/schema";
-import { Array as Arr, Effect, Schema, Struct } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Record as Rec,
+  Schema,
+  SchemaGetter,
+  Struct,
+} from "effect";
 
 /** A Polar response or webhook payload that does not match the contract its handler reads. */
 export class PolarPayloadError extends Schema.TaggedError<PolarPayloadError>()(
@@ -10,11 +17,29 @@ export class PolarPayloadError extends Schema.TaggedError<PolarPayloadError>()(
   }
 ) {}
 
+/**
+ * Customer metadata as the handlers store it: its string, number, and boolean
+ * entries. Any other value is dropped, and a missing or null record is empty,
+ * so an unexpected metadata value never turns a customer webhook into an
+ * answer Polar retries.
+ */
+const polarCustomerMetadata = Schema.NullOr(
+  Schema.Record(Schema.String, Schema.Unknown)
+).pipe(
+  Schema.decodeTo(polarMetadataValidator, {
+    decode: SchemaGetter.transform((metadata) =>
+      Rec.filter(metadata ?? {}, Schema.is(polarMetadataValidator.value))
+    ),
+    encode: SchemaGetter.passthroughSubtype(),
+  }),
+  Schema.withDecodingDefaultKey(Effect.succeed(null))
+);
+
 /** The customer fields the handlers read, under the names the domain uses. */
 const polarCustomerHandledFields = {
   externalId: Schema.optionalKey(Schema.NullOr(Schema.String)),
   id: Schema.String,
-  metadata: polarMetadataValidator,
+  metadata: polarCustomerMetadata,
   name: Schema.NullOr(Schema.String),
 };
 
