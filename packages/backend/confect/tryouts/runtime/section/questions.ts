@@ -12,7 +12,7 @@ import { loadSectionResponseIndex } from "@repo/backend/confect/tryouts/runtime/
 import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
 import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
@@ -98,7 +98,10 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
 /** Projects mutable response state without repeating immutable page fields. */
 function projectRuntimeQuestions(
   placements: readonly TryoutPlacement[],
-  responses: ReadonlyMap<TryoutPlacement["_id"], TryoutResponse>,
+  responses: MutableHashMap.MutableHashMap<
+    TryoutPlacement["_id"],
+    TryoutResponse
+  >,
   access: {
     readonly answers: boolean;
     readonly questions: boolean;
@@ -112,13 +115,18 @@ function projectRuntimeQuestions(
 /** Projects one validated frozen placement and optional learner response. */
 function projectRuntimeQuestion(
   placement: TryoutPlacement,
-  responses: ReadonlyMap<TryoutPlacement["_id"], TryoutResponse>,
+  responses: MutableHashMap.MutableHashMap<
+    TryoutPlacement["_id"],
+    TryoutResponse
+  >,
   access: {
     readonly answers: boolean;
     readonly questions: boolean;
   }
 ) {
-  const response = responses.get(placement._id) ?? null;
+  const response = Option.getOrNull(
+    MutableHashMap.get(responses, placement._id)
+  );
   const runtimeResponse = response
     ? {
         answeredAt: response.answeredAt,

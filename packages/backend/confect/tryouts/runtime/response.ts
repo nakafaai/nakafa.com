@@ -2,26 +2,23 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   indexTryoutResponses,
+  type ResponsePlacementLink,
   requireTryoutResponseSectionSnapshot,
   validateTryoutResponsePlacementInventory,
 } from "@repo/backend/confect/tryouts/response/integrity";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, type MutableHashMap, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 type SectionCoverage = "complete" | "partial";
-interface ResponsePlacementLink {
-  readonly placement: TryoutPlacement;
-  readonly sectionAttemptId: Id<"tryoutSectionAttempts">;
-}
 export interface TryoutResponseIndex {
   readonly placements: readonly TryoutPlacement[];
-  readonly responses: ReadonlyMap<
+  readonly responses: MutableHashMap.MutableHashMap<
     Id<"tryoutAttemptPlacements">,
     TryoutResponse
   >;
