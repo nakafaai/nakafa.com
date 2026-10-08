@@ -1,20 +1,12 @@
-import { Schema } from "effect";
+import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 
-const NumberedSurahSchema = Schema.Struct({
-  number: Schema.Finite,
-});
-type NumberedSurah = typeof NumberedSurahSchema.Type;
-
-const NumberedVerseSchema = Schema.Struct({
-  number: Schema.Struct({
-    inSurah: Schema.Finite,
-  }),
-});
-type NumberedVerse = typeof NumberedVerseSchema.Type;
+type NumberedSurah = Pick<PublishedQuranSurah, "number">;
+type VerseNumber = Pick<QuranRuntimeVerse["number"], "inSurah">;
 
 /** Checks that one verse list exactly covers the requested local range. */
 export function hasExactQuranVerseRange(
-  verses: readonly NumberedVerse[],
+  verses: readonly { readonly number: VerseNumber }[],
   fromVerse: number,
   toVerse: number
 ) {
