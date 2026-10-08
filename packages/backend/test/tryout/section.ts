@@ -91,18 +91,18 @@ export function makeSignedTryoutSection(
     throw new Error("Expected one signed section record.");
   }
 
-  return {
-    signed: {
-      placements: placements.map(makeTryoutPlacementRecord),
-      section: { row: record.row, rowHash: record.rowHash },
-      snapshotId: testTextHash("tryout-runtime-snapshot"),
-    },
+  const signed: TryoutSnapshotSource["snapshot"]["sections"][number] = {
+    placements: placements.map(makeTryoutPlacementRecord),
+    section: { row: record.row, rowHash: record.rowHash },
+    snapshotId: testTextHash("tryout-runtime-snapshot"),
   };
+
+  return { signed };
 }
 
 /** Signed section and placement records used by runtime tests. */
-export type SignedTryoutSectionFixture = ReturnType<
-  typeof makeSignedTryoutSection
+export type SignedTryoutSectionFixture = Readonly<
+  ReturnType<typeof makeSignedTryoutSection>
 >;
 
 /** Builds one complete signed source from signed-only fixtures. */
