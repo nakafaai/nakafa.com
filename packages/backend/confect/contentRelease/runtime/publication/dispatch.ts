@@ -1,8 +1,8 @@
 import {
-  decodePublicContentRuntimeRequest,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
   type PublicContentRuntimeRequest,
+  PublicContentRuntimeRequestSchema,
   PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -32,13 +32,11 @@ const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
     ) {
       return yield* new PublicRuntimeRequestError();
     }
-    const input = yield* Effect.try({
-      catch: () => new PublicRuntimeRequestError(),
-      try: (): unknown => JSON.parse(source),
-    });
-    return yield* decodePublicContentRuntimeRequest(input).pipe(
-      Effect.mapError(() => new PublicRuntimeRequestError())
-    );
+    return yield* Schema.decodeEffect(
+      Schema.fromJsonString(PublicContentRuntimeRequestSchema)
+    )(source, {
+      onExcessProperty: "error",
+    }).pipe(Effect.mapError(() => new PublicRuntimeRequestError()));
   }
 );
 /** Reads one active public artifact for Nakafa verification. */
