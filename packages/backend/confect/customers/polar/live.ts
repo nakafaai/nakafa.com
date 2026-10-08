@@ -1,16 +1,16 @@
-import type { PolarCore } from "@polar-sh/sdk/core";
-import { checkoutsCreate } from "@polar-sh/sdk/funcs/checkoutsCreate";
-import { customerSessionsCreate } from "@polar-sh/sdk/funcs/customerSessionsCreate";
-import { customersCreate } from "@polar-sh/sdk/funcs/customersCreate";
-import { customersDelete } from "@polar-sh/sdk/funcs/customersDelete";
-import { customersGet } from "@polar-sh/sdk/funcs/customersGet";
-import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal";
-import { customersList } from "@polar-sh/sdk/funcs/customersList";
-import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate";
-import { HTTPValidationError } from "@polar-sh/sdk/models/errors/httpvalidationerror";
-import { PolarError } from "@polar-sh/sdk/models/errors/polarerror";
-import type { Result } from "@polar-sh/sdk/types/fp";
+import { PolarClientError } from "@polar-sh/sdk";
+import { errors, type PolarCore } from "@polar-sh/sdk/2026-10";
+import { createCheckoutsService } from "@polar-sh/sdk/2026-10/services/checkouts";
+import { createCustomerSessionsService } from "@polar-sh/sdk/2026-10/services/customer_sessions";
+import { createCustomersService } from "@polar-sh/sdk/2026-10/services/customers";
 import { readPolarClient } from "@repo/backend/confect/customers/polar/client";
+import {
+  decodePolarCheckout,
+  decodePolarCustomer,
+  decodePolarCustomerPage,
+  decodePolarCustomerSession,
+  type PolarPayloadError,
+} from "@repo/backend/confect/customers/polar/payload";
 import {
   PolarCheckoutError,
   PolarCustomerError,
@@ -32,40 +32,41 @@ class PolarRequestError extends Data.TaggedError("PolarRequestError")<{
   readonly cause: unknown;
 }> {}
 
-/** Normalize the SDK's rejected promises and returned errors at the IO boundary. */
-const request = Effect.fn("polar.request")(function* <Value>(
-  call: (client: PolarCore) => Promise<Result<Value, unknown>>
+/** Runs one SDK call; a rejected promise and a missing client configuration both fail it. */
+const call = Effect.fn("polar.call")(function* <Value>(
+  run: (client: PolarCore) => Promise<Value>
 ) {
   const client = yield* readPolarClient().pipe(
-    Effect.mapError(
-      (cause) =>
-        new PolarRequestError({
-          cause,
-        })
-    )
+    Effect.mapError((cause) => new PolarRequestError({ cause }))
   );
-  const result = yield* Effect.tryPromise({
-    try: () => call(client),
-    catch: (cause) =>
-      new PolarRequestError({
-        cause,
-      }),
+  return yield* Effect.tryPromise({
+    try: () => run(client),
+    catch: (cause) => new PolarRequestError({ cause }),
   });
-  if (!result.ok) {
-    return yield* new PolarRequestError({
-      cause: result.error,
-    });
-  }
-  return result.value;
 });
+
+/** Runs one SDK call and checks its payload against the contract the handlers read. */
+const request = Effect.fn("polar.request")(function* <Value, Decoded>(
+  run: (client: PolarCore) => Promise<Value>,
+  decode: (payload: Value) => Effect.Effect<Decoded, PolarPayloadError>
+) {
+  const payload = yield* call(run);
+  return yield* decode(payload).pipe(
+    Effect.mapError((cause) => new PolarRequestError({ cause }))
+  );
+});
+
+/** Only a provider 404 means the customer is absent or already deleted. */
 function isMissingCustomer(error: unknown) {
-  return error instanceof PolarError && error.statusCode === 404;
+  return error instanceof PolarClientError && error.statusCode === 404;
 }
+
+/** Matches the exact validation error Polar returns for an email that is already taken. */
 function isDuplicateEmail(error: unknown) {
   return (
-    error instanceof HTTPValidationError &&
+    error instanceof errors.HTTPValidationError &&
     Arr.some(
-      error.detail ?? [],
+      error.error.detail ?? [],
       (detail) =>
         detail.loc.length === 2 &&
         detail.loc[0] === "body" &&
@@ -80,17 +81,30 @@ export const polarGateway: PolarCustomerGateway = {
   createCheckoutSession: Effect.fn("polar.createCheckoutSession")(function* (
     input: Parameters<PolarCustomerGateway["createCheckoutSession"]>[0]
   ) {
-    const checkout = yield* request((client) =>
-      checkoutsCreate(client, {
-        allowDiscountCodes: true,
-        customerId: input.customerId,
-        customerIpAddress: input.customerIpAddress,
-        locale: input.locale,
-        products: input.productIds,
-        successUrl: input.successUrl,
-        embedOrigin: input.embedOrigin,
-        subscriptionId: input.subscriptionId,
-      })
+    return yield* request(
+      (client) =>
+        createCheckoutsService(client).create({
+          // Learners may apply discount codes at checkout.
+          allow_discount_codes: true,
+          // The product's trial period, when it has one, applies at checkout.
+          allow_trial: true,
+          customer_id: input.customerId,
+          customer_ip_address: input.customerIpAddress,
+          // Checkout is for individuals, so the billing name and address are not required.
+          is_business_customer: false,
+          locale: input.locale,
+          products: input.productIds,
+          // Only the country is required at checkout; US customers still enter the full address.
+          require_billing_address: false,
+          success_url: input.successUrl,
+          ...(input.embedOrigin === undefined
+            ? {}
+            : { embed_origin: input.embedOrigin }),
+          ...(input.subscriptionId === undefined
+            ? {}
+            : { subscription_id: input.subscriptionId }),
+        }),
+      decodePolarCheckout
     ).pipe(
       Effect.mapError(
         ({ cause }) =>
@@ -101,20 +115,21 @@ export const polarGateway: PolarCustomerGateway = {
           })
       )
     );
-    return {
-      url: checkout.url,
-    };
   }),
   createCustomer: Effect.fn("polar.createCustomer")(function* (
     input: Parameters<PolarCustomerGateway["createCustomer"]>[0]
   ) {
-    return yield* request((client) =>
-      customersCreate(client, {
-        externalId: input.externalId,
-        email: input.email,
-        name: input.name,
-        metadata: input.metadata,
-      })
+    return yield* request(
+      (client) =>
+        createCustomersService(client).create({
+          email: input.email,
+          external_id: input.externalId,
+          name: input.name,
+          // Polar leaves the type optional, so Nakafa always states individual.
+          type: "individual",
+          ...(input.metadata === undefined ? {} : { metadata: input.metadata }),
+        }),
+      decodePolarCustomer
     ).pipe(
       Effect.mapError(({ cause }) =>
         isDuplicateEmail(cause)
@@ -134,10 +149,12 @@ export const polarGateway: PolarCustomerGateway = {
   }),
   createCustomerPortalSession: Effect.fn("polar.createCustomerPortalSession")(
     function* (customerId: string) {
-      const session = yield* request((client) =>
-        customerSessionsCreate(client, {
-          customerId,
-        })
+      return yield* request(
+        (client) =>
+          createCustomerSessionsService(client).create({
+            customer_id: customerId,
+          }),
+        decodePolarCustomerSession
       ).pipe(
         Effect.mapError(
           ({ cause }) =>
@@ -148,17 +165,11 @@ export const polarGateway: PolarCustomerGateway = {
             })
         )
       );
-      return {
-        url: session.customerPortalUrl,
-      };
     }
   ),
   deleteCustomer: Effect.fn("polar.deleteCustomer")(function* (id: string) {
-    return yield* request((client) =>
-      customersDelete(client, {
-        anonymize: true,
-        id,
-      })
+    return yield* call((client) =>
+      createCustomersService(client).delete(id, { anonymize: true })
     ).pipe(
       Effect.as(null),
       Effect.catchTag("PolarRequestError", ({ cause }) =>
@@ -177,11 +188,15 @@ export const polarGateway: PolarCustomerGateway = {
   findCustomerByEmail: Effect.fn("polar.findCustomerByEmail")(function* (
     email: string
   ) {
-    const page = yield* request((client) =>
-      customersList(client, {
-        email,
-        limit: 1,
-      })
+    const page = yield* request(
+      (client) =>
+        createCustomersService(client).list({
+          email,
+          limit: 1,
+          // An empty list sends no sort, so the SDK's -created_at default does not apply.
+          sorting: [],
+        }),
+      decodePolarCustomerPage
     ).pipe(
       Effect.mapError(
         ({ cause }) =>
@@ -192,14 +207,13 @@ export const polarGateway: PolarCustomerGateway = {
           })
       )
     );
-    return page.result.items[0] ?? null;
+    return page.items[0] ?? null;
   }),
   getCustomerByExternalId: Effect.fn("polar.getCustomerByExternalId")(
     function* (externalId: string) {
-      return yield* request((client) =>
-        customersGetExternal(client, {
-          externalId,
-        })
+      return yield* request(
+        (client) => createCustomersService(client).getExternal(externalId),
+        decodePolarCustomer
       ).pipe(
         Effect.catchTag("PolarRequestError", ({ cause }) =>
           isMissingCustomer(cause)
@@ -216,10 +230,9 @@ export const polarGateway: PolarCustomerGateway = {
     }
   ),
   getCustomerById: Effect.fn("polar.getCustomerById")(function* (id: string) {
-    return yield* request((client) =>
-      customersGet(client, {
-        id,
-      })
+    return yield* request(
+      (client) => createCustomersService(client).get(id),
+      decodePolarCustomer
     ).pipe(
       Effect.catchTag("PolarRequestError", ({ cause }) =>
         isMissingCustomer(cause)
@@ -237,16 +250,17 @@ export const polarGateway: PolarCustomerGateway = {
   updateCustomer: Effect.fn("polar.updateCustomer")(function* (
     input: Parameters<PolarCustomerGateway["updateCustomer"]>[0]
   ) {
-    return yield* request((client) =>
-      customersUpdate(client, {
-        id: input.customer.id,
-        customerUpdate: {
+    return yield* request(
+      (client) =>
+        createCustomersService(client).update(input.customer.id, {
           email: input.next.email,
-          externalId: input.next.externalId,
-          metadata: input.next.metadata,
+          external_id: input.next.externalId,
           name: input.next.name,
-        },
-      })
+          ...(input.next.metadata === undefined
+            ? {}
+            : { metadata: input.next.metadata }),
+        }),
+      decodePolarCustomer
     ).pipe(
       Effect.mapError(
         ({ cause }) =>
@@ -261,13 +275,12 @@ export const polarGateway: PolarCustomerGateway = {
   updateCustomerMetadata: Effect.fn("polar.updateCustomerMetadata")(function* (
     input: Parameters<PolarCustomerGateway["updateCustomerMetadata"]>[0]
   ) {
-    return yield* request((client) =>
-      customersUpdate(client, {
-        id: input.polarCustomerId,
-        customerUpdate: {
+    return yield* request(
+      (client) =>
+        createCustomersService(client).update(input.polarCustomerId, {
           metadata: input.metadata,
-        },
-      })
+        }),
+      decodePolarCustomer
     ).pipe(
       Effect.mapError(
         ({ cause }) =>
