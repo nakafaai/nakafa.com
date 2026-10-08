@@ -4,51 +4,63 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import contentSnapshots from "@repo/backend/confect/_generated/tables/contentSnapshots";
+import curriculumRoutes from "@repo/backend/confect/_generated/tables/curriculumRoutes";
+import programBuckets from "@repo/backend/confect/_generated/tables/programBuckets";
+import programCatalog from "@repo/backend/confect/_generated/tables/programCatalog";
+import quranRows from "@repo/backend/confect/_generated/tables/quranRows";
+import quranSearch from "@repo/backend/confect/_generated/tables/quranSearch";
+import tryoutCatalog from "@repo/backend/confect/_generated/tables/tryoutCatalog";
+import tryoutPlacements from "@repo/backend/confect/_generated/tables/tryoutPlacements";
+import tryoutRuntimeBundles from "@repo/backend/confect/_generated/tables/tryoutRuntimeBundles";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const CLEANUP_PAGE_COUNT = 2;
 const CLEANUP_PAGE_BYTES = CONTENT_DOCUMENT_LIMIT * CLEANUP_PAGE_COUNT;
 type CleanupPart = NonNullable<Docs["contentSnapshots"]["cleanupPart"]>;
-type SnapshotChild =
-  | {
-      readonly row: Docs["programCatalog"];
-      readonly table: "programCatalog";
-    }
-  | {
-      readonly row: Docs["curriculumRoutes"];
-      readonly table: "curriculumRoutes";
-    }
-  | {
-      readonly row: Docs["programBuckets"];
-      readonly table: "programBuckets";
-    }
-  | {
-      readonly row: Docs["quranRows"];
-      readonly table: "quranRows";
-    }
-  | {
-      readonly row: Docs["quranSearch"];
-      readonly table: "quranSearch";
-    }
-  | {
-      readonly row: Docs["tryoutRuntimeBundles"];
-      readonly table: "tryoutRuntimeBundles";
-    }
-  | {
-      readonly row: Docs["tryoutCatalog"];
-      readonly table: "tryoutCatalog";
-    }
-  | {
-      readonly row: Docs["tryoutPlacements"];
-      readonly table: "tryoutPlacements";
-    };
-interface ChildPage {
-  readonly children: readonly SnapshotChild[];
-  readonly done: boolean;
-  readonly part?: CleanupPart;
-}
+const SnapshotChildSchema = Schema.Union([
+  Schema.Struct({
+    row: programCatalog.Doc,
+    table: Schema.Literal("programCatalog"),
+  }),
+  Schema.Struct({
+    row: curriculumRoutes.Doc,
+    table: Schema.Literal("curriculumRoutes"),
+  }),
+  Schema.Struct({
+    row: programBuckets.Doc,
+    table: Schema.Literal("programBuckets"),
+  }),
+  Schema.Struct({
+    row: quranRows.Doc,
+    table: Schema.Literal("quranRows"),
+  }),
+  Schema.Struct({
+    row: quranSearch.Doc,
+    table: Schema.Literal("quranSearch"),
+  }),
+  Schema.Struct({
+    row: tryoutRuntimeBundles.Doc,
+    table: Schema.Literal("tryoutRuntimeBundles"),
+  }),
+  Schema.Struct({
+    row: tryoutCatalog.Doc,
+    table: Schema.Literal("tryoutCatalog"),
+  }),
+  Schema.Struct({
+    row: tryoutPlacements.Doc,
+    table: Schema.Literal("tryoutPlacements"),
+  }),
+]);
+type SnapshotChild = typeof SnapshotChildSchema.Type;
+const ChildPageSchema = Schema.Struct({
+  children: Schema.Array(SnapshotChildSchema),
+  done: Schema.Boolean,
+  part: contentSnapshots.Fields.fields.cleanupPart,
+});
+type ChildPage = typeof ChildPageSchema.Type;
 
 /** Native page controls shared by every body-bearing cleanup query. */
 function cleanupPage() {

@@ -43,8 +43,8 @@ export function stageRow(
     return stageQuranRow(snapshotId, index, row, rowJson);
   }
   return row.rowKind === "catalog"
-    ? stageTryoutCatalog(snapshotId, index, row, rowJson)
-    : stageTryoutPlacement(snapshotId, index, row, rowJson);
+    ? stageTryoutCatalog(snapshotId, index, row.record, rowJson)
+    : stageTryoutPlacement(snapshotId, index, row.record, rowJson);
 }
 
 /** Rejects ambiguous ledger identity before accepting a retry or continuation. */
