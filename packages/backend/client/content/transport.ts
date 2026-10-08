@@ -313,12 +313,13 @@ function toNetworkRequestError(error: HttpClientError.HttpClientError) {
  * The runtime action is read-only. Allowlisted network failures, a request that
  * misses its deadline, an interrupted response body, and the exact unmarked
  * JSON 500 that the pinned Convex backend creates when Nakafa does not complete
- * the action share two bounded retries. Unclassified network failures and every
- * other response or reader failure continue without retry into the exact
- * status, response, and signature checks. One attempt, from its request to the
- * end of its body, has one ten second deadline. A read therefore answers or
- * fails within 31.5 seconds: three attempts with the 500 ms and 1 s retry
- * delays between them. Decoding and verifying the answer come after that.
+ * the action share two bounded retries. Unclassified network failures end the
+ * read without retry. Every other response or reader failure continues without
+ * retry into the exact status, response, and signature checks. One attempt, from
+ * its request to the end of its body, has one ten second deadline. A read
+ * therefore answers or fails within 31.5 seconds: three attempts with the 500 ms
+ * and 1 s retry delays between them. Decoding and verifying the answer come
+ * after that.
  *
  * @see https://docs.convex.dev/functions/http-actions
  * @see https://github.com/get-convex/convex-backend/blob/38abb46277140838cc5cdad59c6e85ad0432fc9a/crates/application/src/redaction.rs#L143-L160
