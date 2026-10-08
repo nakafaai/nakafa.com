@@ -1,4 +1,10 @@
-import { type ConsoleMessage, expect, type Page, test } from "@playwright/test";
+import {
+  type ConsoleMessage,
+  expect,
+  type Locator,
+  type Page,
+  test,
+} from "@playwright/test";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
 import { Effect } from "effect";
 import {
@@ -8,6 +14,7 @@ import {
   expectFramesToHold,
   patchWebGL,
   type WebGLPatch,
+  waitForStableCanvas,
 } from "@/e2e/support/canvas";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
@@ -20,7 +27,7 @@ import {
   LINE_SCENE,
   lineSceneCards,
 } from "@/e2e/support/selector";
-import { revealCardContent, revealSceneCard } from "@/e2e/support/visual";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;
@@ -95,6 +102,25 @@ const openLessonScenes = Effect.fn("NakafaE2E.openLessonScenes")(function* (
   return { cards, count };
 });
 
+/** Reveals one line-scene card and waits for its canvas to settle. */
+const revealLineScene = Effect.fn("NakafaE2E.revealLineScene")(function* (
+  card: Locator
+) {
+  const scene = card.locator(LINE_SCENE);
+  const canvas = scene.locator("canvas");
+  // Reveal the content-visibility card before scrolling its deferred scene.
+  yield* Effect.promise(() =>
+    expect(async () => {
+      await card.scrollIntoViewIfNeeded();
+      await expect(scene).toBeVisible();
+      await scene.scrollIntoViewIfNeeded();
+      expect(await canvas.isVisible()).toBe(true);
+    }).toPass({ timeout: revealTimeoutMilliseconds })
+  );
+  yield* waitForStableCanvas(canvas);
+  return canvas;
+});
+
 /**
  * Mounts and settles every deferred line scene of the pinned lesson, and
  * proves no page script read pixels back from a scene meanwhile.
@@ -107,8 +133,7 @@ const renderLessonScenes = Effect.fn("NakafaE2E.renderLessonScenes")(function* (
   );
   const { cards, count } = yield* openLessonScenes(page);
   for (let index = 0; index < count; index += 1) {
-    const card = yield* revealCardContent(cards.nth(index), LINE_SCENE);
-    yield* revealSceneCard(card);
+    yield* revealLineScene(cards.nth(index));
   }
   const readbacks = yield* Effect.promise(() =>
     page.evaluate((key) => Reflect.get(window, key), PIXEL_READBACKS)
@@ -124,8 +149,8 @@ const pauseSceneAway = Effect.fn("NakafaE2E.pauseSceneAway")(function* (
     page.addInitScript(patchWebGL, countCanvasFrames)
   );
   const { cards } = yield* openLessonScenes(page);
-  const card = yield* revealCardContent(cards.first(), LINE_SCENE);
-  const canvas = yield* revealSceneCard(card);
+  const card = cards.first();
+  const canvas = yield* revealLineScene(card);
   const rotation = card
     .locator(COORDINATE_CONTROLS)
     .getByRole("button", { name: "Automatic rotation" });

@@ -13,7 +13,6 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { CARD, COORDINATE_CONTROLS, LINE_SCENE } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { revealCardContent, revealSceneCard } from "@/e2e/support/visual";
 
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
@@ -133,16 +132,24 @@ const expectBoundedTriangleZoom = Effect.fn(
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
   const scene = page.locator(TRIANGLE_SCENE);
   const card = page.locator(CARD).filter({ has: scene });
-  // Reveal the content-visibility card before scrolling its deferred scene.
-  yield* revealCardContent(card, TRIANGLE_SCENE);
-  const canvas = yield* revealSceneCard(card, TRIANGLE_SCENE);
+  const canvas = scene.locator("canvas");
   const label = scene
     .locator(".katex-html")
     .filter({ hasText: HYPOTENUSE_LABEL });
+  // Reveal the content-visibility card before scrolling its deferred scene.
+  yield* Effect.promise(() =>
+    expect(async () => {
+      await card.scrollIntoViewIfNeeded();
+      await expect(scene).toBeVisible();
+      await scene.scrollIntoViewIfNeeded();
+      expect(await canvas.isVisible()).toBe(true);
+    }).toPass({ timeout: revealTimeoutMilliseconds })
+  );
   yield* Effect.promise(() => expect(label).toBeVisible());
   yield* Effect.promise(() =>
     expect(card.locator(COORDINATE_CONTROLS)).toContainText("Hypotenuse")
   );
+  yield* waitForStableCanvas(canvas);
   yield* expectReadableLabel(label);
 
   yield* zoomScene(page, canvas, 240);
