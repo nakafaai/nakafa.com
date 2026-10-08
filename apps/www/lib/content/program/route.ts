@@ -1,7 +1,13 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
-import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  GitCommitShaSchema,
+  ReleaseIdSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
+import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -75,7 +81,7 @@ export const readPublishedProgramRoute = Effect.fn(
       program: null,
       route: null,
       sourceRevision,
-    };
+    } satisfies PublishedProgramRoute;
   }
   if (result.programJson === null) {
     return yield* new PublishedProjectionError({
@@ -129,13 +135,25 @@ export const readPublishedProgramRoute = Effect.fn(
     program,
     route,
     sourceRevision,
-  };
+  } satisfies PublishedProgramRoute;
+});
+
+/** Decoded projection of one curriculum route page, as the page consumes it. */
+const PublishedProgramRouteSchema = Schema.Struct({
+  activeReleaseId: Schema.NullOr(ReleaseIdSchema),
+  alternates: Schema.Array(CurriculumRouteSchema),
+  ancestors: Schema.Array(CurriculumRouteSchema),
+  children: Schema.Array(CurriculumRouteSchema),
+  contexts: Schema.Array(CurriculumRouteSchema),
+  groups: Schema.Array(CurriculumRouteSchema),
+  materials: Schema.Array(MaterialLessonProjectionSchema),
+  program: Schema.NullOr(LearningProgramSchema),
+  route: Schema.NullOr(CurriculumRouteSchema),
+  sourceRevision: Schema.NullOr(GitCommitShaSchema),
 });
 
 /** Complete immutable data needed by one curriculum route page. */
-export type PublishedProgramRoute = Effect.Success<
-  ReturnType<typeof readPublishedProgramRoute>
->;
+export type PublishedProgramRoute = typeof PublishedProgramRouteSchema.Type;
 
 /** Caches one complete curriculum route under program publication invalidation. */
 export async function getPublishedProgramRoute(

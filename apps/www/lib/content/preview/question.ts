@@ -63,6 +63,30 @@ function executeArtifact(
     previewArtifact,
   });
 }
+/** Authenticates the answer of an answer question; prompt-only questions have none. */
+const readReadyAnswer = Effect.fn("NakafaContent.readReadyQuestionAnswer")(
+  function* (
+    manifest: ReadyPreviewManifest,
+    document: QuestionPreviewDocument,
+    config: PreviewConfig
+  ) {
+    if (document.identity.bodyKind === "question") {
+      return null;
+    }
+    const answerArtifact = manifest.artifacts[1];
+    if (answerArtifact === undefined) {
+      return yield* new PreviewIntegrityError({ check: "artifact" });
+    }
+    yield* decodeAnswerProjection(answerArtifact);
+    const renderedAnswer = yield* executeArtifact(
+      config,
+      document,
+      manifest,
+      answerArtifact
+    );
+    return renderedAnswer.Content;
+  }
+);
 /** Authenticates one ready prompt or the ordered prompt-answer closure. */
 const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
   function* (
@@ -78,30 +102,9 @@ const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
       manifest,
       promptArtifact
     );
-    if (document.identity.bodyKind === "question") {
-      return {
-        Answer: null,
-        Question: renderedPrompt.Content,
-        appLocale: document.target.section.appLocale,
-        metadata: promptProjection.metadata,
-        response: promptProjection.response,
-        selectedBodyKind: document.identity.bodyKind,
-        target: document.target,
-      };
-    }
-    const answerArtifact = manifest.artifacts[1];
-    if (answerArtifact === undefined) {
-      return yield* new PreviewIntegrityError({ check: "artifact" });
-    }
-    yield* decodeAnswerProjection(answerArtifact);
-    const renderedAnswer = yield* executeArtifact(
-      config,
-      document,
-      manifest,
-      answerArtifact
-    );
+    const Answer = yield* readReadyAnswer(manifest, document, config);
     return {
-      Answer: renderedAnswer.Content,
+      Answer,
       Question: renderedPrompt.Content,
       appLocale: document.target.section.appLocale,
       metadata: promptProjection.metadata,

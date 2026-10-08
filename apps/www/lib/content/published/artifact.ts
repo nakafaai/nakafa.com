@@ -45,39 +45,42 @@ const EvaluateCompiledCodeInputSchema = Schema.Struct({
 type EvaluateCompiledCodeInput = typeof EvaluateCompiledCodeInputSchema.Type;
 
 /** Evaluates already-authenticated compiled code without changing its schema. */
-const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
-  function* (input: EvaluateCompiledCodeInput, components: MDXComponents) {
-    const module = yield* Effect.tryPromise({
-      catch: () =>
-        new ContentExecutionError({
-          contentKey: input.contentKey,
-          stage: "evaluate",
-        }),
-      try: () =>
-        run(input.compiledCode, {
-          Fragment,
-          jsx,
-          jsxs,
-          useMDXComponents: () => components,
-        }),
-    });
-
-    if (typeof module.default !== "function") {
-      return yield* new ContentExecutionError({
+const evaluateCompiledCode: (
+  input: EvaluateCompiledCodeInput,
+  components: MDXComponents
+) => Effect.Effect<ComponentType, ContentExecutionError> = Effect.fn(
+  "NakafaContent.evaluateCompiledCode"
+)(function* (input: EvaluateCompiledCodeInput, components: MDXComponents) {
+  const module = yield* Effect.tryPromise({
+    catch: () =>
+      new ContentExecutionError({
         contentKey: input.contentKey,
-        stage: "module",
-      });
-    }
-    return module.default;
+        stage: "evaluate",
+      }),
+    try: () =>
+      run(input.compiledCode, {
+        Fragment,
+        jsx,
+        jsxs,
+        useMDXComponents: () => components,
+      }),
+  });
+
+  if (typeof module.default !== "function") {
+    return yield* new ContentExecutionError({
+      contentKey: input.contentKey,
+      stage: "module",
+    });
   }
-);
+  return module.default;
+});
 
 /** Evaluates an artifact already authenticated by its owning runtime boundary. */
 export const evaluateVerifiedArtifact = Effect.fn(
   "NakafaContent.evaluateVerifiedArtifact"
 )(function* (input: EvaluateArtifactInput) {
   const components = yield* resolveRendererComponents(input.artifact.payload);
-  const Content: ComponentType = yield* evaluateCompiledCode(
+  const Content = yield* evaluateCompiledCode(
     {
       compiledCode: input.artifact.payload.compiledCode,
       contentKey: input.artifact.payload.contentKey,

@@ -41,11 +41,15 @@ const appLocale: PublishedContentInput["appLocale"] =
 /** Release origin of a found delivery, as the runtime Schema describes it. */
 type FoundOrigin = PublicContentRuntimeFound["release"]["manifest"]["origin"];
 
+const foundKinds: Pick<PublicContentRuntimeFound, "delivery" | "kind"> = {
+  delivery: "public",
+  kind: "found",
+};
+
 const found = {
   activeReleaseId: ReleaseIdSchema.make("release-function-concept"),
   artifact: previewWireArtifact,
-  delivery: "public",
-  kind: "found",
+  ...foundKinds,
   projection: previewProjection,
   release: {
     manifest: {
