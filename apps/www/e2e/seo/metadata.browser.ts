@@ -1,12 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec } from "effect";
-import {
-  withBrowserContext,
-  withObservedPageErrors,
-} from "@/e2e/support/context";
+import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readHeadLinks } from "@/e2e/support/crawler";
 import { NavigationLinkMissing } from "@/e2e/support/navigation/cases";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 /** Captures the rendered lesson identity and its canonical metadata. */
 const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (

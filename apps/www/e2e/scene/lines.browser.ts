@@ -9,8 +9,11 @@ import {
   patchWebGL,
   type WebGLPatch,
 } from "@/e2e/support/canvas";
-import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import {
+  withObservedEvents,
+  withObservedPageErrors,
+} from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { revealSceneCard } from "@/e2e/support/visual";
 
@@ -54,27 +57,24 @@ const withObservedSceneDiagnostics = Effect.fn(
   page: Page,
   use: Effect.Effect<A, E, R>
 ): Effect.fn.Return<A, E, R> {
-  return yield* Effect.acquireUseRelease(
-    Effect.sync(() => {
-      const diagnostics: string[] = [];
-      const recordDiagnostic = (message: ConsoleMessage) => {
+  return yield* withObservedEvents(
+    (record) => {
+      const listener = (message: ConsoleMessage) => {
         const text = message.text();
         if (
           SCENE_DIAGNOSTIC.test(text) &&
           !KNOWN_SCENE_DIAGNOSTICS.some((known) => known.test(text))
         ) {
-          diagnostics.push(`${message.type()}: ${text}`);
+          record(`${message.type()}: ${text}`);
         }
       };
-      page.on("console", recordDiagnostic);
-      return { diagnostics, recordDiagnostic };
-    }),
-    ({ diagnostics }) =>
+      page.on("console", listener);
+      return () => page.off("console", listener);
+    },
+    (diagnostics) =>
       use.pipe(
         Effect.tap(() => Effect.sync(() => expect(diagnostics).toEqual([])))
-      ),
-    ({ recordDiagnostic }) =>
-      Effect.sync(() => page.off("console", recordDiagnostic))
+      )
   );
 });
 

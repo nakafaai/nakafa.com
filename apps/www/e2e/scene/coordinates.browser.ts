@@ -9,10 +9,8 @@ import {
   waitForStableCanvas,
 } from "@/e2e/support/canvas";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import {
-  withBrowserContext,
-  withObservedPageErrors,
-} from "@/e2e/support/context";
+import { withBrowserContext } from "@/e2e/support/context";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";

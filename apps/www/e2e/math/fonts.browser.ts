@@ -1,10 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readMathFonts } from "@/e2e/support/fonts";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 

@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec } from "effect";
-import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/input";
 import {
   legacyAvatarFragmentIds,
@@ -9,6 +8,7 @@ import {
   swipeContributorDrawer,
 } from "@/e2e/support/marketing";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   expectStablePricingAppShell,
   expectStablePricingTransition,

@@ -1,9 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Deferred, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const NINA_DIALOG_NAME = /^Nina/;
 const INTER_FONT = /Inter/;

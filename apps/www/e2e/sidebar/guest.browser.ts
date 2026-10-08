@@ -4,8 +4,8 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/input";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";

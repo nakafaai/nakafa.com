@@ -1,9 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { usageDataTrigger } from "@/e2e/support/consent";
-import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 

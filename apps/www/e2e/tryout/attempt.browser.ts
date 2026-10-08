@@ -1,9 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withObservedPageErrors } from "@/e2e/support/context";
 import { visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   expectStillShell,
   observeShell,

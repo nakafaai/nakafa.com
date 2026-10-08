@@ -15,8 +15,8 @@ import {
   readCanvasSize,
   waitForStableCanvas,
 } from "@/e2e/support/canvas";
-import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   BACTERIA_SCENE,
   expectLabStill,

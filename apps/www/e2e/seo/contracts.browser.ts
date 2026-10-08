@@ -3,10 +3,7 @@ import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec, Schedule, Schema } from "effect";
 import { usageDataTrigger } from "@/e2e/support/consent";
-import {
-  withBrowserContext,
-  withObservedPageErrors,
-} from "@/e2e/support/context";
+import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
   expectSingleLink,
@@ -14,6 +11,7 @@ import {
   type ServerDocument,
 } from "@/e2e/support/crawler";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;

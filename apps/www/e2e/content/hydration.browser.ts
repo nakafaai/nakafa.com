@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, MutableRef, Schema } from "effect";
-import { withObservedPageErrors } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 declare global {
   interface Window {

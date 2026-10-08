@@ -1,10 +1,8 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec } from "effect";
-import {
-  withBrowserContext,
-  withObservedPageErrors,
-} from "@/e2e/support/context";
+import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const revealChart = Effect.fn("NakafaE2E.revealChart")(function* (
   chart: Locator

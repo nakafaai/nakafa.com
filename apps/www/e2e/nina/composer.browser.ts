@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withObservedPageErrors } from "@/e2e/support/context";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const LESSON =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";

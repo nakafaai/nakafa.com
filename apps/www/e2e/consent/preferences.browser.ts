@@ -1,11 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { openConsentPreferences } from "@/e2e/support/consent";
-import {
-  withBrowserContext,
-  withObservedPageErrors,
-} from "@/e2e/support/context";
+import { withBrowserContext } from "@/e2e/support/context";
 import { dragTouch, readBounds } from "@/e2e/support/input";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { targetViewports } from "@/e2e/support/viewport";
 
