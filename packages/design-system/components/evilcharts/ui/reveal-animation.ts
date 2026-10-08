@@ -1,15 +1,23 @@
 "use client";
 
+import { Schema } from "effect";
 import { useEffect, useEffectEvent, useState } from "react";
 
 const BAR_REVEAL_DURATION_MS = 500;
 const BAR_REVEAL_STAGGER_MS = 50;
 
-type OrderedRevealAnimation =
-  | "left-to-right"
-  | "right-to-left"
-  | "center-out"
-  | "edges-in";
+export const RevealAnimationSchema = Schema.Literals([
+  "none",
+  "left-to-right",
+  "right-to-left",
+  "center-out",
+  "edges-in",
+]);
+
+type OrderedRevealAnimation = Exclude<
+  typeof RevealAnimationSchema.Type,
+  "none"
+>;
 
 /**
  * Returns the stagger slot for a data point in an ordered chart reveal.

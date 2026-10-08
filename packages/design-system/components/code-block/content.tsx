@@ -2,14 +2,17 @@
 
 import { captureException } from "@repo/analytics/posthog/browser";
 import { CodeBlockText } from "@repo/design-system/components/code-block/text";
-import { highlightCode } from "@repo/design-system/lib/code-block/highlight";
-import { Effect, Fiber } from "effect";
+import {
+  type CodeHighlightOptions,
+  highlightCode,
+} from "@repo/design-system/lib/code-block/highlight";
+import { Effect, Fiber, Schema } from "effect";
 import type { HTMLAttributes } from "react";
 import { useEffect, useMemo, useState } from "react";
 import type { CodeOptionsMultipleThemes } from "shiki";
 
 /** Highlighting options plus the exact source used by the text fallback. */
-export type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
   children: string;
   language?: string;
   preClassName?: string | undefined;
@@ -18,14 +21,15 @@ export type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
   transparentBackground?: boolean;
 };
 
-interface CodeHighlightRequest {
-  children: string;
-  language: string | undefined;
-  preClassName: string | undefined;
-  syntaxHighlighting: boolean;
-  themes: CodeOptionsMultipleThemes["themes"] | undefined;
-  transparentBackground: boolean;
-}
+const CodeHighlightRequestSchema = Schema.Struct({
+  children: Schema.String,
+  language: Schema.UndefinedOr(Schema.String),
+  preClassName: Schema.UndefinedOr(Schema.String),
+  syntaxHighlighting: Schema.Boolean,
+  transparentBackground: Schema.Boolean,
+});
+type CodeHighlightRequest = typeof CodeHighlightRequestSchema.Type &
+  Pick<CodeHighlightOptions, "themes">;
 
 /** Highlights client-rendered code while retaining a safe text fallback. */
 export function CodeBlockContent({
@@ -43,7 +47,7 @@ export function CodeBlockContent({
       language,
       preClassName,
       syntaxHighlighting,
-      themes,
+      ...(themes === undefined ? {} : { themes }),
       transparentBackground,
     }),
     [
@@ -75,7 +79,7 @@ export function CodeBlockContent({
           ? {}
           : { language: request.language }),
         preClassName: request.preClassName,
-        themes: request.themes,
+        ...(request.themes === undefined ? {} : { themes: request.themes }),
         transparentBackground: request.transparentBackground,
       }).pipe(
         Effect.matchEffect({

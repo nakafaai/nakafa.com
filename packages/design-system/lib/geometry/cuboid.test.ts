@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { createCuboid } from "@repo/design-system/lib/geometry/cuboid";
+import { Array as Arr } from "effect";
 
 describe("createCuboid", () => {
   it("creates eight exact vertices around an authored center", () => {
@@ -25,7 +26,7 @@ describe("createCuboid", () => {
     );
 
     expect(edges).toHaveLength(12);
-    expect(new Set(identities).size).toBe(12);
+    expect(Arr.dedupe(identities).length).toBe(12);
     for (const [start, end] of edges) {
       const changedAxes = [
         start.x !== end.x,
@@ -59,9 +60,9 @@ describe("createCuboid", () => {
       width: minimum,
     });
 
-    expect(new Set(vertices.map(({ x }) => x))).toHaveLength(2);
-    expect(new Set(vertices.map(({ y }) => y))).toHaveLength(2);
-    expect(new Set(vertices.map(({ z }) => z))).toHaveLength(2);
+    expect(Arr.dedupe(vertices.map(({ x }) => x))).toHaveLength(2);
+    expect(Arr.dedupe(vertices.map(({ y }) => y))).toHaveLength(2);
+    expect(Arr.dedupe(vertices.map(({ z }) => z))).toHaveLength(2);
     expect(edges).toHaveLength(12);
     for (const [from, to] of edges) {
       expect(from).not.toEqual(to);

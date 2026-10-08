@@ -13,7 +13,6 @@ import {
   UNIFORM_LINEAR_MOTION_COLORS,
   UNIFORM_LINEAR_MOTION_SCENE,
   UNIFORM_LINEAR_MOTION_SPEEDS,
-  type UniformLinearMotionLabProps,
   type UniformLinearMotionSpeed,
   type UniformLinearMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-linear-motion/data";
@@ -35,13 +34,26 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const PAUSE_SECONDS = 0.8;
 const ROAD_Y = -0.02;
 const POSITION_MARK_Y = 0.08;
 const TRACK_Z = UNIFORM_LINEAR_MOTION_SCENE.roadWidth * 0.22;
+
+interface UniformLinearMotionLabProps {
+  description: ReactNode;
+  labels: {
+    chooseSpeed: string;
+    duration: ReactNode;
+    positionStep: ReactNode;
+    speed: ReactNode;
+    stepDistance: ReactNode;
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
 
 export function UniformLinearMotionLab({
   title,

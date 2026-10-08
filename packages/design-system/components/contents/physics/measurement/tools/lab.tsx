@@ -3,7 +3,7 @@
 import { useThree } from "@react-three/fiber";
 import type {
   MeasurementToolId,
-  MeasurementToolsLabProps,
+  MeasurementToolsLabLabels,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import {
   createInitialMeasurements,
@@ -43,6 +43,12 @@ import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
+
+interface MeasurementToolsLabProps {
+  description: ReactNode;
+  labels: MeasurementToolsLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders an interactive 3D lab for grade 10 measurement tools.

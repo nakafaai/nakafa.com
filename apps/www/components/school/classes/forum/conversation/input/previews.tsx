@@ -14,7 +14,7 @@ export function AttachmentPreviews({
   hasReplyTo,
   onRemove,
 }: {
-  files: FileWithPreview[];
+  files: readonly FileWithPreview[];
   hasReplyTo: boolean;
   onRemove: (id: string) => void;
 }) {

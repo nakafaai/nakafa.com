@@ -5,14 +5,20 @@ import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group
 import { toggleVariants } from "@repo/design-system/lib/toggle/variants";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
+import { Schema } from "effect";
 import type * as React from "react";
 import { createContext, use, useMemo } from "react";
 
-type ToggleGroupLayout = "default" | "grid";
+const ToggleGroupLayoutSchema = Schema.Literals(["default", "grid"]);
 
-type ToggleGroupContextValue = VariantProps<typeof toggleVariants> & {
-  layout: ToggleGroupLayout;
-};
+type ToggleGroupLayout = typeof ToggleGroupLayoutSchema.Type;
+
+const ToggleGroupContextSchema = Schema.Struct({
+  layout: ToggleGroupLayoutSchema,
+});
+
+type ToggleGroupContextValue = VariantProps<typeof toggleVariants> &
+  typeof ToggleGroupContextSchema.Type;
 
 const ToggleGroupContext = createContext<ToggleGroupContextValue>({
   layout: "default",

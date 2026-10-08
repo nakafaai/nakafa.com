@@ -1,5 +1,6 @@
 "use client";
 
+import { Schema } from "effect";
 import { Curve, type CurveProps } from "recharts";
 
 // Buffer line
@@ -10,7 +11,11 @@ import { Curve, type CurveProps } from "recharts";
 // imperatively. Works correctly with any curve type (linear, natural, monotone, etc.).
 type CurvePoint = NonNullable<NonNullable<CurveProps["points"]>[number]>;
 
-type DrawableCurvePoint = CurvePoint & { x: number; y: number };
+const DrawableCurvePositionSchema = Schema.Struct({
+  x: Schema.Finite,
+  y: Schema.Finite,
+});
+type DrawableCurvePoint = CurvePoint & typeof DrawableCurvePositionSchema.Type;
 
 const isDrawableCurvePoint = (point: CurvePoint): point is DrawableCurvePoint =>
   typeof point.x === "number" && typeof point.y === "number";

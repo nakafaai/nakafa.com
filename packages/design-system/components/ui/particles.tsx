@@ -11,6 +11,7 @@ import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
+import { Schema } from "effect";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react";
 
@@ -25,18 +26,24 @@ const MAX_MAGNETISM = 4.1;
 const REMAP_EDGE_END = 20;
 const ALPHA_FADE_IN_SPEED = 0.02;
 
-interface Circle {
-  alpha: number;
-  dx: number;
-  dy: number;
-  magnetism: number;
-  size: number;
-  targetAlpha: number;
-  translateX: number;
-  translateY: number;
-  x: number;
-  y: number;
-}
+/**
+ * One particle. The animation loop updates position and alpha in place, so
+ * those fields stay mutable.
+ */
+const CircleSchema = Schema.Struct({
+  alpha: Schema.mutableKey(Schema.Finite),
+  dx: Schema.Finite,
+  dy: Schema.Finite,
+  magnetism: Schema.Finite,
+  size: Schema.Finite,
+  targetAlpha: Schema.Finite,
+  translateX: Schema.mutableKey(Schema.Finite),
+  translateY: Schema.mutableKey(Schema.Finite),
+  x: Schema.mutableKey(Schema.Finite),
+  y: Schema.mutableKey(Schema.Finite),
+});
+
+type Circle = typeof CircleSchema.Type;
 
 interface ParticlesProps {
   className?: string;

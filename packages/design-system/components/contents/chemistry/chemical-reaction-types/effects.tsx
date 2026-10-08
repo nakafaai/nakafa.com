@@ -1,13 +1,15 @@
 import { useFrame } from "@react-three/fiber";
-import type {
-  ChemicalReactionTypeSceneColors,
-  ChemicalReactionTypeScenePoint,
+import {
+  type ChemicalReactionTypeSceneColors,
+  type ChemicalReactionTypeScenePoint,
+  ChemicalReactionTypeScenePointSchema,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import {
   BEAKER_CONTENT_BOTTOM_Y,
   Particle,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Schema } from "effect";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
@@ -16,6 +18,13 @@ const FLOATING_ION_POINTS = [
   [0.16, -0.18, -0.06],
   [0, 0.02, 0.1],
 ] satisfies ChemicalReactionTypeScenePoint[];
+
+const GasBubbleSchema = Schema.Struct({
+  phase: Schema.Finite,
+  position: ChemicalReactionTypeScenePointSchema,
+  speed: Schema.Finite,
+});
+type GasBubble = typeof GasBubbleSchema.Type;
 
 const BUBBLES = [
   { phase: 0.08, position: [-0.16, -0.28, 0.08], speed: 0.34 },
@@ -68,12 +77,6 @@ const SETTLED_SOLID_POINTS = [
   [0.18, SETTLED_SOLID_BASE_Y + 0.01, -0.02],
   [-0.01, SETTLED_SOLID_BASE_Y + 0.09, 0.01],
 ] satisfies ChemicalReactionTypeScenePoint[];
-
-interface GasBubble {
-  phase: number;
-  position: ChemicalReactionTypeScenePoint;
-  speed: number;
-}
 
 export function HeatRays({ color }: { color: string }) {
   const groupRef = useRef<Group>(null);

@@ -4,6 +4,7 @@ import { Label } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
@@ -228,9 +229,10 @@ function FieldError({
     return null;
   }
 
-  const uniqueErrors = [
-    ...new Map(errors.map((error) => [error?.message, error])).values(),
-  ];
+  const uniqueErrors = Arr.dedupeWith(
+    errors,
+    (first, second) => first?.message === second?.message
+  );
 
   if (uniqueErrors.length === 1) {
     const message = uniqueErrors[0]?.message;

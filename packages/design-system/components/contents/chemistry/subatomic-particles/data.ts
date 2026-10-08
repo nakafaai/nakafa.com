@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const CATHODE_RAY_MODE_ID = "cathode-ray";
 export const GOLD_FOIL_MODE_ID = "gold-foil";
@@ -12,13 +12,23 @@ export type SubatomicParticlesModeId =
   | typeof GOLD_FOIL_MODE_ID
   | typeof ATOM_MAP_MODE_ID;
 export type SubatomicSceneColors = ReturnType<typeof getSubatomicSceneColors>;
-export type SubatomicCameraPoint = readonly [number, number, number];
+const SubatomicCameraPointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
 
 export const SUBATOMIC_PARTICLE_MODE_IDS = [
   CATHODE_RAY_MODE_ID,
   GOLD_FOIL_MODE_ID,
   ATOM_MAP_MODE_ID,
 ] satisfies SubatomicParticlesModeId[];
+
+const SubatomicViewConfigSchema = Schema.Struct({
+  cameraPosition: SubatomicCameraPointSchema,
+  cameraTarget: SubatomicCameraPointSchema,
+  narrowCameraPosition: SubatomicCameraPointSchema,
+});
 
 export const SUBATOMIC_VIEW_CONFIG = {
   [CATHODE_RAY_MODE_ID]: {
@@ -38,45 +48,8 @@ export const SUBATOMIC_VIEW_CONFIG = {
   },
 } satisfies Record<
   SubatomicParticlesModeId,
-  {
-    cameraPosition: SubatomicCameraPoint;
-    cameraTarget: SubatomicCameraPoint;
-    narrowCameraPosition: SubatomicCameraPoint;
-  }
+  typeof SubatomicViewConfigSchema.Type
 >;
-
-export interface SubatomicParticlesFact {
-  label: string;
-  value: ReactNode;
-}
-
-export interface SubatomicParticlesModeLabels {
-  description: ReactNode;
-  facts: readonly SubatomicParticlesFact[];
-  tab: string;
-}
-
-export interface SubatomicParticlesSceneLabels {
-  alphaParticle: ReactNode;
-  anode: ReactNode;
-  cathode: ReactNode;
-  cathodeRay: ReactNode;
-  negativePlate: ReactNode;
-  nucleus: ReactNode;
-  positivePlate: ReactNode;
-}
-
-export interface SubatomicParticlesLabLabels {
-  chooseMode: string;
-  modes: Record<SubatomicParticlesModeId, SubatomicParticlesModeLabels>;
-  scene: SubatomicParticlesSceneLabels;
-}
-
-export interface SubatomicParticlesLabProps {
-  description: ReactNode;
-  labels: SubatomicParticlesLabLabels;
-  title: ReactNode;
-}
 
 export function isSubatomicParticlesModeId(
   value: string

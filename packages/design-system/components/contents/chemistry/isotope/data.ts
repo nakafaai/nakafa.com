@@ -1,11 +1,11 @@
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const HYDROGEN_1_ID = "hydrogen-1";
-export const DEUTERIUM_ID = "deuterium";
-export const TRITIUM_ID = "tritium";
+const DEUTERIUM_ID = "deuterium";
+const TRITIUM_ID = "tritium";
 export const CARBON_12_ID = "carbon-12";
-export const CARBON_13_ID = "carbon-13";
-export const CARBON_14_ID = "carbon-14";
+const CARBON_13_ID = "carbon-13";
+const CARBON_14_ID = "carbon-14";
 
 export type IsotopeSampleId =
   | typeof HYDROGEN_1_ID
@@ -23,6 +23,12 @@ export const ISOTOPE_SAMPLE_IDS = [
   CARBON_13_ID,
   CARBON_14_ID,
 ] satisfies IsotopeSampleId[];
+
+const IsotopeSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  massNumber: Schema.Finite,
+  symbol: Schema.String,
+});
 
 export const ISOTOPE_SAMPLES = {
   [HYDROGEN_1_ID]: {
@@ -55,39 +61,7 @@ export const ISOTOPE_SAMPLES = {
     massNumber: 14,
     symbol: "C",
   },
-} satisfies Record<
-  IsotopeSampleId,
-  {
-    atomicNumber: number;
-    massNumber: number;
-    symbol: string;
-  }
->;
-
-export interface IsotopeSampleLabels {
-  abundance: ReactNode;
-  ariaName: string;
-  name: ReactNode;
-  note: ReactNode;
-  tab: ReactNode;
-}
-
-export interface IsotopeLabLabels {
-  abundance: string;
-  atomicNumber: string;
-  chooseIsotope: string;
-  electrons: string;
-  massNumber: string;
-  neutrons: string;
-  protons: string;
-  samples: Record<IsotopeSampleId, IsotopeSampleLabels>;
-}
-
-export interface IsotopeLabProps {
-  description: ReactNode;
-  labels: IsotopeLabLabels;
-  title: ReactNode;
-}
+} satisfies Record<IsotopeSampleId, typeof IsotopeSampleSchema.Type>;
 
 /**
  * Narrows ToggleGroup string values to the available isotope examples.
