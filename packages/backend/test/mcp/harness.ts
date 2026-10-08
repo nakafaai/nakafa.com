@@ -6,12 +6,11 @@ import { Array as Arr, Effect, Record, Schema } from "effect";
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
 /** Wire literals a client or the Vercel bridge sends or receives. */
-export const MCP_PATH = "/internal/mcp";
+const MCP_PATH = "/internal/mcp";
 export const MCP_SECRET_HEADER = "x-nakafa-mcp-edge-secret";
 export const MCP_SECRET_ENVIRONMENT = "NAKAFA_MCP_EDGE_SECRET";
 export const MCP_SECRET = "technical-mcp-edge-secret";
-export const MCP_PROTOCOL_VERSION = "2026-07-28";
-export const MCP_PREDECESSOR_PROTOCOL_VERSION = "2025-11-25";
+const MCP_PROTOCOL_VERSION = "2026-07-28";
 export const MCP_CLIENT_META = {
   "io.modelcontextprotocol/clientCapabilities": {},
   "io.modelcontextprotocol/clientInfo": {
@@ -22,11 +21,11 @@ export const MCP_CLIENT_META = {
 } as const;
 
 /** Fixed per-request identity: every echo of the request ID is this value. */
-export const GOLDEN_REQUEST_ID = "golden-request";
+const GOLDEN_REQUEST_ID = "golden-request";
 /** Fixed rate-limit identity for every request that does not replace it. */
-export const GOLDEN_CLIENT_ADDRESS = "203.0.113.21";
+const GOLDEN_CLIENT_ADDRESS = "203.0.113.21";
 /** Clock for the public-read token bucket, so refill is identical on every run. */
-export const GOLDEN_NOW = 1_800_000_000_000;
+const GOLDEN_NOW = 1_800_000_000_000;
 
 /** Headers the runtime adds on its own, which the golden contract does not pin. */
 const UNPINNED_HEADERS = ["content-length", "date"];
