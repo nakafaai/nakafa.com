@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import {
   Array as Arr,
   Effect,
@@ -7,8 +7,10 @@ import {
   pipe,
   Schema,
 } from "effect";
+import { recordLayoutShifts } from "@/e2e/support/layout";
 
 const SAMPLES_KEY = "nakafaShellSamples";
+const LAYOUT_SHIFTS_KEY = "nakafaLayoutShifts";
 
 /** One animation frame of the app shell, as the page recorded it. */
 const ShellFrame = Schema.Struct({
@@ -19,13 +21,15 @@ const ShellFrame = Schema.Struct({
   time: Schema.Finite,
 });
 
-/** Everything the page recorded, appended to by its init script. */
+/** Every animation frame the page recorded, appended to by its init script. */
 const ShellSamples = Schema.Struct({
   frames: Schema.mutable(Schema.Array(ShellFrame)),
-  shifts: Schema.mutable(
-    Schema.Array(Schema.Struct({ time: Schema.Finite, value: Schema.Finite }))
-  ),
 });
+
+/** The layout shifts the page recorded, each with the time it started. */
+const RecordedShifts = Schema.Array(
+  Schema.Struct({ time: Schema.Finite, value: Schema.Finite })
+);
 
 /** What the browser rendered of the app shell since one point in time. */
 const ShellObservation = Schema.Struct({
@@ -59,7 +63,7 @@ const ShellObservation = Schema.Struct({
 /**
  * Records, from the first script on, every animation frame's visible `<main>`
  * elements by identity, whether the page inside shows a heading, and whether
- * the shell is locked, and every layout shift the browser reports. The script
+ * the shell is locked. Layout shifts go to `recordLayoutShifts`. The script
  * runs in the page, so it uses the browser's own APIs.
  */
 export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
@@ -67,7 +71,7 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
 ) {
   yield* Effect.promise(() =>
     page.addInitScript((key) => {
-      const samples: typeof ShellSamples.Type = { frames: [], shifts: [] };
+      const samples: typeof ShellSamples.Type = { frames: [] };
       Object.defineProperty(window, key, { value: samples });
       const identities = new WeakMap<Element, number>();
       let nextIdentity = 1;
@@ -81,13 +85,6 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
         return nextIdentity - 1;
       };
       const visibility = { checkOpacity: true, checkVisibilityCSS: true };
-      new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if ("value" in entry && typeof entry.value === "number") {
-            samples.shifts.push({ time: entry.startTime, value: entry.value });
-          }
-        }
-      }).observe({ buffered: true, type: "layout-shift" });
       const sample = () => {
         const mains = [...document.querySelectorAll("main")].filter((main) =>
           main.checkVisibility(visibility)
@@ -115,6 +112,9 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
       requestAnimationFrame(sample);
     }, SAMPLES_KEY)
   );
+  yield* Effect.promise(() =>
+    page.addInitScript(recordLayoutShifts, LAYOUT_SHIFTS_KEY)
+  );
 });
 
 /** Reads the page clock, to start an observation window from now. */
@@ -128,12 +128,34 @@ export const readPageTime = Effect.fn("NakafaE2E.readPageTime")(function* (
 const showsShell = (frame: typeof ShellFrame.Type) =>
   Arr.isReadonlyArrayNonEmpty(frame.mains);
 
+/**
+ * Expects the frames since one observation to show the app shell throughout: a
+ * mounted, visible shell with a heading in every frame, no layout shift, and
+ * exactly the expected lock states. A client render locks through the shell
+ * alone, so no page, hidden or not, may carry the server's lock marker.
+ */
+export function expectStillShell(
+  observation: typeof ShellObservation.Type,
+  locks: readonly boolean[]
+) {
+  expect(observation.frames).toBeGreaterThan(0);
+  expect(observation.hiddenFrames).toBe(0);
+  expect(observation.headinglessFrames).toBe(0);
+  expect(observation.shells).toBe(1);
+  expect(observation.layoutShift).toBe(0);
+  expect(observation.locks).toEqual(locks);
+  expect(observation.markedFrames).toBe(0);
+}
+
 /** Summarizes the frames and layout shifts recorded since `since`. */
 export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
   function* (page: Page, since: number) {
     const samples = yield* Effect.promise(() =>
       page.evaluate((key) => Reflect.get(window, key), SAMPLES_KEY)
     ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(ShellSamples)));
+    const shifts = yield* Effect.promise(() =>
+      page.evaluate((key) => Reflect.get(window, key), LAYOUT_SHIFTS_KEY)
+    ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(RecordedShifts)));
     const frames = Arr.filter(samples.frames, (frame) => frame.time >= since);
     return ShellObservation.make({
       frames: frames.length,
@@ -143,7 +165,7 @@ export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
       ),
       hiddenFrames: Arr.countBy(frames, (frame) => !showsShell(frame)),
       layoutShift: pipe(
-        samples.shifts,
+        shifts,
         Arr.filter((shift) => shift.time >= since),
         Arr.map((shift) => shift.value),
         Num.sumAll

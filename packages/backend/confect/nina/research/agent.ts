@@ -3,7 +3,8 @@ import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import type { ResearchAgentParams } from "@repo/backend/confect/nina/contract/agent";
+import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
+import type { ResearchAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import {
@@ -48,7 +49,7 @@ import {
   Output,
   wrapLanguageModel,
 } from "ai";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, MutableHashSet } from "effect";
 
 // Keep exact source fetching within the admitted count and provider concurrency.
 const exactSourceScrapeConcurrency = 3;
@@ -69,7 +70,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     toolCallId,
     publish,
     usageHandler,
-  }: ResearchAgentParams & { readonly usageHandler: UsageHandler }) {
+  }: ResearchAgentData & {
+    readonly publish: CapabilityProgress;
+    readonly usageHandler: UsageHandler;
+  }) {
     const sourceReferences = getUniqueSourceReferences([
       ...messageSourceReferences,
       ...getSourceReferences(task),
@@ -100,7 +104,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       publish,
     });
     let collectedEvidence = Arr.map(sourceOutputs, (output) => output.text);
-    const eligibleCitationUrls = new Set<string>();
+    const eligibleCitationUrls = MutableHashSet.empty<string>();
 
     for (const sourceOutput of sourceOutputs) {
       addEligibleSourceUrls(eligibleCitationUrls, sourceOutput.sources);
@@ -201,7 +205,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       });
     }
 
-    const sourceEvidenceAvailable = eligibleCitationUrls.size > 0;
+    const sourceEvidenceAvailable =
+      MutableHashSet.size(eligibleCitationUrls) > 0;
     const output = yield* Effect.tryPromise({
       try: (signal) =>
         agent
@@ -254,10 +259,9 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
     sourceReferences,
     toolCallId,
     publish,
-  }: Pick<
-    ResearchAgentParams,
-    "task" | "sourceReferences" | "toolCallId" | "publish"
-  >) {
+  }: Pick<ResearchAgentData, "task" | "sourceReferences" | "toolCallId"> & {
+    readonly publish: CapabilityProgress;
+  }) {
     return yield* Effect.forEach(
       sourceReferences,
       (source, index) =>
@@ -284,16 +288,14 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
  * Keeps source references unique while preserving the user's order.
  */
 function getUniqueSourceReferences(
-  sourceReferences: ResearchAgentParams["sourceReferences"]
+  sourceReferences: ResearchAgentData["sourceReferences"]
 ) {
-  const seen = new Set<string>();
-
-  return Arr.flatMap(sourceReferences, (source) => {
-    if (seen.has(source.href)) {
-      return [];
+  const seen = MutableHashSet.empty<string>();
+  return Arr.filter(sourceReferences, (source) => {
+    if (MutableHashSet.has(seen, source.href)) {
+      return false;
     }
-
-    seen.add(source.href);
-    return [source];
+    MutableHashSet.add(seen, source.href);
+    return true;
   });
 }

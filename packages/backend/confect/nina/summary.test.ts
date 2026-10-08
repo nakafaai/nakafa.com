@@ -15,7 +15,10 @@ import {
 import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Predicate } from "effect";
+import { Array as Arr, Effect, Predicate, Schema } from "effect";
+
+const NOW = Date.UTC(2026, 8, 27, 12);
+const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -29,14 +32,14 @@ afterEach(() => {
 async function fixture(turns: number) {
   const t = createConvexTestWithBetterAuth();
   const setup = await t.mutation(async (ctx) => {
-    const { userId } = await seedAuthenticatedUser(ctx, { now: Date.now() });
+    const { userId } = await seedAuthenticatedUser(ctx, { now: NOW });
     const threadId = await createThread(ctx, components.nina, { userId });
     const chatId = await ctx.db.insert("chats", {
       userId,
       threadId,
       type: "study",
       visibility: "private",
-      updatedAt: Date.now(),
+      updatedAt: NOW,
     });
     let prompts: string[] = [];
     for (let order = 0; order < turns; order += 1) {
@@ -113,7 +116,9 @@ describe("Nina rolling summary", () => {
       "space:personal",
       "purpose:background",
     ]);
-    const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
+    const prompt = Schema.encodeSync(jsonTextSchema)(
+      model.doGenerateCalls[0]?.prompt
+    );
     expect(prompt).toContain("None yet.");
     expect(prompt).toContain("Learner: Question 0");
     expect(prompt).toContain("Nina: Answer 4");
@@ -129,7 +134,7 @@ describe("Nina rolling summary", () => {
         chatId: f.chatId,
         text: "- The learner studied limits.",
         throughOrder: 4,
-        updatedAt: Date.now(),
+        updatedAt: NOW,
         usage: { calls: 1, input: 900, output: 120 },
       })
     );
@@ -141,7 +146,9 @@ describe("Nina rolling summary", () => {
         usage: { calls: 2, input: 912, output: 124 },
       }),
     ]);
-    const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
+    const prompt = Schema.encodeSync(jsonTextSchema)(
+      model.doGenerateCalls[0]?.prompt
+    );
     expect(prompt).toContain("- The learner studied limits.");
     expect(prompt).toContain("Question 5");
     expect(prompt).not.toContain("Question 4");
@@ -155,7 +162,7 @@ describe("Nina rolling summary", () => {
     await f.refresh(55);
     await f.refresh(55);
     const [first, second] = Arr.map(model.doGenerateCalls, (call) =>
-      JSON.stringify(call.prompt)
+      Schema.encodeSync(jsonTextSchema)(call.prompt)
     );
     expect(first).toContain("Question 0");
     expect(first).toContain("Answer 15");
@@ -258,12 +265,14 @@ describe("Nina rolling summary", () => {
         chatId: f.chatId,
         text: "- Earlier study.",
         throughOrder: 40,
-        updatedAt: Date.now(),
+        updatedAt: NOW,
         usage: { calls: 1, input: 900, output: 120 },
       })
     );
     await f.refresh(61);
-    const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
+    const prompt = Schema.encodeSync(jsonTextSchema)(
+      model.doGenerateCalls[0]?.prompt
+    );
     expect(prompt).toContain("Question 41");
     expect(prompt).toContain("Answer 56");
     expect(prompt).not.toContain("Question 40");

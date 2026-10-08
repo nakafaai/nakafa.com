@@ -1,7 +1,6 @@
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { ModelId } from "@repo/backend/confect/gateway/model";
-import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
 import { SourceReferenceSchema } from "@repo/backend/confect/nina/research/source";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
@@ -35,22 +34,11 @@ export const TaskAgentDataSchema = Schema.Struct({
   modelId: ModelId,
   task: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-type TaskAgentData = typeof TaskAgentDataSchema.Type;
-/** Parameters for the deterministic math specialist Agent. */
-export type MathAgentParams = TaskAgentData & {
-  readonly publish: CapabilityProgress;
-};
-/** Parameters for the Nakafa content retrieval specialist Agent. */
-export type NakafaAgentParams = TaskAgentData & {
-  readonly publish: CapabilityProgress;
-};
+export type TaskAgentData = typeof TaskAgentDataSchema.Type;
 /** Schema-derived data passed to the external research specialist. */
 export const ResearchAgentDataSchema = Schema.Struct({
   ...TaskAgentDataSchema.fields,
   sourceReferences: Schema.Array(SourceReferenceSchema),
   toolCallId: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-/** Parameters for the external research specialist Agent. */
-export type ResearchAgentParams = typeof ResearchAgentDataSchema.Type & {
-  readonly publish: CapabilityProgress;
-};
+export type ResearchAgentData = typeof ResearchAgentDataSchema.Type;

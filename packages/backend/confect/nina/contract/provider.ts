@@ -6,23 +6,31 @@ import {
   Schema,
 } from "effect";
 
-interface ObjectJsonSchema extends JsonSchema.JsonSchema {
-  readonly properties: Readonly<Record<string, unknown>>;
-  readonly required: readonly string[];
-  readonly type: "object";
-}
+const ObjectJsonSchemaSchema = Schema.Struct({
+  properties: Schema.Record(Schema.String, Schema.Unknown),
+  required: Schema.Array(Schema.String),
+  type: Schema.Literal("object"),
+});
 
-interface ArrayJsonSchema extends JsonSchema.JsonSchema {
-  readonly maxItems?: number;
-  readonly minItems?: number;
-  readonly type: "array";
-}
+type ObjectJsonSchema = JsonSchema.JsonSchema &
+  typeof ObjectJsonSchemaSchema.Type;
 
-interface ArrayMetadata {
-  readonly description: string | undefined;
-  readonly maxItems: number | undefined;
-  readonly minItems: number | undefined;
-}
+const ArrayJsonSchemaSchema = Schema.Struct({
+  maxItems: Schema.optionalKey(Schema.Finite),
+  minItems: Schema.optionalKey(Schema.Finite),
+  type: Schema.Literal("array"),
+});
+
+type ArrayJsonSchema = JsonSchema.JsonSchema &
+  typeof ArrayJsonSchemaSchema.Type;
+
+const ArrayMetadataSchema = Schema.Struct({
+  description: Schema.UndefinedOr(Schema.String),
+  maxItems: Schema.UndefinedOr(Schema.Finite),
+  minItems: Schema.UndefinedOr(Schema.Finite),
+});
+
+type ArrayMetadata = typeof ArrayMetadataSchema.Type;
 
 /** Narrows generated JSON Schema to object-shaped function parameters. */
 function isObjectSchema(schema: unknown): schema is ObjectJsonSchema {
@@ -57,7 +65,7 @@ function objectVariants(schema: JsonSchema.JsonSchema) {
 
 /** Preserves declared enum order while removing duplicate enum values. */
 function mergeEnumValues(left: readonly unknown[], right: readonly unknown[]) {
-  return [...new Set([...left, ...right])];
+  return Arr.dedupe([...left, ...right]);
 }
 
 /** Joins branch descriptions so provider-facing unions keep all instructions. */
