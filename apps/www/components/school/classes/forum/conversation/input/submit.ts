@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog/browser";
 import type refs from "@repo/backend/confect/_generated/refs";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id, TableNames } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import { Effect, Result, Schema } from "effect";
 import {
@@ -23,19 +23,37 @@ const StorageIdSchema = Schema.declare(
 const StorageUploadResponseSchema = Schema.Struct({
   storageId: StorageIdSchema,
 });
-interface ForumPostSubmitDraft {
-  body: string;
-  forumId: Id<"schoolClassForums">;
-  parentId: Id<"schoolClassForumPosts"> | undefined;
+/** Declares the Schema of one Convex document id, checked as a non-empty string. */
+function convexIdSchema<TableName extends TableNames>(tableName: TableName) {
+  return Schema.declare(
+    (input): input is Id<TableName> =>
+      typeof input === "string" && input.length > 0,
+    {
+      identifier: `ConvexId(${tableName})`,
+    }
+  );
 }
-interface DiscardPendingUploadsInput {
-  source: string;
-  uploadIds: Id<"schoolClassForumPendingUploads">[];
-}
-interface UploadAttachmentFileInput {
-  file: File;
-  forumId: Id<"schoolClassForums">;
-}
+const ForumIdSchema = convexIdSchema("schoolClassForums");
+const ForumPostIdSchema = convexIdSchema("schoolClassForumPosts");
+const ForumPendingUploadIdSchema = convexIdSchema(
+  "schoolClassForumPendingUploads"
+);
+const ForumPostSubmitDraftSchema = Schema.Struct({
+  body: Schema.String,
+  forumId: ForumIdSchema,
+  parentId: Schema.UndefinedOr(ForumPostIdSchema),
+});
+type ForumPostSubmitDraft = typeof ForumPostSubmitDraftSchema.Type;
+const DiscardPendingUploadsInputSchema = Schema.Struct({
+  source: Schema.String,
+  uploadIds: Schema.mutable(Schema.Array(ForumPendingUploadIdSchema)),
+});
+type DiscardPendingUploadsInput = typeof DiscardPendingUploadsInputSchema.Type;
+const UploadAttachmentFileInputSchema = Schema.Struct({
+  file: Schema.instanceOf(File),
+  forumId: ForumIdSchema,
+});
+type UploadAttachmentFileInput = typeof UploadAttachmentFileInputSchema.Type;
 type GenerateUploadUrlMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
@@ -64,7 +82,6 @@ type CreateForumPostMutation = (
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.posts.createForumPost
 >;
-
 class ForumAttachmentUploadError extends Schema.TaggedError<ForumAttachmentUploadError>()(
   "ForumAttachmentUploadError",
   {
