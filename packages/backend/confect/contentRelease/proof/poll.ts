@@ -3,6 +3,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseWriter,
   MutationCtx as MutationCtxService,
+  QueryCtx as QueryCtxService,
 } from "@repo/backend/confect/_generated/services";
 import {
   type ReleaseError,
@@ -16,6 +17,7 @@ import {
 import {
   proofFailureValidator,
   type proofPollValidator,
+  type proofStatusValidator,
 } from "@repo/backend/confect/contentRelease/proof/spec";
 import { stagedEvidence } from "@repo/backend/confect/contentRelease/receipt";
 import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
@@ -24,6 +26,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { Clock, Context, Effect, Layer, Match, Schema } from "effect";
 export type ProofFailure = typeof proofFailureValidator.Type;
 export type ProofPoll = typeof proofPollValidator.Type;
+export type ProofStatus = typeof proofStatusValidator.Type;
 export type Release = Docs["contentReleases"];
 /** Durable Workflow dependency owned only by proof polling. */
 export class ProofPollCoordinator extends Context.Service<
@@ -69,6 +72,29 @@ export const ProofPollCoordinatorLive = Layer.effect(
           )
       ),
       status: Effect.fn("contentRelease.proof.status")((workflowId) =>
+        Effect.promise(() => workflow.status(ctx, workflowId))
+      ),
+    });
+  })
+);
+/** Durable Workflow status for proof polling, the only Workflow operation a query may run. */
+export class ProofPollStatus extends Context.Service<
+  ProofPollStatus,
+  {
+    /** Reads the durable component outcome without starting, canceling, or cleaning it. */
+    readonly status: (
+      workflowId: WorkflowId
+    ) => Effect.Effect<WorkflowStatus, ReleaseError>;
+  }
+>()("@repo/backend/contentRelease/ProofPollStatus") {}
+
+/** Reads Workflow status through a query context, which cannot start or clean one. */
+export const ProofPollStatusLive = Layer.effect(
+  ProofPollStatus,
+  Effect.gen(function* () {
+    const ctx = yield* QueryCtxService;
+    return ProofPollStatus.of({
+      status: Effect.fn("contentRelease.proof.pollStatus")((workflowId) =>
         Effect.promise(() => workflow.status(ctx, workflowId))
       ),
     });
@@ -348,3 +374,26 @@ export const pollProgram = Effect.fn("contentRelease.pollProof")(function* (
     })
   );
 });
+
+const pendingPoll = { phase: "pending" } satisfies ProofStatus;
+
+/** Answers the poll without writing: `pending` names the one case that must run the poll mutation. */
+export const pollStatusProgram = Effect.fn("contentRelease.pollStatus")(
+  function* (manifestHash: string, releaseId: string) {
+    const release = yield* loadVerification(manifestHash, releaseId);
+    const statusReader = yield* ProofPollStatus;
+    const active = yield* readActiveProof(release, statusReader.status);
+    return yield* Match.value(decideProof(release, active)).pipe(
+      Match.discriminatorsExhaustive("phase")({
+        failed: ({ reason }) =>
+          Effect.succeed({ phase: "failed", reason } satisfies ProofStatus),
+        fail: () => Effect.succeed(pendingPoll),
+        finalize: () => Effect.succeed(pendingPoll),
+        start: () => Effect.succeed(pendingPoll),
+        verified: ({ proofJson }) => verifiedProof(proofJson),
+        verifying: () =>
+          Effect.succeed({ phase: "verifying" } satisfies ProofStatus),
+      })
+    );
+  }
+);
