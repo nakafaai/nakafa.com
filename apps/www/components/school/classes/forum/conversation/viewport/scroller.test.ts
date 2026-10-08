@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { HashMap, Option } from "effect";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
   createConversationTestRowsHandle,
@@ -107,7 +108,7 @@ describe("conversation/viewport/scroller", () => {
       })
     ).toBe(true);
     expect(scrollToIndex).toHaveBeenLastCalledWith(
-      rowIndexByPostId.get(firstPost._id),
+      Option.getOrUndefined(HashMap.get(rowIndexByPostId, firstPost._id)),
       {
         align: "start",
         smooth: true,
@@ -174,7 +175,7 @@ describe("conversation/viewport/scroller", () => {
     const emptyTranscript = {
       lastPostId: null,
       postIds: [],
-      rowIndexByPostId: new Map(),
+      rowIndexByPostId: HashMap.empty(),
       rows: [],
     } satisfies ActiveTranscriptModel;
     const reducedMotionScroller = createViewportScroller({
@@ -201,7 +202,7 @@ describe("conversation/viewport/scroller", () => {
       })
     ).toBe(true);
     expect(scrollToIndex).toHaveBeenLastCalledWith(
-      rowIndexByPostId.get(firstPost._id),
+      Option.getOrUndefined(HashMap.get(rowIndexByPostId, firstPost._id)),
       {
         align: "center",
         smooth: false,
