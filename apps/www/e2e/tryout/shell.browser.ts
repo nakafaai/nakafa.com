@@ -44,11 +44,9 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
     },
     requested: MutableHashSet.MutableHashSet<string>
   ) {
-    const run = Effect.runPromiseWith(yield* Effect.context<never>());
     yield* Effect.promise(() => link.scrollIntoViewIfNeeded());
     yield* intend(link, target, requested);
-    // @next/playwright owns this native Promise callback while its lock is held,
-    // so the arrival waits run inside it.
+    // @next/playwright owns this native Promise callback while its lock is held.
     yield* Effect.promise(() =>
       instant(page, () =>
         press(link, target.hasTouch)
@@ -56,7 +54,9 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
           // whatever the next page puts there, before the test asks for it.
           .then(() => page.mouse.move(-1, -1))
           .then(() =>
-            run(arrive(page, onPath(target.pathname), target.content))
+            page.waitForURL((url) => url.pathname === target.pathname, {
+              timeout: readinessTimeoutMilliseconds,
+            })
           )
           .then(() =>
             expect(
@@ -66,6 +66,11 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
                 name: target.title,
               })
             ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+          )
+          .then(() =>
+            expect(target.content).toBeVisible({
+              timeout: readinessTimeoutMilliseconds,
+            })
           )
       )
     );
