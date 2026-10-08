@@ -10,7 +10,7 @@ import {
 import { Effect, Schema } from "effect";
 
 const PARTNER_CURSOR_PREFIX = "content:";
-const PartnerCursorSchema = Schema.Struct({
+export const PartnerCursorSchema = Schema.Struct({
   appLocale: AppLocaleSchema,
   activeReleaseId: ReleaseIdSchema,
   contentKey: ContentKeySchema,
