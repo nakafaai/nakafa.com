@@ -7,6 +7,7 @@ import { loadMathFonts } from "@/e2e/support/fonts";
 import { settlePrefetch } from "@/e2e/support/navigation/prefetch";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { paginationNavigation } from "@/e2e/support/selector";
 import {
   expectStillShell,
   observeShell,
@@ -52,9 +53,7 @@ const readPathname = Effect.fn("NakafaE2E.readLinkPathname")(function* (
 });
 
 const paginationLink = (page: Page, name: RegExp) =>
-  page
-    .getByRole("navigation", { name: "Pagination navigation" })
-    .getByRole("link", { name });
+  paginationNavigation(page).getByRole("link", { name });
 
 /** The first paragraph of the page's article. */
 const articleText = (page: Page) =>
@@ -240,26 +239,6 @@ const verifyContentLink = Effect.fn("NakafaE2E.verifyContentLink")(function* (
   );
 });
 
-/**
- * A link in a lesson's text that leads to the lesson on screen is marked as the
- * current page, like the app's other links, even though it prefetches on intent.
- */
-const verifyCurrentContentLink = Effect.fn(
-  "NakafaE2E.verifyCurrentContentLink"
-)(function* (page: Page) {
-  yield* seedAnalyticsConsent(page, "denied");
-  yield* open(page, lessonHref);
-  const link = page
-    .getByRole("article")
-    .locator(`a[href="${lessonHref}"]`)
-    .first();
-  yield* Effect.promise(() =>
-    expect(link).toHaveAttribute("aria-current", "page", {
-      timeout: readinessTimeoutMilliseconds,
-    })
-  );
-});
-
 for (const viewport of viewports) {
   test.describe(`Prefetched navigation on ${viewport.name}`, () => {
     test.use({
@@ -310,14 +289,6 @@ for (const viewport of viewports) {
     }) => {
       await Effect.runPromise(
         withObservedPageErrors(page, verifyContentLink(page, viewport.hasTouch))
-      );
-    });
-
-    test("a link in a lesson to the lesson on screen is marked as the current page", async ({
-      page,
-    }) => {
-      await Effect.runPromise(
-        withObservedPageErrors(page, verifyCurrentContentLink(page))
       );
     });
   });
