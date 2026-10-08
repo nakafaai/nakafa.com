@@ -127,7 +127,7 @@ export const erasePostHogPerson = Effect.fn(
     delete_recordings: true,
     distinct_ids: [distinctId],
     keep_person: false,
-  }).pipe(Effect.mapError(requestNotSent));
+  }).pipe(Effect.orDie);
   const response = yield* Effect.tryPromise({
     try: () =>
       request(endpoint, {
