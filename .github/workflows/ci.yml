@@ -149,8 +149,9 @@ jobs:
   production:
     name: Production
     # Signed acceptance runs only for trusted same-repository candidates when
-    # they contain production-relevant changes. Test-only and documentation-only
-    # candidates retain Quality while Production is skipped.
+    # they contain production-relevant changes. Candidates that change only
+    # modified TS tests or documentation keep Quality while Production is
+    # skipped; scripts/production/acceptance.ts lists the documentation paths.
     needs: scope
     if: ${{ !cancelled() && needs.scope.result == 'success' && needs.scope.outputs.required == 'true' && needs.scope.outputs.trusted == 'true' }}
     runs-on: ubuntu-latest
