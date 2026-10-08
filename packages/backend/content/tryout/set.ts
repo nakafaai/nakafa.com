@@ -117,7 +117,3 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
     };
   }
 );
-/** Complete authenticated set state frozen into one new attempt. */
-export type VerifiedTryoutSet = Effect.Success<
-  ReturnType<typeof readTryoutSet>
->;

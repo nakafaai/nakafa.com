@@ -93,8 +93,6 @@ export const tryoutSetAttemptPageResultValidator = Schema.Union([
   currentSetResultValidator,
   retainedSetResultValidator,
 ]);
-export type TryoutSetAttemptPageResult =
-  typeof tryoutSetAttemptPageResultValidator.Type;
 export const retainedSectionResultValidator = Schema.Struct({
   activeSectionPublicPath: Schema.Union([Schema.String, Schema.Null]),
   activeSetPublicPath: Schema.Union([Schema.String, Schema.Null]),
@@ -109,5 +107,3 @@ export const tryoutSectionAttemptPageResultValidator = Schema.Union([
   redirectResultValidator,
   retainedSectionResultValidator,
 ]);
-export type TryoutSectionAttemptPageResult =
-  typeof tryoutSectionAttemptPageResultValidator.Type;
