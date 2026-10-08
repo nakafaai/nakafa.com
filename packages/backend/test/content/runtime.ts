@@ -61,10 +61,17 @@ type RuntimeRow = Exclude<
 >;
 /**
  * The public runtime request contract declares appLocale before delivery, so
- * encoding a request literal through it would reorder the body. Each literal is
- * validated against that contract, then emitted in its own wire order.
+ * encoding through the contract would reorder the body. This wire struct takes
+ * every field schema from that contract and keeps the body's original order,
+ * delivery first.
  */
-const PlainJsonSchema = Schema.fromJsonString(Schema.Unknown);
+const PublicRuntimeRequestJsonSchema = Schema.fromJsonString(
+  Schema.Struct({
+    delivery: PublicContentRuntimeRequestSchema.fields.delivery,
+    appLocale: PublicContentRuntimeRequestSchema.fields.appLocale,
+    publicPath: PublicContentRuntimeRequestSchema.fields.publicPath,
+  })
+);
 const SignedArtifactJsonSchema = Schema.fromJsonString(
   SignedContentArtifactSchema
 );
@@ -181,24 +188,20 @@ export function runtimeContentKey(
 
 /** Creates one exact public runtime request body. */
 export function publicRuntimeRequest() {
-  const request = {
+  return Schema.encodeSync(PublicRuntimeRequestJsonSchema)({
     delivery: "public",
-    appLocale: "en",
-    publicPath: TEST_RUNTIME_PATH,
-  };
-  Schema.decodeUnknownSync(PublicContentRuntimeRequestSchema)(request);
-  return Schema.encodeSync(PlainJsonSchema)(request);
+    appLocale: ActiveAppLocaleSchema.make("en"),
+    publicPath: PublicPathSchema.make(TEST_RUNTIME_PATH),
+  });
 }
 
 /** Creates the exact public runtime request for the real pair-grouped article. */
 export function articleRuntimeRequest() {
-  const request = {
+  return Schema.encodeSync(PublicRuntimeRequestJsonSchema)({
     delivery: "public",
-    appLocale: "en",
+    appLocale: ActiveAppLocaleSchema.make("en"),
     publicPath: TEST_ARTICLE_PATH,
-  };
-  Schema.decodeUnknownSync(PublicContentRuntimeRequestSchema)(request);
-  return Schema.encodeSync(PlainJsonSchema)(request);
+  });
 }
 
 /** Creates locale and path mismatches for public exchange verification. */

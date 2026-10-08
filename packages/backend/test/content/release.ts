@@ -8,6 +8,7 @@ import {
   CorpusSourcePathSchema,
   Ed25519SignatureSchema,
   GitCommitShaSchema,
+  PublicPathSchema,
   ReleaseIdSchema,
   Sha256HashSchema,
   SigningKeyIdSchema,
@@ -16,6 +17,8 @@ import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
+  ActiveAppLocaleListSchema,
+  ActiveAppLocaleSchema,
   type AppLocaleCode,
   AppLocaleSchema,
   ArtifactLocaleSchema,
@@ -27,6 +30,11 @@ import {
 } from "@nakafa/aksara-contracts/release";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
+import {
+  ContentRouteBindSchema,
+  ContentRouteDeleteSchema,
+  ContentRouteItemSchema,
+} from "@nakafa/aksara-contracts/release/route/spec";
 import {
   ContentSnapshotKindSchema,
   type PublicationScope,
@@ -42,7 +50,7 @@ import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { testMaterialPublicPath } from "@repo/backend/test/content/material";
-import { Effect, Schema } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
 const SignedReleaseJsonSchema = Schema.fromJsonString(
@@ -56,31 +64,22 @@ const RollbackEntryJsonSchema = Schema.fromJsonString(
 );
 const ReleaseItemJsonSchema = Schema.fromJsonString(ContentReleaseItemSchema);
 /**
- * Route fixtures keep the byte order they have always had. The bind member's
- * order differs from the contract's, so they encode here rather than through
- * ContentRouteItemSchema. Their plain wire fields let a negative case carry a
- * value the production decoder must reject: the test in
- * confect/contentRelease/rollback.test.ts stores an empty contentKey, which
- * ContentKeySchema cannot encode.
+ * Route fixtures validate against the contract's route owners, except for
+ * contentKey. The rollback test in confect/contentRelease/rollback.test.ts
+ * stores an empty content key that ContentKeySchema cannot encode, so the bind
+ * member accepts any string there and the production decoder must reject it.
+ * Declaring contentKey first keeps the bind bytes in their original order.
  */
 const RouteBindFixtureSchema = Schema.Struct({
   contentKey: Schema.String,
-  appLocale: ActiveAppLocaleCodeSchema,
-  operation: Schema.Literal("bind"),
-  publicPath: Schema.String,
+  ...Struct.omit(ContentRouteBindSchema.fields, ["contentKey"]),
 });
-const RouteDeleteFixtureSchema = Schema.Struct({
-  appLocale: ActiveAppLocaleCodeSchema,
-  operation: Schema.Literal("delete"),
-  publicPath: Schema.String,
-});
-const RouteItemFixtureSchema = Schema.Struct({
-  change: Schema.Union([RouteBindFixtureSchema, RouteDeleteFixtureSchema]),
-  index: Schema.Finite,
-  releaseId: Schema.String,
-});
+const RouteItemFixtureSchema = ContentRouteItemSchema.mapFields(
+  Struct.assign({
+    change: Schema.Union([RouteBindFixtureSchema, ContentRouteDeleteSchema]),
+  })
+);
 const RouteItemJsonSchema = Schema.fromJsonString(RouteItemFixtureSchema);
-const ActiveAppLocalesSchema = Schema.NonEmptyArray(AppLocaleSchema);
 const ReleaseOptionsSchema = Schema.Struct({
   activeAppLocales: Schema.optional(Schema.Array(ActiveAppLocaleCodeSchema)),
   baseManifestHash: Schema.optional(Schema.NullOr(Schema.String)),
@@ -187,7 +186,7 @@ export function testReleaseJson({
   scope = testPublicationScope({ snapshots }),
 }: ReleaseOptions = {}) {
   const rollback = originKind ? originKind === "rollback" : !!originReleaseId;
-  const appLocales = Schema.decodeUnknownSync(ActiveAppLocalesSchema)(
+  const appLocales = Schema.decodeUnknownSync(ActiveAppLocaleListSchema)(
     activeAppLocales
   );
   return Schema.encodeSync(SignedReleaseJsonSchema)({
@@ -318,10 +317,11 @@ export function testRouteJson(options?: {
   readonly releaseId?: string | undefined;
 }) {
   const index = options?.index ?? 0;
-  const appLocale = options?.appLocale ?? "en";
+  const appLocale = ActiveAppLocaleSchema.make(options?.appLocale ?? "en");
   const operation = options?.operation ?? "bind";
-  const publicPath =
-    options?.publicPath ?? testMaterialPublicPath(index, appLocale);
+  const publicPath = PublicPathSchema.make(
+    options?.publicPath ?? testMaterialPublicPath(index, appLocale)
+  );
   const change =
     operation === "delete"
       ? { appLocale, operation, publicPath }
@@ -334,7 +334,7 @@ export function testRouteJson(options?: {
   return Schema.encodeSync(RouteItemJsonSchema)({
     change,
     index,
-    releaseId: options?.releaseId ?? TEST_RELEASE_ID,
+    releaseId: ReleaseIdSchema.make(options?.releaseId ?? TEST_RELEASE_ID),
   });
 }
 /** Creates one canonical technical delete item. */
