@@ -9,8 +9,10 @@ import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/su
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 
 interface TryoutResponseProps {
-  locked: boolean;
-  question: TryoutRuntimeQuestion;
+  value: {
+    locked: boolean;
+    question: TryoutRuntimeQuestion;
+  };
 }
 
 function renderResponseLabel({
@@ -26,8 +28,9 @@ function renderResponseLabel({
 }
 
 /** Connects the shared response fields to the persisted attempt mutation. */
-export function TryoutResponse({ locked, question }: TryoutResponseProps) {
+export function TryoutResponse({ value }: TryoutResponseProps) {
   const submit = useTryoutResponseSubmit();
+  const { locked, question } = value;
 
   return (
     <TryoutResponseFields

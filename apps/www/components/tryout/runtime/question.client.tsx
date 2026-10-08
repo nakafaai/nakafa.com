@@ -21,7 +21,7 @@ export function TryoutActiveQuestion({
     <TryoutActiveQuestionShell questionOrder={question.questionOrder}>
       <section className="my-6">{content}</section>
       <section className="my-8">
-        <TryoutResponse locked={locked} question={question} />
+        <TryoutResponse value={{ locked, question }} />
       </section>
     </TryoutActiveQuestionShell>
   );
