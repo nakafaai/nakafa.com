@@ -146,8 +146,12 @@ export const RULES = {
 } satisfies Record<typeof Rule.Type, typeof RuleDefinition.Type>;
 
 const CONFIGURATION_FILE_PATTERN = /(?:^|\/)[^/]+\.config\.[cm]?tsx?$/u;
-/** The Vitest configuration API, which shared configuration modules import. */
-const CONFIGURATION_MODULE_PATTERN = /^vitest\/config$/u;
+/**
+ * The configuration APIs that framework configuration imports: Vitest's, and
+ * Vercel's by any of its subpaths.
+ */
+const CONFIGURATION_MODULE_PATTERN =
+  /^(?:vitest\/config|@vercel\/config(?:\/.*)?)$/u;
 const STRICT_PATTERN = /^(?:packages\/backend\/confect|scripts)\//u;
 /** Tests and the `test.*.ts` modules that set up and support them. */
 const TEST_PATTERN = /(?:\.test\.tsx?|(?:^|\/)test\.[^/]+\.ts)$/u;

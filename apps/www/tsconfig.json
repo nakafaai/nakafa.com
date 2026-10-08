@@ -13,6 +13,7 @@
     "app/.well-known/**/*.ts",
     "**/*.ts",
     "**/*.tsx",
+    "scripts/**/*.mts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules", ".next", "out", "dist", "build"]

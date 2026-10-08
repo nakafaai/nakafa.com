@@ -37,6 +37,30 @@ describe("Effect-native rule scopes", () => {
     })
   );
 
+  it.effect("leaves Vercel configuration to the framework at any subpath", () =>
+    Effect.gen(function* () {
+      const body = "export const data = JSON.parse(text);\n";
+      assert.deepStrictEqual(
+        yield* findings([
+          {
+            file: "apps/cas/vercel.ts",
+            sourceText: `import type { VercelConfig } from "@vercel/config/v1";\n${body}`,
+          },
+          {
+            file: "apps/api/vercel.ts",
+            sourceText: `import { defineConfig } from "@vercel/config";\n${body}`,
+          },
+          {
+            file: "apps/www/configure.ts",
+            sourceText: `import { defineConfig } from "@vercel/configure";\n${body}`,
+          },
+          { file: "apps/www/plain.ts", sourceText: body },
+        ]),
+        ["apps/www/configure.ts json", "apps/www/plain.ts json"]
+      );
+    })
+  );
+
   it.effect(
     "treats a default export that satisfies a framework configuration type as configuration",
     () =>
