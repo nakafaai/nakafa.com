@@ -4,11 +4,9 @@ import { useThree } from "@react-three/fiber";
 import {
   getModernPeriodicTableSceneColors,
   type ModernPeriodicTableFocusId,
+  type ModernPeriodicTableLabLabels,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
-import {
-  ModernPeriodicTableScene,
-  type ModernPeriodicTableSceneProps,
-} from "@repo/design-system/components/contents/chemistry/modern-periodic-table/scene";
+import { ModernPeriodicTableScene } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -42,7 +40,7 @@ export function ModernPeriodicTableCanvas({
 }: {
   "aria-label": string;
   focusId: ModernPeriodicTableFocusId;
-  labels: ModernPeriodicTableSceneProps["labels"];
+  labels: ModernPeriodicTableLabLabels;
 }) {
   const { resolvedTheme } = useTheme();
   const colors = getModernPeriodicTableSceneColors(resolvedTheme);

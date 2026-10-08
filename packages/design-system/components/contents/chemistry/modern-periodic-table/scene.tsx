@@ -8,11 +8,11 @@ import {
   MODERN_PERIODIC_TABLE_FOCI,
   type ModernPeriodicTableFocusId,
   type ModernPeriodicTableSceneColors,
+  type ModernPeriodicTableSceneLabels,
   NOBLE_GAS_FOCUS_ID,
   PERIOD_THREE_FOCUS_ID,
   PERIODIC_SERIES_ROWS,
   type PeriodicElementEntry,
-  type PeriodicSeriesRowKey,
   SERIES_MARKER_CATEGORY_ID,
   TRANSITION_FOCUS_ID,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
@@ -55,11 +55,7 @@ const NARROW_LABEL_SYMBOLS = {
 export interface ModernPeriodicTableSceneProps {
   colors: ModernPeriodicTableSceneColors;
   focusId: ModernPeriodicTableFocusId;
-  labels: {
-    group: string;
-    period: string;
-    seriesNames: Record<PeriodicSeriesRowKey, string>;
-  };
+  labels: ModernPeriodicTableSceneLabels;
 }
 
 /**

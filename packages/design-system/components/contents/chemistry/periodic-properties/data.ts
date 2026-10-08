@@ -1,7 +1,8 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { getColor } from "@repo/design-system/lib/color";
+import { COLORS, FIXED_COLORS, getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Schema } from "effect";
+import { Record as Rec, Schema } from "effect";
+import type { ReactNode } from "react";
 
 export const ATOMIC_RADIUS_MODE_ID = "atomic-radius";
 export const IONIZATION_ENERGY_MODE_ID = "ionization-energy";
@@ -27,8 +28,13 @@ const PeriodicPropertySampleSchema = Schema.Struct({
 });
 export type PeriodicPropertySample = typeof PeriodicPropertySampleSchema.Type;
 
+const PeriodicPropertyColorKeySchema = Schema.Literals([
+  ...Rec.keys(COLORS),
+  ...Rec.keys(FIXED_COLORS),
+]);
+
 const PeriodicPropertyModeSchema = Schema.Struct({
-  colorKey: Schema.Literals(["TEAL", "ORANGE", "VIOLET", "SKY"]),
+  colorKey: PeriodicPropertyColorKeySchema,
   groupSamples: Schema.Array(PeriodicPropertySampleSchema),
   marker: Schema.Literals(["sphere", "pillar"]),
   periodSamples: Schema.Array(PeriodicPropertySampleSchema),
@@ -117,6 +123,32 @@ export const PERIODIC_PROPERTY_MODES = {
     ],
   },
 } satisfies Record<PeriodicPropertyModeId, PeriodicPropertyMode>;
+
+export interface PeriodicPropertiesModeLabels {
+  cause: ReactNode;
+  groupTrend: ReactNode;
+  guidance: ReactNode;
+  name: string;
+  periodTrend: ReactNode;
+  question: ReactNode;
+  tab: string;
+}
+
+const PeriodicPropertiesFactLabelsSchema = Schema.Struct({
+  cause: Schema.String,
+  group: Schema.String,
+  period: Schema.String,
+  question: Schema.String,
+});
+type PeriodicPropertiesFactLabels =
+  typeof PeriodicPropertiesFactLabelsSchema.Type;
+
+export interface PeriodicPropertiesLabLabels {
+  chooseTrend: string;
+  factLabels: PeriodicPropertiesFactLabels;
+  modes: Record<PeriodicPropertyModeId, PeriodicPropertiesModeLabels>;
+  sceneLabel: string;
+}
 
 export type PeriodicPropertiesSceneColors = ReturnType<
   typeof getPeriodicPropertiesSceneColors

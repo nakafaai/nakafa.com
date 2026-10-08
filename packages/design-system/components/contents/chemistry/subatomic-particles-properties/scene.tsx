@@ -11,6 +11,7 @@ import {
   MASS_MODE_ID,
   type SubatomicParticlePropertiesColors,
   type SubatomicParticlePropertiesModeId,
+  type SubatomicParticlePropertiesSceneLabels,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -115,20 +116,9 @@ function createQuadraticPath(start: Vector3, control: Vector3, end: Vector3) {
 
 export interface SubatomicParticlePropertiesSceneProps {
   colors: SubatomicParticlePropertiesColors;
-  labels: {
-    electron: ReactNode;
-    electronRegion: ReactNode;
-    negativePlate: ReactNode;
-    neutron: ReactNode;
-    nucleus: ReactNode;
-    positivePlate: ReactNode;
-    proton: ReactNode;
-  };
+  labels: SubatomicParticlePropertiesSceneLabels;
   modeId: SubatomicParticlePropertiesModeId;
 }
-
-type SubatomicParticlePropertiesSceneLabels =
-  SubatomicParticlePropertiesSceneProps["labels"];
 
 /**
  * Chooses the active 3D scene without mounting hidden property views.

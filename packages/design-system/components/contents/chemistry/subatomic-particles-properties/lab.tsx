@@ -8,12 +8,11 @@ import {
   isSubatomicParticlePropertiesModeId,
   SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS,
   SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG,
+  type SubatomicParticlePropertiesFact,
+  type SubatomicParticlePropertiesLabLabels,
   type SubatomicParticlePropertiesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
-import {
-  SubatomicParticlePropertiesScene,
-  type SubatomicParticlePropertiesSceneProps,
-} from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/scene";
+import { SubatomicParticlePropertiesScene } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -41,26 +40,9 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.4;
 
 export interface SubatomicParticlePropertiesLabProps {
   description: ReactNode;
-  labels: {
-    chooseMode: string;
-    modes: Record<
-      SubatomicParticlePropertiesModeId,
-      {
-        facts: readonly {
-          label: string;
-          value: ReactNode;
-        }[];
-        summary: ReactNode;
-        tab: string;
-      }
-    >;
-    scene: SubatomicParticlePropertiesSceneProps["labels"];
-  };
+  labels: SubatomicParticlePropertiesLabLabels;
   title: ReactNode;
 }
-
-type SubatomicParticlePropertiesFact =
-  SubatomicParticlePropertiesLabProps["labels"]["modes"][SubatomicParticlePropertiesModeId]["facts"][number];
 
 /**
  * Renders one 3D lab for reading charge, mass, and location of subatomic
