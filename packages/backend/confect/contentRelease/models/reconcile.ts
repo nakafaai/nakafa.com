@@ -88,7 +88,10 @@ const decodeCursor = Effect.fn("contentRelease.decodeModelCursor")(function* (
 });
 const appendIdentity = Effect.fn("contentRelease.appendModelIdentity")(
   function* <Row extends ModelRow>(
-    input: ModelReconciliationInput & { readonly position: ModelPosition<Row> },
+    input: Pick<ModelReconciliationInput, "sourceSlot" | "targetSlot"> & {
+      readonly build: Pick<ModelReconciliationInput["build"], "phase">;
+      readonly position: ModelPosition<Row>;
+    },
     source: Row | undefined,
     target: Row | undefined,
     row: Row
