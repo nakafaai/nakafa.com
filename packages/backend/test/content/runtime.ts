@@ -59,9 +59,12 @@ type RuntimeRow = Exclude<
   >,
   null
 >;
-const PublicRuntimeRequestJsonSchema = Schema.fromJsonString(
-  PublicContentRuntimeRequestSchema
-);
+/**
+ * The public runtime request contract declares appLocale before delivery, so
+ * encoding a request literal through it would reorder the body. Each literal is
+ * validated against that contract, then emitted in its own wire order.
+ */
+const PlainJsonSchema = Schema.fromJsonString(Schema.Unknown);
 const SignedArtifactJsonSchema = Schema.fromJsonString(
   SignedContentArtifactSchema
 );
@@ -178,20 +181,24 @@ export function runtimeContentKey(
 
 /** Creates one exact public runtime request body. */
 export function publicRuntimeRequest() {
-  return Schema.encodeSync(PublicRuntimeRequestJsonSchema)({
-    appLocale: ActiveAppLocaleSchema.make("en"),
+  const request = {
     delivery: "public",
-    publicPath: PublicPathSchema.make(TEST_RUNTIME_PATH),
-  });
+    appLocale: "en",
+    publicPath: TEST_RUNTIME_PATH,
+  };
+  Schema.decodeUnknownSync(PublicContentRuntimeRequestSchema)(request);
+  return Schema.encodeSync(PlainJsonSchema)(request);
 }
 
 /** Creates the exact public runtime request for the real pair-grouped article. */
 export function articleRuntimeRequest() {
-  return Schema.encodeSync(PublicRuntimeRequestJsonSchema)({
-    appLocale: ActiveAppLocaleSchema.make("en"),
+  const request = {
     delivery: "public",
+    appLocale: "en",
     publicPath: TEST_ARTICLE_PATH,
-  });
+  };
+  Schema.decodeUnknownSync(PublicContentRuntimeRequestSchema)(request);
+  return Schema.encodeSync(PlainJsonSchema)(request);
 }
 
 /** Creates locale and path mismatches for public exchange verification. */

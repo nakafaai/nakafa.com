@@ -56,11 +56,30 @@ const RollbackEntryJsonSchema = Schema.fromJsonString(
 );
 const ReleaseItemJsonSchema = Schema.fromJsonString(ContentReleaseItemSchema);
 /**
- * Route fixtures can carry a deliberately invalid owner, such as an empty
- * content key, that the production decoder must reject. Encoding them through
- * the contract would refuse to build that negative case.
+ * Route fixtures keep the byte order they have always had. The bind member's
+ * order differs from the contract's, so they encode here rather than through
+ * ContentRouteItemSchema. Their plain wire fields let a negative case carry a
+ * value the production decoder must reject: the test in
+ * confect/contentRelease/rollback.test.ts stores an empty contentKey, which
+ * ContentKeySchema cannot encode.
  */
-const UnvalidatedJsonSchema = Schema.fromJsonString(Schema.Unknown);
+const RouteBindFixtureSchema = Schema.Struct({
+  contentKey: Schema.String,
+  appLocale: ActiveAppLocaleCodeSchema,
+  operation: Schema.Literal("bind"),
+  publicPath: Schema.String,
+});
+const RouteDeleteFixtureSchema = Schema.Struct({
+  appLocale: ActiveAppLocaleCodeSchema,
+  operation: Schema.Literal("delete"),
+  publicPath: Schema.String,
+});
+const RouteItemFixtureSchema = Schema.Struct({
+  change: Schema.Union([RouteBindFixtureSchema, RouteDeleteFixtureSchema]),
+  index: Schema.Finite,
+  releaseId: Schema.String,
+});
+const RouteItemJsonSchema = Schema.fromJsonString(RouteItemFixtureSchema);
 const ActiveAppLocalesSchema = Schema.NonEmptyArray(AppLocaleSchema);
 const ReleaseOptionsSchema = Schema.Struct({
   activeAppLocales: Schema.optional(Schema.Array(ActiveAppLocaleCodeSchema)),
@@ -300,15 +319,19 @@ export function testRouteJson(options?: {
 }) {
   const index = options?.index ?? 0;
   const appLocale = options?.appLocale ?? "en";
-  const change = {
-    ...(options?.operation === "delete"
-      ? {}
-      : { contentKey: options?.contentKey ?? `test:head-${index}` }),
-    appLocale,
-    operation: options?.operation ?? "bind",
-    publicPath: options?.publicPath ?? testMaterialPublicPath(index, appLocale),
-  };
-  return Schema.encodeSync(UnvalidatedJsonSchema)({
+  const operation = options?.operation ?? "bind";
+  const publicPath =
+    options?.publicPath ?? testMaterialPublicPath(index, appLocale);
+  const change =
+    operation === "delete"
+      ? { appLocale, operation, publicPath }
+      : {
+          contentKey: options?.contentKey ?? `test:head-${index}`,
+          appLocale,
+          operation,
+          publicPath,
+        };
+  return Schema.encodeSync(RouteItemJsonSchema)({
     change,
     index,
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
