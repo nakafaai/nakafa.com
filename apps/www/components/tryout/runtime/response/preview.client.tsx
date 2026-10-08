@@ -61,8 +61,8 @@ export function TryoutResponsePreview({
               )}
             </>
           ),
-          responseSpec,
           revealAnswers,
+          responseSpec,
           selection,
         }}
       />
