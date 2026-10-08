@@ -16,7 +16,7 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Clock, Effect, Schema } from "effect";
+import { DateTime, Effect, Schema } from "effect";
 
 const ReleaseJsonSchema = Schema.fromJsonString(SignedContentReleaseSchema);
 // Plain codec on purpose: the fixture keeps `rendererContractVersion`, an
@@ -382,53 +382,45 @@ describe("contentRelease/compact/state", () => {
       code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
-  it.live(
-    "keeps the recent release boundary when a frozen runtime names an older release",
-    () =>
-      Effect.gen(function* () {
-        const now = yield* Clock.currentTimeMillis;
-        const runtimeServices = yield* Effect.context<never>();
-        yield* Effect.promise(async () => {
-          const t = convexTest(schema, convexModules);
-          await t.mutation(async (ctx) => {
-            await seedCompactionHistory(ctx);
-            const recent = await ctx.db
-              .query("contentReleases")
-              .withIndex("by_sequence", (q) => q.eq("sequence", 2))
-              .unique();
-            assert.ok(recent);
-            await ctx.db.patch("contentReleases", recent._id, {
-              createdAt: now,
-            });
-            await ctx.db.insert("tryoutRuntimeBundles", {
-              bundleHash: "technical",
-              bundleJson: "{}",
-              createdAt: 0,
-              rendererJson: "{}",
-              rendererManifestHash: "technical",
-              snapshotId: "technical",
-              sourceGitSha: "technical",
-              sourceManifestHash: compactionIdentity(1).manifestHash,
-              sourceReleaseId: compactionIdentity(1).releaseId,
-            });
-          });
-          expect(
-            await t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                ensureCompaction().pipe(
-                  Effect.provide(mutationLayer(confectSchema, ctx))
-                )
-              )
-            )
-          ).toMatchObject({
-            complete: false,
-            cycle: {
-              floor: 2,
-            },
-          });
-        });
-      })
-  );
+  it("keeps the recent release boundary when a frozen runtime names an older release", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await seedCompactionHistory(ctx);
+      const recent = await ctx.db
+        .query("contentReleases")
+        .withIndex("by_sequence", (q) => q.eq("sequence", 2))
+        .unique();
+      assert.ok(recent);
+      await ctx.db.patch("contentReleases", recent._id, {
+        createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+      });
+      await ctx.db.insert("tryoutRuntimeBundles", {
+        bundleHash: "technical",
+        bundleJson: "{}",
+        createdAt: 0,
+        rendererJson: "{}",
+        rendererManifestHash: "technical",
+        snapshotId: "technical",
+        sourceGitSha: "technical",
+        sourceManifestHash: compactionIdentity(1).manifestHash,
+        sourceReleaseId: compactionIdentity(1).releaseId,
+      });
+    });
+    expect(
+      await t.mutation((ctx) =>
+        Effect.runPromise(
+          ensureCompaction().pipe(
+            Effect.provide(mutationLayer(confectSchema, ctx))
+          )
+        )
+      )
+    ).toMatchObject({
+      complete: false,
+      cycle: {
+        floor: 2,
+      },
+    });
+  });
   it("advances only through a bounded old-release window", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {

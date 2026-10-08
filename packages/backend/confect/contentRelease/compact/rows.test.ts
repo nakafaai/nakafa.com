@@ -26,7 +26,7 @@ import {
 } from "@repo/backend/test/content/compact";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
-import { Array as Arr, Clock, Effect } from "effect";
+import { Array as Arr, DateTime, Effect } from "effect";
 
 /** Provides one persisted compaction page with a mutation transaction. */
 function compactPage(
@@ -42,107 +42,99 @@ function compactPage(
 }
 
 describe("contentRelease/compact/rows", () => {
-  it.live(
-    "retires predecessors below the prior floor while preserving current tombstones and recreated content",
-    () =>
-      Effect.gen(function* () {
-        const now = yield* Clock.currentTimeMillis;
-        const runtimeServices = yield* Effect.context<never>();
-        yield* Effect.promise(async () => {
-          const t = convexTest(schema, convexModules);
-          const hashes = ["obsolete-before-delete", "obsolete-before-update"];
-          await t.mutation(async (ctx) => {
-            for (const artifactHash of hashes) {
-              await insertTestArtifact(ctx, {
-                artifactHash,
-                artifactJson: "{}",
-                retainUntil: 0,
-              });
-            }
-            for (const contentKey of ["deleted", "recreated"]) {
-              for (const sequence of [1, 3, 4]) {
-                const deleted =
-                  contentKey === "deleted" ? sequence !== 1 : sequence === 1;
-                let artifactHash: string | undefined;
-                if (!deleted && contentKey === "deleted") {
-                  artifactHash = hashes[0];
-                }
-                if (!deleted && contentKey === "recreated") {
-                  artifactHash = sequence === 3 ? hashes[1] : "current";
-                }
-                await ctx.db.insert("contentHeads", {
-                  ...(artifactHash === undefined
-                    ? {}
-                    : {
-                        artifactHash,
-                      }),
-                  artifactLocale: "en",
-                  contentKey,
-                  family: "material",
-                  index: 0,
-                  operation: deleted ? "delete" : "upsert",
-                  releaseId: `release-${sequence}`,
-                  sequence,
-                });
-                await ctx.db.insert("contentBindings", {
-                  appLocale: "en",
-                  batchHash: "technical",
-                  batchIndex: 0,
-                  contentKey,
-                  index: 0,
-                  operation: deleted ? "delete" : "bind",
-                  publicPath: contentKey,
-                  releaseId: `release-${sequence}`,
-                  routeJson: "{}",
-                  sequence,
-                });
-              }
-            }
-          });
-          const compact = (phase: "heads" | "bindings") =>
-            t.mutation((ctx) =>
-              Effect.runPromiseWith(runtimeServices)(
-                compactPage(ctx, phase, 3, 4)
-              )
-            );
-          expect(await compact("heads")).toEqual({
-            cursor: null,
-            deleted: 4,
-            done: true,
-          });
-          expect(await compact("bindings")).toEqual({
-            cursor: null,
-            deleted: 4,
-            done: true,
-          });
-          const remaining = await t.query(async (ctx) => ({
-            heads: await ctx.db.query("contentHeads").collect(),
-            bindings: await ctx.db.query("contentBindings").collect(),
-            facts: await ctx.db.query("contentArtifactFacts").collect(),
-          }));
-          expect(remaining.heads).toMatchObject([
-            {
-              contentKey: "deleted",
-              operation: "delete",
-              sequence: 4,
-            },
-            {
-              artifactHash: "current",
-              contentKey: "recreated",
-              operation: "upsert",
-              sequence: 4,
-            },
-          ]);
-          expect(
-            Arr.map(remaining.bindings, ({ sequence }) => sequence)
-          ).toEqual([4, 4]);
-          expect(remaining.facts).toHaveLength(2);
-          expect(
-            Arr.every(remaining.facts, ({ retainUntil }) => retainUntil > now)
-          ).toBe(true);
+  it("retires predecessors below the prior floor while preserving current tombstones and recreated content", async () => {
+    const t = convexTest(schema, convexModules);
+    const hashes = ["obsolete-before-delete", "obsolete-before-update"];
+    await t.mutation(async (ctx) => {
+      for (const artifactHash of hashes) {
+        await insertTestArtifact(ctx, {
+          artifactHash,
+          artifactJson: "{}",
+          retainUntil: 0,
         });
-      })
-  );
+      }
+      for (const contentKey of ["deleted", "recreated"]) {
+        for (const sequence of [1, 3, 4]) {
+          const deleted =
+            contentKey === "deleted" ? sequence !== 1 : sequence === 1;
+          let artifactHash: string | undefined;
+          if (!deleted && contentKey === "deleted") {
+            artifactHash = hashes[0];
+          }
+          if (!deleted && contentKey === "recreated") {
+            artifactHash = sequence === 3 ? hashes[1] : "current";
+          }
+          await ctx.db.insert("contentHeads", {
+            ...(artifactHash === undefined
+              ? {}
+              : {
+                  artifactHash,
+                }),
+            artifactLocale: "en",
+            contentKey,
+            family: "material",
+            index: 0,
+            operation: deleted ? "delete" : "upsert",
+            releaseId: `release-${sequence}`,
+            sequence,
+          });
+          await ctx.db.insert("contentBindings", {
+            appLocale: "en",
+            batchHash: "technical",
+            batchIndex: 0,
+            contentKey,
+            index: 0,
+            operation: deleted ? "delete" : "bind",
+            publicPath: contentKey,
+            releaseId: `release-${sequence}`,
+            routeJson: "{}",
+            sequence,
+          });
+        }
+      }
+    });
+    const compact = (phase: "heads" | "bindings") =>
+      t.mutation((ctx) => Effect.runPromise(compactPage(ctx, phase, 3, 4)));
+    expect(await compact("heads")).toEqual({
+      cursor: null,
+      deleted: 4,
+      done: true,
+    });
+    expect(await compact("bindings")).toEqual({
+      cursor: null,
+      deleted: 4,
+      done: true,
+    });
+    const remaining = await t.query(async (ctx) => ({
+      heads: await ctx.db.query("contentHeads").collect(),
+      bindings: await ctx.db.query("contentBindings").collect(),
+      facts: await ctx.db.query("contentArtifactFacts").collect(),
+    }));
+    expect(remaining.heads).toMatchObject([
+      {
+        contentKey: "deleted",
+        operation: "delete",
+        sequence: 4,
+      },
+      {
+        artifactHash: "current",
+        contentKey: "recreated",
+        operation: "upsert",
+        sequence: 4,
+      },
+    ]);
+    expect(Arr.map(remaining.bindings, ({ sequence }) => sequence)).toEqual([
+      4, 4,
+    ]);
+    expect(remaining.facts).toHaveLength(2);
+    expect(
+      Arr.every(
+        remaining.facts,
+        ({ retainUntil }) =>
+          retainUntil > DateTime.toEpochMillis(DateTime.nowUnsafe())
+      )
+    ).toBe(true);
+  });
   it("keeps a full heads page proving maximal references under the read budget", async () => {
     const t = convexTest(schema, convexModules);
     const keys = Array.from(

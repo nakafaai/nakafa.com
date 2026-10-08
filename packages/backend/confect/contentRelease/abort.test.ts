@@ -23,7 +23,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Clock, Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 /** Runs one server-cursor abort page at the native Convex test boundary. */
 function abort(ctx: MutationCtx, releaseId = ABORT_RELEASE_ID) {
@@ -251,82 +251,74 @@ describe("contentRelease/abort", () => {
       complete: true,
     });
   });
-  it.live.each([false, true])(
+  it.each([false, true])(
     "starts artifact retention only after the final reference, shared: %s",
-    (shared) =>
-      Effect.gen(function* () {
-        const runtimeServices = yield* Effect.context<never>();
-        const t = convexTest(schema, convexModules);
-        const artifactHash = `sha256:${"d".repeat(64)}`;
-        yield* Effect.promise(async () => {
-          await t.mutation(async (ctx) => {
-            await seedAbortRelease(ctx);
-            const item = await ctx.db
-              .query("contentItems")
-              .withIndex("by_releaseId_and_index", (query) =>
-                query.eq("releaseId", ABORT_RELEASE_ID).eq("index", 0)
-              )
-              .unique();
-            if (!item) {
-              throw new Error("Expected staged abort item.");
-            }
-            await ctx.db.patch("contentItems", item._id, {
-              artifactHash,
-              artifactReady: true,
-            });
-            await insertTestArtifact(ctx, {
-              artifactHash,
-              artifactJson: "{}",
-              retainUntil: 0,
-            });
-            if (shared) {
-              const previousReleaseId = "release-retained-artifact";
-              await insertZeroRelease(ctx, {
-                manifestHash: TEST_DIGEST,
-                releaseId: previousReleaseId,
-                sequence: 0,
-                role: "candidate",
-                status: "completed",
-                ownership: {
-                  base: [],
-                  result: ContentFamilySchema.literals,
-                },
-              });
-              await ctx.db.insert("contentHeads", {
-                artifactHash,
-                artifactLocale: "en",
-                compilerConfigHash: TEST_DIGEST,
-                contentKey: "test:retained-artifact",
-                delivery: "public",
-                family: "material",
-                index: 0,
-                operation: "upsert",
-                releaseId: previousReleaseId,
-                rendererDomain: "mathematics",
-                sequence: 0,
-                sourceHash: TEST_DIGEST,
-                sourcePath: "packages/corpus/test/retained/en.mdx",
-              });
-            }
+    async (shared) => {
+      const t = convexTest(schema, convexModules);
+      const artifactHash = `sha256:${"d".repeat(64)}`;
+      await t.mutation(async (ctx) => {
+        await seedAbortRelease(ctx);
+        const item = await ctx.db
+          .query("contentItems")
+          .withIndex("by_releaseId_and_index", (query) =>
+            query.eq("releaseId", ABORT_RELEASE_ID).eq("index", 0)
+          )
+          .unique();
+        if (!item) {
+          throw new Error("Expected staged abort item.");
+        }
+        await ctx.db.patch("contentItems", item._id, {
+          artifactHash,
+          artifactReady: true,
+        });
+        await insertTestArtifact(ctx, {
+          artifactHash,
+          artifactJson: "{}",
+          retainUntil: 0,
+        });
+        if (shared) {
+          const previousReleaseId = "release-retained-artifact";
+          await insertZeroRelease(ctx, {
+            manifestHash: TEST_DIGEST,
+            releaseId: previousReleaseId,
+            sequence: 0,
+            role: "candidate",
+            status: "completed",
+            ownership: {
+              base: [],
+              result: ContentFamilySchema.literals,
+            },
           });
-        });
-        const startedAt = yield* Clock.currentTimeMillis;
-        yield* Effect.promise(async () => {
-          await t.mutation((ctx) =>
-            Effect.runPromiseWith(runtimeServices)(abort(ctx))
-          );
-          const facts = await t.run((ctx) =>
-            ctx.db.query("contentArtifactFacts").unique()
-          );
-          if (shared) {
-            expect(facts?.retainUntil).toBe(0);
-          } else {
-            expect(facts?.retainUntil).toBeGreaterThanOrEqual(
-              startedAt + ROLLBACK_RETENTION_MS
-            );
-          }
-        });
-      })
+          await ctx.db.insert("contentHeads", {
+            artifactHash,
+            artifactLocale: "en",
+            compilerConfigHash: TEST_DIGEST,
+            contentKey: "test:retained-artifact",
+            delivery: "public",
+            family: "material",
+            index: 0,
+            operation: "upsert",
+            releaseId: previousReleaseId,
+            rendererDomain: "mathematics",
+            sequence: 0,
+            sourceHash: TEST_DIGEST,
+            sourcePath: "packages/corpus/test/retained/en.mdx",
+          });
+        }
+      });
+      const startedAt = DateTime.toEpochMillis(DateTime.nowUnsafe());
+      await t.mutation((ctx) => Effect.runPromise(abort(ctx)));
+      const facts = await t.run((ctx) =>
+        ctx.db.query("contentArtifactFacts").unique()
+      );
+      if (shared) {
+        expect(facts?.retainUntil).toBe(0);
+      } else {
+        expect(facts?.retainUntil).toBeGreaterThanOrEqual(
+          startedAt + ROLLBACK_RETENTION_MS
+        );
+      }
+    }
   );
   it("preserves the active search entry while discarding a checked head", async () => {
     const t = convexTest(schema, convexModules);
