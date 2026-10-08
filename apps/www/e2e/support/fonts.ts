@@ -63,6 +63,26 @@ export const readMathFonts = Effect.fn("NakafaE2E.readMathFonts")(function* (
   };
 });
 
+/**
+ * Loads the KaTeX faces the page declares. A formula's face loads the first
+ * time layout finds it, so a page that shows math for the first time reflows
+ * its text once the face arrives. A check that measures a navigation loads the
+ * faces first, so that reflow is not counted as the navigation's.
+ */
+export const loadMathFonts = Effect.fn("NakafaE2E.loadMathFonts")(function* (
+  page: Page
+) {
+  yield* Effect.promise(() =>
+    page.evaluate(() =>
+      Promise.all(
+        [...document.fonts]
+          .filter((face) => face.family.startsWith("KaTeX"))
+          .map((face) => face.load())
+      ).then(() => undefined)
+    )
+  );
+});
+
 /** Reads the Quran typeface's font files from the page's stylesheets. */
 export const readTypefaceFiles = Effect.fn("NakafaE2E.readTypefaceFiles")(
   function* (page: Page) {

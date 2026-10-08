@@ -7,7 +7,7 @@ export const desktopViewport = {
 } as const;
 
 /** The phone viewport that takes touch input. */
-const touchViewport = {
+export const touchViewport = {
   hasTouch: true,
   height: 844,
   name: "touch",
