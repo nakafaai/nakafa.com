@@ -22,9 +22,6 @@ const ProductAnalyticsCaptureArgsSchema = Schema.Struct({
 });
 export type ProductAnalyticsCaptureArgs =
   typeof ProductAnalyticsCaptureArgsSchema.Type;
-export type ProductAnalyticsDeliveryOperations<R = never> = Parameters<
-  typeof deliverProductAnalyticsProgram<R>
->[0];
 /** Raised when an admitted backend product event cannot be queued. */
 /** Maps one Convex or PostHog failure into the analytics capture channel. */
 export function toProductAnalyticsCaptureError(error: unknown) {
