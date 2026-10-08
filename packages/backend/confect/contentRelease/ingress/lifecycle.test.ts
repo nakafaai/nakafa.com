@@ -3,7 +3,7 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 // @vitest-environment node
 
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   Ed25519SignatureSchema,
   ReleaseIdSchema,
@@ -16,6 +16,7 @@ import {
   encodeRendererJson,
 } from "@repo/backend/confect/contentRelease/wire";
 import { convexModules } from "@repo/backend/confect/test.setup";
+import { workflow } from "@repo/backend/confect/workflow";
 import type {
   ActionCtx,
   MutationCtx,
@@ -33,7 +34,11 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import { insertSignedCandidate } from "@repo/backend/test/content/stage";
-import { completeContentProof } from "@repo/backend/test/content/verify";
+import {
+  completeContentProof,
+  prepareContentProof,
+  recomputeContentProof,
+} from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 
@@ -168,19 +173,40 @@ const runLifecycle = Effect.fn("test.contentRelease.runLifecycle")(function* <
   });
 });
 describe("content release lifecycle ingress", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   it.effect(
     "returns in-progress verification without claiming terminal proof",
     () =>
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertSignedCandidate(
+              ctx,
+              releaseId,
+              release,
+              encodeRendererJson(TEST_PROOF_RENDERER)
+            )
+          )
+        );
+        yield* Effect.promise(() => prepareContentProof(t, releaseId));
+        vi.spyOn(workflow, "status").mockResolvedValue({
+          type: "inProgress",
+          running: [],
+        });
         const result = yield* runLifecycle(t, (ctx) => {
-          vi.spyOn(ctx, "runMutation").mockResolvedValue({
-            phase: "verifying",
-          });
+          const runMutation = vi.spyOn(ctx, "runMutation");
           return advancePublication({
             operation: "verify",
             release,
-          });
+          }).pipe(
+            Effect.map((response) => {
+              expect(runMutation).not.toHaveBeenCalled();
+              return response;
+            })
+          );
         });
         expect(result).toEqual({
           ok: true,
@@ -229,6 +255,52 @@ describe("content release lifecycle ingress", () => {
           },
         });
       })
+  );
+  it.effect("runs the poll mutation once after the workflow has finished", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          insertSignedCandidate(
+            ctx,
+            releaseId,
+            release,
+            encodeRendererJson(TEST_PROOF_RENDERER)
+          )
+        )
+      );
+      yield* Effect.promise(() =>
+        recomputeContentProof(t, release.manifestHash, releaseId)
+      );
+      vi.spyOn(workflow, "status").mockResolvedValue({
+        result: null,
+        type: "completed",
+      });
+      vi.spyOn(workflow, "cleanup").mockResolvedValue(true);
+      const response = yield* runLifecycle(t, (ctx) => {
+        const runMutation = vi.spyOn(ctx, "runMutation");
+        return advancePublication({
+          operation: "verify",
+          release,
+        }).pipe(
+          Effect.map((value) => {
+            expect(runMutation).toHaveBeenCalledTimes(1);
+            return value;
+          })
+        );
+      });
+      expect(response).toMatchObject({
+        ok: true,
+        operation: "verify",
+        value: {
+          evidence: {
+            manifestHash: release.manifestHash,
+            releaseId,
+          },
+          phase: "verified",
+        },
+      });
+    })
   );
   it.effect("surfaces only the stable terminal proof category", () =>
     Effect.gen(function* () {
