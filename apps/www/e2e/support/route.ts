@@ -3,10 +3,12 @@ import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 
-/** The English app routes that several suites open by name. */
+/** The app routes that several suites open by name, in English and Indonesian. */
 export const appRoutes = {
   quran: "/en/quran",
+  quranId: "/id/quran",
   quranSurah: "/en/quran/2",
+  quranSurahId: "/id/quran/2",
   tryout: "/en/try-out",
 } as const;
 

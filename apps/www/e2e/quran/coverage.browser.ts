@@ -93,13 +93,13 @@ const verifyQuranInterpretationDrawer = Effect.fn(
 )(function* (page: Page) {
   yield* seedAnalyticsConsent(page, "denied");
   const response = yield* Effect.promise(() =>
-    page.goto("/id/quran/2", { waitUntil: "domcontentloaded" })
+    page.goto(appRoutes.quranSurahId, { waitUntil: "domcontentloaded" })
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
   yield* waitForCommittedAppRouter(
     page,
-    "/id/quran/2",
-    "/id/quran/2",
+    appRoutes.quranSurahId,
+    appRoutes.quranSurahId,
     readinessTimeoutMilliseconds
   );
 
@@ -127,7 +127,7 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
 
-  const quranIndexLink = page.locator('a[href="/id/quran"]').first();
+  const quranIndexLink = page.locator(`a[href="${appRoutes.quranId}"]`).first();
   yield* Effect.promise(() => expect(quranIndexLink).toBeVisible());
   yield* Effect.promise(() => quranIndexLink.click());
   yield* Effect.promise(() => expect(page).toHaveURL(quranIndexUrlPattern));
@@ -139,8 +139,8 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => expect(page).toHaveURL(quranSurahUrlPattern));
   yield* waitForCommittedAppRouter(
     page,
-    "/id/quran",
-    "/id/quran/2",
+    appRoutes.quranId,
+    appRoutes.quranSurahId,
     readinessTimeoutMilliseconds
   );
   yield* Effect.promise(() => expect(trigger).toBeVisible());

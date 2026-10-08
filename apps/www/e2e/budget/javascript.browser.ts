@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { measureRouteJavascript } from "@/e2e/support/resources";
+import { appRoutes } from "@/e2e/support/route";
 
 const HOMEPAGE_MAX_ENCODED_BYTES = 1_168_654;
 const HOMEPAGE_MAX_DECODED_BYTES = 3_809_519;
@@ -20,7 +21,7 @@ const routeBudgets = [
   {
     decodedBodySize: QURAN_MAX_DECODED_BYTES,
     encodedBodySize: QURAN_MAX_ENCODED_BYTES,
-    href: "/id/quran/2",
+    href: appRoutes.quranSurahId,
     name: "Indonesian Quran normal-prefetch graph",
   },
 ] as const;

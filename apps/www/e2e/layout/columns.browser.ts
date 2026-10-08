@@ -3,12 +3,17 @@ import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 // The shared content column's cap, Tailwind's max-w-3xl.
 const columnMaxWidth = 768;
 // Pages whose lists are narrower than the column, so a shrinking column shows.
-const columnRoutes = ["/id/quran", "/en/articles", "/en/articles/politics"];
+const columnRoutes = [
+  appRoutes.quranId,
+  "/en/articles",
+  "/en/articles/politics",
+];
 const tryoutSetRoute = "/en/try-out/indonesia/snbt/2027/set-1";
 
 const visit = Effect.fn("NakafaE2E.visitLayoutRoute")(function* (

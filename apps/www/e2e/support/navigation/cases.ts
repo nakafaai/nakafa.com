@@ -307,11 +307,11 @@ const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>
 
 const resolveQuran = Effect.fn("NakafaE2E.resolveQuran")(() =>
   Effect.succeed({
-    href: "/id/quran/2",
+    href: appRoutes.quranSurahId,
     marker: { kind: "heading", text: QURAN_HEADING_PATTERN },
     name: "Quran",
     shell: "app",
-    sourceHref: "/id/quran",
+    sourceHref: appRoutes.quranId,
   } satisfies NavigationTarget)
 );
 
