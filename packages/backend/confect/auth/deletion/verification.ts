@@ -15,9 +15,6 @@ export type LoadVerificationCursor = Effect.Effect<
 export type SaveVerificationCursor = (
   cursor: string | null
 ) => Effect.Effect<unknown, UserCleanupError>;
-export type VerificationCleanupOperations = Parameters<
-  typeof drainDeletedUserVerificationsProgram
->[0];
 /**
  * Drains every bounded verification scan page and checkpoints after each page
  * so an interrupted action resumes instead of rescanning the global prefix.
