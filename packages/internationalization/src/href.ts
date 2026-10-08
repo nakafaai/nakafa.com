@@ -1,4 +1,5 @@
 import { previewRouting } from "@repo/internationalization/src/routing";
+import { Array as Arr } from "effect";
 import { hasLocale } from "next-intl";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//;
@@ -46,11 +47,11 @@ export function normalizeLocalizedInternalHref(href: string) {
   }
 
   const url = new URL(href, URL_BASE);
-  const segments = url.pathname.split("/").filter(Boolean);
+  const segments = Arr.filter(url.pathname.split("/"), Boolean);
   const firstSegment = segments[0];
 
   if (firstSegment && hasLocale(previewRouting.locales, firstSegment)) {
-    const localizedPath = segments.slice(1).join("/");
+    const localizedPath = Arr.join(segments.slice(1), "/");
     url.pathname = localizedPath ? `/${localizedPath}` : "/";
   }
 
