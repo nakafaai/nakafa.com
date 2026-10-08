@@ -3,6 +3,7 @@ import {
   type ArrowFunction,
   type BindingName,
   type FunctionExpression,
+  type FunctionLikeDeclaration,
   type Identifier,
   isArrowFunction,
   isBindingElement,
@@ -10,6 +11,7 @@ import {
   isCaseBlock,
   isCatchClause,
   isClassDeclaration,
+  isClassExpression,
   isEnumDeclaration,
   isForInStatement,
   isForOfStatement,
@@ -94,6 +96,25 @@ function statementBindings(
   });
 }
 
+/**
+ * The bindings that a function's own scope holds for `name`: its parameters,
+ * and then the name of a function expression, which only its body sees.
+ */
+function functionBindings(
+  scope: FunctionLikeDeclaration,
+  name: string
+): readonly Declared[] {
+  const parameters = Arr.flatMap(scope.parameters, (parameter) =>
+    bindsName(parameter.name, name) ? [undefined] : []
+  );
+  if (!Arr.isReadonlyArrayEmpty(parameters)) {
+    return parameters;
+  }
+  return isFunctionExpression(scope) && scope.name?.text === name
+    ? [scope]
+    : [];
+}
+
 /** The declarations that one scope binds to `name`, none when the scope binds nothing. */
 function scopeBindings(scope: Node, name: string): readonly Declared[] {
   if (isSourceFile(scope) || isModuleBlock(scope) || isBlock(scope)) {
@@ -106,9 +127,10 @@ function scopeBindings(scope: Node, name: string): readonly Declared[] {
     );
   }
   if (isFunctionLikeDeclaration(scope)) {
-    return Arr.flatMap(scope.parameters, (parameter) =>
-      bindsName(parameter.name, name) ? [undefined] : []
-    );
+    return functionBindings(scope, name);
+  }
+  if (isClassExpression(scope)) {
+    return scope.name?.text === name ? [undefined] : [];
   }
   if (
     isForStatement(scope) ||
@@ -142,8 +164,8 @@ function enclosingFunctions(node: Node, name: string): readonly Node[] {
  * Returns the function values that the innermost declaration of the name of
  * `reference` binds. The search runs outward through each enclosing statement
  * list (a module, a block, a module block, or a case block), each function's
- * parameters, each loop head, and each catch clause, and the first scope that
- * binds the name decides. A binding without a function value, such as a
+ * parameters and expression name, each class expression's name, each loop
+ * head, and each catch clause, and the first scope that binds the name decides. A binding without a function value, such as a
  * parameter, a destructured name, a class, or a variable that a call
  * initializes, binds no function, so an outer function of the same name is
  * not the one the reference names. Hoisted `var` declarations are not searched,

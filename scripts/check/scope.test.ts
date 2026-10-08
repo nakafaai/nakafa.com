@@ -96,6 +96,82 @@ export function build() {
     })
   );
 
+  it.effect("binds a function expression's own name inside its body", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* boundLines(
+          `function handler() {}
+export const build = () => {
+  return function handler(step) {
+    return use(handler);
+  };
+};
+`,
+          "handler"
+        ),
+        [[3]]
+      );
+      assert.deepStrictEqual(
+        yield* boundLines(
+          `function handler() {}
+export const build = () => function handler(handler) {
+  return use(handler);
+};
+`,
+          "handler"
+        ),
+        [[]]
+      );
+    })
+  );
+
+  it.effect("stops at a class expression's own name inside its body", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* boundLines(
+          `function handler() {}
+export const Build = class handler {
+  run() {
+    return use(handler);
+  }
+};
+`,
+          "handler"
+        ),
+        [[]]
+      );
+    })
+  );
+
+  it.effect("passes through anonymous function and class expressions", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* boundLines(
+          `function handler() {}
+export const build = function () {
+  return use(handler);
+};
+`,
+          "handler"
+        ),
+        [[1]]
+      );
+      assert.deepStrictEqual(
+        yield* boundLines(
+          `function handler() {}
+export const Build = class {
+  run() {
+    return use(handler);
+  }
+};
+`,
+          "handler"
+        ),
+        [[1]]
+      );
+    })
+  );
+
   it.effect("binds a hoisted function declaration of the same block", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
