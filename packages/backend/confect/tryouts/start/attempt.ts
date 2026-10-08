@@ -8,22 +8,29 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import irtScaleVersions from "@repo/backend/confect/_generated/tables/irtScaleVersions";
+import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttempts";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { createAttemptPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import { startSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
 import { tryoutStartSourceSchema } from "@repo/backend/confect/tryouts/start/source";
 import {
-  attemptAccessFieldsSchema,
   startAttemptArgsValidator,
   toTryoutStartError,
 } from "@repo/backend/confect/tryouts/start/spec";
-import { Array as Arr, Duration, Effect, flow, Schema } from "effect";
+import { Array as Arr, Duration, Effect, flow, Schema, Struct } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
 const createTryoutAttemptInputSchema = Schema.Struct({
-  access: attemptAccessFieldsSchema,
+  access: tryoutAttempts.Doc.mapFields(
+    Struct.pick([
+      "accessEndsAt",
+      "accessSourceKind",
+      "accessSubscriptionId",
+      "countsForCompetition",
+    ])
+  ),
   args: startAttemptArgsValidator,
   attemptNumber: Schema.Finite,
   now: Schema.Finite,

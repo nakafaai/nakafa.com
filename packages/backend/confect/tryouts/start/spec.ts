@@ -1,5 +1,5 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttempts";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { Schema, Struct } from "effect";
@@ -39,15 +39,13 @@ export const tryoutStartAccessValidator = Schema.Union([
 export type TryoutStartAccess = typeof tryoutStartAccessValidator.Type;
 export const tryoutPaywallSourceValidator = Schema.Literal("review");
 export type TryoutPaywallSource = typeof tryoutPaywallSourceValidator.Type;
-export const attemptAccessFieldsSchema = tryoutAttempts.Doc.mapFields(
-  Struct.pick([
-    "accessEndsAt",
-    "accessSourceKind",
-    "accessSubscriptionId",
-    "countsForCompetition",
-  ])
-);
-export type AttemptAccessFields = typeof attemptAccessFieldsSchema.Type;
+export type AttemptAccessFields = Pick<
+  Docs["tryoutAttempts"],
+  | "accessEndsAt"
+  | "accessSourceKind"
+  | "accessSubscriptionId"
+  | "countsForCompetition"
+>;
 const tryoutStartScopeSchema = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
   examKey: tryoutRouteKeyValidator,
