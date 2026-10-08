@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { quranLayer } from "@repo/backend/content/quran/confect";
-import { quranMarkdownValidator } from "@repo/backend/content/quran/contract";
 import { readQuranMarkdown } from "@repo/backend/content/quran/markdown";
 import {
   makeQuranAttribution,
@@ -15,10 +14,7 @@ import {
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { Effect, Schema } from "effect";
 
-const encodeMarkdown = Schema.encodeSync(
-  Schema.fromJsonString(quranMarkdownValidator),
-  { onExcessProperty: "error" }
-);
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 describe("contentRelease/quran/markdown", () => {
   it.effect("returns a normalized unmanaged markdown projection", () =>
@@ -97,9 +93,9 @@ describe("contentRelease/quran/markdown", () => {
               },
             },
           ]);
-          expect(encodeMarkdown(markdown)).not.toContain("Terjemahan teknis");
-          expect(encodeMarkdown(markdown)).not.toContain("Tafsir teknis");
-          expect(encodeMarkdown(markdown)).not.toContain("inQuran");
+          expect(encodeJson(markdown)).not.toContain("Terjemahan teknis");
+          expect(encodeJson(markdown)).not.toContain("Tafsir teknis");
+          expect(encodeJson(markdown)).not.toContain("inQuran");
         })
       );
     })

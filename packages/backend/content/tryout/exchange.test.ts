@@ -1,11 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
-import {
-  Ed25519SignatureSchema,
-  Sha256HashSchema,
-} from "@nakafa/aksara-contracts/ids";
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { decodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/parse";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
@@ -22,15 +17,8 @@ import {
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { Effect, Schema } from "effect";
 
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const otherHash = Sha256HashSchema.make(`sha256:${"9".repeat(64)}`);
-const encodeBundleJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedTryoutRuntimeBundleSchema),
-  { onExcessProperty: "error" }
-);
-const encodeArtifactJson = Schema.encodeSync(
-  Schema.fromJsonString(SignedContentArtifactSchema),
-  { onExcessProperty: "error" }
-);
 describe("protected try-out exchange", () => {
   it.effect(
     "authenticates original question and answer bytes with the requested permanent bundle",
@@ -120,9 +108,9 @@ describe("protected try-out exchange", () => {
               },
               {
                 ...row,
-                bundleJson: encodeBundleJson({
+                bundleJson: encodeJson({
                   ...bundle,
-                  signature: Ed25519SignatureSchema.make("A".repeat(86)),
+                  signature: "A".repeat(86),
                 }),
               },
             ]) {
@@ -200,7 +188,7 @@ describe("protected try-out exchange", () => {
               }
               yield* Effect.promise(() =>
                 tCtx.db.patch(stored._id, {
-                  artifactJson: encodeArtifactJson(artifact),
+                  artifactJson: encodeJson(artifact),
                 })
               );
             });
