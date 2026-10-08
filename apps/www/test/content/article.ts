@@ -32,16 +32,12 @@ import {
   Effect,
   MutableHashMap,
   Record as Rec,
-  Schema,
   Struct,
 } from "effect";
 import {
   testArticleProjection,
   testArticleSourcePath,
 } from "@/test/content-article";
-
-/** Plain codec: writes the same bytes as JSON.stringify, so each stored artifact matches main. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Creates signed localized articles with their complete immutable discovery closure. */
 export const makeArticleRuntimeSource = Effect.fn(
@@ -112,7 +108,7 @@ export const makeArticleRuntimeSource = Effect.fn(
       });
       artifacts.push({
         artifactHash: artifact.artifactHash,
-        artifactJson: encodeJson(artifact),
+        artifactJson: JSON.stringify(artifact),
       });
       const bucket = getHashBucket(projectionHash);
       catalog.push({

@@ -15,7 +15,7 @@ import {
   makePageRuntimeSource,
   TEST_PUBLICATION_RELEASE,
 } from "@repo/backend/test/content/publication";
-import { Effect, Layer, MutableHashMap, Option, Schema } from "effect";
+import { Effect, Layer, MutableHashMap, Option } from "effect";
 import {
   getPublishedPageCatalog,
   readPublishedPageCatalog,
@@ -39,8 +39,6 @@ const dePageProjection = {
   artifactLocale: ArtifactLocaleSchema.make("de"),
   publicPath: PublicPathSchema.make("nutzungsbedingungen"),
 };
-/** Plain codec: writes the same bytes as JSON.stringify, so each stored projection matches main. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -70,7 +68,7 @@ describe("published Page catalog", () => {
       Effect.succeed({
         activeReleaseId,
         managed: true,
-        projectionJson: [encodeJson(testPageProjection)],
+        projectionJson: [JSON.stringify(testPageProjection)],
       })
     );
   });
@@ -184,7 +182,7 @@ describe("published Page catalog", () => {
           Effect.succeed({
             activeReleaseId,
             managed: true,
-            projectionJson: [encodeJson(projection)],
+            projectionJson: [JSON.stringify(projection)],
           })
         );
         const failure = yield* readPublishedPageCatalog().pipe(Effect.flip);
@@ -236,7 +234,7 @@ describe("published Page catalog", () => {
             testPageProjection,
             idPageProjection,
             dePageProjection,
-          ].map((projection) => encodeJson(projection)),
+          ].map((projection) => JSON.stringify(projection)),
         })
       );
       const found = yield* readPublishedPageLocalePath({
@@ -260,7 +258,7 @@ describe("published Page catalog", () => {
         Effect.succeed({
           activeReleaseId,
           managed: true,
-          projectionJson: [encodeJson(testPageProjection)],
+          projectionJson: [JSON.stringify(testPageProjection)],
         })
       );
       const missing = yield* readPublishedPageLocalePath({

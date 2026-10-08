@@ -28,12 +28,8 @@ import {
   Effect,
   MutableHashMap,
   Record as Rec,
-  Schema,
   Struct,
 } from "effect";
-
-/** Plain codec: writes the same bytes as JSON.stringify, so each stored artifact matches main. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const defaultProjections = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
   makeMaterialProjection(locale, 1),
@@ -105,7 +101,7 @@ export const makeMaterialRuntimeSource = Effect.fn(
     });
     artifacts.push({
       artifactHash: artifact.artifactHash,
-      artifactJson: encodeJson(artifact),
+      artifactJson: JSON.stringify(artifact),
     });
     const topic = yield* deriveMaterialTopicReference(projection);
     const bucket = getHashBucket(projectionHash);
