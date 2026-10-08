@@ -6,20 +6,20 @@ import { convexKeys } from "@repo/backend/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Effect, Schema } from "effect";
 
-interface VercelIdentity {
-  readonly deployment: string | undefined;
-  readonly environment: string | undefined;
-  readonly git: {
-    readonly branch: string | undefined;
-    readonly commit: string | undefined;
-    readonly owner: string | undefined;
-    readonly provider: string | undefined;
-    readonly repository: string | undefined;
-  };
-  readonly marker: "1" | undefined;
-  readonly project: string | undefined;
-  readonly target: string | undefined;
-}
+const VercelIdentitySchema = Schema.Struct({
+  deployment: Schema.UndefinedOr(Schema.String),
+  environment: Schema.UndefinedOr(Schema.String),
+  git: Schema.Struct({
+    branch: Schema.UndefinedOr(Schema.String),
+    commit: Schema.UndefinedOr(Schema.String),
+    owner: Schema.UndefinedOr(Schema.String),
+    provider: Schema.UndefinedOr(Schema.String),
+    repository: Schema.UndefinedOr(Schema.String),
+  }),
+  marker: Schema.UndefinedOr(Schema.Literal("1")),
+  project: Schema.UndefinedOr(Schema.String),
+  target: Schema.UndefinedOr(Schema.String),
+});
 
 const FailureSchema = Schema.Literals([
   "anonymous-production",
@@ -49,12 +49,13 @@ export class UnsafeRuntimeError extends Schema.TaggedError<UnsafeRuntimeError>()
   }
 }
 
-export interface RuntimeTarget {
-  readonly agent: "anonymous" | undefined;
-  readonly query: string;
-  readonly site: string | undefined;
-  readonly vercel: VercelIdentity;
-}
+const RuntimeTargetSchema = Schema.Struct({
+  agent: Schema.UndefinedOr(Schema.Literal("anonymous")),
+  query: Schema.String,
+  site: Schema.UndefinedOr(Schema.String),
+  vercel: VercelIdentitySchema,
+});
+export type RuntimeTarget = typeof RuntimeTargetSchema.Type;
 
 function failure(reason: Failure) {
   return new UnsafeRuntimeError({ reason });

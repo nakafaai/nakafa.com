@@ -1,4 +1,4 @@
-import { Effect, FileSystem, Schema } from "effect";
+import { Clock, Effect, FileSystem, Schema } from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import {
   GoogleAssertionSignError,
@@ -24,6 +24,22 @@ const decodeGoogleServiceAccount = Schema.decodeUnknownEffect(
 );
 const decodeGoogleTokenResponse = Schema.decodeUnknownEffect(
   Schema.fromJsonString(GoogleTokenResponseSchema)
+);
+const CompactJsonSchema = Schema.fromJsonString(Schema.Unknown);
+/** Encodes one JWT header or payload as compact JSON for the signed assertion. */
+const encodeAssertionSegment = Effect.fn("scripts.google.auth.encodeSegment")(
+  function* (segment: unknown) {
+    return yield* Schema.encodeEffect(CompactJsonSchema)(segment).pipe(
+      Effect.mapError(
+        (cause) =>
+          new GoogleAssertionSignError({
+            cause,
+            message:
+              "Failed to encode the Google service-account JWT assertion.",
+          })
+      )
+    );
+  }
 );
 /** Loads and validates the service-account key used for eligible URL updates. */
 const loadGoogleServiceAccount = Effect.fn(
@@ -56,7 +72,7 @@ const signGoogleAccessTokenAssertion = Effect.fn(
   "scripts.google.auth.signAssertion"
 )(function* () {
   const credentials = yield* loadGoogleServiceAccount();
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor((yield* Clock.currentTimeMillis) / 1000);
   const encoder = new TextEncoder();
   const key = yield* Effect.tryPromise({
     try: () =>
@@ -83,13 +99,13 @@ const signGoogleAccessTokenAssertion = Effect.fn(
       }),
   });
   const encodedHeader = Buffer.from(
-    JSON.stringify({
+    yield* encodeAssertionSegment({
       alg: GOOGLE_JWT_ALGORITHM,
       typ: "JWT",
     })
   ).toString("base64url");
   const encodedPayload = Buffer.from(
-    JSON.stringify({
+    yield* encodeAssertionSegment({
       aud: GOOGLE_JWT_AUDIENCE,
       exp: now + GOOGLE_JWT_TOKEN_LIFETIME_SECONDS,
       iat: now,
