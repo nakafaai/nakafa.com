@@ -1,6 +1,5 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { HashMap, MutableHashMap, Schema } from "effect";
+import { HashMap, Schema, Tuple } from "effect";
 import type {
   Forum,
   ForumPost,
@@ -39,21 +38,16 @@ export function createActiveTranscriptModel({
     ...(unreadCue === undefined ? {} : { unreadCue }),
   });
   const postIds = posts.map((post) => post._id);
-  const rowIndexByPostId = MutableHashMap.empty<
-    Id<"schoolClassForumPosts">,
-    number
-  >();
-
-  for (const [index, row] of rows.entries()) {
-    if (row.type === "post") {
-      MutableHashMap.set(rowIndexByPostId, row.post._id, index);
-    }
-  }
+  const rowIndexByPostId = HashMap.fromIterable(
+    rows.flatMap((row, index) =>
+      row.type === "post" ? [Tuple.make(row.post._id, index)] : []
+    )
+  );
 
   return {
     lastPostId: getLastConversationPostId(posts),
     postIds,
-    rowIndexByPostId: HashMap.fromIterable(rowIndexByPostId),
+    rowIndexByPostId,
     rows,
   } satisfies ActiveTranscriptModel;
 }

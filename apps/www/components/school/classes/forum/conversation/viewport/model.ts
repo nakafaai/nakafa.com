@@ -19,7 +19,7 @@ import {
   ConversationScrollSnapshotSchema,
 } from "@/components/school/classes/forum/session/store";
 
-/** Matches the four alignments of virtua's `ScrollToIndexAlign`. */
+/** The alignments a placement may ask for. The scroller passes one to virtua, whose own type checks it there. */
 const PlacementAlignSchema = Schema.Literals([
   "start",
   "center",
