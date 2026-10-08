@@ -41,7 +41,7 @@ import {
 } from "typescript/unstable/ast";
 import { candidate } from "#scripts/check/rules";
 import { children } from "#scripts/check/source";
-import { frameworkNames, holdsValueMember } from "#scripts/check/value";
+import { valueMembers } from "#scripts/check/value";
 
 const JSX_PATTERN = /\.tsx$/u;
 const PROPS_PATTERN = /Props$/u;
@@ -291,8 +291,9 @@ function isGeneric(
  * object, outside the functions that run in the browser page, where no Schema
  * reaches. React component props in `.tsx` modules, ambient augmentations,
  * interfaces that only extend a derived type, the type a recursive schema names
- * (found among all `nodes`), shapes that hold a function or a React or MDX
- * value, and generic shapes that use a type parameter stay allowed.
+ * (found among all `nodes`), shapes that hold a value no Schema describes (a
+ * function, a React or MDX value, an AI SDK message part, an Effect runtime
+ * handle), and generic shapes that use a type parameter stay allowed.
  */
 export function shapeCandidates(
   file: string,
@@ -302,7 +303,7 @@ export function shapeCandidates(
 ) {
   const props = JSX_PATTERN.test(file);
   const recursive = recursiveNames(nodes);
-  const names = frameworkNames(sourceFile);
+  const holdsValue = valueMembers(sourceFile);
   return Arr.flatMap(runtime, (node) => {
     if (!(isInterfaceDeclaration(node) || isTypeAliasDeclaration(node))) {
       return [];
@@ -316,7 +317,7 @@ export function shapeCandidates(
       (props && PROPS_PATTERN.test(node.name.text)) ||
       isAmbient(node) ||
       Arr.contains(recursive, node.name.text) ||
-      Arr.some(members, (member) => holdsValueMember(member, names)) ||
+      Arr.some(members, holdsValue) ||
       isGeneric(node, members);
     return handWritten && !allowed
       ? [candidate("data-type", sourceFile, node.name)]

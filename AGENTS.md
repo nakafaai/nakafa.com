@@ -47,7 +47,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 ## Effect V4 Standard
 
-- Nakafa is Effect-native: Effect v4 and Confect v10 express every capability. Plain TypeScript remains only where Effect cannot express it, namely React component props in `.tsx`, framework configuration, generated code, ambient declarations, native promise syntax in a Confect workflow handler, the named type of a recursive Schema, the selector argument of `Extract` or `Exclude`, shapes that hold a function or a React or MDX value, and generic shapes that use their type parameters. The pull request justifies each one.
+- Nakafa is Effect-native: Effect v4 and Confect v10 express every capability. Plain TypeScript remains only where Effect cannot express it, namely React component props in `.tsx`, framework configuration, generated code, ambient declarations, native promise syntax in a Confect workflow handler, the named type of a recursive Schema, the selector argument of `Extract` or `Exclude`, shapes that hold a value no Schema describes as data (a function, a React or MDX value, an AI SDK message part, an Effect runtime handle such as a fiber or a queue), and generic shapes that use their type parameters. The pull request justifies each one.
 - Before writing code, find the Effect or Confect module that already does the job in the sources above. Unstable Effect v4 modules are welcome, and a dependency that Effect already covers goes. `repos/effect` is a read-only Git subtree pinned to the installed version: never edit, import from, build, lint, or test it. `pnpm effect:source:check` verifies parity; `pnpm effect:source:update` creates the matching reference commit after an Effect update.
 
 | Instead of | Use |

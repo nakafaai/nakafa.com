@@ -231,23 +231,47 @@ export interface Card {
   );
 
   it.effect(
-    "keeps a shape reported when a member names no React import or is a local alias",
+    "keeps a shape reported when a member names no React import or a local data alias",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
           yield* shapes(`import type { ReactNode } from "./nodes";
-type Render = () => void;
+type Title = string;
 export interface Imported {
   readonly body: ReactNode;
 }
 export interface Aliased {
-  readonly render: Render;
-}
-export interface Data {
-  readonly title: string;
+  readonly title: Title;
 }
 `),
-          [3, 6, 9]
+          [3, 6]
+        );
+      })
+  );
+
+  it.effect(
+    "allows a shape that holds an Effect runtime handle, an AI SDK message part, or a same-module shape of functions",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`import type { TextUIPart } from "ai";
+import type { Fiber } from "effect";
+interface Actions {
+  readonly close: () => void;
+}
+export interface Save {
+  readonly fiber: Fiber.Fiber<void, never>;
+  readonly owner: symbol;
+}
+export interface Entry {
+  readonly key: string;
+  readonly part: TextUIPart;
+}
+export interface ContextValue {
+  readonly actions: Actions;
+}
+`),
+          []
         );
       })
   );
@@ -299,10 +323,10 @@ export interface Other<T> {
   readonly map: { readonly [T in "a" | "b"]: T };
 }
 export interface Renders<T> {
-  readonly box: { readonly render: <T>(value: T) => T };
+  <T>(value: T): T;
 }
 export interface Visitor<T> {
-  readonly api: { visit<T>(value: T): void };
+  new <T>(value: T): Renders<T>;
 }
 export interface Unwrapped<T> {
   readonly value: Promise<number> extends Promise<infer T> ? T : never;
