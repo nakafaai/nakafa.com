@@ -81,25 +81,27 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     usageHandler,
     languageModel: handle.model,
   });
-  const repaired = yield* Schema.encodeEffect(prettyJsonCodec)(
+  const acceptedSchemaText = yield* Schema.encodeEffect(prettyJsonCodec)(
     schema.value
-  ).pipe(
-    Effect.flatMap((acceptedSchemaText) =>
-      Effect.tryPromise((signal) =>
-        agent
-          .generateText(
-            ctx,
-            { userId },
-            {
-              abortSignal: signal,
-              output: Output.object({ schema: tool.inputSchema }),
-              prompt: createPrompt({
-                taskContext: `
+  ).pipe(Effect.option);
+  if (Option.isNone(acceptedSchemaText)) {
+    return null;
+  }
+  const repaired = yield* Effect.tryPromise((signal) =>
+    agent
+      .generateText(
+        ctx,
+        { userId },
+        {
+          abortSignal: signal,
+          output: Output.object({ schema: tool.inputSchema }),
+          prompt: createPrompt({
+            taskContext: `
         # Repair Task
 
         Repair the math tool arguments without changing the selected tool.
       `,
-                toolUsageGuidelines: `
+            toolUsageGuidelines: `
         # Repair Rules
 
         - Keep the operation field exactly the same as the failed arguments.
@@ -117,7 +119,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         - For named probability distributions, include distribution and parameters.
         - Include the requested probability point or event bounds.
       `,
-                backgroundData: `
+            backgroundData: `
         # Selected Tool
 
         ${toolCall.toolName}
@@ -132,22 +134,19 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
 
         # Accepted Schema
 
-        ${acceptedSchemaText}
+        ${acceptedSchemaText.value}
 
         # Validation Error
 
         ${error.message}
       `,
-              }),
-              ...(instructions === undefined ? {} : { instructions }),
-              timeout: handle.timeout,
-            }
-          )
-          .then((result) => result.output)
+          }),
+          ...(instructions === undefined ? {} : { instructions }),
+          timeout: handle.timeout,
+        }
       )
-    ),
-    Effect.option
-  );
+      .then((result) => result.output)
+  ).pipe(Effect.option);
   if (Option.isNone(repaired)) {
     return null;
   }
