@@ -189,10 +189,11 @@ function runsInPage(
 /**
  * Returns the nodes of a module that run where its imports exist. A function
  * that Playwright serializes into the browser page runs without any import,
- * so Effect cannot replace a platform global inside it. That covers a function
- * written in a `page.evaluate`, `addInitScript`, or sibling call of a
- * Playwright module, and a function this module declares that some Playwright
- * module passes to such a call by reference (`keys`, from `pageFunctionKeys`).
+ * so Effect cannot replace a platform global or derive a shape inside it. That
+ * covers a function written in a `page.evaluate`, `addInitScript`, or sibling
+ * call of a Playwright module, and a function this module declares that some
+ * Playwright module passes to such a call by reference (`keys`, from
+ * `pageFunctionKeys`).
  */
 export function outsidePage(
   file: string,

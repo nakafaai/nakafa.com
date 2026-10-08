@@ -312,4 +312,56 @@ export interface Other<T> {
         );
       })
   );
+
+  it.effect("leaves a shape that a browser page function declares alone", () =>
+    Effect.gen(function* () {
+      const found = yield* effectFindings(
+        yield* parseSources([
+          {
+            file: "apps/www/e2e/named.browser.ts",
+            sourceText: `import { test } from "@playwright/test";
+import { countShared } from "@/e2e/support/frames";
+export interface Outside {
+  readonly id: string;
+}
+page.evaluate(() => {
+  interface Inside {
+    readonly id: string;
+  }
+  return 1;
+});
+page.evaluate(countShared);
+function countFrames() {
+  interface Frame {
+    readonly id: string;
+  }
+  return 1;
+}
+page.evaluate(countFrames);
+`,
+          },
+          {
+            file: "apps/www/e2e/support/frames.ts",
+            sourceText: `export function countShared() {
+  interface Row {
+    readonly id: string;
+  }
+  return 1;
+}
+export interface Helper {
+  readonly id: string;
+}
+`,
+          },
+        ])
+      );
+      assert.deepStrictEqual(
+        Arr.map(
+          Arr.filter(found, ({ rule }) => rule === "data-type"),
+          ({ file, line }) => `${file}:${line}`
+        ),
+        ["apps/www/e2e/named.browser.ts:3", "apps/www/e2e/support/frames.ts:7"]
+      );
+    })
+  );
 });

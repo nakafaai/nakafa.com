@@ -191,6 +191,46 @@ function read(Array: Source) {
         );
       })
   );
+
+  it.effect(
+    "leaves platform globals inside a function that the browser page runs",
+    () =>
+      Effect.gen(function* () {
+        const e2e = "apps/www/e2e/page.browser.ts";
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { test } from "@playwright/test";
+page.evaluate(() => new Map(Object.entries(window.state)));
+page.addInitScript(() => {
+  JSON.parse(window.name);
+  setTimeout(run, Date.now());
+});
+page.$eval("main", (node) => new Set(Object.keys(node.dataset)));
+function countFrames() {
+  return new Map(Object.values(window.frames));
+}
+page.evaluate(countFrames);
+const cache = new Map();
+Object.keys(routes);
+`,
+            e2e
+          ),
+          ["12 map-set", "13 object-helper"]
+        );
+        assert.deepStrictEqual(
+          yield* findings(
+            `page.evaluate(() => new Map(Object.entries(window.state)));
+page.addInitScript(() => {
+  JSON.parse(window.name);
+  setTimeout(run, Date.now());
+});
+`,
+            "apps/www/lib/page.ts"
+          ),
+          ["1 map-set", "1 object-helper", "3 json", "4 clock", "4 timer"]
+        );
+      })
+  );
 });
 
 describe("environment reads", () => {

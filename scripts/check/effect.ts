@@ -167,8 +167,8 @@ function isGenerated(sourceFile: SourceFile) {
  * that names a platform global counts only when the compiler proves no import
  * or local declaration shadows the name, and an array method counts only when
  * its receiver is a value rather than an imported module. Code that Playwright
- * runs in the browser page keeps its platform globals, because no import
- * reaches it.
+ * runs in the browser page keeps its platform globals and its declared shapes,
+ * because no import reaches it.
  */
 export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
   function* ({
@@ -191,7 +191,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
         Arr.flatten([
           globalCandidates(sourceFile, runtime),
           nativeCandidates(sourceFile, runtime),
-          shapeCandidates(file, sourceFile, nodes),
+          shapeCandidates(file, sourceFile, nodes, runtime),
         ]),
         (found) =>
           covers(found.rule, file, sourceFile)

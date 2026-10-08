@@ -353,22 +353,24 @@ function isGeneric(
 }
 
 /**
- * Returns the hand-written data shapes among one module's `nodes`: interfaces
- * that declare their own members and type aliases that spell out an object.
- * React component props in `.tsx` modules, ambient augmentations, interfaces
- * that only extend a derived type, the type a recursive schema names, shapes
- * that hold a function or a React or MDX value, and generic shapes that use a
- * type parameter stay allowed.
+ * Returns the hand-written data shapes among one module's `runtime` nodes:
+ * interfaces that declare their own members and type aliases that spell out an
+ * object, outside the functions that run in the browser page, where no Schema
+ * reaches. React component props in `.tsx` modules, ambient augmentations,
+ * interfaces that only extend a derived type, the type a recursive schema names
+ * (found among all `nodes`), shapes that hold a function or a React or MDX
+ * value, and generic shapes that use a type parameter stay allowed.
  */
 export function shapeCandidates(
   file: string,
   sourceFile: SourceFile,
-  nodes: readonly Node[]
+  nodes: readonly Node[],
+  runtime: readonly Node[]
 ) {
   const props = JSX_PATTERN.test(file);
   const recursive = recursiveNames(nodes);
   const names = frameworkNames(sourceFile);
-  return Arr.flatMap(nodes, (node) => {
+  return Arr.flatMap(runtime, (node) => {
     if (!(isInterfaceDeclaration(node) || isTypeAliasDeclaration(node))) {
       return [];
     }
