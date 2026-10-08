@@ -9,8 +9,8 @@ import { Schema } from "effect";
 import { useState } from "react";
 import { useAuthSession } from "@/components/auth/session";
 import { useConvexAuth } from "@/components/providers/convex";
+import type { TryoutSetTableProps } from "@/components/tryout/catalog/table/table.client";
 import type {
-  TryoutCatalogBootstrap,
   TryoutSetListArgs,
   TryoutSetRow,
 } from "@/components/tryout/catalog/table/types";
@@ -44,13 +44,13 @@ function requestKey(args: TryoutSetListArgs) {
 
 /** Retention is scoped to one principal and track, including while requests change. */
 function useCommittedResult(
-  bootstrap: TryoutCatalogBootstrap,
+  bootstrap: TryoutSetTableProps["bootstrap"],
   activeScope: string,
-  candidate: TryoutCatalogBootstrap | undefined
+  candidate: TryoutSetTableProps["bootstrap"] | undefined
 ) {
   const [committed, setCommitted] = useState<{
     scope: string;
-    value: TryoutCatalogBootstrap | undefined;
+    value: TryoutSetTableProps["bootstrap"] | undefined;
   }>({
     scope: scope(bootstrap.args, bootstrap.result.viewerId),
     value: bootstrap,
@@ -121,7 +121,7 @@ export function useTryoutSetData({
   bootstrap,
   request,
 }: {
-  bootstrap: TryoutCatalogBootstrap;
+  bootstrap: TryoutSetTableProps["bootstrap"];
   request: Omit<TryoutSetListArgs, "paginationOpts">;
 }) {
   const { id: activeViewer, ready } = useViewer(bootstrap.result.viewerId);

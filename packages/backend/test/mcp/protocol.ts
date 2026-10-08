@@ -54,13 +54,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
           error: {
             code: -32_020,
             message:
-              "Bad Request: the request headers and body disagree: the body envelope names protocol version 2026-07-28 but the MCP-Protocol-Version header names 2099-01-01",
-            data: {
-              mismatch: {
-                header: "2099-01-01",
-                body: "the body envelope names protocol version 2026-07-28 but the MCP-Protocol-Version header names 2099-01-01",
-              },
-            },
+              "MCP-Protocol-Version header does not match request metadata",
           },
           id: 60,
         },
@@ -80,14 +74,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
           jsonrpc: "2.0",
           error: {
             code: -32_020,
-            message:
-              "Bad Request: the request headers and body disagree: the body names method server/discover but the Mcp-Method header names tools/list",
-            data: {
-              mismatch: {
-                header: "tools/list",
-                body: "the body names method server/discover but the Mcp-Method header names tools/list",
-              },
-            },
+            message: "Mcp-Method header does not match request method",
           },
           id: 61,
         },
@@ -107,14 +94,7 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
           jsonrpc: "2.0",
           error: {
             code: -32_020,
-            message:
-              'Bad Request: the request headers and body disagree: the body carries params.name="nakafa_get_taxonomy" but the Mcp-Name header names "nakafa_search_content"',
-            data: {
-              mismatch: {
-                header: "nakafa_search_content",
-                body: 'the body carries params.name="nakafa_get_taxonomy" but the Mcp-Name header names "nakafa_search_content"',
-              },
-            },
+            message: "Mcp-Name header does not match request parameters",
           },
           id: 62,
         },

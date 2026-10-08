@@ -4,9 +4,11 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   createNetworkRequestError,
   isRetryableNetworkError,
+  NETWORK_RETRY_SCHEDULE,
   NetworkRequestError,
 } from "@repo/backend/client/network";
-import { Schema } from "effect";
+import { Duration, Effect, Fiber, Ref, Schema } from "effect";
+import { TestClock } from "effect/testing";
 
 const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
@@ -114,4 +116,33 @@ describe("network request classification", () => {
       expect(Schema.encodeSync(JsonTextSchema)(error)).not.toContain("private");
     }
   });
+});
+
+describe("network retry schedule", () => {
+  it.effect(
+    "retries a failed read twice, after 500 milliseconds and then 1 second",
+    () =>
+      Effect.gen(function* () {
+        const attempts = yield* Ref.make(0);
+        const read = Ref.update(attempts, (count) => count + 1).pipe(
+          Effect.andThen(Effect.fail("network failure")),
+          Effect.retry(NETWORK_RETRY_SCHEDULE),
+          Effect.flip
+        );
+        const fiber = yield* Effect.forkChild(read);
+
+        yield* TestClock.adjust(Duration.millis(499));
+        expect(yield* Ref.get(attempts)).toBe(1);
+        yield* TestClock.adjust(Duration.millis(1));
+        expect(yield* Ref.get(attempts)).toBe(2);
+        yield* TestClock.adjust(Duration.millis(999));
+        expect(yield* Ref.get(attempts)).toBe(2);
+        yield* TestClock.adjust(Duration.millis(1));
+        expect(yield* Ref.get(attempts)).toBe(3);
+
+        expect(yield* Fiber.join(fiber)).toBe("network failure");
+        yield* TestClock.adjust(Duration.seconds(60));
+        expect(yield* Ref.get(attempts)).toBe(3);
+      })
+  );
 });

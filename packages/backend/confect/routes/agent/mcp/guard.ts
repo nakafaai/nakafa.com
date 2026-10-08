@@ -6,7 +6,7 @@ import {
 import { mcpTransportErrorResponse } from "@repo/backend/confect/routes/agent/mcp/response";
 import { hasValidEdgeSecret } from "@repo/backend/confect/routes/agent/security";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { Array as Arr, Config, Effect, Option } from "effect";
+import { Array as Arr, Config, Effect, MutableHashSet, Option } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
 const MAX_CONFIGURED_ORIGINS = 16;
@@ -48,7 +48,7 @@ const readMcpGuard = Effect.fn("agent.mcp.readGuard")(function* (
     return "allowed" as const;
   }
   const allowed = yield* readTrustedOrigins();
-  return allowed.has(origin)
+  return MutableHashSet.has(allowed, origin)
     ? ("allowed" as const)
     : ("invalid-origin" as const);
 });
@@ -59,7 +59,9 @@ const readTrustedOrigins = Effect.fn("agent.mcp.readTrustedOrigins")(
     const configured = yield* Config.option(
       Config.String(NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT)
     ).pipe(Effect.map(Option.getOrUndefined), Effect.mapError(invalidOrigins));
-    const allowed = new Set<string>(NAKAFA_DEFAULT_MCP_BROWSER_ORIGINS);
+    const allowed = MutableHashSet.fromIterable<string>(
+      NAKAFA_DEFAULT_MCP_BROWSER_ORIGINS
+    );
     if (configured === undefined) {
       return allowed;
     }
@@ -83,7 +85,7 @@ const readTrustedOrigins = Effect.fn("agent.mcp.readTrustedOrigins")(
       ) {
         return yield* invalidOrigins();
       }
-      allowed.add(entry);
+      MutableHashSet.add(allowed, entry);
     }
     return allowed;
   }

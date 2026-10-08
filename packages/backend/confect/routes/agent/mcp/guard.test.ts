@@ -144,13 +144,13 @@ describe("Nakafa MCP origin guard", () => {
         "https://agent.example.com"
       );
       expect(response.headers.get("access-control-allow-methods")).toBe(
-        "GET,POST,DELETE,OPTIONS"
+        "POST,OPTIONS"
       );
       expect(response.headers.get("access-control-allow-headers")).toBe(
         "content-type,mcp-protocol-version,mcp-param-locale"
       );
       expect(response.headers.get("access-control-expose-headers")).toBe(
-        "MCP-Protocol-Version,MCP-Session-ID,Retry-After"
+        "MCP-Protocol-Version,Retry-After"
       );
       expect(response.headers.get("cache-control")).toBe("no-store");
     })

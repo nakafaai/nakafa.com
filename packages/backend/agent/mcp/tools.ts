@@ -1,15 +1,18 @@
-import type { McpServer } from "@modelcontextprotocol/server";
 import { getNakafaContent } from "@repo/backend/agent/content";
 import { decodeAgentInput } from "@repo/backend/agent/decode";
 import {
   mcpToolOutputSchema,
   runMcpTool,
 } from "@repo/backend/agent/mcp/result";
-import { toMcpObjectSchema } from "@repo/backend/agent/mcp/schema";
+import {
+  type McpObjectContract,
+  toMcpInputSchema,
+  toMcpOutputSchema,
+} from "@repo/backend/agent/mcp/schema";
 import { getNakafaQuranReference } from "@repo/backend/agent/quran";
 import { searchNakafaContent } from "@repo/backend/agent/search";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
-import { QueryRunner } from "@repo/backend/confect/_generated/services";
+import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { NakafaAgentInputError } from "@repo/contents/agent/errors";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
@@ -25,53 +28,60 @@ import {
   NakafaAgentTaxonomyOptionsSchema,
   NakafaAgentTaxonomySchema,
 } from "@repo/contents/agent/schema/taxonomy";
-import { Effect, Option } from "effect";
+import { Context, Effect, Option } from "effect";
+import { McpSchema, McpServer } from "effect/ai";
 
-const READ_ONLY_TOOL = {
+const READ_ONLY_ANNOTATIONS = {
   destructiveHint: false,
   idempotentHint: true,
   openWorldHint: false,
   readOnlyHint: true,
 };
 
+/** Builds one read-only tool definition from its public text and Effect contracts. */
+const readOnlyTool = Effect.fn("agent.mcp.readOnlyTool")(function* (options: {
+  readonly name: string;
+  readonly title: string;
+  readonly description: string;
+  readonly input: McpObjectContract;
+  readonly output: McpObjectContract;
+}) {
+  const inputSchema = yield* toMcpInputSchema(options.input);
+  const outputSchema = yield* toMcpOutputSchema(options.output);
+  return new McpSchema.Tool({
+    annotations: READ_ONLY_ANNOTATIONS,
+    description: options.description,
+    inputSchema,
+    name: options.name,
+    outputSchema,
+    title: options.title,
+  });
+}, Effect.orDie);
+
 /** Registers the public read-only tools over shared Convex programs. */
 export const registerNakafaMcpTools = Effect.fn(
   "agent.mcp.registerNakafaMcpTools"
-)(function* (server: McpServer, requestId: string) {
-  const queryRunner = yield* QueryRunner;
-  server.registerTool(
-    "nakafa_search_content",
-    {
-      annotations: READ_ONLY_TOOL,
+)(function* (services: Context.Context<QueryRunner>, requestId: string) {
+  const server = yield* McpServer.McpServer;
+  yield* server.addTool({
+    annotations: Context.empty(),
+    handle: (input: unknown) =>
+      runMcpTool(
+        searchNakafaContent(input).pipe(Effect.provideContext(services)),
+        requestId
+      ),
+    tool: yield* readOnlyTool({
       description:
         "Search Nakafa's signed public educational content with stable pagination.",
-      inputSchema: toMcpObjectSchema(NakafaAgentSearchOptionsSchema),
-      outputSchema: toMcpObjectSchema(
-        mcpToolOutputSchema(NakafaAgentSearchResultSchema)
-      ),
+      input: NakafaAgentSearchOptionsSchema,
+      name: "nakafa_search_content",
+      output: mcpToolOutputSchema(NakafaAgentSearchResultSchema),
       title: "Search Nakafa content",
-    },
-    (input) =>
-      runMcpTool(
-        searchNakafaContent(input).pipe(
-          Effect.provideService(QueryRunner, queryRunner)
-        ),
-        requestId
-      )
-  );
-  server.registerTool(
-    "nakafa_get_content",
-    {
-      annotations: READ_ONLY_TOOL,
-      description:
-        "Read full agent-ready Markdown for a readable Nakafa content ID or canonical URL. Search results without markdown_url are citation-only catalog entries.",
-      inputSchema: toMcpObjectSchema(NakafaAgentReadOptionsSchema),
-      outputSchema: toMcpObjectSchema(
-        mcpToolOutputSchema(NakafaAgentMarkdownSchema)
-      ),
-      title: "Read Nakafa content",
-    },
-    (input) =>
+    }),
+  });
+  yield* server.addTool({
+    annotations: Context.empty(),
+    handle: (input: unknown) =>
       runMcpTool(
         decodeAgentInput(
           NakafaAgentReadOptionsSchema,
@@ -92,24 +102,22 @@ export const registerNakafaMcpTools = Effect.fn(
               onSome: Effect.succeed,
             })
           ),
-          Effect.provideService(QueryRunner, queryRunner)
+          Effect.provideContext(services)
         ),
         requestId
-      )
-  );
-  server.registerTool(
-    "nakafa_get_taxonomy",
-    {
-      annotations: READ_ONLY_TOOL,
-      description:
-        "List supported Nakafa sections, locales, categories, counts, and tools.",
-      inputSchema: toMcpObjectSchema(NakafaAgentTaxonomyOptionsSchema),
-      outputSchema: toMcpObjectSchema(
-        mcpToolOutputSchema(NakafaAgentTaxonomySchema)
       ),
-      title: "Read Nakafa taxonomy",
-    },
-    (input) =>
+    tool: yield* readOnlyTool({
+      description:
+        "Read full agent-ready Markdown for a readable Nakafa content ID or canonical URL. Search results without markdown_url are citation-only catalog entries.",
+      input: NakafaAgentReadOptionsSchema,
+      name: "nakafa_get_content",
+      output: mcpToolOutputSchema(NakafaAgentMarkdownSchema),
+      title: "Read Nakafa content",
+    }),
+  });
+  yield* server.addTool({
+    annotations: Context.empty(),
+    handle: (input: unknown) =>
       runMcpTool(
         decodeAgentInput(
           NakafaAgentTaxonomyOptionsSchema,
@@ -117,29 +125,33 @@ export const registerNakafaMcpTools = Effect.fn(
           "Invalid Nakafa taxonomy options."
         ).pipe(
           Effect.flatMap(({ locale }) => getNakafaTaxonomy(locale)),
-          Effect.provideService(QueryRunner, queryRunner)
+          Effect.provideContext(services)
         ),
         requestId
-      )
-  );
-  server.registerTool(
-    "nakafa_get_quran_reference",
-    {
-      annotations: READ_ONLY_TOOL,
+      ),
+    tool: yield* readOnlyTool({
+      description:
+        "List supported Nakafa sections, locales, categories, counts, and tools.",
+      input: NakafaAgentTaxonomyOptionsSchema,
+      name: "nakafa_get_taxonomy",
+      output: mcpToolOutputSchema(NakafaAgentTaxonomySchema),
+      title: "Read Nakafa taxonomy",
+    }),
+  });
+  yield* server.addTool({
+    annotations: Context.empty(),
+    handle: (input: unknown) =>
+      runMcpTool(
+        getNakafaQuranReference(input).pipe(Effect.provideContext(services)),
+        requestId
+      ),
+    tool: yield* readOnlyTool({
       description:
         "Read a bounded Quran verse range with reviewed translation and optional tafsir.",
-      inputSchema: toMcpObjectSchema(NakafaAgentQuranReferenceOptionsSchema),
-      outputSchema: toMcpObjectSchema(
-        mcpToolOutputSchema(NakafaAgentQuranReferenceSchema)
-      ),
+      input: NakafaAgentQuranReferenceOptionsSchema,
+      name: "nakafa_get_quran_reference",
+      output: mcpToolOutputSchema(NakafaAgentQuranReferenceSchema),
       title: "Read a Quran reference",
-    },
-    (input) =>
-      runMcpTool(
-        getNakafaQuranReference(input).pipe(
-          Effect.provideService(QueryRunner, queryRunner)
-        ),
-        requestId
-      )
-  );
+    }),
+  });
 });

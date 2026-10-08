@@ -145,7 +145,7 @@ export const PROMPT_CASES: readonly McpCase[] = [
           error: {
             code: -32_602,
             message:
-              "Invalid arguments for prompt nakafa_find_lesson: data must have required property 'topic'",
+              'Invalid arguments for prompt nakafa_find_lesson: Missing key\n  at ["topic"]',
           },
         },
       },
@@ -169,7 +169,7 @@ export const PROMPT_CASES: readonly McpCase[] = [
           error: {
             code: -32_602,
             message:
-              "Invalid arguments for prompt nakafa_answer_from_content: data must have required property 'question'",
+              'Invalid arguments for prompt nakafa_answer_from_content: Missing key\n  at ["question"]',
           },
         },
       },
@@ -198,7 +198,7 @@ export const PROMPT_CASES: readonly McpCase[] = [
           error: {
             code: -32_602,
             message:
-              "Invalid arguments for prompt nakafa_quran_reference: data must have required property 'surah'",
+              'Invalid arguments for prompt nakafa_quran_reference: Missing key\n  at ["surah"]',
           },
         },
       },
@@ -249,7 +249,7 @@ export const PROMPT_CASES: readonly McpCase[] = [
           error: {
             code: -32_602,
             message:
-              "Invalid arguments for prompt nakafa_quran_reference: data/locale must be equal to one of the allowed values, data/locale must be null, data/locale must match a schema in anyOf",
+              'Invalid arguments for prompt nakafa_quran_reference: Expected "en" | "id" | "de"\n  at ["locale"]',
           },
         },
       },
@@ -305,7 +305,7 @@ export const PROMPT_CASES: readonly McpCase[] = [
           id: 47,
           error: {
             code: -32_602,
-            message: "Prompt nakafa_unknown_prompt not found",
+            message: "Prompt 'nakafa_unknown_prompt' not found",
           },
         },
       },

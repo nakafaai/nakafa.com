@@ -2,7 +2,7 @@
 
 import type { ParsedHeading } from "@repo/contents/toc";
 import { extractAllHeadingIds } from "@repo/contents/toc";
-import { HashSet, Schema } from "effect";
+import { Array as Arr, Equal, HashSet, MutableHashSet, Schema } from "effect";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 
@@ -33,7 +33,25 @@ const WATCH_SEPARATOR = "\n";
  */
 function observeHeadings(store: TocStore, watch: readonly string[]) {
   const watched = HashSet.fromIterable(watch);
-  const visible = new Set<Element>();
+  /**
+   * The headings in the reading band, in the order they entered it. Two
+   * headings can share one id, so the set holds the elements, and each element
+   * is marked for reference equality before it reaches the set: Effect would
+   * otherwise compare two elements by their structure.
+   */
+  const visible = MutableHashSet.empty<Element>();
+
+  function enter(heading: Element) {
+    MutableHashSet.add(visible, Equal.byReferenceUnsafe(heading));
+  }
+
+  function leave(heading: Element) {
+    MutableHashSet.remove(visible, Equal.byReferenceUnsafe(heading));
+  }
+
+  function visibleIds() {
+    return Arr.map(Arr.fromIterable(visible), (heading) => heading.id);
+  }
 
   function publish(activeHeadings: readonly string[]) {
     const current = store.getState().activeHeadings;
@@ -48,8 +66,8 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
 
   /** Publishes the headings in the band, keeping the last ones between them. */
   function publishVisible() {
-    if (visible.size > 0) {
-      publish(Array.from(visible, (element) => element.id));
+    if (MutableHashSet.size(visible) > 0) {
+      publish(visibleIds());
     }
   }
 
@@ -57,9 +75,9 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          visible.add(entry.target);
+          enter(entry.target);
         } else {
-          visible.delete(entry.target);
+          leave(entry.target);
         }
       }
       publishVisible();
@@ -87,7 +105,7 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
       for (const node of record.removedNodes) {
         for (const heading of headingsWithin(node)) {
           observer.unobserve(heading);
-          visible.delete(heading);
+          leave(heading);
         }
       }
     }
@@ -104,10 +122,8 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     ) {
       return;
     }
-    const visibleIds = HashSet.fromIterable(
-      Array.from(visible, (item) => item.id)
-    );
-    const inView = watch.filter((id) => HashSet.has(visibleIds, id));
+    const ids = HashSet.fromIterable(visibleIds());
+    const inView = watch.filter((id) => HashSet.has(ids, id));
     const lastId = watch.at(-1);
     if (inView.length > 0) {
       publish(inView);

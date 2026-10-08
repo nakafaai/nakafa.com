@@ -1,22 +1,21 @@
-import { Array as Arr, Predicate, pipe } from "effect";
+import { Array as Arr, Predicate, pipe, Schema } from "effect";
 
+const encodeJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
+/** Request headers the endpoint reads: none for sessions or GET streams, which it does not serve. */
 const DEFAULT_ALLOWED_HEADERS = [
   "accept",
   "baggage",
   "content-type",
-  "last-event-id",
   "mcp-method",
   "mcp-name",
   "mcp-protocol-version",
-  "mcp-session-id",
   "traceparent",
   "tracestate",
 ] as const;
-const EXPOSED_HEADERS = [
-  "MCP-Protocol-Version",
-  "MCP-Session-ID",
-  "Retry-After",
-] as const;
+/** Response headers a browser may read. The endpoint sends no session identifier. */
+const EXPOSED_HEADERS = ["MCP-Protocol-Version", "Retry-After"] as const;
 
 /** Builds one no-store JSON-RPC error at the protected HTTP boundary. */
 export function mcpErrorResponse(
@@ -32,7 +31,7 @@ export function mcpErrorResponse(
       ? undefined
       : Math.max(1, Math.ceil(retryAfterMilliseconds / 1000));
   return new Response(
-    JSON.stringify({
+    encodeJson({
       error: {
         code,
         data: {
@@ -57,6 +56,33 @@ export function mcpErrorResponse(
           : {
               "Retry-After": String(retryAfter),
             }),
+      },
+      status,
+    }
+  );
+}
+
+/** Answers one refused request with a plain JSON-RPC error, without request identity. */
+export function mcpJsonRpcRefusal(
+  status: number,
+  code: number,
+  message: string,
+  responseId: number | string | null,
+  data?: unknown
+) {
+  return new Response(
+    encodeJson({
+      error: {
+        code,
+        message,
+        ...(data === undefined ? {} : { data }),
+      },
+      id: responseId,
+      jsonrpc: "2.0",
+    }),
+    {
+      headers: {
+        "Content-Type": "application/json",
       },
       status,
     }
@@ -102,7 +128,7 @@ export function mcpParsedErrorResponse(
       );
 }
 
-/** Adds CORS and cache metadata without replacing SDK protocol headers. */
+/** Adds CORS and cache metadata without replacing the protocol headers. */
 export function withMcpResponseHeaders(response: Response, request: Request) {
   const headers = new Headers(response.headers);
   const origin = request.headers.get("origin");
@@ -110,7 +136,7 @@ export function withMcpResponseHeaders(response: Response, request: Request) {
   if (origin !== null) {
     headers.set("Access-Control-Allow-Credentials", "true");
   }
-  headers.set("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
+  headers.set("Access-Control-Allow-Methods", "POST,OPTIONS");
   headers.set("Access-Control-Allow-Headers", readAllowedHeaders(request));
   headers.set("Access-Control-Expose-Headers", Arr.join(EXPOSED_HEADERS, ","));
   headers.set("Cache-Control", "no-store");
@@ -141,7 +167,8 @@ export function readJsonRpcRequestId(body: unknown) {
   const { id } = body;
   return Predicate.isNumber(id) || Predicate.isString(id) ? id : null;
 }
-function isJsonRpcNotification(body: unknown) {
+/** Whether a parsed body is a JSON-RPC notification, which the server never answers with a body. */
+export function isJsonRpcNotification(body: unknown) {
   return (
     Predicate.isObject(body) &&
     !Predicate.hasProperty(body, "id") &&

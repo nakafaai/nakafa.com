@@ -4,8 +4,9 @@ import { Effect, Option, Schema } from "effect";
 
 /** Nakafa policy ceiling for one JSON-RPC request, including batch payloads. */
 export const MAX_MCP_REQUEST_BYTES = 64 * 1024;
+const JsonBody = Schema.fromJsonString(Schema.Unknown);
 
-/** Expected failure while bounding an MCP request before SDK classification. */
+/** Expected failure while bounding an MCP request before protocol classification. */
 export class McpRequestBodyError extends Schema.TaggedError<McpRequestBodyError>()(
   "McpRequestBodyError",
   {
@@ -13,20 +14,18 @@ export class McpRequestBodyError extends Schema.TaggedError<McpRequestBodyError>
   }
 ) {}
 
-/** One bounded request plus its JSON value when parsing succeeded. */
-export interface BoundedMcpRequest {
-  readonly parsedBody?: unknown;
-  readonly request: Request;
-}
-
-/** Reads a POST once and keeps every SDK classification path under the cap. */
+/**
+ * Reads a POST once and keeps every protocol classification path under the cap.
+ * Answers the bounded request, with its JSON value as `parsedBody` when parsing
+ * succeeded.
+ */
 export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
   request: Request
 ) {
   if (request.method.toUpperCase() !== "POST") {
     return {
       request,
-    } satisfies BoundedMcpRequest;
+    };
   }
   const declaredLength = yield* parseContentLength(
     request.headers.get("content-length"),
@@ -42,7 +41,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
     }
     return {
       request,
-    } satisfies BoundedMcpRequest;
+    };
   }
   const bytes = yield* readBoundedBody(
     request.body,
@@ -64,7 +63,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
   if (!isJsonContentType(request.headers.get("content-type"))) {
     return {
       request: bounded,
-    } satisfies BoundedMcpRequest;
+    };
   }
   const source = yield* Effect.try({
     catch: () => bodyError("invalid"),
@@ -76,10 +75,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
   const parsedBody =
     source.length === 0
       ? Option.none<unknown>()
-      : yield* Effect.try({
-          catch: () => undefined,
-          try: () => JSON.parse(source) as unknown,
-        }).pipe(Effect.option);
+      : Schema.decodeOption(JsonBody)(source);
   return {
     ...(Option.isSome(parsedBody)
       ? {
@@ -87,7 +83,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
         }
       : {}),
     request: bounded,
-  } satisfies BoundedMcpRequest;
+  };
 });
 
 /** Creates a sanitized body failure without retaining request bytes. */
