@@ -1,25 +1,37 @@
 "use client";
 
-import type {
-  BiologyLabCallout,
-  BiologyScenePoint,
+import {
+  type BiologyLabCallout,
+  type BiologyScenePoint,
+  BiologyScenePointSchema,
 } from "@repo/design-system/components/contents/biology/data";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
-import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
+import {
+  THREE_FONT_SIZE,
+  type ThreeFontSize,
+} from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
+import { Record as Rec, Schema } from "effect";
 import type { ReactNode } from "react";
 
 const BIOLOGY_CALLOUT_ARROW_SIZE = 0.055;
 const BIOLOGY_CALLOUT_LABEL_CLEARANCE = 0.18;
 const BIOLOGY_CALLOUT_TARGET_CLEARANCE = BIOLOGY_CALLOUT_ARROW_SIZE;
 
-export interface BiologyCalloutTarget {
-  fontSize?: ThreeFontSize | number;
-  id: string;
-  labelPosition: BiologyScenePoint;
-  target?: BiologyScenePoint;
-}
+const BiologyCalloutFontSizeSchema = Schema.Union([
+  Schema.Literals(Rec.keys(THREE_FONT_SIZE)),
+  Schema.Finite,
+]);
+
+const BiologyCalloutTargetSchema = Schema.Struct({
+  fontSize: Schema.optionalKey(BiologyCalloutFontSizeSchema),
+  id: Schema.String,
+  labelPosition: BiologyScenePointSchema,
+  target: Schema.optionalKey(BiologyScenePointSchema),
+});
+
+export type BiologyCalloutTarget = typeof BiologyCalloutTargetSchema.Type;
 
 /**
  * Renders localized scene callouts by matching lesson labels to stable model

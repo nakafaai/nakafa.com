@@ -1,6 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const GAS_CUE_ID = "gas";
@@ -17,7 +18,13 @@ export const REACTION_CUE_IDS = [
 
 export type ReactionCueId = (typeof REACTION_CUE_IDS)[number];
 export type ReactionSceneColors = ReturnType<typeof getReactionSceneColors>;
-export type ReactionScenePoint = readonly [number, number, number];
+export const ReactionScenePointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+
+export type ReactionScenePoint = typeof ReactionScenePointSchema.Type;
 
 export interface ReactionCueLabels {
   helperCaption: ReactNode;
@@ -38,11 +45,9 @@ export interface ReactionCharacteristicsLabLabels {
   transition: string;
 }
 
-export interface ReactionCharacteristicsLabProps {
-  description: ReactNode;
-  labels: ReactionCharacteristicsLabLabels;
-  title: ReactNode;
-}
+const ReactionCueSchema = Schema.Struct({
+  kind: Schema.Literals(REACTION_CUE_IDS),
+});
 
 export const REACTION_CUES = {
   [GAS_CUE_ID]: {
@@ -57,12 +62,7 @@ export const REACTION_CUES = {
   [ENERGY_CUE_ID]: {
     kind: ENERGY_CUE_ID,
   },
-} satisfies Record<
-  ReactionCueId,
-  {
-    kind: ReactionCueId;
-  }
->;
+} satisfies Record<ReactionCueId, typeof ReactionCueSchema.Type>;
 
 export const REACTION_SCENE_VIEW = {
   cameraPosition: [0, 2.2, 4.2],

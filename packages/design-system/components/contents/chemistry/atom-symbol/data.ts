@@ -1,3 +1,4 @@
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const CARBON_12_ID = "carbon-12";
@@ -17,6 +18,12 @@ export const ATOM_SYMBOL_SAMPLE_IDS = [
   SODIUM_23_ID,
   CHLORINE_35_ID,
 ] satisfies AtomSymbolSampleId[];
+
+const AtomSymbolSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  massNumber: Schema.Finite,
+  symbol: Schema.String,
+});
 
 export const ATOM_SYMBOL_SAMPLES = {
   [CARBON_12_ID]: {
@@ -39,14 +46,7 @@ export const ATOM_SYMBOL_SAMPLES = {
     massNumber: 35,
     symbol: "Cl",
   },
-} satisfies Record<
-  AtomSymbolSampleId,
-  {
-    atomicNumber: number;
-    massNumber: number;
-    symbol: string;
-  }
->;
+} satisfies Record<AtomSymbolSampleId, typeof AtomSymbolSampleSchema.Type>;
 
 export interface AtomSymbolSampleLabels {
   ariaName: string;
@@ -64,12 +64,6 @@ export interface AtomSymbolLabLabels {
   neutronCount: string;
   protonCount: string;
   samples: Record<AtomSymbolSampleId, AtomSymbolSampleLabels>;
-}
-
-export interface AtomSymbolLabProps {
-  description: ReactNode;
-  labels: AtomSymbolLabLabels;
-  title: ReactNode;
 }
 
 /**

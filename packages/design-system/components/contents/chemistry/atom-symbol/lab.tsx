@@ -3,7 +3,7 @@
 import {
   ATOM_SYMBOL_SAMPLE_IDS,
   ATOM_SYMBOL_SAMPLES,
-  type AtomSymbolLabProps,
+  type AtomSymbolLabLabels,
   type AtomSymbolSampleId,
   CARBON_12_ID,
   isAtomSymbolSampleId,
@@ -22,6 +22,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+export interface AtomSymbolLabProps {
+  description: ReactNode;
+  labels: AtomSymbolLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders a compact identity-card lab for reading atomic notation.
