@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
 import { captureException } from "@repo/analytics/posthog/browser";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
-import type { NinaFailureReason } from "@repo/backend/confect/nina/turns.spec";
+import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { Effect, Schema } from "effect";
 import type { AppConfig } from "next-intl";
 import { toast } from "sonner";

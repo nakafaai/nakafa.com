@@ -25,6 +25,19 @@ export const NinaUserSchema = Schema.Struct({
   curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
   role: Schema.optional(PromptUserRoleSchema),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+/** Safe response failure facts, independent of provider diagnostics and UI language. */
+export const NinaFailureReason = Schema.Literals([
+  "provider-busy",
+  "provider-unavailable",
+  "service-configuration",
+  "request-rejected",
+  "input-too-large",
+  "response-timeout",
+  "content-blocked",
+  "response-limit",
+  "interrupted",
+  "unknown",
+]);
 export type NinaPage = typeof NinaPageSchema.Type;
 export type NinaRuntime = typeof NinaRuntimeSchema.Type;
 export type NinaUser = typeof NinaUserSchema.Type;

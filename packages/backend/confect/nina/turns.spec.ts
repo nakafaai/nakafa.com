@@ -11,6 +11,7 @@ import {
   NinaContextTransitionSchema,
 } from "@repo/backend/confect/nina/contract/pack";
 import {
+  NinaFailureReason,
   NinaPageSchema,
   NinaUserSchema,
 } from "@repo/backend/confect/nina/contract/turn";
@@ -54,20 +55,6 @@ export const NinaInput = Schema.Union([
     page: Schema.optionalKey(NinaPageInput),
     order: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
   }),
-]);
-
-/** Safe response failure facts, independent of provider diagnostics and UI language. */
-export const NinaFailureReason = Schema.Literals([
-  "provider-busy",
-  "provider-unavailable",
-  "service-configuration",
-  "request-rejected",
-  "input-too-large",
-  "response-timeout",
-  "content-blocked",
-  "response-limit",
-  "interrupted",
-  "unknown",
 ]);
 
 export const NinaTurnState = Schema.Union([

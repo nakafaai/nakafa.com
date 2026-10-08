@@ -13,7 +13,7 @@ import {
   contentTypeValidator,
   localeValidator,
 } from "@repo/backend/confect/lib/validators/contents";
-import { NinaFailureReason } from "@repo/backend/confect/nina/turns.spec";
+import { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/confect/tryouts/access/source";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoreStatusValidator } from "@repo/backend/confect/tryouts/score";
