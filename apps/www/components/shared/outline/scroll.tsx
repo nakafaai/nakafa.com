@@ -16,11 +16,11 @@ const OutlineScrollContext = createContext<OutlineScrollValue | null>(null);
 
 /** The outline panel's scrolling body, shared with the entries that virtualize. */
 export function OutlineContent({ children }: { children: ReactNode }) {
-  const value = useOutlineScrollValue();
+  const { scrollRef } = useOutlineScrollValue();
 
   return (
-    <OutlineScrollContext value={value}>
-      <SidebarContent ref={value.scrollRef}>{children}</SidebarContent>
+    <OutlineScrollContext value={{ scrollRef }}>
+      <SidebarContent ref={scrollRef}>{children}</SidebarContent>
     </OutlineScrollContext>
   );
 }

@@ -43,9 +43,7 @@ async function readFeed() {
     getFeedContentRoutes(),
   ]);
 
-  const copyrightYear = await Effect.runPromise(
-    Effect.map(DateTime.now, (now) => DateTime.toDate(now).getFullYear())
-  );
+  const copyrightYear = DateTime.toDate(DateTime.nowUnsafe()).getFullYear();
 
   const feed = new Feed({
     updated: new Date(
