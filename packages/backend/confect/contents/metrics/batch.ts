@@ -6,7 +6,7 @@ import {
   type LearningPopularityWindow,
   learningPopularityWindowValues,
 } from "@repo/backend/confect/contents/popularity";
-import { Array as Arr, Struct } from "effect";
+import { Array as Arr, MutableHashMap, Option, Schema, Struct } from "effect";
 
 type QueuedLearningEngagement = Docs["learningEngagementQueue"];
 type AnalyticsGraphRef = Pick<
@@ -47,9 +47,11 @@ function getAnalyticsContext(item: QueuedLearningEngagement) {
   ]);
 }
 
+const MetricsKeySchema = Schema.fromJsonString(Schema.Unknown);
+
 /** Encodes one metrics identity without delimiter collisions. */
 function encodeMetricsKey(parts: readonly (number | string)[]) {
-  return JSON.stringify(parts);
+  return Schema.encodeSync(MetricsKeySchema)(parts);
 }
 
 /**
@@ -60,7 +62,10 @@ export function groupMetricsQueueItems(
   queueItems: readonly QueuedLearningEngagement[],
   groupSize: number
 ) {
-  const identities = new Map<string, QueuedLearningEngagement[][]>();
+  const identities = MutableHashMap.empty<
+    string,
+    QueuedLearningEngagement[][]
+  >();
   for (const queueItem of queueItems) {
     const key = encodeMetricsKey([
       queueItem.partition,
@@ -68,16 +73,18 @@ export function groupMetricsQueueItems(
       queueItem.content_id,
       queueItem.contextKey,
     ]);
-    const groups = identities.get(key) ?? [];
+    const groups =
+      Option.getOrUndefined(MutableHashMap.get(identities, key)) ?? [];
     const current = groups.at(-1);
-    identities.set(
+    MutableHashMap.set(
+      identities,
       key,
       current && current.length < groupSize
         ? Arr.append(Arr.dropRight(groups, 1), Arr.append(current, queueItem))
         : Arr.append(groups, [queueItem])
     );
   }
-  return Arr.flatten([...identities.values()]);
+  return Arr.flatten([...MutableHashMap.values(identities)]);
 }
 
 /** Creates the first aggregate row for one queued engagement item. */
@@ -155,8 +162,8 @@ export function buildMetricsBatch({
   readonly queueItems: readonly QueuedLearningEngagement[];
   readonly updatedAt: number;
 }) {
-  const counters = new Map<string, PopularityCounterDelta>();
-  const signals = new Map<string, PopularitySignalDelta>();
+  const counters = MutableHashMap.empty<string, PopularityCounterDelta>();
+  const signals = MutableHashMap.empty<string, PopularitySignalDelta>();
   for (const queueItem of queueItems) {
     const signalDay = getPopularitySignalDay(queueItem.viewedAt);
     const signalKey = encodeMetricsKey([
@@ -172,8 +179,10 @@ export function buildMetricsBatch({
         windowKey: "365d",
       })
     ) {
-      const signalCount = signals.get(signalKey);
-      signals.set(signalKey, {
+      const signalCount = Option.getOrUndefined(
+        MutableHashMap.get(signals, signalKey)
+      );
+      MutableHashMap.set(signals, signalKey, {
         ...createPopularitySignalDelta(queueItem),
         viewCount: (signalCount?.viewCount ?? 0) + 1,
       });
@@ -194,18 +203,21 @@ export function buildMetricsBatch({
         queueItem.content_id,
         queueItem.contextKey,
       ]);
-      const counterCount = counters.get(counterKey);
+      const counterCount = Option.getOrUndefined(
+        MutableHashMap.get(counters, counterKey)
+      );
       if (counterCount) {
         const latest =
           signalDay >= counterCount.latestDay
             ? createPopularityCounterDelta(queueItem, windowKey)
             : counterCount;
-        counters.set(counterKey, {
+        MutableHashMap.set(counters, counterKey, {
           ...latest,
           viewCount: counterCount.viewCount + 1,
         });
       } else {
-        counters.set(
+        MutableHashMap.set(
+          counters,
           counterKey,
           createPopularityCounterDelta(queueItem, windowKey)
         );

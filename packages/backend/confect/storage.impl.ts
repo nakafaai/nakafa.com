@@ -10,7 +10,7 @@ import {
   StorageWriter,
 } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/storage.spec";
-import { Array as Arr, Duration, Effect, Layer, Schema } from "effect";
+import { Array as Arr, Duration, Effect, HashSet, Layer, Schema } from "effect";
 
 class StorageSweepError extends Schema.TaggedError<StorageSweepError>()(
   "StorageSweepError",
@@ -38,9 +38,9 @@ export const sweepStorage = Effect.fn("storage.sweep")(function* () {
       }),
     catch: (cause) => new StorageSweepError({ cause }),
   });
-  const deleted = new Set(removed);
+  const deleted = HashSet.fromIterable(removed);
   for (const file of page.page) {
-    if (!deleted.has(file._id)) {
+    if (!HashSet.has(deleted, file._id)) {
       continue;
     }
     const storageId = yield* Schema.decodeUnknownEffect(
@@ -63,7 +63,7 @@ export const sweepStorage = Effect.fn("storage.sweep")(function* () {
       {}
     );
   }
-  return { deleted: deleted.size, done, scanned: page.page.length };
+  return { deleted: HashSet.size(deleted), done, scanned: page.page.length };
 }, Effect.orDie);
 
 export default GroupImpl.make(schema, spec).pipe(

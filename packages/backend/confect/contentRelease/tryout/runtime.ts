@@ -11,11 +11,12 @@ import {
 } from "@repo/backend/confect/contentRelease/model";
 import { loadTryoutRuntimeBundle } from "@repo/backend/confect/tryouts/runtime/signed";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 
-interface RuntimeRetentionOptions {
-  readonly ignoredReleaseId?: string;
-}
+const RuntimeRetentionOptionsSchema = Schema.Struct({
+  ignoredReleaseId: Schema.optionalKey(Schema.String),
+});
+type RuntimeRetentionOptions = typeof RuntimeRetentionOptionsSchema.Type;
 
 /** Checks whether one release still selects an immutable try-out pair. */
 const releaseRetainsRuntime = Effect.fn(

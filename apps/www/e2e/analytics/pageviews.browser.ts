@@ -1,5 +1,5 @@
 import { expect, type Page, type Request, test } from "@playwright/test";
-import { Effect, Option, Schema } from "effect";
+import { Effect, MutableHashSet, Option, Schema } from "effect";
 import {
   openConsentPreferences,
   seedAnalyticsConsent,
@@ -53,14 +53,14 @@ const observeIngest = Effect.fn("NakafaE2E.observeIngest")(function* (
 
 /** Counts distinct pageviews so transport retries cannot inflate the total. */
 function pageviewCount(captured: CapturedIngest[]) {
-  const uuids = new Set<unknown>();
+  const uuids = MutableHashSet.empty<unknown>();
   let count = 0;
   for (const entry of captured) {
     if (entry.event !== "$pageview") {
       continue;
     }
-    if (entry.uuid === undefined || !uuids.has(entry.uuid)) {
-      uuids.add(entry.uuid);
+    if (entry.uuid === undefined || !MutableHashSet.has(uuids, entry.uuid)) {
+      MutableHashSet.add(uuids, entry.uuid);
       count += 1;
     }
   }
@@ -68,12 +68,12 @@ function pageviewCount(captured: CapturedIngest[]) {
 }
 
 function pageviews(captured: CapturedIngest[]) {
-  const seen = new Set<unknown>();
+  const seen = MutableHashSet.empty<unknown>();
   return captured.filter((entry) => {
-    if (entry.event !== "$pageview" || seen.has(entry.uuid)) {
+    if (entry.event !== "$pageview" || MutableHashSet.has(seen, entry.uuid)) {
       return false;
     }
-    seen.add(entry.uuid);
+    MutableHashSet.add(seen, entry.uuid);
     return true;
   });
 }

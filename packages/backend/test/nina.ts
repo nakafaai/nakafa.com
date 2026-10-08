@@ -10,7 +10,10 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { DateTime, Effect, Schema } from "effect";
+
+/** Plain codec: writes the same bytes as JSON.stringify, even for tool input the contract rejects. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /**
  * A real component thread with a reserved turn and its authenticated owner.
@@ -18,7 +21,7 @@ import { Effect } from "effect";
  */
 export async function createNinaTest({
   history = 0,
-  now = Date.now(),
+  now = DateTime.toEpochMillis(DateTime.nowUnsafe()),
   prompt: text = "Explain a limit.",
   needsFetch = false,
 }: {
@@ -183,7 +186,7 @@ export function ninaModel(
               type: "tool-call",
               toolCallId: "read-1",
               toolName: "nakafa",
-              input: JSON.stringify(input),
+              input: encodeJson(input),
             },
             {
               type: "finish",
@@ -196,10 +199,10 @@ export function ninaModel(
       : final,
     doGenerate: ({ responseFormat, prompt }) => {
       let text = "Understanding A Function Limit";
-      if (JSON.stringify(prompt).includes("Repair the arguments for")) {
-        text = JSON.stringify(ninaToolInput);
+      if (encodeJson(prompt).includes("Repair the arguments for")) {
+        text = encodeJson(ninaToolInput);
       } else if (responseFormat?.type === "json") {
-        text = JSON.stringify({
+        text = encodeJson({
           suggestions: ["How does this relate to continuity?"],
         });
       }

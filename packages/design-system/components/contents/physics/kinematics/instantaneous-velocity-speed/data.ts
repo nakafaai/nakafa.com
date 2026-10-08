@@ -1,5 +1,4 @@
 import { getColor } from "@repo/design-system/lib/color";
-import type { ReactNode } from "react";
 
 export const INSTANTANEOUS_SPEED_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/suv-luxury.glb";
@@ -21,22 +20,6 @@ export const INSTANTANEOUS_SPEED_CASES = [
 
 export type InstantaneousSpeedCaseId =
   (typeof INSTANTANEOUS_SPEED_CASES)[number]["id"];
-
-export interface InstantaneousVelocitySpeedLabLabels {
-  chooseMoment: string;
-  factLabels: {
-    speed: ReactNode;
-    time: ReactNode;
-    velocity: ReactNode;
-  };
-  viewLabel: string;
-}
-
-export interface InstantaneousVelocitySpeedLabProps {
-  description: ReactNode;
-  labels: InstantaneousVelocitySpeedLabLabels;
-  title: ReactNode;
-}
 
 export const DEFAULT_INSTANTANEOUS_SPEED_CASE_ID =
   "right-fast" satisfies InstantaneousSpeedCaseId;

@@ -8,14 +8,25 @@ import { loadProgramOwner } from "@repo/backend/content/program/owner";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Array as Arr, Effect, Order } from "effect";
+import { Array as Arr, Effect, Order, pipe } from "effect";
+
+/** Reads one subject route with the authored position that orders it in its program. */
+const readSubjectCandidate = Effect.fn(
+  "contentRelease.readProgramSubjectCandidate"
+)(function* (snapshotId: string, row: PublicationRow<"curriculumRoutes">) {
+  const route = yield* verifyCurriculum(row, snapshotId);
+  const ancestors = yield* readAncestors(snapshotId, route);
+  return {
+    domain: route.materialDomain,
+    // Each ancestor's authored order from the program root down, then the
+    // subject's own order among its siblings.
+    position: [...ancestors.map(({ order }) => order), row.order],
+    row,
+  };
+});
 
 /** One public subject route with its material domain and authored position. */
-interface SubjectCandidate {
-  readonly domain: string | undefined;
-  readonly position: readonly number[];
-  readonly row: PublicationRow<"curriculumRoutes">;
-}
+type SubjectCandidate = Effect.Success<ReturnType<typeof readSubjectCandidate>>;
 
 /**
  * Ancestor orders from the program root down, then the program and node keys.
@@ -68,30 +79,17 @@ export const readProgramSubjects = Effect.fn(
     );
   }
   const subjects = yield* Effect.forEach(rows, (row) =>
-    Effect.gen(function* () {
-      const route = yield* verifyCurriculum(row, snapshotId);
-      const ancestors = yield* readAncestors(snapshotId, route);
-      return {
-        domain: route.materialDomain,
-        // Each ancestor's authored order from the program root down, then the
-        // subject's own order among its siblings.
-        position: [...ancestors.map(({ order }) => order), row.order],
-        row,
-      };
-    })
+    readSubjectCandidate(snapshotId, row)
   );
-  const featured = new Map<string, PublicationRow<"curriculumRoutes">>();
-  for (const { domain, row } of Arr.sort(subjects, authoredOrder)) {
-    if (domain === undefined || featured.has(domain)) {
-      continue;
-    }
-    featured.set(domain, row);
-    if (featured.size === PROGRAM_FEATURED_SUBJECT_LIMIT) {
-      break;
-    }
-  }
+  const featured = pipe(
+    subjects,
+    Arr.sort(authoredOrder),
+    Arr.filter(({ domain }) => domain !== undefined),
+    Arr.dedupeWith((left, right) => left.domain === right.domain),
+    Arr.take(PROGRAM_FEATURED_SUBJECT_LIMIT)
+  );
   return {
     managed: true,
-    routeJson: [...featured.values()].map(({ rowJson }) => rowJson),
+    routeJson: Arr.map(featured, ({ row }) => row.rowJson),
   };
 });

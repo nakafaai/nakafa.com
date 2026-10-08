@@ -6,6 +6,9 @@ import {
   isRetryableNetworkError,
   NetworkRequestError,
 } from "@repo/backend/client/network";
+import { Schema } from "effect";
+
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 describe("network request classification", () => {
   it("classifies nested Undici and Node retry codes", () => {
@@ -23,7 +26,9 @@ describe("network request classification", () => {
       })
     );
     expect(isRetryableNetworkError(error)).toBe(true);
-    expect(JSON.stringify(error)).not.toContain("private socket detail");
+    expect(Schema.encodeSync(JsonTextSchema)(error)).not.toContain(
+      "private socket detail"
+    );
   });
 
   it("deduplicates retry codes across aggregate failures", () => {
@@ -87,7 +92,9 @@ describe("network request classification", () => {
     expect(error).toMatchObject({
       networkCodes: ["EPIPE"],
     });
-    expect(JSON.stringify(error)).not.toContain(cause.privateValue);
+    expect(Schema.encodeSync(JsonTextSchema)(error)).not.toContain(
+      cause.privateValue
+    );
   });
 
   it("keeps accessor failures and oversized graphs terminal", () => {
@@ -104,7 +111,7 @@ describe("network request classification", () => {
     for (const cause of [accessorFailure, oversizedFailure]) {
       const error = createNetworkRequestError(cause);
       expect(error).toMatchObject({ networkCodes: [] });
-      expect(JSON.stringify(error)).not.toContain("private");
+      expect(Schema.encodeSync(JsonTextSchema)(error)).not.toContain("private");
     }
   });
 });

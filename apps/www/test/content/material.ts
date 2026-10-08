@@ -24,7 +24,14 @@ import {
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { Array as Arr, Effect, Record as Rec, Schema, Struct } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashMap,
+  Record as Rec,
+  Schema,
+  Struct,
+} from "effect";
 
 const SignedArtifactJsonSchema = Schema.fromJsonString(
   SignedContentArtifactSchema
@@ -138,11 +145,11 @@ export const makeMaterialRuntimeSource = Effect.fn(
     count: rows.length,
     slot: fixture.state.materialSlot,
   }));
-  fixture.source.set("contentHeads", heads);
-  fixture.source.set("contentBindings", bindings);
-  fixture.source.set("contentArtifacts", artifacts);
-  fixture.source.set("materialCatalog", catalog);
-  fixture.source.set("materialBuckets", buckets);
-  fixture.source.set("contentIndex", search);
+  MutableHashMap.set(fixture.source, "contentHeads", heads);
+  MutableHashMap.set(fixture.source, "contentBindings", bindings);
+  MutableHashMap.set(fixture.source, "contentArtifacts", artifacts);
+  MutableHashMap.set(fixture.source, "materialCatalog", catalog);
+  MutableHashMap.set(fixture.source, "materialBuckets", buckets);
+  MutableHashMap.set(fixture.source, "contentIndex", search);
   return { ...fixture, projections };
 });

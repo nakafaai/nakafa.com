@@ -2,7 +2,10 @@ import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { encodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/wire";
+import {
+  encodeRendererJson,
+  encodeTryoutRuntimeBundleJson,
+} from "@repo/backend/confect/contentRelease/wire";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import {
   stageTryoutRuntimeBundleProgram,
@@ -16,7 +19,10 @@ import {
   makeRuntimeIngressRenderer,
 } from "@repo/backend/test/runtime/ingress";
 import { convexTest } from "convex-test";
-import { Cause, Effect, Exit } from "effect";
+import { Cause, Effect, Exit, Schema } from "effect";
+
+const PlainJson = Schema.fromJsonString(Schema.Unknown);
+const PrettyJson = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 
 /** Returns the complete failure cause from one rejected Convex test program. */
 const failureCause = Effect.fn("test.runtime.failureCause")(function* (
@@ -70,7 +76,7 @@ describe("tryouts/runtime signed storage", () => {
               ctx,
               fixture.release.manifest.releaseId,
               fixture.release,
-              JSON.stringify(fixture.rendererManifest)
+              encodeRendererJson(fixture.rendererManifest)
             )
           )
         );
@@ -80,7 +86,7 @@ describe("tryouts/runtime signed storage", () => {
               Effect.runPromiseWith(runtimeServices)(
                 stageTryoutRuntimeBundleProgram(
                   encodeTryoutRuntimeBundleJson(fixture.bundle),
-                  JSON.stringify(makeRuntimeIngressRenderer())
+                  encodeRendererJson(makeRuntimeIngressRenderer())
                 ).pipe(
                   Effect.provide(
                     RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
@@ -208,10 +214,8 @@ describe("tryouts/runtime signed storage", () => {
           expect(stored).not.toBeNull();
           if (stored) {
             await ctx.db.patch("tryoutRuntimeBundles", stored._id, {
-              rendererJson: JSON.stringify(
-                JSON.parse(stored.rendererJson),
-                null,
-                2
+              rendererJson: Schema.encodeSync(PrettyJson)(
+                Schema.decodeSync(PlainJson)(stored.rendererJson)
               ),
             });
           }
@@ -223,6 +227,160 @@ describe("tryouts/runtime signed storage", () => {
       expect(pairMessage).toMatchObject({
         _tag: "ReleaseError",
         code: "CONTENT_RELEASE_CONFLICT",
+      });
+    })
+  );
+  it.effect("replays one identical bundle as an unchanged receipt", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const fixture = yield* makeRuntimeIngressFixture();
+      const created = yield* storeRuntimeFixture(t, fixture);
+      const replayed = yield* storeRuntimeFixture(t, fixture);
+      expect(created).toMatchObject({
+        created: 1,
+        unchanged: 0,
+      });
+      expect(replayed).toMatchObject({
+        bundleHash: fixture.bundle.bundleHash,
+        created: 0,
+        releaseId: fixture.release.manifest.releaseId,
+        snapshotId: fixture.bundle.payload.snapshot.snapshotId,
+        unchanged: 1,
+      });
+    })
+  );
+  it.effect("stages one signed bundle into its staged release", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      const fixture = yield* makeRuntimeIngressFixture();
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          insertSignedCandidate(
+            ctx,
+            fixture.release.manifest.releaseId,
+            fixture.release,
+            encodeRendererJson(fixture.rendererManifest)
+          )
+        )
+      );
+      const receipt = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            stageTryoutRuntimeBundleProgram(
+              encodeTryoutRuntimeBundleJson(fixture.bundle),
+              encodeRendererJson(fixture.rendererManifest)
+            ).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+              )
+            )
+          )
+        )
+      );
+      expect(receipt).toMatchObject({
+        bundleHash: fixture.bundle.bundleHash,
+        created: 1,
+        unchanged: 0,
+      });
+    })
+  );
+  it.effect(
+    "stages one signed bundle into a verified release that needs no runtime",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const t = convexTest(schema, convexModules);
+        const fixture = yield* makeRuntimeIngressFixture();
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertSignedCandidate(
+              ctx,
+              fixture.release.manifest.releaseId,
+              fixture.release,
+              encodeRendererJson(fixture.rendererManifest)
+            )
+          )
+        );
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const release = await ctx.db.query("contentReleases").unique();
+            expect(release).not.toBeNull();
+            if (release) {
+              await ctx.db.patch("contentReleases", release._id, {
+                status: "verified",
+                tryoutRuntimeRequired: undefined,
+              });
+            }
+          })
+        );
+        const receipt = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              stageTryoutRuntimeBundleProgram(
+                encodeTryoutRuntimeBundleJson(fixture.bundle),
+                encodeRendererJson(fixture.rendererManifest)
+              ).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
+        expect(receipt).toMatchObject({
+          bundleHash: fixture.bundle.bundleHash,
+          created: 1,
+          unchanged: 0,
+        });
+      })
+  );
+  it.effect("rejects a stage once its release is aborting", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      const fixture = yield* makeRuntimeIngressFixture();
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          insertSignedCandidate(
+            ctx,
+            fixture.release.manifest.releaseId,
+            fixture.release,
+            encodeRendererJson(fixture.rendererManifest)
+          )
+        )
+      );
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const release = await ctx.db.query("contentReleases").unique();
+          expect(release).not.toBeNull();
+          if (release) {
+            await ctx.db.patch("contentReleases", release._id, {
+              abortingAt: Date.UTC(2026, 6, 22, 13),
+              status: "aborting",
+            });
+          }
+        })
+      );
+      const message = yield* failureCause(
+        Effect.promise(() =>
+          t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              stageTryoutRuntimeBundleProgram(
+                encodeTryoutRuntimeBundleJson(fixture.bundle),
+                encodeRendererJson(fixture.rendererManifest)
+              ).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        )
+      );
+      expect(message).toMatchObject({
+        _tag: "ReleaseError",
+        code: "CONTENT_RELEASE_STATE",
       });
     })
   );

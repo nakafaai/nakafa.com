@@ -1,6 +1,6 @@
 /// <reference path="../../types/fonts.d.ts" />
 
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, MutableHashSet, Schema } from "effect";
 import ams from "katex/dist/fonts/KaTeX_AMS-Regular.woff2";
 import mainBold from "katex/dist/fonts/KaTeX_Main-Bold.woff2";
 import mainItalic from "katex/dist/fonts/KaTeX_Main-Italic.woff2";
@@ -88,15 +88,13 @@ export const loadMathFonts = Effect.fn("designSystem.markdown.loadMathFonts")(
 
 /** Reads the KaTeX faces one rendered formula draws with, from its classes. */
 export function readMathFonts(html: string): readonly MathFont[] {
-  const elements = Array.from(
-    html.matchAll(CLASS_ATTRIBUTE),
-    ([, classes]) => new Set(classes.split(" "))
+  const elements = Array.from(html.matchAll(CLASS_ATTRIBUTE), ([, classes]) =>
+    MutableHashSet.fromIterable(classes.split(" "))
   );
-  const fonts = new Set<MathFont>();
-  for (const [font, group] of MATH_FONT_CLASSES) {
-    if (elements.some((classes) => group.every((name) => classes.has(name)))) {
-      fonts.add(font);
-    }
-  }
-  return [...fonts];
+  const matched = MATH_FONT_CLASSES.filter(([, group]) =>
+    elements.some((classes) =>
+      group.every((name) => MutableHashSet.has(classes, name))
+    )
+  ).map(([font]) => font);
+  return Arr.dedupe(matched);
 }

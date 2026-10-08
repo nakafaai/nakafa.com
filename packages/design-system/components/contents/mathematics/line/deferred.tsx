@@ -1,6 +1,6 @@
 "use client";
 
-import type { LineSceneProps } from "@repo/design-system/components/contents/mathematics/line/spec";
+import type { LineSceneProps } from "@repo/design-system/components/contents/mathematics/line/scene";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Spinner } from "@repo/design-system/components/ui/spinner";

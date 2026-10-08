@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
   loadMathFonts,
@@ -8,7 +8,7 @@ import {
   MathFontLoadError,
   readMathFonts,
 } from "@repo/design-system/lib/markdown/fonts";
-import { Effect } from "effect";
+import { Effect, FileSystem } from "effect";
 import katex from "katex";
 
 const FONT_FAMILY = /font-family:\s*KaTeX_([A-Za-z0-9]+)/;
@@ -77,31 +77,39 @@ describe("math fonts", () => {
     expect(readMathFonts(render("\\frac{"))).toEqual([]);
   });
 
-  it("covers every rule in KaTeX's stylesheet that selects a face loaded early", () => {
-    const require = createRequire(import.meta.url);
-    const css = readFileSync(require.resolve("katex/dist/katex.css"), "utf8");
-    const rules = css.replaceAll(COMMENT, "").matchAll(RULE);
-    let checked = 0;
-    for (const [, selectors, declarations] of rules) {
-      const font = ruleFont(declarations);
-      if (!font || selectors.includes("@font-face")) {
-        continue;
-      }
-      for (const selector of selectors.split(",")) {
-        // The element that draws: the last compound, or its parent when the
-        // rule styles a child such as `.delim-size1 > span`.
-        const compounds = selector
-          .replace(CHILD_SPAN, "")
-          .trim()
-          .split(WHITESPACE);
-        const classes = compounds.at(-1)?.split(".").filter(Boolean) ?? [];
-        const html = `<span class="katex"><span class="${classes.join(" ")}"></span></span>`;
-        expect(readMathFonts(html), selector).toContain(font);
-        checked += 1;
-      }
-    }
-    expect(checked).toBeGreaterThan(10);
-  });
+  it.effect(
+    "covers every rule in KaTeX's stylesheet that selects a face loaded early",
+    () =>
+      Effect.gen(function* () {
+        const require = createRequire(import.meta.url);
+        const fileSystem = yield* FileSystem.FileSystem;
+        const css = yield* fileSystem.readFileString(
+          require.resolve("katex/dist/katex.css"),
+          "utf8"
+        );
+        const rules = css.replaceAll(COMMENT, "").matchAll(RULE);
+        let checked = 0;
+        for (const [, selectors, declarations] of rules) {
+          const font = ruleFont(declarations);
+          if (!font || selectors.includes("@font-face")) {
+            continue;
+          }
+          for (const selector of selectors.split(",")) {
+            // The element that draws: the last compound, or its parent when the
+            // rule styles a child such as `.delim-size1 > span`.
+            const compounds = selector
+              .replace(CHILD_SPAN, "")
+              .trim()
+              .split(WHITESPACE);
+            const classes = compounds.at(-1)?.split(".").filter(Boolean) ?? [];
+            const html = `<span class="katex"><span class="${classes.join(" ")}"></span></span>`;
+            expect(readMathFonts(html), selector).toContain(font);
+            checked += 1;
+          }
+        }
+        expect(checked).toBeGreaterThan(10);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
 
   it.effect("loads the core faces through the browser's font set", () =>
     Effect.gen(function* () {

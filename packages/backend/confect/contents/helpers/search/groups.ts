@@ -1,5 +1,5 @@
 import type { contentSearchDocumentValidator } from "@repo/backend/confect/contents/helpers/search/schema";
-import { Array as Arr } from "effect";
+import { Array as Arr, MutableHashSet } from "effect";
 /** Search document shape shared by source-owned and release-owned read models. */
 export type ContentSearchDocument = typeof contentSearchDocumentValidator.Type;
 
@@ -13,7 +13,7 @@ export function interleaveSearchGroups<Item>(
     return [];
   }
   let ranked: Item[] = [];
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
   const maxLength = Math.max(
     0,
     ...Arr.map(groups, (documents) => documents.length)
@@ -25,11 +25,11 @@ export function interleaveSearchGroups<Item>(
         continue;
       }
       const identity = identify(document);
-      if (seen.has(identity)) {
+      if (MutableHashSet.has(seen, identity)) {
         continue;
       }
       ranked = Arr.append(ranked, document);
-      seen.add(identity);
+      MutableHashSet.add(seen, identity);
       if (ranked.length >= limit) {
         return ranked;
       }

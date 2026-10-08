@@ -26,7 +26,7 @@ import {
   isAdmin,
 } from "@repo/backend/confect/schools/membership";
 import { getUserMap } from "@repo/backend/confect/users/directory";
-import { Array as Arr, Effect, Layer, Order } from "effect";
+import { Array as Arr, Effect, HashMap, Layer, Option, Order } from "effect";
 
 const getClasses = FunctionImpl.make(
   databaseSchema,
@@ -205,7 +205,9 @@ const getPeople = FunctionImpl.make(
         Arr.map(members, (member) => member.userId)
       );
       const matched = Arr.flatMap(members, (member) => {
-        const userData = userMap.get(member.userId);
+        const userData = Option.getOrUndefined(
+          HashMap.get(userMap, member.userId)
+        );
         if (!userData) {
           return [];
         }
@@ -254,7 +256,9 @@ const getPeople = FunctionImpl.make(
       Arr.map(membersPage.page, (m) => m.userId)
     );
     const loaded = Arr.flatMap(membersPage.page, (member) => {
-      const userData = userMap.get(member.userId);
+      const userData = Option.getOrUndefined(
+        HashMap.get(userMap, member.userId)
+      );
       if (!userData) {
         return [];
       }

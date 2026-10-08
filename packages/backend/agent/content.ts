@@ -9,9 +9,11 @@ import {
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
-import type { agentContentSourceValidator } from "@repo/backend/confect/contentRelease/reference/spec";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
-import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
+import {
+  formatQuranMeaning,
+  quranMarkdownValidator,
+} from "@repo/backend/content/quran/contract";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
@@ -21,23 +23,23 @@ import {
   type NakafaAgentMarkdown,
   NakafaAgentMarkdownSchema,
 } from "@repo/contents/agent/schema/read";
-import type {
-  NakafaAgentContentRef,
-  NakafaAgentReadableContentRef,
+import {
+  type NakafaAgentContentRef,
+  NakafaAgentReadableContentRefSchema,
 } from "@repo/contents/agent/schema/ref";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { Effect, Option, Schema } from "effect";
 
-type PublishedRef = NakafaAgentReadableContentRef & {
-  readonly section: "articles" | "material";
-};
-type AgentContentSource = typeof agentContentSourceValidator.Type;
-type QuranContentSource = Extract<
-  NonNullable<AgentContentSource>,
-  {
-    readonly kind: "quran";
-  }
->;
+const PublishedRefSchema = Schema.Struct({
+  ...NakafaAgentReadableContentRefSchema.fields,
+  section: Schema.Literals(["articles", "material"]),
+});
+type PublishedRef = typeof PublishedRefSchema.Type;
+const QuranContentSourceSchema = Schema.Struct({
+  markdown: quranMarkdownValidator,
+  surahNumber: Schema.Finite,
+});
+type QuranContentSource = typeof QuranContentSourceSchema.Type;
 const contentSourceReference =
   refs.internal.contentRelease.reference.internal.readAgentContent;
 const publicRuntimeReference =

@@ -2,6 +2,7 @@ import { useChart } from "@repo/design-system/components/evilcharts/ui/chart";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import { LegendItem } from "@repo/design-system/components/evilcharts/ui/legend-item";
 import { cn } from "cn";
+import { MutableHashMap } from "effect";
 import type * as React from "react";
 import { type DefaultLegendContentProps, Legend } from "recharts";
 
@@ -49,15 +50,15 @@ function ChartLegendContent({
     return null;
   }
 
-  const items = new Map<string, LegendPayloadItem>();
+  const items = MutableHashMap.empty<string, LegendPayloadItem>();
   for (const item of payload) {
     if (item.type === "none") {
       continue;
     }
 
     const itemKey = getLegendItemKey(item, nameKey);
-    if (!items.has(itemKey)) {
-      items.set(itemKey, item);
+    if (!MutableHashMap.has(items, itemKey)) {
+      MutableHashMap.set(items, itemKey, item);
     }
   }
 

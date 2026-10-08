@@ -6,14 +6,16 @@ import {
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
 import { cn } from "cn";
+import { Schema } from "effect";
 import Image from "next/image";
 import { createContext, use, useMemo, useState } from "react";
 
 /** One cited link and the domain it is shown under. */
-interface SourceLink {
-  domain: string;
-  href: string;
-}
+const SourceLinkSchema = Schema.Struct({
+  domain: Schema.String,
+  href: Schema.String,
+});
+type SourceLink = typeof SourceLinkSchema.Type;
 
 const SourceContext = createContext<SourceLink | null>(null);
 
@@ -53,7 +55,7 @@ function useSource<T>(selector: (source: SourceLink) => T) {
   return selector(value);
 }
 
-export interface SourceProps {
+interface SourceProps {
   children: React.ReactNode;
   href: string;
 }
@@ -69,7 +71,7 @@ export function Source({ href, children }: SourceProps) {
   );
 }
 
-export interface SourceTriggerProps {
+interface SourceTriggerProps {
   className?: string;
   faviconUrl?: string | undefined;
   label?: React.ReactNode;
@@ -123,7 +125,7 @@ export function SourceTrigger({
   );
 }
 
-export interface SourceContentProps {
+interface SourceContentProps {
   className?: string;
   description?: string | undefined;
   faviconUrl?: string | undefined;

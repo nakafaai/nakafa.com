@@ -1,8 +1,16 @@
 "use client";
 
-import type { LineSceneProps } from "@repo/design-system/components/contents/mathematics/line/spec";
+import type { ResolvedLine } from "@repo/design-system/components/contents/mathematics/line/spec";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";
+
+/** Exact serializable payload owned by the deferred WebGL boundary. */
+export interface LineSceneProps {
+  cameraPosition: [number, number, number];
+  cameraTarget?: [number, number, number];
+  lines: readonly ResolvedLine[];
+  showZAxis: boolean;
+}
 
 /** Renders the client-only WebGL implementation of one line scene. */
 export function LineScene({

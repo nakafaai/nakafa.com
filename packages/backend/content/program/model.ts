@@ -11,7 +11,7 @@ import { verifyMaterial } from "@repo/backend/content/material/verify";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type CurriculumRoute = Effect.Success<ReturnType<typeof verifyCurriculum>>;
 /** Orders material groups exactly as authored, with paths as stable tie-breakers. */
@@ -119,7 +119,7 @@ const readGroups = Effect.fn("contentRelease.readProgramGroups")(function* (
   contexts: readonly CurriculumRoute[]
 ) {
   // The exact context index and decoded route schema prove these fields exist.
-  const publicPaths = new Set(
+  const publicPaths = Arr.dedupe(
     yield* Effect.forEach(contexts, ({ materialContextPublicPath }) =>
       Effect.fromNullishOr(materialContextPublicPath).pipe(Effect.orDie)
     )
@@ -148,7 +148,7 @@ const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
     contexts: readonly CurriculumRoute[]
   ) {
     // The exact context index and decoded route schema prove material ownership.
-    const materialKeys = new Set(
+    const materialKeys = Arr.dedupe(
       yield* Effect.forEach(contexts, ({ materialKey }) =>
         Effect.fromNullishOr(materialKey).pipe(Effect.orDie)
       )

@@ -3,17 +3,39 @@
 import { createContext, use } from "react";
 import { createStore, useStore } from "zustand";
 
-/** Responsive state and actions shared by composed sidebar components. */
-export interface SidebarContextValue {
-  isLocked: boolean;
-  isMobile: boolean;
-  open: boolean;
-  openMobile: boolean;
-  setOpen: (open: boolean) => void;
-  setOpenMobile: (open: boolean) => void;
-  state: "expanded" | "collapsed";
-  toggleSidebar: () => void;
+/**
+ * Merges one store snapshot with the provider's actions and lock into the
+ * value every `useSidebar` selector reads.
+ */
+function buildSidebarValue(
+  sidebar: ReturnType<ReturnType<typeof createSidebarStore>["getState"]>,
+  controls: {
+    readonly isLocked: boolean;
+    readonly open?: boolean;
+    readonly setOpen: (open: boolean) => void;
+    readonly setOpenMobile: (open: boolean) => void;
+    readonly toggleSidebar: () => void;
+  }
+) {
+  const open = controls.open ?? sidebar.open;
+  const state: "expanded" | "collapsed" = open ? "expanded" : "collapsed";
+
+  return {
+    isLocked: controls.isLocked,
+    isMobile: sidebar.isMobile,
+    open,
+    openMobile: controls.isLocked ? false : sidebar.openMobile,
+    setOpen: controls.setOpen,
+    setOpenMobile: controls.setOpenMobile,
+    state,
+    toggleSidebar: controls.toggleSidebar,
+  };
 }
+
+/** Responsive state and actions shared by composed sidebar components. */
+export type SidebarContextValue = ReturnType<typeof buildSidebarValue>;
+
+type SidebarControls = Parameters<typeof buildSidebarValue>[1];
 
 /**
  * Creates one SidebarProvider's store with the state the server renders: the
@@ -43,14 +65,7 @@ export const SidebarStoreContext = createContext<ReturnType<
  * The actions read the store when they run, so this value changes only when
  * the provider's props do.
  */
-export const SidebarContext = createContext<
-  | (Pick<
-      SidebarContextValue,
-      "isLocked" | "setOpen" | "setOpenMobile" | "toggleSidebar"
-    > &
-      Partial<Pick<SidebarContextValue, "open">>)
-  | null
->(null);
+export const SidebarContext = createContext<SidebarControls | null>(null);
 
 /**
  * Selects one part of the sidebar state and actions of the nearest
@@ -67,17 +82,7 @@ export function useSidebar<T>(selector: (sidebar: SidebarContextValue) => T) {
     throw new Error("useSidebar must be used within a SidebarProvider.");
   }
 
-  return useStore(store, (sidebar) => {
-    const open = controls.open ?? sidebar.open;
-    return selector({
-      isLocked: controls.isLocked,
-      isMobile: sidebar.isMobile,
-      open,
-      openMobile: controls.isLocked ? false : sidebar.openMobile,
-      setOpen: controls.setOpen,
-      setOpenMobile: controls.setOpenMobile,
-      state: open ? "expanded" : "collapsed",
-      toggleSidebar: controls.toggleSidebar,
-    });
-  });
+  return useStore(store, (sidebar) =>
+    selector(buildSidebarValue(sidebar, controls))
+  );
 }

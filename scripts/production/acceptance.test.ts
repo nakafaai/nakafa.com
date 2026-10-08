@@ -145,6 +145,11 @@ const makeRepository = Effect.fn("ProductionAcceptanceTest.makeRepository")(
     const fileSystem = yield* FileSystem.FileSystem;
     const repository = yield* fileSystem.makeTempDirectoryScoped({ prefix });
     yield* runGit(repository, ["init", "--initial-branch=main"]);
+    // After a commit Git can start detached maintenance, which takes a lock
+    // file under .git/objects while the scope is already removing this
+    // directory. The fixture never needs maintenance, so it is off.
+    yield* runGit(repository, ["config", "maintenance.auto", "false"]);
+    yield* runGit(repository, ["config", "gc.auto", "0"]);
     yield* runGit(repository, ["config", "user.name", "CI Fixture"]);
     yield* runGit(repository, [
       "config",
@@ -189,6 +194,50 @@ describe("production acceptance scope", () => {
     {
       changes: [{ path: "apps/www/example.test.tsx", status: "M" }],
       expected: true,
+    },
+    { changes: [{ path: "README.md", status: "M" }], expected: false },
+    {
+      changes: [{ path: "apps/www/CHANGELOG.md", status: "A" }],
+      expected: false,
+    },
+    {
+      changes: [{ path: "docs/adr/0017-state.md", status: "M" }],
+      expected: false,
+    },
+    {
+      changes: [{ path: ".changeset/fetch.md", status: "A" }],
+      expected: false,
+    },
+    {
+      changes: [{ path: "docs/adr/diagram.svg", status: "A" }],
+      expected: false,
+    },
+    {
+      changes: [{ path: ".changeset/config.json", status: "M" }],
+      expected: false,
+    },
+    { changes: [{ path: "osv.toml", status: "M" }], expected: false },
+    {
+      changes: [{ path: "packages/cli/README.md", status: "M" }],
+      expected: true,
+    },
+    {
+      changes: [{ path: "apps/www/public/notes.md", status: "A" }],
+      expected: true,
+    },
+    {
+      changes: [
+        { path: "docs/adr/0017-state.md", status: "M" },
+        { path: "apps/www/example.ts", status: "M" },
+      ],
+      expected: true,
+    },
+    {
+      changes: [
+        { path: "README.md", status: "M" },
+        { path: "apps/www/example.test.ts", status: "M" },
+      ],
+      expected: false,
     },
   ])("returns $expected for $changes", ({ changes, expected }) => {
     expect(requiresProductionAcceptance(changes)).toBe(expected);
@@ -360,7 +409,7 @@ describe("production acceptance scope", () => {
         "Success",
       ]);
       expect([...skipped.stdout, ...required.stdout]).toEqual([
-        "Production acceptance skipped for 1 modified test modules.\n",
+        "Production acceptance skipped: every changed path is documentation or a modified test.\n",
         "Production acceptance required for 2 changed paths.\n",
       ]);
       expect(yield* fileSystem.readFileString(output)).toBe(

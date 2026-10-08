@@ -19,8 +19,9 @@ import {
 } from "@repo/backend/test/content/proof";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 vi.mock("server-only", () => ({}));
 async function setup(historical = false) {
   const t = createConvexTestWithBetterAuth();
@@ -63,7 +64,7 @@ describe("attempt content verification", () => {
       const bundle = yield* decodeTryoutRuntimeBundleJson(row.bundleJson);
       const changedArtifact = {
         ...first,
-        artifactJson: JSON.stringify({
+        artifactJson: yield* Schema.encodeEffect(JsonTextSchema)({
           ...artifact,
           payload: {
             ...artifact.payload,
@@ -71,7 +72,7 @@ describe("attempt content verification", () => {
           },
         }),
       };
-      const changedBundle = JSON.stringify({
+      const changedBundle = yield* Schema.encodeEffect(JsonTextSchema)({
         ...bundle,
         payload: {
           ...bundle.payload,
@@ -128,9 +129,14 @@ describe("attempt content verification", () => {
               TEST_KEY_RESOLVER
             )
           );
-          assert.strictEqual(JSON.stringify(verified.bundle), row.bundleJson);
           assert.strictEqual(
-            JSON.stringify(verified.items[0]?.artifact),
+            yield* Schema.encodeEffect(JsonTextSchema)(verified.bundle),
+            row.bundleJson
+          );
+          assert.strictEqual(
+            yield* Schema.encodeEffect(JsonTextSchema)(
+              verified.items[0]?.artifact
+            ),
             row.items[0]?.artifactJson
           );
         })
@@ -218,7 +224,7 @@ describe("attempt content verification", () => {
             items: [
               {
                 ...first,
-                artifactJson: JSON.stringify({
+                artifactJson: yield* Schema.encodeEffect(JsonTextSchema)({
                   ...artifact,
                   signature,
                 }),
@@ -249,7 +255,7 @@ describe("attempt content verification", () => {
           request,
           {
             ...row,
-            bundleJson: JSON.stringify({
+            bundleJson: yield* Schema.encodeEffect(JsonTextSchema)({
               ...bundle,
               signature,
             }),

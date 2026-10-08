@@ -24,7 +24,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { User } from "better-auth";
-import { Array as Arr, Effect, pipe } from "effect";
+import { Array as Arr, Effect, pipe, Schema } from "effect";
 
 vi.mock("@convex-dev/better-auth/plugins", async (importOriginal) => {
   const actual =
@@ -38,6 +38,7 @@ vi.mock("@convex-dev/better-auth/plugins", async (importOriginal) => {
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const SITE_URL = new URL("http://localhost:3000");
+const JsonSchema = Schema.fromJsonString(Schema.Unknown);
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
@@ -165,12 +166,13 @@ describe("auth/runtime", () => {
       const discovery = yield* Effect.promise(() =>
         test.fetch("/.well-known/openid-configuration")
       );
+      const body = yield* Schema.encodeEffect(JsonSchema)({
+        callbackURL: "/en/home",
+        provider: "google",
+      });
       const authFailure = yield* Effect.tryPromise(() =>
         test.fetch("/api/auth/sign-in/social", {
-          body: JSON.stringify({
-            callbackURL: "/en/home",
-            provider: "google",
-          }),
+          body,
           headers: {
             "content-type": "application/json",
             origin: "http://localhost:3000",
@@ -198,13 +200,14 @@ describe("auth/runtime", () => {
         const errorCallbackURL = `/en/auth/error?${new URLSearchParams({
           intent,
         })}`;
+        const signInBody = yield* Schema.encodeEffect(JsonSchema)({
+          callbackURL: "/en/onboarding",
+          errorCallbackURL,
+          provider: "google",
+        });
         const signInResponse = yield* Effect.promise(() =>
           test.fetch("/api/auth/sign-in/social", {
-            body: JSON.stringify({
-              callbackURL: "/en/onboarding",
-              errorCallbackURL,
-              provider: "google",
-            }),
+            body: signInBody,
             headers: {
               "content-type": "application/json",
               origin: siteOrigin,
@@ -340,7 +343,9 @@ describe("auth/runtime", () => {
           status: "INTERNAL_SERVER_ERROR",
         });
         expect(prepare).toHaveBeenCalledOnce();
-        expect(JSON.stringify(failure)).not.toContain("private adapter detail");
+        const serializedFailure =
+          yield* Schema.encodeEffect(JsonSchema)(failure);
+        expect(serializedFailure).not.toContain("private adapter detail");
       })
   );
   it.effect("claims deletion through the Better Auth action hook", () =>
@@ -460,11 +465,11 @@ it("publishes only public key material from configured Better Auth signing keys"
   vi.stubEnv("CONVEX_SITE_URL", "https://technical-auth.convex.site");
   vi.stubEnv(
     "JWKS",
-    JSON.stringify([
+    Schema.encodeSync(JsonSchema)([
       {
         id: "technical-signing-key",
         alg: "RS256",
-        publicKey: JSON.stringify(publicKey),
+        publicKey: Schema.encodeSync(JsonSchema)(publicKey),
         privateKey: "private-material-must-not-be-published",
         createdAt: NOW,
       },
@@ -478,7 +483,7 @@ it("publishes only public key material from configured Better Auth signing keys"
     issuer: "https://technical-auth.convex.site",
     algorithm: "RS256",
   });
-  const keys = JSON.parse(
+  const keys = Schema.decodeSync(JsonSchema)(
     atob(provider.jwks.slice(provider.jwks.indexOf(",") + 1))
   );
   expect(keys).toEqual({
@@ -490,7 +495,7 @@ it("publishes only public key material from configured Better Auth signing keys"
       },
     ],
   });
-  expect(JSON.stringify(keys)).not.toContain("private-material");
+  expect(Schema.encodeSync(JsonSchema)(keys)).not.toContain("private-material");
   const t = createConvexTestWithBetterAuth();
   const ids = await t.action(async (ctx) =>
     Arr.map(createAuthOptions(ctx).plugins, (plugin) => plugin.id)

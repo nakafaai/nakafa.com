@@ -6,7 +6,6 @@ import {
   isMultipleProportionsModeId,
   MULTIPLE_PROPORTIONS_MODE_IDS,
   MULTIPLE_PROPORTIONS_SCENE_VIEW,
-  type MultipleProportionsLabProps,
   type MultipleProportionsModeId,
   WATER_PEROXIDE_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/data";
@@ -34,6 +33,27 @@ import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.24;
+
+interface MultipleProportionsLabProps {
+  description: ReactNode;
+  labels: {
+    changingLabel: string;
+    chooseMode: string;
+    comparisonView: string;
+    fixedLabel: string;
+    modes: Record<
+      MultipleProportionsModeId,
+      {
+        changing: ReactNode;
+        fixed: ReactNode;
+        helperCaption: ReactNode;
+        tab: ReactNode;
+        tabLabel: string;
+      }
+    >;
+  };
+  title: ReactNode;
+}
 
 export function MultipleProportionsLab({
   title,

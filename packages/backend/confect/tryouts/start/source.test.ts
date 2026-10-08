@@ -30,6 +30,10 @@ const startArgs: StartAttemptArgs = {
   trackKey: TRACK,
 };
 const REUSED_RELEASE_ID = ReleaseIdSchema.make("release-tryout-reused");
+const SignedReleaseJsonSchema = Schema.fromJsonString(
+  SignedContentReleaseSchema
+);
+const PlainJson = Schema.fromJsonString(Schema.Unknown);
 describe("tryouts/start/source", () => {
   it.effect(
     "starts from signed rows after filesystem ownership is removed",
@@ -79,8 +83,8 @@ describe("tryouts/start/source", () => {
           if (!(release && state)) {
             throw new Error("Expected one active try-out release fixture.");
           }
-          const source = Schema.decodeUnknownSync(SignedContentReleaseSchema)(
-            JSON.parse(release.releaseJson)
+          const source = Schema.decodeSync(SignedReleaseJsonSchema)(
+            release.releaseJson
           );
           const reused = testSignedRelease({
             ...source.manifest,
@@ -88,7 +92,7 @@ describe("tryouts/start/source", () => {
           });
           await ctx.db.patch("contentReleases", release._id, {
             releaseId: REUSED_RELEASE_ID,
-            releaseJson: JSON.stringify(reused),
+            releaseJson: Schema.encodeSync(PlainJson)(reused),
           });
           await ctx.db.patch("contentState", state._id, {
             activeManifestHash: reused.manifestHash,

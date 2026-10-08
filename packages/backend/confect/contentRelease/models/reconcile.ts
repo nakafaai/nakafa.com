@@ -5,18 +5,19 @@ import {
   QueryStreamReadBudget,
 } from "@confect/server";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import contentModelBuildsTable from "@repo/backend/confect/_generated/tables/contentModelBuilds";
 import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/confect/contentRelease/error";
-import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
+import { modelSlotValidator } from "@repo/backend/confect/contentRelease/models/slot";
 import {
   MODEL_BUILD_PAGE_BYTES,
   MODEL_BUILD_PAGE_ROWS,
   type ModelBuildPage,
 } from "@repo/backend/confect/contentRelease/models/spec";
 import { compareValues } from "convex/values";
-import { Array as Arr, Effect, Option, Schema, Stream } from "effect";
+import { Array as Arr, Effect, Option, Schema, Stream, Struct } from "effect";
 
 const PositionSchema = Schema.Tuple([Schema.String, Schema.String]);
 const CursorSchema = Schema.fromJsonString(
@@ -26,6 +27,8 @@ const CursorSchema = Schema.fromJsonString(
     version: Schema.Literal(1),
   })
 );
+/** Writes the cursor as plain JSON text; CursorSchema remains its decoding contract. */
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 type ModelRow = Docs[
   | "articleCatalog"
   | "articleCategories"
@@ -33,30 +36,27 @@ type ModelRow = Docs[
   | "materialCatalog"
   | "materialBuckets"
   | "contentIndex"];
-interface ModelReconciliation<
+const ModelReconciliationSchema = Schema.Struct({
+  build: contentModelBuildsTable.Fields.mapFields(
+    Struct.pick(["cursor", "phase"])
+  ),
+  sourceSlot: modelSlotValidator,
+  targetSlot: modelSlotValidator,
+});
+type ModelReconciliationInput = typeof ModelReconciliationSchema.Type;
+type ModelStream<
   Row extends ModelRow,
   Labels extends QueryStreamKeyLabels.QueryStreamKeyLabels,
-> {
-  readonly build: Pick<Docs["contentModelBuilds"], "cursor" | "phase">;
-  readonly insert: (source: Row) => Effect.Effect<void>;
-  readonly position: (row: Row) => typeof PositionSchema.Type;
-  readonly remove: (target: Row) => Effect.Effect<void>;
-  readonly replace: (target: Row, source: Row) => Effect.Effect<void>;
-  readonly source: QueryStream.QueryStream<
-    Row,
-    Labels,
-    "asc",
-    Document.DocumentDecodeError
-  >;
-  readonly sourceSlot: ModelSlot;
-  readonly target: QueryStream.QueryStream<
-    Row,
-    Labels,
-    "asc",
-    Document.DocumentDecodeError
-  >;
-  readonly targetSlot: ModelSlot;
-}
+> = QueryStream.QueryStream<Row, Labels, "asc", Document.DocumentDecodeError>;
+type ModelPosition<Row extends ModelRow> = (
+  row: Row
+) => typeof PositionSchema.Type;
+type ModelInsert<Row extends ModelRow> = (source: Row) => Effect.Effect<void>;
+type ModelReplace<Row extends ModelRow> = (
+  target: Row,
+  source: Row
+) => Effect.Effect<void>;
+type ModelRemove<Row extends ModelRow> = (target: Row) => Effect.Effect<void>;
 
 /** Removes slot and native document identity before comparing model values. */
 function modelValues(row: ModelRow) {
@@ -87,11 +87,11 @@ const decodeCursor = Effect.fn("contentRelease.decodeModelCursor")(function* (
   return cursor;
 });
 const appendIdentity = Effect.fn("contentRelease.appendModelIdentity")(
-  function* <
-    Row extends ModelRow,
-    Labels extends QueryStreamKeyLabels.QueryStreamKeyLabels,
-  >(
-    input: ModelReconciliation<Row, Labels>,
+  function* <Row extends ModelRow>(
+    input: Pick<ModelReconciliationInput, "sourceSlot" | "targetSlot"> & {
+      readonly build: Pick<ModelReconciliationInput["build"], "phase">;
+      readonly position: ModelPosition<Row>;
+    },
     source: Row | undefined,
     target: Row | undefined,
     row: Row
@@ -117,11 +117,12 @@ const appendIdentity = Effect.fn("contentRelease.appendModelIdentity")(
 
 /** Reconciles one complete identity without rewriting unchanged native rows. */
 const reconcileIdentity = Effect.fn("contentRelease.reconcileModelIdentity")(
-  function* <
-    Row extends ModelRow,
-    Labels extends QueryStreamKeyLabels.QueryStreamKeyLabels,
-  >(
-    input: ModelReconciliation<Row, Labels>,
+  function* <Row extends ModelRow>(
+    input: {
+      readonly insert: ModelInsert<Row>;
+      readonly remove: ModelRemove<Row>;
+      readonly replace: ModelReplace<Row>;
+    },
     source: Row | undefined,
     target: Row | undefined
   ) {
@@ -145,7 +146,16 @@ export const reconcileModel = Effect.fn("contentRelease.reconcileModel")(
   function* <
     Row extends ModelRow,
     Labels extends QueryStreamKeyLabels.QueryStreamKeyLabels,
-  >(input: ModelReconciliation<Row, Labels>) {
+  >(
+    input: ModelReconciliationInput & {
+      readonly insert: ModelInsert<Row>;
+      readonly position: ModelPosition<Row>;
+      readonly remove: ModelRemove<Row>;
+      readonly replace: ModelReplace<Row>;
+      readonly source: ModelStream<Row, Labels>;
+      readonly target: ModelStream<Row, Labels>;
+    }
+  ) {
     const { build } = input;
     const cursor = yield* decodeCursor(build);
     const merged = QueryStream.merge([input.source, input.target]);
@@ -211,12 +221,13 @@ export const reconcileModel = Effect.fn("contentRelease.reconcileModel")(
       )
     );
     if (stopped) {
+      const cursorText = yield* Schema.encodeEffect(JsonTextSchema)({
+        phase: build.phase,
+        position,
+        version: 1,
+      }).pipe(Effect.orDie);
       return {
-        cursor: JSON.stringify({
-          phase: build.phase,
-          position,
-          version: 1,
-        }),
+        cursor: cursorText,
         done: false,
         processed,
       } satisfies ModelBuildPage;

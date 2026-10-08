@@ -1,8 +1,10 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
-import { Effect, Option } from "effect";
+import {
+  AppLocaleCodeSchema,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
+import { Effect, Option, Schema } from "effect";
 import { io } from "next/cache";
-import type { Locale } from "next-intl";
 import {
   type ArticlePreviewContent,
   readArticlePreview,
@@ -10,19 +12,12 @@ import {
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
 /** Exact route identity shared by metadata and body ownership reads. */
-export interface ArticleContentInput {
-  readonly locale: Locale;
-  readonly publicPath: ArticleProjection["publicPath"];
-}
+const ArticleContentInputSchema = Schema.Struct({
+  locale: AppLocaleCodeSchema,
+  publicPath: ArticleProjectionSchema.fields.publicPath,
+});
 
-export interface PublishedOwner {
-  readonly kind: "published";
-}
-
-export interface PreviewOwner {
-  readonly content: ArticlePreviewContent;
-  readonly kind: "preview";
-}
+export type ArticleContentInput = typeof ArticleContentInputSchema.Type;
 
 /** Reads local article ownership only inside the configured preview child. */
 async function readPreviewOwner(input: ArticleContentInput) {
@@ -40,13 +35,11 @@ async function readPreviewOwner(input: ArticleContentInput) {
 }
 
 /** Selects one exclusive article owner before any native module import. */
-export async function resolveArticleOwner(
-  input: ArticleContentInput
-): Promise<PreviewOwner | PublishedOwner> {
+export async function resolveArticleOwner(input: ArticleContentInput) {
   const preview = await readPreviewOwner(input);
   if (Option.isSome(preview)) {
-    return { content: preview.value, kind: "preview" };
+    return { content: preview.value, kind: "preview" as const };
   }
 
-  return { kind: "published" };
+  return { kind: "published" as const };
 }

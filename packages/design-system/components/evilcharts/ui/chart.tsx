@@ -1,14 +1,17 @@
 "use client";
 
 import {
+  type AtLeastOneThemeColor,
   type ChartConfig,
   validateChartConfigColors,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
+import type { ChartSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { cn } from "cn";
 import { domAnimation, LazyMotion } from "motion/react";
 import {
   type ComponentProps,
+  type ComponentType,
   createContext,
   type ReactNode,
   use,
@@ -33,7 +36,7 @@ export function useChart<T>(selector: (chart: ChartContextProps) => T) {
   return selector(value);
 }
 
-interface ChartContainerProps
+export interface ChartContainerProps
   extends Omit<ComponentProps<"div">, "children">,
     Pick<
       ComponentProps<typeof ResponsiveContainer>,
@@ -48,7 +51,15 @@ interface ChartContainerProps
       | "onResize"
       | "children"
     > {
-  config: ChartConfig;
+  config: Record<
+    string,
+    {
+      cue?: ChartSeriesCue;
+      label?: ReactNode;
+      icon?: ComponentType;
+      colors?: AtLeastOneThemeColor;
+    }
+  >;
   /** Optional content rendered below the chart (e.g. EvilBrush) */
   footer?: ReactNode;
   innerResponsiveContainerStyle?: ComponentProps<

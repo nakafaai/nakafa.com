@@ -119,11 +119,11 @@ describe("formatResearchOutput", () => {
             ],
           },
           {
-            text: "Google redirects are source-owned references.",
+            text: "Unretrieved sources are not evidence.",
             citations: [
               {
-                title: "Google redirect",
-                url: "https://vertexaisearch.cloud.google.com/grounding-api-redirect/source",
+                title: "Unretrieved source",
+                url: "https://example.com/unretrieved",
               },
               {
                 title: "Invalid",
@@ -170,8 +170,8 @@ describe("formatResearchOutput", () => {
                 url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
               },
               {
-                title: "Google redirect",
-                url: "https://vertexaisearch.cloud.google.com/grounding-api-redirect/source",
+                title: "Unretrieved source",
+                url: "https://example.com/unretrieved",
               },
             ],
           },

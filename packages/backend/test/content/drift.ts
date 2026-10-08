@@ -5,6 +5,9 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testProofRenderer } from "@repo/backend/test/content/proof";
 import { Data, Effect, Schema } from "effect";
 
+/** Plain codec: writes the same bytes as JSON.stringify. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 class InvalidDriftFixture extends Data.TaggedError("InvalidDriftFixture")<{
   operation: "load-proof-release" | "load-staged-artifact";
 }> {}
@@ -50,7 +53,7 @@ export const driftStoredRenderer = Effect.fn(
   const release = yield* loadProofRelease(ctx);
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", release._id, {
-      rendererJson: JSON.stringify(testProofRenderer("h1")),
+      rendererJson: encodeJson(testProofRenderer("h1")),
     })
   );
 });

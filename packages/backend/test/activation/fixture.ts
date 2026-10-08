@@ -38,9 +38,9 @@ export const RECOVERY = {
   sequence: 2,
 } satisfies TestIdentity;
 
-const ACTIVATION_RENDERER = Schema.decodeUnknownSync(
-  RendererManifestEnvelopeSchema
-)(JSON.parse(testRendererJson()));
+const ACTIVATION_RENDERER = Schema.decodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+)(testRendererJson());
 
 /** Seeds one verified genesis candidate and its exact verified inverse. */
 export async function seedVerifiedPair(
@@ -89,7 +89,7 @@ export function expectedReceipt(
 ) {
   return {
     activatedHeads: 0,
-    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
+    activeAppLocales: [...ACTIVE_APP_LOCALE_CODES],
     deletedHeads: 0,
     manifestHash: identity.manifestHash,
     projectionDigest: TEST_DIGEST,

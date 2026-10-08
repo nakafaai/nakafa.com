@@ -1,6 +1,11 @@
 import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
 import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
-import type { AuthoredLine } from "@repo/design-system/components/contents/mathematics/line/spec";
+import type {
+  AuthoredLine,
+  CircleArcFields,
+  CircleArcLabelFields,
+  ResolvedLineLabel,
+} from "@repo/design-system/components/contents/mathematics/line/spec";
 import {
   CoordinateControls,
   CoordinateProvider,
@@ -11,6 +16,14 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
+
+/**
+ * One authored circle arc. Its label holds React nodes, which no Schema can
+ * describe, so the shape lives beside the `data` prop that takes it.
+ */
+export interface CircleArcLineProps extends CircleArcFields {
+  readonly label?: Omit<ResolvedLineLabel, "at"> & CircleArcLabelFields;
+}
 
 const DEFAULT_CAMERA_POSITION_X = 10;
 const DEFAULT_CAMERA_POSITION_Y = 6;

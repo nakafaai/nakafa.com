@@ -13,16 +13,14 @@ update:
     - '@types/react'
     - 'react-dom'
     - 'react'
-    - '@ai-sdk/gateway'
-    - '@ai-sdk/google'
     - '@biomejs/biome'
+    - '@convex-dev/ai-sdk-provider'
     - '@convex-dev/better-auth'
     - '@effect/platform-browser'
     - '@effect/platform-node'
     - '@effect/tsgo'
     - '@effect/vitest'
     - '@nakafa/aksara-contracts'
-    - '@polar-sh/sdk'
     - '@react-three/fiber'
     - afdocs
     - '@next/third-parties'
@@ -44,8 +42,7 @@ update:
     - vitest
 
 catalog:
-  '@ai-sdk/gateway': 4.0.106
-  '@ai-sdk/google': 4.0.90
+  '@convex-dev/ai-sdk-provider': 0.2.1
   '@effect/platform-browser': 4.0.1
   '@effect/platform-node': 4.0.1
   '@effect/vitest': 4.0.1

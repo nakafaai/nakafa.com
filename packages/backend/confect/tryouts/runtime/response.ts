@@ -7,28 +7,20 @@ import {
 } from "@repo/backend/confect/tryouts/response/integrity";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
-type TryoutResponse = Docs["tryoutResponses"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 type SectionCoverage = "complete" | "partial";
-interface ResponsePlacementLink {
-  readonly placement: TryoutPlacement;
-  readonly sectionAttemptId: Id<"tryoutSectionAttempts">;
-}
-export interface TryoutResponseIndex {
-  readonly placements: readonly TryoutPlacement[];
-  readonly responses: ReadonlyMap<
-    Id<"tryoutAttemptPlacements">,
-    TryoutResponse
-  >;
-}
-export interface TryoutAttemptResponseIndex extends TryoutResponseIndex {
-  readonly sections: readonly TryoutSectionAttempt[];
-}
+/** One section's validated placements and its validated responses in stored order. */
+export type TryoutResponseIndex = Effect.Success<
+  ReturnType<typeof loadSectionResponseIndex>
+>;
+/** One attempt's validated placements, responses in stored order, and frozen sections. */
+export type TryoutAttemptResponseIndex = Effect.Success<
+  ReturnType<typeof loadAttemptResponses>
+>;
 
 /** Loads one section response graph from an already-read placement inventory. */
 export const loadSectionResponseIndex = Effect.fn(
@@ -124,17 +116,17 @@ export const loadAttemptResponses = Effect.fn(
     sections,
     sectionCoverage
   );
-  let links: ResponsePlacementLink[] = [];
-  for (const placement of validatedPlacements) {
-    const section = sectionsByIdentity.get(placement.sectionIdentity);
-    if (!section) {
-      continue;
-    }
-    links = Arr.append(links, {
-      placement,
-      sectionAttemptId: section._id,
-    });
-  }
+  const links = Arr.getSomes(
+    Arr.map(validatedPlacements, (placement) =>
+      Option.map(
+        MutableHashMap.get(sectionsByIdentity, placement.sectionIdentity),
+        (section) => ({
+          placement,
+          sectionAttemptId: section._id,
+        })
+      )
+    )
+  );
   const indexed = yield* indexTryoutResponses({
     attemptId: attempt._id,
     links,
@@ -169,7 +161,10 @@ const indexAttemptSections = Effect.fn("tryouts.response.indexAttemptSections")(
         "Try-out section attempts do not match the frozen section count."
       );
     }
-    const sectionsByIdentity = new Map<string, TryoutSectionAttempt>();
+    const sectionsByIdentity = MutableHashMap.empty<
+      string,
+      TryoutSectionAttempt
+    >();
     for (const section of sections) {
       const snapshot = Option.getOrUndefined(
         Arr.findFirst(
@@ -179,7 +174,7 @@ const indexAttemptSections = Effect.fn("tryouts.response.indexAttemptSections")(
       );
       if (
         !snapshot ||
-        sectionsByIdentity.has(section.sectionIdentity) ||
+        MutableHashMap.has(sectionsByIdentity, section.sectionIdentity) ||
         section.sectionKey !== snapshot.sectionKey ||
         section.sectionOrder !== snapshot.sectionOrder ||
         section.totalQuestions !== snapshot.questionCount
@@ -189,7 +184,7 @@ const indexAttemptSections = Effect.fn("tryouts.response.indexAttemptSections")(
           "Try-out section attempt differs from its frozen snapshot."
         );
       }
-      sectionsByIdentity.set(section.sectionIdentity, section);
+      MutableHashMap.set(sectionsByIdentity, section.sectionIdentity, section);
     }
     return sectionsByIdentity;
   }

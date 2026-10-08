@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, HashSet } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { NINA_SHOWCASE, SHEET_POPUP } from "@/e2e/support/selector";
@@ -64,7 +64,7 @@ const verifyComposer = Effect.fn("NakafaE2E.verifyNinaComposer")(function* (
       return;
     }
     expect(geometry.widths).toEqual([36, 36]);
-    expect(new Set(geometry.rows).size).toBe(1);
+    expect(HashSet.size(HashSet.fromIterable(geometry.rows))).toBe(1);
     expect(geometry.modelGap).toBeGreaterThan(0);
     expect(geometry.attachInset).toBeCloseTo(13, 1);
     expect(geometry.sendInset).toBeCloseTo(13, 1);

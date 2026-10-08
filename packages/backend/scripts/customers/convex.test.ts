@@ -1,4 +1,3 @@
-import { existsSync, readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
@@ -7,10 +6,18 @@ import {
   loadCustomerEnvProvider,
 } from "@repo/backend/scripts/customers/convex";
 import { getFunctionName, makeFunctionReference } from "convex/server";
-import { Config, ConfigProvider, Effect, Schema } from "effect";
+import {
+  Config,
+  ConfigProvider,
+  Effect,
+  FileSystem,
+  Layer,
+  Path,
+  PlatformError,
+  Schema,
+} from "effect";
 import { FetchHttpClient } from "effect/http";
 
-vi.mock("node:fs", () => ({ existsSync: vi.fn(), readFileSync: vi.fn() }));
 vi.mock("node:util", async (original) => {
   const actual = await original<typeof import("node:util")>();
   return { ...actual, parseEnv: vi.fn(actual.parseEnv) };
@@ -34,6 +41,19 @@ const configured = ConfigProvider.fromEnvRecord({
 /** The fetch that Effect's client calls in place of the global one. */
 const fetcher = vi.fn<typeof fetch>();
 
+/** The real path service beside a file system scripted for one test. */
+const scriptedFiles = (fileSystem: Partial<FileSystem.FileSystem>) =>
+  Layer.merge(Path.layer, FileSystem.layerNoop(fileSystem));
+
+/** The UTF-8 bytes that a file holding this text reads back as. */
+const fileBytes = (text: string) => new TextEncoder().encode(text);
+
+/** A file read that fails the test when the code under test reads a file it should not. */
+const unexpectedRead = () =>
+  vi.fn<FileSystem.FileSystem["readFile"]>(() =>
+    Effect.die("unexpected file read")
+  );
+
 /** Calls the reviewed query through the controlled fetch. */
 function callQuery() {
   return callCustomerIntegrityQuery(config, query, args, Schema.Finite).pipe(
@@ -43,8 +63,6 @@ function callQuery() {
 
 beforeEach(() => {
   fetcher.mockReset();
-  vi.mocked(existsSync).mockReturnValue(false);
-  vi.mocked(readFileSync).mockReset();
 });
 afterEach(() => {
   vi.restoreAllMocks();
@@ -55,21 +73,30 @@ describe("customer audit configuration", () => {
   it.effect("uses the shell before backend-local values", () =>
     Effect.gen(function* () {
       vi.stubEnv("CONVEX_URL", "https://shell.example");
-      vi.mocked(existsSync).mockReturnValue(true);
-      vi.mocked(readFileSync).mockReturnValue(
-        "CONVEX_URL=https://file.example\nCONVEX_PROD_URL=https://prod.example"
-      );
       const provider = yield* loadCustomerEnvProvider();
       const values = yield* Effect.all([
         Config.String("CONVEX_URL"),
         Config.String("CONVEX_PROD_URL"),
       ]).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
       expect(values).toEqual(["https://shell.example", "https://prod.example"]);
-    })
+    }).pipe(
+      Effect.provide(
+        scriptedFiles({
+          exists: () => Effect.succeed(true),
+          readFile: () =>
+            Effect.succeed(
+              fileBytes(
+                "CONVEX_URL=https://file.example\nCONVEX_PROD_URL=https://prod.example"
+              )
+            ),
+        })
+      )
+    )
   );
 
-  it.effect("works without a backend env file", () =>
-    Effect.gen(function* () {
+  it.effect("works without a backend env file", () => {
+    const readFile = unexpectedRead();
+    return Effect.gen(function* () {
       vi.stubEnv("CONVEX_URL", "https://shell.example");
       const provider = yield* loadCustomerEnvProvider();
       expect(
@@ -77,51 +104,119 @@ describe("customer audit configuration", () => {
           Effect.provideService(ConfigProvider.ConfigProvider, provider)
         )
       ).toBe("https://shell.example");
-      expect(readFileSync).not.toHaveBeenCalled();
-    })
+      expect(readFile).not.toHaveBeenCalled();
+    }).pipe(Effect.provide(scriptedFiles({ readFile })));
+  });
+
+  it.effect(
+    "keeps shell values when the backend env path cannot be checked",
+    () => {
+      const readFile = unexpectedRead();
+      return Effect.gen(function* () {
+        vi.stubEnv("CONVEX_URL", "https://shell.example");
+        const provider = yield* loadCustomerEnvProvider();
+        expect(
+          yield* Config.String("CONVEX_URL").pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          )
+        ).toBe("https://shell.example");
+        expect(readFile).not.toHaveBeenCalled();
+      }).pipe(
+        Effect.provide(
+          scriptedFiles({
+            exists: () =>
+              Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  module: "FileSystem",
+                  method: "access",
+                  description: "locked backend directory",
+                })
+              ),
+            readFile,
+          })
+        )
+      );
+    }
   );
 
-  it.effect.each([new Error("unreadable env"), "unreadable env"])(
-    "reports backend env read failures as configuration errors: %s",
+  it.effect.each([
+    {
+      failure: PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "FileSystem",
+        method: "readFile",
+        description: "unreadable env",
+      }),
+      label: "a system failure",
+    },
+    {
+      failure: PlatformError.badArgument({
+        module: "FileSystem",
+        method: "readFile",
+        description: "unreadable env",
+      }),
+      label: "a bad argument",
+    },
+  ])(
+    "reports backend env read failures as configuration errors: $label",
+    ({ failure }) =>
+      Effect.gen(function* () {
+        expect(
+          yield* loadCustomerEnvProvider().pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "CustomerConvexConfigError",
+          message: failure.message,
+        });
+      }).pipe(
+        Effect.provide(
+          scriptedFiles({
+            exists: () => Effect.succeed(true),
+            readFile: () => Effect.fail(failure),
+          })
+        )
+      )
+  );
+
+  it.effect.each([new Error("invalid env"), "invalid env"])(
+    "reports an env parser failure as a configuration error: %s",
     (failure) =>
       Effect.gen(function* () {
-        vi.mocked(existsSync).mockReturnValue(true);
-        vi.mocked(readFileSync).mockImplementation(() => {
+        vi.mocked(parseEnv).mockImplementationOnce(() => {
           throw failure;
         });
         expect(
           yield* loadCustomerEnvProvider().pipe(Effect.flip)
         ).toMatchObject({
           _tag: "CustomerConvexConfigError",
-          message: "unreadable env",
+          message: "invalid env",
         });
-      })
-  );
-
-  it.effect("reports an env parser failure as a configuration error", () =>
-    Effect.gen(function* () {
-      vi.mocked(existsSync).mockReturnValue(true);
-      vi.mocked(readFileSync).mockReturnValue("CONVEX_URL=https://example.com");
-      vi.mocked(parseEnv).mockImplementationOnce(() => {
-        throw new Error("invalid env");
-      });
-      expect(yield* loadCustomerEnvProvider().pipe(Effect.flip)).toMatchObject({
-        _tag: "CustomerConvexConfigError",
-        message: "invalid env",
-      });
-    })
+      }).pipe(
+        Effect.provide(
+          scriptedFiles({
+            exists: () => Effect.succeed(true),
+            readFile: () =>
+              Effect.succeed(fileBytes("CONVEX_URL=https://example.com")),
+          })
+        )
+      )
   );
 
   it.effect.each([false, true])(
     "selects the exact deployment for prod=%s",
-    (prod) =>
-      Effect.gen(function* () {
+    (prod) => {
+      const readFile = unexpectedRead();
+      return Effect.gen(function* () {
         expect(yield* getCustomerConvexConfig(prod)).toEqual({
           accessToken: "test-key",
           url: prod ? "https://prod.example" : "https://dev.example",
         });
-        expect(readFileSync).not.toHaveBeenCalled();
-      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, configured))
+        expect(readFile).not.toHaveBeenCalled();
+      }).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, configured),
+        Effect.provide(scriptedFiles({ readFile }))
+      );
+    }
   );
 
   it.effect.each([{}, { CONVEX_URL: "" }])(
@@ -138,13 +233,13 @@ describe("customer audit configuration", () => {
         Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromEnvRecord(values)
-        )
+        ),
+        Effect.provide(scriptedFiles({}))
       )
   );
 
   it.effect("uses local Convex login only when no deployment key exists", () =>
     Effect.gen(function* () {
-      vi.mocked(readFileSync).mockReturnValue('{"accessToken":"local-token"}');
       expect(yield* getCustomerConvexConfig(false)).toEqual({
         accessToken: "local-token",
         url: "https://dev.example",
@@ -153,6 +248,12 @@ describe("customer audit configuration", () => {
       Effect.provideService(
         ConfigProvider.ConfigProvider,
         ConfigProvider.fromEnvRecord({ CONVEX_URL: "https://dev.example" })
+      ),
+      Effect.provide(
+        scriptedFiles({
+          readFile: () =>
+            Effect.succeed(fileBytes('{"accessToken":"local-token"}')),
+        })
       )
     )
   );
@@ -171,14 +272,13 @@ describe("customer audit configuration", () => {
       source: "{}",
       message: "The local Convex configuration has no access token",
     },
+    {
+      // A byte order mark stays in the text, and JSON.parse rejects it.
+      source: `${String.fromCharCode(0xfe_ff)}{"accessToken":"local-token"}`,
+      message: "The local Convex configuration is invalid",
+    },
   ])("rejects unusable local login: $message", ({ source, message }) =>
     Effect.gen(function* () {
-      vi.mocked(readFileSync).mockImplementation(() => {
-        if (source === undefined) {
-          throw new Error("ENOENT");
-        }
-        return source;
-      });
       expect(
         yield* getCustomerConvexConfig(false).pipe(Effect.flip)
       ).toMatchObject({
@@ -189,6 +289,20 @@ describe("customer audit configuration", () => {
       Effect.provideService(
         ConfigProvider.ConfigProvider,
         ConfigProvider.fromEnvRecord({ CONVEX_URL: "https://dev.example" })
+      ),
+      Effect.provide(
+        scriptedFiles({
+          readFile: () =>
+            source === undefined
+              ? Effect.fail(
+                  PlatformError.systemError({
+                    _tag: "NotFound",
+                    module: "FileSystem",
+                    method: "readFile",
+                  })
+                )
+              : Effect.succeed(fileBytes(source)),
+        })
       )
     )
   );

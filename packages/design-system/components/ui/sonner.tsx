@@ -9,31 +9,34 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Schema } from "effect";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
-interface ToasterStyle extends React.CSSProperties {
-  "--border-radius": string;
-  "--error-bg": string;
-  "--error-border": string;
-  "--error-text": string;
-  "--gray2": string;
-  "--gray5": string;
-  "--info-bg": string;
-  "--info-border": string;
-  "--info-text": string;
-  "--normal-bg": string;
-  "--normal-bg-hover": string;
-  "--normal-border": string;
-  "--normal-border-hover": string;
-  "--normal-text": string;
-  "--success-bg": string;
-  "--success-border": string;
-  "--success-text": string;
-  "--warning-bg": string;
-  "--warning-border": string;
-  "--warning-text": string;
-}
+const ToasterStyleSchema = Schema.Struct({
+  "--border-radius": Schema.String,
+  "--error-bg": Schema.String,
+  "--error-border": Schema.String,
+  "--error-text": Schema.String,
+  "--gray2": Schema.String,
+  "--gray5": Schema.String,
+  "--info-bg": Schema.String,
+  "--info-border": Schema.String,
+  "--info-text": Schema.String,
+  "--normal-bg": Schema.String,
+  "--normal-bg-hover": Schema.String,
+  "--normal-border": Schema.String,
+  "--normal-border-hover": Schema.String,
+  "--normal-text": Schema.String,
+  "--success-bg": Schema.String,
+  "--success-border": Schema.String,
+  "--success-text": Schema.String,
+  "--warning-bg": Schema.String,
+  "--warning-border": Schema.String,
+  "--warning-text": Schema.String,
+});
+
+type ToasterStyle = React.CSSProperties & typeof ToasterStyleSchema.Type;
 
 /**
  * Status toasts reuse the subtle recipe of the `*-outline` buttons: a status

@@ -3,7 +3,7 @@ import {
   hashBatch,
   validateStoredBatch,
 } from "@repo/backend/confect/contentRelease/batch";
-import { Effect, Exit } from "effect";
+import { Array as Arr, Effect, Exit } from "effect";
 
 describe("contentRelease/batch", () => {
   it.effect(
@@ -27,7 +27,7 @@ describe("contentRelease/batch", () => {
         ]);
 
         expect(same).toBe(baseline);
-        expect(new Set(variants).size).toBe(variants.length);
+        expect(Arr.dedupe(variants)).toHaveLength(variants.length);
         expect(variants).not.toContain(baseline);
       })
   );

@@ -17,7 +17,9 @@ import {
 import { ARTICLE_PUBLICATION_CURSOR_PREFIX } from "@repo/contents/publication";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
+
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 describe("contentRelease/article/order", () => {
   it("fails closed for an exhausted budget or an invalid stored numeric value", async () => {
@@ -185,7 +187,16 @@ describe("contentRelease/article/order", () => {
     if (!first) {
       throw new Error("Expected an article position fixture.");
     }
-    const legacy = `${ARTICLE_PUBLICATION_CURSOR_PREFIX}${JSON.stringify([first.slot, first.appLocale, first.category, first.datePublished, first.contentKey, first._creationTime, first._id])}`;
+    const encodedPosition = Schema.encodeSync(JsonTextSchema)([
+      first.slot,
+      first.appLocale,
+      first.category,
+      first.datePublished,
+      first.contentKey,
+      first._creationTime,
+      first._id,
+    ]);
+    const legacy = `${ARTICLE_PUBLICATION_CURSOR_PREFIX}${encodedPosition}`;
     const result = await target.query((_ctx) =>
       Effect.runPromise(
         paginateArticles("blue", "en", "politics", {
@@ -201,7 +212,7 @@ describe("contentRelease/article/order", () => {
     expect(Arr.map(result.page, ({ contentKey }) => contentKey)).toEqual([
       testArticleProjection(1).contentKey,
     ]);
-    const position: unknown = JSON.parse(
+    const position: unknown = Schema.decodeSync(JsonTextSchema)(
       result.continueCursor.slice(ARTICLE_PUBLICATION_CURSOR_PREFIX.length)
     );
     expect(position).toHaveLength(5);
@@ -269,7 +280,7 @@ describe("contentRelease/article/order", () => {
       [...first.result.page, ...second.result.page],
       (article) => article.contentKey
     );
-    expect(new Set(contentKeys)).toHaveProperty("size", articleCount);
+    expect(Arr.dedupe(contentKeys)).toHaveLength(articleCount);
   });
   it("bounds publication lookahead by physical rows and bytes", async () => {
     const t = convexTest(schema, convexModules);

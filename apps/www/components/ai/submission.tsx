@@ -15,6 +15,7 @@ import type { FileUIPart } from "ai";
 import { Effect, Exit, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { exceedsDocumentLimit } from "@/components/ai/attachments";
 import { useAi } from "@/components/ai/context";
 import {
   NinaConnectionError,
@@ -162,6 +163,24 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
   return id;
 });
 
+/** Uploads one message's attachments, refusing oversized documents before any upload starts. */
+const uploadAttachments = Effect.fn("nina.uploads")(function* (
+  files: NonNullable<NinaDraft["files"]>,
+  upload: ReturnType<typeof useAction<typeof refs.public.nina.uploads.save>>,
+  uploaded: WeakMap<File, Id<"ninaUploads">>,
+  previews: Map<Id<"ninaUploads">, FileUIPart>
+) {
+  if (exceedsDocumentLimit(files.map((attachment) => attachment.file))) {
+    return yield* new NinaUploadError({
+      code: "NINA_UPLOAD_SIZE",
+      message: "The documents in one message can hold at most 10 MiB together.",
+    });
+  }
+  return yield* Effect.forEach(files, (attachment) =>
+    uploadAttachment(attachment, upload, uploaded, previews)
+  );
+});
+
 /** Native admission with optimistic query updates and idempotent transport retry. */
 export function useNinaSubmission() {
   const upload = useAction(refs.public.nina.uploads.save);
@@ -268,8 +287,11 @@ export function useNinaSubmission() {
   function send(prompt: NinaDraft, chatId?: Id<"chats">) {
     const hint = getMaterialContextHint();
     return perform(
-      Effect.forEach(prompt.files ?? [], (attachment) =>
-        uploadAttachment(attachment, upload, uploaded.current, previews.current)
+      uploadAttachments(
+        prompt.files ?? [],
+        upload,
+        uploaded.current,
+        previews.current
       ).pipe(
         Effect.map((uploadIds) => ({
           kind: "message" as const,

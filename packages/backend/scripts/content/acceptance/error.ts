@@ -24,7 +24,7 @@ export const sanitizeAcceptanceCommandError = (
 };
 
 /** Expected failure during isolated fixture preparation or local lifecycle control. */
-export class AcceptanceRuntimeError extends Schema.TaggedError<AcceptanceRuntimeError>()(
+class AcceptanceRuntimeError extends Schema.TaggedError<AcceptanceRuntimeError>()(
   "AcceptanceRuntimeError",
   { message: Schema.String }
 ) {}

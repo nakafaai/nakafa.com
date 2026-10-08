@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { createCuboidLines } from "@repo/design-system/components/contents/mathematics/cuboid";
+import { Array as Arr, Order } from "effect";
 
 function getEdgeLength({
   points,
@@ -52,8 +53,14 @@ describe("cuboid visual geometry", () => {
     });
     const vertices = lines.flatMap((line) => line.points);
 
-    expect(new Set(vertices.map(({ x }) => x))).toEqual(new Set([-2, 2]));
-    expect(new Set(vertices.map(({ y }) => y))).toEqual(new Set([-3, 3]));
-    expect(new Set(vertices.map(({ z }) => z))).toEqual(new Set([-4, 4]));
+    expect(
+      Arr.sort(Arr.dedupe(vertices.map(({ x }) => x)), Order.Number)
+    ).toEqual([-2, 2]);
+    expect(
+      Arr.sort(Arr.dedupe(vertices.map(({ y }) => y)), Order.Number)
+    ).toEqual([-3, 3]);
+    expect(
+      Arr.sort(Arr.dedupe(vertices.map(({ z }) => z)), Order.Number)
+    ).toEqual([-4, 4]);
   });
 });

@@ -8,8 +8,9 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpe
 import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
+const PlainJson = Schema.fromJsonString(Schema.Unknown);
 const readReference = Ref.getFunctionReference(
   refs.public.tryouts.queries.content.getBatch
 );
@@ -307,7 +308,7 @@ describe("tryouts/runtime/history/placement", () => {
             )
           );
           await ctx.db.patch(stored._id, {
-            artifactJson: JSON.stringify({
+            artifactJson: Schema.encodeSync(PlainJson)({
               ...artifact,
               payload: {
                 ...artifact.payload,

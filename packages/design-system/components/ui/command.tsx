@@ -24,15 +24,11 @@ const CommandDialogPortal = CommandDialogPrimitive.Portal;
 const CommandDialogCreateHandle = CommandDialogPrimitive.createHandle;
 const commandSearchIcon = <HugeIcons className="size-4" icon={Search02Icon} />;
 
-type CommandItems<ItemValue> =
-  | readonly ItemValue[]
-  | readonly { items: readonly ItemValue[] }[];
-
 type CommandProps<ItemValue> = Omit<
   AutocompleteRootProps<ItemValue>,
   "items"
 > & {
-  items?: CommandItems<ItemValue>;
+  items?: readonly ItemValue[] | readonly { items: readonly ItemValue[] }[];
 };
 
 function hasGroupedItems(
@@ -46,7 +42,7 @@ function hasGroupedItems(
 }
 
 function isGroupedCommandItems<ItemValue>(
-  items: CommandItems<ItemValue> | undefined
+  items: CommandProps<ItemValue>["items"]
 ): items is readonly { items: readonly ItemValue[] }[] {
   return Arr.isArray(items) && items.some(hasGroupedItems);
 }

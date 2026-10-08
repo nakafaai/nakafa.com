@@ -41,17 +41,20 @@ const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
   )
 );
 
+const StoredJsonSchema = Schema.fromJsonString(Schema.Unknown);
+
 /** Parses one stored JSON value without allowing thrown parser failures. */
 export const parseStoredJson = Effect.fn("contentRelease.parseStoredJson")(
   (source: string, label = "Stored publication JSON") =>
-    Effect.try({
-      catch: () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `${label} is not valid JSON.`,
-        }),
-      try: (): unknown => JSON.parse(source),
-    })
+    Schema.decodeEffect(StoredJsonSchema)(source).pipe(
+      Effect.mapError(
+        () =>
+          new ReleaseError({
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: `${label} is not valid JSON.`,
+          })
+      )
+    )
 );
 /** Strictly decodes one signed release from canonical storage JSON. */
 export const decodeReleaseJson = Effect.fn("contentRelease.decodeReleaseJson")(

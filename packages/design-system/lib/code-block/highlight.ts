@@ -22,14 +22,16 @@ const PRE_TAG_PATTERN = /<pre(\s|>)/;
 const PRE_BACKGROUND_STYLE_PATTERN =
   /(<pre[^>]*?)\s+style="[^"]*background[^"]*"([^>]*>)/g;
 
+const CodeHighlightInputSchema = Schema.Struct({
+  code: Schema.String,
+  language: Schema.optional(Schema.String),
+  preClassName: Schema.optional(Schema.String),
+  transparentBackground: Schema.optionalKey(Schema.Boolean),
+});
+
 /** Input contract for one Shiki code-highlighting operation. */
-export interface CodeHighlightOptions {
-  readonly code: string;
-  readonly language?: string | undefined;
-  readonly preClassName?: string | undefined;
-  readonly themes?: CodeOptionsMultipleThemes["themes"] | undefined;
-  readonly transparentBackground?: boolean;
-}
+export type CodeHighlightOptions = typeof CodeHighlightInputSchema.Type &
+  Partial<Pick<CodeOptionsMultipleThemes, "themes">>;
 
 /** Expected failure when a code block names a language outside Shiki's bundle. */
 export class UnsupportedCodeLanguageError extends Schema.TaggedError<UnsupportedCodeLanguageError>()(

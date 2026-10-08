@@ -6,7 +6,7 @@ import {
   getUserMap,
 } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, HashMap, Option } from "effect";
 
 describe("users/directory", () => {
   it.effect(
@@ -19,7 +19,7 @@ describe("users/directory", () => {
             const tCtx = yield* MutationCtx;
             yield* Effect.gen(function* () {
               const get = vi.spyOn(tCtx.db, "get");
-              expect(yield* getUserMap([])).toEqual(new Map());
+              expect(HashMap.isEmpty(yield* getUserMap([]))).toBe(true);
               expect(get).not.toHaveBeenCalled();
             });
           })
@@ -66,15 +66,22 @@ describe("users/directory", () => {
                 secondId,
               ]);
               expect(get).toHaveBeenCalledTimes(3);
-              expect([...users.keys()]).toEqual([firstId, secondId]);
-              expect(users.get(firstId)).toEqual({
+              expect(HashMap.size(users)).toBe(2);
+              expect([...HashMap.keys(users)]).toEqual(
+                expect.arrayContaining([firstId, secondId])
+              );
+              expect(
+                Option.getOrUndefined(HashMap.get(users, firstId))
+              ).toEqual({
                 _id: firstId,
                 email: "first@example.com",
                 image: "/avatars/first.png",
                 name: "first",
               });
-              expect(users.get(secondId)?.name).toBe("second");
-              expect(users.has(missingId)).toBe(false);
+              expect(
+                Option.getOrUndefined(HashMap.get(users, secondId))?.name
+              ).toBe("second");
+              expect(HashMap.has(users, missingId)).toBe(false);
             });
           })
         );

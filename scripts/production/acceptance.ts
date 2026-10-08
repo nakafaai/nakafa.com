@@ -126,16 +126,51 @@ export const readProductionChanges = Effect.fn(
   )
 );
 
-/** Requires production unless every change only modifies an existing TS test. */
+/**
+ * Documentation that no build or test reads. `osv.toml` feeds only the security
+ * audit, which Quality runs on every head, and `.changeset` only the release
+ * tooling.
+ */
+const DOCUMENTATION_PATTERNS = [
+  /\.md$/u,
+  /^docs\//u,
+  /^\.changeset\//u,
+  /^osv\.toml$/u,
+] as const;
+
+/**
+ * Documentation-shaped paths that a build or a test still reads, or that the
+ * app serves: a test packs the CLI README into the npm tarball, and Next.js
+ * serves every file under `public`.
+ */
+const READ_DOCUMENTATION_PATTERNS = [
+  /^packages\/cli\/README\.md$/u,
+  /(?:^|\/)public\//u,
+] as const;
+
+/** Whether a path is documentation that the signed acceptance does not read. */
+function isDocumentationPath(path: string) {
+  return (
+    Arr.some(DOCUMENTATION_PATTERNS, (pattern) => pattern.test(path)) &&
+    !Arr.some(READ_DOCUMENTATION_PATTERNS, (pattern) => pattern.test(path))
+  );
+}
+
+/** Whether one change is documentation or a modified TS test, so it needs no acceptance. */
+function needsNoProductionAcceptance(change: ProductionChange) {
+  return (
+    (change.status === "M" && change.path.endsWith(".test.ts")) ||
+    isDocumentationPath(change.path)
+  );
+}
+
+/** Requires production unless every change is documentation or a modified TS test. */
 export function requiresProductionAcceptance(
   changes: readonly ProductionChange[]
 ) {
   return (
     changes.length === 0 ||
-    Arr.some(
-      changes,
-      (change) => change.status !== "M" || !change.path.endsWith(".test.ts")
-    )
+    Arr.some(changes, (change) => !needsNoProductionAcceptance(change))
   );
 }
 
@@ -214,7 +249,7 @@ export const writeProductionAcceptanceDecision = Effect.fn(
   yield* writeOutput(
     required
       ? `Production acceptance required for ${changes.length} changed paths.\n`
-      : `Production acceptance skipped for ${changes.length} modified test modules.\n`
+      : "Production acceptance skipped: every changed path is documentation or a modified test.\n"
   );
 });
 

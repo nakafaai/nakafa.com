@@ -1,4 +1,3 @@
-import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import {
   METAL_COLOR,
   STOPWATCH_HAND_CENTER,
@@ -8,6 +7,7 @@ import {
   TIME_FACE_COLOR,
   TIME_SCENE_SCALE,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useMemo } from "react";
 

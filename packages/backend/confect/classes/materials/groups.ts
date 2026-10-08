@@ -4,7 +4,7 @@ import { MaterialGroupError } from "@repo/backend/confect/classes/materials/spec
 import type { SchoolClassMaterialStatus } from "@repo/backend/confect/classes/schema";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Clock, Effect } from "effect";
+import { Array as Arr, Clock, Effect, HashMap, Option } from "effect";
 /** Requires a future publication time for scheduled groups. */
 export const validateScheduledStatus = Effect.fn(
   "classes.materials.groups.validateScheduledStatus"
@@ -61,9 +61,9 @@ export const enrichMaterialGroups = Effect.fn(
   const userMap = yield* getUserMap(userIds);
   return Arr.map(groups, (group) => ({
     ...group,
-    user: userMap.get(group.createdBy) ?? null,
+    user: Option.getOrNull(HashMap.get(userMap, group.createdBy)),
     publishedByUser: group.publishedBy
-      ? (userMap.get(group.publishedBy) ?? null)
+      ? Option.getOrNull(HashMap.get(userMap, group.publishedBy))
       : null,
   }));
 });

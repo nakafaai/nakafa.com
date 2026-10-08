@@ -1,4 +1,3 @@
-import { google } from "@ai-sdk/google";
 import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
@@ -13,10 +12,6 @@ import {
 } from "@repo/backend/confect/nina/research/citations";
 import { nakafaWebSearch } from "@repo/backend/confect/nina/research/descriptions";
 import { makeResearchGenerationError } from "@repo/backend/confect/nina/research/error";
-import {
-  createGroundingEvidence,
-  createGroundingWebSearchData,
-} from "@repo/backend/confect/nina/research/grounding";
 import {
   createResearchMessages,
   createResearchSynthesisMessages,
@@ -33,10 +28,7 @@ import {
   webSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
 import { getSourceReferences } from "@repo/backend/confect/nina/research/source";
-import {
-  prepareGoogleGroundingStep,
-  prepareResearchEvidenceStep,
-} from "@repo/backend/confect/nina/research/step";
+import { prepareResearchEvidenceStep } from "@repo/backend/confect/nina/research/step";
 import {
   formatScrapeOutput,
   isSuccessfulScrapeOutput,
@@ -88,7 +80,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     const { model, timeout } = (yield* Gateway).language({
       purpose: "specialist",
       model: modelId,
-      space: { kind: "personal", userId },
     });
     const agent = new Agent(components.nina, {
       name: "research",
@@ -121,9 +112,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             instructions: researchEvidencePrompt({ locale, context }),
             messages: createResearchMessages(task, collectedEvidence),
             tools: {
-              google_search: google.tools.googleSearch({
-                searchTypes: { webSearch: {} },
-              }),
               webSearch: createTool({
                 description: nakafaWebSearch,
                 inputSchema: webSearchInputSchema,
@@ -164,22 +152,14 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
              * `activeTools`, and message overrides.
              * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
              */
-            prepareStep: ({ messages, steps }) => {
+            prepareStep: ({ steps }) => {
               const hasWebSearchToolCall = Arr.some(steps, (step) =>
                 Arr.some(
                   step.toolCalls,
                   (toolCall) => toolCall.toolName === "webSearch"
                 )
               );
-              const evidenceStep = prepareResearchEvidenceStep({
-                hasWebSearchToolCall,
-              });
-
-              if (evidenceStep) {
-                return evidenceStep;
-              }
-
-              return prepareGoogleGroundingStep(messages);
+              return prepareResearchEvidenceStep({ hasWebSearchToolCall });
             },
             stopWhen: isStepCount(2),
             timeout,
@@ -187,23 +167,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
         ),
       catch: (error) => makeResearchGenerationError(error, "evidence"),
     });
-
-    const groundedSearchData = createGroundingWebSearchData({
-      providerMetadata: evidenceResult.finalStep.providerMetadata,
-      sources: evidenceResult.sources,
-    });
-
-    if (groundedSearchData) {
-      const groundingEvidence = createGroundingEvidence(groundedSearchData);
-
-      collectedEvidence = Arr.append(collectedEvidence, groundingEvidence);
-      addEligibleSourceUrls(eligibleCitationUrls, groundedSearchData.sources);
-      yield* publish({
-        id: `${toolCallId}-grounding`,
-        type: "data-web-search",
-        data: groundedSearchData,
-      });
-    }
 
     const sourceEvidenceAvailable =
       MutableHashSet.size(eligibleCitationUrls) > 0;

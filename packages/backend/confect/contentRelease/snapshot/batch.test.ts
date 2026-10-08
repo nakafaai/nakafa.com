@@ -257,7 +257,7 @@ describe("contentRelease/snapshot/batch", () => {
               stageProgramRow(
                 data.snapshotId,
                 0,
-                first,
+                first.record,
                 canonicalizeContentSnapshotRow(first)
               ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
             )

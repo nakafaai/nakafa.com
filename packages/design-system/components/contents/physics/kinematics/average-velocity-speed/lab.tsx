@@ -4,7 +4,7 @@ import {
   AVERAGE_VELOCITY_SPEED_CASE_IDS,
   AVERAGE_VELOCITY_SPEED_COLORS,
   type AverageVelocitySpeedCaseId,
-  type AverageVelocitySpeedLabProps,
+  type AverageVelocitySpeedDecimalSeparator,
   formatMeterMath,
   formatSecondsMath,
   formatSpeedMath,
@@ -27,7 +27,25 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
+
+interface AverageVelocitySpeedLabProps {
+  decimalSeparator?: AverageVelocitySpeedDecimalSeparator;
+  description: ReactNode;
+  labels: {
+    chooseCase: string;
+    factLabels: {
+      displacement: ReactNode;
+      distance: ReactNode;
+      speed: ReactNode;
+      time: ReactNode;
+      velocity: ReactNode;
+    };
+    modeLabels: Record<AverageVelocitySpeedCaseId, ReactNode>;
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
 
 export function AverageVelocitySpeedLab({
   decimalSeparator,

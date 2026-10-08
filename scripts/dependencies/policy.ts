@@ -37,13 +37,14 @@ export const EFFECT_COHORT_OVERRIDES = [
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.0.3";
 /**
- * The AI SDK core, its gateway, and the Google provider pin the same exact
- * provider packages, so they move as one catalog cohort. Each bump rechecks
- * the gateway module's provider contracts (confect/gateway).
+ * The AI SDK core and the Convex AI gateway provider move as one catalog
+ * cohort, and each bump rechecks the gateway module's provider contracts
+ * (confect/gateway). The provider brings its own provider packages, so the
+ * lockfile holds more than one version of @ai-sdk/provider and
+ * @ai-sdk/provider-utils.
  */
 export const AI_SDK_COHORT = {
-  "@ai-sdk/gateway": "4.0.106",
-  "@ai-sdk/google": "4.0.90",
+  "@convex-dev/ai-sdk-provider": "0.2.1",
   ai: "7.0.130",
 } as const;
 
@@ -104,12 +105,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
   {
     approved: "catalog:",
-    dependency: "@ai-sdk/google",
-    minimumDeclarations: 1,
-  },
-  {
-    approved: "catalog:",
-    dependency: "@ai-sdk/gateway",
+    dependency: "@convex-dev/ai-sdk-provider",
     minimumDeclarations: 1,
   },
   {
@@ -150,11 +146,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     approved: "2.11.7",
     dependency: "@turbo/gen",
-    minimumDeclarations: 1,
-  },
-  {
-    approved: "^0.49.0",
-    dependency: "@polar-sh/sdk",
     minimumDeclarations: 1,
   },
   {
@@ -264,14 +255,9 @@ export const REGISTRY_REVIEWS = [
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
-    "@ai-sdk/google@latest",
-    AI_SDK_COHORT["@ai-sdk/google"],
-    "AI SDK packages move as one reviewed cohort.",
-  ],
-  [
-    "@ai-sdk/gateway@latest",
-    AI_SDK_COHORT["@ai-sdk/gateway"],
-    "AI SDK packages move as one reviewed cohort.",
+    "@convex-dev/ai-sdk-provider@latest",
+    AI_SDK_COHORT["@convex-dev/ai-sdk-provider"],
+    "The Convex AI gateway provider moves with the AI SDK cohort; each bump rechecks the gateway module (confect/gateway).",
   ],
   [
     "better-auth@latest",
@@ -306,11 +292,6 @@ export const REGISTRY_REVIEWS = [
     "@react-three/fiber@latest",
     "9.8.1",
     "Fiber 9.8 accepts React 19.3 and mounts a scene inside the React DOM commit that renders its canvas. Drei's Html replaces its React root during that mount, and React DOM then commits the first label's replaced root last: it clears the label and makes the label's removal throw on lesson navigation, on React 19.2 and 19.3 alike (pmndrs/drei#2867). Fiber 9.8 and React 19.3 move together once Html keeps one root or scene labels stop using it. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene/lines.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
-  ],
-  [
-    "@polar-sh/sdk@latest",
-    "1.0.2",
-    "SDK 1.0 replaces the standalone funcs and model subpaths with versioned API service modules; the billing integration migrates in its own change.",
   ],
   [
     "afdocs@latest",

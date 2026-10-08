@@ -13,7 +13,7 @@ import {
   UNIFORM_CIRCULAR_MOTION_COLORS,
   UNIFORM_CIRCULAR_MOTION_PERIODS,
   UNIFORM_CIRCULAR_MOTION_SCENE,
-  type UniformCircularMotionLabProps,
+  type UniformCircularMotionDecimalSeparator,
   type UniformCircularMotionPeriod,
   type UniformCircularMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-circular-motion/data";
@@ -42,6 +42,20 @@ import { DoubleSide, type Group } from "three";
 const SHADOW_CAMERA_RADIUS =
   UNIFORM_CIRCULAR_MOTION_SCENE.outerRadius +
   UNIFORM_CIRCULAR_MOTION_SCENE.carScale;
+
+interface UniformCircularMotionLabProps {
+  decimalSeparator?: UniformCircularMotionDecimalSeparator;
+  description: ReactNode;
+  labels: {
+    acceleration: ReactNode;
+    choosePeriod: string;
+    period: ReactNode;
+    radius: ReactNode;
+    speed: ReactNode;
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
 
 export function UniformCircularMotionLab({
   decimalSeparator,
