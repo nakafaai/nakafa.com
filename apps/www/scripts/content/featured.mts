@@ -3,7 +3,7 @@ import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { api } from "@repo/backend/convex/_generated/api";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { fetchQuery } from "convex/nextjs";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
@@ -51,7 +51,11 @@ const verifyFeaturedRenderer = Effect.fn(
 
 const main = verifyFeaturedRenderer().pipe(
   Effect.tap((result) =>
-    Effect.sync(() => process.stdout.write(`${JSON.stringify(result)}\n`))
+    Effect.sync(() =>
+      process.stdout.write(
+        `${Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))(result)}\n`
+      )
+    )
   )
 );
 
