@@ -99,9 +99,6 @@ export const ensurePostHogErasureConfigured = Effect.fn(
   );
 });
 
-export type PostHogErasureOptions = NonNullable<
-  Parameters<typeof erasePostHogPerson>[1]
->;
 /** Erases the PostHog person, historical events, and session recordings. */
 export const erasePostHogPerson = Effect.fn(
   "analytics.erasure.erasePostHogPerson"
