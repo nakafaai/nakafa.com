@@ -1,4 +1,4 @@
-import type { models, webhooks } from "@polar-sh/sdk/2026-04";
+import type { models, webhooks } from "@polar-sh/sdk/2026-10";
 import posthogTest from "@posthog/convex/test";
 import type { StoredPolarCustomer } from "@repo/backend/confect/customers/polar/spec";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
@@ -109,7 +109,7 @@ export function buildSubscription(
   };
 }
 
-/** A Polar individual customer as the 2026-04 API returns it. */
+/** A Polar individual customer as the 2026-10 API returns it. */
 export const polarCustomer = {
   avatar_url: null,
   billing_address: null,
@@ -128,7 +128,7 @@ export const polarCustomer = {
   type: "individual",
 } satisfies models.CustomerIndividual;
 
-/** A Polar product as the 2026-04 API returns it. */
+/** A Polar product as the 2026-10 API returns it. */
 export const polarProduct = {
   attached_custom_fields: [],
   benefits: [],
@@ -153,7 +153,7 @@ export const polarProduct = {
   visibility: "public",
 } satisfies models.Product;
 
-/** A Polar subscription as the 2026-04 API returns it, with ISO date-times. */
+/** A Polar subscription as the 2026-10 API returns it, with ISO date-times. */
 export const polarSubscription = {
   amount: 1000,
   cancel_at_period_end: false,
@@ -264,7 +264,7 @@ export function buildWebhookEvent<Type extends webhooks.WebhookPayload["type"]>(
   data: Extract<webhooks.WebhookPayload, { type: Type }>["data"]
 ) {
   return {
-    api_version: "2026-04",
+    api_version: "2026-10",
     data,
     timestamp: new Date(NOW).toISOString(),
     type,

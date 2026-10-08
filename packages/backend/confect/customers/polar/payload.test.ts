@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { models } from "@polar-sh/sdk/2026-04";
+import type { models } from "@polar-sh/sdk/2026-10";
 import {
   decodePolarCheckout,
   decodePolarCustomer,

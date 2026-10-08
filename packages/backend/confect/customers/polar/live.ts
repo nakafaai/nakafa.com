@@ -1,8 +1,8 @@
 import { PolarClientError } from "@polar-sh/sdk";
-import { errors, type PolarCore } from "@polar-sh/sdk/2026-04";
-import { createCheckoutsService } from "@polar-sh/sdk/2026-04/services/checkouts";
-import { createCustomerSessionsService } from "@polar-sh/sdk/2026-04/services/customer_sessions";
-import { createCustomersService } from "@polar-sh/sdk/2026-04/services/customers";
+import { errors, type PolarCore } from "@polar-sh/sdk/2026-10";
+import { createCheckoutsService } from "@polar-sh/sdk/2026-10/services/checkouts";
+import { createCustomerSessionsService } from "@polar-sh/sdk/2026-10/services/customer_sessions";
+import { createCustomersService } from "@polar-sh/sdk/2026-10/services/customers";
 import { readPolarClient } from "@repo/backend/confect/customers/polar/client";
 import {
   decodePolarCheckout,

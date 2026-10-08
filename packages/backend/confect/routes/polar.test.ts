@@ -1,7 +1,7 @@
 // @vitest-environment edge-runtime
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { webhooks } from "@polar-sh/sdk/2026-04";
+import { webhooks } from "@polar-sh/sdk/2026-10";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -23,8 +23,8 @@ class TestProcessingError extends Schema.TaggedError<TestProcessingError>()(
   { message: Schema.String }
 ) {}
 
-vi.mock("@polar-sh/sdk/2026-04", async (importOriginal) => {
-  const sdk = await importOriginal<typeof import("@polar-sh/sdk/2026-04")>();
+vi.mock("@polar-sh/sdk/2026-10", async (importOriginal) => {
+  const sdk = await importOriginal<typeof import("@polar-sh/sdk/2026-10")>();
   return {
     ...sdk,
     webhooks: {

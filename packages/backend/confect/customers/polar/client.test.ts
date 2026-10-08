@@ -56,13 +56,13 @@ describe("Polar client configuration", () => {
         }
       })
   );
-  it.effect("sends the access token and the 2026-04 API version", () =>
+  it.effect("sends the access token and the 2026-10 API version", () =>
     Effect.gen(function* () {
       const client = yield* readPolarClient().pipe(configured);
       const [, init] = client.buildRequest("GET", "/v1/customers/");
       const headers = new Headers(init.headers);
       expect(headers.get("Authorization")).toBe("Bearer polar_test");
-      expect(headers.get("Polar-Version")).toBe("2026-04");
+      expect(headers.get("Polar-Version")).toBe("2026-10");
     })
   );
   it.effect("gives every request thirty seconds before it times out", () =>

@@ -1,4 +1,9 @@
-import { createPolarCore, type PolarCore } from "@polar-sh/sdk/2026-04";
+// Polar removes an API version about nine months after it appears. 2026-10 is
+// the current version since October 2026 and is removed at the April 2027
+// rotation, so every @polar-sh/sdk/<version> import moves to the then-current
+// version before that. Source:
+// https://handbook.polar.sh/engineering/backend-development/api-versioning
+import { createPolarCore, type PolarCore } from "@polar-sh/sdk/2026-10";
 import { Config, Effect, Redacted, Schema } from "effect";
 
 /** Seconds one Polar request may run; the SDK default of 5 is too short for checkout creation. */
