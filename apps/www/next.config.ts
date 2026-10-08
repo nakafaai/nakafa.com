@@ -6,10 +6,13 @@ import {
   createLoopbackConnectSources,
   createSecurityHeaders,
 } from "@repo/next-config";
-import { previewKeys } from "@repo/next-config/keys";
+import {
+  hasPreviewProvider,
+  hasPreviewRenderer,
+} from "@repo/next-config/preview";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { createEnv } from "@t3-oss/env-nextjs";
-import { Array as Arr, Schema } from "effect";
+import { Schema } from "effect";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import {
@@ -39,31 +42,7 @@ const configEnv = createEnv({
 const localConvexConnectSources = createLoopbackConnectSources(
   new URL(runtime.query)
 );
-// Next loads this file through its own TypeScript transpiler, which resolves
-// `@repo` paths relative to apps/www. The preview gates live below the app
-// root, so this check reads the same preview owner directly instead.
-/** Reports whether the development child supplied any Aksara preview field. */
-function hasAksaraPreviewChild() {
-  if (process.env.NODE_ENV !== "development") {
-    return false;
-  }
-
-  const preview = previewKeys();
-  return Arr.some(
-    [
-      preview.AKSARA_PREVIEW_EVENTS_PATH,
-      preview.AKSARA_PREVIEW_KEY_ID,
-      preview.AKSARA_PREVIEW_MANIFEST_PATH,
-      preview.AKSARA_PREVIEW_ORIGIN,
-      preview.AKSARA_PREVIEW_PUBLIC_KEY,
-      preview.AKSARA_PREVIEW_PROVIDER_TOKEN,
-      preview.AKSARA_PREVIEW_RENDERER_SECRET,
-      preview.AKSARA_PREVIEW_RENDERER_TOKEN,
-    ],
-    (value) => value !== undefined
-  );
-}
-const isAksaraPreviewChild = hasAksaraPreviewChild();
+const isAksaraPreviewChild = hasPreviewProvider() || hasPreviewRenderer();
 const postHogProxyEnv = isAksaraPreviewChild ? null : postHogProxyKeys();
 const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"

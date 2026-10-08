@@ -1,18 +1,5 @@
 import { previewKeys } from "@repo/next-config/keys";
 
-/** Reports whether the development child supplied any renderer field. */
-export function hasPreviewRendererEnvironment() {
-  if (process.env.NODE_ENV !== "development") {
-    return false;
-  }
-
-  const keys = previewKeys();
-  return (
-    keys.AKSARA_PREVIEW_RENDERER_SECRET !== undefined ||
-    keys.AKSARA_PREVIEW_RENDERER_TOKEN !== undefined
-  );
-}
-
 /** Returns the ephemeral provider fields owned by the Aksara child. */
 export function readPreviewEnvironment() {
   const keys = previewKeys();

@@ -7,11 +7,11 @@ import { fonts } from "@repo/design-system/lib/fonts";
 import de from "@repo/internationalization/dictionaries/de.json";
 import en from "@repo/internationalization/dictionaries/en.json";
 import id from "@repo/internationalization/dictionaries/id.json";
-import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
 import {
   previewRouting,
   routing,
 } from "@repo/internationalization/src/routing";
+import { hasPreviewProvider } from "@repo/next-config/preview";
 import { cn } from "cn";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -53,10 +53,7 @@ async function getNotFoundLocale() {
     return locale;
   }
 
-  if (
-    hasCandidateLocalePreview() &&
-    hasLocale(previewRouting.locales, locale)
-  ) {
+  if (hasPreviewProvider() && hasLocale(previewRouting.locales, locale)) {
     return locale;
   }
 
