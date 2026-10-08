@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Ref } from "effect";
-import { createActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
+import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {
-  createConversationTestForum,
   createConversationTestPost,
   conversationTestFirstPost as firstPost,
+  conversationTestRowIndexByPostId as rowIndexByPostId,
   conversationTestRows as rows,
   conversationTestSecondPost as secondPost,
 } from "@/components/school/classes/forum/conversation/fixtures/data";
@@ -143,16 +143,18 @@ describe("conversation/viewport/persist", () => {
         postId: "post_3",
         sequence: 3,
       });
-      const latestTranscript = createActiveTranscriptModel({
-        forum: createConversationTestForum(),
-        posts: [firstPost, secondPost, latestPost],
-        unreadCue: {
-          count: 2,
-          postId: secondPost._id,
-          status: "new",
-        },
-      });
-      const latestRows = latestTranscript.rows;
+      const latestRows = [
+        ...rows,
+        { post: latestPost, type: "post" },
+      ] satisfies ActiveTranscriptModel["rows"];
+      const latestRowIndexByPostId = new Map(rowIndexByPostId);
+      latestRowIndexByPostId.set(latestPost._id, latestRows.length - 1);
+      const latestTranscript = {
+        lastPostId: latestPost._id,
+        postIds: [firstPost._id, secondPost._id, latestPost._id],
+        rowIndexByPostId: latestRowIndexByPostId,
+        rows: latestRows,
+      } satisfies ActiveTranscriptModel;
 
       rig.setTranscript(latestTranscript);
       rig.setMeasurement(
