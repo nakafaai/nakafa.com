@@ -6,7 +6,7 @@ import {
 import { CapabilityOutputSchema } from "@repo/backend/confect/nina/capability/progress";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, MutableHashSet, Schema } from "effect";
 
 /**
  * Gemini's flat input cost for one image. Documents count the same, since only
@@ -17,6 +17,8 @@ const FILE_TOKENS = 300;
 const EXCERPT_TOKENS = 600;
 const EXCERPT_NOTE =
   "Earlier evidence in this conversation, shortened. Call the capability again when the full evidence matters.";
+/** Writes a stored value as the JSON text the model reads, as JSON.stringify does. */
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Estimates provider tokens for one message without counting file bytes. */
 function messageTokens(message: ModelMessage) {
@@ -28,9 +30,9 @@ function messageTokens(message: ModelMessage) {
     if (part.type === "text" || part.type === "reasoning") {
       total += countTextTokens(part.text);
     } else if (part.type === "tool-call") {
-      total += countTextTokens(JSON.stringify(part.input));
+      total += countTextTokens(Schema.encodeSync(JsonTextSchema)(part.input));
     } else if (part.type === "tool-result") {
-      total += countTextTokens(JSON.stringify(part.output));
+      total += countTextTokens(Schema.encodeSync(JsonTextSchema)(part.output));
     } else {
       total += FILE_TOKENS;
     }
@@ -60,7 +62,7 @@ function evidenceText(part: ToolResultPart) {
   if (output.type === "text" || output.type === "error-text") {
     return output.value;
   }
-  return capabilityText(part) ?? JSON.stringify(output);
+  return capabilityText(part) ?? Schema.encodeSync(JsonTextSchema)(output);
 }
 
 /**
@@ -69,7 +71,7 @@ function evidenceText(part: ToolResultPart) {
  * an unavailable capability survives as assistant text.
  */
 function projectMessages(messages: readonly ModelMessage[]) {
-  const unavailableTools = new Set<string>();
+  const unavailableTools = MutableHashSet.empty<string>();
   const projected = Arr.flatMap(messages, (message): ModelMessage[] => {
     if (message.role === "assistant" && Arr.isArray(message.content)) {
       for (const part of message.content) {
@@ -77,7 +79,7 @@ function projectMessages(messages: readonly ModelMessage[]) {
           part.type === "tool-call" &&
           !Schema.is(LearningCapabilityNameSchema)(part.toolName)
         ) {
-          unavailableTools.add(part.toolName);
+          MutableHashSet.add(unavailableTools, part.toolName);
         }
       }
     }
@@ -95,7 +97,7 @@ function projectMessages(messages: readonly ModelMessage[]) {
         EXCERPT_NOTE
       );
       if (!Schema.is(LearningCapabilityNameSchema)(part.toolName)) {
-        unavailableTools.add(part.toolName);
+        MutableHashSet.add(unavailableTools, part.toolName);
         if (capabilityText(part) !== undefined) {
           retained = Arr.append(retained, { role: "assistant", content: text });
         }
@@ -107,7 +109,7 @@ function projectMessages(messages: readonly ModelMessage[]) {
   return pruneMessages({
     messages: projected,
     reasoning: "all",
-    toolCalls: [{ type: "all", tools: [...unavailableTools] }],
+    toolCalls: [{ type: "all", tools: Arr.fromIterable(unavailableTools) }],
     emptyMessages: "remove",
   });
 }
