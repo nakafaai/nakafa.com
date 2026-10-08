@@ -14,20 +14,18 @@ export class McpRequestBodyError extends Schema.TaggedError<McpRequestBodyError>
   }
 ) {}
 
-/** One bounded request plus its JSON value when parsing succeeded. */
-export interface BoundedMcpRequest {
-  readonly parsedBody?: unknown;
-  readonly request: Request;
-}
-
-/** Reads a POST once and keeps every protocol classification path under the cap. */
+/**
+ * Reads a POST once and keeps every protocol classification path under the cap.
+ * Answers the bounded request, with its JSON value as `parsedBody` when parsing
+ * succeeded.
+ */
 export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
   request: Request
 ) {
   if (request.method.toUpperCase() !== "POST") {
     return {
       request,
-    } satisfies BoundedMcpRequest;
+    };
   }
   const declaredLength = yield* parseContentLength(
     request.headers.get("content-length"),
@@ -43,7 +41,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
     }
     return {
       request,
-    } satisfies BoundedMcpRequest;
+    };
   }
   const bytes = yield* readBoundedBody(
     request.body,
@@ -65,7 +63,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
   if (!isJsonContentType(request.headers.get("content-type"))) {
     return {
       request: bounded,
-    } satisfies BoundedMcpRequest;
+    };
   }
   const source = yield* Effect.try({
     catch: () => bodyError("invalid"),
@@ -85,7 +83,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
         }
       : {}),
     request: bounded,
-  } satisfies BoundedMcpRequest;
+  };
 });
 
 /** Creates a sanitized body failure without retaining request bytes. */
