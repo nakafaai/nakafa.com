@@ -2,7 +2,7 @@ import { NAKAFA_API_BASE_URL } from "@repo/contents/agent/constants";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/agent/schema/quran/input";
 import { NakafaAgentSectionSchema } from "@repo/contents/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/content";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
 import {
   ApiBaseSchema,
@@ -114,7 +114,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
         limit: Option.getOrUndefined(limit),
         locale: Option.getOrUndefined(locale),
         offset: Option.getOrUndefined(offset),
-        query: query.join(" "),
+        query: Arr.join(query, " "),
         section: Option.getOrUndefined(section),
       })
   ).pipe(Command.withDescription("Search Nakafa content"));

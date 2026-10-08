@@ -1,5 +1,6 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { COMPANY_SOCIAL_PROFILE_URLS } from "@repo/seo/company-profiles";
+import { Array as Arr } from "effect";
 import type { IdReference, OrganizationLeaf, Person } from "schema-dts";
 
 export const ORGANIZATION_ID = new URL("#organization", COMPANY_IDENTITY.url)
@@ -27,11 +28,14 @@ export const ORGANIZATION: OrganizationLeaf = {
   address: {
     "@type": "PostalAddress",
     streetAddress: COMPANY_IDENTITY.registeredAddress.streetAddress,
-    addressLocality: [
-      COMPANY_IDENTITY.registeredAddress.village,
-      COMPANY_IDENTITY.registeredAddress.district,
-      COMPANY_IDENTITY.registeredAddress.regency,
-    ].join(", "),
+    addressLocality: Arr.join(
+      [
+        COMPANY_IDENTITY.registeredAddress.village,
+        COMPANY_IDENTITY.registeredAddress.district,
+        COMPANY_IDENTITY.registeredAddress.regency,
+      ],
+      ", "
+    ),
     addressRegion: COMPANY_IDENTITY.registeredAddress.region,
     postalCode: COMPANY_IDENTITY.registeredAddress.postalCode,
     addressCountry: COMPANY_IDENTITY.registeredAddress.countryCode,

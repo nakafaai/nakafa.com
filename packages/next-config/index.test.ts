@@ -5,6 +5,7 @@ import {
   createSecurityHeaders,
   securityHeaders,
 } from "@repo/next-config";
+import { Array as Arr, Option } from "effect";
 
 describe("createLoopbackConnectSources", () => {
   it("allows the exact HTTP and WebSocket origins for local Convex", () => {
@@ -30,8 +31,11 @@ describe("createLoopbackConnectSources", () => {
 
 describe("createSecurityHeaders", () => {
   it("builds the default CSP header", () => {
-    const csp = createSecurityHeaders().find(
-      (header) => header.key === "Content-Security-Policy"
+    const csp = Option.getOrUndefined(
+      Arr.findFirst(
+        createSecurityHeaders(),
+        (header) => header.key === "Content-Security-Policy"
+      )
     );
 
     expect(csp?.value).toContain("script-src 'self'");
@@ -42,9 +46,14 @@ describe("createSecurityHeaders", () => {
   });
 
   it("adds app-owned connect sources without widening shared apps", () => {
-    const csp = createSecurityHeaders({
-      additionalConnectSources: ["https://raw.githubusercontent.com"],
-    }).find((header) => header.key === "Content-Security-Policy");
+    const csp = Option.getOrUndefined(
+      Arr.findFirst(
+        createSecurityHeaders({
+          additionalConnectSources: ["https://raw.githubusercontent.com"],
+        }),
+        (header) => header.key === "Content-Security-Policy"
+      )
+    );
 
     expect(csp?.value).toContain(
       "connect-src 'self' wss://*.convex.cloud https://*.convex.cloud"
@@ -56,11 +65,16 @@ describe("createSecurityHeaders", () => {
     const sources = createLoopbackConnectSources(
       new URL("http://127.0.0.1:3212")
     );
-    const csp = createSecurityHeaders({
-      additionalImageSources: sources.filter((source) =>
-        source.startsWith("http:")
-      ),
-    }).find((header) => header.key === "Content-Security-Policy");
+    const csp = Option.getOrUndefined(
+      Arr.findFirst(
+        createSecurityHeaders({
+          additionalImageSources: Arr.filter(sources, (source) =>
+            source.startsWith("http:")
+          ),
+        }),
+        (header) => header.key === "Content-Security-Policy"
+      )
+    );
 
     expect(csp?.value).toContain(
       "img-src 'self' blob: data: https: https://*.googleusercontent.com http://127.0.0.1:3212;"

@@ -5,7 +5,7 @@ import {
   getHeadings,
   ParsedHeadingSchema,
 } from "@repo/contents/toc";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 describe("getHeadings", () => {
   it.each([
@@ -114,14 +114,18 @@ describe("getHeadings", () => {
     const headings = getHeadings(
       "###### Orphan\n### Section\n##### Child\n## New\n#### Fresh"
     );
-    expect(headings.map(({ label }) => label)).toEqual([
+    expect(Arr.map(headings, ({ label }) => label)).toEqual([
       "Orphan",
       "Section",
       "New",
     ]);
     expect(headings[0].children).toEqual([]);
-    expect(headings[1].children.map(({ label }) => label)).toEqual(["Child"]);
-    expect(headings[2].children.map(({ label }) => label)).toEqual(["Fresh"]);
+    expect(Arr.map(headings[1].children, ({ label }) => label)).toEqual([
+      "Child",
+    ]);
+    expect(Arr.map(headings[2].children, ({ label }) => label)).toEqual([
+      "Fresh",
+    ]);
   });
 
   it("preserves duplicate labels and mixed line endings", () => {

@@ -1,5 +1,6 @@
 import { JsonLd } from "@repo/seo/json-ld";
 import { ORGANIZATION } from "@repo/seo/json-ld/constants";
+import { Array as Arr } from "effect";
 import type { CollectionPage, CreativeWork, WithContext } from "schema-dts";
 
 interface Props {
@@ -25,7 +26,7 @@ export function CollectionPageJsonLd({
     url,
     publisher: ORGANIZATION,
     maintainer: ORGANIZATION,
-    hasPart: items.map((item) => ({
+    hasPart: Arr.map(items, (item) => ({
       "@type": "WebPage",
       ...item,
     })),

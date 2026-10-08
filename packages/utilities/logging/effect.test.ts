@@ -4,27 +4,29 @@ import {
   logHttpRequest,
   timeOperation,
 } from "@repo/utilities/logging/effect";
-import { Effect, Logger } from "effect";
+import { Array as Arr, Effect, Logger, MutableList, Option } from "effect";
 
 type StructuredLogEntry = ReturnType<typeof Logger.formatStructured.log>;
 
-function makeLogCollector(entries: StructuredLogEntry[]) {
+function makeLogCollector(
+  entries: MutableList.MutableList<StructuredLogEntry>
+) {
   return Logger.make((entry) =>
-    entries.push(Logger.formatStructured.log(entry))
+    MutableList.append(entries, Logger.formatStructured.log(entry))
   );
 }
 
 describe("Effect logging utilities", () => {
   it.effect("logs errors with structured annotations", () =>
     Effect.gen(function* () {
-      const entries: StructuredLogEntry[] = [];
+      const entries = MutableList.make<StructuredLogEntry>();
       const logger = makeLogCollector(entries);
 
       yield* logError(new Error("Boom"), { service: "test-service" }).pipe(
         Effect.provide(Logger.layer([logger]))
       );
 
-      const [entry] = entries;
+      const [entry] = MutableList.toArray(entries);
 
       expect(entry).toBeDefined();
 
@@ -41,7 +43,7 @@ describe("Effect logging utilities", () => {
 
   it.effect("derives HTTP log levels from status codes", () =>
     Effect.gen(function* () {
-      const entries: StructuredLogEntry[] = [];
+      const entries = MutableList.make<StructuredLogEntry>();
       const logger = makeLogCollector(entries);
 
       yield* Effect.all([
@@ -65,17 +67,15 @@ describe("Effect logging utilities", () => {
         }),
       ]).pipe(Effect.provide(Logger.layer([logger])));
 
-      expect(entries.map((entry) => entry.level)).toEqual([
-        "INFO",
-        "WARN",
-        "ERROR",
-      ]);
+      expect(
+        Arr.map(MutableList.toArray(entries), (entry) => entry.level)
+      ).toEqual(["INFO", "WARN", "ERROR"]);
     })
   );
 
   it.effect("returns the timed operation result", () =>
     Effect.gen(function* () {
-      const entries: StructuredLogEntry[] = [];
+      const entries = MutableList.make<StructuredLogEntry>();
       const logger = makeLogCollector(entries);
 
       const result = yield* timeOperation(
@@ -86,8 +86,11 @@ describe("Effect logging utilities", () => {
         }
       ).pipe(Effect.provide(Logger.layer([logger])));
 
-      const entry = entries.find(
-        (item) => item.message === "test_operation completed"
+      const entry = Option.getOrUndefined(
+        Arr.findFirst(
+          MutableList.toArray(entries),
+          (item) => item.message === "test_operation completed"
+        )
       );
 
       expect(result).toBe("done");
@@ -104,7 +107,7 @@ describe("Effect logging utilities", () => {
 
   it.effect("keeps context optional for simple callers", () =>
     Effect.gen(function* () {
-      const entries: StructuredLogEntry[] = [];
+      const entries = MutableList.make<StructuredLogEntry>();
       const logger = makeLogCollector(entries);
 
       yield* Effect.all([
@@ -112,7 +115,9 @@ describe("Effect logging utilities", () => {
         timeOperation("contextless_operation", Effect.succeed("ok")),
       ]).pipe(Effect.provide(Logger.layer([logger])));
 
-      expect(entries.map((entry) => entry.level)).toEqual(["ERROR", "INFO"]);
+      expect(
+        Arr.map(MutableList.toArray(entries), (entry) => entry.level)
+      ).toEqual(["ERROR", "INFO"]);
     })
   );
 });
