@@ -3,7 +3,10 @@ import refs from "@repo/backend/confect/_generated/refs";
 
 const layerMock = vi.hoisted(() => vi.fn());
 
-import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import {
+  decodeProtectedContentRuntimeRequest,
+  ProtectedContentRuntimeResponseSchema,
+} from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -33,7 +36,7 @@ import {
 } from "@repo/backend/test/content/publication";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   readFeaturedTryout,
@@ -303,7 +306,10 @@ describe("immutable try-out application catalog", () => {
           )
         );
         assert.isNotNull(found);
-        const response = new Response(JSON.stringify(found), {
+        const body = yield* Schema.encodeEffect(
+          Schema.fromJsonString(ProtectedContentRuntimeResponseSchema)
+        )(found);
+        const response = new Response(body, {
           headers: {
             "content-type": "application/json",
             [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,

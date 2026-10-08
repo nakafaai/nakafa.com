@@ -1,12 +1,20 @@
 import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import { Effect, Schema } from "effect";
 
+/** Describes the plan for one selector Schema, so each batch keeps the selector's type. */
+const TryoutContentBatchPlanSchema = <Selector extends Schema.Top>(
+  selector: Selector
+) =>
+  Schema.Struct({
+    batches: Schema.Array(Schema.Array(selector)),
+    questionCount: Schema.Finite,
+    selectorCount: Schema.Finite,
+  });
+
 /** Ordered selector batches plus the question and answer partition boundary. */
-export interface TryoutContentBatchPlan<Selector> {
-  readonly batches: readonly (readonly Selector[])[];
-  readonly questionCount: number;
-  readonly selectorCount: number;
-}
+export type TryoutContentBatchPlan<Selector> = ReturnType<
+  typeof TryoutContentBatchPlanSchema<Schema.Schema<Selector>>
+>["Type"];
 
 /** A rendered batch no longer matches its immutable selector plan. */
 export class TryoutContentBatchOrderError extends Schema.TaggedError<TryoutContentBatchOrderError>()(

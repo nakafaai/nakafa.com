@@ -1,36 +1,53 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
+import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { cn } from "cn";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 import {
   TryoutStatus,
   type TryoutStatusValue,
 } from "@/components/tryout/status";
 
-type TryoutListRowVisual =
-  | Readonly<{
-      icon: IconSvgElement;
-      iconKey: string;
-      kind: "icon";
-    }>
-  | Readonly<{
-      keyString: string;
-      kind: "gradient";
-    }>;
+/** One hugeicons SVG element: a list of `[tag, attributes]` pairs. */
+const IconSvgElementSchema = Schema.Array(
+  Schema.Tuple([
+    Schema.String,
+    Schema.Record(Schema.String, Schema.Union([Schema.String, Schema.Finite])),
+  ])
+);
 
-export type TryoutListRow = Readonly<{
-  current?: boolean;
-  description?: string;
-  href: string;
-  key: string;
-  meta?: ReactNode;
-  status?: TryoutStatusValue;
-  title: string;
-  visual: TryoutListRowVisual;
-}>;
+const TryoutListRowVisualSchema = Schema.Union([
+  Schema.Struct({
+    icon: IconSvgElementSchema,
+    iconKey: Schema.String,
+    kind: Schema.Literal("icon"),
+  }),
+  Schema.Struct({
+    keyString: Schema.String,
+    kind: Schema.Literal("gradient"),
+  }),
+]);
+type TryoutListRowVisual = typeof TryoutListRowVisualSchema.Type;
+
+const TryoutListRowSchema = Schema.Struct({
+  current: Schema.optionalKey(Schema.Boolean),
+  description: Schema.optionalKey(Schema.String),
+  href: Schema.String,
+  key: Schema.String,
+  status: Schema.optionalKey(tryoutStatusValidator),
+  title: Schema.String,
+  visual: TryoutListRowVisualSchema,
+});
+
+/**
+ * A row's optional metadata takes React nodes, which no Schema describes, so
+ * its type comes from the component that renders the slot.
+ */
+export type TryoutListRow = typeof TryoutListRowSchema.Type &
+  Partial<Parameters<typeof TryoutRowMeta>[0]>;
 
 /** Renders the established divided try-out row list with gradient icons. */
 export function TryoutList({
