@@ -3,7 +3,7 @@
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -35,17 +35,15 @@ import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.cli
 import { isActiveLocale } from "@/lib/i18n/active";
 
 type CurriculumPrograms = Ref.Returns<
-  typeof refs.public.learningPreferences.queries.listCurriculumPrograms
+  typeof learningPreferences.queries.listCurriculumPrograms
 >;
 type CurriculumProgramOption = CurriculumPrograms[number];
 type SavePreferredCurriculumArgs = Ref.Args<
-  typeof refs.public.learningPreferences.mutations.setPreferredCurriculum
+  typeof learningPreferences.mutations.setPreferredCurriculum
 >;
 type SavePreferredCurriculum = (
   args: SavePreferredCurriculumArgs
-) => InvokeReturn<
-  typeof refs.public.learningPreferences.mutations.setPreferredCurriculum
->;
+) => InvokeReturn<typeof learningPreferences.mutations.setPreferredCurriculum>;
 const formSchema = Schema.toStandardSchemaV1(
   Schema.Struct({
     preferredCurriculumProgramKey: Schema.String.pipe(
@@ -68,11 +66,9 @@ class CurriculumPreferenceMutationError extends Schema.TaggedError<CurriculumPre
   }
 ) {}
 interface UserSettingsCurriculumProps {
-  initialPreference: Ref.Returns<
-    typeof refs.public.learningPreferences.queries.getCurrent
-  >;
+  initialPreference: Ref.Returns<typeof learningPreferences.queries.getCurrent>;
   initialPrograms: Ref.Returns<
-    typeof refs.public.learningPreferences.queries.listCurriculumPrograms
+    typeof learningPreferences.queries.listCurriculumPrograms
   >;
   locale: PublicAppLocale;
 }
@@ -84,11 +80,11 @@ export function UserSettingsCurriculum({
 }: UserSettingsCurriculumProps) {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const preferenceQuery = useQuery(
-    refs.public.learningPreferences.queries.getCurrent,
+    learningPreferences.queries.getCurrent,
     isAuthenticated ? { locale } : "skip"
   );
   const programsQuery = useQuery(
-    refs.public.learningPreferences.queries.listCurriculumPrograms,
+    learningPreferences.queries.listCurriculumPrograms,
     { locale }
   );
   if (QueryResult.isFailure(preferenceQuery)) {

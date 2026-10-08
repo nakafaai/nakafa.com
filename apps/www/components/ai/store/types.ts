@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type nina from "@repo/backend/confect/_generated/refs/nina";
 import { ModelId } from "@repo/backend/confect/gateway/model";
 import { NinaReceipt } from "@repo/backend/confect/nina/turns.spec";
 import { Schema } from "effect";
@@ -43,7 +43,7 @@ export interface AiActions {
   resolveAsk: (id: AiAsk["id"], chatId: AiState["activeChatId"]) => void;
   resolveChatDraft: (
     key: string,
-    receipt: Ref.Returns<typeof refs.public.nina.turns.start>
+    receipt: Ref.Returns<typeof nina.turns.start>
   ) => void;
   setActiveChatId: (activeChatId: AiState["activeChatId"]) => void;
   setContextTitle: (contextTitle: AiState["contextTitle"]) => void;

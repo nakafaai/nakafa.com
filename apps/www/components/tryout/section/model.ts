@@ -1,16 +1,14 @@
 import type { Ref } from "@confect/core";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Schema } from "effect";
 
 type PublicSectionPage = NonNullable<
-  Ref.Returns<typeof refs.public.tryouts.queries.catalog.getSectionPage>
+  Ref.Returns<typeof tryouts.queries.catalog.getSectionPage>
 >;
 
 type RetainedSectionAttemptPage = Extract<
-  NonNullable<
-    Ref.Returns<typeof refs.public.tryouts.queries.attemptPage.getSection>
-  >,
+  NonNullable<Ref.Returns<typeof tryouts.queries.attemptPage.getSection>>,
   { kind: "retained" }
 >;
 

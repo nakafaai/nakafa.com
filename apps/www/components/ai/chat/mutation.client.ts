@@ -2,7 +2,8 @@
 
 import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
-import refs from "@repo/backend/confect/_generated/refs";
+import chats from "@repo/backend/confect/_generated/refs/chats";
+import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option } from "effect";
 import {
@@ -20,12 +21,12 @@ function patchChatDetail(
     visibility?: "private" | "public";
   }
 ) {
-  const conversation = localStore.getQuery(refs.public.nina.conversation.get, {
+  const conversation = localStore.getQuery(nina.conversation.get, {
     chatId,
   });
   if (Option.isSome(conversation)) {
     localStore.setQuery(
-      refs.public.nina.conversation.get,
+      nina.conversation.get,
       { chatId },
       Option.some({
         ...conversation.value,
@@ -34,13 +35,13 @@ function patchChatDetail(
     );
   }
   const chat = Option.getOrUndefined(
-    localStore.getQuery(refs.public.chats.queries.getChat, {
+    localStore.getQuery(chats.queries.getChat, {
       chatId,
     })
   );
   if (chat) {
     localStore.setQuery(
-      refs.public.chats.queries.getChat,
+      chats.queries.getChat,
       {
         chatId,
       },
@@ -61,9 +62,7 @@ function patchLoadedLists(
     visibility?: "private" | "public";
   }
 ) {
-  for (const query of localStore.getAllQueries(
-    refs.public.chats.queries.getOwnChats
-  )) {
+  for (const query of localStore.getAllQueries(chats.queries.getOwnChats)) {
     if (Option.isNone(query.value)) {
       continue;
     }
@@ -76,7 +75,7 @@ function patchLoadedLists(
         )
       : patchChatPage(query.value.value.page, chatId, patch);
     localStore.setQuery(
-      refs.public.chats.queries.getOwnChats,
+      chats.queries.getOwnChats,
       query.args,
       Option.some({
         ...query.value.value,
@@ -84,9 +83,7 @@ function patchLoadedLists(
       })
     );
   }
-  for (const query of localStore.getAllQueries(
-    refs.public.chats.queries.getChats
-  )) {
+  for (const query of localStore.getAllQueries(chats.queries.getChats)) {
     if (Option.isNone(query.value)) {
       continue;
     }
@@ -95,7 +92,7 @@ function patchLoadedLists(
         ? removeChatFromPage(query.value.value.page, chatId)
         : patchChatPage(query.value.value.page, chatId, patch);
     localStore.setQuery(
-      refs.public.chats.queries.getChats,
+      chats.queries.getChats,
       query.args,
       Option.some({
         ...query.value.value,
@@ -110,12 +107,10 @@ function removeFromLoadedLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   chatId: Id<"chats">
 ) {
-  for (const query of localStore.getAllQueries(
-    refs.public.chats.queries.getOwnChats
-  )) {
+  for (const query of localStore.getAllQueries(chats.queries.getOwnChats)) {
     if (Option.isSome(query.value)) {
       localStore.setQuery(
-        refs.public.chats.queries.getOwnChats,
+        chats.queries.getOwnChats,
         query.args,
         Option.some({
           ...query.value.value,
@@ -124,12 +119,10 @@ function removeFromLoadedLists(
       );
     }
   }
-  for (const query of localStore.getAllQueries(
-    refs.public.chats.queries.getChats
-  )) {
+  for (const query of localStore.getAllQueries(chats.queries.getChats)) {
     if (Option.isSome(query.value)) {
       localStore.setQuery(
-        refs.public.chats.queries.getChats,
+        chats.queries.getChats,
         query.args,
         Option.some({
           ...query.value.value,
@@ -142,51 +135,51 @@ function removeFromLoadedLists(
 
 /** Return a title mutation that updates every loaded chat projection. */
 export function useUpdateChatTitleMutation() {
-  return useMutation(
-    refs.public.chats.mutations.updateChatTitle
-  ).withOptimisticUpdate((localStore, { chatId, title }) => {
-    patchChatDetail(localStore, chatId, {
-      title,
-    });
-    patchLoadedLists(localStore, chatId, {
-      title,
-    });
-    const currentTitle = Option.getOrUndefined(
-      localStore.getQuery(refs.public.chats.queries.getChatTitle, {
-        chatId,
-      })
-    );
-    if (currentTitle !== undefined) {
-      localStore.setQuery(
-        refs.public.chats.queries.getChatTitle,
-        {
+  return useMutation(chats.mutations.updateChatTitle).withOptimisticUpdate(
+    (localStore, { chatId, title }) => {
+      patchChatDetail(localStore, chatId, {
+        title,
+      });
+      patchLoadedLists(localStore, chatId, {
+        title,
+      });
+      const currentTitle = Option.getOrUndefined(
+        localStore.getQuery(chats.queries.getChatTitle, {
           chatId,
-        },
-        Option.some(title)
+        })
       );
+      if (currentTitle !== undefined) {
+        localStore.setQuery(
+          chats.queries.getChatTitle,
+          {
+            chatId,
+          },
+          Option.some(title)
+        );
+      }
     }
-  });
+  );
 }
 
 /** Return a visibility mutation that updates eligible loaded chat projections. */
 export function useUpdateChatVisibilityMutation() {
-  return useMutation(
-    refs.public.chats.mutations.updateChatVisibility
-  ).withOptimisticUpdate((localStore, { chatId, visibility }) => {
-    patchChatDetail(localStore, chatId, {
-      visibility,
-    });
-    patchLoadedLists(localStore, chatId, {
-      visibility,
-    });
-  });
+  return useMutation(chats.mutations.updateChatVisibility).withOptimisticUpdate(
+    (localStore, { chatId, visibility }) => {
+      patchChatDetail(localStore, chatId, {
+        visibility,
+      });
+      patchLoadedLists(localStore, chatId, {
+        visibility,
+      });
+    }
+  );
 }
 
 /** Return a delete mutation that removes the chat from every loaded list. */
 export function useDeleteChatMutation() {
-  return useMutation(
-    refs.public.chats.mutations.deleteChat
-  ).withOptimisticUpdate((localStore, { chatId }) => {
-    removeFromLoadedLists(localStore, chatId);
-  });
+  return useMutation(chats.mutations.deleteChat).withOptimisticUpdate(
+    (localStore, { chatId }) => {
+      removeFromLoadedLists(localStore, chatId);
+    }
+  );
 }

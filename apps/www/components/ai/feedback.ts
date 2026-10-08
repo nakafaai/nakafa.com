@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
 import { captureException } from "@repo/analytics/posthog/browser";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/turns.spec";
 import { Effect, Schema } from "effect";
 import type { AppConfig } from "next-intl";
@@ -13,8 +13,8 @@ export class NinaConnectionError extends Schema.TaggedError<NinaConnectionError>
 ) {}
 
 export type NinaFailure =
-  | Ref.Error<typeof refs.public.nina.turns.start>
-  | Ref.Error<typeof refs.public.nina.lifecycle.cancel>
+  | Ref.Error<typeof nina.turns.start>
+  | Ref.Error<typeof nina.lifecycle.cancel>
   | NinaConnectionError;
 
 /** The recovery the chat offers after a failure. */

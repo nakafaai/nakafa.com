@@ -7,7 +7,7 @@ import {
   UserAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -42,7 +42,7 @@ export function SchoolClassesPeopleInvite() {
 
   const clipboard = useClipboard({ timeout: 500 });
 
-  const inviteCodes = useQuery(refs.public.classes.queries.getInviteCodes, {
+  const inviteCodes = useQuery(classes.queries.getInviteCodes, {
     classId,
   });
 

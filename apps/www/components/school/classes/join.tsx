@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import type { SchoolClassVisibility } from "@repo/backend/confect/classes/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -46,10 +46,8 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const router = useRouter();
   const schoolSlug = useSchool((state) => state.school.slug);
   const [isPending, startTransition] = useTransition();
-  const joinClass = useMutation(refs.public.classes.mutations.joinClass);
-  const joinPublicClass = useMutation(
-    refs.public.classes.mutations.joinPublicClass
-  );
+  const joinClass = useMutation(classes.mutations.joinClass);
+  const joinPublicClass = useMutation(classes.mutations.joinPublicClass);
   const isPublic = visibility === "public";
   function handlePublicJoin() {
     startTransition(async () => {

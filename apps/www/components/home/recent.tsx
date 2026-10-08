@@ -3,7 +3,7 @@
 import type { Ref } from "@confect/core";
 
 import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type contents from "@repo/backend/confect/_generated/refs/contents";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -12,7 +12,7 @@ import { useTranslations } from "next-intl";
 import { MaterialRow } from "@/components/home/material";
 
 type RecentlyViewedSubject = Ref.Returns<
-  typeof refs.public.contents.queries.recent.getRecentlyViewed
+  typeof contents.queries.recent.getRecentlyViewed
 >[number];
 
 /**

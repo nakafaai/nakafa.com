@@ -9,7 +9,7 @@ import {
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import refs from "@repo/backend/confect/_generated/refs";
+import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -66,7 +66,7 @@ function UserChatsList({
 /** Subscribe to all study chats owned by the current viewer. */
 function OwnChatsList() {
   const pagination = usePaginatedQuery(
-    refs.public.chats.queries.getOwnChats,
+    chats.queries.getOwnChats,
     {
       type: "study",
     },
@@ -106,13 +106,9 @@ function PublicChatsList({
         type,
         userId,
       };
-  const pagination = usePaginatedQuery(
-    refs.public.chats.queries.getChats,
-    queryArgs,
-    {
-      initialNumItems: 50,
-    }
-  );
+  const pagination = usePaginatedQuery(chats.queries.getChats, queryArgs, {
+    initialNumItems: 50,
+  });
   const { results } = pagination;
   return (
     <ChatList

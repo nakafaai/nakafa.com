@@ -7,7 +7,7 @@ import {
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import refs from "@repo/backend/confect/_generated/refs";
+import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -120,13 +120,9 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
     : {
         type,
       };
-  const pagination = usePaginatedQuery(
-    refs.public.chats.queries.getOwnChats,
-    queryArgs,
-    {
-      initialNumItems: 50,
-    }
-  );
+  const pagination = usePaginatedQuery(chats.queries.getOwnChats, queryArgs, {
+    initialNumItems: 50,
+  });
   const { results } = pagination;
   return (
     <SidebarMenu>

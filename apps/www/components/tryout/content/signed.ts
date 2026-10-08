@@ -5,7 +5,7 @@ import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signatu
 import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -108,7 +108,7 @@ const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
   selectors: readonly TryoutSelector[]
 ) {
   const row = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.tryouts.queries.content.getBatch, {
+    client.query(tryouts.queries.content.getBatch, {
       attemptId,
       selectors: [...selectors],
     })
