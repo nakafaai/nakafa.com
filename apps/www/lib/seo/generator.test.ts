@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
-import { Effect } from "effect";
+import { Effect, HashMap, Option, Schema } from "effect";
 import { generateSEOMetadata } from "@/lib/seo/generator";
 
 const { mockGetTranslations } = vi.hoisted(() => ({
@@ -13,92 +13,137 @@ vi.mock("next-intl/server", () => ({
   getTranslations: mockGetTranslations,
 }));
 
-interface TranslationValues {
-  readonly [key: string]: number | string | undefined;
-}
+const TranslationValuesSchema = Schema.Record(
+  Schema.String,
+  Schema.UndefinedOr(Schema.Union([Schema.Finite, Schema.String]))
+);
+type TranslationValues = typeof TranslationValuesSchema.Type;
 type TranslationEntry = string | ((values: TranslationValues) => string);
-interface TranslationDictionary {
-  readonly [key: string]: TranslationEntry | undefined;
-}
-interface TranslationNamespaces {
-  readonly [namespace: string]: TranslationDictionary | undefined;
-}
+type TranslationDictionary = HashMap.HashMap<string, TranslationEntry>;
+type TranslationNamespaces = HashMap.HashMap<string, TranslationDictionary>;
 
 /** Reads one ICU-like mock value as display text. */
 function getValue(values: TranslationValues, key: string) {
   return String(values[key] ?? "");
 }
 
-const translations: TranslationNamespaces = {
-  Articles: {
-    politics: "Politics",
-  },
-  Metadata: {
-    title: "Nakafa",
-  },
-  SEO: {
-    "article.description": (values) =>
-      `Generated article description for ${getValue(values, "title")}.`,
-    "article.keywords": (values) =>
-      `${getValue(values, "title")}, ${getValue(values, "category")}, article`,
-    "article.title": (values) =>
-      `${getValue(values, "title")} - ${getValue(values, "category")} | Nakafa`,
-    "curriculum.description": (values) => {
-      const parent = getValue(values, "parent");
-      const program = getValue(values, "program");
-      const parentText = parent === "__EMPTY__" ? "" : ` in ${parent}`;
-      const programText = program === "__EMPTY__" ? "" : ` for ${program}`;
-
-      return `Browse ${getValue(values, "title")}${parentText}${programText}.`;
-    },
-    "curriculum.keywords": (values) =>
+const translations: TranslationNamespaces = HashMap.fromIterable([
+  [
+    "Articles",
+    HashMap.fromIterable<string, TranslationEntry>([["politics", "Politics"]]),
+  ],
+  [
+    "Metadata",
+    HashMap.fromIterable<string, TranslationEntry>([["title", "Nakafa"]]),
+  ],
+  [
+    "SEO",
+    HashMap.fromIterable<string, TranslationEntry>([
       [
-        getValue(values, "title"),
-        getValue(values, "parent"),
-        getValue(values, "program"),
-      ]
-        .filter((value) => value && value !== "__EMPTY__")
-        .join(", "),
-    "curriculum.title": (values) => {
-      const parent = getValue(values, "parent");
-      const program = getValue(values, "program");
-      const parentText = parent === "__EMPTY__" ? "" : ` - ${parent}`;
-      const programText = program === "__EMPTY__" ? "" : ` (${program})`;
+        "article.description",
+        (values) =>
+          `Generated article description for ${getValue(values, "title")}.`,
+      ],
+      [
+        "article.keywords",
+        (values) =>
+          `${getValue(values, "title")}, ${getValue(values, "category")}, article`,
+      ],
+      [
+        "article.title",
+        (values) =>
+          `${getValue(values, "title")} - ${getValue(values, "category")} | Nakafa`,
+      ],
+      [
+        "curriculum.description",
+        (values) => {
+          const parent = getValue(values, "parent");
+          const program = getValue(values, "program");
+          const parentText = parent === "__EMPTY__" ? "" : ` in ${parent}`;
+          const programText = program === "__EMPTY__" ? "" : ` for ${program}`;
 
-      return `${getValue(values, "title")}${parentText}${programText} | Nakafa`;
-    },
-    "quran.description": (values) =>
-      `Read Surah ${getValue(values, "name")} with ${getValue(values, "numberOfVerses")} verses.`,
-    "quran.keywords": (values) =>
-      `${getValue(values, "name")}, ${getValue(values, "translation")}, ${getValue(values, "revelation")}`,
-    "quran.title": (values) =>
-      `Surah ${getValue(values, "number")}. ${getValue(values, "name")} - ${getValue(values, "translation")} | Nakafa`,
-    "subject.description": (values) =>
-      `Generated subject description for ${getValue(values, "title")} in ${getValue(values, "material")} for ${getValue(values, "grade")}.`,
-    "subject.keywords": (values) =>
-      `${getValue(values, "title")}, ${getValue(values, "material")}, ${getValue(values, "grade")}`,
-    /** Formats subject titles with the same chapter-aware shape as the locale dictionary. */
-    "subject.title": (values) => {
-      const chapter = getValue(values, "chapter");
-      const chapterPrefix = chapter === "__EMPTY__" ? "" : `${chapter} - `;
+          return `Browse ${getValue(values, "title")}${parentText}${programText}.`;
+        },
+      ],
+      [
+        "curriculum.keywords",
+        (values) =>
+          [
+            getValue(values, "title"),
+            getValue(values, "parent"),
+            getValue(values, "program"),
+          ]
+            .filter((value) => value && value !== "__EMPTY__")
+            .join(", "),
+      ],
+      [
+        "curriculum.title",
+        (values) => {
+          const parent = getValue(values, "parent");
+          const program = getValue(values, "program");
+          const parentText = parent === "__EMPTY__" ? "" : ` - ${parent}`;
+          const programText = program === "__EMPTY__" ? "" : ` (${program})`;
 
-      return `${getValue(values, "title")}: ${chapterPrefix}${getValue(values, "material")} (${getValue(values, "grade")}) | Nakafa`;
-    },
-  },
-  Subject: {
-    "ai-ds": "Artificial Intelligence & Data Science",
-    bachelor: "Bachelor",
-    grade: (values) => `Grade ${getValue(values, "grade")}`,
-    mathematics: "Mathematics",
-  },
-};
+          return `${getValue(values, "title")}${parentText}${programText} | Nakafa`;
+        },
+      ],
+      [
+        "quran.description",
+        (values) =>
+          `Read Surah ${getValue(values, "name")} with ${getValue(values, "numberOfVerses")} verses.`,
+      ],
+      [
+        "quran.keywords",
+        (values) =>
+          `${getValue(values, "name")}, ${getValue(values, "translation")}, ${getValue(values, "revelation")}`,
+      ],
+      [
+        "quran.title",
+        (values) =>
+          `Surah ${getValue(values, "number")}. ${getValue(values, "name")} - ${getValue(values, "translation")} | Nakafa`,
+      ],
+      [
+        "subject.description",
+        (values) =>
+          `Generated subject description for ${getValue(values, "title")} in ${getValue(values, "material")} for ${getValue(values, "grade")}.`,
+      ],
+      [
+        "subject.keywords",
+        (values) =>
+          `${getValue(values, "title")}, ${getValue(values, "material")}, ${getValue(values, "grade")}`,
+      ],
+      /** Formats subject titles with the same chapter-aware shape as the locale dictionary. */
+      [
+        "subject.title",
+        (values) => {
+          const chapter = getValue(values, "chapter");
+          const chapterPrefix = chapter === "__EMPTY__" ? "" : `${chapter} - `;
+
+          return `${getValue(values, "title")}: ${chapterPrefix}${getValue(values, "material")} (${getValue(values, "grade")}) | Nakafa`;
+        },
+      ],
+    ]),
+  ],
+  [
+    "Subject",
+    HashMap.fromIterable<string, TranslationEntry>([
+      ["ai-ds", "Artificial Intelligence & Data Science"],
+      ["bachelor", "Bachelor"],
+      ["grade", (values) => `Grade ${getValue(values, "grade")}`],
+      ["mathematics", "Mathematics"],
+    ]),
+  ],
+]);
 
 /** Returns the mocked translator for the requested namespace. */
 function getTranslator(namespace: string) {
-  const dictionary = translations[namespace] ?? {};
+  const dictionary = Option.getOrElse(
+    HashMap.get(translations, namespace),
+    () => HashMap.empty<string, TranslationEntry>()
+  );
 
   return (key: string, values: TranslationValues = {}) => {
-    const entry = dictionary[key];
+    const entry = Option.getOrUndefined(HashMap.get(dictionary, key));
 
     if (typeof entry === "function") {
       return entry(values);

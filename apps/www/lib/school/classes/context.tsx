@@ -1,15 +1,12 @@
 "use client";
 
-import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
+import type { classRouteAccessibleValidator } from "@repo/backend/confect/classes/validators";
 import { createContext, use } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 
-type ClassContextValue = Extract<
-  Ref.Returns<typeof refs.public.classes.queries.getClassRoute>,
-  { kind: "accessible" }
->;
+type ClassContextValue = typeof classRouteAccessibleValidator.Type;
 
 const ClassContext = createContext<ClassContextValue | null>(null);
 

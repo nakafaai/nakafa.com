@@ -4,7 +4,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect, Record as Rec, Schema } from "effect";
+import { Effect, HashSet, Record as Rec, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
@@ -14,7 +14,7 @@ import {
   isApplicationRouteRoot,
 } from "@/lib/routing/public/ownership";
 
-const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
+const REJECTED_PUBLIC_ROOTS = HashSet.make("/learn");
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 const QURAN_SURAH_COUNT = 114;
 
@@ -44,7 +44,7 @@ export const readSourceBackedHtmlRouteRejection = Effect.fn(
  * instead of being treated as localized pages.
  */
 function readRejectedPublicRouteLocale(pathname: string) {
-  if (REJECTED_PUBLIC_ROOTS.has(pathname)) {
+  if (HashSet.has(REJECTED_PUBLIC_ROOTS, pathname)) {
     return routing.defaultLocale;
   }
 

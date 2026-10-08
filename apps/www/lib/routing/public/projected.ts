@@ -7,17 +7,18 @@ import {
 import refs from "@repo/backend/confect/_generated/refs";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { httpLayer } from "@/lib/convex/http";
 
-interface ProjectedHtmlRouteInput {
-  readonly hasAttemptCapability: boolean;
-  readonly pathname: string;
-}
+const ProjectedHtmlRouteInputSchema = Schema.Struct({
+  hasAttemptCapability: Schema.Boolean,
+  pathname: Schema.String,
+});
+type ProjectedHtmlRouteInput = typeof ProjectedHtmlRouteInputSchema.Type;
 
 /** Resolves one material HTML route against a single active release snapshot. */
 const readProjectedMaterialRouteRejection = Effect.fn(

@@ -1,12 +1,14 @@
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { Schema } from "effect";
 import type { Locale } from "next-intl";
 
 const SITE_ORIGIN = `https://${MAIN_DOMAIN}`;
 
-interface BreadcrumbEntry {
-  name: string;
-  path: string;
-}
+const BreadcrumbEntrySchema = Schema.Struct({
+  name: Schema.String,
+  path: Schema.String,
+});
+type BreadcrumbEntry = typeof BreadcrumbEntrySchema.Type;
 
 /** Normalizes an app path before joining it with the locale prefix. */
 function normalizeBreadcrumbPath(path: string, locale: Locale) {

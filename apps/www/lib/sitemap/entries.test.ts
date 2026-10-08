@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import type { getPathname } from "@repo/internationalization/src/navigation";
-import { Effect } from "effect";
+import { Effect, HashSet } from "effect";
 import {
   getCachedSitemapEntries,
   getSitemapEntries,
@@ -102,7 +102,7 @@ describe("sitemap entries", () => {
       const entries = yield* getSitemapEntries({ pageId: "base" });
       const urls = entries.map((entry) => entry.url);
 
-      expect(new Set(urls).size).toBe(urls.length);
+      expect(HashSet.size(HashSet.fromIterable(urls))).toBe(urls.length);
       expect(urls).toContain("https://nakafa.com/en");
       expect(urls).toContain("https://nakafa.com/id");
       expect(urls).toContain("https://nakafa.com/de");

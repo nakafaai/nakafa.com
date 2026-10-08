@@ -1,11 +1,14 @@
+import { Array as Arr, Schema } from "effect";
+
 const HIGHLIGHT_TOKEN_LIMIT = 8;
 const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
 
-export interface SearchExcerptPart {
-  highlighted: boolean;
-  key: string;
-  text: string;
-}
+const SearchExcerptPartSchema = Schema.Struct({
+  highlighted: Schema.Boolean,
+  key: Schema.String,
+  text: Schema.String,
+});
+export type SearchExcerptPart = typeof SearchExcerptPartSchema.Type;
 
 /** Returns whether one Convex excerpt contains visible text. */
 export function hasSearchExcerpt(excerpt: string) {
@@ -81,25 +84,12 @@ function getPartKey(start: number, text: string) {
 
 /** Extracts distinct query tokens used for excerpt highlighting. */
 function getHighlightTokens(query: string) {
-  const tokens: string[] = [];
-  const seen = new Set<string>();
+  const tokens = Arr.map(
+    Arr.fromIterable(query.matchAll(TOKEN_PATTERN)),
+    ([token]) => token.toLowerCase()
+  );
 
-  for (const match of query.matchAll(TOKEN_PATTERN)) {
-    const token = match[0].toLowerCase();
-
-    if (seen.has(token)) {
-      continue;
-    }
-
-    seen.add(token);
-    tokens.push(token);
-
-    if (tokens.length === HIGHLIGHT_TOKEN_LIMIT) {
-      break;
-    }
-  }
-
-  return tokens;
+  return Arr.take(Arr.dedupe(tokens), HIGHLIGHT_TOKEN_LIMIT);
 }
 
 /** Escapes a query token before building the highlight pattern. */
