@@ -16,7 +16,7 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { DateTime, Effect, Schema } from "effect";
+import { Clock, Effect, Schema } from "effect";
 
 const ReleaseJsonSchema = Schema.fromJsonString(SignedContentReleaseSchema);
 // Plain codec on purpose: the fixture keeps `rendererContractVersion`, an
@@ -392,7 +392,7 @@ describe("contentRelease/compact/state", () => {
         .unique();
       assert.ok(recent);
       await ctx.db.patch("contentReleases", recent._id, {
-        createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+        createdAt: Effect.runSync(Clock.currentTimeMillis),
       });
       await ctx.db.insert("tryoutRuntimeBundles", {
         bundleHash: "technical",

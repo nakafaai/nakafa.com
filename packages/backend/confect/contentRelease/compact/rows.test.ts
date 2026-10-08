@@ -26,7 +26,7 @@ import {
 } from "@repo/backend/test/content/compact";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
-import { Array as Arr, DateTime, Effect } from "effect";
+import { Array as Arr, Clock, Effect } from "effect";
 
 /** Provides one persisted compaction page with a mutation transaction. */
 function compactPage(
@@ -131,7 +131,7 @@ describe("contentRelease/compact/rows", () => {
       Arr.every(
         remaining.facts,
         ({ retainUntil }) =>
-          retainUntil > DateTime.toEpochMillis(DateTime.nowUnsafe())
+          retainUntil > Effect.runSync(Clock.currentTimeMillis)
       )
     ).toBe(true);
   });

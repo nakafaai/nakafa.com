@@ -34,7 +34,7 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { DateTime, Effect } from "effect";
+import { Clock, Effect } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
 const prepare = internal.contentRelease.activate.prepare;
@@ -169,7 +169,7 @@ describe("contentRelease/models", () => {
     assert(jobId);
     await t.mutation((ctx) => ctx.scheduler.cancel(jobId));
     vi.setSystemTime(
-      DateTime.toEpochMillis(DateTime.nowUnsafe()) + 8 * 24 * 60 * 60 * 1000
+      Effect.runSync(Clock.currentTimeMillis) + 8 * 24 * 60 * 60 * 1000
     );
     // Convex retains terminal scheduler records for seven days. convex-test
     // keeps them forever, so represent pruning at the real system-reader seam.

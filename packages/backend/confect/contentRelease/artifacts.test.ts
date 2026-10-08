@@ -28,7 +28,7 @@ import {
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
-import { DateTime } from "effect";
+import { Clock, Effect } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
@@ -206,7 +206,7 @@ describe("contentRelease/artifacts", () => {
       retainUntil: expect.any(Number),
     });
     expect(state.facts?.retainUntil).toBeGreaterThan(
-      DateTime.toEpochMillis(DateTime.nowUnsafe())
+      Effect.runSync(Clock.currentTimeMillis)
     );
     expect(state.item).toEqual({
       ...staged,
