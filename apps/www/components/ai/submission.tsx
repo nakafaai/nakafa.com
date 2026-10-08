@@ -207,37 +207,40 @@ export function useNinaSubmission() {
     }
     const result = await Effect.runPromise(
       inputProgram.pipe(
-        Effect.flatMap((input) => {
-          const payload = {
-            ...(chatId ? { chatId } : {}),
-            input,
-            modelId: getModel(),
-          };
-          const previous = uncertain.current;
-          const same =
-            previous &&
-            encodeJson({ ...previous, requestId: undefined }) ===
-              encodeJson(payload);
-          const args = {
-            ...payload,
-            requestId: same ? previous.requestId : Effect.runSync(randomUuid),
-          };
-          uncertain.current = args;
-          const submit = start.withOptimisticUpdate(
-            optimisticPrompt(
-              HashMap.fromIterable(previews.current),
-              DateTime.toEpochMillis(DateTime.nowUnsafe())
-            )
-          );
-          return Effect.tryPromise({
-            try: () => submit(args),
-            catch: () =>
-              new NinaConnectionError({
-                code: "NINA_CONNECTION_FAILED",
-                message: "Nina admission could not be confirmed.",
-              }),
-          }).pipe(Effect.flatMap(Effect.fromResult));
-        }),
+        Effect.flatMap((input) =>
+          Effect.gen(function* () {
+            const payload = {
+              ...(chatId ? { chatId } : {}),
+              input,
+              modelId: getModel(),
+            };
+            const previous = uncertain.current;
+            const same =
+              previous &&
+              encodeJson({ ...previous, requestId: undefined }) ===
+                encodeJson(payload);
+            const args = {
+              ...payload,
+              requestId: same ? previous.requestId : yield* randomUuid,
+            };
+            uncertain.current = args;
+            const now = yield* DateTime.now;
+            const submit = start.withOptimisticUpdate(
+              optimisticPrompt(
+                HashMap.fromIterable(previews.current),
+                DateTime.toEpochMillis(now)
+              )
+            );
+            return yield* Effect.tryPromise({
+              try: () => submit(args),
+              catch: () =>
+                new NinaConnectionError({
+                  code: "NINA_CONNECTION_FAILED",
+                  message: "Nina admission could not be confirmed.",
+                }),
+            }).pipe(Effect.flatMap(Effect.fromResult));
+          })
+        ),
         Effect.onExit((exit) =>
           Effect.sync(() => {
             if (!draftKey) {

@@ -10,32 +10,28 @@ export type AnswerPart = Extract<MessagePart, TextUIPart>;
 /** Every rendered part other than answer text. */
 export type OtherPart = Exclude<MessagePart, StepStartUIPart | TextUIPart>;
 
-/** A rendered part, keyed by its position among the parts of its type. */
-function createPartEntry(key: string, part: OtherPart) {
-  return { key, part, type: "part" as const };
+interface PartEntry {
+  readonly key: string;
+  readonly part: OtherPart;
+  readonly type: "part";
 }
 
-/** An answer, which holds the response parts that follow it. */
-function createAnswerEntry(key: string, part: AnswerPart) {
+interface AnswerEntry {
+  readonly key: string;
+  readonly part: AnswerPart;
   /** Response parts after the answer, such as its sources. */
-  const trailing: PartEntry[] = [];
-  return { key, part, trailing, type: "answer" as const };
+  readonly trailing: PartEntry[];
+  readonly type: "answer";
 }
 
-type PartEntry = ReturnType<typeof createPartEntry>;
-type AnswerEntry = ReturnType<typeof createAnswerEntry>;
 type MessageEntry = AnswerEntry | PartEntry;
 
-function createMessageGroup(
-  key: string,
-  kind: "activity" | "response",
-  entries: MessageEntry[]
-) {
-  return { entries, key, kind };
-}
-
 /** One run of consecutive work steps or answer parts. */
-export type MessageGroup = ReturnType<typeof createMessageGroup>;
+export interface MessageGroup {
+  readonly entries: MessageEntry[];
+  readonly key: string;
+  readonly kind: "activity" | "response";
+}
 
 /**
  * Groups a message's parts into activity and response sections in Agent order.
@@ -66,11 +62,11 @@ export function groupMessageParts(parts: readonly MessagePart[]) {
     const key = tool ? part.toolCallId : `${part.type}-${count}`;
     const entry: MessageEntry =
       part.type === "text"
-        ? createAnswerEntry(key, part)
-        : createPartEntry(key, part);
+        ? { key, part, trailing: [], type: "answer" }
+        : { key, part, type: "part" };
     const group = groups.at(-1);
     if (group?.kind !== kind) {
-      groups.push(createMessageGroup(key, kind, [entry]));
+      groups.push({ entries: [entry], key, kind });
       continue;
     }
     const previous = group.entries.at(-1);

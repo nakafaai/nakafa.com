@@ -1,5 +1,9 @@
 "use client";
 
+import type {
+  ProjectileMotionState,
+  ProjectileScenarioId,
+} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -12,7 +16,6 @@ import { useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import type { ProjectileOption } from "@/components/marketing/about/projectile/features";
 import { loadProjectileScene } from "@/components/marketing/about/projectile/loader";
 import type { ProjectileSceneProps } from "@/components/marketing/about/projectile/scene";
 import { reportClientException } from "@/lib/analytics/client";
@@ -84,6 +87,19 @@ const ProjectileScene = dynamic(
     ),
   { loading: ProjectileSceneLoading }
 );
+
+interface ProjectileFact {
+  readonly id: string;
+  readonly label: ReactNode;
+  readonly value: ReactNode;
+}
+
+interface ProjectileOption {
+  readonly facts: readonly ProjectileFact[];
+  readonly id: ProjectileScenarioId;
+  readonly label: ReactNode;
+  readonly motion: ProjectileMotionState;
+}
 
 interface ProjectileClientProps {
   readonly controlsLabel: string;
