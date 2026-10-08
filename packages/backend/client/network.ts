@@ -1,4 +1,11 @@
-import { HashSet, MutableHashSet, Predicate, Result, Schema } from "effect";
+import {
+  Array as Arr,
+  HashSet,
+  MutableHashSet,
+  Predicate,
+  Result,
+  Schema,
+} from "effect";
 export const NETWORK_RETRY_DELAYS_MILLISECONDS = [500, 1000] as const;
 export const NetworkRetryCodeSchema = Schema.Literals([
   "ECONNRESET",
@@ -55,24 +62,30 @@ export function createNetworkRequestError(cause: unknown) {
     networkCodes,
   });
 }
+/**
+ * Identity membership for failures already inspected. Effect collections hash
+ * plain objects by structure, which would merge distinct failures that share a
+ * code and undercount the graph bound.
+ */
+const isVisited = Arr.containsWith<object>((node, other) => node === other);
 function inspectNetworkCodes(cause: unknown) {
   const pending = [cause];
-  const visited = new Set<object>();
+  const visited: object[] = [];
   const retryCodes = MutableHashSet.empty<NetworkRetryCode>();
   let foundCode = false;
   let foundTerminalFailure = false;
-  while (pending.length > 0 && visited.size < NETWORK_CAUSE_LIMIT) {
+  while (pending.length > 0 && visited.length < NETWORK_CAUSE_LIMIT) {
     const current = pending.pop();
     if (!Predicate.isObjectOrArray(current)) {
       continue;
     }
-    if (visited.has(current)) {
+    if (isVisited(visited, current)) {
       continue;
     }
-    visited.add(current);
+    visited.push(current);
     const inspection = inspectNetworkNode(
       current,
-      NETWORK_CAUSE_LIMIT - pending.length - visited.size
+      NETWORK_CAUSE_LIMIT - pending.length - visited.length
     );
     foundCode ||= inspection.hasNetworkCode;
     foundTerminalFailure ||= inspection.foundTerminalFailure;

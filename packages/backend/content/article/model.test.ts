@@ -99,11 +99,11 @@ describe("contentRelease/article/model", () => {
             );
             const runtime = yield* Schema.decodeEffect(
               Schema.fromJsonString(PublicContentRuntimeFoundSchema)
-            )(result.runtimeJson ?? "");
+            )(result.runtimeJson ?? "", { onExcessProperty: "error" });
             expect(runtime.activeReleaseId).toBe(result.model.activeReleaseId);
             const projection = yield* Schema.decodeEffect(
               Schema.fromJsonString(ArticleProjectionSchema)
-            )(result.model.projectionJson ?? "");
+            )(result.model.projectionJson ?? "", { onExcessProperty: "error" });
             expect(runtime.projection).toEqual(projection);
             expect(runtime.delivery).toBe("public");
             const missing = yield* (yield* QueryRunner).runQuery(
