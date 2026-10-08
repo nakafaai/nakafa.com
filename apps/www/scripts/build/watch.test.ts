@@ -35,6 +35,19 @@ const SILENT_TREE = [
   "setInterval(() => {}, 1000);",
 ].join("\n");
 
+/**
+ * A child that leaves a grandchild holding its output open and then exits with
+ * status 0. The grandchild stays silent and ends by itself after 30 seconds, so
+ * a failing run cannot leave it running for long.
+ */
+const OUTPUT_HELD = [
+  'const { spawn } = require("node:child_process");',
+  'const grandchild = spawn(process.execPath, ["-e", "setTimeout(() => {}, 30000)"], { stdio: "inherit" });',
+  "grandchild.unref();",
+  "console.log(grandchild.pid);",
+  'console.log("done");',
+].join("\n");
+
 /** Appends every chunk written to one standard stream to its text. */
 function collectInto(text: Ref.Ref<string>) {
   return () =>
@@ -184,6 +197,29 @@ describe("build watch", () => {
         yield* expectProcessEnded(parent);
         yield* expectProcessEnded(grandchild);
       })
+  );
+
+  it.live("ends a command whose output stays open after it exits", () =>
+    Effect.gen(function* () {
+      const streams = yield* captureStreams;
+      const failure = yield* runWatch(streams.stdio, {
+        args: ["-e", OUTPUT_HELD],
+        command: process.execPath,
+        heartbeatInterval: Duration.seconds(15),
+        stallLimit: Duration.seconds(2),
+      }).pipe(Effect.flip);
+
+      expect(failure).toEqual(
+        new BuildStalled({
+          message: "build stalled: no output for 2s; last output: done",
+        })
+      );
+      const [grandchildLine = ""] = Str.split(
+        yield* Ref.get(streams.stdout),
+        "\n"
+      );
+      yield* expectProcessEnded(Number(grandchildLine));
+    })
   );
 });
 

@@ -132,6 +132,12 @@ export const printHeartbeats = Effect.fn("BuildWatch.printHeartbeats")(
 );
 
 /**
+ * How long a stopped command gets to exit after SIGTERM before it is killed,
+ * and how long its output may take to close once it has been stopped.
+ */
+const STOP_GRACE = Duration.seconds(5);
+
+/**
  * Runs one command and watches it. Its output passes through unchanged, a
  * heartbeat reports the container every interval, and the command and its
  * children are ended when it prints nothing for the whole stall limit. The
@@ -168,25 +174,38 @@ export const watchBuild = Effect.fn("BuildWatch.run")(function* (options: {
       const heartbeats = yield* Effect.forkChild(
         printHeartbeats(activity, stdio, options.heartbeatInterval)
       );
-      const status = yield* child.exitCode.pipe(
+      // The command is finished once it has exited and its output has closed.
+      // A process that holds the output open after the exit must also print
+      // within the stall limit, so the silence watch runs through the drain.
+      const finished = Effect.gen(function* () {
+        const status = yield* child.exitCode;
+        yield* Fiber.join(output);
+        return status;
+      });
+      return yield* finished.pipe(
         Effect.raceFirst(watchSilence(activity, options.stallLimit)),
         Effect.ensuring(Fiber.interrupt(heartbeats)),
         Effect.catchTag("BuildStalled", (stalled) =>
           child
             .kill({
               killSignal: "SIGTERM",
-              forceKillAfter: Duration.seconds(5),
+              forceKillAfter: STOP_GRACE,
             })
             .pipe(
               // The command may have exited on its own just before the kill.
               Effect.ignore,
-              Effect.andThen(Fiber.join(output)),
+              // A stopped command's output closes at once unless a process
+              // outside its group still holds it, so the wait is bounded.
+              Effect.andThen(
+                Fiber.join(output).pipe(
+                  Effect.timeout(STOP_GRACE),
+                  Effect.ignore
+                )
+              ),
               Effect.andThen(Effect.fail(stalled))
             )
         )
       );
-      yield* Fiber.join(output);
-      return status;
     })
   );
 });
