@@ -5,22 +5,23 @@ import {
 import { parseQuranTranslation } from "@nakafa/aksara-contracts/quran/notes";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads one exact locale-selected signed translation. */
 const readTranslation = Effect.fn("agent.quran.readTranslation")(function* (
   verse: QuranRuntimeVerse,
   appLocale: AppLocaleCode
 ) {
-  const localized = verse.translations.find(
+  const localized = Arr.findFirst(
+    verse.translations,
     (translation) => translation.appLocale === appLocale
   );
-  if (!localized) {
+  if (Option.isNone(localized)) {
     return yield* referenceError(
       `Signed Quran verse ${verse.number.inQuran} has no ${appLocale} translation.`
     );
   }
-  return localized.value;
+  return localized.value.value;
 });
 
 /** Projects one verse into semantic translation-note fields. */
@@ -65,15 +66,16 @@ const readRequestedTafsir = Effect.fn("agent.quran.readRequestedTafsir")(
     if (!(includeTafsir && appLocale === INDONESIAN_APP_LOCALE_CODE)) {
       return;
     }
-    const tafsir = verse.tafsir.find(
+    const tafsir = Arr.findFirst(
+      verse.tafsir,
       (interpretation) => interpretation.appLocale === appLocale
     );
-    if (!tafsir) {
+    if (Option.isNone(tafsir)) {
       return yield* referenceError(
         `Signed Quran verse ${verse.number.inQuran} has no Indonesian tafsir.`
       );
     }
-    return tafsir.text;
+    return tafsir.value.text;
   }
 );
 

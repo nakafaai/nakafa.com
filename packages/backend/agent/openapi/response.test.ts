@@ -7,6 +7,7 @@ import {
   createOpenApiOptionsResponse,
   createOpenApiResponse,
 } from "@repo/backend/agent/openapi/response";
+import { Array as Arr } from "effect";
 
 const WEAK_ETAG_PREFIX = /^W\//;
 
@@ -46,7 +47,10 @@ describe("Nakafa OpenAPI response", () => {
     `* , ${NAKAFA_OPENAPI_ETAG}`,
     `${NAKAFA_OPENAPI_ETAG}, "invalid\u0000tag"`,
     `${",".repeat(32)}${NAKAFA_OPENAPI_ETAG}`,
-    Array.from({ length: 33 }, (_, index) => `"tag-${index}"`).join(","),
+    Arr.join(
+      Array.from({ length: 33 }, (_, index) => `"tag-${index}"`),
+      ","
+    ),
   ])("ignores invalid or excessive validators", (ifNoneMatch) => {
     expect(createOpenApiResponse(ifNoneMatch).status).toBe(200);
   });

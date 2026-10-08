@@ -16,6 +16,7 @@ import {
   Array as Arr,
   Effect,
   HashSet,
+  MutableList,
   Predicate,
   Record as Rec,
   Schema,
@@ -34,22 +35,20 @@ const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Returns every method operation from the generated path map. */
 function readOperations() {
-  const operations: OpenApiOperation[] = [];
-  for (const pathItem of Rec.values(NAKAFA_OPENAPI_DOCUMENT.paths)) {
-    for (const operation of Rec.values(pathItem)) {
+  return Arr.flatMap(Rec.values(NAKAFA_OPENAPI_DOCUMENT.paths), (pathItem) =>
+    Arr.map(Rec.values(pathItem), (operation) => {
       if (!isOperation(operation)) {
         expect.fail("OpenAPI paths must contain complete operations.");
       }
-      operations.push(operation);
-    }
-  }
-  return operations;
+      return operation;
+    })
+  );
 }
 
 /** Projects one OpenAPI operation to a function-calling definition. */
 function projectFunction(operation: OpenApiOperation) {
   const properties: Record<string, unknown> = {};
-  const required: string[] = [];
+  const required = MutableList.make<string>();
   for (const parameter of operation.parameters) {
     if (
       !(
@@ -62,7 +61,7 @@ function projectFunction(operation: OpenApiOperation) {
     }
     properties[parameter.name] = parameter.schema;
     if (parameter.required === true) {
-      required.push(parameter.name);
+      MutableList.append(required, parameter.name);
     }
   }
   return {
@@ -71,7 +70,9 @@ function projectFunction(operation: OpenApiOperation) {
     parameters: {
       additionalProperties: false,
       properties,
-      ...(required.length === 0 ? {} : { required }),
+      ...(required.length === 0
+        ? {}
+        : { required: MutableList.toArray(required) }),
       type: "object",
     },
   };
@@ -93,7 +94,12 @@ describe("Nakafa OpenAPI document", () => {
 
       expect(
         result.valid,
-        result.errors?.map(({ message }) => message).join("\n")
+        result.errors === undefined
+          ? undefined
+          : Arr.join(
+              Arr.map(result.errors, ({ message }) => message),
+              "\n"
+            )
       ).toBe(true);
       expect(result.version).toBe("3.1");
       expect(result.errors ?? []).toEqual([]);
@@ -111,7 +117,7 @@ describe("Nakafa OpenAPI document", () => {
 
   it("uses unique described operations, typed parameters, and examples", () => {
     const operations = readOperations();
-    const operationIds = operations.map(({ operationId }) => operationId);
+    const operationIds = Arr.map(operations, ({ operationId }) => operationId);
 
     expect(Arr.dedupe(operationIds).length).toBe(operationIds.length);
     for (const operation of operations) {
@@ -194,9 +200,9 @@ describe("Nakafa OpenAPI document", () => {
   });
 
   it("projects every operation to a non-recursive function definition", () => {
-    const functions = readOperations().map(projectFunction);
+    const functions = Arr.map(readOperations(), projectFunction);
 
-    expect(functions.map(({ name }) => name)).toEqual([
+    expect(Arr.map(functions, ({ name }) => name)).toEqual([
       "getNakafaOpenApi",
       "getNakafaQuranReference",
       "getNakafaApiIndex",
