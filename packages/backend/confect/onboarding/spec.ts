@@ -1,5 +1,4 @@
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
-import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import type {
   OnboardingFocus,
@@ -7,10 +6,11 @@ import type {
 } from "@repo/backend/confect/onboarding/schema";
 import { Schema } from "effect";
 
-interface OnboardingRegionDefaults {
-  readonly curriculumProgramKey: typeof LearningProgramKeySchema.Type;
-  readonly locale: Locale;
-}
+const OnboardingRegionDefaultsSchema = Schema.Struct({
+  curriculumProgramKey: LearningProgramKeySchema,
+  locale: localeValidator,
+});
+type OnboardingRegionDefaults = typeof OnboardingRegionDefaultsSchema.Type;
 const onboardingRegionDefaults = {
   germany: {
     curriculumProgramKey: LearningProgramKeySchema.make(

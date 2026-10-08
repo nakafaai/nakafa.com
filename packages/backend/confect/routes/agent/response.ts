@@ -5,18 +5,12 @@ import type {
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
 import type { NakafaProblemDetails } from "@repo/contents/agent/schema/api";
-import { type Cause, Effect } from "effect";
-export type AgentProblemStatus =
-  | 400
-  | 403
-  | 404
-  | 405
-  | 406
-  | 415
-  | 422
-  | 429
-  | 500
-  | 503;
+import { type Cause, Effect, Schema } from "effect";
+
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const AgentProblemStatusSchema = Schema.Literals([
+  400, 403, 404, 405, 406, 415, 422, 429, 500, 503,
+]);
 export const PUBLIC_API_HEADERS = {
   "Access-Control-Allow-Headers":
     "Accept, Content-Type, traceparent, tracestate, baggage",
@@ -27,17 +21,25 @@ export const PUBLIC_API_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
   Vary: "Accept, Accept-Encoding",
 } as const;
-interface ProblemInput {
-  readonly code: string;
-  readonly detail: string;
-  readonly headers?: HeadersInit;
-  readonly instance: string;
-  readonly requestId: string;
-  readonly resolution: string;
-  readonly status: AgentProblemStatus;
-  readonly title: string;
-  readonly type: string;
-}
+const HeadersInitSchema = Schema.Union([
+  Schema.mutable(
+    Schema.Array(Schema.mutable(Schema.Tuple([Schema.String, Schema.String])))
+  ),
+  Schema.Record(Schema.String, Schema.String),
+  Schema.instanceOf(Headers),
+]);
+const ProblemInputSchema = Schema.Struct({
+  code: Schema.String,
+  detail: Schema.String,
+  headers: Schema.optionalKey(HeadersInitSchema),
+  instance: Schema.String,
+  requestId: Schema.String,
+  resolution: Schema.String,
+  status: AgentProblemStatusSchema,
+  title: Schema.String,
+  type: Schema.String,
+});
+type ProblemInput = typeof ProblemInputSchema.Type;
 
 /** Returns a no-store JSON response with the public CORS contract. */
 export function agentJsonResponse(
@@ -45,7 +47,7 @@ export function agentJsonResponse(
   status = 200,
   headers?: HeadersInit
 ) {
-  return new Response(JSON.stringify(body), {
+  return new Response(body === undefined ? undefined : encodeJson(body), {
     headers: {
       ...PUBLIC_API_HEADERS,
       ...headers,

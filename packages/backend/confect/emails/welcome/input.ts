@@ -7,6 +7,7 @@ import {
 import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { pageCatalogValidator } from "@repo/backend/confect/contentRelease/page.spec";
 import { decodeProjectionJson } from "@repo/backend/confect/contentRelease/parse";
 import {
   deferWelcomeIntent,
@@ -17,14 +18,15 @@ import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { readPageCatalog } from "@repo/backend/content/publication/page";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, flow, Option } from "effect";
+import { Array as Arr, Effect, flow, Option, Schema } from "effect";
 
 const PRIVACY_POLICY_PAGE_KEY = PageKeySchema.make("privacy-policy");
 const TERMS_OF_SERVICE_PAGE_KEY = PageKeySchema.make("terms-of-service");
-interface PageCatalogInput {
-  readonly managed: boolean;
-  readonly projectionJson: readonly string[];
-}
+const PageCatalogInputSchema = Schema.Struct({
+  managed: pageCatalogValidator.fields.managed,
+  projectionJson: Schema.Array(Schema.String),
+});
+type PageCatalogInput = typeof PageCatalogInputSchema.Type;
 function findWelcomePage(
   projections: readonly ContentProjection[],
   locale: AppLocaleCode,
