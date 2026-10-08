@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 interface TouchPoint {
   readonly x: number;
@@ -38,6 +38,28 @@ export const activateUntilVisible = Effect.fn("NakafaE2E.activateUntilVisible")(
     return surface;
   }
 );
+
+/** One interactive surface did not expose measurable bounds for a gesture. */
+export class SurfaceBoundsMissing extends Schema.TaggedError<SurfaceBoundsMissing>()(
+  "SurfaceBoundsMissing",
+  { surface: Schema.String }
+) {
+  get message() {
+    return `Surface bounds are missing: surface=${this.surface}.`;
+  }
+}
+
+/** Reads the bounds a gesture starts from, failing by surface name when absent. */
+export const readBounds = Effect.fn("NakafaE2E.readBounds")(function* (
+  locator: Locator,
+  surface: string
+) {
+  const bounds = yield* Effect.promise(() => locator.boundingBox());
+  if (!bounds) {
+    return yield* new SurfaceBoundsMissing({ surface });
+  }
+  return bounds;
+});
 
 /** Dispatches one real touch drag while always releasing its CDP session. */
 export const dragTouch = Effect.fn("NakafaE2E.dragTouch")(function* (

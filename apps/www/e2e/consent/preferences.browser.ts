@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import {
   openConsentPreferences,
   seedAnalyticsConsent,
@@ -8,7 +8,7 @@ import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/context";
-import { dragTouch } from "@/e2e/support/input";
+import { dragTouch, readBounds } from "@/e2e/support/input";
 
 const targetViewports = [
   { height: 800, name: "compact", slot: "drawer-popup", width: 320 },
@@ -28,12 +28,6 @@ const targetViewports = [
   },
   { height: 900, name: "desktop", slot: "dialog-content", width: 1440 },
 ] as const;
-
-/** The active compact drawer did not expose measurable swipe bounds. */
-class ConsentDrawerBoundsMissing extends Schema.TaggedError<ConsentDrawerBoundsMissing>()(
-  "ConsentDrawerBoundsMissing",
-  {}
-) {}
 
 const prepareConsentPage = Effect.fn("NakafaE2E.prepareConsentPage")(function* (
   page: Page
@@ -83,10 +77,7 @@ const swipeDrawerClosed = Effect.fn("NakafaE2E.swipeConsentDrawerClosed")(
     yield* Effect.promise(() =>
       popup.locator('[data-slot="drawer-bar"]').click({ trial: true })
     );
-    const bounds = yield* Effect.promise(() => popup.boundingBox());
-    if (!bounds) {
-      return yield* new ConsentDrawerBoundsMissing();
-    }
+    const bounds = yield* readBounds(popup, "consent-drawer");
 
     const x = bounds.x + bounds.width / 2;
     const startY = bounds.y + 12;

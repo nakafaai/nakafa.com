@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
-import { dragTouch } from "@/e2e/support/input";
+import { dragTouch, readBounds } from "@/e2e/support/input";
 
 export const legacyAvatarFragmentIds = [
   "clip0",
@@ -22,16 +22,6 @@ export class MarketingContributorMissing extends Schema.TaggedError<MarketingCon
 ) {
   get message() {
     return "The marketing contributor fixture is empty.";
-  }
-}
-
-/** One interactive marketing surface did not expose measurable bounds. */
-export class MarketingBoundsMissing extends Schema.TaggedError<MarketingBoundsMissing>()(
-  "MarketingBoundsMissing",
-  { surface: MarketingSurfaceSchema }
-) {
-  get message() {
-    return `Marketing surface bounds are missing: surface=${this.surface}.`;
   }
 }
 
@@ -125,17 +115,6 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
     return measurements;
   }
 );
-
-const readBounds = Effect.fn("NakafaE2E.readMarketingBounds")(function* (
-  locator: Locator,
-  surface: typeof MarketingSurfaceSchema.Type
-) {
-  const bounds = yield* Effect.promise(() => locator.boundingBox());
-  if (!bounds) {
-    return yield* new MarketingBoundsMissing({ surface });
-  }
-  return bounds;
-});
 
 /** Dismisses the active contributor drawer through a real touch gesture. */
 export const swipeContributorDrawer = Effect.fn(
