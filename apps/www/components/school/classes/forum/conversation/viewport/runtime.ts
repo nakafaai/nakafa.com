@@ -22,7 +22,7 @@ const VIEWPORT_EVENT_CAPACITY = 64;
 
 export type ActiveTranscript = ActiveTranscriptModel | null;
 export type ForumPostId = Id<"schoolClassForumPosts">;
-export type RuntimeFiber = Fiber.Fiber<void, never>;
+type RuntimeFiber = Fiber.Fiber<void, never>;
 export type ViewportStateDraft = Parameters<typeof deriveViewportState>[0];
 
 /** Creates the mutable Effect refs and event queue that one open viewport service owns. */
