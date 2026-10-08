@@ -32,10 +32,7 @@ import {
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji";
 import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/previews";
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply";
-import {
-  ForumPostSubmitMutations,
-  submitForumPost,
-} from "@/components/school/classes/forum/conversation/input/submit";
+import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
 import { useControls } from "@/components/school/classes/forum/conversation/viewport/context";
 import {
   useForumSession,
@@ -172,16 +169,12 @@ export function ForumPostInput() {
           forumId,
           parentId: replyTarget?.postId,
         },
-        files
-      ).pipe(
-        Effect.provideService(ForumPostSubmitMutations, {
-          createPost,
-          discardForumUploads,
-          generateUploadUrl,
-          saveForumUpload,
-        }),
-        Effect.provide(FetchClient)
-      );
+        files,
+        createPost,
+        discardForumUploads,
+        generateUploadUrl,
+        saveForumUpload
+      ).pipe(Effect.provide(FetchClient));
       if (isTextOnlyPost) {
         Effect.runSync(clearSubmittedDraft());
         return Effect.runPromise(

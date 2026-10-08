@@ -10,10 +10,10 @@ import {
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import type { ViewportAdapters } from "@/components/school/classes/forum/conversation/viewport/adapter";
 import {
+  type deriveViewportState,
   initialViewportState,
   type ViewportEvent,
   type ViewportMeasurement,
-  type ViewportState,
 } from "@/components/school/classes/forum/conversation/viewport/model";
 
 export const HIGHLIGHT_DURATION_MS = 5000;
@@ -23,8 +23,7 @@ export const VIEWPORT_EVENT_CAPACITY = 64;
 export type ActiveTranscript = ActiveTranscriptModel | null;
 export type ForumPostId = Id<"schoolClassForumPosts">;
 export type RuntimeFiber = Fiber.Fiber<void, never>;
-export type ViewportStateDraft = Omit<ViewportState, "jumpControl"> &
-  Partial<Pick<ViewportState, "jumpControl">>;
+export type ViewportStateDraft = Parameters<typeof deriveViewportState>[0];
 
 /** Creates the mutable Effect refs and event queue that one open viewport service owns. */
 export const makeViewportRuntime = Effect.fn("www.forum.viewport.runtime")(

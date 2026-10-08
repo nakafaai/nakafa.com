@@ -5,7 +5,7 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
-import { Context, Effect, Result, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import {
   HttpBody,
   HttpClient,
@@ -42,45 +42,34 @@ const UploadAttachmentFileInputSchema = Schema.Struct({
 type ForumPostSubmitDraft = typeof ForumPostSubmitDraftSchema.Type;
 type DiscardPendingUploadsInput = typeof DiscardPendingUploadsInputSchema.Type;
 type UploadAttachmentFileInput = typeof UploadAttachmentFileInputSchema.Type;
-type GenerateUploadUrlMutation = (
+export type GenerateUploadUrlMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.uploads.generateUploadUrl
 >;
-type DiscardForumUploadsMutation = (
+export type DiscardForumUploadsMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.uploads.discardForumUploads
 >;
-type SaveForumUploadMutation = (
+export type SaveForumUploadMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.uploads.saveForumUpload
 >;
-type CreateForumPostMutation = (
+export type CreateForumPostMutation = (
   args: Ref.Args<
     typeof refs.public.classes.forums.mutations.posts.createForumPost
   >
 ) => InvokeReturn<
   typeof refs.public.classes.forums.mutations.posts.createForumPost
 >;
-
-/** Convex mutations one forum post submission calls, supplied by the composer. */
-export class ForumPostSubmitMutations extends Context.Service<
-  ForumPostSubmitMutations,
-  {
-    createPost: CreateForumPostMutation;
-    discardForumUploads: DiscardForumUploadsMutation;
-    generateUploadUrl: GenerateUploadUrlMutation;
-    saveForumUpload: SaveForumUploadMutation;
-  }
->()("ForumPostSubmitMutations") {}
 
 class ForumAttachmentUploadError extends Schema.TaggedError<ForumAttachmentUploadError>()(
   "ForumAttachmentUploadError",
@@ -119,15 +108,17 @@ function getUploadableFiles(files: readonly FileWithPreview[]) {
 }
 /** Discards pending uploads and captures cleanup failures without masking the original error. */
 const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
-  function* ({ source, uploadIds }: DiscardPendingUploadsInput) {
+  function* (
+    { source, uploadIds }: DiscardPendingUploadsInput,
+    discardForumUploads: DiscardForumUploadsMutation
+  ) {
     if (uploadIds.length === 0) {
       return;
     }
-    const mutations = yield* ForumPostSubmitMutations;
     const result = yield* Effect.result(
       Effect.tryPromise({
         try: () =>
-          mutations.discardForumUploads({
+          discardForumUploads({
             uploadIds,
           }),
         catch: (cause) =>
@@ -160,11 +151,15 @@ const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
 );
 /** Uploads one attachment and removes its pending record if the upload fails. */
 const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
-  function* ({ file, forumId }: UploadAttachmentFileInput) {
-    const mutations = yield* ForumPostSubmitMutations;
+  function* (
+    { file, forumId }: UploadAttachmentFileInput,
+    generateUploadUrl: GenerateUploadUrlMutation,
+    saveForumUpload: SaveForumUploadMutation,
+    discardForumUploads: DiscardForumUploadsMutation
+  ) {
     const { uploadId, uploadUrl } = yield* Effect.tryPromise({
       try: () =>
-        mutations.generateUploadUrl({
+        generateUploadUrl({
           forumId,
         }),
       catch: (cause) =>
@@ -206,15 +201,18 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
           })
       ),
       Effect.tapError(() =>
-        discardPendingUploads({
-          source: "forum-upload-discard-single",
-          uploadIds: [uploadId],
-        })
+        discardPendingUploads(
+          {
+            source: "forum-upload-discard-single",
+            uploadIds: [uploadId],
+          },
+          discardForumUploads
+        )
       )
     );
     yield* Effect.tryPromise({
       try: () =>
-        mutations.saveForumUpload({
+        saveForumUpload({
           name: file.name,
           size: file.size,
           type: file.type,
@@ -239,10 +237,13 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
         )
       ),
       Effect.tapError(() =>
-        discardPendingUploads({
-          source: "forum-upload-discard-single",
-          uploadIds: [uploadId],
-        })
+        discardPendingUploads(
+          {
+            source: "forum-upload-discard-single",
+            uploadIds: [uploadId],
+          },
+          discardForumUploads
+        )
       )
     );
     return uploadId;
@@ -251,16 +252,24 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
 /** Uploads attachments, creates the post, and cleans partial uploads on failure. */
 export const submitForumPost = Effect.fn("www.forum.submitPost")(function* (
   post: ForumPostSubmitDraft,
-  files: readonly FileWithPreview[]
+  files: readonly FileWithPreview[],
+  createPost: CreateForumPostMutation,
+  discardForumUploads: DiscardForumUploadsMutation,
+  generateUploadUrl: GenerateUploadUrlMutation,
+  saveForumUpload: SaveForumUploadMutation
 ) {
-  const mutations = yield* ForumPostSubmitMutations;
   const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
   const uploadResults = yield* Effect.all(
     getUploadableFiles(files).map((file) =>
-      uploadAttachmentFile({
-        file,
-        forumId: post.forumId,
-      })
+      uploadAttachmentFile(
+        {
+          file,
+          forumId: post.forumId,
+        },
+        generateUploadUrl,
+        saveForumUpload,
+        discardForumUploads
+      )
     ),
     {
       mode: "result",
@@ -273,15 +282,18 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* (
   }
   const failedUpload = uploadResults.find(Result.isFailure);
   if (failedUpload) {
-    yield* discardPendingUploads({
-      source: "forum-upload-discard-batch",
-      uploadIds: attachmentUploadIds,
-    });
+    yield* discardPendingUploads(
+      {
+        source: "forum-upload-discard-batch",
+        uploadIds: attachmentUploadIds,
+      },
+      discardForumUploads
+    );
     return yield* failedUpload.failure;
   }
   yield* Effect.tryPromise({
     try: () =>
-      mutations.createPost({
+      createPost({
         ...(attachmentUploadIds.length > 0
           ? {
               attachmentUploadIds,
@@ -313,10 +325,13 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* (
       )
     ),
     Effect.tapError(() =>
-      discardPendingUploads({
-        source: "forum-upload-discard-batch",
-        uploadIds: attachmentUploadIds,
-      })
+      discardPendingUploads(
+        {
+          source: "forum-upload-discard-batch",
+          uploadIds: attachmentUploadIds,
+        },
+        discardForumUploads
+      )
     )
   );
 });
