@@ -14,6 +14,7 @@ import {
   Ref,
   Result,
   Schedule,
+  Semaphore,
   Sink,
   Stdio,
   String as Str,
@@ -56,6 +57,12 @@ const SPLIT_CHARACTER = [
   "process.stdout.write(Buffer.from([0xe2, 0x82]));",
   "setTimeout(() => process.stdout.write(Buffer.from([0xac, 0x0a])), 100);",
   "setTimeout(() => {}, 30000);",
+].join("\n");
+
+/** A child that writes half a line, waits past several heartbeats, then finishes the line. */
+const HALF_LINE = [
+  'process.stdout.write("half");',
+  'setTimeout(() => process.stdout.write(" line\\n"), 300);',
 ].join("\n");
 
 /** Appends every chunk written to one standard stream to its text. */
@@ -268,6 +275,24 @@ describe("build watch", () => {
       expectStalled(failure, "build stalled: no output for 2s; last output: €");
     })
   );
+
+  it.live(
+    "keeps a heartbeat out of a line the command is still writing",
+    () =>
+      Effect.gen(function* () {
+        const streams = yield* captureStreams();
+        const status = yield* runWatch(streams.stdio, {
+          args: ["-e", HALF_LINE],
+          command: process.execPath,
+          heartbeatInterval: Duration.millis(20),
+          stallLimit: Duration.seconds(5),
+        });
+
+        expect(status).toBe(0);
+        expect(yield* Ref.get(streams.stdout)).toContain("half line\n");
+      }),
+    15_000
+  );
 });
 
 describe("build status", () => {
@@ -326,6 +351,7 @@ describe("silence watch", () => {
       const activity = yield* Ref.make({
         at: yield* Clock.currentTimeMillis,
         lastLine: quiet,
+        stdoutOpenLine: false,
       });
       const finished = yield* Ref.make(false);
       const watch = yield* trackFinish(
@@ -349,6 +375,7 @@ describe("silence watch", () => {
       const activity = yield* Ref.make({
         at: yield* Clock.currentTimeMillis,
         lastLine: quiet,
+        stdoutOpenLine: false,
       });
       const finished = yield* Ref.make(false);
       const watch = yield* trackFinish(
@@ -360,6 +387,7 @@ describe("silence watch", () => {
       yield* Ref.set(activity, {
         at: yield* Clock.currentTimeMillis,
         lastLine: Option.some("next"),
+        stdoutOpenLine: false,
       });
       yield* TestClock.adjust(Duration.minutes(4));
       expect(yield* Ref.get(finished)).toBe(false);
@@ -380,11 +408,14 @@ describe("build heartbeats", () => {
       const activity = yield* Ref.make({
         at: yield* Clock.currentTimeMillis,
         lastLine: quiet,
+        stdoutOpenLine: false,
       });
+      const gate = yield* Semaphore.make(1);
       const heartbeats = yield* printHeartbeats(
         activity,
         streams.stdio,
-        Duration.millis(50)
+        Duration.millis(50),
+        gate
       ).pipe(Effect.forkChild);
 
       yield* Effect.sleep(Duration.millis(500));
@@ -394,6 +425,37 @@ describe("build heartbeats", () => {
         Arr.filter(lines, (line) => line.startsWith("build heartbeat: silent"))
           .length
       ).toBeGreaterThanOrEqual(2);
+    }).pipe(Effect.provide(layer))
+  );
+
+  it.live("waits for a line to end before writing a heartbeat", () =>
+    Effect.gen(function* () {
+      const streams = yield* captureStreams();
+      const midLine: Option.Option<string> = Option.none();
+      const activity = yield* Ref.make({
+        at: yield* Clock.currentTimeMillis,
+        lastLine: midLine,
+        stdoutOpenLine: true,
+      });
+      const gate = yield* Semaphore.make(1);
+      const heartbeats = yield* printHeartbeats(
+        activity,
+        streams.stdio,
+        Duration.millis(20),
+        gate
+      ).pipe(Effect.forkChild);
+
+      yield* Effect.sleep(Duration.millis(200));
+      expect(yield* Ref.get(streams.stdout)).toBe("");
+      yield* Ref.update(activity, (previous) => ({
+        ...previous,
+        stdoutOpenLine: false,
+      }));
+      yield* Effect.sleep(Duration.millis(200));
+      yield* Fiber.interrupt(heartbeats);
+      expect(yield* Ref.get(streams.stdout)).toContain(
+        "build heartbeat: silent "
+      );
     }).pipe(Effect.provide(layer))
   );
 });

@@ -10,6 +10,7 @@ import {
   Ref,
   Schedule,
   Schema,
+  Semaphore,
   type Sink,
   Stdio,
   String as Str,
@@ -27,12 +28,18 @@ export class BuildStalled extends Data.TaggedError("BuildStalled")<{
   readonly message: string;
 }> {}
 
-/** When the command last printed, and the last non-blank line it wrote. */
+/**
+ * When the command last printed, the last non-blank line it wrote, and whether
+ * its standard output stops in the middle of a line.
+ */
 const Activity = Schema.Struct({
   at: Schema.Finite,
   lastLine: Schema.Option(Schema.String),
+  stdoutOpenLine: Schema.Boolean,
 });
 type Activity = typeof Activity.Type;
+
+const LINE_FEED = 0x0a;
 
 /** The last non-blank line of one chunk of output, without its line break. */
 function lastLineOf(text: string) {
@@ -50,6 +57,7 @@ const recordOutput = Effect.fn("BuildWatch.recordOutput")(function* (
   const now = yield* Clock.currentTimeMillis;
   const line = lastLineOf(decoder.decode(chunk, { stream: true }));
   yield* Ref.update(activity, (previous) => ({
+    ...previous,
     at: now,
     lastLine: Option.orElse(line, () => previous.lastLine),
   }));
@@ -72,6 +80,40 @@ const passThrough = Effect.fn("BuildWatch.passThrough")(function* (
   yield* stream.pipe(
     Stream.tap((chunk) => recordOutput(activity, decoder, chunk)),
     Stream.run(sink)
+  );
+});
+
+/**
+ * Copies standard output one chunk at a time. Each chunk is noted and written
+ * under the gate that also serializes heartbeats, so a heartbeat never lands
+ * inside a line that the command is still writing.
+ */
+const passStdout = Effect.fn("BuildWatch.passStdout")(function* (
+  stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>,
+  sink: Sink.Sink<
+    void,
+    string | Uint8Array,
+    never,
+    PlatformError.PlatformError
+  >,
+  activity: Ref.Ref<Activity>,
+  gate: Semaphore.Semaphore
+) {
+  // The decoder holds a partial character between chunks, as in passThrough.
+  const decoder = new TextDecoder();
+  yield* Stream.runForEach(stream, (chunk) =>
+    gate.withPermit(
+      Effect.gen(function* () {
+        yield* recordOutput(activity, decoder, chunk);
+        // A line feed byte never occurs inside a multi-byte character, so the
+        // last byte of a chunk says whether the chunk ends a line.
+        yield* Ref.update(activity, (previous) => ({
+          ...previous,
+          stdoutOpenLine: chunk.at(-1) !== LINE_FEED,
+        }));
+        yield* Stream.succeed(chunk).pipe(Stream.run(sink));
+      })
+    )
   );
 });
 
@@ -102,10 +144,15 @@ export const watchSilence = Effect.fn("BuildWatch.watchSilence")(function* (
   }
 });
 
-/** Writes one heartbeat line with the silence so far and the container's readings. */
+/**
+ * Writes one heartbeat line with the silence so far and the container's
+ * readings. While standard output is midway through a line, this tick writes
+ * nothing, and the next tick tries again.
+ */
 const printHeartbeat = Effect.fn("BuildWatch.printHeartbeat")(function* (
   activity: Ref.Ref<Activity>,
-  stdio: Stdio.Stdio
+  stdio: Stdio.Stdio,
+  gate: Semaphore.Semaphore
 ) {
   const { at } = yield* Ref.get(activity);
   const silentMillis = (yield* Clock.currentTimeMillis) - at;
@@ -113,8 +160,16 @@ const printHeartbeat = Effect.fn("BuildWatch.printHeartbeat")(function* (
     HEARTBEAT_SOURCES,
     Math.floor(silentMillis / 1000)
   );
-  yield* Stream.succeed(`${formatHeartbeat(heartbeat)}\n`).pipe(
-    Stream.run(stdio.stdout())
+  yield* gate.withPermit(
+    Effect.gen(function* () {
+      const { stdoutOpenLine } = yield* Ref.get(activity);
+      if (stdoutOpenLine) {
+        return;
+      }
+      yield* Stream.succeed(`${formatHeartbeat(heartbeat)}\n`).pipe(
+        Stream.run(stdio.stdout())
+      );
+    })
   );
 });
 
@@ -123,11 +178,12 @@ export const printHeartbeats = Effect.fn("BuildWatch.printHeartbeats")(
   function* (
     activity: Ref.Ref<Activity>,
     stdio: Stdio.Stdio,
-    interval: Duration.Duration
+    interval: Duration.Duration,
+    gate: Semaphore.Semaphore
   ) {
     yield* Effect.sleep(interval).pipe(
       Effect.andThen(
-        printHeartbeat(activity, stdio).pipe(
+        printHeartbeat(activity, stdio, gate).pipe(
           Effect.repeat(Schedule.spaced(interval))
         )
       )
@@ -165,8 +221,12 @@ export const watchBuild = Effect.fn("BuildWatch.run")(function* (options: {
   const started: Activity = {
     at: yield* Clock.currentTimeMillis,
     lastLine: Option.none(),
+    stdoutOpenLine: false,
   };
   const activity = yield* Ref.make(started);
+  // Standard output and heartbeats take turns, so a heartbeat is never written
+  // between two chunks of one line.
+  const stdoutGate = yield* Semaphore.make(1);
   return yield* Effect.scoped(
     Effect.gen(function* () {
       const child = yield* ChildProcess.make(options.command, options.args, {
@@ -177,14 +237,14 @@ export const watchBuild = Effect.fn("BuildWatch.run")(function* (options: {
       const output = yield* Effect.forkChild(
         Effect.all(
           [
-            passThrough(child.stdout, stdio.stdout(), activity),
+            passStdout(child.stdout, stdio.stdout(), activity, stdoutGate),
             passThrough(child.stderr, stdio.stderr(), activity),
           ],
           { concurrency: "unbounded", discard: true }
         )
       );
       const heartbeats = yield* Effect.forkChild(
-        printHeartbeats(activity, stdio, options.heartbeatInterval)
+        printHeartbeats(activity, stdio, options.heartbeatInterval, stdoutGate)
       );
       // Only a command that is still running can stall. Once it has exited,
       // its exit status is the result, even if a process it started still
