@@ -3,10 +3,8 @@
 import { BacterialShapes } from "@repo/design-system/components/contents/biology/bacteria-shapes";
 import { BacterialStructure } from "@repo/design-system/components/contents/biology/bacteria-structure";
 import { GramWallComparison } from "@repo/design-system/components/contents/biology/bacteria-wall";
-import type {
-  BiologyLabItem,
-  BiologySceneProps,
-} from "@repo/design-system/components/contents/biology/data";
+import type { BiologyLabItem } from "@repo/design-system/components/contents/biology/data";
+import type { BiologySceneProps } from "@repo/design-system/components/contents/biology/lab-frame";
 import type { ReactNode } from "react";
 
 type BacteriaScene =

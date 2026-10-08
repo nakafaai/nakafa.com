@@ -4,8 +4,8 @@ import { useThree } from "@react-three/fiber";
 import {
   BIOLOGY_DEFAULT_VIEW,
   type BiologyLabItem,
-  type BiologyLabProps,
-  type BiologySceneProps,
+  type BiologyLabLabels,
+  type BiologySceneColors,
   type BiologySceneView,
   getBiologySceneColors,
   isBiologyItemIndex,
@@ -34,6 +34,20 @@ import type { ComponentType, ReactNode } from "react";
 import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.3;
+
+export interface BiologyLabProps<Item extends BiologyLabItem = BiologyLabItem> {
+  description: ReactNode;
+  labels: BiologyLabLabels<Item>;
+  title: ReactNode;
+}
+
+export interface BiologySceneProps<
+  Item extends BiologyLabItem = BiologyLabItem,
+> {
+  colors: BiologySceneColors;
+  item: Item;
+  selectedIndex: number;
+}
 
 /**
  * Renders the shared card, controls, and camera frame for one biology 3D lab.

@@ -1,3 +1,4 @@
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const NEON_ID = "neon";
@@ -24,6 +25,11 @@ export const ATOM_SHELL_SAMPLE_IDS = [
   CALCIUM_ID,
 ] satisfies AtomShellSampleId[];
 
+const AtomShellSampleSchema = Schema.Struct({
+  atomicNumber: Schema.Finite,
+  symbol: Schema.String,
+});
+
 export const ATOM_SHELL_SAMPLES = {
   [NEON_ID]: { atomicNumber: 10, symbol: "Ne" },
   [MAGNESIUM_ID]: { atomicNumber: 12, symbol: "Mg" },
@@ -31,24 +37,20 @@ export const ATOM_SHELL_SAMPLES = {
   [ARGON_ID]: { atomicNumber: 18, symbol: "Ar" },
   [POTASSIUM_ID]: { atomicNumber: 19, symbol: "K" },
   [CALCIUM_ID]: { atomicNumber: 20, symbol: "Ca" },
-} satisfies Record<
-  AtomShellSampleId,
-  {
-    atomicNumber: number;
-    symbol: string;
-  }
->;
+} satisfies Record<AtomShellSampleId, typeof AtomShellSampleSchema.Type>;
+
+const EarlyElementFillLimitSchema = Schema.Struct({
+  fillLimit: Schema.Finite,
+  key: Schema.String,
+  principalQuantumNumber: Schema.Finite,
+});
 
 export const EARLY_ELEMENT_FILL_LIMITS = [
   { key: "K", principalQuantumNumber: 1, fillLimit: 2 },
   { key: "L", principalQuantumNumber: 2, fillLimit: 8 },
   { key: "M", principalQuantumNumber: 3, fillLimit: 8 },
   { key: "N", principalQuantumNumber: 4, fillLimit: 2 },
-] satisfies readonly {
-  fillLimit: number;
-  key: string;
-  principalQuantumNumber: number;
-}[];
+] satisfies readonly (typeof EarlyElementFillLimitSchema.Type)[];
 
 export interface AtomShellSampleLabels {
   name: string;
@@ -64,12 +66,6 @@ export interface AtomShellLabLabels {
   maximumCapacity: string;
   outerShell: string;
   samples: Record<AtomShellSampleId, AtomShellSampleLabels>;
-}
-
-export interface AtomShellLabProps {
-  description: ReactNode;
-  labels: AtomShellLabLabels;
-  title: ReactNode;
 }
 
 /**

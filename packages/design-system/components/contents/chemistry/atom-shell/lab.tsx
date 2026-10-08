@@ -3,7 +3,7 @@
 import {
   ATOM_SHELL_SAMPLE_IDS,
   ATOM_SHELL_SAMPLES,
-  type AtomShellLabProps,
+  type AtomShellLabLabels,
   type AtomShellSampleId,
   CALCIUM_ID,
   getEarlyElementShellConfiguration,
@@ -24,6 +24,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+export interface AtomShellLabProps {
+  description: ReactNode;
+  labels: AtomShellLabLabels;
+  title: ReactNode;
+}
 
 /** Renders a 3D Bohr shell reader for neutral atoms up to calcium. */
 export function AtomShellLab({

@@ -2,7 +2,7 @@
 
 import {
   ANCIENT_ATOM_LEVELS,
-  type AncientAtomLabProps,
+  type AncientAtomLabLabels,
   type AncientAtomLevelId,
   WHOLE_MATTER_LEVEL_ID,
 } from "@repo/design-system/components/contents/chemistry/ancient-atom/data";
@@ -28,6 +28,12 @@ import {
 import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 import { useState } from "react";
+
+export interface AncientAtomLabProps {
+  description: ReactNode;
+  labels: AncientAtomLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders an introductory thought experiment for Greek atomism.
