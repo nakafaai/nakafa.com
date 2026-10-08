@@ -47,7 +47,7 @@ const QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
  * the cause of the client's own error, so the retry policy treats it like any
  * other transient failure.
  */
-export class QueryDeadline extends Data.TaggedError("QueryDeadline") {}
+class QueryDeadline extends Data.TaggedError("QueryDeadline") {}
 
 /**
  * Each attempt of a query may take at most this long. One query therefore ends
@@ -66,7 +66,7 @@ const QUERY_ATTEMPT_DEADLINE = Duration.seconds(10);
  * its deadline, or the connection dropped before Convex answered. Function
  * errors and decoding failures are never transient.
  */
-export function isTransientQueryFailure(error: unknown) {
+function isTransientQueryFailure(error: unknown) {
   if (!Schema.is(HttpClient.HttpClientError)(error)) {
     return false;
   }
@@ -87,6 +87,8 @@ export function isTransientQueryFailure(error: unknown) {
  * Makes the provided client retry transient query failures, and gives each
  * attempt its own deadline so a stalled query fails within its retry budget.
  * Mutations and actions are not idempotent, so they pass through unchanged.
+ * The export lets the tests script the base client under the test clock, which
+ * httpLayer does not allow.
  */
 export const withQueryRetry = <E, R>(
   base: Layer.Layer<HttpClient.HttpClient, E, R>
