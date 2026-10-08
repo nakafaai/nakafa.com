@@ -7,13 +7,15 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { desktopViewport } from "@/e2e/support/viewport";
 
-const targetViewports = [
+/** The phone sheet and the desktop rail the guest sidebar opens in. */
+const sidebarViewports = [
   { height: 844, name: "compact", width: 390 },
-  { height: 900, name: "desktop", width: 1440 },
+  desktopViewport,
 ] as const;
 
-for (const viewport of targetViewports) {
+for (const viewport of sidebarViewports) {
   test(`guest sidebar keeps account actions clear at ${viewport.name}`, async ({
     page,
   }) => {

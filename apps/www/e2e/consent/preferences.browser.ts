@@ -9,25 +9,21 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/context";
 import { dragTouch, readBounds } from "@/e2e/support/input";
+import { targetViewports } from "@/e2e/support/viewport";
 
-const targetViewports = [
-  { height: 800, name: "compact", slot: "drawer-popup", width: 320 },
-  {
-    hasTouch: true,
-    height: 844,
-    name: "touch",
-    slot: "drawer-popup",
-    width: 390,
-  },
-  { height: 1024, name: "tablet-portrait", slot: "dialog-content", width: 768 },
-  {
-    height: 768,
-    name: "tablet-landscape",
-    slot: "dialog-content",
-    width: 1024,
-  },
-  { height: 900, name: "desktop", slot: "dialog-content", width: 1440 },
-] as const;
+/** The surface each viewport opens: a drawer on a phone, a dialog on wider screens. */
+const slotByViewport = {
+  compact: "drawer-popup",
+  desktop: "dialog-content",
+  "tablet-landscape": "dialog-content",
+  "tablet-portrait": "dialog-content",
+  touch: "drawer-popup",
+} as const;
+
+const consentViewports = targetViewports.map((viewport) => ({
+  ...viewport,
+  slot: slotByViewport[viewport.name],
+}));
 
 const prepareConsentPage = Effect.fn("NakafaE2E.prepareConsentPage")(function* (
   page: Page
@@ -87,7 +83,7 @@ const swipeDrawerClosed = Effect.fn("NakafaE2E.swipeConsentDrawerClosed")(
   }
 );
 
-for (const viewport of targetViewports) {
+for (const viewport of consentViewports) {
   test(`consent preferences preserve responsive UX at ${viewport.name}`, async ({
     baseURL,
     browser,
@@ -98,7 +94,7 @@ for (const viewport of targetViewports) {
         browser,
         {
           baseURL: baseURL ?? "",
-          hasTouch: "hasTouch" in viewport ? viewport.hasTouch : false,
+          hasTouch: viewport.hasTouch,
           serviceWorkers: "block",
           viewport: { height: viewport.height, width: viewport.width },
         },

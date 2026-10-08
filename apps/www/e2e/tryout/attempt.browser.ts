@@ -16,9 +16,9 @@ import {
   openTrack,
   setHref,
   trackHref,
-  viewports,
   visibleLink,
 } from "@/e2e/support/tryout";
+import { tryoutViewports } from "@/e2e/support/viewport";
 
 /** The shell's lock attribute, which the lock store sets once a page hydrates. */
 const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
@@ -246,7 +246,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   });
 });
 
-for (const viewport of viewports) {
+for (const viewport of tryoutViewports) {
   test.describe(`Try-out attempt shell on ${viewport.name}`, () => {
     test.use({
       hasTouch: viewport.hasTouch,

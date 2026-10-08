@@ -13,12 +13,6 @@ export const setHref = `${trackHref}/set-1`;
 const SECTION_HREF_PATTERN =
   /^\/en\/try-out\/indonesia\/snbt\/2027\/set-1\/[^/?]+(\?attemptId=[^&]+)?$/;
 
-/** The viewports every try-out suite walks. */
-export const viewports = [
-  { hasTouch: false, height: 900, name: "desktop", width: 1440 },
-  { hasTouch: true, height: 844, name: "touch", width: 390 },
-] as const;
-
 /** The first link to `href` that the current page shows. */
 export function visibleLink(page: Page, href: string) {
   return page

@@ -22,9 +22,9 @@ import {
   setHref,
   settledSection,
   trackHref,
-  viewports,
   visibleLink,
 } from "@/e2e/support/tryout";
+import { tryoutViewports } from "@/e2e/support/viewport";
 
 /**
  * Opens a set or section while Next.js holds back request-time data, so its
@@ -172,7 +172,7 @@ const verifyPrefetchedHeadings = Effect.fn(
   );
 });
 
-for (const viewport of viewports) {
+for (const viewport of tryoutViewports) {
   test.describe(`Try-out shell on ${viewport.name}`, () => {
     test.use({
       hasTouch: viewport.hasTouch,

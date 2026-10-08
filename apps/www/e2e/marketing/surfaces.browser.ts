@@ -16,6 +16,7 @@ import {
   observeStablePricingReload,
 } from "@/e2e/support/pricing";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
@@ -33,19 +34,6 @@ const COMMUNITY_MAX_DESCENDANTS = 800;
 const COMMUNITY_MAX_HTML_BYTES = 223_000;
 const HOMEPAGE_MAX_DESCENDANTS = 2540;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
-
-const targetViewports = [
-  { height: 800, name: "compact", width: 320 },
-  {
-    hasTouch: true,
-    height: 844,
-    name: "touch",
-    width: 390,
-  },
-  { height: 1024, name: "tablet-portrait", width: 768 },
-  { height: 768, name: "tablet-landscape", width: 1024 },
-  { height: 900, name: "desktop", width: 1440 },
-] as const;
 
 type MarketingViewport = (typeof targetViewports)[number];
 
@@ -116,7 +104,7 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
       expect(page.locator("[data-contributor-drawer]")).toHaveCount(0)
     );
 
-    const hasTouch = "hasTouch" in viewport && viewport.hasTouch;
+    const { hasTouch } = viewport;
     const firstContributor = yield* readFirstContributor(contributors);
     const firstTrigger = triggers.first();
     yield* Effect.promise(() =>
@@ -403,7 +391,7 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
 for (const viewport of targetViewports) {
   test.describe(`marketing surfaces at ${viewport.name}`, () => {
     test.use({
-      hasTouch: "hasTouch" in viewport ? viewport.hasTouch : false,
+      hasTouch: viewport.hasTouch,
       viewport: { height: viewport.height, width: viewport.width },
     });
 

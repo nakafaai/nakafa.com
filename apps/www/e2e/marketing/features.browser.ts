@@ -5,6 +5,7 @@ import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/context";
+import { targetViewports } from "@/e2e/support/viewport";
 
 const NINA_ANSWER_TEXT = "Subtract the first equation";
 const NINA_HEADING_PATTERN = /Nina already knows/;
@@ -20,39 +21,18 @@ const NEXT_CHUNK_PATH =
   /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
 
 // Wide layouts reduce continuous WebGL pressure; three widths keep normal motion.
-const targetViewports = [
-  {
-    height: 800,
-    name: "compact",
-    reducedMotion: "no-preference",
-    width: 320,
-  },
-  {
-    hasTouch: true,
-    height: 844,
-    name: "touch",
-    reducedMotion: "no-preference",
-    width: 390,
-  },
-  {
-    height: 1024,
-    name: "tablet-portrait",
-    reducedMotion: "no-preference",
-    width: 768,
-  },
-  {
-    height: 768,
-    name: "tablet-landscape",
-    reducedMotion: "reduce",
-    width: 1024,
-  },
-  {
-    height: 900,
-    name: "desktop",
-    reducedMotion: "reduce",
-    width: 1440,
-  },
-] as const;
+const reducedMotionByViewport = {
+  compact: "no-preference",
+  desktop: "reduce",
+  "tablet-landscape": "reduce",
+  "tablet-portrait": "no-preference",
+  touch: "no-preference",
+} as const;
+
+const featureViewports = targetViewports.map((viewport) => ({
+  ...viewport,
+  reducedMotion: reducedMotionByViewport[viewport.name],
+}));
 
 const prepareFeaturesPage = Effect.fn("NakafaE2E.prepareFeaturesPage")(
   function* (page: Page) {
@@ -348,7 +328,7 @@ const expectProjectileHydratedWhileDeferred = Effect.fn(
   yield* expectProjectileDeferred(page);
 });
 
-for (const viewport of targetViewports) {
+for (const viewport of featureViewports) {
   test(`homepage features preserve UX at ${viewport.name}`, async ({
     baseURL,
     browser,
@@ -359,7 +339,7 @@ for (const viewport of targetViewports) {
         browser,
         {
           baseURL: baseURL ?? "",
-          hasTouch: "hasTouch" in viewport ? viewport.hasTouch : false,
+          hasTouch: viewport.hasTouch,
           reducedMotion: viewport.reducedMotion,
           serviceWorkers: "block",
           viewport: { height: viewport.height, width: viewport.width },
