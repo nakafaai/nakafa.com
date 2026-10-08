@@ -12,7 +12,7 @@ import {
   createTestPublication,
   makePageRuntimeSource,
 } from "@repo/backend/test/content/publication";
-import { Effect, Struct } from "effect";
+import { Effect, HashMap, Struct } from "effect";
 
 describe("active public body selection", () => {
   it.effect(
@@ -20,39 +20,50 @@ describe("active public body selection", () => {
     () =>
       Effect.gen(function* () {
         const fixture = makePageRuntimeSource();
-        const published = new Map(fixture.source).set("contentReleases", [
-          {
-            ...fixture.release,
-            resultFamilies: ["page"],
-          },
-        ]);
+        const published = HashMap.set(
+          HashMap.fromIterable(fixture.source),
+          "contentReleases",
+          [
+            {
+              ...fixture.release,
+              resultFamilies: ["page"],
+            },
+          ]
+        );
         const sources = [
-          new Map(published).set("contentHeads", [
+          HashMap.set(published, "contentHeads", [
             {
               ...fixture.head,
               compilerConfigHash: `sha256:${"f".repeat(64)}`,
             },
           ]),
-          new Map(published).set("contentHeads", [
+          HashMap.set(published, "contentHeads", [
             {
               ...fixture.head,
               sourcePath: "outside-corpus.mdx",
             },
           ]),
-          new Map(published)
-            .set("contentState", [
-              {
-                ...fixture.state,
-                activeReleaseId: "different-release",
-              },
-            ])
-            .set("contentReleases", [
-              {
-                ...fixture.release,
-                releaseId: "different-release",
-                resultFamilies: ["page"],
-              },
-            ]),
+          HashMap.setMany(published, [
+            [
+              "contentState",
+              [
+                {
+                  ...fixture.state,
+                  activeReleaseId: "different-release",
+                },
+              ],
+            ],
+            [
+              "contentReleases",
+              [
+                {
+                  ...fixture.release,
+                  releaseId: "different-release",
+                  resultFamilies: ["page"],
+                },
+              ],
+            ],
+          ]),
         ];
         for (const source of sources) {
           const runtime = yield* createTestPublication(source);
@@ -121,13 +132,14 @@ describe("active public body selection", () => {
           Struct.omit(fixture.head, ["sourceHash"]),
           Struct.omit(fixture.head, ["sourcePath"]),
         ];
+        const base = HashMap.fromIterable(fixture.source);
         const sources = [
-          new Map(fixture.source).set("contentBindings", [
+          HashMap.set(base, "contentBindings", [
             Struct.omit(fixture.binding, ["contentKey"]),
           ]),
-          new Map(fixture.source).set("contentHeads", []),
+          HashMap.set(base, "contentHeads", []),
           ...incomplete.map((head) =>
-            new Map(fixture.source).set("contentHeads", [head])
+            HashMap.set(base, "contentHeads", [head])
           ),
         ];
         for (const source of sources) {
