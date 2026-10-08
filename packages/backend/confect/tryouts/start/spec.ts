@@ -48,7 +48,7 @@ export const attemptAccessFieldsValidator = tryoutAttempts.Doc.mapFields(
   ])
 );
 export type AttemptAccessFields = typeof attemptAccessFieldsValidator.Type;
-export const tryoutStartScopeValidator = Schema.Struct({
+const tryoutStartScopeValidator = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
   examKey: tryoutRouteKeyValidator,
   now: Schema.Finite,
