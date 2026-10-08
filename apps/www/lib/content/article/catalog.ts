@@ -2,7 +2,6 @@ import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import "server-only";
 import {
-  type GitCommitShaSchema,
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
@@ -11,9 +10,8 @@ import {
   type ArticleCategory,
   ArticleCategorySchema,
   ArticleCategoryTitleSchema,
-  type ArticleMetadata,
+  ArticleMetadataSchema,
   ArticleProjectionSchema,
-  type ArticleRouteSlug,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -41,54 +39,41 @@ type CategoryPageResult = Ref.Returns<
 >;
 type CategoryPageItem = CategoryPageResult["result"]["page"][number];
 /** Active release identity required to continue one stable catalog read. */
-export interface ArticlePageCursor {
-  readonly cursor: null | string;
-  readonly expectedManifestHash: null | typeof Sha256HashSchema.Type;
-  readonly expectedReleaseId: null | typeof ReleaseIdSchema.Type;
-}
+const ArticlePageCursorSchema = Schema.Struct({
+  cursor: Schema.NullOr(Schema.String),
+  expectedManifestHash: Schema.NullOr(Sha256HashSchema),
+  expectedReleaseId: Schema.NullOr(ReleaseIdSchema),
+});
+export type ArticlePageCursor = typeof ArticlePageCursorSchema.Type;
 /** One localized category title verified against the active article model. */
-export interface PublishedArticleCategory {
-  readonly category: ArticleCategory;
-  readonly rendererDomain: CategoryPageItem["rendererDomain"];
-  readonly route: ArticleRouteSlug;
-  readonly title: typeof ArticleCategoryTitleSchema.Type;
-}
+export type PublishedArticleCategory = Effect.Success<
+  ReturnType<typeof decodeCategoryItem>
+>;
 /** One verified article card selected from the active Aksara release. */
-export interface PublishedArticleSummary {
-  readonly authors: (typeof ArticleProjectionSchema.Type)["metadata"]["authors"];
-  readonly category: ArticleCategory;
-  readonly categoryTitle: typeof ArticleCategoryTitleSchema.Type;
-  readonly dateModified?: ArticleMetadata["dateModified"];
-  readonly datePublished: ArticleMetadata["datePublished"];
-  readonly description?: ArticleMetadata["description"];
-  readonly official: boolean;
-  readonly publicPath: (typeof ArticleProjectionSchema.Type)["publicPath"];
-  readonly route: {
-    readonly category: ArticleRouteSlug;
-    readonly slug: ArticleRouteSlug;
-  };
-  readonly title: string;
-}
+const PublishedArticleSummarySchema = Schema.Struct({
+  authors: ArticleMetadataSchema.fields.authors,
+  category: ArticleCategorySchema,
+  categoryTitle: ArticleCategoryTitleSchema,
+  dateModified: ArticleMetadataSchema.fields.dateModified,
+  datePublished: ArticleMetadataSchema.fields.datePublished,
+  description: ArticleMetadataSchema.fields.description,
+  official: Schema.Boolean,
+  publicPath: ArticleProjectionSchema.fields.publicPath,
+  route: Schema.Struct({
+    category: ArticleRouteSlugSchema,
+    slug: ArticleRouteSlugSchema,
+  }),
+  title: Schema.String,
+});
+export type PublishedArticleSummary = typeof PublishedArticleSummarySchema.Type;
 /** One bounded active article page with immutable provenance. */
-export interface PublishedArticlePage {
-  readonly activeManifestHash: typeof Sha256HashSchema.Type;
-  readonly activeReleaseId: typeof ReleaseIdSchema.Type;
-  readonly articles: readonly PublishedArticleSummary[];
-  readonly done: boolean;
-  readonly nextCursor: null | string;
-  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-  readonly stale: boolean;
-}
+export type PublishedArticlePage = Effect.Success<
+  ReturnType<typeof readPublishedArticlePage>
+>;
 /** One bounded active category page with immutable provenance. */
-export interface PublishedCategoryPage {
-  readonly activeManifestHash: typeof Sha256HashSchema.Type;
-  readonly activeReleaseId: typeof ReleaseIdSchema.Type;
-  readonly categories: readonly PublishedArticleCategory[];
-  readonly done: boolean;
-  readonly nextCursor: null | string;
-  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-  readonly stale: boolean;
-}
+export type PublishedCategoryPage = Effect.Success<
+  ReturnType<typeof readPublishedCategories>
+>;
 /** Maps one malformed catalog field to the public projection failure contract. */
 function projectionError(locale: Locale, publicPath = "articles") {
   return new PublishedProjectionError({
@@ -117,15 +102,18 @@ const decodeCatalogIdentity = Effect.fn("www.articles.decodeIdentity")(
     };
   }
 );
+const decodeProjectionJson = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(Schema.Unknown)
+);
+
 /** Strictly decodes one backend-verified article catalog row. */
 const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
   item: ArticlePageItem,
   locale: Locale
 ) {
-  const input = yield* Effect.try({
-    catch: () => projectionError(locale),
-    try: (): unknown => JSON.parse(item.projectionJson),
-  });
+  const input = yield* decodeProjectionJson(item.projectionJson).pipe(
+    Effect.mapError(() => projectionError(locale))
+  );
   const projection = yield* Schema.decodeUnknownEffect(ArticleProjectionSchema)(
     input,
     {
@@ -181,7 +169,7 @@ const decodeCategoryItem = Effect.fn("www.articles.decodeCategory")(function* (
     rendererDomain: item.rendererDomain,
     route,
     title,
-  } satisfies PublishedArticleCategory;
+  };
 });
 /** Reads and decodes one exact category's newest-first article page. */
 export const readPublishedArticlePage = Effect.fn(
@@ -238,7 +226,7 @@ export const readPublishedArticlePage = Effect.fn(
     nextCursor,
     sourceRevision,
     stale,
-  } satisfies PublishedArticlePage;
+  };
 });
 /** Reads and decodes one localized article-category page. */
 export const readPublishedCategories = Effect.fn(
@@ -293,7 +281,7 @@ export const readPublishedCategories = Effect.fn(
     nextCursor,
     sourceRevision,
     stale,
-  } satisfies PublishedCategoryPage;
+  };
 });
 /** Caches one bounded article page under exact article release tags. */
 export async function getPublishedArticlePage(

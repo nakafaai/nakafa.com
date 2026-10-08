@@ -1,15 +1,10 @@
 import "server-only";
 
-import type {
-  CorpusSourcePath,
-  GitCommitSha,
-} from "@nakafa/aksara-contracts/ids";
-import type {
-  MaterialLessonProjection,
-  MaterialMetadata,
+import {
+  MaterialLessonProjectionSchema,
+  MaterialMetadataSchema,
 } from "@nakafa/aksara-contracts/projection/material";
-import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { ReactNode } from "react";
 import { decodeMaterialProjection } from "@/lib/content/material/decode";
 import { readRenderedBody } from "@/lib/content/published/body";
@@ -22,25 +17,18 @@ import {
 /** Exact public material identity sent to the shared runtime seam. */
 export type PublishedMaterialInput = PublishedContentRouteInput;
 
-/** Verified material body and source evidence consumed by the page shell. */
-export interface PublishedMaterialContent {
-  readonly activeReleaseId: PublishedMaterialData["activeReleaseId"];
-  readonly artifactHash: PublishedMaterialData["artifact"]["artifactHash"];
-  readonly body: ReactNode;
-  readonly metadata: MaterialMetadata;
-  readonly projection: MaterialLessonProjection;
-  readonly rawMdx: string;
-  readonly rendererDomain: RendererDomain;
-  readonly sourcePath: CorpusSourcePath;
-  readonly sourceRevision: GitCommitSha | null;
-}
-
+const PublishedMaterialFieldsSchema = Schema.Struct({
+  metadata: MaterialMetadataSchema,
+  projection: MaterialLessonProjectionSchema,
+});
 /** Verified material projection adapted to the current Nakafa route shell. */
-export interface PublishedMaterialData
-  extends Omit<PublishedContentData, "projection"> {
-  readonly metadata: MaterialMetadata;
-  readonly projection: MaterialLessonProjection;
-}
+export type PublishedMaterialData = Omit<PublishedContentData, "projection"> &
+  typeof PublishedMaterialFieldsSchema.Type;
+
+/** Verified material body and source evidence consumed by the page shell. */
+export type PublishedMaterialContent = Readonly<
+  Effect.Success<ReturnType<typeof renderMaterialArtifact>>
+>;
 
 /** Strictly narrows one verified runtime exchange to material data. */
 export const decodeMaterialData = Effect.fn("NakafaContent.decodeMaterialData")(
@@ -73,7 +61,7 @@ export const readPublishedMaterial = Effect.fn(
 export const renderMaterialArtifact = Effect.fn(
   "NakafaContent.renderMaterialArtifact"
 )(function* (data: PublishedMaterialData) {
-  const body = yield* readRenderedBody(data.artifact);
+  const body: ReactNode = yield* readRenderedBody(data.artifact);
 
   return {
     activeReleaseId: data.activeReleaseId,
@@ -85,7 +73,7 @@ export const renderMaterialArtifact = Effect.fn(
     rendererDomain: data.artifact.payload.rendererDomain,
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,
-  } satisfies PublishedMaterialContent;
+  };
 });
 
 /** Reads and renders one material through one signed publication program. */

@@ -10,19 +10,16 @@ type SchoolRouteValue = Ref.Returns<
   typeof refs.public.schools.queries.getSchoolBySlug
 >;
 
-interface SchoolContextValue {
-  school: SchoolRouteValue["school"];
-  schoolMembership: SchoolRouteValue["membership"];
-}
-
-const SchoolContext = createContext<SchoolContextValue | null>(null);
-
-function createSchoolContextValue(value: SchoolRouteValue): SchoolContextValue {
+function createSchoolContextValue(value: SchoolRouteValue) {
   return {
     school: value.school,
     schoolMembership: value.membership,
   };
 }
+
+type SchoolContextValue = ReturnType<typeof createSchoolContextValue>;
+
+const SchoolContext = createContext<SchoolContextValue | null>(null);
 
 /**
  * Provide the resolved school route snapshot to the school client subtree.

@@ -8,10 +8,11 @@ import { Effect, Stream } from "effect";
 import { ChildProcess } from "effect/process";
 import {
   assertRuntimeTarget,
-  type RuntimeTarget,
   readRuntimeConfig,
   UnsafeRuntimeError,
 } from "@/runtime";
+
+type RuntimeTarget = Parameters<typeof assertRuntimeTarget>[0];
 
 const NEXT_CLI = fileURLToPath(
   new URL("./node_modules/next/dist/bin/next", import.meta.url)

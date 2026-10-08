@@ -88,7 +88,7 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
           return;
         }
 
-        history = updateSubmissionHistory({
+        history = yield* updateSubmissionHistory({
           history,
           service: "googleIndexingApi",
           urls: successfullySubmitted,

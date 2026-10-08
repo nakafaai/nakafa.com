@@ -1,25 +1,27 @@
 import { routing } from "@repo/internationalization/src/routing";
-import { Data, Effect } from "effect";
+import { Data, Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
 /** Locale values accepted by next-intl routing and public route projection. */
-type Locale = (typeof routing.locales)[number];
+const LocaleSchema = Schema.Literals(routing.locales);
 
 /** Browser route-localization request accepted by the resolver. */
-interface LocalizedHrefInput {
-  href: string;
-  locale: Locale;
-}
+const LocalizedHrefInputSchema = Schema.Struct({
+  href: Schema.String,
+  locale: LocaleSchema,
+});
+type LocalizedHrefInput = typeof LocalizedHrefInputSchema.Type;
 
 /** Normalized browser href after stripping one optional leading locale segment. */
-interface ParsedLocalizedHref {
-  currentLocale: Locale | undefined;
-  hash: string;
-  publicPath: string;
-  search: string;
-}
+const ParsedLocalizedHrefSchema = Schema.Struct({
+  currentLocale: Schema.UndefinedOr(LocaleSchema),
+  hash: Schema.String,
+  publicPath: Schema.String,
+  search: Schema.String,
+});
+type ParsedLocalizedHref = typeof ParsedLocalizedHrefSchema.Type;
 
 /** Raised when the browser href cannot be parsed as a safe URL. */
 class InvalidLocalizedHrefError extends Data.TaggedError(

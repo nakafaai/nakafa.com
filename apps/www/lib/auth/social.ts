@@ -2,10 +2,12 @@ import { Effect, Schema } from "effect";
 
 const socialSignInFailedCode = "SOCIAL_SIGN_IN_FAILED";
 
-export interface SocialSignInResult {
-  readonly data?: unknown;
-  readonly error?: unknown;
-}
+const SocialSignInResultSchema = Schema.Struct({
+  data: Schema.optionalKey(Schema.Unknown),
+  error: Schema.optionalKey(Schema.Unknown),
+});
+
+export type SocialSignInResult = typeof SocialSignInResultSchema.Type;
 
 export type SocialSignInRequest = (input: {
   readonly callbackURL: string;

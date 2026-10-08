@@ -1,14 +1,11 @@
 import "server-only";
-import {
-  type LocalPreviewManifest,
-  LocalPreviewManifestSchema,
-} from "@nakafa/aksara-contracts/preview/spec";
+import { LocalPreviewManifestSchema } from "@nakafa/aksara-contracts/preview/spec";
 import { Effect, Option, Result, Schema } from "effect";
 import { cache } from "react";
 import {
   decodePreviewEnvironment,
   hasPreviewConfig,
-  type PreviewConfig,
+  PreviewConfigSchema,
 } from "@/lib/content/preview/config";
 import { readPreviewEnvironment } from "@/lib/content/preview/environment";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";
@@ -18,10 +15,11 @@ import {
 } from "@/lib/content/preview/request";
 
 /** Authenticated current state returned by the local Aksara provider. */
-interface PreviewSnapshot {
-  readonly config: PreviewConfig;
-  readonly manifest: LocalPreviewManifest;
-}
+const PreviewSnapshotSchema = Schema.Struct({
+  config: PreviewConfigSchema,
+  manifest: LocalPreviewManifestSchema,
+});
+type PreviewSnapshot = typeof PreviewSnapshotSchema.Type;
 type PreviewSnapshotError =
   | PreviewIntegrityError
   | Result.Result.Failure<

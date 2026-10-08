@@ -1,18 +1,20 @@
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
-interface BillingDestination {
-  readonly url: string;
-}
+const BillingDestinationSchema = Schema.Struct({
+  url: Schema.String,
+});
 
-interface BillingNavigationInput<E> {
-  readonly navigate: (url: string) => void;
-  readonly onFailure: (cause: E) => Effect.Effect<void>;
-  readonly request: Effect.Effect<BillingDestination, E>;
-}
+type BillingDestination = typeof BillingDestinationSchema.Type;
+type BillingNavigate = (url: string) => void;
+type BillingFailureHandler<E> = (cause: E) => Effect.Effect<void>;
 
 /** Opens a successful billing destination or reports the typed request failure. */
 export const billingNavigationProgram = Effect.fn("www.billing.navigate")(
-  function* <E>(input: BillingNavigationInput<E>) {
+  function* <E>(input: {
+    readonly navigate: BillingNavigate;
+    readonly onFailure: BillingFailureHandler<E>;
+    readonly request: Effect.Effect<BillingDestination, E>;
+  }) {
     yield* input.request.pipe(
       Effect.matchEffect({
         onSuccess: (destination) =>

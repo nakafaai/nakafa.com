@@ -24,9 +24,12 @@ import {
   accountDeletionErrorCode,
 } from "@/lib/auth/deletion/errors";
 import {
-  type AccountDeletionPreparationOperations,
+  type CancelAccountDeletionRequest,
+  type ClearAccountDeletionAttempt,
   cancelPreparedAccountDeletion,
   clearCanceledAccountDeletionAttempt,
+  type PersistAccountDeletionAttempt,
+  type PrepareAccountDeletionRequest,
   prepareAccountDeletion,
 } from "@/lib/auth/deletion/prepare";
 
@@ -45,11 +48,6 @@ type ReconcileAccountDeletionRequest = (
   | HttpClient.HttpClientError
   | Schema.SchemaError
 >;
-interface AccountDeletionOperations
-  extends AccountDeletionPreparationOperations {
-  readonly reconcile: ReconcileAccountDeletionRequest;
-  readonly request?: DeleteUserRequest;
-}
 /** Deletes the current Better Auth account through a typed failure channel. */
 export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
   function* ({
@@ -67,7 +65,15 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
           },
         },
       }),
-  }: AccountDeletionOperations) {
+  }: {
+    readonly attempt: AccountDeletionBrowserAttempt;
+    readonly cancelPreparation: CancelAccountDeletionRequest;
+    readonly clearAttempt: ClearAccountDeletionAttempt;
+    readonly persist: PersistAccountDeletionAttempt;
+    readonly prepare: PrepareAccountDeletionRequest;
+    readonly reconcile: ReconcileAccountDeletionRequest;
+    readonly request?: DeleteUserRequest;
+  }) {
     const { attemptId, phase: startPhase } = attempt;
     const proveCommittedDeletion = () =>
       reconcile(attemptId).pipe(
