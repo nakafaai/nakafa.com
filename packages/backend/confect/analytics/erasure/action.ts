@@ -18,13 +18,18 @@ export const PostHogBulkEraseResponseSchema = Schema.Struct({
   ),
   recordings_queued_for_deletion: Schema.Boolean,
 });
-export type PostHogErasureConfig = Effect.Success<
-  ReturnType<typeof readPostHogErasureConfig>
->;
-export interface PostHogErasureOptions {
-  readonly config: PostHogErasureConfig;
-  readonly request: typeof fetch;
-}
+const PostHogErasureConfigSchema = Schema.Struct({
+  deletionApiKey: Schema.String,
+  host: Schema.String,
+  projectId: Schema.String,
+});
+export type PostHogErasureConfig = typeof PostHogErasureConfigSchema.Type;
+const PostHogErasureOptionsSchema = Schema.Struct({
+  config: PostHogErasureConfigSchema,
+});
+export type PostHogErasureOptions = typeof PostHogErasureOptionsSchema.Type;
+type PostHogRequest = typeof fetch;
+const JsonText = Schema.fromJsonString(Schema.Unknown);
 
 /** Reads named Convex settings without exposing credentials in decode errors. */
 const readPostHogErasureConfig = Effect.fn(
@@ -102,32 +107,38 @@ export const ensurePostHogErasureConfigured = Effect.fn(
 /** Erases the PostHog person, historical events, and session recordings. */
 export const erasePostHogPerson = Effect.fn(
   "analytics.erasure.erasePostHogPerson"
-)(function* (distinctId: string, options?: PostHogErasureOptions) {
-  const config = options?.config ?? (yield* readPostHogErasureConfig());
-  const request = options?.request ?? fetch;
+)(function* (
+  distinctId: string,
+  options?: PostHogErasureOptions,
+  request?: PostHogRequest
+) {
+  const resolvedConfig = options?.config ?? (yield* readPostHogErasureConfig());
+  const send = request ?? fetch;
   const { apiOrigin, deletionApiKey, projectId } =
-    yield* validatePostHogErasureConfig(config);
+    yield* validatePostHogErasureConfig(resolvedConfig);
   const endpoint = `${apiOrigin}/api/projects/${encodeURIComponent(projectId)}/persons/bulk_delete/`;
+  const requestNotSent = () =>
+    new PostHogErasureRequestError({
+      code: postHogErasureRequestErrorCode,
+      message: "PostHog person erasure request could not be sent.",
+    });
+  const body = yield* Schema.encodeEffect(JsonText)({
+    delete_events: true,
+    delete_recordings: true,
+    distinct_ids: [distinctId],
+    keep_person: false,
+  }).pipe(Effect.mapError(requestNotSent));
   const response = yield* Effect.tryPromise({
     try: () =>
-      request(endpoint, {
-        body: JSON.stringify({
-          delete_events: true,
-          delete_recordings: true,
-          distinct_ids: [distinctId],
-          keep_person: false,
-        }),
+      send(endpoint, {
+        body,
         headers: {
           Authorization: `Bearer ${deletionApiKey}`,
           "Content-Type": "application/json",
         },
         method: "POST",
       }),
-    catch: () =>
-      new PostHogErasureRequestError({
-        code: postHogErasureRequestErrorCode,
-        message: "PostHog person erasure request could not be sent.",
-      }),
+    catch: requestNotSent,
   });
   if (!response.ok) {
     return yield* new PostHogErasureRequestError({

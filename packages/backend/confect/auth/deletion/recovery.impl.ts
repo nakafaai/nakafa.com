@@ -11,6 +11,7 @@ import {
   tryUserCleanup,
 } from "@repo/backend/confect/auth/cleanup/spec";
 import {
+  RecoveryOperations,
   recoverAccountDeletionProgram,
   sweepAccountDeletionRecoveryProgram,
 } from "@repo/backend/confect/auth/deletion/recovery";
@@ -47,38 +48,39 @@ const recoverAccountDeletion = FunctionImpl.make(
   Effect.fn("auth.deletion.recovery.recoverAccountDeletion")(function* (args) {
     const ctx = yield* ActionCtxService;
     const { runMutation } = yield* MutationRunner;
-    yield* recoverAccountDeletionProgram({
-      authUserExists: tryUserCleanup(() =>
-        authReader.getAnyUserById(ctx, args.authId)
-      ).pipe(Effect.map((user) => user !== null)),
-      cancel: runMutation(refs.internal.auth.deletion.cancelAccountDeletion, {
-        authId: args.authId,
-        expectedPreparation: args.expectedPreparation,
-      }).pipe(
-        Effect.mapError(toUserCleanupError),
-        Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-      ),
-      continueCommit: runMutation(
-        refs.internal.auth.deletion.continueAccountDeletionCommit,
-        {
+    yield* recoverAccountDeletionProgram().pipe(
+      Effect.provideService(RecoveryOperations, {
+        authUserExists: tryUserCleanup(() =>
+          authReader.getAnyUserById(ctx, args.authId)
+        ).pipe(Effect.map((user) => user !== null)),
+        cancel: runMutation(refs.internal.auth.deletion.cancelAccountDeletion, {
           authId: args.authId,
           expectedPreparation: args.expectedPreparation,
-        }
-      ).pipe(
-        Effect.mapError(toUserCleanupError),
-        Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-      ),
-      finalize: runMutation(
-        refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
-        {
-          authId: args.authId,
-          expectedPreparation: args.expectedPreparation,
-        }
-      ).pipe(
-        Effect.mapError(toUserCleanupError),
-        Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
-      ),
-    }).pipe(
+        }).pipe(
+          Effect.mapError(toUserCleanupError),
+          Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+        ),
+        continueCommit: runMutation(
+          refs.internal.auth.deletion.continueAccountDeletionCommit,
+          {
+            authId: args.authId,
+            expectedPreparation: args.expectedPreparation,
+          }
+        ).pipe(
+          Effect.mapError(toUserCleanupError),
+          Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+        ),
+        finalize: runMutation(
+          refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
+          {
+            authId: args.authId,
+            expectedPreparation: args.expectedPreparation,
+          }
+        ).pipe(
+          Effect.mapError(toUserCleanupError),
+          Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+        ),
+      }),
       Effect.annotateLogs({
         authId: args.authId,
       })

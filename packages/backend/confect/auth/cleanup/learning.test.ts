@@ -20,25 +20,26 @@ const learningTables = [
   "learningEngagementQueue",
   "learningPopularityViewerSignals",
 ] as const;
+const NOW = Date.UTC(2026, 9, 8, 9, 0, 0);
 it("drains deleted-user credit history, keeps each batch bounded, and preserves another learner", async () => {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation(async (ctx) => {
     const removed = await seedAuthenticatedUser(ctx, {
-      now: Date.now(),
+      now: NOW,
       suffix: "removed",
     });
     const retained = await seedAuthenticatedUser(ctx, {
-      now: Date.now(),
+      now: NOW,
       suffix: "retained",
     });
     await ctx.db.patch(
       "users",
       removed.userId,
-      createDeletedUserTombstone(removed.userId, Date.now())
+      createDeletedUserTombstone(removed.userId, NOW)
     );
     for (const user of [removed, retained]) {
       const userId = user.userId;
-      const now = Date.now();
+      const now = NOW;
       await ctx.db.insert("onboardingProfiles", {
         userId,
         updatedAt: now,
