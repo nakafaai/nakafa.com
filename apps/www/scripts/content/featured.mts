@@ -50,13 +50,10 @@ const verifyFeaturedRenderer = Effect.fn(
 });
 
 const main = verifyFeaturedRenderer().pipe(
-  Effect.tap((result) =>
-    Effect.sync(() =>
-      process.stdout.write(
-        `${Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))(result)}\n`
-      )
-    )
-  )
+  Effect.flatMap((result) =>
+    Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown))(result)
+  ),
+  Effect.tap((json) => Effect.sync(() => process.stdout.write(`${json}\n`)))
 );
 
 Effect.runPromise(main);
