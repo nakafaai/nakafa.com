@@ -49,17 +49,10 @@ export const encodePublicationResult = Effect.fn(
       )
     )
   );
+  // The response passed the contract above, so writing it as JSON cannot fail.
   const body = yield* Schema.encodeEffect(
     Schema.fromJsonString(Schema.Unknown)
-  )(response).pipe(
-    Effect.catch(() =>
-      Effect.die(
-        new PublicationResponseDefect({
-          reason: "contract",
-        })
-      )
-    )
-  );
+  )(response).pipe(Effect.orDie);
   yield* validateResponseBytes(body);
   const status = response.ok
     ? 200
