@@ -1,4 +1,4 @@
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Schema } from "effect";
 
 const RelationElementsSchema = Schema.Array(Schema.String).pipe(
   Schema.check(
@@ -20,10 +20,15 @@ const RelationSchema = Schema.Struct({
 }).pipe(
   Schema.check(
     Schema.makeFilter(
-      ({ domain, codomain, mappings }) =>
-        mappings.every(
-          ({ from, to }) => domain.includes(from) && codomain.includes(to)
-        ),
+      ({ domain, codomain, mappings }) => {
+        const domainElements = HashSet.fromIterable(domain);
+        const codomainElements = HashSet.fromIterable(codomain);
+        return mappings.every(
+          ({ from, to }) =>
+            HashSet.has(domainElements, from) &&
+            HashSet.has(codomainElements, to)
+        );
+      },
       {
         message:
           "Expected each mapping to reference its own domain and codomain.",

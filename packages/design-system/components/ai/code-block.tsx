@@ -19,6 +19,7 @@ import {
   type ReactNode,
   use,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -42,9 +43,9 @@ export function CodeBlockSource({
   code,
   language,
 }: CodeSource & { children: ReactNode }) {
-  return (
-    <CodeSourceContext value={{ code, language }}>{children}</CodeSourceContext>
-  );
+  const source = useMemo(() => ({ code, language }), [code, language]);
+
+  return <CodeSourceContext value={source}>{children}</CodeSourceContext>;
 }
 
 /** Selects one part of the surrounding code sample. */
