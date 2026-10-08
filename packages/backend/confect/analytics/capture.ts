@@ -11,7 +11,7 @@ import { hasCurrentConsent } from "@repo/backend/confect/consents/impl";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { Context, Duration, Effect, flow, Result, Schema } from "effect";
+import { Duration, Effect, flow, Result, Schema } from "effect";
 
 const JsonText = Schema.fromJsonString(Schema.Unknown);
 export type ProductAnalyticsCtx = Pick<MutationCtx, "db" | "scheduler">;
@@ -22,21 +22,9 @@ const ProductAnalyticsCaptureArgsSchema = Schema.Struct({
 });
 export type ProductAnalyticsCaptureArgs =
   typeof ProductAnalyticsCaptureArgsSchema.Type;
-/**
- * The effects that deliver one queued event. The delivery action supplies
- * them, and tests replace them.
- */
-export class ProductAnalyticsDeliveryOperations extends Context.Service<
-  ProductAnalyticsDeliveryOperations,
-  {
-    readonly capture: Effect.Effect<void, ProductAnalyticsCaptureError>;
-    readonly isUserEligible: Effect.Effect<
-      boolean,
-      ProductAnalyticsCaptureError
-    >;
-    readonly requestErasure: Effect.Effect<void, ProductAnalyticsCaptureError>;
-  }
->()("@repo/backend/analytics/capture/ProductAnalyticsDeliveryOperations") {}
+export type ProductAnalyticsDeliveryOperations<R = never> = Parameters<
+  typeof deliverProductAnalyticsProgram<R>
+>[0];
 /** Raised when an admitted backend product event cannot be queued. */
 /** Maps one Convex or PostHog failure into the analytics capture channel. */
 export function toProductAnalyticsCaptureError(error: unknown) {
@@ -96,8 +84,15 @@ export const captureProductEvent = Effect.fn(
 /** Delivers only for eligible users and erases writes overlapping withdrawal. */
 export const deliverProductAnalyticsProgram = Effect.fn(
   "analytics.capture.deliverProductAnalytics"
-)(function* () {
-  const operations = yield* ProductAnalyticsDeliveryOperations;
+)(function* <R>(operations: {
+  readonly capture: Effect.Effect<void, ProductAnalyticsCaptureError, R>;
+  readonly isUserEligible: Effect.Effect<
+    boolean,
+    ProductAnalyticsCaptureError,
+    R
+  >;
+  readonly requestErasure: Effect.Effect<void, ProductAnalyticsCaptureError, R>;
+}) {
   const isEligibleBeforeSend = yield* operations.isUserEligible;
   if (!isEligibleBeforeSend) {
     return;

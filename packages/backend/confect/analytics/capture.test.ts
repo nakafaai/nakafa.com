@@ -6,7 +6,6 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   captureProductEvent,
   deliverProductAnalyticsProgram,
-  ProductAnalyticsDeliveryOperations,
   toProductAnalyticsCaptureError,
 } from "@repo/backend/confect/analytics/capture";
 import type { ProductAnalyticsCaptureError } from "@repo/backend/confect/analytics/capture.spec";
@@ -141,13 +140,11 @@ describe("analytics/capture", () => {
     Effect.gen(function* () {
       const capture = vi.fn(() => Effect.void);
       const requestErasure = vi.fn(() => Effect.void);
-      yield* deliverProductAnalyticsProgram().pipe(
-        Effect.provideService(ProductAnalyticsDeliveryOperations, {
-          capture: Effect.suspend(capture),
-          isUserEligible: Effect.succeed(false),
-          requestErasure: Effect.suspend(requestErasure),
-        })
-      );
+      yield* deliverProductAnalyticsProgram({
+        capture: Effect.suspend(capture),
+        isUserEligible: Effect.succeed(false),
+        requestErasure: Effect.suspend(requestErasure),
+      });
       expect(capture).not.toHaveBeenCalled();
       expect(requestErasure).not.toHaveBeenCalled();
     })
@@ -156,13 +153,11 @@ describe("analytics/capture", () => {
     Effect.gen(function* () {
       const capture = vi.fn(() => Effect.void);
       const requestErasure = vi.fn(() => Effect.void);
-      yield* deliverProductAnalyticsProgram().pipe(
-        Effect.provideService(ProductAnalyticsDeliveryOperations, {
-          capture: Effect.suspend(capture),
-          isUserEligible: Effect.succeed(true),
-          requestErasure: Effect.suspend(requestErasure),
-        })
-      );
+      yield* deliverProductAnalyticsProgram({
+        capture: Effect.suspend(capture),
+        isUserEligible: Effect.succeed(true),
+        requestErasure: Effect.suspend(requestErasure),
+      });
       expect(capture).toHaveBeenCalledOnce();
       expect(requestErasure).not.toHaveBeenCalled();
     })
@@ -175,13 +170,11 @@ describe("analytics/capture", () => {
         .fn<() => Effect.Effect<boolean, ProductAnalyticsCaptureError>>()
         .mockReturnValueOnce(Effect.succeed(true))
         .mockReturnValueOnce(Effect.succeed(false));
-      yield* deliverProductAnalyticsProgram().pipe(
-        Effect.provideService(ProductAnalyticsDeliveryOperations, {
-          capture: Effect.suspend(capture),
-          isUserEligible: Effect.suspend(isUserActive),
-          requestErasure: Effect.suspend(requestErasure),
-        })
-      );
+      yield* deliverProductAnalyticsProgram({
+        capture: Effect.suspend(capture),
+        isUserEligible: Effect.suspend(isUserActive),
+        requestErasure: Effect.suspend(requestErasure),
+      });
       expect(capture).toHaveBeenCalledOnce();
       expect(requestErasure).toHaveBeenCalledOnce();
     })
@@ -195,16 +188,13 @@ describe("analytics/capture", () => {
           .fn<() => Effect.Effect<boolean, ProductAnalyticsCaptureError>>()
           .mockReturnValueOnce(Effect.succeed(true))
           .mockReturnValueOnce(Effect.succeed(false));
-        const failure = yield* deliverProductAnalyticsProgram().pipe(
-          Effect.provideService(ProductAnalyticsDeliveryOperations, {
-            capture: Effect.fail(
-              toProductAnalyticsCaptureError(new Error("capture uncertain"))
-            ),
-            isUserEligible: Effect.suspend(isUserActive),
-            requestErasure: Effect.suspend(requestErasure),
-          }),
-          Effect.flip
-        );
+        const failure = yield* deliverProductAnalyticsProgram({
+          capture: Effect.fail(
+            toProductAnalyticsCaptureError(new Error("capture uncertain"))
+          ),
+          isUserEligible: Effect.suspend(isUserActive),
+          requestErasure: Effect.suspend(requestErasure),
+        }).pipe(Effect.flip);
         expect(requestErasure).toHaveBeenCalledOnce();
         expect(failure).toMatchObject({
           _tag: "ProductAnalyticsCaptureError",
@@ -227,14 +217,11 @@ describe("analytics/capture", () => {
               )
             )
           );
-        const failure = yield* deliverProductAnalyticsProgram().pipe(
-          Effect.provideService(ProductAnalyticsDeliveryOperations, {
-            capture: Effect.void,
-            isUserEligible: Effect.suspend(isUserActive),
-            requestErasure: Effect.suspend(requestErasure),
-          }),
-          Effect.flip
-        );
+        const failure = yield* deliverProductAnalyticsProgram({
+          capture: Effect.void,
+          isUserEligible: Effect.suspend(isUserActive),
+          requestErasure: Effect.suspend(requestErasure),
+        }).pipe(Effect.flip);
         expect(requestErasure).toHaveBeenCalledOnce();
         expect(failure).toMatchObject({
           _tag: "ProductAnalyticsCaptureError",
