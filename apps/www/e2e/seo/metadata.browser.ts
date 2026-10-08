@@ -2,7 +2,6 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec, Schema } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
-import { readHeadLinks } from "@/e2e/support/crawler";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { paginationNavigation } from "@/e2e/support/selector";
 
@@ -15,14 +14,28 @@ class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing
 const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
   page: Page
 ) {
-  const title = yield* Effect.promise(() => page.title());
   const heading = yield* Effect.promise(() =>
     page.getByRole("heading", { level: 1 }).textContent()
   );
-  const links = yield* Effect.promise(() =>
-    page.evaluate(readHeadLinks, undefined)
+  return yield* Effect.promise(() =>
+    page.evaluate(
+      (visibleHeading) => ({
+        title: document.title,
+        heading: visibleHeading,
+        links: Array.from(
+          document.querySelectorAll<HTMLLinkElement>(
+            'link[rel="canonical"], link[rel="alternate"][hreflang]'
+          ),
+          (link) => ({
+            rel: link.rel,
+            locale: link.hreflang,
+            href: link.href,
+          })
+        ),
+      }),
+      heading
+    )
   );
-  return { heading, links, title };
 });
 
 for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {

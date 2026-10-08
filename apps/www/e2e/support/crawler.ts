@@ -20,15 +20,11 @@ const ServerDocumentSchema = Schema.Struct({
 export type ServerDocument = typeof ServerDocumentSchema.Type;
 
 /**
- * Reads the canonical and alternate links of a document: the live page when
- * `html` is undefined, or the server HTML as a crawler parses it. It runs in
- * the page, so pass it to `page.evaluate` by reference.
+ * Reads the canonical and alternate links of the server HTML a crawler parses.
+ * It runs in the page, so pass it to `page.evaluate` by reference.
  */
-export function readHeadLinks(html: string | undefined) {
-  const root =
-    html === undefined
-      ? document
-      : new DOMParser().parseFromString(html, "text/html");
+function readHeadLinks(html: string) {
+  const root = new DOMParser().parseFromString(html, "text/html");
   return [
     ...root.querySelectorAll(
       'link[rel="canonical"], link[rel="alternate"][hreflang]'
