@@ -12,6 +12,7 @@ import {
 } from "@/e2e/support/crawler";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { LINE_SCENE, lineSceneCards } from "@/e2e/support/selector";
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;
@@ -261,12 +262,8 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
     return;
   }
   yield* waitForCommittedAppRouter(page, route.href, route.href, 15_000);
-  const card = page
-    .locator('[data-slot="card"]')
-    .filter({ has: page.locator('[data-slot="line-scene"]') })
-    .filter({ visible: true })
-    .first();
-  const scene = card.locator('[data-slot="line-scene"]');
+  const card = lineSceneCards(page).filter({ visible: true }).first();
+  const scene = card.locator(LINE_SCENE);
   const canvases = page.locator("canvas");
   yield* Effect.promise(() => expect(scene).toBeAttached());
   yield* Effect.promise(() => expect(canvases).toHaveCount(0));

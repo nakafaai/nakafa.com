@@ -11,6 +11,7 @@ import {
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { CARD, COORDINATE_CONTROLS, LINE_SCENE } from "@/e2e/support/selector";
 
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
@@ -128,7 +129,7 @@ const expectBoundedTriangleZoom = Effect.fn(
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
   const scene = page.locator('[data-slot="triangle-scene"]');
-  const card = page.locator('[data-slot="card"]').filter({ has: scene });
+  const card = page.locator(CARD).filter({ has: scene });
   const canvas = scene.locator("canvas");
   const label = scene
     .locator(".katex-html")
@@ -144,9 +145,7 @@ const expectBoundedTriangleZoom = Effect.fn(
   );
   yield* Effect.promise(() => expect(label).toBeVisible());
   yield* Effect.promise(() =>
-    expect(card.locator("[data-coordinate-controls]")).toContainText(
-      "Hypotenuse"
-    )
+    expect(card.locator(COORDINATE_CONTROLS)).toContainText("Hypotenuse")
   );
   yield* waitForStableCanvas(canvas);
   yield* expectReadableLabel(label);
@@ -175,12 +174,12 @@ const expectStableCoordinateSystem = Effect.fn(
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
-  const card = page.locator('[data-slot="card"]').filter({
+  const card = page.locator(CARD).filter({
     hasText: MANY_SOLUTIONS_TITLE,
   });
-  const scene = card.locator('[data-slot="line-scene"]');
+  const scene = card.locator(LINE_SCENE);
   const canvas = scene.locator("canvas");
-  const footer = card.locator("[data-coordinate-controls]");
+  const footer = card.locator(COORDINATE_CONTROLS);
   const gridButton = footer.getByRole("button", { name: "Kisi" });
   const rotationButton = footer.getByRole("button", {
     name: "Rotasi otomatis",
@@ -363,7 +362,7 @@ test("published unit-circle controls preserve finite angles after clearing", asy
             // This signed lesson teaches the triangle before the unit circle.
             const angle = angles.last();
             const circle = article
-              .locator('[data-slot="card"]')
+              .locator(CARD)
               .filter({
                 has: page.getByRole("textbox", {
                   exact: true,

@@ -4,6 +4,7 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { paginationNavigation } from "@/e2e/support/selector";
 
 const NINA_DIALOG_NAME = /^Nina/;
 const INTER_FONT = /Inter/;
@@ -367,11 +368,7 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
     page.goto(href, { waitUntil: "domcontentloaded" })
   );
   // React's inline streaming scripts reveal the served lesson on their own.
-  yield* Effect.promise(() =>
-    expect(
-      page.getByRole("navigation", { name: "Pagination navigation" })
-    ).toBeVisible()
-  );
+  yield* Effect.promise(() => expect(paginationNavigation(page)).toBeVisible());
   const servedLesson = yield* Effect.promise(() =>
     page
       .getByRole("navigation", { name: "breadcrumb" })
@@ -405,8 +402,7 @@ const verifyReadingControlsHydrateInPlace = Effect.fn(
     expect(controls.replaced).toBe(0);
   });
 
-  const pagination = page
-    .getByRole("navigation", { name: "Pagination navigation" })
+  const pagination = paginationNavigation(page)
     .locator('a[href^="/en/subjects/"]')
     .first();
   const target = yield* Effect.promise(() => pagination.getAttribute("href"));

@@ -17,6 +17,7 @@ import {
 } from "@/e2e/support/canvas";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { COORDINATE_CONTROLS, LINE_SCENE } from "@/e2e/support/selector";
 import {
   BACTERIA_SCENE,
   expectLabStill,
@@ -24,7 +25,6 @@ import {
   expectReturned,
   hideFullscreenApi,
   hidePopoverApi,
-  LINE_SCENE,
   openVisualLesson,
   readPlacement,
   readPresentation,
@@ -205,7 +205,7 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
 ) {
   yield* openVisualLesson(page, pinnedRoutes.material.en, en.Common.fullscreen);
   const { canvas, card } = yield* revealScene(page);
-  const controls = card.locator("[data-coordinate-controls]");
+  const controls = card.locator(COORDINATE_CONTROLS);
   const grid = controls.getByRole("button", {
     exact: true,
     name: en.Common.grid,
@@ -332,7 +332,7 @@ const pauseScenesBehind = Effect.fn("NakafaE2E.pauseVisualScenesBehind")(
       await expect(second.card).toBeInViewport({ ratio: 1 });
     });
     const rotation = second.card
-      .locator("[data-coordinate-controls]")
+      .locator(COORDINATE_CONTROLS)
       .getByRole("button", {
         exact: true,
         name: en.Common["automatic-rotation"],

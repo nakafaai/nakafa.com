@@ -3,6 +3,11 @@ import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import {
+  CARD,
+  SHEET_POPUP,
+  SURAH_SIDEBAR_TRIGGER,
+} from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const verifyCompactReferenceSheet = Effect.fn(
@@ -22,11 +27,7 @@ const verifyCompactReferenceSheet = Effect.fn(
 
   const sidebarTrigger = page
     .getByRole("button", { exact: true, name: "Pada halaman ini" })
-    .or(
-      page.locator(
-        'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]'
-      )
-    )
+    .or(page.locator(SURAH_SIDEBAR_TRIGGER))
     .filter({ visible: true });
   if (width < 1280) {
     yield* Effect.promise(() => sidebarTrigger.click());
@@ -39,7 +40,7 @@ const verifyCompactReferenceSheet = Effect.fn(
   yield* Effect.promise(() => expect(trigger).toBeVisible());
   yield* Effect.promise(() => trigger.click());
 
-  const sheet = page.locator('[data-slot="sheet-popup"]');
+  const sheet = page.locator(SHEET_POPUP);
   yield* Effect.promise(() =>
     expect(sheet).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
@@ -50,9 +51,7 @@ const verifyCompactReferenceSheet = Effect.fn(
   yield* Effect.promise(() =>
     expect(list.locator('[data-slot="separator"]')).toHaveCount(itemCount - 1)
   );
-  yield* Effect.promise(() =>
-    expect(list.locator('[data-slot="card"]')).toHaveCount(0)
-  );
+  yield* Effect.promise(() => expect(list.locator(CARD)).toHaveCount(0));
 
   const metrics = yield* Effect.promise(() =>
     items.first().evaluate((item) => {

@@ -15,6 +15,7 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
+import { COORDINATE_CONTROLS, lineSceneCards } from "@/e2e/support/selector";
 import { revealSceneCard } from "@/e2e/support/visual";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
@@ -84,9 +85,7 @@ const openLessonScenes = Effect.fn("NakafaE2E.openLessonScenes")(function* (
 ) {
   yield* openRoute(page, pinnedRoutes.material.en, "denied");
 
-  const cards = page
-    .locator('[data-slot="card"]')
-    .filter({ has: page.locator('[data-slot="line-scene"]') });
+  const cards = lineSceneCards(page);
   const count = yield* Effect.promise(() => cards.count());
   yield* Effect.sync(() => expect(count).toBeGreaterThan(0));
   return { cards, count };
@@ -123,7 +122,7 @@ const pauseSceneAway = Effect.fn("NakafaE2E.pauseSceneAway")(function* (
   const card = cards.first();
   const canvas = yield* revealSceneCard(card);
   const rotation = card
-    .locator("[data-coordinate-controls]")
+    .locator(COORDINATE_CONTROLS)
     .getByRole("button", { name: "Automatic rotation" });
 
   // Automatic rotation draws every frame, like an animated lab.

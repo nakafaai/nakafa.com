@@ -2,6 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { SHEET_POPUP } from "@/e2e/support/selector";
 
 const LESSON =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -113,7 +114,7 @@ const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
   yield* Effect.promise(() =>
     page.getByRole("button", { name: "Ask Nina", exact: true }).click()
   );
-  yield* verifyComposer(page.locator('[data-slot="sheet-popup"]'));
+  yield* verifyComposer(page.locator(SHEET_POPUP));
 });
 
 for (const width of [390, 1440]) {

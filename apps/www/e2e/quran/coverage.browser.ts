@@ -6,6 +6,13 @@ import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes } from "@/e2e/support/route";
+import {
+  CARD,
+  DRAWER_BAR,
+  DRAWER_POPUP,
+  SHEET_POPUP,
+  SURAH_SIDEBAR_TRIGGER,
+} from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const quranIndexUrlPattern = /\/id\/quran$/;
@@ -99,11 +106,9 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => expect(trigger).toBeEnabled({ timeout: 15_000 }));
   yield* Effect.promise(() => trigger.click());
 
-  const drawer = page.locator('[data-slot="drawer-popup"]');
+  const drawer = page.locator(DRAWER_POPUP);
   yield* Effect.promise(() => expect(drawer).toBeVisible({ timeout: 15_000 }));
-  yield* Effect.promise(() =>
-    expect(drawer.locator('[data-slot="drawer-bar"]')).toBeVisible()
-  );
+  yield* Effect.promise(() => expect(drawer.locator(DRAWER_BAR)).toBeVisible());
   yield* Effect.promise(() =>
     expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText("Tafsir")
   );
@@ -312,11 +317,7 @@ const verifyQuranLocaleCoverage = Effect.fn(
   );
 
   yield* Effect.promise(() => expect(page.locator("footer")).toHaveCount(0));
-  const outline = page
-    .locator(
-      'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]'
-    )
-    .filter({ visible: true });
+  const outline = page.locator(SURAH_SIDEBAR_TRIGGER).filter({ visible: true });
   yield* Effect.promise(() => outline.click());
   const bibliography = page.getByRole("button", {
     exact: true,
@@ -324,7 +325,7 @@ const verifyQuranLocaleCoverage = Effect.fn(
   });
   yield* Effect.promise(() => expect(bibliography).toBeVisible());
   yield* Effect.promise(() => bibliography.click());
-  const bibliographySheet = page.locator('[data-slot="sheet-popup"]');
+  const bibliographySheet = page.locator(SHEET_POPUP);
   yield* Effect.promise(() =>
     expect(bibliographySheet).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
@@ -392,7 +393,7 @@ const verifyQuranIndexEdges = Effect.fn("NakafaE2E.verifyQuranIndexEdges")(
     );
     const edges = yield* Effect.promise(() =>
       page
-        .locator('[data-slot="card"]')
+        .locator(CARD)
         .first()
         .evaluate((card) => {
           const rows = card.querySelectorAll("li > a");

@@ -6,6 +6,7 @@ import {
   readCumulativeLayoutShift,
   readPageLayoutShift,
 } from "@/e2e/support/layout";
+import { LINE_SCENE } from "@/e2e/support/selector";
 
 const REVEAL_TIMEOUT_MILLISECONDS = 30_000;
 /** How long one attempt of a retried check waits before the next one. */
@@ -18,8 +19,6 @@ const SETTLE_ATTEMPTS = 10;
 export const BACTERIA_SCENE = "[data-bacteria-count]";
 /** The animated lab's generation option that names the start, such as "0 h". */
 const FIRST_GENERATION = /^0\s/;
-/** A deferred 3D line scene of a lesson card. */
-export const LINE_SCENE = '[data-slot="line-scene"]';
 
 /** Hides the Fullscreen API the way iPhone Safari does for everything but video. */
 export function hideFullscreenApi() {

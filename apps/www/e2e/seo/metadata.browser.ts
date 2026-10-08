@@ -5,6 +5,7 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readHeadLinks } from "@/e2e/support/crawler";
 import { NavigationLinkMissing } from "@/e2e/support/navigation/cases";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { paginationNavigation } from "@/e2e/support/selector";
 
 /** Captures the rendered lesson identity and its canonical metadata. */
 const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
@@ -42,9 +43,7 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
                   yield* Effect.context<never>()
                 );
                 yield* Effect.promise(() => page.goto(href));
-                const pagination = page.getByRole("navigation", {
-                  name: "Pagination navigation",
-                });
+                const pagination = paginationNavigation(page);
                 const next = pagination.locator("a[href]:visible").last();
                 yield* Effect.promise(() => expect(next).toBeVisible());
                 const destination = yield* Effect.promise(() =>

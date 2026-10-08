@@ -5,6 +5,7 @@ import { activateUntilVisible } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
+import { DRAWER_BAR, DRAWER_POPUP } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const usageDataName = "Usage data";
@@ -30,11 +31,9 @@ const verifyCompactConsentDrawer = Effect.fn(
   "NakafaE2E.verifyCompactConsentDrawer"
 )(function* (page: Page) {
   const trigger = yield* prepareConsentPreferences(page);
-  const drawer = page.locator('[data-slot="drawer-popup"]');
+  const drawer = page.locator(DRAWER_POPUP);
   yield* activateUntilVisible(trigger, drawer, readinessTimeoutMilliseconds);
-  yield* Effect.promise(() =>
-    expect(drawer.locator('[data-slot="drawer-bar"]')).toBeVisible()
-  );
+  yield* Effect.promise(() => expect(drawer.locator(DRAWER_BAR)).toBeVisible());
   yield* Effect.promise(() =>
     expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText(
       usageDataName
@@ -67,7 +66,7 @@ const verifyDesktopConsentDialog = Effect.fn(
     )
   );
   yield* Effect.promise(() =>
-    expect(page.locator('[data-slot="drawer-popup"]')).toHaveCount(0)
+    expect(page.locator(DRAWER_POPUP)).toHaveCount(0)
   );
 
   yield* Effect.promise(() => page.keyboard.press("Escape"));

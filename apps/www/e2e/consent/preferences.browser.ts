@@ -5,6 +5,7 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { dragTouch, readBounds } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
+import { DRAWER_BAR } from "@/e2e/support/selector";
 import { targetViewports } from "@/e2e/support/viewport";
 
 /** The surface each viewport opens: a drawer on a phone, a dialog on wider screens. */
@@ -57,7 +58,7 @@ const swipeDrawerClosed = Effect.fn("NakafaE2E.swipeConsentDrawerClosed")(
   function* (page: Page, popup: Locator) {
     // Raw touch coordinates need the opening drawer to finish moving first.
     yield* Effect.promise(() =>
-      popup.locator('[data-slot="drawer-bar"]').click({ trial: true })
+      popup.locator(DRAWER_BAR).click({ trial: true })
     );
     const bounds = yield* readBounds(popup, "consent-drawer");
 
