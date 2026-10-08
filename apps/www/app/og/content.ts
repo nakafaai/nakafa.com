@@ -11,12 +11,12 @@ import { getMaterialModel } from "@/lib/content/material/publication";
 import { httpLayer } from "@/lib/convex/http";
 import { getCachedMetadataFromSlug } from "@/lib/utils/system";
 
-/** Title and description copy resolved for one social image. */
 const OgCopySchema = Schema.Struct({
   description: Schema.String,
   title: Schema.String,
 });
 
+/** Title and description copy resolved for one social image. */
 export type OgCopy = typeof OgCopySchema.Type;
 
 /** Reads translated default copy for routes without signed ownership. */

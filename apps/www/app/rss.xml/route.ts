@@ -43,6 +43,10 @@ async function readFeed() {
     getFeedContentRoutes(),
   ]);
 
+  const copyrightYear = await Effect.runPromise(
+    Effect.map(DateTime.now, (now) => DateTime.toDate(now).getFullYear())
+  );
+
   const feed = new Feed({
     updated: new Date(
       Math.max(0, ...routes.map((route) => route.dateModified))
@@ -55,7 +59,7 @@ async function readFeed() {
     image: `${baseUrl}/og.png`,
     favicon: `${baseUrl}/icon.png`,
     copyright: tCommon("copyright", {
-      year: DateTime.toDate(DateTime.nowUnsafe()).getFullYear(),
+      year: copyrightYear,
       companyName: COMPANY_IDENTITY.legalName,
     }),
   });
