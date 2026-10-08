@@ -225,4 +225,34 @@ export const PROTOCOL_CASES: readonly McpCase[] = [
       method: "POST",
     },
   },
+  {
+    answer: {
+      body: { text: "" },
+      headers: {
+        "access-control-allow-headers":
+          "accept,baggage,content-type,last-event-id,mcp-method,mcp-name,mcp-protocol-version,mcp-session-id,traceparent,tracestate",
+        "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
+        "access-control-allow-origin": "*",
+        "access-control-expose-headers":
+          "MCP-Protocol-Version,MCP-Session-ID,Retry-After",
+        "cache-control": "no-store",
+        vary: "Origin, Access-Control-Request-Headers",
+      },
+      status: 400,
+    },
+    name: "a notification whose Mcp-Method names another method is refused without a body",
+    request: {
+      body: jsonBody({
+        jsonrpc: "2.0",
+        method: "notifications/initialized",
+        params: { _meta: MCP_CLIENT_META },
+      }),
+      headers: {
+        accept: "application/json, text/event-stream",
+        "content-type": "application/json",
+        "mcp-method": "server/discover",
+      },
+      method: "POST",
+    },
+  },
 ];
