@@ -1,6 +1,9 @@
 import { expect, type Page, type Request, test } from "@playwright/test";
 import { Effect, Option, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import {
+  openConsentPreferences,
+  seedAnalyticsConsent,
+} from "@/e2e/support/consent";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -80,19 +83,6 @@ const waitForPageviews = (captured: CapturedIngest[], count: number) =>
   Effect.promise(() =>
     expect.poll(() => pageviewCount(captured), { timeout: 15_000 }).toBe(count)
   );
-
-const openConsentPreferences = Effect.fn("NakafaE2E.openConsentPreferences")(
-  function* (page: Page) {
-    yield* Effect.promise(() =>
-      page.locator("footer").getByRole("button", { name: "Usage data" }).click()
-    );
-    yield* Effect.promise(() =>
-      expect(page.getByRole("heading", { name: "Usage data" })).toBeVisible({
-        timeout: 15_000,
-      })
-    );
-  }
-);
 
 test("baseline counts one cookieless pageview without consent", async ({
   baseURL,
@@ -201,7 +191,7 @@ test("grant keeps exact counts and attributes the next view", async ({
               yield* Effect.sync(() => expect(response?.ok()).toBe(true));
               yield* waitForPageviews(captured, 1);
 
-              yield* openConsentPreferences(page);
+              yield* openConsentPreferences(page, "dialog-content");
               yield* Effect.promise(() =>
                 page
                   .getByRole("dialog")

@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { seedAnalyticsConsent, usageDataTrigger } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { activateUntilVisible } from "@/e2e/support/interaction";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -23,9 +23,7 @@ const prepareConsentPreferences = Effect.fn(
     readinessTimeoutMilliseconds
   );
 
-  const trigger = page
-    .locator("footer")
-    .getByRole("button", { name: usageDataName });
+  const trigger = usageDataTrigger(page);
   yield* Effect.promise(() => expect(trigger).toBeVisible());
   yield* Effect.promise(() => trigger.scrollIntoViewIfNeeded());
   return trigger;

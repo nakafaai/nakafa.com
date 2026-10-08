@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import {
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   type AnalyticsConsentDecision,
@@ -6,6 +6,7 @@ import {
   encodeAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
 import { Effect } from "effect";
+import { activateUntilVisible } from "@/e2e/support/interaction";
 
 /**
  * Stores an anonymous consent decision before the first navigation. Suites
@@ -26,3 +27,35 @@ export const seedAnalyticsConsent = Effect.fn("NakafaE2E.seedAnalyticsConsent")(
     );
   }
 );
+
+/** The footer control that opens the usage-data preferences. */
+export function usageDataTrigger(page: Page) {
+  return page.locator("footer").getByRole("button", { name: "Usage data" });
+}
+
+/**
+ * Opens the usage-data preferences in the surface named by `slot`, activating
+ * the trigger again until that surface shows, then checks its heading and
+ * its Decline and Allow controls.
+ */
+export const openConsentPreferences = Effect.fn(
+  "NakafaE2E.openConsentPreferences"
+)(function* (page: Page, slot: "dialog-content" | "drawer-popup") {
+  const trigger = usageDataTrigger(page);
+  yield* Effect.promise(() => expect(trigger).toBeVisible());
+  yield* Effect.promise(() => trigger.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => trigger.focus());
+  const popup = page.locator(`[data-slot="${slot}"]`);
+  yield* activateUntilVisible(trigger, popup, 15_000);
+  yield* Effect.promise(() =>
+    expect(page.getByRole("heading", { name: "Usage data" })).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(page.getByRole("button", { name: "Decline" })).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(page.getByRole("button", { name: "Allow" })).toBeVisible()
+  );
+
+  return { popup, trigger };
+});

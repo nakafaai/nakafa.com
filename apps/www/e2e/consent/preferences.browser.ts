@@ -1,11 +1,13 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import {
+  openConsentPreferences,
+  seedAnalyticsConsent,
+} from "@/e2e/support/consent";
 import {
   withBrowserContext,
   withObservedPageErrors,
 } from "@/e2e/support/context";
-import { activateUntilVisible } from "@/e2e/support/interaction";
 import { dragTouch } from "@/e2e/support/touch";
 
 const targetViewports = [
@@ -42,30 +44,6 @@ const prepareConsentPage = Effect.fn("NakafaE2E.prepareConsentPage")(function* (
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 });
-
-const openConsentPreferences = Effect.fn("NakafaE2E.openConsentPreferences")(
-  function* (page: Page, slot: (typeof targetViewports)[number]["slot"]) {
-    const trigger = page
-      .locator("footer")
-      .getByRole("button", { name: "Usage data" });
-    yield* Effect.promise(() => expect(trigger).toBeVisible());
-    yield* Effect.promise(() => trigger.scrollIntoViewIfNeeded());
-    yield* Effect.promise(() => trigger.focus());
-    const popup = page.locator(`[data-slot="${slot}"]`);
-    yield* activateUntilVisible(trigger, popup, 15_000);
-    yield* Effect.promise(() =>
-      expect(page.getByRole("heading", { name: "Usage data" })).toBeVisible()
-    );
-    yield* Effect.promise(() =>
-      expect(page.getByRole("button", { name: "Decline" })).toBeVisible()
-    );
-    yield* Effect.promise(() =>
-      expect(page.getByRole("button", { name: "Allow" })).toBeVisible()
-    );
-
-    return { popup, trigger };
-  }
-);
 
 const expectFocusContained = Effect.fn("NakafaE2E.expectConsentFocusContained")(
   function* (page: Page, popup: Locator) {

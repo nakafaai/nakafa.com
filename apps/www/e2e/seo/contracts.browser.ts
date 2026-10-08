@@ -2,6 +2,7 @@ import type { PublicationDates } from "@nakafa/aksara-contracts/date";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec, Schedule, Schema } from "effect";
+import { usageDataTrigger } from "@/e2e/support/consent";
 import {
   withBrowserContext,
   withObservedPageErrors,
@@ -427,9 +428,7 @@ test("content views store no device identifier until analytics is allowed", asyn
 
               // Declining from a page without a content view still clears it.
               yield* openPage(page, "/en");
-              const preferences = page
-                .locator("footer")
-                .getByRole("button", { name: "Usage data" });
+              const preferences = usageDataTrigger(page);
               yield* Effect.promise(() => preferences.click());
               yield* Effect.promise(() =>
                 page.getByRole("button", { name: "Decline" }).click()
