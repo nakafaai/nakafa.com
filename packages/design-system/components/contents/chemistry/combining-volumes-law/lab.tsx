@@ -4,7 +4,7 @@ import { useThree } from "@react-three/fiber";
 import {
   COMBINING_VOLUMES_MODE_IDS,
   COMBINING_VOLUMES_SCENE_VIEW,
-  type CombiningVolumesLabProps,
+  type CombiningVolumesLabLabels,
   type CombiningVolumesModeId,
   getCombiningVolumesSceneColors,
   isCombiningVolumesModeId,
@@ -34,6 +34,12 @@ import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.27;
+
+interface CombiningVolumesLabProps {
+  description: ReactNode;
+  labels: CombiningVolumesLabLabels;
+  title: ReactNode;
+}
 
 export function CombiningVolumesLab({
   description,

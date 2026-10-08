@@ -1,6 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 
 export const EXACT_RATIO_MODE_ID = "exact";
@@ -19,7 +20,13 @@ export type ConstantCompositionModeId =
 export type ConstantCompositionSceneColors = ReturnType<
   typeof getConstantCompositionSceneColors
 >;
-export type ConstantCompositionScenePoint = readonly [number, number, number];
+export const ConstantCompositionScenePointSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+export type ConstantCompositionScenePoint =
+  typeof ConstantCompositionScenePointSchema.Type;
 
 export interface ConstantCompositionModeLabels {
   helperCaption: ReactNode;
@@ -39,12 +46,6 @@ export interface ConstantCompositionLabLabels {
   modes: Record<ConstantCompositionModeId, ConstantCompositionModeLabels>;
   ratioLabel: string;
   reactionView: string;
-}
-
-export interface ConstantCompositionLabProps {
-  description: ReactNode;
-  labels: ConstantCompositionLabLabels;
-  title: ReactNode;
 }
 
 export const CONSTANT_COMPOSITION_MODES = {

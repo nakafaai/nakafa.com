@@ -5,7 +5,7 @@ import {
   CHEMICAL_REACTION_TYPE_IDS,
   CHEMICAL_REACTION_TYPES_SCENE_VIEW,
   type ChemicalReactionTypeId,
-  type ChemicalReactionTypesLabProps,
+  type ChemicalReactionTypesLabLabels,
   COMBUSTION_TYPE_ID,
   getChemicalReactionTypeSceneColors,
   isChemicalReactionTypeId,
@@ -34,6 +34,12 @@ import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.25;
+
+interface ChemicalReactionTypesLabProps {
+  description: ReactNode;
+  labels: ChemicalReactionTypesLabLabels;
+  title: ReactNode;
+}
 
 /**
  * Renders an interactive 3D reader for common chemical reaction types.
