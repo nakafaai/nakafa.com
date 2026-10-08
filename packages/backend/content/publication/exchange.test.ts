@@ -14,8 +14,10 @@ import {
 import { TEST_QUESTION_PROJECTION_JSON } from "@repo/backend/test/content/question";
 import { Effect, Schema } from "effect";
 
+// Strict decoding rejects undeclared keys instead of stripping them.
 const decodeArtifact = Schema.decodeUnknownSync(
-  Schema.fromJsonString(SignedContentArtifactSchema)
+  Schema.fromJsonString(SignedContentArtifactSchema),
+  { onExcessProperty: "error" }
 );
 const decodeRuntime = Schema.decodeUnknownSync(
   Schema.fromJsonString(PublicContentRuntimeResponseSchema)
