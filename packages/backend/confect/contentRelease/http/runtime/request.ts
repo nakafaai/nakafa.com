@@ -1,24 +1,31 @@
 import {
   type HttpBodyError,
-  type HttpJsonBody,
   readJsonBody,
 } from "@repo/backend/confect/contentRelease/http/body";
 import { matchesHttpSecret } from "@repo/backend/confect/contentRelease/http/secret";
-import {
-  failureResult,
-  type RuntimeHttpResult,
-} from "@repo/backend/confect/contentRelease/runtime/result";
-import { Effect, Result } from "effect";
+import { dispatchInputValidator } from "@repo/backend/confect/contentRelease/ingress/dispatch.spec";
+import { failureResult } from "@repo/backend/confect/contentRelease/runtime/result";
+import { Effect, Result, Schema } from "effect";
+
+/** Response-safe encoded runtime response returned across the Node action boundary. */
+const RuntimeHttpResultSchema = Schema.Struct({
+  body: Schema.String,
+  status: Schema.Finite,
+});
+const AcceptedRuntimeRequestSchema = Schema.Struct({
+  body: dispatchInputValidator,
+  kind: Schema.Literal("accepted"),
+});
+const RejectedRuntimeRequestSchema = Schema.Struct({
+  kind: Schema.Literal("rejected"),
+  result: RuntimeHttpResultSchema,
+});
 /** Authenticated bounded body or one response-safe rejection. */
-export type RuntimeRequestResult =
-  | {
-      readonly body: HttpJsonBody;
-      readonly kind: "accepted";
-    }
-  | {
-      readonly kind: "rejected";
-      readonly result: RuntimeHttpResult;
-    };
+const RuntimeRequestResultSchema = Schema.Union([
+  AcceptedRuntimeRequestSchema,
+  RejectedRuntimeRequestSchema,
+]);
+export type RuntimeRequestResult = typeof RuntimeRequestResultSchema.Type;
 /** Maps one shared bounded-body failure to its stable HTTP status. */
 function bodyFailureResult(error: HttpBodyError) {
   if (error.reason === "size") {
