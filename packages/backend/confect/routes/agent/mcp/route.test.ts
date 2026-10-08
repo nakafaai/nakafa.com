@@ -83,6 +83,41 @@ describe("Nakafa MCP golden contract", () => {
   });
 });
 describe("Nakafa MCP transport", () => {
+  it.effect(
+    "declares exactly the capabilities Nakafa serves in discovery",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* send(
+          createConvexTestWithBetterAuth(),
+          modernPost(76, "server/discover")
+        );
+        expect(response.status).toBe(200);
+        expect(yield* json(response)).toEqual(
+          expect.objectContaining({
+            id: 76,
+            result: expect.objectContaining({
+              capabilities: { prompts: {}, resources: {}, tools: {} },
+            }),
+          })
+        );
+      })
+  );
+  it.effect(
+    "keeps the engine answer for a discovery request with a mismatched header",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* send(
+          createConvexTestWithBetterAuth(),
+          withHeaders(modernPost(78, "server/discover"), {
+            "mcp-protocol-version": "2099-01-01",
+          })
+        );
+        const answer = yield* json(response);
+        expect(response.status).toBe(400);
+        expect(answer).toMatchObject({ error: { code: -32_020 } });
+        expect(answer).not.toHaveProperty("result");
+      })
+  );
   it.effect("answers a modern POST that sends no Accept header", () =>
     Effect.gen(function* () {
       const response = yield* send(
