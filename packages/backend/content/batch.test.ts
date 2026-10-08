@@ -1,4 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import {
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
@@ -23,18 +27,31 @@ import {
 } from "@repo/backend/test/content/release";
 import { Result, Schema } from "effect";
 
+const decodeArtifact = Schema.decodeUnknownSync(
+  Schema.fromJsonString(SignedContentArtifactSchema)
+);
+const decodeProjection = Schema.decodeUnknownSync(
+  Schema.fromJsonString(MaterialLessonProjectionSchema)
+);
+const decodeRelease = Schema.decodeUnknownSync(
+  Schema.fromJsonString(SignedContentReleaseSchema)
+);
+const decodeRenderer = Schema.decodeUnknownSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+);
+
 /** Creates one structurally exact Aksara public found response. */
 function foundResponse(title = "Technical title") {
   return Schema.decodeSync(PublicContentRuntimeResponseSchema)({
     activeManifestHash: TEST_MANIFEST_HASH,
     activeReleaseId: TEST_RELEASE_ID,
-    artifact: JSON.parse(testArtifactJson()),
+    artifact: decodeArtifact(testArtifactJson()),
     delivery: "public",
     kind: "found",
-    projection: JSON.parse(testProjectionJson({ title })),
+    projection: decodeProjection(testProjectionJson({ title })),
     projectionHash: TEST_DIGEST,
-    release: JSON.parse(testReleaseJson()),
-    rendererManifest: JSON.parse(testRendererJson()),
+    release: decodeRelease(testReleaseJson()),
+    rendererManifest: decodeRenderer(testRendererJson()),
     sourcePath: "packages/corpus/test/head-0/en.mdx",
   });
 }

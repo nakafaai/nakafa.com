@@ -1,4 +1,6 @@
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import { PublicContentRuntimeResponseSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   decodePublicRuntimeRow,
@@ -10,7 +12,14 @@ import {
   makePageRuntimeSource,
 } from "@repo/backend/test/content/publication";
 import { TEST_QUESTION_PROJECTION_JSON } from "@repo/backend/test/content/question";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+const decodeArtifact = Schema.decodeUnknownSync(
+  Schema.fromJsonString(SignedContentArtifactSchema)
+);
+const decodeRuntime = Schema.decodeUnknownSync(
+  Schema.fromJsonString(PublicContentRuntimeResponseSchema)
+);
 
 const readFixture = Effect.fn("test.publicationExchange")(function* () {
   const fixture = makePageRuntimeSource();
@@ -41,7 +50,7 @@ describe("stored public exchange", () => {
           response,
         };
         const source = yield* encodePublicDelivery(runtime, row);
-        expect(JSON.parse(source ?? "")).toMatchObject({
+        expect(decodeRuntime(source ?? "")).toMatchObject({
           activeReleaseId: row.activeReleaseId,
           projectionHash: row.projectionHash,
         });
@@ -91,7 +100,7 @@ describe("stored public exchange", () => {
           projectionHash: row.projectionHash,
           sourcePath: row.sourcePath,
         });
-        expect(response?.artifact).toEqual(JSON.parse(row.artifactJson));
+        expect(response?.artifact).toEqual(decodeArtifact(row.artifactJson));
         expect(yield* decodePublicRuntimeRow(null)).toBeNull();
       })
   );
