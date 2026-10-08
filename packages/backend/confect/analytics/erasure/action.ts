@@ -7,7 +7,7 @@ import {
 import { Config, Effect, Redacted, Schema } from "effect";
 export const postHogIngestionHostnameSuffix = /\.i\.posthog\.com$/;
 export const postHogProjectIdPattern = /^[1-9]\d*$/;
-export const PostHogBulkEraseResponseSchema = Schema.Struct({
+const PostHogBulkEraseResponseSchema = Schema.Struct({
   deletion_errors: Schema.optional(Schema.Array(Schema.Unknown)),
   events_queued_for_deletion: Schema.Boolean,
   persons_deleted: Schema.Finite.check(Schema.isInt()).check(

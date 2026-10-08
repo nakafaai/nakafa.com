@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   ensurePostHogErasureConfigured,
   erasePostHogPerson,
-  PostHogBulkEraseResponseSchema,
 } from "@repo/backend/confect/analytics/erasure/action";
 import {
   PostHogErasureConfigError,
@@ -16,7 +15,6 @@ const config = {
   projectId: "114144",
 };
 const JsonText = Schema.fromJsonString(Schema.Unknown);
-const EraseResponseJson = Schema.fromJsonString(PostHogBulkEraseResponseSchema);
 describe("analytics erasure action", () => {
   it.effect.each([
     "POSTHOG_ERASURE_API_KEY",
@@ -65,7 +63,7 @@ describe("analytics erasure action", () => {
       const request = vi.fn(() =>
         Promise.resolve(
           new Response(
-            Schema.encodeSync(EraseResponseJson)({
+            Schema.encodeSync(JsonText)({
               deletion_errors: [],
               events_queued_for_deletion: true,
               persons_deleted: 1,
@@ -108,7 +106,7 @@ describe("analytics erasure action", () => {
         const request = vi.fn(() =>
           Promise.resolve(
             new Response(
-              Schema.encodeSync(EraseResponseJson)({
+              Schema.encodeSync(JsonText)({
                 events_queued_for_deletion: false,
                 persons_deleted: 0,
                 persons_found: 0,
@@ -238,7 +236,7 @@ describe("analytics erasure action", () => {
         request: () =>
           Promise.resolve(
             new Response(
-              Schema.encodeSync(EraseResponseJson)({
+              Schema.encodeSync(JsonText)({
                 deletion_errors: [
                   {
                     person_uuid: "person-1",
@@ -287,7 +285,7 @@ describe("analytics erasure action", () => {
         request: () =>
           Promise.resolve(
             new Response(
-              Schema.encodeSync(EraseResponseJson)({
+              Schema.encodeSync(JsonText)({
                 deletion_errors: [],
                 ...result,
               }),
