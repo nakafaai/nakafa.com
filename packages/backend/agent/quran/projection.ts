@@ -26,13 +26,15 @@ type QuranProjectionInput = typeof QuranProjectionInputSchema.Type;
 /** Projects the canonical Quran contract with semantic notes and signed sources. */
 export const projectNakafaQuranReference = Effect.fn(
   "agent.quran.projectReference"
-)(function* (input: QuranProjectionInput, reference: PublishedQuranReference) {
-  const { sources, tafsirAccess } = reference;
-  const verses = yield* Effect.forEach(reference.verses, (verse) =>
+)(function* (
+  input: QuranProjectionInput & { readonly reference: PublishedQuranReference }
+) {
+  const { sources, tafsirAccess } = input.reference;
+  const verses = yield* Effect.forEach(input.reference.verses, (verse) =>
     projectQuranVerse(verse, input.appLocale, input.includeTafsir)
   );
   const meaning = selectQuranMeaning(
-    reference.surah.name.meaning,
+    input.reference.surah.name.meaning,
     input.appLocale
   );
   return yield* decodeAgentOutput(
@@ -43,9 +45,9 @@ export const projectNakafaQuranReference = Effect.fn(
         locale: meaning.appLocale,
         text: meaning.text,
       },
-      name: reference.surah.name.transliteration,
-      pre_bismillah: reference.preBismillah,
-      revelation: reference.surah.revelation.place,
+      name: input.reference.surah.name.transliteration,
+      pre_bismillah: input.reference.preBismillah,
+      revelation: input.reference.surah.revelation.place,
       sources: {
         arabic: projectEmbeddedSource(sources.arabic),
         translation: {

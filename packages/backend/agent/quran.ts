@@ -45,7 +45,10 @@ export const getNakafaQuranReference = Effect.fn(
     surahNumber: request.surah,
   }).pipe(Effect.mapError(quranReadError));
   const identity = yield* projectReferenceIdentity(reference.search, request);
-  return yield* projectNakafaQuranReference(identity, reference);
+  return yield* projectNakafaQuranReference({
+    ...identity,
+    reference,
+  });
 });
 
 /** Decodes and bounds one request against its signed catalog. */
