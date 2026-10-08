@@ -8,6 +8,7 @@ import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(
 import {
   readMaterialNavigation,
   toMaterialHref,
+  toMaterialNavigationPage,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 import {
@@ -80,6 +81,35 @@ describe("material lesson navigation", () => {
     expect(toMaterialHref(previewProjection)).toBe(
       `/${previewProjection.appLocale}/${previewProjection.publicPath}`
     );
+  });
+
+  it("hands client controls route identity and sibling labels only", () => {
+    const navigation = toMaterialNavigationPage(publishedPage);
+
+    expect(navigation.kind).toBe("published");
+    expect(navigation.route).toStrictEqual({
+      appLocale: previewProjection.appLocale,
+      contentKey: previewProjection.contentKey,
+      materialKey: previewProjection.materialKey,
+      parentPath: previewProjection.parentPath,
+      publicPath: previewProjection.publicPath,
+    });
+    expect(navigation.siblings).toStrictEqual([
+      {
+        appLocale: previewProjection.appLocale,
+        metadata: { title: previewProjection.metadata.title },
+        order: previewProjection.order,
+        parentPath: previewProjection.parentPath,
+        publicPath: previewProjection.publicPath,
+      },
+      {
+        appLocale: previewNextProjection.appLocale,
+        metadata: { title: previewNextProjection.metadata.title },
+        order: previewNextProjection.order,
+        parentPath: previewNextProjection.parentPath,
+        publicPath: previewNextProjection.publicPath,
+      },
+    ]);
   });
 
   it("orders signed siblings and handles pagination edges", () => {

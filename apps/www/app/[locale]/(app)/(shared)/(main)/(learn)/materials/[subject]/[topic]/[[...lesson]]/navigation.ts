@@ -11,16 +11,41 @@ type MaterialNavigationIdentity = Pick<
 >;
 
 /** Sibling route identity with the one visible label navigation shows. */
-type MaterialNavigationRoute = Pick<
-  MaterialLessonProjection,
-  "appLocale" | "order" | "parentPath" | "publicPath"
-> &
-  Record<"metadata", Pick<MaterialLessonProjection["metadata"], "title">>;
+type MaterialNavigationRoute = Readonly<
+  ReturnType<typeof toMaterialNavigationRoute>
+>;
 
 /** Small public navigation model shared by the static shell and client controls. */
-export type MaterialNavigationPage = Pick<MaterialPageContent, "kind"> &
-  Record<"route", MaterialNavigationIdentity> &
-  Record<"siblings", readonly MaterialNavigationRoute[]>;
+export type MaterialNavigationPage = Readonly<
+  ReturnType<typeof toMaterialNavigationPage>
+>;
+
+/** Projects one signed route to the identity and label siblings need. */
+function toMaterialNavigationRoute(route: MaterialLessonProjection) {
+  return {
+    appLocale: route.appLocale,
+    metadata: { title: route.metadata.title },
+    order: route.order,
+    parentPath: route.parentPath,
+    publicPath: route.publicPath,
+  };
+}
+
+/** Projects the signed page to the navigation model client controls receive. */
+export function toMaterialNavigationPage(page: MaterialPageContent) {
+  const identity: MaterialNavigationIdentity = {
+    appLocale: page.route.appLocale,
+    contentKey: page.route.contentKey,
+    materialKey: page.route.materialKey,
+    parentPath: page.route.parentPath,
+    publicPath: page.route.publicPath,
+  };
+  return {
+    kind: page.kind,
+    route: identity,
+    siblings: page.siblings.map(toMaterialNavigationRoute),
+  };
+}
 
 const emptyItem = { href: "", title: "" };
 
