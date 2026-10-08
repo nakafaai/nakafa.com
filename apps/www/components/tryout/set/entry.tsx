@@ -6,24 +6,36 @@ import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { TryoutRuntime } from "@/components/tryout/runtime/client";
 import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
+import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import { TryoutSummaryAction } from "@/components/tryout/section/action.client";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
-import type { TryoutInternalSetView } from "@/components/tryout/set/model";
+import type {
+  LoadedRuntime,
+  SetEntrySection,
+} from "@/components/tryout/set/model";
+import type { TryoutSetOverviewProps } from "@/components/tryout/set/overview";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
+
+/** Props of the direct-entry set: its render model and its only section's runtime. */
+interface TryoutSetEntryProps {
+  children: ReactNode;
+  content: Promise<TryoutRuntimeContent> | null;
+  /** Render model for sets whose only section is the set entry itself. */
+  value: TryoutSetOverviewProps["value"] & {
+    entrySection: SetEntrySection;
+    runtimeState: TryoutRuntimeState<LoadedRuntime>;
+  };
+}
 
 /** Renders a no-nested-section set as the directly startable section surface. */
 export function TryoutSetEntry({
   children,
   content,
   value,
-}: {
-  children: ReactNode;
-  content: Promise<TryoutRuntimeContent> | null;
-  value: TryoutInternalSetView;
-}) {
+}: TryoutSetEntryProps) {
   const state = value.runtimeState;
   const isRunning = state.kind === "active" || state.kind === "pending";
   return (
@@ -62,7 +74,7 @@ export function TryoutSetEntry({
  * Renders the direct-entry facts from the catalog, followed by the attempt's
  * score once it has one, so facts a pending page paints never move.
  */
-function TryoutEntryResult({ value }: { value: TryoutInternalSetView }) {
+function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
   const attempt = value.actionAttempt;
 
   return (
@@ -99,7 +111,7 @@ function TryoutEntryResult({ value }: { value: TryoutInternalSetView }) {
 }
 
 /** Renders a direct-entry action only outside active runtime states. */
-function TryoutEntryAction({ value }: { value: TryoutInternalSetView }) {
+function TryoutEntryAction({ value }: { value: TryoutSetEntryProps["value"] }) {
   if (
     value.runtimeState.kind === "active" ||
     value.runtimeState.kind === "pending"
@@ -155,7 +167,7 @@ function TryoutEntryRuntime({
 }: {
   children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
-  value: TryoutInternalSetView;
+  value: TryoutSetEntryProps["value"];
 }) {
   if (value.runtimeState.kind === "none") {
     return null;
@@ -181,7 +193,7 @@ function TryoutEntryRuntimeContent({
   value,
 }: {
   content: Promise<TryoutRuntimeContent> | null;
-  value: TryoutInternalSetView;
+  value: TryoutSetEntryProps["value"];
 }) {
   if (value.runtimeState.kind === "none") {
     return null;

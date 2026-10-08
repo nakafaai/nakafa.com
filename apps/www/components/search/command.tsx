@@ -51,29 +51,34 @@ const DEBOUNCE_TIME = 500;
 
 type SearchCommandIcon = ComponentProps<typeof HugeIcons>["icon"];
 
-type SearchCommandItem =
-  | {
-      excerpt: string;
-      href: string;
-      key: string;
-      label: string;
-      query: string;
-      type: "content";
-      value: string;
-    }
-  | {
-      href: string;
-      icon: SearchCommandIcon;
-      key: string;
-      label: string;
-      type: "navigation";
-      value: string;
-    };
-
-interface SearchCommandGroup {
-  items: SearchCommandItem[];
-  value: string;
+/** Props of the result list: the groups it renders, with navigation icons. */
+interface SearchListProps {
+  groups: {
+    items: (
+      | {
+          excerpt: string;
+          href: string;
+          key: string;
+          label: string;
+          query: string;
+          type: "content";
+          value: string;
+        }
+      | {
+          href: string;
+          icon: SearchCommandIcon;
+          key: string;
+          label: string;
+          type: "navigation";
+          value: string;
+        }
+    )[];
+    value: string;
+  }[];
 }
+
+type SearchCommandGroup = SearchListProps["groups"][number];
+type SearchCommandItem = SearchCommandGroup["items"][number];
 
 /**
  * Renders the global command menu used across the main app shell.
@@ -211,7 +216,7 @@ function SearchEmpty({
   );
 }
 
-function SearchList({ groups }: { groups: SearchCommandGroup[] }) {
+function SearchList({ groups }: SearchListProps) {
   const router = useRouter();
   const setOpen = useSearch((state) => state.setOpen);
   const [isPending, startTransition] = useTransition();

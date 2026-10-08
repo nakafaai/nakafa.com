@@ -1,3 +1,4 @@
+import { DateTime, Schema } from "effect";
 import { createStore } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -11,9 +12,11 @@ import { immer } from "zustand/middleware/immer";
 
 const SESSION_TTL = 30 * 60 * 1000; // 30 minutes
 
-interface State {
-  viewedSlugs: Record<string, number>;
-}
+const StateSchema = Schema.Struct({
+  viewedSlugs: Schema.Record(Schema.String, Schema.Finite),
+});
+
+type State = typeof StateSchema.Type;
 
 interface Actions {
   isViewed: (key: string) => boolean;
@@ -34,7 +37,9 @@ export const createContentViewsStore = () =>
 
         markAsViewed: (key) =>
           set((state) => {
-            state.viewedSlugs[key] = Date.now();
+            state.viewedSlugs[key] = DateTime.toEpochMillis(
+              DateTime.nowUnsafe()
+            );
           }),
 
         /**
@@ -47,7 +52,10 @@ export const createContentViewsStore = () =>
           if (viewedAt === undefined) {
             return false;
           }
-          return Date.now() - viewedAt < SESSION_TTL;
+          return (
+            DateTime.toEpochMillis(DateTime.nowUnsafe()) - viewedAt <
+            SESSION_TTL
+          );
         },
       })),
       {

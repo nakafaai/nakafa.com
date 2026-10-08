@@ -15,16 +15,23 @@ import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client"
 import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
 import { catalogQuery } from "@/components/tryout/catalog/table/query";
 import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
-import type { TryoutCatalogBootstrap } from "@/components/tryout/catalog/table/types";
+import type {
+  TryoutSetListArgs,
+  TryoutSetPage,
+} from "@/components/tryout/catalog/table/types";
+
+/** Props of the signed discovery table: its server payload and its title. */
+export interface TryoutSetTableProps {
+  /** Server-to-client payload: the list request and the result it resolved to. */
+  bootstrap: {
+    readonly args: TryoutSetListArgs;
+    readonly result: TryoutSetPage;
+  };
+  title: string;
+}
 
 /** Displays one complete signed discovery result with independent URL controls. */
-export function TryoutSetTable({
-  bootstrap,
-  title,
-}: {
-  bootstrap: TryoutCatalogBootstrap;
-  title: string;
-}) {
+export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
   const t = useTranslations("Tryouts");
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   const [selection, setSelection] = useQueryStates(catalogQuery, {
