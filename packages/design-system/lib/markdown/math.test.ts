@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { Lexer } from "marked";
 
 const UnknownJsonSchema = Schema.fromJsonString(Schema.Unknown);
@@ -13,36 +13,37 @@ describe("preprocessLaTeX", () => {
   });
 
   it("keeps closed code fences unchanged while normalizing prose after them", () => {
-    const markdown = [
-      "```ts",
-      'const value = "\\\\(x\\\\)";',
-      "```",
-      "Then \\(y\\)",
-    ].join("\n");
+    const markdown = Arr.join(
+      ["```ts", 'const value = "\\\\(x\\\\)";', "```", "Then \\(y\\)"],
+      "\n"
+    );
 
     expect(preprocessLaTeX(markdown)).toBe(
-      ['```ts\nconst value = "\\\\(x\\\\)";\n```', "Then $$y$$"].join("\n")
+      Arr.join(['```ts\nconst value = "\\\\(x\\\\)";\n```', "Then $$y$$"], "\n")
     );
   });
 
   it("keeps unclosed code fences unchanged", () => {
-    const markdown = ["```ts", "const value = \\(x\\)"].join("\n");
+    const markdown = Arr.join(["```ts", "const value = \\(x\\)"], "\n");
 
     expect(preprocessLaTeX(markdown)).toBe(markdown);
   });
 
   it("normalizes display math outside lists", () => {
-    expect(preprocessLaTeX(["Intro", "\\[x^2\\]"].join("\n"))).toContain(
+    expect(preprocessLaTeX(Arr.join(["Intro", "\\[x^2\\]"], "\n"))).toContain(
       "```math\nx^2\n```"
     );
   });
 
   it("keeps display math inside blockquotes", () => {
-    const markdown = [
-      "> **Rumus Hubungannya:**",
-      "> \\[w = m \\cdot g\\]",
-      "> (\\(w\\) = berat, \\(m\\) = massa, \\(g\\) = percepatan gravitasi)",
-    ].join("\n");
+    const markdown = Arr.join(
+      [
+        "> **Rumus Hubungannya:**",
+        "> \\[w = m \\cdot g\\]",
+        "> (\\(w\\) = berat, \\(m\\) = massa, \\(g\\) = percepatan gravitasi)",
+      ],
+      "\n"
+    );
 
     const output = preprocessLaTeX(markdown);
     const tokens = Lexer.lex(output, { gfm: true });
@@ -53,13 +54,13 @@ describe("preprocessLaTeX", () => {
   });
 
   it("ignores indented prose that is not part of a list", () => {
-    const markdown = ["Intro", "  continued", "  \\[x\\]"].join("\n");
+    const markdown = Arr.join(["Intro", "  continued", "  \\[x\\]"], "\n");
 
     expect(preprocessLaTeX(markdown)).toContain("```math\nx\n```");
   });
 
   it("normalizes numbered list display math with list indentation", () => {
-    const markdown = ["1. Step", "   \\[x\\]"].join("\n");
+    const markdown = Arr.join(["1. Step", "   \\[x\\]"], "\n");
 
     expect(preprocessLaTeX(markdown)).toContain("   ```math\n   x\n   ```");
   });
@@ -67,11 +68,14 @@ describe("preprocessLaTeX", () => {
   it.each(["-", "*", "+"])(
     "keeps display math inside %s bullet lists aligned with following prose",
     (marker) => {
-      const markdown = [
-        `${marker}   **Penyederhanaan:**`,
-        "    \\[\\frac{x^2 - 9}{x - 3} = x + 3\\]",
-        "    *Ingat:* Domainnya adalah \\(x \\neq 3\\), karena penyebut tidak boleh nol.",
-      ].join("\n");
+      const markdown = Arr.join(
+        [
+          `${marker}   **Penyederhanaan:**`,
+          "    \\[\\frac{x^2 - 9}{x - 3} = x + 3\\]",
+          "    *Ingat:* Domainnya adalah \\(x \\neq 3\\), karena penyebut tidak boleh nol.",
+        ],
+        "\n"
+      );
 
       const output = preprocessLaTeX(markdown);
 
@@ -89,21 +93,21 @@ describe("preprocessLaTeX", () => {
   );
 
   it("normalizes dollar math inside plain code fences into math fences", () => {
-    const markdown = ["```", "$x^2$", "```"].join("\n");
+    const markdown = Arr.join(["```", "$x^2$", "```"], "\n");
 
     expect(preprocessLaTeX(markdown)).toContain("```math\nx^2\n```");
   });
 
   it("normalizes malformed fenced math blocks", () => {
     expect(preprocessLaTeX("```math x^2```")).toBe(
-      ["", "", "```math", "x^2", "```", "", ""].join("\n")
+      Arr.join(["", "", "```math", "x^2", "```", "", ""], "\n")
     );
   });
 
   it("normalizes hallucinated MDX math components", () => {
     expect(preprocessLaTeX('<InlineMath math="x^2" />')).toBe("$$x^2$$");
     expect(preprocessLaTeX('<BlockMath math="x^2" />')).toBe(
-      ["", "", "```math", "x^2", "```", "", ""].join("\n")
+      Arr.join(["", "", "```math", "x^2", "```", "", ""], "\n")
     );
   });
 
@@ -144,7 +148,7 @@ describe("preprocessLaTeX", () => {
 
   it("normalizes HTML math tags", () => {
     expect(preprocessLaTeX("<math>x^2</math>")).toBe(
-      ["", "", "```math", "x^2", "```", "", ""].join("\n")
+      Arr.join(["", "", "```math", "x^2", "```", "", ""], "\n")
     );
   });
 });
