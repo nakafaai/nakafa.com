@@ -7,6 +7,6 @@
       "@repo/next-config/*": ["./*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "*.mts"],
   "exclude": ["node_modules"]
 }
