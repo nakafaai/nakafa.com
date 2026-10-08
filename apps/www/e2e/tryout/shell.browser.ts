@@ -3,7 +3,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, type MutableHashSet } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
-import { press } from "@/e2e/support/input";
+import { press, visibleLink } from "@/e2e/support/input";
 import {
   observeShell,
   readPageTime,
@@ -22,7 +22,6 @@ import {
   setHref,
   settledSection,
   trackHref,
-  visibleLink,
 } from "@/e2e/support/tryout";
 import { tryoutViewports } from "@/e2e/support/viewport";
 

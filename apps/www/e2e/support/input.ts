@@ -20,6 +20,11 @@ export function press(control: Locator, hasTouch: boolean) {
     : control.click({ noWaitAfter: true, timeout: PRESS_TIMEOUT_MILLISECONDS });
 }
 
+/** The first link to `href` that the page shows, wherever it sits on the page. */
+export function visibleLink(page: Page, href: string) {
+  return page.locator(`a[href="${href}"]`).filter({ visible: true }).first();
+}
+
 /** Repeats a real activation until its client-owned surface becomes visible. */
 export const activateUntilVisible = Effect.fn("NakafaE2E.activateUntilVisible")(
   function* (trigger: Locator, surface: Locator, timeoutMilliseconds: number) {

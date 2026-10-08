@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
+import { visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import {
   observeShell,
@@ -16,7 +17,6 @@ import {
   openTrack,
   setHref,
   trackHref,
-  visibleLink,
 } from "@/e2e/support/tryout";
 import { tryoutViewports } from "@/e2e/support/viewport";
 

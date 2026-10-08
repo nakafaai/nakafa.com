@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, MutableHashSet } from "effect";
-import { press } from "@/e2e/support/input";
+import { press, visibleLink } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/requests";
 import { appRoutes } from "@/e2e/support/route";
@@ -13,14 +13,6 @@ export const trackHref = `${examHref}/2027`;
 export const setHref = `${trackHref}/set-1`;
 const SECTION_HREF_PATTERN =
   /^\/en\/try-out\/indonesia\/snbt\/2027\/set-1\/[^/?]+(\?attemptId=[^&]+)?$/;
-
-/** The first link to `href` that the current page shows. */
-export function visibleLink(page: Page, href: string) {
-  return page
-    .locator(`main a[href="${href}"]`)
-    .filter({ visible: true })
-    .first();
-}
 
 /** The first section link that the current set page shows. */
 export function sectionLink(page: Page) {
