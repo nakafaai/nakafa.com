@@ -17,10 +17,8 @@ export const PartnerCursorSchema = Schema.Struct({
   family: Schema.Literals(["article", "material"]),
   prefix: Schema.Union([Schema.Literal(""), ContentKeySchema]),
 });
-/** Opaque partner API position bound to one current publication generation. */
-export type PartnerCursor = typeof PartnerCursorSchema.Type;
 /** Signed content family a partner page may address. */
-export type PartnerFamily = PartnerCursor["family"];
+type PartnerFamily = (typeof PartnerCursorSchema.Type)["family"];
 /** Decodes one unversioned current partner pagination cursor. */
 export const decodePartnerCursor = Effect.fn(
   "contentRelease.decodePartnerCursor"

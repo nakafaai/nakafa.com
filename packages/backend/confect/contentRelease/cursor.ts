@@ -13,10 +13,10 @@ const PageCursorSchema = Schema.Tuple([
   Schema.String,
 ]);
 const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
-export type PageCursorKind = (typeof PageCursorSchema.Type)[0];
+type PageCursorKind = (typeof PageCursorSchema.Type)[0];
 
 /** Immutable active release identity bound to a native pagination cursor. */
-export type ReleaseCursorIdentity = Pick<
+type ReleaseCursorIdentity = Pick<
   typeof contentReleasesTable.Doc.Type,
   "manifestHash" | "releaseId"
 >;

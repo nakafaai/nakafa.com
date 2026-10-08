@@ -10,7 +10,7 @@ const ModelItemPageSchema = Schema.Struct({
   nextIndex: Schema.Finite,
   rows: Schema.Array(contentItemsTable.Doc),
 });
-export type ModelItemPage = typeof ModelItemPageSchema.Type;
+type ModelItemPage = typeof ModelItemPageSchema.Type;
 
 /** Loads one bounded, contiguous page inside the signed release item count. */
 export const loadModelItems = Effect.fn("contentRelease.loadModelItems")(

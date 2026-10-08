@@ -10,11 +10,11 @@ const StoredRowSchema = Schema.Struct({
   index: Schema.Finite,
   rowJson: Schema.String,
 });
-export type StoredRow = typeof StoredRowSchema.Type;
-export type SnapshotFamily = ContentSnapshotManifest["family"];
+type StoredRow = typeof StoredRowSchema.Type;
+type SnapshotFamily = ContentSnapshotManifest["family"];
 
 /** Proves one stored page is complete and returns canonical row bytes. */
-export const exactRowJson = Effect.fn("contentRelease.exactSnapshotRowJson")(
+const exactRowJson = Effect.fn("contentRelease.exactSnapshotRowJson")(
   function* (
     rows: readonly StoredRow[],
     family: SnapshotFamily,
@@ -36,7 +36,7 @@ export const exactRowJson = Effect.fn("contentRelease.exactSnapshotRowJson")(
 );
 
 /** Reads exact row JSON for one immutable family batch. */
-export const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
+const loadRows = Effect.fn("contentRelease.loadSnapshotRows")(function* (
   family: SnapshotFamily,
   snapshotId: string,
   firstIndex: number,
