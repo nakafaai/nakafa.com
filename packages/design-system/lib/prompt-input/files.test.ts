@@ -1,9 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   PromptInputFileConstraintError,
+  PromptInputFileSchema,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const image = new File(["image"], "lesson.png", { type: "image/png" });
 const text = new File(["lesson"], "lesson.txt", { type: "text/plain" });
@@ -89,6 +90,41 @@ describe("prompt input file selection", () => {
       expect(result.files).toEqual([image]);
       expect(result.warning).toBeInstanceOf(PromptInputFileConstraintError);
       expect(result.warning?.code).toBe("max_files");
+    })
+  );
+});
+
+describe("prompt input file schema", () => {
+  const attachment = {
+    file: image,
+    id: "attachment-1",
+    mediaType: "image/png",
+    type: "file",
+    url: "blob:lesson",
+  };
+
+  it.effect("keeps provider metadata that is plain JSON", () =>
+    Effect.gen(function* () {
+      const providerMetadata = {
+        openai: { detail: ["high", null, 1, true] },
+      };
+      const decoded = yield* Schema.decodeUnknownEffect(PromptInputFileSchema)({
+        ...attachment,
+        providerMetadata,
+      });
+
+      expect(decoded.providerMetadata).toEqual(providerMetadata);
+    })
+  );
+
+  it.effect("rejects provider metadata that is not JSON", () =>
+    Effect.gen(function* () {
+      const error = yield* Schema.decodeUnknownEffect(PromptInputFileSchema)({
+        ...attachment,
+        providerMetadata: { openai: { detail: () => "not json" } },
+      }).pipe(Effect.flip);
+
+      expect(error).toBeInstanceOf(Schema.SchemaError);
     })
   );
 });
