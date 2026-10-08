@@ -4,7 +4,7 @@ import {
   decodeRendererJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { PublicationSource } from "@repo/backend/content/publication/source";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads and validates the complete active publication snapshot identity. */
 export const loadActiveIdentity = Effect.fn(
@@ -17,7 +17,7 @@ export const loadActiveIdentity = Effect.fn(
     state?.activeReleaseId,
     state?.activeSequence,
   ];
-  if (fields.every((field) => field === undefined)) {
+  if (Arr.every(fields, (field) => field === undefined)) {
     return null;
   }
   if (

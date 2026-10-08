@@ -1,12 +1,11 @@
 import type { ActiveAppLocale } from "@nakafa/aksara-contracts/locale";
-import { compareCodeUnits } from "@nakafa/aksara-contracts/text/order";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { PAGE_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/page/limits";
 import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { PublicationSource } from "@repo/backend/content/publication/source";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Order, Schema } from "effect";
 
 const PageCatalogRowSchema = Schema.Struct({
   contentKey: Schema.String,
@@ -33,18 +32,19 @@ const readLocalePages = Effect.fn("contentRelease.readLocalePages")(function* (
   const projections = yield* Effect.forEach(keys, ({ contentKey }) =>
     resolvePublicProjection(contentKey, appLocale, activeSequence)
   );
-  const rows: PageCatalogRow[] = [];
+  const rows = MutableList.make<PageCatalogRow>();
   for (const projection of projections) {
     if (projection === null) {
       continue;
     }
-    rows.push({
+    MutableList.append(rows, {
       contentKey: projection.contentKey,
       projectionJson: projection.projectionJson,
     });
   }
-  return rows.sort((left, right) =>
-    compareCodeUnits(left.contentKey, right.contentKey)
+  return Arr.sort(
+    MutableList.toArray(rows),
+    Order.mapInput(Order.String, (row: PageCatalogRow) => row.contentKey)
   );
 });
 
@@ -55,7 +55,8 @@ function hasSamePageIdentities(
 ) {
   return (
     expected.length === actual.length &&
-    Arr.zip(expected, actual).every(
+    Arr.every(
+      Arr.zip(expected, actual),
       ([left, right]) => left.contentKey === right.contentKey
     )
   );
@@ -80,16 +81,17 @@ export const readPageCatalog = Effect.fn("contentRelease.readPageCatalog")(
         projectionJson: [],
       };
     }
-    const catalogs = yield* Effect.forEach(
-      active.signed.manifest.activeAppLocales,
-      (appLocale) => readLocalePages(active.sequence, appLocale)
-    );
+    const catalogs: readonly (readonly PageCatalogRow[])[] =
+      yield* Effect.forEach(
+        active.signed.manifest.activeAppLocales,
+        (appLocale) => readLocalePages(active.sequence, appLocale)
+      );
     const expected = yield* Effect.fromNullishOr(catalogs[0]).pipe(
       Effect.orDie
     );
     if (
       expected.length === 0 ||
-      catalogs.some((catalog) => !hasSamePageIdentities(expected, catalog))
+      Arr.some(catalogs, (catalog) => !hasSamePageIdentities(expected, catalog))
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -99,8 +101,8 @@ export const readPageCatalog = Effect.fn("contentRelease.readPageCatalog")(
     return {
       activeReleaseId: active.releaseId,
       managed: true,
-      projectionJson: catalogs.flatMap((catalog) =>
-        catalog.map(({ projectionJson }) => projectionJson)
+      projectionJson: Arr.flatMap(catalogs, (catalog) =>
+        Arr.map(catalog, ({ projectionJson }) => projectionJson)
       ),
     };
   }
