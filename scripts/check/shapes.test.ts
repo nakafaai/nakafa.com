@@ -203,12 +203,6 @@ export interface Lifecycle {
 export interface Factory {
   readonly build: new () => Builder;
 }
-export interface Constructible {
-  new (value: boolean): Toggle;
-}
-export interface Callable {
-  (value: boolean): void;
-}
 export interface Lookup {
   [key: string]: () => void;
 }
@@ -216,6 +210,23 @@ export type Handlers = { readonly onOpen: () => void };
 export type Wrapped = Readonly<{ onOpen: (() => void) | null }>;
 `),
           []
+        );
+      })
+  );
+
+  it.effect(
+    "keeps a shape reported when its members are only call or construct signatures",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`export interface Callable {
+  (value: boolean): void;
+}
+export interface Constructible {
+  new (value: boolean): Toggle;
+}
+`),
+          [1, 4]
         );
       })
   );

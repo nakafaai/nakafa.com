@@ -7,9 +7,7 @@ import {
   isArrayTypeNode,
   isArrowFunction,
   isCallExpression,
-  isCallSignatureDeclaration,
   isConstructorTypeNode,
-  isConstructSignatureDeclaration,
   isDeclareKeyword,
   isFunctionTypeNode,
   isIdentifier,
@@ -296,9 +294,9 @@ function holdsValue(type: TypeNode, names: readonly string[]): boolean {
 
 /**
  * Whether one member of a shape holds a function, a constructor, or a React or
- * MDX value, or is itself a method or a callable or constructible signature.
- * A Schema describes data only, so such a member keeps its shape out of Schema
- * candidates.
+ * MDX value, or is a method signature. An index signature counts by its value
+ * type, and call and construct signatures do not count. A Schema describes data
+ * only, so such a member keeps its shape out of Schema candidates.
  */
 function holdsValueMember(
   member: TypeElement,
@@ -310,11 +308,7 @@ function holdsValueMember(
   ) {
     return member.type !== undefined && holdsValue(member.type, names);
   }
-  return (
-    isMethodSignatureDeclaration(member) ||
-    isCallSignatureDeclaration(member) ||
-    isConstructSignatureDeclaration(member)
-  );
+  return isMethodSignatureDeclaration(member);
 }
 
 /** Returns the members that a shape declares itself: an interface's body, or the object literals of a type alias. */
