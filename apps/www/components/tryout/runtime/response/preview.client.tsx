@@ -39,28 +39,28 @@ export function TryoutResponsePreview({
   return (
     <div className="space-y-4">
       <TryoutResponseFields
-        onChange={(nextSelection) => {
-          setSelection(nextSelection);
-          if (autoReveal) {
-            setRevealAnswers(true);
-          }
-        }}
-        renderLabel={({
-          correctness,
-          id: labelId,
-        }: TryoutResponseFieldLabel) => (
-          <>
-            {labels[labelId]}
-            {correctness === undefined ? null : (
-              <span className="sr-only">
-                {t(correctness ? "correct" : "incorrect")}
-              </span>
-            )}
-          </>
-        )}
         value={{
           id,
           locked: revealAnswers && !autoReveal,
+          onChange: (nextSelection) => {
+            setSelection(nextSelection);
+            if (autoReveal) {
+              setRevealAnswers(true);
+            }
+          },
+          renderLabel: ({
+            correctness,
+            id: labelId,
+          }: TryoutResponseFieldLabel) => (
+            <>
+              {labels[labelId]}
+              {correctness === undefined ? null : (
+                <span className="sr-only">
+                  {t(correctness ? "correct" : "incorrect")}
+                </span>
+              )}
+            </>
+          ),
           responseSpec,
           revealAnswers,
           selection,

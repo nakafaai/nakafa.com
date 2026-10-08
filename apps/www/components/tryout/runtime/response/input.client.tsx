@@ -31,11 +31,11 @@ export function TryoutResponse({ locked, question }: TryoutResponseProps) {
 
   return (
     <TryoutResponseFields
-      onChange={(selection) => submit(question, selection)}
-      renderLabel={renderResponseLabel}
       value={{
         id: question.placementId,
         locked,
+        onChange: (selection) => submit(question, selection),
+        renderLabel: renderResponseLabel,
         responseSpec: question.responseSpec,
         selection: question.response?.selection ?? null,
       }}

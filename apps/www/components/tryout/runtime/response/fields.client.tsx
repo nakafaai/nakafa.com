@@ -32,13 +32,13 @@ export type TryoutResponseFieldLabel =
 type OnResponseChange = (selection: TryoutResponseSelection | null) => void;
 type RenderResponseLabel = (value: TryoutResponseFieldLabel) => ReactNode;
 
-/** Props of one response field set: its callbacks arrive as separate props. */
+/** Props of one response field set: `value` holds the response and the callbacks it drives. */
 export interface TryoutResponseFieldsProps {
-  onChange: OnResponseChange;
-  renderLabel: RenderResponseLabel;
   value: {
     readonly id: string;
     readonly locked: boolean;
+    readonly onChange: OnResponseChange;
+    readonly renderLabel: RenderResponseLabel;
     readonly responseSpec: TryoutRenderableResponseSpec;
     readonly revealAnswers?: boolean;
     readonly selection: TryoutResponseSelection | null;
@@ -46,49 +46,26 @@ export interface TryoutResponseFieldsProps {
 }
 
 /** Renders every response kind through one persistence-neutral surface. */
-export function TryoutResponseFields({
-  onChange,
-  renderLabel,
-  value,
-}: TryoutResponseFieldsProps) {
+export function TryoutResponseFields({ value }: TryoutResponseFieldsProps) {
   const t = useTranslations("Tryouts");
   const answerLabel = t("answer");
   if (value.responseSpec.kind === "single-choice") {
-    return (
-      <SingleChoiceFields
-        answerLabel={answerLabel}
-        onChange={onChange}
-        renderLabel={renderLabel}
-        value={value}
-      />
-    );
+    return <SingleChoiceFields answerLabel={answerLabel} value={value} />;
   }
   if (value.responseSpec.kind === "multiple-choice") {
-    return (
-      <MultipleChoiceFields
-        answerLabel={answerLabel}
-        onChange={onChange}
-        renderLabel={renderLabel}
-        value={value}
-      />
-    );
+    return <MultipleChoiceFields answerLabel={answerLabel} value={value} />;
   }
-  return (
-    <CategoryFields
-      onChange={onChange}
-      renderLabel={renderLabel}
-      value={value}
-    />
-  );
+  return <CategoryFields value={value} />;
 }
 
 function SingleChoiceFields({
   answerLabel,
-  onChange,
-  renderLabel,
   value,
-}: TryoutResponseFieldsProps & { answerLabel: string }) {
-  const { id, locked, responseSpec, selection } = value;
+}: {
+  answerLabel: string;
+  value: TryoutResponseFieldsProps["value"];
+}) {
+  const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "single-choice") {
     return null;
   }
@@ -119,7 +96,7 @@ function SingleChoiceFields({
             disabled={locked}
             id={optionLabelId(id, option.optionKey)}
             key={option.optionKey}
-            label={renderLabel({
+            label={value.renderLabel({
               correctness: previewCorrectness(
                 value.revealAnswers,
                 option.isCorrect
@@ -137,11 +114,12 @@ function SingleChoiceFields({
 
 function MultipleChoiceFields({
   answerLabel,
-  onChange,
-  renderLabel,
   value,
-}: TryoutResponseFieldsProps & { answerLabel: string }) {
-  const { id, locked, responseSpec, selection } = value;
+}: {
+  answerLabel: string;
+  value: TryoutResponseFieldsProps["value"];
+}) {
+  const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "multiple-choice") {
     return null;
   }
@@ -158,7 +136,7 @@ function MultipleChoiceFields({
           disabled={locked}
           id={optionLabelId(id, option.optionKey)}
           key={option.optionKey}
-          label={renderLabel({
+          label={value.renderLabel({
             correctness: previewCorrectness(
               value.revealAnswers,
               option.isCorrect
@@ -181,11 +159,11 @@ function MultipleChoiceFields({
 }
 
 function CategoryFields({
-  onChange,
-  renderLabel,
   value,
-}: TryoutResponseFieldsProps) {
-  const { id, locked, responseSpec, selection } = value;
+}: {
+  value: TryoutResponseFieldsProps["value"];
+}) {
+  const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "category") {
     return null;
   }
@@ -208,7 +186,7 @@ function CategoryFields({
         return (
           <section className="space-y-3" key={statement.statementKey}>
             <div id={statementHeadingId}>
-              {renderLabel({
+              {value.renderLabel({
                 id: statementId,
                 label: statement.label,
               })}
@@ -244,7 +222,7 @@ function CategoryFields({
                     category.categoryKey
                   )}
                   key={category.categoryKey}
-                  label={renderLabel({
+                  label={value.renderLabel({
                     correctness: previewCorrectness(
                       value.revealAnswers,
                       statement.correctCategoryKey === undefined
