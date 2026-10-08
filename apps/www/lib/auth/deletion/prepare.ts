@@ -167,7 +167,3 @@ export const prepareAccountDeletion = Effect.fn(
     return yield* persistedDeletionPhase.failure;
   }
 });
-/** The arguments prepareAccountDeletion takes: the attempt, then its browser operations. */
-export type AccountDeletionPreparationOperations = Parameters<
-  typeof prepareAccountDeletion
->;
