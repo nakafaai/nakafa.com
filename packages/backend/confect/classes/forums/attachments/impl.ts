@@ -30,7 +30,7 @@ import {
   MAX_FORUM_ATTACHMENT_BYTES,
 } from "@repo/backend/confect/classes/forums/constants";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, flow, Option } from "effect";
+import { Array as Arr, Effect, flow, MutableHashSet, Option } from "effect";
 
 function hasAllowedForumAttachmentMimeType(mimeType: string) {
   if (mimeType.startsWith("image/")) {
@@ -104,10 +104,11 @@ export const validateForumAttachmentPolicy = Effect.fn(
 const ensureDistinctUploadIds = Effect.fn(
   "classes.forums.attachments.ensureDistinctUploadIds"
 )(function* (uploadIds: Id<"schoolClassForumPendingUploads">[]) {
-  const seenUploadIds = new Set<Id<"schoolClassForumPendingUploads">>();
+  const seenUploadIds =
+    MutableHashSet.empty<Id<"schoolClassForumPendingUploads">>();
   for (const uploadId of uploadIds) {
-    if (!seenUploadIds.has(uploadId)) {
-      seenUploadIds.add(uploadId);
+    if (!MutableHashSet.has(seenUploadIds, uploadId)) {
+      MutableHashSet.add(seenUploadIds, uploadId);
       continue;
     }
     return yield* failForumAttachment(
