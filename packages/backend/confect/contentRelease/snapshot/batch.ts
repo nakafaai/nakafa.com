@@ -30,21 +30,21 @@ import { encodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/wire
 import { Array as Arr, Clock, Effect } from "effect";
 
 /** Stores one decoded family row in its domain-owned physical table. */
-export function stageRow(
+function stageRow(
   snapshotId: string,
   index: number,
   row: ContentSnapshotRow,
   rowJson: string
 ) {
   if (row.family === "program") {
-    return stageProgramRow(snapshotId, index, row, rowJson);
+    return stageProgramRow(snapshotId, index, row.record, rowJson);
   }
   if (row.family === "quran") {
-    return stageQuranRow(snapshotId, index, row, rowJson);
+    return stageQuranRow(snapshotId, index, row.record, rowJson);
   }
   return row.rowKind === "catalog"
-    ? stageTryoutCatalog(snapshotId, index, row, rowJson)
-    : stageTryoutPlacement(snapshotId, index, row, rowJson);
+    ? stageTryoutCatalog(snapshotId, index, row.record, rowJson)
+    : stageTryoutPlacement(snapshotId, index, row.record, rowJson);
 }
 
 /** Rejects ambiguous ledger identity before accepting a retry or continuation. */
@@ -73,7 +73,7 @@ const loadBatch = Effect.fn("contentRelease.loadSnapshotBatch")(function* (
 });
 
 /** Resolves the next exact family-local row index from the prior batch. */
-export const nextRowIndex = Effect.fn("contentRelease.nextSnapshotRowIndex")(
+const nextRowIndex = Effect.fn("contentRelease.nextSnapshotRowIndex")(
   function* (
     releaseId: string,
     family: ContentSnapshotKind,

@@ -23,6 +23,9 @@ import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
 type ContentHead = WithoutSystemFields<Doc<"contentHeads">>;
+const ContentProjectionJsonSchema = Schema.fromJsonString(
+  ContentProjectionSchema
+);
 
 /** Builds one complete technical head for the search writer boundary. */
 function testHead(options?: {
@@ -52,14 +55,12 @@ function testHead(options?: {
 
 /** Decodes one complete material projection through the production contract. */
 function materialProjection() {
-  return Schema.decodeUnknownSync(ContentProjectionSchema)(
-    JSON.parse(
-      testProjectionJson({
-        contentKey: "test:search",
-        publicPath: "subjects/test/search",
-        title: "Search title",
-      })
-    )
+  return Schema.decodeSync(ContentProjectionJsonSchema)(
+    testProjectionJson({
+      contentKey: "test:search",
+      publicPath: "subjects/test/search",
+      title: "Search title",
+    })
   );
 }
 

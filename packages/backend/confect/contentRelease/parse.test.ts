@@ -1,5 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import {
+  ContentReleaseItemSchema,
+  ReleaseVerificationEvidenceSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
@@ -36,11 +43,19 @@ import {
   testRendererJson,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
-import { Array as Arr, Effect, Exit } from "effect";
+import { Array as Arr, Effect, Exit, Schema } from "effect";
+
+/** Encodes raw JSON, so fixtures can carry fields their contract rejects. */
+const RawJson = Schema.fromJsonString(Schema.Unknown);
+const ArtifactJson = Schema.fromJsonString(SignedContentArtifactSchema);
+const ItemJson = Schema.fromJsonString(ContentReleaseItemSchema);
+const ProjectionJson = Schema.fromJsonString(ContentProjectionSchema);
+const ProofJson = Schema.fromJsonString(ReleaseVerificationEvidenceSchema);
+const ReleaseJson = Schema.fromJsonString(SignedContentReleaseSchema);
 
 /** Creates exact server-derived evidence for strict proof decoding. */
 function testProofJson() {
-  return JSON.stringify({
+  return Schema.encodeUnknownSync(ProofJson, { onExcessProperty: "error" })({
     activeAppLocales: ACTIVE_APP_LOCALE_CODES,
     baseActiveAppLocales: null,
     baseManifestHash: null,
@@ -81,12 +96,24 @@ describe("contentRelease/parse", () => {
         const renderer = yield* decodeRendererJson(testRendererJson());
         const proof = yield* decodeProofJson(testProofJson());
 
-        expect(encodeReleaseJson(release)).toBe(JSON.stringify(release));
-        expect(JSON.parse(encodeItemJson(item))).toEqual(item);
-        expect(JSON.parse(encodeArtifactJson(artifact))).toEqual(artifact);
-        expect(JSON.parse(encodeProjectionJson(projection))).toEqual(
-          projection
+        expect(encodeReleaseJson(release)).toBe(
+          yield* Schema.encodeEffect(RawJson)(release)
         );
+        expect(
+          yield* Schema.decodeEffect(ItemJson, { onExcessProperty: "error" })(
+            encodeItemJson(item)
+          )
+        ).toEqual(item);
+        expect(
+          yield* Schema.decodeEffect(ArtifactJson, {
+            onExcessProperty: "error",
+          })(encodeArtifactJson(artifact))
+        ).toEqual(artifact);
+        expect(
+          yield* Schema.decodeEffect(ProjectionJson, {
+            onExcessProperty: "error",
+          })(encodeProjectionJson(projection))
+        ).toEqual(projection);
         expect(encodeRendererJson(renderer)).toBe(testRendererJson());
         expect(proof.releaseId).toBe(TEST_RELEASE_ID);
       })
@@ -96,7 +123,7 @@ describe("contentRelease/parse", () => {
     Effect.gen(function* () {
       const current = yield* decodeArtifactJson(testArtifactJson());
       const rejected = yield* decodeArtifactJson(
-        JSON.stringify({
+        yield* Schema.encodeEffect(RawJson)({
           ...current,
           payload: { ...current.payload, ignored: true },
         })
@@ -108,9 +135,11 @@ describe("contentRelease/parse", () => {
 
   it.live("rejects the retired publication-date shape", () =>
     Effect.gen(function* () {
-      const current = JSON.parse(testProjectionJson());
+      const current = yield* Schema.decodeEffect(ProjectionJson)(
+        testProjectionJson()
+      );
       const { datePublished, ...metadata } = current.metadata;
-      const storedJson = JSON.stringify({
+      const storedJson = yield* Schema.encodeEffect(RawJson)({
         ...current,
         metadata: { ...metadata, date: datePublished },
       });
@@ -140,7 +169,7 @@ describe("contentRelease/parse", () => {
           },
         ]) {
           const rejected = yield* decodeProjectionJson(
-            JSON.stringify(value)
+            yield* Schema.encodeEffect(RawJson)(value)
           ).pipe(Effect.flip);
           expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
         }
@@ -151,7 +180,7 @@ describe("contentRelease/parse", () => {
     "keeps rejecting a manifest the content contract does not recognize",
     () =>
       Effect.gen(function* () {
-        const stored = JSON.parse(
+        const stored = yield* Schema.decodeEffect(ReleaseJson)(
           testReleaseJson({ baseReleaseId: "release-base" })
         );
         const manifest = {
@@ -162,7 +191,7 @@ describe("contentRelease/parse", () => {
         // The content contract keeps rejecting unknown manifest fields.
         expect(
           yield* decodeReleaseJson(
-            JSON.stringify({ ...stored, manifest })
+            yield* Schema.encodeEffect(RawJson)({ ...stored, manifest })
           ).pipe(Effect.flip)
         ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
       })
@@ -205,9 +234,9 @@ describe("contentRelease/parse", () => {
       const { topicTitle: _topicTitle, ...incomplete } = FUNCTION_MATERIAL;
 
       expect(
-        yield* decodeProjectionJson(JSON.stringify(incomplete)).pipe(
-          Effect.flip
-        )
+        yield* decodeProjectionJson(
+          yield* Schema.encodeEffect(RawJson)(incomplete)
+        ).pipe(Effect.flip)
       ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
     })
   );

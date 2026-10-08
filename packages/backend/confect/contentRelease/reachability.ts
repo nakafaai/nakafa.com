@@ -1,25 +1,20 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import type {
-  releaseSnapshotTransitionsValidator,
-  releaseSnapshotTransitionValidator,
-} from "@repo/backend/confect/contentRelease/spec";
-/** Snapshot transition facts the history cleaner reads for one family. */
-export type ReleaseSnapshotTransition =
-  typeof releaseSnapshotTransitionValidator.Type;
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { releaseSnapshotTransitionValidator } from "@repo/backend/confect/contentRelease/spec";
 
-/** Fixed per-family snapshot transitions stored beside one release. */
-export type ReleaseSnapshotTransitions =
-  typeof releaseSnapshotTransitionsValidator.Type;
+/** Snapshot transition facts the history cleaner reads for one family. */
+type ReleaseSnapshotTransition = typeof releaseSnapshotTransitionValidator.Type;
 
 /** Reachability facts stored beside one release so retirement never decodes it. */
-export interface ReleaseReachability {
-  readonly baseManifestHash: string | null;
-  readonly baseReleaseId: string | null;
-  readonly manifestHash: string;
-  readonly originKind: "git" | "rollback";
-  readonly rendererManifestHash: string;
-  readonly snapshotTransitions: ReleaseSnapshotTransitions;
-}
+type ReleaseReachability = Pick<
+  Docs["contentReleases"],
+  | "baseManifestHash"
+  | "baseReleaseId"
+  | "manifestHash"
+  | "originKind"
+  | "rendererManifestHash"
+  | "snapshotTransitions"
+>;
 
 /** Keeps only the snapshot facts history retention reads. */
 function snapshotTransition(

@@ -2,8 +2,11 @@ import type { ContentReleaseItem } from "@nakafa/aksara-contracts/release";
 import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
 import {
   canonicalizeRollbackSnapshotEntry,
+  type RollbackArticleStateSchema,
+  type RollbackMaterialStateSchema,
+  type RollbackPageStateSchema,
+  type RollbackQuestionStateSchema,
   RollbackSnapshotEntrySchema,
-  type RollbackSnapshotState,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
@@ -21,12 +24,11 @@ import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { contentHead } from "@repo/backend/content/publication/projection";
 import { Clock, Effect } from "effect";
 
-type PresentRollbackState = Exclude<
-  RollbackSnapshotState,
-  {
-    readonly state: "absent";
-  }
->;
+type PresentRollbackState =
+  | typeof RollbackArticleStateSchema.Type
+  | typeof RollbackMaterialStateSchema.Type
+  | typeof RollbackPageStateSchema.Type
+  | typeof RollbackQuestionStateSchema.Type;
 
 /** Binds one discriminated content head to its exact rollback state. */
 function presentRollback(head: ContentHead): PresentRollbackState {

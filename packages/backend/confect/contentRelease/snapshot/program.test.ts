@@ -53,7 +53,12 @@ describe("contentRelease/snapshot/program", () => {
           expect(
             target.mutation((ctx) =>
               Effect.runPromiseWith(runtimeServices)(
-                stageProgramRow(data.snapshotId, 0, program, programJson).pipe(
+                stageProgramRow(
+                  data.snapshotId,
+                  0,
+                  program.record,
+                  programJson
+                ).pipe(
                   Effect.provide(
                     RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                   )
@@ -66,7 +71,12 @@ describe("contentRelease/snapshot/program", () => {
           expect(
             target.mutation((ctx) =>
               Effect.runPromiseWith(runtimeServices)(
-                stageProgramRow(data.snapshotId, 0, program, programJson).pipe(
+                stageProgramRow(
+                  data.snapshotId,
+                  0,
+                  program.record,
+                  programJson
+                ).pipe(
                   Effect.provide(
                     RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                   )
@@ -82,7 +92,7 @@ describe("contentRelease/snapshot/program", () => {
                 stageProgramRow(
                   data.snapshotId,
                   0,
-                  curriculum,
+                  curriculum.record,
                   canonicalizeContentSnapshotRow(curriculum)
                 ).pipe(
                   Effect.provide(
@@ -109,7 +119,7 @@ describe("contentRelease/snapshot/program", () => {
             stageProgramRow(
               data.snapshotId,
               2,
-              source,
+              source.record,
               canonicalizeContentSnapshotRow(source)
             ).pipe(
               Effect.provide(
@@ -137,7 +147,7 @@ describe("contentRelease/snapshot/program", () => {
               stageProgramRow(
                 data.snapshotId,
                 3,
-                duplicate,
+                duplicate.record,
                 canonicalizeContentSnapshotRow(duplicate)
               ).pipe(
                 Effect.provide(
@@ -202,7 +212,7 @@ describe("contentRelease/snapshot/program", () => {
               stageProgramRow(
                 data.snapshotId,
                 0,
-                oversizedProgramRow,
+                oversizedProgramRow.record,
                 canonicalizeContentSnapshotRow(oversizedProgramRow)
               ).pipe(
                 Effect.provide(
@@ -222,7 +232,7 @@ describe("contentRelease/snapshot/program", () => {
               stageProgramRow(
                 data.snapshotId,
                 1,
-                oversizedCurriculumRow,
+                oversizedCurriculumRow.record,
                 canonicalizeContentSnapshotRow(oversizedCurriculumRow)
               ).pipe(
                 Effect.provide(
@@ -254,7 +264,8 @@ it.live.each(["cross-table", "index", "identity", "json", "hash"] as const)(
             stageProgramRow(
               data.snapshotId,
               0,
-              condition === "cross-table" ? findCurriculum(data) : program,
+              (condition === "cross-table" ? findCurriculum(data) : program)
+                .record,
               json
             ).pipe(
               Effect.provide(
@@ -290,7 +301,7 @@ it.live.each(["cross-table", "index", "identity", "json", "hash"] as const)(
         await expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageProgramRow(data.snapshotId, 0, program, json).pipe(
+              stageProgramRow(data.snapshotId, 0, program.record, json).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -315,7 +326,7 @@ it.live.each(["index", "path", "node", "json", "hash", "bucket"] as const)(
         const json = canonicalizeContentSnapshotRow(curriculum);
         await t.mutation((ctx) =>
           Effect.runPromiseWith(runtimeServices)(
-            stageProgramRow(data.snapshotId, 0, curriculum, json).pipe(
+            stageProgramRow(data.snapshotId, 0, curriculum.record, json).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
               )
@@ -325,7 +336,7 @@ it.live.each(["index", "path", "node", "json", "hash", "bucket"] as const)(
         expect(
           await t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageProgramRow(data.snapshotId, 0, curriculum, json).pipe(
+              stageProgramRow(data.snapshotId, 0, curriculum.record, json).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -364,7 +375,7 @@ it.live.each(["index", "path", "node", "json", "hash", "bucket"] as const)(
         await expect(
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              stageProgramRow(data.snapshotId, 0, curriculum, json).pipe(
+              stageProgramRow(data.snapshotId, 0, curriculum.record, json).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )

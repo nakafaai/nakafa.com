@@ -1,12 +1,13 @@
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const SEARCH_TERM_LIMIT = 16;
 const SEARCH_TERM_BYTE_CEILING = 32;
 const searchTermPattern = /[\p{Alphabetic}\p{Number}]+/gu;
-interface SearchQueryLimits {
-  readonly characterLimit?: number;
-}
+const SearchQueryLimitsSchema = Schema.Struct({
+  characterLimit: Schema.optionalKey(Schema.Finite),
+});
+type SearchQueryLimits = typeof SearchQueryLimitsSchema.Type;
 
 /** Validates one query against Convex full-text token and byte limits. */
 export const validateSearchQuery = Effect.fn(
