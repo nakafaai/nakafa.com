@@ -9,18 +9,19 @@
         "name": "@effect/language-service",
         "ignoreEffectSuggestionsInTscExitCode": false,
         "diagnosticSeverity": {
+          "cryptoRandomUUID": "error",
+          "cryptoRandomUUIDInEffect": "error",
           "experimentalApiUsage": "off",
           "extendsNativeError": "error",
           "globalConsole": "error",
           "globalConsoleInEffect": "error",
           "globalFetch": "error",
-          "cryptoRandomUUID": "error",
-          "cryptoRandomUUIDInEffect": "error",
           "globalFetchInEffect": "error",
           "globalRandom": "error",
           "globalRandomInEffect": "error",
           "instanceOfSchema": "error",
           "preferSchemaTypeProperty": "error",
+          "unnecessaryArrowBlock": "error",
           "unstableApiUsage": "off"
         }
       }

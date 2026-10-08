@@ -51,51 +51,49 @@ export const RevealMask = ({
 }: {
   id: string;
   type: OrderedRevealAnimation;
-}) => {
-  return (
-    <mask
-      height="100%"
-      id={`${id}-reveal-mask`}
-      maskContentUnits="userSpaceOnUse"
-      maskUnits="userSpaceOnUse"
-      width="100%"
-      x="0"
-      y="0"
-    >
-      {type === "edges-in" ? (
-        <>
-          {/* left half wipes inward from the left edge toward the centre */}
-          <m.rect
-            {...REVEAL_PROPS}
-            fill="white"
-            height="100%"
-            style={{ originX: 0 }}
-            width="50%"
-            x="0"
-            y="0"
-          />
-          {/* right half wipes inward from the right edge toward the centre */}
-          <m.rect
-            {...REVEAL_PROPS}
-            fill="white"
-            height="100%"
-            style={{ originX: 1 }}
-            width="50%"
-            x="50%"
-            y="0"
-          />
-        </>
-      ) : (
+}) => (
+  <mask
+    height="100%"
+    id={`${id}-reveal-mask`}
+    maskContentUnits="userSpaceOnUse"
+    maskUnits="userSpaceOnUse"
+    width="100%"
+    x="0"
+    y="0"
+  >
+    {type === "edges-in" ? (
+      <>
+        {/* left half wipes inward from the left edge toward the centre */}
         <m.rect
           {...REVEAL_PROPS}
           fill="white"
           height="100%"
-          style={{ originX: SINGLE_REVEAL_ORIGIN[type] }}
-          width="100%"
+          style={{ originX: 0 }}
+          width="50%"
           x="0"
           y="0"
         />
-      )}
-    </mask>
-  );
-};
+        {/* right half wipes inward from the right edge toward the centre */}
+        <m.rect
+          {...REVEAL_PROPS}
+          fill="white"
+          height="100%"
+          style={{ originX: 1 }}
+          width="50%"
+          x="50%"
+          y="0"
+        />
+      </>
+    ) : (
+      <m.rect
+        {...REVEAL_PROPS}
+        fill="white"
+        height="100%"
+        style={{ originX: SINGLE_REVEAL_ORIGIN[type] }}
+        width="100%"
+        x="0"
+        y="0"
+      />
+    )}
+  </mask>
+);

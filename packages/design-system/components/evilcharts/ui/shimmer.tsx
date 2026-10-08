@@ -10,8 +10,8 @@ const generateEasedGradientStops = (
   steps = 17,
   minOpacity = 0.05,
   maxOpacity = 0.9
-) => {
-  return Array.from({ length: steps }, (_, i) => {
+) =>
+  Array.from({ length: steps }, (_, i) => {
     const t = i / (steps - 1); // 0 to 1
     // Sine-based bell curve easing: peaks at center (t=0.5), smooth falloff at edges
     const eased = Math.sin(t * Math.PI) ** 2;
@@ -21,7 +21,6 @@ const generateEasedGradientStops = (
       opacity: Number(opacity.toFixed(3)),
     };
   });
-};
 
 export const LoadingShimmer = ({ chartId }: { chartId: string }) => {
   const shouldReduceMotion = useReducedMotion();
