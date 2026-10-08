@@ -114,7 +114,7 @@ function createQuadraticPath(start: Vector3, control: Vector3, end: Vector3) {
   });
 }
 
-export interface SubatomicParticlePropertiesSceneProps {
+interface SubatomicParticlePropertiesSceneProps {
   colors: SubatomicParticlePropertiesColors;
   labels: SubatomicParticlePropertiesSceneLabels;
   modeId: SubatomicParticlePropertiesModeId;

@@ -52,7 +52,7 @@ const NARROW_LABEL_SYMBOLS = {
   [NOBLE_GAS_FOCUS_ID]: ["He", "Ar", "Rn"],
 } satisfies Record<ModernPeriodicTableFocusId, string[]>;
 
-export interface ModernPeriodicTableSceneProps {
+interface ModernPeriodicTableSceneProps {
   colors: ModernPeriodicTableSceneColors;
   focusId: ModernPeriodicTableFocusId;
   labels: ModernPeriodicTableSceneLabels;
