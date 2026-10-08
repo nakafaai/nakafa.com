@@ -1,5 +1,6 @@
 import { DateTime, Schema } from "effect";
-export const materialStatusSchema = Schema.Literals([
+
+const materialStatusSchema = Schema.Literals([
   "draft",
   "published",
   "scheduled",
