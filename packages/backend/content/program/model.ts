@@ -15,27 +15,15 @@ import { Array as Arr, Effect, MutableList, Option, Order } from "effect";
 
 type CurriculumRoute = Effect.Success<ReturnType<typeof verifyCurriculum>>;
 /** Orders material groups exactly as authored, with paths as stable tie-breakers. */
-function compareGroups(
-  left: PublicationRow<"curriculumRoutes">,
-  right: PublicationRow<"curriculumRoutes">
-): -1 | 0 | 1 {
-  const order = left.order - right.order;
-  if (order < 0) {
-    return -1;
-  }
-  if (order > 0) {
-    return 1;
-  }
-  // A NaN order sorts as equal, as the native comparator's NaN result did.
-  if (order !== 0) {
-    return 0;
-  }
-  const path = left.path.localeCompare(right.path);
-  if (path < 0) {
-    return -1;
-  }
-  return path > 0 ? 1 : 0;
-}
+const compareGroups = Order.combine(
+  Order.mapInput(
+    Order.Number,
+    (group: PublicationRow<"curriculumRoutes">) => group.order
+  ),
+  Order.make<PublicationRow<"curriculumRoutes">>((left, right) =>
+    Order.Number(left.path.localeCompare(right.path), 0)
+  )
+);
 
 /** Rejects a bounded relationship whose source fan-out exceeds its contract. */
 const requireBoundedRows = Effect.fn("contentRelease.requireProgramRows")(
@@ -149,7 +137,7 @@ const readGroups = Effect.fn("contentRelease.readProgramGroups")(function* (
       )
     )
   );
-  return Arr.sort(groups, Order.make(compareGroups));
+  return Arr.sort(groups, compareGroups);
 });
 /** Reads every verified lesson projection referenced by curriculum contexts. */
 const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
