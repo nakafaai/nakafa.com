@@ -11,7 +11,7 @@ import {
   PARABOLIC_LAUNCHES,
   PARABOLIC_SCENE,
   type ParabolicLaunchId,
-  type ParabolicMovementLabProps,
+  type ParabolicMovementDecimalSeparator,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { ProjectileBallScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -32,6 +32,24 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
+
+export interface ParabolicMovementLabProps {
+  decimalSeparator?: ParabolicMovementDecimalSeparator;
+  description: ReactNode;
+  labels: {
+    chooseLaunch: string;
+    factLabels: {
+      flightTime: ReactNode;
+      initialSpeed: ReactNode;
+      peakHeight: ReactNode;
+      range: ReactNode;
+    };
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
+
+export type ParabolicMovementLabLabels = ParabolicMovementLabProps["labels"];
 
 export function ParabolicMovementLab({
   decimalSeparator,

@@ -12,7 +12,7 @@ import {
   PROJECTILE_INSTANT_TIME,
   PROJECTILE_SCENARIOS,
   PROJECTILE_SCENE,
-  type ProjectileAnalysisLabProps,
+  type ProjectileAnalysisDecimalSeparator,
   type ProjectileScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { PirateProjectileScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/scene";
@@ -36,6 +36,27 @@ import { getColor } from "@repo/design-system/lib/color";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 const FLASH_COLOR = getColor("ORANGE", 500);
+
+export interface ProjectileAnalysisLabProps {
+  decimalSeparator?: ProjectileAnalysisDecimalSeparator;
+  description: ReactNode;
+  labels: {
+    chooseScenario: string;
+    factLabels: {
+      flightTime: ReactNode;
+      horizontalComponent: ReactNode;
+      instantaneousVelocity: ReactNode;
+      peakTime: ReactNode;
+      range: ReactNode;
+      verticalComponent: ReactNode;
+    };
+    scenarioNames: Record<ProjectileScenarioId, ReactNode>;
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
+
+export type ProjectileAnalysisLabLabels = ProjectileAnalysisLabProps["labels"];
 
 export function ParabolicMovementAnalysisLab({
   decimalSeparator,

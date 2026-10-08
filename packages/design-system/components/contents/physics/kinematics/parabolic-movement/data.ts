@@ -1,33 +1,22 @@
 import { getColor } from "@repo/design-system/lib/color";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export type ParabolicMovementDecimalSeparator = "comma" | "dot";
-export type ParabolicLaunchId = "low-angle" | "balanced-angle" | "high-angle";
 
-export interface ParabolicLaunchScenario {
-  angleDegrees: number;
-  color: string;
-  id: ParabolicLaunchId;
-  initialSpeed: number;
-}
+const ParabolicLaunchIdSchema = Schema.Literals([
+  "low-angle",
+  "balanced-angle",
+  "high-angle",
+]);
+export type ParabolicLaunchId = typeof ParabolicLaunchIdSchema.Type;
 
-export interface ParabolicMovementLabLabels {
-  chooseLaunch: string;
-  factLabels: {
-    flightTime: ReactNode;
-    initialSpeed: ReactNode;
-    peakHeight: ReactNode;
-    range: ReactNode;
-  };
-  viewLabel: string;
-}
-
-export interface ParabolicMovementLabProps {
-  decimalSeparator?: ParabolicMovementDecimalSeparator;
-  description: ReactNode;
-  labels: ParabolicMovementLabLabels;
-  title: ReactNode;
-}
+const ParabolicLaunchScenarioSchema = Schema.Struct({
+  angleDegrees: Schema.Finite,
+  color: Schema.String,
+  id: ParabolicLaunchIdSchema,
+  initialSpeed: Schema.Finite,
+});
+export type ParabolicLaunchScenario = typeof ParabolicLaunchScenarioSchema.Type;
 
 type VectorTuple = [number, number, number];
 

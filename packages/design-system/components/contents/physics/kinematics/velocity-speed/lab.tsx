@@ -16,7 +16,6 @@ import {
   VELOCITY_SPEED_COLORS,
   VELOCITY_SPEED_SCENE,
   type VelocitySpeedCaseId,
-  type VelocitySpeedLabProps,
   type VelocitySpeedState,
 } from "@repo/design-system/components/contents/physics/kinematics/velocity-speed/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -38,7 +37,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const PAUSE_SECONDS = 0.8;
@@ -52,6 +51,24 @@ const GUIDE_THICKNESS = 0.045;
 const ROUTE_CONE_Z = DISTANCE_GUIDE_Z - DISTANCE_GUIDE_STEP * 1.35;
 const SHADOW_CAMERA_RADIUS =
   VELOCITY_SPEED_SCENE.laneLength / 2 + VELOCITY_SPEED_SCENE.laneWidth;
+
+export interface VelocitySpeedLabProps {
+  description: ReactNode;
+  labels: {
+    chooseCase: string;
+    factLabels: {
+      displacement: ReactNode;
+      distance: ReactNode;
+      speed: ReactNode;
+      velocity: ReactNode;
+    };
+    modeLabels: Record<VelocitySpeedCaseId, ReactNode>;
+    viewLabel: string;
+  };
+  title: ReactNode;
+}
+
+export type VelocitySpeedLabLabels = VelocitySpeedLabProps["labels"];
 
 export function VelocitySpeedLab({
   title,
