@@ -100,15 +100,19 @@ describe("contentRelease/parse", () => {
           yield* Schema.encodeEffect(RawJson)(release)
         );
         expect(
-          yield* Schema.decodeEffect(ItemJson)(encodeItemJson(item))
+          yield* Schema.decodeEffect(ItemJson, { onExcessProperty: "error" })(
+            encodeItemJson(item)
+          )
         ).toEqual(item);
         expect(
-          yield* Schema.decodeEffect(ArtifactJson)(encodeArtifactJson(artifact))
+          yield* Schema.decodeEffect(ArtifactJson, {
+            onExcessProperty: "error",
+          })(encodeArtifactJson(artifact))
         ).toEqual(artifact);
         expect(
-          yield* Schema.decodeEffect(ProjectionJson)(
-            encodeProjectionJson(projection)
-          )
+          yield* Schema.decodeEffect(ProjectionJson, {
+            onExcessProperty: "error",
+          })(encodeProjectionJson(projection))
         ).toEqual(projection);
         expect(encodeRendererJson(renderer)).toBe(testRendererJson());
         expect(proof.releaseId).toBe(TEST_RELEASE_ID);
