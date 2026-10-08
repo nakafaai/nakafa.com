@@ -10,9 +10,10 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { ensureTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { convexTest } from "convex-test";
-import { Effect, Struct } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Builds a trigger test instance with its analytics component boundary. */
 function createTryoutScoreTriggerTest() {
@@ -151,7 +152,7 @@ describe("triggers/tryouts/scores", () => {
           expect.objectContaining({
             distinctId: identity.userId,
             event: "tryout attempt completed",
-            properties: JSON.stringify({
+            properties: encodeJson({
               attempt_number: 2,
               country_key: "indonesia",
               exam_key: "snbt",
