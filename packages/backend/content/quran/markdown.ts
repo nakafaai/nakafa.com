@@ -72,7 +72,7 @@ const validateVerseLimit = Effect.fn(
 });
 
 /** Loads the exact signed source fields for canonical Quran markdown. */
-export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
+const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
   function* (
     appLocale: AppLocaleCode,
     sourceSurah: number,

@@ -15,17 +15,18 @@ import { Effect, Schema } from "effect";
 
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
 export type QuranSearchRow = typeof QuranSearchRowSchema.Type;
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Parses one stored signed row without weakening its runtime boundary. */
 const parseQuranRow = Effect.fn("NakafaQuran.parseRow")(function* (
   source: string,
   operation: QuranPublicationOperation
 ) {
-  return yield* Effect.try({
-    catch: () =>
-      quranPublicationError(operation, "Quran row is not valid JSON."),
-    try: (): unknown => JSON.parse(source),
-  });
+  return yield* Schema.decodeEffect(JsonTextSchema)(source).pipe(
+    Effect.mapError(() =>
+      quranPublicationError(operation, "Quran row is not valid JSON.")
+    )
+  );
 });
 
 /** Decodes one signed Quran row and verifies snapshot ownership. */

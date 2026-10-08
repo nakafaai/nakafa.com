@@ -118,7 +118,7 @@ function index(
   }).pipe(
     Effect.match({
       onFailure: (error) => error.code,
-      onSuccess: (indexed) => indexed.size,
+      onSuccess: (indexed) => indexed.length,
     })
   );
 }

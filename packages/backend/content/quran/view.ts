@@ -61,69 +61,70 @@ const loadVerse = Effect.fn("contentRelease.loadQuranViewVerse")(function* (
 });
 
 /** Loads the exact signed source fields for one canonical Quran page. */
-export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
-  function* (appLocale: AppLocaleCode, sourceSurah: number) {
-    const loaded = yield* loadQuranSurah(sourceSurah);
-    if (loaded.surah === null || loaded.owner.snapshotId === null) {
-      return {
-        ...loaded.owner,
-        appLocale,
-        nextSurah: null,
-        bismillah: null,
-        previousSurah: null,
-        sources: null,
-        surah: null,
-        tafsirAccess: null,
-        verses: [],
-      };
-    }
-    const { bismillah, localeSources, nextRow, previousRow, verses } =
-      yield* Effect.all(
-        {
-          bismillah: readQuranBismillah(
-            loaded.owner.snapshotId,
-            appLocale,
-            loaded.surah.surahNumber,
-            1
-          ),
-          localeSources: readQuranLocaleSources(
-            loaded.owner.snapshotId,
-            appLocale
-          ),
-          nextRow: readNeighbor(
-            loaded.owner.snapshotId,
-            loaded.surah.surahNumber + 1
-          ),
-          previousRow: readNeighbor(
-            loaded.owner.snapshotId,
-            loaded.surah.surahNumber - 1
-          ),
-          verses: readQuranSurahVerses(
-            loaded.owner.snapshotId,
-            loaded.surah.surahNumber,
-            loaded.surah.row.payload.numberOfVerses
-          ),
-        },
-        {
-          concurrency: "unbounded",
-        }
-      );
-    const loadedVerses = yield* Effect.forEach(verses, (verse) =>
-      loadVerse(verse, appLocale)
-    );
+const loadQuranView = Effect.fn("contentRelease.loadQuranView")(function* (
+  appLocale: AppLocaleCode,
+  sourceSurah: number
+) {
+  const loaded = yield* loadQuranSurah(sourceSurah);
+  if (loaded.surah === null || loaded.owner.snapshotId === null) {
     return {
       ...loaded.owner,
       appLocale,
-      bismillah,
-      nextSurah: nextRow?.payload ?? null,
-      previousSurah: previousRow?.payload ?? null,
-      sources: localeSources.sources,
-      surah: loaded.surah.row.payload,
-      tafsirAccess: localeSources.tafsirAccess,
-      verses: loadedVerses,
+      nextSurah: null,
+      bismillah: null,
+      previousSurah: null,
+      sources: null,
+      surah: null,
+      tafsirAccess: null,
+      verses: [],
     };
   }
-);
+  const { bismillah, localeSources, nextRow, previousRow, verses } =
+    yield* Effect.all(
+      {
+        bismillah: readQuranBismillah(
+          loaded.owner.snapshotId,
+          appLocale,
+          loaded.surah.surahNumber,
+          1
+        ),
+        localeSources: readQuranLocaleSources(
+          loaded.owner.snapshotId,
+          appLocale
+        ),
+        nextRow: readNeighbor(
+          loaded.owner.snapshotId,
+          loaded.surah.surahNumber + 1
+        ),
+        previousRow: readNeighbor(
+          loaded.owner.snapshotId,
+          loaded.surah.surahNumber - 1
+        ),
+        verses: readQuranSurahVerses(
+          loaded.owner.snapshotId,
+          loaded.surah.surahNumber,
+          loaded.surah.row.payload.numberOfVerses
+        ),
+      },
+      {
+        concurrency: "unbounded",
+      }
+    );
+  const loadedVerses = yield* Effect.forEach(verses, (verse) =>
+    loadVerse(verse, appLocale)
+  );
+  return {
+    ...loaded.owner,
+    appLocale,
+    bismillah,
+    nextSurah: nextRow?.payload ?? null,
+    previousSurah: previousRow?.payload ?? null,
+    sources: localeSources.sources,
+    surah: loaded.surah.row.payload,
+    tafsirAccess: localeSources.tafsirAccess,
+    verses: loadedVerses,
+  };
+});
 
 /** Returns the canonical web projection without compatibility aliases. */
 export const readQuranView = Effect.fn("contentRelease.readQuranView")(

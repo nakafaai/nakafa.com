@@ -1,4 +1,11 @@
-import { Predicate, Result, Schema } from "effect";
+import {
+  Array as Arr,
+  HashSet,
+  MutableHashSet,
+  Predicate,
+  Result,
+  Schema,
+} from "effect";
 export const NETWORK_RETRY_DELAYS_MILLISECONDS = [500, 1000] as const;
 export const NetworkRetryCodeSchema = Schema.Literals([
   "ECONNRESET",
@@ -14,7 +21,7 @@ export const NetworkRetryCodeSchema = Schema.Literals([
 type NetworkRetryCode = typeof NetworkRetryCodeSchema.Type;
 const NETWORK_CODE_PATTERN = /^[A-Z][A-Z0-9_]{1,47}$/;
 const NETWORK_CAUSE_LIMIT = 32;
-const networkRetryCodes: ReadonlySet<string> = new Set(
+const networkRetryCodes = HashSet.fromIterable<string>(
   NetworkRetryCodeSchema.literals
 );
 /** One rejected fetch has only sanitized retry classification. */
@@ -24,13 +31,8 @@ export class NetworkRequestError extends Schema.TaggedError<NetworkRequestError>
     networkCodes: Schema.Array(NetworkRetryCodeSchema),
   }
 ) {}
-interface NetworkCodeInspection {
-  readonly foundCode: boolean;
-  readonly foundTerminalFailure: boolean;
-  readonly retryCodes: ReadonlySet<NetworkRetryCode>;
-}
 function isNetworkRetryCode(code: string): code is NetworkRetryCode {
-  return networkRetryCodes.has(code);
+  return HashSet.has(networkRetryCodes, code);
 }
 /**
  * Classifies nested Node and Undici failures without retaining private data.
@@ -53,43 +55,49 @@ export function createNetworkRequestError(cause: unknown) {
     inspection.success.foundCode && !inspection.success.foundTerminalFailure;
   const networkCodes = retryable
     ? NetworkRetryCodeSchema.literals.filter((code) =>
-        inspection.success.retryCodes.has(code)
+        HashSet.has(inspection.success.retryCodes, code)
       )
     : [];
   return new NetworkRequestError({
     networkCodes,
   });
 }
-function inspectNetworkCodes(cause: unknown): NetworkCodeInspection {
+/**
+ * Identity membership for failures already inspected. Effect collections hash
+ * plain objects by structure, which would merge distinct failures that share a
+ * code and undercount the graph bound.
+ */
+const isVisited = Arr.containsWith<object>((node, other) => node === other);
+function inspectNetworkCodes(cause: unknown) {
   const pending = [cause];
-  const visited = new Set<object>();
-  const retryCodes = new Set<NetworkRetryCode>();
+  const visited: object[] = [];
+  const retryCodes = MutableHashSet.empty<NetworkRetryCode>();
   let foundCode = false;
   let foundTerminalFailure = false;
-  while (pending.length > 0 && visited.size < NETWORK_CAUSE_LIMIT) {
+  while (pending.length > 0 && visited.length < NETWORK_CAUSE_LIMIT) {
     const current = pending.pop();
     if (!Predicate.isObjectOrArray(current)) {
       continue;
     }
-    if (visited.has(current)) {
+    if (isVisited(visited, current)) {
       continue;
     }
-    visited.add(current);
+    visited.push(current);
     const inspection = inspectNetworkNode(
       current,
-      NETWORK_CAUSE_LIMIT - pending.length - visited.size
+      NETWORK_CAUSE_LIMIT - pending.length - visited.length
     );
     foundCode ||= inspection.hasNetworkCode;
     foundTerminalFailure ||= inspection.foundTerminalFailure;
     if (inspection.retryCode !== undefined) {
-      retryCodes.add(inspection.retryCode);
+      MutableHashSet.add(retryCodes, inspection.retryCode);
     }
     pending.push(...inspection.children);
   }
   return {
     foundCode,
     foundTerminalFailure: foundTerminalFailure || pending.length > 0,
-    retryCodes,
+    retryCodes: HashSet.fromIterable(retryCodes),
   };
 }
 

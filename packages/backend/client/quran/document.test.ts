@@ -83,6 +83,26 @@ describe("signed Quran document decoder", () => {
         });
       })
   );
+  it.live(
+    "rejects a signed document for a different surah of the same locale",
+    () =>
+      Effect.gen(function* () {
+        const mismatched = yield* Effect.result(
+          decodePublishedQuranDocument(documentResult(), {
+            appLocale: "id",
+            surahNumber: 2,
+          })
+        );
+        expect(mismatched).toMatchObject({
+          _tag: "Failure",
+          failure: {
+            _tag: "QuranPublicationError",
+            operation: "document",
+            reason: "Signed Quran document identity is inconsistent.",
+          },
+        });
+      })
+  );
 });
 /** Builds one complete app-locale signed document response. */
 function documentResult(): QuranDocumentResult {

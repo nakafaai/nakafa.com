@@ -1,4 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
@@ -19,13 +19,14 @@ import {
   type TryoutSetSelection,
 } from "@repo/backend/content/tryout/selection";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
-interface AttemptPath {
-  readonly locale: AppLocaleCode;
-  readonly publicPath: string;
-}
+const AttemptPathSchema = Schema.Struct({
+  locale: AppLocaleCodeSchema,
+  publicPath: Schema.String,
+});
+type AttemptPath = typeof AttemptPathSchema.Type;
 
 /** Reads and verifies one set page from the attempt-owned source snapshot. */
 export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(

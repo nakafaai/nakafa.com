@@ -4,7 +4,6 @@ import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   decodePublishedQuranInterpretation,
   isQuranSnapshotConflict,
-  type PublishedQuranInterpretation,
   QuranInterpretationRequestError,
   toQuranInterpretationRequestError,
 } from "@repo/backend/client/quran/interpretation";
@@ -13,6 +12,10 @@ import type refs from "@repo/backend/confect/_generated/refs";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { makeQuranTafsirProjection } from "@repo/backend/test/quran/rows";
 import { Effect } from "effect";
+
+type PublishedQuranInterpretation = Effect.Success<
+  ReturnType<typeof decodePublishedQuranInterpretation>
+>;
 
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,

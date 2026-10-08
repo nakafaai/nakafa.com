@@ -1,4 +1,8 @@
 import {
+  QuranRuntimeVerseSchema,
+  QuranSearchRowSchema,
+} from "@nakafa/aksara-contracts/quran/snapshot/row";
+import {
   quranAppLocaleValidator,
   quranReadingSourcesValidator,
   quranRevelationPlaceValidator,
@@ -8,9 +12,13 @@ import {
   quranTafsirAppLocaleValidator,
   quranTranslationDocumentValidator,
 } from "@repo/backend/confect/contentRelease/quran/spec";
-import { quranBismillahValidator } from "@repo/backend/content/quran/contract";
+import {
+  PublishedQuranSurahSchema,
+  quranBismillahValidator,
+} from "@repo/backend/content/quran/contract";
 import { Schema } from "effect";
-export const quranDocumentSurahValidator = Schema.Struct({
+
+const quranDocumentSurahValidator = Schema.Struct({
   kind: Schema.Literal("quran-surah"),
   name: Schema.Struct({
     arabic: Schema.String,
@@ -24,7 +32,7 @@ export const quranDocumentSurahValidator = Schema.Struct({
     place: quranRevelationPlaceValidator,
   }),
 });
-export const quranDocumentVerseValidator = Schema.Struct({
+const quranDocumentVerseValidator = Schema.Struct({
   arabic: Schema.String,
   number: Schema.Struct({
     inQuran: Schema.Finite,
@@ -52,7 +60,7 @@ export const quranInterpretationValidator = Schema.Struct({
   tafsirAccess: Schema.Union([quranTafsirAccessValidator, Schema.Null]),
   verseNumber: Schema.Finite,
 });
-export const quranPassageFields = {
+const quranPassageFields = {
   ...quranSourceFields,
   chunkJson: Schema.mutable(Schema.Array(Schema.String)),
   fromVerse: Schema.Finite,
@@ -68,17 +76,28 @@ export const quranPassageValidator = Schema.Struct({
   ...quranPassageFields,
   preBismillah: Schema.Union([quranBismillahValidator, Schema.Null]),
 });
-export const quranViewNameValidator = Schema.Struct({
+/** Decoded fields of one bounded signed Quran passage in its canonical shape. */
+export const PublishedQuranReferenceFieldsSchema = Schema.Struct({
+  fromVerse: quranPassageValidator.fields.fromVerse,
+  preBismillah: quranPassageValidator.fields.preBismillah,
+  search: QuranSearchRowSchema,
+  sources: quranReadingSourcesValidator,
+  surah: PublishedQuranSurahSchema,
+  tafsirAccess: quranTafsirAccessValidator,
+  toVerse: quranPassageValidator.fields.toVerse,
+  verses: Schema.Array(QuranRuntimeVerseSchema),
+});
+const quranViewNameValidator = Schema.Struct({
   arabic: Schema.String,
   sourceMeaning: quranSurahMeaningValidator,
   transliteration: Schema.String,
 });
-export const quranViewSurahValidator = Schema.Struct({
+const quranViewSurahValidator = Schema.Struct({
   name: quranViewNameValidator,
   number: Schema.Finite,
   numberOfVerses: Schema.Finite,
 });
-export const quranViewVerseValidator = Schema.Struct({
+const quranViewVerseValidator = Schema.Struct({
   arabic: Schema.String,
   number: Schema.Struct({
     inQuran: Schema.Finite,

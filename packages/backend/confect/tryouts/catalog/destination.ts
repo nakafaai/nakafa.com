@@ -4,6 +4,10 @@ import {
   tryoutCatalogIdentity,
   tryoutCatalogNodeIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
+import {
+  tryoutRouteKeyValidator,
+  tryoutSetIdentityValidator,
+} from "@repo/backend/confect/tryouts/route";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { loadTryoutOwner } from "@repo/backend/content/tryout/owner";
 import {
@@ -14,15 +18,16 @@ import {
   readTryoutCatalogRowByIdentity,
   readTryoutCatalogRowByPath,
 } from "@repo/backend/content/tryout/row";
-import type { TryoutSectionIdentity } from "@repo/backend/content/tryout/section";
 import { readTryoutSetSections } from "@repo/backend/content/tryout/selection";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
-interface TryoutDestinationIdentity extends TryoutSetIdentity {
-  readonly requestedSectionPublicPath?: string;
-  readonly sectionKey?: TryoutSectionIdentity["sectionKey"];
-}
+const TryoutDestinationIdentitySchema = Schema.Struct({
+  ...tryoutSetIdentityValidator.fields,
+  requestedSectionPublicPath: Schema.optionalKey(Schema.String),
+  sectionKey: Schema.optionalKey(tryoutRouteKeyValidator),
+});
+type TryoutDestinationIdentity = typeof TryoutDestinationIdentitySchema.Type;
 
 /** Reads only the active signed rows needed to link one retained attempt. */
 export const readTryoutDestinationPaths = Effect.fn(

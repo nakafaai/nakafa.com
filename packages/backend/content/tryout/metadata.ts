@@ -9,19 +9,18 @@ import {
   readTryoutCatalogRowByIdentity,
   readTryoutCatalogRowByPath,
 } from "@repo/backend/content/tryout/row";
-import { Effect } from "effect";
+import {
+  tryoutLocalizedPathArgsValidator,
+  tryoutMetadataArgsValidator,
+} from "@repo/backend/content/tryout/spec";
+import { Effect, Schema } from "effect";
 
-type TryoutRouteKind = TryoutCatalogRow["kind"];
-interface TryoutMetadataInput {
-  readonly appLocale: AppLocaleCode;
-  readonly kind: TryoutRouteKind;
-  readonly publicPath: string;
-}
-interface TryoutLocalizedPathInput {
-  readonly currentAppLocale: AppLocaleCode;
-  readonly publicPath: string;
-  readonly targetAppLocale: AppLocaleCode;
-}
+const TryoutMetadataInputSchema = Schema.Struct(tryoutMetadataArgsValidator);
+type TryoutMetadataInput = typeof TryoutMetadataInputSchema.Type;
+const TryoutLocalizedPathInputSchema = Schema.Struct(
+  tryoutLocalizedPathArgsValidator
+);
+type TryoutLocalizedPathInput = typeof TryoutLocalizedPathInputSchema.Type;
 
 /** Reads one route and its localized counterparts from signed ownership. */
 export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(

@@ -3,7 +3,10 @@ import {
   ProtectedContentRuntimeRequestSchema,
   type ProtectedContentRuntimeSelector,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
+import {
+  type TryoutPlacement,
+  TryoutPlacementSchema,
+} from "@nakafa/aksara-contracts/tryout/placement";
 import {
   ReleaseError,
   releaseFail,
@@ -20,18 +23,15 @@ import {
   PublicationSource,
 } from "@repo/backend/content/publication/source";
 import { TryoutSource } from "@repo/backend/content/tryout/source";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
-interface ProtectedBodyIdentity {
-  readonly artifactHash: string;
-  readonly artifactLocale: TryoutPlacement["answerArtifactLocale"];
-  readonly contentKey: string;
-  readonly kind: "answer" | "question";
-}
-interface ProtectedPlacementSelection {
-  readonly placement: PublicationRow<"tryoutPlacements">;
-  readonly selector: ProtectedContentRuntimeSelector;
-}
+const ProtectedBodyIdentitySchema = Schema.Struct({
+  artifactHash: Schema.String,
+  artifactLocale: TryoutPlacementSchema.fields.answerArtifactLocale,
+  contentKey: Schema.String,
+  kind: Schema.Literals(["answer", "question"]),
+});
+type ProtectedBodyIdentity = typeof ProtectedBodyIdentitySchema.Type;
 
 /** Selects one retained placement through its exact body artifact identity. */
 const loadPlacement = Effect.fn("contentRelease.loadProtectedPlacement")(
@@ -185,13 +185,14 @@ export const readProtectedProgram = Effect.fn(
       concurrency: "unbounded",
     }
   );
-  if (selections.some(({ placement }) => placement === null)) {
+  const foundSelections = Arr.flatMapNullishOr(
+    selections,
+    ({ placement, selector }) =>
+      placement === null ? null : { placement, selector }
+  );
+  if (foundSelections.length !== selections.length) {
     return null;
   }
-  const foundSelections = selections.filter(
-    (selection): selection is ProtectedPlacementSelection =>
-      selection.placement !== null
-  );
   yield* loadVerifiedSnapshot("tryout", request.snapshotId);
   const items = yield* Effect.forEach(
     foundSelections,

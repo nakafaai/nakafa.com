@@ -143,7 +143,7 @@ export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
 
 /** Decodes fixture rows through their native table contracts into a fresh Confect database. */
 export const createTestPublication = Effect.fn("TestContent.createPublication")(
-  function* (source: ReadonlyMap<TableNames, readonly unknown[]>) {
+  function* (source: Iterable<readonly [TableNames, readonly unknown[]]>) {
     const runtime = yield* Confect;
     yield* runtime.run(
       Effect.gen(function* () {
