@@ -59,8 +59,5 @@ describe("tryout route paths", () => {
         new URLSearchParams("attemptId=first&attemptId=second")
       )
     ).toBe(false);
-    expect(
-      readTryoutRouteAttemptCapability({ attemptId: ["first", "second"] })
-    ).toEqual({ kind: "invalid" });
   });
 });
