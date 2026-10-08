@@ -3,65 +3,14 @@ import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { readMathFonts } from "@/e2e/support/fonts";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const cacheTimeoutMilliseconds = 30_000;
 const lesson = pinnedRoutes.inverse.en;
-const katexFile = /\/KaTeX_([^./]+)\.[^/]+\.woff2$/;
 const lessonPath = /^\/en\/subjects\//;
-
-interface LoadedFontFace {
-  readonly family: string;
-  readonly style: string;
-  readonly weight: string;
-}
-
-/** Names a KaTeX file the way KaTeX does, such as `Main-Regular`. */
-function fileFace(url: string) {
-  return katexFile.exec(new URL(url).pathname)?.[1];
-}
-
-/** Names a loaded KaTeX face the way its file is named. */
-function loadedFace({ family, style, weight }: LoadedFontFace) {
-  if (!family.startsWith("KaTeX_")) {
-    return;
-  }
-  const bold = weight === "bold" || weight === "700" ? "Bold" : "";
-  const italic = style === "italic" ? "Italic" : "";
-  return `${family.slice("KaTeX_".length)}-${bold + italic || "Regular"}`;
-}
-
-/** Reads which KaTeX faces the page preloads, fetches, and draws with. */
-const readMathFonts = Effect.fn("NakafaE2E.readMathFonts")(function* (
-  page: Page
-) {
-  const state = yield* Effect.promise(() =>
-    page.evaluate(() => ({
-      fetched: performance
-        .getEntriesByType("resource")
-        .filter((entry) => entry instanceof PerformanceResourceTiming)
-        .map((entry) => ({ initiator: entry.initiatorType, url: entry.name })),
-      loaded: [...document.fonts]
-        .filter((font) => font.status === "loaded")
-        .map(({ family, style, weight }) => ({ family, style, weight })),
-      preloaded: [
-        ...document.querySelectorAll<HTMLLinkElement>(
-          'link[rel="preload"][as="font"]'
-        ),
-      ].map((link) => link.href),
-    }))
-  );
-  return {
-    fetched: state.fetched.flatMap(({ initiator, url }) => {
-      const face = fileFace(url);
-      return face ? [`${face} ${initiator}`] : [];
-    }),
-    loaded: state.loaded.flatMap((font) => loadedFace(font) ?? []),
-    preloaded: state.preloaded.flatMap((url) => fileFace(url) ?? []),
-  };
-});
 
 /**
  * Most lessons render on demand, and later readers get the page Next cached

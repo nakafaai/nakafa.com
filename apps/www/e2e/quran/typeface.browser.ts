@@ -2,6 +2,10 @@ import { expect, type Page, test } from "@playwright/test";
 import { Deferred, Duration, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/context";
+import {
+  PRELOADED_FONT_SELECTOR,
+  readTypefaceFiles,
+} from "@/e2e/support/fonts";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
@@ -10,37 +14,6 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** Longer than the 100 ms block period of optional display. */
 const lateTypefaceMilliseconds = 1000;
-
-/** Reads the Quran typeface's font files from the page's stylesheets. */
-const readTypefaceFiles = Effect.fn("NakafaE2E.readTypefaceFiles")(function* (
-  page: Page
-) {
-  return yield* Effect.promise(() =>
-    page.evaluate(() =>
-      [...document.styleSheets].flatMap((sheet) =>
-        [...sheet.cssRules].flatMap((rule) => {
-          if (
-            !(rule instanceof CSSFontFaceRule) ||
-            rule.style.getPropertyValue("font-family").replaceAll('"', "") !==
-              "Amiri"
-          ) {
-            return [];
-          }
-          const source = rule.style.getPropertyValue("src");
-          const start = source.indexOf("url(") + "url(".length;
-          return [
-            new URL(
-              source
-                .slice(start, source.indexOf(")", start))
-                .replaceAll('"', ""),
-              sheet.href ?? location.href
-            ).pathname,
-          ];
-        })
-      )
-    )
-  );
-});
 
 const verifyQuranTypefaceScope = Effect.fn(
   "NakafaE2E.verifyQuranTypefaceScope"
@@ -125,7 +98,7 @@ const verifySurahPreloadsTypeface = Effect.fn(
   const files = yield* readTypefaceFiles(page);
   const preloads = yield* Effect.promise(() =>
     page
-      .locator('link[rel="preload"][as="font"]')
+      .locator(PRELOADED_FONT_SELECTOR)
       .evaluateAll((links) =>
         links.map(
           (link) =>
