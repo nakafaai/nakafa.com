@@ -195,15 +195,6 @@ export function publicRuntimeRequest() {
   });
 }
 
-/** Creates the exact public runtime request for the real pair-grouped article. */
-export function articleRuntimeRequest() {
-  return Schema.encodeSync(PublicRuntimeRequestJsonSchema)({
-    delivery: "public",
-    appLocale: ActiveAppLocaleSchema.make("en"),
-    publicPath: TEST_ARTICLE_PATH,
-  });
-}
-
 /** Creates locale and path mismatches for public exchange verification. */
 export function runtimeCases(row: RuntimeRow) {
   const response = {
