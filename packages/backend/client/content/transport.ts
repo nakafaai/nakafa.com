@@ -1,9 +1,4 @@
-import type { ProtectedContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import type {
-  ContentRuntimeFailureSchema,
-  ContentRuntimeMissingSchema,
-} from "@nakafa/aksara-contracts/runtime/result";
-import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
+import type { ContentHttpTarget } from "@repo/backend/client/content/endpoint";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {
   createNetworkRequestError,
@@ -18,16 +13,7 @@ import {
 import { parseContentLength, readBoundedStream } from "@repo/utilities/body";
 import { FetchClient } from "@repo/utilities/http/client";
 import { isJsonContentType } from "@repo/utilities/mime";
-import {
-  Clock,
-  Data,
-  Effect,
-  HashSet,
-  Layer,
-  Schedule,
-  Schema,
-  Stream,
-} from "effect";
+import { Clock, Data, Effect, Layer, Schedule, Schema, Stream } from "effect";
 import {
   FetchHttpClient,
   HttpClient,
@@ -37,7 +23,6 @@ import {
 } from "effect/http";
 
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
-const LOOPBACK_HOSTS = HashSet.make("127.0.0.1", "[::1]", "localhost");
 /** Reads and writes unknown JSON text; its bytes match JSON.parse and JSON.stringify. */
 const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 /**
@@ -57,18 +42,6 @@ const ContentHttpClient = FetchClient.pipe(
     )
   )
 );
-type ContentRuntimeStatus =
-  | Pick<typeof ContentRuntimeFailureSchema.Type, "code" | "kind">
-  | Pick<PublicContentRuntimeFound | ProtectedContentRuntimeFound, "kind">
-  | Pick<typeof ContentRuntimeMissingSchema.Type, "kind">;
-
-const ContentHttpTargetSchema = Schema.Struct({
-  siteUrl: Schema.String,
-  token: Schema.String,
-});
-/** Server-owned connection values for private Convex content endpoints. */
-export type ContentHttpTarget = typeof ContentHttpTargetSchema.Type;
-
 /**
  * One exact unmarked response may share the safe read retry budget. It keeps
  * the deadline of the attempt that received it for a read after the budget.
@@ -167,27 +140,13 @@ function classifyContentBodyFailure<Failure>(failure: Failure) {
 }
 
 /** Returns whether the response carries the current diagnostic marker. */
-function hasContentRuntimeMarker(
+export function hasContentRuntimeMarker(
   response: HttpClientResponse.HttpClientResponse
 ) {
   return (
     response.headers[CONTENT_RUNTIME_RESPONSE_HEADER] ===
     CONTENT_RUNTIME_RESPONSE_MARKER
   );
-}
-
-/** Classifies an out-of-contract JSON body without exposing its contents. */
-export function createContentContractError(
-  response: HttpClientResponse.HttpClientResponse
-) {
-  if (hasContentRuntimeMarker(response)) {
-    return new ContentTransportError({
-      reason: "response-contract",
-    });
-  }
-  return new ContentTransportError({
-    reason: "response-unmarked",
-  });
 }
 
 /** Classifies malformed JSON without exposing its response body. */
@@ -203,86 +162,6 @@ function createContentSyntaxError(
     reason: "response-unmarked",
   });
 }
-
-/** Enforces the runtime endpoints' shared response and HTTP status pairs. */
-export const validateContentRuntimeStatus = Effect.fn(
-  "NakafaContent.validateContentRuntimeStatus"
-)(function* (response: ContentRuntimeStatus, status: number) {
-  if (response.kind === "found" && status === 200) {
-    return;
-  }
-  if (response.kind === "missing" && status === 404) {
-    return;
-  }
-  if (response.kind !== "failure") {
-    return yield* new ContentTransportError({
-      reason: "status",
-    });
-  }
-  if (response.code === "CONTENT_RUNTIME_UNAUTHORIZED" && status === 401) {
-    return;
-  }
-  if (
-    response.code === "CONTENT_RUNTIME_INVALID" &&
-    (status === 400 || status === 413 || status === 415)
-  ) {
-    return;
-  }
-  if (
-    (response.code === "CONTENT_RUNTIME_INTERNAL" ||
-      response.code === "CONTENT_RUNTIME_RESPONSE_TOO_LARGE") &&
-    status === 500
-  ) {
-    return;
-  }
-  return yield* new ContentTransportError({
-    reason: "status",
-  });
-});
-
-/** Builds one fixed private endpoint without inheriting paths or credentials. */
-export const createContentEndpoint = Effect.fn(
-  "NakafaContent.createContentEndpoint"
-)(function* (baseUrl: string, path: string) {
-  const base = yield* Effect.try({
-    catch: () =>
-      new ContentTransportError({
-        reason: "url",
-      }),
-    try: () => new URL(baseUrl),
-  });
-  const isLocalHttp =
-    base.protocol === "http:" && HashSet.has(LOOPBACK_HOSTS, base.hostname);
-  if (
-    (base.protocol !== "https:" && !isLocalHttp) ||
-    base.username.length + base.password.length > 0
-  ) {
-    return yield* new ContentTransportError({
-      reason: "url",
-    });
-  }
-  return new URL(path, base.origin).href;
-});
-
-/** Serializes one request while enforcing its complete UTF-8 byte ceiling. */
-export const encodeContentRequest = Effect.fn(
-  "NakafaContent.encodeContentRequest"
-)(function* (input: unknown, maxBytes: number) {
-  const source = yield* Schema.encodeEffect(JsonTextSchema)(input).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "request",
-        })
-    )
-  );
-  if (new TextEncoder().encode(source).byteLength > maxBytes) {
-    return yield* new ContentTransportError({
-      reason: "request-size",
-    });
-  }
-  return source;
-});
 
 /**
  * Keeps only the sanitized retry classification of one failed request: the
