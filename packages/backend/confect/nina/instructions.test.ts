@@ -15,6 +15,7 @@ vi.mock("@repo/backend/agent/content", () => ({
 }));
 
 const runtime = { currentDate: "2026-09-30T00:00:00.000Z" };
+const NOW = Date.parse(runtime.currentDate);
 
 /** Reads one fixture turn's instructions, or the typed failure's reason. */
 async function instructionsFor(
@@ -62,7 +63,7 @@ describe("Nina instructions", () => {
         chatId: f.chatId,
         text: "- The learner practiced limits.",
         throughOrder: 3,
-        updatedAt: Date.now(),
+        updatedAt: NOW,
         usage: { calls: 1, input: 900, output: 120 },
       })
     );
@@ -109,7 +110,7 @@ describe("Nina instructions", () => {
     await f.t.mutation(async (ctx) => {
       await ctx.db.insert("onboardingProfiles", {
         focus: "tryout",
-        updatedAt: Date.now(),
+        updatedAt: NOW,
         userId: f.identity.userId,
       });
       await ctx.db.insert("ninaMemories", {
@@ -117,12 +118,12 @@ describe("Nina instructions", () => {
           {
             chatId: f.chatId,
             key: 0,
-            savedAt: Date.now(),
+            savedAt: NOW,
             text: "Sulit di peluang.",
           },
         ],
         next: 1,
-        updatedAt: Date.now(),
+        updatedAt: NOW,
         usage: { calls: 1, input: 300, output: 20 },
         userId: f.identity.userId,
       });
