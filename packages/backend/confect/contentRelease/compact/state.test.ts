@@ -1,8 +1,8 @@
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { ensureCompaction } from "@repo/backend/confect/contentRelease/compact/state";
-import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
@@ -16,7 +16,7 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Clock, Effect, Schema } from "effect";
+import { DateTime, Effect, Schema } from "effect";
 
 describe("contentRelease/compact/state", () => {
   it("distinguishes a newly persisted cycle, a resumed cycle, and its exact completed floor", async () => {
@@ -297,11 +297,11 @@ describe("contentRelease/compact/state", () => {
         .withIndex("by_releaseId", (q) => q.eq("releaseId", base.releaseId))
         .unique();
       assert.ok(row);
-      const stored = await Effect.runPromise(
-        decodeReleaseJson(row.releaseJson)
-      );
-      // Plain codec on purpose: the release contract would strip the excess
-      // field this patched manifest keeps, so a strict decode rejects the row.
+      const stored = Schema.decodeSync(
+        Schema.fromJsonString(SignedContentReleaseSchema),
+        { onExcessProperty: "error" }
+      )(row.releaseJson);
+      // Plain codec: a typed encode would strip the excess manifest field.
       await ctx.db.patch("contentReleases", row._id, {
         releaseJson: Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
           ...stored,
@@ -388,7 +388,7 @@ describe("contentRelease/compact/state", () => {
         .unique();
       assert.ok(recent);
       await ctx.db.patch("contentReleases", recent._id, {
-        createdAt: Effect.runSync(Clock.currentTimeMillis),
+        createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
       });
       await ctx.db.insert("tryoutRuntimeBundles", {
         bundleHash: "technical",
