@@ -13,39 +13,42 @@ import {
   decodeProofJson,
   decodeReleaseJson,
 } from "@repo/backend/confect/contentRelease/parse";
-import type {
+import {
   proofFailureValidator,
-  proofPollValidator,
+  type proofPollValidator,
 } from "@repo/backend/confect/contentRelease/proof/spec";
 import { stagedEvidence } from "@repo/backend/confect/contentRelease/receipt";
 import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { Clock, Context, Effect, Layer, type Schema } from "effect";
-export type ProofFailure = Schema.Schema.Type<typeof proofFailureValidator>;
-export type ProofPoll = Schema.Schema.Type<typeof proofPollValidator>;
+import { Clock, Context, Effect, Layer, Schema } from "effect";
+export type ProofFailure = typeof proofFailureValidator.Type;
+export type ProofPoll = typeof proofPollValidator.Type;
 export type Release = Docs["contentReleases"];
-export interface ProofPollCoordinatorService {
-  /** Removes terminal component state after its outcome is persisted. */
-  readonly cleanup: (
-    workflowId: WorkflowId
-  ) => Effect.Effect<boolean, ReleaseError>;
-  /** Starts one retryable proof workflow under the caller's transaction. */
-  readonly start: (
-    manifestHash: string,
-    releaseId: string
-  ) => Effect.Effect<WorkflowId, ReleaseError>;
-  /** Reads the durable component outcome without exposing it publicly. */
-  readonly status: (
-    workflowId: WorkflowId
-  ) => Effect.Effect<WorkflowStatus, ReleaseError>;
-}
-
 /** Durable Workflow dependency owned only by proof polling. */
 export class ProofPollCoordinator extends Context.Service<
   ProofPollCoordinator,
-  ProofPollCoordinatorService
+  {
+    /** Removes terminal component state after its outcome is persisted. */
+    readonly cleanup: (
+      workflowId: WorkflowId
+    ) => Effect.Effect<boolean, ReleaseError>;
+    /** Starts one retryable proof workflow under the caller's transaction. */
+    readonly start: (
+      manifestHash: string,
+      releaseId: string
+    ) => Effect.Effect<WorkflowId, ReleaseError>;
+    /** Reads the durable component outcome without exposing it publicly. */
+    readonly status: (
+      workflowId: WorkflowId
+    ) => Effect.Effect<WorkflowStatus, ReleaseError>;
+  }
 >()("@repo/backend/contentRelease/ProofPollCoordinator") {}
+
+/** The Workflow coordinator's shape, which a test runtime replaces with a fake. */
+export type ProofPollCoordinatorService = Context.Service.Shape<
+  typeof ProofPollCoordinator
+>;
 export const ProofPollCoordinatorLive = Layer.effect(
   ProofPollCoordinator,
   Effect.gen(function* () {
@@ -71,18 +74,20 @@ export const ProofPollCoordinatorLive = Layer.effect(
     });
   })
 );
-export type ProofWorkflowResolution =
-  | {
-      readonly phase: "failed";
-      readonly reason: ProofFailure;
-    }
-  | {
-      readonly phase: "ready";
-      readonly proofJson: string;
-    }
-  | {
-      readonly phase: "verifying";
-    };
+const ProofWorkflowResolutionSchema = Schema.Union([
+  Schema.Struct({
+    phase: Schema.Literal("failed"),
+    reason: proofFailureValidator,
+  }),
+  Schema.Struct({
+    phase: Schema.Literal("ready"),
+    proofJson: Schema.String,
+  }),
+  Schema.Struct({
+    phase: Schema.Literal("verifying"),
+  }),
+]);
+export type ProofWorkflowResolution = typeof ProofWorkflowResolutionSchema.Type;
 
 /** Reduces durable component status to the proof state machine. */
 export function resolveProofWorkflow(

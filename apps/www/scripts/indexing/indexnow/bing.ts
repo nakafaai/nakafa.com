@@ -1,11 +1,12 @@
 import { Config, Effect, Option, Schema } from "effect";
+import { HttpBody, HttpClient, type HttpClientResponse } from "effect/http";
 import { BingSubmitError } from "@/scripts/indexing/errors";
 import { INDEXING_HOST } from "@/scripts/indexing/paths";
-import { logger } from "@/scripts/utils";
 
 const BATCH_SIZE = 100;
 const RATE_LIMIT_DELAY = 1000;
 const HTTP_STATUS_CODE_OK = 200;
+const JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 const BING_SUBMIT_ENDPOINT =
   "https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch";
 const BING_PLACEHOLDER_API_KEY = "YOUR_BING_WEBMASTER_API_KEY";
@@ -42,15 +43,15 @@ export const readBingWebmasterApiKey = Effect.fn(
 export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
   function* (urls: readonly string[], apiKey: string) {
     if (urls.length === 0) {
-      logger.info("No new URLs to submit to Bing.");
+      yield* Effect.logInfo("No new URLs to submit to Bing.");
       return [];
     }
     let batchSize = BATCH_SIZE;
     let submittedCount = 0;
     const successfullySubmitted: string[] = [];
-    logger.info("Starting Bing URL Submission API process...");
-    logger.stats("URLs to submit", urls.length);
-    logger.stats("Initial batch size", batchSize);
+    yield* Effect.logInfo("Starting Bing URL Submission API process...");
+    yield* Effect.logInfo(`URLs to submit: ${urls.length}`);
+    yield* Effect.logInfo(`Initial batch size: ${batchSize}`);
     while (submittedCount < urls.length) {
       const currentBatchSize = Math.min(
         batchSize,
@@ -78,7 +79,7 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
       if (result.quotaRemaining !== undefined) {
         batchSize = result.quotaRemaining;
         if (batch.length > result.quotaRemaining) {
-          logger.info(
+          yield* Effect.logInfo(
             `Retrying with smaller batch size of ${result.quotaRemaining}`
           );
           continue;
@@ -88,11 +89,13 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
         break;
       }
       if (submittedCount < urls.length) {
-        logger.progress(submittedCount, urls.length, "Submission progress");
+        yield* Effect.logInfo(
+          `Submission progress: ${submittedCount}/${urls.length} (${Math.round((submittedCount / urls.length) * 100)}%)`
+        );
         yield* Effect.sleep(RATE_LIMIT_DELAY);
       }
     }
-    logger.info(
+    yield* Effect.logInfo(
       `Bing URL Submission API process completed. Submitted ${successfullySubmitted.length}/${urls.length} URLs.`
     );
     return successfullySubmitted;
@@ -111,46 +114,55 @@ const submitBatchToBing = Effect.fn("scripts.indexing.bing.submitBatch")(
     endIndex: number;
     startIndex: number;
   }) {
-    logger.info(
+    yield* Effect.logInfo(
       `Submitting batch of ${batch.length} URLs to Bing (${startIndex} to ${endIndex})`
     );
-    const response = yield* Effect.tryPromise({
-      catch: (cause) =>
-        new BingSubmitError({
-          cause,
-          message: "Error submitting URLs to Bing.",
-        }),
-      try: () =>
-        fetch(`${BING_SUBMIT_ENDPOINT}?apikey=${apiKey}`, {
-          body: JSON.stringify({
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* client
+      .post(BING_SUBMIT_ENDPOINT, {
+        body: HttpBody.jsonUnsafe(
+          {
             siteUrl: INDEXING_HOST,
             urlList: batch,
-          }),
-          headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            Host: "ssl.bing.com",
           },
-          method: "POST",
-        }),
-    });
+          JSON_CONTENT_TYPE
+        ),
+        headers: { Host: "ssl.bing.com" },
+        urlParams: { apikey: apiKey },
+      })
+      .pipe(
+        // Bing requires `apikey` in the query, so its URL must not enter telemetry.
+        Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
+        Effect.mapError(
+          (cause) =>
+            new BingSubmitError({
+              cause,
+              message: "Error submitting URLs to Bing.",
+            })
+        )
+      );
     return yield* readBingResponse(response, batch);
   }
 );
 /** Reads Bing's response and preserves quota semantics for the submit loop. */
 const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
-  function* (response: Response, batch: readonly string[]) {
+  function* (
+    response: HttpClientResponse.HttpClientResponse,
+    batch: readonly string[]
+  ) {
     const status = response.status;
-    const responseText = yield* Effect.tryPromise({
-      catch: (cause) =>
-        new BingSubmitError({
-          cause,
-          message: "Failed to read Bing response text.",
-        }),
-      try: () => response.text(),
-    });
-    logger.info(`Bing API response status: ${status}`);
+    const responseText = yield* response.text.pipe(
+      Effect.mapError(
+        (cause) =>
+          new BingSubmitError({
+            cause,
+            message: "Failed to read Bing response text.",
+          })
+      )
+    );
+    yield* Effect.logInfo(`Bing API response status: ${status}`);
     if (status === HTTP_STATUS_CODE_OK) {
-      logger.success(
+      yield* Effect.logInfo(
         `Successfully submitted ${batch.length} URLs to Bing URL Submission API.`
       );
       return {
@@ -159,10 +171,10 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
         submittedUrls: [...batch],
       };
     }
-    logger.error(`Error submitting URLs to Bing. Status: ${status}`);
-    logger.error(`Response: ${responseText}`);
+    yield* Effect.logError(`Error submitting URLs to Bing. Status: ${status}`);
+    yield* Effect.logError(`Response: ${responseText}`);
     if (QUOTA_EXCEEDED_REGEX.test(responseText)) {
-      logger.warn("Daily quota exceeded. Stopping submission.");
+      yield* Effect.logWarning("Daily quota exceeded. Stopping submission.");
       return {
         quotaRemaining: undefined,
         shouldStop: true,
@@ -172,7 +184,7 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
     if (responseText.includes("Quota remaining")) {
       const quotaRemaining = yield* readRemainingBingQuota(responseText);
       if (quotaRemaining !== undefined) {
-        logger.info(
+        yield* Effect.logInfo(
           `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
         );
         return {

@@ -23,9 +23,9 @@ import type {
 import { findReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/binding";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
-import { Effect, type Schema } from "effect";
-export type ReleaseStatus = Schema.Schema.Type<typeof statusValidator>;
-export type CurrentStatus = Schema.Schema.Type<typeof currentValidator>;
+import { Effect } from "effect";
+export type ReleaseStatus = typeof statusValidator.Type;
+export type CurrentStatus = typeof currentValidator.Type;
 export type ActiveBundle = NonNullable<CurrentStatus["active"]>;
 export type StagedBundle = NonNullable<CurrentStatus["candidate"]>;
 

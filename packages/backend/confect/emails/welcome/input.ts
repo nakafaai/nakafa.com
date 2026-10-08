@@ -17,7 +17,7 @@ import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { readPageCatalog } from "@repo/backend/content/publication/page";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, flow, type Schema } from "effect";
+import { Array as Arr, Effect, flow, Option } from "effect";
 
 const PRIVACY_POLICY_PAGE_KEY = PageKeySchema.make("privacy-policy");
 const TERMS_OF_SERVICE_PAGE_KEY = PageKeySchema.make("terms-of-service");
@@ -30,11 +30,14 @@ function findWelcomePage(
   locale: AppLocaleCode,
   pageKey: PageKey
 ): PublicPageProjection | undefined {
-  return projections.find(
-    (projection): projection is PublicPageProjection =>
-      projection.kind === "public-page" &&
-      projection.appLocale === locale &&
-      projection.pageKey === pageKey
+  return Option.getOrUndefined(
+    Arr.findFirst(
+      projections,
+      (projection): projection is PublicPageProjection =>
+        projection.kind === "public-page" &&
+        projection.appLocale === locale &&
+        projection.pageKey === pageKey
+    )
   );
 }
 
@@ -52,7 +55,9 @@ export const resolveWelcomeEmailLinks = Effect.fn(
     catalog.projectionJson,
     decodeProjectionJson
   );
-  if (projections.some((projection) => projection.kind !== "public-page")) {
+  if (
+    Arr.some(projections, (projection) => projection.kind !== "public-page")
+  ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Welcome email Page catalog contains a non-Page projection."
@@ -86,9 +91,7 @@ export const resolveWelcomeEmailLinks = Effect.fn(
     ).href,
   };
 });
-export type WelcomeIntentInput = Schema.Schema.Type<
-  typeof welcomeIntentInputValidator
->;
+export type WelcomeIntentInput = typeof welcomeIntentInputValidator.Type;
 
 /** Reads one scheduled intent and its signed locale-exact links. */
 export const readWelcomeIntentInput = Effect.fn(

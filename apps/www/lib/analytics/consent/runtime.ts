@@ -12,7 +12,7 @@ import {
   suspendBrowserAnalyticsIdentity,
 } from "@repo/analytics/posthog/browser";
 import { Effect, Fiber, type Option, Schedule } from "effect";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   type AccountConsentDecision,
   type BrowserAnalyticsUser,
@@ -25,6 +25,7 @@ interface AnalyticsRuntimeAlignmentOptions {
   readonly isAuthenticated: boolean;
   readonly isPreviewChild: boolean;
   readonly isRuntimeSuppressed: boolean;
+  readonly setHasRuntimeError: (hasRuntimeError: boolean) => void;
   readonly status: AnalyticsConsentState["status"];
   readonly user: BrowserAnalyticsUser | null;
 }
@@ -43,11 +44,10 @@ export function useAnalyticsRuntimeAlignment({
   isAuthenticated,
   isPreviewChild,
   isRuntimeSuppressed,
+  setHasRuntimeError,
   status,
   user,
 }: AnalyticsRuntimeAlignmentOptions) {
-  const [hasRuntimeError, setRuntimeError] = useState(false);
-
   useEffect(() => {
     if (isPreviewChild) {
       return;
@@ -79,9 +79,9 @@ export function useAnalyticsRuntimeAlignment({
           schedule: Schedule.exponential("100 millis"),
           times: 2,
         }),
-        Effect.andThen(Effect.sync(() => setRuntimeError(false))),
+        Effect.andThen(Effect.sync(() => setHasRuntimeError(false))),
         Effect.catchTag("BrowserAnalyticsLoadFailed", () =>
-          Effect.sync(() => setRuntimeError(true))
+          Effect.sync(() => setHasRuntimeError(true))
         )
       )
     );
@@ -96,9 +96,8 @@ export function useAnalyticsRuntimeAlignment({
     isAuthenticated,
     isPreviewChild,
     isRuntimeSuppressed,
+    setHasRuntimeError,
     status,
     user,
   ]);
-
-  return hasRuntimeError;
 }

@@ -17,11 +17,11 @@ import {
   COMPACTION_PAGE_BYTES,
   RELEASE_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Clock, Effect, type Schema } from "effect";
+import { Clock, Effect } from "effect";
 
-type AppLocale = Schema.Schema.Type<typeof appLocaleValidator>;
-type ArtifactLocale = Schema.Schema.Type<typeof artifactLocaleValidator>;
-type ReleaseRole = Schema.Schema.Type<typeof releaseRoleValidator>;
+type AppLocale = typeof appLocaleValidator.Type;
+type ArtifactLocale = typeof artifactLocaleValidator.Type;
+type ReleaseRole = typeof releaseRoleValidator.Type;
 
 /** Reads the singleton publication identity through its exact index. */
 export const loadState = Effect.fn("contentRelease.loadState")(function* () {

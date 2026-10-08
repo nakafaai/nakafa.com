@@ -17,7 +17,7 @@ import {
   makeTryoutStartPlacement,
   TRYOUT_START_NOW,
 } from "@repo/backend/test/tryout/source";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 describe("tryouts/queries/sets", () => {
   it.effect("requires an active signed try-out publication", () =>
@@ -92,7 +92,7 @@ describe("tryouts/queries/sets", () => {
               sort: { field: "publishedScore", direction },
             })
           );
-          expect(tied.page.map(({ setKey }) => setKey)).toEqual([
+          expect(Arr.map(tied.page, ({ setKey }) => setKey)).toEqual([
             "set-1",
             "set-2",
           ]);
@@ -114,7 +114,7 @@ describe("tryouts/queries/sets", () => {
               sort: { field: "publishedScore", direction },
             })
           );
-          expect(ranked.page.map(({ setKey }) => setKey)).toEqual([
+          expect(Arr.map(ranked.page, ({ setKey }) => setKey)).toEqual([
             "set-2",
             "set-1",
           ]);
@@ -147,7 +147,9 @@ describe("tryouts/queries/sets", () => {
               sort: { field, direction },
             })
           );
-          expect(result.page.map(({ setKey }) => setKey)).toEqual(expected);
+          expect(Arr.map(result.page, ({ setKey }) => setKey)).toEqual(
+            expected
+          );
         }
         const first = yield* Effect.promise(() =>
           authed.query(api.tryouts.queries.sets.list, {
@@ -157,7 +159,7 @@ describe("tryouts/queries/sets", () => {
             paginationOpts: { cursor: null, numItems: 1 },
           })
         );
-        expect(first.page.map(({ setKey }) => setKey)).toEqual(["set-4"]);
+        expect(Arr.map(first.page, ({ setKey }) => setKey)).toEqual(["set-4"]);
         expect(first.isDone).toBe(false);
       })
   );
@@ -198,7 +200,7 @@ describe("tryouts/queries/sets", () => {
           viewerId: identity.authUserId,
         });
         expect(
-          result.page.map(({ setKey, attemptStatus, publishedScore }) => ({
+          Arr.map(result.page, ({ setKey, attemptStatus, publishedScore }) => ({
             setKey,
             attemptStatus,
             publishedScore,
@@ -244,7 +246,7 @@ describe("tryouts/queries/sets", () => {
         expect(anonymous).toMatchObject({ snapshotId, viewerId: null });
         for (const page of [separate, anonymous]) {
           expect(
-            page.page.map(({ attemptStatus, publishedScore }) => [
+            Arr.map(page.page, ({ attemptStatus, publishedScore }) => [
               attemptStatus,
               publishedScore,
             ])
@@ -300,7 +302,9 @@ describe("tryouts/queries/sets", () => {
         expect(grown.isDone).toBe(true);
         expect(grown.page).toHaveLength(125);
         expect(grown.page.slice(0, 25)).toEqual(first.page);
-        expect(new Set(grown.page.map(({ setKey }) => setKey)).size).toBe(125);
+        expect(new Set(Arr.map(grown.page, ({ setKey }) => setKey)).size).toBe(
+          125
+        );
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             for (const row of await ctx.db
@@ -319,7 +323,10 @@ describe("tryouts/queries/sets", () => {
         expect(refreshed.page).toHaveLength(125);
         expect(refreshed.snapshotId).toBe(grown.snapshotId);
         expect(
-          refreshed.page.slice(0, 2).map(({ publishedScore }) => publishedScore)
+          Arr.map(
+            refreshed.page.slice(0, 2),
+            ({ publishedScore }) => publishedScore
+          )
         ).toEqual([0, 0]);
       })
   );
@@ -332,11 +339,13 @@ describe("tryouts/queries/sets", () => {
           const t = createConvexTestWithBetterAuth();
           const source = makeTryoutStartHierarchy("id", visibility);
           const durationSeconds = visibility === "visible" ? 11_700 : 4500;
-          const section = source.find((row) => row.kind === "section");
+          const section = Option.getOrUndefined(
+            Arr.findFirst(source, (row) => row.kind === "section")
+          );
           if (section?.kind !== "section") {
             return yield* Effect.die("Expected the technical section fixture.");
           }
-          const catalog = source.map((row) => {
+          let catalog = Arr.map(source, (row) => {
             if (row.kind === "section") {
               return {
                 ...row,
@@ -358,7 +367,8 @@ describe("tryouts/queries/sets", () => {
             return row;
           });
           if (visibility === "visible") {
-            catalog.push(
+            catalog = Arr.append(
+              catalog,
               yield* Schema.decodeEffect(TryoutCatalogRowSchema)({
                 ...section,
                 graph: {

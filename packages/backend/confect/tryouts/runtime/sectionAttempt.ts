@@ -14,7 +14,7 @@ import {
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { requireSectionSnapshot } from "@repo/backend/confect/tryouts/runtime/placement";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Duration, Effect, flow } from "effect";
+import { Array as Arr, Duration, Effect, flow, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 interface InternalEntrySection {
@@ -29,7 +29,9 @@ const startSectionResult = Object.freeze({
 export const requireInternalEntrySection = Effect.fn(
   "tryouts.runtime.requireInternalEntrySection"
 )(function* (sections: readonly InternalEntrySection[], sectionKey: string) {
-  const section = sections.find((row) => row.sectionKey === sectionKey);
+  const section = Option.getOrUndefined(
+    Arr.findFirst(sections, (row) => row.sectionKey === sectionKey)
+  );
   if (section?.visibility !== "internal-entry") {
     return yield* new TryoutRuntimeError({
       code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",

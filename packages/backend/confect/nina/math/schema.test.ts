@@ -12,7 +12,7 @@ import {
   mathStatisticsInput,
 } from "@repo/backend/confect/nina/math/schema";
 import { type Schema as AISchema, asSchema } from "ai";
-import { Effect, Predicate } from "effect";
+import { Array as Arr, Effect, Predicate } from "effect";
 
 /** Proves that Effect-backed AI schemas keep their deterministic sync contract. */
 function readSynchronous<A>(value: A | PromiseLike<A>, operation: string): A {
@@ -398,16 +398,19 @@ describe("math AI input schemas", () => {
     });
   });
   it("exposes grouped tool schemas as provider-compatible objects", () => {
-    const jsonSchemas = [
-      mathAlgebraInput,
-      mathEquationInput,
-      mathGeometryInput,
-      mathDiscreteInput,
-      mathMatrixInput,
-      mathSeriesInput,
-      mathStatisticsInput,
-      mathProbabilityInput,
-    ].map((schema) => readSynchronous(schema.jsonSchema, "Math JSON Schema"));
+    const jsonSchemas = Arr.map(
+      [
+        mathAlgebraInput,
+        mathEquationInput,
+        mathGeometryInput,
+        mathDiscreteInput,
+        mathMatrixInput,
+        mathSeriesInput,
+        mathStatisticsInput,
+        mathProbabilityInput,
+      ],
+      (schema) => readSynchronous(schema.jsonSchema, "Math JSON Schema")
+    );
     for (const jsonSchema of jsonSchemas) {
       expect(jsonSchema).not.toHaveProperty("anyOf");
       expect(jsonSchema).toMatchObject({ type: "object" });

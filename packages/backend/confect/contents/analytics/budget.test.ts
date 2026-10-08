@@ -4,6 +4,7 @@ import {
   hasContentAnalyticsHeadroom,
 } from "@repo/backend/confect/contents/analytics/budget";
 import type { TransactionMetrics } from "convex/server";
+import { Record as Rec } from "effect";
 
 /** Builds one complete transaction metric fixture at configured reserves. */
 function transactionMetrics(
@@ -29,7 +30,7 @@ describe("content analytics transaction budget", () => {
   it("continues only while every transaction reserve remains", () => {
     expect(hasContentAnalyticsHeadroom(transactionMetrics())).toBe(true);
 
-    for (const key of Object.keys(
+    for (const key of Rec.keys(
       CONTENT_ANALYTICS_HEADROOM
     ) as (keyof TransactionMetrics)[]) {
       expect(

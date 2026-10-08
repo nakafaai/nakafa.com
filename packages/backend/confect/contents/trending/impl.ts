@@ -19,7 +19,7 @@ import {
 import { hydrateDurableContentTarget } from "@repo/backend/confect/contents/views/target";
 import type { TrendingSubject } from "@repo/backend/confect/lib/validators/trending";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Struct } from "effect";
+import { Array as Arr, Effect, Struct } from "effect";
 
 const defaultTrendingSubjectsLimit = 6;
 const defaultTrendingMinViews = 5;
@@ -60,7 +60,7 @@ const loadRankedPopularityCounterIds = Effect.fn(
   }
 ) {
   const ctx = yield* QueryCtxService;
-  const ids: Docs["learningPopularityCounters"]["_id"][] = [];
+  let ids: Docs["learningPopularityCounters"]["_id"][] = [];
   let cursor: string | undefined;
   let pagesRead = 0;
   while (pagesRead < trendingRankingMaxPages) {
@@ -78,7 +78,10 @@ const loadRankedPopularityCounterIds = Effect.fn(
         }),
       catch: toTrendingSubjectIoError,
     });
-    ids.push(...result.page.map((item) => item.id));
+    ids = Arr.appendAll(
+      ids,
+      Arr.map(result.page, (item) => item.id)
+    );
     pagesRead += 1;
     if (result.isDone) {
       break;
@@ -105,7 +108,7 @@ const loadRankedPopularityCounters = Effect.fn(
         )
       )
   );
-  return rows.flatMap((row) => (row ? [row] : []));
+  return Arr.flatMap(rows, (row) => (row ? [row] : []));
 });
 
 /** Loads the current signed material for a ranked popularity counter. */
@@ -171,7 +174,7 @@ export const listTrendingSubjects = Effect.fn(
   }
   const ids = yield* loadRankedPopularityCounterIds(args, settings);
   const rows = yield* loadRankedPopularityCounters(ids);
-  const subjects: TrendingSubject[] = [];
+  let subjects: TrendingSubject[] = [];
   for (const row of rows) {
     if (row.score < settings.minViews) {
       continue;
@@ -180,7 +183,7 @@ export const listTrendingSubjects = Effect.fn(
     if (!route) {
       continue;
     }
-    subjects.push(toTrendingSubject(row, route));
+    subjects = Arr.append(subjects, toTrendingSubject(row, route));
     if (subjects.length >= settings.limit) {
       break;
     }

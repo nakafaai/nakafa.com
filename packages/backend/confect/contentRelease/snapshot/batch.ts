@@ -27,7 +27,7 @@ import {
   stageTryoutPlacement,
 } from "@repo/backend/confect/contentRelease/snapshot/tryout";
 import { encodeSnapshotRowJson } from "@repo/backend/confect/contentRelease/wire";
-import { Clock, Effect } from "effect";
+import { Array as Arr, Clock, Effect } from "effect";
 
 /** Stores one decoded family row in its domain-owned physical table. */
 export function stageRow(
@@ -110,11 +110,11 @@ export const stageBatch = Effect.fn("contentRelease.stageSnapshotBatch")(
       batchIndex,
       sources
     );
-    const entries = decoded.rows.map((row) => ({
+    const entries = Arr.map(decoded.rows, (row) => ({
       row,
       rowJson: encodeSnapshotRowJson(row),
     }));
-    const values = entries.map(({ rowJson }) => rowJson);
+    const values = Arr.map(entries, ({ rowJson }) => rowJson);
     const batchHash = yield* hashBatch("snapshot", releaseId, batchIndex, [
       family,
       snapshotId,

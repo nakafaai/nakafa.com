@@ -1,13 +1,6 @@
 // @vitest-environment node
 
-import {
-  afterEach,
-  assert,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   ContentKeySchema,
   ReleaseIdSchema,
@@ -204,12 +197,12 @@ describe("protected content runtime client", () => {
       ).toMatchObject({ items: [{ delivery: "authenticated" }] });
       expect(fetchMock).toHaveBeenCalledOnce();
       const call = fetchMock.mock.calls.at(0);
-      assert(
-        call && typeof call[1]?.body === "string",
-        "Expected one JSON protected runtime request."
-      );
-      expect(call[0]).toBe(endpoint);
-      expect(JSON.parse(call[1].body)).toEqual(request);
+      expect(call?.[0]).toEqual(new URL(endpoint));
+      expect(
+        yield* Effect.promise(
+          (): Promise<unknown> => new Response(call?.[1]?.body).json()
+        )
+      ).toEqual(request);
       expect(verifyProtectedContentRuntimeExchange).toHaveBeenCalledOnce();
     })
   );

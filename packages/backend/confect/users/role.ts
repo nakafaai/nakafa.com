@@ -8,4 +8,4 @@ export const userRoles = [
 ] as const;
 /** Runtime prompt role contract used by Nina and specialist prompt context. */
 export const PromptUserRoleSchema = Schema.Literals(userRoles);
-export type PromptUserRole = Schema.Schema.Type<typeof PromptUserRoleSchema>;
+export type PromptUserRole = typeof PromptUserRoleSchema.Type;

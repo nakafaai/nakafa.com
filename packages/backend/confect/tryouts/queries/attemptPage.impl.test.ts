@@ -22,7 +22,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import type { FunctionArgs, WithoutSystemFields } from "convex/server";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type AttemptPatch = Partial<WithoutSystemFields<Doc<"tryoutAttempts">>>;
 type ProgressPatch = Partial<WithoutSystemFields<Doc<"tryoutSetProgress">>>;
@@ -102,10 +102,13 @@ const seedClient = Effect.fn("tryouts.queries.attemptPage.test.seedClient")(
               throw new Error("Expected one frozen section snapshot.");
             }
             await ctx.db.patch(attemptId, {
-              sectionSnapshots: attempt.sectionSnapshots.map((snapshot) => ({
-                ...snapshot,
-                ...patch,
-              })),
+              sectionSnapshots: Arr.map(
+                attempt.sectionSnapshots,
+                (snapshot) => ({
+                  ...snapshot,
+                  ...patch,
+                })
+              ),
             });
             return original;
           })

@@ -18,13 +18,13 @@ import {
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import type { ReactNode } from "react";
 
@@ -84,93 +84,97 @@ export function VirusChart({ labels }: Props) {
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilLineChart config={chartConfig} curveType="monotone" data={data}>
-          <Grid />
-          <XAxis
-            dataKey="phase"
-            tickFormatter={(value) => value.toString()}
-            tickMargin={8}
-          />
-          <YAxis
-            label={{
-              value: labels.yLabel,
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
-            }}
-            tickFormatter={(value) =>
-              value >= THRESHOLD_VALUE
-                ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
-                : String(value)
-            }
-            tickMargin={8}
-          />
-          <ChartTooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length > 0) {
-                const phaseValue = payload[0].payload.phase;
-                return (
-                  <ChartTooltipContent
-                    active={active}
-                    label={`${labels.phase} ${phaseValue}`}
-                    payload={payload}
-                  />
-                );
+    <VisualCard>
+      <VisualCardHeader description={labels.description} title={labels.title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilLineChart config={chartConfig} curveType="monotone" data={data}>
+            <Grid />
+            <XAxis
+              dataKey="phase"
+              tickFormatter={(value) => value.toString()}
+              tickMargin={8}
+            />
+            <YAxis
+              label={{
+                value: labels.yLabel,
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" },
+              }}
+              tickFormatter={(value) =>
+                value >= THRESHOLD_VALUE
+                  ? `${(value / THRESHOLD_VALUE).toFixed(THRESHOLD_VALUE_DECIMAL_PLACES)}k`
+                  : String(value)
               }
-              return null;
-            }}
-          />
-          <Line
-            dataKey="exponential"
-            lineProps={{
-              name: "exponential",
-              ...(VIRUS_CUES.exponential.strokeDasharray === undefined
-                ? {}
-                : { strokeDasharray: VIRUS_CUES.exponential.strokeDasharray }),
-              strokeWidth: 2,
-            }}
-          >
-            <Dot variant={VIRUS_CUES.exponential.dot} />
-            <ActiveDot variant={VIRUS_CUES.exponential.activeDot} />
-          </Line>
-          <Line
-            dataKey="linear"
-            lineProps={{
-              name: "linear",
-              ...(VIRUS_CUES.linear.strokeDasharray === undefined
-                ? {}
-                : { strokeDasharray: VIRUS_CUES.linear.strokeDasharray }),
-              strokeWidth: 2,
-            }}
-          >
-            <Dot variant={VIRUS_CUES.linear.dot} />
-            <ActiveDot variant={VIRUS_CUES.linear.activeDot} />
-          </Line>
-          <Line
-            dataKey="logarithmic"
-            lineProps={{
-              name: "logarithmic",
-              ...(VIRUS_CUES.logarithmic.strokeDasharray === undefined
-                ? {}
-                : { strokeDasharray: VIRUS_CUES.logarithmic.strokeDasharray }),
-              strokeWidth: 2,
-            }}
-          >
-            <Dot variant={VIRUS_CUES.logarithmic.dot} />
-            <ActiveDot variant={VIRUS_CUES.logarithmic.activeDot} />
-          </Line>
-          <Legend verticalAlign="bottom" />
-        </EvilLineChart>
-      </CardContent>
-      <CardFooter>
+              tickMargin={8}
+            />
+            <ChartTooltip
+              content={({ active, payload }) => {
+                if (active && payload && payload.length > 0) {
+                  const phaseValue = payload[0].payload.phase;
+                  return (
+                    <ChartTooltipContent
+                      active={active}
+                      label={`${labels.phase} ${phaseValue}`}
+                      payload={payload}
+                    />
+                  );
+                }
+                return null;
+              }}
+            />
+            <Line
+              dataKey="exponential"
+              lineProps={{
+                name: "exponential",
+                ...(VIRUS_CUES.exponential.strokeDasharray === undefined
+                  ? {}
+                  : {
+                      strokeDasharray: VIRUS_CUES.exponential.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={VIRUS_CUES.exponential.dot} />
+              <ActiveDot variant={VIRUS_CUES.exponential.activeDot} />
+            </Line>
+            <Line
+              dataKey="linear"
+              lineProps={{
+                name: "linear",
+                ...(VIRUS_CUES.linear.strokeDasharray === undefined
+                  ? {}
+                  : { strokeDasharray: VIRUS_CUES.linear.strokeDasharray }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={VIRUS_CUES.linear.dot} />
+              <ActiveDot variant={VIRUS_CUES.linear.activeDot} />
+            </Line>
+            <Line
+              dataKey="logarithmic"
+              lineProps={{
+                name: "logarithmic",
+                ...(VIRUS_CUES.logarithmic.strokeDasharray === undefined
+                  ? {}
+                  : {
+                      strokeDasharray: VIRUS_CUES.logarithmic.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={VIRUS_CUES.logarithmic.dot} />
+              <ActiveDot variant={VIRUS_CUES.logarithmic.activeDot} />
+            </Line>
+            <Legend verticalAlign="bottom" />
+          </EvilLineChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
         <p className="text-sm">{labels.caption}</p>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

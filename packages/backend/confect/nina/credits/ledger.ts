@@ -11,15 +11,18 @@ import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
 } from "@repo/backend/confect/credits/state";
-import {
-  getModelCreditCost,
-  type ModelId,
-} from "@repo/backend/confect/nina/config/model";
+import type { ModelId, ModelKey } from "@repo/backend/confect/gateway/model";
 import {
   NinaCreditError,
   type NinaCreditHold,
 } from "@repo/backend/confect/nina/credits/schema";
-import { Clock, Effect, type Schema, Struct } from "effect";
+import { Clock, Effect, Struct } from "effect";
+
+/** Credits one Nina response holds and charges, by model. */
+const responseCredits = {
+  "nakafa-lite": 2,
+  "nakafa-pro": 5,
+} satisfies Record<ModelKey, number>;
 
 // Admission quota is independent of refundable credits. Five starts may burst;
 // ten per minute permits interactive retries without unbounded hold cycling.
@@ -46,7 +49,8 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
           })
       )
     );
-    const credits = getModelCreditCost(modelId);
+    const model: ModelKey = modelId;
+    const credits = responseCredits[model];
     if (state.credits < credits) {
       return yield* new NinaCreditError({
         code: "INSUFFICIENT_CREDITS",
@@ -125,10 +129,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
 
 /** Refund a failed or abandoned turn at most once, within its credit period. */
 export const refundCredits = Effect.fn("nina.credits.refund")(
-  function* (
-    turn: Schema.Schema.Type<typeof NinaCreditHold>,
-    reservationId: string
-  ) {
+  function* (turn: typeof NinaCreditHold.Type, reservationId: string) {
     const now = yield* Clock.currentTimeMillis;
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;

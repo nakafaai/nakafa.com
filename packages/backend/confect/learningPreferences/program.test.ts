@@ -3,7 +3,7 @@ import {
   RegisteredConvexFunction,
 } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import { makeProgramSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+import { makeProgramSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import confectSchema from "@repo/backend/confect/_generated/schema";
@@ -25,7 +25,7 @@ import {
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 describe("learningPreferences/program", () => {
   it.effect("returns no curriculum for a retired saved key", () =>
@@ -177,7 +177,8 @@ describe("learningPreferences/program", () => {
           LearningProgramSchema
         )({
           ...original,
-          translations: original.translations.filter(
+          translations: Arr.filter(
+            original.translations,
             ({ appLocale }) => appLocale !== "en"
           ),
         });

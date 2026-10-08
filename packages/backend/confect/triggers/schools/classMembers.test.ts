@@ -9,7 +9,7 @@ import {
 import { schoolClassMembersHandler } from "@repo/backend/confect/triggers/schools/classMembers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 21, 0, 0);
 describe("triggers/schools/classMembers", () => {
@@ -51,9 +51,12 @@ describe("triggers/schools/classMembers", () => {
     const schoolInviteCode = await t.query(async (ctx) => {
       const inviteCodes = await ctx.db.query("schoolInviteCodes").collect();
       return (
-        inviteCodes.find(
-          (code) =>
-            code.schoolId === created.schoolId && code.role === "student"
+        Option.getOrUndefined(
+          Arr.findFirst(
+            inviteCodes,
+            (code) =>
+              code.schoolId === created.schoolId && code.role === "student"
+          )
         ) ?? null
       );
     });
@@ -75,8 +78,11 @@ describe("triggers/schools/classMembers", () => {
         .query("schoolClassInviteCodes")
         .collect();
       return (
-        inviteCodes.find(
-          (code) => code.classId === classId && code.role === "student"
+        Option.getOrUndefined(
+          Arr.findFirst(
+            inviteCodes,
+            (code) => code.classId === classId && code.role === "student"
+          )
         ) ?? null
       );
     });
@@ -259,11 +265,14 @@ it.effect(
         studentCount: 0,
         teacherCount: 1,
       });
-      const change = state.logs.find(
-        (row) =>
-          row.metadata &&
-          "newTeacherRole" in row.metadata &&
-          row.metadata.newTeacherRole === "assistant"
+      const change = Option.getOrUndefined(
+        Arr.findFirst(
+          state.logs,
+          (row) =>
+            row.metadata &&
+            "newTeacherRole" in row.metadata &&
+            row.metadata.newTeacherRole === "assistant"
+        )
       );
       expect(change?.action).toBe("class_member_teacher_role_changed");
       expect(change?.metadata).toStrictEqual({

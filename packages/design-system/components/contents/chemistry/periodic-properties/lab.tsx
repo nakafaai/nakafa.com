@@ -9,17 +9,16 @@ import {
   type PeriodicPropertyModeId,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -52,13 +51,10 @@ export function PeriodicPropertiesLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
 
-      <CardContent className="flex flex-col gap-4">
+      <VisualCardBody className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseTrend}
           gridColumns="4-lg"
@@ -86,9 +82,9 @@ export function PeriodicPropertiesLab({
         <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.guidance}
         </p>
-      </CardContent>
+      </VisualCardBody>
 
-      <CardFooter className="border-t">
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <TrendFact
             label={labels.factLabels.question}
@@ -107,8 +103,9 @@ export function PeriodicPropertiesLab({
             value={selectedLabels.cause}
           />
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

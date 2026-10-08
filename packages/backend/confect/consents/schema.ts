@@ -11,9 +11,7 @@ import { Schema } from "effect";
 export const consentCategoryValidator = Schema.Literals([
   ...CONSENT_CATEGORIES,
 ]);
-export type ConsentCategory = Schema.Schema.Type<
-  typeof consentCategoryValidator
->;
+export type ConsentCategory = typeof consentCategoryValidator.Type;
 
 /** Notice versions retained as provenance on account consent decisions. */
 export const consentNoticeVersionValidator = Schema.Literals([
@@ -43,9 +41,7 @@ export const consentDecisionValidator = Schema.Union([
     mechanism: Schema.Literal(ANALYTICS_BROWSER_SIGNAL_MECHANISM),
   }),
 ]);
-export type ConsentDecision = Schema.Schema.Type<
-  typeof consentDecisionValidator
->;
+export type ConsentDecision = typeof consentDecisionValidator.Type;
 
 /** Current-version input accepted from an authenticated account. */
 export const consentWriteValidator = Schema.Union([
@@ -62,7 +58,7 @@ export const consentWriteValidator = Schema.Union([
     noticeVersion: currentConsentNoticeVersionValidator,
   }),
 ]);
-export type ConsentWrite = Schema.Schema.Type<typeof consentWriteValidator>;
+export type ConsentWrite = typeof consentWriteValidator.Type;
 
 /** Reactive state returned for one authenticated consent category. */
 export const currentConsentStateValidator = Schema.Struct({

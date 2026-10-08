@@ -7,7 +7,7 @@ import {
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { NinaUploadError } from "@repo/backend/confect/nina/uploads.spec";
-import { Clock, Effect } from "effect";
+import { Array as Arr, Clock, Effect } from "effect";
 
 /** Resolves only this user's unexpired upload grants inside the send transaction. */
 export const consumeAttachments = Effect.fn("nina.attachments.consume")(
@@ -15,7 +15,7 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
     userId: Docs["users"]["_id"],
     uploadIds: readonly Docs["ninaUploads"]["_id"][]
   ) {
-    if (new Set(uploadIds).size !== uploadIds.length) {
+    if (Arr.dedupe(uploadIds).length !== uploadIds.length) {
       return yield* new NinaUploadError({
         code: "NINA_UPLOAD_INVALID",
         message: "An attachment cannot be submitted twice.",
@@ -60,8 +60,8 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
       })
     );
     return {
-      fileIds: files.map((file) => file.fileId),
-      parts: files.map((file) => file.part),
+      fileIds: Arr.map(files, (file) => file.fileId),
+      parts: Arr.map(files, (file) => file.part),
     };
   }
 );

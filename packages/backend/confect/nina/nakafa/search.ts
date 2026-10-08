@@ -3,6 +3,7 @@ import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
 } from "@repo/contents/agent/schema/search";
+import { Array as Arr, HashSet, Order } from "effect";
 
 type SearchResultInput = Pick<NakafaAgentSearchInput, "queries">;
 
@@ -22,15 +23,14 @@ export function rankSearchResult(
 
 /** Tokenizes model-provided search text without language-specific rules. */
 export function getSearchTokens(queries: string[]) {
-  return [
-    ...new Set(
-      queries.flatMap((query) =>
-        Array.from(query.toLocaleLowerCase().matchAll(searchTokenPattern)).map(
-          ([token]) => token
-        )
+  return Arr.dedupe(
+    Arr.flatMap(queries, (query) =>
+      Arr.map(
+        Array.from(query.toLocaleLowerCase().matchAll(searchTokenPattern)),
+        ([token]) => token
       )
-    ),
-  ];
+    )
+  );
 }
 
 /** Adds query context to markdown returned to the Nakafa sub-agent. */
@@ -44,12 +44,15 @@ export function formatSearchGroup(
     return formatSearch(result);
   }
 
-  return [
-    "# Nakafa Search Query",
-    ...queries.map((query) => `- Query: "${query}"`),
-    "",
-    formatSearch(result),
-  ].join("\n");
+  return Arr.join(
+    [
+      "# Nakafa Search Query",
+      ...Arr.map(queries, (query) => `- Query: "${query}"`),
+      "",
+      formatSearch(result),
+    ],
+    "\n"
+  );
 }
 
 /** Applies query relevance while preserving stable equal-score order. */
@@ -61,16 +64,11 @@ function rankSearchItems(
     return items;
   }
 
-  return [...items].sort((left, right) => {
-    const scoreDelta =
-      getSearchScore(right, tokens) - getSearchScore(left, tokens);
-
-    if (scoreDelta !== 0) {
-      return scoreDelta;
-    }
-
-    return 0;
-  });
+  return Arr.sortWith(
+    items,
+    (item) => getSearchScore(item, tokens),
+    Order.flip(Order.Number)
+  );
 }
 
 /** Scores searchable metadata by exact normalized query-token matches. */
@@ -78,7 +76,7 @@ function getSearchScore(
   item: NakafaAgentSearchResult["items"][number],
   tokens: string[]
 ) {
-  const searchableTokens = new Set(
+  const searchableTokens = HashSet.fromIterable(
     getSearchTokens([
       item.title,
       item.description,
@@ -86,11 +84,11 @@ function getSearchScore(
     ])
   );
 
-  return tokens.reduce((score, token) => {
-    if (searchableTokens.has(token)) {
+  return Arr.reduce(tokens, 0, (score, token) => {
+    if (HashSet.has(searchableTokens, token)) {
       return score + 1;
     }
 
     return score;
-  }, 0);
+  });
 }

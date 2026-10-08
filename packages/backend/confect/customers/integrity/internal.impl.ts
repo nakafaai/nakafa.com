@@ -2,7 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/customers/integrity/internal.spec";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 const listUsersForCustomerIntegrity = FunctionImpl.make(
   databaseSchema,
@@ -18,7 +18,7 @@ const listUsersForCustomerIntegrity = FunctionImpl.make(
       return {
         continueCursor: rows.continueCursor,
         isDone: rows.isDone,
-        page: rows.page.map((row) => ({
+        page: Arr.map(rows.page, (row) => ({
           authId: row.authId,
           email: row.email,
           userId: row._id,
@@ -41,7 +41,7 @@ const listCustomersForIntegrity = FunctionImpl.make(
       return {
         continueCursor: rows.continueCursor,
         isDone: rows.isDone,
-        page: rows.page.map((row) => ({
+        page: Arr.map(rows.page, (row) => ({
           externalId: row.externalId,
           localCustomerId: row._id,
           polarCustomerId: row.id,
@@ -66,7 +66,7 @@ const listActiveSubscriptionsForIntegrity = FunctionImpl.make(
       return {
         continueCursor: rows.continueCursor,
         isDone: rows.isDone,
-        page: rows.page.map((row) => ({
+        page: Arr.map(rows.page, (row) => ({
           currentPeriodEnd: row.currentPeriodEnd,
           customerId: row.customerId,
           status: row.status,

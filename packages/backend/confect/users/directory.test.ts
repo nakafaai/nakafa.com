@@ -6,7 +6,7 @@ import {
   getUserMap,
 } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("users/directory", () => {
   it.effect(
@@ -36,9 +36,10 @@ describe("users/directory", () => {
             const tCtx = yield* MutationCtx;
             const [firstId, missingId, secondId] = yield* Effect.gen(
               function* () {
-                const ids: Id<"users">[] = [];
+                let ids: Id<"users">[] = [];
                 for (const suffix of ["first", "missing", "second"]) {
-                  ids.push(
+                  ids = Arr.append(
+                    ids,
                     yield* Effect.promise(() =>
                       tCtx.db.insert("users", {
                         authId: `auth-${suffix}`,

@@ -19,7 +19,10 @@ import {
   stagedEvidence,
 } from "@repo/backend/confect/contentRelease/receipt";
 import { loadReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/runtime";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Schema } from "effect";
+
+/** Stores the receipt as plain JSON text, with the bytes JSON.stringify produces. */
+const ReceiptJson = Schema.fromJsonString(Schema.Unknown);
 
 /** Starts the invisible read-model build after full candidate validation. */
 export const prepareCandidate = Effect.fn("contentRelease.prepareCandidate")(
@@ -93,7 +96,9 @@ export const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
       .table("contentReleases")
       .patch(release._id, {
         completedAt: now,
-        receiptJson: JSON.stringify(receipt),
+        receiptJson: yield* Schema.encodeEffect(ReceiptJson)(receipt).pipe(
+          Effect.orDie
+        ),
         status: "completed",
         tryoutRuntimeBundleHash: runtime.result?.bundle.bundleHash,
         updatedAt: now,

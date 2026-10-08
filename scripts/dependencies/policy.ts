@@ -1,21 +1,51 @@
+import { Schema } from "effect";
+
 /** The exact specs one reviewed dependency may declare. */
-type ApprovedSpecs =
-  | { readonly allowed: readonly [string, ...string[]] }
-  | { readonly approved: string };
+const ApprovedSpecsSchema = Schema.Union([
+  Schema.Struct({ allowed: Schema.NonEmptyArray(Schema.String) }),
+  Schema.Struct({ approved: Schema.String }),
+]);
 
 /** The manifests that must declare one reviewed dependency. */
-type DeclarationOwners =
-  | { readonly declarationPaths: readonly string[] }
-  | { readonly minimumDeclarations: number };
+const DeclarationOwnersSchema = Schema.Union([
+  Schema.Struct({ declarationPaths: Schema.Array(Schema.String) }),
+  Schema.Struct({ minimumDeclarations: Schema.Finite }),
+]);
 
-type DependencyHold = ApprovedSpecs &
-  DeclarationOwners & { readonly dependency: string };
+const DependencyNameSchema = Schema.Struct({ dependency: Schema.String });
 
-export const CONTRACT_PACKAGE_VERSION = "0.43.0";
+type DependencyHold = typeof ApprovedSpecsSchema.Type &
+  typeof DeclarationOwnersSchema.Type &
+  typeof DependencyNameSchema.Type;
+
+/** The exact package manager the root manifest pins for every checkout and CI job. */
+export const PACKAGE_MANAGER = "pnpm@11.28.4";
+export const CONTRACT_PACKAGE_VERSION = "0.46.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.0.0-rc.118";
+export const EFFECT_COHORT_VERSION = "4.0.1";
+/**
+ * Effect packages that only dependencies declare: the Confect CLI's platform
+ * packages and the Confect server's AI providers. An override keeps each one
+ * in the exact cohort.
+ */
+export const EFFECT_COHORT_OVERRIDES = [
+  "@effect/ai-openai-compat",
+  "@effect/ai-openrouter",
+  "@effect/platform-node",
+  "@effect/platform-node-shared",
+] as const;
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
-export const VITEST_COHORT_VERSION = "5.0.2";
+export const VITEST_COHORT_VERSION = "5.0.3";
+/**
+ * The AI SDK core, its gateway, and the Google provider pin the same exact
+ * provider packages, so they move as one catalog cohort. Each bump rechecks
+ * the gateway module's provider contracts (confect/gateway).
+ */
+export const AI_SDK_COHORT = {
+  "@ai-sdk/gateway": "4.0.106",
+  "@ai-sdk/google": "4.0.90",
+  ai: "7.0.130",
+} as const;
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "19.2.8", dependency: "react", minimumDeclarations: 1 },
@@ -30,6 +60,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     approved: "catalog:",
     dependency: "effect",
+    minimumDeclarations: 1,
+  },
+  {
+    approved: "catalog:",
+    dependency: "@effect/platform-browser",
     minimumDeclarations: 1,
   },
   {
@@ -50,7 +85,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.47.1",
+    approved: "0.48.1",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -59,21 +94,21 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "typescript",
     minimumDeclarations: 1,
   },
-  { approved: "16.3.7", dependency: "next", minimumDeclarations: 1 },
+  { approved: "16.4.0", dependency: "next", minimumDeclarations: 1 },
   {
-    approved: "16.3.7",
+    approved: "16.4.0",
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
   { approved: "1.46.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.123", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.86",
+    approved: "catalog:",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.101",
+    approved: "catalog:",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
@@ -101,19 +136,19 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@nakafa/aksara-contracts",
   },
   {
-    approved: "2.5.14",
+    approved: "2.5.15",
     dependency: "@biomejs/biome",
     minimumDeclarations: 1,
   },
   {
-    approved: "24.19.0",
+    approved: "24.19.1",
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "7.12.2", dependency: "ultracite", minimumDeclarations: 1 },
-  { approved: "2.11.5", dependency: "turbo", minimumDeclarations: 1 },
+  { approved: "7.12.4", dependency: "ultracite", minimumDeclarations: 1 },
+  { approved: "2.11.7", dependency: "turbo", minimumDeclarations: 1 },
   {
-    approved: "2.11.5",
+    approved: "2.11.7",
     dependency: "@turbo/gen",
     minimumDeclarations: 1,
   },
@@ -134,7 +169,7 @@ export const REGISTRY_REVIEWS = [
   [
     "react@latest",
     "19.3.0",
-    "Fiber 9.7.0 requires React below 19.3 and bundles the 19.2 reconciler.",
+    "Fiber 9.7.0 requires React below 19.3, and Fiber 9.8 cannot move yet (see @react-three/fiber), so the declared React stays on 19.2 while Next.js bundles its own React 19.3 build for App Router routes.",
   ],
   [
     "react-dom@latest",
@@ -153,44 +188,59 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "mermaid@latest",
-    "12.0.0",
+    "12.1.0",
     "Mermaid 12 requires Safari 17.4 while Nakafa supports the Next.js Safari 16.4 browser floor.",
   ],
   [
-    "effect@rc",
-    "4.0.0-rc.118",
-    "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts 0.43.0 peers on RC118 exactly.",
+    "effect@latest",
+    EFFECT_COHORT_VERSION,
+    "Signed content contracts move with the exact Effect cohort: @nakafa/aksara-contracts peers on one exact Effect version.",
   ],
   [
-    "@effect/platform-node@rc",
-    "4.0.0-rc.118",
+    "@effect/platform-browser@latest",
+    EFFECT_COHORT_VERSION,
     "The platform package must match the Effect cohort.",
   ],
   [
-    "@effect/platform-node-shared@rc",
-    "4.0.0-rc.118",
+    "@effect/platform-node@latest",
+    EFFECT_COHORT_VERSION,
+    "The platform package must match the Effect cohort.",
+  ],
+  [
+    "@effect/platform-node-shared@latest",
+    EFFECT_COHORT_VERSION,
     "The transitive platform package must match the Effect cohort.",
   ],
   [
-    "@effect/vitest@rc",
-    "4.0.0-rc.118",
+    "@effect/vitest@latest",
+    EFFECT_COHORT_VERSION,
     "The test adapter must match the Effect cohort.",
   ],
   [
-    "@effect/tsgo@latest",
-    "0.47.1",
-    "Compiler patching moves with TypeScript and Effect; 0.47.0 targets the Effect RC118 cohort, and 0.47.1 lets the prepare step run effect-tsgo patch without the deprecated --force flag.",
+    "@effect/ai-openai-compat@latest",
+    EFFECT_COHORT_VERSION,
+    "The Confect server's transitive AI provider must match the Effect cohort.",
   ],
-  ["vitest@latest", "5.0.2", "The Effect RC118 adapter accepts Vitest 5."],
+  [
+    "@effect/ai-openrouter@latest",
+    EFFECT_COHORT_VERSION,
+    "The Confect server's transitive AI provider must match the Effect cohort.",
+  ],
+  [
+    "@effect/tsgo@latest",
+    "0.48.1",
+    "Compiler patching moves with TypeScript and Effect; 0.48 ships the standard libraries beside the patched compiler and adds per-export allow lists for unstable APIs.",
+  ],
+  ["vitest@latest", "5.0.3", "The Effect 4 test adapter requires Vitest 5."],
   [
     "@vitest/coverage-istanbul@latest",
-    "5.0.2",
-    "Coverage must match the supported Vitest 5.0.2 runner.",
+    "5.0.3",
+    "Coverage must match the supported Vitest runner.",
   ],
   [
     "@vitest/ui@latest",
-    "5.0.2",
-    "The test UI must match the supported Vitest 5.0.2 runner.",
+    "5.0.3",
+    "The test UI must match the supported Vitest runner.",
   ],
   [
     "@nakafa/aksara-contracts@latest",
@@ -200,28 +250,32 @@ export const REGISTRY_REVIEWS = [
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "next@latest",
-    "16.3.7",
-    "Stable 16.3.7 backports a Turbopack consistent-read fix onto 16.3.6, which fixed GHSA-vcvr-r3jv-pc5j in Node.js next/og ImageResponse.",
+    "16.4.0",
+    "Next.js 16.4 recommends Cache Components with partial prefetching for every app, which Nakafa already runs, adds `ensureStatic` and the `navigation()` and `prefetch()` deferral APIs, and ships one shared Turbopack runtime chunk with export mangling. It follows the 16.3.8 security release.",
   ],
   [
     "convex@latest",
     "1.46.0",
     "Additive validator `.optional()` and `FunctionReference_future`; acceptance uses an isolated deployment.",
   ],
-  ["ai@latest", "7.0.123", "AI SDK packages move as one reviewed cohort."],
+  [
+    "ai@latest",
+    AI_SDK_COHORT.ai,
+    "AI SDK packages move as one reviewed cohort.",
+  ],
   [
     "@ai-sdk/google@latest",
-    "4.0.86",
+    AI_SDK_COHORT["@ai-sdk/google"],
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.101",
+    AI_SDK_COHORT["@ai-sdk/gateway"],
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "better-auth@latest",
-    "1.7.6",
+    "1.7.7",
     "@convex-dev/better-auth@0.12.5 declares the peer range >=1.6.11 <1.7.0, so runtime stays on the latest 1.6 patch (1.6.33) until the adapter opens 1.7. Its optional Vitest peer stops at 4, but only unused test-utils import Vitest; Nakafa auth runtime tests pass on 5.",
   ],
   [
@@ -229,33 +283,33 @@ export const REGISTRY_REVIEWS = [
     "0.12.5",
     "The adapter defines the accepted Better Auth peer range.",
   ],
-  ["@biomejs/biome@latest", "2.5.14", "Formatting is reviewed with Ultracite."],
-  ["ultracite@latest", "7.12.2", "Formatting is reviewed with Biome."],
-  ["@types/node@24", "24.19.0", "Declarations remain on the Node 24 line."],
+  ["@biomejs/biome@latest", "2.5.15", "Formatting is reviewed with Ultracite."],
+  ["ultracite@latest", "7.12.4", "Formatting is reviewed with Biome."],
+  ["@types/node@24", "24.19.1", "Declarations remain on the Node 24 line."],
   ["node@24", "24.21.0", "The repository supports the Node 24 runtime line."],
   [
     "pnpm@latest",
-    "12.8.1",
-    "OSV Scanner 2.5.1 skips the application graph after pnpm 12 adds a package-manager YAML document, and the 2.6.0 release notes do not address it.",
+    "12.9.1",
+    "pnpm 12 records its own packages in a second YAML document at the top of the lockfile. OSV Scanner 2.6.0 reads both documents and Turborepo hashes each workspace as before, but GitHub's dependency graph reads only the first (dependabot/dependabot-core#15904), so it would report no application dependencies and close Aksara's Dependabot alerts. The one setting that keeps a single document, `pmOnFail: ignore`, also stops pnpm from enforcing the pinned version. pnpm 12 moves in both repositories once GitHub reads both documents.",
   ],
   [
     "react-doctor@latest",
-    "0.9.14",
-    "The local and CI scanners move as one reviewed cohort.",
+    "0.9.17",
+    "The local and CI scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled.",
   ],
   [
     "turbo@latest",
-    "2.11.5",
+    "2.11.7",
     "Turbo and its generator move together; 2.11 adds hash and scope-filtering performance work, and 2.11.4 respects negated global dependencies in affected detection, with no config change for this repository.",
   ],
   [
     "@react-three/fiber@latest",
     "9.8.1",
-    "Fiber 9.8 widens React support to 19.3 and moves to the React 19.3 scheduler, so it moves with the React 19.3 upgrade; with React 19.2 it broke DOM removal during lesson navigation. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
+    "Fiber 9.8 accepts React 19.3 and mounts a scene inside the React DOM commit that renders its canvas. Drei's Html replaces its React root during that mount, and React DOM then commits the first label's replaced root last: it clears the label and makes the label's removal throw on lesson navigation, on React 19.2 and 19.3 alike (pmndrs/drei#2867). Fiber 9.8 and React 19.3 move together once Html keeps one root or scene labels stop using it. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene/lines.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
   ],
   [
     "@polar-sh/sdk@latest",
-    "1.0.0",
+    "1.0.2",
     "SDK 1.0 replaces the standalone funcs and model subpaths with versioned API service modules; the billing integration migrates in its own change.",
   ],
   [
@@ -271,13 +325,13 @@ export const SCRIPT_DEPENDENCY_HOLDS = [
     // throwaway install took versions npm was still propagating: a 4-minute-old
     // electron-to-chromium tarball returned 404 and failed Doctor. The pnpm 11
     // default of one day keeps that install on settled releases.
-    approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.14",
+    approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },
 ];
 
-export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
+export const FORBIDDEN_EFFECT_DEPENDENCIES = [
   "@effect/cluster",
   "@effect/experimental",
   "@effect/language-service",
@@ -285,4 +339,4 @@ export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
   "@effect/rpc",
   "@effect/sql",
   "@effect/workflow",
-]);
+];

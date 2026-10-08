@@ -17,6 +17,7 @@ import {
 import { KeyValueStore } from "effect/persistence"
 import { AsyncResult, Atom, AtomRegistry, Hydration, Reactivity } from "effect/reactivity"
 import { TestClock } from "effect/testing"
+import { collectGarbage, getGc } from "../utils/gc.ts"
 
 declare const global: any
 
@@ -428,6 +429,73 @@ describe("Atom", { concurrent: false }, () => {
 
     result = r.get(count)
     assert(AsyncResult.isSuccess(result))
+  })
+
+  it("effectFn concurrent preserves synchronous success and failure", () => {
+    const count = Atom.fn((n: number) => n === 1 ? Effect.succeed(n + 1) : Effect.fail("fail"), {
+      concurrent: true
+    })
+    const r = AtomRegistry.make()
+    r.mount(count)
+
+    r.set(count, 1)
+    const success = r.get(count)
+    assert(AsyncResult.isSuccess(success))
+    assert.strictEqual(success.value, 2)
+
+    r.set(count, 2)
+    const failure = r.get(count)
+    assert(AsyncResult.isFailure(failure))
+    const error = Cause.findErrorOption(failure.cause)
+    assert(Option.isSome(error))
+    assert.strictEqual(error.value, "fail")
+    r.dispose()
+  })
+
+  it("effectFn concurrent waits for earlier calls", async () => {
+    const latch = Latch.makeUnsafe()
+    const count = Atom.fn((n: number) => n === 1 ? latch.await.pipe(Effect.as(n)) : Effect.succeed(n), {
+      concurrent: true
+    })
+    const r = AtomRegistry.make()
+    r.mount(count)
+
+    r.set(count, 1)
+    assert(AsyncResult.isInitial(r.get(count)))
+    r.set(count, 2)
+    const waiting = r.get(count)
+    assert(AsyncResult.isInitial(waiting) && waiting.waiting)
+
+    latch.openUnsafe()
+    await Effect.runPromise(Effect.yieldNow)
+    const result = r.get(count)
+    assert(AsyncResult.isSuccess(result))
+    assert.strictEqual(result.value, 1)
+    r.dispose()
+  })
+
+  it("effectFn concurrent observes an earlier failure after a later success", async () => {
+    const latch = Latch.makeUnsafe()
+    const count = Atom.fn((n: number) =>
+      n === 1
+        ? latch.await.pipe(Effect.flatMap(() => Effect.fail("older failure")))
+        : Effect.succeed(n), { concurrent: true })
+    const r = AtomRegistry.make()
+    r.mount(count)
+
+    r.set(count, 1)
+    r.set(count, 2)
+    const waiting = r.get(count)
+    assert(AsyncResult.isInitial(waiting) && waiting.waiting)
+
+    latch.openUnsafe()
+    await Effect.runPromise(Effect.yieldNow)
+    const result = r.get(count)
+    assert(AsyncResult.isFailure(result))
+    const error = Cause.findErrorOption(result.cause)
+    assert(Option.isSome(error))
+    assert.strictEqual(error.value, "older failure")
+    r.dispose()
   })
 
   it("effectFn initial", async () => {
@@ -999,6 +1067,29 @@ describe("Atom", { concurrent: false }, () => {
       assert.strictEqual(hashKeep, Hash.hash(countKeep(1)))
     }
   })
+
+  it.skipIf(process.versions.bun !== undefined || process.versions.deno !== undefined)(
+    "family keeps a replacement atom when the collected atom is finalized late",
+    async () => {
+      vitest.useRealTimers()
+      const gc = await getGc()
+      const tick = () => new Promise((resolve) => setTimeout(resolve, 0))
+      const family = Atom.family((_: string) => Atom.make(0))
+
+      const older = new WeakRef(family("a"))
+      for (let i = 0; i < 8 && older.deref() !== undefined; i++) {
+        await tick()
+        gc()
+      }
+      assert.isUndefined(older.deref())
+
+      // Replace the collected atom before its finalizer gets a turn.
+      const current = family("a")
+      await Effect.runPromise(collectGarbage)
+
+      assert.strictEqual(family("a"), current)
+    }
+  )
 
   it("label", async () => {
     expect(

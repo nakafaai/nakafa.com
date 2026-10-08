@@ -1,3 +1,5 @@
+import { Array as Arr, MutableHashSet, pipe, Schema } from "effect";
+
 const queryTokenPattern = /[\p{L}\p{N}][\p{L}\p{N}._-]*/gu;
 const mixedCasePattern = /\p{Ll}[\p{L}\p{N}._-]*\p{Lu}/u;
 const separatorPattern = /[._-]/u;
@@ -8,23 +10,27 @@ const nonSearchCharacterPattern = /[^\p{L}\p{N}]+/gu;
 const tokenBoundaryPattern = /^[._-]+|[._-]+$/gu;
 const titleCasePattern = /^\p{Lu}[\p{L}\p{N}._-]*$/u;
 
-interface PlanSearchQueriesInput {
-  fallback?: "task" | "none";
-  includeShortNumbers?: boolean;
-  maxQueries: number;
-  queries: readonly string[];
-  scopeByNamedPhrases?: boolean;
-  task: string;
-}
+const PlanSearchQueriesInputSchema = Schema.Struct({
+  fallback: Schema.optionalKey(Schema.Literals(["task", "none"])),
+  includeShortNumbers: Schema.optionalKey(Schema.Boolean),
+  maxQueries: Schema.Finite,
+  queries: Schema.Array(Schema.String),
+  scopeByNamedPhrases: Schema.optionalKey(Schema.Boolean),
+  task: Schema.String,
+});
+type PlanSearchQueriesInput = typeof PlanSearchQueriesInputSchema.Type;
 
-interface DistinctiveSearchTermOptions {
-  includeShortNumbers?: boolean;
-}
+const DistinctiveSearchTermOptionsSchema = Schema.Struct({
+  includeShortNumbers: Schema.optionalKey(Schema.Boolean),
+});
+type DistinctiveSearchTermOptions =
+  typeof DistinctiveSearchTermOptionsSchema.Type;
 
-interface NamedSearchPhrase {
-  normalized: string;
-  text: string;
-}
+const NamedSearchPhraseSchema = Schema.Struct({
+  normalized: Schema.String,
+  text: Schema.String,
+});
+type NamedSearchPhrase = typeof NamedSearchPhraseSchema.Type;
 
 /** Plans executable search queries without rewriting model-chosen search text. */
 export function planSearchQueries({
@@ -35,8 +41,8 @@ export function planSearchQueries({
   queries,
   scopeByNamedPhrases = false,
 }: PlanSearchQueriesInput) {
-  const seen = new Set<string>();
-  const executableQueries = queries.flatMap((query) => {
+  const seen = MutableHashSet.empty<string>();
+  const executableQueries = Arr.flatMap(queries, (query) => {
     const text = normalizeExecutableSearchQuery(query);
 
     if (!text) {
@@ -48,11 +54,13 @@ export function planSearchQueries({
   const namedPhrases = scopeByNamedPhrases ? getNamedSearchPhrases(task) : [];
   const hasScopedQuery =
     scopeByNamedPhrases &&
-    executableQueries.some((query) => queryHasNamedPhrase(query, namedPhrases));
+    Arr.some(executableQueries, (query) =>
+      queryHasNamedPhrase(query, namedPhrases)
+    );
   const scopedQueries = hasScopedQuery
     ? preserveScopedQueryContext(executableQueries, namedPhrases)
     : executableQueries;
-  const plannedQueries = scopedQueries.flatMap((text) =>
+  const plannedQueries = Arr.flatMap(scopedQueries, (text) =>
     appendSearchQuery({ maxQueries, seen, text })
   );
 
@@ -74,12 +82,12 @@ export function getDistinctiveSearchTerms(
   options: DistinctiveSearchTermOptions = {}
 ) {
   const tokens = getSearchTokens(getSearchableText(query));
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
 
-  return tokens.flatMap((text, index) => {
+  return Arr.flatMap(tokens, (text, index) => {
     const normalized = normalizeSearchTerm(text);
 
-    if (!normalized || seen.has(normalized)) {
+    if (!normalized || MutableHashSet.has(seen, normalized)) {
       return [];
     }
 
@@ -87,7 +95,7 @@ export function getDistinctiveSearchTerms(
       return [];
     }
 
-    seen.add(normalized);
+    MutableHashSet.add(seen, normalized);
 
     return [{ normalized, text }];
   });
@@ -144,58 +152,40 @@ function getTaskAnchorQuery(
     return;
   }
 
-  return taskTerms.map((term) => term.text).join(" ");
+  return pipe(
+    taskTerms,
+    Arr.map((term) => term.text),
+    Arr.join(" ")
+  );
 }
 
 /** Extracts exact named phrases that should keep search variants scoped. */
-function getNamedSearchPhrases(task: string) {
-  const tokens = getSearchTokens(getSearchableText(task));
-  const phrases: NamedSearchPhrase[] = [];
-  const seen = new Set<string>();
-  let run: string[] = [];
-
-  for (const token of tokens) {
-    if (isNamedPhraseToken(token)) {
-      run.push(token);
-      continue;
-    }
-
-    appendNamedSearchPhrase({ phrases, run, seen });
-    run = [];
-  }
-
-  appendNamedSearchPhrase({ phrases, run, seen });
-
-  return phrases;
+function getNamedSearchPhrases(task: string): NamedSearchPhrase[] {
+  const runs = Arr.chop(getSearchTokens(getSearchableText(task)), (tokens) => {
+    const [run, later] = Arr.splitWhere(
+      tokens,
+      (token) => !isNamedPhraseToken(token)
+    );
+    // An empty run starts at a separator token, which the next run skips.
+    return [run, Arr.isReadonlyArrayEmpty(run) ? Arr.drop(later, 1) : later];
+  });
+  const phrases = Arr.filter(
+    Arr.flatMap(runs, namedSearchPhrase),
+    (phrase) => phrase.normalized !== ""
+  );
+  return Arr.dedupeWith(
+    phrases,
+    (left, right) => left.normalized === right.normalized
+  );
 }
 
-/** Adds a named phrase run when it has enough signal to be source-scoping. */
-function appendNamedSearchPhrase({
-  phrases,
-  run,
-  seen,
-}: {
-  phrases: NamedSearchPhrase[];
-  run: string[];
-  seen: Set<string>;
-}) {
-  if (run.length < 2) {
-    return;
+/** Returns a named phrase run when it has enough signal to be source-scoping. */
+function namedSearchPhrase(run: readonly string[]): NamedSearchPhrase[] {
+  if (run.length < 2 || !Arr.some(run, isSpecificTextToken)) {
+    return [];
   }
-
-  if (!run.some(isSpecificTextToken)) {
-    return;
-  }
-
-  const text = run.join(" ");
-  const normalized = normalizeSearchTerm(text);
-
-  if (!(normalized && !seen.has(normalized))) {
-    return;
-  }
-
-  seen.add(normalized);
-  phrases.push({ normalized, text });
+  const text = Arr.join(run, " ");
+  return [{ normalized: normalizeSearchTerm(text), text }];
 }
 
 /** Checks whether a query preserves at least one task-level named phrase. */
@@ -209,7 +199,7 @@ function queryHasNamedPhrase(
 
   const normalizedQuery = normalizeSearchTerm(query);
 
-  return namedPhrases.some((phrase) =>
+  return Arr.some(namedPhrases, (phrase) =>
     ` ${normalizedQuery} `.includes(` ${phrase.normalized} `)
   );
 }
@@ -219,10 +209,11 @@ function preserveScopedQueryContext(
   queries: readonly string[],
   namedPhrases: ReturnType<typeof getNamedSearchPhrases>
 ) {
-  const scopedQueries = queries.filter((query) =>
+  const scopedQueries = Arr.filter(queries, (query) =>
     queryHasNamedPhrase(query, namedPhrases)
   );
-  const droppedQueries = queries.filter(
+  const droppedQueries = Arr.filter(
+    queries,
     (query) => !queryHasNamedPhrase(query, namedPhrases)
   );
   const contextTerms = getDroppedContextTerms(droppedQueries);
@@ -231,7 +222,7 @@ function preserveScopedQueryContext(
     return scopedQueries;
   }
 
-  return scopedQueries.map((query, index) => {
+  return Arr.map(scopedQueries, (query, index) => {
     if (index !== scopedQueries.length - 1) {
       return query;
     }
@@ -242,23 +233,23 @@ function preserveScopedQueryContext(
 
 /** Extracts adjacent date-like context without language-specific month names. */
 function getDroppedContextTerms(queries: readonly string[]) {
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
 
-  return queries.flatMap((query) => {
+  return Arr.flatMap(queries, (query) => {
     const tokens = getSearchTokens(query);
 
-    return tokens.flatMap((text, index) => {
+    return Arr.flatMap(tokens, (text, index) => {
       if (!isContextToken(text, index, tokens)) {
         return [];
       }
 
       const normalized = normalizeSearchTerm(text);
 
-      if (!normalized || seen.has(normalized)) {
+      if (!normalized || MutableHashSet.has(seen, normalized)) {
         return [];
       }
 
-      seen.add(normalized);
+      MutableHashSet.add(seen, normalized);
       return [{ normalized, text }];
     });
   });
@@ -287,7 +278,7 @@ function appendMissingContextTerms(
   contextTerms: ReturnType<typeof getDroppedContextTerms>
 ) {
   const normalizedQuery = normalizeSearchTerm(query);
-  const missingTerms = contextTerms.flatMap((term) => {
+  const missingTerms = Arr.flatMap(contextTerms, (term) => {
     if (normalizedSearchTextHasTerm(normalizedQuery, term)) {
       return [];
     }
@@ -299,23 +290,23 @@ function appendMissingContextTerms(
     return query;
   }
 
-  return `${query} ${missingTerms.join(" ")}`;
+  return `${query} ${Arr.join(missingTerms, " ")}`;
 }
 
 /** Extracts normalized token text from multilingual search input. */
 function getSearchTokens(query: string) {
-  return [...query.matchAll(queryTokenPattern)].map((match) =>
+  return Arr.map([...query.matchAll(queryTokenPattern)], (match) =>
     match[0].replace(tokenBoundaryPattern, "")
   );
 }
 
 /** Removes internal Markdown section labels from executable search text. */
 function getSearchableText(value: string) {
-  const content = value
-    .split(searchableLineBreakPattern)
-    .filter((line) => !line.trimStart().startsWith("#"))
-    .join("\n")
-    .trim();
+  const content = pipe(
+    value.split(searchableLineBreakPattern),
+    Arr.filter((line) => !line.trimStart().startsWith("#")),
+    Arr.join("\n")
+  ).trim();
 
   if (!content) {
     return value;
@@ -336,7 +327,7 @@ function appendSearchQuery({
   text,
 }: {
   maxQueries: number;
-  seen: Set<string>;
+  seen: MutableHashSet.MutableHashSet<string>;
   text: string;
 }) {
   if (!text) {
@@ -345,11 +336,14 @@ function appendSearchQuery({
 
   const key = text.toLocaleLowerCase();
 
-  if (seen.has(key) || seen.size >= maxQueries) {
+  if (
+    MutableHashSet.has(seen, key) ||
+    MutableHashSet.size(seen) >= maxQueries
+  ) {
     return [];
   }
 
-  seen.add(key);
+  MutableHashSet.add(seen, key);
   return [text];
 }
 
@@ -382,7 +376,7 @@ function isDistinctiveNumber(
     return false;
   }
 
-  return tokens.slice(0, index).some(isSpecificTextToken);
+  return Arr.some(tokens.slice(0, index), isSpecificTextToken);
 }
 
 /** Detects nonnumeric terms that are specific enough to anchor a short number. */

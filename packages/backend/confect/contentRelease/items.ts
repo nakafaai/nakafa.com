@@ -26,7 +26,7 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { encodeItemJson } from "@repo/backend/confect/contentRelease/wire";
 import { getConvexSize } from "convex/values";
-import { Clock, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Effect, Schema } from "effect";
 
 /** Decodes one bounded item batch through the shared wire contract. */
 export const decodeBatch = Effect.fn("contentRelease.decodeItemBatch")(
@@ -75,12 +75,13 @@ export const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const { items } = yield* decodeBatch(releaseId, batchIndex, sources);
-    const entries = items.map((item) => ({
+    const entries = Arr.map(items, (item) => ({
       item,
       itemJson: encodeItemJson(item),
     }));
-    const values = entries.map(({ itemJson }) => itemJson);
-    const batchDeletes = items.filter(
+    const values = Arr.map(entries, ({ itemJson }) => itemJson);
+    const batchDeletes = Arr.filter(
+      items,
       ({ change }) => change.operation === "delete"
     ).length;
     const batchUpserts = items.length - batchDeletes;
@@ -93,7 +94,7 @@ export const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(
         `Content release ${releaseId} no longer accepts item batches.`
       );
     }
-    if (items.some(({ index }) => index >= signed.manifest.itemCount)) {
+    if (!Arr.every(items, ({ index }) => index < signed.manifest.itemCount)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Item batch ${batchIndex} exceeds the signed item count.`
@@ -110,7 +111,7 @@ export const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(
       yield* validateStoredBatch(
         existing.length,
         values.length,
-        existing.map(({ itemBatchHash }) => itemBatchHash),
+        Arr.map(existing, ({ itemBatchHash }) => itemBatchHash),
         batchHash,
         releaseId,
         batchIndex

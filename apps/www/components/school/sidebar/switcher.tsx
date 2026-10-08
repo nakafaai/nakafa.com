@@ -35,9 +35,9 @@ import {
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { useConvexAuth } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { useSchool } from "@/lib/school/context";
 
@@ -55,7 +55,8 @@ export function SchoolSwitcher({
   const t = useTranslations("School.Onboarding");
   const router = useRouter();
   const currentSchool = useSchool((state) => state.school);
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const [open, setOpen] = useState(false);
   const pagination = usePaginatedQuery(
     refs.public.schools.queries.getMySchoolsPage,

@@ -10,7 +10,7 @@ import { categorizedArticle } from "@repo/backend/test/article/release";
 import { insertModelBuild } from "@repo/backend/test/content/model";
 import { insertRuntimeArticles } from "@repo/backend/test/content/runtime";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 async function reconcile(
   t: TestConvex<typeof schema>,
@@ -101,9 +101,9 @@ describe("contentRelease/models/article", () => {
     });
     const source = await read(t, "blue");
     const expected = {
-      catalog: source.catalog.map(values),
-      categories: source.categories.map(values),
-      buckets: source.buckets.map(values),
+      catalog: Arr.map(source.catalog, values),
+      categories: Arr.map(source.categories, values),
+      buckets: Arr.map(source.buckets, values),
     };
     expect(await reconcile(t, build)).toBe(
       source.catalog.length + source.categories.length + source.buckets.length
@@ -167,9 +167,9 @@ describe("contentRelease/models/article", () => {
     expect(await reconcile(t, build)).toBe(9);
     const repaired = await read(t, "green");
     expect({
-      catalog: repaired.catalog.map(values),
-      categories: repaired.categories.map(values),
-      buckets: repaired.buckets.map(values),
+      catalog: Arr.map(repaired.catalog, values),
+      categories: Arr.map(repaired.categories, values),
+      buckets: Arr.map(repaired.buckets, values),
     }).toEqual(expected);
     await expect(read(t, "blue")).resolves.toEqual(source);
     expect(await reconcile(t, build)).toBe(0);

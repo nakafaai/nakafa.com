@@ -10,9 +10,7 @@ export const activationResultValidator = Schema.Union([
     receipt: publicationReceiptValidator,
   }),
 ]);
-export type ActivationResult = Schema.Schema.Type<
-  typeof activationResultValidator
->;
+export type ActivationResult = typeof activationResultValidator.Type;
 export const preparationResultValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("completed"),
@@ -21,6 +19,4 @@ export const preparationResultValidator = Schema.Union([
     kind: Schema.Literal("prepared"),
   }),
 ]);
-export type PreparationResult = Schema.Schema.Type<
-  typeof preparationResultValidator
->;
+export type PreparationResult = typeof preparationResultValidator.Type;

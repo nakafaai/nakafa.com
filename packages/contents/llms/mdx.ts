@@ -7,7 +7,7 @@ import {
   getTan,
   ISOSCELES_RIGHT_TRIANGLE_ANGLE,
 } from "@repo/math/angles";
-import { Effect, Option, Predicate, Schema } from "effect";
+import { Array as Arr, Effect, Option, Predicate, Schema } from "effect";
 import type { Parent, Root, RootContent } from "mdast";
 import type {
   MdxJsxAttribute,
@@ -473,8 +473,8 @@ function isMdxElementNode(
 ): node is MdxJsxFlowElement | MdxJsxTextElement {
   return (
     (node.type === "mdxJsxFlowElement" || node.type === "mdxJsxTextElement") &&
-    Array.isArray(node.children) &&
-    Array.isArray(node.attributes)
+    Arr.isArray(node.children) &&
+    Arr.isArray(node.attributes)
   );
 }
 

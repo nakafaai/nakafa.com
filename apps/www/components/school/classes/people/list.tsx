@@ -13,10 +13,10 @@ import {
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { useConvexAuth } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { searchParsers } from "@/lib/nuqs/search";
 import { useClass } from "@/lib/school/classes/context";
@@ -110,7 +110,8 @@ function usePeople(
   const classId = useClass((state) => state.class._id);
   const [{ q }] = useQueryStates(searchParsers);
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const pagination = useStreamPaginatedQuery(
     refs.public.classes.roster.list,
     isAuthenticated && !isLoading

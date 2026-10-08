@@ -17,7 +17,7 @@ import {
   seedDeletionUser,
 } from "@repo/backend/test/deletion/seed";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 8, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -345,7 +345,7 @@ describe("auth/deletion/prepare", () => {
   );
   it("prepares more owned schools than one transaction batch", async () => {
     const t = convexTest(schema, convexModules);
-    const continuedPreparations: Doc<"accountDeletionPreparations">[] = [];
+    let continuedPreparations: Doc<"accountDeletionPreparations">[] = [];
     let currentTime = NOW;
     const seeded = await t.mutation(async (ctx) => {
       const ownerId = await seedDeletionUser(ctx, "many-schools-owner");
@@ -378,7 +378,10 @@ describe("auth/deletion/prepare", () => {
           ctx.db.query("accountDeletionPreparations").unique()
         );
         if (stepOutcome === "continue" && preparation) {
-          continuedPreparations.push(preparation);
+          continuedPreparations = Arr.append(
+            continuedPreparations,
+            preparation
+          );
         }
       }
     );

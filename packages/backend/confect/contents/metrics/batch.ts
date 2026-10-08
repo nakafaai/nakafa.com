@@ -6,7 +6,7 @@ import {
   type LearningPopularityWindow,
   learningPopularityWindowValues,
 } from "@repo/backend/confect/contents/popularity";
-import { Struct } from "effect";
+import { Array as Arr, Struct } from "effect";
 
 type QueuedLearningEngagement = Docs["learningEngagementQueue"];
 type AnalyticsGraphRef = Pick<
@@ -70,14 +70,14 @@ export function groupMetricsQueueItems(
     ]);
     const groups = identities.get(key) ?? [];
     const current = groups.at(-1);
-    if (current && current.length < groupSize) {
-      current.push(queueItem);
-    } else {
-      groups.push([queueItem]);
-    }
-    identities.set(key, groups);
+    identities.set(
+      key,
+      current && current.length < groupSize
+        ? Arr.append(Arr.dropRight(groups, 1), Arr.append(current, queueItem))
+        : Arr.append(groups, [queueItem])
+    );
   }
-  return [...identities.values()].flat();
+  return Arr.flatten([...identities.values()]);
 }
 
 /** Creates the first aggregate row for one queued engagement item. */

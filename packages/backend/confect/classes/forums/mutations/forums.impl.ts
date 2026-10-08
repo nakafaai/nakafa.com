@@ -15,7 +15,7 @@ import { ForumError } from "@repo/backend/confect/classes/forums/spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { isAdmin } from "@repo/backend/confect/schools/membership";
-import { Clock, Effect, Layer } from "effect";
+import { Array as Arr, Clock, Effect, Layer } from "effect";
 
 /**
  * Create a new forum inside a class.
@@ -53,7 +53,7 @@ const createForum = FunctionImpl.make(
     if (
       !(
         canCreateManagedForumTag ||
-        STUDENT_FORUM_TAGS.some((tag) => tag === args.tag)
+        Arr.some(STUDENT_FORUM_TAGS, (tag) => tag === args.tag)
       )
     ) {
       return yield* new ForumError({

@@ -1,11 +1,19 @@
 import { getLatestUserText } from "@repo/backend/confect/nina/prompt/user";
 import type { ModelMessage } from "ai";
-import { Schema, Struct } from "effect";
+import {
+  Array as Arr,
+  HashMap,
+  HashSet,
+  MutableHashSet,
+  Option,
+  Schema,
+  Struct,
+} from "effect";
 import { ParseResultType, parseDomain } from "parse-domain";
 
 const whitespacePattern = /\s+/;
-const sourceSeparators = new Set([",", ";"]);
-const boundaryPunctuation = new Set([
+const sourceSeparators = HashSet.make(",", ";");
+const boundaryPunctuation = HashSet.make(
   '"',
   "'",
   "(",
@@ -22,35 +30,35 @@ const boundaryPunctuation = new Set([
   "]",
   "`",
   "{",
-  "}",
-]);
-const pairedBoundaryPunctuation = new Map([
+  "}"
+);
+const pairedBoundaryPunctuation = HashMap.make(
   [")", "("],
   ["]", "["],
-  ["}", "{"],
-]);
+  ["}", "{"]
+);
 /** Runtime contract for one external source reference extracted from user text. */
 export const SourceReferenceSchema = Schema.Struct({
   href: Schema.String,
   hostname: Schema.String,
   text: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type SourceReference = Schema.Schema.Type<typeof SourceReferenceSchema>;
+export type SourceReference = typeof SourceReferenceSchema.Type;
 /**
  * Extracts every unique external source reference from plain user text.
  */
 export function getSourceReferences(text: string) {
-  const seen = new Set<string>();
-  return text.split(whitespacePattern).flatMap((token) =>
-    splitSourceToken(token).flatMap((segment) => {
+  const seen = MutableHashSet.empty<string>();
+  return Arr.flatMap(text.split(whitespacePattern), (token) =>
+    Arr.flatMap(splitSourceToken(token), (segment) => {
       const reference = parseSourceReference(segment);
       if (!reference) {
         return [];
       }
-      if (seen.has(reference.href)) {
+      if (MutableHashSet.has(seen, reference.href)) {
         return [];
       }
-      seen.add(reference.href);
+      MutableHashSet.add(seen, reference.href);
       return [reference];
     })
   );
@@ -107,7 +115,7 @@ function splitSourceToken(token: string): string[] {
  */
 function findSourceSeparator(token: string) {
   for (let index = 0; index < token.length; index += 1) {
-    if (!sourceSeparators.has(token[index])) {
+    if (!HashSet.has(sourceSeparators, token[index])) {
       continue;
     }
     if (startsWithSourceReference(token.slice(index + 1))) {
@@ -126,7 +134,7 @@ function startsWithSourceReference(text: string) {
  */
 function getLeadingSegment(text: string) {
   for (let index = 0; index < text.length; index += 1) {
-    if (sourceSeparators.has(text[index])) {
+    if (HashSet.has(sourceSeparators, text[index])) {
       return text.slice(0, index);
     }
   }
@@ -179,7 +187,7 @@ function createSourceReference(text: string, url: URL) {
 function trimBoundaryPunctuation(token: string) {
   let start = 0;
   let end = token.length;
-  while (start < end && boundaryPunctuation.has(token[start])) {
+  while (start < end && HashSet.has(boundaryPunctuation, token[start])) {
     start += 1;
   }
   while (end > start && shouldTrimTrailingBoundary(token, start, end)) {
@@ -192,10 +200,12 @@ function trimBoundaryPunctuation(token: string) {
  */
 function shouldTrimTrailingBoundary(token: string, start: number, end: number) {
   const character = token[end - 1];
-  if (!boundaryPunctuation.has(character)) {
+  if (!HashSet.has(boundaryPunctuation, character)) {
     return false;
   }
-  const opener = pairedBoundaryPunctuation.get(character);
+  const opener = Option.getOrUndefined(
+    HashMap.get(pairedBoundaryPunctuation, character)
+  );
   if (!opener) {
     return true;
   }

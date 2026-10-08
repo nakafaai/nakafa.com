@@ -5,6 +5,5 @@ export const tryoutAttemptAccessSourceKindValidator = Schema.Literals([
   tryoutAttemptAccessSourceKindFree,
   tryoutAttemptAccessSourceKindSubscription,
 ]);
-export type TryoutAttemptAccessSourceKind = Schema.Schema.Type<
-  typeof tryoutAttemptAccessSourceKindValidator
->;
+export type TryoutAttemptAccessSourceKind =
+  typeof tryoutAttemptAccessSourceKindValidator.Type;

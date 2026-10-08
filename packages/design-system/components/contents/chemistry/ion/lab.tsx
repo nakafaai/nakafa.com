@@ -10,19 +10,18 @@ import {
   SODIUM_CATION_ID,
 } from "@repo/design-system/components/contents/chemistry/ion/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -59,13 +58,10 @@ export function IonLab({ title, description, labels }: IonLabProps) {
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
 
-      <CardContent className="flex flex-col gap-5">
+      <VisualCardBody className="flex flex-col gap-5">
         <ToggleGroup
           aria-label={labels.chooseIon}
           gridColumns="4"
@@ -136,9 +132,9 @@ export function IonLab({ title, description, labels }: IonLabProps) {
             value={<InlineMath math={`e^-: ${electronFlowMath}`} />}
           />
         </dl>
-      </CardContent>
+      </VisualCardBody>
 
-      <CardFooter className="border-t">
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <IonFact
             label={labels.protons}
@@ -161,8 +157,9 @@ export function IonLab({ title, description, labels }: IonLabProps) {
             }
           />
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

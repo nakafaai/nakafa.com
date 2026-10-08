@@ -3,6 +3,7 @@
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { VisualCardScene } from "@repo/design-system/components/visual/card";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 
@@ -34,7 +35,7 @@ export function DeferredMathScene(props: MathSceneProps) {
   const [shouldRender, setShouldRender] = useState(false);
 
   return (
-    <div className="relative" data-slot="math-scene">
+    <VisualCardScene className="relative" data-slot="math-scene">
       <Intersection
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -42,6 +43,6 @@ export function DeferredMathScene(props: MathSceneProps) {
         onIntersect={() => setShouldRender(true)}
       />
       {shouldRender ? <MathScene {...props} /> : <ScenePlaceholder />}
-    </div>
+    </VisualCardScene>
   );
 }

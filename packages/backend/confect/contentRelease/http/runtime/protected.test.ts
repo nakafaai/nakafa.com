@@ -1,11 +1,12 @@
 import { RegisteredFunction } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { HttpRouter, HttpServer } from "effect/http";
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { MAX_PROTECTED_RUNTIME_REQUEST_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
+import { ProtectedContentRuntimeRequestSchema } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { protectedRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/protected";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
@@ -31,6 +32,14 @@ const request = {
   ],
   snapshotId: digest,
 };
+/** Encodes one protected request through the contract, so a malformed fixture fails here. */
+const requestJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(ProtectedContentRuntimeRequestSchema)
+);
+/** Encodes a body the contract rejects, keeping its exact invalid wire bytes. */
+const malformedJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
 /** Sends one request through the registered protected Convex route. */
@@ -94,7 +103,7 @@ describe("protected content runtime HTTP route", () => {
                     `https://test.invalid${PROTECTED_CONTENT_RUNTIME_PATH}`,
                     {
                       method: "POST",
-                      body: JSON.stringify(request),
+                      body: requestJson(request),
                       headers: {
                         "content-type": "application/json",
                         "x-nakafa-content-token": RUNTIME_TOKEN,
@@ -127,7 +136,7 @@ describe("protected content runtime HTTP route", () => {
     const response = await post(
       createConvexTestWithBetterAuth(),
       PROTECTED_CONTENT_RUNTIME_PATH,
-      JSON.stringify(request)
+      requestJson(request)
     );
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
@@ -141,7 +150,7 @@ describe("protected content runtime HTTP route", () => {
     const response = await post(
       target,
       PROTECTED_CONTENT_RUNTIME_PATH,
-      JSON.stringify(request)
+      requestJson(request)
     );
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({
@@ -158,13 +167,13 @@ describe("protected content runtime HTTP route", () => {
     const unauthorized = await post(
       target,
       PROTECTED_CONTENT_RUNTIME_PATH,
-      JSON.stringify(request),
+      requestJson(request),
       "wrong-token"
     );
     const malformed = await post(
       target,
       PROTECTED_CONTENT_RUNTIME_PATH,
-      JSON.stringify({
+      malformedJson({
         ...request,
         selectors: [],
       })

@@ -29,7 +29,7 @@ const quranPassage = refs.public.contentRelease.quran.passage;
 export const getNakafaQuranReference = Effect.fn(
   "agent.getNakafaQuranReference"
 )(function* (input: unknown) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const request = yield* readNakafaQuranRequest(input);
   const result = yield* runQuery(quranPassage, referenceArgs(request)).pipe(
     Effect.mapError(
@@ -54,7 +54,7 @@ export const getNakafaQuranReference = Effect.fn(
 /** Decodes and bounds one request against its signed catalog. */
 const readNakafaQuranRequest = Effect.fn("agent.readNakafaQuranRequest")(
   function* (input: unknown) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const parsed = yield* decodeAgentInput(
       NakafaAgentQuranReferenceOptionsSchema,
       input,

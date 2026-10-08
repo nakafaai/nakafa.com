@@ -1,8 +1,13 @@
 import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
+import { Array as Arr, pipe } from "effect";
 
 /** Renders structured research findings as markdown with inline citations. */
 export function formatResearchOutput(output: ResearchOutput) {
-  const findings = output.findings.map(formatFinding).join("\n\n");
+  const findings = pipe(
+    output.findings,
+    Arr.map(formatFinding),
+    Arr.join("\n\n")
+  );
   const limitations = formatLimitations(output.limitations);
 
   if (!findings) {
@@ -25,18 +30,11 @@ function formatFinding(finding: ResearchOutput["findings"][number]) {
 function formatCitations(
   citations: ResearchOutput["findings"][number]["citations"]
 ) {
-  const seen = new Set<string>();
-
-  return citations
-    .flatMap((citation) => {
-      if (seen.has(citation.url)) {
-        return [];
-      }
-
-      seen.add(citation.url);
-      return [`[${citation.title}](${citation.url})`];
-    })
-    .join(" ");
+  return pipe(
+    Arr.dedupeWith(citations, (left, right) => left.url === right.url),
+    Arr.map((citation) => `[${citation.title}](${citation.url})`),
+    Arr.join(" ")
+  );
 }
 
 /** Renders caveats without pretending they are sourced claims. */
@@ -45,5 +43,9 @@ function formatLimitations(limitations: ResearchOutput["limitations"]) {
     return "";
   }
 
-  return limitations.map((limitation) => `- ${limitation}`).join("\n");
+  return pipe(
+    limitations,
+    Arr.map((limitation) => `- ${limitation}`),
+    Arr.join("\n")
+  );
 }

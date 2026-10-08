@@ -11,17 +11,16 @@ import {
 import { DaltonEvidenceScene } from "@repo/design-system/components/contents/chemistry/dalton-evidence/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -56,12 +55,9 @@ export function DaltonEvidenceLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-5">
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody className="flex flex-col gap-5">
         <ToggleGroup
           aria-label={labels.chooseMode}
           gridColumns="3"
@@ -84,9 +80,9 @@ export function DaltonEvidenceLab({
           beforeTitle={selectedLabels.beforeTitle}
           expression={selectedLabels.expression}
         />
-      </CardContent>
+      </VisualCardBody>
 
-      <CardFooter className="border-t">
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           {selectedLabels.facts.map((fact) => (
             <LabFact
@@ -96,8 +92,9 @@ export function DaltonEvidenceLab({
             />
           ))}
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

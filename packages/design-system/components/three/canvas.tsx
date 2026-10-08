@@ -1,7 +1,7 @@
 "use client";
 
 import { Sad02Icon } from "@hugeicons/core-free-icons";
-import { useIntersection } from "@mantine/hooks";
+import { useIntersection, useMergedRef } from "@mantine/hooks";
 import { AdaptiveDpr } from "@react-three/drei";
 import {
   Canvas,
@@ -20,7 +20,13 @@ import { getPowerPreference } from "@repo/design-system/lib/device";
 import { cn } from "cn";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 function ErrorFallback({
   error,
@@ -103,12 +109,27 @@ function SceneTime() {
 }
 
 /**
+ * Calls back whenever an element of the page turns inert or interactive
+ * again, such as the page behind a visual card shown full screen.
+ */
+function subscribeToInert(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.body, {
+    attributeFilter: ["inert"],
+    subtree: true,
+  });
+  return () => observer.disconnect();
+}
+
+/**
  * Shared Three.js canvas with a WebGL fallback and render error boundary.
  *
  * Selects an appropriate GPU power preference and lets React Three Fiber own
  * capability detection through its Canvas fallback. A canvas farther than
  * `THREE_RENDER_MARGIN` from the viewport stops rendering and resumes when it
- * returns, so animated scenes cost nothing while nobody can see them.
+ * returns, so animated scenes cost nothing while nobody can see them. A canvas
+ * in an inert part of the page, such as the page behind a visual card shown
+ * full screen, stops the same way.
  *
  * @param children - React Three.js children to render
  * @param frameloop - Frame update strategy ("always" | "demand")
@@ -130,8 +151,15 @@ function ThreeCanvasComponent({
   const { entry, ref } = useIntersection<HTMLDivElement>({
     rootMargin: `${THREE_RENDER_MARGIN}px`,
   });
+  const [frame, setFrame] = useState<HTMLDivElement | null>(null);
+  const frameRef = useMergedRef(ref, setFrame);
   // A canvas renders until the observer first places it.
   const nearViewport = entry?.isIntersecting ?? true;
+  const behindInert = useSyncExternalStore(
+    subscribeToInert,
+    () => Boolean(frame?.closest("[inert]")),
+    () => false
+  );
 
   /**
    * Next.js Cache Components can preserve recently visited routes with React
@@ -152,7 +180,7 @@ function ThreeCanvasComponent({
   );
 
   return (
-    <div className="size-full rounded-[inherit]" ref={ref}>
+    <div className="size-full rounded-[inherit]" ref={frameRef}>
       <ErrorBoundary
         fallbackRender={({ error, resetErrorBoundary }) => (
           <ErrorFallback
@@ -176,7 +204,7 @@ function ThreeCanvasComponent({
               />
             </div>
           }
-          frameloop={nearViewport ? frameloop : "never"}
+          frameloop={nearViewport && !behindInert ? frameloop : "never"}
           gl={{
             antialias: true,
             powerPreference,

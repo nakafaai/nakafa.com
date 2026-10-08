@@ -23,15 +23,15 @@ import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { Slider } from "@repo/design-system/components/ui/slider";
+import {
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { Effect } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -65,15 +65,13 @@ export function VectorConceptLab({
   }
 
   return (
-    <Card className="overflow-hidden content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <section
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody className="flex flex-col gap-4">
+        <VisualCardScene
           aria-label={labels.bridgeView}
           className={threeSceneFrameVariants()}
+          render={<section />}
         >
           <ThreeCanvas frameloop="demand">
             <Suspense>
@@ -100,7 +98,7 @@ export function VectorConceptLab({
               />
             </Suspense>
           </ThreeCanvas>
-        </section>
+        </VisualCardScene>
 
         <div className="flex flex-col gap-3 pt-2">
           <div className="flex items-center justify-between gap-4 text-sm">
@@ -118,15 +116,16 @@ export function VectorConceptLab({
             value={loadX}
           />
         </div>
-      </CardContent>
-      <CardFooter className="border-t">
+      </VisualCardBody>
+      <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <LabFact label={labels.magnitude} value={labels.magnitudeValue} />
           <LabFact label={labels.direction} value={labels.directionValue} />
           <LabFact label={labels.netIdea} value={labels.netIdeaValue} />
         </dl>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 

@@ -11,7 +11,7 @@ import {
   makeQuranSearch,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const snapshotId = Sha256HashSchema.make(`sha256:${"2".repeat(64)}`);
 
@@ -34,7 +34,7 @@ describe("contentRelease/quran/facts", () => {
         bindQuranRow(snapshotId, payload)
       );
 
-      expect(records.map(quranRowFacts)).toEqual([
+      expect(Arr.map(records, quranRowFacts)).toEqual([
         {
           identity:
             "attribution:tanzil-text:tanzil-metadata:kemenag-names:bubenheim-names:quranenc-english:quranenc-indonesian:quranenc-german:quranenc-tafsir:mokhtasar-english:mokhtasar-german",

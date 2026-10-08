@@ -12,7 +12,7 @@ import {
   NinaTurnError,
 } from "@repo/backend/confect/nina/turns.spec";
 import type { ModelMessage } from "ai";
-import { Effect, type Schema } from "effect";
+import { Effect } from "effect";
 
 const retryUnavailable = () =>
   new NinaTurnError({
@@ -24,7 +24,7 @@ const retryUnavailable = () =>
 export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   user: Docs["users"],
   chat: Docs["chats"] | null,
-  input: Schema.Schema.Type<typeof NinaInput>,
+  input: typeof NinaInput.Type,
   capturedAt: string
 ) {
   if (input.kind === "message") {

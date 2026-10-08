@@ -97,7 +97,11 @@ describe("immutable rollback transition reconstruction", () => {
             throw new Error("Expected a prior content head.");
           }
           await ctx.db.patch("contentItems", row._id, {
-            rollbackJson: JSON.stringify({
+            // Narrowing does not tie each head to its state, so the contract
+            // codec validates this corrupted runtime value instead.
+            rollbackJson: Schema.encodeUnknownSync(
+              Schema.fromJsonString(RollbackSnapshotEntrySchema)
+            )({
               ...snapshot,
               snapshot: {
                 ...snapshot.snapshot,

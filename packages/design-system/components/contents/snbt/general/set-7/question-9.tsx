@@ -15,12 +15,13 @@ import {
 } from "@repo/design-system/components/evilcharts/charts/line-chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { type ReactNode, useMemo } from "react";
 
@@ -85,64 +86,68 @@ export function VisitorChart({
   );
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilLineChart
-          className="aspect-video"
-          config={chartConfig}
-          data={data}
-        >
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="day"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis
-            axisLine={false}
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-              offset: 10,
-              style: { textAnchor: "middle" },
-            }}
-            tickLine={false}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Legend />
-          <Line
-            dataKey="library"
-            lineProps={{
-              ...(VISITOR_CUES.library.strokeDasharray === undefined
-                ? {}
-                : { strokeDasharray: VISITOR_CUES.library.strokeDasharray }),
-              strokeWidth: 2,
-            }}
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilLineChart
+            className="aspect-video"
+            config={chartConfig}
+            data={data}
           >
-            <Dot variant={VISITOR_CUES.library.dot} />
-            <ActiveDot variant={VISITOR_CUES.library.activeDot} />
-          </Line>
-          <Line
-            dataKey="laboratory"
-            lineProps={{
-              ...(VISITOR_CUES.laboratory.strokeDasharray === undefined
-                ? {}
-                : { strokeDasharray: VISITOR_CUES.laboratory.strokeDasharray }),
-              strokeWidth: 2,
-            }}
-          >
-            <Dot variant={VISITOR_CUES.laboratory.dot} />
-            <ActiveDot variant={VISITOR_CUES.laboratory.activeDot} />
-          </Line>
-        </EvilLineChart>
-      </CardContent>
-    </Card>
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="day"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              axisLine={false}
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+                offset: 10,
+                style: { textAnchor: "middle" },
+              }}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Legend />
+            <Line
+              dataKey="library"
+              lineProps={{
+                ...(VISITOR_CUES.library.strokeDasharray === undefined
+                  ? {}
+                  : { strokeDasharray: VISITOR_CUES.library.strokeDasharray }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={VISITOR_CUES.library.dot} />
+              <ActiveDot variant={VISITOR_CUES.library.activeDot} />
+            </Line>
+            <Line
+              dataKey="laboratory"
+              lineProps={{
+                ...(VISITOR_CUES.laboratory.strokeDasharray === undefined
+                  ? {}
+                  : {
+                      strokeDasharray: VISITOR_CUES.laboratory.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={VISITOR_CUES.laboratory.dot} />
+              <ActiveDot variant={VISITOR_CUES.laboratory.activeDot} />
+            </Line>
+          </EvilLineChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

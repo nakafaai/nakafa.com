@@ -13,6 +13,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { Array as Arr } from "effect";
 
 const FORUM_CREATED_AT = Date.UTC(2026, 3, 18, 8, 0, 0);
 async function insertMemberships(
@@ -191,8 +192,8 @@ describe("classes/forums/queries/pages", () => {
       .query(api.classes.forums.queries.pages.getForumPosts, {
         forumId,
       });
-    expect(result.map((post) => post.sequence)).toEqual([1, 2, 3, 4]);
-    expect(result.map((post) => post.isUnread)).toEqual([
+    expect(Arr.map(result, (post) => post.sequence)).toEqual([1, 2, 3, 4]);
+    expect(Arr.map(result, (post) => post.isUnread)).toEqual([
       false,
       false,
       true,
@@ -227,7 +228,7 @@ describe("classes/forums/queries/pages", () => {
       .query(api.classes.forums.queries.pages.getForumPosts, {
         forumId,
       });
-    expect(result.map((post) => post.isUnread)).toEqual([false, false]);
+    expect(Arr.map(result, (post) => post.isUnread)).toEqual([false, false]);
   });
   it("returns only the latest transcript window while preserving ascending order", async () => {
     const { identity, t } = await seedForum();

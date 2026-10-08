@@ -27,7 +27,7 @@ const FailureSchema = Schema.Literals([
   "mixed-production",
   "untrusted-production",
 ]);
-type Failure = Schema.Schema.Type<typeof FailureSchema>;
+type Failure = typeof FailureSchema.Type;
 
 const messages = {
   "anonymous-production":

@@ -21,7 +21,7 @@ describe("llms constants", () => {
     vi.resetModules();
 
     await expect(import("@/lib/llms/constants")).rejects.toThrow(
-      "NEXT_PUBLIC_APP_URL is required."
+      "Invalid environment variables"
     );
   });
 });

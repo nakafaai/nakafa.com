@@ -22,7 +22,7 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpe
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { registerWorkflow } from "@repo/backend/test/workflow";
-import { Data, Effect } from "effect";
+import { Array as Arr, Data, Effect, MutableRef } from "effect";
 
 const NOW = Date.UTC(2026, 8, 27);
 class WorkflowUnavailable extends Data.TaggedError("WorkflowUnavailable")<{
@@ -44,20 +44,18 @@ afterEach(() => {
   vi.useRealTimers();
 });
 async function admit() {
-  const requests: {
-    body: string;
-    method: string;
-    url: string;
-  }[] = [];
+  const sent = MutableRef.make<
+    readonly { body: string; method: string; url: string }[]
+  >([]);
   vi.stubGlobal(
     "fetch",
     vi.fn<typeof fetch>(async (input, init) => {
       const request = new Request(input, init);
-      requests.push({
-        body: await request.text(),
-        method: request.method,
-        url: request.url,
-      });
+      const body = await request.text();
+      MutableRef.update(
+        sent,
+        Arr.append({ body, method: request.method, url: request.url })
+      );
       return Response.json({
         deletion_errors: [],
         events_queued_for_deletion: true,
@@ -91,7 +89,7 @@ async function admit() {
   assert(journal);
   return {
     t,
-    requests,
+    requests: () => MutableRef.get(sent),
     userId,
     workflowId: journal.workflowId,
   };
@@ -118,14 +116,15 @@ async function readJobs(
   fixture: Awaited<ReturnType<typeof admit>>,
   name: string
 ) {
-  return (
+  return Arr.filter(
     await fixture.t.query((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
-    )
-  ).filter((job) => job.name === `privacy/recovery:${name}`);
+    ),
+    (job) => job.name === `privacy/recovery:${name}`
+  );
 }
 async function expectErased(fixture: Awaited<ReturnType<typeof admit>>) {
-  expect(fixture.requests).toEqual([
+  expect(fixture.requests()).toEqual([
     {
       body: JSON.stringify({
         delete_events: true,
@@ -198,11 +197,11 @@ describe("privacy workflow recovery", () => {
       await fixture.t.finishAllScheduledFunctions(vi.runAllTimers);
       await expectErased(fixture);
       const jobs = await readJobs(fixture, "retryCleanupWorkflow");
-      expect(jobs.map((job) => job.scheduledTime)).toEqual([
+      expect(Arr.map(jobs, (job) => job.scheduledTime)).toEqual([
         NOW + WORKFLOW_RECOVERY_DELAY_MS,
         NOW + 2 * WORKFLOW_RECOVERY_DELAY_MS,
       ]);
-      expect(jobs.every((job) => job.state.kind === "success")).toBe(true);
+      expect(Arr.every(jobs, (job) => job.state.kind === "success")).toBe(true);
     }
   );
   it("retries journal release without rerunning external erasure", async () => {
@@ -222,7 +221,7 @@ describe("privacy workflow recovery", () => {
     expect(jobs).toHaveLength(2);
     assert(failedAt !== undefined);
     expect(jobs[1]?.scheduledTime).toBe(failedAt + WORKFLOW_RECOVERY_DELAY_MS);
-    expect(jobs.every((job) => job.state.kind === "success")).toBe(true);
+    expect(Arr.every(jobs, (job) => job.state.kind === "success")).toBe(true);
   });
   it.each(["recovery", "journal"] as const)(
     "preserves the journal and reports a typed failure when %s cannot be rescheduled",

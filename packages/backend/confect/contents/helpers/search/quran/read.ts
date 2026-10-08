@@ -18,11 +18,9 @@ import { quranLayer } from "@repo/backend/content/quran/confect";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { readQuranRow } from "@repo/backend/content/quran/row";
 import { authenticateQuranSearchHit } from "@repo/backend/content/quran/search";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 interface SignedQuranSearch {
   readonly index: number;
   readonly payload: typeof QuranSearchRowSchema.Type;
@@ -56,7 +54,7 @@ export const readSignedQuranSearchDocuments = Effect.fn(
       rows,
       args.locale
     );
-    return authenticated.map(({ document }) => document);
+    return Arr.map(authenticated, ({ document }) => document);
   }
   const { exactSurahNumbers, textQueries } = partitionQuranQueries(
     args.locale,
@@ -82,7 +80,7 @@ export const readSignedQuranSearchDocuments = Effect.fn(
     }
   );
   const exactIdentities = new Set(
-    exactSurahNumbers.map((surahNumber) =>
+    Arr.map(exactSurahNumbers, (surahNumber) =>
       quranSearchIdentity(args.locale, surahNumber)
     )
   );
@@ -100,11 +98,11 @@ export const readSignedQuranSearchDocuments = Effect.fn(
     args.locale
   );
   const documentsByIdentity = new Map(
-    authenticated.map(({ document, row }) => [row.identity, document])
+    Arr.map(authenticated, ({ document, row }) => [row.identity, document])
   );
-  const rankedGroups = groups.map(({ query, rows: queryRows }) =>
+  const rankedGroups = Arr.map(groups, ({ query, rows: queryRows }) =>
     rankContentSearchDocuments(
-      queryRows.flatMap((row) => {
+      Arr.flatMap(queryRows, (row) => {
         const document = documentsByIdentity.get(row.identity);
         return document ? [document] : [];
       }),
@@ -142,24 +140,24 @@ function partitionQuranQueries(
   appLocale: ContentSearchInput["locale"],
   queryTexts: readonly string[]
 ) {
-  const exactSurahNumbers: number[] = [];
+  let exactSurahNumbers: number[] = [];
   const seenExact = new Set<number>();
-  const textQueries: string[] = [];
+  let textQueries: string[] = [];
   for (const queryText of queryTexts) {
     const route = getExactRouteQuery(appLocale, queryText);
     if (!route) {
-      textQueries.push(queryText);
+      textQueries = Arr.append(textQueries, queryText);
       continue;
     }
     const surahNumber = getExactQuranSurah(route);
     if (Option.isNone(surahNumber)) {
-      textQueries.push(getRouteSearchText(queryText));
+      textQueries = Arr.append(textQueries, getRouteSearchText(queryText));
       continue;
     }
     if (seenExact.has(surahNumber.value)) {
       continue;
     }
-    exactSurahNumbers.push(surahNumber.value);
+    exactSurahNumbers = Arr.append(exactSurahNumbers, surahNumber.value);
     seenExact.add(surahNumber.value);
   }
   return {

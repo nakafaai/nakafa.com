@@ -26,7 +26,7 @@ import {
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
 import { activateTryoutStartSource } from "@repo/backend/test/tryout/source";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const NOW = 1_798_752_000_000;
 const PREFERENCE_APP_LOCALES = Schema.decodeSync(ActiveAppLocaleListSchema)([
@@ -106,7 +106,7 @@ describe("learningPreferences", () => {
             locale: "id",
           })
         );
-        expect(programs.map((program) => program.key)).toEqual([
+        expect(Arr.map(programs, (program) => program.key)).toEqual([
           "merdeka",
           "cambridge-international",
           "singapore-moe",

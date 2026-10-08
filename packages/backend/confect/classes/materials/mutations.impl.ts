@@ -142,7 +142,7 @@ const updateMaterialGroup = FunctionImpl.make(
 
       // Cancel existing job if status changed or time changed
       if (needsCancel && previousJobId) {
-        yield* Effect.promise(async () => ctx.scheduler.cancel(previousJobId));
+        yield* Effect.promise(() => ctx.scheduler.cancel(previousJobId));
         scheduledJobId = undefined;
       }
 
@@ -231,7 +231,7 @@ const deleteMaterialGroup = FunctionImpl.make(
       });
       const previousJobId = group.scheduledJobId;
       if (group.status === "scheduled" && previousJobId) {
-        yield* Effect.promise(async () => ctx.scheduler.cancel(previousJobId));
+        yield* Effect.promise(() => ctx.scheduler.cancel(previousJobId));
       }
 
       // Triggers drain child groups and maintain the parent count.

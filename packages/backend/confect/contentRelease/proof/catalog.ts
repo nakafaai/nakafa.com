@@ -1,4 +1,7 @@
-import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
+import {
+  type ContentHead,
+  ContentHeadSchema,
+} from "@nakafa/aksara-contracts/release/head";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -11,7 +14,10 @@ import {
 } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { hasProofTransactionHeadroom } from "@repo/backend/confect/contentRelease/proof/budget";
-import type { catalogCursorValidator } from "@repo/backend/confect/contentRelease/proof/catalog.spec";
+import {
+  type catalogCursorValidator,
+  catalogPageValidator,
+} from "@repo/backend/confect/contentRelease/proof/catalog.spec";
 import {
   completedReceipt,
   stagedEvidence,
@@ -22,13 +28,14 @@ import {
 } from "@repo/backend/confect/contentRelease/spec";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolveContentHead } from "@repo/backend/content/publication/projection";
-import { Effect, type Schema } from "effect";
-export type CatalogCursor = Schema.Schema.Type<typeof catalogCursorValidator>;
-export interface CatalogPage {
-  readonly done: boolean;
-  readonly heads: readonly ContentHead[];
-  readonly nextCursor: CatalogCursor | null;
-}
+import { Array as Arr, Effect, Schema } from "effect";
+export type CatalogCursor = typeof catalogCursorValidator.Type;
+/** Keeps the contract head element type that stream consumers already decode. */
+const CatalogPageSchema = Schema.Struct({
+  ...catalogPageValidator.fields,
+  heads: Schema.Array(ContentHeadSchema),
+});
+export type CatalogPage = typeof CatalogPageSchema.Type;
 
 /** Proves one staged release still extends its exact durable base slot. */
 export const validateBase = Effect.fn("contentRelease.validateCatalogBase")(
@@ -146,8 +153,7 @@ export const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(
     const release = yield* catalogRelease(releaseId);
     const stored = yield* loadCatalogKeys(cursor);
     const keys = stored.slice(0, PROOF_PAGE_LIMIT);
-    const heads: (ContentHead &
-      Schema.Schema.Type<typeof contentHeadValidator>)[] = [];
+    let heads: (ContentHead & typeof contentHeadValidator.Type)[] = [];
     let nextCursor = cursor;
     let processed = 0;
     for (const key of keys) {
@@ -159,7 +165,7 @@ export const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(
       if (head) {
         // 128 schema-bounded heads fit below 652 KiB, within the proof ceiling.
         const { publicPath, ...fields } = head;
-        heads.push({
+        heads = Arr.append(heads, {
           ...fields,
           ...(publicPath === undefined
             ? {}

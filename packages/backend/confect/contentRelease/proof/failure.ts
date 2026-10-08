@@ -10,24 +10,24 @@ import {
   SigningKeyResolutionError,
 } from "@nakafa/aksara-contracts/signature/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Predicate } from "effect";
+import { Predicate, Schema } from "effect";
 
 /** Recognizes exact contract errors caused by unsupported trust or rendering. */
 function isUnsupported(error: unknown) {
   return (
-    error instanceof SigningKeyNotFoundError ||
-    error instanceof SigningKeyResolutionError ||
-    error instanceof PublicKeyParseError ||
-    error instanceof PublicKeyTypeError ||
-    error instanceof ArtifactRendererComponentMissingError
+    Schema.is(SigningKeyNotFoundError)(error) ||
+    Schema.is(SigningKeyResolutionError)(error) ||
+    Schema.is(PublicKeyParseError)(error) ||
+    Schema.is(PublicKeyTypeError)(error) ||
+    Schema.is(ArtifactRendererComponentMissingError)(error)
   );
 }
 
 /** Recognizes exact shared-contract size failures without tag heuristics. */
 function isSize(error: unknown) {
   return (
-    error instanceof ArtifactVerificationByteLimitError ||
-    error instanceof ArtifactPayloadFieldByteLimitError
+    Schema.is(ArtifactVerificationByteLimitError)(error) ||
+    Schema.is(ArtifactPayloadFieldByteLimitError)(error)
   );
 }
 
@@ -42,7 +42,7 @@ function readContractTag(error: unknown) {
 
 /** Maps one concrete Aksara contract failure into publication semantics. */
 export function contractFailure(error: unknown) {
-  if (error instanceof ReleaseError) {
+  if (Schema.is(ReleaseError)(error)) {
     return error;
   }
   let code: ReleaseError["code"] = "CONTENT_RELEASE_INTEGRITY";

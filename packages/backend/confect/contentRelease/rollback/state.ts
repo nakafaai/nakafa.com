@@ -2,10 +2,7 @@ import {
   type ContentProjection,
   canonicalizeContentProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
-import {
-  type ContentChange,
-  ContentUpsertSchema,
-} from "@nakafa/aksara-contracts/release";
+import { ContentUpsertSchema } from "@nakafa/aksara-contracts/release";
 import {
   type RollbackRecord,
   type RollbackState,
@@ -29,12 +26,7 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { Effect, Schema } from "effect";
 
-type UpsertChange = Extract<
-  ContentChange,
-  {
-    readonly operation: "upsert";
-  }
->;
+type UpsertChange = typeof ContentUpsertSchema.Type;
 /** Loads one immutable signed artifact required by a rollback state. */
 const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
   function* (artifactHash: string, identity: string) {

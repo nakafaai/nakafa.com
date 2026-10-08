@@ -15,11 +15,11 @@ import {
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
 import { digestProgramRows } from "@nakafa/aksara-contracts/program/snapshot/digest";
-import { makeProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import {
   makeCurriculumSnapshotRow,
+  makeProgramSnapshot,
   makeProgramSnapshotRow,
-} from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+} from "@nakafa/aksara-contracts/program/snapshot/hash";
 import {
   type LearningProgram,
   LearningProgramKeySchema,
@@ -219,7 +219,7 @@ export type ProgramSnapshotData = Effect.Success<
 export const stageProgramSnapshot = Effect.fn("TestProgram.stageSnapshot")(
   function* (data: ProgramSnapshotData, batchSize = data.rowJson.length) {
     const ctx = yield* MutationCtx;
-    const mutate = yield* MutationRunner;
+    const { runMutation: mutate } = yield* MutationRunner;
     yield* Effect.promise(() =>
       insertTestRelease(ctx, {
         activeAppLocales: data.snapshot.manifest.activeAppLocales,

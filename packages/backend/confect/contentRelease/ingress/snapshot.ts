@@ -1,17 +1,22 @@
 "use node";
 
 import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
-import { verifyProgramSnapshotHash } from "@nakafa/aksara-contracts/program/snapshot/hash";
-import { verifyProgramSnapshotRowHash } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+import {
+  verifyProgramSnapshotHash,
+  verifyProgramSnapshotRowHash,
+} from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { verifyQuranSnapshotHash } from "@nakafa/aksara-contracts/quran/snapshot/hash";
 import { hashQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row/hash";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
-import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
-import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
+import type {
+  StageSnapshotBatchRequest,
+  StageSnapshotRequest,
+} from "@nakafa/aksara-contracts/transport/snapshot";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/hash/catalog";
+import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/hash/placement";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
@@ -21,20 +26,8 @@ import {
   encodeSnapshotJson,
   encodeSnapshotRowJson,
 } from "@repo/backend/confect/contentRelease/wire";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
-type SnapshotRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation: "stageSnapshot";
-  }
->;
-type SnapshotBatchRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation: "stageSnapshotBatch";
-  }
->;
 /** Rejects one content identity mismatch before immutable storage. */
 function requireHash(
   actual: Sha256Hash,
@@ -167,8 +160,8 @@ export const verifySnapshotBatch = Effect.fn(
 
 /** Verifies and stages one immutable structured-family manifest. */
 export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
-  function* (request: SnapshotRequest) {
-    const runMutation = yield* MutationRunner;
+  function* (request: StageSnapshotRequest) {
+    const { runMutation } = yield* MutationRunner;
     yield* verifySnapshotManifest(request.snapshot);
     return yield* runMutation(
       refs.internal.contentRelease.snapshot.manifest.stageSnapshot,
@@ -183,8 +176,8 @@ export const stageSnapshot = Effect.fn("contentRelease.stageSnapshot")(
 /** Verifies and stages one bounded structured-family row batch. */
 export const stageSnapshotBatch = Effect.fn(
   "contentRelease.stageSnapshotBatch"
-)(function* (request: SnapshotBatchRequest) {
-  const runMutation = yield* MutationRunner;
+)(function* (request: StageSnapshotBatchRequest) {
+  const { runMutation } = yield* MutationRunner;
   yield* verifySnapshotBatch(request.family, request.snapshotId, request.rows);
   return yield* runMutation(
     refs.internal.contentRelease.snapshot.batch.stageSnapshotBatch,
@@ -192,7 +185,7 @@ export const stageSnapshotBatch = Effect.fn(
       batchIndex: request.batchIndex,
       family: request.family,
       releaseId: request.releaseId,
-      rowJson: request.rows.map(encodeSnapshotRowJson),
+      rowJson: Arr.map(request.rows, encodeSnapshotRowJson),
       snapshotId: request.snapshotId,
     }
   ).pipe(Effect.catchTag("SchemaError", Effect.die));

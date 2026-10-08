@@ -4,6 +4,7 @@ import type { LineSceneProps } from "@repo/design-system/components/contents/mat
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { VisualCardScene } from "@repo/design-system/components/visual/card";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 
@@ -36,7 +37,7 @@ export function DeferredLineScene(props: LineSceneProps) {
   const [shouldRender, setShouldRender] = useState(false);
 
   return (
-    <div className="relative" data-slot="line-scene">
+    <VisualCardScene className="relative" data-slot="line-scene">
       <Intersection
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -44,6 +45,6 @@ export function DeferredLineScene(props: LineSceneProps) {
         onIntersect={() => setShouldRender(true)}
       />
       {shouldRender ? <LineScene {...props} /> : <ScenePlaceholder />}
-    </div>
+    </VisualCardScene>
   );
 }

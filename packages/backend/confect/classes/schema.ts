@@ -17,9 +17,7 @@ export const schoolClassVisibilityValidator = Schema.Literals([
   "private",
   "public",
 ]);
-export type SchoolClassVisibility = Schema.Schema.Type<
-  typeof schoolClassVisibilityValidator
->;
+export type SchoolClassVisibility = typeof schoolClassVisibilityValidator.Type;
 
 /**
  * Class material status validator
@@ -30,9 +28,8 @@ export const schoolClassMaterialStatusValidator = Schema.Literals([
   "scheduled",
   "archived",
 ]);
-export type SchoolClassMaterialStatus = Schema.Schema.Type<
-  typeof schoolClassMaterialStatusValidator
->;
+export type SchoolClassMaterialStatus =
+  typeof schoolClassMaterialStatusValidator.Type;
 
 /**
  * Class images validator
@@ -66,9 +63,7 @@ export const schoolClassImageValidator = Schema.Literals([
   "stamp",
   "vintage",
 ]);
-export type SchoolClassImage = Schema.Schema.Type<
-  typeof schoolClassImageValidator
->;
+export type SchoolClassImage = typeof schoolClassImageValidator.Type;
 
 /**
  * Forum tag validator
@@ -80,9 +75,7 @@ export const schoolClassForumTagValidator = Schema.Literals([
   "assignment",
   "resource",
 ]);
-export type SchoolClassForumTag = Schema.Schema.Type<
-  typeof schoolClassForumTagValidator
->;
+export type SchoolClassForumTag = typeof schoolClassForumTagValidator.Type;
 
 /**
  * Forum status validator

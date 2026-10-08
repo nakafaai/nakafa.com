@@ -14,27 +14,31 @@ import type {
 } from "@repo/backend/confect/contentRelease/models/spec";
 import { Context, Duration, Effect, Layer } from "effect";
 export type ModelBuildWaitPolicy = "observe" | "restart-failed-once";
-export interface ModelBuildCoordinatorService {
-  readonly restart: (
-    args: ModelBuildRestartArgs
-  ) => Effect.Effect<ModelBuildRestartResult, ReleaseError>;
-  readonly status: (
-    releaseId: string
-  ) => Effect.Effect<ModelBuildStatus, ReleaseError>;
-}
 
 /** Private dependency for one candidate read-model build lineage. */
 export class ModelBuildCoordinator extends Context.Service<
   ModelBuildCoordinator,
-  ModelBuildCoordinatorService
+  {
+    readonly restart: (
+      args: ModelBuildRestartArgs
+    ) => Effect.Effect<ModelBuildRestartResult, ReleaseError>;
+    readonly status: (
+      releaseId: string
+    ) => Effect.Effect<ModelBuildStatus, ReleaseError>;
+  }
 >()("@repo/backend/contentRelease/ModelBuildCoordinator") {}
+
+/** Service shape of the private model-build coordinator. */
+export type ModelBuildCoordinatorService = Context.Service.Shape<
+  typeof ModelBuildCoordinator
+>;
 
 /** Resolves the private model-build functions through native Confect runners. */
 export const modelBuildCoordinatorLayer = Layer.effect(
   ModelBuildCoordinator,
   Effect.gen(function* () {
-    const runMutation = yield* MutationRunner;
-    const runQuery = yield* QueryRunner;
+    const { runMutation } = yield* MutationRunner;
+    const { runQuery } = yield* QueryRunner;
     return ModelBuildCoordinator.of({
       restart: Effect.fn("contentRelease.restartModelBuild")((args) =>
         runMutation(refs.internal.contentRelease.models.restart, args).pipe(

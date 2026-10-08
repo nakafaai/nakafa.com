@@ -1,44 +1,56 @@
-import { GatewayRateLimitError } from "@ai-sdk/gateway";
 import { Ref } from "@confect/core";
 import { afterEach, expect, it } from "@effect/vitest";
 import { PostHog } from "@posthog/convex";
 import refs from "@repo/backend/confect/_generated/refs";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
+import { failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
+import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", async (original) => ({
-  ...(await original<
-    typeof import("@repo/backend/confect/nina/config/provider")
-  >()),
-  getGatewayModel: vi.fn(),
+vi.mock("@repo/backend/confect/gateway/live", async () => ({
+  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 
-afterEach(() => vi.restoreAllMocks());
+/** Encodes a captured report as the JSON text an analytics sink receives. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
-it.effect(
-  "reports provider routing facts while redacting the prompt, response and credentials",
-  () =>
+afterEach(() => {
+  vi.restoreAllMocks();
+  provider.languageModel.mockReset();
+});
+
+it.effect.each([
+  [
+    "a classified failure",
+    failures["rate-limit"],
+    {
+      gateway_error_type: "rate_limit_exceeded",
+      gateway_generation_id: "gen_test-1",
+    },
+  ],
+  [
+    "a raw provider error",
+    new APICallError({
+      message: "private provider response",
+      url: "https://provider.example.invalid",
+      requestBodyValues: { prompt: "private prompt" },
+      responseBody: "private-secret",
+      statusCode: 429,
+    }),
+    {},
+  ],
+] as const)(
+  "reports the routing facts of %s while redacting the prompt, response and credentials",
+  ([, error, facts]) =>
     Effect.gen(function* () {
       const capture = vi
         .spyOn(PostHog.prototype, "captureException")
         .mockResolvedValue(undefined);
-      vi.mocked(getGatewayModel).mockReturnValue(
-        Effect.succeed(
-          new MockLanguageModelV4({
-            doStream: ninaStream([
-              {
-                type: "error",
-                error: new GatewayRateLimitError({
-                  message: "private provider response",
-                  cause: { key: "private-secret" },
-                  generationId: "gen_123-abc",
-                }),
-              },
-            ]),
-          })
-        )
+      provider.languageModel.mockReturnValue(
+        new MockLanguageModelV4({
+          doStream: ninaStream([{ type: "error", error }]),
+        })
       );
       const f = yield* Effect.promise(() =>
         createNinaTest({ prompt: "private user prompt" })
@@ -53,16 +65,16 @@ it.effect(
       expect(report?.additionalProperties).toMatchObject({
         source: "nina-response",
         operation: "provider-busy",
-        gateway_error_type: "rate_limit_exceeded",
+        gateway_model_id: "google/gemini-3.5-flash-lite",
         gateway_status_code: 429,
         gateway_retryable: true,
-        gateway_generation_id: "gen_123-abc",
+        ...facts,
       });
       expect(report?.error).toMatchObject({
         name: "OperationalError(nina-response.provider-busy)",
         message: "Operational exception",
       });
-      expect(JSON.stringify(report)).not.toContain("private");
+      expect(encodeJson(report)).not.toContain("private");
       expect(report?.distinctId).toBeUndefined();
     })
 );
@@ -74,7 +86,9 @@ it.effect(
       const capture = vi
         .spyOn(PostHog.prototype, "captureException")
         .mockRejectedValue(new Error("private delivery failure"));
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.die("private defect"));
+      provider.languageModel.mockImplementation(() => {
+        throw new Error("private defect");
+      });
       const f = yield* Effect.promise(() => createNinaTest());
       yield* Effect.promise(() =>
         f.t.action(Ref.getFunctionReference(refs.internal.nina.response.run), {

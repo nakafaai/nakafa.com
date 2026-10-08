@@ -8,7 +8,7 @@ import {
   it,
 } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
-import { ModelIdSchema } from "@repo/backend/confect/nina/config/model";
+import { ModelId, type ModelKey } from "@repo/backend/confect/gateway/model";
 import {
   refundCredits,
   reserveCredits,
@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { products } from "@repo/backend/confect/utils/polar/products";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 8, 1);
 async function fixture(credits = 2, creditsResetAt = NOW) {
@@ -27,12 +27,12 @@ async function fixture(credits = 2, creditsResetAt = NOW) {
   const identity = await t.mutation((ctx) =>
     seedAuthenticatedUser(ctx, { now: NOW, credits, creditsResetAt })
   );
-  const reserve = () =>
+  const reserve = (model: ModelKey = "nakafa-lite") =>
     t.mutation(async (ctx) => {
       const user = await ctx.db.get("users", identity.userId);
       assert(user);
       return Effect.runPromise(
-        reserveCredits(user, ModelIdSchema.make("nakafa-lite")).pipe(
+        reserveCredits(user, ModelId.make(model)).pipe(
           Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
         )
       );
@@ -64,12 +64,33 @@ describe("Nina credit transactions", () => {
       ledger: await ctx.db.query("creditTransactions").collect(),
     }));
     expect(result.user?.credits).toBe(10);
-    expect(result.ledger.map(({ type, amount }) => [type, amount])).toEqual([
+    expect(
+      Arr.map(result.ledger, ({ type, amount }) => [type, amount])
+    ).toEqual([
       ["daily-grant", 10],
       ["usage", -2],
       ["refund", 2],
     ]);
   });
+
+  it.each([
+    ["nakafa-lite", 2],
+    ["nakafa-pro", 5],
+  ] as const)(
+    "holds the %s response price of %i credits and refuses less",
+    async (model, price) => {
+      const priced = await fixture(price);
+      const hold = await priced.reserve(model);
+      const user = await priced.t.query((ctx) =>
+        ctx.db.get("users", priced.identity.userId)
+      );
+      expect(hold).toMatchObject({ credits: price, modelId: model });
+      expect(user?.credits).toBe(0);
+      await expect(
+        (await fixture(price - 1)).reserve(model)
+      ).rejects.toMatchObject({ code: "INSUFFICIENT_CREDITS" });
+    }
+  );
 
   it.each(["ledger", "state", "quota"] as const)(
     "rolls back admission and returns a typed %s failure",
@@ -95,7 +116,7 @@ describe("Nina credit transactions", () => {
             );
           }
           return Effect.runPromise(
-            reserveCredits(user, ModelIdSchema.make("nakafa-lite")).pipe(
+            reserveCredits(user, ModelId.make("nakafa-lite")).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(schema, ctx)
               )

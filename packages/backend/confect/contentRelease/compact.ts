@@ -9,11 +9,9 @@ import {
   ensureCompaction,
 } from "@repo/backend/confect/contentRelease/compact/state";
 import type { compactionReceiptValidator } from "@repo/backend/confect/contentRelease/spec";
-import { Clock, Effect, type Schema } from "effect";
+import { Clock, Effect } from "effect";
 export const RUN_PAGE_LIMIT = 64;
-export type CompactionReceipt = Schema.Schema.Type<
-  typeof compactionReceiptValidator
->;
+export type CompactionReceipt = typeof compactionReceiptValidator.Type;
 /** Returns the next durable phase after all rows in one table are exhausted. */
 export function nextPhase(
   phase: CompactionCycle["phase"]
@@ -131,7 +129,7 @@ export const compactProgram = Effect.fn("contentRelease.compactPage")(
 /** Executes a bounded number of persisted pages for one scheduled run. */
 export const runProgram = Effect.fn("contentRelease.runCompaction")(
   function* () {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     let deleted = 0;
     let latest: {
       readonly complete: boolean;

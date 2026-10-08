@@ -5,9 +5,10 @@ import {
   getColorsCount,
   THEMES,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { Array as Arr, Record as Rec } from "effect";
 
 function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
-  const colorConfig = Object.entries(config).filter(
+  const colorConfig = Rec.toEntries(config).filter(
     ([, itemConfig]) => itemConfig.colors
   );
 
@@ -20,7 +21,7 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
       .flatMap(([key, itemConfig]) => {
         const colorsArray = itemConfig.colors?.[theme];
         if (
-          !(colorsArray && Array.isArray(colorsArray)) ||
+          !(colorsArray && Arr.isArray(colorsArray)) ||
           colorsArray.length === 0
         ) {
           return [];
@@ -36,7 +37,7 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
       })
       .join("\n");
 
-  const css = Object.entries(THEMES)
+  const css = Rec.toEntries(THEMES)
     .map(
       ([theme, prefix]) =>
         `${prefix} [data-chart="${id}"] {\n${generateCssVars(theme as keyof typeof THEMES)}\n}`

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import {
   MAX_ARTIFACT_BATCH_BYTES,
   MAX_ITEM_BATCH_BYTES,
@@ -17,6 +18,11 @@ import {
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import { testUpsertJson } from "@repo/backend/test/content/release";
 import { Effect, Result, Schema } from "effect";
+
+const ProjectionJsonSchema = Schema.fromJsonString(ContentProjectionSchema);
+const PublicationRequestJsonSchema = Schema.fromJsonString(
+  PublicationRequestSchema
+);
 
 /** Decodes one exact source at the Vitest boundary. */
 function decode(
@@ -74,12 +80,15 @@ describe("content publication request decoding", () => {
   );
   it.live("rejects an oversized grouped child before dispatch", () =>
     Effect.gen(function* () {
+      const projection = yield* Schema.decodeEffect(ProjectionJsonSchema)(
+        testProjectionJson()
+      );
       const projectionRequest = yield* Schema.decodeEffect(
         PublicationRequestSchema
       )({
         batchIndex: 0,
         operation: "stageProjectionBatch",
-        projections: [JSON.parse(testProjectionJson())],
+        projections: [projection],
         releaseId: "release-test",
       });
       expect(projectionRequest.operation).toBe("stageProjectionBatch");
@@ -88,22 +97,16 @@ describe("content publication request decoding", () => {
           new Error("Expected a projection batch request fixture.")
         );
       }
-      const [projection] = projectionRequest.projections;
-      const source = JSON.stringify({
+      const oversized = yield* Schema.decodeEffect(ProjectionJsonSchema)(
+        testProjectionJson({ title: "x".repeat(MAX_PROJECTION_BATCH_BYTES) })
+      );
+      const source = yield* Schema.encodeEffect(PublicationRequestJsonSchema)({
         operation: "stageGroup",
         releaseId: projectionRequest.releaseId,
         requests: [
           {
             ...projectionRequest,
-            projections: [
-              {
-                ...projection,
-                metadata: {
-                  ...projection.metadata,
-                  title: "x".repeat(MAX_PROJECTION_BATCH_BYTES),
-                },
-              },
-            ],
+            projections: [oversized],
           },
         ],
       });

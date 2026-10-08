@@ -12,10 +12,8 @@ import { resolveLearningContext } from "@repo/backend/confect/contents/views/con
 import { hydrateMaterialTarget } from "@repo/backend/confect/contents/views/target";
 import type { recentlyViewedSubjectValidator } from "@repo/backend/confect/lib/validators/trending";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, flow, Schema, Struct } from "effect";
-export type RecentlyViewedSubject = Schema.Schema.Type<
-  typeof recentlyViewedSubjectValidator
->;
+import { Array as Arr, Effect, flow, Schema, Struct } from "effect";
+export type RecentlyViewedSubject = typeof recentlyViewedSubjectValidator.Type;
 export const defaultRecentLearningLimit = 5;
 export const maxRecentLearningLimit = 20;
 export const recentLearningCandidateLimit = 100;
@@ -25,9 +23,7 @@ export const recentLearningCandidateLimit = 100;
 export const getRecentlyViewedArgsValidator = Schema.Struct(
   getRecentlyViewedArgs
 );
-export type ListRecentLearningArgs = Schema.Schema.Type<
-  typeof getRecentlyViewedArgsValidator
->;
+export type ListRecentLearningArgs = typeof getRecentlyViewedArgsValidator.Type;
 /** Maps thrown Convex IO failures into the Continue Learning error channel. */
 export function toRecentLearningIoError(error: unknown) {
   return new RecentLearningIoError({
@@ -51,7 +47,7 @@ export const listRecentLearning = Effect.fn(
     if (!(user && limit > 0)) {
       return [];
     }
-    const subjects: RecentlyViewedSubject[] = [];
+    let subjects: RecentlyViewedSubject[] = [];
     const recentRows = yield* database
       .table("userLearningRecents")
       .index(
@@ -68,7 +64,7 @@ export const listRecentLearning = Effect.fn(
     for (const row of recentRows) {
       const subject = yield* toRecentlyViewedSubject(row);
       if (subject) {
-        subjects.push(subject);
+        subjects = Arr.append(subjects, subject);
       }
       if (subjects.length >= limit) {
         break;

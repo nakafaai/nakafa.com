@@ -11,7 +11,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Struct } from "effect";
+import { Array as Arr, Struct } from "effect";
 
 const NOW = Date.UTC(2026, 3, 16, 14, 0, 0);
 
@@ -56,7 +56,9 @@ describe("triggers/materials/groups", () => {
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
     }));
     expect(state.groups).toEqual([]);
-    expect(state.jobs.every((job) => job.state.kind === "success")).toBe(true);
+    expect(Arr.every(state.jobs, (job) => job.state.kind === "success")).toBe(
+      true
+    );
   });
 
   it("decrements a parent group child count when a child group is deleted", async () => {

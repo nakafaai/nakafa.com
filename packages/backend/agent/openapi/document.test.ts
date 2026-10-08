@@ -12,7 +12,7 @@ import {
 } from "@repo/contents/agent/schema/api";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
 import { dereference, validate } from "@scalar/openapi-parser";
-import { Effect, Predicate, Schema } from "effect";
+import { Array as Arr, Effect, Predicate, Record as Rec, Schema } from "effect";
 
 interface OpenApiOperation {
   readonly description: string;
@@ -24,8 +24,8 @@ interface OpenApiOperation {
 /** Returns every method operation from the generated path map. */
 function readOperations() {
   const operations: OpenApiOperation[] = [];
-  for (const pathItem of Object.values(NAKAFA_OPENAPI_DOCUMENT.paths)) {
-    for (const operation of Object.values(pathItem)) {
+  for (const pathItem of Rec.values(NAKAFA_OPENAPI_DOCUMENT.paths)) {
+    for (const operation of Rec.values(pathItem)) {
       if (!isOperation(operation)) {
         expect.fail("OpenAPI paths must contain complete operations.");
       }
@@ -41,7 +41,7 @@ function isOperation(value: unknown): value is OpenApiOperation {
     Predicate.isReadonlyObject(value) &&
     typeof value.description === "string" &&
     typeof value.operationId === "string" &&
-    Array.isArray(value.parameters) &&
+    Arr.isArray(value.parameters) &&
     Predicate.isReadonlyObject(value.responses)
   );
 }

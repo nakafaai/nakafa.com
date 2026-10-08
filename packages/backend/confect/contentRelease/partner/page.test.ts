@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/test/material/catalog";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const ARTICLE_PREFIX = "articles/politics";
 const ARTICLE_CURSOR_PATTERN = /^content:article:/;
@@ -187,7 +187,7 @@ describe("contentRelease/partner/page", () => {
         continueCursor: "",
       });
       expect(
-        [...first.page, ...second.page].map((row) => row.publicPath)
+        Arr.map([...first.page, ...second.page], (row) => row.publicPath)
       ).toEqual(paths);
     }
   );

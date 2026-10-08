@@ -10,6 +10,7 @@ import {
 } from "@repo/backend/confect/nina/uploads.spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import { randomUuid } from "@repo/utilities/uuid";
 import type { FileUIPart } from "ai";
 import { Effect, Exit, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
@@ -185,7 +186,7 @@ export function useNinaSubmission() {
     }
     inFlight.current = true;
     setError(null);
-    const draftKey = chatId ? null : crypto.randomUUID();
+    const draftKey = chatId ? null : Effect.runSync(randomUuid);
     if (draftKey) {
       addChatDraft(draftKey);
     }
@@ -204,7 +205,7 @@ export function useNinaSubmission() {
               JSON.stringify(payload);
           const args = {
             ...payload,
-            requestId: same ? previous.requestId : crypto.randomUUID(),
+            requestId: same ? previous.requestId : Effect.runSync(randomUuid),
           };
           uncertain.current = args;
           const submit = start.withOptimisticUpdate(

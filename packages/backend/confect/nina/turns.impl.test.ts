@@ -11,7 +11,7 @@ import {
   seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -26,6 +26,7 @@ vi.mock("@convex-dev/agent", async (load) => {
 });
 
 const NOW = Date.UTC(2026, 8, 27, 12);
+const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const args = {
@@ -95,7 +96,7 @@ describe("native Nina admission", () => {
     const jobs = await t.query((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()
     );
-    const events = jobs.filter((job) =>
+    const events = Arr.filter(jobs, (job) =>
       job.name.includes("deliverProductEvent")
     );
     expect(events).toHaveLength(1);
@@ -103,7 +104,7 @@ describe("native Nina admission", () => {
       expect.objectContaining({
         distinctId: identity.userId,
         event: "chat message sent",
-        properties: JSON.stringify({
+        properties: Schema.encodeSync(jsonTextSchema)({
           chat_type: "study",
           model_id: "nakafa-lite",
         }),
@@ -144,9 +145,11 @@ describe("native Nina admission", () => {
       usage: [],
       state: { status: "queued" },
     });
-    expect(state.ledger.filter((row) => row.type === "usage")).toHaveLength(1);
     expect(
-      state.schedules.filter((row) => row.name === "nina/response:run")
+      Arr.filter(state.ledger, (row) => row.type === "usage")
+    ).toHaveLength(1);
+    expect(
+      Arr.filter(state.schedules, (row) => row.name === "nina/response:run")
     ).toHaveLength(1);
     expect(state.messages.page).toHaveLength(1);
   });

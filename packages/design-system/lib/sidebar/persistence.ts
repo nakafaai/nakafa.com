@@ -19,7 +19,7 @@ export const SidebarStateCookie = Schema.Struct({
 });
 
 /** Schema-derived input accepted by sidebar persistence. */
-export type SidebarStateCookie = Schema.Schema.Type<typeof SidebarStateCookie>;
+export type SidebarStateCookie = typeof SidebarStateCookie.Type;
 
 /** Expected browser failure while persisting sidebar state. */
 export class SidebarStatePersistenceError extends Schema.TaggedError<SidebarStatePersistenceError>()(

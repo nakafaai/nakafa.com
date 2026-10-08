@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 // @vitest-environment node
 
 import { afterEach, expect, it } from "@effect/vitest";
@@ -15,12 +16,12 @@ it("drains all four deletion workflows and their delayed reconciliation before r
   vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
   vi.setSystemTime(Date.UTC(2026, 8, 27));
   vi.stubEnv("POSTHOG_HOST", "https://eu.i.posthog.com");
-  const requests: { method: string; url: string; body: string }[] = [];
+  let requests: { method: string; url: string; body: string }[] = [];
   vi.stubGlobal(
     "fetch",
     vi.fn<typeof fetch>(async (input, init) => {
       const request = new Request(input, init);
-      requests.push({
+      requests = Arr.append(requests, {
         method: request.method,
         url: request.url,
         body: await request.text(),
@@ -124,18 +125,22 @@ it("drains all four deletion workflows and their delayed reconciliation before r
     page: [{ value: "unrelated-user" }],
     isDone: true,
   });
-  expect(state.jobs.every((job) => job.state.kind === "success")).toBe(true);
+  expect(Arr.every(state.jobs, (job) => job.state.kind === "success")).toBe(
+    true
+  );
   expect(
-    state.jobs.filter(
+    Arr.filter(
+      state.jobs,
       (job) => job.name === "privacy/recovery:cleanupWorkflowStorage"
     )
   ).toHaveLength(4);
-  const analyticsRequests = requests.filter((request) =>
+  const analyticsRequests = Arr.filter(requests, (request) =>
     request.url.includes("posthog.com")
   );
   expect(analyticsRequests).toHaveLength(2);
   expect(
-    analyticsRequests.every(
+    Arr.every(
+      analyticsRequests,
       (request) =>
         request.body ===
         JSON.stringify({
@@ -147,9 +152,9 @@ it("drains all four deletion workflows and their delayed reconciliation before r
     )
   ).toBe(true);
   expect(
-    requests.filter((request) => request.method === "DELETE")
+    Arr.filter(requests, (request) => request.method === "DELETE")
   ).toHaveLength(1);
-  expect(requests.filter((request) => request.method === "GET")).toHaveLength(
-    1
-  );
+  expect(
+    Arr.filter(requests, (request) => request.method === "GET")
+  ).toHaveLength(1);
 });

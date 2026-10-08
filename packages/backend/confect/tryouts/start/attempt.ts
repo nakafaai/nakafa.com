@@ -17,7 +17,7 @@ import type {
 } from "@repo/backend/confect/tryouts/start/spec";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Duration, Effect, flow } from "effect";
+import { Array as Arr, Duration, Effect, flow } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutAttemptInsert = Omit<TryoutAttempt, "_creationTime" | "_id">;
@@ -82,21 +82,27 @@ function buildAttemptValues(
     examKey: signedSet.examKey,
     appLocale: input.args.locale,
     scoringStrategy: signedSet.scoringStrategy,
-    sectionSnapshots: input.source.snapshot.sections.map(({ section }) => ({
-      ...(section.row.publicPath === undefined
-        ? {}
-        : {
-            publicPath: section.row.publicPath,
-          }),
-      questionCount: section.row.questionCount,
-      questionSourcePath: section.row.questionSourcePath,
-      sectionIdentity: tryoutCatalogIdentity(section.row),
-      sectionKey: section.row.sectionKey,
-      sectionOrder: section.row.order,
-      sectionRowHash: section.rowHash,
-      sourceRevision: section.row.sourceRevision,
-      timeLimitSeconds: section.row.timeLimitSeconds,
-    })),
+    sectionSnapshots: Arr.map(
+      input.source.snapshot.sections,
+      ({ section }) => ({
+        ...(section.row.marks === undefined
+          ? {}
+          : { marks: section.row.marks }),
+        ...(section.row.publicPath === undefined
+          ? {}
+          : {
+              publicPath: section.row.publicPath,
+            }),
+        questionCount: section.row.questionCount,
+        questionSourcePath: section.row.questionSourcePath,
+        sectionIdentity: tryoutCatalogIdentity(section.row),
+        sectionKey: section.row.sectionKey,
+        sectionOrder: section.row.order,
+        sectionRowHash: section.rowHash,
+        sourceRevision: section.row.sourceRevision,
+        timeLimitSeconds: section.row.timeLimitSeconds,
+      })
+    ),
     setIdentity: input.source.snapshot.setIdentity,
     setKey: signedSet.setKey,
     setPublicPath: signedSet.publicPath,

@@ -7,14 +7,9 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { boundText } from "@repo/backend/confect/nina/budget";
-import {
-  defaultModel,
-  getFastModelProviderOptions,
-} from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { backgroundGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
   type NinaLearner,
@@ -22,20 +17,23 @@ import {
 } from "@repo/backend/confect/nina/memory.spec";
 import { formatLearnerProfile } from "@repo/backend/confect/nina/prompt/learner";
 import { Output } from "ai";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Learner text one curation reads. */
 const MESSAGE_TOKENS = 1000;
 
-const INSTRUCTIONS = [
-  "You keep the long-term memory that Nina, Nakafa's AI tutor, holds about one learner.",
-  "Read the learner's newest message and decide whether it reveals a durable fact that helps Nina teach this learner in later conversations: their grade or level, the exams they target and when, their goals, the subjects or topics they find hard or easy, and how they like to learn.",
-  "Record only what the learner states about themself. Never record the question itself, exercise answers, or anything about other people.",
-  "Never record sensitive information: health, religion, ethnicity, political views, precise location, contact details, passwords, or financial details.",
-  "Most messages reveal nothing durable; then return empty lists.",
-  "Use update when the message changes a known fact and forget when the learner contradicts or withdraws one. Never repeat a known fact or an account fact.",
-  "Write each fact as one short statement in the learner's language, at most 160 characters.",
-].join("\n");
+const INSTRUCTIONS = Arr.join(
+  [
+    "You keep the long-term memory that Nina, Nakafa's AI tutor, holds about one learner.",
+    "Read the learner's newest message and decide whether it reveals a durable fact that helps Nina teach this learner in later conversations: their grade or level, the exams they target and when, their goals, the subjects or topics they find hard or easy, and how they like to learn.",
+    "Record only what the learner states about themself. Never record the question itself, exercise answers, or anything about other people.",
+    "Never record sensitive information: health, religion, ethnicity, political views, precise location, contact details, passwords, or financial details.",
+    "Most messages reveal nothing durable; then return empty lists.",
+    "Use update when the message changes a known fact and forget when the learner contradicts or withdraws one. Never repeat a known fact or an account fact.",
+    "Write each fact as one short statement in the learner's language, at most 160 characters.",
+  ],
+  "\n"
+);
 
 class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
   "NinaMemoryError",
@@ -47,15 +45,21 @@ function formatKnown(
   profile: typeof NinaLearner.Type.profile,
   facts: readonly { readonly key: number; readonly text: string }[]
 ) {
-  return [
-    formatLearnerProfile(profile) ?? "Account: none",
-    facts.length > 0
-      ? [
-          "Known facts:",
-          ...facts.map((fact) => `- [${fact.key}] ${fact.text}`),
-        ].join("\n")
-      : "Known facts: none",
-  ].join("\n\n");
+  return Arr.join(
+    [
+      formatLearnerProfile(profile) ?? "Account: none",
+      facts.length > 0
+        ? Arr.join(
+            [
+              "Known facts:",
+              ...Arr.map(facts, (fact) => `- [${fact.key}] ${fact.text}`),
+            ],
+            "\n"
+          )
+        : "Known facts: none",
+    ],
+    "\n\n"
+  );
 }
 
 /**
@@ -66,12 +70,11 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
   function* (
     turn: Pick<NinaTurnsDoc, "chatId" | "promptMessageId" | "userId">
   ) {
-    const learner = yield* (yield* QueryRunner)(
-      refs.internal.nina.memory.read,
-      {
+    const learner = yield* (yield* QueryRunner)
+      .runQuery(refs.internal.nina.memory.read, {
         userId: turn.userId,
-      }
-    ).pipe(Effect.orDie);
+      })
+      .pipe(Effect.orDie);
     const { memory } = learner;
     if (!memory) {
       return;
@@ -88,9 +91,14 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
     if (!text) {
       return;
     }
+    const handle = (yield* Gateway).language({
+      purpose: "background",
+      model: defaultModel,
+      space: { kind: "personal", userId: turn.userId },
+    });
     const agent = new Agent(components.nina, {
       instructions: `${INSTRUCTIONS}\n\n${formatKnown(learner.profile, memory.facts)}`,
-      languageModel: yield* getGatewayModel(defaultModel),
+      languageModel: handle.model,
       name: "memory",
     });
     const { output, usage } = yield* Effect.tryPromise({
@@ -104,23 +112,24 @@ export const curateMemory = Effect.fn("nina.memory.curate")(
               schema: createEffectSchema(NinaMemoryChanges),
             }),
             prompt: `# Learner Message\n\n${boundText(text, MESSAGE_TOKENS, "Message shortened.")}`,
-            providerOptions: {
-              gateway: gatewayProviderOptions,
-              google: getFastModelProviderOptions(defaultModel),
-            },
-            timeout: backgroundGenerationTimeout,
+            timeout: handle.timeout,
           },
           { storageOptions: { saveMessages: "none" } }
         ),
       catch: () => new NinaMemoryError({ operation: "generate" }),
     });
-    yield* (yield* MutationRunner)(refs.internal.nina.memory.apply, {
-      changes: output,
-      chatId: turn.chatId,
-      memory: { id: memory.id, revision: memory.revision },
-      usage: { input: usage.inputTokens ?? 0, output: usage.outputTokens ?? 0 },
-      userId: turn.userId,
-    }).pipe(Effect.orDie);
+    yield* (yield* MutationRunner)
+      .runMutation(refs.internal.nina.memory.apply, {
+        changes: output,
+        chatId: turn.chatId,
+        memory: { id: memory.id, revision: memory.revision },
+        usage: {
+          input: usage.inputTokens ?? 0,
+          output: usage.outputTokens ?? 0,
+        },
+        userId: turn.userId,
+      })
+      .pipe(Effect.orDie);
   },
   Effect.catchTag("NinaMemoryError", (error) =>
     Effect.logWarning("Nina memory unavailable", {

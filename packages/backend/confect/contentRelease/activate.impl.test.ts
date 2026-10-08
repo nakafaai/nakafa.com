@@ -17,7 +17,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
 const prepare = internal.contentRelease.activate.prepare;
@@ -74,7 +74,7 @@ describe("contentRelease/activate", () => {
       state: await ctx.db.query("contentState").unique(),
     }));
     expect(ready.jobs.length).toBeGreaterThan(1);
-    expect(ready.jobs.every(({ state }) => state.kind === "success")).toBe(
+    expect(Arr.every(ready.jobs, ({ state }) => state.kind === "success")).toBe(
       true
     );
     expect(ready.build).toMatchObject({

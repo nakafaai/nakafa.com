@@ -16,7 +16,7 @@ export const selfSelectableUserRoleValidator = Schema.Literals([
  * User role validator (nullable) - for return types
  */
 export const userRoleValidator = Schema.NullOr(userRoleOptionsValidator);
-export type UserRole = Schema.Schema.Type<typeof userRoleValidator>;
+export type UserRole = typeof userRoleValidator.Type;
 
 /**
  * User plan validator
@@ -24,7 +24,7 @@ export type UserRole = Schema.Schema.Type<typeof userRoleValidator>;
  * Can be extended in the future
  */
 export const userPlanValidator = Schema.Literals(["free", "pro"]);
-export type UserPlan = Schema.Schema.Type<typeof userPlanValidator>;
+export type UserPlan = typeof userPlanValidator.Type;
 
 /**
  * User base validator (without system fields)

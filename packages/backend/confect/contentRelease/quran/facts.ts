@@ -1,5 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { PublishedQuranRow } from "@repo/backend/content/quran/contract";
+import { Array as Arr, pipe } from "effect";
 
 type QuranSnapshotRow = PublishedQuranRow["record"];
 type QuranSearch = Extract<
@@ -34,7 +35,11 @@ export function quranRowFacts(record: QuranSnapshotRow): QuranRowFacts {
   const { payload } = record;
   if (payload.kind === "quran-attribution") {
     return {
-      identity: `attribution:${payload.sources.map(({ id }) => id).join(":")}`,
+      identity: `attribution:${pipe(
+        payload.sources,
+        Arr.map(({ id }) => id),
+        Arr.join(":")
+      )}`,
       kind: payload.kind,
     };
   }

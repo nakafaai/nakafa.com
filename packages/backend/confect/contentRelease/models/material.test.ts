@@ -10,7 +10,7 @@ import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { insertModelBuild } from "@repo/backend/test/content/model";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 async function reconcile(
   t: TestConvex<typeof schema>,
@@ -96,8 +96,8 @@ describe("contentRelease/models/material", () => {
     );
     const source = await read(t, "blue");
     const expected = {
-      catalog: source.catalog.map(values),
-      buckets: source.buckets.map(values),
+      catalog: Arr.map(source.catalog, values),
+      buckets: Arr.map(source.buckets, values),
     };
     expect(await reconcile(t, build)).toBe(
       source.catalog.length + source.buckets.length
@@ -142,8 +142,8 @@ describe("contentRelease/models/material", () => {
     expect(await reconcile(t, build)).toBe(6);
     const repaired = await read(t, "green");
     expect({
-      catalog: repaired.catalog.map(values),
-      buckets: repaired.buckets.map(values),
+      catalog: Arr.map(repaired.catalog, values),
+      buckets: Arr.map(repaired.buckets, values),
     }).toEqual(expected);
     await expect(read(t, "blue")).resolves.toEqual(source);
     expect(await reconcile(t, build)).toBe(0);

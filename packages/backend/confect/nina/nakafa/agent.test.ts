@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { quran } from "@repo/backend/confect/nina/nakafa/tools/quran";
 import { read } from "@repo/backend/confect/nina/nakafa/tools/read";
 import { search } from "@repo/backend/confect/nina/nakafa/tools/search";
 import { taxonomy } from "@repo/backend/confect/nina/nakafa/tools/taxonomy";
+import { provider } from "@repo/backend/test/gateway";
 import {
   providerStep,
   runSpecialist,
@@ -12,11 +12,8 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", () => ({
-  getGatewayModel: vi.fn(),
-}));
 vi.mock("@repo/backend/confect/nina/nakafa/tools/read", () => ({
   read: vi.fn(),
 }));
@@ -29,7 +26,10 @@ vi.mock("@repo/backend/confect/nina/nakafa/tools/quran", () => ({
 vi.mock("@repo/backend/confect/nina/nakafa/tools/taxonomy", () => ({
   taxonomy: vi.fn(),
 }));
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  provider.languageModel.mockReset();
+});
 
 const content = readNakafaContentRefFixture(
   "en",
@@ -37,6 +37,7 @@ const content = readNakafaContentRefFixture(
   "articles"
 );
 const final = providerStep([{ type: "text", text: "A bounded explanation." }]);
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 function call(toolName: string, input: object) {
   return providerStep(
     [
@@ -44,7 +45,7 @@ function call(toolName: string, input: object) {
         type: "tool-call",
         toolName,
         toolCallId: toolName,
-        input: JSON.stringify(input),
+        input: encodeJson(input),
       },
     ],
     "tool-calls"
@@ -68,7 +69,7 @@ describe("Nakafa Agent execution", () => {
       const model = new MockLanguageModelV4({
         doGenerate: [call(toolName, input), final],
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const result = await runSpecialist((userId) =>
         runNakafaAgent({
           ...specialistRequest,
@@ -87,6 +88,10 @@ describe("Nakafa Agent execution", () => {
         })
       );
       expect(model.doGenerateCalls).toHaveLength(2);
+      expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
+        "space:personal",
+        "purpose:specialist",
+      ]);
     }
   );
 
@@ -124,7 +129,7 @@ describe("Nakafa Agent execution", () => {
           final,
         ],
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const result = await runSpecialist((userId) =>
         runNakafaAgent({
           ...specialistRequest,
@@ -148,8 +153,8 @@ describe("Nakafa Agent execution", () => {
   );
 
   it("returns the model answer when no tool ran", async () => {
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(new MockLanguageModelV4({ doGenerate: final }))
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({ doGenerate: final })
     );
     expect(
       await runSpecialist((userId) =>
@@ -163,12 +168,10 @@ describe("Nakafa Agent execution", () => {
     ).toEqual({ text: "A bounded explanation." });
   });
   it("preserves a typed failure when generation cannot run", async () => {
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(
-        new MockLanguageModelV4({
-          doGenerate: () => Promise.reject(new Error("Provider failure")),
-        })
-      )
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doGenerate: () => Promise.reject(new Error("Provider failure")),
+      })
     );
     const error = await runSpecialist((userId) =>
       runNakafaAgent({

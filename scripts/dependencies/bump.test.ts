@@ -1,17 +1,24 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import {
+  Array as Arr,
   ConfigProvider,
   Effect,
   FileSystem,
   Layer,
+  Option,
   PlatformError,
-  Sink,
+  Ref,
+  Schema,
   Stdio,
 } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
-import { bumpDependencies } from "#scripts/dependencies/bump";
+import { capture, makeCapture } from "#scripts/capture";
+import {
+  bumpDependencies,
+  RegistryVersionJson,
+} from "#scripts/dependencies/bump";
 import type { runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
 import { GITHUB_ACTION_REVIEWS } from "#scripts/github/policy";
@@ -22,26 +29,34 @@ import {
 
 type CommandResult = Effect.Success<ReturnType<typeof runPnpm>>;
 
-interface Scenario {
-  readonly command: (args: readonly string[]) => CommandResult;
-  readonly inspectPolicy?: () => string[];
-  readonly release?: (review: GithubActionReleaseReview) => Response;
-}
+/** Scripts one pnpm command's result from its arguments. */
+type CommandScript = (args: readonly string[]) => CommandResult;
+/** Scripts the policy problems that one inspection reports. */
+type PolicyScript = () => string[];
+/** Scripts the GitHub release response for one reviewed action. */
+type ReleaseScript = (review: GithubActionReleaseReview) => Response;
 
 function reviewedDependencies(args: readonly string[]): CommandResult {
   if (args[0] === "update" || args[0] === "outdated") {
     return { exitCode: 0, stderr: "", stdout: "" };
   }
   assert.strictEqual(args[0], "view");
-  const review = REGISTRY_REVIEWS.find(([registry]) => registry === args[1]);
+  const review = Option.getOrUndefined(
+    Arr.findFirst(REGISTRY_REVIEWS, ([registry]) => registry === args[1])
+  );
   assert.isDefined(review);
-  return { exitCode: 0, stderr: "", stdout: JSON.stringify(review[1]) };
+  return {
+    exitCode: 0,
+    stderr: "",
+    stdout: Schema.encodeSync(RegistryVersionJson)(review[1]),
+  };
 }
 
 /** Returns the release tag last reviewed for one action. */
 function reviewedTag(action: string) {
-  return GITHUB_ACTION_REVIEWS.find((review) => review.action === action)
-    ?.expectedTag;
+  return Option.getOrUndefined(
+    Arr.findFirst(GITHUB_ACTION_REVIEWS, (review) => review.action === action)
+  )?.expectedTag;
 }
 
 function reviewedRelease(review: GithubActionReleaseReview) {
@@ -57,10 +72,13 @@ const releaseClient = Effect.fn("DependencyBumpTest.releaseClient")(function* (
     HttpClient.HttpClient,
     HttpClient.make((request) =>
       Effect.sync(() => {
-        const review = reviews.find(
-          ({ repository }) =>
-            request.url ===
-            `https://api.github.com/repos/${repository}/releases/latest`
+        const review = Option.getOrUndefined(
+          Arr.findFirst(
+            reviews,
+            ({ repository }) =>
+              request.url ===
+              `https://api.github.com/repos/${repository}/releases/latest`
+          )
         );
         assert.isDefined(review);
         return HttpClientResponse.fromWeb(request, release(review));
@@ -69,36 +87,30 @@ const releaseClient = Effect.fn("DependencyBumpTest.releaseClient")(function* (
   );
 });
 
-const runScenario = Effect.fn("DependencyBumpTest.runScenario")(function* ({
-  command,
-  inspectPolicy = () => [],
-  release = reviewedRelease,
-}: Scenario) {
-  const commands: string[][] = [];
-  const errors: string[] = [];
-  const output: string[] = [];
+const runScenario = Effect.fn("DependencyBumpTest.runScenario")(function* (
+  command: CommandScript,
+  inspectPolicy: PolicyScript = () => [],
+  release: ReleaseScript = reviewedRelease
+) {
+  const commands = yield* Ref.make<readonly string[][]>([]);
+  const errors = yield* Ref.make<readonly string[]>([]);
+  const output = yield* Ref.make<readonly string[]>([]);
   let inspections = 0;
-  const status = yield* bumpDependencies({
-    root: "/repository",
-    inspectPolicy: () =>
+  const status = yield* bumpDependencies(
+    { root: "/repository" },
+    () =>
       Effect.sync(() => {
         inspections += 1;
         return inspectPolicy();
       }),
-    run: (_root, args) =>
-      Effect.sync(() => {
-        commands.push([...args]);
-        return command(args);
-      }),
-    writeError: (message) =>
-      Effect.sync(() => {
-        errors.push(message);
-      }),
-    writeOutput: (message) =>
-      Effect.sync(() => {
-        output.push(message);
-      }),
-  }).pipe(
+    (_root, args) =>
+      Effect.andThen(
+        Ref.update(commands, Arr.append([...args])),
+        Effect.sync(() => command(args))
+      ),
+    (message) => Ref.update(errors, Arr.append(message)),
+    (message) => Ref.update(output, Arr.append(message))
+  ).pipe(
     Effect.provide(
       Layer.mergeAll(NodeServices.layer, yield* releaseClient(release))
     ),
@@ -107,7 +119,13 @@ const runScenario = Effect.fn("DependencyBumpTest.runScenario")(function* ({
       ConfigProvider.fromEnvRecord({})
     )
   );
-  return { commands, errors, inspections, output, status };
+  return {
+    commands: yield* Ref.get(commands),
+    errors: yield* Ref.get(errors),
+    inspections,
+    output: yield* Ref.get(output),
+    status,
+  };
 });
 
 describe("dependency updates", () => {
@@ -115,7 +133,7 @@ describe("dependency updates", () => {
     "rechecks policy and both registries after a successful update",
     () =>
       Effect.gen(function* () {
-        const result = yield* runScenario({ command: reviewedDependencies });
+        const result = yield* runScenario(reviewedDependencies);
         assert.strictEqual(result.status, 0);
         assert.strictEqual(result.inspections, 2);
         assert.deepStrictEqual(result.errors, []);
@@ -132,7 +150,7 @@ describe("dependency updates", () => {
         ]);
         assert.ok(result.output.at(-1)?.startsWith("Routine dependencies and"));
         assert.ok(
-          result.output.some((message) =>
+          Arr.some(result.output, (message) =>
             message.startsWith("actions/checkout:")
           )
         );
@@ -141,10 +159,9 @@ describe("dependency updates", () => {
 
   it.effect("rejects unsafe policy before running pnpm update", () =>
     Effect.gen(function* () {
-      const result = yield* runScenario({
-        command: reviewedDependencies,
-        inspectPolicy: () => ["unsafe dependency policy"],
-      });
+      const result = yield* runScenario(reviewedDependencies, () => [
+        "unsafe dependency policy",
+      ]);
       assert.strictEqual(result.status, 1);
       assert.strictEqual(result.inspections, 1);
       assert.deepStrictEqual(result.commands, []);
@@ -154,9 +171,11 @@ describe("dependency updates", () => {
 
   it.effect("preserves an update failure without querying registries", () =>
     Effect.gen(function* () {
-      const result = yield* runScenario({
-        command: () => ({ exitCode: 23, stderr: "update failed", stdout: "" }),
-      });
+      const result = yield* runScenario(() => ({
+        exitCode: 23,
+        stderr: "update failed",
+        stdout: "",
+      }));
       assert.strictEqual(result.status, 23);
       assert.strictEqual(result.inspections, 1);
       assert.strictEqual(result.commands.length, 1);
@@ -167,46 +186,47 @@ describe("dependency updates", () => {
 
   it.effect("reports registry failures and unresolved updates together", () =>
     Effect.gen(function* () {
-      const sharedPlatformReview = REGISTRY_REVIEWS.find(
-        ([registry]) => registry === "@effect/platform-node-shared@rc"
+      const sharedPlatformReview = Option.getOrUndefined(
+        Arr.findFirst(
+          REGISTRY_REVIEWS,
+          ([registry]) => registry === "@effect/platform-node-shared@latest"
+        )
       );
       assert.isDefined(sharedPlatformReview);
-      const result = yield* runScenario({
-        command: (args) => {
-          if (args[0] === "outdated") {
-            return {
-              exitCode: 1,
-              stderr: "",
-              stdout: '{"unreviewed-library":{}}',
-            };
-          }
-          if (args[1] === "react@latest") {
-            return { exitCode: 1, stderr: "", stdout: "" };
-          }
-          if (args[1] === "effect@rc") {
-            return { exitCode: 2, stderr: "registry unavailable", stdout: "" };
-          }
-          if (args[1] === "@effect/platform-node@rc") {
-            return { exitCode: 0, stderr: "", stdout: "{" };
-          }
-          if (args[1] === "@effect/platform-node-shared@rc") {
-            return { exitCode: 0, stderr: "", stdout: '"99.0.0"' };
-          }
-          return reviewedDependencies(args);
-        },
+      const result = yield* runScenario((args) => {
+        if (args[0] === "outdated") {
+          return {
+            exitCode: 1,
+            stderr: "",
+            stdout: '{"unreviewed-library":{}}',
+          };
+        }
+        if (args[1] === "react@latest") {
+          return { exitCode: 1, stderr: "", stdout: "" };
+        }
+        if (args[1] === "effect@latest") {
+          return { exitCode: 2, stderr: "registry unavailable", stdout: "" };
+        }
+        if (args[1] === "@effect/platform-node@latest") {
+          return { exitCode: 0, stderr: "", stdout: "{" };
+        }
+        if (args[1] === "@effect/platform-node-shared@latest") {
+          return { exitCode: 0, stderr: "", stdout: '"99.0.0"' };
+        }
+        return reviewedDependencies(args);
       });
       assert.strictEqual(result.status, 1);
       assert.strictEqual(result.inspections, 2);
       assert.deepStrictEqual(result.errors, [
         "Unable to inspect reviewed dependency react@latest.\n" +
           "registry unavailable\n" +
-          "@effect/platform-node@rc returned invalid registry metadata.\n" +
-          `@effect/platform-node-shared@rc is now 99.0.0; last reviewed ${sharedPlatformReview[1]}.\n` +
+          "@effect/platform-node@latest returned invalid registry metadata.\n" +
+          `@effect/platform-node-shared@latest is now 99.0.0; last reviewed ${sharedPlatformReview[1]}.\n` +
           "Routine dependencies remain outdated: unreviewed-library.\n",
       ]);
       assert.ok(
-        result.output.some((message) =>
-          message.startsWith("@effect/platform-node-shared@rc: reviewed")
+        Arr.some(result.output, (message) =>
+          message.startsWith("@effect/platform-node-shared@latest: reviewed")
         )
       );
     })
@@ -214,20 +234,21 @@ describe("dependency updates", () => {
 
   it.effect("reports unavailable and drifted action releases", () =>
     Effect.gen(function* () {
-      const result = yield* runScenario({
-        command: (args) =>
+      const result = yield* runScenario(
+        (args) =>
           args[0] === "outdated"
             ? { exitCode: 1, stderr: "", stdout: "{" }
             : reviewedDependencies(args),
-        release: (review) => {
+        () => [],
+        (review) => {
           if (review.repository === "actions/checkout") {
             return new Response(null, { status: 404 });
           }
           return review.repository === "pnpm/setup"
             ? Response.json({ tag_name: "v99.0.0" })
             : reviewedRelease(review);
-        },
-      });
+        }
+      );
       assert.strictEqual(result.status, 1);
       assert.deepStrictEqual(result.errors, [
         "Unable to read the latest actions/checkout release.\n" +
@@ -235,7 +256,8 @@ describe("dependency updates", () => {
           "pnpm outdated returned invalid JSON.\n",
       ]);
       assert.ok(
-        result.output.every(
+        Arr.every(
+          result.output,
           (message) => !message.startsWith("actions/checkout:")
         )
       );
@@ -244,16 +266,16 @@ describe("dependency updates", () => {
 
   it.effect("reports failed outdated checks with their diagnostics", () =>
     Effect.gen(function* () {
-      const failures: [number, readonly string[]][] = [];
-      for (const stderr of ["network down\n", ""]) {
-        const result = yield* runScenario({
-          command: (args) =>
+      const failures = yield* Effect.forEach(["network down\n", ""], (stderr) =>
+        Effect.map(
+          runScenario((args) =>
             args[0] === "outdated"
               ? { exitCode: 2, stderr, stdout: "" }
-              : reviewedDependencies(args),
-        });
-        failures.push([result.status, result.errors]);
-      }
+              : reviewedDependencies(args)
+          ),
+          (result) => [result.status, result.errors]
+        )
+      );
       assert.deepStrictEqual(failures, [
         [1, ["network down\n"]],
         [1, ["pnpm outdated failed.\n"]],
@@ -267,8 +289,8 @@ describe("dependency updates", () => {
       const root = yield* fileSystem.makeTempDirectoryScoped({
         prefix: "dependency-bump-",
       });
-      const spawned: unknown[] = [];
-      const stderr: Array<string | Uint8Array> = [];
+      const spawned = yield* Ref.make<readonly unknown[]>([]);
+      const stderr = yield* makeCapture;
       const status = yield* bumpDependencies({ root }).pipe(
         Effect.provide(
           Layer.mergeAll(
@@ -276,7 +298,7 @@ describe("dependency updates", () => {
             Layer.succeed(
               ChildProcessSpawner.ChildProcessSpawner,
               ChildProcessSpawner.make((command) =>
-                Effect.sync(() => spawned.push(command)).pipe(
+                Ref.update(spawned, Arr.append<unknown>(command)).pipe(
                   Effect.andThen(
                     Effect.fail(
                       PlatformError.systemError({
@@ -290,20 +312,15 @@ describe("dependency updates", () => {
               )
             ),
             Stdio.layerTest({
-              stderr: () =>
-                Sink.forEachArray((chunks) =>
-                  Effect.sync(() => {
-                    stderr.push(...chunks);
-                  })
-                ),
+              stderr: capture(stderr),
             })
           )
         )
       );
 
       assert.strictEqual(status, 1);
-      assert.deepStrictEqual(spawned, []);
-      assert.deepStrictEqual(stderr, [
+      assert.deepStrictEqual(yield* Ref.get(spawned), []);
+      assert.deepStrictEqual(yield* Ref.get(stderr), [
         `Unable to inspect dependencies: Unable to read ${root}/package.json.\n` +
           "Unable to inspect GitHub Actions: Unable to read GitHub workflow files.\n",
       ]);

@@ -29,13 +29,15 @@ import type {
   progressValidator,
   statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Effect, type Schema } from "effect";
-export type Progress = Schema.Schema.Type<typeof progressValidator>;
-export type Status = Schema.Schema.Type<typeof statusValidator>;
+import { Effect, Schema } from "effect";
+export type Progress = typeof progressValidator.Type;
+export type Status = typeof statusValidator.Type;
+/** Stores the proof as the exact JSON text that the commit compares byte for byte. */
+const ProofJsonSchema = Schema.fromJsonString(Schema.Unknown);
 /** Authenticates the frozen release and renderer identity shared by proof steps. */
 export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
   function* (manifestHash: string, releaseId: string) {
-    const runQuery = yield* QueryRunner;
+    const { runQuery } = yield* QueryRunner;
     const state = yield* runQuery(
       refs.internal.contentRelease.proof.read.state,
       {
@@ -68,7 +70,7 @@ export const loadProofIdentity = Effect.fn("contentRelease.loadProofIdentity")(
 /** Advances exact item verification from the durable server cursor. */
 export const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
   function* (releaseId: string, afterIndex: number) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     let cursor = afterIndex;
     while (true) {
       const page = yield* runMutation(
@@ -90,7 +92,7 @@ export const verifyStoredItems = Effect.fn("contentRelease.verifyStoredItems")(
 export const verifyRouteCatalog = Effect.fn(
   "contentRelease.verifyRouteCatalog"
 )(function* (releaseId: string) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   let cursor: null | string = null;
   while (true) {
     const page: RouteCatalogPage = yield* runQuery(
@@ -117,7 +119,7 @@ export const verifyRouteCatalog = Effect.fn(
 export const verifyArtifactBatchProgram = Effect.fn(
   "contentRelease.verifyArtifactProofBatch"
 )(function* (manifestHash: string, releaseId: string, batchIndex: number) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const { renderer } = yield* loadProofIdentity(manifestHash, releaseId);
   const page = yield* runQuery(
     refs.internal.contentRelease.proof.read.artifactBatch,
@@ -144,7 +146,7 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
     releaseId: string,
     verifiedArtifacts: number
   ) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     const { release, state } = yield* loadProofIdentity(
       manifestHash,
       releaseId
@@ -226,8 +228,11 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       stagedSnapshotRows: snapshots.stagedRows,
       upsertHeads: items.upsertCount,
     };
+    const proofJson = yield* Schema.encodeEffect(ProofJsonSchema)(proof).pipe(
+      Effect.orDie
+    );
     yield* runMutation(refs.internal.contentRelease.proof.commit.commitProof, {
-      proofJson: JSON.stringify(proof),
+      proofJson,
     }).pipe(Effect.catchTag("SchemaError", Effect.die));
     return proof;
   }

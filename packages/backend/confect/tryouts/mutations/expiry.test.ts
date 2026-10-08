@@ -12,7 +12,7 @@ import {
   seedExpirySweep,
 } from "@repo/backend/test/tryout/expiry";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
-import { Data, Effect } from "effect";
+import { Array as Arr, Data, Effect } from "effect";
 
 class SchedulerUnavailable extends Data.TaggedError("SchedulerUnavailable") {}
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
@@ -92,7 +92,7 @@ describe("tryouts/mutations/expiry", () => {
           fixture.expiredAttemptSectionId
         ),
         expiredSection: await ctx.db.get(fixture.expiredSectionId),
-        expiryJobs: scheduledJobs.filter(({ name }) =>
+        expiryJobs: Arr.filter(scheduledJobs, ({ name }) =>
           name.startsWith("tryouts/mutations/expiry:")
         ),
         scores: await ctx.db.query("tryoutScores").collect(),
@@ -110,7 +110,7 @@ describe("tryouts/mutations/expiry", () => {
       },
     };
     expect(
-      beforeDrain.expiryJobs.map(({ args, name, state }) => ({
+      Arr.map(beforeDrain.expiryJobs, ({ args, name, state }) => ({
         args,
         name,
         state,
@@ -139,18 +139,22 @@ describe("tryouts/mutations/expiry", () => {
         .collect();
       return {
         activeAttempt: await ctx.db.get(fixture.activeAttemptId),
-        attemptExpiryJobs: scheduledJobs.filter(
+        attemptExpiryJobs: Arr.filter(
+          scheduledJobs,
           ({ name }) => name === ATTEMPT_EXPIRY_NAME
         ),
-        attemptReconciliationJobs: scheduledJobs.filter(
+        attemptReconciliationJobs: Arr.filter(
+          scheduledJobs,
           ({ name }) => name === ATTEMPT_RECONCILIATION_NAME
         ),
         expiredAttempt: await ctx.db.get(fixture.expiredAttemptId),
         scores: await ctx.db.query("tryoutScores").collect(),
-        sectionExpiryJobs: scheduledJobs.filter(
+        sectionExpiryJobs: Arr.filter(
+          scheduledJobs,
           ({ name }) => name === SECTION_EXPIRY_NAME
         ),
-        sectionReconciliationJobs: scheduledJobs.filter(
+        sectionReconciliationJobs: Arr.filter(
+          scheduledJobs,
           ({ name }) => name === SECTION_RECONCILIATION_NAME
         ),
       };
@@ -167,12 +171,13 @@ describe("tryouts/mutations/expiry", () => {
     });
     expect(afterAttemptPhase.attemptReconciliationJobs).toHaveLength(2);
     expect(
-      afterAttemptPhase.attemptReconciliationJobs.every(
+      Arr.every(
+        afterAttemptPhase.attemptReconciliationJobs,
         ({ state }) => state.kind === "success"
       )
     ).toBe(true);
     expect(
-      afterAttemptPhase.attemptExpiryJobs.map(({ args, state }) => ({
+      Arr.map(afterAttemptPhase.attemptExpiryJobs, ({ args, state }) => ({
         args,
         state,
       }))
@@ -195,10 +200,13 @@ describe("tryouts/mutations/expiry", () => {
       )
     );
     expect(
-      afterAttemptPhase.sectionReconciliationJobs.map(({ args, state }) => ({
-        args,
-        state,
-      }))
+      Arr.map(
+        afterAttemptPhase.sectionReconciliationJobs,
+        ({ args, state }) => ({
+          args,
+          state,
+        })
+      )
     ).toEqual(
       Array.from(
         {
@@ -241,7 +249,7 @@ describe("tryouts/mutations/expiry", () => {
           fixture.expiredAttemptSectionId
         ),
         expiredSection: await ctx.db.get(fixture.expiredSectionId),
-        expiryJobs: scheduledJobs.filter(({ name }) =>
+        expiryJobs: Arr.filter(scheduledJobs, ({ name }) =>
           name.startsWith("tryouts/mutations/expiry:")
         ),
         scores: await ctx.db.query("tryoutScores").collect(),
@@ -275,24 +283,28 @@ describe("tryouts/mutations/expiry", () => {
     });
     expect(afterDrain.scores).toHaveLength(2);
     expect(
-      afterDrain.expiryJobs.every(({ state }) => state.kind === "success")
+      Arr.every(afterDrain.expiryJobs, ({ state }) => state.kind === "success")
     ).toBe(true);
-    const attemptReconciliationJobs = afterDrain.expiryJobs.filter(
+    const attemptReconciliationJobs = Arr.filter(
+      afterDrain.expiryJobs,
       ({ name }) => name === ATTEMPT_RECONCILIATION_NAME
     );
-    const sectionReconciliationJobs = afterDrain.expiryJobs.filter(
+    const sectionReconciliationJobs = Arr.filter(
+      afterDrain.expiryJobs,
       ({ name }) => name === SECTION_RECONCILIATION_NAME
     );
-    const attemptExpiryJobs = afterDrain.expiryJobs.filter(
+    const attemptExpiryJobs = Arr.filter(
+      afterDrain.expiryJobs,
       ({ name }) => name === ATTEMPT_EXPIRY_NAME
     );
-    const sectionExpiryJobs = afterDrain.expiryJobs.filter(
+    const sectionExpiryJobs = Arr.filter(
+      afterDrain.expiryJobs,
       ({ name }) => name === SECTION_EXPIRY_NAME
     );
     expect(attemptReconciliationJobs).toHaveLength(2);
     expect(sectionReconciliationJobs).toHaveLength(2);
     expect(attemptExpiryJobs).toHaveLength(2);
-    expect(attemptExpiryJobs.map(({ args }) => args)).toEqual(
+    expect(Arr.map(attemptExpiryJobs, ({ args }) => args)).toEqual(
       Array.from(
         {
           length: attemptExpiryJobs.length,
@@ -306,7 +318,7 @@ describe("tryouts/mutations/expiry", () => {
       )
     );
     expect(sectionExpiryJobs).toHaveLength(2);
-    expect(sectionExpiryJobs.map(({ args }) => args)).toEqual(
+    expect(Arr.map(sectionExpiryJobs, ({ args }) => args)).toEqual(
       Array.from(
         {
           length: sectionExpiryJobs.length,

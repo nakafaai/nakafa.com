@@ -2,17 +2,14 @@ import { Agent, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
-import {
-  defaultModel,
-  getFastModelProviderOptions,
-} from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { backgroundGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
 import type { NinaToolSet } from "@repo/backend/confect/nina/step";
 import { NoSuchToolError, Output, type ToolCallRepairFunction } from "ai";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
+
+const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 class NinaRepairError extends Schema.TaggedError<NinaRepairError>()(
   "NinaRepairError",
@@ -47,11 +44,19 @@ export const repairToolCall = Effect.fn("nina.repair")(
     });
     const tool = tools[toolCall.toolName];
     const ctx = yield* ActionCtx;
+    const handle = (yield* Gateway).language({
+      purpose: "background",
+      model: defaultModel,
+      space: { kind: "personal", userId },
+    });
     const agent = new Agent(components.nina, {
       name: "nina-repair",
-      languageModel: yield* getGatewayModel(defaultModel),
+      languageModel: handle.model,
       usageHandler,
     });
+    const acceptedSchema = yield* Schema.encodeEffect(jsonTextSchema)(
+      schema
+    ).pipe(Effect.orDie);
     const result = yield* Effect.tryPromise({
       try: (signal) =>
         agent
@@ -61,24 +66,26 @@ export const repairToolCall = Effect.fn("nina.repair")(
             {
               abortSignal: signal,
               output: Output.object({ schema: tool.inputSchema }),
-              prompt: [
-                `Repair the arguments for ${toolCall.toolName}. Keep the original task and source constraints. Do not invent another task or change the tool.`,
-                `Failed arguments: ${toolCall.input}`,
-                `Accepted schema: ${JSON.stringify(schema)}`,
-                `Validation error: ${error.message}`,
-              ].join("\n\n"),
-              providerOptions: {
-                gateway: gatewayProviderOptions,
-                google: getFastModelProviderOptions(defaultModel),
-              },
-              timeout: backgroundGenerationTimeout,
+              prompt: Arr.join(
+                [
+                  `Repair the arguments for ${toolCall.toolName}. Keep the original task and source constraints. Do not invent another task or change the tool.`,
+                  `Failed arguments: ${toolCall.input}`,
+                  `Accepted schema: ${acceptedSchema}`,
+                  `Validation error: ${error.message}`,
+                ],
+                "\n\n"
+              ),
+              timeout: handle.timeout,
             },
             { storageOptions: { saveMessages: "none" } }
           )
           .then((generated) => generated.output),
       catch: () => new NinaRepairError({ phase: "generation" }),
     });
-    return { ...toolCall, input: JSON.stringify(result) };
+    const input = yield* Schema.encodeEffect(jsonTextSchema)(result).pipe(
+      Effect.orDie
+    );
+    return { ...toolCall, input };
   },
   Effect.catchTag("NinaRepairError", (error) =>
     Effect.logWarning("Nina tool repair unavailable", {

@@ -1,9 +1,9 @@
 import {
-  tryoutSectionVisibilityValidator,
-  tryoutTrackKindValidator,
-} from "@repo/backend/confect/tryouts/catalog/spec";
+  TryoutScoringSchema,
+  TryoutTrackKindSchema,
+  TryoutVisibilitySchema,
+} from "@nakafa/aksara-contracts/tryout/spec";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
-import { tryoutScoringStrategyValidator } from "@repo/backend/confect/tryouts/score";
 import { Schema } from "effect";
 export const publicTryoutCountryValidator = Schema.Struct({
   countryCode: Schema.String,
@@ -20,7 +20,7 @@ export const publicTryoutExamValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
   examKey: tryoutRouteKeyValidator,
   publicPath: Schema.String,
-  scoringStrategy: tryoutScoringStrategyValidator,
+  scoringStrategy: TryoutScoringSchema,
   title: Schema.String,
 });
 export const publicTryoutSetValidator = Schema.Struct({
@@ -30,7 +30,7 @@ export const publicTryoutSetValidator = Schema.Struct({
   publicPath: Schema.String,
   readyQuestionCount: Schema.Finite,
   readyVisibleSectionCount: Schema.Finite,
-  scoringStrategy: tryoutScoringStrategyValidator,
+  scoringStrategy: TryoutScoringSchema,
   sectionCount: Schema.Finite,
   setKey: tryoutRouteKeyValidator,
   title: Schema.String,
@@ -46,7 +46,7 @@ export const publicTryoutTrackValidator = Schema.Struct({
   readyVisibleSectionCount: Schema.Finite,
   title: Schema.String,
   trackKey: tryoutRouteKeyValidator,
-  trackKind: tryoutTrackKindValidator,
+  trackKind: TryoutTrackKindSchema,
 });
 export const publicTryoutSectionValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
@@ -55,5 +55,5 @@ export const publicTryoutSectionValidator = Schema.Struct({
   sectionKey: tryoutRouteKeyValidator,
   timeLimitSeconds: Schema.Finite,
   title: Schema.String,
-  visibility: tryoutSectionVisibilityValidator,
+  visibility: TryoutVisibilitySchema,
 });

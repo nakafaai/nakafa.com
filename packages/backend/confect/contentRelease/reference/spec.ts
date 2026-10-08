@@ -16,9 +16,7 @@ export const contentReferenceInputValidator = Schema.Union([
 ]);
 
 /** Input type derived from the public current reference validator. */
-export type ContentReferenceInput = Schema.Schema.Type<
-  typeof contentReferenceInputValidator
->;
+export type ContentReferenceInput = typeof contentReferenceInputValidator.Type;
 
 /** One current authenticated public content summary, or no exact match. */
 export const contentReferenceReturnValidator = Schema.Union([

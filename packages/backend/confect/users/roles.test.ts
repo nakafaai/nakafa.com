@@ -4,11 +4,12 @@ import {
   isSelfSelectableUserRole,
   selfSelectableUserRoles,
 } from "@repo/backend/confect/users/roles";
+import { Array as Arr } from "effect";
 
 describe("users/roles", () => {
   it("keeps self-selectable roles within persisted roles", () => {
     expect(
-      selfSelectableUserRoles.every((role) => userRoles.includes(role))
+      Arr.every(selfSelectableUserRoles, (role) => userRoles.includes(role))
     ).toBe(true);
   });
 

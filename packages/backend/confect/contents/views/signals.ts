@@ -20,7 +20,7 @@ import {
 } from "@repo/backend/confect/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";
 import type { ContentViewer } from "@repo/backend/confect/contents/views/viewer";
-import { Duration, Effect, flow, Struct } from "effect";
+import { Array as Arr, Duration, Effect, flow, Struct } from "effect";
 
 /** Creates one popularity signal scope from verified learning-context storage. */
 function createSignalScope(
@@ -35,11 +35,9 @@ function createSignalScope(
 
 /** Returns the popularity scopes produced by one verified learning context. */
 function createSignalScopes(context: LearningContextStorage) {
-  const scopes = [
-    createSignalScope(createCanonicalLearningContext(), "global"),
-  ];
+  let scopes = [createSignalScope(createCanonicalLearningContext(), "global")];
   if (context.contextMode === "placement") {
-    scopes.push(createSignalScope(context, "placement"));
+    scopes = Arr.append(scopes, createSignalScope(context, "placement"));
   }
   return scopes;
 }

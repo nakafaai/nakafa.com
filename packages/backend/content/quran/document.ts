@@ -13,9 +13,9 @@ import {
   loadQuranSurah,
   readQuranSurahVerses,
 } from "@repo/backend/content/quran/surah";
-import { Effect, type Schema } from "effect";
+import { Effect } from "effect";
 
-type QuranDocument = Schema.Schema.Type<typeof quranDocumentValidator>;
+type QuranDocument = typeof quranDocumentValidator.Type;
 type QuranDocumentSurah = NonNullable<QuranDocument["surah"]>;
 
 /** Projects complete public surah metadata without signed envelope fields. */

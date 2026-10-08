@@ -87,7 +87,7 @@ describe("contentRelease/article/model", () => {
                 localizedArticle
               )
             );
-            const result = yield* (yield* QueryRunner)(
+            const result = yield* (yield* QueryRunner).runQuery(
               refs.public.contentRelease.article.delivery,
               {
                 appLocale: "en",
@@ -100,7 +100,7 @@ describe("contentRelease/article/model", () => {
               JSON.parse(result.model.projectionJson ?? "")
             );
             expect(runtime.delivery).toBe("public");
-            const missing = yield* (yield* QueryRunner)(
+            const missing = yield* (yield* QueryRunner).runQuery(
               refs.public.contentRelease.article.delivery,
               {
                 appLocale: "en",
@@ -132,13 +132,12 @@ describe("contentRelease/article/model", () => {
               );
             });
             expect(
-              yield* (yield* QueryRunner)(
-                refs.public.contentRelease.article.route,
-                {
+              yield* (yield* QueryRunner)
+                .runQuery(refs.public.contentRelease.article.route, {
                   appLocale: "en",
                   publicPath: testArticleProjection(0).publicPath,
-                }
-              ).pipe(Effect.flip)
+                })
+                .pipe(Effect.flip)
             ).toMatchObject({
               code: "CONTENT_RELEASE_INTEGRITY",
             });
@@ -178,7 +177,7 @@ describe("contentRelease/article/model", () => {
               localizedArticle
             )
           );
-          const result = yield* (yield* QueryRunner)(
+          const result = yield* (yield* QueryRunner).runQuery(
             refs.public.contentRelease.article.route,
             {
               appLocale: requested.appLocale,

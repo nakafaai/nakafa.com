@@ -5,7 +5,7 @@ import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -181,7 +181,7 @@ const validateIrtScaleItems = Effect.fn(
     placementsByIdentity.set(placement.placementIdentity, placement);
   }
   const itemIdentities = new Set<string>();
-  const validated: TryoutIrtSource["items"][number][] = [];
+  let validated: TryoutIrtSource["items"][number][] = [];
   for (const item of args.items) {
     if (itemIdentities.has(item.placementIdentity)) {
       return yield* irtRuntimeError(
@@ -203,7 +203,7 @@ const validateIrtScaleItems = Effect.fn(
       );
     }
     itemIdentities.add(item.placementIdentity);
-    validated.push({
+    validated = Arr.append(validated, {
       item,
       placementId: placement._id,
     });

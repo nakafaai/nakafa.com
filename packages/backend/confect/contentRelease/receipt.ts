@@ -6,20 +6,23 @@ import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot/spec
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { decodeReceiptJson } from "@repo/backend/confect/contentRelease/parse";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Checks that every staged counter is an exact nonnegative integer. */
 function hasStageCounters(release: PublicationRow<"contentReleases">) {
-  return [
-    release.stagedArtifacts,
-    release.stagedDeletes,
-    release.stagedItems,
-    release.stagedProjections,
-    release.stagedRoutes,
-    release.stagedSnapshotBatches,
-    release.stagedSnapshotRows,
-    release.stagedUpserts,
-  ].every((value) => Number.isSafeInteger(value) && value >= 0);
+  return Arr.every(
+    [
+      release.stagedArtifacts,
+      release.stagedDeletes,
+      release.stagedItems,
+      release.stagedProjections,
+      release.stagedRoutes,
+      release.stagedSnapshotBatches,
+      release.stagedSnapshotRows,
+      release.stagedUpserts,
+    ],
+    (value) => Number.isSafeInteger(value) && value >= 0
+  );
 }
 
 /** Checks the durable verifier cursor against the signed item count. */

@@ -2,11 +2,8 @@ import { Agent } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { createCapabilities } from "@repo/backend/confect/nina/capabilities";
-import { getModelProviderOptions } from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { chatStreamTimeout } from "@repo/backend/confect/nina/config/timeouts";
 import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn";
 import {
   generationFailure,
@@ -25,7 +22,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>
 ) {
   const ctx = yield* ActionCtx;
-  const services = yield* Effect.context<ActionCtx>();
+  const services = yield* Effect.context<ActionCtx | Gateway>();
   // SDK callbacks are framework boundaries. Domain programs keep composing Effects.
   const runPromise = Effect.runPromiseWith(services);
   const usageHandler = yield* createUsageHandler(turn._id);
@@ -49,13 +46,14 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     turn.modelId,
     usageHandler
   );
+  const handle = (yield* Gateway).language({
+    purpose: "chat",
+    model: turn.modelId,
+    space: { kind: "personal", userId: turn.userId },
+  });
   const agent = new Agent(components.nina, {
     name: "nina",
-    languageModel: yield* getGatewayModel(turn.modelId).pipe(
-      Effect.mapError(
-        () => new NinaGenerationError({ reason: "service-configuration" })
-      )
-    ),
+    languageModel: handle.model,
     instructions,
     tools,
     usageHandler,
@@ -103,11 +101,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
               })
             ),
           stopWhen: isStepCount(20),
-          providerOptions: {
-            gateway: gatewayProviderOptions,
-            google: getModelProviderOptions(turn.modelId),
-          },
-          timeout: { ...chatStreamTimeout, totalMs: 420_000 },
+          timeout: handle.timeout,
         },
         { saveStreamDeltas: { sendSources: true, returnImmediately: false } }
       ),

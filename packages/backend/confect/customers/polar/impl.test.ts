@@ -13,7 +13,7 @@ import {
   polarDuplicateEmailCode,
   type StoredPolarCustomer,
 } from "@repo/backend/confect/customers/polar/spec";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const input: EnsurePolarCustomerInput = {
   email: "nakafaai@gmail.com",
@@ -240,7 +240,7 @@ describe("customers/polar/impl", () => {
     "relinks an existing email customer when externalId is still unset",
     () =>
       Effect.gen(function* () {
-        const updates: Array<{
+        let updates: Array<{
           customer: StoredPolarCustomer;
           next: EnsurePolarCustomerInput;
         }> = [];
@@ -262,7 +262,7 @@ describe("customers/polar/impl", () => {
             }),
           getCustomerByExternalId: () => Effect.succeed(null),
           updateCustomer: (update) => {
-            updates.push(update);
+            updates = Arr.append(updates, update);
             return Effect.succeed({
               email: update.next.email,
               externalId: update.next.externalId,

@@ -9,6 +9,7 @@ import { useThree } from "@react-three/fiber";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import {
   type CameraProjection,
+  resolveAuthoredView,
   resolveCameraDistanceLimits,
   resolveOrthographicZoom,
 } from "@repo/design-system/lib/geometry/camera";
@@ -141,6 +142,14 @@ export function CameraControls(props: CameraControlsProps) {
     projection.kind === "perspective" ? (projection.fov ?? fov) : fov;
   const projectionHeight =
     projection.kind === "orthographic" ? (projection.viewHeight ?? 0) : 0;
+  // An authored pose keeps a square frame's sides on a portrait canvas, such
+  // as a phone showing the scene full screen. A content fit covers both axes.
+  const authoredView = resolveAuthoredView({
+    fov: projectionFov,
+    height: viewportHeight,
+    width: viewportWidth,
+  });
+  const authoredExtent = authoredView.extent;
   const projectionNear = projection.near;
   const projectionFar = projection.far;
 
@@ -173,7 +182,7 @@ export function CameraControls(props: CameraControlsProps) {
       const zoom = resolveOrthographicZoom(
         projectionHeight ||
           2 * distance * Math.tan((projectionFov * Math.PI) / 360),
-        viewportHeight
+        authoredExtent
       );
       if (!unchanged) {
         object.position.copy(position);
@@ -348,6 +357,7 @@ export function CameraControls(props: CameraControlsProps) {
     framing.invalidate();
     return unsubscribe;
   }, [
+    authoredExtent,
     camera,
     cameraPositionX,
     cameraPositionY,
@@ -435,7 +445,7 @@ export function CameraControls(props: CameraControlsProps) {
       ) : (
         <PerspectiveCamera
           {...(projection.far === undefined ? {} : { far: projection.far })}
-          fov={projection.fov ?? fov}
+          fov={framingMode === "content" ? projectionFov : authoredView.fov}
           makeDefault
           {...(projection.near === undefined ? {} : { near: projection.near })}
         />

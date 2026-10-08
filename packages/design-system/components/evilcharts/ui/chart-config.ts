@@ -1,6 +1,6 @@
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import type { ChartSeriesCue } from "@repo/design-system/lib/charts/series-cue";
-import { Predicate } from "effect";
+import { Predicate, Record as Rec } from "effect";
 import type * as React from "react";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -30,7 +30,7 @@ function isThemeKey(key: string): key is ThemeKey {
   return key in THEMES;
 }
 
-const VALID_THEME_KEYS = Object.keys(THEMES).filter(isThemeKey);
+const VALID_THEME_KEYS = Rec.keys(THEMES).filter(isThemeKey);
 const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/;
 
 export type ChartConfig = Record<
@@ -45,7 +45,7 @@ export type ChartConfig = Record<
 
 // Validation for chart config colors at runtime
 function validateChartConfigColors(config: ChartConfigValidationInput): void {
-  for (const [key, value] of Object.entries(config)) {
+  for (const [key, value] of Rec.toEntries(config)) {
     const { colors } = value;
 
     if (colors) {

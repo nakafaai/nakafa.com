@@ -2,24 +2,24 @@
 
 set -euo pipefail
 
-readonly osv_version="2.5.1"
+readonly osv_version="2.6.0"
 
 case "$(uname -s):$(uname -m)" in
   Darwin:arm64)
     readonly osv_asset="osv-scanner_darwin_arm64"
-    readonly osv_checksum="75c44d6332f892a1e56286f4105a98ed751ae28d215ca0a8b65cc00d84103054"
+    readonly osv_checksum="98c460dcd37de25819babd757d04542045b6243113e209edcd4d89fedb0256b4"
     ;;
   Darwin:x86_64)
     readonly osv_asset="osv-scanner_darwin_amd64"
-    readonly osv_checksum="9f89beb6c3d784893cb1cae0a3d56c529bfe91075418c2f9440c45b79654198b"
+    readonly osv_checksum="60c5296637e977b28eeda5c7f13573e447659a632922737f94d11fa7e30ad6ca"
     ;;
   Linux:aarch64)
     readonly osv_asset="osv-scanner_linux_arm64"
-    readonly osv_checksum="3d0f5aa5a6baa8eb32bcef247388e149ef6030a6634ccae6fa0d62681fb27a6d"
+    readonly osv_checksum="2c71403eb443d05891c4f268c3ad771cf4f16e5443463fd7851ef8f454d3c7e4"
     ;;
   Linux:x86_64)
     readonly osv_asset="osv-scanner_linux_amd64"
-    readonly osv_checksum="f9f25499a2c8cc367b3af45df2ea7eeca7fbccceab9c35079968f4b3652194be"
+    readonly osv_checksum="ca69b3d3cd08f889a49dc0a383122f71cc528b83803671df5fd874d97485b108"
     ;;
   *)
     echo "OSV Scanner does not publish a binary for this platform." >&2
@@ -40,6 +40,7 @@ curl \
   --connect-timeout 10 \
   --fail \
   --location \
+  --max-filesize 134217728 \
   --max-time 120 \
   --output "${osv_binary}" \
   --proto '=https' \
@@ -58,5 +59,6 @@ fi
 
 chmod 700 "${osv_binary}"
 "${osv_binary}" scan source \
+  --config=osv.toml \
   --lockfile=pnpm-lock.yaml \
   --lockfile=apps/cas/uv.lock

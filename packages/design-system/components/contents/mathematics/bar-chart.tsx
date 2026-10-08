@@ -10,12 +10,13 @@ import {
 } from "@repo/design-system/components/evilcharts/charts/bar-chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 
 interface Props {
   chartConfig: ChartConfig;
@@ -36,37 +37,39 @@ export function HistogramChart({
   yAxisLabel,
 }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilBarChart
-          barCategoryGap={0}
-          barGap={0}
-          className="aspect-square"
-          config={chartConfig}
-          data={data}
-        >
-          <Grid vertical={false} />
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilBarChart
+            barCategoryGap={0}
+            barGap={0}
+            className="aspect-square"
+            config={chartConfig}
+            data={data}
+          >
+            <Grid vertical={false} />
 
-          <XAxis dataKey="name" tickMargin={10} />
-          <YAxis
-            dataKey="value"
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
-            }}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Bar dataKey="value" radius={0} />
-        </EvilBarChart>
-      </CardContent>
-    </Card>
+            <XAxis dataKey="name" tickMargin={10} />
+            <YAxis
+              dataKey="value"
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" },
+              }}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Bar dataKey="value" radius={0} />
+          </EvilBarChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }
 
@@ -78,33 +81,35 @@ export function BarChart({
   yAxisLabel,
 }: Props) {
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilBarChart
-          className="aspect-square"
-          config={chartConfig}
-          data={data}
-        >
-          <Grid vertical={false} />
-          <XAxis dataKey="name" tickMargin={10} />
-          <YAxis
-            dataKey="value"
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
-            }}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Bar dataKey="value" radius={8} />
-        </EvilBarChart>
-      </CardContent>
-    </Card>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilBarChart
+            className="aspect-square"
+            config={chartConfig}
+            data={data}
+          >
+            <Grid vertical={false} />
+            <XAxis dataKey="name" tickMargin={10} />
+            <YAxis
+              dataKey="value"
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" },
+              }}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Bar dataKey="value" radius={8} />
+          </EvilBarChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

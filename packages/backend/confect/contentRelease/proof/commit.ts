@@ -20,8 +20,8 @@ import {
   ROLLBACK_RETENTION_MS,
   type statusValidator,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Clock, Effect, type Schema } from "effect";
-export type ReleaseStatus = Schema.Schema.Type<typeof statusValidator>;
+import { Clock, Effect } from "effect";
+export type ReleaseStatus = typeof statusValidator.Type;
 
 /** Proves server-recomputed evidence matches every signed release count. */
 export function matchesManifest(

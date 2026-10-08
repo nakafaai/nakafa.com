@@ -5,7 +5,7 @@ import { triggers } from "@repo/backend/confect/functions";
 import { schoolActivitySchema } from "@repo/backend/confect/schools/schema";
 import { schoolsHandler } from "@repo/backend/confect/triggers/schools/schools";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Effect, Schema, Struct } from "effect";
+import { Array as Arr, Effect, pipe, Schema, Struct } from "effect";
 
 it("records only the fields changed by each native school write", async () => {
   const { t, schoolId } = await createClassFixture();
@@ -37,9 +37,11 @@ it("records only the fields changed by each native school write", async () => {
       .take(20)
   );
   expect(
-    events
-      .filter((event) => event.action === "school_updated")
-      .map((event) => event.metadata)
+    pipe(
+      events,
+      Arr.filter((event) => event.action === "school_updated"),
+      Arr.map((event) => event.metadata)
+    )
   ).toEqual([
     {
       schoolName: "Renamed School",
@@ -124,10 +126,11 @@ it.effect.each([true, false])(
             .take(20)
         )
       );
-      const schoolEvents = events.filter(
+      const schoolEvents = Arr.filter(
+        events,
         (event) => event.entityType === "schools"
       );
-      expect(schoolEvents.map((event) => event.action)).toEqual([
+      expect(Arr.map(schoolEvents, (event) => event.action)).toEqual([
         "school_created",
         "school_updated",
         "school_deleted",

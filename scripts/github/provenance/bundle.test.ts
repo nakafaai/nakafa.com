@@ -1,6 +1,6 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { bundleFromJSON, bundleToJSON } from "@sigstore/bundle";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   ProvenanceBundleVerifier,
   publisherPolicy,
@@ -110,7 +110,10 @@ describe("live Sigstore bundle verification", () => {
       }).pipe(Effect.flip);
 
       assert.deepStrictEqual(
-        [invalid, unsigned].map((failure) => [failure._tag, failure.message]),
+        Arr.map([invalid, unsigned], (failure) => [
+          failure._tag,
+          failure.message,
+        ]),
         [
           [
             "ProvenanceVerificationError",

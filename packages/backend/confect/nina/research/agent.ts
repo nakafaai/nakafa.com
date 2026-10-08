@@ -2,11 +2,9 @@ import { google } from "@ai-sdk/google";
 import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
-import { getFastModelProviderOptions } from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { subAgentGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
-import type { ResearchAgentParams } from "@repo/backend/confect/nina/contract/agent";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
+import type { ResearchAgentData } from "@repo/backend/confect/nina/contract/agent";
 import { textOutputSchema } from "@repo/backend/confect/nina/contract/tools";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import {
@@ -51,7 +49,7 @@ import {
   Output,
   wrapLanguageModel,
 } from "ai";
-import { Effect } from "effect";
+import { Array as Arr, Effect, MutableHashSet } from "effect";
 
 // Keep exact source fetching within the admitted count and provider concurrency.
 const exactSourceScrapeConcurrency = 3;
@@ -72,7 +70,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     toolCallId,
     publish,
     usageHandler,
-  }: ResearchAgentParams & { readonly usageHandler: UsageHandler }) {
+  }: ResearchAgentData & {
+    readonly publish: CapabilityProgress;
+    readonly usageHandler: UsageHandler;
+  }) {
     const sourceReferences = getUniqueSourceReferences([
       ...messageSourceReferences,
       ...getSourceReferences(task),
@@ -84,7 +85,11 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       });
     }
     const ctx = yield* ActionCtx;
-    const model = yield* getGatewayModel(modelId);
+    const { model, timeout } = (yield* Gateway).language({
+      purpose: "specialist",
+      model: modelId,
+      space: { kind: "personal", userId },
+    });
     const agent = new Agent(components.nina, {
       name: "research",
       languageModel: model,
@@ -98,8 +103,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       toolCallId,
       publish,
     });
-    const collectedEvidence = sourceOutputs.map((output) => output.text);
-    const eligibleCitationUrls = new Set<string>();
+    let collectedEvidence = Arr.map(sourceOutputs, (output) => output.text);
+    const eligibleCitationUrls = MutableHashSet.empty<string>();
 
     for (const sourceOutput of sourceOutputs) {
       addEligibleSourceUrls(eligibleCitationUrls, sourceOutput.sources);
@@ -138,7 +143,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                     }).pipe(
                       Effect.tap((output) =>
                         Effect.sync(() => {
-                          collectedEvidence.push(output.text);
+                          collectedEvidence = Arr.append(
+                            collectedEvidence,
+                            output.text
+                          );
                           addEligibleSourceUrls(
                             eligibleCitationUrls,
                             output.result.sources
@@ -157,8 +165,9 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
              * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
              */
             prepareStep: ({ messages, steps }) => {
-              const hasWebSearchToolCall = steps.some((step) =>
-                step.toolCalls.some(
+              const hasWebSearchToolCall = Arr.some(steps, (step) =>
+                Arr.some(
+                  step.toolCalls,
                   (toolCall) => toolCall.toolName === "webSearch"
                 )
               );
@@ -172,12 +181,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 
               return prepareGoogleGroundingStep(messages);
             },
-            providerOptions: {
-              gateway: gatewayProviderOptions,
-              google: getFastModelProviderOptions(modelId),
-            },
             stopWhen: isStepCount(2),
-            timeout: subAgentGenerationTimeout,
+            timeout,
           }
         ),
       catch: (error) => makeResearchGenerationError(error, "evidence"),
@@ -191,7 +196,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     if (groundedSearchData) {
       const groundingEvidence = createGroundingEvidence(groundedSearchData);
 
-      collectedEvidence.push(groundingEvidence);
+      collectedEvidence = Arr.append(collectedEvidence, groundingEvidence);
       addEligibleSourceUrls(eligibleCitationUrls, groundedSearchData.sources);
       yield* publish({
         id: `${toolCallId}-grounding`,
@@ -200,7 +205,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       });
     }
 
-    const sourceEvidenceAvailable = eligibleCitationUrls.size > 0;
+    const sourceEvidenceAvailable =
+      MutableHashSet.size(eligibleCitationUrls) > 0;
     const output = yield* Effect.tryPromise({
       try: (signal) =>
         agent
@@ -230,11 +236,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                 name: "research_findings",
                 schema: researchOutputSchema,
               }),
-              providerOptions: {
-                gateway: gatewayProviderOptions,
-                google: getFastModelProviderOptions(modelId),
-              },
-              timeout: subAgentGenerationTimeout,
+              timeout,
             }
           )
           .then((result) => result.output),
@@ -257,10 +259,9 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
     sourceReferences,
     toolCallId,
     publish,
-  }: Pick<
-    ResearchAgentParams,
-    "task" | "sourceReferences" | "toolCallId" | "publish"
-  >) {
+  }: Pick<ResearchAgentData, "task" | "sourceReferences" | "toolCallId"> & {
+    readonly publish: CapabilityProgress;
+  }) {
     return yield* Effect.forEach(
       sourceReferences,
       (source, index) =>
@@ -287,16 +288,14 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
  * Keeps source references unique while preserving the user's order.
  */
 function getUniqueSourceReferences(
-  sourceReferences: ResearchAgentParams["sourceReferences"]
+  sourceReferences: ResearchAgentData["sourceReferences"]
 ) {
-  const seen = new Set<string>();
-
-  return sourceReferences.flatMap((source) => {
-    if (seen.has(source.href)) {
-      return [];
+  const seen = MutableHashSet.empty<string>();
+  return Arr.filter(sourceReferences, (source) => {
+    if (MutableHashSet.has(seen, source.href)) {
+      return false;
     }
-
-    seen.add(source.href);
-    return [source];
+    MutableHashSet.add(seen, source.href);
+    return true;
   });
 }

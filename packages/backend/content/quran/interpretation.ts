@@ -2,13 +2,11 @@ import { readQuranTafsir } from "@repo/backend/confect/contentRelease/quran/tran
 import { loadQuranPassage } from "@repo/backend/content/quran/reference";
 import type { quranInterpretationValidator } from "@repo/backend/content/quran/response";
 import { readQuranLocaleSources } from "@repo/backend/content/quran/sources";
-import { Effect, type Schema } from "effect";
+import { Effect } from "effect";
 
 /** Exact signed tafsir response returned only after one verse is requested. */
 
-type QuranInterpretation = Schema.Schema.Type<
-  typeof quranInterpretationValidator
->;
+type QuranInterpretation = typeof quranInterpretationValidator.Type;
 
 /** Reads one exact Indonesian tafsir from its verified immutable chunk. */
 export const readQuranInterpretation = Effect.fn(

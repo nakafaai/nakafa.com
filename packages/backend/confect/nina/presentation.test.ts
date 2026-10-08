@@ -3,25 +3,24 @@ import { saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  GatewayConfigurationError,
-  getGatewayModel,
-} from "@repo/backend/confect/nina/config/provider";
+import { GatewayConfigurationError } from "@repo/backend/confect/gateway/key";
+import { deployment, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Order, Schema } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", async (load) => ({
-  ...(await load<
-    typeof import("@repo/backend/confect/nina/config/provider")
-  >()),
-  getGatewayModel: vi.fn(),
+vi.mock("@repo/backend/confect/gateway/live", async () => ({
+  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
   vi.restoreAllMocks();
+  deployment.mockReset();
+  provider.languageModel.mockReset();
   vi.useRealTimers();
 });
+const NOW = Date.UTC(2026, 8, 27, 12);
+const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const present = Ref.getFunctionReference(refs.internal.nina.response.present);
 const save = Ref.getFunctionReference(refs.internal.nina.presentation.save);
@@ -38,7 +37,7 @@ describe("Nina presentation after an answer", () => {
         failure === "provider"
           ? () => Promise.reject(new Error("Private provider diagnostic"))
           : () => Promise.resolve(providerStep([{ type: "text", text: "" }]));
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       await f.t.action(run, { turnId: f.turnId });
       await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
       const state = await f.t.query(async (ctx) => ({
@@ -67,7 +66,7 @@ describe("Nina presentation after an answer", () => {
       });
     });
     const model = ninaModel();
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
     expect(model.doGenerateCalls).toHaveLength(1);
@@ -91,7 +90,7 @@ describe("Nina presentation after an answer", () => {
       }
     );
     expect(
-      messages.page.filter((message) => message.message?.role === "user")
+      Arr.filter(messages.page, (message) => message.message?.role === "user")
     ).toHaveLength(2);
     expect(messages.page.at(-1)?.message).toMatchObject({
       role: "assistant",
@@ -111,7 +110,7 @@ describe("Nina presentation after an answer", () => {
   it("releases the chat before metadata, anchors its context and accounts for late usage", async () => {
     const f = await createNinaTest();
     const model = ninaModel();
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
     expect(model.doGenerateCalls).toHaveLength(0);
     expect(
@@ -132,17 +131,33 @@ describe("Nina presentation after an answer", () => {
     );
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
     const [suggestions, title] = model.doGenerateCalls;
-    expect(JSON.stringify(suggestions?.prompt)).toContain("Explain a limit.");
-    expect(JSON.stringify(suggestions?.prompt)).toContain(
+    expect(suggestions?.providerOptions?.gateway?.tags).toEqual([
+      "space:personal",
+      "purpose:suggestion",
+    ]);
+    expect(title?.providerOptions?.gateway?.tags).toEqual([
+      "space:personal",
+      "purpose:presentation",
+    ]);
+    expect(Schema.encodeSync(jsonTextSchema)(suggestions?.prompt)).toContain(
+      "Explain a limit."
+    );
+    expect(Schema.encodeSync(jsonTextSchema)(suggestions?.prompt)).toContain(
       "A limit describes the value approached."
     );
-    expect(JSON.stringify(suggestions?.prompt)).not.toContain("photosynthesis");
+    expect(
+      Schema.encodeSync(jsonTextSchema)(suggestions?.prompt)
+    ).not.toContain("photosynthesis");
     expect(suggestions?.prompt.at(-1)?.role).toBe("user");
-    expect(JSON.stringify(title?.prompt)).toContain("Explain a limit.");
-    expect(JSON.stringify(title?.prompt)).not.toContain(
+    expect(Schema.encodeSync(jsonTextSchema)(title?.prompt)).toContain(
+      "Explain a limit."
+    );
+    expect(Schema.encodeSync(jsonTextSchema)(title?.prompt)).not.toContain(
       "A limit describes the value approached."
     );
-    expect(JSON.stringify(title?.prompt)).not.toContain("photosynthesis");
+    expect(Schema.encodeSync(jsonTextSchema)(title?.prompt)).not.toContain(
+      "photosynthesis"
+    );
     const state = await f.t.query(async (ctx) => ({
       turn: await ctx.db.get("ninaTurns", f.turnId),
       user: await ctx.db.get("users", f.identity.userId),
@@ -150,11 +165,12 @@ describe("Nina presentation after an answer", () => {
       ledger: await ctx.db.query("creditTransactions").collect(),
     }));
     expect(state.turn?.tokens).toEqual({ input: 36, output: 12, total: 48 });
-    expect(state.turn?.usage.map((row) => row.agent).sort()).toEqual([
-      "nina",
-      "suggestions",
-      "title",
-    ]);
+    expect(
+      Arr.sort(
+        Arr.map(state.turn?.usage ?? [], (row) => row.agent),
+        Order.String
+      )
+    ).toEqual(["nina", "suggestions", "title"]);
     expect(state.turn?.suggestions).toEqual([
       "How does this relate to continuity?",
     ]);
@@ -174,7 +190,7 @@ describe("Nina presentation after an answer", () => {
     "missing-context",
   ] as const)("skips deferred generation for %s state", async (state) => {
     const f = await createNinaTest();
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(ninaModel()));
+    provider.languageModel.mockReturnValue(ninaModel());
     if (state === "cancelled") {
       await f.owner.mutation(cancel, { chatId: f.chatId });
     } else if (state === "failed") {
@@ -197,29 +213,31 @@ describe("Nina presentation after an answer", () => {
       }
       if (state === "deleting-user") {
         await ctx.db.patch("users", f.identity.userId, {
-          deletionPreparedAt: Date.now(),
+          deletionPreparedAt: NOW,
         });
       }
       if (state === "missing-context") {
         await ctx.db.patch("ninaTurns", f.turnId, { page: undefined });
       }
     });
-    vi.mocked(getGatewayModel).mockClear();
+    provider.languageModel.mockClear();
     await expect(f.t.action(present, { turnId: f.turnId })).resolves.toBeNull();
-    expect(getGatewayModel).not.toHaveBeenCalled();
+    expect(provider.languageModel).not.toHaveBeenCalled();
   });
 
   it("keeps a settled answer when optional generation loses provider configuration", async () => {
     const f = await createNinaTest();
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(ninaModel()));
+    provider.languageModel.mockReturnValue(ninaModel());
     await f.t.action(run, { turnId: f.turnId });
-    vi.mocked(getGatewayModel).mockReturnValue(
+    deployment.mockReturnValue(
       Effect.fail(new GatewayConfigurationError({ message: "Unavailable" }))
     );
+    provider.languageModel.mockClear();
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
     expect(
       await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
     ).toMatchObject({ state: { status: "complete" } });
+    expect(provider.languageModel).not.toHaveBeenCalled();
   });
 
   it("never overwrites an edited title, and replaces only the default title", async () => {
@@ -275,7 +293,7 @@ describe("Nina presentation after an answer", () => {
     const f = await createNinaTest();
     await f.owner.mutation(cancel, { chatId: f.chatId });
     await f.t.action(run, { turnId: f.turnId });
-    expect(getGatewayModel).not.toHaveBeenCalled();
+    expect(provider.languageModel).not.toHaveBeenCalled();
     expect(
       (await f.t.query((ctx) => ctx.db.get("users", f.identity.userId)))
         ?.credits

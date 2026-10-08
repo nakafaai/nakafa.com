@@ -7,7 +7,7 @@ import { MAX_FORUM_TRANSCRIPT_POSTS } from "@repo/backend/confect/classes/forums
 import spec from "@repo/backend/confect/classes/forums/queries/pages.spec";
 import { createForumFeedPosts } from "@repo/backend/confect/classes/forums/transcript";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 const getForumPosts = FunctionImpl.make(
   databaseSchema,
@@ -30,7 +30,7 @@ const getForumPosts = FunctionImpl.make(
     return yield* createForumFeedPosts({
       currentUserId,
       forumId: args.forumId,
-      posts: [...posts].reverse(),
+      posts: Arr.reverse(posts),
     });
   })
 );

@@ -19,7 +19,7 @@ import {
   type TryoutSetSelection,
 } from "@repo/backend/content/tryout/selection";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 interface AttemptPath {
@@ -57,11 +57,17 @@ export const readAttemptSectionPage = Effect.fn(
 )(function* (args: AttemptPath, attempt: TryoutAttempt) {
   const identity = readAttemptSetIdentity(attempt);
   const selection = yield* readAttemptSetSelection(args, attempt, identity);
-  const original = attempt.sectionSnapshots.find(
-    (section) => section.publicPath === args.publicPath
+  const original = Option.getOrUndefined(
+    Arr.findFirst(
+      attempt.sectionSnapshots,
+      (section) => section.publicPath === args.publicPath
+    )
   );
-  const localized = selection.sections.find(
-    (section) => section.sectionKey === original?.sectionKey
+  const localized = Option.getOrUndefined(
+    Arr.findFirst(
+      selection.sections,
+      (section) => section.sectionKey === original?.sectionKey
+    )
   );
   const page = yield* readPublishedSectionPageFromIndex(
     selection,
@@ -142,9 +148,12 @@ function matchesAttemptSelection(
   ) {
     return false;
   }
-  return attempt.sectionSnapshots.every((snapshot) => {
-    const record = selection.sectionRecords.find(
-      ({ row }) => tryoutCatalogIdentity(row) === snapshot.sectionIdentity
+  return Arr.every(attempt.sectionSnapshots, (snapshot) => {
+    const record = Option.getOrUndefined(
+      Arr.findFirst(
+        selection.sectionRecords,
+        ({ row }) => tryoutCatalogIdentity(row) === snapshot.sectionIdentity
+      )
     );
     if (!record) {
       return false;

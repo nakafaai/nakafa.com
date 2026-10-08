@@ -4,7 +4,7 @@ import {
   logInternalFailure,
 } from "@repo/backend/confect/routes/agent/response";
 import { NakafaAgentInputError } from "@repo/contents/agent/errors";
-import { Cause, Effect, Logger } from "effect";
+import { Array as Arr, Cause, Effect, Logger, MutableRef } from "effect";
 
 describe("agent responses", () => {
   it("uses corrective input guidance when no cause is supplied", async () => {
@@ -23,14 +23,16 @@ describe("agent responses", () => {
   });
   it.effect("logs unexpected causes with the public request identity", () =>
     Effect.gen(function* () {
-      const entries: Array<{
-        readonly annotations: Record<string, unknown>;
-        readonly cause: string | undefined;
-        readonly level: string;
-        readonly message: unknown;
-      }> = [];
+      const logged = MutableRef.make<
+        readonly {
+          readonly annotations: Record<string, unknown>;
+          readonly cause: string | undefined;
+          readonly level: string;
+          readonly message: unknown;
+        }[]
+      >([]);
       const logger = Logger.formatStructured.pipe(
-        Logger.map((entry) => entries.push(entry))
+        Logger.map((entry) => MutableRef.update(logged, Arr.append(entry)))
       );
       const response = yield* logInternalFailure(
         Cause.die(new Error("private defect detail")),
@@ -39,6 +41,7 @@ describe("agent responses", () => {
       ).pipe(Effect.provide(Logger.layer([logger])));
       const body = yield* Effect.promise(() => response.json());
 
+      const entries = MutableRef.get(logged);
       expect(entries).toHaveLength(1);
       expect(entries[0]).toMatchObject({
         annotations: {

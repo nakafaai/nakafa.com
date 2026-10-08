@@ -1,4 +1,5 @@
 import dedent from "dedent";
+import { Array as Arr, pipe } from "effect";
 
 /** Assembles prompt sections in their declared order with empty sections removed. */
 export function createPrompt(opts: {
@@ -26,19 +27,21 @@ export function createPrompt(opts: {
   outputFormatting?: string;
 }): string {
   return dedent(
-    [
-      opts.taskContext,
-      opts.toneContext,
-      opts.backgroundData,
-      opts.toolUsageGuidelines,
-      opts.detailedTaskInstructions,
-      opts.examples,
-      opts.conversationHistory,
-      opts.finalRequest,
-      opts.chainOfThought,
-      opts.outputFormatting,
-    ]
-      .filter(Boolean)
-      .join("\n\n")
+    pipe(
+      [
+        opts.taskContext,
+        opts.toneContext,
+        opts.backgroundData,
+        opts.toolUsageGuidelines,
+        opts.detailedTaskInstructions,
+        opts.examples,
+        opts.conversationHistory,
+        opts.finalRequest,
+        opts.chainOfThought,
+        opts.outputFormatting,
+      ],
+      Arr.filter((part): part is string => Boolean(part)),
+      Arr.join("\n\n")
+    )
   );
 }

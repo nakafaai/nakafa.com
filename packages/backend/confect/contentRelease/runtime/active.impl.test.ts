@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -6,6 +7,7 @@ import { testProofRenderer } from "@repo/backend/test/content/proof";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
+import { Schema } from "effect";
 
 const readActive = api.contentRelease.runtime.active.read;
 
@@ -61,7 +63,9 @@ describe("contentRelease/runtime/active", () => {
         throw new Error("Expected an active release.");
       }
       await ctx.db.patch("contentReleases", release._id, {
-        rendererJson: JSON.stringify(testProofRenderer("blockquote")),
+        rendererJson: Schema.encodeSync(
+          Schema.fromJsonString(RendererManifestEnvelopeSchema)
+        )(testProofRenderer("blockquote")),
       });
     });
     await expect(rendererMismatch.query(readActive, {})).rejects.toMatchObject({

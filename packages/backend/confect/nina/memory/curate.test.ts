@@ -5,22 +5,20 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import { curateMemory } from "@repo/backend/confect/nina/memory/curate";
+import { GatewayTest, provider } from "@repo/backend/test/gateway";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", async (original) => ({
-  ...(await original<
-    typeof import("@repo/backend/confect/nina/config/provider")
-  >()),
-  getGatewayModel: vi.fn(),
-}));
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  provider.languageModel.mockReset();
+});
 
 const enable = Ref.getFunctionReference(refs.public.nina.memory.enable);
+const jsonCodec = Schema.fromJsonString(Schema.Unknown);
 
 /** A learner prompt, a way to curate it, and the stored memory. */
 async function fixture(prompt = "Aku kelas 12 dan mau ikut SNBT 2027.") {
@@ -32,7 +30,12 @@ async function fixture(prompt = "Aku kelas 12 dan mau ikut SNBT 2027.") {
           chatId: f.chatId,
           promptMessageId,
           userId: f.identity.userId,
-        }).pipe(Effect.provide(RegisteredFunction.actionLayer(schema, ctx)))
+        }).pipe(
+          Effect.provide([
+            GatewayTest,
+            RegisteredFunction.actionLayer(schema, ctx),
+          ])
+        )
       )
     );
   const memory = () =>
@@ -43,9 +46,11 @@ async function fixture(prompt = "Aku kelas 12 dan mau ikut SNBT 2027.") {
 /** A curator model that answers every call with `changes`. */
 function curator(changes: object) {
   const model = new MockLanguageModelV4({
-    doGenerate: providerStep([{ type: "text", text: JSON.stringify(changes) }]),
+    doGenerate: providerStep([
+      { type: "text", text: Schema.encodeSync(jsonCodec)(changes) },
+    ]),
   });
-  vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+  provider.languageModel.mockReturnValue(model);
   return model;
 }
 
@@ -68,8 +73,12 @@ describe("Nina memory curation", () => {
     });
     await f.curate();
     await f.curate();
-    const [first, second] = model.doGenerateCalls.map((call) =>
-      JSON.stringify(call.prompt)
+    expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
+      "space:personal",
+      "purpose:background",
+    ]);
+    const [first, second] = Arr.map(model.doGenerateCalls, (call) =>
+      Schema.encodeSync(jsonCodec)(call.prompt)
     );
     expect(first).toContain("Aku kelas 12 dan mau ikut SNBT 2027.");
     expect(first).toContain("Known facts: none");
@@ -112,12 +121,10 @@ describe("Nina memory curation", () => {
   it("keeps memory unchanged when the prompt or the provider fails", async () => {
     const f = await fixture();
     await f.owner.mutation(enable, {});
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(
-        new MockLanguageModelV4({
-          doGenerate: () => Promise.reject(new Error("provider down")),
-        })
-      )
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doGenerate: () => Promise.reject(new Error("provider down")),
+      })
     );
     await f.curate();
     await f.curate("not-a-message-id");
@@ -132,39 +139,37 @@ describe("Nina memory curation", () => {
   it("records zero tokens when the provider omits usage counters", async () => {
     const f = await fixture();
     await f.owner.mutation(enable, {});
-    vi.mocked(getGatewayModel).mockReturnValue(
-      Effect.succeed(
-        new MockLanguageModelV4({
-          doGenerate: () =>
-            Promise.resolve({
-              content: [
-                {
-                  type: "text",
-                  text: JSON.stringify({
-                    forget: [],
-                    remember: [],
-                    update: [],
-                  }),
-                },
-              ],
-              finishReason: { unified: "stop", raw: "stop" },
-              usage: {
-                inputTokens: {
-                  total: undefined,
-                  noCache: undefined,
-                  cacheRead: undefined,
-                  cacheWrite: undefined,
-                },
-                outputTokens: {
-                  total: undefined,
-                  text: undefined,
-                  reasoning: undefined,
-                },
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        doGenerate: () =>
+          Promise.resolve({
+            content: [
+              {
+                type: "text",
+                text: Schema.encodeSync(jsonCodec)({
+                  forget: [],
+                  remember: [],
+                  update: [],
+                }),
               },
-              warnings: [],
-            }),
-        })
-      )
+            ],
+            finishReason: { unified: "stop", raw: "stop" },
+            usage: {
+              inputTokens: {
+                total: undefined,
+                noCache: undefined,
+                cacheRead: undefined,
+                cacheWrite: undefined,
+              },
+              outputTokens: {
+                total: undefined,
+                text: undefined,
+                reasoning: undefined,
+              },
+            },
+            warnings: [],
+          }),
+      })
     );
     await f.curate();
     expect(await f.memory()).toEqual([

@@ -15,7 +15,7 @@ import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 const testResend = new Resend(components.resend, {
   apiKey: "re_test_welcome_reconciliation",
@@ -160,9 +160,12 @@ describe("emails/welcome/reconciliation", () => {
     const retained = await test.query((ctx) =>
       ctx.db.query("welcomeEmailIntents").collect()
     );
-    expect(retained.map((intent) => intent._id).sort()).toEqual(
-      [waiting.intentId, queued.intentId].sort()
-    );
+    expect(
+      Arr.sort(
+        Arr.map(retained, (intent) => intent._id),
+        Order.String
+      )
+    ).toEqual(Arr.sort([waiting.intentId, queued.intentId], Order.String));
   });
   it("releases an intent after component retention removed its record", async () => {
     const test = convexTest(schema, convexModules);

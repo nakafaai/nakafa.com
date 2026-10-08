@@ -1,12 +1,13 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-  decodePublicContentRuntimeRequest,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
+  PublicContentRuntimeRequestSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { decodeRendererJson } from "@repo/backend/confect/contentRelease/parse";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -24,11 +25,24 @@ import {
 } from "@repo/backend/test/content/runtime";
 import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
+const publicRequestJson = Schema.fromJsonString(
+  PublicContentRuntimeRequestSchema
+);
+/** Decodes one public request with the strict contract that production uses. */
+const decodePublicRequestJson = Schema.decodeUnknownEffect(publicRequestJson, {
+  onExcessProperty: "error",
+});
+/** Encodes one valid public request through the contract. */
+const encodePublicRequestJson = Schema.encodeUnknownSync(publicRequestJson);
+/** Encodes a body the contract rejects, keeping its exact invalid wire bytes. */
+const malformedJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 /** Sends one request through the actual registered Convex HTTP route. */
@@ -136,7 +150,7 @@ describe("public content runtime HTTP route", () => {
       413,
     ],
     [
-      JSON.stringify({
+      malformedJson({
         delivery: "public",
         extra: true,
         appLocale: "en",
@@ -172,7 +186,7 @@ describe("public content runtime HTTP route", () => {
         const missing = yield* Effect.promise(() =>
           post(
             t,
-            JSON.stringify({
+            encodePublicRequestJson({
               delivery: "public",
               appLocale: "en",
               publicPath: "subjects/test/missing",
@@ -182,9 +196,7 @@ describe("public content runtime HTTP route", () => {
         expect(found.status).toBe(200);
         const foundBody = yield* Effect.promise(() => found.json());
         expect(foundBody).toMatchObject({ kind: "found" });
-        const request = yield* decodePublicContentRuntimeRequest(
-          JSON.parse(publicRuntimeRequest())
-        );
+        const request = yield* decodePublicRequestJson(publicRuntimeRequest());
         const rejected = yield* verifyContentRuntimeExchange({
           rendererManifest: foundBody.rendererManifest,
           request,
@@ -217,12 +229,11 @@ describe("public content runtime HTTP route", () => {
       if (!row) {
         return expect.fail("Expected one public runtime row.");
       }
-      const request = yield* decodePublicContentRuntimeRequest(
-        JSON.parse(publicRuntimeRequest())
-      );
+      const request = yield* decodePublicRequestJson(publicRuntimeRequest());
+      const rendererManifest = yield* decodeRendererJson(row.rendererJson);
       for (const [reason, candidate] of runtimeCases(row)) {
         const result = yield* verifyContentRuntimeExchange({
-          rendererManifest: JSON.parse(row.rendererJson),
+          rendererManifest,
           request,
           response: candidate,
         }).pipe(
@@ -244,7 +255,7 @@ describe("public content runtime HTTP route", () => {
     await seedRuntime(t, "authenticated");
     const response = await post(
       t,
-      JSON.stringify({
+      malformedJson({
         delivery: "authenticated",
         appLocale: "en",
         publicPath: TEST_RUNTIME_PATH,

@@ -10,11 +10,11 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { useConvexAuth } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { useConvexAuth } from "@/components/providers/convex";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
@@ -59,7 +59,8 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
 /** Starts or resumes a free try-out from the current page. */
 function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const startAttempt = useMutation(
     refs.public.tryouts.mutations.attempts.startAttempt
   );

@@ -9,7 +9,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 import { NextRequest } from "next/server";
 import {
   ContentCacheInvalidationError,
@@ -82,7 +82,7 @@ function createBodyRequest(
       body,
       headers: {
         Authorization: "Bearer test-key",
-        ...Object.fromEntries(new Headers(headers)),
+        ...Rec.fromEntries(new Headers(headers)),
       },
       method: "POST",
     }

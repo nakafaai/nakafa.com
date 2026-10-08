@@ -1,11 +1,21 @@
-import { execFileSync } from "node:child_process";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, PlatformError, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  Layer,
+  Path,
+  PlatformError,
+  Record as Rec,
+  Schema,
+  Stream,
+} from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
   type EffectSourceConfig,
   makeEffectSourceProgram,
+  SourceIdentity,
 } from "#scripts/effect/source";
 
 class GitFixtureError extends Schema.TaggedError<GitFixtureError>()(
@@ -22,24 +32,50 @@ const STAGED_TREE = "0123456789abcdef0123456789abcdef01234567";
 const OUTSIDE_REPOSITORY =
   /^git status --porcelain -- repos\/effect scripts\/effect\/source\.json: fatal: /u;
 
+const PackageManifestJson = Schema.fromJsonString(
+  Schema.Struct({ name: Schema.String, version: Schema.String }),
+  { space: 2 }
+);
+const SourceIdentityJson = Schema.fromJsonString(SourceIdentity, { space: 2 });
+// Accepts any commit or tree text: a fixture may record an invalid identity.
+const UncheckedSourceIdentityJson = Schema.fromJsonString(
+  Schema.Struct({
+    ...SourceIdentity.fields,
+    commit: Schema.String,
+    tree: Schema.String,
+  }),
+  { space: 2 }
+);
+
 const packageManifest = (version: string) =>
-  `${JSON.stringify({ name: "effect", version }, null, 2)}\n`;
+  `${Schema.encodeSync(PackageManifestJson)({ name: "effect", version })}\n`;
 
 const sourceIdentity = (commit: string, tag: string, tree: string) =>
-  `${JSON.stringify({ commit, tag, tree }, null, 2)}\n`;
+  `${Schema.encodeSync(SourceIdentityJson)({ commit, tag, tree })}\n`;
 
-const runGit = Effect.fn("EffectSourceTest.runGit")(
-  (cwd: string, args: readonly string[]) =>
-    Effect.try({
-      catch: (cause) =>
-        new GitFixtureError({
-          cause,
-          message: `git ${args.join(" ")} failed`,
-        }),
-      try: () =>
-        execFileSync("git", [...args], { cwd, encoding: "utf8" }).trim(),
+/** Runs Git in one child process and returns its trimmed standard output. */
+const runGit = Effect.fn("EffectSourceTest.runGit")(function* (
+  cwd: string,
+  args: readonly string[]
+) {
+  const message = `git ${Arr.join(args, " ")} failed`;
+  const [exitCode, stdout] = yield* Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* ChildProcess.make("git", args, {
+        cwd,
+        stderr: "inherit",
+      });
+      return yield* Effect.all(
+        [handle.exitCode, Stream.mkString(Stream.decodeText(handle.stdout))],
+        { concurrency: 2 }
+      );
     })
-);
+  ).pipe(Effect.mapError((cause) => new GitFixtureError({ cause, message })));
+  if (exitCode !== 0) {
+    return yield* new GitFixtureError({ cause: exitCode, message });
+  }
+  return stdout.trim();
+});
 
 /** Writes fixture files below one repository root. */
 const writeFiles = Effect.fn("EffectSourceTest.writeFiles")(function* (
@@ -48,7 +84,7 @@ const writeFiles = Effect.fn("EffectSourceTest.writeFiles")(function* (
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  for (const [file, content] of Object.entries(files)) {
+  for (const [file, content] of Rec.toEntries(files)) {
     const filePath = path.join(root, file);
     yield* fileSystem.makeDirectory(path.dirname(filePath), {
       recursive: true,
@@ -75,6 +111,11 @@ const initRepository = Effect.fn("EffectSourceTest.initRepository")(function* (
 ) {
   yield* writeFiles(repository, files);
   yield* runGit(repository, ["init", "--initial-branch=main"]);
+  // Git starts detached maintenance after a commit. A fixture repository lives
+  // in a scoped temporary folder, so nothing may still write into it when the
+  // scope removes that folder.
+  yield* runGit(repository, ["config", "gc.auto", "0"]);
+  yield* runGit(repository, ["config", "maintenance.auto", "false"]);
   yield* runGit(repository, ["config", "user.name", "Source Fixture"]);
   yield* runGit(repository, [
     "config",
@@ -193,6 +234,29 @@ function stagedSourceTree(tree: string) {
   ).pipe(Layer.provide(NodeServices.layer));
 }
 
+/** Answers the upstream commit query with an abbreviated Git object id. */
+function abbreviatedUpstreamCommit(commit: string) {
+  return Layer.effect(
+    ChildProcessSpawner.ChildProcessSpawner,
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      return ChildProcessSpawner.make((command) =>
+        spawner.spawn(
+          ChildProcess.isStandardCommand(command) &&
+            command.args[0] === "rev-parse" &&
+            command.args[1] === "FETCH_HEAD^{commit}"
+            ? ChildProcess.make(
+                "git",
+                ["rev-parse", "--short", commit],
+                command.options
+              )
+            : command
+        )
+      );
+    })
+  ).pipe(Layer.provide(NodeServices.layer));
+}
+
 describe("Effect source identity", () => {
   it.effect(
     "updates linearly and remains valid after its subtree history is squashed",
@@ -218,7 +282,12 @@ describe("Effect source identity", () => {
         expect(
           yield* runGit(consumer, ["show", "-s", "--format=%B", updatedHead])
         ).toContain(`git-subtree-split: ${fixture.newCommit}`);
-        expect(JSON.parse(identity)).toEqual({
+        // Excess keys fail the decode, so toEqual also proves the exact key set.
+        expect(
+          yield* Schema.decodeEffect(SourceIdentityJson)(identity, {
+            onExcessProperty: "error",
+          })
+        ).toEqual({
           commit: fixture.newCommit,
           tag: "effect@2.0.0",
           tree: fixture.newTree,
@@ -341,7 +410,11 @@ describe("Effect source identity", () => {
       action: "check",
       change: (fixture: Fixture) =>
         commitFiles(fixture.consumer, {
-          [IDENTITY]: sourceIdentity("HEAD", "effect@1.0.0", "HEAD"),
+          [IDENTITY]: `${Schema.encodeSync(UncheckedSourceIdentityJson)({
+            commit: "HEAD",
+            tag: "effect@1.0.0",
+            tree: "HEAD",
+          })}\n`,
         }),
       error: "EffectSourceFileError",
       message: (fixture: Fixture) =>
@@ -357,7 +430,7 @@ describe("Effect source identity", () => {
         "Effect source updates require a clean worktree. Commit dependency changes first.",
       name: "an update from a dirty worktree",
     },
-    ...[undefined, "sync"].map((action) => ({
+    ...Arr.map([undefined, "sync"], (action) => ({
       action,
       change: () => Effect.void,
       error: "EffectSourceUsageError",
@@ -456,6 +529,16 @@ describe("Effect source identity", () => {
       update: (fixture: Fixture) =>
         makeEffectSourceProgram("update", fixture.config).pipe(
           Effect.provide(stagedSourceTree(STAGED_TREE))
+        ),
+    },
+    {
+      error: "EffectSourceFileError",
+      message: (fixture: Fixture) =>
+        `${fixture.identityManifest} cannot be written as an Effect source identity.`,
+      name: "the upstream commit is not a full object id",
+      update: (fixture: Fixture) =>
+        makeEffectSourceProgram("update", fixture.config).pipe(
+          Effect.provide(abbreviatedUpstreamCommit(fixture.newCommit))
         ),
     },
   ])("keeps the branch when $name", ({ error, message, update }) =>

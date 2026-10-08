@@ -15,6 +15,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest, type TestConvex } from "convex-test";
+import { Array as Arr, Order, pipe } from "effect";
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";
@@ -114,7 +115,7 @@ async function insertBoundedHistory(
     "365d": 0,
   };
   const boundaries = new Set(
-    getFinitePopularityWindows().map(getPopularityWindowDayCount)
+    Arr.map(getFinitePopularityWindows(), getPopularityWindowDayCount)
   );
   let lifetimeScore = 0;
 
@@ -189,23 +190,24 @@ async function readBoundedState(target: TestConvex<typeof schema>) {
   return await target.query(async (ctx) => {
     const counters = await ctx.db.query("learningPopularityCounters").collect();
     const rankings = await Promise.all(
-      getFinitePopularityWindows().map(async (windowKey) => {
+      Arr.map(getFinitePopularityWindows(), async (windowKey) => {
         const ranking = await learningPopularityRankings.paginate(ctx, {
           namespace: ["material", "en", "global", windowKey],
           order: "asc",
           pageSize: 10,
         });
         return {
-          keys: ranking.page.map((item) => item.key),
+          keys: Arr.map(ranking.page, (item) => item.key),
           windowKey,
         };
       })
     );
 
     return {
-      counters: counters
-        .map(({ _creationTime, _id, ...counter }) => counter)
-        .sort((left, right) => left.windowKey.localeCompare(right.windowKey)),
+      counters: pipe(
+        Arr.map(counters, ({ _creationTime, _id, ...counter }) => counter),
+        Arr.sortWith((counter) => counter.windowKey, Order.String)
+      ),
       rankings,
     };
   });

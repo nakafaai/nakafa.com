@@ -8,7 +8,7 @@ import {
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
@@ -62,7 +62,7 @@ export const loadSectionResponseIndex = Effect.fn(
     placements,
     snapshots: [snapshot],
   });
-  const links = validatedPlacements.map((placement) => ({
+  const links = Arr.map(validatedPlacements, (placement) => ({
     placement,
     sectionAttemptId: section._id,
   }));
@@ -124,13 +124,13 @@ export const loadAttemptResponses = Effect.fn(
     sections,
     sectionCoverage
   );
-  const links: ResponsePlacementLink[] = [];
+  let links: ResponsePlacementLink[] = [];
   for (const placement of validatedPlacements) {
     const section = sectionsByIdentity.get(placement.sectionIdentity);
     if (!section) {
       continue;
     }
-    links.push({
+    links = Arr.append(links, {
       placement,
       sectionAttemptId: section._id,
     });
@@ -171,8 +171,11 @@ const indexAttemptSections = Effect.fn("tryouts.response.indexAttemptSections")(
     }
     const sectionsByIdentity = new Map<string, TryoutSectionAttempt>();
     for (const section of sections) {
-      const snapshot = attempt.sectionSnapshots.find(
-        (candidate) => candidate.sectionIdentity === section.sectionIdentity
+      const snapshot = Option.getOrUndefined(
+        Arr.findFirst(
+          attempt.sectionSnapshots,
+          (candidate) => candidate.sectionIdentity === section.sectionIdentity
+        )
       );
       if (
         !snapshot ||

@@ -22,7 +22,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import type { WithoutSystemFields } from "convex/server";
-import { Effect, Struct } from "effect";
+import { Array as Arr, Effect, Struct } from "effect";
 
 const identity = {
   countryKey: TRYOUT_START_COUNTRY,
@@ -91,7 +91,7 @@ describe("frozen try-out page integrity", () => {
           publicPath: original.setPublicPath,
           totalQuestionCount: original.totalQuestions,
         });
-        expect(set.sections.map(({ sectionKey }) => sectionKey)).toEqual([
+        expect(Arr.map(set.sections, ({ sectionKey }) => sectionKey)).toEqual([
           TRYOUT_START_SECTION,
         ]);
         const section = yield* Effect.promise(() =>
@@ -187,40 +187,47 @@ describe("frozen try-out page integrity", () => {
           {
             sectionSnapshots: [],
           },
-          ...[
-            {
-              sectionIdentity: "section:missing",
-            },
-            {
-              sectionRowHash: "hash:drift",
-            },
-            {
-              sectionOrder: 2,
-            },
-            {
-              publicPath: `${sectionPath}-drift`,
-            },
-            {
-              questionCount: 2,
-            },
-            {
-              questionSourcePath: "packages/corpus/question-bank/tryout/drift",
-            },
-            {
-              sectionKey: "other",
-            },
-            {
-              sourceRevision: "other",
-            },
-            {
-              timeLimitSeconds: 1,
-            },
-          ].map((patch) => ({
-            sectionSnapshots: original.sectionSnapshots.map((snapshot) => ({
-              ...snapshot,
-              ...patch,
-            })),
-          })),
+          ...Arr.map(
+            [
+              {
+                sectionIdentity: "section:missing",
+              },
+              {
+                sectionRowHash: "hash:drift",
+              },
+              {
+                sectionOrder: 2,
+              },
+              {
+                publicPath: `${sectionPath}-drift`,
+              },
+              {
+                questionCount: 2,
+              },
+              {
+                questionSourcePath:
+                  "packages/corpus/question-bank/tryout/drift",
+              },
+              {
+                sectionKey: "other",
+              },
+              {
+                sourceRevision: "other",
+              },
+              {
+                timeLimitSeconds: 1,
+              },
+            ],
+            (patch) => ({
+              sectionSnapshots: Arr.map(
+                original.sectionSnapshots,
+                (snapshot) => ({
+                  ...snapshot,
+                  ...patch,
+                })
+              ),
+            })
+          ),
         ];
         for (const patch of patches) {
           yield* Effect.promise(() =>

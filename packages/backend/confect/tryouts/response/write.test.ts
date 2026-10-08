@@ -10,20 +10,16 @@ import { api } from "@repo/backend/convex/_generated/api";
 import {
   authenticate,
   type ConvexTest,
+  type ExpectedConvexFailure,
+  expectConvexFailure,
+  type ResponseFixture,
+  readResponseState,
   seedResponseFixture,
+  setResponseClock,
 } from "@repo/backend/test/tryout/response";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
-type ResponseFixture = Effect.Success<ReturnType<typeof seedResponseFixture>>;
-interface ExpectedConvexFailure {
-  readonly code: string;
-  readonly message?: string;
-}
-const setResponseClock = Effect.fn("test.tryout.response.setClock")(
-  (offset: number) =>
-    Effect.sync(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW + offset)))
-);
 const saveSelection = Effect.fn("test.tryout.response.saveSelection")(
   (
     fixture: ResponseFixture,
@@ -45,27 +41,6 @@ const collectResponses = Effect.fn("test.tryout.response.collect")(
     Effect.promise(() =>
       t.query((ctx) => ctx.db.query("tryoutResponses").collect())
     )
-);
-const readResponseState = Effect.fn("test.tryout.response.readState")(
-  (t: ConvexTest, fixture: ResponseFixture) =>
-    Effect.promise(() =>
-      t.query(async (ctx) => ({
-        attempt: await ctx.db.get(fixture.attemptId),
-        responses: await ctx.db.query("tryoutResponses").collect(),
-        section: await ctx.db.get(fixture.sectionAttemptId),
-      }))
-    )
-);
-const expectConvexFailure = Effect.fn("test.tryout.response.expectFailure")(
-  function* (
-    operation: () => Promise<unknown>,
-    expected: ExpectedConvexFailure
-  ) {
-    const failure = yield* Effect.tryPromise(operation).pipe(Effect.flip);
-    expect(failure.cause).toMatchObject({
-      data: expected,
-    });
-  }
 );
 const expectSaveFailure = Effect.fn("test.tryout.response.expectSaveFailure")(
   function* (
@@ -104,6 +79,9 @@ describe("tryouts/response/write", () => {
           answeredAt: TRYOUT_TEST_NOW + 5000,
           isComplete: true,
           isCorrect: seeded.selectedChoice.isCorrect,
+          outcome: {
+            status: seeded.selectedChoice.isCorrect ? "correct" : "incorrect",
+          },
           selection: {
             kind: "single-choice",
             optionKey: seeded.selectedChoice.optionKey,
@@ -390,7 +368,7 @@ describe("tryouts/response/write", () => {
         code: "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
       });
       const stored = yield* readResponseState(t, seeded);
-      expect(stored.responses.map(({ updatedAt }) => updatedAt)).toEqual([
+      expect(Arr.map(stored.responses, ({ updatedAt }) => updatedAt)).toEqual([
         TRYOUT_TEST_NOW,
         TRYOUT_TEST_NOW + 1,
       ]);

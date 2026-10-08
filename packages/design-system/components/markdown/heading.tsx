@@ -9,10 +9,10 @@ import type {
   HeadingTag,
 } from "@repo/design-system/types/markdown";
 import { cn } from "cn";
-import { Predicate } from "effect";
+import { Array as Arr, Predicate } from "effect";
 import type { ReactNode } from "react";
 
-function extractTextFromNode(node: ReactNode): string {
+function extractTextFromNode(node: unknown): string {
   if (node === null || node === undefined) {
     return "";
   }
@@ -22,7 +22,7 @@ function extractTextFromNode(node: ReactNode): string {
   if (typeof node === "number" || typeof node === "boolean") {
     return String(node);
   }
-  if (Array.isArray(node)) {
+  if (Arr.isArray(node)) {
     return node.map(extractTextFromNode).join("");
   }
   if (Predicate.isObject(node) && Predicate.hasProperty(node, "props")) {

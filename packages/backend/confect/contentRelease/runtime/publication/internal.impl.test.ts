@@ -30,6 +30,7 @@ import {
 } from "@repo/backend/test/runtime/values";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
+import { Array as Arr } from "effect";
 
 const routeArgs = {
   appLocale: "en",
@@ -74,7 +75,7 @@ describe("contentRelease/runtime/publication/internal", () => {
       requests,
     });
     expect(rows).toHaveLength(8);
-    expect(rows.map((row) => row?.delivery ?? null)).toEqual([
+    expect(Arr.map(rows, (row) => row?.delivery ?? null)).toEqual([
       "public",
       null,
       "public",

@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
+import { FetchClient } from "@repo/utilities/http/client";
 import type {
   DefaultFunctionArgs,
   FunctionArgs,
@@ -11,6 +12,11 @@ import type {
 } from "convex/server";
 import { getFunctionName } from "convex/server";
 import { Config, ConfigProvider, Effect, Option, Schema } from "effect";
+import {
+  HttpClient,
+  type HttpClientError,
+  HttpClientRequest,
+} from "effect/http";
 
 interface CustomerConvexConfig {
   accessToken: string;
@@ -48,6 +54,11 @@ class CustomerConvexResponseError extends Schema.TaggedError<CustomerConvexRespo
 ) {}
 const getUnknownMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
+/** Reports why Convex's answer could not be read, in the words of its cause. */
+const toResponseError = (error: HttpClientError.HttpClientError) =>
+  new CustomerConvexResponseError({
+    message: getUnknownMessage(error.reason.cause),
+  });
 const backendEnvPath = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../..",
@@ -184,33 +195,33 @@ export const callCustomerIntegrityQuery = Effect.fn(
     catch: (error) =>
       new CustomerConvexConfigError({ message: getUnknownMessage(error) }),
   });
-  const response = yield* Effect.tryPromise({
-    try: () =>
-      fetch(`${config.url}/api/query`, {
-        body: JSON.stringify({ args, format: "json", path: functionPath }),
-        headers: {
-          Authorization: `Convex ${config.accessToken}`,
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      }),
-    catch: (error) =>
-      new CustomerConvexRequestError({ message: getUnknownMessage(error) }),
-  });
-  if (!response.ok) {
-    const body = yield* Effect.tryPromise({
-      try: () => response.text(),
-      catch: (error) =>
-        new CustomerConvexResponseError({ message: getUnknownMessage(error) }),
-    });
+  const client = yield* HttpClient.HttpClient;
+  const response = yield* HttpClientRequest.post(
+    `${config.url}/api/query`
+  ).pipe(
+    HttpClientRequest.setHeader(
+      "Authorization",
+      `Convex ${config.accessToken}`
+    ),
+    HttpClientRequest.bodyJsonUnsafe({
+      args,
+      format: "json",
+      path: functionPath,
+    }),
+    client.execute,
+    Effect.mapError(
+      (error) =>
+        new CustomerConvexRequestError({
+          message: getUnknownMessage(error.reason.cause),
+        })
+    )
+  );
+  if (response.status < 200 || response.status >= 300) {
+    const body = yield* response.text.pipe(Effect.mapError(toResponseError));
     return yield* new CustomerConvexRequestError({
       message: `${functionPath}: HTTP ${response.status} ${body}`,
     });
   }
-  const body = yield* Effect.tryPromise({
-    try: () => response.json(),
-    catch: (error) =>
-      new CustomerConvexResponseError({ message: getUnknownMessage(error) }),
-  });
+  const body = yield* response.json.pipe(Effect.mapError(toResponseError));
   return yield* parseResponse(body, schema, functionPath);
-});
+}, Effect.provide(FetchClient));

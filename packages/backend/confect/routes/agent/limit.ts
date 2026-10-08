@@ -5,14 +5,14 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/agent/errors";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const MAX_CLIENT_ADDRESS_LENGTH = 256;
 
 /** Consumes one per-client public read token through the Convex component. */
 export const enforceAgentReadLimit = Effect.fn("agent.enforceReadLimit")(
   function* (request: Request) {
-    const runMutation = yield* MutationRunner;
+    const { runMutation } = yield* MutationRunner;
     const key = yield* readClientKey(request);
     yield* runMutation(refs.internal.routes.agent.quota.consume, { key }).pipe(
       Effect.catchTag("SchemaError", (error) =>
@@ -57,7 +57,10 @@ const readClientKey = Effect.fn("agent.readClientKey")(function* (
     try: () =>
       crypto.subtle.digest("SHA-256", new TextEncoder().encode(address)),
   });
-  return Array.from(new Uint8Array(digest), (byte) =>
-    byte.toString(16).padStart(2, "0")
-  ).join("");
+  return Arr.join(
+    Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, "0")
+    ),
+    ""
+  );
 });

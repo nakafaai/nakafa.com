@@ -15,7 +15,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const DAY = Date.parse("2026-09-23T00:00:00Z");
 const EXPIRED = DAY - 365 * POPULARITY_DAY_MS;
@@ -166,13 +166,13 @@ describe("contents/metrics/retention", () => {
         windowKey: "lifetime",
       },
     ]);
-    expect(state.ranking.page.map(({ key }) => key)).toEqual([
+    expect(Arr.map(state.ranking.page, ({ key }) => key)).toEqual([
       [-42, graph.assetId],
     ]);
-    expect(state.signals.map(({ signalDay }) => signalDay)).toEqual([
+    expect(Arr.map(state.signals, ({ signalDay }) => signalDay)).toEqual([
       EXPIRED + POPULARITY_DAY_MS,
     ]);
-    expect(state.viewers.map(({ signalDay }) => signalDay)).toEqual([
+    expect(Arr.map(state.viewers, ({ signalDay }) => signalDay)).toEqual([
       DAY,
       DAY + POPULARITY_DAY_MS,
     ]);

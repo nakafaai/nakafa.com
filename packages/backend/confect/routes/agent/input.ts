@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const INTEGER_PATTERN = /^-?\d+$/;
 
@@ -148,7 +148,7 @@ function assertAllowedParameters(url: URL, allowed: readonly string[]) {
       }
       return yield* new AgentHttpInputError({
         detail: `Unknown query parameter: ${key}.`,
-        resolution: `Use only these query parameters: ${allowed.join(", ")}.`,
+        resolution: `Use only these query parameters: ${Arr.join(allowed, ", ")}.`,
       });
     }
   });

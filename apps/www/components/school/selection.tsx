@@ -5,8 +5,8 @@ import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { useConvexAuth } from "convex/react";
 import { useTranslations } from "next-intl";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 
 /** Render the paginated school selection list for users with many schools. */
@@ -18,7 +18,8 @@ export function SchoolSelectList({
   >;
 }) {
   const t = useTranslations("School.Onboarding");
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
   const pagination = usePaginatedQuery(
     refs.public.schools.queries.getMySchoolsPage,
     isAuthenticated && !isLoading ? {} : "skip",

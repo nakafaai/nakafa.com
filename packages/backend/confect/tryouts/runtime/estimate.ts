@@ -1,6 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const MAX_THETA = 4;
 const MIN_THETA = -4;
@@ -93,11 +93,11 @@ function getThetaStep(itemAnswers: IrtItemAnswer[], theta: number) {
 
 /** Computes Fisher information for a complete item response vector. */
 function getInformation(itemAnswers: IrtItemAnswer[], theta: number) {
-  return itemAnswers.reduce((total, itemAnswer) => {
+  return Arr.reduce(itemAnswers, 0, (total, itemAnswer) => {
     const discrimination = itemAnswer.item.discrimination;
     const expected = getExpectedProbability(itemAnswer.item, theta);
     return total + discrimination * discrimination * expected * (1 - expected);
-  }, 0);
+  });
 }
 
 /** Returns the 2PL expected correctness probability for one item. */

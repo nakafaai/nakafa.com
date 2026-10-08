@@ -26,6 +26,4 @@ export const CurrentWeatherSummarySchema = Schema.Struct({
   temperatureKelvin: Schema.Finite,
 });
 
-export type CurrentWeatherSummary = Schema.Schema.Type<
-  typeof CurrentWeatherSummarySchema
->;
+export type CurrentWeatherSummary = typeof CurrentWeatherSummarySchema.Type;

@@ -7,28 +7,46 @@ import {
 import type refs from "@repo/backend/confect/_generated/refs";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
-import { Duration, Effect, Exit, Fiber, Result } from "effect";
+import {
+  Array as Arr,
+  Duration,
+  Effect,
+  Exit,
+  Fiber,
+  HashMap,
+  Option,
+  Result,
+} from "effect";
 import { TestClock } from "effect/testing";
-import type { SetStateAction } from "react";
 import {
   type ConsentSaveAction,
   createConsentSaveAction,
   resolveConsentAffordances,
   resolveConsentError,
 } from "@/lib/analytics/consent/decision";
-import type { AnalyticsConsentSessionOverrides } from "@/lib/analytics/consent/session";
+import {
+  type AnalyticsConsentPromptIdentity,
+  emptyAnalyticsConsentSessionOverrides,
+} from "@/lib/analytics/consent/session";
 import { AnalyticsConsentStorageFailed } from "@/lib/analytics/consent/storage";
+import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
 const promptIdentity = `anonymous:${ANALYTICS_CONSENT_NOTICE_VERSION}` as const;
 
-type OverridesMap = AnalyticsConsentSessionOverrides;
+type OverridesUpdate = Parameters<
+  AnalyticsConsentStoreState["setSessionOverrides"]
+>[0];
 
-function foldUpdates(updates: SetStateAction<OverridesMap>[]) {
-  return updates.reduce<OverridesMap>(
-    (current, update) =>
-      typeof update === "function" ? update(current) : update,
-    new Map()
-  );
+/** Applies recorded override updates in order and reads one visitor's choice. */
+function readOverride(
+  updates: readonly OverridesUpdate[],
+  identity: AnalyticsConsentPromptIdentity
+) {
+  return Arr.reduce(
+    updates,
+    emptyAnalyticsConsentSessionOverrides,
+    (current, update) => update(current)
+  ).pipe(HashMap.get(identity), Option.getOrUndefined);
 }
 
 describe("consent affordance resolution", () => {
@@ -126,7 +144,7 @@ describe("consent error resolution", () => {
 
 describe("explicit consent save actions", () => {
   function createOptions(
-    overrides: SetStateAction<OverridesMap>[],
+    overrides: OverridesUpdate[],
     options?: {
       readonly saveDecision?: (
         granted: boolean
@@ -151,7 +169,7 @@ describe("explicit consent save actions", () => {
           )),
       setAccountConsent: () => Promise.reject(new Error("account path unused")),
       setPreferencesOpen: vi.fn(),
-      setSessionOverrides: (update: SetStateAction<OverridesMap>) => {
+      setSessionOverrides: (update: OverridesUpdate) => {
         overrides.push(update);
       },
       user: null,
@@ -166,7 +184,7 @@ describe("explicit consent save actions", () => {
   }
 
   it("ignores disallowed decisions without touching persistence", () => {
-    const overrides: SetStateAction<OverridesMap>[] = [];
+    const overrides: OverridesUpdate[] = [];
     const action = createConsentSaveAction({
       ...createOptions(overrides, {}),
       canGrant: false,
@@ -179,7 +197,7 @@ describe("explicit consent save actions", () => {
   });
 
   it("ignores decisions that resolve no account user", () => {
-    const overrides: SetStateAction<OverridesMap>[] = [];
+    const overrides: OverridesUpdate[] = [];
     const action = createConsentSaveAction({
       ...createOptions(overrides, {}),
       granted: true,
@@ -194,7 +212,7 @@ describe("explicit consent save actions", () => {
 
   it.effect("persists an anonymous grant through the save lifecycle", () =>
     Effect.gen(function* () {
-      const overrides: SetStateAction<OverridesMap>[] = [];
+      const overrides: OverridesUpdate[] = [];
       const action = createConsentSaveAction({
         ...createOptions(overrides, {}),
         granted: true,
@@ -207,7 +225,7 @@ describe("explicit consent save actions", () => {
       expect(action.promptIdentity).toBe(promptIdentity);
       yield* action.program;
 
-      expect(foldUpdates(overrides).get(promptIdentity)).toMatchObject({
+      expect(readOverride(overrides, promptIdentity)).toMatchObject({
         persistence: "saved",
       });
     })
@@ -215,7 +233,7 @@ describe("explicit consent save actions", () => {
 
   it.effect("records a save failure when anonymous persistence rejects", () =>
     Effect.gen(function* () {
-      const overrides: SetStateAction<OverridesMap>[] = [];
+      const overrides: OverridesUpdate[] = [];
       const action = createConsentSaveAction({
         ...createOptions(overrides, {
           saveDecision: () =>
@@ -231,7 +249,7 @@ describe("explicit consent save actions", () => {
 
       yield* runProgram(action);
 
-      expect(foldUpdates(overrides).get(promptIdentity)).toMatchObject({
+      expect(readOverride(overrides, promptIdentity)).toMatchObject({
         persistence: "failed",
       });
     })
@@ -239,7 +257,7 @@ describe("explicit consent save actions", () => {
 
   it.effect("interrupts a superseded save before persisting", () =>
     Effect.gen(function* () {
-      const overrides: SetStateAction<OverridesMap>[] = [];
+      const overrides: OverridesUpdate[] = [];
       const first = createConsentSaveAction({
         ...createOptions(overrides, {}),
         granted: true,
@@ -265,16 +283,16 @@ describe("explicit consent save actions", () => {
       yield* runProgram(second);
       const firstExit = yield* Fiber.await(firstFiber);
       expect(Exit.isFailure(firstExit)).toBe(true);
-      expect(
-        foldUpdates(overrides.slice(0, 2)).get(promptIdentity)
-      ).toMatchObject({ owner: second.owner });
+      expect(readOverride(overrides.slice(0, 2), promptIdentity)).toMatchObject(
+        { owner: second.owner }
+      );
     })
   );
 
   it.effect("records a save failure when account persistence rejects", () =>
     Effect.gen(function* () {
       const expectedUserId = "user-1" as Id<"users">;
-      const overrides: SetStateAction<OverridesMap>[] = [];
+      const overrides: OverridesUpdate[] = [];
       const action = createConsentSaveAction({
         ...createOptions(overrides, {}),
         granted: true,
@@ -294,7 +312,8 @@ describe("explicit consent save actions", () => {
       yield* Fiber.join(fiber);
 
       expect(
-        foldUpdates(overrides).get(
+        readOverride(
+          overrides,
           `account:user-1:${ANALYTICS_CONSENT_NOTICE_VERSION}`
         )
       ).toMatchObject({ persistence: "failed" });
@@ -321,7 +340,7 @@ describe("explicit consent save actions", () => {
           );
         }
       );
-      const overrides: SetStateAction<OverridesMap>[] = [];
+      const overrides: OverridesUpdate[] = [];
       const action = createConsentSaveAction({
         ...createOptions(overrides, {}),
         granted: true,

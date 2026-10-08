@@ -14,7 +14,7 @@ import { insertArticleProjection } from "@repo/backend/test/article/release";
 import { insertCompletedRelease } from "@repo/backend/test/content/model";
 import { testArticleProjection } from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const identity = {
   manifestHash: `sha256:${"6".repeat(64)}`,
@@ -91,7 +91,7 @@ describe("article inactive-buffer synchronization", () => {
           t.query((ctx) => ctx.db.query("articleCatalog").collect())
         );
         expect(rows).toHaveLength(2);
-        expect(rows.every((row) => row.slot === "green")).toBe(true);
+        expect(Arr.every(rows, (row) => row.slot === "green")).toBe(true);
         const verified = yield* Effect.promise(() =>
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
@@ -135,8 +135,11 @@ describe("article inactive-buffer synchronization", () => {
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const heads = await ctx.db.query("contentHeads").collect();
-            const head = heads.find(
-              (row) => row.contentKey === testArticleProjection(0).contentKey
+            const head = Option.getOrUndefined(
+              Arr.findFirst(
+                heads,
+                (row) => row.contentKey === testArticleProjection(0).contentKey
+              )
             );
             assert(head);
             await ctx.db.patch("contentHeads", head._id, {

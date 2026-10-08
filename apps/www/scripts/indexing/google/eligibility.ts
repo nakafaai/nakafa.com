@@ -1,11 +1,11 @@
 import { Effect, Predicate, Schema } from "effect";
+import { HttpClient } from "effect/http";
 import {
   GoogleIndexPageFetchError,
   GoogleStructuredDataParseError,
 } from "@/scripts/indexing/errors";
 import { hasGoogleIndexingApiEligibleStructuredData } from "@/scripts/indexing/google/structured";
 import type { SiteIndexUrlBatch } from "@/scripts/indexing/manifest";
-import { logger } from "@/scripts/utils";
 
 const ELIGIBILITY_FETCH_CONCURRENCY = 8;
 const JSON_LD_SCRIPT_PATTERN =
@@ -17,14 +17,13 @@ const decodeStructuredDataJson = Schema.decodeUnknownEffect(
 export const getEligibleGoogleIndexingUrls = Effect.fn(
   "scripts.google.eligibility.list"
 )(function* (batch: SiteIndexUrlBatch) {
-  logger.stats(
-    `Canonical URLs in sitemap batch ${batch.batchIndex}`,
-    batch.urls.length
+  yield* Effect.logInfo(
+    `Canonical URLs in sitemap batch ${batch.batchIndex}: ${batch.urls.length}`
   );
-  logger.info(
+  yield* Effect.logInfo(
     "General Google discovery remains sitemap.xml, sitemap shards, robots.txt, canonical metadata, and Search Console."
   );
-  logger.info(
+  yield* Effect.logInfo(
     "Checking sitemap URLs for JobPosting or BroadcastEvent-in-VideoObject JSON-LD before using the Google Indexing API."
   );
   const maybeEligibleUrls = yield* Effect.forEach(
@@ -33,9 +32,8 @@ export const getEligibleGoogleIndexingUrls = Effect.fn(
     { concurrency: ELIGIBILITY_FETCH_CONCURRENCY }
   );
   const urls = maybeEligibleUrls.filter(Predicate.isString);
-  logger.stats(
-    `Google Indexing API eligible URLs in batch ${batch.batchIndex}`,
-    urls.length
+  yield* Effect.logInfo(
+    `Google Indexing API eligible URLs in batch ${batch.batchIndex}: ${urls.length}`
   );
   return urls;
 });
@@ -43,30 +41,33 @@ export const getEligibleGoogleIndexingUrls = Effect.fn(
 const readEligibleGoogleIndexingUrl = Effect.fn(
   "scripts.google.eligibility.readUrl"
 )(function* (url: string) {
-  const response = yield* Effect.tryPromise({
-    try: () => fetch(url),
-    catch: (cause) =>
-      new GoogleIndexPageFetchError({
-        cause,
-        message: `Failed to fetch ${url} for Google Indexing API eligibility.`,
-        url,
-      }),
-  });
-  if (!response.ok) {
+  const client = yield* HttpClient.HttpClient;
+  const response = yield* client.get(url).pipe(
+    Effect.mapError(
+      (cause) =>
+        new GoogleIndexPageFetchError({
+          cause,
+          message: `Failed to fetch ${url} for Google Indexing API eligibility.`,
+          url,
+        })
+    )
+  );
+  if (response.status < 200 || response.status >= 300) {
     return yield* new GoogleIndexPageFetchError({
       message: `Google Indexing API eligibility fetch returned HTTP ${response.status}.`,
       url,
     });
   }
-  const html = yield* Effect.tryPromise({
-    try: () => response.text(),
-    catch: (cause) =>
-      new GoogleIndexPageFetchError({
-        cause,
-        message: `Failed to read ${url} for Google Indexing API eligibility.`,
-        url,
-      }),
-  });
+  const html = yield* response.text.pipe(
+    Effect.mapError(
+      (cause) =>
+        new GoogleIndexPageFetchError({
+          cause,
+          message: `Failed to read ${url} for Google Indexing API eligibility.`,
+          url,
+        })
+    )
+  );
   const blocks = readJsonLdScriptBodies(html);
   for (const block of blocks) {
     const data = yield* decodeStructuredDataJson(block).pipe(

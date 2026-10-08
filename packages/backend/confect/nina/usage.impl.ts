@@ -5,7 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/nina/usage.spec";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /** Agent invokes this after every model response, including repair and synthesis. */
 const record = FunctionImpl.make(
@@ -23,12 +23,16 @@ const record = FunctionImpl.make(
     if (!turn) {
       return null;
     }
-    const totals = [...turn.usage];
-    const index = totals.findIndex(
-      (row) =>
-        row.agent === usage.agent &&
-        row.model === usage.model &&
-        row.provider === usage.provider
+    let totals = [...turn.usage];
+    const index = Option.getOrElse(
+      Arr.findFirstIndex(
+        totals,
+        (row) =>
+          row.agent === usage.agent &&
+          row.model === usage.model &&
+          row.provider === usage.provider
+      ),
+      () => -1
     );
     const previous = totals[index];
     if (previous) {
@@ -39,10 +43,10 @@ const record = FunctionImpl.make(
         calls: previous.calls + 1,
       };
     } else {
-      totals.push({ ...usage, calls: 1 });
+      totals = Arr.append(totals, { ...usage, calls: 1 });
     }
-    const input = totals.reduce((total, row) => total + row.input, 0);
-    const output = totals.reduce((total, row) => total + row.output, 0);
+    const input = Arr.reduce(totals, 0, (total, row) => total + row.input);
+    const output = Arr.reduce(totals, 0, (total, row) => total + row.output);
     yield* (yield* DatabaseWriter)
       .table("ninaTurns")
       .patch(turnId, {

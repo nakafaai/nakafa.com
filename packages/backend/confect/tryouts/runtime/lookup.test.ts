@@ -14,6 +14,7 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
+import { Array as Arr } from "effect";
 
 const identity = {
   countryKey: TRYOUT_START_COUNTRY,
@@ -118,7 +119,7 @@ describe("locale-neutral attempt ownership", () => {
         locale,
         paginationOpts: { numItems: 1, cursor: null },
       });
-      expect(firstPage.page.map((row) => row.attemptId)).toEqual([
+      expect(Arr.map(firstPage.page, (row) => row.attemptId)).toEqual([
         second.attemptId,
       ]);
       const secondPage = await client.query(api.tryouts.queries.history.bySet, {
@@ -126,7 +127,7 @@ describe("locale-neutral attempt ownership", () => {
         locale,
         paginationOpts: { numItems: 1, cursor: firstPage.continueCursor },
       });
-      expect(secondPage.page.map((row) => row.attemptId)).toEqual([
+      expect(Arr.map(secondPage.page, (row) => row.attemptId)).toEqual([
         first.attemptId,
       ]);
     }

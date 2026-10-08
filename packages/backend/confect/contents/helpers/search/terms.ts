@@ -1,10 +1,7 @@
 import type { contentSearchInputValidator } from "@repo/backend/confect/contents/helpers/search/schema";
 import { cleanSlug } from "@repo/utilities/helper";
-import type { Schema } from "effect";
 
-type ContentSearchInput = Schema.Schema.Type<
-  typeof contentSearchInputValidator
->;
+type ContentSearchInput = typeof contentSearchInputValidator.Type;
 const routeSeparatorPattern = /[/_-]+/g;
 
 /** Converts path-like queries into the token form Convex search expects. */

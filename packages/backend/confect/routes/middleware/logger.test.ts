@@ -1,13 +1,13 @@
 import { expect, it } from "@effect/vitest";
 import { requestLogger } from "@repo/backend/confect/routes/middleware/logger";
-import { Effect, Layer, Logger } from "effect";
+import { Array as Arr, Effect, Layer, Logger } from "effect";
 import { HttpRouter, HttpServerResponse } from "effect/http";
 
 it.effect("logs request paths without OAuth query diagnostics", () =>
   Effect.gen(function* () {
-    const messages: string[] = [];
+    let messages: string[] = [];
     const capture = Logger.map(Logger.formatStructured, (entry) => {
-      messages.push(JSON.stringify(entry));
+      messages = Arr.append(messages, JSON.stringify(entry));
     });
     const routes = HttpRouter.add(
       "GET",
@@ -42,7 +42,7 @@ it.effect("logs request paths without OAuth query diagnostics", () =>
       "state=",
       "private-state",
     ]) {
-      expect(messages.join("\n")).not.toContain(secret);
+      expect(Arr.join(messages, "\n")).not.toContain(secret);
     }
   })
 );

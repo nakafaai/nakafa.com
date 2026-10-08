@@ -14,6 +14,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { Array as Arr, Option } from "effect";
 
 vi.mock("@convex-dev/agent", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@convex-dev/agent")>();
@@ -27,11 +28,12 @@ vi.mock("@convex-dev/agent", async (importOriginal) => {
 
 const query = Ref.getFunctionReference(refs.public.nina.messages.list);
 const paginationOpts = { cursor: null, numItems: 20 };
+const NOW = Date.UTC(2026, 8, 27, 12);
 
 async function fixture(visibility: "private" | "public" = "private") {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation(async (ctx) => {
-    const user = await seedAuthenticatedUser(ctx, { now: Date.now() });
+    const user = await seedAuthenticatedUser(ctx, { now: NOW });
     const threadId = await createThread(ctx, components.nina, {
       userId: user.userId,
     });
@@ -39,7 +41,7 @@ async function fixture(visibility: "private" | "public" = "private") {
       threadId,
       type: "study",
       userId: user.userId,
-      updatedAt: Date.now(),
+      updatedAt: NOW,
       visibility,
     });
     const prompt = await saveMessage(ctx, components.nina, {
@@ -116,7 +118,9 @@ describe("Nina message boundary", () => {
       await owner.query(query, args)
     );
     expect(page.streams).toEqual({ kind: "list", messages: [] });
-    const assistant = page.page.find((message) => message.role === "assistant");
+    const assistant = Option.getOrUndefined(
+      Arr.findFirst(page.page, (message) => message.role === "assistant")
+    );
     expect(assistant?.parts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -137,7 +141,7 @@ describe("Nina message boundary", () => {
       ])
     );
     expect(
-      page.page.some((message) => message.text === "Explain a limit.")
+      Arr.some(page.page, (message) => message.text === "Explain a limit.")
     ).toBe(true);
   });
 

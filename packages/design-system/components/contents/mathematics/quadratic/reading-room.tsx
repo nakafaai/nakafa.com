@@ -10,11 +10,10 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import { Polygon } from "@repo/design-system/components/three/polygon";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -47,13 +46,15 @@ export function ReadingRoomProblem({
 }: ReadingRoomProblemProps) {
   return (
     <CoordinateProvider>
-      <Card className="my-6">
-        <CardHeader>
-          <CardTitle>
-            {widthLabel} × {heightLabel}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <VisualCard className="my-6">
+        <VisualCardHeader
+          title={
+            <>
+              {widthLabel} × {heightLabel}
+            </>
+          }
+        />
+        <VisualCardBody>
           <CoordinateSystem cameraPosition={[0, 0, 15]}>
             <LineEquation
               color={COLORS.SLATE}
@@ -124,9 +125,9 @@ export function ReadingRoomProblem({
           <p className="sr-only">
             {widthLabel} × {heightLabel}; <InlineMath math="4x^2" />.
           </p>
-        </CardContent>
+        </VisualCardBody>
         <CoordinateControls />
-      </Card>
+      </VisualCard>
     </CoordinateProvider>
   );
 }

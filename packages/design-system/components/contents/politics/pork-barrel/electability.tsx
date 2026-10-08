@@ -18,13 +18,13 @@ import {
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  VisualCard,
+  VisualCardBody,
+  VisualCardFooter,
+  VisualCardFullscreen,
+  VisualCardHeader,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { format } from "date-fns";
 import type { ReactNode } from "react";
@@ -161,96 +161,98 @@ export function ElectabilityChart({
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-card">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <EvilLineChart
-          config={chartConfig}
-          curveType="natural"
-          data={electabilityChartData}
-        >
-          <Grid vertical={false} />
-          <XAxis
-            dataKey="date"
-            tickFormatter={(value) => {
-              const date = new Date(value);
-              return format(date, "MMM yyyy");
-            }}
-            tickMargin={8}
-          />
-          <YAxis
-            label={{
-              value: yLabel,
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
-            }}
-          />
-          <ChartTooltip
-            content={
-              <ChartTooltipContent
-                indicator="line"
-                labelFormatter={(value) =>
-                  format(new Date(String(value)), "MMMM yyyy")
-                }
-              />
-            }
-            cursor={false}
-          />
-          <Line
-            dataKey="anies_muhaimin"
-            lineProps={{
-              ...(ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray === undefined
-                ? {}
-                : {
-                    strokeDasharray:
-                      ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray,
-                  }),
-              strokeWidth: 2,
-            }}
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <VisualCardBody>
+        <VisualCardScene>
+          <EvilLineChart
+            config={chartConfig}
+            curveType="natural"
+            data={electabilityChartData}
           >
-            <Dot variant={ELECTABILITY_CUES.aniesMuhaimin.dot} />
-            <ActiveDot variant={ELECTABILITY_CUES.aniesMuhaimin.activeDot} />
-          </Line>
-          <Line
-            dataKey="prabowo_gibran"
-            lineProps={{
-              ...(ELECTABILITY_CUES.prabowoGibran.strokeDasharray === undefined
-                ? {}
-                : {
-                    strokeDasharray:
-                      ELECTABILITY_CUES.prabowoGibran.strokeDasharray,
-                  }),
-              strokeWidth: 2,
-            }}
-          >
-            <Dot variant={ELECTABILITY_CUES.prabowoGibran.dot} />
-            <ActiveDot variant={ELECTABILITY_CUES.prabowoGibran.activeDot} />
-          </Line>
-          <Line
-            dataKey="ganjar_mahfud"
-            lineProps={{
-              ...(ELECTABILITY_CUES.ganjarMahfud.strokeDasharray === undefined
-                ? {}
-                : {
-                    strokeDasharray:
-                      ELECTABILITY_CUES.ganjarMahfud.strokeDasharray,
-                  }),
-              strokeWidth: 2,
-            }}
-          >
-            <Dot variant={ELECTABILITY_CUES.ganjarMahfud.dot} />
-            <ActiveDot variant={ELECTABILITY_CUES.ganjarMahfud.activeDot} />
-          </Line>
-          <Legend />
-        </EvilLineChart>
-      </CardContent>
-      <CardFooter>
+            <Grid vertical={false} />
+            <XAxis
+              dataKey="date"
+              tickFormatter={(value) => {
+                const date = new Date(value);
+                return format(date, "MMM yyyy");
+              }}
+              tickMargin={8}
+            />
+            <YAxis
+              label={{
+                value: yLabel,
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" },
+              }}
+            />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  indicator="line"
+                  labelFormatter={(value) =>
+                    format(new Date(String(value)), "MMMM yyyy")
+                  }
+                />
+              }
+              cursor={false}
+            />
+            <Line
+              dataKey="anies_muhaimin"
+              lineProps={{
+                ...(ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray ===
+                undefined
+                  ? {}
+                  : {
+                      strokeDasharray:
+                        ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={ELECTABILITY_CUES.aniesMuhaimin.dot} />
+              <ActiveDot variant={ELECTABILITY_CUES.aniesMuhaimin.activeDot} />
+            </Line>
+            <Line
+              dataKey="prabowo_gibran"
+              lineProps={{
+                ...(ELECTABILITY_CUES.prabowoGibran.strokeDasharray ===
+                undefined
+                  ? {}
+                  : {
+                      strokeDasharray:
+                        ELECTABILITY_CUES.prabowoGibran.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={ELECTABILITY_CUES.prabowoGibran.dot} />
+              <ActiveDot variant={ELECTABILITY_CUES.prabowoGibran.activeDot} />
+            </Line>
+            <Line
+              dataKey="ganjar_mahfud"
+              lineProps={{
+                ...(ELECTABILITY_CUES.ganjarMahfud.strokeDasharray === undefined
+                  ? {}
+                  : {
+                      strokeDasharray:
+                        ELECTABILITY_CUES.ganjarMahfud.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={ELECTABILITY_CUES.ganjarMahfud.dot} />
+              <ActiveDot variant={ELECTABILITY_CUES.ganjarMahfud.activeDot} />
+            </Line>
+            <Legend />
+          </EvilLineChart>
+        </VisualCardScene>
+      </VisualCardBody>
+      <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-      </CardFooter>
-    </Card>
+        <VisualCardFullscreen />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

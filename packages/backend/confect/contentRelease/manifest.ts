@@ -29,9 +29,9 @@ import {
   encodeRendererJson,
 } from "@repo/backend/confect/contentRelease/wire";
 import type { WithoutSystemFields } from "convex/server";
-import { Clock, Effect, type Schema } from "effect";
+import { Clock, Effect } from "effect";
 export type ReleaseRole = Docs["contentReleases"]["role"];
-export type ReleaseStatus = Schema.Schema.Type<typeof statusValidator>;
+export type ReleaseStatus = typeof statusValidator.Type;
 
 /** Projects one durable release into its exact shared lifecycle status. */
 export const releaseStatus = Effect.fn("contentRelease.releaseStatus")(

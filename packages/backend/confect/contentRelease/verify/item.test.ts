@@ -1,5 +1,6 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { checkItem } from "@repo/backend/confect/contentRelease/verify/item";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -29,7 +30,7 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** Runs item verification against the only staged release item. */
 function verifyOnly(ctx: MutationCtx) {
@@ -45,6 +46,9 @@ function verifyOnly(ctx: MutationCtx) {
     );
   });
 }
+const decodeRollbackEntry = Schema.decodeSync(
+  Schema.fromJsonString(RollbackSnapshotEntrySchema)
+);
 describe("contentRelease/verify/item", () => {
   it.each(["identity", "version"] as const)(
     "rejects a staged delete with conflicting %s without advancing verification",
@@ -105,7 +109,9 @@ describe("contentRelease/verify/item", () => {
     await stageDeleteFixture(t);
     await t.mutation(async (ctx) => {
       const bindings = await ctx.db.query("contentBindings").collect();
-      const tombstone = bindings.find((binding) => binding.sequence === 2);
+      const tombstone = Option.getOrUndefined(
+        Arr.findFirst(bindings, (binding) => binding.sequence === 2)
+      );
       const item = await ctx.db.query("contentItems").unique();
       assert(tombstone && item);
       await ctx.db.patch(tombstone._id, {
@@ -121,7 +127,7 @@ describe("contentRelease/verify/item", () => {
     const heads = await t.query((ctx) =>
       ctx.db.query("contentHeads").collect()
     );
-    expect(heads.every((head) => head.sequence !== 2)).toBe(true);
+    expect(Arr.every(heads, (head) => head.sequence !== 2)).toBe(true);
   });
   it("writes and idempotently replays one valid immutable upsert", async () => {
     const t = convexTest(schema, convexModules);
@@ -167,7 +173,7 @@ describe("contentRelease/verify/item", () => {
     const staged = await deletion.run((ctx) =>
       ctx.db.query("contentItems").unique()
     );
-    expect(JSON.parse(staged?.rollbackJson ?? "{}")).toMatchObject({
+    expect(decodeRollbackEntry(staged?.rollbackJson ?? "{}")).toMatchObject({
       snapshot: {
         head: {
           contentKey: TEST_ARTICLE_KEY,
@@ -184,7 +190,11 @@ describe("contentRelease/verify/item", () => {
     const heads = await deletion.run((ctx) =>
       ctx.db.query("contentHeads").take(3)
     );
-    expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(heads, ({ sequence }) => sequence === 2)
+      )
+    ).toMatchObject({
       contentKey: TEST_ARTICLE_KEY,
       family: "article",
       operation: "delete",
@@ -212,7 +222,7 @@ describe("contentRelease/verify/item", () => {
     const staged = await deletion.run((ctx) =>
       ctx.db.query("contentItems").unique()
     );
-    expect(JSON.parse(staged?.rollbackJson ?? "{}")).toMatchObject({
+    expect(decodeRollbackEntry(staged?.rollbackJson ?? "{}")).toMatchObject({
       snapshot: {
         head: {
           contentKey: TEST_PAGE_KEY,
@@ -230,7 +240,11 @@ describe("contentRelease/verify/item", () => {
     const heads = await deletion.run((ctx) =>
       ctx.db.query("contentHeads").take(3)
     );
-    expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
+    expect(
+      Option.getOrUndefined(
+        Arr.findFirst(heads, ({ sequence }) => sequence === 2)
+      )
+    ).toMatchObject({
       contentKey: TEST_PAGE_KEY,
       family: "page",
       operation: "delete",
@@ -248,7 +262,11 @@ describe("contentRelease/verify/item", () => {
         t.mutation((ctx) => Effect.runPromise(verifyOnly(ctx)))
       ).resolves.toBeNull();
       const heads = await t.run((ctx) => ctx.db.query("contentHeads").take(3));
-      expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
+      expect(
+        Option.getOrUndefined(
+          Arr.findFirst(heads, ({ sequence }) => sequence === 2)
+        )
+      ).toMatchObject({
         contentKey:
           family === "question" ? TEST_QUESTION_CONTENT_KEY : "test:deleted",
         family,

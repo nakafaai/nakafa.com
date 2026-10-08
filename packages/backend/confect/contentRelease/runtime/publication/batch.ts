@@ -17,7 +17,7 @@ import {
   publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
-import { Effect, flow, Result, Schema } from "effect";
+import { Array as Arr, Effect, flow, Result, Schema } from "effect";
 
 class PublicRuntimeBatchRequestError extends Schema.TaggedError<PublicRuntimeBatchRequestError>()(
   "PublicRuntimeBatchRequestError",
@@ -37,13 +37,9 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
     ) {
       return yield* new PublicRuntimeBatchRequestError();
     }
-    const input = yield* Effect.try({
-      catch: () => new PublicRuntimeBatchRequestError(),
-      try: (): unknown => JSON.parse(source),
-    });
-    return yield* Schema.decodeUnknownEffect(
-      PublicContentRuntimeBatchRequestSchema
-    )(input, {
+    return yield* Schema.decodeEffect(
+      Schema.fromJsonString(PublicContentRuntimeBatchRequestSchema)
+    )(source, {
       onExcessProperty: "error",
     }).pipe(Effect.mapError(() => new PublicRuntimeBatchRequestError()));
   }
@@ -52,11 +48,11 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
 const resolvePublicRuntimeBatch = Effect.fn(
   "contentRelease.resolvePublicRuntimeBatch"
 )(function* (requests: readonly PublicContentRuntimeRequest[]) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const rows = yield* runQuery(
     refs.internal.contentRelease.runtime.publication.internal.readBatch,
     {
-      requests: requests.map(({ appLocale, publicPath }) => ({
+      requests: Arr.map(requests, ({ appLocale, publicPath }) => ({
         appLocale,
         publicPath,
       })),
@@ -106,7 +102,8 @@ export const dispatchBatchProgram = Effect.fn(
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
   if (
-    responses.success.some(
+    Arr.some(
+      responses.success,
       (response) =>
         publicRuntimeResponseBytes(response) > MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
     )

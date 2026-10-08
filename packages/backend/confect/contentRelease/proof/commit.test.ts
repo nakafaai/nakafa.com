@@ -5,7 +5,9 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ContentReleaseManifestSchema,
   ReleaseVerificationEvidenceSchema,
+  SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -21,11 +23,24 @@ import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { recomputeContentProof } from "@repo/backend/test/content/verify";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-proof-commit");
 const release = testSignedRelease(testEmptyManifest(releaseId));
 const commit = internal.contentRelease.proof.commit.commitProof;
+const encodeProofJson = Schema.encodeSync(
+  Schema.fromJsonString(ReleaseVerificationEvidenceSchema)
+);
+/** The text JSON.stringify writes, which the commit compares byte for byte. */
+const encodePlainJson = Schema.encodeSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
+const encodeRendererJson = Schema.encodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+);
+const encodeReleaseJson = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentReleaseSchema)
+);
 
 /** Obtains authentic proof bytes through the same verifier used by production. */
 async function prepare() {
@@ -35,11 +50,11 @@ async function prepare() {
       ctx,
       releaseId,
       release,
-      JSON.stringify(TEST_PROOF_RENDERER)
+      encodeRendererJson(TEST_PROOF_RENDERER)
     )
   );
   const proof = await recomputeContentProof(t, release.manifestHash, releaseId);
-  return { proof, proofJson: JSON.stringify(proof), t };
+  return { proof, proofJson: encodePlainJson(proof), t };
 }
 
 /** Selects the unique technical release for deliberate durability corruption. */
@@ -108,7 +123,7 @@ describe("durable proof commit", () => {
       });
       const input =
         corruption === "manifest"
-          ? JSON.stringify({
+          ? encodeProofJson({
               ...proof,
               resultDigest: release.manifest.itemsDigest,
             })
@@ -153,7 +168,7 @@ describe("durable proof commit", () => {
             await ctx.db.patch("contentReleases", row._id, {
               proofAt: undefined,
               proofJson: undefined,
-              releaseJson: JSON.stringify(replacement),
+              releaseJson: encodeReleaseJson(replacement),
               stagedSnapshotRows: data.rowJson.length,
             });
             if (mode !== "missing") {
@@ -169,7 +184,7 @@ describe("durable proof commit", () => {
           })
         );
         const action = t.mutation(commit, {
-          proofJson: JSON.stringify(snapshotProof),
+          proofJson: encodeProofJson(snapshotProof),
         });
         if (mode === "missing") {
           yield* Effect.promise(() =>

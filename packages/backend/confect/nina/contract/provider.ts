@@ -1,22 +1,36 @@
-import { JsonSchema, Predicate, Schema } from "effect";
+import {
+  Array as Arr,
+  JsonSchema,
+  Predicate,
+  Record as Rec,
+  Schema,
+} from "effect";
 
-interface ObjectJsonSchema extends JsonSchema.JsonSchema {
-  readonly properties: Readonly<Record<string, unknown>>;
-  readonly required: readonly string[];
-  readonly type: "object";
-}
+const ObjectJsonSchemaSchema = Schema.Struct({
+  properties: Schema.Record(Schema.String, Schema.Unknown),
+  required: Schema.Array(Schema.String),
+  type: Schema.Literal("object"),
+});
 
-interface ArrayJsonSchema extends JsonSchema.JsonSchema {
-  readonly maxItems?: number;
-  readonly minItems?: number;
-  readonly type: "array";
-}
+type ObjectJsonSchema = JsonSchema.JsonSchema &
+  typeof ObjectJsonSchemaSchema.Type;
 
-interface ArrayMetadata {
-  readonly description: string | undefined;
-  readonly maxItems: number | undefined;
-  readonly minItems: number | undefined;
-}
+const ArrayJsonSchemaSchema = Schema.Struct({
+  maxItems: Schema.optionalKey(Schema.Finite),
+  minItems: Schema.optionalKey(Schema.Finite),
+  type: Schema.Literal("array"),
+});
+
+type ArrayJsonSchema = JsonSchema.JsonSchema &
+  typeof ArrayJsonSchemaSchema.Type;
+
+const ArrayMetadataSchema = Schema.Struct({
+  description: Schema.UndefinedOr(Schema.String),
+  maxItems: Schema.UndefinedOr(Schema.Finite),
+  minItems: Schema.UndefinedOr(Schema.Finite),
+});
+
+type ArrayMetadata = typeof ArrayMetadataSchema.Type;
 
 /** Narrows generated JSON Schema to object-shaped function parameters. */
 function isObjectSchema(schema: unknown): schema is ObjectJsonSchema {
@@ -26,7 +40,7 @@ function isObjectSchema(schema: unknown): schema is ObjectJsonSchema {
   if (!Predicate.isReadonlyObject(schema.properties)) {
     return false;
   }
-  return Array.isArray(schema.required);
+  return Arr.isArray(schema.required);
 }
 
 /** Narrows generated JSON Schema to array-shaped properties. */
@@ -36,10 +50,10 @@ function isArraySchema(schema: unknown): schema is ArrayJsonSchema {
 
 /** Requires every top-level Effect union branch to define object parameters. */
 function objectVariants(schema: JsonSchema.JsonSchema) {
-  if (!Array.isArray(schema.anyOf)) {
+  if (!Arr.isArray(schema.anyOf)) {
     return [];
   }
-  return schema.anyOf.map((variant) => {
+  return Arr.map(schema.anyOf, (variant) => {
     if (!isObjectSchema(variant)) {
       throw new Error(
         "Provider-compatible tool schema unions require every branch to be an object."
@@ -51,7 +65,7 @@ function objectVariants(schema: JsonSchema.JsonSchema) {
 
 /** Preserves declared enum order while removing duplicate enum values. */
 function mergeEnumValues(left: readonly unknown[], right: readonly unknown[]) {
-  return [...new Set([...left, ...right])];
+  return Arr.dedupe([...left, ...right]);
 }
 
 /** Joins branch descriptions so provider-facing unions keep all instructions. */
@@ -76,7 +90,7 @@ function readArrayMetadata(schema: JsonSchema.JsonSchema): ArrayMetadata {
   let minItems =
     typeof schema.minItems === "number" ? schema.minItems : undefined;
 
-  if (!Array.isArray(schema.allOf)) {
+  if (!Arr.isArray(schema.allOf)) {
     return { description, maxItems, minItems };
   }
 
@@ -131,7 +145,7 @@ function mergePropertySchema(
   right: JsonSchema.JsonSchema
 ): JsonSchema.JsonSchema {
   const description = mergeDescription(left.description, right.description);
-  if (Array.isArray(left.enum) && Array.isArray(right.enum)) {
+  if (Arr.isArray(left.enum) && Arr.isArray(right.enum)) {
     return {
       ...right,
       ...(description ? { description } : {}),
@@ -178,7 +192,7 @@ function requirePropertySchema(value: unknown, name: string) {
 function mergeVariantProperties(variants: readonly ObjectJsonSchema[]) {
   const properties: Record<string, JsonSchema.JsonSchema> = {};
   for (const variant of variants) {
-    for (const [name, value] of Object.entries(variant.properties)) {
+    for (const [name, value] of Rec.toEntries(variant.properties)) {
       const property = requirePropertySchema(value, name);
       const existing = properties[name];
       properties[name] = existing
@@ -204,7 +218,7 @@ function toDraft07Document(schema: Schema.Constraint) {
 
 /** Attaches local definitions to one provider-facing Draft-07 schema. */
 function withDefinitions(document: JsonSchema.Document<"draft-07">) {
-  if (Object.keys(document.definitions).length === 0) {
+  if (Rec.keys(document.definitions).length === 0) {
     return document.schema;
   }
   return {

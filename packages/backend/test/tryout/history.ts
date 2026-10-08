@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { replaceContentSnapshot } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   tryoutCatalogNodeIdentity,
@@ -12,6 +11,7 @@ import {
   decodeSnapshotRowJson,
   decodeTryoutRuntimeBundleJson,
 } from "@repo/backend/confect/contentRelease/parse";
+import { freeze } from "@repo/backend/confect/response/projection";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import type { TryoutHistoryRequest } from "@repo/backend/confect/tryouts/runtime/history/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
@@ -23,7 +23,7 @@ import {
 } from "@repo/backend/test/content/proof";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 
 /** Rebuilds a technical fixture using the exact choices-era placement hash format. */
 async function retainChoicesSnapshot(
@@ -61,8 +61,8 @@ async function retainChoicesSnapshot(
     const { response, languagePolicy, ...identity } = original.record.row;
     const row = { ...identity, choices: response.options };
     const canonical = JSON.stringify(
-      Object.fromEntries(
-        Object.entries(row).sort(([left], [right]) => {
+      Rec.fromEntries(
+        Rec.toEntries<string, unknown>(row).sort(([left], [right]) => {
           if (left < right) {
             return -1;
           }
@@ -110,10 +110,8 @@ async function retainChoicesSnapshot(
           baseSnapshotId: null,
           resultSnapshotId: snapshot.snapshotId,
           rowCount:
-            Object.values(snapshot.counts).reduce(
-              (sum, count) => sum + count,
-              0
-            ) + snapshot.placementCount,
+            Rec.values(snapshot.counts).reduce((sum, count) => sum + count, 0) +
+            snapshot.placementCount,
           rowDigest: snapshot.snapshotId,
         }),
       },
@@ -257,7 +255,7 @@ export async function insertHistoryAttempt(
     questionContentKey: placement.questionContentKey,
     questionOrder: placement.questionOrder,
     rendererDomain: placement.rendererDomain,
-    responseSpec: canonicalQuestionResponse(placement.response),
+    responseSpec: freeze(placement.response, placement.deliveryLanguage),
     sectionIdentity,
     sectionKey: placement.sectionKey,
     sourcePath: placement.questionSourcePath,

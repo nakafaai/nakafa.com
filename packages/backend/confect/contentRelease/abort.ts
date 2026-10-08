@@ -22,7 +22,7 @@ import {
   loadModelBuild,
 } from "@repo/backend/confect/contentRelease/models/build";
 import { stopProofWorkflow } from "@repo/backend/confect/contentRelease/proof/coordinator";
-import { Clock, Effect, Option } from "effect";
+import { Array as Arr, Clock, Effect, Option } from "effect";
 
 /** Validates durable progress for one still-invisible abort operation. */
 export const abortEvidence = Effect.fn("contentRelease.abortEvidence")(
@@ -107,7 +107,7 @@ export const validateAbortedRelease = Effect.fn(
     build?.releaseId === releaseId ||
     residue ||
     runtime ||
-    rows.some((row) => row !== null)
+    Arr.some(rows, (row) => row !== null)
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

@@ -1,14 +1,18 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import {
+  Array as Arr,
   Effect,
   FileSystem,
   Layer,
   Path,
   PlatformError,
-  Sink,
+  Record as Rec,
+  Ref,
   Stdio,
 } from "effect";
+import { capture, makeCapture } from "#scripts/capture";
+import { RULES } from "#scripts/check/rules";
 import { checkTestPolicy } from "#scripts/check/tests";
 
 const CLEAN_TEST =
@@ -17,44 +21,39 @@ const CLEAN_TEST =
 /** Writes fixture files below one repository root. */
 const writeFixtures = Effect.fn("TestPolicyTest.writeFixtures")(function* (
   root: string,
-  files: Record<string, string>
+  files: Readonly<Record<string, string>>
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  for (const [file, content] of Object.entries(files)) {
-    const filePath = path.join(root, file);
-    yield* fileSystem.makeDirectory(path.dirname(filePath), {
-      recursive: true,
-    });
-    yield* fileSystem.writeFileString(filePath, content);
-  }
+  yield* Effect.forEach(
+    Rec.toEntries(files),
+    ([file, content]) =>
+      Effect.andThen(
+        fileSystem.makeDirectory(path.dirname(path.join(root, file)), {
+          recursive: true,
+        }),
+        fileSystem.writeFileString(path.join(root, file), content)
+      ),
+    { discard: true }
+  );
 });
 
 /** Runs the test policy against a fixture with captured standard streams. */
 const checkFixture = Effect.fn("TestPolicyTest.checkFixture")(function* (
   root: string
 ) {
-  const stdout: Array<string | Uint8Array> = [];
-  const stderr: Array<string | Uint8Array> = [];
+  const stdout = yield* makeCapture;
+  const stderr = yield* makeCapture;
   const status = yield* checkTestPolicy(root).pipe(
     Effect.provide(
-      Stdio.layerTest({
-        stderr: () =>
-          Sink.forEachArray((chunks) =>
-            Effect.sync(() => {
-              stderr.push(...chunks);
-            })
-          ),
-        stdout: () =>
-          Sink.forEachArray((chunks) =>
-            Effect.sync(() => {
-              stdout.push(...chunks);
-            })
-          ),
-      })
+      Stdio.layerTest({ stderr: capture(stderr), stdout: capture(stdout) })
     )
   );
-  return { status, stderr, stdout };
+  return {
+    status,
+    stderr: yield* Ref.get(stderr),
+    stdout: yield* Ref.get(stdout),
+  };
 });
 
 /** Delegates to the Node file system except for one unreadable file. */
@@ -93,11 +92,15 @@ describe("test ownership policy", () => {
         "apps/web/style.test.ts":
           'import { it } from "@effect/vitest";\nit("keeps size-[4px]", () => {});\n',
         "apps/web/style.ts": 'export const style = "w-[calc(100%-2rem)]";\n',
+        "apps/web/tsconfig.json":
+          '{"extends":"@repo/typescript-config/base.json"}\n',
         "apps/web/value.test.ts": CLEAN_TEST,
         "apps/web/value.ts": "export const value = 1;\n",
         "packages/core/_generated/api.ts":
           "try {\n  run();\n} catch {\n  stop();\n}\n",
         "packages/core/node_modules/dependency/view.test.tsx": CLEAN_TEST,
+        "packages/typescript-config/base.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
         "packages/core/types.d.ts":
           'export declare const narrowed: typeof value === "object";\n',
         "scripts/tool.test.ts": CLEAN_TEST,
@@ -115,7 +118,6 @@ describe("test ownership policy", () => {
   it.effect("reports ownership, layout, runner, and source violations", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
       const root = yield* fileSystem.makeTempDirectoryScoped({
         prefix: "test-policy-dirty-",
       });
@@ -130,6 +132,10 @@ describe("test ownership policy", () => {
         "packages/core/runner.ts": "export const runner = true;\n",
         "scripts/raw.ts":
           "export function read() {\n  try {\n    return 1;\n  } catch {\n    return 0;\n  }\n}\n",
+        "apps/web/store.ts": "export const store = Object.keys(value);\n",
+        "apps/web/tsconfig.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
+        "tsconfig.json": '{"compilerOptions":{"plugins":[]}}\n',
       });
 
       assert.deepStrictEqual(yield* checkFixture(root), {
@@ -138,8 +144,9 @@ describe("test ownership policy", () => {
           "Every final test must have a colocated .ts Module with the same name; React and TSX behavior belongs in Browser or E2E acceptance:\n  - apps/web/orphan.test.ts\n",
           "Final code must not contain .test.tsx files:\n  - apps/web/view.test.tsx\n",
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
-          `${path.join(root, "packages/core/runner.test.ts")}: return the Effect to @effect/vitest instead of running it.\n`,
-          "scripts/raw.ts: model failure with Effect instead of a raw try/catch statement.\n",
+          "packages/core/runner.test.ts: return the Effect to @effect/vitest instead of running it.\n",
+          `apps/web/store.ts:1: ${RULES["object-helper"].message} (object-helper)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
+          "apps/web/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\ntsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\n",
           "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
         stdout: [],
@@ -174,6 +181,19 @@ describe("test ownership policy", () => {
     {
       category: "an arbitrary value a Tailwind class repeats",
       files: { "apps/web/card.tsx": 'export const card = "ring-[3px]";\n' },
+    },
+    {
+      category: "an Effect-native violation",
+      files: {
+        "apps/web/store.ts": "export const store = Object.keys(value);\n",
+      },
+    },
+    {
+      category: "a gateway client outside its module",
+      files: {
+        "packages/core/model.ts":
+          'import { createGateway } from "@ai-sdk/gateway";\n',
+      },
     },
     {
       category: "typeof-object narrowing",
@@ -230,11 +250,11 @@ describe("test ownership policy", () => {
       ];
 
       assert.deepStrictEqual(
-        failures.map(({ _tag, message }) => ({ _tag, message })),
+        Arr.map(failures, ({ _tag, message }) => [_tag, message]),
         [
-          `Unable to read ${unreadableTest}.`,
-          `Unable to read ${unreadableSource}.`,
-        ].map((message) => ({ _tag: "TestPolicyReadError", message }))
+          ["RepositoryReadError", `Unable to read ${unreadableTest}.`],
+          ["RepositoryReadError", `Unable to read ${unreadableSource}.`],
+        ]
       );
     }).pipe(Effect.provide(NodeServices.layer))
   );

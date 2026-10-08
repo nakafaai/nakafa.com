@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/test/material/catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 /** Reads one published article window through the production owner boundary. */
 function readArticles(
@@ -102,7 +102,7 @@ describe("readPublishedSearchDocuments", () => {
     expect(firstPage).toHaveLength(2);
     expect(firstPage).toEqual(fullWindow.slice(0, firstPage.length));
     expect(
-      new Set(fullWindow.map((document) => document.content_id)).size
+      new Set(Arr.map(fullWindow, (document) => document.content_id)).size
     ).toBe(fullWindow.length);
   });
   it("fills the window when an exact route repeats in search hits", async () => {
@@ -121,9 +121,9 @@ describe("readPublishedSearchDocuments", () => {
     const documents = await readArticles(t, [exact.publicPath], 3);
     expect(documents).toHaveLength(3);
     expect(documents[0]?.content_id).toBe(exact.graph.assetId);
-    expect(new Set(documents.map((document) => document.content_id)).size).toBe(
-      documents.length
-    );
+    expect(
+      new Set(Arr.map(documents, (document) => document.content_id)).size
+    ).toBe(documents.length);
   });
   it("browses current materials in stable public-path order", async () => {
     const t = createConvexTestWithBetterAuth();
@@ -187,11 +187,11 @@ describe("readPublishedSearchDocuments", () => {
         )
       );
     });
-    const expected = projections
-      .map(({ publicPath }) => publicPath)
-      .sort()
-      .slice(0, 2);
-    expect(documents.map(({ route }) => route)).toEqual(expected);
+    const expected = Arr.sort(
+      Arr.map(projections, ({ publicPath }) => publicPath),
+      Order.String
+    ).slice(0, 2);
+    expect(Arr.map(documents, ({ route }) => route)).toEqual(expected);
   });
 });
 it("keeps the signed description in published search documents", async () => {

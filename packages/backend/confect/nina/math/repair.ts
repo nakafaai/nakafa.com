@@ -2,13 +2,8 @@ import { Agent, type UsageHandler } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
-import {
-  getFastModelProviderOptions,
-  type ModelId,
-} from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { backgroundGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import type { ModelId } from "@repo/backend/confect/gateway/model";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import {
   NoSuchToolError,
@@ -26,6 +21,7 @@ const repairArgumentsSchema = Schema.Record(Schema.String, Schema.Unknown);
 const operationSchema = Schema.Struct({
   operation: Schema.String,
 });
+const prettyJsonCodec = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 /** Reads the requested operation from raw tool arguments. */
 function decodeOperation(input: string) {
   return Schema.decodeEffect(Schema.fromJsonString(operationSchema))(input);
@@ -72,14 +68,22 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   )(toolCall.input).pipe(Effect.option);
   const failedArgumentsText = Option.match(failedArguments, {
     onNone: () => toolCall.input,
-    onSome: (input) => JSON.stringify(input, null, 2),
+    onSome: (input) => Schema.encodeSync(prettyJsonCodec)(input),
   });
   const ctx = yield* ActionCtx;
+  const handle = (yield* Gateway).language({
+    purpose: "background",
+    model: modelId,
+    space: { kind: "personal", userId },
+  });
   const agent = new Agent(components.nina, {
     name: "math-repair",
     usageHandler,
-    languageModel: yield* getGatewayModel(modelId),
+    languageModel: handle.model,
   });
+  const acceptedSchemaText = yield* Schema.encodeEffect(prettyJsonCodec)(
+    schema.value
+  ).pipe(Effect.orDie);
   const repaired = yield* Effect.tryPromise((signal) =>
     agent
       .generateText(
@@ -127,19 +131,15 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
 
         # Accepted Schema
 
-        ${JSON.stringify(schema.value, null, 2)}
+        ${acceptedSchemaText}
 
         # Validation Error
 
         ${error.message}
       `,
           }),
-          providerOptions: {
-            gateway: gatewayProviderOptions,
-            google: getFastModelProviderOptions(modelId),
-          },
           ...(instructions === undefined ? {} : { instructions }),
-          timeout: backgroundGenerationTimeout,
+          timeout: handle.timeout,
         }
       )
       .then((result) => result.output)
@@ -160,8 +160,11 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     onNone: () => repairedInput.value,
     onSome: ({ operation }) => ({ ...repairedInput.value, operation }),
   });
+  const encodedInput = yield* Schema.encodeEffect(prettyJsonCodec)(input).pipe(
+    Effect.orDie
+  );
   return {
     ...toolCall,
-    input: JSON.stringify(input, null, 2),
+    input: encodedInput,
   };
 });

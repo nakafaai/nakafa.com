@@ -42,10 +42,12 @@ function concatenateChunks(chunks: readonly Uint8Array[], totalBytes: number) {
   }
   return result;
 }
-interface BoundedBodyState {
-  readonly chunks: Uint8Array[];
-  readonly totalBytes: number;
-}
+/** Chunks grow in place, so reading a body stays linear in its size. */
+const BoundedBodyStateSchema = Schema.Struct({
+  chunks: Schema.Array(Schema.Uint8Array).pipe(Schema.mutable),
+  totalBytes: Schema.Finite,
+});
+type BoundedBodyState = typeof BoundedBodyStateSchema.Type;
 /** Acquires one reader in the typed channel and cancels it when its stream ends. */
 function streamBody(body: ReadableStream<Uint8Array>) {
   return Stream.fromPull(
@@ -92,13 +94,13 @@ export const parseContentLength = Effect.fn("Utilities.parseContentLength")(
     return byteLength;
   }
 );
-/** Reads a web body stream with typed failure and interruption cancellation. */
-export const readBoundedBody = Effect.fn("Utilities.readBoundedBody")(
-  function* (body: ReadableStream<Uint8Array> | null, maxBytes: number) {
-    if (body === null) {
-      return yield* new BodyMissingError();
-    }
-    const state = yield* streamBody(body).pipe(
+/** Collects a byte stream into one array and fails once it crosses its ceiling. */
+export const readBoundedStream = Effect.fn("Utilities.readBoundedStream")(
+  function* <Failure, Requirements>(
+    stream: Stream.Stream<Uint8Array, Failure, Requirements>,
+    maxBytes: number
+  ) {
+    const state = yield* stream.pipe(
       Stream.runFoldEffect(
         (): BoundedBodyState => ({ chunks: [], totalBytes: 0 }),
         (current, chunk) => {
@@ -114,5 +116,14 @@ export const readBoundedBody = Effect.fn("Utilities.readBoundedBody")(
       )
     );
     return concatenateChunks(state.chunks, state.totalBytes);
+  }
+);
+/** Reads a web body stream with typed failure and interruption cancellation. */
+export const readBoundedBody = Effect.fn("Utilities.readBoundedBody")(
+  function* (body: ReadableStream<Uint8Array> | null, maxBytes: number) {
+    if (body === null) {
+      return yield* new BodyMissingError();
+    }
+    return yield* readBoundedStream(streamBody(body), maxBytes);
   }
 );

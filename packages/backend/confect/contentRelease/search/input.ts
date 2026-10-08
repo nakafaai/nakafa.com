@@ -1,5 +1,5 @@
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const SEARCH_TERM_LIMIT = 16;
 const SEARCH_TERM_BYTE_CEILING = 32;
@@ -17,7 +17,8 @@ export const validateSearchQuery = Effect.fn(
   const exceedsCharacterLimit =
     limits.characterLimit !== undefined && query.length > limits.characterLimit;
   const encoder = new TextEncoder();
-  const hasDiscardedTerm = terms.some(
+  const hasDiscardedTerm = Arr.some(
+    terms,
     (term) => encoder.encode(term).byteLength >= SEARCH_TERM_BYTE_CEILING
   );
   if (

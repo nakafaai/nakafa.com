@@ -1,6 +1,9 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { decodeArtifactJson } from "@repo/backend/confect/contentRelease/parse";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -8,9 +11,15 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const readProtected = internal.contentRelease.runtime.tryout.internal.read;
+const encodeArtifact = Schema.encodeSync(
+  Schema.fromJsonString(SignedContentArtifactSchema)
+);
+const decodeBundle = Schema.decodeSync(
+  Schema.fromJsonString(SignedTryoutRuntimeBundleSchema)
+);
 
 /** Builds one protected batch from the shared fixture snapshot identity. */
 function batch(
@@ -19,7 +28,7 @@ function batch(
 ) {
   return {
     bundleHash: fixture.request.bundleHash,
-    selectors: selectors.map(({ artifactHash, contentKey, delivery }) => ({
+    selectors: Arr.map(selectors, ({ artifactHash, contentKey, delivery }) => ({
       artifactHash,
       contentKey,
       delivery,
@@ -104,11 +113,11 @@ describe("contentRelease/runtime/tryout/internal", () => {
             )
           );
           await ctx.db.patch(stored._id, {
-            artifactJson: JSON.stringify({
+            artifactJson: encodeArtifact({
               ...artifact,
               payload: {
                 ...artifact.payload,
-                artifactLocale: "id",
+                artifactLocale: ArtifactLocaleSchema.make("id"),
               },
             }),
           });
@@ -139,7 +148,7 @@ describe("contentRelease/runtime/tryout/internal", () => {
       delivery: "entitled",
       sourcePath: `${fixture.placement.questionSourcePath}/answer.en.mdx`,
     });
-    expect(JSON.parse(result.bundleJson)).toMatchObject({
+    expect(decodeBundle(result.bundleJson)).toMatchObject({
       bundleHash: fixture.request.bundleHash,
       payload: {
         snapshot: {

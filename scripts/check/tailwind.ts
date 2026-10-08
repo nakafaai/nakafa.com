@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 /**
  * Reports Tailwind arbitrary values that repeat a value a built-in class
  * already renders, with that class. Tailwind finds class candidates by
@@ -34,9 +36,9 @@ const SIZES = ["w", "h", "size", "min-w", "min-h", "max-w", "max-h", "basis"];
 const INSETS = ["inset", "inset-x", "inset-y", "top", "right", "bottom"];
 const SIDES = ["left", "start", "end", "translate-x", "translate-y"];
 const MARGINS = ["m", "mx", "my", "mt", "mr", "mb", "ml", "ms", "me"];
-const SCROLL_MARGINS = MARGINS.map((margin) => `scroll-${margin}`);
+const SCROLL_MARGINS = Arr.map(MARGINS, (margin) => `scroll-${margin}`);
 const PADDINGS = ["p", "px", "py", "pt", "pr", "pb", "pl", "ps", "pe"];
-const SCROLL_PADDINGS = PADDINGS.map((padding) => `scroll-${padding}`);
+const SCROLL_PADDINGS = Arr.map(PADDINGS, (padding) => `scroll-${padding}`);
 const GAPS = ["gap", "gap-x", "gap-y", "space-x", "space-y"];
 const TYPOGRAPHY_SPACING = ["indent", "leading", "border-spacing"];
 const BORDERS = ["border", "border-x", "border-y", "border-t", "border-r"];
@@ -190,26 +192,26 @@ function gridTracks(value: string) {
 }
 
 const RESOLVERS = new Map<string, Resolve>([
-  ...[
-    ...SIZES,
-    ...INSETS,
-    ...SIDES,
-    ...MARGINS,
-    ...SCROLL_MARGINS,
-    ...PADDINGS,
-    ...SCROLL_PADDINGS,
-    ...GAPS,
-    ...TYPOGRAPHY_SPACING,
-  ].map((utility): [string, Resolve] => [utility, spacing(utility)]),
-  ...[
-    ...BORDERS,
-    ...BORDER_SIDES,
-    ...DIVIDES,
-    ...LINE_WIDTHS,
-    ...TEXT_LINES,
-  ].map((utility): [string, Resolve] => [utility, lineWidth(utility)]),
-  ...COUNTS.map((utility): [string, Resolve] => [utility, integer]),
-  ...["opacity", ...SCALES].map((utility): [string, Resolve] => [
+  ...Arr.map(
+    [
+      ...SIZES,
+      ...INSETS,
+      ...SIDES,
+      ...MARGINS,
+      ...SCROLL_MARGINS,
+      ...PADDINGS,
+      ...SCROLL_PADDINGS,
+      ...GAPS,
+      ...TYPOGRAPHY_SPACING,
+    ],
+    (utility): [string, Resolve] => [utility, spacing(utility)]
+  ),
+  ...Arr.map(
+    [...BORDERS, ...BORDER_SIDES, ...DIVIDES, ...LINE_WIDTHS, ...TEXT_LINES],
+    (utility): [string, Resolve] => [utility, lineWidth(utility)]
+  ),
+  ...Arr.map(COUNTS, (utility): [string, Resolve] => [utility, integer]),
+  ...Arr.map(["opacity", ...SCALES], (utility): [string, Resolve] => [
     utility,
     percentStep,
   ]),
@@ -241,7 +243,7 @@ export function inspectTailwindSource(file: string, sourceText: string) {
   if (TEST_MODULE_PATTERN.test(file)) {
     return [];
   }
-  return [...sourceText.matchAll(CANDIDATE_PATTERN)].flatMap((match) => {
+  return Arr.flatMap([...sourceText.matchAll(CANDIDATE_PATTERN)], (match) => {
     const [candidate, negative, utility, value] = match;
     const replacement = builtInClass(negative === "-", utility, value);
     if (replacement === undefined) {

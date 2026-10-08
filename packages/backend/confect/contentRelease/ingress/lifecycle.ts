@@ -2,7 +2,13 @@
 
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import type {
+  ActivateRecoveryRequest,
+  ActivateReleaseRequest,
+  PublicationAbortRequest,
+  PublicationAcceptRequest,
+  VerifyReleaseRequest,
+} from "@nakafa/aksara-contracts/transport/request";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   MutationRunner,
@@ -20,23 +26,16 @@ import {
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
 import { Effect } from "effect";
 
-type LifecycleRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation:
-      | "accept"
-      | "abort"
-      | "activate"
-      | "activateRecovery"
-      | "verify";
-  }
->;
-type SignedRequest = Exclude<
-  LifecycleRequest,
-  {
-    readonly operation: "abort" | "accept";
-  }
->;
+type LifecycleRequest =
+  | PublicationAcceptRequest
+  | PublicationAbortRequest
+  | VerifyReleaseRequest
+  | ActivateReleaseRequest
+  | ActivateRecoveryRequest;
+type SignedRequest =
+  | VerifyReleaseRequest
+  | ActivateReleaseRequest
+  | ActivateRecoveryRequest;
 /** Authenticates one lifecycle request and its immutable release identity. */
 function verifyRequest(request: SignedRequest) {
   return verifySignedContentRelease(request.release).pipe(
@@ -48,7 +47,7 @@ function verifyRequest(request: SignedRequest) {
 const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   release: SignedRequest["release"]
 ) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const envelope = yield* runQuery(refs.internal.contentRelease.envelope.get, {
     manifestHash: release.manifestHash,
     releaseId: release.manifest.releaseId,
@@ -70,7 +69,7 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
 export const advancePublication = Effect.fn(
   "contentRelease.advancePublication"
 )(function* (request: LifecycleRequest) {
-  const runMutation = yield* MutationRunner;
+  const { runMutation } = yield* MutationRunner;
   if (request.operation === "accept") {
     const value = yield* runMutation(
       refs.internal.contentRelease.accept.accept,

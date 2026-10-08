@@ -16,7 +16,7 @@ import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { testArticleGraph } from "@repo/backend/test/content/release";
 import { getOrThrow } from "convex-helpers/server/relationships";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option, pipe } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const ARTICLE_ROUTE = "articles/politics/dynastic-politics-asian-values";
@@ -118,18 +118,24 @@ describe("contents/metrics/apply", () => {
       counters: await ctx.db.query("learningPopularityCounters").collect(),
       signals: await ctx.db.query("learningPopularitySignals").collect(),
     }));
-    const subjectCounter = state.counters.find(
-      (row) =>
-        row.section === "material" &&
-        row.windowKey === getDefaultPopularityWindow()
+    const subjectCounter = Option.getOrUndefined(
+      Arr.findFirst(
+        state.counters,
+        (row) =>
+          row.section === "material" &&
+          row.windowKey === getDefaultPopularityWindow()
+      )
     );
-    const articleCounter = state.counters.find(
-      (row) =>
-        row.section === "articles" &&
-        row.windowKey === getDefaultPopularityWindow()
+    const articleCounter = Option.getOrUndefined(
+      Arr.findFirst(
+        state.counters,
+        (row) =>
+          row.section === "articles" &&
+          row.windowKey === getDefaultPopularityWindow()
+      )
     );
-    const subjectSignal = state.signals.find(
-      (row) => row.section === "material"
+    const subjectSignal = Option.getOrUndefined(
+      Arr.findFirst(state.signals, (row) => row.section === "material")
     );
     expect(articleCounter).toMatchObject({
       locale: "en",
@@ -152,7 +158,7 @@ describe("contents/metrics/apply", () => {
         pageSize: 10,
       })
     );
-    expect(initialRanking.page.map(({ key }) => key)).toEqual([
+    expect(Arr.map(initialRanking.page, ({ key }) => key)).toEqual([
       [-2, subjectCounter?.content_id],
     ]);
     expect(subjectSignal).toMatchObject({
@@ -182,7 +188,7 @@ describe("contents/metrics/apply", () => {
         pageSize: 10,
       })
     );
-    expect(updatedRanking.page.map(({ key }) => key)).toEqual([
+    expect(Arr.map(updatedRanking.page, ({ key }) => key)).toEqual([
       [-3, subjectCounter?.content_id],
     ]);
     const accumulated = await target.query(
@@ -230,12 +236,17 @@ describe("contents/metrics/apply", () => {
       signal: await ctx.db.query("learningPopularitySignals").unique(),
     }));
     expect(
-      state.counters.find(
-        (row) => row.windowKey === getDefaultPopularityWindow()
+      Option.getOrUndefined(
+        Arr.findFirst(
+          state.counters,
+          (row) => row.windowKey === getDefaultPopularityWindow()
+        )
       )
     ).toBeUndefined();
     expect(
-      state.counters.find((row) => row.windowKey === "lifetime")
+      Option.getOrUndefined(
+        Arr.findFirst(state.counters, (row) => row.windowKey === "lifetime")
+      )
     ).toMatchObject({
       score: 1,
     });
@@ -277,18 +288,22 @@ describe("contents/metrics/apply", () => {
       async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
     );
     expect(
-      counters
-        .filter(
+      pipe(
+        counters,
+        Arr.filter(
           ({ windowKey }) => windowKey === "7d" || windowKey === "lifetime"
+        ),
+        Arr.map(
+          ({ contextMode, latestDay, route, score, title, windowKey }) => ({
+            contextMode,
+            latestDay,
+            route,
+            score,
+            title,
+            windowKey,
+          })
         )
-        .map(({ contextMode, latestDay, route, score, title, windowKey }) => ({
-          contextMode,
-          latestDay,
-          route,
-          score,
-          title,
-          windowKey,
-        }))
+      )
     ).toEqual([
       {
         contextMode: "canonical",
@@ -386,18 +401,22 @@ describe("contents/metrics/apply", () => {
       async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
     );
     expect(
-      repaired
-        .filter(
+      pipe(
+        repaired,
+        Arr.filter(
           ({ windowKey }) => windowKey === "7d" || windowKey === "lifetime"
+        ),
+        Arr.map(
+          ({ contextMode, latestDay, route, score, title, windowKey }) => ({
+            contextMode,
+            latestDay,
+            route,
+            score,
+            title,
+            windowKey,
+          })
         )
-        .map(({ contextMode, latestDay, route, score, title, windowKey }) => ({
-          contextMode,
-          latestDay,
-          route,
-          score,
-          title,
-          windowKey,
-        }))
+      )
     ).toEqual([
       {
         contextMode: "canonical",
@@ -431,18 +450,22 @@ describe("contents/metrics/apply", () => {
       async (ctx) => await ctx.db.query("learningPopularityCounters").collect()
     );
     expect(
-      stable
-        .filter(
+      pipe(
+        stable,
+        Arr.filter(
           ({ windowKey }) => windowKey === "7d" || windowKey === "lifetime"
+        ),
+        Arr.map(
+          ({ contextMode, latestDay, route, score, title, windowKey }) => ({
+            contextMode,
+            latestDay,
+            route,
+            score,
+            title,
+            windowKey,
+          })
         )
-        .map(({ contextMode, latestDay, route, score, title, windowKey }) => ({
-          contextMode,
-          latestDay,
-          route,
-          score,
-          title,
-          windowKey,
-        }))
+      )
     ).toEqual([
       {
         contextMode: "canonical",

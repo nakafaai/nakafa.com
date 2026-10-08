@@ -13,7 +13,17 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/conversation.spec";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
 import type { StreamRequest } from "@repo/backend/confect/nina/schema";
-import { Effect, Layer, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  HashMap,
+  HashSet,
+  Layer,
+  MutableHashMap,
+  Option,
+  pipe,
+  Schema,
+} from "effect";
 
 /** Reads active streams or their deltas for one authorized thread. */
 const readStreams = Effect.fn("nina.messages.streams")(function* (
@@ -34,16 +44,20 @@ const readStreams = Effect.fn("nina.messages.streams")(function* (
       catch: () =>
         new NinaReadError({ message: "Unable to read Nina streams." }),
     });
-    const allowed = new Set(available.map((stream) => stream.streamId));
+    const allowed = HashSet.fromIterable(
+      Arr.map(available, (stream) => stream.streamId)
+    );
+    // A stream keeps its last cursor, in the order the streams first appear.
+    const latest = MutableHashMap.fromIterable(
+      pipe(
+        streamArgs.cursors,
+        Arr.filter((cursor) => HashSet.has(allowed, cursor.streamId)),
+        Arr.map((cursor) => [cursor.streamId, cursor])
+      )
+    );
     streamArgs = {
       kind: "deltas",
-      cursors: [
-        ...new Map(
-          streamArgs.cursors
-            .filter((cursor) => allowed.has(cursor.streamId))
-            .map((cursor) => [cursor.streamId, cursor])
-        ).values(),
-      ],
+      cursors: [...MutableHashMap.values(latest)],
     };
   }
   // The SDK answers every stream request; a missing result is a read failure.
@@ -90,9 +104,9 @@ const list = FunctionImpl.make(
     const reader = yield* DatabaseReader;
     // Hydrate only the orders present in this bounded message page. Agent keeps
     // ownership of parts and stream cursors; app facts come from their own turn.
-    const turns = new Map(
+    const turns = HashMap.fromIterable(
       yield* Effect.forEach(
-        [...new Set(page.page.map((message) => message.order))],
+        Arr.dedupe(Arr.map(page.page, (message) => message.order)),
         Effect.fn(function* (order) {
           const turn = yield* reader
             .table("ninaTurns")
@@ -102,15 +116,17 @@ const list = FunctionImpl.make(
             );
           const summary = turn
             ? yield* Schema.decodeEffect(NinaTurnSummary)(turn)
-            : null;
+            : undefined;
           return [order, summary] as const;
         }, Effect.orDie)
       )
     );
     return {
       ...page,
-      page: page.page.map((message) => {
-        const metadata = turns.get(message.order) ?? undefined;
+      page: Arr.map(page.page, (message) => {
+        const metadata = Option.getOrUndefined(
+          HashMap.get(turns, message.order)
+        );
         let createdAt = message._creationTime;
         if (message.role === "user" && metadata?.promptedAt !== undefined) {
           createdAt = metadata.promptedAt;

@@ -24,9 +24,7 @@ const AiContext = createContext<AiStoreApi | null>(null);
 /** Provides the Nina store to AI components. */
 export function AiContextProvider({ children }: { children: ReactNode }) {
   const ownerId = useAuthSession((session) =>
-    session.isPending || session.error
-      ? undefined
-      : (session.data?.user.id ?? null)
+    session.isPending || session.hasError ? undefined : session.userId
   );
   const activeDraftOwnerIdRef = useRef<string | null | undefined>(undefined);
   const pendingDraftRef = useRef({

@@ -24,7 +24,7 @@ import {
 } from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const EXPIRED_AT = NOW - 1000;
@@ -47,7 +47,8 @@ describe("tryouts/runtime/finish", () => {
           sectionCount: 2,
           visibleSectionCount: 2,
         });
-        const alignedSections = [FIRST_SECTION, SECOND_SECTION].map(
+        const alignedSections = Arr.map(
+          [FIRST_SECTION, SECOND_SECTION],
           (sectionKey, index) =>
             makeSignedTryoutSection(
               makeTryoutSection({
@@ -79,7 +80,7 @@ describe("tryouts/runtime/finish", () => {
         const attemptId = await insertTryoutAttempt(ctx, {
           expiresAt: EXPIRED_AT,
           scaleVersionId,
-          sectionSnapshots: alignedSections.map(({ signed }) =>
+          sectionSnapshots: Arr.map(alignedSections, ({ signed }) =>
             tryoutSectionSnapshot({
               signed,
             })
@@ -151,13 +152,16 @@ describe("tryouts/runtime/finish", () => {
             now: NOW,
           }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
         );
-        const placementQueryCount = query.mock.calls.filter(
+        const placementQueryCount = Arr.filter(
+          query.mock.calls,
           ([tableName]) => tableName === "tryoutAttemptPlacements"
         ).length;
-        const scaleItemQueryCount = query.mock.calls.filter(
+        const scaleItemQueryCount = Arr.filter(
+          query.mock.calls,
           ([tableName]) => tableName === "irtScaleItems"
         ).length;
-        const calibrationRunQueryCount = query.mock.calls.filter(
+        const calibrationRunQueryCount = Arr.filter(
+          query.mock.calls,
           ([tableName]) => tableName === "irtCalibrationRuns"
         ).length;
         query.mockRestore();
@@ -391,13 +395,16 @@ describe("tryouts/runtime/finish", () => {
           section: sectionAttempt,
         }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
       );
-      const placementQueryCount = query.mock.calls.filter(
+      const placementQueryCount = Arr.filter(
+        query.mock.calls,
         ([tableName]) => tableName === "tryoutAttemptPlacements"
       ).length;
-      const scaleItemQueryCount = query.mock.calls.filter(
+      const scaleItemQueryCount = Arr.filter(
+        query.mock.calls,
         ([tableName]) => tableName === "irtScaleItems"
       ).length;
-      const calibrationRunQueryCount = query.mock.calls.filter(
+      const calibrationRunQueryCount = Arr.filter(
+        query.mock.calls,
         ([tableName]) => tableName === "irtCalibrationRuns"
       ).length;
       query.mockRestore();

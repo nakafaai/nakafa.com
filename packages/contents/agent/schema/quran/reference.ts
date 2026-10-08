@@ -137,6 +137,5 @@ export const NakafaAgentQuranReferenceSchema = Schema.Union([
     "Nakafa Quran reference with semantic notes and signed source attribution.",
 });
 
-export type NakafaAgentQuranReference = Schema.Schema.Type<
-  typeof NakafaAgentQuranReferenceSchema
->;
+export type NakafaAgentQuranReference =
+  typeof NakafaAgentQuranReferenceSchema.Type;

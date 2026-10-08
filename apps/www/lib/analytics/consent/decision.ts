@@ -1,18 +1,17 @@
 "use client";
 
 import { Effect, Fiber } from "effect";
-import type { Dispatch, SetStateAction } from "react";
-import type { useAnonymousAnalyticsConsent } from "@/lib/analytics/consent/browser";
+import type { createAnonymousConsentSave } from "@/lib/analytics/consent/browser";
 import type { AnalyticsConsentError } from "@/lib/analytics/consent/context";
 import {
   type AnalyticsConsentPromptIdentity,
   type AnalyticsConsentSessionOperation,
-  type AnalyticsConsentSessionOverrides,
   cancelAnalyticsConsentSessionSave,
   completeAnalyticsConsentSessionSave,
   setAnalyticsConsentSessionOverride,
 } from "@/lib/analytics/consent/session";
 import { saveAccountAnalyticsChoice } from "@/lib/analytics/consent/signal";
+import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
 export interface AnalyticsConsentSave extends AnalyticsConsentSessionOperation {
   readonly fiber: Fiber.Fiber<void, never>;
@@ -76,14 +75,10 @@ interface ConsentSaveActionOptions {
   readonly isSaving: boolean;
   readonly previousSave: AnalyticsConsentSave | null;
   readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
-  readonly saveDecision: ReturnType<
-    typeof useAnonymousAnalyticsConsent
-  >["saveDecision"];
+  readonly saveDecision: ReturnType<typeof createAnonymousConsentSave>;
   readonly setAccountConsent: Parameters<typeof saveAccountAnalyticsChoice>[0];
   readonly setPreferencesOpen: (isOpen: boolean) => void;
-  readonly setSessionOverrides: Dispatch<
-    SetStateAction<AnalyticsConsentSessionOverrides>
-  >;
+  readonly setSessionOverrides: AnalyticsConsentStoreState["setSessionOverrides"];
   readonly user: {
     readonly appUser: {
       readonly _id: Parameters<typeof saveAccountAnalyticsChoice>[1];

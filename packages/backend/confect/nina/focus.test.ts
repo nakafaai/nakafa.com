@@ -1,5 +1,6 @@
 import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { NinaFocus } from "@repo/backend/confect/nina/contract/focus";
 import {
@@ -9,9 +10,12 @@ import {
 } from "@repo/backend/confect/nina/focus";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
-import { Exit } from "effect";
+import { Exit, Schema } from "effect";
 
 const readReference = Ref.getFunctionReference(refs.internal.nina.focus.read);
+const OTHER_LEARNER_SEEDED_AT = Date.UTC(2026, 8, 27, 12);
+/** Decodes stored artifacts through the contract production decodes. */
+const SignedArtifactJson = Schema.fromJsonString(SignedContentArtifactSchema);
 
 describe("Nina question focus", () => {
   it("freezes a Pro learner's finished question", async () => {
@@ -33,7 +37,7 @@ describe("Nina question focus", () => {
     await f.t.mutation(async (ctx) => {
       if (state === "another learner") {
         const other = await seedAuthenticatedUser(ctx, {
-          now: Date.now(),
+          now: OTHER_LEARNER_SEEDED_AT,
           suffix: "other",
         });
         await ctx.db.patch("tryoutAttempts", f.focus.attemptId, {
@@ -100,7 +104,7 @@ describe("Nina question focus", () => {
           explanationMdx: "#### Technical answer",
           responseSpec: expect.objectContaining({ kind: "single-choice" }),
           selection: null,
-          isCorrect: null,
+          outcome: null,
         })
       )
     );
@@ -132,7 +136,7 @@ describe("Nina question focus", () => {
     await read((exit) =>
       expect(exit).toMatchObject({
         _tag: "Success",
-        value: { selection, isCorrect: false },
+        value: { selection, outcome: { status: "incorrect" } },
       })
     );
     await f.t.mutation((ctx) =>
@@ -162,9 +166,11 @@ describe("Nina question focus", () => {
           await ctx.db.delete("contentArtifacts", stored._id);
           return;
         }
-        const artifact = JSON.parse(stored.artifactJson);
+        const artifact = Schema.decodeSync(SignedArtifactJson, {
+          onExcessProperty: "error",
+        })(stored.artifactJson);
         await ctx.db.patch("contentArtifacts", stored._id, {
-          artifactJson: JSON.stringify({
+          artifactJson: Schema.encodeSync(SignedArtifactJson)({
             ...artifact,
             artifactHash: f.seed.fixture.placement.answerArtifactHash,
           }),

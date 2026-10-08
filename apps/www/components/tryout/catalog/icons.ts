@@ -7,12 +7,15 @@ import {
   ChatQuestionIcon,
   File01Icon,
   LanguageSkillIcon,
+  Mortarboard02Icon,
   PuzzleIcon,
   RankingIcon,
   SchoolReportCardIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
+import type { TryoutTrackKindSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import { getMaterialIcon } from "@repo/contents/curriculum/material";
+import { Match } from "effect";
 
 /** Exam subjects and subtests that are not curriculum materials. */
 const examSubjectIcons = {
@@ -58,13 +61,15 @@ export function getTryoutSubjectIcon(key: string): IconSvgElement {
   );
 }
 
-/** Resolves one track identity to its year or subject icon. */
+/** Resolves one track identity to its year, institution, or subject icon. */
 export function getTryoutTrackIcon(
-  trackKind: "subject" | "year",
+  trackKind: typeof TryoutTrackKindSchema.Type,
   trackKey: string
 ): IconSvgElement {
-  if (trackKind === "year") {
-    return Calendar03Icon;
-  }
-  return getTryoutSubjectIcon(trackKey);
+  return Match.value(trackKind).pipe(
+    Match.when("year", () => Calendar03Icon),
+    Match.when("institution", () => Mortarboard02Icon),
+    Match.when("subject", () => getTryoutSubjectIcon(trackKey)),
+    Match.exhaustive
+  );
 }

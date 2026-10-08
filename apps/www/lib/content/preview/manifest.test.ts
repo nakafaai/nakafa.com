@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import {
   readPreviewManifestForPrerender,
@@ -9,6 +9,16 @@ import {
 import { makePendingManifest } from "@/test/content-preview";
 
 const target = "http://127.0.0.1:4000/manifest";
+/**
+ * One fetch for the whole file: these readers end in a Promise, so the double
+ * is global, and Effect's client keeps the first global fetch it reads.
+ */
+const fetcher = vi.fn<typeof fetch>();
+
+beforeEach(() => {
+  fetcher.mockReset();
+  vi.stubGlobal("fetch", fetcher);
+});
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -46,8 +56,6 @@ describe("local preview prerender manifest", () => {
       Effect.gen(function* () {
         stubPreviewEnvironment();
         vi.stubEnv("NODE_ENV", "production");
-        const fetcher = vi.fn();
-        vi.stubGlobal("fetch", fetcher);
 
         expect(yield* readPreviewSnapshot()).toEqual(Option.none());
         expect(fetcher).not.toHaveBeenCalled();
@@ -60,10 +68,7 @@ describe("local preview prerender manifest", () => {
       Effect.gen(function* () {
         stubPreviewEnvironment();
         const manifest = makePendingManifest();
-        vi.stubGlobal(
-          "fetch",
-          vi.fn(() => Promise.resolve(response(JSON.stringify(manifest))))
-        );
+        fetcher.mockResolvedValue(response(JSON.stringify(manifest)));
 
         const snapshot = yield* readPreviewSnapshot();
         expect(Option.map(snapshot, (value) => value.manifest)).toEqual(
@@ -75,10 +80,7 @@ describe("local preview prerender manifest", () => {
   it.effect("keeps transport failures in the Effect error channel", () =>
     Effect.gen(function* () {
       stubPreviewEnvironment();
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(() => Promise.reject(new TypeError("closed")))
-      );
+      fetcher.mockRejectedValue(new TypeError("closed"));
 
       expect(yield* readPreviewSnapshot().pipe(Effect.flip)).toMatchObject({
         _tag: "PreviewRequestError",
@@ -90,10 +92,7 @@ describe("local preview prerender manifest", () => {
   it.effect("keeps manifest failures in the Effect error channel", () =>
     Effect.gen(function* () {
       stubPreviewEnvironment();
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(() => Promise.resolve(response("{}")))
-      );
+      fetcher.mockResolvedValue(response("{}"));
 
       expect(yield* readPreviewSnapshot().pipe(Effect.flip)).toMatchObject({
         _tag: "PreviewIntegrityError",
@@ -102,13 +101,10 @@ describe("local preview prerender manifest", () => {
     })
   );
 
-  it("reads the strict manifest behind Next's direct Promise boundary", async () => {
+  it("reads the strict manifest behind the Promise boundary", async () => {
     stubPreviewEnvironment();
     const manifest = makePendingManifest();
-    const fetcher = vi.fn(() =>
-      Promise.resolve(response(JSON.stringify(manifest)))
-    );
-    vi.stubGlobal("fetch", fetcher);
+    fetcher.mockResolvedValue(response(JSON.stringify(manifest)));
 
     await expect(readPreviewManifestForPrerender()).resolves.toEqual(manifest);
     expect(fetcher).toHaveBeenCalledWith(
@@ -126,8 +122,6 @@ describe("local preview prerender manifest", () => {
 
   it("rejects invalid configuration before sending a credential", async () => {
     vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", "partial-token");
-    const fetcher = vi.fn();
-    vi.stubGlobal("fetch", fetcher);
 
     await expect(readPreviewManifestForPrerender()).rejects.toMatchObject({
       _tag: "PreviewConfigError",
@@ -137,10 +131,7 @@ describe("local preview prerender manifest", () => {
 
   it("rejects malformed manifests in the typed integrity channel", async () => {
     stubPreviewEnvironment();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.resolve(response("{}")))
-    );
+    fetcher.mockResolvedValue(response("{}"));
 
     await expect(readPreviewManifestForPrerender()).rejects.toMatchObject({
       _tag: "PreviewIntegrityError",
@@ -150,10 +141,7 @@ describe("local preview prerender manifest", () => {
 
   it("preserves typed transport failures at the Next boundary", async () => {
     stubPreviewEnvironment();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.reject(new TypeError("closed")))
-    );
+    fetcher.mockRejectedValue(new TypeError("closed"));
 
     await expect(readPreviewManifestForPrerender()).rejects.toMatchObject({
       _tag: "PreviewRequestError",

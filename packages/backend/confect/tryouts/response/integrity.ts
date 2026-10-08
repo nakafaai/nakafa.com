@@ -1,8 +1,10 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { evaluateTryoutResponse } from "@repo/backend/confect/tryouts/response/evaluation";
+import { evaluate } from "@repo/backend/confect/response/evaluation";
+import { Outcome } from "@repo/backend/confect/response/model";
+import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
@@ -77,7 +79,8 @@ export const validateTryoutResponsePlacements = Effect.fn(
   placements: readonly TryoutPlacement[]
 ) {
   if (
-    placements.some(
+    Arr.some(
+      placements,
       (placement) =>
         placement.tryoutAttemptId !== attemptId ||
         placement.sectionIdentity !== snapshot.sectionIdentity ||
@@ -111,9 +114,10 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
   const snapshotsByIdentity = yield* validateTryoutSectionSnapshots(
     input.snapshots
   );
-  const snapshotQuestionCount = input.snapshots.reduce(
-    (total, snapshot) => total + snapshot.questionCount,
-    0
+  const snapshotQuestionCount = Arr.reduce(
+    input.snapshots,
+    0,
+    (total, snapshot) => total + snapshot.questionCount
   );
   if (
     snapshotQuestionCount !== input.expectedQuestionCount ||
@@ -181,7 +185,7 @@ export const indexTryoutResponses = Effect.fn(
   readonly responses: readonly TryoutResponse[];
 }) {
   const linksByPlacement = new Map(
-    input.links.map((link) => [link.placement._id, link])
+    Arr.map(input.links, (link) => [link.placement._id, link])
   );
   const responsesByPlacement = new Map<
     Id<"tryoutAttemptPlacements">,
@@ -205,9 +209,8 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out placement has more than one response."
       );
     }
-    const evaluated = yield* evaluateTryoutResponse(
-      link.placement.responseSpec,
-      response.selection
+    const evaluated = yield* Effect.fromResult(
+      evaluate(link.placement.responseSpec, response.selection)
     ).pipe(
       Effect.mapError(() =>
         responseIntegrity(
@@ -218,7 +221,7 @@ export const indexTryoutResponses = Effect.fn(
     );
     if (
       evaluated.isComplete !== response.isComplete ||
-      evaluated.isCorrect !== response.isCorrect
+      !confirms(evaluated.outcome, readOutcome(response))
     ) {
       return yield* responseIntegrity(
         "TRYOUT_RESPONSE_SELECTION_MISMATCH",
@@ -229,6 +232,16 @@ export const indexTryoutResponses = Effect.fn(
   }
   return responsesByPlacement;
 });
+const sameOutcome = Schema.toEquivalence(Outcome);
+
+/**
+ * Reports whether a deterministic evaluation reproduces a stored outcome. An
+ * evaluation it cannot decide is `pending`, so it defers to the stored one,
+ * which the grader may already have decided.
+ */
+function confirms(evaluated: Outcome, stored: Outcome) {
+  return evaluated.status === "pending" || sameOutcome(evaluated, stored);
+}
 /** Creates one typed fail-closed response graph error. */
 function responseIntegrity(
   code: TryoutResponseIntegrityError["code"],

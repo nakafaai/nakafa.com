@@ -8,7 +8,7 @@ import {
 import { schoolMembersHandler } from "@repo/backend/confect/triggers/schools/members";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createClassFixture } from "@repo/backend/test/classes";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 20, 30, 0);
 describe("triggers/schools/members", () => {
@@ -127,8 +127,8 @@ describe("triggers/schools/members", () => {
       const logs = await t.query((ctx) =>
         ctx.db.query("schoolActivityLogs").collect()
       );
-      const memberLogs = logs.filter((log) => log.entityId === memberId);
-      expect(memberLogs.map(({ action }) => action)).toEqual([
+      const memberLogs = Arr.filter(logs, (log) => log.entityId === memberId);
+      expect(Arr.map(memberLogs, ({ action }) => action)).toEqual([
         "member_invited",
         "member_role_changed",
         "member_joined",
@@ -178,7 +178,7 @@ describe("triggers/schools/members", () => {
     const logs = await t.query((ctx) =>
       ctx.db.query("schoolActivityLogs").collect()
     );
-    expect(logs.some((log) => log.entityId === memberId)).toBe(false);
+    expect(Arr.some(logs, (log) => log.entityId === memberId)).toBe(false);
   });
   it("tracks school joins and invite usage through school mutations", async () => {
     vi.useFakeTimers();
@@ -215,9 +215,12 @@ describe("triggers/schools/members", () => {
     const inviteCode = await t.query(async (ctx) => {
       const inviteCodes = await ctx.db.query("schoolInviteCodes").collect();
       return (
-        inviteCodes.find(
-          (code) =>
-            code.schoolId === created.schoolId && code.role === "student"
+        Option.getOrUndefined(
+          Arr.findFirst(
+            inviteCodes,
+            (code) =>
+              code.schoolId === created.schoolId && code.role === "student"
+          )
         ) ?? null
       );
     });

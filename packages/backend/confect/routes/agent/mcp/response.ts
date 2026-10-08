@@ -1,4 +1,4 @@
-import { Predicate } from "effect";
+import { Array as Arr, Predicate, pipe } from "effect";
 
 const DEFAULT_ALLOWED_HEADERS = [
   "accept",
@@ -112,7 +112,7 @@ export function withMcpResponseHeaders(response: Response, request: Request) {
   }
   headers.set("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
   headers.set("Access-Control-Allow-Headers", readAllowedHeaders(request));
-  headers.set("Access-Control-Expose-Headers", EXPOSED_HEADERS.join(","));
+  headers.set("Access-Control-Expose-Headers", Arr.join(EXPOSED_HEADERS, ","));
   headers.set("Cache-Control", "no-store");
   headers.append("Vary", "Origin");
   headers.append("Vary", "Access-Control-Request-Headers");
@@ -154,15 +154,16 @@ function isJsonRpcNotification(body: unknown) {
 function readAllowedHeaders(request: Request) {
   const requested = request.headers.get("access-control-request-headers");
   if (requested === null) {
-    return DEFAULT_ALLOWED_HEADERS.join(",");
+    return Arr.join(DEFAULT_ALLOWED_HEADERS, ",");
   }
-  return requested
-    .split(",")
-    .map((header) => header.trim().toLowerCase())
-    .filter(
+  return pipe(
+    requested.split(","),
+    Arr.map((header) => header.trim().toLowerCase()),
+    Arr.filter(
       (header) =>
-        DEFAULT_ALLOWED_HEADERS.some((allowed) => allowed === header) ||
+        Arr.some(DEFAULT_ALLOWED_HEADERS, (allowed) => allowed === header) ||
         header.startsWith("mcp-param-")
-    )
-    .join(",");
+    ),
+    Arr.join(",")
+  );
 }

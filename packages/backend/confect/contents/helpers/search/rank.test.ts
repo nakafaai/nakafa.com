@@ -4,6 +4,7 @@ import {
   matchesContentSearchQuery,
   rankContentSearchDocuments,
 } from "@repo/backend/confect/contents/helpers/search/rank";
+import { Array as Arr } from "effect";
 
 /** Builds a persisted search row slice for rank tests without Convex IDs. */
 function createSearchRow(
@@ -23,7 +24,7 @@ function createSearchRow(
 
 describe("rankContentSearchDocuments", () => {
   it("preserves input order for punctuation-only queries and equal evidence", () => {
-    const rows = ["first", "second"].map((sourcePath) =>
+    const rows = Arr.map(["first", "second"], (sourcePath) =>
       createSearchRow({
         route: "same-route",
         sourcePath,

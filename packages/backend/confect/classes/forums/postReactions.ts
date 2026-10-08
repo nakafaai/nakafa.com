@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/confect/classes/forums/constants";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect, pipe } from "effect";
 /**
  * Get current user's emoji reactions for multiple posts.
  */
@@ -23,7 +23,9 @@ export const getMyPostReactions = Effect.fn(
       .take(FORUM_REACTION_PREVIEW_BATCH_LIMIT)
       .pipe(Effect.orDie)
   );
-  return reactions.map((rows) => rows.map((reaction) => reaction.emoji));
+  return Arr.map(reactions, (rows) =>
+    Arr.map(rows, (reaction) => reaction.emoji)
+  );
 });
 
 /**
@@ -45,16 +47,19 @@ export const getPostReactionPreviews = Effect.fn(
     )
   );
   const userMap = yield* getUserMap(
-    reactionsByPost
-      .flat()
-      .flat()
-      .map((reaction) => reaction.userId)
+    pipe(
+      reactionsByPost,
+      Arr.flatten,
+      Arr.flatten,
+      Arr.map((reaction) => reaction.userId)
+    )
   );
-  return posts.map((post, postIndex) =>
-    post.reactionCounts.map(({ count, emoji }, reactionIndex) => ({
+  return Arr.map(posts, (post, postIndex) =>
+    Arr.map(post.reactionCounts, ({ count, emoji }, reactionIndex) => ({
       count,
       emoji,
-      reactors: reactionsByPost[postIndex][reactionIndex].map(
+      reactors: Arr.map(
+        reactionsByPost[postIndex][reactionIndex],
         (reaction) => userMap.get(reaction.userId)?.name ?? "Unknown"
       ),
     }))

@@ -44,7 +44,7 @@ describe("contentRelease/reference/read", () => {
               },
             ]) {
               expect(
-                yield* (yield* QueryRunner)(
+                yield* (yield* QueryRunner).runQuery(
                   refs.public.contentRelease.reference.read,
                   {
                     input,
@@ -82,7 +82,7 @@ describe("contentRelease/reference/read", () => {
               },
             ]) {
               expect(
-                yield* (yield* QueryRunner)(
+                yield* (yield* QueryRunner).runQuery(
                   refs.public.contentRelease.reference.read,
                   {
                     input,
@@ -120,7 +120,7 @@ describe("contentRelease/reference/read", () => {
                 kind: "content" as const,
               },
             ]) {
-              const result = yield* (yield* QueryRunner)(
+              const result = yield* (yield* QueryRunner).runQuery(
                 refs.public.contentRelease.reference.read,
                 {
                   input,
@@ -160,7 +160,7 @@ describe("contentRelease/reference/read", () => {
             },
           ]) {
             expect(
-              yield* (yield* QueryRunner)(
+              yield* (yield* QueryRunner).runQuery(
                 refs.public.contentRelease.reference.read,
                 {
                   input,
@@ -205,7 +205,7 @@ describe("contentRelease/reference/read", () => {
             },
           ]) {
             expect(
-              yield* (yield* QueryRunner)(
+              yield* (yield* QueryRunner).runQuery(
                 refs.public.contentRelease.reference.read,
                 {
                   input,
@@ -249,15 +249,14 @@ describe("contentRelease/reference/read", () => {
               );
             });
             expect(
-              yield* (yield* QueryRunner)(
-                refs.public.contentRelease.reference.read,
-                {
+              yield* (yield* QueryRunner)
+                .runQuery(refs.public.contentRelease.reference.read, {
                   input: {
                     contentId: other.graph.assetId,
                     kind: "content",
                   },
-                }
-              ).pipe(Effect.flip)
+                })
+                .pipe(Effect.flip)
             ).toMatchObject({
               message: expect.stringContaining("changed its signed projection"),
             });
@@ -271,7 +270,7 @@ describe("contentRelease/reference/read", () => {
       yield* target.run(
         Effect.gen(function* () {
           expect(
-            yield* (yield* QueryRunner)(
+            yield* (yield* QueryRunner).runQuery(
               refs.public.contentRelease.reference.read,
               {
                 input: {
@@ -283,7 +282,7 @@ describe("contentRelease/reference/read", () => {
             )
           ).toBeNull();
           expect(
-            yield* (yield* QueryRunner)(
+            yield* (yield* QueryRunner).runQuery(
               refs.public.contentRelease.reference.read,
               {
                 input: {
@@ -306,7 +305,7 @@ describe("contentRelease/reference/read", () => {
           Effect.gen(function* () {
             const material = makeMaterialProjection("de", 1);
             expect(
-              yield* (yield* QueryRunner)(
+              yield* (yield* QueryRunner).runQuery(
                 refs.public.contentRelease.reference.read,
                 {
                   input: {
@@ -318,7 +317,7 @@ describe("contentRelease/reference/read", () => {
               )
             ).toBeNull();
             expect(
-              yield* (yield* QueryRunner)(
+              yield* (yield* QueryRunner).runQuery(
                 refs.public.contentRelease.reference.read,
                 {
                   input: {

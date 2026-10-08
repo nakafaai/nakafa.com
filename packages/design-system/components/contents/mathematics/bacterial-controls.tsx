@@ -1,9 +1,11 @@
 "use client";
 
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
+import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
 import { Button } from "@repo/design-system/components/ui/button";
-import { CardFooter } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { VisualCardFullscreen } from "@repo/design-system/components/visual/card";
+import { useTranslations } from "next-intl";
 
 const SPEED_STEP = 0.25;
 const SPEED_VALUES = Array.from(
@@ -11,113 +13,86 @@ const SPEED_VALUES = Array.from(
   (_, index) => SPEED_STEP * (index + 1)
 );
 
-interface BacterialControlsProps {
-  generation: number;
-  isPlaying: boolean;
-  maxGenerations: number;
-  onGenerationChange: (generation: number) => void;
-  onReset: () => void;
-  onSpeedChange: (speed: number) => void;
-  onTogglePlaying: () => void;
-  speed: number;
-  timeInterval: number;
-  timeUnit: string;
-}
-
-/** Renders the generation selection controls for the bacterial animation. */
-function GenerationButtons({
-  generation,
-  maxGenerations,
-  onGenerationChange,
-  timeInterval,
-  timeUnit,
-}: Pick<
-  BacterialControlsProps,
-  | "generation"
-  | "maxGenerations"
-  | "onGenerationChange"
-  | "timeInterval"
-  | "timeUnit"
->) {
-  return Array.from({ length: maxGenerations + 1 }, (_, index) => {
-    const time = index * timeInterval;
-
-    return (
-      <Button
-        key={time.toString()}
-        onClick={() => onGenerationChange(index)}
-        size="sm"
-        variant={generation === index ? "default" : "outline"}
-      >
-        {time}
-        {timeUnit}
-      </Button>
-    );
-  });
-}
-
-/** Owns the playback, speed, and generation controls for bacterial growth. */
-export function BacterialControls({
-  generation,
+/** Renders the reset, playback, full screen, and speed controls. */
+export function BacterialPlayback({
   isPlaying,
-  maxGenerations,
-  onGenerationChange,
   onReset,
   onSpeedChange,
   onTogglePlaying,
   speed,
+}: {
+  isPlaying: boolean;
+  onReset: () => void;
+  onSpeedChange: (speed: number) => void;
+  onTogglePlaying: () => void;
+  speed: number;
+}) {
+  const t = useTranslations("Common");
+
+  return (
+    <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
+      <div className="flex justify-between gap-2">
+        <Button onClick={onReset} size="icon" variant="outline">
+          <HugeIcons icon={Clock04Icon} />
+          <span className="sr-only">{t("reset")}</span>
+        </Button>
+        <Button
+          onClick={onTogglePlaying}
+          size="icon"
+          variant={isPlaying ? "outline" : "default"}
+        >
+          <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
+          <span className="sr-only">{t(isPlaying ? "pause" : "play")}</span>
+        </Button>
+        <VisualCardFullscreen />
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-2">
+        {SPEED_VALUES.map((speedValue) => (
+          <Choice
+            key={speedValue}
+            onClick={() => onSpeedChange(speedValue)}
+            pressed={speed === speedValue}
+          >
+            {speedValue}x
+          </Choice>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Renders one button per generation, labelled with its time. */
+export function BacterialGenerations({
+  generation,
+  maxGenerations,
+  onGenerationChange,
   timeInterval,
   timeUnit,
-}: BacterialControlsProps) {
+}: {
+  generation: number;
+  maxGenerations: number;
+  onGenerationChange: (generation: number) => void;
+  timeInterval: number;
+  timeUnit: string;
+}) {
   return (
-    <CardFooter className="flex flex-col gap-4 px-0">
-      <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-        <div className="flex justify-between gap-2">
-          <Button
-            aria-label="Reset"
-            onClick={onReset}
-            size="icon"
-            variant="outline"
-          >
-            <HugeIcons icon={Clock04Icon} />
-            <span className="sr-only">Reset</span>
-          </Button>
-          <Button
-            aria-label={isPlaying ? "Pause" : "Play"}
-            onClick={onTogglePlaying}
-            size="icon"
-            variant={isPlaying ? "outline" : "default"}
-          >
-            <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
-            <span className="sr-only">{isPlaying ? "Pause" : "Play"}</span>
-          </Button>
-        </div>
+    <div className="w-full border-t px-6 pt-4">
+      <div className="flex flex-wrap justify-center gap-2">
+        {Array.from({ length: maxGenerations + 1 }, (_, index) => {
+          const time = index * timeInterval;
 
-        <div className="flex flex-wrap justify-center gap-2">
-          {SPEED_VALUES.map((speedValue) => (
-            <Button
-              key={speedValue}
-              onClick={() => onSpeedChange(speedValue)}
-              size="sm"
-              variant={speed === speedValue ? "default" : "outline"}
+          return (
+            <Choice
+              key={time.toString()}
+              onClick={() => onGenerationChange(index)}
+              pressed={generation === index}
             >
-              {speedValue}x
-            </Button>
-          ))}
-        </div>
+              {time} {timeUnit}
+            </Choice>
+          );
+        })}
       </div>
-
-      <div className="w-full border-t px-6 pt-4">
-        <div className="flex flex-wrap justify-center gap-2">
-          <GenerationButtons
-            generation={generation}
-            maxGenerations={maxGenerations}
-            onGenerationChange={onGenerationChange}
-            timeInterval={timeInterval}
-            timeUnit={timeUnit}
-          />
-        </div>
-      </div>
-    </CardFooter>
+    </div>
   );
 }

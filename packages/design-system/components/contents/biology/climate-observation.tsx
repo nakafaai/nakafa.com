@@ -14,6 +14,7 @@ import type {
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import { BiologyLine } from "@repo/design-system/components/contents/biology/parts";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import {
   Box3,
@@ -135,7 +136,7 @@ function createSatelliteMaterial(
   material: Material | Material[],
   colors: BiologySceneColors
 ) {
-  const baseMaterial = Array.isArray(material) ? material[0] : material;
+  const baseMaterial = Arr.isArray(material) ? material[0] : material;
   const materialName = baseMaterial?.name.toLowerCase() ?? "";
 
   if (materialName.includes("panel")) {

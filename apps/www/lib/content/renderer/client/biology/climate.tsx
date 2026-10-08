@@ -1,15 +1,20 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
-export const GreenhouseEffectLab = dynamic(() =>
-  import(
-    "@repo/design-system/components/contents/biology/climate-greenhouse"
-  ).then(({ GreenhouseEffectLab }) => GreenhouseEffectLab)
+export const GreenhouseEffectLab = withHydrationBoundary(
+  dynamic(() =>
+    import(
+      "@repo/design-system/components/contents/biology/climate-greenhouse"
+    ).then(({ GreenhouseEffectLab }) => GreenhouseEffectLab)
+  )
 );
 
-export const ClimateObservationLab = dynamic(() =>
-  import(
-    "@repo/design-system/components/contents/biology/climate-observation"
-  ).then(({ ClimateObservationLab }) => ClimateObservationLab)
+export const ClimateObservationLab = withHydrationBoundary(
+  dynamic(() =>
+    import(
+      "@repo/design-system/components/contents/biology/climate-observation"
+    ).then(({ ClimateObservationLab }) => ClimateObservationLab)
+  )
 );

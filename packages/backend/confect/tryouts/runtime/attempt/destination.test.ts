@@ -23,7 +23,7 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
 const sectionPath = `${setPath}/${TRYOUT_START_SECTION}`;
@@ -39,8 +39,9 @@ describe("retained attempt navigation", () => {
         now: TRYOUT_START_NOW,
         suffix: "localized-resume",
       });
-      const catalog = ["id", "en"].flatMap((locale) =>
-        makeTryoutStartHierarchy(locale === "id" ? "id" : "en", "visible").map(
+      const catalog = Arr.flatMap(["id", "en"], (locale) =>
+        Arr.map(
+          makeTryoutStartHierarchy(locale === "id" ? "id" : "en", "visible"),
           (row) => {
             if (row.appLocale !== "en") {
               return row;

@@ -3,8 +3,11 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { readAttemptAnswer } from "@repo/backend/confect/tryouts/runtime/answer";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
-import { Effect } from "effect";
+import {
+  readConfectPlacement,
+  seedTryoutContentAccessState,
+} from "@repo/backend/test/tryout/runtime";
+import { Array as Arr, Effect, Option } from "effect";
 
 describe("retained explanation language", () => {
   it("reads a signed sibling without changing the original exam content", async () => {
@@ -18,7 +21,7 @@ describe("retained explanation language", () => {
     );
     await t.query(async (ctx) => {
       const attempt = await ctx.db.get(seeded.attemptId);
-      const placement = await ctx.db.get(seeded.placementId);
+      const placement = await readConfectPlacement(ctx, seeded.placementId);
       assert.isNotNull(attempt);
       assert.isNotNull(placement);
       for (const locale of ["id", "en"] as const) {
@@ -66,13 +69,15 @@ describe("retained explanation language", () => {
     });
     await t.mutation(async (ctx) => {
       const rows = await ctx.db.query("tryoutPlacements").collect();
-      const english = rows.find((row) => row.appLocale === "en");
+      const english = Option.getOrUndefined(
+        Arr.findFirst(rows, (row) => row.appLocale === "en")
+      );
       assert.isDefined(english);
       await ctx.db.patch(english._id, { rowHash: "tampered" });
     });
     await t.query(async (ctx) => {
       const attempt = await ctx.db.get(seeded.attemptId);
-      const placement = await ctx.db.get(seeded.placementId);
+      const placement = await readConfectPlacement(ctx, seeded.placementId);
       assert.isNotNull(attempt);
       assert.isNotNull(placement);
       await expect(

@@ -13,7 +13,7 @@ import {
   dedupeSources,
   readSearchSources,
 } from "@repo/backend/confect/nina/research/search/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /**
  * Searches the web and writes the web search UI data part.
@@ -105,7 +105,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
       ),
     { concurrency: webSearchMaxQueries }
   );
-  const failedResults = searchResults.flatMap((result) => {
+  const failedResults = Arr.flatMap(searchResults, (result) => {
     if (!result.error) {
       return [];
     }
@@ -117,7 +117,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     searchQueries.length > 0 &&
     failedResults.length === searchQueries.length
   ) {
-    const error = failedResults.join("\n");
+    const error = Arr.join(failedResults, "\n");
 
     const output = {
       sources: [],
@@ -131,7 +131,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   }
 
   const sources = addSourceCitations(
-    dedupeSources(searchResults.flatMap((result) => result.sources))
+    dedupeSources(Arr.flatMap(searchResults, (result) => result.sources))
   );
 
   const output = {

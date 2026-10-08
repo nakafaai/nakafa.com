@@ -17,7 +17,7 @@ import {
 import type { TryoutSectionIdentity } from "@repo/backend/content/tryout/section";
 import { readTryoutSetSections } from "@repo/backend/content/tryout/selection";
 import type { TryoutSetIdentity } from "@repo/backend/content/tryout/set";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 interface TryoutDestinationIdentity extends TryoutSetIdentity {
   readonly requestedSectionPublicPath?: string;
@@ -108,8 +108,9 @@ export const readActiveTryoutRestartTarget = Effect.fn(
     owner.snapshotId,
     set
   ).pipe(Effect.provide(tryoutLayer));
-  const sections = sectionRecords.map(({ row }) => row);
-  const visibleSections = sections.filter(
+  const sections = Arr.map(sectionRecords, ({ row }) => row);
+  const visibleSections = Arr.filter(
+    sections,
     (section) => section.visibility === "visible"
   );
   const entrySection = yield* readPublishedEntrySection(

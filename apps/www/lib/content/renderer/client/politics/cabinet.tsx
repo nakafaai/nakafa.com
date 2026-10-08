@@ -1,15 +1,20 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
-export const MerahPutihCabinetChart = dynamic(() =>
-  import(
-    "@repo/design-system/components/contents/politics/merah-putih/chart"
-  ).then(({ CabinetChart }) => CabinetChart)
+export const MerahPutihCabinetChart = withHydrationBoundary(
+  dynamic(() =>
+    import(
+      "@repo/design-system/components/contents/politics/merah-putih/chart"
+    ).then(({ CabinetChart }) => CabinetChart)
+  )
 );
 
-export const MerahPutihCompositionChart = dynamic(() =>
-  import(
-    "@repo/design-system/components/contents/politics/merah-putih/chart"
-  ).then(({ CompositionChart }) => CompositionChart)
+export const MerahPutihCompositionChart = withHydrationBoundary(
+  dynamic(() =>
+    import(
+      "@repo/design-system/components/contents/politics/merah-putih/chart"
+    ).then(({ CompositionChart }) => CompositionChart)
+  )
 );

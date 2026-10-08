@@ -11,7 +11,7 @@ import {
   SEMANTIC_COLOR_TOKENS,
   toRgbProjection,
 } from "@repo/design-system/lib/theme/contract";
-import { Effect } from "effect";
+import { Effect, Record as Rec } from "effect";
 
 const readProfiles = readThemeStyleSources().pipe(
   Effect.map((sources) => createThemeProfiles(["light", "dark"], sources)),
@@ -37,7 +37,7 @@ describe("theme compatibility colors", () => {
         return;
       }
 
-      const expected = Object.fromEntries(
+      const expected = Rec.fromEntries(
         SEMANTIC_COLOR_TOKENS.map((token) => {
           const value = readDirectValue(rule, token);
           expect(value).toBeDefined();
@@ -45,7 +45,7 @@ describe("theme compatibility colors", () => {
         })
       );
 
-      expect(Object.keys(values).sort()).toEqual(
+      expect(Rec.keys(values).sort()).toEqual(
         SEMANTIC_COLOR_TOKENS.map((token) => token.slice(2)).sort()
       );
       expect(values).toEqual(expected);

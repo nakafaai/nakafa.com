@@ -22,7 +22,10 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { isStepCount } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
+
+/** Encodes test values as the JSON text that tool calls and results carry. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -61,7 +64,7 @@ function toolCall(
         type: "tool-call",
         toolName,
         toolCallId,
-        input: JSON.stringify(toolInputs[toolName]),
+        input: encodeJson(toolInputs[toolName]),
       },
     ],
     "tool-calls"
@@ -167,11 +170,11 @@ describe("Nina capability execution policy", () => {
                 { prompt: "Use the requested capability." }
               )
             );
-            return generated.toolResults.map(({ output }) => output);
+            return Arr.map(generated.toolResults, ({ output }) => output);
           })
         );
         expect(result).toHaveLength(1);
-        expect(JSON.stringify(result)).not.toContain("Private provider detail");
+        expect(encodeJson(result)).not.toContain("Private provider detail");
         if (state === "denied" || state === "missing") {
           expect(result[0]).toMatchObject({
             failure: "denied",

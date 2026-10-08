@@ -1,7 +1,4 @@
 import type { tryoutStartAccessValidator } from "@repo/backend/confect/tryouts/start/spec";
-import type { Schema } from "effect";
-export const anonymousStartAccess: Schema.Schema.Type<
-  typeof tryoutStartAccessValidator
-> = {
+export const anonymousStartAccess: typeof tryoutStartAccessValidator.Type = {
   kind: "free-attempt",
 };

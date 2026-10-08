@@ -3,7 +3,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { readLearningPreferenceByUserId } from "@repo/backend/confect/learningPreferences/impl";
 import type { NinaLearnerProfile } from "@repo/backend/confect/nina/memory.spec";
 import { readOnboardingProfileByUserId } from "@repo/backend/confect/onboarding/impl";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads the latest finished try-out with the correct answers per section. */
 const readLatestTryout = Effect.fn("nina.memory.profile.tryout")(function* (
@@ -44,7 +44,7 @@ const readLatestTryout = Effect.fn("nina.memory.profile.tryout")(function* (
     exam: attempt.examKey,
     finishedAt: score.finalizedAt,
     score: score.publishedScore,
-    sections: sections.map((section) => ({
+    sections: Arr.map(sections, (section) => ({
       correct: section.correctAnswers,
       key: section.sectionKey,
       total: section.totalQuestions,

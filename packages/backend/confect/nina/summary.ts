@@ -7,15 +7,10 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import { Gateway } from "@repo/backend/confect/gateway/handle";
+import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import {
-  defaultModel,
-  getFastModelProviderOptions,
-} from "@repo/backend/confect/nina/config/model";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
-import { gatewayProviderOptions } from "@repo/backend/confect/nina/config/routing";
-import { backgroundGenerationTimeout } from "@repo/backend/confect/nina/config/timeouts";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Complete turns kept verbatim after the summary. */
 export const RECENT_TURNS = 4;
@@ -30,13 +25,16 @@ const FOLD_LIMIT = 16;
 const MESSAGE_TOKENS = 1500;
 const MESSAGE_PAGE = 100;
 
-const INSTRUCTIONS = [
-  "You maintain the running summary of a tutoring conversation between a learner and Nina, Nakafa's AI tutor.",
-  "Rewrite the previous summary so it also covers the new turns.",
-  "Keep the learner's goals, level, and preferences; every question with the method and final answers Nina gave; open problems; and anything Nina promised to follow up.",
-  "Drop greetings, filler, and tool or system mechanics. Never invent facts.",
-  "Write compact bullet points in the conversation's language, at most 250 words.",
-].join("\n");
+const INSTRUCTIONS = Arr.join(
+  [
+    "You maintain the running summary of a tutoring conversation between a learner and Nina, Nakafa's AI tutor.",
+    "Rewrite the previous summary so it also covers the new turns.",
+    "Keep the learner's goals, level, and preferences; every question with the method and final answers Nina gave; open problems; and anything Nina promised to follow up.",
+    "Drop greetings, filler, and tool or system mechanics. Never invent facts.",
+    "Write compact bullet points in the conversation's language, at most 250 words.",
+  ],
+  "\n"
+);
 
 class NinaSummaryError extends Schema.TaggedError<NinaSummaryError>()(
   "NinaSummaryError",
@@ -67,7 +65,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
   anchor: string
 ) {
   const ctx = yield* ActionCtx;
-  const lines: string[] = [];
+  let lines: string[] = [];
   let cursor: string | null = null;
   let done = false;
   while (!done) {
@@ -86,15 +84,17 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
     for (const message of page.page) {
       if (message.order > from && message.order <= through && message.text) {
         const speaker = message.message?.role === "user" ? "Learner" : "Nina";
-        lines.push(
+        lines = Arr.append(
+          lines,
           `${speaker}: ${boundText(message.text, MESSAGE_TOKENS, "Message shortened.")}`
         );
       }
     }
-    done = page.isDone || page.page.some((message) => message.order <= from);
+    done =
+      page.isDone || Arr.some(page.page, (message) => message.order <= from);
     cursor = page.continueCursor;
   }
-  return lines.reverse().join("\n\n");
+  return Arr.join(Arr.reverse(lines), "\n\n");
 });
 
 /**
@@ -105,7 +105,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (
     turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId" | "userId">
   ) {
-    const query = yield* QueryRunner;
+    const { runQuery: query } = yield* QueryRunner;
     const current = yield* query(refs.internal.nina.summaries.read, {
       chatId: turn.chatId,
     }).pipe(Effect.orDie);
@@ -127,9 +127,14 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       anchor
     );
     const ctx = yield* ActionCtx;
+    const handle = (yield* Gateway).language({
+      purpose: "background",
+      model: defaultModel,
+      space: { kind: "personal", userId: turn.userId },
+    });
     const agent = new Agent(components.nina, {
       instructions: INSTRUCTIONS,
-      languageModel: yield* getGatewayModel(defaultModel),
+      languageModel: handle.model,
       name: "summary",
     });
     const { text, usage } = yield* Effect.tryPromise({
@@ -139,15 +144,14 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
           { userId: turn.userId },
           {
             abortSignal: signal,
-            prompt: [
-              `# Previous Summary\n\n${current?.text ?? "None yet."}`,
-              `# New Turns\n\n${transcript}`,
-            ].join("\n\n"),
-            providerOptions: {
-              gateway: gatewayProviderOptions,
-              google: getFastModelProviderOptions(defaultModel),
-            },
-            timeout: backgroundGenerationTimeout,
+            prompt: Arr.join(
+              [
+                `# Previous Summary\n\n${current?.text ?? "None yet."}`,
+                `# New Turns\n\n${transcript}`,
+              ],
+              "\n\n"
+            ),
+            timeout: handle.timeout,
           },
           { storageOptions: { saveMessages: "none" } }
         ),
@@ -157,12 +161,17 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     if (!summary) {
       return yield* new NinaSummaryError({ operation: "generate" });
     }
-    yield* (yield* MutationRunner)(refs.internal.nina.summaries.save, {
-      chatId: turn.chatId,
-      text: boundText(summary, NINA_BUDGET.summary, "Summary shortened."),
-      throughOrder: target,
-      usage: { input: usage.inputTokens ?? 0, output: usage.outputTokens ?? 0 },
-    }).pipe(Effect.orDie);
+    yield* (yield* MutationRunner)
+      .runMutation(refs.internal.nina.summaries.save, {
+        chatId: turn.chatId,
+        text: boundText(summary, NINA_BUDGET.summary, "Summary shortened."),
+        throughOrder: target,
+        usage: {
+          input: usage.inputTokens ?? 0,
+          output: usage.outputTokens ?? 0,
+        },
+      })
+      .pipe(Effect.orDie);
   },
   Effect.catchTag("NinaSummaryError", (error) =>
     Effect.logWarning("Nina summary unavailable", {

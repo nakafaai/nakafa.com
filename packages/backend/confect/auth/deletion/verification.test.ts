@@ -9,7 +9,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 21, 0, 0);
 const decodeVerificationPage = Schema.decodeUnknownSync(
@@ -89,7 +89,7 @@ describe("auth/deletion/verification", () => {
         expect(
           yield* drainDeletedUserVerificationsProgram(operations)
         ).toBeUndefined();
-        expect(deletePage.mock.calls.map(([cursor]) => cursor)).toEqual([
+        expect(Arr.map(deletePage.mock.calls, ([cursor]) => cursor)).toEqual([
           null,
           "verification-cursor-1",
           "verification-cursor-1",
@@ -232,7 +232,7 @@ describe("auth/deletion/verification", () => {
             user: await ctx.db.get("users", userId),
           }))
         );
-        expect(state.remaining.page.map((row) => row.value)).toEqual([
+        expect(Arr.map(state.remaining.page, (row) => row.value)).toEqual([
           ...unrelatedValues,
           substringValue,
         ]);

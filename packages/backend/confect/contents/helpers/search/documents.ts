@@ -5,7 +5,7 @@ import {
   nakafaSectionValidator,
 } from "@repo/backend/confect/lib/validators/contents";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Schema } from "effect";
+import { Array as Arr, pipe, Schema } from "effect";
 
 const WHITESPACE_PATTERN = /\s+/g;
 const FENCE_START_PATTERN = /^\s*(?:```|~~~)/;
@@ -28,9 +28,7 @@ export const contentSearchSourceValidator = Schema.Struct({
 });
 
 /** Search source row derived from the Convex validator. */
-export type ContentSearchSource = Schema.Schema.Type<
-  typeof contentSearchSourceValidator
->;
+export type ContentSearchSource = typeof contentSearchSourceValidator.Type;
 
 /**
  * Creates the stable public content reference stored in the search read model.
@@ -95,10 +93,12 @@ export function buildContentSearchRef(
  * https://docs.convex.dev/search/text-search
  */
 export function getContentSearchText(parts: Array<string | undefined>) {
-  return parts
-    .map(cleanContentSearchText)
-    .filter((part) => part.length > 0)
-    .join(" ")
+  return pipe(
+    parts,
+    Arr.map(cleanContentSearchText),
+    Arr.filter((part) => part.length > 0),
+    Arr.join(" ")
+  )
     .replace(WHITESPACE_PATTERN, " ")
     .trim();
 }
@@ -117,8 +117,9 @@ function cleanContentSearchText(part: string | undefined) {
 function cleanContentSearchLines(part: string) {
   let isInFence = false;
   const lines = part.split("\n");
-  return lines
-    .map((line) => {
+  return pipe(
+    lines,
+    Arr.map((line) => {
       if (FENCE_START_PATTERN.test(line)) {
         isInFence = !isInFence;
         return "";
@@ -130,8 +131,9 @@ function cleanContentSearchLines(part: string) {
         return "";
       }
       return line.replace(MARKDOWN_HEADING_PATTERN, "$1");
-    })
-    .join("\n");
+    }),
+    Arr.join("\n")
+  );
 }
 
 /** Detects authoring-only ESM rows in authored MDX source. */

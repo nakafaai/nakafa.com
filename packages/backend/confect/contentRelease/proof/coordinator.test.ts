@@ -4,12 +4,13 @@ import {
 } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 // @vitest-environment node
 
 import workflowTest from "@convex-dev/workflow/test";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { cleanupProofWorkflow } from "@repo/backend/confect/contentRelease/proof/coordinator";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
@@ -42,7 +43,9 @@ describe("contentRelease/proof/coordinator", () => {
           ctx,
           releaseId,
           release,
-          JSON.stringify(TEST_PROOF_RENDERER)
+          Schema.encodeSync(
+            Schema.fromJsonString(RendererManifestEnvelopeSchema)
+          )(TEST_PROOF_RENDERER)
         )
       );
       await t.mutation(poll, {

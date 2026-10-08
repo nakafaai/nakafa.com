@@ -118,6 +118,9 @@ function correctSelection(
       kind: "category",
     };
   }
+  if (response.kind === "short-answer" || response.kind === "rubric") {
+    return null;
+  }
   const optionKeys = response.options.flatMap(({ isCorrect, optionKey }) =>
     isCorrect ? [optionKey] : []
   );

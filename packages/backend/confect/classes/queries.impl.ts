@@ -26,7 +26,7 @@ import {
   isAdmin,
 } from "@repo/backend/confect/schools/membership";
 import { getUserMap } from "@repo/backend/confect/users/directory";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer, Order } from "effect";
 
 const getClasses = FunctionImpl.make(
   databaseSchema,
@@ -201,8 +201,10 @@ const getPeople = FunctionImpl.make(
           message: "Class member count exceeds the class member totals.",
         });
       }
-      const userMap = yield* getUserMap(members.map((member) => member.userId));
-      const people = members.flatMap((member) => {
+      const userMap = yield* getUserMap(
+        Arr.map(members, (member) => member.userId)
+      );
+      const matched = Arr.flatMap(members, (member) => {
         const userData = userMap.get(member.userId);
         if (!userData) {
           return [];
@@ -220,9 +222,10 @@ const getPeople = FunctionImpl.make(
           },
         ];
       });
-      people.sort(
-        (left, right) =>
-          Number(right.role === "teacher") - Number(left.role === "teacher")
+      const people = Arr.sortWith(
+        matched,
+        (person) => person.role === "teacher",
+        Order.flip(Order.Boolean)
       );
       const cursor = paginationOpts.cursor;
       const startIndex = cursor ? Number(cursor) : 0;
@@ -247,8 +250,10 @@ const getPeople = FunctionImpl.make(
       .index("by_classId_and_userId", (idx) => idx.eq("classId", classId))
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    const userMap = yield* getUserMap(membersPage.page.map((m) => m.userId));
-    const people = membersPage.page.flatMap((member) => {
+    const userMap = yield* getUserMap(
+      Arr.map(membersPage.page, (m) => m.userId)
+    );
+    const loaded = Arr.flatMap(membersPage.page, (member) => {
       const userData = userMap.get(member.userId);
       if (!userData) {
         return [];
@@ -260,13 +265,13 @@ const getPeople = FunctionImpl.make(
         },
       ];
     });
-    people.sort(
-      (left, right) =>
-        Number(right.role === "teacher") - Number(left.role === "teacher")
-    );
     return {
       ...membersPage,
-      page: people,
+      page: Arr.sortWith(
+        loaded,
+        (person) => person.role === "teacher",
+        Order.flip(Order.Boolean)
+      ),
     };
   })
 );

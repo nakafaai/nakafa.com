@@ -6,8 +6,8 @@ import {
   protectedRuntimeResponseBytes,
 } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import {
-  decodeProtectedContentRuntimeRequest,
   type ProtectedContentRuntimeRequest,
+  ProtectedContentRuntimeRequestSchema,
   ProtectedContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -21,7 +21,13 @@ import {
   decodeProtectedRuntimeRow,
   ProtectedRuntimeReadError,
 } from "@repo/backend/content/tryout/exchange";
-import { Effect, flow, Result } from "effect";
+import { Effect, flow, Result, Schema } from "effect";
+
+/** Decodes one protected batch request from JSON text, rejecting unknown keys. */
+const decodeRequestJson = Schema.decodeEffect(
+  Schema.fromJsonString(ProtectedContentRuntimeRequestSchema),
+  { onExcessProperty: "error" }
+);
 /** Strictly parses one bounded UTF-8 protected batch request. */
 export const decodeProtectedRequest = Effect.fn(
   "contentRelease.decodeProtectedRequest"
@@ -33,11 +39,7 @@ export const decodeProtectedRequest = Effect.fn(
   ) {
     return yield* new ProtectedRuntimeRequestError();
   }
-  const input = yield* Effect.try({
-    catch: () => new ProtectedRuntimeRequestError(),
-    try: (): unknown => JSON.parse(source),
-  });
-  return yield* decodeProtectedContentRuntimeRequest(input).pipe(
+  return yield* decodeRequestJson(source).pipe(
     Effect.mapError(() => new ProtectedRuntimeRequestError())
   );
 });
@@ -46,7 +48,7 @@ export const decodeProtectedRequest = Effect.fn(
 export const resolveProtectedRuntime = Effect.fn(
   "contentRelease.resolveProtectedRuntime"
 )(function* (request: ProtectedContentRuntimeRequest) {
-  const runQuery = yield* QueryRunner;
+  const { runQuery } = yield* QueryRunner;
   const row = yield* runQuery(
     refs.internal.contentRelease.runtime.tryout.internal.read,
     {

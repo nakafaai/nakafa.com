@@ -195,9 +195,13 @@ export class Sharding extends Context.Service<Sharding, {
   >
 
   /**
-   * Reset the state of a message
+   * Reset the state of a message. When options.expectedReplyId is provided,
+   * reset only if it is still the latest reply. Otherwise reset unconditionally.
    */
-  readonly reset: (requestId: Snowflake.Snowflake) => Effect.Effect<boolean>
+  readonly reset: (
+    requestId: Snowflake.Snowflake,
+    options?: { readonly expectedReplyId?: Snowflake.Snowflake | undefined }
+  ) => Effect.Effect<boolean>
 
   /**
    * Trigger a storage read, which will read all unprocessed messages.
@@ -545,30 +549,27 @@ const make = Effect.gen(function*() {
       return Effect.logInfo("Shard lock storage has recovered")
     })
 
-    const refreshShardLocks = Effect.suspend(() =>
-      runnerStorage.refresh(selfAddress, [
-        ...acquiredShards,
-        ...releasingShards
-      ])
-    ).pipe(
-      Effect.flatMap((acquired) => {
-        for (const shardId of acquiredShards) {
-          if (!acquired.includes(shardId)) {
-            MutableHashSet.remove(acquiredShards, shardId)
-            MutableHashSet.add(releasingShards, shardId)
-          }
+    const refreshShardLocks = Effect.gen(function*() {
+      const refreshed = [...acquiredShards, ...releasingShards]
+      const acquired = yield* runnerStorage.refresh(selfAddress, refreshed)
+      // Shards acquired during the request are absent from its response.
+      for (const shardId of refreshed) {
+        if (MutableHashSet.has(acquiredShards, shardId) && !acquired.includes(shardId)) {
+          MutableHashSet.remove(acquiredShards, shardId)
+          MutableHashSet.add(releasingShards, shardId)
         }
-        for (let i = 0; i < acquired.length; i++) {
-          const shardId = acquired[i]
-          if (!MutableHashSet.has(selfShards, shardId)) {
-            MutableHashSet.remove(acquiredShards, shardId)
-            MutableHashSet.add(releasingShards, shardId)
-          }
+      }
+      for (let i = 0; i < acquired.length; i++) {
+        const shardId = acquired[i]
+        if (!MutableHashSet.has(selfShards, shardId)) {
+          MutableHashSet.remove(acquiredShards, shardId)
+          MutableHashSet.add(releasingShards, shardId)
         }
-        return MutableHashSet.size(releasingShards) > 0
-          ? activeShardsLatch.open
-          : Effect.void
-      }),
+      }
+      if (MutableHashSet.size(releasingShards) > 0) {
+        yield* activeShardsLatch.open
+      }
+    }).pipe(
       Effect.retry({
         times: 5,
         schedule: Schedule.spaced(50)
@@ -1208,8 +1209,8 @@ const make = Effect.gen(function*() {
     )
   }
 
-  const reset: Sharding["Service"]["reset"] = (requestId) =>
-    Effect.matchCause(storage.clearReplies(requestId), {
+  const reset: Sharding["Service"]["reset"] = (requestId, options) =>
+    Effect.matchCause(storage.clearReplies(requestId, options), {
       onSuccess: () => true,
       onFailure: () => false
     })
@@ -1458,8 +1459,10 @@ const make = Effect.gen(function*() {
               // for durable messages, we ignore interrupts on shutdown or as a
               // result of a shard being resassigned
               const caller = Context.getOption(entry.context, CurrentAddress).valueOrUndefined
+              const singletonShard = Context.getOption(entry.context, SingletonShardTag).valueOrUndefined
               const isTransientInterrupt = MutableRef.get(isShutdown) ||
-                (caller !== undefined && ActiveTeardown.isActive(caller))
+                (caller !== undefined && ActiveTeardown.isActive(caller)) ||
+                (singletonShard !== undefined && ActiveTeardown.isShardActive(singletonShard))
               if (isTransientInterrupt && Context.get(entry.message.annotations, Persisted)) {
                 return Effect.void
               }
@@ -1588,7 +1591,7 @@ const make = Effect.gen(function*() {
         Effect.andThen(Effect.never),
         Effect.scoped,
         Effect.provideService(CurrentLogAnnotations, {}),
-        Effect.provideContext(services),
+        Effect.provideContext(Context.add(services, SingletonShardTag, address.shardId)),
         Effect.orDie,
         Effect.interruptible
       ) as Effect.Effect<never>
@@ -1851,3 +1854,4 @@ export const layer: Layer.Layer<
 // Utilities
 
 const ClientAddressTag = Context.Service<EntityAddress>("effect/cluster/Sharding/ClientAddress")
+const SingletonShardTag = Context.Service<ShardId>("effect/cluster/Sharding/SingletonShard")

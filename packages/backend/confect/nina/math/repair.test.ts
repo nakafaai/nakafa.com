@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { getGatewayModel } from "@repo/backend/confect/nina/config/provider";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { repairMathToolCall } from "@repo/backend/confect/nina/math/repair";
 import {
   mathAlgebraInput,
   mathEquationInput,
 } from "@repo/backend/confect/nina/math/schema";
+import { provider } from "@repo/backend/test/gateway";
 import {
   providerStep,
   runSpecialist,
@@ -13,12 +13,12 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { InvalidToolInputError, NoSuchToolError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect, Schema } from "effect";
+import { Schema } from "effect";
 
-vi.mock("@repo/backend/confect/nina/config/provider", () => ({
-  getGatewayModel: vi.fn(),
-}));
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  provider.languageModel.mockReset();
+});
 const toolCall = {
   type: "tool-call" as const,
   toolCallId: "math",
@@ -41,6 +41,7 @@ const options = {
   usageHandler: vi.fn(),
 };
 const repaired = { operation: "simplify", expression: "x + x" };
+const jsonCodec = Schema.fromJsonString(Schema.Unknown);
 
 describe("Math tool repair with the Agent component", () => {
   it.each([undefined, "Keep the exact expressions"])(
@@ -50,11 +51,14 @@ describe("Math tool repair with the Agent component", () => {
         doGenerate: providerStep([
           {
             type: "text",
-            text: JSON.stringify({ ...repaired, operation: "factor" }),
+            text: Schema.encodeSync(jsonCodec)({
+              ...repaired,
+              operation: "factor",
+            }),
           },
         ]),
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const usageHandler = vi.fn();
       const result = await runSpecialist((userId) =>
         repairMathToolCall({ ...options, userId, instructions, usageHandler })
@@ -63,7 +67,9 @@ describe("Math tool repair with the Agent component", () => {
         toolName: toolCall.toolName,
         toolCallId: toolCall.toolCallId,
       });
-      expect(JSON.parse(result?.input ?? "null")).toEqual(repaired);
+      expect(Schema.decodeSync(jsonCodec)(result?.input ?? "null")).toEqual(
+        repaired
+      );
       expect(usageHandler).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
@@ -71,9 +77,13 @@ describe("Math tool repair with the Agent component", () => {
           userId: expect.any(String),
         })
       );
-      expect(JSON.stringify(model.doGenerateCalls[0]?.prompt)).toContain(
-        options.task
-      );
+      expect(model.doGenerateCalls[0]?.providerOptions?.gateway?.tags).toEqual([
+        "space:personal",
+        "purpose:background",
+      ]);
+      expect(
+        Schema.encodeSync(jsonCodec)(model.doGenerateCalls[0]?.prompt)
+      ).toContain(options.task);
     }
   );
 
@@ -82,10 +92,10 @@ describe("Math tool repair with the Agent component", () => {
     async (input) => {
       const model = new MockLanguageModelV4({
         doGenerate: providerStep([
-          { type: "text", text: JSON.stringify(repaired) },
+          { type: "text", text: Schema.encodeSync(jsonCodec)(repaired) },
         ]),
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const result = await runSpecialist((userId) =>
         repairMathToolCall({
           ...options,
@@ -93,10 +103,12 @@ describe("Math tool repair with the Agent component", () => {
           toolCall: { ...toolCall, input },
         })
       );
-      expect(JSON.parse(result?.input ?? "null")).toEqual(repaired);
-      expect(JSON.stringify(model.doGenerateCalls[0]?.prompt)).toContain(
-        "# Failed Arguments"
+      expect(Schema.decodeSync(jsonCodec)(result?.input ?? "null")).toEqual(
+        repaired
       );
+      expect(
+        Schema.encodeSync(jsonCodec)(model.doGenerateCalls[0]?.prompt)
+      ).toContain("# Failed Arguments");
     }
   );
 
@@ -111,10 +123,10 @@ describe("Math tool repair with the Agent component", () => {
     };
     const model = new MockLanguageModelV4({
       doGenerate: providerStep([
-        { type: "text", text: JSON.stringify(bounded) },
+        { type: "text", text: Schema.encodeSync(jsonCodec)(bounded) },
       ]),
     });
-    vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+    provider.languageModel.mockReturnValue(model);
     const result = await runSpecialist((userId) =>
       repairMathToolCall({
         ...options,
@@ -123,13 +135,18 @@ describe("Math tool repair with the Agent component", () => {
         toolCall: {
           ...toolCall,
           toolName: "equation",
-          input: JSON.stringify({ ...bounded, variable: undefined }),
+          input: Schema.encodeSync(jsonCodec)({
+            ...bounded,
+            variable: undefined,
+          }),
         },
         tools: { equation: { inputSchema: mathEquationInput } },
         inputSchema: () => Promise.resolve(mathEquationInput.jsonSchema),
       })
     );
-    expect(JSON.parse(result?.input ?? "null")).toEqual(bounded);
+    expect(Schema.decodeSync(jsonCodec)(result?.input ?? "null")).toEqual(
+      bounded
+    );
   });
 
   it.each(["unknown", "missing", "schema"] as const)(
@@ -151,7 +168,7 @@ describe("Math tool repair with the Agent component", () => {
         })
       );
       expect(result).toBeNull();
-      expect(getGatewayModel).not.toHaveBeenCalled();
+      expect(provider.languageModel).not.toHaveBeenCalled();
     }
   );
 
@@ -172,7 +189,7 @@ describe("Math tool repair with the Agent component", () => {
                 },
               ]),
       });
-      vi.mocked(getGatewayModel).mockReturnValue(Effect.succeed(model));
+      provider.languageModel.mockReturnValue(model);
       const result = await runSpecialist((userId) =>
         repairMathToolCall({
           ...options,

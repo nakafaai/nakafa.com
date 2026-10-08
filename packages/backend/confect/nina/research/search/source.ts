@@ -10,6 +10,7 @@ import {
   firstText,
   getDocumentMetadata,
 } from "@repo/backend/confect/nina/research/tools/metadata";
+import { Array as Arr, HashSet, MutableHashSet, pipe } from "effect";
 
 export type SearchSource = ReturnType<typeof getSearchSource>;
 
@@ -21,49 +22,57 @@ export function readSearchSources({
   query: string;
   response: Awaited<ReturnType<FirecrawlApp["search"]>>;
 }) {
-  const web =
-    response.web?.map((result) => getSearchSource({ query, result })) || [];
-  const webUrls = new Set(web.map((item) => item.url).filter(Boolean));
-  const news =
-    response.news?.flatMap((result) => {
-      const source = getSearchSource({ query, result });
+  const web = Arr.map(response.web ?? [], (result) =>
+    getSearchSource({ query, result })
+  );
+  const webUrls = HashSet.fromIterable(
+    pipe(
+      web,
+      Arr.map((item) => item.url),
+      Arr.filter(Boolean)
+    )
+  );
+  const news = Arr.flatMap(response.news ?? [], (result) => {
+    const source = getSearchSource({ query, result });
 
-      if (!source.url || webUrls.has(source.url)) {
-        return [];
-      }
+    if (!source.url || HashSet.has(webUrls, source.url)) {
+      return [];
+    }
 
-      return [source];
-    }) || [];
+    return [source];
+  });
 
   return [...web, ...news];
 }
 
 /** Keeps one source per URL across query variants. */
 export function dedupeSources(sources: SearchSource[]) {
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
 
-  return sources.flatMap((source) => {
-    if (!source.url || seen.has(source.url)) {
+  return Arr.flatMap(sources, (source) => {
+    if (!source.url || MutableHashSet.has(seen, source.url)) {
       return [];
     }
 
-    seen.add(source.url);
+    MutableHashSet.add(seen, source.url);
     return [source];
   });
 }
 
 /** Adds markdown citations to sources with usable URLs. */
 export function addSourceCitations(sources: SearchSource[]) {
-  return sources
-    .filter((source) => source.url)
-    .map((source) => {
+  return pipe(
+    sources,
+    Arr.filter((source) => Boolean(source.url)),
+    Arr.map((source) => {
       const domain = extractDomain(source.url);
 
       return {
         ...source,
         citation: `[${domain}](${source.url})`,
       };
-    });
+    })
+  );
 }
 
 /** Keeps Firecrawl search metadata when a scraped Document is returned. */

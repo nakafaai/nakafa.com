@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/test/content/budget";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("contentRelease/compact/artifacts", () => {
   it("freezes artifact expiry at the durable cycle start", async () => {
@@ -95,10 +95,12 @@ describe("contentRelease/compact/artifacts", () => {
       floor: 1,
     });
     const hashes = await t.run(async (ctx) => ({
-      artifacts: (await ctx.db.query("contentArtifacts").collect()).map(
+      artifacts: Arr.map(
+        await ctx.db.query("contentArtifacts").collect(),
         ({ artifactHash }) => artifactHash
       ),
-      facts: (await ctx.db.query("contentArtifactFacts").collect()).map(
+      facts: Arr.map(
+        await ctx.db.query("contentArtifactFacts").collect(),
         ({ artifactHash }) => artifactHash
       ),
     }));

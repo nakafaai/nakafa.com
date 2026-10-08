@@ -11,6 +11,7 @@ import {
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 3, 16, 9, 0, 0);
 
@@ -147,9 +148,12 @@ describe("triggers/schools/cleanupDeletedClass", () => {
     expect(state.invites).toEqual([]);
     expect(state.forums).toEqual([]);
     expect(state.groups).toEqual([]);
-    expect(state.jobs.every((job) => job.state.kind === "success")).toBe(true);
+    expect(Arr.every(state.jobs, (job) => job.state.kind === "success")).toBe(
+      true
+    );
     expect(
-      state.jobs.filter(
+      Arr.filter(
+        state.jobs,
         (job) => job.name === "triggers/schools/cleanup:cleanupDeletedClass"
       )
     ).toHaveLength(4);

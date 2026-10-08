@@ -17,6 +17,7 @@ import {
   readContentViewState as readViewState,
 } from "@repo/backend/test/content/view";
 import { convexTest } from "convex-test";
+import { Array as Arr } from "effect";
 
 describe("contents/views/impl", () => {
   beforeEach(() => {
@@ -89,7 +90,7 @@ describe("contents/views/impl", () => {
         viewerKey: "device:device-1",
       },
     ]);
-    expect(state.scheduledJobs.map((job) => job.args[0])).toEqual([
+    expect(Arr.map(state.scheduledJobs, (job) => job.args[0])).toEqual([
       { partition: getSignalPartition(article.contentId) },
     ]);
   });

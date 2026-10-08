@@ -16,14 +16,23 @@ import spec, {
   MEMORY_FACTS,
   type NinaMemoryChanges,
 } from "@repo/backend/confect/nina/memory.spec";
-import { Clock, Effect, Layer } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Effect,
+  HashMap,
+  HashSet,
+  Layer,
+  MutableHashSet,
+  Option,
+} from "effect";
 
 type Memory = Docs["ninaMemories"];
 
 /** Lists facts for settings, most recently saved first. */
 function toView(facts: Memory["facts"]) {
   return {
-    facts: [...facts].reverse().map(({ key, savedAt, text }) => ({
+    facts: Arr.map(Arr.reverse(facts), ({ key, savedAt, text }) => ({
       key,
       savedAt,
       text,
@@ -44,29 +53,35 @@ function reviseFacts(
     readonly savedAt: number;
   }
 ) {
-  const forgotten = new Set(changes.forget);
-  const updates = new Map(changes.update.map(({ key, text }) => [key, text]));
-  const kept: Memory["facts"] = [];
-  const rewritten: Memory["facts"] = [];
+  const forgotten = HashSet.fromIterable(changes.forget);
+  const updates = HashMap.fromIterable(
+    Arr.map(changes.update, ({ key, text }) => [key, text])
+  );
+  let kept: Memory["facts"] = [];
+  let rewritten: Memory["facts"] = [];
   for (const fact of memory.facts) {
-    if (forgotten.has(fact.key)) {
+    if (HashSet.has(forgotten, fact.key)) {
       continue;
     }
-    const text = updates.get(fact.key);
+    const text = Option.getOrUndefined(HashMap.get(updates, fact.key));
     if (text === undefined) {
-      kept.push(fact);
+      kept = Arr.append(kept, fact);
     } else {
-      rewritten.push({ ...source, key: fact.key, text });
+      rewritten = Arr.append(rewritten, { ...source, key: fact.key, text });
     }
   }
-  const known = new Set(
-    [...kept, ...rewritten].map((fact) => fact.text.toLowerCase())
+  const known = MutableHashSet.fromIterable(
+    Arr.map([...kept, ...rewritten], (fact) => fact.text.toLowerCase())
   );
-  const added: Memory["facts"] = [];
+  let added: Memory["facts"] = [];
   for (const text of changes.remember) {
-    if (!known.has(text.toLowerCase())) {
-      known.add(text.toLowerCase());
-      added.push({ ...source, key: memory.next + added.length, text });
+    if (!MutableHashSet.has(known, text.toLowerCase())) {
+      MutableHashSet.add(known, text.toLowerCase());
+      added = Arr.append(added, {
+        ...source,
+        key: memory.next + added.length,
+        text,
+      });
     }
   }
   return {
@@ -141,7 +156,7 @@ const forget = FunctionImpl.make(
     if (!memory) {
       return null;
     }
-    const facts = memory.facts.filter((fact) => fact.key !== key);
+    const facts = Arr.filter(memory.facts, (fact) => fact.key !== key);
     if (facts.length < memory.facts.length) {
       yield* (yield* DatabaseWriter)
         .table("ninaMemories")
@@ -165,7 +180,7 @@ const read = FunctionImpl.make(
     return {
       memory: memory
         ? {
-            facts: memory.facts.map(({ key, text }) => ({ key, text })),
+            facts: Arr.map(memory.facts, ({ key, text }) => ({ key, text })),
             id: memory._id,
             revision: memory.updatedAt,
           }

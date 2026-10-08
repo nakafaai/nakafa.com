@@ -1,6 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Path, Sink, Stdio } from "effect";
+import { Effect, FileSystem, Path, Ref, Stdio } from "effect";
+import { capture, makeCapture } from "#scripts/capture";
 import { checkPatchPolicy } from "#scripts/check/patches";
 
 /** Writes one fixture file below the repository root. */
@@ -20,27 +21,21 @@ const writeFixture = Effect.fn("PatchPolicyTest.writeFixture")(function* (
 const checkFixture = Effect.fn("PatchPolicyTest.checkFixture")(function* (
   root: string
 ) {
-  const stdout: Array<string | Uint8Array> = [];
-  const stderr: Array<string | Uint8Array> = [];
+  const stdout = yield* makeCapture;
+  const stderr = yield* makeCapture;
   const status = yield* checkPatchPolicy(root).pipe(
     Effect.provide(
       Stdio.layerTest({
-        stderr: () =>
-          Sink.forEachArray((chunks) =>
-            Effect.sync(() => {
-              stderr.push(...chunks);
-            })
-          ),
-        stdout: () =>
-          Sink.forEachArray((chunks) =>
-            Effect.sync(() => {
-              stdout.push(...chunks);
-            })
-          ),
+        stderr: capture(stderr),
+        stdout: capture(stdout),
       })
     )
   );
-  return { status, stderr, stdout };
+  return {
+    status,
+    stderr: yield* Ref.get(stderr),
+    stdout: yield* Ref.get(stdout),
+  };
 });
 
 describe("dependency patch policy", () => {

@@ -1,6 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import { Effect, FileSystem, Path, Record as Rec } from "effect";
+import { PACKAGE_MANAGER } from "#scripts/dependencies/policy";
 import {
   inspectDependencyPolicy,
   readFirstPartyManifests,
@@ -13,7 +14,7 @@ const writeFixtures = Effect.fn("DependencySourceTest.writeFixtures")(
   function* (root: string, files: Record<string, string>) {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    for (const [file, content] of Object.entries(files)) {
+    for (const [file, content] of Rec.toEntries(files)) {
       const filePath = path.join(root, file);
       yield* fileSystem.makeDirectory(path.dirname(filePath), {
         recursive: true,
@@ -41,12 +42,12 @@ describe("dependency policy sources", () => {
       const root = yield* makeRepository({
         "apps/README.md": "Workspace notes.\n",
         "apps/web/package.json": '{ "dependencies": { "next": "16.3.6" } }',
-        "package.json": '{ "packageManager": "pnpm@11.27.0" }',
+        "package.json": `{ "packageManager": "${PACKAGE_MANAGER}" }`,
         "packages/core/package.json": '{ "scripts": { "test": "vitest" } }',
       });
 
       assert.deepStrictEqual(yield* readFirstPartyManifests(root), [
-        { manifest: { packageManager: "pnpm@11.27.0" }, path: "package.json" },
+        { manifest: { packageManager: PACKAGE_MANAGER }, path: "package.json" },
         {
           manifest: { dependencies: { next: "16.3.6" } },
           path: "apps/web/package.json",
@@ -69,7 +70,7 @@ describe("dependency policy sources", () => {
       });
 
       const problems = yield* inspectDependencyPolicy(root);
-      assert.include(problems, "packageManager must be pnpm@11.27.0.");
+      assert.include(problems, `packageManager must be ${PACKAGE_MANAGER}.`);
       assert.include(
         problems,
         "react has 0 declarations; expected at least 1."

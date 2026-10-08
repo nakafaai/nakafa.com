@@ -14,26 +14,38 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useTranslations } from "next-intl";
-import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
+import {
+  type AnalyticsConsentContextValue,
+  useAnalyticsConsent,
+} from "@/lib/analytics/consent/context";
 import { usePageNavigation } from "@/lib/content/page/context";
 
-/** Renders the non-blocking first decision and permanent preferences dialog. */
+/**
+ * Renders the non-blocking first decision and permanent preferences dialog.
+ *
+ * The consent state is derived once here and handed to the decision and
+ * detail parts, which render in both the prompt and the dialog.
+ */
 export function AnalyticsConsentControls() {
   const t = useTranslations("AnalyticsConsent");
-  const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
-  const preferences = useAnalyticsConsent((state) => state.preferences);
-  const setPreferencesOpen = useAnalyticsConsent(
-    (state) => state.setPreferencesOpen
-  );
-  const isPromptOpen = useAnalyticsConsent((state) => state.isPromptOpen);
+  const consent = useAnalyticsConsent((state) => state);
 
-  if (!isAvailable) {
+  if (!consent.isAvailable) {
     return null;
   }
 
+  const actions = (
+    <ConsentActions
+      canDecline={consent.canDecline}
+      canGrant={consent.canGrant}
+      decide={consent.decide}
+      isSaving={consent.isSaving}
+    />
+  );
+
   return (
     <>
-      {isPromptOpen ? (
+      {consent.isPromptOpen ? (
         <section
           aria-label={t("title")}
           className="fixed right-4 bottom-4 left-4 z-50 sm:right-6 sm:bottom-6 sm:left-auto sm:w-full sm:max-w-md"
@@ -44,36 +56,40 @@ export function AnalyticsConsentControls() {
               <CardDescription>{t("prompt-description")}</CardDescription>
             </CardHeader>
             <CardContent className="min-h-0 flex-1 overflow-y-auto">
-              <ConsentDetails />
+              <ConsentDetails error={consent.error} />
             </CardContent>
             <CardFooter className="flex-col gap-2 sm:flex-row sm:justify-end max-sm:[&>[data-slot=button]]:w-full">
-              <ConsentActions />
+              {actions}
             </CardFooter>
           </Card>
         </section>
       ) : null}
 
       <ResponsiveDialog
-        description={t(`status-${preferences.statusAtOpen}`)}
-        footer={<ConsentActions />}
-        open={preferences.isOpen}
-        setOpen={setPreferencesOpen}
+        description={t(`status-${consent.preferences.statusAtOpen}`)}
+        footer={actions}
+        open={consent.preferences.isOpen}
+        setOpen={consent.setPreferencesOpen}
         title={t("title")}
       >
         <div className="flex flex-col gap-3">
-          <ConsentDetails />
+          <ConsentDetails error={consent.error} />
         </div>
       </ResponsiveDialog>
     </>
   );
 }
 
-function ConsentActions() {
+function ConsentActions({
+  canDecline,
+  canGrant,
+  decide,
+  isSaving,
+}: Pick<
+  AnalyticsConsentContextValue,
+  "canDecline" | "canGrant" | "decide" | "isSaving"
+>) {
   const t = useTranslations("AnalyticsConsent");
-  const canDecline = useAnalyticsConsent((state) => state.canDecline);
-  const canGrant = useAnalyticsConsent((state) => state.canGrant);
-  const decide = useAnalyticsConsent((state) => state.decide);
-  const isSaving = useAnalyticsConsent((state) => state.isSaving);
 
   return (
     <>
@@ -96,9 +112,10 @@ function ConsentActions() {
   );
 }
 
-function ConsentDetails() {
+function ConsentDetails({
+  error,
+}: Pick<AnalyticsConsentContextValue, "error">) {
   const t = useTranslations("AnalyticsConsent");
-  const error = useAnalyticsConsent((state) => state.error);
 
   return (
     <>
@@ -140,7 +157,11 @@ function PrivacyPolicyLink() {
   );
 }
 
-function ConsentError({ error }: { error: "load" | "runtime" | "save" }) {
+function ConsentError({
+  error,
+}: {
+  error: NonNullable<AnalyticsConsentContextValue["error"]>;
+}) {
   const t = useTranslations("AnalyticsConsent");
 
   return (

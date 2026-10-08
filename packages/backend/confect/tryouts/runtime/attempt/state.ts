@@ -7,7 +7,7 @@ import {
   getSectionScoreResult,
   loadAttemptScoreResult,
 } from "@repo/backend/confect/tryouts/score/result";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 interface AttemptStateInput {
   readonly appLocale: AppLocaleCode;
@@ -21,8 +21,12 @@ export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
   function* ({ appLocale, attempt, sectionKey, sections }: AttemptStateInput) {
     const resume = readAttemptResume(attempt, sections);
     const section = sectionKey
-      ? (sections.find((candidate) => candidate.sectionKey === sectionKey) ??
-        null)
+      ? (Option.getOrUndefined(
+          Arr.findFirst(
+            sections,
+            (candidate) => candidate.sectionKey === sectionKey
+          )
+        ) ?? null)
       : null;
     const score = yield* loadAttemptScoreResult(attempt);
     return {

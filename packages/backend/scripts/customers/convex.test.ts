@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/scripts/customers/convex";
 import { getFunctionName, makeFunctionReference } from "convex/server";
 import { Config, ConfigProvider, Effect, Schema } from "effect";
+import { FetchHttpClient } from "effect/http";
 
 vi.mock("node:fs", () => ({ existsSync: vi.fn(), readFileSync: vi.fn() }));
 vi.mock("node:util", async (original) => {
@@ -30,13 +31,23 @@ const configured = ConfigProvider.fromEnvRecord({
   CONVEX_URL: "https://dev.example",
 });
 
+/** The fetch that Effect's client calls in place of the global one. */
+const fetcher = vi.fn<typeof fetch>();
+
+/** Calls the reviewed query through the controlled fetch. */
+function callQuery() {
+  return callCustomerIntegrityQuery(config, query, args, Schema.Finite).pipe(
+    Effect.provideService(FetchHttpClient.Fetch, fetcher)
+  );
+}
+
 beforeEach(() => {
+  fetcher.mockReset();
   vi.mocked(existsSync).mockReturnValue(false);
   vi.mocked(readFileSync).mockReset();
 });
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
 
@@ -186,28 +197,24 @@ describe("customer audit configuration", () => {
 describe("customer integrity query boundary", () => {
   it.effect("sends one authenticated query and validates its value", () =>
     Effect.gen(function* () {
-      const fetch = vi
-        .fn()
-        .mockResolvedValue(Response.json({ status: "success", value: 3 }));
-      vi.stubGlobal("fetch", fetch);
-      expect(
-        yield* callCustomerIntegrityQuery(config, query, args, Schema.Finite)
-      ).toBe(3);
-      expect(fetch).toHaveBeenCalledExactlyOnceWith(
-        "https://test.convex.cloud/api/query",
-        {
-          body: JSON.stringify({
-            args,
-            format: "json",
-            path: "customers/integrity:count",
-          }),
+      fetcher.mockResolvedValue(Response.json({ status: "success", value: 3 }));
+      expect(yield* callQuery()).toBe(3);
+      expect(fetcher).toHaveBeenCalledExactlyOnceWith(
+        new URL("https://test.convex.cloud/api/query"),
+        expect.objectContaining({
           headers: {
-            Authorization: "Convex test-token",
-            "Content-Type": "application/json",
+            authorization: "Convex test-token",
+            "content-type": "application/json",
           },
           method: "POST",
-        }
+        })
       );
+      expect(
+        yield* Effect.promise(
+          (): Promise<unknown> =>
+            new Response(fetcher.mock.calls[0]?.[1]?.body).json()
+        )
+      ).toEqual({ args, format: "json", path: "customers/integrity:count" });
     })
   );
 
@@ -216,20 +223,11 @@ describe("customer integrity query boundary", () => {
       vi.mocked(getFunctionName).mockImplementationOnce(() => {
         throw new Error("invalid reference");
       });
-      const fetch = vi.fn();
-      vi.stubGlobal("fetch", fetch);
-      expect(
-        yield* callCustomerIntegrityQuery(
-          config,
-          query,
-          args,
-          Schema.Finite
-        ).pipe(Effect.flip)
-      ).toMatchObject({
+      expect(yield* callQuery().pipe(Effect.flip)).toMatchObject({
         _tag: "CustomerConvexConfigError",
         message: "invalid reference",
       });
-      expect(fetch).not.toHaveBeenCalled();
+      expect(fetcher).not.toHaveBeenCalled();
     })
   );
 
@@ -249,15 +247,8 @@ describe("customer integrity query boundary", () => {
     },
   ])("rejects an invalid query response: $message", ({ body, message }) =>
     Effect.gen(function* () {
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json(body)));
-      expect(
-        yield* callCustomerIntegrityQuery(
-          config,
-          query,
-          args,
-          Schema.Finite
-        ).pipe(Effect.flip)
-      ).toMatchObject({
+      fetcher.mockResolvedValue(Response.json(body));
+      expect(yield* callQuery().pipe(Effect.flip)).toMatchObject({
         _tag: "CustomerConvexResponseError",
         message: expect.stringContaining(message),
       });
@@ -284,20 +275,12 @@ describe("customer integrity query boundary", () => {
     "preserves typed transport failure: $tag $message",
     ({ response, tag, message }) =>
       Effect.gen(function* () {
-        vi.stubGlobal(
-          "fetch",
-          response === undefined
-            ? vi.fn().mockRejectedValue(new Error("offline"))
-            : vi.fn().mockResolvedValue(response)
-        );
-        expect(
-          yield* callCustomerIntegrityQuery(
-            config,
-            query,
-            args,
-            Schema.Finite
-          ).pipe(Effect.flip)
-        ).toMatchObject({
+        if (response === undefined) {
+          fetcher.mockRejectedValue(new Error("offline"));
+        } else {
+          fetcher.mockResolvedValue(response);
+        }
+        expect(yield* callQuery().pipe(Effect.flip)).toMatchObject({
           _tag: tag,
           message: expect.stringContaining(message),
         });
@@ -306,19 +289,18 @@ describe("customer integrity query boundary", () => {
 
   it.effect("reports an unreadable HTTP error body", () =>
     Effect.gen(function* () {
-      const response = new Response("denied", { status: 403 });
-      vi.spyOn(response, "text").mockRejectedValue(
-        new Error("body interrupted")
+      fetcher.mockResolvedValue(
+        new Response(
+          new ReadableStream({
+            /** Fails before the error body yields any bytes. */
+            pull(controller) {
+              controller.error(new Error("body interrupted"));
+            },
+          }),
+          { status: 403 }
+        )
       );
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
-      expect(
-        yield* callCustomerIntegrityQuery(
-          config,
-          query,
-          args,
-          Schema.Finite
-        ).pipe(Effect.flip)
-      ).toMatchObject({
+      expect(yield* callQuery().pipe(Effect.flip)).toMatchObject({
         _tag: "CustomerConvexResponseError",
         message: "body interrupted",
       });

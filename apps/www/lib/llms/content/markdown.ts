@@ -1,6 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option, Record as Rec, Schema } from "effect";
 import type { Locale } from "next-intl";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
@@ -18,7 +18,7 @@ import { classifyQuranLlmsRoute, getQuranLlmsText } from "@/lib/llms/quran";
 
 const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
   PUBLIC_ROUTE_SURFACES.flatMap((surface) =>
-    surface.key === "subject" ? Object.values(surface.routeSlugs) : []
+    surface.key === "subject" ? Rec.values(surface.routeSlugs) : []
   )
 );
 interface PublishedMarkdownSource {

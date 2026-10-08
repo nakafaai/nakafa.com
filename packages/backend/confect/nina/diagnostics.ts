@@ -3,7 +3,7 @@ import { createOperationalException } from "@repo/analytics/posthog/exception";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
-import { getModelGatewayId } from "@repo/backend/confect/nina/config/model";
+import { type ModelKey, models } from "@repo/backend/confect/gateway/model";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
 import { Cause, Effect, Option, Schema } from "effect";
 
@@ -21,15 +21,16 @@ export const reportFailure = Effect.fn("nina.diagnostics.report")(function* (
     Option.filter(Schema.is(NinaGenerationError)),
     Option.getOrElse(() => new NinaGenerationError({ reason: "unknown" }))
   );
+  const model: ModelKey = turn.modelId;
   const properties = {
     source: "nina-response",
     operation: error.reason,
     model_id: turn.modelId,
-    gateway_model_id: getModelGatewayId(turn.modelId),
-    gateway_error_type: error.diagnostics?.type,
-    gateway_status_code: error.diagnostics?.status,
-    gateway_retryable: error.diagnostics?.retryable,
-    gateway_generation_id: error.diagnostics?.generation,
+    gateway_model_id: models[model],
+    gateway_error_type: error.gateway?.type,
+    gateway_status_code: error.gateway?.status,
+    gateway_retryable: error.gateway?.retryable,
+    gateway_generation_id: error.gateway?.generation,
   };
   yield* Effect.logError("Nina response interrupted", {
     turnId: turn._id,

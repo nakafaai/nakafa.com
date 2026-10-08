@@ -10,7 +10,7 @@ import {
   StorageWriter,
 } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/storage.spec";
-import { Duration, Effect, Layer, Schema } from "effect";
+import { Array as Arr, Duration, Effect, Layer, Schema } from "effect";
 
 class StorageSweepError extends Schema.TaggedError<StorageSweepError>()(
   "StorageSweepError",
@@ -34,7 +34,7 @@ export const sweepStorage = Effect.fn("storage.sweep")(function* () {
   const removed = yield* Effect.tryPromise({
     try: () =>
       ctx.runMutation(components.nina.files.deleteFiles, {
-        fileIds: page.page.map((file) => file._id),
+        fileIds: Arr.map(page.page, (file) => file._id),
       }),
     catch: (cause) => new StorageSweepError({ cause }),
   });

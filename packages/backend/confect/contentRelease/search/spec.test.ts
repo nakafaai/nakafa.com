@@ -4,10 +4,11 @@ import {
   isSearchFamily,
   SEARCH_FAMILIES,
 } from "@repo/backend/confect/contentRelease/search/spec";
+import { Array as Arr } from "effect";
 
 describe("contentRelease/search/spec", () => {
   it("keeps only learning families in canonical release order", () => {
-    expect(ContentFamilySchema.literals.filter(isSearchFamily)).toEqual(
+    expect(Arr.filter(ContentFamilySchema.literals, isSearchFamily)).toEqual(
       SEARCH_FAMILIES
     );
     expect(isSearchFamily("page")).toBe(false);

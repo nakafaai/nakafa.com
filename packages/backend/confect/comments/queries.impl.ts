@@ -7,7 +7,7 @@ import spec from "@repo/backend/confect/comments/queries.spec";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Layer, Struct } from "effect";
+import { Array as Arr, Effect, Layer, Struct } from "effect";
 
 const getCommentsBySlug = FunctionImpl.make(
   databaseSchema,
@@ -20,8 +20,8 @@ const getCommentsBySlug = FunctionImpl.make(
       .index("by_slug", (q) => q.eq("slug", cleanSlug(args.slug)), "desc")
       .paginate(args.paginationOpts)
       .pipe(Effect.orDie);
-    const commentUserIds = comments.page.map((comment) => comment.userId);
-    const replyToUserIds = comments.page.flatMap((comment) =>
+    const commentUserIds = Arr.map(comments.page, (comment) => comment.userId);
+    const replyToUserIds = Arr.flatMap(comments.page, (comment) =>
       comment.replyToUserId ? [comment.replyToUserId] : []
     );
     const viewer = yield* getOptionalAppUserForRead();
@@ -32,7 +32,7 @@ const getCommentsBySlug = FunctionImpl.make(
     ]);
     return {
       ...comments,
-      page: comments.page.map((comment) => {
+      page: Arr.map(comments.page, (comment) => {
         const user = userMap.get(comment.userId);
         const replyToUser = comment.replyToUserId
           ? replyToUserMap.get(comment.replyToUserId)
@@ -67,7 +67,7 @@ const getCommentsByUserId = FunctionImpl.make(
     );
     return {
       ...comments,
-      page: comments.page.map((comment) => ({
+      page: Arr.map(comments.page, (comment) => ({
         ...comment,
         viewerVote: viewerVotes.get(comment._id) ?? null,
       })),

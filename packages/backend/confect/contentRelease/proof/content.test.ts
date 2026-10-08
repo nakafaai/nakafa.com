@@ -21,7 +21,7 @@ import {
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
-import { Effect, Stream } from "effect";
+import { Array as Arr, Effect, Schema, Stream } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-one-pass-proof");
 
@@ -40,7 +40,7 @@ describe("content proof streams", () => {
           releaseId,
         })
       );
-      const rollbacks = items.map((item) =>
+      const rollbacks = Arr.map(items, (item) =>
         RollbackSnapshotEntrySchema.make({
           index: item.index,
           releaseId,
@@ -70,14 +70,16 @@ describe("content proof streams", () => {
           rollbackDigest: rollbackDigest.digest,
         })
       );
-      const rows = items.map((item, index) => {
+      const rows = Arr.map(items, (item, index) => {
         const rollback = rollbacks[index];
         if (!rollback) {
           throw new Error(`Expected rollback row ${index}.`);
         }
         return {
           index: item.index,
-          itemJson: JSON.stringify(item),
+          itemJson: Schema.encodeSync(
+            Schema.fromJsonString(ContentReleaseItemSchema)
+          )(item),
           rollbackJson: canonicalizeRollbackSnapshotEntry(rollback),
         };
       });

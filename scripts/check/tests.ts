@@ -1,164 +1,149 @@
-import { Effect, FileSystem, Path, Schema } from "effect";
 import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  HashSet,
+  Path,
+  String as Str,
+} from "effect";
+import {
+  inspectCompilerConfigs,
+  isCompilerConfig,
+} from "#scripts/check/compiler";
+import {
+  effectFindings,
   effectTestViolations,
-  inspectEffectSource,
+  findingMessages,
 } from "#scripts/check/effect";
-import { readRepositoryFiles } from "#scripts/check/files";
+import { readAuthoredSources, readAuthoredTree } from "#scripts/check/files";
+import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
-import { sourceViolations as inspectSources } from "#scripts/check/source";
+import { parseSources } from "#scripts/check/source";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
 import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
 const TEST_FILE_PATTERN = /\.test\.tsx?$/u;
 const TSX_TEST_FILE_PATTERN = /\.test\.tsx$/u;
-const SOURCE_FILE_PATTERN = /\.tsx?$/u;
-const GENERATED_DIRECTORY = "_generated";
-const TEST_DIRECTORIES = new Set(["__test__", "__tests__"]);
-const IGNORED_DIRECTORIES = new Set([
-  ".git",
-  ".next",
-  ".react-email",
-  ".turbo",
-  "coverage",
-  "dist",
-  "node_modules",
-]);
+const TEST_DIRECTORIES = HashSet.make("__test__", "__tests__");
 
-/** Expected failure while inspecting repository test ownership. */
-class TestPolicyReadError extends Schema.TaggedError<TestPolicyReadError>()(
-  "TestPolicyReadError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+/** Renders one titled list of files, or nothing when the list is empty. */
+function fileReport(title: string, files: readonly string[]) {
+  return Arr.isReadonlyArrayEmpty(files)
+    ? ""
+    : `${title}\n${Arr.join(
+        Arr.map(files, (file) => `  - ${file}`),
+        "\n"
+      )}\n`;
+}
 
-/** Returns whether a test has a colocated TypeScript Module with the same name. */
-const hasColocatedOwner = Effect.fn("RepositoryPolicy.hasColocatedOwner")(
-  function* (testPath: string) {
-    const fileSystem = yield* FileSystem.FileSystem;
-    const ownerPath = testPath.replace(TEST_FILE_PATTERN, "");
-    return yield* fileSystem.exists(`${ownerPath}.ts`);
-  }
-);
+/** Renders violation lines, or nothing when there are none. */
+function lineReport(lines: readonly string[]) {
+  return Arr.isReadonlyArrayEmpty(lines) ? "" : `${Arr.join(lines, "\n")}\n`;
+}
 
-/** Validates test ownership, source policy, and repository layout. */
+/**
+ * Applies the Effect-native, gateway, React, and state source policies to authored
+ * modules through one native compiler batch. Every Effect-native finding is a
+ * violation: no baseline or allowlist holds one back.
+ */
+const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
+  sources: Parameters<typeof parseSources>[0]
+) {
+  const parsed = yield* parseSources(sources);
+  return Arr.appendAll(
+    findingMessages(yield* effectFindings(parsed)),
+    Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
+      Arr.flatten([
+        inspectGatewaySource(file, sourceFile),
+        inspectReactSource(file, sourceFile),
+        inspectStateSource(file, sourceFile),
+      ])
+    )
+  );
+}, Effect.scoped);
+
+/** Validates test ownership, source policy, compiler configuration, and repository layout. */
 export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   function* (root: string) {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const files = yield* Effect.forEach(["apps", "packages"], (directory) =>
-      readRepositoryFiles(path.join(root, directory), IGNORED_DIRECTORIES)
-    ).pipe(Effect.map((groups) => groups.flat()));
-    const scriptFiles = yield* readRepositoryFiles(
-      path.join(root, "scripts"),
-      IGNORED_DIRECTORIES
-    );
-    const tests = files.filter((file) => TEST_FILE_PATTERN.test(file));
-    const effectTests = [...tests, ...scriptFiles].filter((file) =>
+    const { scripts, workspaces } = yield* readAuthoredTree(root);
+    const tests = Arr.filter(workspaces, (file) =>
       TEST_FILE_PATTERN.test(file)
     );
-    const ownership = yield* Effect.forEach(tests, (test) =>
-      hasColocatedOwner(test).pipe(
-        Effect.map((hasOwner) => ({ hasOwner, test }))
+    const orphanTests = yield* Effect.filter(tests, (test) =>
+      Effect.map(
+        fileSystem.exists(`${Str.replace(TEST_FILE_PATTERN, "")(test)}.ts`),
+        (owned) => !owned
       )
     );
-    const orphanTests = ownership
-      .filter(({ hasOwner }) => !hasOwner)
-      .map(({ test }) => test);
-    const tsxTestFiles = tests.filter((test) =>
+    const tsxTests = Arr.filter(tests, (test) =>
       TSX_TEST_FILE_PATTERN.test(test)
     );
-    const nestedTestFiles = files.filter((file) =>
-      file.split(path.sep).some((segment) => TEST_DIRECTORIES.has(segment))
-    );
-    const sources = yield* Effect.forEach(effectTests, (test) =>
-      fileSystem.readFileString(test).pipe(
-        Effect.map((sourceText) => ({ file: test, sourceText })),
-        Effect.mapError(
-          (cause) =>
-            new TestPolicyReadError({
-              cause,
-              message: `Unable to read ${test}.`,
-            })
-        )
+    const nestedTests = Arr.filter(workspaces, (file) =>
+      Arr.some(Str.split(file, path.sep), (segment) =>
+        HashSet.has(TEST_DIRECTORIES, segment)
       )
     );
-    const effectViolations = yield* effectTestViolations(sources);
-    const authoredFiles = [...files, ...scriptFiles].filter(
+    const sources = yield* readAuthoredSources(
+      root,
+      Arr.appendAll(workspaces, scripts)
+    );
+    const runnerViolations = yield* effectTestViolations(sources);
+    const sourceViolations = yield* inspectSources(sources);
+    const relative = (files: readonly string[]) =>
+      Arr.map(files, (file) => path.relative(root, file));
+    // The policy reads repository paths, which use "/" on every platform. A
+    // configuration at the repository root counts like any workspace's own.
+    const rootEntries = yield* fileSystem.readDirectory(root);
+    const configs = yield* Effect.forEach(
+      Arr.filter(
+        Arr.appendAll(
+          Arr.map(relative(Arr.appendAll(workspaces, scripts)), (file) =>
+            Arr.join(Str.split(file, path.sep), "/")
+          ),
+          rootEntries
+        ),
+        isCompilerConfig
+      ),
       (file) =>
-        SOURCE_FILE_PATTERN.test(file) &&
-        !file.endsWith(".d.ts") &&
-        !file.split(path.sep).includes(GENERATED_DIRECTORY)
-    );
-    const authoredSources = yield* Effect.forEach(authoredFiles, (file) =>
-      fileSystem.readFileString(file).pipe(
-        Effect.map((sourceText) => ({
-          file: path.relative(root, file).split(path.sep).join("/"),
-          sourceText,
-        })),
-        Effect.mapError(
-          (cause) =>
-            new TestPolicyReadError({
-              cause,
-              message: `Unable to read ${file}.`,
-            })
+        Effect.map(
+          fileSystem.readFileString(path.join(root, file)),
+          (sourceText) => ({ file, sourceText })
         )
-      )
     );
-    const sourceViolations = yield* inspectSources(authoredSources, [
-      inspectEffectSource,
-      inspectReactSource,
-      inspectStateSource,
-    ]);
-    const tailwindViolations = authoredSources.flatMap(({ file, sourceText }) =>
-      inspectTailwindSource(file, sourceText)
+    const reports = Arr.filter(
+      [
+        fileReport(
+          "Every final test must have a colocated .ts Module with the same name; React and TSX behavior belongs in Browser or E2E acceptance:",
+          relative(orphanTests)
+        ),
+        fileReport(
+          "Final code must not contain .test.tsx files:",
+          relative(tsxTests)
+        ),
+        fileReport(
+          "Tests must not use __test__ or __tests__ folders:",
+          relative(nestedTests)
+        ),
+        lineReport(runnerViolations),
+        lineReport(sourceViolations),
+        lineReport(inspectCompilerConfigs(configs)),
+        lineReport(
+          Arr.flatMap(sources, ({ file, sourceText }) =>
+            inspectTailwindSource(file, sourceText)
+          )
+        ),
+      ],
+      Str.isNonEmpty
     );
 
-    if (
-      orphanTests.length === 0 &&
-      tsxTestFiles.length === 0 &&
-      nestedTestFiles.length === 0 &&
-      effectViolations.length === 0 &&
-      sourceViolations.length === 0 &&
-      tailwindViolations.length === 0
-    ) {
+    if (Arr.isReadonlyArrayEmpty(reports)) {
       yield* writeOutput("Test ownership checks passed.\n");
       return 0;
     }
-
-    if (orphanTests.length > 0) {
-      yield* writeError(
-        `Every final test must have a colocated .ts Module with the same name; React and TSX behavior belongs in Browser or E2E acceptance:\n${orphanTests
-          .map((file) => `  - ${path.relative(root, file)}`)
-          .join("\n")}\n`
-      );
-    }
-    if (tsxTestFiles.length > 0) {
-      yield* writeError(
-        `Final code must not contain .test.tsx files:\n${tsxTestFiles
-          .map((file) => `  - ${path.relative(root, file)}`)
-          .join("\n")}\n`
-      );
-    }
-    if (nestedTestFiles.length > 0) {
-      yield* writeError(
-        `Tests must not use __test__ or __tests__ folders:\n${nestedTestFiles
-          .map((file) => `  - ${path.relative(root, file)}`)
-          .join("\n")}\n`
-      );
-    }
-    if (effectViolations.length > 0) {
-      yield* writeError(`${effectViolations.join("\n")}\n`);
-    }
-    if (sourceViolations.length > 0) {
-      yield* writeError(`${sourceViolations.join("\n")}\n`);
-    }
-    if (tailwindViolations.length > 0) {
-      yield* writeError(`${tailwindViolations.join("\n")}\n`);
-    }
-
+    yield* Effect.forEach(reports, writeError, { discard: true });
     return 1;
   }
 );

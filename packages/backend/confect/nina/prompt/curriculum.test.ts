@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { AgentCurriculumPreference } from "@repo/backend/confect/nina/contract/agent";
 import { formatCurriculumPreferencePromptContext } from "@repo/backend/confect/nina/prompt/curriculum";
+import { Array as Arr } from "effect";
 
 const preference: AgentCurriculumPreference = {
   program: {
@@ -16,11 +17,14 @@ describe("formatCurriculumPreferencePromptContext", () => {
       "- curriculum preference: not selected"
     );
     expect(formatCurriculumPreferencePromptContext(preference)).toBe(
-      [
-        "- curriculum preference: selected",
-        "- curriculum: Cambridge International",
-        "- curriculum key: cambridge-international",
-      ].join("\n")
+      Arr.join(
+        [
+          "- curriculum preference: selected",
+          "- curriculum: Cambridge International",
+          "- curriculum key: cambridge-international",
+        ],
+        "\n"
+      )
     );
   });
 });

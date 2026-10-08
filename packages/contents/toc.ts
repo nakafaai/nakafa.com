@@ -2,6 +2,7 @@ import {
   createHeadingId,
   createHeadingLabel,
 } from "@repo/design-system/lib/markdown/headings";
+import { Schema } from "effect";
 
 /**
  * Extracts heading hierarchy from markdown content.
@@ -80,9 +81,19 @@ export function extractAllHeadingIds(headings: ParsedHeading[]): string[] {
   return ids;
 }
 
-export interface ParsedHeading {
-  children: ParsedHeading[];
-  href: string;
-  index?: number;
-  label: string;
-}
+export const ParsedHeadingSchema = Schema.Struct({
+  children: Schema.Array(
+    Schema.suspend((): Schema.Codec<ParsedHeading> => ParsedHeadingSchema)
+  ).pipe(Schema.mutable),
+  href: Schema.String,
+  index: Schema.optionalKey(Schema.Finite),
+  label: Schema.String,
+});
+
+type ParsedHeadingFields = typeof ParsedHeadingSchema.Type;
+
+/**
+ * One heading in the table of contents. The interface only names the recursive
+ * shape; every field is derived from `ParsedHeadingSchema`.
+ */
+export interface ParsedHeading extends ParsedHeadingFields {}

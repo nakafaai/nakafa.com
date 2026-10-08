@@ -1,4 +1,3 @@
-import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
@@ -9,6 +8,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { freeze } from "@repo/backend/confect/response/projection";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
   TryoutRuntimeError,
@@ -17,7 +17,7 @@ import {
 import type { TryoutSnapshotSource } from "@repo/backend/confect/tryouts/start/source";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
 import { getDocumentSize } from "convex/values";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
@@ -26,8 +26,11 @@ type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
 export const requireSectionSnapshot = Effect.fn(
   "tryouts.runtime.requireSectionSnapshot"
 )(function* (attempt: TryoutAttempt, sectionKey: string) {
-  const snapshot = attempt.sectionSnapshots.find(
-    (section) => section.sectionKey === sectionKey
+  const snapshot = Option.getOrUndefined(
+    Arr.findFirst(
+      attempt.sectionSnapshots,
+      (section) => section.sectionKey === sectionKey
+    )
   );
   if (!snapshot) {
     return yield* new TryoutAttemptStateError({
@@ -81,8 +84,11 @@ export const createAttemptPlacements = Effect.fn(
   const writer = yield* DatabaseWriter;
   for (const source of args.source.snapshot.sections) {
     const sectionIdentity = tryoutCatalogIdentity(source.section.row);
-    const snapshot = args.attempt.sectionSnapshots.find(
-      (candidate) => candidate.sectionIdentity === sectionIdentity
+    const snapshot = Option.getOrUndefined(
+      Arr.findFirst(
+        args.attempt.sectionSnapshots,
+        (candidate) => candidate.sectionIdentity === sectionIdentity
+      )
     );
     if (
       !snapshot ||
@@ -94,7 +100,6 @@ export const createAttemptPlacements = Effect.fn(
       );
     }
     for (const placement of source.placements) {
-      const responseSpec = canonicalQuestionResponse(placement.row.response);
       const frozenPlacement = {
         answerArtifactHash: placement.row.answerArtifactHash,
         answerContentKey: placement.row.answerContentKey,
@@ -105,7 +110,13 @@ export const createAttemptPlacements = Effect.fn(
         questionContentKey: placement.row.questionContentKey,
         questionOrder: placement.row.questionOrder,
         rendererDomain: placement.row.rendererDomain,
-        responseSpec,
+        responseSpec: freeze(
+          placement.row.response,
+          placement.row.deliveryLanguage
+        ),
+        ...(placement.row.points === undefined
+          ? {}
+          : { points: placement.row.points }),
         sectionIdentity,
         sectionKey: placement.row.sectionKey,
         sourcePath: placement.row.questionSourcePath,

@@ -43,12 +43,9 @@ export const learningContextStorageFields = {
 export const learningContextStorageValidator = Schema.Struct(
   learningContextStorageFields
 );
-export type LearningContextInput = Schema.Schema.Type<
-  typeof learningContextInputValidator
->;
-export type LearningContextStorage = Schema.Schema.Type<
-  typeof learningContextStorageValidator
->;
+export type LearningContextInput = typeof learningContextInputValidator.Type;
+export type LearningContextStorage =
+  typeof learningContextStorageValidator.Type;
 
 /** Returns the storage projection for a canonical asset visit. */
 export function createCanonicalLearningContext(): LearningContextStorage {

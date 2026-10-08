@@ -1,18 +1,20 @@
 import path from "node:path";
 import { postHogProxyKeys } from "@repo/analytics/keys";
 import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
-import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
 import {
   config,
   createLoopbackConnectSources,
   createSecurityHeaders,
 } from "@repo/next-config";
+import {
+  hasPreviewProvider,
+  hasPreviewRenderer,
+} from "@repo/next-config/preview";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
-import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
 import {
   CONTENT_CACHE_LIFETIME,
   CONTENT_CACHE_PROFILE,
@@ -40,8 +42,7 @@ const configEnv = createEnv({
 const localConvexConnectSources = createLoopbackConnectSources(
   new URL(runtime.query)
 );
-const isAksaraPreviewChild =
-  hasCandidateLocalePreview() || hasPreviewRendererEnvironment();
+const isAksaraPreviewChild = hasPreviewProvider() || hasPreviewRenderer();
 const postHogProxyEnv = isAksaraPreviewChild ? null : postHogProxyKeys();
 const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
@@ -212,6 +213,14 @@ const nextConfig = {
   // `process.cwd()` resolves to the app directory (`apps/www`) during Next.js
   // config loading, so walking up two levels targets the monorepo root.
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
+  // The image routes read the logo through Effect's FileSystem, which the
+  // file tracer cannot follow, so the trace names the file. Without it the
+  // deployed function has no logo and answers 500.
+  // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats
+  outputFileTracingIncludes: {
+    "/og/*": ["./public/logo.svg"],
+    "/*/og/*": ["./public/logo.svg"],
+  },
   serverExternalPackages: [
     ...(config.serverExternalPackages ?? []),
     "@takumi-rs/core",
