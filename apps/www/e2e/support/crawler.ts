@@ -21,10 +21,10 @@ export type ServerDocument = typeof ServerDocumentSchema.Type;
 
 /**
  * Reads the canonical and alternate links of a document: the live page when
- * `html` is absent, or the server HTML as a crawler parses it. It runs in the
- * page, so pass it to `page.evaluate` by reference.
+ * `html` is undefined, or the server HTML as a crawler parses it. It runs in
+ * the page, so pass it to `page.evaluate` by reference.
  */
-export function readHeadLinks(html?: string) {
+export function readHeadLinks(html: string | undefined) {
   const root =
     html === undefined
       ? document

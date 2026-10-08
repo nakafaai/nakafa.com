@@ -16,7 +16,9 @@ const readLessonIdentity = Effect.fn("NakafaE2E.readLessonIdentity")(function* (
   const heading = yield* Effect.promise(() =>
     page.getByRole("heading", { level: 1 }).textContent()
   );
-  const links = yield* Effect.promise(() => page.evaluate(readHeadLinks));
+  const links = yield* Effect.promise(() =>
+    page.evaluate(readHeadLinks, undefined)
+  );
   return { heading, links, title };
 });
 
