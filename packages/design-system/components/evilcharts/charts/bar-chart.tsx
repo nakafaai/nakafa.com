@@ -22,6 +22,7 @@ import {
 import { LoadingBar } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import type { OrderedRevealAnimation } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import {
   ChartTooltip,
   ChartTooltipContent,
@@ -68,13 +69,7 @@ export type BarAnimationType = "none" | OrderedRevealAnimation;
 // Shared context
 
 const BarChartStateSchema = Schema.Struct({
-  animationType: Schema.Literals([
-    "none",
-    "left-to-right",
-    "right-to-left",
-    "center-out",
-    "edges-in",
-  ]), // default grow-in order each <Bar /> inherits
+  animationType: RevealAnimationSchema, // default grow-in order each <Bar /> inherits
   barRadius: Schema.Finite, // default corner radius each <Bar /> inherits
   dataLength: Schema.Finite, // number of rows currently rendered
   isHorizontal: Schema.Boolean, // whether bars are laid out horizontally

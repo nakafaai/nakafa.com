@@ -19,6 +19,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/legend";
 import { LoadingArea } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
+import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import {
   ChartTooltip,
   ChartTooltipContent,
@@ -51,13 +52,7 @@ export type CurveType = NonNullable<
 type StackType = "default" | "expanded" | "stacked";
 
 const AreaChartStateSchema = Schema.Struct({
-  animationType: Schema.Literals([
-    "none",
-    "left-to-right",
-    "right-to-left",
-    "center-out",
-    "edges-in",
-  ]), // default intro reveal each <Area /> inherits
+  animationType: RevealAnimationSchema, // default intro reveal each <Area /> inherits
   isExpanded: Schema.Boolean, // whether the stack is normalized to 100%
   isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
   isStacked: Schema.Boolean, // whether areas stack on top of each other

@@ -18,6 +18,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/legend";
 import { LoadingLine } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
+import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import {
   ChartTooltip,
   ChartTooltipContent,
@@ -53,13 +54,7 @@ export type CurveType = NonNullable<
 // Shared context
 
 const LineChartStateSchema = Schema.Struct({
-  animationType: Schema.Literals([
-    "none",
-    "left-to-right",
-    "right-to-left",
-    "center-out",
-    "edges-in",
-  ]), // default intro reveal each <Line /> inherits
+  animationType: RevealAnimationSchema, // default intro reveal each <Line /> inherits
   isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
   selectedDataKey: Schema.NullOr(Schema.String), // currently selected series, or null when none
 });

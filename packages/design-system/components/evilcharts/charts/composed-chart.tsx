@@ -18,6 +18,7 @@ import {
 import { LoadingBar } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import type { OrderedRevealAnimation } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import {
   ChartTooltip,
   ChartTooltipContent,
@@ -66,13 +67,7 @@ export type ComposedAnimationType = "none" | OrderedRevealAnimation;
 // Shared context
 
 const ComposedChartStateSchema = Schema.Struct({
-  animationType: Schema.Literals([
-    "none",
-    "left-to-right",
-    "right-to-left",
-    "center-out",
-    "edges-in",
-  ]), // default intro each <Bar /> and <Line /> inherits
+  animationType: RevealAnimationSchema, // default intro each <Bar /> and <Line /> inherits
   dataLength: Schema.Finite, // number of rows currently rendered
   hoveredIndex: Schema.NullOr(Schema.Finite), // data index currently hovered, or null when none
   isLoading: Schema.Boolean, // whether the chart shows its loading skeleton
