@@ -222,6 +222,33 @@ export const JSON_RPC_CASES: readonly McpCase[] = [
   },
   {
     answer: {
+      body: {
+        json: {
+          error: {
+            code: -32_600,
+            message:
+              "Bad Request: the request body is not a valid JSON-RPC message",
+          },
+          id: 86,
+          jsonrpc: "2.0",
+        },
+      },
+      headers: JSON_RESPONSE_HEADERS,
+      status: 400,
+    },
+    name: "an object with an id and no method is refused as an invalid JSON-RPC message",
+    request: {
+      body: jsonBody({ id: 86, jsonrpc: "2.0" }),
+      headers: {
+        accept: "application/json, text/event-stream",
+        "content-type": "application/json",
+        "mcp-protocol-version": "2026-07-28",
+      },
+      method: "POST",
+    },
+  },
+  {
+    answer: {
       body: { text: "" },
       headers: BODYLESS_RESPONSE_HEADERS,
       status: 202,

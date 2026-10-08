@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/routes/agent/mcp/response";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/agent/constants";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Array as Arr, HashSet, Option, Predicate, Schema } from "effect";
+import { Array as Arr, HashSet, Option, Schema } from "effect";
 
 const MCP_PROTOCOL_VERSION_HEADER = "mcp-protocol-version";
 const PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
@@ -64,7 +64,7 @@ export function refuseMcpRequest(request: Request, parsedBody: unknown) {
     );
   }
   const responseId = readJsonRpcRequestId(parsedBody);
-  if (!(Predicate.isObject(parsedBody) && isJsonRpcMessage(parsedBody))) {
+  if (!isJsonRpcMessage(parsedBody)) {
     return Option.some(
       mcpJsonRpcRefusal(
         400,
@@ -136,9 +136,10 @@ export function refuseUnservedMethod(parsedBody: unknown) {
   );
 }
 
-function isJsonRpcMessage(body: object) {
-  return Predicate.hasProperty(body, "jsonrpc") && body.jsonrpc === "2.0";
-}
+/** A JSON-RPC 2.0 request or notification: the version and a method name. */
+const isJsonRpcMessage = Schema.is(
+  Schema.Struct({ jsonrpc: Schema.Literal("2.0"), method: Schema.String })
+);
 
 /** Whether the body's own metadata names a protocol version, which the engine checks against the header. */
 const claimsProtocolVersion = Schema.is(
