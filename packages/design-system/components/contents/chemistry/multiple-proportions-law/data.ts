@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const WATER_PEROXIDE_MODE_ID = "water-peroxide";
 const CARBON_OXIDES_MODE_ID = "carbon-oxides";
@@ -237,5 +237,8 @@ function molecule(
 }
 
 function defaultBonds(atoms: readonly MultipleProportionsAtom[]) {
-  return atoms.slice(1).map((atomData) => [atoms[0].id, atomData.id] as const);
+  return Arr.map(
+    atoms.slice(1),
+    (atomData) => [atoms[0].id, atomData.id] as const
+  );
 }

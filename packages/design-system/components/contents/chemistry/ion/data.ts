@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const SODIUM_CATION_ID = "sodium-cation";
 const FLUORIDE_ANION_ID = "fluoride-anion";
@@ -56,5 +56,5 @@ export const ION_SAMPLES = {
  * Narrows ToggleGroup string values to the available ion examples.
  */
 export function isIonSampleId(value: string): value is IonSampleId {
-  return ION_SAMPLE_IDS.some((sampleId) => sampleId === value);
+  return Arr.some(ION_SAMPLE_IDS, (sampleId) => sampleId === value);
 }

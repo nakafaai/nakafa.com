@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const CHARGE_MODE_ID = "charge";
 export const MASS_MODE_ID = "mass";
@@ -59,7 +59,8 @@ export const SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG = {
 export function isSubatomicParticlePropertiesModeId(
   value: string
 ): value is SubatomicParticlePropertiesModeId {
-  return SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS.some(
+  return Arr.some(
+    SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS,
     (modeId) => modeId === value
   );
 }

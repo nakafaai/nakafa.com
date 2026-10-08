@@ -11,7 +11,7 @@ import {
 import type { ReactionCharacteristicsLabProps } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useRef } from "react";
 import { DoubleSide, type Group } from "three";
 
@@ -304,7 +304,7 @@ function ReactionCueVisual({
 function GasBubbles({ color }: { color: string }) {
   return (
     <group>
-      {BUBBLES.map((bubble) => (
+      {Arr.map(BUBBLES, (bubble) => (
         <AnimatedBubble color={color} key={bubble.id} particle={bubble} />
       ))}
     </group>
@@ -369,7 +369,7 @@ function AnimatedBubble({
 function Precipitate({ color }: { color: string }) {
   return (
     <group>
-      {PRECIPITATE_PARTICLES.map((particle) => (
+      {Arr.map(PRECIPITATE_PARTICLES, (particle) => (
         <mesh castShadow key={particle.id} position={particle.position}>
           <sphereGeometry args={[SOLID_RADIUS, 24, 16]} />
           <meshStandardMaterial color={color} roughness={0.46} />
@@ -395,7 +395,7 @@ function ColorParticles({ color }: { color: string }) {
 
   return (
     <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
-      {COLOR_PARTICLES.map((particle) => (
+      {Arr.map(COLOR_PARTICLES, (particle) => (
         <mesh castShadow key={particle.id} position={particle.position}>
           <sphereGeometry args={[COLOR_PARTICLE_RADIUS, 24, 16]} />
           <meshStandardMaterial
@@ -426,7 +426,7 @@ function HeatMarkers({ color }: { color: string }) {
 
   return (
     <CameraBounds motion={{ scale: 1.02 }} objectRef={groupRef}>
-      {HEAT_MARKERS.map((marker) => (
+      {Arr.map(HEAT_MARKERS, (marker) => (
         <mesh castShadow key={marker.id} position={marker.position}>
           <cylinderGeometry
             args={[

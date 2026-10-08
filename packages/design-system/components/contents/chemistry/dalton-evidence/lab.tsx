@@ -21,6 +21,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -72,7 +73,7 @@ export function DaltonEvidenceLab({
           value={selectedModeId}
           variant="outline"
         >
-          {DALTON_MODE_IDS.map((modeId) => (
+          {Arr.map(DALTON_MODE_IDS, (modeId) => (
             <ToggleGroupItem key={modeId} value={modeId}>
               {labels.modes[modeId].tab}
             </ToggleGroupItem>
@@ -90,7 +91,7 @@ export function DaltonEvidenceLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          {selectedLabels.facts.map((fact) => (
+          {Arr.map(selectedLabels.facts, (fact) => (
             <LabFact
               key={fact.label}
               label={fact.label}

@@ -16,7 +16,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { HashMap, Option } from "effect";
+import { Array as Arr, HashMap, Option } from "effect";
 
 const FIRST_X = -0.78;
 const SECOND_X = 0.78;
@@ -59,7 +59,7 @@ function CompoundStage({
         <InlineMath math={model.formula} />
       </ThreeLabel>
       <group position={[0, 0.02, 0]}>
-        {model.molecules.map((molecule) => (
+        {Arr.map(model.molecules, (molecule) => (
           <Molecule colors={colors} key={molecule.id} molecule={molecule} />
         ))}
       </group>
@@ -75,12 +75,12 @@ function Molecule({
   molecule: MultipleProportionsMolecule;
 }) {
   const atomsById = HashMap.fromIterable(
-    molecule.atoms.map((atomData) => [atomData.id, atomData])
+    Arr.map(molecule.atoms, (atomData) => [atomData.id, atomData])
   );
 
   return (
     <group position={molecule.position}>
-      {molecule.bonds.map(([startId, endId]) => {
+      {Arr.map(molecule.bonds, ([startId, endId]) => {
         const start = HashMap.get(atomsById, startId);
         const end = HashMap.get(atomsById, endId);
 
@@ -98,7 +98,7 @@ function Molecule({
         );
       })}
 
-      {molecule.atoms.map((atomData) => (
+      {Arr.map(molecule.atoms, (atomData) => (
         <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
       ))}
     </group>

@@ -3,6 +3,7 @@ import type {
   Molecule,
 } from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Array as Arr } from "effect";
 
 const ATOM_COLORS = {
   C: "var(--muted-foreground)",
@@ -46,7 +47,7 @@ function MoleculePanel({
     <section className="flex min-h-36 flex-col items-center justify-center gap-4 p-3 text-center">
       <div className="font-medium text-muted-foreground text-sm">{title}</div>
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
-        {molecules.map((molecule) => (
+        {Arr.map(molecules, (molecule) => (
           <MoleculeGroup key={molecule.id} molecule={molecule} />
         ))}
       </div>
@@ -68,7 +69,7 @@ function MoleculeGroup({ molecule }: { molecule: Molecule }) {
   return (
     <div className="grid w-24 justify-items-center gap-2">
       <div className="flex -space-x-2">
-        {molecule.atoms.map((atom) => (
+        {Arr.map(molecule.atoms, (atom) => (
           <Atom key={atom.id} symbol={atom.symbol} />
         ))}
       </div>
