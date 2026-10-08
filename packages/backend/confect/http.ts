@@ -1,4 +1,3 @@
-import "@repo/backend/confect/polyfills";
 import {
   HttpRouter as ConfectHttpRouter,
   ConvexConfigProvider,
