@@ -21,7 +21,7 @@ import {
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
-import { Array as Arr, Effect, Stream } from "effect";
+import { Array as Arr, Effect, Schema, Stream } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-one-pass-proof");
 
@@ -77,7 +77,9 @@ describe("content proof streams", () => {
         }
         return {
           index: item.index,
-          itemJson: JSON.stringify(item),
+          itemJson: Schema.encodeSync(
+            Schema.fromJsonString(ContentReleaseItemSchema)
+          )(item),
           rollbackJson: canonicalizeRollbackSnapshotEntry(rollback),
         };
       });

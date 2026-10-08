@@ -1,3 +1,4 @@
+import type { dispatchInputValidator } from "@repo/backend/confect/contentRelease/ingress/dispatch.spec";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
 import { Effect, Schema } from "effect";
@@ -9,10 +10,7 @@ export class HttpBodyError extends Schema.TaggedError<HttpBodyError>()(
   }
 ) {}
 /** Complete UTF-8 JSON request body accepted by one HTTP adapter. */
-export interface HttpJsonBody {
-  readonly byteLength: number;
-  readonly source: string;
-}
+export type HttpJsonBody = typeof dispatchInputValidator.Type;
 /** Creates one sanitized body failure without retaining request bytes. */
 function bodyError(reason: HttpBodyError["reason"]) {
   return new HttpBodyError({
