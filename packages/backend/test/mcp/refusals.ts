@@ -1,7 +1,7 @@
 import { type McpCase, modernPost } from "@repo/backend/test/mcp/harness";
 import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
 
-/** Tool calls the SDK accepts whose options the Nakafa decoder refuses before any read. */
+/** Tool calls whose options the Nakafa decoder refuses before any read. */
 export const REFUSED_TOOL_CALL_CASES: readonly McpCase[] = [
   {
     answer: {

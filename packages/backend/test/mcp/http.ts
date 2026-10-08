@@ -144,7 +144,7 @@ export const HTTP_CASES: readonly McpCase[] = [
       headers: JSON_RESPONSE_HEADERS,
       status: 415,
     },
-    name: "a POST with a media type that is not JSON is refused by the SDK",
+    name: "a POST with a media type that is not JSON is refused as unsupported media",
     request: {
       body: jsonBody({
         id: 91,

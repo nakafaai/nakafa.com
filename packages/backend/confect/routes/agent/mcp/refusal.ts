@@ -15,10 +15,12 @@ const PARSE_ERROR_CODE = -32_700;
 const UNSUPPORTED_PROTOCOL_VERSION_CODE = -32_022;
 
 /**
- * Answers the refusals the engine would answer with another status, another
- * code, or no body, so clients keep the SDK's answer. Returns none when the
- * engine should answer. `parsedBody` is undefined when the body is empty or is
- * not JSON, which the body reader leaves unparsed.
+ * Nakafa's transport rules, applied before the engine: the endpoint takes POST
+ * only, with a JSON body that is one JSON-RPC 2.0 request, and it serves
+ * protocol version 2026-07-28 only. The engine answers these refusals with a
+ * different status, code, or body, so Nakafa answers them itself. Returns none
+ * when the engine should answer. `parsedBody` is undefined when the body is
+ * empty or is not JSON, which the body reader leaves unparsed.
  */
 export function refuseMcpRequest(request: Request, parsedBody: unknown) {
   if (request.method !== "POST") {

@@ -10,7 +10,7 @@ export const BODYLESS_RESPONSE_HEADERS = {
   vary: "Origin, Access-Control-Request-Headers",
 };
 
-/** Headers of an answer the SDK writes as plain application/json: the bodyless set plus its content type. */
+/** Headers of a JSON answer: the bodyless set plus its content type. */
 export const JSON_RESPONSE_HEADERS = {
   ...BODYLESS_RESPONSE_HEADERS,
   "content-type": "application/json",

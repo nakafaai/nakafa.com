@@ -117,9 +117,10 @@ function origins(request: Request): readonly string[] {
 }
 
 /**
- * The engine answers 406 unless Accept names both JSON and an event stream. This
- * endpoint has never enforced Accept, so the engine always receives both media
- * types, and every answer stays the same.
+ * Nakafa does not enforce the Accept header. Every answer is JSON, so a client
+ * that names only one media type loses nothing. The engine refuses a request
+ * whose Accept does not name both JSON and an event stream, so the engine always
+ * receives both.
  */
 function withEngineAccept(request: Request): Request {
   const headers = new Headers(request.headers);
