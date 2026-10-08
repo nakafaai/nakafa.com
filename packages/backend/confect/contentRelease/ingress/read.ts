@@ -1,6 +1,14 @@
 "use node";
 
-import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import type {
+  PublicationCleanupRequest,
+  PublicationCurrentRequest,
+  PublicationHeadPageRequest,
+  PublicationRecoveryLookupRequest,
+  PublicationRollbackRequest,
+  PublicationRoutePageRequest,
+  PublicationStatusRequest,
+} from "@nakafa/aksara-contracts/transport/request";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   MutationRunner,
@@ -15,19 +23,14 @@ import {
 import { readRollback } from "@repo/backend/confect/contentRelease/ingress/rollback";
 import { Effect } from "effect";
 
-type ReadRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation:
-      | "cleanup"
-      | "current"
-      | "headPage"
-      | "recovery"
-      | "rollbackPage"
-      | "routePage"
-      | "status";
-  }
->;
+type ReadRequest =
+  | PublicationCleanupRequest
+  | PublicationCurrentRequest
+  | PublicationHeadPageRequest
+  | PublicationRecoveryLookupRequest
+  | PublicationRollbackRequest
+  | PublicationRoutePageRequest
+  | PublicationStatusRequest;
 /** Executes one authenticated bounded publication read or cleanup request. */
 export const readPublication = Effect.fn("contentRelease.readPublication")(
   function* (request: ReadRequest) {

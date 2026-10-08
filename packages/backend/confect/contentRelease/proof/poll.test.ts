@@ -1,7 +1,7 @@
 import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 // @vitest-environment node
 
 import workflowTest from "@convex-dev/workflow/test";
@@ -11,6 +11,7 @@ import {
   type Sha256Hash,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { resolveProofWorkflow } from "@repo/backend/confect/contentRelease/proof/poll";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
@@ -51,7 +52,9 @@ async function createCandidate() {
       ctx,
       releaseId,
       release,
-      JSON.stringify(TEST_PROOF_RENDERER)
+      Schema.encodeSync(Schema.fromJsonString(RendererManifestEnvelopeSchema))(
+        TEST_PROOF_RENDERER
+      )
     )
   );
   return t;

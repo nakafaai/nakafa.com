@@ -3,7 +3,7 @@ import {
   familyForProjection,
   projectionArtifactLocale,
 } from "@nakafa/aksara-contracts/projection/spec";
-import type { ContentReleaseItem } from "@nakafa/aksara-contracts/release";
+import type { ContentUpsertSchema } from "@nakafa/aksara-contracts/release";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -26,12 +26,7 @@ import {
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
-type UpsertChange = Extract<
-  ContentReleaseItem["change"],
-  {
-    operation: "upsert";
-  }
->;
+type UpsertChange = typeof ContentUpsertSchema.Type;
 
 /** Builds the complete immutable upsert version from staged evidence. */
 const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (

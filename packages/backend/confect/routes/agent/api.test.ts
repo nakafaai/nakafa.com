@@ -66,6 +66,20 @@ describe("public agent API routes", () => {
       status: 405,
     });
   });
+  it("answers HEAD on the index and the OpenAPI document with the method guard", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const [index, document] = await Promise.all([
+      fetchApi(test, "/", { method: "HEAD" }),
+      fetchOpenApi(test, { method: "HEAD" }),
+    ]);
+    for (const response of [index, document]) {
+      expect(response.status).toBe(405);
+      expect(response.headers.get("allow")).toBe("GET, OPTIONS");
+      expect(response.headers.get("content-type")).toBe(
+        "application/problem+json; charset=utf-8"
+      );
+    }
+  });
   it("serves the API index, health response, and CORS preflight", async () => {
     const test = createConvexTestWithBetterAuth();
     const [index, health, options] = await Promise.all([

@@ -1,5 +1,6 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { checkItem } from "@repo/backend/confect/contentRelease/verify/item";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -29,7 +30,7 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** Runs item verification against the only staged release item. */
 function verifyOnly(ctx: MutationCtx) {
@@ -45,6 +46,9 @@ function verifyOnly(ctx: MutationCtx) {
     );
   });
 }
+const decodeRollbackEntry = Schema.decodeSync(
+  Schema.fromJsonString(RollbackSnapshotEntrySchema)
+);
 describe("contentRelease/verify/item", () => {
   it.each(["identity", "version"] as const)(
     "rejects a staged delete with conflicting %s without advancing verification",
@@ -169,7 +173,7 @@ describe("contentRelease/verify/item", () => {
     const staged = await deletion.run((ctx) =>
       ctx.db.query("contentItems").unique()
     );
-    expect(JSON.parse(staged?.rollbackJson ?? "{}")).toMatchObject({
+    expect(decodeRollbackEntry(staged?.rollbackJson ?? "{}")).toMatchObject({
       snapshot: {
         head: {
           contentKey: TEST_ARTICLE_KEY,
@@ -218,7 +222,7 @@ describe("contentRelease/verify/item", () => {
     const staged = await deletion.run((ctx) =>
       ctx.db.query("contentItems").unique()
     );
-    expect(JSON.parse(staged?.rollbackJson ?? "{}")).toMatchObject({
+    expect(decodeRollbackEntry(staged?.rollbackJson ?? "{}")).toMatchObject({
       snapshot: {
         head: {
           contentKey: TEST_PAGE_KEY,

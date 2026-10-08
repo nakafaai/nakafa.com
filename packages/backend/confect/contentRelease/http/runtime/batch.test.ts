@@ -1,9 +1,13 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { PublicContentRuntimeRequestSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/batch";
+import {
+  MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES,
+  PublicContentRuntimeBatchRequestSchema,
+} from "@repo/backend/content/batch";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
@@ -19,7 +23,18 @@ import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
 const RUNTIME_TOKEN = "technical-runtime-token";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
-const foundRequest = JSON.parse(publicRuntimeRequest());
+/** Encodes one batch through the public contract, so a malformed fixture fails here. */
+const batchJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(PublicContentRuntimeBatchRequestSchema)
+);
+/** Encodes a body the contract rejects, keeping its exact invalid wire bytes. */
+const malformedJson = Schema.encodeUnknownSync(
+  Schema.fromJsonString(Schema.Unknown)
+);
+/** Decodes the found request with the strict contract production uses, so an unmodeled key fails here. */
+const foundRequest = Schema.decodeSync(
+  Schema.fromJsonString(PublicContentRuntimeRequestSchema)
+)(publicRuntimeRequest(), { onExcessProperty: "error" });
 const missingRequest = {
   appLocale: "en",
   delivery: "public",
@@ -78,7 +93,7 @@ describe("public content runtime batch HTTP route", () => {
   it("returns current publications on the canonical batch path", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedPublicRuntime(t);
-    const body = JSON.stringify({ requests: [foundRequest, missingRequest] });
+    const body = batchJson({ requests: [foundRequest, missingRequest] });
 
     const response = await post(t, body);
     const responseBody = await response.json();
@@ -128,7 +143,7 @@ describe("public content runtime batch HTTP route", () => {
       ...Array.from({ length: 6 }, () => foundRequest),
     ];
 
-    const response = await post(t, JSON.stringify({ requests }));
+    const response = await post(t, batchJson({ requests }));
 
     expect(response.status).toBe(200);
     expectPrivate(response);
@@ -155,7 +170,7 @@ describe("public content runtime batch HTTP route", () => {
     const t = createConvexTestWithBetterAuth();
     const overCount = await post(
       t,
-      JSON.stringify({
+      malformedJson({
         requests: Array.from({ length: 9 }, () => foundRequest),
       })
     );
@@ -185,10 +200,7 @@ describe("public content runtime batch HTTP route", () => {
       });
     });
 
-    const response = await post(
-      t,
-      JSON.stringify({ requests: [foundRequest] })
-    );
+    const response = await post(t, batchJson({ requests: [foundRequest] }));
 
     expect(response.status).toBe(500);
     expectPrivate(response);

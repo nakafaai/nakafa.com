@@ -5,11 +5,14 @@ import {
 import { MAX_PUBLICATION_RESPONSE_BYTES } from "@nakafa/aksara-contracts/transport/limits";
 import { PublicationResponseSchema } from "@nakafa/aksara-contracts/transport/response";
 import { Effect, Schema } from "effect";
+
+/** Wire shape of one publication result: JSON body and exact HTTP status. */
+const PublicationResultSchema = Schema.Struct({
+  body: Schema.String,
+  status: Schema.Finite,
+});
 /** JSON body and exact HTTP status returned by publication ingress. */
-export interface PublicationResult {
-  readonly body: string;
-  readonly status: number;
-}
+export type PublicationResult = typeof PublicationResultSchema.Type;
 /** Marks a response-construction contradiction as a non-wire defect. */
 export class PublicationResponseDefect extends Schema.TaggedError<PublicationResponseDefect>()(
   "PublicationResponseDefect",
@@ -46,7 +49,10 @@ export const encodePublicationResult = Effect.fn(
       )
     )
   );
-  const body = JSON.stringify(response);
+  // The response passed the contract above, so writing it as JSON cannot fail.
+  const body = yield* Schema.encodeEffect(
+    Schema.fromJsonString(Schema.Unknown)
+  )(response).pipe(Effect.orDie);
   yield* validateResponseBytes(body);
   const status = response.ok
     ? 200

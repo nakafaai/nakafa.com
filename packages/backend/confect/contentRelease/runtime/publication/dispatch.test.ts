@@ -4,11 +4,18 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
-  decodePublicContentRuntimeRequest,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
+  PublicContentRuntimeFoundSchema,
+  PublicContentRuntimeRequestSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import {
+  decodeArtifactJson,
+  decodeProjectionJson,
+  decodeReleaseJson,
+  decodeRendererJson,
+} from "@repo/backend/confect/contentRelease/parse";
 import { dispatchProgram } from "@repo/backend/confect/contentRelease/runtime/publication/dispatch";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -27,7 +34,6 @@ import {
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { testTextHash } from "@repo/backend/test/content/release";
 import {
-  articleRuntimeRequest,
   insertSignedRelease,
   publicRuntimeRequest,
   runtimeContentKey,
@@ -38,10 +44,16 @@ import {
 } from "@repo/backend/test/content/runtime";
 import { insertSignedHead } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
+const encodePublicRequestBody = Schema.encodeUnknownSync(
+  Schema.fromJsonString(PublicContentRuntimeRequestSchema)
+);
+const decodeFoundBody = Schema.decodeSync(
+  Schema.fromJsonString(PublicContentRuntimeFoundSchema)
+);
 /** Executes the public runtime transport program. */
 function runDispatch(t: RuntimeAction, source: string) {
   const byteLength = new TextEncoder().encode(source).byteLength;
@@ -80,22 +92,26 @@ describe("contentRelease/runtime/publication/dispatch", () => {
         if (!row) {
           return expect.fail("Expected one signed runtime row.");
         }
-        const request = yield* decodePublicContentRuntimeRequest(
-          JSON.parse(publicRuntimeRequest())
-        );
+        const request = yield* Schema.decodeEffect(
+          Schema.fromJsonString(PublicContentRuntimeRequestSchema)
+        )(publicRuntimeRequest(), { onExcessProperty: "error" });
+        const artifact = yield* decodeArtifactJson(row.artifactJson);
+        const projection = yield* decodeProjectionJson(row.projectionJson);
+        const release = yield* decodeReleaseJson(row.releaseJson);
+        const rendererManifest = yield* decodeRendererJson(row.rendererJson);
         const verified = yield* verifyContentRuntimeExchange({
-          rendererManifest: JSON.parse(row.rendererJson),
+          rendererManifest,
           request,
           response: {
             activeManifestHash: row.activeManifestHash,
             activeReleaseId: row.activeReleaseId,
-            artifact: JSON.parse(row.artifactJson),
+            artifact,
             delivery: row.delivery,
             kind: "found",
-            projection: JSON.parse(row.projectionJson),
+            projection,
             projectionHash: row.projectionHash,
-            release: JSON.parse(row.releaseJson),
-            rendererManifest: JSON.parse(row.rendererJson),
+            release,
+            rendererManifest,
             sourcePath: row.sourcePath,
           },
         }).pipe(
@@ -109,12 +125,19 @@ describe("contentRelease/runtime/publication/dispatch", () => {
           _tag: "Success",
         });
         const found = yield* Effect.promise(() =>
-          runDispatch(t, publicRuntimeRequest())
+          runDispatch(
+            t,
+            encodePublicRequestBody({
+              delivery: "public",
+              appLocale: "en",
+              publicPath: TEST_RUNTIME_PATH,
+            })
+          )
         );
         const missing = yield* Effect.promise(() =>
           runDispatch(
             t,
-            JSON.stringify({
+            encodePublicRequestBody({
               delivery: "public",
               appLocale: "en",
               publicPath: "subjects/test/missing",
@@ -122,7 +145,7 @@ describe("contentRelease/runtime/publication/dispatch", () => {
           )
         );
         expect(found.status).toBe(200);
-        expect(JSON.parse(found.body)).toMatchObject({
+        expect(decodeFoundBody(found.body)).toMatchObject({
           artifact: {
             payload: {
               contentKey: runtimeContentKey("public"),
@@ -152,9 +175,16 @@ describe("contentRelease/runtime/publication/dispatch", () => {
         sourcePath: TEST_ARTICLE_SOURCE,
       });
     });
-    const found = await runDispatch(t, articleRuntimeRequest());
+    const found = await runDispatch(
+      t,
+      encodePublicRequestBody({
+        delivery: "public",
+        appLocale: "en",
+        publicPath: TEST_ARTICLE_PATH,
+      })
+    );
     expect(found.status).toBe(200);
-    expect(JSON.parse(found.body)).toMatchObject({
+    expect(decodeFoundBody(found.body)).toMatchObject({
       artifact: {
         payload: {
           contentKey: TEST_ARTICLE_KEY,
@@ -187,9 +217,9 @@ describe("contentRelease/runtime/publication/dispatch", () => {
       delivery: "public",
       publicPath: TEST_PAGE_PATH,
     } as const;
-    const found = await runDispatch(t, JSON.stringify(request));
+    const found = await runDispatch(t, encodePublicRequestBody(request));
     expect(found.status).toBe(200);
-    const foundBody = JSON.parse(found.body);
+    const foundBody = decodeFoundBody(found.body);
     expect(foundBody).toMatchObject({
       artifact: {
         payload: {
@@ -220,14 +250,14 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     });
     const found = await runDispatch(
       t,
-      JSON.stringify({
+      encodePublicRequestBody({
         delivery: "public",
         appLocale: "en",
         publicPath: FUNCTION_MATERIAL_PATH,
       })
     );
     expect(found.status).toBe(200);
-    const body = JSON.parse(found.body);
+    const body = decodeFoundBody(found.body);
     expect(body).toMatchObject({
       artifact: {
         payload: {
@@ -249,7 +279,11 @@ describe("contentRelease/runtime/publication/dispatch", () => {
   });
   it("rejects malformed, mismatched, and oversized request bytes", async () => {
     const t = createConvexTestWithBetterAuth();
-    const source = publicRuntimeRequest();
+    const source = encodePublicRequestBody({
+      delivery: "public",
+      appLocale: "en",
+      publicPath: TEST_RUNTIME_PATH,
+    });
     const mismatch = await t.action((ctx) =>
       Effect.runPromise(
         dispatchProgram(source, 1).pipe(
@@ -279,7 +313,16 @@ describe("contentRelease/runtime/publication/dispatch", () => {
         projectionHash: `sha256:${"f".repeat(64)}`,
       });
     });
-    await expect(runDispatch(t, publicRuntimeRequest())).resolves.toEqual({
+    await expect(
+      runDispatch(
+        t,
+        encodePublicRequestBody({
+          delivery: "public",
+          appLocale: "en",
+          publicPath: TEST_RUNTIME_PATH,
+        })
+      )
+    ).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
       status: 500,
     });
@@ -288,7 +331,11 @@ describe("contentRelease/runtime/publication/dispatch", () => {
     "sanitizes a %s query response at the action boundary",
     async (failure) => {
       const t = createConvexTestWithBetterAuth();
-      const source = publicRuntimeRequest();
+      const source = encodePublicRequestBody({
+        delivery: "public",
+        appLocale: "en",
+        publicPath: TEST_RUNTIME_PATH,
+      });
       const result = await t.action((ctx) => {
         const query = vi.spyOn(ctx, "runQuery");
         if (failure === "invalid") {

@@ -37,13 +37,9 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
     ) {
       return yield* new PublicRuntimeBatchRequestError();
     }
-    const input = yield* Effect.try({
-      catch: () => new PublicRuntimeBatchRequestError(),
-      try: (): unknown => JSON.parse(source),
-    });
-    return yield* Schema.decodeUnknownEffect(
-      PublicContentRuntimeBatchRequestSchema
-    )(input, {
+    return yield* Schema.decodeEffect(
+      Schema.fromJsonString(PublicContentRuntimeBatchRequestSchema)
+    )(source, {
       onExcessProperty: "error",
     }).pipe(Effect.mapError(() => new PublicRuntimeBatchRequestError()));
   }
