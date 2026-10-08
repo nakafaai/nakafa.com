@@ -15,9 +15,8 @@ export const VIEWPORT_EVENT_CAPACITY = 64;
 export type ActiveTranscript = ActiveTranscriptModel | null;
 export type ForumPostId = Id<"schoolClassForumPosts">;
 export type RuntimeFiber = Fiber.Fiber<void, never>;
-export type ViewportStateDraft = Omit<ViewportState, "jumpControl"> & {
-  jumpControl?: ViewportState["jumpControl"];
-};
+export type ViewportStateDraft = Omit<ViewportState, "jumpControl"> &
+  Partial<Pick<ViewportState, "jumpControl">>;
 
 /** Mutable Effect refs and adapters owned by one open viewport service. */
 export interface ViewportRuntime {
