@@ -16,18 +16,15 @@ import type { sweepAccountDeletionRecoveryArgsValidator } from "@repo/backend/co
 import { Clock, Duration, Effect, flow } from "effect";
 export type SweepAccountDeletionRecoveryArgs =
   typeof sweepAccountDeletionRecoveryArgsValidator.Type;
-export interface RecoveryOperations {
+/** Restores an aborted deletion or finishes one whose auth user is gone. */
+export const recoverAccountDeletionProgram = Effect.fn(
+  "auth.deletion.recoverAccountDeletion"
+)(function* (operations: {
   readonly authUserExists: Effect.Effect<boolean, UserCleanupError>;
   readonly cancel: Effect.Effect<unknown, UserCleanupError>;
   readonly continueCommit: Effect.Effect<boolean, UserCleanupError>;
   readonly finalize: Effect.Effect<unknown, UserCleanupError>;
-}
-/** Restores an aborted deletion or finishes one whose auth user is gone. */
-export const recoverAccountDeletionProgram: (
-  operations: RecoveryOperations
-) => Effect.Effect<void, UserCleanupError> = Effect.fn(
-  "auth.deletion.recoverAccountDeletion"
-)(function* (operations: RecoveryOperations) {
+}) {
   const commitStarted = yield* operations.continueCommit;
   if (commitStarted) {
     return;

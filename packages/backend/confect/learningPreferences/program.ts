@@ -8,6 +8,7 @@ import {
   CurriculumPreferenceError,
   curriculumPreferenceIoFailedCode,
   curriculumProgramNotFoundCode,
+  type curriculumProgramOptionValidator,
 } from "@repo/backend/confect/learningPreferences/schema";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { readVerifiedProgramCatalog } from "@repo/backend/content/program/catalog";
@@ -19,12 +20,8 @@ const CURRICULUM_PROGRAM_LIMIT = 50;
 const curriculumPreferenceIoFailedMessage =
   "Unable to read or persist curriculum preferences.";
 /** Compact curriculum option consumed by selectors and preference storage. */
-export interface CurriculumProgramOption {
-  readonly countryCode?: string;
-  readonly key: string;
-  readonly publicSlug: string;
-  readonly title: string;
-}
+export type CurriculumProgramOption =
+  typeof curriculumProgramOptionValidator.Type;
 /** Maps unknown database failures into the curriculum preference error channel. */
 function toPreferenceIoError() {
   return new CurriculumPreferenceError({

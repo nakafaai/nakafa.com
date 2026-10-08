@@ -4,7 +4,7 @@ import {
   loadRelease,
   loadState,
 } from "@repo/backend/confect/contentRelease/model";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, MutableHashSet, Option } from "effect";
 
 /** Checks permanent try-out state that still requires one snapshot. */
 const hasTryoutRuntimeReference = Effect.fn(
@@ -45,7 +45,7 @@ const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
       )
       .take(2)
       .pipe(Effect.orDie);
-    const ids = new Set(
+    const ids = MutableHashSet.fromIterable(
       Arr.filter(
         [
           state?.activeReleaseId,
@@ -60,7 +60,7 @@ const protectedReleases = Effect.fn("contentRelease.protectedSnapshotReleases")(
       const release = yield* loadRelease(releaseId);
       const baseReleaseId = release.baseReleaseId;
       if (baseReleaseId !== null) {
-        ids.add(baseReleaseId);
+        MutableHashSet.add(ids, baseReleaseId);
       }
     }
     return ids;

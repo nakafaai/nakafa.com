@@ -11,7 +11,7 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schema } from "effect";
 
 const polarGateway = vi.hoisted(() => ({
   createCustomer: vi.fn(),
@@ -24,6 +24,8 @@ const polarGateway = vi.hoisted(() => ({
 vi.mock("@repo/backend/confect/customers/polar/live", () => ({
   polarGateway,
 }));
+
+const JsonSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Seeds a real local identity for customer synchronization. */
 async function setup(linked = false) {
@@ -121,7 +123,9 @@ describe("customer synchronization", () => {
       ...payload,
       _tag: "PolarCustomerEmailConflict",
     });
-    expect(JSON.stringify(decoded)).not.toContain("private-foreign");
+    expect(Schema.encodeSync(JsonSchema)(decoded)).not.toContain(
+      "private-foreign"
+    );
     expect(polarGateway.updateCustomer).not.toHaveBeenCalled();
     const stored = await t.query((ctx) => ctx.db.query("customers").unique());
     expect(stored).toMatchObject({

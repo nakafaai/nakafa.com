@@ -1,13 +1,10 @@
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { QURAN_REFERENCE_VERSE_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
+import type { QuranReferenceArgs } from "@repo/backend/confect/contentRelease/quran/spec";
 import { Effect } from "effect";
 
-interface QuranReferenceInput {
-  readonly fromVerse: number;
-  readonly surahNumber: number;
-  readonly toVerse?: number;
-}
+type QuranReferenceInput = Omit<QuranReferenceArgs, "appLocale">;
 
 /** Validates one canonical Quran surah number at the runtime boundary. */
 export const validateQuranSurah = Effect.fn(

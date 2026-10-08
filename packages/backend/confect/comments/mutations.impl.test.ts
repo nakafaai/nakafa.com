@@ -8,17 +8,19 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { Array as Arr, Option } from "effect";
 
+const now = Date.UTC(2026, 8, 1);
+
 describe("comment write and read contracts", () => {
   it("keeps reply identities and viewer votes coherent across account removal", async () => {
     const t = createConvexTestWithBetterAuth();
     const [author, reader] = await t.mutation(async (ctx) =>
       Promise.all([
         seedAuthenticatedUser(ctx, {
-          now: Date.now(),
+          now,
           suffix: "comment-author",
         }),
         seedAuthenticatedUser(ctx, {
-          now: Date.now(),
+          now,
           suffix: "comment-reader",
         }),
       ])

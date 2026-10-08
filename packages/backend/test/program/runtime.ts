@@ -24,7 +24,7 @@ export const makeProgramRuntimeSource = Effect.fn(
     Effect.forEach(
       data.rows,
       (row, index) =>
-        stageProgramRow(data.snapshotId, index, row, encodeJson(row)),
+        stageProgramRow(data.snapshotId, index, row.record, encodeJson(row)),
       { discard: true }
     )
   );

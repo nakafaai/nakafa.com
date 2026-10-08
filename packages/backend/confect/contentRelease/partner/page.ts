@@ -1,50 +1,55 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
   decodePartnerCursor,
   encodePartnerCursor,
-  type PartnerCursor,
-  type PartnerFamily,
+  PartnerCursorSchema,
 } from "@repo/backend/confect/contentRelease/partner/cursor";
+import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { articleLayer } from "@repo/backend/content/article/confect";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { verifyArticle } from "@repo/backend/content/article/verify";
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
-import { Array as Arr, Effect, pipe } from "effect";
+import { Array as Arr, Effect, pipe, Schema } from "effect";
 
 const PARTNER_PAGE_LIMIT = 100;
-interface PartnerPageInput {
-  readonly appLocale: Docs["contentPaths"]["appLocale"];
-  readonly cursor: string | null;
-  readonly family: PartnerFamily;
-  readonly limit: number;
-  readonly prefix: string;
-}
-interface ValidatedPartnerPageInput extends Omit<PartnerPageInput, "cursor"> {
-  readonly cursor: PartnerCursor | null;
-}
-interface PartnerCatalogRow {
-  readonly appLocale: Docs["contentPaths"]["appLocale"];
-  readonly contentKey: string;
-  readonly publicPath: string;
-}
-interface PartnerRange {
-  readonly inclusive: boolean;
-  readonly lower: string;
-  readonly upper: string;
-}
-interface PartnerCatalogSource<Row extends PartnerCatalogRow, R> {
-  readonly readDescendants: (
-    range: PartnerRange,
-    limit: number
-  ) => Effect.Effect<readonly Row[]>;
-  readonly readExact: () => Effect.Effect<null | Row>;
-  readonly verify: (row: Row) => Effect.Effect<unknown, ReleaseError, R>;
-}
+const PartnerPageInputSchema = Schema.Struct({
+  appLocale: appLocaleValidator,
+  cursor: Schema.NullOr(Schema.String),
+  family: PartnerCursorSchema.fields.family,
+  limit: Schema.Finite,
+  prefix: Schema.String,
+});
+type PartnerPageInput = typeof PartnerPageInputSchema.Type;
+const ValidatedPartnerPageInputSchema = Schema.Struct({
+  ...PartnerPageInputSchema.fields,
+  cursor: Schema.NullOr(PartnerCursorSchema),
+});
+type ValidatedPartnerPageInput = typeof ValidatedPartnerPageInputSchema.Type;
+const PartnerCatalogRowSchema = Schema.Struct({
+  appLocale: appLocaleValidator,
+  contentKey: Schema.String,
+  publicPath: Schema.String,
+});
+type PartnerCatalogRow = typeof PartnerCatalogRowSchema.Type;
+const PartnerRangeSchema = Schema.Struct({
+  inclusive: Schema.Boolean,
+  lower: Schema.String,
+  upper: Schema.String,
+});
+type PartnerRange = typeof PartnerRangeSchema.Type;
+/** Reads at most `limit` descendant catalog rows inside one range. */
+type ReadDescendants<Row> = (
+  range: PartnerRange,
+  limit: number
+) => Effect.Effect<readonly Row[]>;
+/** Reads the catalog row stored exactly at the requested prefix, if any. */
+type ReadExact<Row> = () => Effect.Effect<null | Row>;
+/** Verifies one catalog row against its signed release. */
+type VerifyRow<Row, R> = (row: Row) => Effect.Effect<unknown, ReleaseError, R>;
 
 /** Checks exact-or-descendant content-key membership without sibling bleed. */
 function matchesPrefix(contentKey: string, prefix: string) {
@@ -117,7 +122,14 @@ const validatePartnerPageInput = Effect.fn(
 const readPartnerRows = Effect.fn("contentRelease.readPartnerRows")(function* <
   Row extends PartnerCatalogRow,
   R,
->(input: ValidatedPartnerPageInput, source: PartnerCatalogSource<Row, R>) {
+>(
+  input: ValidatedPartnerPageInput,
+  source: {
+    readonly readDescendants: ReadDescendants<Row>;
+    readonly readExact: ReadExact<Row>;
+    readonly verify: VerifyRow<Row, R>;
+  }
+) {
   const exact =
     input.cursor === null && input.prefix !== ""
       ? yield* source.readExact()

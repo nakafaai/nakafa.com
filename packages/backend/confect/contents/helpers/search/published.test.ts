@@ -102,7 +102,7 @@ describe("readPublishedSearchDocuments", () => {
     expect(firstPage).toHaveLength(2);
     expect(firstPage).toEqual(fullWindow.slice(0, firstPage.length));
     expect(
-      new Set(Arr.map(fullWindow, (document) => document.content_id)).size
+      Arr.dedupe(Arr.map(fullWindow, (document) => document.content_id)).length
     ).toBe(fullWindow.length);
   });
   it("fills the window when an exact route repeats in search hits", async () => {
@@ -122,7 +122,7 @@ describe("readPublishedSearchDocuments", () => {
     expect(documents).toHaveLength(3);
     expect(documents[0]?.content_id).toBe(exact.graph.assetId);
     expect(
-      new Set(Arr.map(documents, (document) => document.content_id)).size
+      Arr.dedupe(Arr.map(documents, (document) => document.content_id)).length
     ).toBe(documents.length);
   });
   it("browses current materials in stable public-path order", async () => {

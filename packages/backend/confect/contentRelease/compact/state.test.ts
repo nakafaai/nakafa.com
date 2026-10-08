@@ -1,5 +1,6 @@
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { ensureCompaction } from "@repo/backend/confect/contentRelease/compact/state";
 import { convexModules } from "@repo/backend/confect/test.setup";
@@ -15,7 +16,7 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { DateTime, Effect, Schema } from "effect";
 
 describe("contentRelease/compact/state", () => {
   it("distinguishes a newly persisted cycle, a resumed cycle, and its exact completed floor", async () => {
@@ -296,9 +297,13 @@ describe("contentRelease/compact/state", () => {
         .withIndex("by_releaseId", (q) => q.eq("releaseId", base.releaseId))
         .unique();
       assert.ok(row);
-      const stored = JSON.parse(row.releaseJson);
+      const stored = Schema.decodeSync(
+        Schema.fromJsonString(SignedContentReleaseSchema),
+        { onExcessProperty: "error" }
+      )(row.releaseJson);
+      // Plain codec: a typed encode would strip the excess manifest field.
       await ctx.db.patch("contentReleases", row._id, {
-        releaseJson: JSON.stringify({
+        releaseJson: Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
           ...stored,
           manifest: {
             ...stored.manifest,
@@ -383,7 +388,7 @@ describe("contentRelease/compact/state", () => {
         .unique();
       assert.ok(recent);
       await ctx.db.patch("contentReleases", recent._id, {
-        createdAt: Date.now(),
+        createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
       });
       await ctx.db.insert("tryoutRuntimeBundles", {
         bundleHash: "technical",

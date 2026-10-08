@@ -2,11 +2,11 @@
 
 import { useGLTF } from "@react-three/drei";
 import { SARS_COV_2_VIRION_ASSET } from "@repo/design-system/components/contents/biology/assets";
-import type {
-  BiologyLabProps,
-  BiologySceneView,
-} from "@repo/design-system/components/contents/biology/data";
-import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
+import type { BiologySceneView } from "@repo/design-system/components/contents/biology/data";
+import {
+  BiologyLabFrame,
+  type BiologyLabProps,
+} from "@repo/design-system/components/contents/biology/lab-frame";
 import { useMemo } from "react";
 import { Box3, type Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
 

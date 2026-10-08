@@ -2,20 +2,23 @@
 
 import { useCallback, useState } from "react";
 
-interface UseControllableStateProps<T> {
-  defaultProp: T;
-  onChange?: ((value: T) => void) | undefined;
-  prop?: T | undefined;
-}
-
 type SetState<T> = (value: T) => void;
 type ControllableState<T> = [T, SetState<T>];
+type ControllableChange<T> = (value: T) => void;
 
+/**
+ * Keeps a value that `prop` controls when it is defined, and otherwise a local
+ * value that starts at `defaultProp`. `onChange` receives every new value.
+ */
 export function useControllableState<T>({
   defaultProp,
   onChange,
   prop,
-}: UseControllableStateProps<T>): ControllableState<T> {
+}: {
+  defaultProp: T;
+  onChange?: ControllableChange<T> | undefined;
+  prop?: T | undefined;
+}): ControllableState<T> {
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultProp);
   const value = prop === undefined ? uncontrolledValue : prop;
 

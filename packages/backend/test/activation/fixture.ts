@@ -89,7 +89,7 @@ export function expectedReceipt(
 ) {
   return {
     activatedHeads: 0,
-    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
+    activeAppLocales: [...ACTIVE_APP_LOCALE_CODES],
     deletedHeads: 0,
     manifestHash: identity.manifestHash,
     projectionDigest: TEST_DIGEST,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { themes } from "@repo/design-system/lib/theme/registry";
+import { Array as Arr } from "effect";
 
 describe("theme picker options", () => {
   it("stays synchronized with every runtime theme definition", () => {
@@ -18,8 +19,11 @@ describe("theme picker options", () => {
     expect(themeOptions.map((option) => option.value)).toEqual(
       themes.map((theme) => theme.value)
     );
-    expect(new Set(themeOptions.map((option) => option.icon)).size).toBe(
-      themeOptions.length
-    );
+    expect(
+      Arr.dedupeWith(
+        themeOptions.map((option) => option.icon),
+        (self, that) => self === that
+      ).length
+    ).toBe(themeOptions.length);
   });
 });

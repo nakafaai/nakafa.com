@@ -6,10 +6,8 @@ import {
   Dot,
   type DotProps,
 } from "@repo/design-system/components/evilcharts/charts/composed/line";
-import {
-  getOpacity,
-  useComposedChart,
-} from "@repo/design-system/components/evilcharts/charts/composed-chart";
+import { getOpacity } from "@repo/design-system/components/evilcharts/charts/composed/opacity";
+import { useComposedChart } from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import {
   type ChartConfig,
   getChartColorVariable,

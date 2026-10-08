@@ -5,21 +5,44 @@ import {
   resolveThreeFontSize,
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   THREE_FONT_SIZE,
+  type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import {
   DEFAULT_INEQUALITY_RANGE_MAX,
   DEFAULT_INEQUALITY_RANGE_MIN,
   getAdaptiveInequalityResolution,
-  type InequalityProps,
 } from "@repo/design-system/components/three/inequality-data";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { sampleInequalityBoundary } from "@repo/design-system/lib/geometry/inequality/boundary";
 import { createInequalityGeometry } from "@repo/design-system/lib/geometry/inequality/region";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { Color, DoubleSide, MeshBasicMaterial } from "three";
 
 const DEFAULT_LABEL_FONT_SIZE = THREE_FONT_SIZE.diagram;
+
+/** Props of an inequality region. The label text is React content. */
+export interface InequalityProps {
+  boundaryColor?: string | Color;
+  boundaryFunction?: (x: number, y: number) => number;
+  /** Coefficients `[a, b, c]` for the boundary `ax + by + c = 0`. */
+  boundaryLine2D?: [number, number, number];
+  boundaryLineWidth?: number;
+  color?: string | Color;
+  is2D?: boolean;
+  label?: {
+    color?: string | Color;
+    fontSize?: ThreeFontSize | number;
+    position: [number, number, number];
+    text: ReactNode;
+  };
+  opacity?: number;
+  resolution?: number;
+  showBoundary?: boolean;
+  xRange?: [number, number];
+  yRange?: [number, number];
+  zRange?: [number, number];
+}
 
 /**
  * Renders 2D or 3D inequality regions with a wide boundary guide line.

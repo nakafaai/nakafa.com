@@ -6,6 +6,7 @@ import type {
   CameraMotionBounds,
   CameraSubjectBounds,
 } from "@repo/design-system/lib/geometry/camera/bounds";
+import { MutableHashMap, MutableHashSet } from "effect";
 import {
   createContext,
   type ReactNode,
@@ -15,12 +16,14 @@ import {
   useRef,
   useState,
 } from "react";
-import { Box3, type Group, type Object3D, Vector3 } from "three";
+import { Box3, type Group, Vector3 } from "three";
 
 function createFraming() {
-  const listeners = new Set<() => void>();
-  const labels = new Map<Object3D, CameraLabelBounds>();
-  const subjects = new Map<Object3D, CameraSubjectBounds>();
+  const listeners = MutableHashSet.empty<() => void>();
+  // Effect hashes object keys structurally, which would walk a whole scene
+  // graph, so each registry keys an object by its id.
+  const labels = MutableHashMap.empty<number, CameraLabelBounds>();
+  const subjects = MutableHashMap.empty<number, CameraSubjectBounds>();
   let scheduled: number | undefined;
   let renderedChildren: ReactNode;
   const invalidate = () => {
@@ -53,9 +56,9 @@ function createFraming() {
     },
     invalidate,
     subscribe(listener: () => void) {
-      listeners.add(listener);
+      MutableHashSet.add(listeners, listener);
       return () => {
-        listeners.delete(listener);
+        MutableHashSet.remove(listeners, listener);
       };
     },
   };
@@ -122,7 +125,7 @@ export function CameraBounds({
       return;
     }
     if (exclude) {
-      framing.subjects.set(object, false);
+      MutableHashMap.set(framing.subjects, object.id, false);
     } else if (
       rotation !== undefined ||
       scale !== undefined ||
@@ -141,7 +144,7 @@ export function CameraBounds({
               z: { min: travelMinZ, max: travelMaxZ },
             }
           : undefined;
-      framing.subjects.set(object, {
+      MutableHashMap.set(framing.subjects, object.id, {
         rotation,
         scale,
         translation,
@@ -154,14 +157,15 @@ export function CameraBounds({
       maxY !== undefined &&
       maxZ !== undefined
     ) {
-      framing.subjects.set(
-        object,
+      MutableHashMap.set(
+        framing.subjects,
+        object.id,
         new Box3(new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ))
       );
     }
     framing.invalidate();
     return () => {
-      framing.subjects.delete(object);
+      MutableHashMap.remove(framing.subjects, object.id);
       framing.invalidate();
     };
   }, [

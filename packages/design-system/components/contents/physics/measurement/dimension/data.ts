@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import type { ReactNode } from "react";
+import { Schema } from "effect";
 
 export const LENGTH_MODE_ID = "length";
 export const AREA_MODE_ID = "area";
@@ -49,22 +49,19 @@ export const DIMENSION_MODES = {
 };
 
 export type DimensionModeId = keyof typeof DIMENSION_MODES;
-export type DimensionMode = (typeof DIMENSION_MODES)[DimensionModeId];
 export type SceneColors = ReturnType<typeof getDimensionSceneColors>;
 
-export interface DimensionLabLabels {
-  chooseMode: string;
-  dimension: string;
-  formula: string;
-  modes: Record<DimensionModeId, string>;
-  unit: string;
-}
-
-export interface DimensionLabProps {
-  description: ReactNode;
-  labels: DimensionLabLabels;
-  title: ReactNode;
-}
+const DimensionLabLabelsSchema = Schema.Struct({
+  chooseMode: Schema.String,
+  dimension: Schema.String,
+  formula: Schema.String,
+  modes: Schema.Record(
+    Schema.Literals([LENGTH_MODE_ID, AREA_MODE_ID, VOLUME_MODE_ID]),
+    Schema.String
+  ),
+  unit: Schema.String,
+});
+export type DimensionLabLabels = typeof DimensionLabLabelsSchema.Type;
 
 /**
  * Chooses theme-aware colors for the dimension visualizer.

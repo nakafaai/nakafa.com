@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 export const RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/hatchback-sports.glb";
 
@@ -13,25 +11,6 @@ export const RELATIVE_MOVEMENT_CASE_IDS = [
 
 export type RelativeMovementCaseId =
   (typeof RELATIVE_MOVEMENT_CASE_IDS)[number];
-
-export interface RelativeMovementLabLabels {
-  chooseCase: string;
-  directionLabels: Record<"left" | "right", ReactNode>;
-  factLabels: {
-    observer: ReactNode;
-    relativeVelocity: ReactNode;
-    target: ReactNode;
-    visibleDirection: ReactNode;
-  };
-  modeLabels: Record<RelativeMovementCaseId, ReactNode>;
-  viewLabel: string;
-}
-
-export interface RelativeMovementLabProps {
-  description: ReactNode;
-  labels: RelativeMovementLabLabels;
-  title: ReactNode;
-}
 
 const RELATIVE_MOVEMENT_CASES: Record<
   RelativeMovementCaseId,

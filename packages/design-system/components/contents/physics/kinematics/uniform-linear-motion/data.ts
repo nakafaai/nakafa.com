@@ -1,5 +1,4 @@
 import { getColor } from "@repo/design-system/lib/color";
-import type { ReactNode } from "react";
 
 export const UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/sedan-sports.glb";
@@ -8,21 +7,6 @@ export const UNIFORM_LINEAR_MOTION_SPEEDS = [2, 4, 6] as const;
 
 export type UniformLinearMotionSpeed =
   (typeof UNIFORM_LINEAR_MOTION_SPEEDS)[number];
-
-export interface UniformLinearMotionLabLabels {
-  chooseSpeed: string;
-  duration: ReactNode;
-  positionStep: ReactNode;
-  speed: ReactNode;
-  stepDistance: ReactNode;
-  viewLabel: string;
-}
-
-export interface UniformLinearMotionLabProps {
-  description: ReactNode;
-  labels: UniformLinearMotionLabLabels;
-  title: ReactNode;
-}
 
 export const UNIFORM_LINEAR_MOTION_SCENE = {
   carScale: 0.62,

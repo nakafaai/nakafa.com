@@ -1,11 +1,14 @@
-import type { PublicationRow } from "@repo/backend/content/publication/source";
+import contentStateTable from "@repo/backend/confect/_generated/tables/contentState";
+import { Schema } from "effect";
 
-interface MaterialReadModelIdentity {
-  readonly manifestHash: string;
-  readonly releaseId: string;
-  readonly sequence: number;
-  readonly state: PublicationRow<"contentState">;
-}
+const MaterialReadModelIdentitySchema = Schema.Struct({
+  manifestHash: Schema.String,
+  releaseId: Schema.String,
+  sequence: Schema.Finite,
+  state: contentStateTable.Fields,
+});
+
+type MaterialReadModelIdentity = typeof MaterialReadModelIdentitySchema.Type;
 
 /** Checks the material projection against one active release identity. */
 export function hasMaterialReadModel(identity: MaterialReadModelIdentity) {

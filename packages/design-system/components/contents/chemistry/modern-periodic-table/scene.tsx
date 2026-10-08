@@ -7,8 +7,8 @@ import {
   METALLOID_FOCUS_ID,
   MODERN_PERIODIC_TABLE_FOCI,
   type ModernPeriodicTableFocusId,
-  type ModernPeriodicTableLabLabels,
   type ModernPeriodicTableSceneColors,
+  type ModernPeriodicTableSceneLabels,
   NOBLE_GAS_FOCUS_ID,
   PERIOD_THREE_FOCUS_ID,
   PERIODIC_SERIES_ROWS,
@@ -52,6 +52,12 @@ const NARROW_LABEL_SYMBOLS = {
   [NOBLE_GAS_FOCUS_ID]: ["He", "Ar", "Rn"],
 } satisfies Record<ModernPeriodicTableFocusId, string[]>;
 
+interface ModernPeriodicTableSceneProps {
+  colors: ModernPeriodicTableSceneColors;
+  focusId: ModernPeriodicTableFocusId;
+  labels: ModernPeriodicTableSceneLabels;
+}
+
 /**
  * Renders the 3D periodic-table model and highlights the active reading focus.
  */
@@ -59,11 +65,7 @@ export function ModernPeriodicTableScene({
   colors,
   focusId,
   labels,
-}: {
-  colors: ModernPeriodicTableSceneColors;
-  focusId: ModernPeriodicTableFocusId;
-  labels: ModernPeriodicTableLabLabels;
-}) {
+}: ModernPeriodicTableSceneProps) {
   const narrow = useThree((state) => state.size.width < 560);
 
   return (
@@ -107,7 +109,7 @@ function GuideLabels({
   labels,
 }: {
   colors: ModernPeriodicTableSceneColors;
-  labels: ModernPeriodicTableLabLabels;
+  labels: ModernPeriodicTableSceneProps["labels"];
 }) {
   return (
     <>

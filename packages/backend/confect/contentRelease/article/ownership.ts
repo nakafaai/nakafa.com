@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { adjustArticleBucket } from "@repo/backend/confect/contentRelease/article/bucket";
 import { readOrderedArticles } from "@repo/backend/confect/contentRelease/article/order";
+import { articleFields } from "@repo/backend/confect/contentRelease/article/schema";
 import {
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
@@ -23,13 +24,14 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type AppLocale = Docs["articleCatalog"]["appLocale"];
 type ArticleEntry = WithoutSystemFields<Docs["articleCatalog"]>;
-export interface ArticleCategoryClaim {
-  readonly appLocale: AppLocale;
-  readonly category: ArticleEntry["category"];
-  readonly rendererDomain: ArticleEntry["rendererDomain"];
-  readonly route: ArticleRouteSlug;
-  readonly title: ArticleEntry["categoryTitle"];
-}
+const ArticleCategoryClaimSchema = Schema.Struct({
+  appLocale: articleFields.appLocale,
+  category: articleFields.category,
+  rendererDomain: articleFields.rendererDomain,
+  route: ArticleRouteSlugSchema,
+  title: articleFields.categoryTitle,
+});
+export type ArticleCategoryClaim = typeof ArticleCategoryClaimSchema.Type;
 
 /** Loads the sole active article row for one locale-specific content identity. */
 export const loadArticle = Effect.fn("contentRelease.loadArticle")(function* (

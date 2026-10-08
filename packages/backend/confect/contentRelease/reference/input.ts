@@ -1,6 +1,7 @@
 import {
   classifyLearningGraphAssetId,
   type LearningGraphFamily,
+  LearningGraphFamilySchema,
 } from "@nakafa/aksara-contracts/graph/family";
 import {
   type ActiveAppLocale,
@@ -8,26 +9,18 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/spec";
-import type { Locale } from "@repo/contents/content";
-import { Effect, Option } from "effect";
-export type ActiveContentReferenceInput = (
-  | Extract<
-      ContentReferenceInput,
-      {
-        readonly kind: "content";
-      }
-    >
-  | Extract<
-      ContentReferenceInput,
-      {
-        readonly kind: "route";
-      }
-    >
-) & {
-  readonly appLocale: ActiveAppLocale;
-  readonly family: LearningGraphFamily;
-  readonly publicLocale: Locale;
-};
+import { LocaleSchema } from "@repo/contents/content";
+import { Effect, Option, Schema } from "effect";
+
+/** Active fields the resolver adds to one exact current public reference. */
+const ActiveReferenceFieldsSchema = Schema.Struct({
+  appLocale: ActiveAppLocaleSchema,
+  family: LearningGraphFamilySchema,
+  publicLocale: LocaleSchema,
+});
+
+export type ActiveContentReferenceInput = ContentReferenceInput &
+  typeof ActiveReferenceFieldsSchema.Type;
 
 /** Classifies one current public route through its locale-owned namespace. */
 function classifyPublicRoute(
