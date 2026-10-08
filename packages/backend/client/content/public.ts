@@ -9,19 +9,23 @@ import {
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
+  type ContentHttpTarget,
+  createContentEndpoint,
+  encodeContentRequest,
+} from "@repo/backend/client/content/endpoint";
+import {
   ContentRuntimeFailureError,
   ContentRuntimeMissingError,
   ContentRuntimeVerificationError,
   ContentTransportError,
 } from "@repo/backend/client/content/errors";
 import {
-  type ContentHttpTarget,
   createContentContractError,
-  createContentEndpoint,
-  encodeContentRequest,
+  validateContentRuntimeStatus,
+} from "@repo/backend/client/content/status";
+import {
   readContentResponse,
   requestContentResponse,
-  validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
 import {
   MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES,
