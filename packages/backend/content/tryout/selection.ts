@@ -21,7 +21,7 @@ const SelectedTryoutSectionSchema = Schema.Struct({
   rowHash: Schema.String,
 });
 /** One authenticated section row with its signed immutable digest. */
-export type SelectedTryoutSection = typeof SelectedTryoutSectionSchema.Type;
+type SelectedTryoutSection = typeof SelectedTryoutSectionSchema.Type;
 
 const TryoutSetSelectionSchema = Schema.Struct({
   ...PublishedCatalogIndexSchema.fields,

@@ -37,12 +37,12 @@ import {
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect, Array as ReadonlyArray, Schema } from "effect";
 import type { HttpClientResponse } from "effect/http";
+
 /** Server-owned connection values for the private content runtime endpoint. */
-export type ContentRuntimeTarget = ContentHttpTarget;
+type ContentRuntimeTarget = ContentHttpTarget;
 const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 /** Public route identity without its module-owned delivery discriminator. */
-export type PublicContentRuntimeInput =
-  typeof PublicContentRuntimeInputSchema.Type;
+type PublicContentRuntimeInput = typeof PublicContentRuntimeInputSchema.Type;
 const PublicContentVerificationSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("frozen"),

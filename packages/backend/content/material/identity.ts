@@ -20,7 +20,7 @@ const MaterialIdentityInputSchema = Schema.Struct({
   expectedSectionKey: Schema.String,
 });
 /** Stable signed material identity requested by an application surface. */
-export type MaterialIdentityInput = typeof MaterialIdentityInputSchema.Type;
+type MaterialIdentityInput = typeof MaterialIdentityInputSchema.Type;
 /** Decodes the caller's stable identity through Aksara's current contracts. */
 const decodeMaterialIdentity = Effect.fn(
   "contentRelease.decodeMaterialIdentity"

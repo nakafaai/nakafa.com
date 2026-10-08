@@ -64,7 +64,7 @@ const sha256Hex = Effect.fn("ContentAcceptance.sha256Hex")(function* (
   );
   return Hex.encode(digest);
 });
-export const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
+const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
 
 /**
  * One inert backend environment for signed reads in local production builds.

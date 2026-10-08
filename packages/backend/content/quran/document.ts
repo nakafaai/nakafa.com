@@ -51,7 +51,7 @@ const loadVerse = Effect.fn("contentRelease.loadQuranDocumentVerse")(function* (
 });
 
 /** Loads the exact signed source fields for one canonical document. */
-export const loadQuranDocument = Effect.fn("contentRelease.loadQuranDocument")(
+const loadQuranDocument = Effect.fn("contentRelease.loadQuranDocument")(
   function* (appLocale: AppLocaleCode, sourceSurah: number) {
     const loaded = yield* loadQuranSurah(sourceSurah);
     if (loaded.surah === null || loaded.owner.snapshotId === null) {

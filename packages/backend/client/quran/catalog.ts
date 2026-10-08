@@ -19,7 +19,7 @@ type QuranCatalogResult = FunctionReturnType<
 >;
 
 /** Complete signed Quran metadata catalog in its canonical shape. */
-export type PublishedQuranCatalog = PublishedQuranSource &
+type PublishedQuranCatalog = PublishedQuranSource &
   typeof PublishedQuranSurahsSchema.Type;
 // sourceMeaning stays unknown until decodePublishedQuranSurah validates it.
 const QuranSurahTransportProjectionSchema = Schema.Struct({
