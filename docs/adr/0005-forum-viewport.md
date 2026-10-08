@@ -16,7 +16,7 @@ Pure deterministic helpers such as Transcript row construction, geometry, bottom
 
 ## Consequences
 
-- The current split controller, leftover compatibility paths, duplicated state ownership, and legacy scroll hooks should be deleted instead of preserved.
+- The split controller, leftover compatibility paths, duplicated state ownership, and legacy scroll hooks are deleted instead of preserved.
 - Viewport state, Placement intent, back navigation, latest-edge detection, read sync, and Snapshot persistence must be coordinated by one state machine.
 - Latest-control visibility is derived from the Effect-owned Viewport state. Virtua, Zustand, and in-flight Placement refs do not directly decide whether the latest button is shown.
 - React UI Modules consume a small provider/context Interface with state, actions, and meta. The provider is the only React Module that knows the Viewport Implementation is Effect-owned.
@@ -38,4 +38,4 @@ Pure deterministic helpers such as Transcript row construction, geometry, bottom
 - React Effects in this area are limited to synchronizing the provider with the external Effect runtime and subscription lifecycle. Derived render state, navigation decisions, and scroll behavior stay in the Effect Module or React event handlers, not ad hoc `useEffect` chains.
 - Fresh open restore order is valid Snapshot, then unread Placement, then latest Placement. Snapshot validity must be tied to the same Forum Conversation and compatible Transcript shape.
 - Tests should cover the Effect Viewport Module through its Interface with fake Scroller, Session, Read, and Timer Adapters. Pure helpers keep colocated `{file}.test.ts` tests, lifecycle tests cover state transitions and typed failures, provider tests only verify React Interface wiring when necessary, and Browser e2e verifies the pinned panel, page scroll, chat scroll, latest control, smooth Placement, and desktop/mobile behavior.
-- Legacy controller, hook, and Zustand store tests should be removed with the deleted Implementation instead of preserved as compatibility coverage.
+- Legacy controller, hook, and Zustand store tests were removed with the deleted Implementation instead of preserved as compatibility coverage.
