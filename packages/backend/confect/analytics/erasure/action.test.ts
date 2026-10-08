@@ -7,7 +7,8 @@ import {
   PostHogErasureConfigError,
   PostHogErasureRequestError,
 } from "@repo/backend/confect/analytics/erasure/action.spec";
-import { ConfigProvider, Effect, Schema } from "effect";
+import { ConfigProvider, Effect, Fiber, Schema } from "effect";
+import { TestClock } from "effect/testing";
 
 const config = {
   deletionApiKey: "phx_test",
@@ -58,6 +59,39 @@ describe("analytics erasure action", () => {
         )
       )
   );
+  it.effect("sends through the global fetch when no request is injected", () =>
+    Effect.gen(function* () {
+      const fetcher = vi.fn<typeof fetch>(() =>
+        Promise.resolve(
+          new Response(
+            Schema.encodeSync(JsonText)({
+              deletion_errors: [],
+              events_queued_for_deletion: true,
+              persons_deleted: 1,
+              persons_found: 1,
+              recordings_queued_for_deletion: true,
+            }),
+            { status: 202 }
+          )
+        )
+      );
+      vi.stubGlobal("fetch", fetcher);
+      const provider = ConfigProvider.fromUnknown({
+        POSTHOG_ERASURE_API_KEY: config.deletionApiKey,
+        POSTHOG_HOST: config.host,
+        POSTHOG_PROJECT_ID: config.projectId,
+      });
+
+      yield* erasePostHogPerson("user-1").pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
+      );
+
+      expect(fetcher).toHaveBeenCalledWith(
+        "https://eu.posthog.com/api/projects/114144/persons/bulk_delete/",
+        expect.objectContaining({ method: "POST" })
+      );
+    }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllGlobals())))
+  );
   it.effect("requests person, event, and recording erasure", () =>
     Effect.gen(function* () {
       const request = vi.fn(() =>
@@ -95,6 +129,7 @@ describe("analytics erasure action", () => {
             "Content-Type": "application/json",
           },
           method: "POST",
+          signal: expect.any(AbortSignal),
         }
       );
     })
@@ -193,6 +228,70 @@ describe("analytics erasure action", () => {
         request: () => Promise.reject(new Error("offline")),
       }).pipe(Effect.flip);
       expect(failure).toBeInstanceOf(PostHogErasureRequestError);
+    })
+  );
+  it.effect("aborts a request that misses its 10 second deadline", () =>
+    Effect.gen(function* () {
+      const request = vi.fn<typeof fetch>(
+        () => new Promise<Response>(() => undefined)
+      );
+      const fiber = yield* Effect.forkChild(
+        erasePostHogPerson("user-1", { config, request }).pipe(Effect.flip)
+      );
+
+      yield* TestClock.adjust("9999 millis");
+      const signal = request.mock.calls[0]?.[1]?.signal;
+      expect(signal?.aborted).toBe(false);
+      yield* TestClock.adjust("1 millis");
+
+      const failure = yield* Fiber.join(fiber);
+      expect(failure).toBeInstanceOf(PostHogErasureRequestError);
+      expect(failure.message).toBe("PostHog person erasure request timed out.");
+      expect(signal?.aborted).toBe(true);
+      expect(request).toHaveBeenCalledOnce();
+    })
+  );
+  it.effect("returns a typed failure when the answer body cannot be read", () =>
+    Effect.gen(function* () {
+      const failure = yield* erasePostHogPerson("user-1", {
+        config,
+        request: () =>
+          Promise.resolve(
+            new Response(
+              new ReadableStream<Uint8Array>({
+                /** Fails before the answer body yields any bytes. */
+                pull(controller) {
+                  controller.error(new Error("unreadable"));
+                },
+              }),
+              { status: 202 }
+            )
+          ),
+      }).pipe(Effect.flip);
+
+      expect(failure).toBeInstanceOf(PostHogErasureRequestError);
+      expect(failure.message).toBe(
+        "PostHog person erasure returned an invalid response."
+      );
+    })
+  );
+  it.effect("aborts an answer whose body stalls past the deadline", () =>
+    Effect.gen(function* () {
+      const request = vi.fn<typeof fetch>(() =>
+        Promise.resolve(
+          new Response(new ReadableStream<Uint8Array>(), { status: 202 })
+        )
+      );
+      const fiber = yield* Effect.forkChild(
+        erasePostHogPerson("user-1", { config, request }).pipe(Effect.flip)
+      );
+
+      yield* TestClock.adjust("10 seconds");
+
+      const failure = yield* Fiber.join(fiber);
+      expect(failure).toBeInstanceOf(PostHogErasureRequestError);
+      expect(failure.message).toBe("PostHog person erasure request timed out.");
+      expect(request.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
     })
   );
   it.effect("returns a typed failure when PostHog rejects erasure", () =>
