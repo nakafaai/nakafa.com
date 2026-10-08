@@ -54,8 +54,10 @@ interface TryoutSectionPageClientProps {
 
 interface TryoutSectionBodyProps {
   children: ReactNode;
-  content: Promise<TryoutRuntimeContent> | null;
-  runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
+  value: {
+    content: Promise<TryoutRuntimeContent> | null;
+    runtimeState: TryoutRuntimeState<TryoutSectionRuntime>;
+  };
 }
 
 /** Renders one stable page with an active-only mutable subscription. */
@@ -238,7 +240,7 @@ function ResolvedTryoutSectionPage({
             }}
           />
         )}
-        <TryoutSectionBody content={content} runtimeState={runtimeState}>
+        <TryoutSectionBody value={{ content, runtimeState }}>
           {children}
         </TryoutSectionBody>
       </TryoutPageBody>
@@ -312,15 +314,11 @@ function TryoutSectionHeader({
 }
 
 /** Keeps signed content loading separate from stable page controls. */
-function TryoutSectionBody({
-  children,
-  content,
-  runtimeState,
-}: TryoutSectionBodyProps) {
-  if (runtimeState.kind === "none") {
+function TryoutSectionBody({ children, value }: TryoutSectionBodyProps) {
+  if (value.runtimeState.kind === "none") {
     return null;
   }
-  if (runtimeState.kind === "review") {
+  if (value.runtimeState.kind === "review") {
     return (
       <Suspense fallback={null}>
         {children ?? <TryoutContentRefresh />}
@@ -329,39 +327,37 @@ function TryoutSectionBody({
   }
   return (
     <Suspense fallback={null}>
-      <TryoutSectionRuntimeContent
-        content={content}
-        runtimeState={runtimeState}
-      />
+      <TryoutSectionRuntimeContent value={value} />
     </Suspense>
   );
 }
 
 /** Resolves signed content only inside the section runtime region. */
 function TryoutSectionRuntimeContent({
-  content,
-  runtimeState,
-}: Pick<TryoutSectionBodyProps, "content" | "runtimeState">) {
-  if (!content) {
+  value,
+}: {
+  value: TryoutSectionBodyProps["value"];
+}) {
+  if (!value.content) {
     return <TryoutContentRefresh />;
   }
 
-  const loadedContent = use(content);
-  if (loadedContent.questions.length === 0) {
+  const content = use(value.content);
+  if (content.questions.length === 0) {
     return <TryoutContentRefresh />;
   }
-  if (runtimeState.kind === "none") {
+  if (value.runtimeState.kind === "none") {
     return null;
   }
-  if (runtimeState.kind === "review") {
+  if (value.runtimeState.kind === "review") {
     return <TryoutContentRefresh />;
   }
   return (
     <TryoutRuntime
       value={{
-        expired: runtimeState.kind !== "active",
-        questions: loadedContent.questions,
-        runtime: runtimeState.runtime,
+        expired: value.runtimeState.kind !== "active",
+        questions: content.questions,
+        runtime: value.runtimeState.runtime,
       }}
     />
   );
