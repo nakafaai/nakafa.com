@@ -7,7 +7,7 @@ const CompactJsonSchema = Schema.fromJsonString(Schema.Unknown);
 runMain(
   rendererManifest.pipe(
     Effect.flatMap((manifest) =>
-      Schema.encodeEffect(CompactJsonSchema)(manifest)
+      Schema.encodeEffect(CompactJsonSchema)(manifest).pipe(Effect.orDie)
     ),
     Effect.flatMap((json) =>
       Effect.sync(() => {

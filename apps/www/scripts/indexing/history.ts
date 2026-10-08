@@ -107,13 +107,7 @@ export const saveSubmissionHistory = Effect.fn("scripts.indexing.history.save")(
     const fs = yield* FileSystem.FileSystem;
     const { submissionHistory } = yield* indexingFiles;
     const text = yield* Schema.encodeEffect(PrettyJsonSchema)(history).pipe(
-      Effect.mapError(
-        (cause) =>
-          new SubmissionHistoryError({
-            cause,
-            message: `Failed to encode ${submissionHistory}.`,
-          })
-      )
+      Effect.orDie
     );
     yield* fs.writeFileString(submissionHistory, text).pipe(
       Effect.mapError(

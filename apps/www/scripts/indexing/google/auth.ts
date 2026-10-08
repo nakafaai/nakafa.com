@@ -30,14 +30,7 @@ const CompactJsonSchema = Schema.fromJsonString(Schema.Unknown);
 const encodeAssertionSegment = Effect.fn("scripts.google.auth.encodeSegment")(
   function* (segment: unknown) {
     return yield* Schema.encodeEffect(CompactJsonSchema)(segment).pipe(
-      Effect.mapError(
-        (cause) =>
-          new GoogleAssertionSignError({
-            cause,
-            message:
-              "Failed to encode the Google service-account JWT assertion.",
-          })
-      )
+      Effect.orDie
     );
   }
 );
