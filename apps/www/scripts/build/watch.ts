@@ -44,10 +44,11 @@ function lastLineOf(text: string) {
 /** Notes one chunk of output: when it arrived, and its last non-blank line if it has one. */
 const recordOutput = Effect.fn("BuildWatch.recordOutput")(function* (
   activity: Ref.Ref<Activity>,
+  decoder: TextDecoder,
   chunk: Uint8Array
 ) {
   const now = yield* Clock.currentTimeMillis;
-  const line = lastLineOf(new TextDecoder().decode(chunk));
+  const line = lastLineOf(decoder.decode(chunk, { stream: true }));
   yield* Ref.update(activity, (previous) => ({
     at: now,
     lastLine: Option.orElse(line, () => previous.lastLine),
@@ -65,8 +66,11 @@ const passThrough = Effect.fn("BuildWatch.passThrough")(function* (
   >,
   activity: Ref.Ref<Activity>
 ) {
+  // A chunk can end in the middle of a character, so one decoder per stream
+  // holds the partial bytes until the rest arrives in the next chunk.
+  const decoder = new TextDecoder();
   yield* stream.pipe(
-    Stream.tap((chunk) => recordOutput(activity, chunk)),
+    Stream.tap((chunk) => recordOutput(activity, decoder, chunk)),
     Stream.run(sink)
   );
 });

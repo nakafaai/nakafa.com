@@ -21,7 +21,6 @@ import {
 } from "effect";
 import { TestClock } from "effect/testing";
 import {
-  BuildStalled,
   printHeartbeats,
   watchBuild,
   watchSilence,
@@ -46,6 +45,16 @@ const OUTPUT_HELD = [
   "grandchild.unref();",
   "console.log(grandchild.pid);",
   'console.log("done");',
+].join("\n");
+
+/**
+ * A child that writes one euro sign split across two chunks, then stays silent.
+ * The bytes are E2 82 AC, and the second chunk starts with the last one.
+ */
+const SPLIT_CHARACTER = [
+  "process.stdout.write(Buffer.from([0xe2, 0x82]));",
+  "setTimeout(() => process.stdout.write(Buffer.from([0xac, 0x0a])), 100);",
+  "setTimeout(() => {}, 30000);",
 ].join("\n");
 
 /** Appends every chunk written to one standard stream to its text. */
@@ -81,6 +90,18 @@ const captureStreams = Effect.gen(function* () {
     stdout,
   };
 });
+
+/**
+ * Asserts which stall a failed watch reported. `toEqual` does not compare the
+ * message of these errors, so the tag and the line are checked directly.
+ */
+function expectStalled(
+  failure: { readonly _tag: string; readonly message: string },
+  message: string
+) {
+  expect(failure._tag).toBe("BuildStalled");
+  expect(failure.message).toBe(message);
+}
 
 /** Runs one watch with the real child-process and file services, writing to captured streams. */
 function runWatch(
@@ -180,10 +201,9 @@ describe("build watch", () => {
           stallLimit: Duration.seconds(1),
         }).pipe(Effect.flip);
 
-        expect(failure).toEqual(
-          new BuildStalled({
-            message: "build stalled: no output for 1s; last output: compiling",
-          })
+        expectStalled(
+          failure,
+          "build stalled: no output for 1s; last output: compiling"
         );
         const [pidLine = "", compiling = ""] = Str.split(
           yield* Ref.get(streams.stdout),
@@ -209,16 +229,29 @@ describe("build watch", () => {
         stallLimit: Duration.seconds(2),
       }).pipe(Effect.flip);
 
-      expect(failure).toEqual(
-        new BuildStalled({
-          message: "build stalled: no output for 2s; last output: done",
-        })
+      expectStalled(
+        failure,
+        "build stalled: no output for 2s; last output: done"
       );
       const [grandchildLine = ""] = Str.split(
         yield* Ref.get(streams.stdout),
         "\n"
       );
       yield* expectProcessEnded(Number(grandchildLine));
+    })
+  );
+
+  it.live("reads a character split across two chunks in the stall line", () =>
+    Effect.gen(function* () {
+      const streams = yield* captureStreams;
+      const failure = yield* runWatch(streams.stdio, {
+        args: ["-e", SPLIT_CHARACTER],
+        command: process.execPath,
+        heartbeatInterval: Duration.seconds(15),
+        stallLimit: Duration.seconds(2),
+      }).pipe(Effect.flip);
+
+      expectStalled(failure, "build stalled: no output for 2s; last output: €");
     })
   );
 });
@@ -240,10 +273,9 @@ describe("silence watch", () => {
       yield* TestClock.adjust(Duration.millis(299_999));
       expect(yield* Ref.get(finished)).toBe(false);
       yield* TestClock.adjust(Duration.millis(1));
-      expect(yield* Fiber.join(watch).pipe(Effect.flip)).toEqual(
-        new BuildStalled({
-          message: "build stalled: no output for 300s; last output: (none)",
-        })
+      expectStalled(
+        yield* Fiber.join(watch).pipe(Effect.flip),
+        "build stalled: no output for 300s; last output: (none)"
       );
     })
   );
@@ -269,10 +301,9 @@ describe("silence watch", () => {
       yield* TestClock.adjust(Duration.minutes(4));
       expect(yield* Ref.get(finished)).toBe(false);
       yield* TestClock.adjust(Duration.minutes(1));
-      expect(yield* Fiber.join(watch).pipe(Effect.flip)).toEqual(
-        new BuildStalled({
-          message: "build stalled: no output for 300s; last output: next",
-        })
+      expectStalled(
+        yield* Fiber.join(watch).pipe(Effect.flip),
+        "build stalled: no output for 300s; last output: next"
       );
     })
   );
