@@ -14,7 +14,7 @@ import {
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import refs from "@repo/backend/confect/_generated/refs";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Effect, HashSet, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   decodeMaterialJson,
@@ -200,13 +200,13 @@ export const decodePublishedMaterialRoute = Effect.fn(
       })
     )
   );
-  const alternateLocales = Arr.dedupe(
+  const alternateLocales = HashSet.fromIterable(
     alternates.map((alternate) => alternate.appLocale)
   );
   const completeLocaleSet =
-    alternateLocales.length === activeAppLocales.length &&
+    HashSet.size(alternateLocales) === activeAppLocales.length &&
     activeAppLocales.every((alternateLocale) =>
-      alternateLocales.includes(alternateLocale)
+      HashSet.has(alternateLocales, alternateLocale)
     );
   if (
     projection.appLocale !== appLocale ||
@@ -214,7 +214,7 @@ export const decodePublishedMaterialRoute = Effect.fn(
     alternates.some(
       (alternate) => !isMaterialCounterpart(projection, alternate)
     ) ||
-    alternateLocales.length !== alternates.length ||
+    HashSet.size(alternateLocales) !== alternates.length ||
     !alternates.some(
       (alternate) =>
         alternate.appLocale === projection.appLocale &&
