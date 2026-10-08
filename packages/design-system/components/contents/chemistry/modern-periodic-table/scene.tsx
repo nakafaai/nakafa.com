@@ -19,6 +19,7 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 const GROUP_COUNT = 18;
@@ -72,8 +73,8 @@ export function ModernPeriodicTableScene({
     <group>
       <GuideLabels colors={colors} labels={labels} />
 
-      {MAIN_PERIODIC_TABLE_ROWS.map((row) =>
-        row.entries.map((entry) => (
+      {Arr.map(MAIN_PERIODIC_TABLE_ROWS, (row) =>
+        Arr.map(row.entries, (entry) => (
           <MainTableTile
             colors={colors}
             entry={entry}
@@ -85,8 +86,8 @@ export function ModernPeriodicTableScene({
         ))
       )}
 
-      {PERIODIC_SERIES_ROWS.map((row, rowIndex) =>
-        row.entries.map((entry, entryIndex) => (
+      {Arr.map(PERIODIC_SERIES_ROWS, (row, rowIndex) =>
+        Arr.map(row.entries, (entry, entryIndex) => (
           <SeriesTile
             colors={colors}
             entry={entry}
@@ -130,7 +131,7 @@ function GuideLabels({
         {labels.period} 1–7
       </ThreeLabel>
 
-      {PERIODIC_SERIES_ROWS.map((row, rowIndex) => (
+      {Arr.map(PERIODIC_SERIES_ROWS, (row, rowIndex) => (
         <ThreeLabel
           color={colors.text}
           fontSize="reading"
@@ -335,11 +336,11 @@ function isEntryHighlighted(
 ) {
   const focus = MODERN_PERIODIC_TABLE_FOCI[focusId];
 
-  if (focus.symbols.some((symbol) => symbol === entry.symbol)) {
+  if (Arr.some(focus.symbols, (symbol) => symbol === entry.symbol)) {
     return true;
   }
 
-  return focus.categories.some((category) => category === entry.category);
+  return Arr.some(focus.categories, (category) => category === entry.category);
 }
 
 /**
@@ -352,7 +353,8 @@ function getMainTileLabel(
   narrow: boolean
 ) {
   if (narrow) {
-    return NARROW_LABEL_SYMBOLS[focusId].some(
+    return Arr.some(
+      NARROW_LABEL_SYMBOLS[focusId],
       (symbol) => symbol === entry.symbol
     )
       ? entry.symbol
@@ -364,7 +366,10 @@ function getMainTileLabel(
   }
 
   if (focusId === TRANSITION_FOCUS_ID) {
-    return TRANSITION_LABEL_SYMBOLS.some((symbol) => symbol === entry.symbol)
+    return Arr.some(
+      TRANSITION_LABEL_SYMBOLS,
+      (symbol) => symbol === entry.symbol
+    )
       ? entry.symbol
       : "";
   }
@@ -377,7 +382,7 @@ function getMainTileLabel(
     return entry.symbol;
   }
 
-  return ALWAYS_VISIBLE_SYMBOLS.some((symbol) => symbol === entry.symbol)
+  return Arr.some(ALWAYS_VISIBLE_SYMBOLS, (symbol) => symbol === entry.symbol)
     ? entry.symbol
     : "";
 }
@@ -390,7 +395,8 @@ function getSeriesTileLabel(symbol: string, highlighted: boolean) {
     return "";
   }
 
-  return INNER_TRANSITION_LABEL_SYMBOLS.some(
+  return Arr.some(
+    INNER_TRANSITION_LABEL_SYMBOLS,
     (labelSymbol) => labelSymbol === symbol
   )
     ? symbol

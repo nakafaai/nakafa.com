@@ -21,6 +21,7 @@ import {
   Particle,
   ParticleCluster,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
+import { Array as Arr } from "effect";
 
 const PHOSPHORUS_POINTS = [
   [-0.18, -0.08, 0],
@@ -107,10 +108,10 @@ function CombustionModel({
           points={PHOSPHORUS_POINTS}
           radius={0.13}
         />
-        {OXYGEN_PAIR_POINTS.map((position) => (
+        {Arr.map(OXYGEN_PAIR_POINTS, (position) => (
           <DiatomicMolecule
             color={colors.oxygen}
-            key={position.join(",")}
+            key={Arr.join(Arr.map(position, String), ",")}
             label="O"
             labelColor={colors.sphereText}
             labelOutlineColor={colors.sphereTextOutline}

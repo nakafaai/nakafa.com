@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const CARBON_12_ID = "carbon-12";
 const OXYGEN_16_ID = "oxygen-16";
@@ -53,5 +53,5 @@ export const ATOM_SYMBOL_SAMPLES = {
 export function isAtomSymbolSampleId(
   value: string
 ): value is AtomSymbolSampleId {
-  return ATOM_SYMBOL_SAMPLE_IDS.some((sampleId) => sampleId === value);
+  return Arr.some(ATOM_SYMBOL_SAMPLE_IDS, (sampleId) => sampleId === value);
 }
