@@ -35,13 +35,16 @@ type TryoutAttempt = Docs["tryoutAttempts"];
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
 /** Keeps every stored strategy that counts answers; IRT scores through calibrated items. */
+type AnswerCountScoringStrategy = Exclude<
+  typeof tryoutScoringStrategyValidator.Type,
+  "irt"
+>;
 const AnswerCountScoringStrategySchema = Schema.Literals(
   Arr.filter(
     tryoutScoringStrategyValidator.literals,
-    (strategy) => strategy !== "irt"
+    (strategy): strategy is AnswerCountScoringStrategy => strategy !== "irt"
   )
 );
-type AnswerCountScoringStrategy = typeof AnswerCountScoringStrategySchema.Type;
 const AnswerCountScoreSourceSchema = Schema.Struct({
   attemptId: Id("tryoutAttempts"),
   kind: Schema.Literal("answer-count"),
