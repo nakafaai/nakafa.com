@@ -3,14 +3,14 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import type { PublicAppLocale } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -28,18 +28,19 @@ type StartAttempt = Pick<
   CurrentAttempt,
   "attemptId" | "resumeSectionKey" | "status"
 > | null;
-export interface StartTryoutRequest {
-  authRedirectHref: string;
-  countryKey: string;
-  destinationHref: string;
-  destinationSectionKey: string;
-  entrySectionKey?: string;
-  examKey: string;
-  locale: PublicAppLocale;
-  setKey: string;
-  successNavigation: "destination" | "stay";
-  trackKey: string;
-}
+const StartTryoutRequestSchema = Schema.Struct({
+  authRedirectHref: Schema.String,
+  countryKey: Schema.String,
+  destinationHref: Schema.String,
+  destinationSectionKey: Schema.String,
+  entrySectionKey: Schema.optionalKey(Schema.String),
+  examKey: Schema.String,
+  locale: ActiveAppLocaleCodeSchema,
+  setKey: Schema.String,
+  successNavigation: Schema.Literals(["destination", "stay"]),
+  trackKey: Schema.String,
+});
+export type StartTryoutRequest = typeof StartTryoutRequestSchema.Type;
 interface StartTryoutButtonProps {
   attempt?: StartAttempt | undefined;
   request: StartTryoutRequest;
@@ -135,27 +136,29 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     if (busy) {
       return;
     }
-    const program = startAttemptProgram({
-      args: {
-        countryKey: request.countryKey,
-        ...(directEntry
-          ? {}
-          : {
-              destinationSectionKey: request.destinationSectionKey,
-            }),
-        ...(request.entrySectionKey === undefined
-          ? {}
-          : {
-              entrySectionKey: request.entrySectionKey,
-            }),
-        examKey: request.examKey,
-        locale: request.locale,
-        setKey: request.setKey,
-        trackKey: request.trackKey,
+    const program = startAttemptProgram(
+      {
+        args: {
+          countryKey: request.countryKey,
+          ...(directEntry
+            ? {}
+            : {
+                destinationSectionKey: request.destinationSectionKey,
+              }),
+          ...(request.entrySectionKey === undefined
+            ? {}
+            : {
+                entrySectionKey: request.entrySectionKey,
+              }),
+          examKey: request.examKey,
+          locale: request.locale,
+          setKey: request.setKey,
+          trackKey: request.trackKey,
+        },
+        failureMessage: t("start-error"),
       },
-      failureMessage: t("start-error"),
-      mutation: startAttempt,
-      onSuccess: (result) =>
+      startAttempt,
+      (result) =>
         Effect.sync(() => {
           dialog.close();
           toast.success(
@@ -173,8 +176,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
             return;
           }
           router.push(href);
-        }),
-    });
+        })
+    );
     startTransition(() => Effect.runPromise(program));
   }
   return (
