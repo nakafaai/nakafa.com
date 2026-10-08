@@ -95,4 +95,69 @@ interface CardValue {
         );
       })
   );
+
+  it.effect("allows the type a recursive Schema.suspend thunk names", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`import { Schema } from "effect";
+export interface Category {
+  readonly children: ReadonlyArray<Category>;
+}
+export interface Node {
+  readonly next?: Node;
+}
+export const category = Schema.suspend((): Schema.Codec<Category> => CategorySchema);
+export const node = Schema.suspend((): Schema.Schema<Node> => NodeSchema);
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "keeps other interfaces and annotations of a recursive type reported",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`interface Other {
+  readonly id: string;
+}
+export interface Category {
+  readonly children: ReadonlyArray<Category>;
+}
+export const category = Schema.suspend((): Schema.Codec<Category> => CategorySchema);
+interface Lesson {
+  readonly title: string;
+}
+export const lesson: Schema.Codec<Lesson> = LessonSchema;
+`),
+          [1, 8]
+        );
+      })
+  );
+
+  it.effect("allows a selector that picks union members", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`type Program = Extract<Row, { readonly family: "program" }>;
+type Drafts = Exclude<Status, { readonly state: "draft" | "archived"; readonly count: 1 }>;
+`),
+        []
+      );
+    })
+  );
+
+  it.effect("keeps generics with declared object arguments reported", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`type Shape = Extract<Row, { readonly id: string }>;
+type Picked = Pick<Row, { readonly family: "program" }>;
+type Wrapped = Extract<{ readonly family: "program" }, Row>;
+type Extended = Extract<Row, { readonly family: "program" }> & { extra: string };
+type Mixed = Exclude<Row, { readonly family: "program"; readonly id: string }>;
+`),
+        [1, 2, 3, 4, 5]
+      );
+    })
+  );
 });
