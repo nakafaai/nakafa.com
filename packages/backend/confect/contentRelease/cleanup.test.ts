@@ -31,6 +31,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest, type TestConvex } from "convex-test";
+import { Clock, Effect } from "effect";
 
 const cleanup = internal.contentRelease.cleanup.cleanup;
 const RELEASE = {
@@ -272,28 +273,35 @@ describe("contentRelease/cleanup", () => {
     });
   });
 
-  it("returns an exact retry deadline for retained future artifacts", async () => {
-    const t = convexTest(schema, convexModules);
-    const retryAt = Date.now() + 60_000;
-    await t.mutation(async (ctx) => {
-      await insertRelease(ctx);
-      await insertArtifact(ctx, 0, retryAt);
-      await insertArtifact(ctx, 1, retryAt + 60_000);
-    });
+  it.live("returns an exact retry deadline for retained future artifacts", () =>
+    Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis;
+      const retryAt = now + 60_000;
+      yield* Effect.promise(async () => {
+        const t = convexTest(schema, convexModules);
+        await t.mutation(async (ctx) => {
+          await insertRelease(ctx);
+          await insertArtifact(ctx, 0, retryAt);
+          await insertArtifact(ctx, 1, retryAt + 60_000);
+        });
 
-    const first = await t.mutation(cleanup, { releaseId: RELEASE.releaseId });
-    const repeated = await t.mutation(cleanup, {
-      releaseId: RELEASE.releaseId,
-    });
+        const first = await t.mutation(cleanup, {
+          releaseId: RELEASE.releaseId,
+        });
+        const repeated = await t.mutation(cleanup, {
+          releaseId: RELEASE.releaseId,
+        });
 
-    expect(first).toEqual({
-      complete: false,
-      deletedArtifacts: 0,
-      releaseId: RELEASE.releaseId,
-      retryAt,
-    });
-    expect(repeated).toEqual(first);
-  });
+        expect(first).toEqual({
+          complete: false,
+          deletedArtifacts: 0,
+          releaseId: RELEASE.releaseId,
+          retryAt,
+        });
+        expect(repeated).toEqual(first);
+      });
+    })
+  );
 
   it("rejects reachable releases and invalid durable counters", async () => {
     const reachable = convexTest(schema, convexModules);

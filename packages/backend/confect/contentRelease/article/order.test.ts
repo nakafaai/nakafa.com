@@ -8,7 +8,10 @@ import {
   PUBLICATION_SCAN_LIMIT,
 } from "@repo/backend/confect/contentRelease/paging";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import { articlePublicationCursor } from "@repo/backend/content/article/cursor";
+import {
+  articlePublicationCursor,
+  decodePublicationPosition,
+} from "@repo/backend/content/article/cursor";
 import schema from "@repo/backend/convex/schema";
 import {
   insertRuntimeArticles,
@@ -17,7 +20,9 @@ import {
 import { ARTICLE_PUBLICATION_CURSOR_PREFIX } from "@repo/contents/publication";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
+
+const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 describe("contentRelease/article/order", () => {
   it("fails closed for an exhausted budget or an invalid stored numeric value", async () => {
@@ -165,47 +170,69 @@ describe("contentRelease/article/order", () => {
         expect(next.isDone).toBe(true);
       })
   );
-  it("accepts deployed seven-field positions and emits portable positions", async () => {
-    const target = convexTest(schema, convexModules);
-    await target.mutation((ctx) => insertRuntimeArticles(ctx, 3));
-    const first = await target.query((ctx) =>
-      ctx.db
-        .query("articleCatalog")
-        .withIndex(
-          "by_slot_appLocale_category_datePublished_contentKey",
-          (index) =>
-            index
-              .eq("slot", "blue")
-              .eq("appLocale", "en")
-              .eq("category", "politics")
-        )
-        .order("desc")
-        .first()
-    );
-    if (!first) {
-      throw new Error("Expected an article position fixture.");
-    }
-    const legacy = `${ARTICLE_PUBLICATION_CURSOR_PREFIX}${JSON.stringify([first.slot, first.appLocale, first.category, first.datePublished, first.contentKey, first._creationTime, first._id])}`;
-    const result = await target.query((_ctx) =>
-      Effect.runPromise(
-        paginateArticles("blue", "en", "politics", {
-          cursor: legacy,
-          maximumBytesRead: PROJECTION_PAGE_BYTES,
-          maximumRowsRead: 4,
-          numItems: 1,
-        }).pipe(
-          Effect.provide(ConfectDatabaseReader.layer(confectSchema, _ctx.db))
-        )
-      )
-    );
-    expect(Arr.map(result.page, ({ contentKey }) => contentKey)).toEqual([
-      testArticleProjection(1).contentKey,
-    ]);
-    const position: unknown = JSON.parse(
-      result.continueCursor.slice(ARTICLE_PUBLICATION_CURSOR_PREFIX.length)
-    );
-    expect(position).toHaveLength(5);
-  });
+  it.live(
+    "accepts deployed seven-field positions and emits portable positions",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const target = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          target.mutation((ctx) => insertRuntimeArticles(ctx, 3))
+        );
+        const first = yield* Effect.promise(() =>
+          target.query((ctx) =>
+            ctx.db
+              .query("articleCatalog")
+              .withIndex(
+                "by_slot_appLocale_category_datePublished_contentKey",
+                (index) =>
+                  index
+                    .eq("slot", "blue")
+                    .eq("appLocale", "en")
+                    .eq("category", "politics")
+              )
+              .order("desc")
+              .first()
+          )
+        );
+        if (!first) {
+          throw new Error("Expected an article position fixture.");
+        }
+        const encodedPosition = yield* Schema.encodeEffect(JsonTextSchema)([
+          first.slot,
+          first.appLocale,
+          first.category,
+          first.datePublished,
+          first.contentKey,
+          first._creationTime,
+          first._id,
+        ]);
+        const legacy = `${ARTICLE_PUBLICATION_CURSOR_PREFIX}${encodedPosition}`;
+        const result = yield* Effect.promise(() =>
+          target.query((_ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              paginateArticles("blue", "en", "politics", {
+                cursor: legacy,
+                maximumBytesRead: PROJECTION_PAGE_BYTES,
+                maximumRowsRead: 4,
+                numItems: 1,
+              }).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, _ctx.db)
+                )
+              )
+            )
+          )
+        );
+        expect(Arr.map(result.page, ({ contentKey }) => contentKey)).toEqual([
+          testArticleProjection(1).contentKey,
+        ]);
+        const position = yield* decodePublicationPosition(
+          result.continueCursor
+        );
+        expect(position).toHaveLength(5);
+      })
+  );
   it("returns one full page without a false split boundary", async () => {
     const t = convexTest(schema, convexModules);
     const articleCount = PROJECTION_PAGE_LIMIT + 2;
@@ -269,7 +296,7 @@ describe("contentRelease/article/order", () => {
       [...first.result.page, ...second.result.page],
       (article) => article.contentKey
     );
-    expect(new Set(contentKeys)).toHaveProperty("size", articleCount);
+    expect(Arr.dedupe(contentKeys)).toHaveLength(articleCount);
   });
   it("bounds publication lookahead by physical rows and bytes", async () => {
     const t = convexTest(schema, convexModules);
