@@ -172,7 +172,7 @@ export const verify = workflow.define({
     return new Promise(finish);
   },
 });
-export const deliver = workflow.define({ handler: send });
+export const deliver = workflow.define({ retries: 2, handler: send });
 export async function send(step) {
   await step.runAction(deliver);
 }
@@ -223,6 +223,48 @@ export const verify = workflow.define({
             WORKFLOW
           ),
           ["3 promise", "4 promise"]
+        );
+      })
+  );
+
+  it.effect(
+    "keeps workflow handlers reported when define does not name the Confect export",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import workflow from "@repo/backend/confect/workflow";
+export const first = workflow.define({
+  handler: async (step) => step.runAction(run),
+});
+import * as workflows from "@repo/backend/confect/workflow";
+export const second = workflows.define({
+  handler: async (step) => step.runAction(run),
+});
+import { other } from "@repo/backend/confect/workflow";
+export const third = other.define({ handler: async (step) => step.runAction(run) });
+`,
+            WORKFLOW
+          ),
+          ["3 promise", "7 promise", "10 promise"]
+        );
+      })
+  );
+
+  it.effect(
+    "keeps a handler reported when the module does not define it inline or by name",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { workflow } from "@repo/backend/confect/workflow";
+const definition = { handler: async (step) => step.runAction(run) };
+export const verify = workflow.define(definition);
+export const wrapped = workflow.define({ handler: wrap(async (step) => step.runAction(run)) });
+`,
+            WORKFLOW
+          ),
+          ["2 promise", "4 promise"]
         );
       })
   );

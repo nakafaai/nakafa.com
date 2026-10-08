@@ -141,6 +141,7 @@ export const lesson: Schema.Codec<Lesson> = LessonSchema;
       assert.deepStrictEqual(
         yield* shapes(`type Program = Extract<Row, { readonly family: "program" }>;
 type Drafts = Exclude<Status, { readonly state: "draft" | "archived"; readonly count: 1 }>;
+type Flags = Extract<Row, { readonly done: true; readonly failed: false }>;
 `),
         []
       );
@@ -159,5 +160,22 @@ type Mixed = Exclude<Row, { readonly family: "program"; readonly id: string }>;
         [1, 2, 3, 4, 5]
       );
     })
+  );
+
+  it.effect(
+    "keeps a recursive type reported when the thunk names another schema",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`interface Node {
+  readonly next?: Node;
+}
+export const node = Schema.suspend((): Effects.Codec<Node> => NodeSchema);
+export const bare = Schema.suspend((): Schema.Codec => BareSchema);
+export const other = Schema.suspend(makeThunk);
+`),
+          [1]
+        );
+      })
   );
 });
