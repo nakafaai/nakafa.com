@@ -60,6 +60,53 @@ interface RemapValueProps {
   value: number;
 }
 
+/** Maps a value from one range onto another, never below zero. */
+function remapValue({
+  value,
+  start1,
+  end1,
+  start2,
+  end2,
+}: RemapValueProps): number {
+  const remapped =
+    ((value - start1) * (end2 - start2)) / (end1 - start1) + start2;
+  return remapped > 0 ? remapped : 0;
+}
+
+/**
+ * Sets a circle's alpha from its nearest canvas edge: it fades in while clear of
+ * the edges and dims as it nears them.
+ */
+function updateAlpha(circle: Circle, width: number, height: number) {
+  // Handle the alpha value
+  const edge = [
+    circle.x + circle.translateX - circle.size, // distance from left edge
+    width - circle.x - circle.translateX - circle.size, // distance from right edge
+    circle.y + circle.translateY - circle.size, // distance from top edge
+    height - circle.y - circle.translateY - circle.size, // distance from bottom edge
+  ];
+  const closestEdge = Arr.reduce(edge, Number.POSITIVE_INFINITY, (a, b) =>
+    Math.min(a, b)
+  );
+  const remapClosestEdge = Number.parseFloat(
+    remapValue({
+      value: closestEdge,
+      start1: 0,
+      end1: REMAP_EDGE_END,
+      start2: 0,
+      end2: 1,
+    }).toFixed(2)
+  );
+  if (remapClosestEdge > 1) {
+    circle.alpha += ALPHA_FADE_IN_SPEED;
+    if (circle.alpha > circle.targetAlpha) {
+      circle.alpha = circle.targetAlpha;
+    }
+  } else {
+    circle.alpha = circle.targetAlpha * remapClosestEdge;
+  }
+}
+
 /** Reports whether a circle has left the canvas, its radius included. */
 function isOutsideCanvas(circle: Circle, width: number, height: number) {
   return (
@@ -220,15 +267,6 @@ export function Particles({
     }
   }, [mousePositionRef]);
 
-  const remapValue = useCallback(
-    ({ value, start1, end1, start2, end2 }: RemapValueProps): number => {
-      const remapped =
-        ((value - start1) * (end2 - start2)) / (end1 - start1) + start2;
-      return remapped > 0 ? remapped : 0;
-    },
-    []
-  );
-
   const animate = useCallback(() => {
     onMouseMove();
     clearContext();
@@ -244,33 +282,7 @@ export function Particles({
       if (circle === MutableList.Empty) {
         break;
       }
-      // Handle the alpha value
-      const edge = [
-        circle.x + circle.translateX - circle.size, // distance from left edge
-        canvasSize.current.w - circle.x - circle.translateX - circle.size, // distance from right edge
-        circle.y + circle.translateY - circle.size, // distance from top edge
-        canvasSize.current.h - circle.y - circle.translateY - circle.size, // distance from bottom edge
-      ];
-      const closestEdge = Arr.reduce(edge, Number.POSITIVE_INFINITY, (a, b) =>
-        Math.min(a, b)
-      );
-      const remapClosestEdge = Number.parseFloat(
-        remapValue({
-          value: closestEdge,
-          start1: 0,
-          end1: REMAP_EDGE_END,
-          start2: 0,
-          end2: 1,
-        }).toFixed(2)
-      );
-      if (remapClosestEdge > 1) {
-        circle.alpha += ALPHA_FADE_IN_SPEED;
-        if (circle.alpha > circle.targetAlpha) {
-          circle.alpha = circle.targetAlpha;
-        }
-      } else {
-        circle.alpha = circle.targetAlpha * remapClosestEdge;
-      }
+      updateAlpha(circle, canvasSize.current.w, canvasSize.current.h);
       circle.x += circle.dx;
       circle.y += circle.dy;
 
@@ -323,7 +335,6 @@ export function Particles({
     clearContext,
     drawCircle,
     ease,
-    remapValue,
     staticity,
     isMobile,
     onMouseMove,
