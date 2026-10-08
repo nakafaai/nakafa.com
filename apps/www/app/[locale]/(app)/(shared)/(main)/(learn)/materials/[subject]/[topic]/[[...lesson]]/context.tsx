@@ -9,11 +9,11 @@ import {
 } from "@repo/contents/route/material/context";
 import { Effect } from "effect";
 import { useSyncExternalStore } from "react";
-import type {
-  MaterialNavigationPage,
-  MaterialPageContent,
-} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
-import { readMaterialNavigation } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
+import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
+import {
+  type MaterialNavigationPage,
+  readMaterialNavigation,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import { BreadcrumbHeaderSegment } from "@/components/shared/breadcrumb/header";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { SidebarRightHeader } from "@/components/shared/outline/panel";

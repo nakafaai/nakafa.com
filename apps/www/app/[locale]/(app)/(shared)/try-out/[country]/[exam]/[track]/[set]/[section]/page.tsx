@@ -1,4 +1,4 @@
-import { Clock, Effect, Option, Schema } from "effect";
+import { Clock, Effect, Option } from "effect";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
@@ -33,15 +33,14 @@ import { TryoutSectionPending } from "@/components/tryout/section/pending";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-const TryoutSectionParamsSchema = Schema.Struct({
-  country: Schema.String,
-  exam: Schema.String,
-  locale: Schema.String,
-  section: Schema.String,
-  set: Schema.String,
-  track: Schema.String,
-});
-type TryoutSectionParams = typeof TryoutSectionParamsSchema.Type;
+interface TryoutSectionParams {
+  country: string;
+  exam: string;
+  locale: string;
+  section: string;
+  set: string;
+  track: string;
+}
 
 interface TryoutSectionPageProps {
   params: Promise<TryoutSectionParams>;

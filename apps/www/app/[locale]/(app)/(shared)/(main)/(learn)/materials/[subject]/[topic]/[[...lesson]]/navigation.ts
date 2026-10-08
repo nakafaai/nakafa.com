@@ -1,11 +1,26 @@
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentPagination } from "@repo/contents/content";
 import { toContextualMaterialHref } from "@repo/contents/route/material/context";
-import type { MaterialNavigationPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
+import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 
 /** Only route identity and visible labels are needed for sibling navigation. */
-type MaterialNavigationRoute = MaterialNavigationPage["siblings"][number];
+type MaterialNavigationRoute = Pick<
+  MaterialLessonProjection,
+  "appLocale" | "order" | "parentPath" | "publicPath"
+> & {
+  readonly metadata: Pick<MaterialLessonProjection["metadata"], "title">;
+};
+
+/** Small public navigation model shared by the static shell and client controls. */
+export interface MaterialNavigationPage {
+  readonly kind: MaterialPageContent["kind"];
+  readonly route: Pick<
+    MaterialLessonProjection,
+    "appLocale" | "contentKey" | "materialKey" | "parentPath" | "publicPath"
+  >;
+  readonly siblings: readonly MaterialNavigationRoute[];
+}
 
 const emptyItem = { href: "", title: "" };
 
