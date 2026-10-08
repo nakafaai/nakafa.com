@@ -16,9 +16,6 @@ import type { sweepAccountDeletionRecoveryArgsValidator } from "@repo/backend/co
 import { Clock, Duration, Effect, flow } from "effect";
 export type SweepAccountDeletionRecoveryArgs =
   typeof sweepAccountDeletionRecoveryArgsValidator.Type;
-export type RecoveryOperations = Parameters<
-  typeof recoverAccountDeletionProgram
->[0];
 /** Restores an aborted deletion or finishes one whose auth user is gone. */
 export const recoverAccountDeletionProgram = Effect.fn(
   "auth.deletion.recoverAccountDeletion"
