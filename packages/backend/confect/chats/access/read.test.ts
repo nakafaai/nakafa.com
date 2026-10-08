@@ -9,16 +9,18 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { Option } from "effect";
 
+const now = Date.UTC(2026, 8, 1);
+
 describe("transcript read authorization", () => {
   it("protects private transcripts from anonymous and other accounts while permitting public sharing", async () => {
     const t = createConvexTestWithBetterAuth();
     const { owner, stranger, chatId } = await t.mutation(async (ctx) => {
       const owner = await seedAuthenticatedUser(ctx, {
-        now: Date.now(),
+        now,
         suffix: "read-owner",
       });
       const stranger = await seedAuthenticatedUser(ctx, {
-        now: Date.now(),
+        now,
         suffix: "read-stranger",
       });
       const chatId = await ctx.db.insert("chats", {
@@ -26,7 +28,7 @@ describe("transcript read authorization", () => {
         userId: owner.userId,
         type: "study",
         visibility: "private",
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
       return {
         owner,

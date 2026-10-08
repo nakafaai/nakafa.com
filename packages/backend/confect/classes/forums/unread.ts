@@ -8,7 +8,7 @@ import {
   forumPostsBySequence,
 } from "@repo/backend/confect/classes/forums/aggregate";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, pipe } from "effect";
+import { Array as Arr, Effect, HashMap, Option, pipe } from "effect";
 
 /** Load the current viewer's read-state rows for one forum page. */
 const getForumReadStateMap = Effect.fn(
@@ -34,7 +34,7 @@ const getForumReadStateMap = Effect.fn(
       };
     })
   );
-  return new Map(
+  return HashMap.fromIterable(
     Arr.map(readStates, ({ forumId, readState }) => [forumId, readState])
   );
 });
@@ -59,6 +59,9 @@ export const getForumUnreadCounts = Effect.fn(
     forumIds: Arr.map(forums, (forum) => forum._id),
     userId,
   });
+  const lastReadSequenceOf = (forumId: Id<"schoolClassForums">) =>
+    Option.getOrNull(HashMap.get(readStateByForumId, forumId))
+      ?.lastReadSequence ?? 0;
   const forumsWithUnreadPotential = pipe(
     forums,
     Arr.map((forum, index) => ({
@@ -69,9 +72,7 @@ export const getForumUnreadCounts = Effect.fn(
       if (forum.postCount === 0) {
         return false;
       }
-      const lastReadSequence =
-        readStateByForumId.get(forum._id)?.lastReadSequence ?? 0;
-      return lastReadSequence < forum.nextPostSequence - 1;
+      return lastReadSequenceOf(forum._id) < forum.nextPostSequence - 1;
     })
   );
   const unreadCounts = Arr.map(forums, () => 0);
@@ -84,7 +85,7 @@ export const getForumUnreadCounts = Effect.fn(
       Arr.map(forumsWithUnreadPotential, ({ forum }) => ({
         bounds: {
           lower: {
-            key: readStateByForumId.get(forum._id)?.lastReadSequence ?? 0,
+            key: lastReadSequenceOf(forum._id),
             inclusive: false,
           },
         },
@@ -98,7 +99,7 @@ export const getForumUnreadCounts = Effect.fn(
       Arr.map(forumsWithUnreadPotential, ({ forum }) => ({
         bounds: {
           lower: {
-            key: readStateByForumId.get(forum._id)?.lastReadSequence ?? 0,
+            key: lastReadSequenceOf(forum._id),
             inclusive: false,
           },
         },
