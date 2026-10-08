@@ -16,8 +16,6 @@ const readReference = Ref.getFunctionReference(refs.internal.nina.focus.read);
 const OTHER_LEARNER_SEEDED_AT = Date.UTC(2026, 8, 27, 12);
 /** Decodes stored artifacts through the contract production decodes. */
 const SignedArtifactJson = Schema.fromJsonString(SignedContentArtifactSchema);
-/** Encodes a tampered artifact as the JSON text the content store keeps. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 describe("Nina question focus", () => {
   it("freezes a Pro learner's finished question", async () => {
@@ -172,7 +170,7 @@ describe("Nina question focus", () => {
           onExcessProperty: "error",
         })(stored.artifactJson);
         await ctx.db.patch("contentArtifacts", stored._id, {
-          artifactJson: encodeJson({
+          artifactJson: Schema.encodeSync(SignedArtifactJson)({
             ...artifact,
             artifactHash: f.seed.fixture.placement.answerArtifactHash,
           }),
