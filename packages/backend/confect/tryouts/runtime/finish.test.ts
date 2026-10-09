@@ -31,6 +31,18 @@ const EXPIRED_AT = NOW - 1000;
 const SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 const FIRST_SECTION = "pengetahuan-kuantitatif";
 const SECOND_SECTION = "penalaran-matematika";
+
+/** Counts the queries one spied database ran against the three IRT tables. */
+function countIrtQueries(calls: readonly (readonly [string])[]) {
+  const count = (tableName: string) =>
+    Arr.filter(calls, ([name]) => name === tableName).length;
+  return {
+    calibrationRunQueryCount: count("irtCalibrationRuns"),
+    placementQueryCount: count("tryoutAttemptPlacements"),
+    scaleItemQueryCount: count("irtScaleItems"),
+  };
+}
+
 describe("tryouts/runtime/finish", () => {
   it.each([false, true])(
     "expires IRT sections at the attempt deadline despite earlier entitlement expiry: %s",
@@ -152,18 +164,7 @@ describe("tryouts/runtime/finish", () => {
             now: NOW,
           }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
         );
-        const placementQueryCount = Arr.filter(
-          query.mock.calls,
-          ([tableName]) => tableName === "tryoutAttemptPlacements"
-        ).length;
-        const scaleItemQueryCount = Arr.filter(
-          query.mock.calls,
-          ([tableName]) => tableName === "irtScaleItems"
-        ).length;
-        const calibrationRunQueryCount = Arr.filter(
-          query.mock.calls,
-          ([tableName]) => tableName === "irtCalibrationRuns"
-        ).length;
+        const queryCounts = countIrtQueries(query.mock.calls);
         query.mockRestore();
         const sections = await ctx.db
           .query("tryoutSectionAttempts")
@@ -179,9 +180,7 @@ describe("tryouts/runtime/finish", () => {
           .unique();
         return {
           attempt: await ctx.db.get(attemptId),
-          calibrationRunQueryCount,
-          placementQueryCount,
-          scaleItemQueryCount,
+          ...queryCounts,
           score,
           sections,
         };
@@ -395,18 +394,7 @@ describe("tryouts/runtime/finish", () => {
           section: sectionAttempt,
         }).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
       );
-      const placementQueryCount = Arr.filter(
-        query.mock.calls,
-        ([tableName]) => tableName === "tryoutAttemptPlacements"
-      ).length;
-      const scaleItemQueryCount = Arr.filter(
-        query.mock.calls,
-        ([tableName]) => tableName === "irtScaleItems"
-      ).length;
-      const calibrationRunQueryCount = Arr.filter(
-        query.mock.calls,
-        ([tableName]) => tableName === "irtCalibrationRuns"
-      ).length;
+      const queryCounts = countIrtQueries(query.mock.calls);
       query.mockRestore();
       const score = await ctx.db
         .query("tryoutScores")
@@ -416,9 +404,7 @@ describe("tryouts/runtime/finish", () => {
         .unique();
       return {
         attempt: await ctx.db.get(attemptId),
-        calibrationRunQueryCount,
-        placementQueryCount,
-        scaleItemQueryCount,
+        ...queryCounts,
         score,
         section: await ctx.db.get(sectionId),
       };

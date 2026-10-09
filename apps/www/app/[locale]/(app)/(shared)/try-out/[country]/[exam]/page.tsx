@@ -14,7 +14,7 @@ import {
   readTryoutExamPage,
 } from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 
 /**
  * Lets a navigation into an exam published after the build wait for its
@@ -37,7 +37,7 @@ export const instant = false;
 export async function generateStaticParams({
   params,
 }: {
-  params: { locale: string };
+  params: LocaleRouteParams;
 }) {
   const routes = await Effect.runPromise(
     readTryoutCatalogRoutes(getLocaleOrThrow(params.locale))
@@ -49,7 +49,7 @@ export async function generateStaticParams({
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ country: string; exam: string; locale: string }>;
+  params: PageProps<"/[locale]/try-out/[country]/[exam]">["params"];
 }) {
   const { country, exam, locale: localeParam } = await params;
   const locale = getLocaleOrThrow(localeParam);

@@ -8,6 +8,7 @@ import {
   readPathname,
 } from "@/e2e/support/navigation/prefetch";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { NEXT_ROUTER_REQUEST_HEADER } from "@/e2e/support/requests";
 import { paginationNavigation } from "@/e2e/support/selector";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
@@ -35,7 +36,7 @@ const verifyNextLesson = Effect.fn("NakafaE2E.verifyNextLesson")(function* (
   const requested = MutableList.make<string>();
   yield* Effect.sync(() =>
     page.on("request", (request) => {
-      if (request.headers().rsc === "1") {
+      if (request.headers()[NEXT_ROUTER_REQUEST_HEADER] === "1") {
         MutableList.append(requested, new URL(request.url()).pathname);
       }
     })

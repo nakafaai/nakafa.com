@@ -81,7 +81,8 @@ function isLiteralValue(literal: Node): boolean {
 
 /**
  * Whether a type is an object literal of one or more properties, each with a
- * literal type, such as `{ readonly family: "program" }`.
+ * literal type or a selector of its own, such as `{ readonly family: "program" }`
+ * or `{ translation: { id: "english" } }`.
  */
 function isSelector(type: TypeNode | undefined): boolean {
   return (
@@ -93,7 +94,7 @@ function isSelector(type: TypeNode | undefined): boolean {
       (member) =>
         isPropertySignatureDeclaration(member) &&
         member.type !== undefined &&
-        isLiteralType(member.type)
+        (isLiteralType(member.type) || isSelector(member.type))
     )
   );
 }
@@ -118,7 +119,7 @@ function selectsMembers(type: TypeReferenceNode) {
  * second argument is skipped, because it picks union members and declares no
  * shape.
  */
-function objectLiterals(type: TypeNode): readonly TypeLiteralNode[] {
+export function objectLiterals(type: TypeNode): readonly TypeLiteralNode[] {
   if (isTypeLiteralNode(type)) {
     return [type];
   }
@@ -239,7 +240,7 @@ function ownMembers(
  * Returns the type parameter names that a node declares for its own children,
  * such as `T` in `<T>(value: T) => T` or in `{ [T in Keys]: T }`.
  */
-function declaredNames(node: Node): readonly string[] {
+export function declaredNames(node: Node): readonly string[] {
   return Arr.flatMap(children(node), (child) =>
     isTypeParameterDeclaration(child) ? [child.name.text] : []
   );
@@ -260,7 +261,7 @@ function inferredNames(node: Node): readonly string[] {
  * parameter of the same name shadows it inside that node, and an `infer` of the
  * same name shadows it in a conditional type's extends clause and true branch.
  */
-function mentions(node: Node, names: readonly string[]): boolean {
+export function mentions(node: Node, names: readonly string[]): boolean {
   if (
     isTypeReferenceNode(node) &&
     isIdentifier(node.typeName) &&

@@ -7,7 +7,8 @@ type PublicSectionPage = NonNullable<
   Ref.Returns<typeof tryouts.queries.catalog.getSectionPage>
 >;
 
-type RetainedSectionAttemptPage = Extract<
+/** The retained attempt page of one section, as its query returns it. */
+export type RetainedSectionAttemptPage = Extract<
   NonNullable<Ref.Returns<typeof tryouts.queries.attemptPage.getSection>>,
   { kind: "retained" }
 >;

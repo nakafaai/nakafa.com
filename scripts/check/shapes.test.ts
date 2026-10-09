@@ -295,8 +295,10 @@ type Drafts = Exclude<Status, { readonly state: "draft" | "archived"; readonly c
 type Flags = Extract<Row, { readonly done: true; readonly failed: false }>;
 type Level = Extract<Row, { readonly n: -1 }>;
 type Choice = Extract<Row, { readonly k: ("a" | "b") }>;
+type Nested = Extract<Row, { readonly source: { readonly id: "english" } }>;
+type Open = Extract<Row, { readonly source: { readonly id: string } }>;
 `),
-        []
+        [7]
       );
     })
   );
@@ -329,114 +331,6 @@ export const bare = Schema.suspend((): Schema.Codec => BareSchema);
 export const other = Schema.suspend(makeThunk);
 `),
           [1]
-        );
-      })
-  );
-
-  it.effect("allows a shape whose own member holds a function", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* shapes(`export interface Toggle {
-  readonly onChange: (value: boolean) => void;
-}
-export type Handlers = { readonly onOpen: () => void };
-export type Wrapped = Readonly<{ onOpen: (() => void) | null }>;
-`),
-        []
-      );
-    })
-  );
-
-  it.effect(
-    "keeps a shape reported when its members are only call or construct signatures",
-    () =>
-      Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* shapes(`export interface Callable {
-  (value: boolean): void;
-}
-export interface Constructible {
-  new (value: boolean): Toggle;
-}
-`),
-          [1, 4]
-        );
-      })
-  );
-
-  it.effect("allows a shape whose own member holds a React value", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* shapes(`import type { ReactNode } from "react";
-export interface Card {
-  readonly body: ReactNode;
-}
-`),
-        []
-      );
-    })
-  );
-
-  it.effect(
-    "allows a shape whose own member holds a parser syntax-tree node, and still reports plain data",
-    () =>
-      Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* shapes(`import type { JSXElement } from "estree-jsx";
-export interface Snippet {
-  readonly element: JSXElement;
-}
-export interface Lesson {
-  readonly title: string;
-}
-`),
-          [5]
-        );
-      })
-  );
-
-  it.effect(
-    "keeps a shape reported when a member names no React import or a local data alias",
-    () =>
-      Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* shapes(`import type { ReactNode } from "./nodes";
-type Title = string;
-export interface Imported {
-  readonly body: ReactNode;
-}
-export interface Aliased {
-  readonly title: Title;
-}
-`),
-          [3, 6]
-        );
-      })
-  );
-
-  it.effect(
-    "allows a shape that holds an Effect runtime handle, an AI SDK message part, or a same-module shape of functions",
-    () =>
-      Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* shapes(`import type { TextUIPart } from "ai";
-import type { Fiber } from "effect";
-interface Actions {
-  readonly close: () => void;
-}
-export interface Save {
-  readonly fiber: Fiber.Fiber<void, never>;
-  readonly owner: symbol;
-}
-export interface Entry {
-  readonly key: string;
-  readonly part: TextUIPart;
-}
-export interface ContextValue {
-  readonly actions: Actions;
-}
-`),
-          []
         );
       })
   );

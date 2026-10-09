@@ -81,11 +81,6 @@ const navigationIcons: {
   state: Flag01Icon,
 };
 
-/** Resolves a source-owned material identity to its Hugeicons card icon. */
-export function readCurriculumMaterialIcon(material: string) {
-  return getMaterialIcon(material);
-}
-
 /** Resolves a source-owned navigation identity to its Hugeicons card icon. */
 export function readCurriculumNavigationIcon(key: ProgramNavigationIconKey) {
   return navigationIcons[key];
@@ -99,7 +94,7 @@ export function readCurriculumRouteIcon(route: CurriculumViewRoute) {
     return readCurriculumNavigationIcon(source.key);
   }
 
-  return readCurriculumMaterialIcon(source.key);
+  return getMaterialIcon(source.key);
 }
 
 /**

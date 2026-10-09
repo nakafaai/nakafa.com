@@ -1,5 +1,5 @@
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import {
-  getUnknownErrorMessage,
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";

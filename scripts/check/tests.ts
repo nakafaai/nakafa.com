@@ -13,6 +13,7 @@ import {
   ownerBlock,
   sharedPackageName,
 } from "#scripts/check/compiler";
+import { inspectDeploySource } from "#scripts/check/deploy";
 import {
   effectFindings,
   effectTestViolations,
@@ -24,6 +25,7 @@ import { inspectGatewaySource } from "#scripts/check/gateway";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
+import { inspectModuleSize } from "#scripts/check/size";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
 import { runEntry } from "#scripts/entry";
@@ -80,6 +82,8 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectReactSource(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
+        inspectModuleSize(file, sourceFile),
+        inspectDeploySource(file, sourceFile),
       ])
     )
   );

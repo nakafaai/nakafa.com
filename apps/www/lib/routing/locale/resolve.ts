@@ -2,7 +2,10 @@ import { routing } from "@repo/internationalization/src/routing";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, Data, Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
-import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
+import {
+  readPublishedLocalizedHref,
+  toNavigationHref,
+} from "@/lib/routing/locale/published";
 import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
 /** Locale values accepted by next-intl routing and public route projection. */
@@ -57,14 +60,6 @@ function parseLocalizedHref(href: string): ParsedLocalizedHref {
     publicPath: Arr.join(publicSegments, "/"),
     search: url.search,
   };
-}
-
-/**
- * Returns a next-intl navigation href without a locale prefix; the router adds
- * the target locale using its configured localized pathname mapping.
- */
-function toNavigationHref(publicPath: string, suffix: string) {
-  return `/${publicPath}${suffix}`;
 }
 
 /** Preserves static page query/hash state when no source projection is needed. */

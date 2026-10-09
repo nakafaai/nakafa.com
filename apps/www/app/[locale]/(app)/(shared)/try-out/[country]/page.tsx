@@ -17,7 +17,7 @@ import {
   readTryoutHubPage,
 } from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 
@@ -42,7 +42,7 @@ export const instant = false;
 export async function generateStaticParams({
   params,
 }: {
-  params: { locale: string };
+  params: LocaleRouteParams;
 }) {
   const routes = await Effect.runPromise(
     readTryoutCatalogRoutes(getLocaleOrThrow(params.locale))
@@ -54,7 +54,7 @@ export async function generateStaticParams({
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ country: string; locale: string }>;
+  params: PageProps<"/[locale]/try-out/[country]">["params"];
 }) {
   const { country, locale: localeParam } = await params;
   const locale = getLocaleOrThrow(localeParam);

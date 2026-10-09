@@ -1,4 +1,4 @@
-import { slugify } from "@repo/utilities/slug";
+import { toAnchorSlug } from "@repo/utilities/slug";
 import { cva } from "class-variance-authority";
 
 /**
@@ -26,7 +26,7 @@ export const headingTextVariants = cva(
 
 /** Produces the stable anchor used by rendered Markdown headings. */
 export function createHeadingId(text: string) {
-  return slugify(createHeadingLabel(text));
+  return toAnchorSlug(createHeadingLabel(text));
 }
 
 /** Removes MDX markup while retaining readable heading text. */
