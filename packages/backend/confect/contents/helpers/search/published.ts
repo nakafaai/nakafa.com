@@ -19,7 +19,6 @@ type ContentSearchInput = typeof contentSearchInputValidator.Type;
 type PublishedSearchOwner = NonNullable<
   Effect.Success<ReturnType<typeof loadSearchOwner>>
 >;
-type PublishedFamily = SearchFamily;
 /** Returns active searchable families selected by the requested UI section. */
 export function getPublishedSearchFamilies(
   owner: PublishedSearchOwner | null,
@@ -28,7 +27,7 @@ export function getPublishedSearchFamilies(
   if (!owner) {
     return [];
   }
-  let families: PublishedFamily[] = [];
+  let families: SearchFamily[] = [];
   if (
     Arr.contains(owner.families, "article") &&
     (section === undefined || section === "articles")
@@ -51,7 +50,7 @@ export const readPublishedSearchDocuments = Effect.fn(
   queryTexts: readonly string[],
   scanLimit: number,
   owner: PublishedSearchOwner,
-  families: readonly PublishedFamily[]
+  families: readonly SearchFamily[]
 ) {
   if (queryTexts.length === 0) {
     const groups = yield* Effect.forEach(
@@ -129,7 +128,7 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
   function* (
     slot: ModelSlot,
     locale: ContentSearchInput["locale"],
-    families: readonly PublishedFamily[],
+    families: readonly SearchFamily[],
     queryText: string,
     scanLimit: number
   ) {
@@ -146,66 +145,59 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
   }
 );
 /** Reads full-text and exact-path candidates for one active family. */
-const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
-  function* (
-    slot: ModelSlot,
-    locale: ContentSearchInput["locale"],
-    family: PublishedFamily,
-    route: null | string,
-    queryText: string,
-    scanLimit: number
-  ) {
-    const database = yield* DatabaseReader;
-    const exact = route
-      ? yield* database
-          .table("contentIndex")
-          .get(
-            "by_slot_and_appLocale_and_family_and_publicPath",
-            slot,
-            locale,
-            family,
-            route
-          )
-          .pipe(
-            Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null))
-          )
-      : null;
-    const hits = yield* database
-      .table("contentIndex")
-      .search("search_text_by_slot_and_family_and_appLocale", (index) =>
-        index
-          .search("text", queryText)
-          .eq("slot", slot)
-          .eq("family", family)
-          .eq("appLocale", locale)
-      )
-      .take(scanLimit);
-    const rows = exact
-      ? [exact, ...Arr.filter(hits, (row) => row._id !== exact._id)]
-      : hits;
-    return Arr.take(rows, scanLimit);
-  },
-  Effect.orDie
-);
+const searchFamily = Effect.fn("contents.search.searchSearchFamily")(function* (
+  slot: ModelSlot,
+  locale: ContentSearchInput["locale"],
+  family: SearchFamily,
+  route: null | string,
+  queryText: string,
+  scanLimit: number
+) {
+  const database = yield* DatabaseReader;
+  const exact = route
+    ? yield* database
+        .table("contentIndex")
+        .get(
+          "by_slot_and_appLocale_and_family_and_publicPath",
+          slot,
+          locale,
+          family,
+          route
+        )
+        .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)))
+    : null;
+  const hits = yield* database
+    .table("contentIndex")
+    .search("search_text_by_slot_and_family_and_appLocale", (index) =>
+      index
+        .search("text", queryText)
+        .eq("slot", slot)
+        .eq("family", family)
+        .eq("appLocale", locale)
+    )
+    .take(scanLimit);
+  const rows = exact
+    ? [exact, ...Arr.filter(hits, (row) => row._id !== exact._id)]
+    : hits;
+  return Arr.take(rows, scanLimit);
+}, Effect.orDie);
 /** Browses one active family through its stable route ordering. */
-const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
-  function* (
-    slot: ModelSlot,
-    locale: ContentSearchInput["locale"],
-    family: PublishedFamily,
-    scanLimit: number
-  ) {
-    const database = yield* DatabaseReader;
-    const rows = yield* database
-      .table("contentIndex")
-      .index("by_slot_and_appLocale_and_family_and_publicPath", (index) =>
-        index.eq("slot", slot).eq("appLocale", locale).eq("family", family)
-      )
-      .take(scanLimit)
-      .pipe(Effect.orDie);
-    return rows;
-  }
-);
+const browseFamily = Effect.fn("contents.search.browseSearchFamily")(function* (
+  slot: ModelSlot,
+  locale: ContentSearchInput["locale"],
+  family: SearchFamily,
+  scanLimit: number
+) {
+  const database = yield* DatabaseReader;
+  const rows = yield* database
+    .table("contentIndex")
+    .index("by_slot_and_appLocale_and_family_and_publicPath", (index) =>
+      index.eq("slot", slot).eq("appLocale", locale).eq("family", family)
+    )
+    .take(scanLimit)
+    .pipe(Effect.orDie);
+  return rows;
+});
 /** Authenticates indexed hits before projecting public search documents. */
 function authenticateSearchRows(
   rows: readonly Docs["contentIndex"][],
