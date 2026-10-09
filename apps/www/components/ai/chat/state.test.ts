@@ -1,14 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import {
   patchChatPage,
   removeChatFromPage,
   updateOwnChatVisibility,
 } from "@/components/ai/chat/state";
 
-const firstId = "chat-1" as Id<"chats">;
-const secondId = "chat-2" as Id<"chats">;
+const firstId = Schema.decodeUnknownSync(Id("chats"))("chat-1");
+const secondId = Schema.decodeUnknownSync(Id("chats"))("chat-2");
+const userId = Schema.decodeUnknownSync(Id("users"))("user-1");
 const page = [
   {
     _creationTime: 1,
@@ -17,7 +19,7 @@ const page = [
     title: "First",
     type: "study",
     updatedAt: 1,
-    userId: "user-1" as Id<"users">,
+    userId,
     visibility: "private",
   },
   {
@@ -27,7 +29,7 @@ const page = [
     title: "Second",
     type: "study",
     updatedAt: 2,
-    userId: "user-1" as Id<"users">,
+    userId,
     visibility: "public",
   },
 ] satisfies Docs["chats"][];
