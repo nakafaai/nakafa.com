@@ -270,3 +270,6 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
     });
   });
 });
+
+/** The Better Auth instance that `createAuth` builds, for typed clients. */
+export type Auth = Effect.Success<ReturnType<typeof createAuth>>;

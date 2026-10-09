@@ -1,14 +1,17 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import {
   createConversationTestForum,
   createConversationTestPost,
 } from "@/components/school/classes/forum/conversation/fixtures/data";
 import { createOptimisticForumPost } from "@/components/school/classes/forum/conversation/input/optimistic";
 
-const optimisticPostId = "optimistic_post" as Id<"schoolClassForumPosts">;
+const optimisticPostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "optimistic_post"
+);
 const currentUser = {
-  _id: "user_current" as Id<"users">,
+  _id: Schema.decodeUnknownSync(Id("users"))("user_current"),
   email: "nabil@example.test",
   image: "https://example.test/nabil.png",
   name: "Test Learner",

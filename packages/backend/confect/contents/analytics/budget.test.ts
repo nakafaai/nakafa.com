@@ -30,9 +30,7 @@ describe("content analytics transaction budget", () => {
   it("continues only while every transaction reserve remains", () => {
     expect(hasContentAnalyticsHeadroom(transactionMetrics())).toBe(true);
 
-    for (const key of Rec.keys(
-      CONTENT_ANALYTICS_HEADROOM
-    ) as (keyof TransactionMetrics)[]) {
+    for (const key of Rec.keys(CONTENT_ANALYTICS_HEADROOM)) {
       expect(
         hasContentAnalyticsHeadroom(
           transactionMetrics({ [key]: CONTENT_ANALYTICS_HEADROOM[key] - 1 })

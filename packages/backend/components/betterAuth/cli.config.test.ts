@@ -5,7 +5,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("betterAuth/auth", () => {
+describe("betterAuth/cli.config", () => {
   it.effect("exposes the schema without requiring deployment auth values", () =>
     Effect.gen(function* () {
       yield* Effect.sync(() => {
@@ -14,7 +14,7 @@ describe("betterAuth/auth", () => {
         vi.stubEnv("AUTH_GOOGLE_SECRET", undefined);
       });
       const { auth } = yield* Effect.promise(
-        () => import("@repo/backend/components/betterAuth/auth")
+        () => import("@repo/backend/components/betterAuth/cli.config")
       );
       const context = yield* Effect.promise(() => auth.$context);
 

@@ -1,10 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Effect, Schema } from "effect";
 import { restoreForumPostInputDraft } from "@/components/school/classes/forum/conversation/input/draft";
 
+const firstPostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "post_1"
+);
+const secondPostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "post_2"
+);
 const replyTarget = {
-  postId: "post_1" as Id<"schoolClassForumPosts">,
+  postId: firstPostId,
   userName: "Test Learner",
 };
 
@@ -62,7 +68,7 @@ describe("conversation/input/draft", () => {
         draft: {
           body: "failed message",
           replyTarget: {
-            postId: "post_2" as Id<"schoolClassForumPosts">,
+            postId: secondPostId,
             userName: "Other User",
           },
         },

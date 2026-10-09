@@ -20,9 +20,9 @@ type DependencyHold = typeof ApprovedSpecsSchema.Type &
 
 /** The exact package manager the root manifest pins for every checkout and CI job. */
 export const PACKAGE_MANAGER = "pnpm@11.28.5";
-export const CONTRACT_PACKAGE_VERSION = "0.47.2";
+export const CONTRACT_PACKAGE_VERSION = "0.48.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.0.1";
+export const EFFECT_COHORT_VERSION = "4.0.2";
 /**
  * Effect packages that only dependencies declare: the Confect CLI's platform
  * packages and the Confect server's AI providers. An override keeps each one
@@ -86,7 +86,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.48.1",
+    approved: "0.51.1",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -219,8 +219,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.48.1",
-    "Compiler patching moves with TypeScript and Effect; 0.48 ships the standard libraries beside the patched compiler and adds per-export allow lists for unstable APIs.",
+    "0.51.1",
+    "Compiler patching moves with TypeScript and Effect; 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), and 0.51 adds declaration locations to it.",
   ],
   ["vitest@latest", "5.0.3", "The Effect 4 test adapter requires Vitest 5."],
   [

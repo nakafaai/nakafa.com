@@ -1,9 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import { markTranscriptRead } from "@/components/school/classes/forum/read/state";
 
 /** Create a typed post id for pure state fixtures. */
-const postId = (value: string) => value as Id<"schoolClassForumPosts">;
+const postId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"));
 
 const posts = [
   { _id: postId("post-1"), isUnread: false, sequence: 1 },
