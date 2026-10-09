@@ -20,3 +20,11 @@ export function releaseFail(code: ReleaseError["code"], message: string) {
     })
   );
 }
+
+/** Rejects a semantic identity shared by multiple current catalog rows. */
+export function identityCollision(family: string) {
+  return releaseFail(
+    "CONTENT_RELEASE_INTEGRITY",
+    `Current ${family} identity resolves multiple catalog rows.`
+  );
+}

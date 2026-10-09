@@ -4,13 +4,11 @@ import {
   type Expression,
   type FunctionDeclaration,
   type FunctionExpression,
-  isArrowFunction,
   isBinaryExpression,
   isBlock,
   isCallExpression,
   isConditionalExpression,
   isFunctionDeclaration,
-  isFunctionExpression,
   isIdentifier,
   isImportDeclaration,
   isJsxElement,
@@ -27,6 +25,7 @@ import {
   type SourceFile,
   type Statement,
 } from "typescript/unstable/ast";
+import { isFunctionValue } from "#scripts/check/scope";
 import { children } from "#scripts/check/source";
 
 type RenderFunction = ArrowFunction | FunctionDeclaration | FunctionExpression;
@@ -51,15 +50,6 @@ function isJsxValue(node: Expression | undefined): boolean {
   }
   return (
     isJsxElement(node) || isJsxSelfClosingElement(node) || isJsxFragment(node)
-  );
-}
-
-/** Whether a node is a function expression or arrow function. */
-function isFunctionValue(
-  node: Node | undefined
-): node is ArrowFunction | FunctionExpression {
-  return (
-    node !== undefined && (isArrowFunction(node) || isFunctionExpression(node))
   );
 }
 

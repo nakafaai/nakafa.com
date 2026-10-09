@@ -4,13 +4,12 @@ import {
   Effect,
   FileSystem,
   Option,
-  type PlatformError,
   Schema,
-  Stream,
 } from "effect";
 import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";
 import { writeOutput } from "#scripts/output";
+import { collectText } from "#scripts/process";
 
 const GIT_REVISION_PATTERN = /^[0-9a-f]{40}$/u;
 
@@ -36,19 +35,6 @@ class ProductionAcceptanceError extends Schema.TaggedError<ProductionAcceptanceE
 ) {}
 
 const GitRevision = Schema.String.check(Schema.isPattern(GIT_REVISION_PATTERN));
-
-/** Collects one child-process stream as UTF-8 text. */
-function collectText(
-  stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>
-) {
-  return stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(
-      () => "",
-      (output, chunk) => output + chunk
-    )
-  );
-}
 
 /** Reads head changes since the merge base without hiding renamed sources. */
 export const readProductionChanges = Effect.fn(

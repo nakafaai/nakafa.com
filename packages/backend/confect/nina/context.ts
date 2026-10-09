@@ -27,7 +27,7 @@ import { tryoutLayer } from "@repo/backend/content/tryout/confect";
 import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { cleanSlug } from "@repo/utilities/helper";
-import { slugify } from "@repo/utilities/slug";
+import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 
 const referenceLayer = Layer.mergeAll(
@@ -189,7 +189,7 @@ const resolvePlacement = Effect.fn("nina.context.placement")(function* (
   return {
     mode: "placement" as const,
     nodeKey: context.mapping.materialContextNodeKey,
-    parentHref: `/${locale}/${context.mapping.materialContextParentPath}#${slugify(label)}`,
+    parentHref: `/${locale}/${context.mapping.materialContextParentPath}#${toAnchorSlug(label)}`,
     parentTitle: label,
     programKey,
   };

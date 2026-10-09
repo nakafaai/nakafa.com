@@ -1,6 +1,6 @@
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
-import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { identityCollision } from "@repo/backend/confect/contentRelease/error";
 import { quranSearchIdentity } from "@repo/backend/confect/contentRelease/quran/facts";
 import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
@@ -72,11 +72,3 @@ const readQuranReferenceRow = Effect.fn("contentRelease.readQuranReferenceRow")(
     );
   }
 );
-
-/** Rejects a semantic identity shared by multiple current catalog rows. */
-function identityCollision(family: string) {
-  return releaseFail(
-    "CONTENT_RELEASE_INTEGRITY",
-    `Current ${family} identity resolves multiple catalog rows.`
-  );
-}

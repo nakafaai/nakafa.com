@@ -1,4 +1,4 @@
-import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { identityCollision } from "@repo/backend/confect/contentRelease/error";
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import type { ActiveContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
@@ -107,10 +107,3 @@ const readMaterialRows = Effect.fn("contentRelease.readMaterialReferenceRows")(
     ];
   }
 );
-/** Rejects a semantic identity shared by multiple current catalog rows. */
-function identityCollision(family: string) {
-  return releaseFail(
-    "CONTENT_RELEASE_INTEGRITY",
-    `Current ${family} identity resolves multiple catalog rows.`
-  );
-}
