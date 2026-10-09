@@ -1,6 +1,5 @@
 import { Array as Arr, HashSet } from "effect";
 import {
-  type ExportDeclaration,
   isAsyncKeyword,
   isAwaitExpression,
   isBinaryExpression,
@@ -15,7 +14,6 @@ import {
   isImportDeclaration,
   isImportEqualsDeclaration,
   isMethodDeclaration,
-  isNamedExports,
   isNamedImports,
   isObjectLiteralExpression,
   isPropertyAccessExpression,
@@ -32,7 +30,7 @@ import {
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { candidate, loadsImport } from "#scripts/check/rules";
+import { candidate, loadsExport, loadsImport } from "#scripts/check/rules";
 import { boundFunctions, isFunctionValue } from "#scripts/check/scope";
 import { unwrapped } from "#scripts/check/wrapper";
 
@@ -72,17 +70,6 @@ function namesNodeModule(specifier: Node | undefined) {
     specifier !== undefined &&
     isStringLiteralLikeNode(specifier) &&
     HashSet.has(NODE_MODULES, specifier.text)
-  );
-}
-
-/** Whether an export declaration loads at runtime: it is not `export type`, and it does not name only types. */
-function loadsExport(node: ExportDeclaration) {
-  const bindings = node.exportClause;
-  return !(
-    node.isTypeOnly ||
-    (bindings !== undefined &&
-      isNamedExports(bindings) &&
-      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
   );
 }
 

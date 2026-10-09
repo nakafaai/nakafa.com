@@ -181,6 +181,48 @@ describe("Effect-native rule scopes", () => {
     })
   );
 
+  it.effect("counts a runtime re-export from React as a value import", () =>
+    Effect.gen(function* () {
+      const timer =
+        "export const retry = (run: () => void) => setTimeout(run, 300);\n";
+      assert.deepStrictEqual(
+        yield* findings([
+          {
+            file: "apps/www/lib/hooks.ts",
+            sourceText: `export { useState } from "react";\n${timer}`,
+          },
+          {
+            file: "apps/www/lib/all.ts",
+            sourceText: `export * from "react-dom";\n${timer}`,
+          },
+          {
+            file: "apps/www/lib/types.ts",
+            sourceText: `export type { ReactNode } from "react";\n${timer}`,
+          },
+          {
+            file: "apps/www/lib/names.ts",
+            sourceText: `export { type FC } from "react";\n${timer}`,
+          },
+          {
+            file: "apps/www/lib/helper.ts",
+            sourceText: `export { helper } from "./helper";\n${timer}`,
+          },
+          {
+            file: "apps/www/lib/local.ts",
+            sourceText:
+              "const retry = (run: () => void) => setTimeout(run, 300);\nexport { retry };\n",
+          },
+        ]),
+        [
+          "apps/www/lib/helper.ts timer",
+          "apps/www/lib/local.ts timer",
+          "apps/www/lib/names.ts timer",
+          "apps/www/lib/types.ts timer",
+        ]
+      );
+    })
+  );
+
   it.effect("holds Confect and script domain code to Effect composition", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

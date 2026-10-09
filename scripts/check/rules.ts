@@ -1,10 +1,13 @@
 import { Array as Arr, Match, Schema } from "effect";
 import {
+  type ExportDeclaration,
   type Identifier,
   type ImportDeclaration,
   isExportAssignment,
+  isExportDeclaration,
   isIdentifier,
   isImportDeclaration,
+  isNamedExports,
   isNamedImports,
   isSatisfiesExpression,
   isStringLiteral,
@@ -259,19 +262,41 @@ export function loadsImport(node: ImportDeclaration) {
 }
 
 /**
- * Whether a module loads, at runtime, an import whose specifier `pattern`
- * matches. A type-only import does not count, so a helper that imports only
- * React types is not a React module.
+ * Whether an export declaration loads at runtime: it is not `export type`, and it
+ * does not name only types.
+ */
+export function loadsExport(node: ExportDeclaration) {
+  const bindings = node.exportClause;
+  return !(
+    node.isTypeOnly ||
+    (bindings !== undefined &&
+      isNamedExports(bindings) &&
+      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
+  );
+}
+
+/**
+ * Whether a module loads, at runtime, a module whose specifier `pattern` matches,
+ * through an import or a re-export. A type-only import or re-export does not
+ * count, so a helper that imports only React types is not a React module.
  */
 function loadsModule(sourceFile: SourceFile, pattern: RegExp) {
-  return Arr.some(
-    sourceFile.statements,
-    (statement) =>
-      isImportDeclaration(statement) &&
-      loadsImport(statement) &&
+  return Arr.some(sourceFile.statements, (statement) => {
+    if (isImportDeclaration(statement)) {
+      return (
+        loadsImport(statement) &&
+        isStringLiteral(statement.moduleSpecifier) &&
+        pattern.test(statement.moduleSpecifier.text)
+      );
+    }
+    return (
+      isExportDeclaration(statement) &&
+      loadsExport(statement) &&
+      statement.moduleSpecifier !== undefined &&
       isStringLiteral(statement.moduleSpecifier) &&
       pattern.test(statement.moduleSpecifier.text)
-  );
+    );
+  });
 }
 
 /** Whether a module renders or hooks into React, where timers belong to effects and handlers. */
