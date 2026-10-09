@@ -62,7 +62,7 @@ export const readEnvironment = <
               Arr.map(
                 formatIssues(issue).issues,
                 ({ message, path }) =>
-                  `${Arr.join(Arr.map(path ?? [], String), ".")}: ${message}`
+                  `${Arr.join(Arr.map(Arr.flatten(Arr.fromNullishOr(path)), String), ".")}: ${message}`
               ),
               "; "
             )

@@ -1,35 +1,19 @@
+import { postHogPublicKeys, urlSchema } from "@repo/analytics/public";
 import { readEnvironment } from "@repo/utilities/env";
 import { Schema } from "effect";
 
-const postHogKeySchema = Schema.String.check(Schema.isStartingWith("phc_"));
-const urlSchema = Schema.String.pipe(
-  Schema.check(Schema.makeFilter((value) => URL.canParse(value)))
-);
 const optionalStringSchema = Schema.UndefinedOr(Schema.String);
 /**
  * Validates the PostHog managed reverse proxy host read by Next config. Server
- * code only: the browser never reads this key.
+ * code only: the browser reads `@repo/analytics/public`.
  */
 export const postHogProxyKeys = () =>
   readEnvironment(
     { POSTHOG_PROXY_HOST: urlSchema },
     { POSTHOG_PROXY_HOST: process.env.POSTHOG_PROXY_HOST }
   );
-/** Validates public PostHog values used by browser analytics. */
-export const postHogPublicKeys = () =>
-  readEnvironment(
-    {
-      NEXT_PUBLIC_POSTHOG_KEY: postHogKeySchema,
-      NEXT_PUBLIC_POSTHOG_UI_HOST: urlSchema,
-    },
-    {
-      NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
-      NEXT_PUBLIC_POSTHOG_UI_HOST: process.env.NEXT_PUBLIC_POSTHOG_UI_HOST,
-    }
-  );
 /**
  * Validate the shared PostHog environment contract used by server analytics.
- * The browser reads `postHogPublicKeys` instead, so it never reads a server key.
  *
  * References:
  * https://posthog.com/docs/libraries/next-js

@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import {
-  deploymentKeys,
-  keys,
-  postHogProxyKeys,
-  postHogPublicKeys,
-} from "@repo/analytics/keys";
+import { deploymentKeys, keys, postHogProxyKeys } from "@repo/analytics/keys";
 
 /** Installs one complete analytics environment for each assertion. */
 function stubAnalyticsEnvironment() {
@@ -23,10 +18,6 @@ describe("analytics environment contracts", () => {
 
     expect(postHogProxyKeys()).toEqual({
       POSTHOG_PROXY_HOST: "https://t.nakafa.com",
-    });
-    expect(postHogPublicKeys()).toEqual({
-      NEXT_PUBLIC_POSTHOG_KEY: "phc_test",
-      NEXT_PUBLIC_POSTHOG_UI_HOST: "https://eu.posthog.com",
     });
     expect(keys()).toMatchObject({
       NEXT_PUBLIC_POSTHOG_KEY: "phc_test",
@@ -86,30 +77,6 @@ describe("required PostHog values", () => {
 
     vi.stubEnv("POSTHOG_PROXY_HOST", "not a url");
     expect(postHogProxyKeys).toThrow();
-  });
-
-  it("requires a project key with the phc_ prefix", () => {
-    stubAnalyticsEnvironment();
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", undefined);
-    expect(postHogPublicKeys).toThrow();
-
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
-    expect(postHogPublicKeys).toThrow();
-
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "ph_test");
-    expect(postHogPublicKeys).toThrow();
-  });
-
-  it("requires a URL UI host that is set and parseable", () => {
-    stubAnalyticsEnvironment();
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", undefined);
-    expect(postHogPublicKeys).toThrow();
-
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", "");
-    expect(postHogPublicKeys).toThrow();
-
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", "not a url");
-    expect(postHogPublicKeys).toThrow();
   });
 
   it("throws from the merged analytics keys when any one value is invalid", () => {

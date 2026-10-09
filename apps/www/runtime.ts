@@ -2,7 +2,7 @@ import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   isProtectedProduction,
 } from "@repo/backend/content/deployment";
-import { convexKeys } from "@repo/backend/keys";
+import { convexKeys } from "@repo/backend/public";
 import { readEnvironment } from "@repo/utilities/env";
 import { Effect, Schema } from "effect";
 

@@ -1,4 +1,4 @@
-import { convexKeys, convexSiteKeys } from "@repo/backend/keys";
+import { convexKeys, convexSiteKeys } from "@repo/backend/public";
 import { readEnvironment } from "@repo/utilities/env";
 import { Schema } from "effect";
 
