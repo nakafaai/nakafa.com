@@ -13,7 +13,7 @@
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts",
     "index-now": "node --env-file=.env.local --import tsx scripts/index-now.ts",
     "renderer:manifest": "tsx --conditions=import --conditions=react-server scripts/content/renderer.ts",
-    "start": "portless run --name nakafa next start",
+    "start": "portless run --name nakafa next start --keepAliveTimeout 70000",
     "test": "NODE_OPTIONS='--no-experimental-webstorage' vitest run",
     "test:browser": "playwright test",
     "test:ui": "NODE_OPTIONS='--no-experimental-webstorage' vitest --ui",
