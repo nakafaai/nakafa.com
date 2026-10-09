@@ -7,6 +7,7 @@ import {
   readPublishedTryoutExamPage,
   readPublishedTryoutSectionPage,
 } from "@/lib/content/tryout/catalog";
+import { temporaryRedirect } from "@/lib/routing/public/redirect";
 import {
   decodeAppLocale,
   readActiveTryoutPath,
@@ -111,7 +112,11 @@ const readNewestServingTrack = Effect.fn(
   return Option.getOrNull(Arr.head(newestTracks));
 });
 
-/** Redirects a retired track-less set to the same set in its newest live year track. */
+/**
+ * Answers a retired track-less set with a temporary redirect to the same set in
+ * its newest live year track. A newer year track can replace that track, so
+ * the answer must not be permanent.
+ */
 const readTracklessSetRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutTracklessSetMigration"
 )(function* (route: TracklessSetRoute) {
@@ -121,10 +126,15 @@ const readTracklessSetRedirect = Effect.fn(
     return null;
   }
   const track = yield* readNewestServingTrack(appLocale, examPath, set);
-  return track === null ? null : `/${appLocale}/${track.publicPath}/${set}`;
+  return track === null
+    ? null
+    : temporaryRedirect(`/${appLocale}/${track.publicPath}/${set}`);
 });
 
-/** Redirects a retired track-less section to its renamed section in the newest live year track. */
+/**
+ * Answers a retired track-less section with a temporary redirect to its renamed
+ * section in the newest live year track, for the same reason as its set.
+ */
 const readTracklessSectionRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutTracklessSectionMigration"
 )(function* (route: TracklessSetRoute, section: string) {
@@ -149,10 +159,12 @@ const readTracklessSectionRedirect = Effect.fn(
   });
   return page === null
     ? null
-    : `/${appLocale}/${track.publicPath}/${set}/${successor}`;
+    : temporaryRedirect(
+        `/${appLocale}/${track.publicPath}/${set}/${successor}`
+      );
 });
 
-/** Redirects one retired track-less URL, a set or a section, to its newest live track. */
+/** Answers one retired track-less URL, a set or a section, with a temporary redirect. */
 export const readTracklessRouteRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutTracklessMigration"
 )(function* (route: TracklessSetRoute) {

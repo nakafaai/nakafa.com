@@ -1,5 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Effect, HashMap, Option } from "effect";
+import { permanentRedirect } from "@/lib/routing/public/redirect";
 import {
   readActiveTryoutPath,
   SNBT_ROUTE,
@@ -83,7 +84,8 @@ export function readSectionSuccessor(
 
 /**
  * Resolves a retired SNBT section URL to its successor, only once the active
- * signed catalog has dropped the retired route and serves the successor.
+ * signed catalog has dropped the retired route and serves the successor. The
+ * renamed section does not move, so the answer is a permanent redirect.
  */
 export const readRetiredSectionRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutSectionMigration"
@@ -102,5 +104,5 @@ export const readRetiredSectionRedirect = Effect.fn(
   if (previous !== null || successor === null) {
     return null;
   }
-  return `/${retired.appLocale}/${successor}`;
+  return permanentRedirect(`/${retired.appLocale}/${successor}`);
 });

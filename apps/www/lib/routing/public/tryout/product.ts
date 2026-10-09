@@ -5,6 +5,7 @@ import {
 import { Effect, Option, Schema } from "effect";
 import { readPublishedTryoutSectionPage } from "@/lib/content/tryout/catalog";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
+import { permanentRedirect } from "@/lib/routing/public/redirect";
 import {
   decodeAppLocale,
   readActiveTryoutPath,
@@ -85,7 +86,7 @@ export const readRetiredSnbtExamRedirect = Effect.fn(
     publicPath: SNBT_EXAM_PATH,
     targetAppLocale: appLocale,
   });
-  return exam === null ? null : `/${appLocale}/${exam}`;
+  return exam === null ? null : permanentRedirect(`/${appLocale}/${exam}`);
 });
 
 /** Redirects a retired SNBT product set to its localized set once that set is live. */
@@ -102,7 +103,9 @@ const readRetiredSnbtSetRedirect = Effect.fn(
     return null;
   }
   const successor = yield* readLocalizedSnbtSet(appLocale, year, set);
-  return successor === null ? null : `/${appLocale}/${successor}`;
+  return successor === null
+    ? null
+    : permanentRedirect(`/${appLocale}/${successor}`);
 });
 
 /** Redirects a retired SNBT product part to its renamed section once that section page is live. */
@@ -127,10 +130,16 @@ const readRetiredSnbtPartRedirect = Effect.fn(
     appLocale,
     publicPath: `${setPath}/${section}`,
   });
-  return page === null ? null : `/${appLocale}/${setPath}/${section}`;
+  return page === null
+    ? null
+    : permanentRedirect(`/${appLocale}/${setPath}/${section}`);
 });
 
-/** Redirects one retired SNBT product URL to its set, or to its renamed part section. */
+/**
+ * Redirects one retired SNBT product URL to its set, or to its renamed part
+ * section. Both successors are permanent: a localized set and a renamed
+ * section do not move, so each answer is a permanent redirect.
+ */
 export const readRetiredSnbtProductRedirect = Effect.fn(
   "www.routing.publicHtml.tryoutProductMigration"
 )(function* (product: RetiredSnbtProduct) {

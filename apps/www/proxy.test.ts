@@ -190,7 +190,10 @@ describe("proxy", () => {
     const sourceUrl = new URL(source, "http://localhost:3000");
     const targetUrl = new URL(target, "http://localhost:3000");
     runtimeMocks.readRedirect.mockReturnValueOnce(
-      Effect.succeed(targetUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""))
+      Effect.succeed({
+        destination: targetUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""),
+        status: 308,
+      })
     );
     const response = await requestProxy(source, init);
     expect(response.status).toBe(308);
@@ -200,6 +203,62 @@ describe("proxy", () => {
       method: "GET",
       pathname: sourceUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""),
     });
+  });
+  it.each([
+    [
+      "a track-less set",
+      "/en/try-out/indonesia/snbt/set-1",
+      "/en/try-out/indonesia/snbt/2027/set-1",
+      307,
+    ],
+    [
+      "a track-less section",
+      "/en/try-out/indonesia/snbt/set-1/reading-and-writing-skills",
+      "/en/try-out/indonesia/snbt/2027/set-1/reading-comprehension-and-writing",
+      307,
+    ],
+    [
+      "a retired section",
+      "/en/try-out/indonesia/snbt/2027/set-1/reading-and-writing-skills",
+      "/en/try-out/indonesia/snbt/2027/set-1/reading-comprehension-and-writing",
+      308,
+    ],
+  ])(
+    "answers %s with the redirect status of its rule",
+    async (_kind, path, destination, status) => {
+      runtimeMocks.readRedirect.mockReturnValueOnce(
+        Effect.succeed({ destination, status })
+      );
+      const response = await requestProxy(path);
+      expect(response.status).toBe(status);
+      expect(response.headers.get("location")).toBe(
+        `http://localhost:3000${destination}`
+      );
+    }
+  );
+  it("answers a retired product URL with a permanent redirect", async () => {
+    runtimeMocks.readTryout.mockReturnValueOnce(
+      Effect.succeed({
+        tracks: [
+          {
+            publicPath: "try-out/indonesia/snbt/2027",
+            trackKey: "2027",
+            trackKind: "year",
+          },
+        ],
+      })
+    );
+    runtimeMocks.readRedirect.mockReturnValueOnce(
+      Effect.succeed({
+        destination: "/en/try-out/indonesia/snbt/2027/set-1",
+        status: 308,
+      })
+    );
+    const response = await requestProxy("/en/try-out/snbt/2027-set-1");
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/en/try-out/indonesia/snbt/2027/set-1"
+    );
   });
   it("tells the migration resolver when a URL carries a try-out attempt", async () => {
     const pathname = "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris";

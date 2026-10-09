@@ -142,9 +142,12 @@ export async function proxy(request: NextRequest) {
   );
   if (urlMigrationRedirect) {
     const redirectUrl = new URL(request.url);
-    redirectUrl.pathname = `${urlMigrationRedirect}${migrationSuffix}`;
+    redirectUrl.pathname = `${urlMigrationRedirect.destination}${migrationSuffix}`;
 
-    const response = NextResponse.redirect(redirectUrl, 308);
+    const response = NextResponse.redirect(
+      redirectUrl,
+      urlMigrationRedirect.status
+    );
     mergeRepresentationVary(response);
     return response;
   }

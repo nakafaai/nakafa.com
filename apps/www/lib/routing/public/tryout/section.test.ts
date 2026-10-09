@@ -80,7 +80,10 @@ describe("retired try-out redirects", () => {
             routes: [{ [appLocale]: successor.slice(4) }],
           });
 
-          expect(yield* readTryoutRedirect(pathname)).toBe(successor);
+          expect(yield* readTryoutRedirect(pathname)).toEqual({
+            destination: successor,
+            status: 308,
+          });
           expect(readLocalizedPathMock).toHaveBeenCalledWith({
             currentAppLocale: appLocale,
             publicPath: successor.slice(4),

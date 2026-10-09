@@ -51,14 +51,32 @@ describe("public URL migration redirects", () => {
     Effect.gen(function* () {
       const successor =
         "/id/try-out/indonesia/snbt/2027/set-1/literasi-dalam-bahasa-inggris";
-      readTryoutRedirectMock.mockReturnValueOnce(Effect.succeed(successor));
+      readTryoutRedirectMock.mockReturnValueOnce(
+        Effect.succeed({ destination: successor, status: 308 })
+      );
       const redirect = yield* readPublicUrlMigrationRedirect({
         hasAttemptCapability: false,
         method: "GET",
         pathname: "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris",
       });
-      expect(redirect).toBe(successor);
+      expect(redirect).toEqual({ destination: successor, status: 308 });
       expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("passes a temporary try-out redirect on with its status", () =>
+    Effect.gen(function* () {
+      const redirect = {
+        destination: "/en/try-out/indonesia/snbt/2027/set-1",
+        status: 307,
+      };
+      readTryoutRedirectMock.mockReturnValueOnce(Effect.succeed(redirect));
+      expect(
+        yield* readPublicUrlMigrationRedirect({
+          hasAttemptCapability: false,
+          method: "GET",
+          pathname: "/en/try-out/indonesia/snbt/set-1",
+        })
+      ).toEqual(redirect);
     })
   );
   it.effect("keeps a try-out attempt on the route it was frozen to", () =>
@@ -88,9 +106,11 @@ describe("public URL migration redirects", () => {
         pathname:
           "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
       });
-      expect(redirect).toBe(
-        "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
-      );
+      expect(redirect).toEqual({
+        destination:
+          "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling",
+        status: 308,
+      });
       expect(readNakafaRuntimeQueryMock).toHaveBeenCalledWith(
         expect.anything(),
         {
@@ -117,7 +137,10 @@ describe("public URL migration redirects", () => {
             pathname:
               "/id/subject/high-school/11/mathematics/technical-topic/section-1",
           })
-        ).toBe("/id/materi/mathematics/teknis-topic/section-1");
+        ).toEqual({
+          destination: "/id/materi/mathematics/teknis-topic/section-1",
+          status: 308,
+        });
         expect(
           yield* readPublicUrlMigrationRedirect({
             hasAttemptCapability: false,
@@ -168,7 +191,10 @@ describe("public URL migration redirects", () => {
           method: "GET",
           pathname,
         });
-        expect(redirect).toBe(`/${expectedIdentity.appLocale}/${publicPath}`);
+        expect(redirect).toEqual({
+          destination: `/${expectedIdentity.appLocale}/${publicPath}`,
+          status: 308,
+        });
         expect(readNakafaRuntimeQueryMock).toHaveBeenCalledWith(
           expect.anything(),
           expectedIdentity
@@ -228,7 +254,7 @@ describe("public URL migration redirects", () => {
         method: "GET",
         pathname,
       });
-      expect(redirect).toBe(expected);
+      expect(redirect).toEqual({ destination: expected, status: 308 });
       expect(readNakafaRuntimeQueryMock).not.toHaveBeenCalled();
     })
   );
@@ -242,7 +268,10 @@ describe("public URL migration redirects", () => {
         method: "HEAD",
         pathname: "/de/articles/politics",
       });
-      expect(redirect).toBe("/de/articles/politik");
+      expect(redirect).toEqual({
+        destination: "/de/articles/politik",
+        status: 308,
+      });
     })
   );
   it.effect("keeps article routes owned by a recovered signed release", () =>

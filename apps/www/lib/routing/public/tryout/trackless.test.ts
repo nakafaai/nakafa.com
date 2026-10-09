@@ -177,7 +177,10 @@ describe("retired try-out redirects", () => {
 
           expect(
             yield* readTryoutRedirect("/en/try-out/indonesia/snbt/set-1")
-          ).toBe("/en/try-out/indonesia/snbt/2027/set-1");
+          ).toEqual({
+            destination: "/en/try-out/indonesia/snbt/2027/set-1",
+            status: 307,
+          });
         })
     );
 
@@ -194,7 +197,10 @@ describe("retired try-out redirects", () => {
             yield* readTryoutRedirect(
               "/de/try-out/indonesien/snbt/aufgabensatz-1"
             )
-          ).toBe("/de/try-out/indonesien/snbt/2027/aufgabensatz-1");
+          ).toEqual({
+            destination: "/de/try-out/indonesien/snbt/2027/aufgabensatz-1",
+            status: 307,
+          });
         })
     );
 
@@ -226,7 +232,10 @@ describe("retired try-out redirects", () => {
 
           expect(
             yield* readTryoutRedirect("/en/try-out/indonesia/snbt/set-1")
-          ).toBe("/en/try-out/indonesia/snbt/2026/set-1");
+          ).toEqual({
+            destination: "/en/try-out/indonesia/snbt/2026/set-1",
+            status: 307,
+          });
         })
     );
 
@@ -350,9 +359,11 @@ describe("retired try-out redirects", () => {
             yield* readTryoutRedirect(
               "/en/try-out/indonesia/snbt/set-1/reading-and-writing-skills"
             )
-          ).toBe(
-            "/en/try-out/indonesia/snbt/2027/set-1/reading-comprehension-and-writing"
-          );
+          ).toEqual({
+            destination:
+              "/en/try-out/indonesia/snbt/2027/set-1/reading-comprehension-and-writing",
+            status: 307,
+          });
         })
     );
 
@@ -376,9 +387,11 @@ describe("retired try-out redirects", () => {
             yield* readTryoutRedirect(
               "/de/try-out/indonesien/snbt/aufgabensatz-1/allgemeinwissen"
             )
-          ).toBe(
-            "/de/try-out/indonesien/snbt/2027/aufgabensatz-1/allgemeines-wissen-und-verstaendnis"
-          );
+          ).toEqual({
+            destination:
+              "/de/try-out/indonesien/snbt/2027/aufgabensatz-1/allgemeines-wissen-und-verstaendnis",
+            status: 307,
+          });
         })
     );
 

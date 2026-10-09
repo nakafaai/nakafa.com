@@ -165,7 +165,10 @@ describe("retired try-out redirects", () => {
       Effect.gen(function* () {
         serveCatalog({ routes: [SNBT_EXAM] });
 
-        expect(yield* readTryoutRedirect(pathname)).toBe(expected);
+        expect(yield* readTryoutRedirect(pathname)).toEqual({
+          destination: expected,
+          status: 308,
+        });
       })
     );
 
@@ -217,7 +220,10 @@ describe("retired try-out redirects", () => {
           routes: [SNBT_EXAM, SNBT_2027_TRACK, SNBT_2027_SET_1],
         });
 
-        expect(yield* readTryoutRedirect(pathname)).toBe(expected);
+        expect(yield* readTryoutRedirect(pathname)).toEqual({
+          destination: expected,
+          status: 308,
+        });
       })
     );
 
@@ -296,7 +302,10 @@ describe("retired try-out redirects", () => {
             sections: [section],
           });
 
-          expect(yield* readTryoutRedirect(pathname)).toBe(expected);
+          expect(yield* readTryoutRedirect(pathname)).toEqual({
+            destination: expected,
+            status: 308,
+          });
         })
     );
 
@@ -383,7 +392,10 @@ describe("retired try-out redirects", () => {
           yield* readTryoutRedirect(
             "/en/try-out/snbt/2027-set-1/part/matematika-wajib"
           )
-        ).toBe("/en/try-out/indonesia/snbt/2027/set-1/matematika-wajib");
+        ).toEqual({
+          destination: "/en/try-out/indonesia/snbt/2027/set-1/matematika-wajib",
+          status: 308,
+        });
       })
     );
   });
