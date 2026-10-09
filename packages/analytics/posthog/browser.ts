@@ -21,7 +21,7 @@ import {
   startPageviewTracking,
 } from "@repo/analytics/posthog/pageview";
 import { postHogPublicKeys } from "@repo/analytics/public";
-import { Effect, MutableRef, Option, Schema } from "effect";
+import { DateTime, Effect, MutableRef, Option, Schema } from "effect";
 import type { PostHog } from "posthog-js";
 
 export type BrowserAnalyticsClient = Pick<
@@ -330,7 +330,9 @@ function createConsentEventProperties(
 ) {
   return {
     $geoip_disable: false,
-    consent_decided_at: new Date(identity.consentDecidedAt).toISOString(),
+    consent_decided_at: DateTime.formatIso(
+      DateTime.makeUnsafe(identity.consentDecidedAt)
+    ),
     consent_decision: "granted",
     consent_mechanism: identity.consentMechanism,
     consent_notice_version: identity.consentNoticeVersion,

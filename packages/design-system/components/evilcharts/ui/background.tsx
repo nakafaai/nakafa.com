@@ -1,5 +1,6 @@
 "use client";
 
+import { Match } from "effect";
 import { useId } from "react";
 import { ZIndexLayer } from "recharts";
 
@@ -269,32 +270,22 @@ function BackgroundPattern({
   id,
   variant,
 }: PatternProps & { variant: BackgroundVariant }) {
-  switch (variant) {
-    case "dots":
-      return <DotsPattern id={id} />;
-    case "grid":
-      return <GridPattern id={id} />;
-    case "cross-hatch":
-      return <CrossHatchPattern id={id} />;
-    case "diagonal-lines":
-      return <DiagonalLinesPattern id={id} />;
-    case "plus":
-      return <PlusPattern id={id} />;
-    case "falling-triangles":
-      return <FallingTrianglesPattern id={id} />;
-    case "4-pointed-star":
-      return <FourPointedStarPattern id={id} />;
-    case "tiny-checkers":
-      return <TinyCheckersPattern id={id} />;
-    case "overlapping-circles":
-      return <OverlappingCirclesPattern id={id} />;
-    case "wiggle-lines":
-      return <WiggleLinesPattern id={id} />;
-    case "bubbles":
-      return <BubblesPattern id={id} />;
-    default:
-      return null;
-  }
+  return Match.value(variant).pipe(
+    Match.when("dots", () => <DotsPattern id={id} />),
+    Match.when("grid", () => <GridPattern id={id} />),
+    Match.when("cross-hatch", () => <CrossHatchPattern id={id} />),
+    Match.when("diagonal-lines", () => <DiagonalLinesPattern id={id} />),
+    Match.when("plus", () => <PlusPattern id={id} />),
+    Match.when("falling-triangles", () => <FallingTrianglesPattern id={id} />),
+    Match.when("4-pointed-star", () => <FourPointedStarPattern id={id} />),
+    Match.when("tiny-checkers", () => <TinyCheckersPattern id={id} />),
+    Match.when("overlapping-circles", () => (
+      <OverlappingCirclesPattern id={id} />
+    )),
+    Match.when("wiggle-lines", () => <WiggleLinesPattern id={id} />),
+    Match.when("bubbles", () => <BubblesPattern id={id} />),
+    Match.orElse(() => null)
+  );
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────

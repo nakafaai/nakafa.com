@@ -7,7 +7,7 @@ import {
 import type { ChartLegendVariant } from "@repo/design-system/components/evilcharts/ui/legend";
 import { ChartSeriesCueIndicator } from "@repo/design-system/components/evilcharts/ui/series-cue-indicator";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Match } from "effect";
 import type * as React from "react";
 import type * as RechartsPrimitive from "recharts";
 
@@ -134,34 +134,35 @@ function LegendIndicator({
   const fillStyle = getLegendFillStyle(dataKey, colorsCount);
   const outlineStyle = getLegendOutlineStyle(dataKey, colorsCount);
 
-  switch (variant) {
-    case "square":
-      return <div className="h-2 w-2 shrink-0" style={fillStyle} />;
-    case "circle":
-      return (
-        <div className="h-2 w-2 shrink-0 rounded-full" style={fillStyle} />
-      );
-    case "circle-outline":
-      return (
-        <div
-          className="h-2.5 w-2.5 shrink-0 rounded-full p-[1.5px]"
-          style={outlineStyle}
-        />
-      );
-    case "vertical-bar":
-      return <div className="h-3 w-1 shrink-0 rounded-xs" style={fillStyle} />;
-    case "horizontal-bar":
-      return <div className="h-1 w-3 shrink-0 rounded-xs" style={fillStyle} />;
-    case "rounded-square-outline":
-      return (
-        <div
-          className="h-2.5 w-2.5 shrink-0 rounded-[3px] p-[1.5px]"
-          style={outlineStyle}
-        />
-      );
-    default:
-      return <div className="h-2 w-2 shrink-0 rounded-xs" style={fillStyle} />;
-  }
+  return Match.value(variant).pipe(
+    Match.when("square", () => (
+      <div className="h-2 w-2 shrink-0" style={fillStyle} />
+    )),
+    Match.when("circle", () => (
+      <div className="h-2 w-2 shrink-0 rounded-full" style={fillStyle} />
+    )),
+    Match.when("circle-outline", () => (
+      <div
+        className="h-2.5 w-2.5 shrink-0 rounded-full p-[1.5px]"
+        style={outlineStyle}
+      />
+    )),
+    Match.when("vertical-bar", () => (
+      <div className="h-3 w-1 shrink-0 rounded-xs" style={fillStyle} />
+    )),
+    Match.when("horizontal-bar", () => (
+      <div className="h-1 w-3 shrink-0 rounded-xs" style={fillStyle} />
+    )),
+    Match.when("rounded-square-outline", () => (
+      <div
+        className="h-2.5 w-2.5 shrink-0 rounded-[3px] p-[1.5px]"
+        style={outlineStyle}
+      />
+    )),
+    Match.orElse(() => (
+      <div className="h-2 w-2 shrink-0 rounded-xs" style={fillStyle} />
+    ))
+  );
 }
 
 /** Solid fill or gradient background for filled variants. */

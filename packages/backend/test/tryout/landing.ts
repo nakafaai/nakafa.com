@@ -12,7 +12,7 @@ import {
   makeTryoutStartHierarchy,
   makeTryoutStartPlacement,
 } from "@repo/backend/test/tryout/source";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Match, Schema } from "effect";
 
 const LANDING_SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 const LANDING_SOURCE_ROOT =
@@ -45,38 +45,34 @@ export function makeLandingHierarchy(
   return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
     Arr.map(
       makeTryoutStartHierarchy(locale, visibility, scoringStrategy),
-      (row) => {
-        switch (row.kind) {
-          case "country":
-            return row;
-          case "exam":
-            return {
-              ...row,
+      (row) =>
+        Match.value(row).pipe(
+          Match.discriminators("kind")({
+            country: (country) => country,
+            exam: (exam) => ({
+              ...exam,
               examKey: LANDING_FEATURED_TRYOUT.examKey,
               publicPath: "try-out/indonesia/snbt",
               title: "SNBT",
-            };
-          case "track":
-            return {
-              ...row,
+            }),
+            track: (track) => ({
+              ...track,
               examKey: LANDING_FEATURED_TRYOUT.examKey,
               publicPath: "try-out/indonesia/snbt/2027",
               title: "Year 2027",
               trackKey: LANDING_FEATURED_TRYOUT.trackKey,
               trackKind: "year",
-            };
-          case "set":
-            return {
-              ...row,
+            }),
+            set: (set) => ({
+              ...set,
               examKey: LANDING_FEATURED_TRYOUT.examKey,
               publicPath: LANDING_SET_PATH,
               setKey: LANDING_FEATURED_TRYOUT.setKey,
               title: "Set 1",
               trackKey: LANDING_FEATURED_TRYOUT.trackKey,
-            };
-          case "section":
-            return {
-              ...row,
+            }),
+            section: (section) => ({
+              ...section,
               examKey: LANDING_FEATURED_TRYOUT.examKey,
               publicPath:
                 visibility === "visible"
@@ -87,11 +83,10 @@ export function makeLandingHierarchy(
               setKey: LANDING_FEATURED_TRYOUT.setKey,
               title: "Quantitative Knowledge",
               trackKey: LANDING_FEATURED_TRYOUT.trackKey,
-            };
-          default:
-            return row;
-        }
-      }
+            }),
+          }),
+          Match.orElse((other) => other)
+        )
     )
   );
 }

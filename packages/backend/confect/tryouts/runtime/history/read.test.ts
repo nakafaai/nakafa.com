@@ -57,7 +57,7 @@ async function setup(historical = false) {
     t,
   };
 }
-beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
+beforeEach(() => vi.setSystemTime(TRYOUT_TEST_NOW));
 describe("tryouts/runtime/history/read", () => {
   it.effect(
     "requires current Pro access for answers beyond the free preview",

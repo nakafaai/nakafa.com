@@ -160,7 +160,7 @@ describe("classes/forums/attachments/impl", () => {
     })
   );
   it("rejects duplicate upload claims and discards finalized pending uploads", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const { owner, seeded, t } = await createForumOwner();
     const upload = await owner.mutation(
       api.classes.forums.mutations.uploads.generateUploadUrl,
@@ -208,7 +208,7 @@ describe("classes/forums/attachments/impl", () => {
   it.each(["size", "missing"])(
     "rejects uploads whose saved metadata no longer matches storage: %s",
     async (reason) => {
-      vi.setSystemTime(new Date(NOW));
+      vi.setSystemTime(NOW);
       const { owner, seeded, t } = await createForumOwner();
       const upload = await owner.mutation(
         api.classes.forums.mutations.uploads.generateUploadUrl,
@@ -258,7 +258,7 @@ describe("classes/forums/attachments/impl", () => {
   it.each(["prepared", "deleted"])(
     "erases only the server-bound upload when the account is %s",
     async (state) => {
-      vi.setSystemTime(new Date(NOW));
+      vi.setSystemTime(NOW);
       const { owner, seeded, t } = await createForumOwner();
       const upload = await owner.mutation(
         api.classes.forums.mutations.uploads.generateUploadUrl,
@@ -324,7 +324,7 @@ describe("classes/forums/attachments/impl", () => {
   );
   it("expires an unused server upload capability", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const { owner, seeded, t } = await createForumOwner();
     const upload = await owner.mutation(
       api.classes.forums.mutations.uploads.generateUploadUrl,
@@ -474,7 +474,7 @@ describe("classes/forums/attachments/impl", () => {
     });
   });
   it("rejects upload URL requests once the pending attachment limit is reached", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const { owner, seeded } = await createForumOwner();
     for (let index = 0; index < MAX_FORUM_POST_ATTACHMENTS; index += 1) {
       await owner.mutation(

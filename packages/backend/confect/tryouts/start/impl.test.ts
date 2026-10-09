@@ -15,10 +15,11 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import type { FunctionArgs } from "convex/server";
+import { DateTime } from "effect";
 
 describe("tryouts/start/impl", () => {
   it("records the active subscription without shortening an already admitted attempt", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const periodEnd = TRYOUT_START_NOW + 60_000;
     const identity = await t.mutation(async (ctx) => {
@@ -33,14 +34,16 @@ describe("tryouts/start/impl", () => {
         metadata: {},
         userId: user.userId,
       });
-      const timestamp = new Date(TRYOUT_START_NOW).toISOString();
+      const timestamp = DateTime.formatIso(
+        DateTime.makeUnsafe(TRYOUT_START_NOW)
+      );
       await ctx.db.insert("subscriptions", {
         amount: null,
         cancelAtPeriodEnd: true,
         checkoutId: null,
         createdAt: timestamp,
         currency: null,
-        currentPeriodEnd: new Date(periodEnd).toISOString(),
+        currentPeriodEnd: DateTime.formatIso(DateTime.makeUnsafe(periodEnd)),
         currentPeriodStart: timestamp,
         customerId: "polar-paid-attempt",
         endedAt: null,
@@ -81,7 +84,7 @@ describe("tryouts/start/impl", () => {
   });
 
   it("resumes an active attempt without loading the complete signed catalog", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -122,7 +125,7 @@ describe("tryouts/start/impl", () => {
     ).resolves.toEqual(started);
   });
   it("rejects missing immutable navigation and resumes only the frozen entry scope", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -176,7 +179,7 @@ describe("tryouts/start/impl", () => {
   });
 
   it("scores an expired predecessor before opening the next free attempt", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {

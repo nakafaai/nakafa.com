@@ -12,6 +12,7 @@ import {
   BAR_REVEAL_STAGGER_MS,
   getOrderedRevealStep,
 } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import { Match } from "effect";
 import type { KeyboardEvent } from "react";
 
 // Custom bar shape
@@ -99,26 +100,24 @@ export const CustomBar = ({
     isRevealActive
   );
 
-  const getFill = () => {
-    switch (variant) {
-      case "hatched":
-        return `url(#${id}-hatched)`;
-      case "duotone":
-        return `url(#${id}-duotone)`;
-      case "duotone-reverse":
-        return `url(#${id}-duotone-reverse)`;
-      case "gradient":
-        return `url(#${id}-gradient)`;
-      case "stripped":
-        return `url(#${id}-stripped)`;
-      default:
+  const getFill = () =>
+    Match.value(variant).pipe(
+      Match.whenOr(
+        "hatched",
+        "duotone",
+        "duotone-reverse",
+        "gradient",
+        "stripped",
+        (fill) => `url(#${id}-${fill})`
+      ),
+      Match.orElse(() => {
         if (colorSlots > 1 && index >= 0) {
           return getChartColorVariable(dataKey, index, colorSlots - 1);
         }
 
         return `url(#${id}-bar-colors)`;
-    }
-  };
+      })
+    );
 
   const interactiveProps = onClick
     ? {

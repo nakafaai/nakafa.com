@@ -187,7 +187,7 @@ describe("consents/current", () => {
     expect(stored).toEqual([]);
   });
   it("atomically records grant and withdrawal", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -208,7 +208,7 @@ describe("consents/current", () => {
       },
       expectedUserId: identity.userId,
     });
-    vi.setSystemTime(new Date(NOW + 1000));
+    vi.setSystemTime(NOW + 1000);
     const denied = await authenticated.mutation(api.consents.current.set, {
       decision: {
         category: analyticsCategory,
@@ -271,7 +271,7 @@ describe("consents/current", () => {
     ]);
   });
   it("returns an exact repeated decision without appending history", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -293,7 +293,7 @@ describe("consents/current", () => {
       expectedUserId: identity.userId,
     };
     const first = await authenticated.mutation(api.consents.current.set, input);
-    vi.setSystemTime(new Date(NOW + 1000));
+    vi.setSystemTime(NOW + 1000);
     const repeated = await authenticated.mutation(
       api.consents.current.set,
       input
