@@ -161,6 +161,12 @@ tests and framework configuration, by `new-promise`. The rule counts only while
   no decision, a name the plugin no longer defines, any other severity, and a
   second `plugins` array anywhere. So a plugin upgrade that adds a rule fails
   the check until the rule is decided.
+- This repository owns the rule decisions for every repository that runs its
+  source check. When the check judges another repository, it reads the block of
+  the repository that holds the check, at the commit the other repository
+  pins, and reports each rule the other block does not list or lists with
+  another severity. So Aksara cannot keep a shorter or a different block: its
+  required check fails until the two are equal.
 - A new place that a framework forces is added to the source check as a
   construction, with a test for the reported and the unreported form.
 - Keep `new X({...})` for Schema error classes.
