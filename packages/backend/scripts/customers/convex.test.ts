@@ -65,7 +65,6 @@ function callQuery() {
 
 beforeEach(() => {
   fetcher.mockReset();
-  vi.stubEnv("HOME", "/home/tester");
 });
 afterEach(() => {
   vi.restoreAllMocks();
@@ -258,7 +257,10 @@ describe("customer audit configuration", () => {
       }).pipe(
         Effect.provideService(
           ConfigProvider.ConfigProvider,
-          ConfigProvider.fromEnvRecord({ CONVEX_URL: "https://dev.example" })
+          ConfigProvider.fromEnvRecord({
+            CONVEX_URL: "https://dev.example",
+            HOME: "/home/tester",
+          })
         ),
         Effect.provide(scriptedFiles({ readFile }))
       );
@@ -270,7 +272,6 @@ describe("customer audit configuration", () => {
     () => {
       const readFile = unexpectedRead();
       return Effect.gen(function* () {
-        vi.stubEnv("HOME", undefined);
         expect(
           yield* getCustomerConvexConfig(false).pipe(Effect.flip)
         ).toMatchObject({
@@ -318,7 +319,10 @@ describe("customer audit configuration", () => {
     }).pipe(
       Effect.provideService(
         ConfigProvider.ConfigProvider,
-        ConfigProvider.fromEnvRecord({ CONVEX_URL: "https://dev.example" })
+        ConfigProvider.fromEnvRecord({
+          CONVEX_URL: "https://dev.example",
+          HOME: "/home/tester",
+        })
       ),
       Effect.provide(
         scriptedFiles({
