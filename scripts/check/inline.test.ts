@@ -110,6 +110,58 @@ let widen: (Base & { readonly extra: string }) | null;
   );
 
   it.effect(
+    "leaves an object type that names a type parameter in scope alone",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`export function stop<const ToolName extends string>(
+  steps: readonly { readonly toolCalls: readonly { readonly toolName: ToolName }[] }[]
+) {}
+export function narrow<Family extends Kind>(
+  value: Snapshot
+): value is Extract<Snapshot, { readonly family: Family }> {
+  return check(value);
+}
+class Box<Item> {
+  read(): { readonly item: Item } {
+    return run();
+  }
+  plain(): { readonly id: string } {
+    return run();
+  }
+}
+export function unused<Item>(rows: { id: string }[]) {}
+export function shadowed<Item>(rows: { keys: { [Item in Keys]: Item }; id: string }[]) {}
+`),
+          [13, 17, 18]
+        );
+      })
+  );
+
+  it.effect(
+    "leaves an object type that holds a three.js object or a TypeScript syntax-tree node alone",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* shapes(`import { type Color, Vector3 } from "three";
+import type { CallExpression, PropertyAccessExpression } from "typescript/unstable/ast";
+let particles: { readonly position: Vector3; readonly id: string }[];
+export function isPainted(value: unknown): value is { readonly color: Color } {
+  return check(value);
+}
+export function isMethodCall(
+  node: unknown
+): node is CallExpression & { readonly expression: PropertyAccessExpression } {
+  return check(node);
+}
+let plain: { readonly position: readonly [number, number, number] }[];
+`),
+          [12]
+        );
+      })
+  );
+
+  it.effect(
     "judges a platform type name that the module binds itself as the module's own type",
     () =>
       Effect.gen(function* () {

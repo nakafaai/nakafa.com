@@ -240,7 +240,7 @@ function ownMembers(
  * Returns the type parameter names that a node declares for its own children,
  * such as `T` in `<T>(value: T) => T` or in `{ [T in Keys]: T }`.
  */
-function declaredNames(node: Node): readonly string[] {
+export function declaredNames(node: Node): readonly string[] {
   return Arr.flatMap(children(node), (child) =>
     isTypeParameterDeclaration(child) ? [child.name.text] : []
   );
@@ -261,7 +261,7 @@ function inferredNames(node: Node): readonly string[] {
  * parameter of the same name shadows it inside that node, and an `infer` of the
  * same name shadows it in a conditional type's extends clause and true branch.
  */
-function mentions(node: Node, names: readonly string[]): boolean {
+export function mentions(node: Node, names: readonly string[]): boolean {
   if (
     isTypeReferenceNode(node) &&
     isIdentifier(node.typeName) &&

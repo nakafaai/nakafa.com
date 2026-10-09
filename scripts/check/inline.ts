@@ -11,6 +11,7 @@ import {
   isParenthesizedTypeNode,
   isPropertySignatureDeclaration,
   isSatisfiesExpression,
+  isSourceFile,
   isTypeLiteralNode,
   isTypePredicateNode,
   isTypeReferenceNode,
@@ -22,7 +23,7 @@ import {
   type TypeNode,
 } from "typescript/unstable/ast";
 import { candidate } from "#scripts/check/rules";
-import { objectLiterals } from "#scripts/check/shapes";
+import { declaredNames, mentions, objectLiterals } from "#scripts/check/shapes";
 import { valueMembers, valueTypes } from "#scripts/check/value";
 
 const JSX_PATTERN = /\.tsx$/u;
@@ -129,13 +130,36 @@ function writtenShapes(file: string, node: Node): readonly TypeLiteralNode[] {
 }
 
 /**
+ * Returns the type parameter names in scope at a node: the ones that the
+ * functions, classes, and types around it declare.
+ */
+function scopeParameters(node: Node): readonly string[] {
+  const { parent } = node;
+  return isSourceFile(parent)
+    ? []
+    : Arr.appendAll(declaredNames(parent), scopeParameters(parent));
+}
+
+/**
+ * Whether an object type names a type parameter in scope in one of its
+ * members, such as `ToolName` in `{ readonly toolName: ToolName }` inside
+ * `function stop<ToolName extends string>(...)`. The caller chooses that type,
+ * so no single `typeof X.Type` names the shape, as for a generic interface.
+ */
+function isGeneric(literal: TypeLiteralNode): boolean {
+  const parameters = scopeParameters(literal);
+  return Arr.some(literal.members, (member) => mentions(member, parameters));
+}
+
+/**
  * Returns the object types that one module's `runtime` nodes write inline as
  * data: an object type with members, none of which holds a value no Schema
  * describes, in a data position. One annotation is one candidate.
  *
  * An object type that an intersection joins to a value, such as the second
  * member of `ResponseInit & { readonly url?: string }`, extends that value and
- * is no data shape of its own.
+ * is no data shape of its own. Neither is an object type that names a type
+ * parameter in scope.
  */
 export function inlineCandidates(
   file: string,
@@ -150,7 +174,8 @@ export function inlineCandidates(
       (literal) =>
         Arr.isReadonlyArrayNonEmpty(literal.members) &&
         !Arr.some(literal.members, holdsValue) &&
-        !(isIntersectionTypeNode(literal.parent) && isValue(literal.parent))
+        !(isIntersectionTypeNode(literal.parent) && isValue(literal.parent)) &&
+        !isGeneric(literal)
     );
     return Arr.map(Arr.take(written, 1), (literal) =>
       candidate("data-type", sourceFile, literal)

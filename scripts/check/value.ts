@@ -33,15 +33,19 @@ import {
 /**
  * The modules whose types describe values that no Schema describes as data:
  * React and MDX values, the design system's Markdown types (each one names a
- * React or MDX type), and the parser syntax-tree nodes of ESTree and its JSX
- * extension. The AI SDK names only some of its types as values, listed below.
+ * React or MDX type), the scene objects and math classes of three.js, and the
+ * parser syntax-tree nodes of ESTree, its JSX extension, and TypeScript. The
+ * AI SDK names only some of its types as values, listed below.
  */
 const FRAMEWORK_TYPE_MODULES = HashSet.make(
   "@repo/design-system/types/markdown",
   "estree",
   "estree-jsx",
   "mdx/types",
-  "react"
+  "react",
+  "three",
+  "typescript",
+  "typescript/unstable/ast"
 );
 
 /**
