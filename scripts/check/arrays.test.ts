@@ -51,6 +51,19 @@ const judgmentFailure = Effect.fn("ArrayPolicyTest.judgmentFailure")(
 );
 
 describe("array findings by project", () => {
+  it.effect("judges an array call inside an extends clause", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* judge({
+          [PROJECT_CONFIG]: PROJECT,
+          "scripts/heritage.ts":
+            "declare function makeBase<T>(items: T): new () => object;\nexport class Holder extends makeBase([1, 2].map(String)) {}\n",
+        }),
+        ["scripts/heritage.ts:2 array-method"]
+      );
+    })
+  );
+
   it.effect(
     "judges a module in its nearest project, one project at a time",
     () =>

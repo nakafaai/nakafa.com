@@ -11,6 +11,7 @@ import {
   type Identifier,
   isCallExpression,
   isExportDeclaration,
+  isExpressionWithTypeArguments,
   isImportDeclaration,
   isImportTypeNode,
   isLiteralTypeNode,
@@ -92,7 +93,11 @@ export function children(node: Node) {
   return MutableList.takeAll(nodes);
 }
 
-/** Returns value-position descendants in breadth-first order, excluding type-only subtrees. */
+/**
+ * Returns value-position descendants in breadth-first order, excluding type-only
+ * subtrees. A heritage clause's expression is a value, such as the call in
+ * `class X extends makeBase(...)`, so only its type arguments stay out.
+ */
 export function descendants(sourceFile: SourceFile, skipTypes = true) {
   const pending = MutableList.make<Node>();
   const visited = MutableList.make<Node>();
@@ -107,6 +112,8 @@ export function descendants(sourceFile: SourceFile, skipTypes = true) {
       node.forEachChild((child) => {
         MutableList.append(pending, child);
       });
+    } else if (isExpressionWithTypeArguments(node)) {
+      MutableList.append(pending, node.expression);
     }
   }
   return MutableList.takeAll(visited);

@@ -131,6 +131,17 @@ const { "entries": list } = (Object);
     })
   );
 
+  it.effect("reads platform globals inside an extends call", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`declare function makeBase<T>(value: T): new () => object;
+export class Holder extends makeBase(JSON.parse(text)) {}
+`),
+        ["2 json"]
+      );
+    })
+  );
+
   it.effect("ignores other members, shadowed names, and lookalikes", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
