@@ -1,7 +1,11 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Path, Record as Rec } from "effect";
-import { inspectExports, publishedDirectories } from "#scripts/check/exports";
+import {
+  emitsDeclarations,
+  inspectExports,
+  publishedDirectories,
+} from "#scripts/check/exports";
 import { parseSources } from "#scripts/check/source";
 
 const MODULE = "packages/shop/cart.ts";
@@ -14,13 +18,15 @@ function report(line: number, name: string, file = MODULE) {
 
 /**
  * Inspects fixture modules with the export policy alone. `others` holds the
- * text of modules that no rule judges, and `published` the directories of the
- * published workspaces.
+ * text of modules that no rule judges, `published` the directories of the
+ * published workspaces, and `declarations` says whether the repository emits
+ * declarations.
  */
 function inspect(
   files: Readonly<Record<string, string>>,
   others: readonly string[] = [],
-  published: readonly string[] = []
+  published: readonly string[] = [],
+  declarations = false
 ) {
   const sources = Arr.map(Rec.toEntries(files), ([file, sourceText]) => ({
     file,
@@ -34,7 +40,8 @@ function inspect(
           Arr.map(sources, ({ sourceText }) => sourceText),
           others
         ),
-        published
+        published,
+        declarations
       )
     )
   );
@@ -165,6 +172,52 @@ export const { tax } = source;
       );
     })
   );
+
+  it.effect(
+    "keeps a name that an exported signature needs when declarations are emitted",
+    () =>
+      Effect.gen(function* () {
+        const files = {
+          [MODULE]: `export class Failure {}
+export type Price = number;
+export const tax = 2;
+const local = tax;
+export const run = (price: Price) => new Failure();
+export default Failure;
+`,
+        };
+        assert.deepStrictEqual(yield* inspect(files, [], [], true), [
+          report(3, "tax"),
+          report(5, "run"),
+        ]);
+        assert.deepStrictEqual(yield* inspect(files), [
+          report(1, "Failure"),
+          report(2, "Price"),
+          report(3, "tax"),
+          report(5, "run"),
+        ]);
+      })
+  );
+
+  it("reads declaration output from the compiler configurations", () => {
+    const config = (sourceText: string) => ({
+      file: "tsconfig.json",
+      sourceText,
+    });
+    assert.isTrue(
+      emitsDeclarations([
+        config('{"extends":"./base.json"}'),
+        config('{"compilerOptions":{"declaration":true,"noEmit":true}}'),
+      ])
+    );
+    assert.isFalse(
+      emitsDeclarations([
+        config('{"compilerOptions":{"declaration":false}}'),
+        config('{"compilerOptions":{"noEmit":true}}'),
+        config("// not JSON"),
+      ])
+    );
+  });
 
   it.effect("names each workspace whose manifest is not private", () =>
     Effect.gen(function* () {

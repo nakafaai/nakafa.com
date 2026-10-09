@@ -119,9 +119,14 @@ describe("test ownership policy", () => {
           '{"name":"@repo/typescript-config"}\n',
         "packages/core/types.d.ts":
           'export declare const narrowed: typeof value === "object";\n',
+        ".agents/skills/content/scripts/run.ts":
+          'import { skilled } from "../../../../scripts/tool";\nrun(skilled);\n',
+        "site.config.ts":
+          'import { configured } from "./scripts/tool";\nrun(configured);\n',
         "scripts/tool.test.ts":
           'import { it } from "@effect/vitest";\nimport { tool } from "./tool";\nit("reads", () => tool);\n',
-        "scripts/tool.ts": "export const tool = true;\n",
+        "scripts/tool.ts":
+          "export const tool = true;\nexport const skilled = 1;\nexport const configured = 2;\n",
         "scripts/tsconfig.json":
           '{"extends":"../packages/typescript-config/base.json"}\n',
       });

@@ -20,7 +20,11 @@ import {
   findingMessages,
   sortFindings,
 } from "#scripts/check/effect";
-import { inspectExports, publishedDirectories } from "#scripts/check/exports";
+import {
+  emitsDeclarations,
+  inspectExports,
+  publishedDirectories,
+} from "#scripts/check/exports";
 import {
   readAuthoredSources,
   readAuthoredTree,
@@ -68,7 +72,8 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
   sources: Parameters<typeof parseSources>[0],
   projectConfigs: readonly string[],
   otherModules: readonly string[],
-  published: readonly string[]
+  published: readonly string[],
+  declarations: boolean
 ) {
   const parsed = yield* parseSources(sources);
   const arrays = yield* Effect.scoped(
@@ -100,7 +105,8 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         Arr.map(sources, ({ sourceText }) => sourceText),
         otherModules
       ),
-      published
+      published,
+      declarations
     ),
   ]);
 }, Effect.scoped);
@@ -115,7 +121,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   function* (root: string, owner: string = root) {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const { scripts, workspaces } = yield* readAuthoredTree(root);
+    const { agents, scripts, workspaces } = yield* readAuthoredTree(root);
     const tests = Arr.filter(workspaces, (file) =>
       TEST_FILE_PATTERN.test(file)
     );
@@ -137,15 +143,19 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       root,
       Arr.appendAll(workspaces, scripts)
     );
-    const otherModules = yield* readOtherModules(
-      Arr.appendAll(workspaces, scripts)
-    );
     const runnerViolations = yield* effectTestViolations(sources);
     const relative = (files: readonly string[]) =>
       Arr.map(files, (file) => path.relative(root, file));
     // The policy reads repository paths, which use "/" on every platform. A
     // configuration at the repository root counts like any workspace's own.
     const rootEntries = yield* fileSystem.readDirectory(root);
+    const otherModules = yield* readOtherModules(
+      Arr.appendAll(workspaces, scripts),
+      Arr.appendAll(
+        agents,
+        Arr.map(rootEntries, (entry) => path.join(root, entry))
+      )
+    );
     const configs = yield* Effect.forEach(
       Arr.filter(
         Arr.appendAll(
@@ -176,7 +186,8 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       sources,
       projectConfigs,
       otherModules,
-      yield* publishedDirectories(root, workspaces)
+      yield* publishedDirectories(root, workspaces),
+      emitsDeclarations(configs)
     );
     const reports = Arr.filter(
       [

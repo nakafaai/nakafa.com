@@ -26,7 +26,7 @@ import {
   SyntaxKind,
 } from "typescript/unstable/ast";
 import { RepositoryReadError } from "#scripts/check/files";
-import { isGenerated } from "#scripts/check/source";
+import { isGenerated, type RepositorySource } from "#scripts/check/source";
 
 /** Everything between two words. A word is a run of identifier characters. */
 const WORD_BREAK_PATTERN = /[^\w$]+/u;
@@ -83,6 +83,47 @@ export const publishedDirectories = Effect.fn(
     Str.slice(0, file.length - MANIFEST_FILE.length)(file)
   );
 });
+
+/** What a compiler configuration says about declaration output. */
+const DeclarationConfig = Schema.fromJsonString(
+  Schema.Struct({
+    compilerOptions: Schema.Struct({ declaration: Schema.Literal(true) }),
+  })
+);
+const decodeDeclarationConfig = Schema.decodeUnknownOption(DeclarationConfig);
+/** A top-level statement that exports: a declaration, a list, or the default. */
+const EXPORT_STATEMENT_PATTERN = /^export\b/u;
+
+/**
+ * Whether a compiler configuration of the repository turns declaration output
+ * on. The compiler then rejects an exported declaration whose type names a
+ * declaration that is not exported, so such a name has to stay exported.
+ */
+export function emitsDeclarations(
+  configs: readonly (typeof RepositorySource.Type)[]
+) {
+  return Arr.some(configs, ({ sourceText }) =>
+    Option.isSome(decodeDeclarationConfig(sourceText))
+  );
+}
+
+/**
+ * Whether another exporting statement of the module mentions `name`. With
+ * declaration output on, such a name is part of that statement's signature.
+ */
+function namedByExport(sourceFile: SourceFile, owner: Statement, name: string) {
+  return Arr.some(sourceFile.statements, (statement) => {
+    const text = Str.slice(
+      statement.getStart(sourceFile),
+      statement.end
+    )(sourceFile.text);
+    return (
+      statement !== owner &&
+      EXPORT_STATEMENT_PATTERN.test(text) &&
+      Arr.contains(Str.split(text, WORD_BREAK_PATTERN), name)
+    );
+  });
+}
 
 /** Whether a declaration carries `export` without `default`. */
 function exportsByName(modifiers: readonly Node[] | undefined) {
@@ -141,7 +182,9 @@ function exportedNames(statement: Statement): readonly string[] {
  * word appears in a second text, so the rule never reports a name that
  * something imports, and it misses an unused name that another module happens
  * to spell. `published` lists the directories of the workspaces that are
- * published as packages, whose exports another repository reads.
+ * published as packages, whose exports another repository reads. With
+ * `declarations`, a name that another exporting statement of its own module
+ * mentions is left alone, because the compiler may need it in that signature.
  */
 export function inspectExports(
   modules: readonly {
@@ -149,7 +192,8 @@ export function inspectExports(
     readonly sourceFile: SourceFile;
   }[],
   texts: readonly string[],
-  published: readonly string[]
+  published: readonly string[],
+  declarations: boolean
 ): readonly string[] {
   const declared = Arr.flatMap(modules, ({ file, sourceFile }) =>
     isGenerated(sourceFile) ||
@@ -158,14 +202,21 @@ export function inspectExports(
     Arr.some(published, (directory) => Str.startsWith(directory)(file))
       ? []
       : Arr.flatMap(sourceFile.statements, (statement) =>
-          Arr.map(exportedNames(statement), (name) => ({
-            file,
-            line:
-              sourceFile.getLineAndCharacterOfPosition(
-                statement.getStart(sourceFile)
-              ).line + 1,
-            name,
-          }))
+          Arr.map(
+            Arr.filter(
+              exportedNames(statement),
+              (name) =>
+                !(declarations && namedByExport(sourceFile, statement, name))
+            ),
+            (name) => ({
+              file,
+              line:
+                sourceFile.getLineAndCharacterOfPosition(
+                  statement.getStart(sourceFile)
+                ).line + 1,
+              name,
+            })
+          )
         )
   );
   const names = HashSet.fromIterable(Arr.map(declared, ({ name }) => name));
