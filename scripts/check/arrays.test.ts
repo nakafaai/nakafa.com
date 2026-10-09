@@ -113,6 +113,67 @@ describe("array findings by project", () => {
   );
 
   it.effect(
+    "judges a module in the project above its nearest one when that one excludes it",
+    () =>
+      Effect.gen(function* () {
+        const update = vi.spyOn(API.prototype, "updateSnapshot");
+        assert.deepStrictEqual(
+          yield* judge({
+            [PROJECT_CONFIG]: PROJECT,
+            "packages/contracts/tsconfig.json": '{"include":["src/**/*.ts"]}\n',
+            "packages/contracts/scripts/consumer/package.ts": CALL,
+          }),
+          ["packages/contracts/scripts/consumer/package.ts:2 array-method"]
+        );
+        // The nearest project opens first, and the project above it opens once, after it.
+        const nested = `${ROOT}/packages/contracts/tsconfig.json`;
+        assert.deepStrictEqual(
+          Arr.takeRight(
+            Arr.map(update.mock.calls, ([params]) => params),
+            2
+          ),
+          [
+            { closeProjects: [], openProjects: [nested] },
+            {
+              closeProjects: [nested],
+              openProjects: [`${ROOT}/${PROJECT_CONFIG}`],
+            },
+          ]
+        );
+      })
+  );
+
+  it.effect(
+    "judges a module that the nearest project and the project above both contain once, in the nearest",
+    () =>
+      Effect.gen(function* () {
+        const update = vi.spyOn(API.prototype, "updateSnapshot");
+        assert.deepStrictEqual(
+          yield* judge({
+            [PROJECT_CONFIG]: PROJECT,
+            "packages/web/tsconfig.json": PROJECT,
+            "packages/web/value.ts": CALL,
+          }),
+          ["packages/web/value.ts:2 array-method"]
+        );
+        // The fixture's in-memory parse opens first. The project above has nothing left to judge, so it never opens.
+        assert.strictEqual(update.mock.calls.length, 2);
+        assert.deepStrictEqual(
+          Arr.takeRight(
+            Arr.map(update.mock.calls, ([params]) => params),
+            1
+          ),
+          [
+            {
+              closeProjects: [],
+              openProjects: [`${ROOT}/packages/web/tsconfig.json`],
+            },
+          ]
+        );
+      })
+  );
+
+  it.effect(
     "fails when a judged module has no project up its folder tree",
     () =>
       Effect.gen(function* () {
@@ -139,10 +200,29 @@ describe("array findings by project", () => {
         [failure._tag, failure.message],
         [
           "TestCompilerError",
-          "scripts/tool.ts is not part of its nearest project tsconfig.json, so the array rules cannot read its types.",
+          "scripts/tool.ts is not part of any project up its folder tree (tried tsconfig.json), so the array rules cannot read its types.",
         ]
       );
     })
+  );
+
+  it.effect(
+    "names every project tried when none up the folder tree contains a judged module",
+    () =>
+      Effect.gen(function* () {
+        const failure = yield* judge({
+          [PROJECT_CONFIG]: '{"include":["src/**/*.ts"]}\n',
+          "packages/contracts/tsconfig.json": '{"include":["src/**/*.ts"]}\n',
+          "packages/contracts/scripts/consumer/package.ts": CALL,
+        }).pipe(Effect.flip);
+        assert.deepStrictEqual(
+          [failure._tag, failure.message],
+          [
+            "TestCompilerError",
+            "packages/contracts/scripts/consumer/package.ts is not part of any project up its folder tree (tried packages/contracts/tsconfig.json, tsconfig.json), so the array rules cannot read its types.",
+          ]
+        );
+      })
   );
 
   it.effect(
