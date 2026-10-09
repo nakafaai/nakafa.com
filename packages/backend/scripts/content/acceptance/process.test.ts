@@ -341,7 +341,7 @@ describe("application process ownership", () => {
       const readinessLog = yield* Deferred.make<string>();
       const child = yield* spawner({ output: "" });
       const request = vi.fn();
-      const application = vi.fn();
+      const application = vi.fn<() => void>();
       fetcher.mockImplementation(request);
       const fiber = yield* withLocalBackend(
         runtime,

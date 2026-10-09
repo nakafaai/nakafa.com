@@ -1,8 +1,8 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
-import { Deferred, Effect, Fiber, Redacted } from "effect";
+import { Deferred, Effect, Fiber, Redacted, Result } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import type { PreviewConfig } from "@/lib/content/preview/config";
@@ -56,7 +56,11 @@ function runFailure(
   maxBytes = MAX_PREVIEW_MANIFEST_BYTES,
   path: string = config.manifestPath
 ) {
-  return run(maxBytes, path).pipe(Effect.flip);
+  return Effect.gen(function* () {
+    const result = yield* Effect.result(run(maxBytes, path));
+    assert(Result.isFailure(result));
+    return result.failure;
+  });
 }
 
 describe("local preview JSON requests", () => {

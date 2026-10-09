@@ -2,12 +2,19 @@
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import type { runWatchedBuild } from "@/scripts/build/watch";
+
+/** The entry hands runMain the watched build's exit status and its failures. */
+type BuildEntry = Effect.Effect<
+  Effect.Success<ReturnType<typeof runWatchedBuild>>,
+  Effect.Error<ReturnType<typeof runWatchedBuild>>
+>;
 
 const mocks = vi.hoisted(() => {
-  let entry: Effect.Effect<unknown, unknown> | undefined;
+  let entry: BuildEntry | undefined;
   return {
     getEntry: () => entry,
-    runMain: vi.fn((program: Effect.Effect<unknown, unknown>) => {
+    runMain: vi.fn((program: BuildEntry) => {
       entry = program;
     }),
   };

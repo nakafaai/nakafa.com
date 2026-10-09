@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY } from "@repo/analytics/consent";
 import {
+  BrowserAnalyticsLoadFailed,
   resetBrowserAnalyticsIdentity,
   revokeToBaselineAnalytics,
 } from "@repo/analytics/posthog/browser";
 import { Effect } from "effect";
+import { AnalyticsConsentStorageFailed } from "@/lib/analytics/consent/storage";
 import { authClient } from "@/lib/auth/client";
 import {
   AccountSignOutFailed,
@@ -17,7 +19,8 @@ vi.mock("@/lib/auth/client", () => ({
   authClient: { signOut: vi.fn() },
 }));
 
-vi.mock("@repo/analytics/posthog/browser", () => ({
+vi.mock(import("@repo/analytics/posthog/browser"), async (importOriginal) => ({
+  ...(await importOriginal()),
   revokeToBaselineAnalytics: vi.fn(() => Effect.void),
   resetBrowserAnalyticsIdentity: vi.fn(),
 }));
@@ -132,19 +135,36 @@ describe("account browser identity", () => {
     "does not fail a completed deletion when browser cleanup fails",
     () =>
       Effect.gen(function* () {
+        const cleanup = {
+          denyAnonymousAnalytics: vi.fn(() =>
+            Effect.fail(
+              new AnalyticsConsentStorageFailed({
+                code: "ANALYTICS_CONSENT_STORAGE_FAILED",
+              })
+            )
+          ),
+          removePersistedAccountState: vi.fn(() => {
+            throw new Error("storage unavailable");
+          }),
+          resetAnalytics: vi.fn(() => {
+            throw new Error("analytics unavailable");
+          }),
+          revokeAnalytics: vi.fn(() =>
+            Effect.fail(
+              new BrowserAnalyticsLoadFailed({
+                code: "BROWSER_ANALYTICS_LOAD_FAILED",
+              })
+            )
+          ),
+        };
         expect(
-          yield* clearDeletedAccountBrowserIdentity({
-            denyAnonymousAnalytics: () =>
-              Effect.fail("privacy storage unavailable"),
-            revokeAnalytics: () => Effect.fail("analytics queue unavailable"),
-            removePersistedAccountState: () => {
-              throw new Error("storage unavailable");
-            },
-            resetAnalytics: () => {
-              throw new Error("analytics unavailable");
-            },
-          })
+          yield* clearDeletedAccountBrowserIdentity(cleanup)
         ).toBeUndefined();
+        // Every step runs although each one before it failed.
+        expect(cleanup.revokeAnalytics).toHaveBeenCalledOnce();
+        expect(cleanup.denyAnonymousAnalytics).toHaveBeenCalledOnce();
+        expect(cleanup.resetAnalytics).toHaveBeenCalledOnce();
+        expect(cleanup.removePersistedAccountState).toHaveBeenCalledOnce();
       })
   );
 
