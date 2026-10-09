@@ -41,11 +41,16 @@ describe("theme compatibility colors", () => {
       }
 
       const expected = Rec.fromEntries(
-        Arr.map(SEMANTIC_COLOR_TOKENS, (token) => {
-          const value = readDirectValue(rule, token);
-          expect(value).toBeDefined();
-          return [token.slice(2), value ? toRgbProjection(value) : undefined];
-        })
+        yield* Effect.forEach(SEMANTIC_COLOR_TOKENS, (token) =>
+          Effect.gen(function* () {
+            const value = readDirectValue(rule, token);
+            expect(value).toBeDefined();
+            return [
+              token.slice(2),
+              value ? yield* toRgbProjection(value) : undefined,
+            ] as const;
+          })
+        )
       );
 
       expect(Arr.sort(Rec.keys(values), Order.String)).toEqual(

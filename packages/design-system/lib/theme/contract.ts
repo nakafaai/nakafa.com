@@ -187,31 +187,56 @@ export function readCustomThemeNames(root: Root) {
   });
 }
 
-/** Rejects an omitted color channel before numeric theme calculations. */
-function requireColorChannel(channel: null | number, value: string) {
+/** Expected failure: a theme color has no numeric value for one channel. */
+export class ThemeColorChannelError extends Schema.TaggedError<ThemeColorChannelError>()(
+  "ThemeColorChannelError",
+  {
+    message: Schema.String,
+    value: Schema.String,
+  }
+) {}
+
+/** Requires one complete color channel before numeric theme calculations. */
+function requireColorChannel(
+  channel: null | number,
+  value: string
+): Effect.Effect<number, ThemeColorChannelError> {
   if (channel === null) {
-    throw new Error(`Theme color "${value}" has a missing channel.`);
+    return Effect.fail(
+      new ThemeColorChannelError({
+        message: `Theme color "${value}" has a missing channel.`,
+        value,
+      })
+    );
   }
 
-  return channel;
+  return Effect.succeed(channel);
 }
 
 /** Reads complete OKLCH channels from one canonical theme color. */
-export function readOklchChannels(value: string) {
+export const readOklchChannels = Effect.fn(
+  "designSystem.theme.readOklchChannels"
+)(function* (value: string) {
   const [lightness, chroma, hue] = new Color(value).oklch;
 
-  return {
+  return yield* Effect.all({
     chroma: requireColorChannel(chroma, value),
     hue: requireColorChannel(hue, value),
     lightness: requireColorChannel(lightness, value),
-  };
-}
+  });
+});
 
 /** Projects canonical OKLCH into the required comma-form 8-bit sRGB value. */
-export function toRgbProjection(value: string) {
-  const channels = Arr.map(new Color(value).to("srgb").coords, (channel) =>
-    String(Math.round(requireColorChannel(channel, value) * 255))
-  );
+export const toRgbProjection = Effect.fn("designSystem.theme.toRgbProjection")(
+  function* (value: string) {
+    const channels = yield* Effect.forEach(
+      new Color(value).to("srgb").coords,
+      (channel) =>
+        requireColorChannel(channel, value).pipe(
+          Effect.map((byte) => String(Math.round(byte * 255)))
+        )
+    );
 
-  return `rgb(${Arr.join(channels, ", ")})`;
-}
+    return `rgb(${Arr.join(channels, ", ")})`;
+  }
+);
