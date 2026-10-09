@@ -6,7 +6,7 @@ import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const ProgramContextInputSchema = Schema.Struct({
   contentKey: Schema.String,
@@ -108,10 +108,11 @@ export const readProgramContext = Effect.fn(
       }))
     )
   );
-  const identityMatches = contexts.filter(({ context }) =>
+  const identityMatches = Arr.filter(contexts, ({ context }) =>
     ownsMaterialIdentity(context, group, parent, input)
   );
-  const directMatches = identityMatches.filter(
+  const directMatches = Arr.filter(
+    identityMatches,
     ({ context }) =>
       context.canonicalPath === input.publicPath ||
       context.canonicalPath === input.parentPath

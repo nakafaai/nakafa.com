@@ -5,7 +5,7 @@ import {
   TRUSTED_CONTENT_KEYS,
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { contentKeyResolver } from "@repo/backend/content/trust";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const unknownKeyId = SigningKeyIdSchema.make("unknown-key");
 const agentKeyId = SigningKeyIdSchema.make("agent-test-key");
@@ -18,8 +18,11 @@ afterEach(() => {
 describe("content trust", () => {
   it.effect("resolves the active reviewed code-owned key", () =>
     Effect.gen(function* () {
-      const active = TRUSTED_CONTENT_KEYS.find(
-        ({ keyId }) => keyId === ACTIVE_SIGNING_KEY_ID
+      const active = Option.getOrUndefined(
+        Arr.findFirst(
+          TRUSTED_CONTENT_KEYS,
+          ({ keyId }) => keyId === ACTIVE_SIGNING_KEY_ID
+        )
       );
 
       expect(yield* contentKeyResolver.resolve(ACTIVE_SIGNING_KEY_ID)).toBe(
@@ -42,18 +45,19 @@ describe("content trust", () => {
     "adds one complete Agent Mode key without replacing retained keys",
     () =>
       Effect.gen(function* () {
-        const productionKey = TRUSTED_CONTENT_KEYS.find(
+        const productionKey = Arr.findFirst(
+          TRUSTED_CONTENT_KEYS,
           ({ keyId }) => keyId === ACTIVE_SIGNING_KEY_ID
         );
-        expect(productionKey).toBeDefined();
-        if (productionKey === undefined) {
+        expect(Option.isSome(productionKey)).toBe(true);
+        if (Option.isNone(productionKey)) {
           return;
         }
         vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", agentKeyId);
         vi.stubEnv("CONVEX_CLOUD_URL", "http://127.0.0.1:3210");
         vi.stubEnv(
           "AKSARA_AGENT_SIGNING_PUBLIC_KEY",
-          productionKey.publicKeyPem
+          productionKey.value.publicKeyPem
         );
         vi.resetModules();
 
@@ -63,11 +67,11 @@ describe("content trust", () => {
 
         expect(agentTrust.activeContentSigningKeyId).toBe(agentKeyId);
         expect(yield* agentTrust.contentKeyResolver.resolve(agentKeyId)).toBe(
-          productionKey.publicKeyPem
+          productionKey.value.publicKeyPem
         );
         expect(
           yield* agentTrust.contentKeyResolver.resolve(ACTIVE_SIGNING_KEY_ID)
-        ).toBe(productionKey.publicKeyPem);
+        ).toBe(productionKey.value.publicKeyPem);
       })
   );
 

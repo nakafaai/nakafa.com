@@ -13,12 +13,14 @@ import {
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
+  Array as Arr,
   Deferred,
   Effect,
   Fiber,
   FileSystem,
   Layer,
   Logger,
+  MutableList,
   Schedule,
   Sink,
   Stream,
@@ -66,17 +68,17 @@ const spawner = Effect.fn("ProcessTest.spawner")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const release = vi.fn();
-  const commands: ChildProcess.Command[] = [];
-  const temporaryRoots: string[] = [];
+  const commands = MutableList.make<ChildProcess.Command>();
+  const temporaryRoots = MutableList.make<string>();
   const service = ChildProcessSpawner.make((command) =>
     Effect.gen(function* () {
-      commands.push(command);
+      MutableList.append(commands, command);
       const root =
         command._tag === "StandardCommand"
           ? command.options.env?.TMPDIR
           : undefined;
       if (root !== undefined) {
-        temporaryRoots.push(root);
+        MutableList.append(temporaryRoots, root);
       }
       // Records whether the command's temporary root outlived its group.
       yield* Effect.acquireRelease(Effect.void, () =>
@@ -120,9 +122,10 @@ describe("application process ownership", () => {
           Effect.gen(function* () {
             yield* Effect.addFinalizer(() =>
               Effect.sync(() => {
-                const listeners = process
-                  .listeners("SIGHUP")
-                  .filter((listener) => !previous.includes(listener));
+                const listeners = Arr.filter(
+                  process.listeners("SIGHUP"),
+                  (listener) => !previous.includes(listener)
+                );
                 expect(listeners).toHaveLength(1);
                 for (const listener of listeners) {
                   listener("SIGHUP");
@@ -167,7 +170,7 @@ describe("application process ownership", () => {
         expect(
           (yield* fs.stat(`${runtime.directory}/convex.log`)).mode % 0o1000
         ).toBe(0o600);
-        expect(child.commands).toEqual([
+        expect(MutableList.toArray(child.commands)).toEqual([
           expect.objectContaining({
             options: expect.objectContaining({
               cwd: runtime.backend,
@@ -182,7 +185,7 @@ describe("application process ownership", () => {
           }),
         ]);
         expect(child.temporaryRoots).toHaveLength(1);
-        for (const root of child.temporaryRoots) {
+        for (const root of MutableList.toArray(child.temporaryRoots)) {
           expect(yield* fs.exists(root)).toBe(false);
         }
       }).pipe(Effect.provide(services))
@@ -197,9 +200,9 @@ describe("application process ownership", () => {
         const child = yield* spawner({
           output: `${"Convex functions ready!\n".repeat(300)}\u001B[31mStaging rejected: missing publication owner\u001B[0m ${runtime.publicationToken}`,
         });
-        const messages: string[] = [];
+        const messages = MutableList.make<string>();
         const logger = Logger.make(({ message }) =>
-          messages.push(String(message))
+          MutableList.append(messages, String(message))
         );
         const original = acceptanceRuntimeError(
           "Signed publication returned HTTP 500."
@@ -216,13 +219,14 @@ describe("application process ownership", () => {
           Effect.flip
         );
         expect(failure).toBe(original);
+        const logged = MutableList.toArray(messages);
         expect(messages).toHaveLength(1);
-        expect(messages[0]).toContain(
+        expect(logged[0]).toContain(
           "Staging rejected: missing publication owner [redacted]"
         );
-        expect(messages[0]).not.toContain(runtime.publicationToken);
-        expect(messages[0]).not.toContain("\u001B");
-        expect(messages[0]?.length).toBeLessThanOrEqual(2040);
+        expect(logged[0]).not.toContain(runtime.publicationToken);
+        expect(logged[0]).not.toContain("\u001B");
+        expect(logged[0]?.length).toBeLessThanOrEqual(2040);
         expect(child.release).toHaveBeenCalledOnce();
       }).pipe(Effect.provide(services))
   );
@@ -234,8 +238,10 @@ describe("application process ownership", () => {
         Effect.gen(function* () {
           const { fs, runtime } = yield* fixture;
           const child = yield* spawner();
-          const messages: unknown[] = [];
-          const logger = Logger.make(({ message }) => messages.push(message));
+          const messages = MutableList.make<unknown>();
+          const logger = Logger.make(({ message }) =>
+            MutableList.append(messages, message)
+          );
           const original = acceptanceRuntimeError("Signed publication failed.");
           fetcher.mockImplementation(() =>
             Promise.resolve(new Response("owned"))
@@ -257,7 +263,7 @@ describe("application process ownership", () => {
               Effect.flip
             )
           ).toBe(original);
-          expect(messages).toEqual([]);
+          expect(MutableList.toArray(messages)).toEqual([]);
           expect(child.release).toHaveBeenCalledOnce();
         }).pipe(Effect.provide(services))
     );
@@ -419,7 +425,7 @@ writeFileSync("ready", "ready");`
             Effect.result
           );
           expect(result._tag).toBe(code === 0 ? "Success" : "Failure");
-          expect(child.commands).toEqual([
+          expect(MutableList.toArray(child.commands)).toEqual([
             expect.objectContaining({
               options: expect.objectContaining({
                 env: expect.objectContaining({

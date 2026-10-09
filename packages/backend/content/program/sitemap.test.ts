@@ -11,7 +11,7 @@ import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("contentRelease/program/sitemap", () => {
   it.effect("rejects an index larger than the complete partition space", () =>
@@ -88,7 +88,7 @@ describe("contentRelease/program/sitemap", () => {
           const pages = yield* Effect.forEach(result.buckets, (bucket) =>
             readProgramSitemap("en", bucket).pipe(Effect.provide(programLayer))
           );
-          expect(pages.flatMap((page) => page?.routes ?? [])).toEqual(
+          expect(Arr.flatMap(pages, (page) => page?.routes ?? [])).toEqual(
             expect.arrayContaining([
               {
                 publicPath: "curriculum/technical-program-1",

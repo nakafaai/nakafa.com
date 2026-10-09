@@ -2,7 +2,7 @@ import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
-import { Cause, Effect, Schema } from "effect";
+import { Array as Arr, Cause, Effect, Option, Schema } from "effect";
 
 type AgentToolError = NakafaAgentDataReadError | NakafaAgentInputError;
 const McpToolErrorStructuredContentSchema = Schema.Struct({
@@ -29,9 +29,9 @@ export function runMcpTool<Output extends Readonly<Record<string, unknown>>>(
   return program.pipe(
     Effect.matchCauseEffect({
       onFailure: (cause) => {
-        const failure = cause.reasons.find(Cause.isFailReason);
-        if (failure) {
-          return Effect.succeed(toExpectedToolError(failure.error));
+        const failure = Arr.findFirst(cause.reasons, Cause.isFailReason);
+        if (Option.isSome(failure)) {
+          return Effect.succeed(toExpectedToolError(failure.value.error));
         }
         return Effect.logError(
           "Unexpected Nakafa MCP tool failure.",

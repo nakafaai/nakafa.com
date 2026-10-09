@@ -3,7 +3,7 @@ import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { readMaterialPartition } from "@repo/backend/content/material/partition";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
-import { Effect, Struct } from "effect";
+import { Array as Arr, Effect, Struct } from "effect";
 
 const MATERIAL_DISCOVERY_LIMIT = 100;
 /** Selects the compact fields used by RSS, sitemap, and LLMS discovery. */
@@ -13,7 +13,7 @@ function summarizeMaterial(
 ) {
   const { projection } = verified;
   return {
-    authors: projection.metadata.authors.map(({ name }) => ({
+    authors: Arr.map(projection.metadata.authors, ({ name }) => ({
       name,
     })),
     ...Struct.pick(projection.metadata, ["dateModified"]),
@@ -68,7 +68,7 @@ export const readMaterialBucket = Effect.fn(
   return {
     activeReleaseId: partition.activeReleaseId,
     managed: true,
-    materials: partition.materials.map((material) =>
+    materials: Arr.map(partition.materials, (material) =>
       summarizeMaterial(material, material.row.sourcePath)
     ),
   };

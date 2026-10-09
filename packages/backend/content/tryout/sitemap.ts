@@ -4,18 +4,18 @@ import {
   compareSitemapPaths,
 } from "@repo/backend/confect/contentRelease/sitemap";
 import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
-import { Effect } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 
 type TryoutCatalog = Effect.Success<ReturnType<typeof loadTryoutCatalog>>;
 /** Selects canonical public paths from one verified localized catalog. */
 function listTryoutSitemapPaths(catalog: TryoutCatalog) {
-  const paths: string[] = [];
+  const paths = MutableList.make<string>();
   for (const { row } of catalog.entries) {
     if (row.publicPath !== undefined) {
-      paths.push(row.publicPath);
+      MutableList.append(paths, row.publicPath);
     }
   }
-  return paths.sort(compareSitemapPaths);
+  return Arr.sort(MutableList.toArray(paths), compareSitemapPaths);
 }
 /** Reads the bounded sitemap inventory for one active try-out locale. */
 export const readTryoutSitemapCount = Effect.fn(

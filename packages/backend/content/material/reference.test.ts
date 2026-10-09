@@ -6,7 +6,7 @@ import { materialLayer } from "@repo/backend/content/material/confect";
 import { readMaterialReference } from "@repo/backend/content/material/reference";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 describe("material reference integrity", () => {
   it.effect(
@@ -49,14 +49,15 @@ describe("material reference integrity", () => {
               const rows = yield* Effect.promise(() =>
                 tCtx.db.query("materialCatalog").collect()
               );
-              const other = rows.find(
+              const other = Arr.findFirst(
+                rows,
                 (row) =>
                   row.appLocale === "en" &&
                   row.contentKey !== projection.contentKey
               );
-              assert(other);
+              assert(Option.isSome(other));
               yield* Effect.promise(() =>
-                tCtx.db.patch("materialCatalog", other._id, {
+                tCtx.db.patch("materialCatalog", other.value._id, {
                   assetId: projection.graph.assetId,
                   publicPath: projection.publicPath,
                 })
@@ -102,7 +103,8 @@ describe("material reference integrity", () => {
               const rows = yield* Effect.promise(() =>
                 tCtx.db.query("materialCatalog").collect()
               );
-              for (const row of rows.filter(
+              for (const row of Arr.filter(
+                rows,
                 (candidate) => candidate.appLocale === "en"
               )) {
                 yield* Effect.promise(() =>

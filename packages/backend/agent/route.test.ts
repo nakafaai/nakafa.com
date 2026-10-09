@@ -10,6 +10,7 @@ import {
   createAgentEdgeRoutes,
   NAKAFA_API_EDGE_PATHS,
 } from "@repo/backend/agent/route";
+import { Array as Arr } from "effect";
 
 function expectedRoute(
   contract: AgentEdgeContract,
@@ -113,7 +114,7 @@ describe("agent Vercel routes", () => {
     "/v1/quran/1",
   ])("forwards declared API route %s", (path) => {
     expect(
-      NAKAFA_API_EDGE_PATHS.some(({ source }) =>
+      Arr.some(NAKAFA_API_EDGE_PATHS, ({ source }) =>
         new RegExp(source, "u").test(path)
       )
     ).toBe(true);
@@ -131,7 +132,7 @@ describe("agent Vercel routes", () => {
     "/v2",
   ])("leaves non-contract route %s outside the API bridge", (path) => {
     expect(
-      NAKAFA_API_EDGE_PATHS.some(({ source }) =>
+      Arr.some(NAKAFA_API_EDGE_PATHS, ({ source }) =>
         new RegExp(source, "u").test(path)
       )
     ).toBe(false);

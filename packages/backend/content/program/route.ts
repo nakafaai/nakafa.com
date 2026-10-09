@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/content/program/verify";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads one complete curriculum page model from immutable indexed sources. */
 export const readProgramRoute = Effect.fn("contentRelease.readProgramRoute")(
@@ -80,11 +80,11 @@ export const readProgramRoute = Effect.fn("contentRelease.readProgramRoute")(
     return {
       activeManifestHash: active.manifestHash,
       activeReleaseId: active.releaseId,
-      alternateJson: model.alternates.map(({ rowJson }) => rowJson),
-      ancestorJson: model.ancestors.map(({ rowJson }) => rowJson),
-      childJson: model.children.map(({ rowJson }) => rowJson),
-      contextJson: model.contexts.map(({ rowJson }) => rowJson),
-      groupJson: model.groups.map(({ rowJson }) => rowJson),
+      alternateJson: Arr.map(model.alternates, ({ rowJson }) => rowJson),
+      ancestorJson: Arr.map(model.ancestors, ({ rowJson }) => rowJson),
+      childJson: Arr.map(model.children, ({ rowJson }) => rowJson),
+      contextJson: Arr.map(model.contexts, ({ rowJson }) => rowJson),
+      groupJson: Arr.map(model.groups, ({ rowJson }) => rowJson),
       managed: true,
       materialJson: model.materialJson,
       programJson: storedProgram.rowJson,

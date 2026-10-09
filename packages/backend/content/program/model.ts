@@ -11,20 +11,19 @@ import { verifyMaterial } from "@repo/backend/content/material/verify";
 import { ProgramSource } from "@repo/backend/content/program/source";
 import { verifyCurriculum } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, MutableList, Option, Order } from "effect";
 
 type CurriculumRoute = Effect.Success<ReturnType<typeof verifyCurriculum>>;
 /** Orders material groups exactly as authored, with paths as stable tie-breakers. */
-function compareGroups(
-  left: PublicationRow<"curriculumRoutes">,
-  right: PublicationRow<"curriculumRoutes">
-) {
-  const order = left.order - right.order;
-  if (order !== 0) {
-    return order;
-  }
-  return left.path.localeCompare(right.path);
-}
+const compareGroups = Order.combine(
+  Order.mapInput(
+    Order.Number,
+    (group: PublicationRow<"curriculumRoutes">) => group.order
+  ),
+  Order.make<PublicationRow<"curriculumRoutes">>((left, right) =>
+    Order.Number(left.path.localeCompare(right.path), 0)
+  )
+);
 
 /** Rejects a bounded relationship whose source fan-out exceeds its contract. */
 const requireBoundedRows = Effect.fn("contentRelease.requireProgramRows")(
@@ -42,7 +41,7 @@ const requireBoundedRows = Effect.fn("contentRelease.requireProgramRows")(
 export const readAncestors = Effect.fn("contentRelease.readProgramAncestors")(
   function* (snapshotId: string, route: CurriculumRoute) {
     const source = yield* ProgramSource;
-    const rows: PublicationRow<"curriculumRoutes">[] = [];
+    const rows = MutableList.make<PublicationRow<"curriculumRoutes">>();
     let parentPath = route.parentPath;
     while (parentPath) {
       if (rows.length === PROGRAM_ANCESTOR_LIMIT) {
@@ -61,10 +60,10 @@ export const readAncestors = Effect.fn("contentRelease.readProgramAncestors")(
         );
       }
       const verified = yield* verifyCurriculum(parent, snapshotId);
-      rows.unshift(parent);
+      MutableList.prepend(rows, parent);
       parentPath = verified.parentPath;
     }
-    return rows;
+    return MutableList.toArray(rows);
   }
 );
 /** Reads every localized counterpart through source-owned node identity. */
@@ -138,7 +137,7 @@ const readGroups = Effect.fn("contentRelease.readProgramGroups")(function* (
       )
     )
   );
-  return groups.sort(compareGroups);
+  return Arr.sort(groups, compareGroups);
 });
 /** Reads every verified lesson projection referenced by curriculum contexts. */
 const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
@@ -154,7 +153,7 @@ const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
       )
     );
     const source = yield* MaterialSource;
-    const projections: string[] = [];
+    const projections = MutableList.make<string>();
     for (const materialKey of materialKeys) {
       const remaining = PROGRAM_MATERIAL_LIMIT - projections.length;
       const rows = yield* source.siblings(
@@ -174,9 +173,9 @@ const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
           Effect.map(({ projectionJson }) => projectionJson)
         )
       );
-      projections.push(...verified);
+      MutableList.appendAll(projections, verified);
     }
-    return projections;
+    return MutableList.toArray(projections);
   }
 );
 /** Resolves every bounded relationship needed by one curriculum page. */

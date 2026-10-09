@@ -22,7 +22,14 @@ import {
 } from "@repo/backend/test/tryout/snapshot";
 import { makeTryoutStartHierarchy } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Layer, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Layer,
+  MutableList,
+  Option,
+  Schema,
+} from "effect";
 
 /** Creates one technical track used to break localized count symmetry. */
 function makeTechnicalTrack() {
@@ -169,7 +176,7 @@ describe("contentRelease/tryout/catalog", () => {
             countryKey: "germany",
             publicPath: "try-out/germany",
           },
-          ...[2027, 2028].map((year) => ({
+          ...Arr.map([2027, 2028], (year) => ({
             ...track,
             appLocale: "id",
             graph: {
@@ -218,24 +225,28 @@ describe("contentRelease/tryout/catalog", () => {
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
-        const catalog: TryoutCatalogRow[] = [];
+        const catalog = MutableList.make<TryoutCatalogRow>();
         for (const locale of ["en", "id"] as const) {
-          catalog.push(makeTryoutCatalogRow(locale).record.row);
-          const section = makeTryoutStartHierarchy(
-            locale,
-            locale === "en" ? "visible" : "internal-entry"
-          ).find((row) => row.kind === "section");
-          if (section === undefined) {
+          MutableList.append(catalog, makeTryoutCatalogRow(locale).record.row);
+          const section = Arr.findFirst(
+            makeTryoutStartHierarchy(
+              locale,
+              locale === "en" ? "visible" : "internal-entry"
+            ),
+            (row) => row.kind === "section"
+          );
+          if (Option.isNone(section)) {
             return yield* Effect.die("Expected a technical section.");
           }
           for (const index of [1, 2]) {
-            catalog.push(
+            MutableList.append(
+              catalog,
               yield* Schema.decodeEffect(TryoutCatalogRowSchema)({
-                ...section,
+                ...section.value,
                 sectionKey: `section-${index}`,
                 publicPath:
                   locale === "en"
-                    ? `${section.publicPath}-${index}`
+                    ? `${section.value.publicPath}-${index}`
                     : undefined,
               }).pipe(Effect.orDie)
             );
@@ -244,7 +255,7 @@ describe("contentRelease/tryout/catalog", () => {
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
             activateTryoutSnapshot(ctx, {
-              catalog,
+              catalog: MutableList.toArray(catalog),
               placements: [
                 makeTryoutPlacementRow("en").record.row,
                 makeTryoutPlacementRow("id").record.row,

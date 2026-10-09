@@ -20,7 +20,7 @@ import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content/runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Schema } from "effect";
 
 // Strict decoding rejects undeclared keys instead of stripping them.
 const decodeProjection = Schema.decodeUnknownSync(
@@ -105,7 +105,7 @@ describe("contentRelease/material/model", () => {
     });
     expect(decodeProjection(result.projectionJson ?? "")).toEqual(requested);
     expect(
-      result.alternateJson.map((value) => decodeProjection(value))
+      Arr.map(result.alternateJson, (value) => decodeProjection(value))
     ).toMatchObject([
       {
         appLocale: "en",
@@ -121,7 +121,7 @@ describe("contentRelease/material/model", () => {
       },
     ]);
     expect(
-      result.siblingJson.map((value) => decodeProjection(value))
+      Arr.map(result.siblingJson, (value) => decodeProjection(value))
     ).toMatchObject([
       {
         appLocale: "en",
@@ -135,7 +135,7 @@ describe("contentRelease/material/model", () => {
   });
   it("uses 12 queries for three alternates and one sibling", async () => {
     const target = convexTest(schema, convexModules);
-    const projections = (["en", "id", "de"] as const).map((appLocale) =>
+    const projections = Arr.map(["en", "id", "de"] as const, (appLocale) =>
       makeMaterialProjection(appLocale, 1)
     );
     const requested = projections[0];

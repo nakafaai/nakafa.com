@@ -3,7 +3,7 @@ import {
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
-import { Context, Effect, Schema } from "effect";
+import { Array as Arr, Context, Effect, Schema } from "effect";
 import { McpSchema, McpServer } from "effect/ai";
 
 const NonEmptyPromptStringSchema = Schema.Trim.pipe(
@@ -140,7 +140,7 @@ function promptResult(lines: readonly string[]) {
     messages: [
       {
         content: {
-          text: lines.join("\n"),
+          text: Arr.join(lines, "\n"),
           type: "text",
         },
         role: "user",
