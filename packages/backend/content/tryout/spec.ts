@@ -1,3 +1,4 @@
+import { ProtectedContentDeliverySchema } from "@nakafa/aksara-contracts/delivery";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { ResponseSpec } from "@repo/backend/confect/response/model";
 import { tryoutBodyBatchValidator } from "@repo/backend/confect/tryouts/runtime/body";
@@ -49,14 +50,10 @@ export const tryoutPageArgsValidator = Schema.Struct({
   ...tryoutHubArgsValidator.fields,
   publicPath: Schema.String,
 });
-const protectedDeliveryValidator = Schema.Union([
-  Schema.Literal("authenticated"),
-  Schema.Literal("entitled"),
-]);
 const protectedSelectorValidator = Schema.Struct({
   artifactHash: Schema.String,
   contentKey: Schema.String,
-  delivery: protectedDeliveryValidator,
+  delivery: ProtectedContentDeliverySchema,
 });
 export const protectedArgsValidator = {
   bundleHash: Schema.String,
