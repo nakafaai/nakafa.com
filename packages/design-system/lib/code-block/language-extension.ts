@@ -1,4 +1,5 @@
-import { type BundledLanguage, bundledLanguages } from "shiki";
+import { isBundledLanguage } from "@repo/design-system/lib/code-block/language";
+import type { BundledLanguage } from "shiki";
 
 const LANGUAGE_EXTENSION_OVERRIDES: Partial<Record<BundledLanguage, string>> = {
   "1c-query": "1cq",
@@ -134,10 +135,6 @@ const LANGUAGE_EXTENSION_OVERRIDES: Partial<Record<BundledLanguage, string>> = {
   zenscript: "zs",
   文言: "wy",
 };
-
-function isBundledLanguage(language: string): language is BundledLanguage {
-  return Object.hasOwn(bundledLanguages, language);
-}
 
 /** Resolves a Shiki language to a useful downloaded-file extension. */
 export function getCodeFileExtension(language: string | undefined) {
