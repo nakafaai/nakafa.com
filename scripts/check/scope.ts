@@ -28,6 +28,7 @@ import {
   type Node,
   type VariableDeclaration,
 } from "typescript/unstable/ast";
+import { unwrapped } from "#scripts/check/wrapper";
 
 /**
  * What one declaration binds a name to: the function value it holds, or
@@ -59,10 +60,12 @@ function bindsName(binding: BindingName, name: string): boolean {
 
 /** The function value that a variable holds, when it binds an identifier to a function. */
 function functionValueOf(declaration: VariableDeclaration): Declared {
-  return isIdentifier(declaration.name) &&
-    isFunctionValue(declaration.initializer)
-    ? declaration.initializer
-    : undefined;
+  const { initializer } = declaration;
+  if (!isIdentifier(declaration.name) || initializer === undefined) {
+    return undefined;
+  }
+  const value = unwrapped(initializer);
+  return isFunctionValue(value) ? value : undefined;
 }
 
 /** The declarations of one variable list that bind `name`. */

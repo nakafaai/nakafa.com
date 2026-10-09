@@ -1,7 +1,6 @@
 import { Array as Arr, HashSet, Option, Record as Rec, Result } from "effect";
 import {
   type ExpressionWithTypeArguments,
-  isAsExpression,
   isBinaryExpression,
   isCallExpression,
   isClassDeclaration,
@@ -14,12 +13,9 @@ import {
   isImportDeclaration,
   isNamedImports,
   isNewExpression,
-  isNonNullExpression,
   isObjectBindingPattern,
-  isParenthesizedExpression,
   isPropertyAccessExpression,
   isPropertyAssignment,
-  isSatisfiesExpression,
   isStringLiteral,
   isStringLiteralLikeNode,
   isVariableDeclaration,
@@ -28,6 +24,7 @@ import {
   SyntaxKind,
 } from "typescript/unstable/ast";
 import { candidate, type Rule } from "#scripts/check/rules";
+import { unwrapped, wrapped } from "#scripts/check/wrapper";
 
 type RuleId = typeof Rule.Type;
 
@@ -95,26 +92,6 @@ const ASSIGNMENTS = HashSet.make(
   SyntaxKind.EqualsToken,
   SyntaxKind.QuestionQuestionEqualsToken
 );
-
-/** Whether a node only wraps an expression: parentheses, a non-null assertion, or a type assertion. */
-function isWrapper(node: Node) {
-  return (
-    isParenthesizedExpression(node) ||
-    isNonNullExpression(node) ||
-    isAsExpression(node) ||
-    isSatisfiesExpression(node)
-  );
-}
-
-/** Returns the outermost expression that only wraps `node`, such as `(Object)`. */
-function wrapped(node: Node): Node {
-  return isWrapper(node.parent) ? wrapped(node.parent) : node;
-}
-
-/** Returns the expression inside every wrapper around it. */
-function unwrapped(node: Node): Node {
-  return isWrapper(node) ? unwrapped(node.expression) : node;
-}
 
 /**
  * Returns the member a node reads from `owner`, written as a property or as an

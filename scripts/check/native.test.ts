@@ -108,6 +108,29 @@ const config = require(name);
     })
   );
 
+  it.effect("sees a handler written in parentheses or a type assertion", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(
+          `import { workflow } from "@repo/backend/confect/workflow";
+export const verify = workflow.define({
+  handler: (async (step) => step.runAction(run)),
+});
+const retry = (async (step) => {
+  await step.runAction(retry);
+});
+export const again = workflow.define({ handler: (retry as typeof retry) });
+export const bare = (async () => {
+  await run();
+});
+`,
+          WORKFLOW
+        ),
+        ["9 promise", "10 promise"]
+      );
+    })
+  );
+
   it.effect("lets a Confect workflow handler use native promise syntax", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

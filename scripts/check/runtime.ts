@@ -23,6 +23,7 @@ import {
   type Symbols,
   symbolAt,
 } from "#scripts/check/convex";
+import { unwrapped } from "#scripts/check/wrapper";
 
 const EFFECT_RUNNERS = HashSet.fromIterable(
   "runCallback runCallbackWith runFork runForkWith runPromise runPromiseExit runPromiseExitWith runPromiseWith runSync runSyncExit runSyncExitWith runSyncWith".split(
@@ -132,9 +133,10 @@ function runtimeImports(nodes: readonly Node[], symbols: Symbols) {
 
 /** Resolves an imported Effect module, factory, or runtime expression. */
 function runtimeKind(
-  node: Node,
+  expression: Node,
   imports: RuntimeImports
 ): RuntimeKind | undefined {
+  const node = unwrapped(expression);
   if (isAwaitExpression(node)) {
     return runtimeKind(node.expression, imports);
   }

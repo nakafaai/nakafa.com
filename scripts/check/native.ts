@@ -31,6 +31,7 @@ import {
 } from "typescript/unstable/ast";
 import { candidate } from "#scripts/check/rules";
 import { boundFunctions, isFunctionValue } from "#scripts/check/scope";
+import { unwrapped } from "#scripts/check/wrapper";
 
 const NODE_MODULES = HashSet.make(
   "child_process",
@@ -188,10 +189,11 @@ function propertyName(name: PropertyName): string | undefined {
  * written inline, or the function that an identifier binds where it stands.
  */
 function handlerFunctions(handler: Node): readonly Node[] {
-  if (isFunctionValue(handler)) {
-    return [handler];
+  const value = unwrapped(handler);
+  if (isFunctionValue(value)) {
+    return [value];
   }
-  return isIdentifier(handler) ? boundFunctions(handler) : [];
+  return isIdentifier(value) ? boundFunctions(value) : [];
 }
 
 /**

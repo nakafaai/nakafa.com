@@ -7,6 +7,7 @@ import {
   type Node,
 } from "typescript/unstable/ast";
 import type { Rule } from "#scripts/check/rules";
+import { unwrapped } from "#scripts/check/wrapper";
 
 /** Array methods that transform, read, or search an array and have no String counterpart. `join` is among them: the receiver's type tells an array's join from the path helper of the same name. */
 const ARRAY_METHODS = HashSet.make(
@@ -71,7 +72,7 @@ function calledMethod(node: Node) {
   if (!isCallExpression(node)) {
     return;
   }
-  const callee = node.expression;
+  const callee = unwrapped(node.expression);
   if (isPropertyAccessExpression(callee)) {
     return { method: callee.name.text, receiver: callee.expression };
   }

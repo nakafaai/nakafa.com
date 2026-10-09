@@ -36,6 +36,32 @@ describe("Effect test policy", () => {
     })
   );
 
+  it.effect("sees a runner through parentheses and type assertions", () =>
+    Effect.gen(function* () {
+      const source = (name: string, call: string) => ({
+        file: `packages/example/src/${name}.test.ts`,
+        sourceText: `import { Effect } from "effect";\n${call}\n`,
+      });
+      assert.deepStrictEqual(
+        yield* effectTestViolations([
+          source("parenthesized", "(Effect).runPromise(program);"),
+          source("asserted", "(Effect as typeof Effect).runPromise(program);"),
+          source(
+            "satisfied",
+            "(Effect satisfies typeof Effect).runSync(program);"
+          ),
+          source("unwrapped", "Effect!.runFork(program);"),
+        ]),
+        [
+          "packages/example/src/parenthesized.test.ts: return the Effect to @effect/vitest instead of running it.",
+          "packages/example/src/asserted.test.ts: return the Effect to @effect/vitest instead of running it.",
+          "packages/example/src/satisfied.test.ts: return the Effect to @effect/vitest instead of running it.",
+          "packages/example/src/unwrapped.test.ts: return the Effect to @effect/vitest instead of running it.",
+        ]
+      );
+    })
+  );
+
   it.effect("ignores sources that are not TypeScript tests", () =>
     Effect.gen(function* () {
       const violations = yield* effectTestViolations([

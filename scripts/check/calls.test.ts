@@ -57,6 +57,17 @@ items[name](String);
     })
   );
 
+  it.effect("sees a method through parentheses around its callee", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* calls(`(items.map)(String);
+(items["filter"])(Boolean);
+`),
+        ["1 array-method items", "2 array-method items"]
+      );
+    })
+  );
+
   it.effect(
     "recognizes a method on a call result and a namespace receiver",
     () =>
