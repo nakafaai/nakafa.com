@@ -10,7 +10,7 @@ import {
   ProgramTranslationSchema,
   type LearningProgram as PublishedLearningProgram,
 } from "@nakafa/aksara-contracts/program/spec";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";
@@ -62,18 +62,24 @@ export function isRenderableCurriculumView(route: CurriculumViewRoute) {
 export async function resolveRuntimeCurriculumRoute(params: CurriculumParams) {
   const resolved = await params;
   const locale = getLocaleOrThrow(resolved.locale);
-  const publicPath = [
-    CURRICULUM_NAMESPACES[locale],
-    resolved.curriculum,
-    ...(resolved.path ?? []),
-  ].join("/");
+  const publicPath = Arr.join(
+    [
+      CURRICULUM_NAMESPACES[locale],
+      resolved.curriculum,
+      ...(resolved.path ?? []),
+    ],
+    "/"
+  );
   const published = await getPublishedProgramRoute(locale, publicPath);
   const { program, route } = published;
   if (!(program && route && isRenderableCurriculumView(route))) {
     notFound();
   }
 
-  const childRoutes = published.children.filter(isRenderableCurriculumView);
+  const childRoutes = Arr.filter(
+    published.children,
+    isRenderableCurriculumView
+  );
   const materialCards = await getPublishedMaterialCards({
     contexts: published.contexts,
     groups: published.groups,
@@ -82,8 +88,8 @@ export async function resolveRuntimeCurriculumRoute(params: CurriculumParams) {
     route,
   });
   return {
-    alternates: published.alternates.filter(isRenderableCurriculumView),
-    ancestors: published.ancestors.filter(isRenderableCurriculumView),
+    alternates: Arr.filter(published.alternates, isRenderableCurriculumView),
+    ancestors: Arr.filter(published.ancestors, isRenderableCurriculumView),
     childRoutes,
     locale,
     materialCards,
@@ -100,7 +106,7 @@ export async function readRuntimeCurriculumCatalog(
 ): Promise<CurriculumCatalogModel> {
   const published = await getPublishedProgramCatalog(locale);
   return {
-    entries: published.entries.filter(({ route }) =>
+    entries: Arr.filter(published.entries, ({ route }) =>
       isRenderableCurriculumView(route)
     ),
     sourceRevision: published.sourceRevision,
@@ -112,7 +118,7 @@ export function readRuntimeCurriculumOptions(
   catalog: CurriculumCatalogModel,
   locale: Locale
 ) {
-  return catalog.entries.map(({ program, route, translation }) => ({
+  return Arr.map(catalog.entries, ({ program, route, translation }) => ({
     ...(program.provider.homeCountry === undefined
       ? {}
       : { countryCode: program.provider.homeCountry }),
@@ -136,7 +142,7 @@ export function readRuntimeCurriculumBreadcrumbs(
       name: subjectLabel,
       path: getCurriculumIndexHref(model.locale),
     },
-    ...model.ancestors.map((ancestor) => ({
+    ...Arr.map(model.ancestors, (ancestor) => ({
       name: ancestor.title,
       path: `/${ancestor.publicPath}`,
     })),
