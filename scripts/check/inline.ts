@@ -6,6 +6,7 @@ import {
   isFunctionExpression,
   isFunctionLikeDeclaration,
   isIdentifier,
+  isIntersectionTypeNode,
   isParameterDeclaration,
   isSatisfiesExpression,
   isTypePredicateNode,
@@ -90,6 +91,10 @@ function annotation(file: string, node: Node): TypeNode | undefined {
  * data: an object type with members, none of which holds a value no Schema
  * describes, in the type of a parameter, a variable, a return type, a type
  * predicate, or a `satisfies` target. One annotation is one candidate.
+ *
+ * An object type that an intersection joins to a value, such as the second
+ * member of `ResponseInit & { readonly url?: string }`, extends that value and
+ * is no data shape of its own.
  */
 export function inlineCandidates(
   file: string,
@@ -99,16 +104,12 @@ export function inlineCandidates(
   const holdsValue = valueMembers(sourceFile);
   const isValue = valueTypes(sourceFile);
   return Arr.flatMap(runtime, (node) => {
-    const type = annotation(file, node);
-    // A type that holds a value as a whole, such as `ResponseInit & { ... }`, extends that value.
-    if (type === undefined || isValue(type)) {
-      return [];
-    }
     const written = Arr.filter(
-      objectLiterals(type),
+      Arr.flatMap(Arr.fromNullishOr(annotation(file, node)), objectLiterals),
       (literal) =>
         Arr.isReadonlyArrayNonEmpty(literal.members) &&
-        !Arr.some(literal.members, holdsValue)
+        !Arr.some(literal.members, holdsValue) &&
+        !(isIntersectionTypeNode(literal.parent) && isValue(literal.parent))
     );
     return Arr.map(Arr.take(written, 1), (literal) =>
       candidate("data-type", sourceFile, literal)

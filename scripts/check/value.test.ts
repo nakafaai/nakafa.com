@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { isInterfaceDeclaration } from "typescript/unstable/ast";
+import { effectFindings } from "#scripts/check/effect";
 import { parseSources } from "#scripts/check/source";
 import { valueMembers } from "#scripts/check/value";
 
@@ -20,6 +21,19 @@ const holds = Effect.fn("ValueTest.holds")(function* (sourceText: string) {
         : []
     );
   });
+}, Effect.scoped);
+
+/** Lists the lines of one module's hand-written data shapes, as the shape rule reports them. */
+const reported = Effect.fn("ValueTest.reported")(function* (
+  sourceText: string
+) {
+  const found = yield* effectFindings(
+    yield* parseSources([{ file: "apps/www/lib/example.ts", sourceText }])
+  );
+  return Arr.map(
+    Arr.filter(found, ({ rule }) => rule === "data-type"),
+    ({ line }) => line
+  );
 }, Effect.scoped);
 
 describe("value members", () => {
@@ -189,6 +203,116 @@ export interface Holder {
 }
 `),
           [true, true, true, true, false, false]
+        );
+      })
+  );
+});
+
+describe("value members in the shape rule", () => {
+  it.effect("allows a shape whose own member holds a function", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* reported(`export interface Toggle {
+  readonly onChange: (value: boolean) => void;
+}
+export type Handlers = { readonly onOpen: () => void };
+export type Wrapped = Readonly<{ onOpen: (() => void) | null }>;
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "keeps a shape reported when its members are only call or construct signatures",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* reported(`export interface Callable {
+  (value: boolean): void;
+}
+export interface Constructible {
+  new (value: boolean): Toggle;
+}
+`),
+          [1, 4]
+        );
+      })
+  );
+
+  it.effect("allows a shape whose own member holds a React value", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* reported(`import type { ReactNode } from "react";
+export interface Card {
+  readonly body: ReactNode;
+}
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "allows a shape whose own member holds a parser syntax-tree node, and still reports plain data",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* reported(`import type { JSXElement } from "estree-jsx";
+export interface Snippet {
+  readonly element: JSXElement;
+}
+export interface Lesson {
+  readonly title: string;
+}
+`),
+          [5]
+        );
+      })
+  );
+
+  it.effect(
+    "keeps a shape reported when a member names no React import or a local data alias",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* reported(`import type { ReactNode } from "./nodes";
+type Title = string;
+export interface Imported {
+  readonly body: ReactNode;
+}
+export interface Aliased {
+  readonly title: Title;
+}
+`),
+          [3, 6]
+        );
+      })
+  );
+
+  it.effect(
+    "allows a shape that holds an Effect runtime handle, an AI SDK message part, or a same-module shape of functions",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* reported(`import type { TextUIPart } from "ai";
+import type { Fiber } from "effect";
+interface Actions {
+  readonly close: () => void;
+}
+export interface Save {
+  readonly fiber: Fiber.Fiber<void, never>;
+  readonly owner: symbol;
+}
+export interface Entry {
+  readonly key: string;
+  readonly part: TextUIPart;
+}
+export interface ContextValue {
+  readonly actions: Actions;
+}
+`),
+          []
         );
       })
   );
