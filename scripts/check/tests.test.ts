@@ -105,6 +105,8 @@ describe("test ownership policy", () => {
           'export declare const narrowed: typeof value === "object";\n',
         "scripts/tool.test.ts": CLEAN_TEST,
         "scripts/tool.ts": "export const tool = true;\n",
+        "scripts/tsconfig.json":
+          '{"extends":"../packages/typescript-config/base.json"}\n',
       });
 
       assert.deepStrictEqual(yield* checkFixture(root), {
@@ -132,7 +134,8 @@ describe("test ownership policy", () => {
         "packages/core/runner.ts": "export const runner = true;\n",
         "scripts/raw.ts":
           "export function read() {\n  try {\n    return 1;\n  } catch {\n    return 0;\n  }\n}\n",
-        "apps/web/store.ts": "export const store = Object.keys(value);\n",
+        "apps/web/store.ts":
+          "export const store = new Map();\nexport const names = Object.keys(value);\n",
         "apps/web/tsconfig.json":
           '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
         "tsconfig.json": '{"compilerOptions":{"plugins":[]}}\n',
@@ -145,7 +148,7 @@ describe("test ownership policy", () => {
           "Final code must not contain .test.tsx files:\n  - apps/web/view.test.tsx\n",
           "Tests must not use __test__ or __tests__ folders:\n  - packages/core/__tests__/value.ts\n",
           "packages/core/runner.test.ts: return the Effect to @effect/vitest instead of running it.\n",
-          `apps/web/store.ts:1: ${RULES["object-helper"].message} (object-helper)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
+          `apps/web/store.ts:1: ${RULES["map-set"].message} (map-set)\napps/web/store.ts:2: ${RULES["object-helper"].message} (object-helper)\nscripts/raw.ts:2: ${RULES["try-catch"].message} (try-catch)\n`,
           "apps/web/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\ntsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.\n",
           "apps/web/card.tsx:1: use size-1 instead of size-[4px].\n",
         ],
@@ -183,7 +186,11 @@ describe("test ownership policy", () => {
       files: { "apps/web/card.tsx": 'export const card = "ring-[3px]";\n' },
     },
     {
-      category: "an Effect-native violation",
+      category: "a native Map",
+      files: { "apps/web/store.ts": "export const store = new Map();\n" },
+    },
+    {
+      category: "an Object helper",
       files: {
         "apps/web/store.ts": "export const store = Object.keys(value);\n",
       },
@@ -211,7 +218,11 @@ describe("test ownership policy", () => {
       yield* writeFixtures(root, {
         "apps/web/value.ts": "export const value = 1;\n",
         "packages/core/value.ts": "export const value = 1;\n",
+        "packages/typescript-config/base.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
         "scripts/tool.ts": "export const tool = true;\n",
+        "tsconfig.json":
+          '{"extends":"./packages/typescript-config/base.json"}\n',
         ...files,
       });
 

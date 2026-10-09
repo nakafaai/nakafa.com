@@ -1,8 +1,71 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Order, Tuple } from "effect";
+import {
+  type Identifier,
+  isIdentifier,
+  type Node,
+} from "typescript/unstable/ast";
+import { symbolAt, symbolTable } from "#scripts/check/convex";
 import { effectTestViolations } from "#scripts/check/effect";
+import { descendants } from "#scripts/check/source";
+import { ROOT, typedProject, withProject } from "#scripts/check/test.helpers";
 
 const file = "packages/backend/example.test.ts";
+
+describe("symbol table", () => {
+  it.effect(
+    "resolves a name to the symbol of its own scope, and a later entry replaces an earlier one",
+    () =>
+      Effect.gen(function* () {
+        const project = yield* typedProject(
+          withProject({
+            "scripts/names.ts":
+              "const value = 1;\nexport function read(value: number) {\n  return value;\n}\nexport const copy = value;\n",
+          })
+        );
+        const sourceFile = yield* Effect.fromNullishOr(
+          project.program.getSourceFile(`${ROOT}/scripts/names.ts`)
+        );
+        const named = Arr.sort(
+          Arr.filter(
+            descendants(sourceFile, false),
+            (node): node is Identifier =>
+              isIdentifier(node) && node.text === "value"
+          ),
+          Order.mapInput(Order.Number, (node: Node) =>
+            node.getStart(sourceFile)
+          )
+        );
+        const pairs = Arr.zip(
+          named,
+          project.checker.getSymbolAtLocation(named)
+        );
+        const [declared, parameter, inside, outside] = pairs;
+        const table = symbolTable(pairs);
+        const idAt = (node: Identifier) => symbolAt(table, node)?.id;
+        assert.deepStrictEqual(
+          [
+            idAt(inside[0]) === idAt(parameter[0]),
+            idAt(outside[0]) === idAt(declared[0]),
+            idAt(parameter[0]) === idAt(declared[0]),
+            idAt(declared[0]) !== undefined,
+          ],
+          [true, true, false, true]
+        );
+        const replaced = symbolTable(
+          Arr.append(pairs, Tuple.make(outside[0], parameter[1]))
+        );
+        assert.deepStrictEqual(
+          [
+            symbolAt(replaced, outside[0])?.id === parameter[1]?.id,
+            parameter[1] !== undefined,
+          ],
+          [true, true]
+        );
+      }).pipe(Effect.scoped)
+  );
+});
+
 const imports =
   'import { Effect } from "effect"; import { convexTest, type TestConvex } from "convex-test";';
 

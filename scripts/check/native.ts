@@ -1,153 +1,144 @@
 import { Array as Arr, HashSet } from "effect";
 import {
+  isAsyncKeyword,
+  isAwaitExpression,
   isBinaryExpression,
   isCallExpression,
-  isElementAccessExpression,
+  isCaseClause,
+  isComputedPropertyName,
+  isExportDeclaration,
+  isExternalModuleReference,
+  isForOfStatement,
+  isFunctionLikeDeclaration,
   isIdentifier,
   isImportDeclaration,
+  isImportEqualsDeclaration,
+  isMethodDeclaration,
   isNamedImports,
+  isObjectLiteralExpression,
   isPropertyAccessExpression,
+  isPropertyAssignment,
+  isShorthandPropertyAssignment,
+  isSourceFile,
   isStringLiteral,
   isStringLiteralLikeNode,
+  isSwitchStatement,
   isTryStatement,
   isTypeOfExpression,
   type Node,
+  type PropertyName,
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { candidate } from "#scripts/check/rules";
-import type { Binding } from "#scripts/check/source";
+import { candidate, loadsExport, loadsImport } from "#scripts/check/rules";
+import { boundFunctions, isFunctionValue } from "#scripts/check/scope";
+import { unwrapped } from "#scripts/check/wrapper";
 
-/** Array methods that return a new value and have no String counterpart. */
-const ARRAY_METHODS = HashSet.make(
-  "every",
-  "filter",
-  "flat",
-  "flatMap",
-  "forEach",
-  "map",
-  "reduce",
-  "reduceRight",
-  "some",
-  "toReversed"
+const NODE_MODULES = HashSet.make(
+  "child_process",
+  "fs",
+  "fs/promises",
+  "node:child_process",
+  "node:fs",
+  "node:fs/promises",
+  "node:path",
+  "node:path/posix",
+  "node:path/win32",
+  "path",
+  "path/posix",
+  "path/win32"
 );
-/** Array methods that change their array in place. */
-const MUTATION_METHODS = HashSet.make(
-  "pop",
-  "push",
-  "reverse",
-  "shift",
-  "sort",
-  "splice",
-  "unshift"
-);
-/** Array methods that search for one element, which Effect returns as an Option. */
-const SEARCH_METHODS = HashSet.make(
-  "find",
-  "findIndex",
-  "findLast",
-  "findLastIndex"
-);
-/** Receivers that are not module imports, so an array method transforms a value. */
-const VALUE_BINDINGS: readonly (typeof Binding.Type)[] = ["global", "local"];
-/** Every binding, for a receiver that a repository module exports as a value. */
-const ANY_BINDING: readonly (typeof Binding.Type)[] = [
-  "global",
-  "import",
-  "local",
-];
-/** Relative paths, app and script aliases, and workspace packages name repository modules. */
-const REPOSITORY_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;
-
 const EQUALITY_OPERATORS = HashSet.make(
   SyntaxKind.EqualsEqualsEqualsToken,
   SyntaxKind.EqualsEqualsToken,
   SyntaxKind.ExclamationEqualsEqualsToken,
   SyntaxKind.ExclamationEqualsToken
 );
+/** Whether a node declares an async function or waits on a Promise. */
+function isPromiseSyntax(node: Node) {
+  return (
+    (isFunctionLikeDeclaration(node) &&
+      Arr.some(node.modifiers ?? [], isAsyncKeyword)) ||
+    isAwaitExpression(node) ||
+    (isForOfStatement(node) && node.awaitModifier !== undefined)
+  );
+}
 
-/**
- * Returns the method a call invokes and its receiver, for a callee written as
- * a property or as an element access with a string literal, such as
- * `rows.map(format)` or `rows["map"](format)`.
- */
-function calledMethod(node: Node) {
-  if (!isCallExpression(node)) {
-    return;
-  }
-  const callee = node.expression;
-  if (isPropertyAccessExpression(callee)) {
-    return {
-      count: node.arguments.length,
-      method: callee.name.text,
-      receiver: callee.expression,
-    };
-  }
-  return isElementAccessExpression(callee) &&
-    isStringLiteralLikeNode(callee.argumentExpression)
-    ? {
-        count: node.arguments.length,
-        method: callee.argumentExpression.text,
-        receiver: callee.expression,
-      }
-    : undefined;
+/** Whether a module specifier names a Node file system, path, or process module. */
+function namesNodeModule(specifier: Node | undefined) {
+  return (
+    specifier !== undefined &&
+    isStringLiteralLikeNode(specifier) &&
+    HashSet.has(NODE_MODULES, specifier.text)
+  );
 }
 
 /**
- * Returns the receiver of a call to an array method and the rule it breaks:
- * a method that transforms its array, changes it in place, or searches it. `join` counts
- * with at most one argument, which tells it from the path helper of the same
- * name.
+ * Whether a callee is a `createRequire(...)` call, which returns a `require`
+ * function, such as `createRequire(import.meta.url)`.
  */
-function arrayCall(node: Node) {
-  const call = calledMethod(node);
-  if (call === undefined) {
-    return;
+function isRequireFactory(callee: Node) {
+  if (!isCallExpression(callee)) {
+    return false;
   }
-  if (
-    HashSet.has(ARRAY_METHODS, call.method) ||
-    (call.method === "join" && call.count <= 1)
-  ) {
-    return { receiver: call.receiver, rule: "array-method" as const };
-  }
-  if (HashSet.has(MUTATION_METHODS, call.method)) {
-    return { receiver: call.receiver, rule: "array-mutation" as const };
-  }
-  return HashSet.has(SEARCH_METHODS, call.method)
-    ? { receiver: call.receiver, rule: "array-search" as const }
-    : undefined;
+  const factory = unwrapped(callee.expression);
+  return (
+    (isIdentifier(factory) && factory.text === "createRequire") ||
+    (isPropertyAccessExpression(factory) &&
+      factory.name.text === "createRequire")
+  );
 }
 
 /**
- * Whether a module imports `name` as a value from a repository module, by a
- * default or a named import. Such an import is a value like any local one,
- * while a namespace import or a package import may be a module of functions,
- * such as `Arr` from `effect`.
+ * Whether a node loads a Node file system, path, or process module at runtime:
+ * an import, an import assignment, a re-export, a dynamic import, or a call of
+ * `require` or of a `createRequire` function, each with a literal module name.
+ * The callee of a call is unwrapped first, so `(require)` and `(require as
+ * NodeRequire)` are the `require` function.
  */
-function importsRepositoryValue(sourceFile: SourceFile, name: string) {
-  return Arr.some(sourceFile.statements, (statement) => {
-    if (
-      !(
-        isImportDeclaration(statement) &&
-        isStringLiteral(statement.moduleSpecifier) &&
-        REPOSITORY_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
-      )
-    ) {
-      return false;
-    }
-    const clause = statement.importClause;
-    const bindings = clause?.namedBindings;
+function isNodeModuleLoad(node: Node) {
+  if (isImportDeclaration(node)) {
+    return loadsImport(node) && namesNodeModule(node.moduleSpecifier);
+  }
+  if (isImportEqualsDeclaration(node)) {
     return (
-      clause?.name?.text === name ||
-      (bindings !== undefined &&
-        isNamedImports(bindings) &&
-        Arr.some(bindings.elements, (element) => element.name.text === name))
+      !node.isTypeOnly &&
+      isExternalModuleReference(node.moduleReference) &&
+      namesNodeModule(node.moduleReference.expression)
     );
-  });
+  }
+  if (isExportDeclaration(node)) {
+    return loadsExport(node) && namesNodeModule(node.moduleSpecifier);
+  }
+  if (!isCallExpression(node)) {
+    return false;
+  }
+  const callee = unwrapped(node.expression);
+  const loader =
+    callee.kind === SyntaxKind.ImportKeyword ||
+    (isIdentifier(callee) && callee.text === "require") ||
+    isRequireFactory(callee);
+  const [specifier] = node.arguments;
+  return loader && namesNodeModule(specifier);
 }
 
-/** Whether a node compares a typeof result against the object tag. */
+/**
+ * Whether a node compares a typeof result against the object tag, or switches on
+ * a typeof result with an `object` case.
+ */
 function isTypeofObjectComparison(node: Node) {
+  if (isSwitchStatement(node)) {
+    return (
+      isTypeOfExpression(unwrapped(node.expression)) &&
+      Arr.some(
+        node.caseBlock.clauses,
+        (clause) =>
+          isCaseClause(clause) &&
+          isStringLiteralLikeNode(clause.expression) &&
+          clause.expression.text === "object"
+      )
+    );
+  }
   if (
     !(
       isBinaryExpression(node) &&
@@ -167,23 +158,136 @@ function isTypeofObjectComparison(node: Node) {
   );
 }
 
-/** Returns the native array, failure, and narrowing syntax at one node. */
-function syntaxCandidates(sourceFile: SourceFile, node: Node) {
-  const call = arrayCall(node);
-  if (call !== undefined) {
-    return [
-      isIdentifier(call.receiver)
-        ? candidate(
-            call.rule,
-            sourceFile,
-            node,
-            call.receiver,
-            importsRepositoryValue(sourceFile, call.receiver.text)
-              ? ANY_BINDING
-              : VALUE_BINDINGS
-          )
-        : candidate(call.rule, sourceFile, node),
-    ];
+/** The Confect module whose `workflow` export defines durable workflows. */
+const WORKFLOW_MODULE = "@repo/backend/confect/workflow";
+const WORKFLOW_EXPORT = "workflow";
+/** The option of `workflow.define` that holds a workflow's handler. */
+const HANDLER_KEY = "handler";
+
+/**
+ * Returns the local names a module binds to the `workflow` export of the
+ * Confect workflow module, such as `workflow` in `import { workflow } from ...`.
+ */
+function workflowNames(sourceFile: SourceFile) {
+  return Arr.flatMap(sourceFile.statements, (statement) => {
+    if (
+      !(
+        isImportDeclaration(statement) &&
+        isStringLiteral(statement.moduleSpecifier) &&
+        statement.moduleSpecifier.text === WORKFLOW_MODULE
+      )
+    ) {
+      return [];
+    }
+    const bindings = statement.importClause?.namedBindings;
+    return bindings !== undefined && isNamedImports(bindings)
+      ? Arr.flatMap(bindings.elements, (element) =>
+          (element.propertyName ?? element.name).text === WORKFLOW_EXPORT
+            ? [element.name.text]
+            : []
+        )
+      : [];
+  });
+}
+
+/**
+ * Returns the static key that a property name spells: an identifier, a string,
+ * or a computed string, such as `handler`, `"handler"`, or `["handler"]`.
+ */
+function propertyName(name: PropertyName): string | undefined {
+  if (isIdentifier(name) || isStringLiteral(name)) {
+    return name.text;
+  }
+  return isComputedPropertyName(name) && isStringLiteral(name.expression)
+    ? name.expression.text
+    : undefined;
+}
+
+/**
+ * Returns the functions a handler value names: the function itself when it is
+ * written inline, or the function that an identifier binds where it stands.
+ */
+function handlerFunctions(handler: Node): readonly Node[] {
+  const value = unwrapped(handler);
+  if (isFunctionValue(value)) {
+    return [value];
+  }
+  return isIdentifier(value) ? boundFunctions(value) : [];
+}
+
+/**
+ * Returns the handler functions that one option of `workflow.define` names: a
+ * method called `handler`, the value of a `handler` property, or the variable
+ * that a shorthand `handler` reads.
+ */
+function handlerOptions(option: Node): readonly Node[] {
+  if (isMethodDeclaration(option)) {
+    return propertyName(option.name) === HANDLER_KEY ? [option] : [];
+  }
+  if (isPropertyAssignment(option)) {
+    return propertyName(option.name) === HANDLER_KEY
+      ? handlerFunctions(option.initializer)
+      : [];
+  }
+  if (isShorthandPropertyAssignment(option)) {
+    return propertyName(option.name) === HANDLER_KEY
+      ? handlerFunctions(option.name)
+      : [];
+  }
+  return [];
+}
+
+/**
+ * Returns the handler functions of each Confect workflow a module defines: the
+ * `handler` option of the object that `workflow.define` receives, where
+ * `workflow` is bound to the Confect workflow module's export. The Convex
+ * workflow engine owns when a handler's steps start, because it starts them in
+ * parallel only when their requests are already buffered when it handles the
+ * first new one (`@convex-dev/workflow`, `src/client/step.ts`,
+ * `StepExecutor.run`). An Effect runtime would start them through its
+ * scheduler, so a handler keeps native promise syntax.
+ */
+function workflowHandlers(sourceFile: SourceFile, nodes: readonly Node[]) {
+  const names = workflowNames(sourceFile);
+  return Arr.flatMap(nodes, (node) => {
+    if (
+      !(
+        isCallExpression(node) &&
+        isPropertyAccessExpression(node.expression) &&
+        node.expression.name.text === "define" &&
+        isIdentifier(node.expression.expression) &&
+        Arr.contains(names, node.expression.expression.text)
+      )
+    ) {
+      return [];
+    }
+    const [options] = node.arguments;
+    if (options === undefined || !isObjectLiteralExpression(options)) {
+      return [];
+    }
+    return Arr.flatMap(options.properties, handlerOptions);
+  });
+}
+
+/** Whether a node is one of the handler functions or sits inside one. */
+function insideHandler(node: Node, handlers: readonly Node[]): boolean {
+  if (Arr.some(handlers, (handler) => handler === node)) {
+    return true;
+  }
+  return !isSourceFile(node) && insideHandler(node.parent, handlers);
+}
+
+/** Returns the native Promise, module, and failure syntax at one node. */
+function syntaxCandidates(
+  sourceFile: SourceFile,
+  node: Node,
+  handlers: readonly Node[]
+) {
+  if (isPromiseSyntax(node) && !insideHandler(node, handlers)) {
+    return [candidate("promise", sourceFile, node)];
+  }
+  if (isNodeModuleLoad(node)) {
+    return [candidate("node-module", sourceFile, node)];
   }
   if (isTryStatement(node) && node.catchClause !== undefined) {
     return [candidate("try-catch", sourceFile, node)];
@@ -195,12 +299,16 @@ function syntaxCandidates(sourceFile: SourceFile, node: Node) {
 
 /**
  * Returns the native syntax among one module's value-position `nodes` that
- * Effect replaces: array methods, raw failure handling, and hand-rolled
- * narrowing.
+ * Effect replaces: Promise syntax outside Confect workflow handlers, Node module
+ * imports, raw failure handling, and hand-rolled narrowing. Array methods are
+ * judged by the typed pass in `arrays.ts`.
  */
 export function nativeCandidates(
   sourceFile: SourceFile,
   nodes: readonly Node[]
 ) {
-  return Arr.flatMap(nodes, (node) => syntaxCandidates(sourceFile, node));
+  const handlers = workflowHandlers(sourceFile, nodes);
+  return Arr.flatMap(nodes, (node) =>
+    syntaxCandidates(sourceFile, node, handlers)
+  );
 }

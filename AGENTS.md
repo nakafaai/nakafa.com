@@ -47,7 +47,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 ## Effect V4 Standard
 
-- Nakafa is Effect-native: Effect v4 and Confect v10 express every capability. Plain TypeScript remains only where Effect cannot express it, namely React component props in `.tsx`, framework configuration, generated code, and ambient declarations, and the pull request justifies each one.
+- Nakafa is Effect-native: Effect v4 and Confect v10 express every capability. Plain TypeScript remains only where Effect cannot express it, namely React component props in `.tsx`, framework configuration, generated code, ambient declarations, native promise syntax in a Confect workflow handler, the named type of a recursive Schema, the selector argument of `Extract` or `Exclude`, shapes that hold a value no Schema describes as data (a function, a React or MDX value, an AI SDK message part, an Effect runtime handle such as a fiber or a queue, or a parser syntax-tree node), generic shapes that use their type parameters, and code that Playwright serializes into the browser page, where no import reaches. The pull request justifies each one.
 - Before writing code, find the Effect or Confect module that already does the job in the sources above. Unstable Effect v4 modules are welcome, and a dependency that Effect already covers goes. `repos/effect` is a read-only Git subtree pinned to the installed version: never edit, import from, build, lint, or test it. `pnpm effect:source:check` verifies parity; `pnpm effect:source:update` creates the matching reference commit after an Effect update.
 
 | Instead of | Use |
@@ -68,8 +68,8 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - A private pure helper is allowed only for a small deterministic transformation after validation that cannot fail, perform IO, access dependencies, mutate shared state, or define a public source of truth.
 - Name shared modules by domain capability, such as `lib/analytics` or `lib/content`, never `lib/effect`.
 - Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request or uncached data. Use the framework Promise boundary and document the exception with https://nextjs.org/docs/messages/next-prerender-current-time.
-- Enforcement: `pnpm check:tests`, part of `pnpm lint`, `pnpm test`, and `pnpm build`, runs the source rules, and every workspace typecheck runs the compiler rules. Each violation names its fix. No baseline, allowlist, exceptions file, inline suppression, or `@effect-diagnostics` comment exists or may be added. A rule becomes an error in the pull request that clears its last violation, and the check recognizes by construction the places Effect cannot express, each with a test. A `plugins` array replaces the one it extends, so only the shared compiler configurations declare `plugins`.
-- The checks read syntax, so review what they cannot see: assertions, broad records, `any`, generic errors, raw throws, runners, and silent source fallbacks, and explain every retained framework exception.
+- Enforcement: `pnpm check:tests`, part of `pnpm lint`, `pnpm test`, and `pnpm build`, runs the source rules, and every workspace typecheck runs the compiler rules. Each violation names its fix. No baseline, allowlist, exceptions file, inline suppression, or `@effect-diagnostics` comment may be added. A rule becomes an error in the pull request that clears its last violation, and the check recognizes by construction the places Effect cannot express, each with a test. A `plugins` array replaces the one it extends, so only the shared compiler configurations declare `plugins`.
+- The source rules read syntax, and the array rules also read the compiler's types. Review what they cannot see: assertions, broad records, `any`, generic errors, raw throws, runners, and silent source fallbacks. Explain every retained framework exception.
 
 ## React And Next.js
 
