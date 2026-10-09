@@ -1,7 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Option, Schema } from "effect";
+import { Schema } from "effect";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense, use } from "react";
 import { UserComments } from "@/components/user/comments";
@@ -38,9 +37,5 @@ function UserCommentsRoute({
   params,
 }: Pick<PageProps<"/[locale]/user/[id]">, "params">) {
   const { id } = use(params);
-  const userId = Schema.decodeUnknownOption(Id("users"))(id);
-  if (Option.isNone(userId)) {
-    notFound();
-  }
-  return <UserComments userId={userId.value} />;
+  return <UserComments userId={Schema.decodeUnknownSync(Id("users"))(id)} />;
 }

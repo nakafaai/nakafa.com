@@ -27,13 +27,9 @@ export function useCreateForumPost() {
     }
 
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
-    const generatedPostId = Schema.decodeUnknownOption(
-      Id("schoolClassForumPosts")
-    )(Effect.runSync(randomUuid));
-    if (Option.isNone(generatedPostId)) {
-      return createForumPost(args);
-    }
-    const postId = generatedPostId.value;
+    const postId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+      Effect.runSync(randomUuid)
+    );
     const optimisticMutation = createForumPost.withOptimisticUpdate(
       (localStore, optimisticArgs) => {
         const cached = localStore.getQuery(

@@ -1,7 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Option, Schema } from "effect";
+import { Schema } from "effect";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense, use } from "react";
 import { UserChats } from "@/components/user/chats";
@@ -40,9 +39,5 @@ function UserChatsRoute({
   params,
 }: Pick<PageProps<"/[locale]/user/[id]/chat">, "params">) {
   const { id } = use(params);
-  const userId = Schema.decodeUnknownOption(Id("users"))(id);
-  if (Option.isNone(userId)) {
-    notFound();
-  }
-  return <UserChats userId={userId.value} />;
+  return <UserChats userId={Schema.decodeUnknownSync(Id("users"))(id)} />;
 }
