@@ -32,6 +32,8 @@ interface OverlayItem {
   id: number;
   ref: RefCallback<HTMLDivElement> | undefined;
   style: CSSProperties | undefined;
+  /** Requests a frame of the label's canvas. */
+  wake: () => void;
 }
 
 interface SceneOverlayState {
@@ -91,18 +93,21 @@ export function SceneOverlayProvider({ children }: { children: ReactNode }) {
 /** One label: an outer element that the frame loop moves, and an inner element that holds its content. */
 function OverlayLabel({ item }: { item: OverlayItem }) {
   const store = useSceneOverlayStore();
-  const { children, id, ref, style } = item;
+  const { children, id, ref, style, wake } = item;
   const attachFrame = useCallback(
     (element: HTMLDivElement | null) => {
       if (!element) {
         return;
       }
       MutableHashMap.set(store.getState().frames, id, element);
+      // The element mounts after the frame that registered the label, and a
+      // scene that renders on demand has no later frame to place it.
+      wake();
       return () => {
         MutableHashMap.remove(store.getState().frames, id);
       };
     },
-    [id, store]
+    [id, store, wake]
   );
 
   return (
@@ -218,7 +223,13 @@ export function SceneHtml({
     if (!group) {
       return;
     }
-    store.getState().put({ children, id: group.id, ref, style });
+    store.getState().put({
+      children,
+      id: group.id,
+      ref,
+      style,
+      wake: invalidate,
+    });
     invalidate();
   }, [children, invalidate, ref, store, style]);
 
