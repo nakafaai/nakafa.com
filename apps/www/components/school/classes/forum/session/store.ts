@@ -1,9 +1,8 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Schema } from "effect";
+import { Record as Rec, Schema } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
 import { ConversationViewSchema } from "@/components/school/classes/forum/conversation/data/view/model";
 
 /** A forum id as a record key: Confect's id Schema does not carry the key type that `Schema.Record` needs. */
@@ -73,32 +72,56 @@ const initialPersistedState = {
 export function createForumSessionStore(classId: string) {
   return createStore<ForumSessionStore>()(
     persist(
-      immer((set) => ({
+      (set) => ({
         ...initialState,
 
         saveConversationScrollSnapshot: (forumId, snapshot) => {
-          set((state) => {
-            state.conversationScrollSnapshotByForumId[forumId] = snapshot;
-          });
+          set((state) =>
+            state.conversationScrollSnapshotByForumId[forumId] === snapshot
+              ? state
+              : {
+                  conversationScrollSnapshotByForumId: Rec.set(
+                    state.conversationScrollSnapshotByForumId,
+                    forumId,
+                    snapshot
+                  ),
+                }
+          );
         },
 
         setHydrated: (isHydrated) => {
-          set((state) => {
-            state.isHydrated = isHydrated;
-          });
+          set((state) =>
+            state.isHydrated === isHydrated ? state : { isHydrated }
+          );
         },
 
         setForumReplyTarget: (forumId, replyTarget) => {
           set((state) => {
             if (!replyTarget) {
-              delete state.replyTargetByForumId[forumId];
-              return;
+              if (!Rec.has(state.replyTargetByForumId, forumId)) {
+                return state;
+              }
+              return {
+                replyTargetByForumId: Rec.remove(
+                  state.replyTargetByForumId,
+                  forumId
+                ),
+              };
             }
 
-            state.replyTargetByForumId[forumId] = replyTarget;
+            if (state.replyTargetByForumId[forumId] === replyTarget) {
+              return state;
+            }
+            return {
+              replyTargetByForumId: Rec.set(
+                state.replyTargetByForumId,
+                forumId,
+                replyTarget
+              ),
+            };
           });
         },
-      })),
+      }),
       {
         name: `nakafa-forum-session:${classId}`,
         migrate: () => initialPersistedState,

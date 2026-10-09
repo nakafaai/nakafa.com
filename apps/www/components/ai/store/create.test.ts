@@ -112,6 +112,19 @@ describe("ai/store/create", () => {
     expect(store.getState().chatDrafts).toEqual(["draft-1"]);
   });
 
+  it("changes nothing when the removed draft is not pending", () => {
+    const store = createAiStore();
+    store.getState().addChatDraft("draft-1");
+    const before = store.getState();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.getState().removeChatDraft("missing");
+
+    expect(store.getState()).toBe(before);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
   it("keeps the pending ask when composer drafts change", () => {
     const store = createAiStore();
     store.getState().openAsk({ id: "ask-1", text: "Explain" });
