@@ -73,7 +73,10 @@ describe("Better Auth retired username fields", () => {
             paginationOpts: { cursor: null, numItems: 10 },
           })
         );
-        expect(Schema.decodeUnknownSync(StoredUsers)(users.page)).toEqual([
+        const stored = yield* Schema.decodeUnknownEffect(StoredUsers)(
+          users.page
+        );
+        expect(stored).toEqual([
           {
             displayUsername: "Ada",
             email: "named@example.com",
