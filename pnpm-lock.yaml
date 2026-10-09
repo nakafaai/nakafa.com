@@ -96,9 +96,6 @@ importers:
       '@types/node':
         specifier: 24.19.1
         version: 24.19.1
-      afdocs:
-        specifier: 0.20.0
-        version: 0.20.0
       effect:
         specifier: 'catalog:'
         version: 4.0.2
