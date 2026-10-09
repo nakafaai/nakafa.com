@@ -1,5 +1,6 @@
 import type { AgentHttpInputError } from "@repo/backend/confect/routes/agent/input";
 import type { AgentRateLimitError } from "@repo/backend/confect/routes/agent/quota";
+import { NAKAFA_BASE_URL } from "@repo/contents/agent/constants";
 import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
@@ -66,7 +67,7 @@ export function problemResponse(input: ProblemInput) {
     resolution: input.resolution,
     status: input.status,
     title: input.title,
-    type: new URL(`/problems/${input.type}`, "https://nakafa.com").href,
+    type: new URL(`/problems/${input.type}`, NAKAFA_BASE_URL).href,
   };
   return agentJsonResponse(body, input.status, {
     ...input.headers,

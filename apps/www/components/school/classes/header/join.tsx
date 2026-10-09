@@ -19,10 +19,12 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
+import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 const form = Schema.Struct({
   code: Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))),
@@ -37,6 +39,7 @@ export function SchoolClassesHeaderJoin() {
   const router = useRouter();
   const [open, openHandlers] = useDisclosure(false);
   const joinClass = useMutation(classes.mutations.joinClass);
+  const convex = useConvex();
   const form = useForm({
     defaultValues,
     validators: {
@@ -44,8 +47,17 @@ export function SchoolClassesHeaderJoin() {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(() => joinClass(value)).pipe(
-          Effect.flatMap(Effect.fromResult),
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            Effect.tryPromise(() => joinClass(value)).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tapError((error) =>
+                reportClientException(error, {
+                  source: "school-class-join-header",
+                })
+              )
+            )
+          ),
           Effect.tap(({ classId }) =>
             Effect.sync(() => {
               router.push(`${pathname}/${classId}`);
@@ -54,16 +66,10 @@ export function SchoolClassesHeaderJoin() {
             })
           ),
           Effect.matchEffect({
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "school-class-join-header",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(t("join-class-failed"));
-                  })
-                )
-              ),
+            onFailure: () =>
+              Effect.sync(() => {
+                toast.error(t("join-class-failed"));
+              }),
             onSuccess: () => Effect.void,
           })
         )

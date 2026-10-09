@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/confect/contents/trending/spec";
 import { hydrateDurableContentTarget } from "@repo/backend/confect/contents/views/target";
 import type { TrendingSubject } from "@repo/backend/confect/lib/validators/trending";
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, Struct } from "effect";
 
 const defaultTrendingSubjectsLimit = 6;

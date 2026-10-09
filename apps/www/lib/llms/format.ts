@@ -1,4 +1,4 @@
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Option, pipe } from "effect";
 import { LLMS_TEXT_PATH } from "@/lib/discovery";
 import {

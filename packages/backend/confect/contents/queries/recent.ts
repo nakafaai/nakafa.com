@@ -11,7 +11,7 @@ import {
 import { resolveLearningContext } from "@repo/backend/confect/contents/views/context";
 import { hydrateMaterialTarget } from "@repo/backend/confect/contents/views/target";
 import type { recentlyViewedSubjectValidator } from "@repo/backend/confect/lib/validators/trending";
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, flow, Schema, Struct } from "effect";
 export type RecentlyViewedSubject = typeof recentlyViewedSubjectValidator.Type;
 const defaultRecentLearningLimit = 5;

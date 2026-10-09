@@ -20,7 +20,7 @@ type DependencyHold = typeof ApprovedSpecsSchema.Type &
 
 /** The exact package manager the root manifest pins for every checkout and CI job. */
 export const PACKAGE_MANAGER = "pnpm@11.28.5";
-const CONTRACT_PACKAGE_VERSION = "0.48.6";
+const CONTRACT_PACKAGE_VERSION = "0.48.7";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.2";
 /**

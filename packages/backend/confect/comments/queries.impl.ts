@@ -6,7 +6,7 @@ import { getViewerVotes } from "@repo/backend/confect/comments/queries";
 import spec from "@repo/backend/confect/comments/queries.spec";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, HashMap, Layer, Option, Struct } from "effect";
 
 const getCommentsBySlug = FunctionImpl.make(

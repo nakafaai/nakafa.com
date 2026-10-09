@@ -9,6 +9,7 @@ import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -17,6 +18,7 @@ import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { TryoutTimer } from "@/components/tryout/runtime/countdown";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 /** Props of the production sticky timer, progress, and finish controls. */
 interface TryoutRuntimeControlsProps {
@@ -36,6 +38,7 @@ export function TryoutRuntimeControls({
   const { expired, returnHref, runtime } = value;
   const router = useRouter();
   const completeSection = useMutation(tryouts.mutations.sections.complete);
+  const convex = useConvex();
   const tTryouts = useTranslations("Tryouts");
   const [isPending, startTransition] = useTransition();
   const [isOpen, { close: closeDialog, open: openDialog }] =
@@ -65,21 +68,25 @@ export function TryoutRuntimeControls({
     }
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise(() =>
-          completeSection({
-            attemptId: runtime.attemptId,
-            sectionKey: runtime.section.sectionKey,
-          })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.tap(() =>
-            Effect.sync(() => {
-              closeDialog();
-              router.push(returnHref);
-              toast.success(tTryouts("complete-part-success"), {
-                position: "bottom-center",
-              });
-            })
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            Effect.tryPromise(() =>
+              completeSection({
+                attemptId: runtime.attemptId,
+                sectionKey: runtime.section.sectionKey,
+              })
+            ).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tap(() =>
+                Effect.sync(() => {
+                  closeDialog();
+                  router.push(returnHref);
+                  toast.success(tTryouts("complete-part-success"), {
+                    position: "bottom-center",
+                  });
+                })
+              )
+            )
           ),
           Effect.catch(() =>
             Effect.sync(() => {

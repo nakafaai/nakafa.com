@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@nakafa/aksara-contracts": "0.48.6",
+    "@nakafa/aksara-contracts": "0.48.7",
     "@repo/next-config": "workspace:*",
     "@repo/seo": "workspace:*",
     "effect": "catalog:",
