@@ -57,6 +57,7 @@
     "@effect/tsgo": "0.48.1",
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
+    "@repo/utilities": "workspace:*",
     "@sigstore/bundle": "5.0.0",
     "@turbo/gen": "2.11.7",
     "@types/node": "24.19.1",

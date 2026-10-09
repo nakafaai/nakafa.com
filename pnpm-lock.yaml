@@ -84,6 +84,9 @@ importers:
       '@repo/testing':
         specifier: workspace:*
         version: link:packages/testing
+      '@repo/utilities':
+        specifier: workspace:*
+        version: link:packages/utilities
       '@sigstore/bundle':
         specifier: 5.0.0
         version: 5.0.0
