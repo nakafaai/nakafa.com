@@ -1,0 +1,86 @@
+import { bundleFromJSON, bundleToJSON } from "@sigstore/bundle";
+import { Effect, Layer } from "effect";
+import { type VerifyOptions, verify as verifySigstore } from "sigstore";
+import {
+  ProvenanceVerificationError,
+  type PublisherIdentity,
+} from "#scripts/provenance/schema";
+import { ProvenanceBundleVerifier } from "#scripts/provenance/service";
+
+const GITHUB_ISSUER = "https://token.actions.githubusercontent.com";
+const GITHUB_REPOSITORY_PREFIX = "https://github.com/";
+
+/** Escapes one exact certificate identity for anchored regular-expression matching. */
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+}
+
+/** Encodes one short GitHub certificate extension as a DER UTF-8 string. */
+function derUtf8(value: string) {
+  return `${String.fromCharCode(12, Buffer.byteLength(value))}${value}`;
+}
+
+/** Pins a Sigstore certificate to one exact GitHub trusted-publisher identity. */
+export function publisherPolicy(identity: PublisherIdentity): VerifyOptions {
+  const repositorySlug = identity.repository.slice(
+    GITHUB_REPOSITORY_PREFIX.length
+  );
+  const certificateIdentity = `${identity.repository}/${identity.workflow}@${identity.ref}`;
+
+  return {
+    certificateIdentityURI: `^${escapeRegex(certificateIdentity)}$`,
+    certificateIssuer: GITHUB_ISSUER,
+    certificateOIDs: {
+      "1.3.6.1.4.1.57264.1.3": identity.sourceSha,
+      "1.3.6.1.4.1.57264.1.5": repositorySlug,
+      "1.3.6.1.4.1.57264.1.6": identity.ref,
+      "1.3.6.1.4.1.57264.1.11": derUtf8("github-hosted"),
+      "1.3.6.1.4.1.57264.1.23": derUtf8(identity.environment),
+    },
+  };
+}
+
+/** Converts untrusted npm audit JSON into one validated serialized bundle. */
+const normalizeBundle = Effect.fn("Provenance.normalizeBundle")(function* (
+  bundle: unknown
+) {
+  return yield* Effect.try({
+    catch: (cause) =>
+      new ProvenanceVerificationError({
+        cause,
+        message: "The npm audit returned an invalid Sigstore bundle.",
+      }),
+    try: () => bundleToJSON(bundleFromJSON(bundle)),
+  });
+});
+
+/** Verifies one bundle against the exact certificate policy. */
+const verifySigstoreBundle = Effect.fn("Provenance.verifyBundle")(function* (
+  bundle: unknown,
+  identity: PublisherIdentity
+) {
+  const serialized = yield* normalizeBundle(bundle);
+  if (!("dsseEnvelope" in serialized && serialized.dsseEnvelope)) {
+    return yield* new ProvenanceVerificationError({
+      message: "The npm provenance bundle has no signed DSSE payload.",
+    });
+  }
+  yield* Effect.tryPromise({
+    catch: (cause) =>
+      new ProvenanceVerificationError({
+        cause,
+        message:
+          "The npm provenance signer does not match the trusted publisher.",
+      }),
+    try: () => verifySigstore(serialized, publisherPolicy(identity)),
+  });
+  return Buffer.from(serialized.dsseEnvelope.payload, "base64").toString(
+    "utf8"
+  );
+});
+
+/** Live Sigstore implementation for the bundle-verification seam. */
+export const SigstoreProvenanceBundleVerifierLive = Layer.succeed(
+  ProvenanceBundleVerifier,
+  { verify: verifySigstoreBundle }
+);
