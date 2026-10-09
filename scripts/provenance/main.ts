@@ -9,7 +9,7 @@ import {
 import { verifyProvenance } from "#scripts/provenance/verify";
 
 /** Verifies one transported npm signature audit named by CLI arguments. */
-export const verifyProvenanceAudit = Effect.fn("GithubProvenance.verifyAudit")(
+export const verifyProvenanceAudit = Effect.fn("Provenance.verifyAudit")(
   function* (argv: readonly string[]) {
     const args = yield* Schema.decodeUnknownEffect(CliArgumentsSchema)(
       argv

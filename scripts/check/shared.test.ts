@@ -67,7 +67,7 @@ describe("shared file policy", () => {
       }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.effect("compares bytes, so a line ending alone is a finding", () =>
+  it.effect("compares the exact text, so a line ending alone is a finding", () =>
     Effect.gen(function* () {
       const { owner, root } = yield* repositories("bytes");
       yield* writeFiles(root, { [VERIFY]: "export const verify = 1;\r\n" });

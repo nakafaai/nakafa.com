@@ -235,7 +235,7 @@ The check compares each one, so a drifted copy fails the check.
 - The rule block: the Effect block of `packages/typescript-config/base.json`.
 - The shared files, listed in `SHARED_FILES` in `scripts/check/shared.ts`:
   `scripts/osv` and the three verifier files in `scripts/provenance/`. A
-  repository that holds one keeps the owner's exact bytes.
+  repository that holds one keeps the owner's exact text.
 - The Effect cohort pins: each `effect`, `typescript`, or `@effect/*` name that
   both repositories pin, in the root manifest or the default catalog. Both must
   use one version.

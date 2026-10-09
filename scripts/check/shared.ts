@@ -35,20 +35,20 @@ export class SharedFileError extends Schema.TaggedError<SharedFileError>()(
   }
 ) {}
 
-/** Reads the bytes of one shared file, failing with a typed error that names the reason. */
+/** Reads the text of one shared file, failing with a typed error that names the reason. */
 const readShared = Effect.fn("RepositoryPolicy.readSharedFile")(function* (
   filePath: string,
   message: string
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   return yield* fileSystem
-    .readFile(filePath)
+    .readFileString(filePath)
     .pipe(Effect.mapError((cause) => new SharedFileError({ cause, message })));
 });
 
 /**
- * Compares one shared file that `root` holds with the owner's copy, byte for
- * byte. A file that `root` does not hold is not compared.
+ * Compares the text of one shared file that `root` holds with the owner's copy.
+ * A file that `root` does not hold is not compared.
  */
 const inspectSharedFile = Effect.fn("RepositoryPolicy.inspectSharedFile")(
   function* (root: string, owner: string, file: string) {
@@ -66,7 +66,7 @@ const inspectSharedFile = Effect.fn("RepositoryPolicy.inspectSharedFile")(
       path.join(owner, file),
       `${file} of the repository that owns this check is missing or unreadable, so its copy cannot be compared.`
     );
-    return Buffer.from(copy).equals(ownerCopy)
+    return copy === ownerCopy
       ? []
       : [
           `${file} differs from the copy in the repository that owns this check: change that copy first, then copy it here.`,
