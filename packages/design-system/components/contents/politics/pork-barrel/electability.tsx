@@ -25,8 +25,11 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import {
+  formatLongMonthYear,
+  formatShortMonthYear,
+} from "@repo/design-system/lib/charts/month";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
-import { format } from "date-fns";
 import type { ReactNode } from "react";
 
 interface ElectabilityChartProps {
@@ -173,10 +176,7 @@ export function ElectabilityChart({
             <Grid vertical={false} />
             <XAxis
               dataKey="date"
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return format(date, "MMM yyyy");
-              }}
+              tickFormatter={(value) => formatShortMonthYear(String(value))}
               tickMargin={8}
             />
             <YAxis
@@ -191,9 +191,7 @@ export function ElectabilityChart({
               content={
                 <ChartTooltipContent
                   indicator="line"
-                  labelFormatter={(value) =>
-                    format(new Date(String(value)), "MMMM yyyy")
-                  }
+                  labelFormatter={(value) => formatLongMonthYear(String(value))}
                 />
               }
               cursor={false}

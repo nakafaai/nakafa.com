@@ -30,7 +30,6 @@
     "class-variance-authority": "^0.7.1",
     "cn": "0.4.0",
     "country-code-lookup": "^0.1.5",
-    "date-fns": "4.4.0",
     "effect": "catalog:",
     "frimousse": "^0.4.0",
     "geist": "^1.7.2",

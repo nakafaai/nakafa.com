@@ -754,9 +754,6 @@ importers:
       country-code-lookup:
         specifier: ^0.1.5
         version: 0.1.5
-      date-fns:
-        specifier: 4.4.0
-        version: 4.4.0
       effect:
         specifier: 'catalog:'
         version: 4.0.1
