@@ -5,8 +5,8 @@ const BEARER_PREFIX = "Bearer ";
 
 /**
  * Authenticates one internal content request with a timing-safe bearer check.
- * A failed digest is a defect, as a thrown digest was before: the route fails
- * with a server error and never answers "not authorized".
+ * A failed digest is a defect: the route fails with a server error and never
+ * answers "not authorized".
  */
 export const isInternalContentAuthorized = Effect.fn(
   "NakafaContent.isInternalContentAuthorized"
