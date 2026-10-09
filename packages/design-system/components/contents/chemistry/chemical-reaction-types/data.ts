@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const COMBUSTION_TYPE_ID = "combustion";
 export const RUST_TYPE_ID = "rust";
@@ -33,28 +33,6 @@ export const ChemicalReactionTypeSceneLabelsSchema = Schema.Struct({
   before: Schema.String,
 });
 
-const ChemicalReactionTypeDefinitionSchema = Schema.Struct({
-  kind: Schema.Literals(CHEMICAL_REACTION_TYPE_IDS),
-});
-
-const CHEMICAL_REACTION_TYPES = {
-  [COMBUSTION_TYPE_ID]: {
-    kind: COMBUSTION_TYPE_ID,
-  },
-  [RUST_TYPE_ID]: {
-    kind: RUST_TYPE_ID,
-  },
-  [PRECIPITATE_TYPE_ID]: {
-    kind: PRECIPITATE_TYPE_ID,
-  },
-  [GAS_TYPE_ID]: {
-    kind: GAS_TYPE_ID,
-  },
-} satisfies Record<
-  ChemicalReactionTypeId,
-  typeof ChemicalReactionTypeDefinitionSchema.Type
->;
-
 export const CHEMICAL_REACTION_TYPES_SCENE_VIEW = {
   cameraPosition: [0, 1.8, 4],
   cameraTarget: [0, 0, 0],
@@ -67,7 +45,7 @@ export const CHEMICAL_REACTION_TYPES_SCENE_VIEW = {
 export function isChemicalReactionTypeId(
   value: string
 ): value is ChemicalReactionTypeId {
-  return value in CHEMICAL_REACTION_TYPES;
+  return Arr.some(CHEMICAL_REACTION_TYPE_IDS, (id) => id === value);
 }
 
 /**

@@ -1,7 +1,7 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const CLOSED_SYSTEM_MODE_ID = "closed";
 export const OPEN_SYSTEM_MODE_ID = "open";
@@ -24,22 +24,6 @@ export const MassConservationScenePointSchema = Schema.Tuple([
 ]);
 type MassConservationScenePoint = typeof MassConservationScenePointSchema.Type;
 
-const MassConservationModeDefinitionSchema = Schema.Struct({
-  kind: Schema.Literals(MASS_CONSERVATION_MODE_IDS),
-});
-
-const MASS_CONSERVATION_MODES = {
-  [CLOSED_SYSTEM_MODE_ID]: {
-    kind: CLOSED_SYSTEM_MODE_ID,
-  },
-  [OPEN_SYSTEM_MODE_ID]: {
-    kind: OPEN_SYSTEM_MODE_ID,
-  },
-} satisfies Record<
-  MassConservationModeId,
-  typeof MassConservationModeDefinitionSchema.Type
->;
-
 export const MASS_CONSERVATION_SCENE_VIEW = {
   cameraPosition: [0, 2.45, 5.6],
   cameraTarget: [0, -0.1, 0],
@@ -49,7 +33,7 @@ export const MASS_CONSERVATION_SCENE_VIEW = {
 export function isMassConservationModeId(
   value: string
 ): value is MassConservationModeId {
-  return value in MASS_CONSERVATION_MODES;
+  return Arr.some(MASS_CONSERVATION_MODE_IDS, (id) => id === value);
 }
 
 export function getMassConservationSceneColors(
