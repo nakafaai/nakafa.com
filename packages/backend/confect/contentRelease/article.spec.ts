@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import { articleApiPageValidator } from "@repo/backend/confect/contentRelease/article/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -31,17 +32,13 @@ export const categoryValidator = Schema.Struct({
 });
 export const articleSummaryValidator = Schema.Struct({
   articleSlug: Schema.String,
-  authors: Schema.mutable(
-    Schema.Array(
-      Schema.Struct({
-        name: Schema.String,
-      })
-    )
-  ),
+  authors: Schema.mutable(Schema.Array(ContentAuthorSchema)),
   category: Schema.String,
   categoryTitle: Schema.String,
+  // Aksara's date fields add calendar checks, which a return must not add.
   dateModified: Schema.optionalKey(Schema.String),
   datePublished: Schema.String,
+  // Aksara's description also accepts undefined; the return keeps exact absence.
   description: Schema.optionalKey(Schema.String),
   official: Schema.Boolean,
   publicPath: Schema.String,
