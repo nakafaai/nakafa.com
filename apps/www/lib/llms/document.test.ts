@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import { resolvePublicDocumentRoute } from "@/lib/routing/public/document";
+import { resolvePublicDocumentRoute } from "@/lib/llms/document";
 
 const routeMocks = vi.hoisted(() => ({
   markdown: vi.fn(),

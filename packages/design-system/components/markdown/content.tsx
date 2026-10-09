@@ -4,8 +4,8 @@ import {
 } from "@repo/design-system/components/markdown/frame";
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react/mdx";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
-import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
+import { preprocessLaTeX } from "@repo/math/latex";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import ReactMarkdown from "react-markdown";

@@ -4,11 +4,11 @@ import {
   getSearchTokens,
   rankSearchResult,
 } from "@repo/backend/confect/nina/nakafa/search";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import {
   type NakafaAgentSearchResult,
   NakafaAgentSearchResultSchema,
 } from "@repo/contents/agent/schema/search";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Array as Arr, Schema } from "effect";
 
 /** Builds one schema-decoded search result for ranking tests. */

@@ -4,8 +4,6 @@ import { createContext, use } from "react";
 import { useAnalyticsConsentModel } from "@/lib/analytics/consent/model";
 import type { AnalyticsConsentStore } from "@/lib/analytics/consent/store";
 
-export type AnalyticsConsentError = "load" | "runtime" | "save";
-
 /** The consent controller's value, derived from the model that builds it. */
 export type AnalyticsConsentContextValue = ReturnType<
   typeof useAnalyticsConsentModel

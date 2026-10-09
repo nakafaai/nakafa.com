@@ -5,10 +5,10 @@ import {
   prepareTaxonomyAnswerStep,
   readSearchFollowup,
 } from "@repo/backend/confect/nina/nakafa/step";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import type { NakafaAgentSection } from "@repo/contents/agent/schema/ref";
 import type { NakafaAgentSearchResult } from "@repo/contents/agent/schema/search";
 import type { Locale } from "@repo/contents/content";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Array as Arr, Option } from "effect";
 
 /** Builds a typed Nakafa search item fixture from canonical route parts. */

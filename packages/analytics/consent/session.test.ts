@@ -4,7 +4,6 @@ import {
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
-import { Array as Arr, HashMap, Option } from "effect";
 import {
   canCommitAnalyticsConsentRevocation,
   cancelAnalyticsConsentSessionSave,
@@ -13,7 +12,8 @@ import {
   emptyAnalyticsConsentSessionOverrides,
   resolveAnalyticsConsentSessionPolicy,
   setAnalyticsConsentSessionOverride,
-} from "@/lib/analytics/consent/session";
+} from "@repo/analytics/consent/session";
+import { Array as Arr, HashMap, Option } from "effect";
 
 const accountConsent = {
   category: ANALYTICS_CONSENT_CATEGORY,

@@ -10,7 +10,7 @@ import {
   readThemeStyleSources,
   SEMANTIC_COLOR_TOKENS,
   toRgbProjection,
-} from "@repo/design-system/lib/theme/contract";
+} from "@repo/design-system/test/contract";
 import { Array as Arr, Effect, Option, Order, Record as Rec } from "effect";
 
 const readProfiles = readThemeStyleSources().pipe(

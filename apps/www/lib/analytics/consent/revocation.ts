@@ -1,14 +1,14 @@
 "use client";
 
-import { Effect, Fiber, Option } from "effect";
-import { useEffect, useRef } from "react";
 import {
   type AnalyticsConsentPromptIdentity,
   type AnalyticsConsentSessionOperation,
   type AnalyticsConsentSessionOverride,
   canCommitAnalyticsConsentRevocation,
   setAnalyticsConsentSessionOverride,
-} from "@/lib/analytics/consent/session";
+} from "@repo/analytics/consent/session";
+import { Effect, Fiber, Option } from "effect";
+import { useEffect, useRef } from "react";
 import { revokeAccountAnalyticsGrant } from "@/lib/analytics/consent/signal";
 import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 

@@ -15,16 +15,9 @@ import {
 const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
 const revalidateTagMock = vi.hoisted(() => vi.fn());
-const invalidateSitemapCacheMock = vi.hoisted(() => vi.fn());
 
-class TestCacheFailure extends Data.TaggedError("TestCacheFailure")<{
-  readonly layer: "next" | "sitemap";
-}> {}
+class TestCacheFailure extends Data.TaggedError("TestCacheFailure") {}
 
-vi.mock("@/lib/sitemap/cache", () => ({
-  /** Records the shared sitemap invalidation without calling Vercel. */
-  invalidateSitemapCache: invalidateSitemapCacheMock,
-}));
 vi.mock("next/cache", () => ({
   /** Records cache profile usage without touching Next internals. */
   cacheLife: cacheLifeMock,
@@ -38,7 +31,6 @@ describe("content runtime cache", () => {
     cacheLifeMock.mockClear();
     cacheTagMock.mockClear();
     revalidateTagMock.mockClear();
-    invalidateSitemapCacheMock.mockReset().mockReturnValue(Effect.void);
   });
   it("keeps combined mutable dependencies explicit", () => {
     applyContentCache("material", "program");
@@ -56,7 +48,6 @@ describe("content runtime cache", () => {
         expect(revalidateTagMock.mock.calls).toEqual([
           [makeContentCacheTag(scope), "max"],
         ]);
-        expect(invalidateSitemapCacheMock).toHaveBeenCalledOnce();
       })
   );
   it("revalidates through the runtime profile instead of deleting", () => {
@@ -64,29 +55,15 @@ describe("content runtime cache", () => {
 
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
-  it.effect(
-    "keeps a failed sitemap invalidation in the typed error channel",
-    () =>
-      Effect.gen(function* () {
-        invalidateSitemapCacheMock.mockReturnValueOnce(
-          Effect.fail(new TestCacheFailure({ layer: "sitemap" }))
-        );
-
-        expect(
-          yield* invalidateContentCache("material").pipe(Effect.flip)
-        ).toEqual(new ContentCacheInvalidationError({ layer: "sitemap" }));
-      })
-  );
   it.effect("keeps a failed Next invalidation in the typed error channel", () =>
     Effect.gen(function* () {
       revalidateTagMock.mockImplementationOnce(() => {
-        throw new TestCacheFailure({ layer: "next" });
+        throw new TestCacheFailure();
       });
 
       expect(
         yield* invalidateContentCache("material").pipe(Effect.flip)
-      ).toEqual(new ContentCacheInvalidationError({ layer: "next" }));
-      expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
+      ).toEqual(new ContentCacheInvalidationError());
     })
   );
 });

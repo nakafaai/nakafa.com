@@ -136,6 +136,26 @@ describe("GitHub Action policy", () => {
       )
   );
 
+  it.effect("runs the boundaries check in Quality right after lint", () =>
+    readRepositoryFile("../../.github/workflows/ci.yml").pipe(
+      Effect.tap((source) =>
+        Effect.sync(() => {
+          const lint = source.indexOf(
+            "      - name: Lint\n        run: pnpm lint\n"
+          );
+          const boundaries = source.indexOf(
+            "      - name: Boundaries\n        run: pnpm boundaries\n"
+          );
+          const typecheck = source.indexOf("      - name: Typecheck\n");
+          expect(lint).toBeGreaterThan(-1);
+          expect(boundaries).toBeGreaterThan(lint);
+          expect(typecheck).toBeGreaterThan(boundaries);
+        })
+      ),
+      Effect.provide(NodeServices.layer)
+    )
+  );
+
   it.effect(
     "runs the backend suite in its own job and gates Required on it",
     () =>

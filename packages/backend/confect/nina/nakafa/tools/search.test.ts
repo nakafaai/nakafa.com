@@ -6,7 +6,7 @@ import {
   runSpecialist,
 } from "@repo/backend/test/nina/specialist";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Array as Arr, Effect, MutableList, Option } from "effect";
 
 vi.mock("@repo/backend/agent/search", () => ({ searchNakafaContent: vi.fn() }));

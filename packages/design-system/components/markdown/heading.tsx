@@ -1,16 +1,37 @@
 import { Link05Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  createHeadingId,
-  headingTextVariants,
-} from "@repo/design-system/lib/markdown/headings";
+import { createHeadingId } from "@repo/design-system/lib/markdown/headings";
 import type {
   HeadingProps,
   HeadingTag,
 } from "@repo/design-system/types/markdown";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr, Predicate } from "effect";
 import type { ReactNode } from "react";
+
+/**
+ * Styling for the text inside one rendered heading.
+ *
+ * The rule under the words marks where a section starts, so the top two
+ * heading levels carry it. Deeper levels stay plain ink so the level
+ * hierarchy reads at a glance.
+ */
+const headingTextVariants = cva(
+  "wrap-anywhere hyphens-auto text-pretty text-primary",
+  {
+    variants: {
+      rule: {
+        none: "",
+        section:
+          "underline decoration-2 decoration-heading-rule underline-offset-4",
+      },
+    },
+    defaultVariants: {
+      rule: "none",
+    },
+  }
+);
 
 function extractTextFromNode(node: unknown): string {
   if (node === null || node === undefined) {

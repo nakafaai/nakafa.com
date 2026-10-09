@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { NodeFileSystem } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { themes } from "@repo/design-system/lib/theme/registry";
 import {
   createThemeProfiles,
   findInlineTheme,
@@ -16,8 +17,7 @@ import {
   ThemeColorChannelError,
   ThemeStyleSourceLoadError,
   toRgbProjection,
-} from "@repo/design-system/lib/theme/contract";
-import { themes } from "@repo/design-system/lib/theme/registry";
+} from "@repo/design-system/test/contract";
 import { Array as Arr, Effect, Option, Order } from "effect";
 import postcss from "postcss";
 

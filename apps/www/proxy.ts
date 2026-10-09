@@ -21,6 +21,7 @@ import {
   matchesPreviewPathname,
 } from "@/lib/content/preview/route";
 import { AGENT_DISCOVERY_LINK_HEADER, LLMS_TEXT_PATH } from "@/lib/discovery";
+import { resolvePublicDocumentRoute } from "@/lib/llms/document";
 import {
   LLMS_REPRESENTATION_VARY_FIELDS,
   type LocalizedLlmsRoute,
@@ -31,7 +32,6 @@ import {
   isLocaleBypassPath,
   isUnsupportedSystemPath,
 } from "@/lib/routing/bypass";
-import { resolvePublicDocumentRoute } from "@/lib/routing/public/document";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 

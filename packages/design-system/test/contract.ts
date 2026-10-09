@@ -77,8 +77,8 @@ export class ThemeStyleSourceLoadError extends Schema.TaggedError<ThemeStyleSour
 
 const SIMPLE_THEME_SELECTOR_PATTERN = /^\.([a-z0-9-]+)$/;
 const DEFAULT_THEME_STYLE_SOURCE_PATHS: ThemeStyleSourcePaths = {
-  customThemes: `${import.meta.dirname}/../../styles/theme.css`,
-  globals: `${import.meta.dirname}/../../styles/globals.css`,
+  customThemes: `${import.meta.dirname}/../styles/theme.css`,
+  globals: `${import.meta.dirname}/../styles/globals.css`,
 };
 
 /** Builds one typed stylesheet read failure with its exact source path. */

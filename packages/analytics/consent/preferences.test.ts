@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   initialConsentPreferences,
   updateConsentPreferences,
-} from "@/lib/analytics/consent/preferences";
+} from "@repo/analytics/consent/preferences";
 
 describe("analytics consent preferences", () => {
   it("snapshots the status only when the dialog opens", () => {

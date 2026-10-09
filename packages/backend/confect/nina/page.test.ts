@@ -7,7 +7,7 @@ import {
 import { readPageContext } from "@repo/backend/confect/nina/page";
 import { runSpecialist } from "@repo/backend/test/nina/specialist";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Effect } from "effect";
 
 vi.mock("@repo/backend/agent/content", () => ({ getNakafaContent: vi.fn() }));

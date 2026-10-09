@@ -1,6 +1,7 @@
 import {
   ContentCacheReceiptSchema,
   ContentCacheRequestSchema,
+  type ContentCacheScope,
 } from "@nakafa/aksara-contracts/cache/content";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
@@ -11,6 +12,7 @@ import { env } from "@/env";
 import { invalidateContentCache } from "@/lib/content/cache";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
+import { invalidateSitemapCache } from "@/lib/sitemap/cache";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
 const MAX_CACHE_REQUEST_BYTES = 32 * 1024;
@@ -70,6 +72,14 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
     Effect.mapError(() => new CacheRequestError({ reason: "body" }))
   );
 });
+/** Revalidates one Next content tag, then purges the shared sitemap response. */
+const invalidateContentRuntime = Effect.fn("NakafaContent.invalidateRuntime")(
+  function* (scope: ContentCacheScope) {
+    yield* invalidateContentCache(scope);
+    yield* invalidateSitemapCache();
+  }
+);
+
 /**
  * Revalidates Convex-backed content runtime cache tags for trusted sync scripts.
  */
@@ -103,7 +113,7 @@ export const POST = (request: NextRequest) =>
           { headers: PRIVATE_RESPONSE_HEADERS, status: 409 }
         );
       }
-      const invalidation = yield* invalidateContentCache(
+      const invalidation = yield* invalidateContentRuntime(
         decoded.success.scope
       ).pipe(Effect.result);
       if (invalidation._tag === "Failure") {

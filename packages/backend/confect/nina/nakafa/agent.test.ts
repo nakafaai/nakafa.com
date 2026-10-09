@@ -10,7 +10,7 @@ import {
   runSpecialist,
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect } from "effect";
