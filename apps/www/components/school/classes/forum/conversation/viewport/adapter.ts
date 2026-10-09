@@ -63,7 +63,9 @@ export class ConversationViewportAdapters extends Context.Service<
       sleep: (milliseconds: number) => Effect.Effect<void, never>;
     };
   }
->()("ConversationViewportAdapters") {}
+>()(
+  "www/components/school/classes/forum/conversation/viewport/adapter/ConversationViewportAdapters"
+) {}
 
 /** External Adapter set required by the Effect-owned Viewport service. */
 export type ViewportAdapters = Context.Service.Shape<

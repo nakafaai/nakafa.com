@@ -2,7 +2,7 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Context, Effect } from "effect";
 import { HttpRouter, HttpServerRequest } from "effect/http";
 export class RequestIdentity extends Context.Service<RequestIdentity, string>()(
-  "@repo/backend/http/RequestIdentity"
+  "@repo/backend/confect/routes/middleware/identity/RequestIdentity"
 ) {}
 
 /** Shares one correlation ID across the request without retaining its URL. */

@@ -482,4 +482,15 @@ describe("Nina generation through the real Agent component", () => {
     expect(prompt).toContain("Earlier question 4");
     expect(prompt).toContain("Earlier answer 5");
   });
+
+  it("dates the prompt with the turn's creation time as an ISO string", async () => {
+    const languageModel = ninaModel();
+    provider.languageModel.mockReturnValue(languageModel);
+    const f = await createNinaTest();
+    await f.t.action(run, { turnId: f.turnId });
+    const turn = await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId));
+    expect(encodeJsonText(languageModel.doStreamCalls[0]?.prompt)).toContain(
+      `- date: ${new Date(turn?._creationTime ?? 0).toISOString()}`
+    );
+  });
 });

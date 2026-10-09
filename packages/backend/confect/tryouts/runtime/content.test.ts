@@ -17,7 +17,7 @@ describe("try-out review entitlement", () => {
     "keeps results free and changes answer-key access with the current plan",
     () =>
       Effect.gen(function* () {
-        vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
+        vi.setSystemTime(TRYOUT_TEST_NOW);
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* Effect.promise(() =>
           t.mutation(async (ctx) => {

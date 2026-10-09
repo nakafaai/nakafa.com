@@ -41,7 +41,7 @@ export class SidebarCookieWriter extends Context.Service<
       cookieName: string
     ) => Effect.Effect<void, SidebarStatePersistenceError>;
   }
->()("@repo/design-system/SidebarCookieWriter") {}
+>()("@repo/design-system/lib/sidebar/persistence/SidebarCookieWriter") {}
 
 const writeBrowserCookie = Effect.fn("designSystem.sidebar.writeBrowserCookie")(
   function* (cookie: string, cookieName: string) {

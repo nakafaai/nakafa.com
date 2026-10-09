@@ -275,7 +275,7 @@ describe("immutable Quran application reads", () => {
   class QuranFixture extends Context.Service<
     QuranFixture,
     Effect.Success<typeof prepareQuran>
-  >()("TestContent.QuranFixture") {}
+  >()("www/lib/content/quran/publication.test/QuranFixture") {}
   layer(Layer.effect(QuranFixture, prepareQuran))((test) => {
     test.effect(
       "returns the authenticated identity and complete cached metadata catalog",

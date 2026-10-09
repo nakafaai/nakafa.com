@@ -1,7 +1,7 @@
 import { encodePrettyJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
-  Clock,
+  DateTime,
   Effect,
   FileSystem,
   Option,
@@ -159,7 +159,7 @@ export const updateSubmissionHistory = Effect.fn(
   service: SubmissionService;
   urls: readonly string[];
 }) {
-  const timestamp = new Date(yield* Clock.currentTimeMillis).toISOString();
+  const timestamp = DateTime.formatIso(yield* DateTime.now);
   const serviceHistory = { ...history[service] };
   for (const url of urls) {
     serviceHistory[url] = timestamp;

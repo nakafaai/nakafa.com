@@ -90,7 +90,7 @@ type ReadyMaterialManifestValue = ReturnType<typeof makeReadyManifest>;
 class ReadyMaterialManifest extends Context.Service<
   ReadyMaterialManifest,
   ReadyMaterialManifestValue
->()("www.test.ReadyMaterialManifest") {
+>()("www/lib/content/preview/material.test/ReadyMaterialManifest") {
   static readonly layer = Layer.effect(
     this,
     rendererManifest.pipe(

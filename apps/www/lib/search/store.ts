@@ -1,7 +1,6 @@
 import { Schema } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
 
 const StateSchema = Schema.Struct({
   activated: Schema.Boolean,
@@ -27,21 +26,22 @@ const initialState: State = {
 export const createSearchStore = () =>
   createStore<SearchStore>()(
     persist(
-      immer((set) => ({
+      (set) => ({
         ...initialState,
 
         setQuery: (query: string) => {
-          set((state) => {
-            state.query = query;
-          });
+          set((state) => (state.query === query ? state : { query }));
         },
         setOpen: (open: boolean) => {
           set((state) => {
-            state.activated = state.activated || open;
-            state.open = open;
+            const activated = state.activated || open;
+            if (activated === state.activated && open === state.open) {
+              return state;
+            }
+            return { activated, open };
           });
         },
-      })),
+      }),
       {
         name: "nakafa-search",
         storage: createJSONStorage(() => sessionStorage),

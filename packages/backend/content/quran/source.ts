@@ -30,4 +30,4 @@ export class QuranSource extends Context.Service<
       assetId: string
     ) => Effect.Effect<readonly PublicationRow<"quranSearch">[], ReleaseError>;
   }
->()("content/QuranSource") {}
+>()("@repo/backend/content/quran/source/QuranSource") {}

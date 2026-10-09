@@ -1,7 +1,6 @@
-import { DateTime, Schema } from "effect";
+import { DateTime, Record as Rec, Schema } from "effect";
 import { createStore } from "zustand";
 import { persist } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
 
 /**
  * Tracks content views to prevent rapid duplicate recording within session.
@@ -32,15 +31,17 @@ const initialState: State = {
 export const createContentViewsStore = () =>
   createStore<ContentViewsStore>()(
     persist(
-      immer((set, get) => ({
+      (set, get) => ({
         ...initialState,
 
-        markAsViewed: (key) =>
-          set((state) => {
-            state.viewedSlugs[key] = DateTime.toEpochMillis(
-              DateTime.nowUnsafe()
-            );
-          }),
+        markAsViewed: (key) => {
+          const viewedAt = DateTime.toEpochMillis(DateTime.nowUnsafe());
+          set((state) =>
+            state.viewedSlugs[key] === viewedAt
+              ? state
+              : { viewedSlugs: Rec.set(state.viewedSlugs, key, viewedAt) }
+          );
+        },
 
         /**
          * Checks if content has been viewed in current session.
@@ -57,7 +58,7 @@ export const createContentViewsStore = () =>
             SESSION_TTL
           );
         },
-      })),
+      }),
       {
         name: "nakafa-content-views",
         version: 1,

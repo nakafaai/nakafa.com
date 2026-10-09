@@ -7,7 +7,7 @@ import { Context } from "effect";
 
 /** The grant that the function's `GrantAccess` check loaded and allowed. */
 export class Grant extends Context.Service<Grant, TenantGrantsDoc>()(
-  "@repo/backend/access/Grant"
+  "@repo/backend/confect/access/access/Grant"
 ) {}
 
 /** Checks a grant action on the grant whose ID the `arg` argument holds. */

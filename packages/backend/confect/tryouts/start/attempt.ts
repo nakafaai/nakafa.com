@@ -175,7 +175,7 @@ const persistAttemptStart = Effect.fn("tryouts.start.persistAttemptStart")(
           track_key: input.args.trackKey,
         },
       },
-      timestamp: new Date(input.now),
+      timestamp: input.now,
     });
   }
 );

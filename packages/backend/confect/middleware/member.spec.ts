@@ -21,7 +21,7 @@ const Principal = Schema.Struct({
 });
 
 export class Member extends Context.Service<Member, typeof Principal.Type>()(
-  "@repo/backend/tenancy/Member"
+  "@repo/backend/confect/middleware/member.spec/Member"
 ) {}
 
 const notMember = Schema.Literal("NOT_MEMBER");

@@ -18,7 +18,7 @@ describe("onboarding", () => {
       const first = yield* Effect.promise(() =>
         authenticated.mutation(api.onboarding.mutations.admit, {})
       );
-      vi.setSystemTime(new Date(NOW + 1000));
+      vi.setSystemTime(NOW + 1000);
       const repeated = yield* Effect.promise(() =>
         authenticated.mutation(api.onboarding.mutations.admit, {})
       );
@@ -89,7 +89,7 @@ describe("onboarding", () => {
         yield* Effect.promise(() =>
           authenticated.mutation(api.onboarding.mutations.admit, {})
         );
-        vi.setSystemTime(new Date(NOW + 1000));
+        vi.setSystemTime(NOW + 1000);
         yield* Effect.promise(() =>
           authenticated.mutation(api.onboarding.mutations.saveAnswer, {
             answer: {
