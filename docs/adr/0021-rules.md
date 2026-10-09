@@ -192,6 +192,22 @@ with its count, tests included, and a module that a tool generated is not
 judged. The limit is on physical lines, so a long comment counts: a module
 that needs that much explanation holds more than one capability.
 
+### Exports that nothing names
+
+An exported name is the interface of its module. The check reports an exported
+name that no other module mentions: it loses `export`, and Biome then reports
+the declaration when its own module does not use it either. A name counts as
+mentioned when the word appears in a second module, generated and declaration
+files included, so the check never reports a name that something imports, and
+it misses an unused name that another module happens to spell.
+
+The check does not judge a module whose exports are read by name from outside
+the repository's imports: the Next.js file conventions of an app, its
+`vercel.ts`, a generated module, and a workspace that is published as a
+package. It also leaves `packages/design-system/components/ui`, which keeps
+every part its shadcn upstream ships. A default export has no name to import
+and is not judged.
+
 ### Vercel deployment policy
 
 Each app's `vercel.ts` sets `git.deploymentEnabled` to exactly
