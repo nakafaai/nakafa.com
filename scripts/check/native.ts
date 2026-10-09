@@ -122,9 +122,15 @@ function isNodeModuleLoad(node: Node) {
   return loader && namesNodeModule(specifier);
 }
 
+/** Whether a node is the string `"object"`, the tag that `typeof` gives an object. */
+function isObjectTag(node: Node) {
+  return isStringLiteralLikeNode(node) && node.text === "object";
+}
+
 /**
  * Whether a node compares a typeof result against the object tag, or switches on
- * a typeof result with an `object` case.
+ * a typeof result with an `object` case. Parentheses and assertions around an
+ * operand or a case label do not change what it compares.
  */
 function isTypeofObjectComparison(node: Node) {
   if (isSwitchStatement(node)) {
@@ -133,9 +139,7 @@ function isTypeofObjectComparison(node: Node) {
       Arr.some(
         node.caseBlock.clauses,
         (clause) =>
-          isCaseClause(clause) &&
-          isStringLiteralLikeNode(clause.expression) &&
-          clause.expression.text === "object"
+          isCaseClause(clause) && isObjectTag(unwrapped(clause.expression))
       )
     );
   }
@@ -147,14 +151,11 @@ function isTypeofObjectComparison(node: Node) {
   ) {
     return false;
   }
-  const { left, right } = node;
+  const left = unwrapped(node.left);
+  const right = unwrapped(node.right);
   return (
-    (isTypeOfExpression(left) &&
-      isStringLiteralLikeNode(right) &&
-      right.text === "object") ||
-    (isTypeOfExpression(right) &&
-      isStringLiteralLikeNode(left) &&
-      left.text === "object")
+    (isTypeOfExpression(left) && isObjectTag(right)) ||
+    (isTypeOfExpression(right) && isObjectTag(left))
   );
 }
 

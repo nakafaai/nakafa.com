@@ -169,6 +169,49 @@ export function asserted(value: unknown) {
       })
   );
 
+  it.effect(
+    "reports a typeof comparison whose typeof operand is parenthesized",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export const object = (typeof value) === "object";
+export const flipped = "object" === (typeof value);
+`),
+          ["1 typeof-object", "2 typeof-object"]
+        );
+      })
+  );
+
+  it.effect(
+    "reports a typeof comparison whose object tag is parenthesized",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export const object = typeof value === ("object");
+export const flipped = ("object") === typeof value;
+`),
+          ["1 typeof-object", "2 typeof-object"]
+        );
+      })
+  );
+
+  it.effect("reports a switch on typeof with a parenthesized object case", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`export function read(value: unknown) {
+  switch (typeof value) {
+    case ("object"):
+      return value;
+    default:
+      return null;
+  }
+}
+`),
+        ["2 typeof-object"]
+      );
+    })
+  );
+
   it.effect("reports raw failure handling and typeof-object narrowing", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
