@@ -56,15 +56,19 @@ describe("utilities/digest", () => {
     })
   );
 
-  it.effect("digests both values before it compares them", () =>
+  it.effect("digests both values for a different and for an equal pair", () =>
     Effect.gen(function* () {
       const digest = vi.spyOn(crypto.subtle, "digest");
 
       expect(yield* matchesSecret("foreign-token", "technical-token")).toBe(
         false
       );
-
       expect(digest).toHaveBeenCalledTimes(2);
+
+      expect(yield* matchesSecret("technical-token", "technical-token")).toBe(
+        true
+      );
+      expect(digest).toHaveBeenCalledTimes(4);
     })
   );
 

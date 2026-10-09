@@ -42,8 +42,10 @@ export const createLocalSigningIdentity = Effect.fn(
         "The isolated acceptance signing identity could not be generated."
       ),
   });
-  const keyId = `acceptance-${Hex.encode(yield* crypto.randomBytes(16))}`;
-  const publicationToken = Base64Url.encode(yield* crypto.randomBytes(32));
+  const keyId = `acceptance-${Hex.encode(yield* Effect.orDie(crypto.randomBytes(16)))}`;
+  const publicationToken = Base64Url.encode(
+    yield* Effect.orDie(crypto.randomBytes(32))
+  );
   const privateKeyPath = `${directory}/signing-private.pem`;
   yield* fs.writeFileString(privateKeyPath, keys.privateKey, {
     mode: 0o600,
