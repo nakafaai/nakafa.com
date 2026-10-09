@@ -256,9 +256,7 @@ const readActiveProof = Effect.fn("contentRelease.readActiveProof")(function* (
  */
 function decideProof(
   release: Release,
-  active:
-    | { readonly status: WorkflowStatus; readonly workflowId: WorkflowId }
-    | undefined
+  active: Effect.Success<ReturnType<typeof readActiveProof>>
 ): ProofDecision {
   if (release.status === "verified") {
     return {

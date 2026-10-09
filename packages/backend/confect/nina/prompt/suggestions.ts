@@ -11,6 +11,12 @@ const ParamsSchema = Schema.Struct({
 
 type Params = typeof ParamsSchema.Type;
 
+/** The example follow-ups and the language name that one locale's instructions give. */
+const LocaleInstructionSchema = Schema.Struct({
+  example: Schema.String,
+  language: Schema.String,
+});
+
 const localeInstructions = {
   de: {
     language: "German",
@@ -45,7 +51,7 @@ const localeInstructions = {
       - Ask Nina to explain the steps more slowly in Indonesian.
     `,
   },
-} satisfies Record<Locale, { example: string; language: string }>;
+} satisfies Record<Locale, typeof LocaleInstructionSchema.Type>;
 
 /** Builds follow-up suggestion instructions for the active conversation locale. */
 export function nakafaSuggestions({ locale }: Params) {

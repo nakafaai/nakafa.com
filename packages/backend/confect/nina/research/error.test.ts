@@ -2,7 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import { makeResearchGenerationError } from "@repo/backend/confect/nina/research/error";
 import { ResearchGenerationError } from "@repo/backend/confect/nina/research/schema";
 import { NoObjectGeneratedError } from "ai";
-import { DateTime } from "effect";
+import { DateTime, Schema } from "effect";
+
+const CyclicFailureSchema = Schema.Struct({
+  cause: Schema.mutableKey(Schema.optionalKey(Schema.Unknown)),
+  message: Schema.String,
+});
 
 describe("makeResearchGenerationError", () => {
   it.each([
@@ -23,7 +28,7 @@ describe("makeResearchGenerationError", () => {
   });
 
   it("keeps a cyclic provider failure in the typed error channel", () => {
-    const failure: { cause?: unknown; message: string } = {
+    const failure: typeof CyclicFailureSchema.Type = {
       message: "Provider unavailable",
     };
     failure.cause = failure;

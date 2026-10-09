@@ -1,4 +1,8 @@
 import type { NakafaAgentQuranReference } from "@repo/contents/agent/schema/quran/reference";
+import type {
+  NakafaQuranEmbeddedSourceSchema,
+  NakafaQuranExternalSourceSchema,
+} from "@repo/contents/agent/schema/quran/source";
 import type { NakafaAgentSearchResult } from "@repo/contents/agent/schema/search";
 import type { NakafaAgentTaxonomy } from "@repo/contents/agent/schema/taxonomy";
 import dedent from "dedent";
@@ -57,14 +61,11 @@ function formatQuranTranslation(
 }
 
 /** Formats the source identity shared by embedded and link-only editions. */
-function formatQuranSource(source: {
-  readonly label: string;
-  readonly publisher: string;
-  readonly source_url: string;
-  readonly terms: { readonly url: string };
-  readonly update_url: string;
-  readonly version: string;
-}) {
+function formatQuranSource(
+  source:
+    | typeof NakafaQuranEmbeddedSourceSchema.Type
+    | typeof NakafaQuranExternalSourceSchema.Type
+) {
   return `${source.label}; publisher: ${source.publisher}; version: ${source.version}; source: ${source.source_url}; updates: ${source.update_url}; terms: ${source.terms.url}`;
 }
 

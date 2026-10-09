@@ -8,10 +8,10 @@ import {
   PolarCustomerEmailConflict,
   PolarCustomerError,
   type PolarCustomerGateway,
+  type PolarCustomerUpdateInput,
   PolarDuplicateEmailError,
   polarCustomerErrorCode,
   polarDuplicateEmailCode,
-  type StoredPolarCustomer,
 } from "@repo/backend/confect/customers/polar/spec";
 import { Array as Arr, Effect } from "effect";
 
@@ -211,10 +211,7 @@ describe("customers/polar/impl", () => {
     "relinks an existing email customer when externalId is still unset",
     () =>
       Effect.gen(function* () {
-        let updates: Array<{
-          customer: StoredPolarCustomer;
-          next: EnsurePolarCustomerInput;
-        }> = [];
+        let updates: PolarCustomerUpdateInput[] = [];
         const gateway = createGateway({
           createCustomer: () =>
             Effect.fail(
