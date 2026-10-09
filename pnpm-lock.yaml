@@ -309,9 +309,6 @@ importers:
       feed:
         specifier: ^6.0.0
         version: 6.0.0
-      immer:
-        specifier: ^11.1.21
-        version: 11.1.21
       motion:
         specifier: ^14.0.0
         version: 14.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

@@ -62,7 +62,6 @@
     "date-fns": "4.4.0",
     "effect": "catalog:",
     "feed": "^6.0.0",
-    "immer": "^11.1.21",
     "motion": "^14.0.0",
     "nanoid": "^6.0.2",
     "next": "16.4.0",
