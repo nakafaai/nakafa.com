@@ -43,6 +43,7 @@
     "@nakafa/aksara-contracts": "0.48.3",
     "@polar-sh/sdk": "^1.0.2",
     "@posthog/convex": "2.1.5",
+    "@react-email/render": "2.1.0",
     "@repo/analytics": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/email": "workspace:*",
@@ -59,7 +60,13 @@
     "gpt-tokenizer": "^4.0.0",
     "parse-domain": "^8.4.0",
     "react": "19.2.8",
-    "strip-ansi": "^7.2.0"
+    "react-dom": "19.2.8",
+    "react-email": "6.11.1",
+    "remark-mdx": "3.1.1",
+    "remark-parse": "11.0.0",
+    "server-only": "0.0.1",
+    "strip-ansi": "^7.2.0",
+    "unified": "11.0.5"
   },
   "devDependencies": {
     "@confect/cli": "10.1.0",
