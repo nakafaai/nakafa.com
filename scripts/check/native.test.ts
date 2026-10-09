@@ -296,10 +296,8 @@ export const bare = (async () => {
         ),
         [
           "3 assertion",
-          "6 assertion",
           "9 assertion",
           "11 assertion",
-          "14 assertion",
           "15 assertion",
           "15 promise",
           "16 promise",

@@ -44,7 +44,6 @@ export const checked = value satisfies Shape;
           "4 assertion",
           "5 assertion",
           "6 assertion",
-          "7 assertion",
         ]
       );
     })
@@ -59,7 +58,7 @@ export const checked = value satisfies Shape;
   .name!;
 export const checked = (
   response
-) satisfies Shape;
+) as Shape;
 `),
           ["1 assertion", "3 assertion"]
         );
@@ -88,40 +87,49 @@ type Keys<T> = { [K in keyof T as Exclude<K, "hidden">]: T[K] };
     })
   );
 
-  it.effect("reports only the satisfies of a const assertion", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* findings(
-          'export const shape = ["a"] as const satisfies readonly string[];\n'
-        ),
-        ["1 assertion"]
-      );
-    })
+  it.effect(
+    "never reports a satisfies expression, alone or after a const",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            'export const shape = ["a"] as const satisfies readonly string[];\nexport const defaults = { mode: "dark" } satisfies Settings;\n'
+          ),
+          []
+        );
+      })
   );
 
-  it.effect("reports assertions in tests, configuration, and components", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* fileFindings([
-          {
-            file: "apps/www/next.config.ts",
-            sourceText: "export default config as NextConfig;\n",
-          },
-          {
-            file: "scripts/tool.test.ts",
-            sourceText: "export const expected = value!;\n",
-          },
-          {
-            file: "apps/www/components/card.tsx",
-            sourceText: "export const node = ref.current!;\n",
-          },
-        ]),
-        [
-          "apps/www/components/card.tsx:1 assertion",
-          "apps/www/next.config.ts:1 assertion",
-          "scripts/tool.test.ts:1 assertion",
-        ]
-      );
-    })
+  it.effect(
+    "reports assertions in tests and components, never in configuration",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* fileFindings([
+            {
+              file: "apps/www/next.config.ts",
+              sourceText: "export default config as NextConfig;\n",
+            },
+            {
+              file: "apps/www/source.config.ts",
+              sourceText: "export default {} satisfies NextConfig;\n",
+            },
+            {
+              file: "scripts/tool.test.ts",
+              sourceText:
+                "export const expected = value!;\nexport const label = value as Label;\n",
+            },
+            {
+              file: "apps/www/components/card.tsx",
+              sourceText: "export const node = ref.current!;\n",
+            },
+          ]),
+          [
+            "apps/www/components/card.tsx:1 assertion",
+            "scripts/tool.test.ts:1 assertion",
+            "scripts/tool.test.ts:2 assertion",
+          ]
+        );
+      })
   );
 });

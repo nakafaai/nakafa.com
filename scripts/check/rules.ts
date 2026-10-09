@@ -82,8 +82,8 @@ export const RULES = {
   },
   assertion: {
     message:
-      "narrow the value with a Schema or a Predicate from effect instead of an as, angle-bracket, satisfies, or non-null assertion.",
-    scope: "every",
+      "narrow the value with a Schema or a Predicate from effect instead of an as, angle-bracket, or non-null assertion.",
+    scope: "code",
   },
   async: {
     message:

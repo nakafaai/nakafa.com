@@ -3,7 +3,6 @@ import {
   isAsExpression,
   isIdentifier,
   isNonNullExpression,
-  isSatisfiesExpression,
   isTypeAssertion,
   isTypeReferenceNode,
   type Node,
@@ -28,12 +27,13 @@ function assertedType(node: Node): TypeNode | undefined {
 
 /**
  * Whether one node is an assertion that this rule reports: an `as` or
- * angle-bracket assertion to any type but `const`, a non-null assertion, or a
- * `satisfies` expression. The `as` of an import, an export, or a mapped type is
+ * angle-bracket assertion to any type but `const`, or a non-null assertion. A
+ * `satisfies` expression checks a value against a type without changing it, so
+ * it is not an assertion. The `as` of an import, an export, or a mapped type is
  * not an expression, so the rule never sees it.
  */
 export function isAssertion(node: Node) {
-  if (isNonNullExpression(node) || isSatisfiesExpression(node)) {
+  if (isNonNullExpression(node)) {
     return true;
   }
   const type = assertedType(node);
