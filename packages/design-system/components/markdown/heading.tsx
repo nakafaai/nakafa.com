@@ -1,10 +1,10 @@
 import { Link05Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { createHeadingId } from "@repo/design-system/lib/markdown/headings";
 import type {
   HeadingProps,
   HeadingTag,
 } from "@repo/design-system/types/markdown";
+import { createHeadingId } from "@repo/math/heading";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr, Predicate } from "effect";

@@ -699,9 +699,6 @@ importers:
       '@nakafa/aksara-contracts':
         specifier: 0.48.5
         version: 0.48.5(effect@4.0.2)
-      '@repo/design-system':
-        specifier: workspace:*
-        version: link:../design-system
       '@repo/math':
         specifier: workspace:*
         version: link:../math

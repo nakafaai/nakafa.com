@@ -12,7 +12,6 @@
   "dependencies": {
     "@hugeicons/core-free-icons": "catalog:",
     "@nakafa/aksara-contracts": "0.48.5",
-    "@repo/design-system": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
