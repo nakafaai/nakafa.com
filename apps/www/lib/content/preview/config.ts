@@ -1,16 +1,11 @@
 import "server-only";
 import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
 import { PreviewRendererSecretSchema } from "@nakafa/aksara-contracts/preview/auth";
-import { hasPreviewProvider } from "@repo/next-config/preview";
 import {
-  Array as Arr,
-  Effect,
-  Option,
-  Record as Rec,
-  Redacted,
-  Result,
-  Schema,
-} from "effect";
+  hasPreviewProvider,
+  hasPreviewRenderer,
+} from "@repo/next-config/preview";
+import { Effect, Option, Redacted, Result, Schema } from "effect";
 import {
   readPreviewEnvironment,
   readPreviewRendererEnvironment,
@@ -131,40 +126,34 @@ export const previewUrl = Effect.fn("NakafaContent.previewUrl")(function* (
 export function hasPreviewConfig() {
   return hasPreviewProvider();
 }
-/** Whether this build is the development child that may read preview connections. */
-function isDevelopment() {
-  return process.env.NODE_ENV === "development";
-}
-/** Reads the complete ephemeral connection only in the development child. */
+/**
+ * Reads the complete ephemeral connection only when the development child set
+ * a provider field. `hasPreviewProvider` owns that check for every caller.
+ */
 export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
   function* () {
-    if (!isDevelopment()) {
+    if (!hasPreviewProvider()) {
       return Option.none<PreviewConfig>();
     }
-    const environment = readPreviewEnvironment();
-    if (Arr.every(Rec.values(environment), (value) => value === undefined)) {
-      return Option.none<PreviewConfig>();
-    }
-    const decoded = decodePreviewEnvironment(environment);
+    const decoded = decodePreviewEnvironment(readPreviewEnvironment());
     if (Result.isFailure(decoded)) {
       return yield* decoded.failure;
     }
     return Option.some<PreviewConfig>(decoded.success);
   }
 );
-/** Reads independent local renderer credentials only in the development child. */
+/**
+ * Reads independent local renderer credentials only when the development child
+ * set a renderer field. `hasPreviewRenderer` owns that check.
+ */
 export const readPreviewRendererConfig = Effect.fn(
   "NakafaContent.readPreviewRendererConfig"
 )(() => {
-  if (!isDevelopment()) {
-    return Effect.succeed(Option.none<PreviewRendererConfig>());
-  }
-  const environment = readPreviewRendererEnvironment();
-  if (Arr.every(Rec.values(environment), (value) => value === undefined)) {
+  if (!hasPreviewRenderer()) {
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }
   return Schema.decodeUnknownEffect(PreviewRendererEnvironmentSchema)(
-    environment,
+    readPreviewRendererEnvironment(),
     {
       onExcessProperty: "error",
     }
