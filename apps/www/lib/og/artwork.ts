@@ -1,9 +1,13 @@
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  ENGLISH_APP_LOCALE_CODE,
+} from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import type { Locale } from "next-intl";
 import { getOgUrl } from "@/lib/utils/metadata";
 
-const ALL_ARTWORK_LOCALES = ["en", "id", "de"] as const;
-const ENGLISH_ARTWORK = ["en"] as const;
+const ALL_ARTWORK_LOCALES = ACTIVE_APP_LOCALE_CODES;
+const ENGLISH_ARTWORK = [ENGLISH_APP_LOCALE_CODE] as const;
 
 /** Reviewed public artwork grouped by stable, language-neutral identity. */
 export const artworkSources = {
