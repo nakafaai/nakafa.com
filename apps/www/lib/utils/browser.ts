@@ -1,26 +1,20 @@
 import { MATERIAL_CONTEXT_QUERY_PARAM } from "@repo/contents/route/material/context";
+import { splitLocalePathname } from "@repo/internationalization/src/href";
 import { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr } from "effect";
-import { hasLocale } from "next-intl";
 
 /**
  * Get current locale from the URL pathname
  * Assumes locale is the first segment of the pathname, such as /en, /id, or /de.
  */
 export function getLocale() {
-  const pathname = window.location.pathname;
-  const segments = Arr.filter(pathname.split("/"), Boolean);
+  const { locale } = splitLocalePathname(
+    window.location.pathname,
+    routing.locales
+  );
 
-  // Get the first segment which should be the locale
-  const locale = segments[0];
-
-  // Validate if it's a valid locale using next-intl's hasLocale
-  if (locale && hasLocale(routing.locales, locale)) {
-    return locale;
-  }
-
-  // Fallback to default locale
-  return routing.defaultLocale;
+  // Fallback to default locale when the path starts with no configured locale
+  return locale ?? routing.defaultLocale;
 }
 
 /**
@@ -29,12 +23,14 @@ export function getLocale() {
  */
 export function getPathname() {
   const pathname = window.location.pathname;
-  const segments = Arr.filter(pathname.split("/"), Boolean);
+  const { locale, publicSegments } = splitLocalePathname(
+    pathname,
+    routing.locales
+  );
 
   // Remove the first segment (locale) and reconstruct the path
-  const localeSegment = segments[0];
-  if (localeSegment && hasLocale(routing.locales, localeSegment)) {
-    const pathWithoutLocale = Arr.join(Arr.drop(segments, 1), "/");
+  if (locale) {
+    const pathWithoutLocale = Arr.join(publicSegments, "/");
     return pathWithoutLocale ? `/${pathWithoutLocale}` : "/";
   }
 

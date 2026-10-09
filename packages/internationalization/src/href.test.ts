@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
+import {
+  normalizeLocalizedInternalHref,
+  splitLocalePathname,
+} from "@repo/internationalization/src/href";
+
+const TEST_LOCALES = ["de", "en", "id"] as const;
 
 describe("localized internal href normalization", () => {
   it.each([
@@ -24,4 +29,23 @@ describe("localized internal href normalization", () => {
   ])("normalizes internal href %s", (href, expected) => {
     expect(normalizeLocalizedInternalHref(href)).toBe(expected);
   });
+});
+
+describe("splitLocalePathname", () => {
+  it.each([
+    ["/en/subjects/mathematics", "en", ["subjects", "mathematics"]],
+    ["/id", "id", []],
+    ["//de//faecher/", "de", ["faecher"]],
+    ["/subjects/mathematics", undefined, ["subjects", "mathematics"]],
+    ["/xx/home", undefined, ["xx", "home"]],
+    ["/", undefined, []],
+  ])(
+    "splits pathname %s at its leading locale",
+    (pathname, locale, segments) => {
+      expect(splitLocalePathname(pathname, TEST_LOCALES)).toEqual({
+        locale,
+        publicSegments: segments,
+      });
+    }
+  );
 });
