@@ -8,9 +8,9 @@ type ConvexConnection = Pick<
 >;
 
 /**
- * How long a call waits for a socket that the client is restoring. A session
- * refresh and a first reconnect take under two seconds, so a person who is
- * online is never refused for them.
+ * How long a call waits for a socket that the client is opening or restoring.
+ * The first connection, a session refresh, and a first reconnect usually end
+ * within it, so a person who is online is rarely refused for them.
  */
 const SOCKET_WAIT = Duration.seconds(5);
 
@@ -21,8 +21,9 @@ export class ConvexOfflineError extends Schema.TaggedError<ConvexOfflineError>()
 ) {}
 
 /**
- * Whether the client had a socket or tried to get one, and has none now. Before
- * its first attempt the client is not offline: a call then waits for the handshake.
+ * Whether the client had a socket or tried to get one, and has none now. A
+ * view shows this as offline. Before its first attempt the client is not
+ * offline yet: it is still connecting.
  */
 export function isConvexOffline(state: ConvexConnectionState) {
   const hadOrTriedConnection =
@@ -30,15 +31,15 @@ export function isConvexOffline(state: ConvexConnectionState) {
   return hadOrTriedConnection && !state.isWebSocketConnected;
 }
 
-/** Completes when the client has a socket: at once when it has one now. */
-function socketRestored(convex: ConvexConnection) {
+/** Completes when the client has a connected socket: at once when it has one now. */
+function socketConnected(convex: ConvexConnection) {
   return Effect.callback<void>((resume) => {
-    if (!isConvexOffline(convex.connectionState())) {
+    if (convex.connectionState().isWebSocketConnected) {
       resume(Effect.void);
       return;
     }
     const unsubscribe = convex.subscribeToConnectionState((state) => {
-      if (!isConvexOffline(state)) {
+      if (state.isWebSocketConnected) {
         unsubscribe();
         resume(Effect.void);
       }
@@ -48,11 +49,12 @@ function socketRestored(convex: ConvexConnection) {
 }
 
 /**
- * Lets a Convex mutation or action start only while the client is online. It
+ * Lets a Convex mutation or action start only on a connected socket. It
  * refuses at once when the browser reports no network, and after a short wait
- * when the client has no socket: a call that started then would be stored and
- * delivered after the reconnect. It reads the client at the moment of the
- * call, so the caller needs no subscription to the connection state.
+ * when the client has no connected socket: a call that started then would be
+ * stored and delivered when the socket opens. It reads the client at the
+ * moment of the call, so the caller needs no subscription to the connection
+ * state.
  */
 export const requireConvexOnline = Effect.fn("www.convex.requireOnline")(
   function* (convex: ConvexConnection) {
@@ -62,7 +64,7 @@ export const requireConvexOnline = Effect.fn("www.convex.requireOnline")(
     if (navigator.onLine === false) {
       return yield* refusal;
     }
-    yield* socketRestored(convex).pipe(
+    yield* socketConnected(convex).pipe(
       Effect.timeoutOrElse({
         duration: SOCKET_WAIT,
         orElse: () => Effect.fail(refusal),

@@ -33,29 +33,33 @@ Convex React hook calls get no client deadline.
   returns the stored decision when the decision already matches, and a newer
   decision interrupts the older save.
 - A hook call whose answer starts a navigation, a clock, or a redirect starts
-  only while the client is online. `requireConvexOnline` in
+  only on a connected socket. `requireConvexOnline` in
   `apps/www/lib/convex/online.ts` stands in front of the call. It refuses at
-  once when the browser reports no network. When the client has no socket it
-  waits up to five seconds for it, because a session refresh and a first
-  reconnect restore it in under two, and refuses after that. The call site
-  then shows its usual failure. Nothing was queued, so that failure is true,
-  and it is not reported as an exception. The call does not need a deadline.
+  once when the browser reports no network. When the client has no connected
+  socket it waits up to five seconds for one, because the first connection, a
+  session refresh, and a first reconnect usually end within that time, and
+  refuses after that. The call site then shows its usual failure. Nothing was
+  queued, so that failure is true, and it is not reported as an exception. The
+  call does not need a deadline.
 - The guard reads what the browser and the client report. A socket that is
   dead but not yet closed, and a socket paused for a session token, still read
-  as connected: a call started then is stored and delivered when the client
-  recovers, as before.
+  as connected. A mutation started then is stored and delivered when the
+  client recovers, and an action started then fails when the client notices,
+  as before.
 - A mutation that was already sent when the socket drops stays pending with
   its control, and the client delivers it after the reconnect. The guard does
   not end it: an error there would again report a failure for a write that
   still happens.
 - A view that shows the connection state reads it with
-  `useConvexConnectionState` and the same rule, `isConvexOffline`, as the
-  try-out catalog does.
+  `useConvexConnectionState` and the rule `isConvexOffline`, as the try-out
+  catalog does.
 
 ## Consequences
 
 - A reviewer who finds a hook mutation without a deadline leaves it so, and
-  checks what its success branch does when the answer arrives late.
+  checks what its success branch does when the answer arrives late. A call
+  whose answer navigates, starts a clock, or redirects and has no guard yet is
+  a defect to fix, not an exception.
 - A new transient read calls `retryNetworkAttempt` and passes its own deadline
   failure. It does not copy the wiring.
 - `packages/backend/client/content/transport.ts` keeps its own pipeline: one

@@ -117,20 +117,23 @@ describe("Convex online state", () => {
     })
   );
 
-  it.effect("lets a call start at once before the first attempt", () =>
+  it.effect("waits for the first connection before a call starts", () =>
     Effect.gen(function* () {
       const convex = client({
         connectionCount: 0,
         connectionRetries: 0,
         isWebSocketConnected: false,
       });
+      const fiber = yield* Effect.forkChild(requireConvexOnline(convex));
+      yield* TestClock.adjust("1 second");
+      expect(fiber.pollUnsafe()).toBeUndefined();
 
-      yield* requireConvexOnline(convex);
+      convex.change(CONNECTED);
+      yield* Fiber.join(fiber);
 
       expect(convex.subscribers()).toBe(0);
     })
   );
-
   it.effect(
     "waits for a socket that returns, such as after a session refresh",
     () =>
@@ -182,15 +185,20 @@ describe("Convex online state", () => {
     })
   );
 
-  it.effect("refuses at once when the browser reports no network", () =>
-    Effect.gen(function* () {
-      vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
-      const convex = client(CONNECTED);
+  it.effect.each([
+    { name: "a connected socket", state: CONNECTED },
+    { name: "a dropped socket", state: DROPPED },
+  ])(
+    "refuses at once when the browser reports no network, with $name",
+    ({ state }) =>
+      Effect.gen(function* () {
+        vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+        const convex = client(state);
 
-      const error = yield* Effect.flip(requireConvexOnline(convex));
+        const error = yield* Effect.flip(requireConvexOnline(convex));
 
-      expect(error).toBeInstanceOf(ConvexOfflineError);
-      expect(convex.subscribers()).toBe(0);
-    })
+        expect(error).toBeInstanceOf(ConvexOfflineError);
+        expect(convex.subscribers()).toBe(0);
+      })
   );
 });

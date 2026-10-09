@@ -38,10 +38,10 @@ export function ChatDeletion({
     if (!user || isPending) {
       return;
     }
-    onOpenChange(false);
     startTransition(async () =>
       Effect.runPromise(
         requireConvexOnline(convex).pipe(
+          Effect.tap(() => Effect.sync(() => onOpenChange(false))),
           Effect.andThen(
             Effect.tryPromise(() => deleteChat({ chatId: chat._id })).pipe(
               Effect.flatMap(Effect.fromResult),
