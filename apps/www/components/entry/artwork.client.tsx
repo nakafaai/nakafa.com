@@ -42,7 +42,8 @@ export function EntryShellArtwork() {
 /**
  * Probes WebGL only on wide screens, so a phone never creates a context. A
  * failed load of the artwork leaves the panel plain instead of replacing the
- * sign-in page, and the boundary reports the failure.
+ * sign-in page. The boundary hands the failure to error capture, which sends
+ * it only when the analytics client is already loaded.
  */
 function HardwareDithering() {
   const hasWebGL = useSyncExternalStore(

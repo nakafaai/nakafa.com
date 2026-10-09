@@ -1,102 +1,41 @@
-import { Effect, HashMap, Option } from "effect";
-import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
-
-const TRYOUT_ROOT = "try-out";
-const SNBT_ROUTE = "snbt";
-
-/**
- * UTBK-SNBT section route segments retired when the sections took their
- * official names, mapped to their successors in each app locale.
- */
-const RETIRED_SNBT_SECTIONS = {
-  de: HashMap.make(
-    ["allgemeines-logisches-denken", "allgemeines-schlussfolgern"],
-    ["allgemeinwissen", "allgemeines-wissen-und-verstaendnis"],
-    ["englische-sprache", "lesekompetenz-in-englischer-sprache"],
-    ["indonesische-sprache", "lesekompetenz-in-indonesischer-sprache"],
-    ["lese-und-schreibkompetenz", "leseverstaendnis-und-schreiben"]
-  ),
-  en: HashMap.make(
-    ["english-language", "literacy-in-english"],
-    ["general-knowledge", "general-knowledge-and-understanding"],
-    ["indonesian-language", "literacy-in-indonesian"],
-    ["reading-and-writing-skills", "reading-comprehension-and-writing"]
-  ),
-  id: HashMap.make(
-    ["bahasa-indonesia", "literasi-dalam-bahasa-indonesia"],
-    ["bahasa-inggris", "literasi-dalam-bahasa-inggris"],
-    ["literasi-membaca-menulis", "pemahaman-bacaan-dan-menulis"],
-    ["pengetahuan-umum", "pengetahuan-dan-pemahaman-umum"]
-  ),
-};
-
-type RetiredSectionLocale = keyof typeof RETIRED_SNBT_SECTIONS;
-
-function isRetiredSectionLocale(
-  locale: string | undefined
-): locale is RetiredSectionLocale {
-  return locale !== undefined && Object.hasOwn(RETIRED_SNBT_SECTIONS, locale);
-}
-
-/** Reads one retired SNBT section URL as its retired and successor routes. */
-function readRetiredSnbtSection(pathname: string) {
-  const [appLocale, root, country, exam, track, set, section, ...rest] =
-    pathname.split("/").filter(Boolean);
-  if (
-    !(
-      isRetiredSectionLocale(appLocale) &&
-      root === TRYOUT_ROOT &&
-      exam === SNBT_ROUTE &&
-      country &&
-      track &&
-      set &&
-      section &&
-      rest.length === 0
-    )
-  ) {
-    return null;
-  }
-  const successor = HashMap.get(RETIRED_SNBT_SECTIONS[appLocale], section);
-  if (Option.isNone(successor)) {
-    return null;
-  }
-  const setPath = [root, country, exam, track, set].join("/");
-  return {
-    appLocale,
-    previousPath: `${setPath}/${section}`,
-    successorPath: `${setPath}/${successor.value}`,
-  };
-}
-
-/** Reads whether the active signed catalog serves one exact route. */
-function readActiveTryoutPath(appLocale: RetiredSectionLocale, path: string) {
-  return readPublishedTryoutLocalizedPath({
-    currentAppLocale: appLocale,
-    publicPath: path,
-    targetAppLocale: appLocale,
-  });
-}
+import { Effect, Option } from "effect";
+import {
+  readRetiredSnbtExam,
+  readRetiredSnbtExamRedirect,
+  readRetiredSnbtProduct,
+  readRetiredSnbtProductRedirect,
+} from "@/lib/routing/public/tryout/product";
+import { readRetiredSectionRedirect } from "@/lib/routing/public/tryout/section";
+import {
+  readTracklessRouteRedirect,
+  readTracklessSetRoute,
+} from "@/lib/routing/public/tryout/trackless";
 
 /**
- * Resolves a retired SNBT section URL to its successor, only once the active
- * signed catalog has dropped the retired route and serves the successor.
+ * Resolves one retired try-out URL to its live successor, with the status that
+ * answers it. Each rule keeps the retired path absent and the successor live,
+ * so a redirect never lands on a page that the signed catalog does not serve.
+ * The track-less rules answer 307, because their newest live track can change;
+ * every other try-out rule answers 308.
  */
-export const readTryoutSectionRedirect = Effect.fn(
-  "www.routing.publicHtml.tryoutSectionMigration"
+export const readTryoutRedirect = Effect.fn(
+  "www.routing.publicHtml.tryoutRedirect"
 )(function* (pathname: string) {
-  const retired = readRetiredSnbtSection(pathname);
-  if (!retired) {
-    return null;
+  const sectionRedirect = yield* readRetiredSectionRedirect(pathname);
+  if (sectionRedirect !== null) {
+    return sectionRedirect;
   }
-  const [previous, successor] = yield* Effect.all(
-    [
-      readActiveTryoutPath(retired.appLocale, retired.previousPath),
-      readActiveTryoutPath(retired.appLocale, retired.successorPath),
-    ],
-    { concurrency: 2 }
-  );
-  if (previous !== null || successor === null) {
-    return null;
+  const exam = readRetiredSnbtExam(pathname);
+  if (Option.isSome(exam)) {
+    return yield* readRetiredSnbtExamRedirect(exam.value);
   }
-  return `/${retired.appLocale}/${successor}`;
+  const product = readRetiredSnbtProduct(pathname);
+  if (Option.isSome(product)) {
+    return yield* readRetiredSnbtProductRedirect(product.value);
+  }
+  const trackless = readTracklessSetRoute(pathname);
+  if (Option.isSome(trackless)) {
+    return yield* readTracklessRouteRedirect(trackless.value);
+  }
+  return null;
 });
