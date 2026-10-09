@@ -90,13 +90,7 @@ export function buildSiteLlmsEntries(
 
 /** Orders entries by route with the locale-aware comparison used for agent indexes. */
 const compareEntryRoutes = Order.make<{ readonly route: string }>(
-  (left, right) => {
-    const order = left.route.localeCompare(right.route);
-    if (order === 0) {
-      return 0;
-    }
-    return order < 0 ? -1 : 1;
-  }
+  (left, right) => Order.Number(left.route.localeCompare(right.route), 0)
 );
 
 /** Builds sorted agent entries from compact published content summaries. */
