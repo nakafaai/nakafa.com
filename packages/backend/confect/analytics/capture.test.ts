@@ -14,13 +14,13 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { internalActionGeneric } from "convex/server";
 import { v } from "convex/values";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 const contentViewProperties = {
   alignment_id: "alignment:id:articles:example",
   concept_id: "concept:id:articles:example",
@@ -77,7 +77,7 @@ describe("analytics/capture", () => {
             return jobs;
           })
         );
-        const properties = yield* Schema.encodeEffect(JsonText)(
+        const properties = yield* Schema.encodeEffect(JsonTextSchema)(
           contentViewProperties
         ).pipe(Effect.orDie);
         expect(scheduledJobs).toEqual([

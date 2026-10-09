@@ -1,10 +1,10 @@
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { isJsonContentType } from "@repo/utilities/mime";
 import { Effect, Option, Schema } from "effect";
 
 /** Nakafa policy ceiling for one JSON-RPC request, including batch payloads. */
 export const MAX_MCP_REQUEST_BYTES = 64 * 1024;
-const JsonBody = Schema.fromJsonString(Schema.Unknown);
 
 /** Expected failure while bounding an MCP request before protocol classification. */
 export class McpRequestBodyError extends Schema.TaggedError<McpRequestBodyError>()(
@@ -75,7 +75,7 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
   const parsedBody =
     source.length === 0
       ? Option.none<unknown>()
-      : Schema.decodeOption(JsonBody)(source);
+      : Schema.decodeOption(JsonTextSchema)(source);
   return {
     ...(Option.isSome(parsedBody)
       ? {

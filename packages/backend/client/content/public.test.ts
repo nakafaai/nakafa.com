@@ -36,6 +36,7 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
@@ -48,7 +49,6 @@ const input = {
   appLocale: AppLocaleSchema.make("en"),
   publicPath: PublicPathSchema.make("test/head-0"),
 };
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const ArtifactJsonSchema = Schema.fromJsonString(SignedContentArtifactSchema);
 const ProjectionJsonSchema = Schema.fromJsonString(ContentProjectionSchema);
 const ReleaseJsonSchema = Schema.fromJsonString(SignedContentReleaseSchema);
@@ -77,7 +77,7 @@ function createResponse(
       CONTENT_RUNTIME_RESPONSE_MARKER
     );
   }
-  const response = new Response(Schema.encodeSync(JsonTextSchema)(body), {
+  const response = new Response(encodeJsonText(body), {
     headers,
     status,
   });

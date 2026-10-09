@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Option, Schema } from "effect";
-
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Option } from "effect";
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import type {
   PlaneObject,
@@ -12,8 +12,6 @@ import {
   projectVisualFrame,
   resolveVisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
-
-const pointJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 function plane(first: PlaneObject, ...rest: PlaneObject[]): PlaneVisual {
   return {
@@ -312,7 +310,9 @@ describe("MathVisual geometry", () => {
     );
     expect(
       Arr.dedupe(
-        Arr.map(geometry.paths[0]?.points ?? [], (point) => pointJson(point))
+        Arr.map(geometry.paths[0]?.points ?? [], (point) =>
+          encodeJsonText(point)
+        )
       ).length
     ).toBe(4);
   });

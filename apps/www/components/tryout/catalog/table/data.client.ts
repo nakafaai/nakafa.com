@@ -3,9 +3,8 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { encodeJsonText } from "@repo/utilities/json";
 import { useConvexConnectionState } from "convex/react";
-import { Schema } from "effect";
-
 import { useState } from "react";
 import { useAuthSession } from "@/components/auth/session";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -18,14 +17,11 @@ import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 
 const EMPTY_ROWS: TryoutSetRow[] = [];
 
-/** Encodes one comparison key as JSON text, so equal keys compare equal as strings. */
-const encodeKey = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
-
 function scope(
   args: Omit<TryoutSetListArgs, "paginationOpts">,
   viewer: string | null
 ) {
-  return encodeKey([
+  return encodeJsonText([
     viewer,
     args.countryKey,
     args.examKey,
@@ -35,11 +31,11 @@ function scope(
 }
 
 function selectionKey(args: Omit<TryoutSetListArgs, "paginationOpts">) {
-  return encodeKey([args.filter, args.sort.field, args.sort.direction]);
+  return encodeJsonText([args.filter, args.sort.field, args.sort.direction]);
 }
 
 function requestKey(args: TryoutSetListArgs) {
-  return encodeKey([selectionKey(args), args.paginationOpts.numItems]);
+  return encodeJsonText([selectionKey(args), args.paginationOpts.numItems]);
 }
 
 /** Retention is scoped to one principal and track, including while requests change. */
@@ -127,7 +123,7 @@ export function useTryoutSetData({
   const { id: activeViewer, ready } = useViewer(bootstrap.result.viewerId);
   const connection = useConvexConnectionState();
   const activeScope = scope(request, activeViewer);
-  const selection = encodeKey([activeScope, selectionKey(request)]);
+  const selection = encodeJsonText([activeScope, selectionKey(request)]);
   const window = useResultWindow(selection);
   const size = window.size;
 

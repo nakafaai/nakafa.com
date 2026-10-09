@@ -101,6 +101,12 @@ function createAppRewrites() {
   };
 }
 /**
+ * One two-letter locale segment, the shape every app locale has. A longer first
+ * segment such as `user` never matches, so a valid bare path keeps its meaning.
+ */
+const LOCALE_SEGMENT = ":locale([A-Za-z]{2})";
+
+/**
  * Build the localized redirect list shared by all supported locales.
  */
 function createLocalizedRedirects() {
@@ -120,6 +126,40 @@ function createLocalizedRedirects() {
       destination: "/:locale",
       permanent: true,
     },
+    {
+      source: "/.well-known/skills/index.json",
+      destination: "/.well-known/agent-skills/index.json",
+      permanent: true,
+    },
+  ];
+  // Only the localized paths of retired pages redirect. An unconstrained
+  // `/:locale/settings` would also send the valid bare path `/user/settings`.
+  const retiredPageRedirects = [
+    {
+      source: `/${LOCALE_SEGMENT}/settings`,
+      destination: "/:locale/user/settings",
+      permanent: true,
+    },
+    {
+      source: `/${LOCALE_SEGMENT}/user/settings/developers`,
+      destination: "/:locale/user/settings",
+      permanent: true,
+    },
+    {
+      source: `/${LOCALE_SEGMENT}/onboarding/focus`,
+      destination: "/:locale/onboarding",
+      permanent: true,
+    },
+    {
+      source: `/${LOCALE_SEGMENT}/onboarding/role`,
+      destination: "/:locale/onboarding",
+      permanent: true,
+    },
+    {
+      source: `/${LOCALE_SEGMENT}/school/:slug/classes/:id/timeline`,
+      destination: "/:locale/school/:slug/classes/:id/forum",
+      permanent: true,
+    },
   ];
   const redirects = [
     {
@@ -135,6 +175,7 @@ function createLocalizedRedirects() {
   ];
   return [
     ...rootRedirects,
+    ...retiredPageRedirects,
     ...redirects.flatMap(({ source, destination, permanent }) => {
       const isExternal = destination.startsWith("http");
       return [

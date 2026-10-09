@@ -22,17 +22,10 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpe
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { registerWorkflow } from "@repo/backend/test/workflow";
-import {
-  Array as Arr,
-  Data,
-  DateTime,
-  Effect,
-  MutableRef,
-  Schema,
-} from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Data, DateTime, Effect, MutableRef } from "effect";
 
 const NOW = Date.UTC(2026, 8, 27);
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 class WorkflowUnavailable extends Data.TaggedError("WorkflowUnavailable")<{
   readonly message: string;
 }> {}
@@ -134,7 +127,7 @@ async function readJobs(
 async function expectErased(fixture: Awaited<ReturnType<typeof admit>>) {
   expect(fixture.requests()).toEqual([
     {
-      body: encodeJson({
+      body: encodeJsonText({
         delete_events: true,
         delete_recordings: true,
         distinct_ids: [fixture.userId],

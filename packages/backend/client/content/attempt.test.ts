@@ -19,9 +19,9 @@ import {
 } from "@repo/backend/test/content/proof";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 vi.mock("server-only", () => ({}));
 async function setup(historical = false) {
   const t = createConvexTestWithBetterAuth();

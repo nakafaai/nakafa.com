@@ -1,5 +1,6 @@
 import { generateKeyPairSync } from "node:crypto";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { symmetricEncrypt } from "better-auth/crypto";
 import { Clock, Crypto, Effect, Schema } from "effect";
 
@@ -21,13 +22,13 @@ const LocalJwks = Schema.fromJsonString(
       createdAt: Schema.Finite,
       id: Schema.String,
       privateKey: Schema.fromJsonString(Schema.String),
-      publicKey: Schema.fromJsonString(Schema.Unknown),
+      publicKey: JsonTextSchema,
     }),
   ])
 );
 
 /** A JSON Web Key as JSON text, the form Better Auth encrypts. */
-const encodeJwk = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
+const encodeJwk = Schema.encodeEffect(JsonTextSchema);
 
 /**
  * Creates the one RS256 key the local backend signs session tokens with, as

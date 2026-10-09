@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
 import { createForumSessionStore } from "@/components/school/classes/forum/session/store";
-
-/** Plain JSON codec: the stored text is the same bytes JSON.stringify writes. */
-const plainJson = Schema.fromJsonString(Schema.Unknown);
 
 const forumId = "forum_1" as Id<"schoolClassForums">;
 const otherForumId = "forum_2" as Id<"schoolClassForums">;
@@ -104,7 +101,7 @@ describe("forum/store/session", () => {
   it("drops stale persisted scroll snapshots from older session versions", async () => {
     sessionStorage.setItem(
       "nakafa-forum-session:class-session-test",
-      Schema.encodeSync(plainJson)({
+      encodeJsonText({
         state: {
           conversationScrollSnapshotByForumId: {
             [forumId]: {

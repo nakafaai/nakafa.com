@@ -16,6 +16,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
@@ -96,9 +97,7 @@ const decodeCatalogIdentity = Effect.fn("www.articles.decodeIdentity")(
     };
   }
 );
-const decodeProjectionJson = Schema.decodeUnknownEffect(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const decodeProjectionJson = Schema.decodeUnknownEffect(JsonTextSchema);
 
 /** Strictly decodes one backend-verified article catalog row. */
 const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (

@@ -5,6 +5,7 @@ import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import type { ModelId } from "@repo/backend/confect/gateway/model";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
+import { JsonTextSchema } from "@repo/utilities/json";
 import {
   NoSuchToolError,
   Output,
@@ -63,9 +64,9 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   if (Option.isNone(schema)) {
     return null;
   }
-  const failedArguments = yield* Schema.decodeEffect(
-    Schema.fromJsonString(Schema.Unknown)
-  )(toolCall.input).pipe(Effect.option);
+  const failedArguments = yield* Schema.decodeEffect(JsonTextSchema)(
+    toolCall.input
+  ).pipe(Effect.option);
   const failedArgumentsText = Option.match(failedArguments, {
     onNone: () => toolCall.input,
     onSome: (input) => Schema.encodeSync(prettyJsonCodec)(input),

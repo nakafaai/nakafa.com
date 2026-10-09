@@ -7,14 +7,13 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { Effect, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
 const NOW = Date.UTC(2026, 8, 27, 12);
-/** Encodes a response as the JSON text a client would receive. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const get = Ref.getFunctionReference(refs.public.nina.conversation.get);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
@@ -108,9 +107,9 @@ describe("Nina conversation visibility", () => {
     );
     expect(page.page).toHaveLength(1);
     expect(page.page[0]?.metadata).toEqual(conversation.turn);
-    expect(encodeJson(page)).not.toContain('"role":"teacher"');
-    expect(encodeJson(page)).not.toContain("creditsResetAt");
-    expect(encodeJson(conversation)).not.toContain("fingerprint");
+    expect(encodeJsonText(page)).not.toContain('"role":"teacher"');
+    expect(encodeJsonText(page)).not.toContain("creditsResetAt");
+    expect(encodeJsonText(conversation)).not.toContain("fingerprint");
   });
 
   it("denies anonymous readers of a private chat and follows the newest turn by order", async () => {

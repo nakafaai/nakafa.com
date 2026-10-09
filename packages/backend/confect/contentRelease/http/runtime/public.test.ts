@@ -25,6 +25,7 @@ import {
 } from "@repo/backend/test/content/runtime";
 import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
@@ -40,9 +41,7 @@ const decodePublicRequestJson = Schema.decodeUnknownEffect(publicRequestJson, {
 /** Encodes one valid public request through the contract. */
 const encodePublicRequestJson = Schema.encodeUnknownSync(publicRequestJson);
 /** Encodes a body the contract rejects, keeping its exact invalid wire bytes. */
-const malformedJson = Schema.encodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const malformedJson = Schema.encodeUnknownSync(JsonTextSchema);
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 /** Sends one request through the actual registered Convex HTTP route. */

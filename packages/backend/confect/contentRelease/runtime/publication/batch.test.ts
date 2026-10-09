@@ -24,15 +24,14 @@ import {
 } from "@repo/backend/test/content/runtime";
 import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
+import { JsonTextSchema } from "@repo/utilities/json";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
 const encodeBatchBody = Schema.encodeSync(
   Schema.fromJsonString(PublicContentRuntimeBatchRequestSchema)
 );
-const encodeJsonBody = Schema.encodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const encodeJsonBody = Schema.encodeUnknownSync(JsonTextSchema);
 const decodeBatchBody = Schema.decodeSync(
   Schema.fromJsonString(PublicContentRuntimeBatchResponseSchema)
 );

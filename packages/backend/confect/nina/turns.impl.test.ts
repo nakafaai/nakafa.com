@@ -11,7 +11,8 @@ import {
   seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { Array as Arr, Effect, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -26,7 +27,6 @@ vi.mock("@convex-dev/agent", async (load) => {
 });
 
 const NOW = Date.UTC(2026, 8, 27, 12);
-const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const args = {
@@ -104,7 +104,7 @@ describe("native Nina admission", () => {
       expect.objectContaining({
         distinctId: identity.userId,
         event: "chat message sent",
-        properties: Schema.encodeSync(jsonTextSchema)({
+        properties: encodeJsonText({
           chat_type: "study",
           model_id: "nakafa-lite",
         }),

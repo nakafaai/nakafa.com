@@ -1,6 +1,7 @@
 import "server-only";
 import { type BodyLimitError, readBoundedStream } from "@repo/utilities/body";
 import { FetchClient } from "@repo/utilities/http/client";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { isJsonContentType } from "@repo/utilities/mime";
 import { Effect, Layer, Result, Schema } from "effect";
 import {
@@ -50,9 +51,7 @@ function withPreviewRequestTimeout<A, E, R>(
   );
 }
 /** Parses authenticated JSON without weakening its unknown boundary. */
-const decodePreviewJson = Schema.decodeUnknownEffect(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const decodePreviewJson = Schema.decodeUnknownEffect(JsonTextSchema);
 /** Validates the exact successful JSON response before reading its body. */
 const validateResponse = Effect.fn("NakafaContent.validatePreviewResponse")(
   function* (response: HttpClientResponse.HttpClientResponse, target: URL) {

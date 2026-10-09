@@ -1,3 +1,4 @@
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Clock, Effect, FileSystem, Schema } from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import {
@@ -25,11 +26,10 @@ const decodeGoogleServiceAccount = Schema.decodeUnknownEffect(
 const decodeGoogleTokenResponse = Schema.decodeUnknownEffect(
   Schema.fromJsonString(GoogleTokenResponseSchema)
 );
-const CompactJsonSchema = Schema.fromJsonString(Schema.Unknown);
 /** Encodes one JWT header or payload as compact JSON for the signed assertion. */
 const encodeAssertionSegment = Effect.fn("scripts.google.auth.encodeSegment")(
   function* (segment: unknown) {
-    return yield* Schema.encodeEffect(CompactJsonSchema)(segment).pipe(
+    return yield* Schema.encodeEffect(JsonTextSchema)(segment).pipe(
       Effect.orDie
     );
   }

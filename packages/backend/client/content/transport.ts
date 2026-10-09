@@ -1,7 +1,4 @@
-import {
-  type ContentHttpTarget,
-  JsonTextSchema,
-} from "@repo/backend/client/content/endpoint";
+import type { ContentHttpTarget } from "@repo/backend/client/content/endpoint";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {
   createNetworkRequestError,
@@ -16,6 +13,7 @@ import {
 } from "@repo/backend/content/endpoint";
 import { parseContentLength, readBoundedStream } from "@repo/utilities/body";
 import { FetchClient } from "@repo/utilities/http/client";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { isJsonContentType } from "@repo/utilities/mime";
 import {
   Clock,

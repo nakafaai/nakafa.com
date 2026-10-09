@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import type { readSelectedPublicRuntime } from "@repo/backend/content/publication/public";
 import type { PublicRuntimeRow } from "@repo/backend/content/publication/spec";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 export class PublicRuntimeReadError extends Schema.TaggedError<PublicRuntimeReadError>()(
   "PublicRuntimeReadError",
@@ -67,7 +68,6 @@ export const decodePublicRuntimeRow = Effect.fn(
   return response;
 });
 
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Binds one public body to the route model read in the same query transaction. */
 export const encodePublicDelivery = Effect.fn(
   "contentRelease.encodePublicDelivery"
@@ -89,5 +89,5 @@ export const encodePublicDelivery = Effect.fn(
       "The public body and route model do not share one publication."
     );
   }
-  return runtime === null ? null : encodeJson(runtime.response);
+  return runtime === null ? null : encodeJsonText(runtime.response);
 });

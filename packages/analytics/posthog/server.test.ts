@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const postHogMocks = vi.hoisted(() => ({
@@ -110,9 +111,9 @@ describe("PostHog server reporting", () => {
         properties
       );
       expect(postHogMocks.captureExceptionImmediate).toHaveBeenCalledTimes(3);
-      const encodedCalls = yield* Schema.encodeUnknownEffect(
-        Schema.fromJsonString(Schema.Unknown)
-      )(postHogMocks.captureExceptionImmediate.mock.calls);
+      const encodedCalls = yield* Schema.encodeUnknownEffect(JsonTextSchema)(
+        postHogMocks.captureExceptionImmediate.mock.calls
+      );
       expect(encodedCalls).not.toContain("user@example.com");
       expect(encodedCalls).not.toContain("object secret");
     })

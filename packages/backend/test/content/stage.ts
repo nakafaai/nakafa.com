@@ -16,10 +16,9 @@ import {
   testRendererJson,
   testStoredReachability,
 } from "@repo/backend/test/content/release";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const StagedReleaseOptionsSchema = Schema.Struct({
   activeAppLocales: Schema.optionalKey(Schema.Array(ActiveAppLocaleCodeSchema)),
   baseFamilies: Schema.optionalKey(Schema.Array(ContentFamilySchema)),
@@ -67,7 +66,7 @@ export async function insertSignedCandidate(
     checkedItems: 0,
     createdAt: now,
     releaseId,
-    releaseJson: encodeJson(release),
+    releaseJson: encodeJsonText(release),
     rendererJson,
     resultFamilies: [...release.manifest.scope.families],
     role: "candidate",

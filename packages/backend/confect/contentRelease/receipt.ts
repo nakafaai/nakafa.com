@@ -6,10 +6,8 @@ import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot/spec
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { decodeReceiptJson } from "@repo/backend/confect/contentRelease/parse";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Array as Arr, Effect, Schema } from "effect";
-
-/** Encodes a value to the same text as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Effect } from "effect";
 
 /** Checks that every staged counter is an exact nonnegative integer. */
 function hasStageCounters(release: PublicationRow<"contentReleases">) {
@@ -201,7 +199,7 @@ export const completedReceipt = Effect.fn("contentRelease.completedReceipt")(
       );
     }
     const stored = yield* decodeReceiptJson(release.receiptJson);
-    if (encodeJson(stored) !== encodeJson(expected)) {
+    if (encodeJsonText(stored) !== encodeJsonText(expected)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Completed release ${release.releaseId} has mismatched receipt evidence.`

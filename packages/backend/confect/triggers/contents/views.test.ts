@@ -13,10 +13,10 @@ import {
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
-import { Effect, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 describe("triggers/contents/views", () => {
   beforeEach(() => {
     vi.useFakeTimers({
@@ -80,7 +80,7 @@ describe("triggers/contents/views", () => {
               expect.objectContaining({
                 distinctId: identity.userId,
                 event: "content viewed",
-                properties: encodeJson({
+                properties: encodeJsonText({
                   alignment_id: projection.graph.alignmentId,
                   concept_id: projection.graph.conceptId,
                   content_id: projection.graph.assetId,

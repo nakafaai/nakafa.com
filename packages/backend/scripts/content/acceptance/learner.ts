@@ -10,6 +10,7 @@ import {
   localConvexEnvironment,
   makeConvexTemporaryRoot,
 } from "@repo/backend/scripts/content/acceptance/process";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Clock, Crypto, Effect, FileSystem, Schema } from "effect";
 import { Base64Url, Hex } from "effect/encoding";
 
@@ -25,9 +26,7 @@ const SessionCookie = Schema.fromJsonString(
   Schema.Struct({ name: Schema.String, value: Schema.String })
 );
 /** One Convex function's arguments as the CLI takes them, JSON text. */
-const encodeArguments = Schema.encodeEffect(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 
 /** Runs one Convex CLI command against the running local backend. */
 const runLocalConvex = Effect.fn("contentAcceptance.runLocalConvex")(function* (
