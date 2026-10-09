@@ -9,23 +9,32 @@ import {
   MutableHashMap,
   MutableHashSet,
   MutableList,
+  Option,
   Path,
 } from "effect";
 import { TestClock } from "effect/testing";
 import { indexingFiles } from "@/scripts/indexing/paths";
 
+/** The folder that holds a path: the text before its last slash. */
+const folderOf = (path: string) => path.slice(0, path.lastIndexOf("/"));
+
 /**
  * A file system held in memory for one indexing test, seeded with `seeded`
  * entries and merged with the real path service. Each write is logged in
- * `events`, in the order the module makes it. A read of a file that was never
- * written is a defect of the test, so it dies instead of answering.
+ * `events`, in the order the module makes it. A folder exists once
+ * `makeDirectory` creates it or a seeded entry lies in it, and a write succeeds
+ * only when the folder of its path exists. A read of a file that was never
+ * written, and a write into a folder that was never created, are defects of
+ * the module under test, so they die instead of answering.
  */
 export function memoryFiles(
   events: MutableList.MutableList<string>,
   seeded: readonly (readonly [string, string])[]
 ) {
   const files = MutableHashMap.fromIterable(seeded);
-  const directories = MutableHashSet.empty<string>();
+  const directories = MutableHashSet.fromIterable(
+    Arr.map(seeded, ([path]) => folderOf(path))
+  );
   const layer = FileSystem.layerNoop({
     exists: (path) =>
       Effect.sync(
@@ -40,10 +49,19 @@ export function memoryFiles(
     readFileString: (path) =>
       Effect.orDie(Effect.fromOption(MutableHashMap.get(files, path))),
     writeFileString: (path, text) =>
-      Effect.sync(() => {
-        MutableHashMap.set(files, path, text);
-        MutableList.append(events, `write ${path}`);
-      }),
+      Effect.fromOption(
+        Option.liftPredicate(folderOf(path), (folder) =>
+          MutableHashSet.has(directories, folder)
+        )
+      ).pipe(
+        Effect.orDie,
+        Effect.andThen(
+          Effect.sync(() => {
+            MutableHashMap.set(files, path, text);
+            MutableList.append(events, `write ${path}`);
+          })
+        )
+      ),
   });
   return {
     directories,
