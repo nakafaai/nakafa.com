@@ -10,7 +10,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { createWebhookTestConvex } from "@repo/backend/test/polar";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Schema } from "effect";
+import { DateTime, Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 const SubscriptionInputSchema = Schema.Struct({
@@ -62,7 +62,7 @@ function buildSubscription({
   status,
   subscriptionId,
 }: SubscriptionInput) {
-  const timestamp = new Date(NOW).toISOString();
+  const timestamp = DateTime.formatIso(DateTime.makeUnsafe(NOW));
   return {
     id: subscriptionId,
     customerId,

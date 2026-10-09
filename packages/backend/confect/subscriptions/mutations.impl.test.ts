@@ -10,6 +10,7 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
+import { DateTime } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 
@@ -25,7 +26,7 @@ function buildSubscription({
   productId,
   status,
 }: SubscriptionInput): SubscriptionRecord {
-  const timestamp = new Date(NOW).toISOString();
+  const timestamp = DateTime.formatIso(DateTime.makeUnsafe(NOW));
 
   return {
     id,
