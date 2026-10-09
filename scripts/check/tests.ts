@@ -25,7 +25,7 @@ import { inspectGatewaySource } from "#scripts/check/gateway";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
-import { inspectSharedFiles } from "#scripts/check/shared";
+import { inspectCohortPins, inspectSharedFiles } from "#scripts/check/shared";
 import { inspectModuleSize } from "#scripts/check/size";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
@@ -148,6 +148,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     const pluginRules = yield* pluginRuleNames(root);
     const ownerRules = yield* ownerBlock(root, owner);
     const sharedViolations = yield* inspectSharedFiles(root, owner);
+    const cohortViolations = yield* inspectCohortPins(root, owner);
     const projectConfigs = Arr.map(
       Arr.filter(configs, ({ file }) => isProjectConfig(file)),
       ({ file }) => file
@@ -182,6 +183,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
           )
         ),
         lineReport(sharedViolations),
+        lineReport(cohortViolations),
         lineReport(
           Arr.flatMap(sources, ({ file, sourceText }) =>
             inspectTailwindSource(file, sourceText)

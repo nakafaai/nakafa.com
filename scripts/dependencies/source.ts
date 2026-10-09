@@ -58,30 +58,30 @@ function readError(message: string, cause: unknown) {
 /** Parses manifest text into a value whose shape PackageManifest narrows next. */
 const ManifestJson = Schema.fromJsonString(Schema.Unknown);
 
-const readPackageManifest = Effect.fn("RepositoryPolicy.readPackageManifest")(
-  function* (manifestPath: string) {
-    const fileSystem = yield* FileSystem.FileSystem;
-    const source = yield* fileSystem
-      .readFileString(manifestPath)
-      .pipe(
-        Effect.mapError((cause) =>
-          readError(`Unable to read ${manifestPath}.`, cause)
-        )
-      );
-    const input = yield* Schema.decodeEffect(ManifestJson)(source).pipe(
+export const readPackageManifest = Effect.fn(
+  "RepositoryPolicy.readPackageManifest"
+)(function* (manifestPath: string) {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const source = yield* fileSystem
+    .readFileString(manifestPath)
+    .pipe(
       Effect.mapError((cause) =>
-        readError(`${manifestPath} does not contain valid JSON.`, cause)
+        readError(`Unable to read ${manifestPath}.`, cause)
       )
     );
-    return yield* Schema.decodeUnknownEffect(PackageManifest)(input).pipe(
-      Effect.mapError((cause) =>
-        readError(`${manifestPath} has an invalid package manifest.`, cause)
-      )
-    );
-  }
-);
+  const input = yield* Schema.decodeEffect(ManifestJson)(source).pipe(
+    Effect.mapError((cause) =>
+      readError(`${manifestPath} does not contain valid JSON.`, cause)
+    )
+  );
+  return yield* Schema.decodeUnknownEffect(PackageManifest)(input).pipe(
+    Effect.mapError((cause) =>
+      readError(`${manifestPath} has an invalid package manifest.`, cause)
+    )
+  );
+});
 
-const readWorkspaceManifest = Effect.fn(
+export const readWorkspaceManifest = Effect.fn(
   "RepositoryPolicy.readWorkspaceManifest"
 )(function* (workspacePath: string) {
   const fileSystem = yield* FileSystem.FileSystem;

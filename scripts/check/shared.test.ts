@@ -1,7 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Path, Record as Rec } from "effect";
-import { inspectSharedFiles } from "#scripts/check/shared";
+import { inspectCohortPins, inspectSharedFiles } from "#scripts/check/shared";
 
 const OSV = "scripts/osv";
 const VERIFY = "scripts/provenance/verify.ts";
@@ -134,6 +134,147 @@ describe("shared file policy", () => {
             "SharedFileError",
             "scripts/osv cannot be read in this repository, so it cannot be compared with the owner's copy.",
           ]
+        );
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+});
+
+const PINS =
+  '{"devDependencies":{"@effect/tsgo":"0.51.1","effect":"catalog:"}}\n';
+const CATALOG = "catalog:\n  effect: 4.0.2\n";
+const CATALOG_OLD = "catalog:\n  effect: 4.0.1\n";
+const NO_CATALOG = "packages:\n  - apps/*\n";
+const PIN_FINDING =
+  "effect is pinned at 4.0.1 here and at 4.0.2 in the repository that owns this check: set this pin to 4.0.2, and move the Effect cohort in the owner first.";
+
+describe("Effect cohort pins", () => {
+  it.effect(
+    "accepts pins that equal the owner's, through catalog references",
+    () =>
+      Effect.gen(function* () {
+        const { owner, root } = yield* repositories("pins-equal");
+        yield* writeFiles(root, {
+          "package.json": PINS,
+          "pnpm-workspace.yaml": CATALOG,
+        });
+        yield* writeFiles(owner, {
+          "package.json": PINS,
+          "pnpm-workspace.yaml": CATALOG,
+        });
+
+        assert.deepStrictEqual(yield* inspectCohortPins(root, owner), []);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("reports a literal pin that differs from the owner's pin", () =>
+    Effect.gen(function* () {
+      const { owner, root } = yield* repositories("pins-divergent");
+      yield* writeFiles(root, {
+        "package.json": '{"devDependencies":{"effect":"4.0.1"}}\n',
+        "pnpm-workspace.yaml": NO_CATALOG,
+      });
+      yield* writeFiles(owner, {
+        "package.json": '{"devDependencies":{"effect":"catalog:"}}\n',
+        "pnpm-workspace.yaml": CATALOG,
+      });
+
+      assert.deepStrictEqual(yield* inspectCohortPins(root, owner), [
+        PIN_FINDING,
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("compares a catalog entry that no manifest names", () =>
+    Effect.gen(function* () {
+      const { owner, root } = yield* repositories("pins-catalog-only");
+      yield* writeFiles(root, {
+        "package.json": '{"dependencies":{}}\n',
+        "pnpm-workspace.yaml": CATALOG_OLD,
+      });
+      yield* writeFiles(owner, {
+        "package.json": '{"dependencies":{"effect":"4.0.2"}}\n',
+        "pnpm-workspace.yaml": NO_CATALOG,
+      });
+
+      assert.deepStrictEqual(yield* inspectCohortPins(root, owner), [
+        PIN_FINDING,
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "ignores names outside the cohort and names only one repository pins",
+    () =>
+      Effect.gen(function* () {
+        const { owner, root } = yield* repositories("pins-one-side");
+        yield* writeFiles(root, {
+          "package.json":
+            '{"dependencies":{"react":"19.2.8"},"devDependencies":{"@effect/tsgo":"0.51.1"}}\n',
+          "pnpm-workspace.yaml": NO_CATALOG,
+        });
+        yield* writeFiles(owner, {
+          "package.json": '{"dependencies":{"react":"19.2.9"}}\n',
+          "pnpm-workspace.yaml": NO_CATALOG,
+        });
+
+        assert.deepStrictEqual(yield* inspectCohortPins(root, owner), []);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("pins nothing through a named catalog reference", () =>
+    Effect.gen(function* () {
+      const { owner, root } = yield* repositories("pins-named");
+      yield* writeFiles(root, {
+        "package.json": '{"devDependencies":{"effect":"catalog:react"}}\n',
+        "pnpm-workspace.yaml": CATALOG_OLD,
+      });
+      yield* writeFiles(owner, {
+        "package.json": '{"devDependencies":{"effect":"4.0.2"}}\n',
+        "pnpm-workspace.yaml": NO_CATALOG,
+      });
+
+      assert.deepStrictEqual(yield* inspectCohortPins(root, owner), []);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "compares nothing for the owner itself or a repository without a manifest",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const { owner, root } = yield* repositories("pins-skip");
+        const bare = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "shared-pins-bare-",
+        });
+        yield* writeFiles(root, {
+          "package.json": PINS,
+          "pnpm-workspace.yaml": NO_CATALOG,
+        });
+        yield* writeFiles(owner, {
+          "package.json": PINS,
+          "pnpm-workspace.yaml": CATALOG,
+        });
+
+        assert.deepStrictEqual(yield* inspectCohortPins(root, root), []);
+        assert.deepStrictEqual(yield* inspectCohortPins(bare, owner), []);
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "fails with a typed error when the owner's workspace manifest is missing",
+    () =>
+      Effect.gen(function* () {
+        const { owner, root } = yield* repositories("pins-missing");
+        yield* writeFiles(root, {
+          "package.json": PINS,
+          "pnpm-workspace.yaml": CATALOG,
+        });
+        yield* writeFiles(owner, { "package.json": PINS });
+
+        const failure = yield* inspectCohortPins(root, owner).pipe(Effect.flip);
+        assert.deepStrictEqual(
+          [failure._tag, failure.message.slice(-"pnpm-workspace.yaml.".length)],
+          ["DependencyPolicyReadError", "pnpm-workspace.yaml."]
         );
       }).pipe(Effect.provide(NodeServices.layer))
   );
