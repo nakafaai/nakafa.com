@@ -19,3 +19,6 @@ export const CONTENT_RUNTIME_RESPONSE_HEADER = "x-nakafa-runtime-response";
 
 /** Current private runtime response marker. */
 export const CONTENT_RUNTIME_RESPONSE_MARKER = "1";
+
+/** Request header that carries the content runtime token to the private runtime routes. */
+export const CONTENT_TOKEN_HEADER = "x-nakafa-content-token";
