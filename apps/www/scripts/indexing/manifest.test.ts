@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, MutableList } from "effect";
 
 const sitemapMocks = vi.hoisted(() => ({
@@ -14,8 +14,9 @@ vi.mock("@/lib/sitemap/catalog", () => ({
   readSitemapPageDescriptors: sitemapMocks.readSitemapPageDescriptors,
 }));
 
-afterEach(() => {
-  vi.clearAllMocks();
+beforeEach(() => {
+  sitemapMocks.getSitemapEntries.mockReset();
+  sitemapMocks.readSitemapPageDescriptors.mockReset();
 });
 
 describe("forEachSiteIndexUrlBatch", () => {
@@ -43,6 +44,7 @@ describe("forEachSiteIndexUrlBatch", () => {
         (batch) =>
           Effect.sync(() => {
             MutableList.append(batches, [...batch.urls]);
+            return false;
           }),
         { batchSize: 2 }
       );
@@ -69,7 +71,7 @@ describe("forEachSiteIndexUrlBatch", () => {
         const { forEachSiteIndexUrlBatch } = yield* Effect.promise(
           () => import("@/scripts/indexing/manifest")
         );
-        const processBatch = vi.fn(() => Effect.void);
+        const processBatch = vi.fn(() => Effect.succeed(false));
 
         const summary = yield* forEachSiteIndexUrlBatch(processBatch);
 
@@ -78,6 +80,48 @@ describe("forEachSiteIndexUrlBatch", () => {
           canonicalUrlCount: 0,
         });
         expect(processBatch).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "ends the pass after the batch that asks to stop, and counts only the batches read",
+    () =>
+      Effect.gen(function* () {
+        sitemapMocks.readSitemapPageDescriptors.mockReturnValue(
+          Effect.succeed([{ id: "public_id_0" }, { id: "public_en_0" }])
+        );
+        sitemapMocks.getSitemapEntries
+          .mockReturnValueOnce(
+            Effect.succeed([
+              { url: "https://nakafa.com/id/home" },
+              { url: "https://nakafa.com/id/search" },
+            ])
+          )
+          .mockReturnValueOnce(
+            Effect.succeed([{ url: "https://nakafa.com/en/home" }])
+          );
+        const { forEachSiteIndexUrlBatch } = yield* Effect.promise(
+          () => import("@/scripts/indexing/manifest")
+        );
+        const batches = MutableList.make<string[]>();
+
+        const summary = yield* forEachSiteIndexUrlBatch(
+          (batch) =>
+            Effect.sync(() => {
+              MutableList.append(batches, [...batch.urls]);
+              return true;
+            }),
+          { batchSize: 2 }
+        );
+
+        expect(summary).toEqual({
+          batchCount: 1,
+          canonicalUrlCount: 2,
+        });
+        expect(MutableList.toArray(batches)).toEqual([
+          ["https://nakafa.com/id/home", "https://nakafa.com/id/search"],
+        ]);
+        expect(sitemapMocks.getSitemapEntries).toHaveBeenCalledOnce();
       })
   );
 });

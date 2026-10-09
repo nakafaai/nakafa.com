@@ -48,6 +48,8 @@ export const runIndexNow = Effect.fn("scripts.indexing.indexNow.run")(
           history,
           urls: batch.urls,
         });
+        // IndexNow has no stop path, so the pass always reads the next batch.
+        return false;
       })
     );
 
@@ -125,12 +127,14 @@ const runBingSubmission = Effect.fn("scripts.indexing.indexNow.runBing")(
     let latestHistory = history;
     const summary = yield* forEachSiteIndexUrlBatch((batch) =>
       Effect.gen(function* () {
-        latestHistory = yield* submitBingBatch({
+        const outcome = yield* submitBingBatch({
           apiKey,
           batchIndex: batch.batchIndex,
           history: latestHistory,
           urls: batch.urls,
         });
+        latestHistory = outcome.history;
+        return outcome.stopped;
       })
     );
 
@@ -138,7 +142,10 @@ const runBingSubmission = Effect.fn("scripts.indexing.indexNow.runBing")(
   }
 );
 
-/** Submits one sitemap URL batch to Bing and returns updated local history. */
+/**
+ * Submits one sitemap URL batch to Bing. Returns the updated local history and
+ * whether Bing's quota stopped the submission, which ends the Bing pass.
+ */
 const submitBingBatch = Effect.fn("scripts.indexing.indexNow.runBingBatch")(
   function* ({
     apiKey,
@@ -168,20 +175,22 @@ const submitBingBatch = Effect.fn("scripts.indexing.indexNow.runBingBatch")(
       yield* Effect.logInfo(
         "No new URLs to submit to Bing. All canonical URLs have been previously submitted."
       );
-      return history;
+      return { history, stopped: false };
     }
 
-    const { failure, submittedUrls } = yield* submitUrlsToBing(
+    const { failure, stopped, submittedUrls } = yield* submitUrlsToBing(
       unsubmittedUrls,
       apiKey
     );
 
-    return yield* saveAcceptedUrls({
+    const updatedHistory = yield* saveAcceptedUrls({
       failure,
       history,
       service: "bing",
       submittedUrls,
     });
+
+    return { history: updatedHistory, stopped };
   }
 );
 
