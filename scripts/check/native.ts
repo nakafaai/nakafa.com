@@ -12,6 +12,7 @@ import {
   isImportDeclaration,
   isImportEqualsDeclaration,
   isNamedImports,
+  isNewExpression,
   isObjectLiteralExpression,
   isPropertyAccessExpression,
   isStringLiteral,
@@ -204,6 +205,20 @@ function workflowHandlers(sourceFile: SourceFile, nodes: readonly Node[]) {
   });
 }
 
+/**
+ * Returns the candidate for `new Promise(...)`, which counts while `Promise`
+ * binds to the platform global, so a class or a binding named Promise does not.
+ */
+function newPromiseCandidates(sourceFile: SourceFile, node: Node) {
+  if (!isNewExpression(node)) {
+    return [];
+  }
+  const callee = unwrapped(node.expression);
+  return isIdentifier(callee) && callee.text === "Promise"
+    ? [candidate("new-promise", sourceFile, node, callee)]
+    : [];
+}
+
 /** Returns the native Promise, module, and failure syntax at one node. */
 function syntaxCandidates(
   sourceFile: SourceFile,
@@ -219,16 +234,17 @@ function syntaxCandidates(
   if (isTryStatement(node) && node.catchClause !== undefined) {
     return [candidate("try-catch", sourceFile, node)];
   }
-  return isTypeofObjectComparison(node)
-    ? [candidate("typeof-object", sourceFile, node)]
-    : [];
+  if (isTypeofObjectComparison(node)) {
+    return [candidate("typeof-object", sourceFile, node)];
+  }
+  return newPromiseCandidates(sourceFile, node);
 }
 
 /**
  * Returns the native syntax among one module's value-position `nodes` that
- * Effect replaces: Promise syntax outside Confect workflow handlers, Node module
- * imports, raw failure handling, and hand-rolled narrowing. Array methods are
- * judged by the typed pass in `arrays.ts`.
+ * Effect replaces: Promise syntax outside Confect workflow handlers, `new Promise`,
+ * Node module imports, raw failure handling, and hand-rolled narrowing. Array
+ * methods are judged by the typed pass in `arrays.ts`.
  */
 export function nativeCandidates(
   sourceFile: SourceFile,

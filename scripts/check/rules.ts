@@ -23,6 +23,7 @@ export const Rule = Schema.Literals([
   "fetch",
   "json",
   "map-set",
+  "new-promise",
   "node-module",
   "object-helper",
   "promise",
@@ -38,8 +39,10 @@ export const Rule = Schema.Literals([
  * The authored modules a rule inspects: every module (`every`); code outside
  * framework configuration (`code`); code outside framework configuration and
  * React modules, tests included (`logic`); the domain code of the strict
- * Confect and script folders, tests excluded (`domain`); and product code,
- * which is outside framework configuration, React modules, and tests (`product`).
+ * Confect and script folders, tests excluded (`domain`); product code, which is
+ * outside framework configuration, React modules, and tests (`product`); and
+ * source code, which is outside framework configuration and tests, React modules
+ * included (`source`).
  */
 const RuleScope = Schema.Literals([
   "every",
@@ -47,6 +50,7 @@ const RuleScope = Schema.Literals([
   "logic",
   "domain",
   "product",
+  "source",
 ]);
 
 /** One rule's scope and the Effect-native replacement it names. */
@@ -131,9 +135,14 @@ export const RULES = {
       "use Record.keys, Record.values, Record.toEntries, or Record.fromEntries from effect instead of the Object helper.",
     scope: "code",
   },
+  "new-promise": {
+    message:
+      "build the value with Effect.callback, Effect.promise, or a Deferred from effect, and run it at the framework boundary, instead of new Promise.",
+    scope: "source",
+  },
   promise: {
     message:
-      "compose Effects with Effect.fn, wrapping a Promise SDK once in Effect.tryPromise, instead of new Promise, async functions, or await.",
+      "compose Effects with Effect.fn, wrapping a Promise SDK once in Effect.tryPromise, instead of async functions or await.",
     scope: "domain",
   },
   random: {
@@ -195,6 +204,10 @@ export function covers(
           isReactModule(file, sourceFile) ||
           TEST_PATTERN.test(file)
         )
+    ),
+    Match.when(
+      "source",
+      () => !(isConfiguration(file, sourceFile) || TEST_PATTERN.test(file))
     ),
     Match.exhaustive
   );

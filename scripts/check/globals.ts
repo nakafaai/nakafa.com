@@ -35,7 +35,6 @@ type RuleId = typeof Rule.Type;
 const CONSTRUCTED: Readonly<Record<string, RuleId>> = {
   Date: "clock",
   Map: "map-set",
-  Promise: "promise",
   Set: "map-set",
 };
 
