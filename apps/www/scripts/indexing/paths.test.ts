@@ -6,7 +6,7 @@ import { indexingFiles } from "@/scripts/indexing/paths";
 
 describe("indexingFiles", () => {
   it.effect(
-    "places the key, the state folder, and the history file under the scripts folder, where git ignores them",
+    "places the key, the state folder, and the history file under the scripts folder",
     () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;

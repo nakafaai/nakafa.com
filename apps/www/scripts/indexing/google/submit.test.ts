@@ -169,7 +169,7 @@ describe("submitUrlsToGoogle", () => {
   );
 
   it.effect(
-    "returns to a 1 s wait after an accepted URL, so the wait after a 500 ends at 1 s",
+    "waits 2 s after a 500, then returns to a 1 s wait after an accepted URL",
     () =>
       Effect.gen(function* () {
         fetcher
