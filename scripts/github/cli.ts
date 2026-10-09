@@ -195,9 +195,7 @@ const trustedPublishProblems = Effect.fn("GithubCli.trustedPublishProblems")(
       Arr.map(executableSource),
       Arr.join("\n")
     );
-    const json = yield* Schema.encodeEffect(WorkflowJobJson)(publish).pipe(
-      Effect.orDie
-    );
+    const json = yield* Schema.encodeEffect(WorkflowJobJson)(publish);
     const sha256 = yield* sha256Hex(json);
     return Arr.flatten([
       problemWhen(
@@ -222,19 +220,19 @@ const trustedPublishProblems = Effect.fn("GithubCli.trustedPublishProblems")(
         "CLI publication must not checkout repository code."
       ),
     ]);
-  }
+  },
+  Effect.orDie
 );
 
 const trustedVerifyProblems = Effect.fn("GithubCli.trustedVerifyProblems")(
   function* (verify: WorkflowJob) {
-    const json = yield* Schema.encodeEffect(WorkflowJobJson)(verify).pipe(
-      Effect.orDie
-    );
+    const json = yield* Schema.encodeEffect(WorkflowJobJson)(verify);
     const sha256 = yield* sha256Hex(json);
     return sha256 === TRUSTED_VERIFY_SHA256
       ? []
       : ["CLI verification must match the exact trusted job."];
-  }
+  },
+  Effect.orDie
 );
 
 /** Reports a publication or verification job that leaves the repository runtime. */

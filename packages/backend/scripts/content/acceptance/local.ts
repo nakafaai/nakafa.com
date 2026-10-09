@@ -20,10 +20,10 @@ import {
   LocalSigningIdentitySchema,
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
+import { sha256Hex } from "@repo/utilities/digest";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
-  Crypto,
   Effect,
   FileSystem,
   Option,
@@ -31,7 +31,6 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
-import { Hex } from "effect/encoding";
 
 const LoopbackUrl = Schema.String.check(
   Schema.isPattern(/^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/),
@@ -53,17 +52,6 @@ const RuntimeManifest = Schema.Struct({
   site: LoopbackUrl,
 });
 export type LocalRuntime = typeof RuntimeManifest.Type;
-/** Hashes text with SHA-256 through Effect's `Crypto` and returns the hex digest. */
-const sha256Hex = Effect.fn("ContentAcceptance.sha256Hex")(function* (
-  text: string
-) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest(
-    "SHA-256",
-    new TextEncoder().encode(text)
-  );
-  return Hex.encode(digest);
-});
 const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
 
 /**

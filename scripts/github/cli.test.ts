@@ -345,10 +345,7 @@ describe("CLI workflow policy", () => {
       const source = "permissions: {}\njobs:\n  build:\n    steps: []\n";
       const problem =
         "CLI workflow requires separate build, publish, and verify jobs.";
-      const failure = yield* verifyCliWorkflow(source).pipe(
-        Effect.catchTag("PlatformError", Effect.die),
-        Effect.flip
-      );
+      const failure = yield* verifyCliWorkflow(source).pipe(Effect.flip);
 
       assert.deepStrictEqual(yield* validateCliWorkflow(source), [problem]);
       assert.strictEqual(failure._tag, "CliWorkflowPolicyError");
