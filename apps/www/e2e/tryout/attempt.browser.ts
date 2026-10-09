@@ -136,7 +136,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   yield* Effect.sync(() => {
     expect(reloaded.headinglessFrames).toBe(0);
     expect(reloaded.shells).toBe(1);
-    expect(reloaded.layoutShift).toBe(0);
+    expect(reloaded.layoutShifts).toEqual([]);
     expect(reloaded.locks).toEqual([true]);
     expect(reloaded.marked).toBe(false);
   });
@@ -215,7 +215,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     expect(new URL(page.url()).search).toBe("");
     expect(direct.headinglessFrames).toBe(0);
     expect(direct.shells).toBe(1);
-    expect(direct.layoutShift).toBe(0);
+    expect(direct.layoutShifts).toEqual([]);
     expect(direct.marked).toBe(false);
     // Locked from the first painted frame, or after the catalog view once.
     expect([[true], [false, true]]).toContainEqual(direct.locks);
