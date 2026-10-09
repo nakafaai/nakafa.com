@@ -20,7 +20,10 @@ import {
 } from "@/lib/content/page/published";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readPagePreviewStaticParams } from "@/lib/content/preview/route";
-import { getActiveLocaleOrThrow } from "@/lib/i18n/params";
+import {
+  getActiveLocaleOrThrow,
+  type LocaleRouteParams,
+} from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 
 type PublicPageProps = PageProps<"/[locale]/[...page]">;
@@ -70,7 +73,7 @@ async function readPublishedPageMetadata(input: CurrentPublishedPageInput) {
 export async function generateStaticParams({
   params,
 }: {
-  params: { locale: string };
+  params: LocaleRouteParams;
 }) {
   const locale = getActiveLocaleOrThrow(params.locale);
   if (hasPreviewConfig()) {
