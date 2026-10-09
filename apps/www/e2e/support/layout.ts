@@ -29,13 +29,15 @@ export function recordLayoutShifts(key: string) {
   new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       if ("value" in entry && typeof entry.value === "number") {
-        const sources: unknown[] = Array.from(
-          Reflect.get(entry, "sources") ?? []
-        );
+        const sources = Array.from<{
+          currentRect: unknown;
+          node: unknown;
+          previousRect: unknown;
+        }>(Reflect.get(entry, "sources") ?? []);
         shifts.push({
           sources: sources.map(
             (source) =>
-              `${name(Reflect.get(Object(source), "node"))}: ${box(Reflect.get(Object(source), "previousRect"))} to ${box(Reflect.get(Object(source), "currentRect"))}`
+              `${name(source.node)}: ${box(source.previousRect)} to ${box(source.currentRect)}`
           ),
           time: entry.startTime,
           value: entry.value,
