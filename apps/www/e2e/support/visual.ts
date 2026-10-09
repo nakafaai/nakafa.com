@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { Array as Arr, Duration, Effect } from "effect";
+import { Array as Arr, Duration, Effect, Option } from "effect";
 import { waitForStableCanvas } from "@/e2e/support/canvas";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { scrollToElement } from "@/e2e/support/input";
@@ -269,14 +269,17 @@ function settleLayoutShift(
       let attempt = 0;
       attempt < SETTLE_ATTEMPTS &&
       (readings.length < SETTLED_READINGS ||
-        readings.at(-1) !== readings.at(-SETTLED_READINGS));
+        Option.getOrUndefined(Arr.last(readings)) !==
+          Option.getOrUndefined(
+            Arr.get(readings, readings.length - SETTLED_READINGS)
+          ));
       attempt += 1
     ) {
       yield* Effect.sleep(Duration.millis(500));
       const reading = yield* read(page);
       readings = Arr.takeRight(Arr.append(readings, reading), SETTLED_READINGS);
     }
-    return readings.at(-1) ?? 0;
+    return Option.getOrElse(Arr.last(readings), () => 0);
   });
 }
 

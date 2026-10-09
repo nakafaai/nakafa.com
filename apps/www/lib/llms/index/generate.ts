@@ -241,7 +241,7 @@ function parsePageIndex(prefixParts: readonly string[]) {
     return null;
   }
 
-  const pageSegment = Arr.join(prefixParts.slice(2), "");
+  const pageSegment = Arr.join(Arr.drop(prefixParts, 2), "");
   const page = Number(pageSegment);
   if (!Number.isSafeInteger(page) || page < 0 || String(page) !== pageSegment) {
     return null;

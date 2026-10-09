@@ -1,5 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { HashMap, Schema } from "effect";
+import { Array as Arr, HashMap, Option, Schema } from "effect";
 import { CONVERSATION_EDGE_TOLERANCE } from "@/components/school/classes/forum/conversation/data/scroll/metrics";
 import {
   type ActiveTranscriptModel,
@@ -209,7 +209,7 @@ export function pushViewportBackView(
   backStack: readonly ConversationView[],
   view: ConversationView
 ) {
-  const current = backStack.at(-1);
+  const current = Option.getOrUndefined(Arr.last(backStack));
 
   if (areConversationViewsEqual(current, view)) {
     return [...backStack];

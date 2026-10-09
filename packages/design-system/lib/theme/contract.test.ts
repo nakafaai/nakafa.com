@@ -206,14 +206,14 @@ describe("theme profile contract", () => {
           node.type === "decl" ? [node.prop] : []
         );
         const coreProperties = Arr.filter(properties, (property) =>
-          REQUIRED_THEME_TOKENS.includes(property)
+          Arr.contains(REQUIRED_THEME_TOKENS, property)
         );
         const unexpectedProperties = Arr.filter(
           properties,
           (property) =>
             !(
-              REQUIRED_THEME_TOKENS.includes(property) ||
-              THEME_METADATA_PROPERTIES.includes(property)
+              Arr.contains(REQUIRED_THEME_TOKENS, property) ||
+              Arr.contains(THEME_METADATA_PROPERTIES, property)
             )
         );
 

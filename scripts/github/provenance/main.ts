@@ -1,4 +1,4 @@
-import { Effect, FileSystem, Schema } from "effect";
+import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 import { runEntry } from "#scripts/entry";
 import { SigstoreProvenanceBundleVerifierLive } from "#scripts/github/provenance/bundle";
 import {
@@ -61,7 +61,7 @@ export const verifyProvenanceAudit = Effect.fn("GithubProvenance.verifyAudit")(
 
 runEntry(
   import.meta.main,
-  verifyProvenanceAudit(process.argv.slice(2)).pipe(
+  verifyProvenanceAudit(Arr.drop(process.argv, 2)).pipe(
     Effect.provide(SigstoreProvenanceBundleVerifierLive)
   )
 );

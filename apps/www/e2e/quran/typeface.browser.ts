@@ -107,7 +107,9 @@ const verifySurahPreloadsTypeface = Effect.fn(
       )
   );
   yield* Effect.sync(() =>
-    expect(Arr.filter(files, (file) => preloads.includes(file))).toHaveLength(2)
+    expect(
+      Arr.filter(files, (file) => Arr.contains(preloads, file))
+    ).toHaveLength(2)
   );
 
   yield* openSurah(page, href);
@@ -133,7 +135,7 @@ const verifyLateTypefaceKeepsSurahStill = Effect.fn(
   const services = yield* Effect.context<never>();
   yield* Effect.promise(() =>
     page.route(
-      (url) => files.includes(url.pathname),
+      (url) => Arr.contains(files, url.pathname),
       (route) => {
         MutableList.append(held, route.request().url());
         return Effect.runPromiseWith(services)(

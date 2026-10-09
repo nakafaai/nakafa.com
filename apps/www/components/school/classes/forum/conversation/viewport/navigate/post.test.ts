@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr, Option } from "effect";
 import {
   conversationTestFirstPost as firstPost,
   conversationTestSecondPost as secondPost,
@@ -37,7 +38,7 @@ describe("conversation/viewport/navigate/post", () => {
 
     expect(postState.backStack).toEqual([{ kind: "bottom" }]);
     expect(postState.highlightedPostId).toBeNull();
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       align: "center",
       view: { kind: "post", postId: firstPost._id },
     });
@@ -156,7 +157,7 @@ describe("conversation/viewport/navigate/post", () => {
     );
 
     expect(state.backStack).toEqual([{ kind: "bottom" }]);
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       align: "center",
       view: { kind: "post", postId: secondPost._id },
     });
@@ -179,7 +180,7 @@ describe("conversation/viewport/navigate/post", () => {
     );
 
     expect(state.highlightedPostId).toBeNull();
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       align: "center",
       view: { kind: "post", postId: firstPost._id },
     });
@@ -271,7 +272,7 @@ describe("conversation/viewport/navigate/post", () => {
     );
 
     expect(state.backStack).toEqual([]);
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       align: "center",
       view: { kind: "post", postId: firstPost._id },
     });
@@ -300,7 +301,7 @@ describe("conversation/viewport/navigate/post", () => {
 
     expect(state.backStack).toEqual([]);
     expect(state.latestAffinity).toBe("detached");
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       align: "center",
       view: { kind: "post", postId: firstPost._id },
     });
@@ -325,7 +326,7 @@ describe("conversation/viewport/navigate/post", () => {
 
     expect(state.backStack).toEqual([{ kind: "bottom" }]);
     expect(state.highlightedPostId).toBeNull();
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       align: "center",
       view: { kind: "post", postId: firstPost._id },
     });
@@ -351,7 +352,7 @@ describe("conversation/viewport/navigate/post", () => {
 
     expect(state.backStack).toEqual([{ kind: "post", postId: firstPost._id }]);
     expect(state.latestAffinity).toBe("detached");
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       align: "center",
       view: { kind: "post", postId: secondPost._id },
     });

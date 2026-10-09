@@ -224,7 +224,7 @@ describe("Nakafa CLI package", () => {
         );
 
         expect(
-          Arr.every(REQUIRED_PACKED_FILES, (file) => files.includes(file))
+          Arr.every(REQUIRED_PACKED_FILES, (file) => Arr.contains(files, file))
         ).toBe(true);
         expect(Arr.every(files, isAllowedPackedFile)).toBe(true);
         expect(help).toContain("Nakafa CLI");

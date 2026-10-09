@@ -3,6 +3,7 @@ import {
   Config,
   Effect,
   FileSystem,
+  Option,
   type PlatformError,
   Schema,
   Stream,
@@ -101,7 +102,9 @@ export const readProductionChanges = Effect.fn(
       }
 
       const split = stdout.split("\0");
-      const fields = split.at(-1) === "" ? Arr.dropRight(split, 1) : split;
+      const fields = Option.exists(Arr.last(split), (field) => field === "")
+        ? Arr.dropRight(split, 1)
+        : split;
       if (fields.length % 2 !== 0) {
         return yield* new ProductionAcceptanceError({
           message: "Git returned an invalid changed-path record.",

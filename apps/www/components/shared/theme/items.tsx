@@ -58,9 +58,9 @@ function ThemeGroup({ options }: { options: typeof themeOptions }) {
 export function ThemeMenuItems() {
   return (
     <>
-      <ThemeGroup options={themeOptions.slice(0, BASE_THEMES_COUNT)} />
+      <ThemeGroup options={Arr.take(themeOptions, BASE_THEMES_COUNT)} />
       <DropdownMenuSeparator />
-      <ThemeGroup options={themeOptions.slice(BASE_THEMES_COUNT)} />
+      <ThemeGroup options={Arr.drop(themeOptions, BASE_THEMES_COUNT)} />
     </>
   );
 }

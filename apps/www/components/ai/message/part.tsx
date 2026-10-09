@@ -12,6 +12,7 @@ import {
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
 import { type DynamicToolUIPart, isToolUIPart, type ToolUIPart } from "ai";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { NinaAttachment } from "@/components/ai/attachment";
 import { Activity } from "@/components/ai/message/activity";
@@ -38,7 +39,7 @@ export function AiMessagePart({
     if (
       !(
         URL.canParse(part.url) &&
-        ["https:", "http:"].includes(new URL(part.url).protocol)
+        Arr.contains(["https:", "http:"], new URL(part.url).protocol)
       )
     ) {
       return null;

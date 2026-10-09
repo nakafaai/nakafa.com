@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   conversationTestFirstPost as firstPost,
   conversationTestSecondPost as secondPost,
@@ -37,7 +37,7 @@ describe("conversation/viewport/navigate/back", () => {
       (state) => state.pendingPlacement?.view.kind === "bottom"
     );
 
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       view: { kind: "bottom" },
     });
 
@@ -61,7 +61,7 @@ describe("conversation/viewport/navigate/back", () => {
       (state) => state.pendingPlacement?.view.kind === "post"
     );
 
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       align: "center",
       view: { kind: "post", postId: firstPost._id },
     });
@@ -103,7 +103,7 @@ describe("conversation/viewport/navigate/back", () => {
       (state) => state.pendingPlacement?.view.kind === "bottom"
     );
 
-    expect(rig.placements.at(-1)).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       view: { kind: "bottom" },
     });
 
