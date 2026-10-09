@@ -44,8 +44,10 @@ async function readFeed() {
   ]);
 
   const feed = new Feed({
-    updated: new Date(
-      Math.max(0, ...Arr.map(routes, (route) => route.dateModified))
+    updated: DateTime.toDateUtc(
+      DateTime.makeUnsafe(
+        Math.max(0, ...Arr.map(routes, (route) => route.dateModified))
+      )
     ),
     title: t("title"),
     description: t("description"),
@@ -66,7 +68,7 @@ async function readFeed() {
       title: route.title,
       description: route.description ?? route.title,
       link,
-      date: new Date(route.datePublished),
+      date: DateTime.toDateUtc(DateTime.makeUnsafe(route.datePublished)),
       id: link,
       author: route.authors,
       image: `${baseUrl}/${route.appLocale}/og/${route.route}/image.png`,

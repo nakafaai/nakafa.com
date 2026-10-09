@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import type { getPathname } from "@repo/internationalization/src/navigation";
-import { Array as Arr, Effect, HashSet } from "effect";
+import { Array as Arr, DateTime, Effect, HashSet } from "effect";
 import {
   getCachedSitemapEntries,
   getSitemapEntries,
@@ -357,7 +357,9 @@ describe("sitemap entries", () => {
       Effect.succeed({
         routes: [
           {
-            lastModified: new Date("2024-01-02T00:00:00.000Z"),
+            lastModified: DateTime.toDateUtc(
+              DateTime.makeUnsafe("2024-01-02T00:00:00.000Z")
+            ),
             path: "/search",
           },
         ],
