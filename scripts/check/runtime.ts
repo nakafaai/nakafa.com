@@ -1,4 +1,11 @@
-import { Array as Arr, HashSet, MutableHashMap, Option, pipe } from "effect";
+import {
+  Array as Arr,
+  HashSet,
+  Match,
+  MutableHashMap,
+  Option,
+  pipe,
+} from "effect";
 import {
   type Expression,
   isAwaitExpression,
@@ -73,16 +80,12 @@ function staticElement(node: Expression) {
 }
 
 function importedRuntimeKind(node: Node): RuntimeKind | undefined {
-  switch (importedModule(node)) {
-    case "effect":
-      return "root";
-    case "effect/Effect":
-      return "effect";
-    case "effect/ManagedRuntime":
-      return "managed-module";
-    default:
-      return undefined;
-  }
+  return Match.value(importedModule(node)).pipe(
+    Match.when("effect", (): RuntimeKind => "root"),
+    Match.when("effect/Effect", (): RuntimeKind => "effect"),
+    Match.when("effect/ManagedRuntime", (): RuntimeKind => "managed-module"),
+    Match.orElse(() => undefined)
+  );
 }
 
 /** Collects local bindings that expose Effect runtime modules. */
