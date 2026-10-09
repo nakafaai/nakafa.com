@@ -112,6 +112,7 @@ describe("Effect-native rule scopes", () => {
           [
             "packages/a/default.ts env",
             "packages/a/default.ts object-helper",
+            "packages/a/literal.ts data-type",
             "packages/a/literal.ts env",
             "packages/a/literal.ts object-helper",
             "packages/a/local.ts env",
