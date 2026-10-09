@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import {
   conversationTestFirstPost as firstPost,
   conversationTestSecondPost as secondPost,
@@ -16,6 +17,10 @@ import {
   shutdownViewport,
   waitForState,
 } from "@/components/school/classes/forum/conversation/viewport/fixture";
+
+const stalePostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "stale_post"
+);
 
 describe("conversation/viewport/navigate/back", () => {
   it("navigates back to latest when latest is the semantic back target", async () => {
@@ -65,7 +70,6 @@ describe("conversation/viewport/navigate/back", () => {
   });
 
   it("falls back to latest when back navigation points to a stale post", async () => {
-    const stalePostId = "stale_post" as Id<"schoolClassForumPosts">;
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 

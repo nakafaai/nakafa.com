@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Id } from "@repo/backend/confect/_generated/id";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Record as Rec, Schema } from "effect";
 import {
@@ -7,10 +7,16 @@ import {
   createForumSessionStore,
 } from "@/components/school/classes/forum/session/store";
 
-const forumId = "forum_1" as Id<"schoolClassForums">;
-const otherForumId = "forum_2" as Id<"schoolClassForums">;
-const lastPostId = "post_1" as Id<"schoolClassForumPosts">;
-const otherPostId = "post_2" as Id<"schoolClassForumPosts">;
+const forumId = Schema.decodeUnknownSync(Id("schoolClassForums"))("forum_1");
+const otherForumId = Schema.decodeUnknownSync(Id("schoolClassForums"))(
+  "forum_2"
+);
+const lastPostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "post_1"
+);
+const otherPostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"))(
+  "post_2"
+);
 const replyTarget = {
   postId: lastPostId,
   userName: "Nabil",
