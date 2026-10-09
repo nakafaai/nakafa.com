@@ -96,6 +96,36 @@ interface CardValue {
       })
   );
 
+  it.effect("reports a declare namespace that holds local data", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`declare namespace Feed {
+  interface Row {
+    readonly id: string;
+  }
+}
+export type FeedRow = Feed.Row;
+`),
+        [2]
+      );
+    })
+  );
+
+  it.effect("reports a plain shape that a Schema.suspend thunk names", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* shapes(`import { Schema } from "effect";
+export interface UserRow {
+  readonly id: string;
+  readonly title: string;
+}
+export const userRows = Schema.suspend((): Schema.Codec<UserRow> => UserRowsSchema);
+`),
+        [2]
+      );
+    })
+  );
+
   it.effect("allows the type a recursive Schema.suspend thunk names", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

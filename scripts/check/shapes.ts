@@ -149,19 +149,29 @@ function objectLiterals(type: TypeNode): readonly TypeLiteralNode[] {
 }
 
 /**
- * Whether a declaration sits inside `declare module` or `declare global`,
- * where it augments a framework or platform type that no Schema can own.
+ * Whether a module declaration augments a framework or platform type: a
+ * `declare module "name"` block or a `declare global` block. A `declare
+ * namespace` declares its own shapes, so it does not count.
+ */
+function isAugmentation(node: Node): boolean {
+  return (
+    isModuleDeclaration(node) &&
+    Arr.some(node.modifiers ?? [], isDeclareKeyword) &&
+    (isStringLiteral(node.name) ||
+      (isIdentifier(node.name) && node.name.text === "global"))
+  );
+}
+
+/**
+ * Whether a declaration sits inside an augmentation, where it extends a framework
+ * or platform type that no Schema can own.
  */
 function isAmbient(node: Node): boolean {
   const { parent } = node;
   if (isSourceFile(parent)) {
     return false;
   }
-  return (
-    (isModuleDeclaration(parent) &&
-      Arr.some(parent.modifiers ?? [], isDeclareKeyword)) ||
-    isAmbient(parent)
-  );
+  return isAugmentation(parent) || isAmbient(parent);
 }
 
 /**
@@ -286,6 +296,18 @@ function isGeneric(
 }
 
 /**
+ * Whether a shape refers to its own name, which makes it a recursive type, such
+ * as `Category` in `readonly children: ReadonlyArray<Category>`. A shape that a
+ * thunk names without referring to itself is plain data.
+ */
+function refersToItself(
+  node: InterfaceDeclaration | TypeAliasDeclaration,
+  name: string
+): boolean {
+  return Arr.some(ownMembers(node), (member) => mentions(member, [name]));
+}
+
+/**
  * Returns the hand-written data shapes among one module's `runtime` nodes:
  * interfaces that declare their own members and type aliases that spell out an
  * object, outside the functions that run in the browser page, where no Schema
@@ -317,7 +339,8 @@ export function shapeCandidates(
     const allowed =
       (props && PROPS_PATTERN.test(node.name.text)) ||
       isAmbient(node) ||
-      Arr.contains(recursive, node.name.text) ||
+      (Arr.contains(recursive, node.name.text) &&
+        refersToItself(node, node.name.text)) ||
       Arr.some(members, holdsValue) ||
       isGeneric(node, members);
     return handWritten && !allowed
