@@ -101,12 +101,10 @@ function createAppRewrites() {
   };
 }
 /**
- * The active app locales as one path group, so a locale segment cannot match
- * any word. Config loads through `require`, which the `./locale` export of
- * `@nakafa/aksara-contracts` does not allow, so this list mirrors that
- * package's `ACTIVE_APP_LOCALE_CODES`.
+ * One two-letter locale segment, the shape every app locale has. A longer first
+ * segment such as `user` never matches, so a valid bare path keeps its meaning.
  */
-const ACTIVE_LOCALE_PATTERN = "en|id|de";
+const LOCALE_SEGMENT = ":locale([A-Za-z]{2})";
 
 /**
  * Build the localized redirect list shared by all supported locales.
@@ -138,27 +136,27 @@ function createLocalizedRedirects() {
   // `/:locale/settings` would also send the valid bare path `/user/settings`.
   const retiredPageRedirects = [
     {
-      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/settings`,
+      source: `/${LOCALE_SEGMENT}/settings`,
       destination: "/:locale/user/settings",
       permanent: true,
     },
     {
-      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/user/settings/developers`,
+      source: `/${LOCALE_SEGMENT}/user/settings/developers`,
       destination: "/:locale/user/settings",
       permanent: true,
     },
     {
-      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/onboarding/focus`,
+      source: `/${LOCALE_SEGMENT}/onboarding/focus`,
       destination: "/:locale/onboarding",
       permanent: true,
     },
     {
-      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/onboarding/role`,
+      source: `/${LOCALE_SEGMENT}/onboarding/role`,
       destination: "/:locale/onboarding",
       permanent: true,
     },
     {
-      source: `/:locale(${ACTIVE_LOCALE_PATTERN})/school/:slug/classes/:id/timeline`,
+      source: `/${LOCALE_SEGMENT}/school/:slug/classes/:id/timeline`,
       destination: "/:locale/school/:slug/classes/:id/forum",
       permanent: true,
     },

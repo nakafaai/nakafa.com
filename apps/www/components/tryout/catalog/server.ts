@@ -9,6 +9,10 @@ import type { Locale } from "next-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { applyContentCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
+import {
+  readPublishedTryoutExamPage,
+  readPublishedTryoutSectionPage,
+} from "@/lib/content/tryout/page";
 import { httpLayer } from "@/lib/convex/http";
 
 const TryoutMetadataArgsSchema = Schema.Struct({
@@ -144,12 +148,10 @@ export async function readTryoutExamPage(locale: Locale, publicPath: string) {
 
   applyContentCache("tryout");
   return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(tryouts.queries.catalog.getExamPage, {
-        appLocale: AppLocaleSchema.make(locale),
-        publicPath,
-      })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
+    readPublishedTryoutExamPage({
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    }).pipe(Effect.withTracerTiming(false))
   );
 }
 
@@ -248,12 +250,10 @@ export async function readTryoutSectionPage(
 
   applyContentCache("tryout");
   return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(tryouts.queries.catalog.getSectionPage, {
-        appLocale: AppLocaleSchema.make(locale),
-        publicPath,
-      })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
+    readPublishedTryoutSectionPage({
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    }).pipe(Effect.withTracerTiming(false))
   );
 }
 
