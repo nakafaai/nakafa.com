@@ -2,6 +2,7 @@ import { AllahIcon } from "@hugeicons/core-free-icons";
 import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import { Card } from "@repo/design-system/components/ui/card";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Array as Arr } from "effect";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import { type Locale, useTranslations } from "next-intl";
@@ -90,7 +91,7 @@ function PageContent({
       <LayoutContent className="pb-20">
         <Card className="py-0">
           <CardLinks>
-            {surahs.map((surah) => {
+            {Arr.map(surahs, (surah) => {
               const title = getQuranSurahName(surah.name);
               return (
                 <CardLink

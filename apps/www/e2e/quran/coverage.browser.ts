@@ -3,7 +3,7 @@ import {
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, HashSet, Record as Rec, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { readLayoutShift } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
@@ -88,10 +88,11 @@ function quranMeaningLocator(
   meanings: readonly [QuranMeaningContract, ...QuranMeaningContract[]]
 ) {
   const [first, ...rest] = meanings;
-  return rest.reduce(
+  return Arr.reduce(
+    rest,
+    page.locator(selector).filter({ hasText: first.text }),
     (locator, meaning) =>
-      locator.or(page.locator(selector).filter({ hasText: meaning.text })),
-    page.locator(selector).filter({ hasText: first.text })
+      locator.or(page.locator(selector).filter({ hasText: meaning.text }))
   );
 }
 
@@ -258,9 +259,9 @@ const verifyQuranLocaleCoverage = Effect.fn(
     )
   );
   yield* Effect.sync(() => {
-    expect(interpretationNames.every((name) => name?.includes(": "))).toBe(
-      true
-    );
+    expect(
+      Arr.every(interpretationNames, (name) => name?.includes(": ") === true)
+    ).toBe(true);
     expect(HashSet.size(HashSet.fromIterable(interpretationNames))).toBe(
       interpretationNames.length
     );
@@ -313,7 +314,8 @@ const verifyQuranLocaleCoverage = Effect.fn(
     );
     yield* Effect.sync(() =>
       expect(
-        visibleTranslations.every(
+        Arr.every(
+          visibleTranslations,
           (text) => !rawTranslationNotePattern.test(text ?? "")
         )
       ).toBe(true)
@@ -364,7 +366,7 @@ const verifyQuranLocaleCoverage = Effect.fn(
   );
   yield* Effect.sync(() =>
     expect(
-      sourceHrefs.every((sourceHref) =>
+      Arr.every(sourceHrefs, (sourceHref) =>
         sourceHref === null ? false : new URL(sourceHref).protocol === "https:"
       )
     ).toBe(true)

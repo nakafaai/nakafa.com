@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { openConsentPreferences } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { readBounds, swipeDown } from "@/e2e/support/input";
@@ -17,7 +17,7 @@ const slotByViewport = {
   touch: "drawer-popup",
 } as const;
 
-const consentViewports = targetViewports.map((viewport) => ({
+const consentViewports = Arr.map(targetViewports, (viewport) => ({
   ...viewport,
   slot: slotByViewport[viewport.name],
 }));

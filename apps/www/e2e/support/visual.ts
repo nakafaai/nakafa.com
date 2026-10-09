@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { Duration, Effect } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 import { waitForStableCanvas } from "@/e2e/support/canvas";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { scrollToElement } from "@/e2e/support/input";
@@ -263,7 +263,8 @@ function settleLayoutShift(
   read: (page: Page) => ReturnType<typeof readCumulativeLayoutShift>
 ) {
   return Effect.gen(function* () {
-    const readings = [yield* read(page)];
+    // Only the last SETTLED_READINGS readings decide when the page settles.
+    let readings = [yield* read(page)];
     for (
       let attempt = 0;
       attempt < SETTLE_ATTEMPTS &&
@@ -272,7 +273,8 @@ function settleLayoutShift(
       attempt += 1
     ) {
       yield* Effect.sleep(Duration.millis(500));
-      readings.push(yield* read(page));
+      const reading = yield* read(page);
+      readings = Arr.takeRight(Arr.append(readings, reading), SETTLED_READINGS);
     }
     return readings.at(-1) ?? 0;
   });

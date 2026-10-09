@@ -265,7 +265,7 @@ describe("array findings by scope", () => {
   );
 
   it.effect(
-    "judges only the strict folders, tests included, reporting only arrays",
+    "judges every authored module outside framework configuration, tests included, reporting only arrays",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -283,16 +283,17 @@ describe("array findings by scope", () => {
             "scripts/vitest.config.ts": `import { defineConfig } from "vitest/config";\n${CALL}`,
           }),
           [
+            "apps/www/lib/list.ts:2 array-method",
             "packages/backend/confect/users/list.test.ts:2 array-method",
             "packages/backend/confect/users/list.ts:2 array-method",
+            "packages/backend/convex/users.ts:2 array-method",
             "scripts/check/list.ts:2 array-method",
-            "scripts/vitest.config.ts:3 array-method",
           ]
         );
       })
   );
 
-  it.effect("needs no project outside the strict folders", () =>
+  it.effect("needs no project for framework configuration", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
         yield* judge({

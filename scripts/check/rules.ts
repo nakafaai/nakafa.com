@@ -43,16 +43,10 @@ export const Rule = Schema.Literals([
 
 /**
  * The authored modules a rule inspects: every module, code outside framework
- * configuration, code outside React modules, every module of the strict Confect
- * and script folders, or the domain code of those folders, tests excluded.
+ * configuration, code outside React modules, or the domain code of the strict
+ * Confect and script folders, tests excluded.
  */
-const RuleScope = Schema.Literals([
-  "every",
-  "code",
-  "logic",
-  "strict",
-  "domain",
-]);
+const RuleScope = Schema.Literals(["every", "code", "logic", "domain"]);
 
 /** One rule's scope and the Effect-native replacement it names. */
 const RuleDefinition = Schema.Struct({
@@ -70,17 +64,17 @@ export const RULES = {
   "array-method": {
     message:
       "transform arrays with the Array module from effect, such as Array.map, Array.filter, and Array.join, instead of a native array method.",
-    scope: "strict",
+    scope: "code",
   },
   "array-mutation": {
     message:
       "build a new array with the Array module from effect, such as Array.append, Array.sort, and Array.reverse, or collect into a MutableList, instead of changing an array in place.",
-    scope: "strict",
+    scope: "code",
   },
   "array-search": {
     message:
       "search arrays with Array.findFirst, Array.findLast, or their index forms from effect, which return an Option, instead of a native find method.",
-    scope: "strict",
+    scope: "code",
   },
   clock: {
     message:
@@ -318,7 +312,6 @@ export function covers(
       () =>
         !(isConfiguration(file, sourceFile) || isReactModule(file, sourceFile))
     ),
-    Match.when("strict", () => STRICT_PATTERN.test(file)),
     Match.when(
       "domain",
       () => STRICT_PATTERN.test(file) && !TEST_PATTERN.test(file)

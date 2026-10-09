@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate, visibleLink } from "@/e2e/support/input";
@@ -51,8 +51,9 @@ const observeStep = Effect.fn("NakafaE2E.observeAttemptStep")(function* (
   run: Effect.Effect<void>
 ) {
   const since = yield* readPageTime(page);
-  const urls: string[] = [];
-  const record = (frame: { url: () => string }) => urls.push(frame.url());
+  const urls = MutableList.make<string>();
+  const record = (frame: { url: () => string }) =>
+    MutableList.append(urls, frame.url());
   page.on("framenavigated", record);
   yield* run;
   // Late streamed content would still move the page, so keep observing.
@@ -60,7 +61,7 @@ const observeStep = Effect.fn("NakafaE2E.observeAttemptStep")(function* (
   page.off("framenavigated", record);
   const observation = yield* readShellObservation(page, since);
   yield* Effect.sync(() => expectStillShell(observation, locks));
-  return urls;
+  return MutableList.toArray(urls);
 });
 
 /**

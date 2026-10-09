@@ -8,7 +8,7 @@ import {
   routing,
 } from "@repo/internationalization/src/routing";
 import { mergeVaryHeader } from "@repo/utilities/http/accept";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { hasLocale } from "next-intl";
@@ -181,7 +181,7 @@ export async function proxy(request: NextRequest) {
 
 /** Reads a supported locale that is not in the active public route set. */
 function readCandidateLocale(pathname: string): AppLocaleCode | null {
-  const [locale] = pathname.split("/").filter(Boolean);
+  const [locale] = Arr.filter(pathname.split("/"), Boolean);
   if (
     !hasLocale(APP_LOCALE_CODES, locale) ||
     hasLocale(routing.locales, locale)
@@ -236,7 +236,7 @@ function representationNotAcceptable() {
   return new Response("Not Acceptable\n", {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      Vary: LLMS_REPRESENTATION_VARY_FIELDS.join(", "),
+      Vary: Arr.join(LLMS_REPRESENTATION_VARY_FIELDS, ", "),
     },
     status: 406,
   });
