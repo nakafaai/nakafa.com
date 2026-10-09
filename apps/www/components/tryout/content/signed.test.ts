@@ -192,6 +192,12 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
     };
   }
 );
+/** Loads the attempt's signed content and returns the failure it must end in. */
+const loadFailure = (
+  fixture: Effect.Success<ReturnType<typeof readOwnedFixture>>
+) =>
+  loadSignedTryoutContent(fixture.attemptId, fixture.access).pipe(Effect.flip);
+
 beforeEach(() => {
   vi.setSystemTime(TRYOUT_TEST_NOW);
   cacheMock.mockReset();
@@ -341,12 +347,7 @@ describe("signed try-out execution", () => {
           ...found,
           items: Arr.take(found.items, 1),
         });
-        expect(
-          yield* loadSignedTryoutContent(
-            fixture.attemptId,
-            fixture.access
-          ).pipe(Effect.flip)
-        ).toMatchObject({
+        expect(yield* loadFailure(fixture)).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause: {
             _tag: "ContentRuntimeVerificationError",
@@ -440,11 +441,7 @@ describe("signed try-out execution", () => {
           })
         )
       );
-      expect(
-        yield* loadSignedTryoutContent(fixture.attemptId, fixture.access).pipe(
-          Effect.flip
-        )
-      ).toMatchObject({
+      expect(yield* loadFailure(fixture)).toMatchObject({
         _tag: "ContentRuntimeVerificationError",
         cause: {
           _tag: "ContentRuntimeMissingError",
@@ -460,23 +457,13 @@ describe("signed try-out execution", () => {
       Effect.gen(function* () {
         const fixture = yield* readOwnedFixture();
         tokenMock.mockResolvedValueOnce(null);
-        expect(
-          yield* loadSignedTryoutContent(
-            fixture.attemptId,
-            fixture.access
-          ).pipe(Effect.flip)
-        ).toMatchObject({
+        expect(yield* loadFailure(fixture)).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause: "Try-out content requires an active session.",
         });
         const cause = new TypeError("Session transport unavailable.");
         tokenMock.mockRejectedValueOnce(cause);
-        expect(
-          yield* loadSignedTryoutContent(
-            fixture.attemptId,
-            fixture.access
-          ).pipe(Effect.flip)
-        ).toMatchObject({
+        expect(yield* loadFailure(fixture)).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause,
         });
@@ -493,12 +480,7 @@ describe("signed try-out execution", () => {
           cause: new TypeError("Authorization query unavailable."),
         });
         queryMock.mockRejectedValueOnce(cause.cause);
-        expect(
-          yield* loadSignedTryoutContent(
-            fixture.attemptId,
-            fixture.access
-          ).pipe(Effect.flip)
-        ).toMatchObject({
+        expect(yield* loadFailure(fixture)).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause,
         });
