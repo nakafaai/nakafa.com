@@ -14,7 +14,7 @@ import {
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Effect, HashSet, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   decodeMaterialJson,
@@ -201,28 +201,33 @@ export const decodePublishedMaterialRoute = Effect.fn(
     )
   );
   const alternateLocales = HashSet.fromIterable(
-    alternates.map((alternate) => alternate.appLocale)
+    Arr.map(alternates, (alternate) => alternate.appLocale)
   );
   const completeLocaleSet =
     HashSet.size(alternateLocales) === activeAppLocales.length &&
-    activeAppLocales.every((alternateLocale) =>
+    Arr.every(activeAppLocales, (alternateLocale) =>
       HashSet.has(alternateLocales, alternateLocale)
     );
   if (
     projection.appLocale !== appLocale ||
     projection.publicPath !== publicPath ||
-    alternates.some(
+    Arr.some(
+      alternates,
       (alternate) => !isMaterialCounterpart(projection, alternate)
     ) ||
     HashSet.size(alternateLocales) !== alternates.length ||
-    !alternates.some(
+    !Arr.some(
+      alternates,
       (alternate) =>
         alternate.appLocale === projection.appLocale &&
         alternate.publicPath === projection.publicPath
     ) ||
     !completeLocaleSet ||
-    siblings.some((sibling) => !isMaterialSibling(projection, sibling)) ||
-    !siblings.some((sibling) => sibling.publicPath === projection.publicPath)
+    Arr.some(siblings, (sibling) => !isMaterialSibling(projection, sibling)) ||
+    !Arr.some(
+      siblings,
+      (sibling) => sibling.publicPath === projection.publicPath
+    )
   ) {
     return yield* makeMaterialProjectionError({
       appLocale,
