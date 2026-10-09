@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { FeaturesDithering } from "@/components/marketing/about/features.client";
 
 /** Reuses the authenticated entry-page split layout across auth and onboarding. */
 export function EntryShell({ children }: { children: ReactNode }) {
@@ -29,15 +28,6 @@ export function EntryShellBody({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6">
       {children}
-    </div>
-  );
-}
-
-/** Renders the existing theme-aware dithering on wide screens. */
-export function EntryShellArtwork() {
-  return (
-    <div className="relative col-span-4 hidden lg:block">
-      <FeaturesDithering />
     </div>
   );
 }

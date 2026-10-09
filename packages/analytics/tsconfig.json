@@ -7,6 +7,6 @@
       "@repo/analytics/*": ["./*"]
     }
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "*.mts"],
   "exclude": ["node_modules", "coverage"]
 }

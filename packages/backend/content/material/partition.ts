@@ -10,10 +10,12 @@ import { verifyMaterial } from "@repo/backend/content/material/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
 import { Array as Arr, Effect, MutableList, Option } from "effect";
 
+/** Verifies one catalog row and keeps the row beside its verified material. */
+const verifyPartitionRow = (row: PublicationRow<"materialCatalog">) =>
+  verifyMaterial(row).pipe(Effect.map((material) => ({ ...material, row })));
+
 /** One verified material of a discovery partition, with its owning catalog row. */
-type PartitionMaterial = Effect.Success<ReturnType<typeof verifyMaterial>> & {
-  readonly row: PublicationRow<"materialCatalog">;
-};
+type PartitionMaterial = Effect.Success<ReturnType<typeof verifyPartitionRow>>;
 
 /** Reads a transaction-bounded group of complete material discovery buckets. */
 export const readMaterialPartition = Effect.fn(
@@ -77,12 +79,7 @@ export const readMaterialPartition = Effect.fn(
       );
     }
     const verified = yield* Effect.forEach(rows, (row) =>
-      verifyMaterial(row).pipe(
-        Effect.map((material) => ({
-          ...material,
-          row,
-        }))
-      )
+      verifyPartitionRow(row)
     );
     MutableList.appendAll(materials, verified);
   }
