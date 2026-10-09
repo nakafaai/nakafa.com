@@ -130,14 +130,17 @@ function aiValueNames(clause: ImportClause | undefined): readonly string[] {
     : [];
 }
 
-/** Returns the local names that a namespace import of `effect` binds, such as `Whole` in `import * as Whole from "effect"`. */
-function effectNamespaceNames(sourceFile: SourceFile): readonly string[] {
+/** Returns the local names that a namespace import of `module` binds, such as `Whole` in `import * as Whole from "effect"`. */
+function namespaceNames(
+  sourceFile: SourceFile,
+  module: string
+): readonly string[] {
   return Arr.flatMap(sourceFile.statements, (statement) => {
     if (
       !(
         isImportDeclaration(statement) &&
         isStringLiteral(statement.moduleSpecifier) &&
-        statement.moduleSpecifier.text === "effect"
+        statement.moduleSpecifier.text === module
       )
     ) {
       return [];
@@ -157,19 +160,21 @@ function segmentsOf(name: EntityName): readonly Identifier[] {
 }
 
 /**
- * Whether a qualified type name reads a runtime handle through a namespace import
- * of `effect`, such as `Whole.Effect.Effect` for `import * as Whole from "effect"`.
+ * Whether a qualified type name reads one of `members` through a namespace
+ * import, such as `Whole.Effect.Effect` for `import * as Whole from "effect"`, or
+ * `AI.TextUIPart` for `import type * as AI from "ai"`.
  */
-function namesEffectHandle(
+function namesMember(
   name: EntityName,
-  namespaces: readonly string[]
+  namespaces: readonly string[],
+  members: HashSet.HashSet<string>
 ): boolean {
-  const [namespace, handle] = segmentsOf(name);
+  const [namespace, member] = segmentsOf(name);
   return (
     namespace !== undefined &&
-    handle !== undefined &&
+    member !== undefined &&
     Arr.contains(namespaces, namespace.text) &&
-    HashSet.has(EFFECT_HANDLE_MODULES, handle.text)
+    HashSet.has(members, member.text)
   );
 }
 
@@ -257,7 +262,8 @@ function wrappedTypes(type: TypeNode): readonly TypeNode[] {
  */
 export function valueMembers(sourceFile: SourceFile) {
   const names = valueNames(sourceFile);
-  const namespaces = effectNamespaceNames(sourceFile);
+  const effectNamespaces = namespaceNames(sourceFile, "effect");
+  const aiNamespaces = namespaceNames(sourceFile, "ai");
   const shapes = localShapes(sourceFile);
 
   /** Whether a shape that this module declares holds a value; a shape already being read does not count again. */
@@ -292,7 +298,8 @@ export function valueMembers(sourceFile: SourceFile) {
     }
     return (
       Arr.contains(names, leading(type.typeName).text) ||
-      namesEffectHandle(type.typeName, namespaces) ||
+      namesMember(type.typeName, effectNamespaces, EFFECT_HANDLE_MODULES) ||
+      namesMember(type.typeName, aiNamespaces, AI_VALUE_TYPES) ||
       Arr.some(type.typeArguments ?? [], (argument) =>
         typeHolds(argument, seen)
       ) ||

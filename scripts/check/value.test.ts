@@ -123,7 +123,7 @@ export interface Entry {
   );
 
   it.effect(
-    "holds an AI SDK type under its imported name, and only from a named import",
+    "holds an AI SDK value type under its imported or namespace name, not a data type",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -135,7 +135,7 @@ export interface Entry {
   readonly namespaced: AI.TextUIPart;
 }
 `),
-          [true, false, false]
+          [true, false, true]
         );
       })
   );
