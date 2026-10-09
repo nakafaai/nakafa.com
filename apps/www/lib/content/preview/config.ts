@@ -131,10 +131,14 @@ export const previewUrl = Effect.fn("NakafaContent.previewUrl")(function* (
 export function hasPreviewConfig() {
   return hasPreviewProvider();
 }
+/** Whether this build is the development child that may read preview connections. */
+function isDevelopment() {
+  return process.env.NODE_ENV === "development";
+}
 /** Reads the complete ephemeral connection only in the development child. */
 export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
   function* () {
-    if (process.env.NODE_ENV !== "development") {
+    if (!isDevelopment()) {
       return Option.none<PreviewConfig>();
     }
     const environment = readPreviewEnvironment();
@@ -152,7 +156,7 @@ export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
 export const readPreviewRendererConfig = Effect.fn(
   "NakafaContent.readPreviewRendererConfig"
 )(() => {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isDevelopment()) {
     return Effect.succeed(Option.none<PreviewRendererConfig>());
   }
   const environment = readPreviewRendererEnvironment();

@@ -87,6 +87,7 @@
           "preferSucceedSomeOrNone": "error",
           "preferTypedSchemaDecoder": "error",
           "preferUnsafeConstructor": "error",
+          "processEnvInEffect": "error",
           "promiseInEffectSuccess": "error",
           "provideLayerSucceedToProvideService": "error",
           "raceFirstWithSleepToTimeout": "error",
