@@ -109,11 +109,10 @@ describe("Nina learner memory", () => {
       });
     }
     const view = await f.owner.query(get, {});
-    expect(view?.facts).toHaveLength(MEMORY_FACTS);
-    expect(view?.facts[0]?.text).toBe("Fakta 9-2.");
-    expect(Option.getOrThrow(Arr.last(view?.facts ?? [])).text).toBe(
-      "Fakta 0-0."
-    );
+    const facts = Option.getOrThrow(Option.fromNullishOr(view)).facts;
+    expect(facts).toHaveLength(MEMORY_FACTS);
+    expect(facts[0]?.text).toBe("Fakta 9-2.");
+    expect(Option.getOrThrow(Arr.last(facts)).text).toBe("Fakta 0-0.");
   });
 
   it("changes nothing from a curation that raced a newer write, but counts it", async () => {

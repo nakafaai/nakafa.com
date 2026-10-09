@@ -111,7 +111,7 @@ it.effect("retains gathered steps with a typed specialist failure", () =>
         ),
       options
     ).pipe(Stream.runCollect);
-    const final = yield* Schema.decodeUnknownEffect(CapabilityOutputSchema)(
+    const final = yield* Schema.decodeEffect(CapabilityOutputSchema)(
       Option.getOrThrow(Arr.last(snapshots))
     );
     expect(final).toEqual({
