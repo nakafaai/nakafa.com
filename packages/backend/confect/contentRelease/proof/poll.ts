@@ -24,8 +24,9 @@ import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { Clock, Context, Effect, Layer, Match, Schema } from "effect";
-export type ProofFailure = typeof proofFailureValidator.Type;
-export type ProofPoll = typeof proofPollValidator.Type;
+
+type ProofFailure = typeof proofFailureValidator.Type;
+type ProofPoll = typeof proofPollValidator.Type;
 export type ProofStatus = typeof proofStatusValidator.Type;
 export type Release = Docs["contentReleases"];
 /** Durable Workflow dependency owned only by proof polling. */
@@ -78,7 +79,7 @@ export const ProofPollCoordinatorLive = Layer.effect(
   })
 );
 /** Durable Workflow status for proof polling, the only Workflow operation a query may run. */
-export class ProofPollStatus extends Context.Service<
+class ProofPollStatus extends Context.Service<
   ProofPollStatus,
   {
     /** Reads the durable component outcome without starting, canceling, or cleaning it. */
@@ -113,7 +114,7 @@ const ProofWorkflowResolutionSchema = Schema.Union([
     phase: Schema.Literal("verifying"),
   }),
 ]);
-export type ProofWorkflowResolution = typeof ProofWorkflowResolutionSchema.Type;
+type ProofWorkflowResolution = typeof ProofWorkflowResolutionSchema.Type;
 
 /** Reduces durable component status to the proof state machine. */
 export function resolveProofWorkflow(
@@ -160,30 +161,31 @@ const loadVerification = Effect.fn("contentRelease.loadVerification")(
 );
 
 /** Finalizes proof only after its coordinator completed successfully. */
-export const finalizeProof = Effect.fn("contentRelease.finalizeProof")(
-  function* (release: Release, proofJson: string) {
-    const writer = yield* DatabaseWriter;
-    yield* decodeProofJson(proofJson);
-    const now = yield* Clock.currentTimeMillis;
-    yield* writer
-      .table("contentReleases")
-      .patch(release._id, {
-        proofFailure: undefined,
-        proofWorkflowId: undefined,
-        status: "verified",
-        updatedAt: now,
-        verifiedAt: now,
-      })
-      .pipe(Effect.orDie);
-    return {
-      phase: "verified",
-      proofJson,
-    } satisfies ProofPoll;
-  }
-);
+const finalizeProof = Effect.fn("contentRelease.finalizeProof")(function* (
+  release: Release,
+  proofJson: string
+) {
+  const writer = yield* DatabaseWriter;
+  yield* decodeProofJson(proofJson);
+  const now = yield* Clock.currentTimeMillis;
+  yield* writer
+    .table("contentReleases")
+    .patch(release._id, {
+      proofFailure: undefined,
+      proofWorkflowId: undefined,
+      status: "verified",
+      updatedAt: now,
+      verifiedAt: now,
+    })
+    .pipe(Effect.orDie);
+  return {
+    phase: "verified",
+    proofJson,
+  } satisfies ProofPoll;
+});
 
 /** Persists one sanitized terminal coordinator failure exactly once. */
-export const failedProof = Effect.fn("contentRelease.failedProof")(function* (
+const failedProof = Effect.fn("contentRelease.failedProof")(function* (
   release: Release,
   reason: ProofFailure
 ) {

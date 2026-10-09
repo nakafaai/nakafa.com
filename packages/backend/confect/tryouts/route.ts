@@ -21,7 +21,7 @@ const TryoutSetIdentitySchema = Schema.Struct({
   trackKey: TryoutKeySchema,
 });
 /** Expected failure while decoding one authored try-out route identity. */
-export class TryoutRouteError extends Schema.TaggedError<TryoutRouteError>()(
+class TryoutRouteError extends Schema.TaggedError<TryoutRouteError>()(
   "TryoutRouteError",
   {
     cause: Schema.optional(Schema.Unknown),

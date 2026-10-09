@@ -34,9 +34,9 @@ const decodeEmptySubmissionHistory = Schema.decodeUnknownEffect(
   SubmissionHistorySchema
 );
 export type SubmissionHistory = typeof SubmissionHistorySchema.Type;
-export type SubmissionService = typeof SubmissionServiceSchema.Type;
+type SubmissionService = typeof SubmissionServiceSchema.Type;
 /** Builds an empty local submission-history value for a first script run. */
-export function emptySubmissionHistory(): SubmissionHistory {
+function emptySubmissionHistory(): SubmissionHistory {
   return {
     bing: {},
     googleIndexingApi: {},

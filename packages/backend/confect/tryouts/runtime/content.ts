@@ -8,7 +8,7 @@ import { Effect } from "effect";
  * Leading questions of a finished section whose answers a free learner may
  * read, so the review offer shows real explanations before the upgrade.
  */
-export const TRYOUT_REVIEW_PREVIEW_QUESTIONS = 2;
+const TRYOUT_REVIEW_PREVIEW_QUESTIONS = 2;
 
 /**
  * Whether a frozen question position belongs to its section's free preview.

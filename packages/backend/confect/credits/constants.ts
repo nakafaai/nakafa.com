@@ -4,14 +4,12 @@
  */
 import type { planCreditValidator } from "@repo/backend/confect/credits/schema";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
+
 /**
  * Credit grant configuration per plan.
  * Extensible for future plans: max, ultra, enterprise, etc.
  */
-export const PLAN_CREDIT_CONFIG: Record<
-  UserPlan,
-  typeof planCreditValidator.Type
-> = {
+const PLAN_CREDIT_CONFIG: Record<UserPlan, typeof planCreditValidator.Type> = {
   free: {
     amount: 10,
     grantType: "daily-grant",

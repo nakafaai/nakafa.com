@@ -4,7 +4,7 @@ import { GradeSchema, MaterialSchema } from "@repo/contents/taxonomy";
 import { Schema } from "effect";
 
 /** Optional authored copy used by the SEO projection. */
-export const ContentSEODataSchema = Schema.Struct({
+const ContentSEODataSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
   subject: Schema.optional(Schema.String),
   title: Schema.optional(Schema.String),

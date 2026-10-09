@@ -93,13 +93,13 @@ const startData: StartCleanupWorkflow = Effect.fn(
     )
   );
 });
-export const cleanupWorkflowStarters = {
+const cleanupWorkflowStarters = {
   startAnalytics,
   startAuth,
   startCustomer,
   startData,
 };
-export type CleanupWorkflowStarters = typeof cleanupWorkflowStarters;
+type CleanupWorkflowStarters = typeof cleanupWorkflowStarters;
 
 /** Atomically admits independent auth, analytics, customer, and data workflows. */
 export const launchDeletedUserCleanupProgram = Effect.fn(

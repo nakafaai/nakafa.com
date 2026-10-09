@@ -1,7 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { Schema } from "effect";
-export const artifactProofReceiptValidator = Schema.Struct({
+
+const artifactProofReceiptValidator = Schema.Struct({
   batchIndex: Schema.Finite,
   verifiedArtifacts: Schema.Finite,
 });

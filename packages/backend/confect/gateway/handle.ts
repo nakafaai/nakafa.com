@@ -12,11 +12,11 @@ import { defaultSettingsMiddleware, wrapLanguageModel } from "ai";
 import { Context, Schema } from "effect";
 
 /** What one model call is for and which model it runs. */
-export const LanguageRequest = Schema.Struct({
+const LanguageRequest = Schema.Struct({
   model: ModelKey,
   purpose: Purpose,
 });
-export type LanguageRequest = typeof LanguageRequest.Type;
+type LanguageRequest = typeof LanguageRequest.Type;
 
 /** The one way Nakafa reaches a model. */
 export class Gateway extends Context.Service<

@@ -14,14 +14,15 @@ import {
 import type { welcomeIntentReconciliationPhaseValidator } from "@repo/backend/confect/emails/welcome/reconciliation.spec";
 import { workflow } from "@repo/backend/confect/workflow";
 import { Duration, Effect, flow, Result } from "effect";
-export type WelcomeIntentReconciliationPhase =
+
+type WelcomeIntentReconciliationPhase =
   typeof welcomeIntentReconciliationPhaseValidator.Type;
 /** Maximum app intents one reconciliation transaction may inspect. */
-export const welcomeIntentReconciliationPageSize = 32;
+const welcomeIntentReconciliationPageSize = 32;
 
 /** Maximum app-table bytes one reconciliation transaction may read. */
-export const welcomeIntentReconciliationPageBytes = 4 * 1024 * 1024;
-export const scheduleNextReconciliationPage = Effect.fn(
+const welcomeIntentReconciliationPageBytes = 4 * 1024 * 1024;
+const scheduleNextReconciliationPage = Effect.fn(
   "emails.welcome.scheduleReconciliation"
 )(
   function* (
@@ -49,9 +50,7 @@ export const scheduleNextReconciliationPage = Effect.fn(
 );
 
 /** Finalizes one intent only after its workflow and email component are terminal. */
-export const reconcileWelcomeIntent = Effect.fn(
-  "emails.welcome.reconcileIntent"
-)(
+const reconcileWelcomeIntent = Effect.fn("emails.welcome.reconcileIntent")(
   function* (intent: Docs["welcomeEmailIntents"]) {
     const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;

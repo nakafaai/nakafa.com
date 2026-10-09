@@ -82,7 +82,7 @@ export const sweepAccountDeletionCancellationsProgram = Effect.fn(
 );
 
 /** Removes one bounded reservation batch and then its empty preparation. */
-export const deleteAccountDeletionPreparation = Effect.fn(
+const deleteAccountDeletionPreparation = Effect.fn(
   "auth.deletion.deleteAccountDeletionPreparation"
 )(
   function* (preparation: Docs["accountDeletionPreparations"]) {

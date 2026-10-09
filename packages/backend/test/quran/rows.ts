@@ -207,7 +207,7 @@ const quranTafsirAccessByLocale = {
 } satisfies Record<AppLocaleCode, QuranTafsirAccess>;
 
 /** Returns one complete technical Tafsir access record for protocol tests. */
-export function makeQuranTafsirAccess(appLocale: AppLocaleCode) {
+function makeQuranTafsirAccess(appLocale: AppLocaleCode) {
   return quranTafsirAccessByLocale[appLocale];
 }
 

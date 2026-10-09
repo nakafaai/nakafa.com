@@ -13,7 +13,7 @@ export const Placement = Schema.Struct({
 });
 
 /** One action on one subject: allowed, or refused by role or by condition. */
-export const Decision = Schema.Literals(["allow", "role", "condition"]);
+const Decision = Schema.Literals(["allow", "role", "condition"]);
 
 /**
  * Decides one rule for one principal on one placed subject. Conditions come

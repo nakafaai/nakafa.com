@@ -32,7 +32,7 @@ import {
 import { encodeJsonText } from "@repo/utilities/json";
 import { Schema } from "effect";
 
-export const TestIdentitySchema = Schema.Struct({
+const TestIdentitySchema = Schema.Struct({
   manifestHash: Schema.String,
   releaseId: Schema.String,
   sequence: Schema.Finite,

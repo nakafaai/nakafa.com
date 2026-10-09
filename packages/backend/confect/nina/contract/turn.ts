@@ -25,7 +25,7 @@ export const NinaPageSchema = Schema.Struct({
   verified: Schema.Boolean,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Runtime facts that are stable for one Nina turn. */
-export const NinaRuntimeSchema = Schema.Struct({
+const NinaRuntimeSchema = Schema.Struct({
   currentDate: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** User facts Nina may use after app auth and selection boundaries validate them. */

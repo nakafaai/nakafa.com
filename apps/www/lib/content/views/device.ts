@@ -38,7 +38,7 @@ const contentViewDeviceStorageFailure = () =>
  * signed-in view still counts for the account's recently viewed content, and
  * a signed-out view records and stores nothing.
  */
-export type ContentViewAttribution =
+type ContentViewAttribution =
   | "account"
   | "accountDevice"
   | "device"

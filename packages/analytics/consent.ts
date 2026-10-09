@@ -34,10 +34,7 @@ export const ANALYTICS_CONSENT_NOTICE_VERSION = CONSENT_NOTICE_VERSIONS[0];
 export const ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY =
   "nakafa-analytics-consent";
 
-export const AnalyticsConsentDecisionSchema = Schema.Literals([
-  "granted",
-  "denied",
-]);
+const AnalyticsConsentDecisionSchema = Schema.Literals(["granted", "denied"]);
 
 export type AnalyticsConsentDecision =
   typeof AnalyticsConsentDecisionSchema.Type;

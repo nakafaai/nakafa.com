@@ -13,28 +13,29 @@ import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec
 import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads one resumable or newly expired immutable snapshot. */
-export const loadExpiredSnapshot = Effect.fn(
-  "contentRelease.loadExpiredSnapshot"
-)(function* (cutoff: number) {
-  const database = yield* DatabaseReader;
-  const retry = yield* database
-    .table("contentSnapshots")
-    .index("by_cleanupRetryAt_and_family_and_snapshotId", (query) =>
-      query.gt("cleanupRetryAt", undefined).lte("cleanupRetryAt", cutoff)
-    )
-    .first()
-    .pipe(Effect.map(Option.getOrNull));
-  if (retry) {
-    return retry;
-  }
-  return yield* database
-    .table("contentSnapshots")
-    .index("by_retainUntil_and_family_and_snapshotId", (query) =>
-      query.lte("retainUntil", cutoff)
-    )
-    .first()
-    .pipe(Effect.map(Option.getOrNull));
-}, Effect.orDie);
+const loadExpiredSnapshot = Effect.fn("contentRelease.loadExpiredSnapshot")(
+  function* (cutoff: number) {
+    const database = yield* DatabaseReader;
+    const retry = yield* database
+      .table("contentSnapshots")
+      .index("by_cleanupRetryAt_and_family_and_snapshotId", (query) =>
+        query.gt("cleanupRetryAt", undefined).lte("cleanupRetryAt", cutoff)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
+    if (retry) {
+      return retry;
+    }
+    return yield* database
+      .table("contentSnapshots")
+      .index("by_retainUntil_and_family_and_snapshotId", (query) =>
+        query.lte("retainUntil", cutoff)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
+  },
+  Effect.orDie
+);
 
 /** Persists one incomplete physical cleanup page. */
 const persistCleanup = Effect.fn("contentRelease.persistSnapshotCleanup")(

@@ -21,7 +21,7 @@ type RankedMaterial = Ref.Returns<
   typeof contents.queries.recent.getRecentlyViewed
 >[number];
 
-export type HomeMaterial = Pick<
+type HomeMaterial = Pick<
   RankedMaterial,
   | "content_id"
   | "contextKey"

@@ -43,7 +43,7 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
 });
 
 /** Authenticated local body plus metadata rendered by the actual Nakafa app. */
-export type MaterialPreviewContent = Effect.Success<
+type MaterialPreviewContent = Effect.Success<
   ReturnType<typeof readReadyContent>
 >;
 /** Reads a matching changed material route or leaves unchanged routes alone. */

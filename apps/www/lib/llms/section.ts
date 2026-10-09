@@ -22,7 +22,7 @@ const LlmsSectionPagesSchema = Schema.Struct({
   routeCount: Schema.Finite,
 });
 /** One bounded signed section inventory. */
-export type LlmsSectionPages = typeof LlmsSectionPagesSchema.Type;
+type LlmsSectionPages = typeof LlmsSectionPagesSchema.Type;
 
 /** Reads bounded page counts from the active owner of one content section. */
 export const getLlmsSectionPages = Effect.fn("www.llms.section.pages")(

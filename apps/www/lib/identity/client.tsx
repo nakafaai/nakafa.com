@@ -35,7 +35,7 @@ function toIdentityState(account: AccountRecord) {
 }
 
 /** The resolved account, its projection, and whether it is still resolving. */
-export type IdentityState =
+type IdentityState =
   | typeof pendingState
   | typeof signedOutState
   | ReturnType<typeof toIdentityState>;

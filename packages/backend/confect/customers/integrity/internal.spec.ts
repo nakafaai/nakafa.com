@@ -2,7 +2,8 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
-export const customerIntegrityUserPageResultValidator = Schema.Struct({
+
+const customerIntegrityUserPageResultValidator = Schema.Struct({
   continueCursor: Schema.String,
   isDone: Schema.Boolean,
   page: Schema.mutable(
@@ -15,7 +16,7 @@ export const customerIntegrityUserPageResultValidator = Schema.Struct({
     )
   ),
 });
-export const customerIntegrityCustomerPageResultValidator = Schema.Struct({
+const customerIntegrityCustomerPageResultValidator = Schema.Struct({
   continueCursor: Schema.String,
   isDone: Schema.Boolean,
   page: Schema.mutable(
@@ -29,7 +30,7 @@ export const customerIntegrityCustomerPageResultValidator = Schema.Struct({
     )
   ),
 });
-export const customerIntegritySubscriptionPageResultValidator = Schema.Struct({
+const customerIntegritySubscriptionPageResultValidator = Schema.Struct({
   continueCursor: Schema.String,
   isDone: Schema.Boolean,
   page: Schema.mutable(

@@ -21,7 +21,7 @@ export class CommentWriteError extends Schema.TaggedError<CommentWriteError>()(
 /**
  * Vote action validator: -1 = downvote, 0 = remove vote, 1 = upvote
  */
-export const voteActionValidator = Schema.Literals([-1, 0, 1]);
+const voteActionValidator = Schema.Literals([-1, 0, 1]);
 
 /**
  * Add a comment to a slug (article, post, etc.).

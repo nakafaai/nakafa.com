@@ -27,7 +27,7 @@ interface AnswerEntry {
 type MessageEntry = AnswerEntry | PartEntry;
 
 /** One run of consecutive work steps or answer parts. */
-export interface MessageGroup {
+interface MessageGroup {
   readonly entries: MessageEntry[];
   readonly key: string;
   readonly kind: "activity" | "response";

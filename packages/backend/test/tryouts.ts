@@ -12,10 +12,10 @@ import {
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { Effect, Schema } from "effect";
 export const TRYOUT_TEST_NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
-export const TRYOUT_COUNTRY_PATH = "try-out/indonesia";
-export const TRYOUT_EXAM_PATH = `${TRYOUT_COUNTRY_PATH}/snbt`;
-export const TRYOUT_TRACK_PATH = `${TRYOUT_EXAM_PATH}/2027`;
-export const TRYOUT_SET_PATH = `${TRYOUT_TRACK_PATH}/set-1`;
+const TRYOUT_COUNTRY_PATH = "try-out/indonesia";
+const TRYOUT_EXAM_PATH = `${TRYOUT_COUNTRY_PATH}/snbt`;
+const TRYOUT_TRACK_PATH = `${TRYOUT_EXAM_PATH}/2027`;
+const TRYOUT_SET_PATH = `${TRYOUT_TRACK_PATH}/set-1`;
 export const TRYOUT_SECTION_KEY = "penalaran-matematika";
 export const TRYOUT_SECTION_PATH = `${TRYOUT_SET_PATH}/${TRYOUT_SECTION_KEY}`;
 type TryoutSetFixtureOptions = Partial<
@@ -80,7 +80,7 @@ type TryoutGraphInput =
   | TryoutSetGraphInput
   | TryoutSectionGraphInput;
 /** Derives the exact graph identity owned by one signed try-out row. */
-export function testTryoutGraph(input: TryoutGraphInput) {
+function testTryoutGraph(input: TryoutGraphInput) {
   const appLocale = ActiveAppLocaleSchema.make(input.appLocale ?? "id");
   const examLens: LearningGraphSegments["lens"] = [
     "tryout",

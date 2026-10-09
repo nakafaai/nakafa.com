@@ -120,7 +120,7 @@ export function deriveViewportState(
 }
 
 /** Selects the jump actions allowed to render for the current viewport. */
-export function getViewportJumpControl({
+function getViewportJumpControl({
   backStack,
   hasOverflow,
   isAtLatest,

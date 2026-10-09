@@ -3,7 +3,7 @@ import type { QuestionResponse } from "@nakafa/aksara-contracts/question/respons
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 
 /** Cohesive reactive state returned for one try-out section route. */
-export type TryoutSectionState = NonNullable<
+type TryoutSectionState = NonNullable<
   Ref.Returns<typeof tryouts.queries.runtime.getSectionAttemptState>
 >;
 
@@ -17,7 +17,7 @@ export type TryoutSectionRuntime = NonNullable<TryoutSectionState["runtime"]>;
 export type TryoutRuntimeQuestion = TryoutSectionRuntime["questions"][number];
 
 /** One public immutable response definition in an active question. */
-export type TryoutRuntimeResponseSpec = TryoutRuntimeQuestion["responseSpec"];
+type TryoutRuntimeResponseSpec = TryoutRuntimeQuestion["responseSpec"];
 
 /** Response definition rendered from either signed preview or attempt state. */
 export type TryoutRenderableResponseSpec =

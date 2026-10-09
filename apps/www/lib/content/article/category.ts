@@ -31,7 +31,7 @@ const PublishedArticleCategoryGenerationSchema = Schema.Struct({
 });
 
 /** One localized category with the generation observed during its catalog read. */
-export type PublishedArticleCategoryModel = PublishedArticleCategory &
+type PublishedArticleCategoryModel = PublishedArticleCategory &
   typeof PublishedArticleCategoryGenerationSchema.Type;
 
 /** Maps an incomplete signed category catalog to its public failure contract. */

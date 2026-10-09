@@ -11,7 +11,7 @@ import { type Cause, Effect, Schema } from "effect";
 const AgentProblemStatusSchema = Schema.Literals([
   400, 403, 404, 405, 406, 415, 422, 429, 500, 503,
 ]);
-export const PUBLIC_API_HEADERS = {
+const PUBLIC_API_HEADERS = {
   "Access-Control-Allow-Headers":
     "Accept, Content-Type, traceparent, tracestate, baggage",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -141,7 +141,7 @@ export function httpInputFailureResponse(
 }
 
 /** Maps an unexpected Effect defect to a traceable server response. */
-export function internalFailureResponse(instance: string, requestId: string) {
+function internalFailureResponse(instance: string, requestId: string) {
   return problemResponse({
     code: "INTERNAL_ERROR",
     detail: "The public API could not complete the request.",

@@ -14,7 +14,7 @@ const QUIET_MILLISECONDS = 500;
 const POLL_MILLISECONDS = 100;
 
 /** A prefetch or one of its scripts was still loading when the window ended. */
-export class PrefetchSettleTimeout extends Schema.TaggedError<PrefetchSettleTimeout>()(
+class PrefetchSettleTimeout extends Schema.TaggedError<PrefetchSettleTimeout>()(
   "PrefetchSettleTimeout",
   {
     pending: Schema.Array(Schema.String),

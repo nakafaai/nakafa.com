@@ -16,7 +16,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema, Struct } from "effect";
 
 /** Everything the School shell needs to render for the caller in one tenant. */
-export const ViewerView = Schema.Struct({
+const ViewerView = Schema.Struct({
   can: TenantCapabilities,
   grants: Schema.Array(GrantView),
   person: Schema.Struct({

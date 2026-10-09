@@ -33,7 +33,7 @@ export const normalizeStoredCustomer: (
   };
 });
 /** Aligns an existing Polar customer with the app user's current identity. */
-export const syncExistingCustomer: (
+const syncExistingCustomer: (
   gateway: PolarCustomerGateway,
   customer: PolarCustomerSource,
   input: EnsurePolarCustomerInput

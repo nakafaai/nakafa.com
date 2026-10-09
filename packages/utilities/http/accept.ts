@@ -48,7 +48,7 @@ export const HttpMediaTypeSchema = Schema.String.pipe(
   Schema.brand("@Nakafa/HttpMediaType")
 );
 
-export type HttpMediaType = typeof HttpMediaTypeSchema.Type;
+type HttpMediaType = typeof HttpMediaTypeSchema.Type;
 
 type SupportedMediaTypes = readonly [HttpMediaType, ...HttpMediaType[]];
 

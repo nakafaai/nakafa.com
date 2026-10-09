@@ -2,7 +2,8 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { snapshotFamilyValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
-export const rowPageValidator = Schema.Struct({
+
+const rowPageValidator = Schema.Struct({
   batchIndex: Schema.Finite,
   done: Schema.Boolean,
   firstIndex: Schema.Finite,

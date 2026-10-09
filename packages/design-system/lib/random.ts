@@ -14,7 +14,7 @@ const SEED_MULTIPLIER = 16_807;
  * Based on the LCG algorithm: X = (a * X + c) % m
  * Using constants from Numerical Recipes for good quality randomness.
  */
-export class SeededRandom {
+class SeededRandom {
   private seed: number;
 
   constructor(seed: number) {
@@ -94,7 +94,7 @@ export class SeededRandom {
  * @param inputs - Array of numbers or strings to create seed from
  * @returns A deterministic seed number
  */
-export function createSeed(...inputs: (string | number)[]): number {
+function createSeed(...inputs: (string | number)[]): number {
   let seed = 0;
   for (const input of inputs) {
     if (typeof input === "number") {

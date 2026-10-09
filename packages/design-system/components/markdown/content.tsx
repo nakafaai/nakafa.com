@@ -22,7 +22,7 @@ const REMARK_PLUGINS = [
 
 type HardenOptions = Parameters<typeof harden>[0];
 
-export interface MarkdownSecurityProps {
+interface MarkdownSecurityProps {
   allowedImagePrefixes?: HardenOptions["allowedImagePrefixes"];
   allowedLinkPrefixes?: HardenOptions["allowedLinkPrefixes"];
   defaultOrigin?: HardenOptions["defaultOrigin"];

@@ -37,7 +37,7 @@ const ApplicationSiteSummarySchema = Schema.Struct({
   route: Schema.String,
   title: Schema.String,
 });
-export type ApplicationSiteSummary = typeof ApplicationSiteSummarySchema.Type;
+type ApplicationSiteSummary = typeof ApplicationSiteSummarySchema.Type;
 
 /** Checks whether a route segment is a supported llms section. */
 export function isLlmsSection(

@@ -27,7 +27,6 @@ export const startAccessArgsValidator = Schema.Struct({
     now: Schema.Finite,
   },
 });
-export type StartAccessArgs = typeof startAccessArgsValidator.Type;
 export const tryoutStartAccessValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("free-attempt"),
@@ -38,7 +37,6 @@ export const tryoutStartAccessValidator = Schema.Union([
 ]);
 export type TryoutStartAccess = typeof tryoutStartAccessValidator.Type;
 export const tryoutPaywallSourceValidator = Schema.Literal("review");
-export type TryoutPaywallSource = typeof tryoutPaywallSourceValidator.Type;
 export type AttemptAccessFields = Pick<
   Docs["tryoutAttempts"],
   | "accessEndsAt"

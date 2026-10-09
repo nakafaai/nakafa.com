@@ -59,7 +59,7 @@ export const tenantGrants = Kind.extend(tenant, {
   published: [],
 });
 
-export const unitGrants = Kind.extend(unit, {
+const unitGrants = Kind.extend(unit, {
   actions: {
     "grant.manage": {
       access: "write",
@@ -73,7 +73,7 @@ export const unitGrants = Kind.extend(unit, {
 });
 
 /** Grant changes are filed under the Person who holds the grant. */
-export const personGrants = Kind.extend(person, {
+const personGrants = Kind.extend(person, {
   actions: {},
   changes: [
     Schema.Struct({

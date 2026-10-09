@@ -24,61 +24,62 @@ import { Effect, Result } from "effect";
 /** Complete bounded evidence accepted by the Node publication dispatcher. */
 export type DispatchInput = typeof dispatchInputValidator.Type;
 /** Routes one decoded request to its single domain-owned capability. */
-export const performRequest = Effect.fn("contentRelease.performRequest")(
-  function* (request: PublicationRequest, activeKeyId: string) {
-    const _ctx = yield* ActionCtxService;
-    if (request.operation === "stageGroup") {
-      return yield* stagePublicationGroup(request, activeKeyId);
+const performRequest = Effect.fn("contentRelease.performRequest")(function* (
+  request: PublicationRequest,
+  activeKeyId: string
+) {
+  const _ctx = yield* ActionCtxService;
+  if (request.operation === "stageGroup") {
+    return yield* stagePublicationGroup(request, activeKeyId);
+  }
+  if (
+    request.operation === "stageRelease" ||
+    request.operation === "stageRecovery" ||
+    request.operation === "stageItemBatch" ||
+    request.operation === "stageRouteBatch" ||
+    request.operation === "stageProjectionBatch" ||
+    request.operation === "stageArtifactBatch" ||
+    request.operation === "stageSnapshot" ||
+    request.operation === "stageSnapshotBatch" ||
+    request.operation === "stageTryoutRuntimeBundle"
+  ) {
+    return yield* stagePublication(request, activeKeyId);
+  }
+  if (
+    request.operation === "accept" ||
+    request.operation === "abort" ||
+    request.operation === "verify" ||
+    request.operation === "activate" ||
+    request.operation === "activateRecovery"
+  ) {
+    return yield* advancePublication(request);
+  }
+  return yield* readPublication(request);
+});
+/** Encodes one sanitized failure from a fully decoded request. */
+const encodeRequestFailure = Effect.fn("contentRelease.encodeRequestFailure")(
+  function* (request: PublicationRequest, error: ReleaseError) {
+    yield* Effect.logWarning("Content publication request rejected.").pipe(
+      Effect.annotateLogs({
+        code: error.code,
+        operation: request.operation,
+        reason: error.message,
+      })
+    );
+    let activeReleaseId: null | ReleaseId = null;
+    if (error.code === "CONTENT_RELEASE_STALE_BASE") {
+      const current = yield* readCurrentPublication().pipe(Effect.result);
+      if (Result.isFailure(current)) {
+        const failure = yield* requestFailure(request, current.failure, null);
+        return yield* publicationFailure(failure);
+      }
+      activeReleaseId =
+        current.success.active?.release.manifest.releaseId ?? null;
     }
-    if (
-      request.operation === "stageRelease" ||
-      request.operation === "stageRecovery" ||
-      request.operation === "stageItemBatch" ||
-      request.operation === "stageRouteBatch" ||
-      request.operation === "stageProjectionBatch" ||
-      request.operation === "stageArtifactBatch" ||
-      request.operation === "stageSnapshot" ||
-      request.operation === "stageSnapshotBatch" ||
-      request.operation === "stageTryoutRuntimeBundle"
-    ) {
-      return yield* stagePublication(request, activeKeyId);
-    }
-    if (
-      request.operation === "accept" ||
-      request.operation === "abort" ||
-      request.operation === "verify" ||
-      request.operation === "activate" ||
-      request.operation === "activateRecovery"
-    ) {
-      return yield* advancePublication(request);
-    }
-    return yield* readPublication(request);
+    const failure = yield* requestFailure(request, error, activeReleaseId);
+    return yield* publicationFailure(failure);
   }
 );
-/** Encodes one sanitized failure from a fully decoded request. */
-export const encodeRequestFailure = Effect.fn(
-  "contentRelease.encodeRequestFailure"
-)(function* (request: PublicationRequest, error: ReleaseError) {
-  yield* Effect.logWarning("Content publication request rejected.").pipe(
-    Effect.annotateLogs({
-      code: error.code,
-      operation: request.operation,
-      reason: error.message,
-    })
-  );
-  let activeReleaseId: null | ReleaseId = null;
-  if (error.code === "CONTENT_RELEASE_STALE_BASE") {
-    const current = yield* readCurrentPublication().pipe(Effect.result);
-    if (Result.isFailure(current)) {
-      const failure = yield* requestFailure(request, current.failure, null);
-      return yield* publicationFailure(failure);
-    }
-    activeReleaseId =
-      current.success.active?.release.manifest.releaseId ?? null;
-  }
-  const failure = yield* requestFailure(request, error, activeReleaseId);
-  return yield* publicationFailure(failure);
-});
 /** Strictly decodes, executes, and sanitizes one authenticated request. */
 export const dispatchPublication = Effect.fn(
   "contentRelease.dispatchPublication"

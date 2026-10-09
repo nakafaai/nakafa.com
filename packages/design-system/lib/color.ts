@@ -26,7 +26,7 @@ const COLOR_KEYS = [
   "ZINC",
 ] as const;
 
-export type ColorName = (typeof COLOR_KEYS)[number];
+type ColorName = (typeof COLOR_KEYS)[number];
 
 export const COLORS = {
   AMBER: "#d97706",
@@ -123,8 +123,8 @@ export const FIXED_COLORS = {
 type ShadeColorName = keyof typeof COLOR_SHADES;
 type ColorShade<Color extends ShadeColorName> =
   keyof (typeof COLOR_SHADES)[Color];
-export type FixedColorName = keyof typeof FIXED_COLORS;
-export type ColorInput = ColorName | FixedColorName;
+type FixedColorName = keyof typeof FIXED_COLORS;
+type ColorInput = ColorName | FixedColorName;
 const COLOR_VALUES = {
   ...COLORS,
   ...FIXED_COLORS,

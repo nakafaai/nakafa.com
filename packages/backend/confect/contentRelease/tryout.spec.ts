@@ -2,28 +2,29 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
-export const tryoutCatalogValidator = Schema.Struct({
+
+const tryoutCatalogValidator = Schema.Struct({
   activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   rowJson: Schema.mutable(Schema.Array(Schema.String)),
   snapshotId: Schema.String,
   sourceRevision: Schema.Union([Schema.String, Schema.Null]),
 });
-export const tryoutSitemapCountValidator = Schema.Struct({
+const tryoutSitemapCountValidator = Schema.Struct({
   pageCount: Schema.Finite,
   routeCount: Schema.Finite,
 });
-export const tryoutSitemapPageValidator = Schema.Union([
+const tryoutSitemapPageValidator = Schema.Union([
   Schema.Struct({
     paths: Schema.mutable(Schema.Array(Schema.String)),
   }),
   Schema.Null,
 ]);
-export const taxonomyOptionValidator = Schema.Struct({
+const taxonomyOptionValidator = Schema.Struct({
   id: Schema.String,
   label: Schema.String,
 });
-export const tryoutTaxonomyValidator = Schema.Struct({
+const tryoutTaxonomyValidator = Schema.Struct({
   countries: Schema.mutable(Schema.Array(taxonomyOptionValidator)),
   exams: Schema.mutable(Schema.Array(taxonomyOptionValidator)),
   routeCount: Schema.Finite,

@@ -49,7 +49,7 @@ const NakafaQuranTranslationDocumentSchema =
   })).mapFields(Struct.map(Schema.mutableKey));
 
 /** Dedicated signed Bismillah presented before numbered verses. */
-export const NakafaQuranBismillahSchema = Schema.Struct({
+const NakafaQuranBismillahSchema = Schema.Struct({
   arabic: Schema.String.annotate({
     description: "Exact signed Arabic Bismillah text.",
   }),

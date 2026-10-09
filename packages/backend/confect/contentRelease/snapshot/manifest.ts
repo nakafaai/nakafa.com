@@ -43,7 +43,7 @@ export const loadSnapshot = Effect.fn("contentRelease.loadSnapshot")(function* (
 });
 
 /** Proves a staged manifest is the signed replacement for its family. */
-export const requireReplacement = Effect.fn(
+const requireReplacement = Effect.fn(
   "contentRelease.requireSnapshotReplacement"
 )(function* (
   release: Docs["contentReleases"],

@@ -21,23 +21,23 @@ import { Array as Arr, Effect, Schema } from "effect";
 export const HEAD_PAGE_LIMIT = 128;
 
 /** Decodes one bounded active-head request into the exact shared contract. */
-export const decodeRequest = Effect.fn("contentRelease.decodeHeadPage")(
-  function* (input: unknown) {
-    return yield* Schema.decodeUnknownEffect(HeadPageRequestSchema)(input, {
-      onExcessProperty: "error",
-    }).pipe(
-      Effect.mapError(
-        () =>
-          new ReleaseError({
-            code: "CONTENT_RELEASE_LIMIT",
-            message: "Content head page request violates its bounded contract.",
-          })
-      )
-    );
-  }
-);
+const decodeRequest = Effect.fn("contentRelease.decodeHeadPage")(function* (
+  input: unknown
+) {
+  return yield* Schema.decodeUnknownEffect(HeadPageRequestSchema)(input, {
+    onExcessProperty: "error",
+  }).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_LIMIT",
+          message: "Content head page request violates its bounded contract.",
+        })
+    )
+  );
+});
 /** Proves the requested release is an exact active or verified snapshot. */
-export const snapshotSequence = Effect.fn("contentRelease.snapshotSequence")(
+const snapshotSequence = Effect.fn("contentRelease.snapshotSequence")(
   function* (releaseId: string, manifestHash: string) {
     const { release } = yield* loadReadableSnapshot(releaseId, manifestHash);
     return release.sequence;

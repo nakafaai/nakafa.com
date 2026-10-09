@@ -9,7 +9,7 @@ import {
   Schema,
 } from "effect";
 
-export const TrackedRequestKindSchema = Schema.Literals([
+const TrackedRequestKindSchema = Schema.Literals([
   "javascript",
   "prefetch",
   "router",
@@ -21,24 +21,23 @@ export const APP_SCRIPT_PATTERN = /\/_next\/static\/chunks\/.+\.js$/;
 /** The header every request of the Next.js client router carries, with the value "1". */
 export const NEXT_ROUTER_REQUEST_HEADER = "rsc";
 export const NEXT_ROUTER_PREFETCH_HEADER = "next-router-prefetch";
-export const NEXT_ROUTER_SEGMENT_PREFETCH_HEADER =
-  "next-router-segment-prefetch";
+const NEXT_ROUTER_SEGMENT_PREFETCH_HEADER = "next-router-segment-prefetch";
 
 export type TrackedRequestKind = typeof TrackedRequestKindSchema.Type;
 
-export const RequestOutcomeSchema = Schema.Literals([
+const RequestOutcomeSchema = Schema.Literals([
   "http",
   "missing-response",
   "network",
 ]);
 
-export const TrackedRequestSchema = Schema.Struct({
+const TrackedRequestSchema = Schema.Struct({
   prefetchHeader: Schema.optional(Schema.String),
   segmentPrefetchHeader: Schema.optional(Schema.String),
   url: Schema.String,
 });
 
-export type TrackedRequest = typeof TrackedRequestSchema.Type;
+type TrackedRequest = typeof TrackedRequestSchema.Type;
 
 export const requestFailureFields = {
   errorText: Schema.optional(Schema.String),
@@ -51,7 +50,7 @@ export const requestFailureFields = {
 
 export const RequestFailureSchema = Schema.Struct(requestFailureFields);
 
-export type RequestFailure = typeof RequestFailureSchema.Type;
+type RequestFailure = typeof RequestFailureSchema.Type;
 
 export const formatRequestFailure = (failure: RequestFailure) => {
   const prefetchHeader =

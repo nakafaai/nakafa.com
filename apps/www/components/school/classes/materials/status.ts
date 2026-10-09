@@ -29,7 +29,7 @@ export const materialStatusList = [
   },
 ] as const;
 
-export type MaterialStatusValue = (typeof materialStatusList)[number]["value"];
+type MaterialStatusValue = (typeof materialStatusList)[number]["value"];
 
 /**
  * Gets the material status by value.

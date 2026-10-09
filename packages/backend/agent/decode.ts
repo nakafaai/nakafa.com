@@ -4,7 +4,8 @@ import {
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
 import { Effect, Schema } from "effect";
-export type AgentSchema = Schema.ConstraintDecoder<unknown, never>;
+
+type AgentSchema = Schema.ConstraintDecoder<unknown, never>;
 const parseOptions = {
   onExcessProperty: "error",
 } as const;

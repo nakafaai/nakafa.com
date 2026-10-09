@@ -8,7 +8,7 @@ const PublicRedirectSchema = Schema.Struct({
  * The answer to one retired public URL: the pathname that the client is sent
  * to, and the status that says whether that answer can change later.
  */
-export type PublicRedirect = typeof PublicRedirectSchema.Type;
+type PublicRedirect = typeof PublicRedirectSchema.Type;
 
 /**
  * Answers with a permanent redirect (308) to a successor that does not change,

@@ -10,7 +10,8 @@ import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoreResultValidator } from "@repo/backend/confect/tryouts/score";
 import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
 import { Schema } from "effect";
-export const tryoutCurrentSectionValidator = Schema.Struct({
+
+const tryoutCurrentSectionValidator = Schema.Struct({
   answeredCount: Schema.Finite,
   completedAt: Schema.Union([Schema.Finite, Schema.Null]),
   endReason: Schema.Union([attemptEndReasonValidator, Schema.Null]),
@@ -51,7 +52,7 @@ const runtimeQuestionValidator = Schema.Struct({
   sourcePath: Schema.String,
   sourceRevision: Schema.String,
 });
-export const tryoutSectionRuntimeValidator = Schema.Struct({
+const tryoutSectionRuntimeValidator = Schema.Struct({
   attemptId: IdSchema("tryoutAttempts"),
   expiresAt: Schema.Finite,
   questions: Schema.mutable(Schema.Array(runtimeQuestionValidator)),
@@ -61,7 +62,7 @@ export const tryoutRuntimeStateValidator = Schema.Struct({
   attempt: tryoutAttemptStateValidator,
   runtime: Schema.Union([Schema.Null, tryoutSectionRuntimeValidator]),
 });
-export const selectorFields = {
+const selectorFields = {
   appLocale: appLocaleValidator,
   artifactHash: Schema.String,
   bundleHash: Schema.String,

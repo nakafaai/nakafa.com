@@ -11,8 +11,9 @@ import {
   PreviewPendingError,
 } from "@/lib/content/preview/errors";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
+
 /** Exact article route identity requested by the physical Next page. */
-export type ArticlePreviewInput = Pick<
+type ArticlePreviewInput = Pick<
   ArticlePreviewDocument["route"],
   "appLocale" | "publicPath"
 >;

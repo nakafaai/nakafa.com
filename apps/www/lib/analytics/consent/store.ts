@@ -17,13 +17,13 @@ import type { BrowserConsentSnapshot } from "@/lib/analytics/consent/state";
  * isolated authoring preview that never asks, or on a page whose signed
  * notice is not live yet.
  */
-export const AnalyticsConsentMode = Schema.Literals([
+const AnalyticsConsentMode = Schema.Literals([
   "live",
   "preview",
   "unavailable",
 ]);
 
-export type AnalyticsConsentMode = typeof AnalyticsConsentMode.Type;
+type AnalyticsConsentMode = typeof AnalyticsConsentMode.Type;
 
 /**
  * Creates one provider's consent store with the state the server renders.

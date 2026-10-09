@@ -33,7 +33,7 @@ export const ScrapeInputSchema = Schema.Struct({
       `,
     }),
   });
-export const ScrapeOutputSchema = Schema.Struct({
+const ScrapeOutputSchema = Schema.Struct({
   data: Schema.Struct({
     content: Schema.String,
     description: Schema.optional(Schema.String),
@@ -98,7 +98,7 @@ export const WebSearchSourceSchema = Schema.Struct({
   title: Schema.String,
   url: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export const WebSearchOutputSchema = Schema.Struct({
+const WebSearchOutputSchema = Schema.Struct({
   error: Schema.optional(Schema.String),
   sources: Schema.Array(WebSearchSourceSchema).pipe(Schema.mutable),
 })
@@ -110,7 +110,7 @@ export const WebSearchOutputSchema = Schema.Struct({
       `,
     }),
   });
-export const ResearchCitationSchema = Schema.Struct({
+const ResearchCitationSchema = Schema.Struct({
   title: Schema.NonEmptyString.annotate({
     description: createPrompt({
       taskContext: `
@@ -126,7 +126,7 @@ export const ResearchCitationSchema = Schema.Struct({
     }),
   }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export const ResearchFindingSchema = Schema.Struct({
+const ResearchFindingSchema = Schema.Struct({
   text: Schema.NonEmptyString.annotate({
     description: createPrompt({
       taskContext: `

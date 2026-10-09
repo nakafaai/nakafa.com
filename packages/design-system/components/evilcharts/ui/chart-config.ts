@@ -45,7 +45,7 @@ const CHART_KEY_SAFE_CHAR_PATTERN = /^[A-Za-z0-9_-]$/;
 export type ChartConfig = ChartContainerProps["config"];
 
 /** Expected failure: a chart config entry has colors but no theme key. */
-export class ChartConfigColorsError extends Schema.TaggedError<ChartConfigColorsError>()(
+class ChartConfigColorsError extends Schema.TaggedError<ChartConfigColorsError>()(
   "ChartConfigColorsError",
   {
     key: Schema.String,

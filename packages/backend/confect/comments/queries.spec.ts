@@ -6,16 +6,17 @@ import { commentVoteValidator } from "@repo/backend/confect/comments/schema";
 import { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema } from "effect";
-export const publicCommentUserValidator = Schema.Struct({
+
+const publicCommentUserValidator = Schema.Struct({
   _id: userDataValidator.fields._id,
   image: userDataValidator.fields.image,
   name: userDataValidator.fields.name,
 });
-export const commentWithViewerVoteValidator = Schema.Struct({
+const commentWithViewerVoteValidator = Schema.Struct({
   ...commentsTable.Doc.fields,
   viewerVote: Schema.NullOr(commentVoteValidator),
 });
-export const commentWithUserValidator = Schema.Struct({
+const commentWithUserValidator = Schema.Struct({
   ...commentWithViewerVoteValidator.fields,
   user: Schema.NullOr(publicCommentUserValidator),
   replyToUser: Schema.NullOr(publicCommentUserValidator),

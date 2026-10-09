@@ -111,7 +111,7 @@ export const routePageProgram = Effect.fn("contentRelease.routeProofPage")(
 );
 
 /** Loads the signed artifact referenced by one exact staged upsert. */
-export const loadArtifactJson = Effect.fn("contentRelease.loadProofArtifact")(
+const loadArtifactJson = Effect.fn("contentRelease.loadProofArtifact")(
   function* (row: Docs["contentItems"]) {
     const database = yield* DatabaseReader;
     const item = yield* decodeItemJson(row.itemJson);

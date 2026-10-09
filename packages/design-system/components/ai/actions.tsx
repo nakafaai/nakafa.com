@@ -10,7 +10,7 @@ import {
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 
-export type ActionsProps = ComponentProps<typeof ButtonGroup>;
+type ActionsProps = ComponentProps<typeof ButtonGroup>;
 
 /** Groups adjacent response actions. */
 export function Actions({ className, children, ...props }: ActionsProps) {
@@ -21,7 +21,7 @@ export function Actions({ className, children, ...props }: ActionsProps) {
   );
 }
 
-export type ActionProps = ComponentProps<typeof Button> & {
+type ActionProps = ComponentProps<typeof Button> & {
   tooltip?: string;
   label?: string;
 };

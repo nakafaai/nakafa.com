@@ -97,7 +97,7 @@ const PublishedProgramCatalogSchema = Schema.Struct({
 });
 
 /** Complete bounded program catalog used by root curriculum navigation. */
-export type PublishedProgramCatalog = typeof PublishedProgramCatalogSchema.Type;
+type PublishedProgramCatalog = typeof PublishedProgramCatalogSchema.Type;
 
 /** Selects one renderable root from the authenticated bounded program catalog. */
 export const readPublishedProgramPrerenderRoute = Effect.fn(

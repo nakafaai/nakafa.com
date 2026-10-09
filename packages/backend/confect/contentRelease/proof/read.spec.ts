@@ -2,7 +2,8 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { releaseRoleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
-export const proofRowValidator = Schema.Struct({
+
+const proofRowValidator = Schema.Struct({
   index: Schema.Finite,
   itemJson: Schema.String,
   projectionJson: Schema.optionalKey(Schema.String),
@@ -13,7 +14,7 @@ export const proofPageValidator = Schema.Struct({
   nextIndex: Schema.Finite,
   rows: Schema.mutable(Schema.Array(proofRowValidator)),
 });
-export const proofStateValidator = Schema.Struct({
+const proofStateValidator = Schema.Struct({
   checkedIndex: Schema.Finite,
   releaseJson: Schema.String,
   rendererJson: Schema.String,
@@ -28,7 +29,7 @@ export const proofStateValidator = Schema.Struct({
   stagedUpserts: Schema.Finite,
   status: Schema.Literals(["verifying", "verified"]),
 });
-export const artifactProofRowValidator = Schema.Struct({
+const artifactProofRowValidator = Schema.Struct({
   artifactJson: Schema.String,
   index: Schema.Finite,
   itemJson: Schema.String,
@@ -37,7 +38,7 @@ export const artifactProofPageValidator = Schema.Struct({
   batchIndex: Schema.Finite,
   rows: Schema.mutable(Schema.Array(artifactProofRowValidator)),
 });
-export const artifactProofPlanValidator = Schema.Struct({
+const artifactProofPlanValidator = Schema.Struct({
   batchCount: Schema.Finite,
   stagedArtifacts: Schema.Finite,
 });

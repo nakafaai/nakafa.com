@@ -15,7 +15,7 @@ const JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 const INDEXNOW_ENDPOINT = "https://api.indexnow.org";
 
 /** Splits canonical sitemap URLs into IndexNow's supported batch size. */
-export function chunkIndexNowUrls(urls: readonly string[]) {
+function chunkIndexNowUrls(urls: readonly string[]) {
   return Arr.chunksOf(urls, BATCH_SIZE);
 }
 

@@ -38,65 +38,66 @@ const CatalogPageSchema = Schema.Struct({
 export type CatalogPage = typeof CatalogPageSchema.Type;
 
 /** Proves one staged release still extends its exact durable base slot. */
-export const validateBase = Effect.fn("contentRelease.validateCatalogBase")(
-  function* (release: Docs["contentReleases"], state: Docs["contentState"]) {
-    const signed = yield* decodeReleaseJson(release.releaseJson);
-    const baseId = signed.manifest.baseReleaseId;
-    const baseHash = signed.manifest.baseManifestHash;
-    const stateId =
-      release.role === "candidate"
-        ? state.activeReleaseId
-        : state.candidateReleaseId;
-    const stateHash =
-      release.role === "candidate"
-        ? state.activeManifestHash
-        : state.candidateManifestHash;
-    const stateSequence =
-      release.role === "candidate"
-        ? state.activeSequence
-        : state.candidateSequence;
-    if ((stateId ?? null) !== baseId || (stateHash ?? null) !== baseHash) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_STATE",
-        `Content release ${release.releaseId} lost its result-catalog base.`
-      );
-    }
-    if (baseId === null) {
-      if (stateSequence !== undefined) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Content release ${release.releaseId} has a nonempty genesis sequence.`
-        );
-      }
-      return;
-    }
-    if (baseHash === null || stateSequence === undefined) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Content release ${release.releaseId} has an incomplete base identity.`
-      );
-    }
-    const base = yield* loadRelease(baseId);
-    const baseSigned = yield* decodeReleaseJson(base.releaseJson);
-    if (
-      base.sequence !== stateSequence ||
-      baseSigned.manifestHash !== baseHash ||
-      (release.role === "candidate"
-        ? base.status !== "completed"
-        : base.role !== "candidate" || base.status !== "verified")
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Content release ${release.releaseId} has an invalid catalog base.`
-      );
-    }
-    if (release.role === "candidate") {
-      yield* completedReceipt(base, baseSigned);
-      return;
-    }
-    yield* stagedEvidence(base, baseSigned);
+const validateBase = Effect.fn("contentRelease.validateCatalogBase")(function* (
+  release: Docs["contentReleases"],
+  state: Docs["contentState"]
+) {
+  const signed = yield* decodeReleaseJson(release.releaseJson);
+  const baseId = signed.manifest.baseReleaseId;
+  const baseHash = signed.manifest.baseManifestHash;
+  const stateId =
+    release.role === "candidate"
+      ? state.activeReleaseId
+      : state.candidateReleaseId;
+  const stateHash =
+    release.role === "candidate"
+      ? state.activeManifestHash
+      : state.candidateManifestHash;
+  const stateSequence =
+    release.role === "candidate"
+      ? state.activeSequence
+      : state.candidateSequence;
+  if ((stateId ?? null) !== baseId || (stateHash ?? null) !== baseHash) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      `Content release ${release.releaseId} lost its result-catalog base.`
+    );
   }
-);
+  if (baseId === null) {
+    if (stateSequence !== undefined) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Content release ${release.releaseId} has a nonempty genesis sequence.`
+      );
+    }
+    return;
+  }
+  if (baseHash === null || stateSequence === undefined) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Content release ${release.releaseId} has an incomplete base identity.`
+    );
+  }
+  const base = yield* loadRelease(baseId);
+  const baseSigned = yield* decodeReleaseJson(base.releaseJson);
+  if (
+    base.sequence !== stateSequence ||
+    baseSigned.manifestHash !== baseHash ||
+    (release.role === "candidate"
+      ? base.status !== "completed"
+      : base.role !== "candidate" || base.status !== "verified")
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Content release ${release.releaseId} has an invalid catalog base.`
+    );
+  }
+  if (release.role === "candidate") {
+    yield* completedReceipt(base, baseSigned);
+    return;
+  }
+  yield* stagedEvidence(base, baseSigned);
+});
 
 /** Loads one staged release after validating its frozen base identity. */
 export const catalogRelease = Effect.fn("contentRelease.catalogRelease")(
@@ -116,35 +117,34 @@ export const catalogRelease = Effect.fn("contentRelease.catalogRelease")(
 );
 
 /** Loads the next bounded permanent identities after one logical cursor. */
-export const loadCatalogKeys = Effect.fn("contentRelease.loadCatalogKeys")(
-  function* (cursor: CatalogCursor | null) {
-    const database = yield* DatabaseReader;
-    const limit = PROOF_PAGE_LIMIT + 1;
-    const sameKey =
-      cursor === null
-        ? []
-        : yield* database
-            .table("contentKeys")
-            .index(
-              "by_contentKey_and_artifactLocale",
-              (query) =>
-                query
-                  .eq("contentKey", cursor.contentKey)
-                  .gt("artifactLocale", cursor.artifactLocale),
-              "asc"
-            )
-            .take(limit);
-    const remaining = limit - sameKey.length;
-    const laterKeys = yield* database
-      .table("contentKeys")
-      .index("by_contentKey_and_artifactLocale", (query) =>
-        cursor === null ? query : query.gt("contentKey", cursor.contentKey)
-      )
-      .take(remaining);
-    return [...sameKey, ...laterKeys];
-  },
-  Effect.orDie
-);
+const loadCatalogKeys = Effect.fn("contentRelease.loadCatalogKeys")(function* (
+  cursor: CatalogCursor | null
+) {
+  const database = yield* DatabaseReader;
+  const limit = PROOF_PAGE_LIMIT + 1;
+  const sameKey =
+    cursor === null
+      ? []
+      : yield* database
+          .table("contentKeys")
+          .index(
+            "by_contentKey_and_artifactLocale",
+            (query) =>
+              query
+                .eq("contentKey", cursor.contentKey)
+                .gt("artifactLocale", cursor.artifactLocale),
+            "asc"
+          )
+          .take(limit);
+  const remaining = limit - sameKey.length;
+  const laterKeys = yield* database
+    .table("contentKeys")
+    .index("by_contentKey_and_artifactLocale", (query) =>
+      cursor === null ? query : query.gt("contentKey", cursor.contentKey)
+    )
+    .take(remaining);
+  return [...sameKey, ...laterKeys];
+}, Effect.orDie);
 
 /** Reads one canonical result-catalog page from a frozen release sequence. */
 export const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(

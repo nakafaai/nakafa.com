@@ -1,7 +1,8 @@
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
+
 /** One signed article selected for partner API hydration. */
-export const articleApiEntryValidator = Schema.Struct({
+const articleApiEntryValidator = Schema.Struct({
   appLocale: appLocaleValidator,
   publicPath: Schema.String,
 });

@@ -90,7 +90,7 @@ export const releaseStatusValidator = Schema.Literals([
 export const releaseRoleValidator = Schema.Literals(["candidate", "recovery"]);
 
 /** Ordered durable phases for one crash-safe history compaction cycle. */
-export const COMPACTION_PHASES = [
+const COMPACTION_PHASES = [
   "heads",
   "bindings",
   "items",

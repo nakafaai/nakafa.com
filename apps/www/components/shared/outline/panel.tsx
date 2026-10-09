@@ -19,7 +19,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { OutlineContent } from "@/components/shared/outline/scroll";
 
 /** The outline panel: its heading slot, the outline, and the page's actions. */
-export type SidebarRightProps = {
+type SidebarRightProps = {
   children: ReactNode;
   footer: ReactNode;
   header?: ReactNode;

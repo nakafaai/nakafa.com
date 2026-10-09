@@ -214,7 +214,7 @@ function namesMember(
  * `MDXComponents`, `TextUIPart`, and `JSXElement`, and the handle modules of
  * `effect`, such as `Effect` and `Fiber`.
  */
-export function valueNames(sourceFile: SourceFile): readonly string[] {
+function valueNames(sourceFile: SourceFile): readonly string[] {
   return Arr.flatMap(sourceFile.statements, (statement) => {
     if (
       !(

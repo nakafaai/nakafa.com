@@ -6,7 +6,7 @@ import {
 import type { Locale } from "next-intl";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
-export const forYouNavigationItems = {
+const forYouNavigationItems = {
   subject: {
     href: "/curriculum",
     icon: Books02Icon,
@@ -30,7 +30,7 @@ export const forYouNavigationItems = {
   },
 } as const;
 
-export type ForYouNavigationItem =
+type ForYouNavigationItem =
   (typeof forYouNavigationItems)[keyof typeof forYouNavigationItems];
 
 const primaryNavigationItems = [

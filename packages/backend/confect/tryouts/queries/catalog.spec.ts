@@ -18,7 +18,8 @@ import {
   tryoutPageArgsValidator,
 } from "@repo/backend/content/tryout/spec";
 import { Schema } from "effect";
-export const sectionPageFields = {
+
+const sectionPageFields = {
   exam: publicTryoutExamValidator,
   section: publicTryoutSectionValidator,
   set: publicTryoutSetValidator,

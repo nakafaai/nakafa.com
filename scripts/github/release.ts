@@ -16,7 +16,7 @@ import {
 
 const GithubRelease = Schema.Struct({ tag_name: Schema.String });
 
-export const GithubActionReleaseReviewSchema = Schema.Struct({
+const GithubActionReleaseReviewSchema = Schema.Struct({
   expectedTag: Schema.String,
   reason: Schema.String,
   repository: Schema.String,

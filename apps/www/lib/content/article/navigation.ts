@@ -69,7 +69,7 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
 );
 
 /** Caches complete article navigation under exact article release tags. */
-export async function getArticleNavigation(locale: Locale) {
+async function getArticleNavigation(locale: Locale) {
   "use cache";
 
   const navigation = await Effect.runPromise(

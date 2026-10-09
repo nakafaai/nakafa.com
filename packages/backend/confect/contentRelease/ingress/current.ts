@@ -19,19 +19,19 @@ import { contractFailure } from "@repo/backend/confect/contentRelease/proof/fail
 import { Effect, Schema } from "effect";
 
 /** Authenticates one exact release and renderer bundle recovered from storage. */
-export const decodeStoredBundle = Effect.fn(
-  "contentRelease.decodeStoredBundle"
-)(function* (releaseJson: string, rendererJson: string) {
-  const release = yield* parseStoredJson(releaseJson, "Signed release");
-  const rendererManifest = yield* parseStoredJson(
-    rendererJson,
-    "Renderer manifest"
-  );
-  return yield* verifyContentReleaseBundle({
-    release,
-    rendererManifest,
-  }).pipe(Effect.mapError(contractFailure));
-});
+const decodeStoredBundle = Effect.fn("contentRelease.decodeStoredBundle")(
+  function* (releaseJson: string, rendererJson: string) {
+    const release = yield* parseStoredJson(releaseJson, "Signed release");
+    const rendererManifest = yield* parseStoredJson(
+      rendererJson,
+      "Renderer manifest"
+    );
+    return yield* verifyContentReleaseBundle({
+      release,
+      rendererManifest,
+    }).pipe(Effect.mapError(contractFailure));
+  }
+);
 /** Loads and authenticates one stored release through its durable identity. */
 export const loadVerifiedRelease = Effect.fn(
   "contentRelease.loadVerifiedRelease"

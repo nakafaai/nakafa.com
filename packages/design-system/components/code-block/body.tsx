@@ -35,10 +35,7 @@ const codeBlockVariants = cva(
 );
 
 /** Render-prop contract for projecting every code source into the body. */
-export type CodeBlockBodyProps = Omit<
-  HTMLAttributes<HTMLDivElement>,
-  "children"
-> & {
+type CodeBlockBodyProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   children: (item: CodeBlockData) => ReactNode;
 };
 
@@ -50,7 +47,7 @@ export function CodeBlockBody({ children, ...props }: CodeBlockBodyProps) {
 }
 
 /** Active-source identity and optional line-number presentation. */
-export type CodeBlockItemProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockItemProps = HTMLAttributes<HTMLDivElement> & {
   value: string;
   lineNumbers?: boolean;
 };

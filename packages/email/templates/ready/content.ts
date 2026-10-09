@@ -36,7 +36,7 @@ const AccountReadyEmailCopySchema = Schema.Struct({
   subject: Schema.String,
   termsOfService: Schema.String,
 });
-export type AccountReadyEmailCopy = typeof AccountReadyEmailCopySchema.Type;
+type AccountReadyEmailCopy = typeof AccountReadyEmailCopySchema.Type;
 const accountReadyEmailCopy = {
   de: {
     body: "Dein Konto ist eingerichtet. Wähle ein Fach oder starte einen Probetest, wenn du bereit bist.",

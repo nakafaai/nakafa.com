@@ -35,7 +35,7 @@ const PublishedArticleRouteSchema = Schema.Union([
 ]);
 
 /** Complete active article route or a signed missing-route tombstone. */
-export type PublishedArticleRoute = typeof PublishedArticleRouteSchema.Type;
+type PublishedArticleRoute = typeof PublishedArticleRouteSchema.Type;
 
 /** Reads and validates one complete signed article route model. */
 export const readPublishedArticleRoute = Effect.fn(

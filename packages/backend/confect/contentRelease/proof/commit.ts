@@ -24,7 +24,7 @@ import { Clock, Effect } from "effect";
 export type ReleaseStatus = typeof statusValidator.Type;
 
 /** Proves server-recomputed evidence matches every signed release count. */
-export function matchesManifest(
+function matchesManifest(
   release: SignedContentRelease,
   proof: ReleaseVerificationEvidence,
   manifestHash: string
@@ -56,42 +56,43 @@ export function matchesManifest(
 }
 
 /** Marks every authenticated replacement manifest as verified and retained. */
-export const verifySnapshots = Effect.fn("contentRelease.commitSnapshots")(
-  function* (release: SignedContentRelease, now: number) {
-    const database = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    for (const family of ContentSnapshotKindSchema.literals) {
-      const state = release.manifest.snapshots[family];
-      if (state.mode !== "replace" || state.resultSnapshotId === null) {
-        continue;
-      }
-      const snapshotId = state.resultSnapshotId;
-      const snapshot = yield* database
-        .table("contentSnapshots")
-        .get("by_family_and_snapshotId", family, snapshotId)
-        .pipe(
-          Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-          Effect.orDie
-        );
-      if (!snapshot) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_MISSING",
-          `Verified release lost ${family} snapshot ${snapshotId}.`
-        );
-      }
-      yield* writer
-        .table("contentSnapshots")
-        .patch(snapshot._id, {
-          retainUntil: Math.max(
-            snapshot.retainUntil,
-            now + ROLLBACK_RETENTION_MS
-          ),
-          verifiedAt: snapshot.verifiedAt ?? now,
-        })
-        .pipe(Effect.orDie);
+const verifySnapshots = Effect.fn("contentRelease.commitSnapshots")(function* (
+  release: SignedContentRelease,
+  now: number
+) {
+  const database = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  for (const family of ContentSnapshotKindSchema.literals) {
+    const state = release.manifest.snapshots[family];
+    if (state.mode !== "replace" || state.resultSnapshotId === null) {
+      continue;
     }
+    const snapshotId = state.resultSnapshotId;
+    const snapshot = yield* database
+      .table("contentSnapshots")
+      .get("by_family_and_snapshotId", family, snapshotId)
+      .pipe(
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    if (!snapshot) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_MISSING",
+        `Verified release lost ${family} snapshot ${snapshotId}.`
+      );
+    }
+    yield* writer
+      .table("contentSnapshots")
+      .patch(snapshot._id, {
+        retainUntil: Math.max(
+          snapshot.retainUntil,
+          now + ROLLBACK_RETENTION_MS
+        ),
+        verifiedAt: snapshot.verifiedAt ?? now,
+      })
+      .pipe(Effect.orDie);
   }
-);
+});
 
 /** Commits server evidence only after every staged stream passed verification. */
 export const commitProgram = Effect.fn("contentRelease.commitProof")(function* (

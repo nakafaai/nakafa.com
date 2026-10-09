@@ -6,11 +6,12 @@ import {
   releasePageValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
-export const programPageValidator = Schema.Struct({
+
+const programPageValidator = Schema.Struct({
   ...releasePageValidator(Schema.String).fields,
   snapshotId: Schema.Union([Schema.String, Schema.Null]),
 });
-export const programCatalogValidator = Schema.Struct({
+const programCatalogValidator = Schema.Struct({
   activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   managed: Schema.Boolean,
@@ -19,7 +20,7 @@ export const programCatalogValidator = Schema.Struct({
   snapshotId: Schema.Union([Schema.String, Schema.Null]),
   sourceRevision: Schema.Union([Schema.String, Schema.Null]),
 });
-export const programRouteValidator = Schema.Struct({
+const programRouteValidator = Schema.Struct({
   activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   alternateJson: Schema.mutable(Schema.Array(Schema.String)),
@@ -34,23 +35,23 @@ export const programRouteValidator = Schema.Struct({
   snapshotId: Schema.Union([Schema.String, Schema.Null]),
   sourceRevision: Schema.Union([Schema.String, Schema.Null]),
 });
-export const programContextValidator = Schema.Struct({
+const programContextValidator = Schema.Struct({
   groupJson: Schema.Union([Schema.String, Schema.Null]),
   managed: Schema.Boolean,
   mappingJson: Schema.Union([Schema.String, Schema.Null]),
   parentJson: Schema.Union([Schema.String, Schema.Null]),
   resolvedCanonicalPath: Schema.Union([Schema.String, Schema.Null]),
 });
-export const programPathValidator = Schema.Struct({
+const programPathValidator = Schema.Struct({
   managed: Schema.Boolean,
   routeJson: Schema.Union([Schema.String, Schema.Null]),
 });
-export const programBucketsValidator = Schema.Struct({
+const programBucketsValidator = Schema.Struct({
   buckets: Schema.mutable(Schema.Array(Schema.String)),
   managed: Schema.Boolean,
   routeCount: Schema.Finite,
 });
-export const programSitemapValidator = Schema.Union([
+const programSitemapValidator = Schema.Union([
   Schema.Null,
   Schema.Struct({
     routes: Schema.mutable(

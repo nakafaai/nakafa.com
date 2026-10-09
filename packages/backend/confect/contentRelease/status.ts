@@ -25,12 +25,12 @@ import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { Effect } from "effect";
 export type ReleaseStatus = typeof statusValidator.Type;
-export type CurrentStatus = typeof currentValidator.Type;
-export type ActiveBundle = NonNullable<CurrentStatus["active"]>;
-export type StagedBundle = NonNullable<CurrentStatus["candidate"]>;
+type CurrentStatus = typeof currentValidator.Type;
+type ActiveBundle = NonNullable<CurrentStatus["active"]>;
+type StagedBundle = NonNullable<CurrentStatus["candidate"]>;
 
 /** Validates and returns one invisible slot's public lifecycle phase. */
-export const stagedPhase = Effect.fn("contentRelease.stagedPhase")(function* (
+const stagedPhase = Effect.fn("contentRelease.stagedPhase")(function* (
   release: Docs["contentReleases"]
 ) {
   const state = yield* loadState();
@@ -72,7 +72,7 @@ export const stagedPhase = Effect.fn("contentRelease.stagedPhase")(function* (
 });
 
 /** Loads one exact stored bundle for an invisible candidate or recovery. */
-export const stagedBundle = Effect.fn("contentRelease.stagedBundle")(function* (
+const stagedBundle = Effect.fn("contentRelease.stagedBundle")(function* (
   releaseId: string | undefined
 ) {
   if (releaseId === undefined) {

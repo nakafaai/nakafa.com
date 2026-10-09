@@ -14,11 +14,12 @@ import {
   quranViewValidator,
 } from "@repo/backend/content/quran/response";
 import { Schema } from "effect";
-export const attributionValidator = Schema.Struct({
+
+const attributionValidator = Schema.Struct({
   ...quranSourceFields,
   rowJson: Schema.Union([Schema.String, Schema.Null]),
 });
-export const surahCatalogValidator = Schema.Struct({
+const surahCatalogValidator = Schema.Struct({
   ...quranSourceFields,
   rowJson: Schema.mutable(Schema.Array(Schema.String)),
 });

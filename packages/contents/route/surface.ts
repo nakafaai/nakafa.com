@@ -20,9 +20,7 @@ const PublicRouteSurfaceKeySchema = Schema.Literals([
   "subject",
   "tryout",
 ]);
-export type PublicRouteSurfaceKey = SchemaType<
-  typeof PublicRouteSurfaceKeySchema
->;
+type PublicRouteSurfaceKey = SchemaType<typeof PublicRouteSurfaceKeySchema>;
 const PublicRouteSurfaceSchema = Schema.Struct({
   appSegment: PublicRouteSegmentSchema,
   key: PublicRouteSurfaceKeySchema,

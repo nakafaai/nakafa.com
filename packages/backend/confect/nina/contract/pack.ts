@@ -2,17 +2,18 @@ import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec"
 import { NinaFocusSchema } from "@repo/backend/confect/nina/contract/focus";
 import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Schema, Struct } from "effect";
-export const NINA_CONTEXT_TRANSITION_REASONS = [
+
+const NINA_CONTEXT_TRANSITION_REASONS = [
   "same-context",
   "page-context",
 ] as const;
-export const NINA_CONTEXT_SOURCES = [
+const NINA_CONTEXT_SOURCES = [
   "current-page",
   "pinned-chat",
   "message",
 ] as const;
 /** Page identity Nina can trust because the app validated it before the turn. */
-export const NinaLearningContextSchema = Schema.Struct({
+const NinaLearningContextSchema = Schema.Struct({
   assetId: Schema.optionalKey(Schema.String),
   contentId: Schema.optionalKey(Schema.String),
   locale: LocaleSchema,
@@ -25,7 +26,7 @@ export const NinaLearningContextSchema = Schema.Struct({
   verified: Schema.Boolean,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Verified placement that explains why this asset was opened from navigation. */
-export const LearningPlacementContextSchema = Schema.Struct({
+const LearningPlacementContextSchema = Schema.Struct({
   mode: Schema.Literal("placement"),
   nodeKey: Schema.String,
   parentHref: Schema.String,
@@ -33,7 +34,7 @@ export const LearningPlacementContextSchema = Schema.Struct({
   programKey: LearningProgramKeySchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Tool permissions for a Nina turn, separated from tool implementation code. */
-export const NinaToolContextSchema = Schema.Struct({
+const NinaToolContextSchema = Schema.Struct({
   allowDeepResearch: Schema.Boolean,
   allowMath: Schema.Boolean,
   allowNakafa: Schema.Boolean,
@@ -55,19 +56,18 @@ export const NinaContextTransitionSchema = Schema.Struct({
   toContextKey: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Validated learning context captured before one Nina turn. */
-export const NinaLearningSessionInputSchema = Schema.Struct({
+const NinaLearningSessionInputSchema = Schema.Struct({
   capturedAt: Schema.String,
   focus: Schema.optionalKey(NinaFocusSchema),
   learning: NinaLearningContextSchema,
   placement: Schema.optionalKey(LearningPlacementContextSchema),
   source: Schema.Literals(NINA_CONTEXT_SOURCES),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type NinaLearningContext = typeof NinaLearningContextSchema.Type;
-export type LearningPlacementContext =
-  typeof LearningPlacementContextSchema.Type;
-export type NinaToolContext = typeof NinaToolContextSchema.Type;
-export type NinaContextSnapshot = typeof NinaContextSnapshotSchema.Type;
-export type NinaContextTransition = typeof NinaContextTransitionSchema.Type;
+type NinaLearningContext = typeof NinaLearningContextSchema.Type;
+type LearningPlacementContext = typeof LearningPlacementContextSchema.Type;
+type NinaToolContext = typeof NinaToolContextSchema.Type;
+type NinaContextSnapshot = typeof NinaContextSnapshotSchema.Type;
+type NinaContextTransition = typeof NinaContextTransitionSchema.Type;
 export type NinaLearningSessionInput =
   typeof NinaLearningSessionInputSchema.Type;
 /** Nina context pack consumed by prompts, specialists, and message metadata. */
@@ -84,16 +84,16 @@ export type NinaContextPack = typeof NinaContextPackSchema.Type;
 export const NinaLearningSessionSchema = Schema.Struct({
   context: NinaContextPackSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type NinaLearningSession = typeof NinaLearningSessionSchema.Type;
+type NinaLearningSession = typeof NinaLearningSessionSchema.Type;
 /** Raised when the app boundary sends an invalid Nina learning context. */
-export class NinaContextError extends Schema.TaggedError<NinaContextError>()(
+class NinaContextError extends Schema.TaggedError<NinaContextError>()(
   "NinaContextError",
   {
     message: Schema.String,
   }
 ) {}
 /** Creates the stable key used for context snapshots and transition markers. */
-export function createNinaContextKey({
+function createNinaContextKey({
   learning,
   placement,
 }: {
@@ -106,7 +106,7 @@ export function createNinaContextKey({
   return `canonical:${learning.slug}`;
 }
 /** Resolves per-turn specialist evidence permissions from validated context. */
-export function resolveNinaToolContext(
+function resolveNinaToolContext(
   learning: NinaLearningContext
 ): NinaToolContext {
   const allowPageFetch = learning.verified;
@@ -119,7 +119,7 @@ export function resolveNinaToolContext(
   };
 }
 /** Builds the durable snapshot that survives chat reload and retries. */
-export function createNinaContextSnapshot({
+function createNinaContextSnapshot({
   capturedAt,
   learning,
   placement,
@@ -135,7 +135,7 @@ export function createNinaContextSnapshot({
   };
 }
 /** Builds an explicit transition marker for the current Nina turn. */
-export function createNinaContextTransition({
+function createNinaContextTransition({
   learning,
   placement,
   reason,

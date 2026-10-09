@@ -5,10 +5,8 @@ import schoolClassForumPendingUploadsTable from "@repo/backend/confect/_generate
 import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export type ForumPendingUploadDoc = Docs["schoolClassForumPendingUploads"];
-export const forumAttachmentLimitExceededCode =
-  "FORUM_ATTACHMENT_LIMIT_EXCEEDED";
-export const forumAttachmentAlreadySavedCode =
-  "FORUM_ATTACHMENT_UPLOAD_ALREADY_SAVED";
+const forumAttachmentLimitExceededCode = "FORUM_ATTACHMENT_LIMIT_EXCEEDED";
+const forumAttachmentAlreadySavedCode = "FORUM_ATTACHMENT_UPLOAD_ALREADY_SAVED";
 export const forumAttachmentAlreadyAttachedCode =
   "FORUM_ATTACHMENT_ALREADY_ATTACHED";
 export const forumAttachmentAlreadyClaimedCode =
@@ -26,7 +24,7 @@ export const forumAttachmentTypeUnsupportedCode =
   "FORUM_ATTACHMENT_TYPE_UNSUPPORTED";
 export const forumAttachmentUploadNotFoundCode =
   "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND";
-export const forumAttachmentErrorCodeSchema = Schema.Literals([
+const forumAttachmentErrorCodeSchema = Schema.Literals([
   forumAttachmentLimitExceededCode,
   forumAttachmentAlreadySavedCode,
   forumAttachmentAlreadyAttachedCode,
@@ -87,9 +85,6 @@ export class ForumAttachmentIoError extends Schema.TaggedError<ForumAttachmentIo
   }
 ) {}
 export const ForumAttachmentIoErrorWire = publicFailure(ForumAttachmentIoError);
-export type ForumAttachmentFailure =
-  | ForumAttachmentError
-  | ForumAttachmentIoError;
 export class ForumAttachmentUploadConfigError extends Schema.TaggedError<ForumAttachmentUploadConfigError>()(
   "ForumAttachmentUploadConfigError",
   {

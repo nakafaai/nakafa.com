@@ -36,7 +36,7 @@ const requiredCustomerValidator = Schema.Struct({
   ...customersTable.Fields.fields,
   localCustomerId: IdSchema("customers"),
 });
-export type RequiredCustomer = typeof requiredCustomerValidator.Type;
+type RequiredCustomer = typeof requiredCustomerValidator.Type;
 
 /** Loads the app user and any already-linked local customer row. */
 const loadCustomerSyncState = Effect.fn("customers.sync.loadCustomerSyncState")(

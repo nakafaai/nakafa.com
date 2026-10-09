@@ -4,7 +4,8 @@ import {
   nakafaSectionValidator,
 } from "@repo/backend/confect/lib/validators/contents";
 import { Schema } from "effect";
-export const contentSearchRefValidator = Schema.Struct({
+
+const contentSearchRefValidator = Schema.Struct({
   ...learningGraphIdentityValidator.fields,
   content_id: Schema.String,
   locale: localeValidator,
@@ -18,7 +19,7 @@ export const contentSearchSummaryValidator = Schema.Struct({
   description: Schema.String,
   title: Schema.String,
 });
-export const contentSearchResultItemValidator = Schema.Struct({
+const contentSearchResultItemValidator = Schema.Struct({
   ...contentSearchSummaryValidator.fields,
   excerpt: Schema.String,
 });

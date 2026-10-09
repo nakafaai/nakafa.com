@@ -13,7 +13,7 @@ const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/;
 const MARKDOWN_LINK_PATTERN = /(^|[^!])\[([^\]]+)\]\([^)]+\)/g;
 
 /** Convex validator for source rows used to build search documents. */
-export const contentSearchSourceValidator = Schema.Struct({
+const contentSearchSourceValidator = Schema.Struct({
   ...learningGraphIdentityValidator.fields,
   contentHash: Schema.String,
   description: Schema.optionalKey(Schema.String),
@@ -28,7 +28,7 @@ export const contentSearchSourceValidator = Schema.Struct({
 });
 
 /** Search source row derived from the Convex validator. */
-export type ContentSearchSource = typeof contentSearchSourceValidator.Type;
+type ContentSearchSource = typeof contentSearchSourceValidator.Type;
 
 /**
  * Creates the stable public content reference stored in the search read model.
@@ -92,7 +92,7 @@ export function buildContentSearchRef(
  * Reference: Convex `searchIndex` accepts one `searchField`.
  * https://docs.convex.dev/search/text-search
  */
-export function getContentSearchText(parts: Array<string | undefined>) {
+function getContentSearchText(parts: Array<string | undefined>) {
   return pipe(
     parts,
     Arr.map(cleanContentSearchText),

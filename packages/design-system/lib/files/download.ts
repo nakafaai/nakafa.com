@@ -1,12 +1,13 @@
 import { Array as Arr, Effect, Option, Result, Schema } from "effect";
+
 /** Runtime contract for one browser file download. */
-export const FileDownloadRequest = Schema.Struct({
+const FileDownloadRequest = Schema.Struct({
   content: Schema.Union([Schema.String, Schema.instanceOf(Blob)]),
   filename: Schema.String,
   mimeType: Schema.String,
 });
 /** Schema-derived input accepted by the browser download program. */
-export type FileDownloadRequest = typeof FileDownloadRequest.Type;
+type FileDownloadRequest = typeof FileDownloadRequest.Type;
 /** Expected browser failure while preparing, activating, or cleaning a download. */
 export class BrowserFileDownloadError extends Schema.TaggedError<BrowserFileDownloadError>()(
   "BrowserFileDownloadError",

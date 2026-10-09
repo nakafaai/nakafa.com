@@ -7,7 +7,7 @@ const SocialSignInResultSchema = Schema.Struct({
   error: Schema.optionalKey(Schema.Unknown),
 });
 
-export type SocialSignInResult = typeof SocialSignInResultSchema.Type;
+type SocialSignInResult = typeof SocialSignInResultSchema.Type;
 
 export type SocialSignInRequest = (input: {
   readonly callbackURL: string;

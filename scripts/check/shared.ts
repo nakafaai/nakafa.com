@@ -19,7 +19,7 @@ import {
  * repository that runs it. A repository that holds one of them keeps an exact
  * copy of the owner's file.
  */
-export const SHARED_FILES = [
+const SHARED_FILES = [
   "scripts/osv",
   "scripts/provenance/schema.ts",
   "scripts/provenance/bundle.ts",

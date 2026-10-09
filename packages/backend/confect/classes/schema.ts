@@ -80,7 +80,7 @@ export type SchoolClassForumTag = typeof schoolClassForumTagValidator.Type;
 /**
  * Forum status validator
  */
-export const schoolClassForumStatusValidator = Schema.Literals([
+const schoolClassForumStatusValidator = Schema.Literals([
   "open",
   "locked",
   "archived",

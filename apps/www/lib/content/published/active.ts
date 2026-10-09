@@ -16,7 +16,7 @@ const ActiveContentIdentitySchema = Schema.NullOr(
   })
 );
 /** Integrity-checked active publication identity returned by Convex. */
-export type ActiveContentIdentity = typeof ActiveContentIdentitySchema.Type;
+type ActiveContentIdentity = typeof ActiveContentIdentitySchema.Type;
 /** Release identity used to bind ownership and body cache entries. */
 export type ActiveContentReleaseId =
   NonNullable<ActiveContentIdentity>["releaseId"];

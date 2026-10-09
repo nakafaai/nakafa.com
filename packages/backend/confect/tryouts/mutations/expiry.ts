@@ -12,9 +12,10 @@ import {
 } from "@repo/backend/confect/tryouts/runtime/finish";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Clock, Duration, Effect, flow, HashSet } from "effect";
-export const EXPIRY_SWEEP_LIMIT = 50;
-export const EXPIRY_SWEEP_ATTEMPT_BYTES = 6 * 1024 * 1024;
-export const EXPIRY_SWEEP_SECTION_BYTES = 2 * 1024 * 1024;
+
+const EXPIRY_SWEEP_LIMIT = 50;
+const EXPIRY_SWEEP_ATTEMPT_BYTES = 6 * 1024 * 1024;
+const EXPIRY_SWEEP_SECTION_BYTES = 2 * 1024 * 1024;
 export type TryoutAttempt = Docs["tryoutAttempts"];
 export type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
 /** Expires one still-matching attempt through the typed runtime program. */
@@ -92,7 +93,7 @@ export const expireScheduledSection = Effect.fn("tryouts.expiry.section")(
 );
 
 /** Starts one sequential, byte-bounded missed-expiry reconciliation. */
-export const startExpiryReconciliation = Effect.fn(
+const startExpiryReconciliation = Effect.fn(
   "tryouts.expiry.startReconciliation"
 )(function* (before: number) {
   const scheduler = yield* Scheduler;
@@ -214,7 +215,7 @@ export const reconcileMissedSectionExpiries = Effect.fn(
 );
 
 /** Returns true when a scheduled expiry job still matches an active row. */
-export function shouldExpire<Row extends TryoutAttempt | TryoutSectionAttempt>(
+function shouldExpire<Row extends TryoutAttempt | TryoutSectionAttempt>(
   row: Row | null,
   scheduledExpiresAt: number,
   now: number

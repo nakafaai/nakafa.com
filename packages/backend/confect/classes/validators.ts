@@ -7,6 +7,7 @@ import {
   schoolClassVisibilityValidator,
 } from "@repo/backend/confect/classes/schema";
 import { Schema } from "effect";
+
 /**
  * The minimal class fields needed to render the class join screen.
  */
@@ -22,7 +23,7 @@ import { Schema } from "effect";
 /**
  * Paginated classes validator
  */
-export const classRouteJoinClassValidator = Schema.Struct({
+const classRouteJoinClassValidator = Schema.Struct({
   _id: IdSchema("schoolClasses"),
   image: schoolClassImageValidator,
   name: Schema.String,
@@ -44,7 +45,7 @@ export const classRouteAccessibleValidator = Schema.Struct({
 /**
  * The class route snapshot returned when the viewer must join the class first.
  */
-export const classRouteJoinValidator = Schema.Struct({
+const classRouteJoinValidator = Schema.Struct({
   kind: Schema.Literal("joinRequired"),
   class: classRouteJoinClassValidator,
   schoolMembership: schoolMembersTable.Doc,

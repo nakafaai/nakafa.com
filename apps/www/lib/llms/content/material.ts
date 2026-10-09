@@ -10,7 +10,7 @@ const MaterialLlmsInventorySchema = Schema.Struct({
   pageCount: Schema.Finite,
   routeCount: Schema.Finite,
 });
-export type MaterialLlmsInventory = typeof MaterialLlmsInventorySchema.Type;
+type MaterialLlmsInventory = typeof MaterialLlmsInventorySchema.Type;
 
 /** Reads one truthful bounded page inventory from the signed catalog. */
 export const readMaterialLlmsInventory = Effect.fn(

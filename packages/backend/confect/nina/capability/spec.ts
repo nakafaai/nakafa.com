@@ -1,5 +1,6 @@
 import { Schema } from "effect";
-export const LEARNING_CAPABILITY_NAME_VALUES = [
+
+const LEARNING_CAPABILITY_NAME_VALUES = [
   "nakafa",
   "deepResearch",
   "math",

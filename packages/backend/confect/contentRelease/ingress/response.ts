@@ -13,7 +13,7 @@ const PublicationResultSchema = Schema.Struct({
   status: Schema.Finite,
 });
 /** JSON body and exact HTTP status returned by publication ingress. */
-export type PublicationResult = typeof PublicationResultSchema.Type;
+type PublicationResult = typeof PublicationResultSchema.Type;
 /** Marks a response-construction contradiction as a non-wire defect. */
 export class PublicationResponseDefect extends Schema.TaggedError<PublicationResponseDefect>()(
   "PublicationResponseDefect",

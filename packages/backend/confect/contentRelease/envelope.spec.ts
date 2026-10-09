@@ -2,7 +2,8 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { releaseRoleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
-export const envelopeValidator = Schema.Struct({
+
+const envelopeValidator = Schema.Struct({
   releaseJson: Schema.String,
   rendererJson: Schema.String,
 });

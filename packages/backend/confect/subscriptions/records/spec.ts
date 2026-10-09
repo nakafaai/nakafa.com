@@ -1,7 +1,7 @@
 import subscriptions from "@repo/backend/confect/_generated/tables/subscriptions";
 import { Schema } from "effect";
 export const subscriptionRecordIoFailedCode = "SUBSCRIPTION_RECORD_IO_FAILED";
-export const subscriptionRecordValidator = subscriptions.Fields;
+const subscriptionRecordValidator = subscriptions.Fields;
 export const subscriptionRecordArgs = {
   subscription: subscriptionRecordValidator,
 };

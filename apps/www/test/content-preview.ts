@@ -103,7 +103,7 @@ export const previewProjection = makeMaterialLessonProjection(
 );
 
 /** Exact English route owned by the next real Function Concept sibling. */
-export const previewNextRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
+const previewNextRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
   contentKey: ContentKeySchema.make(
     "material/lesson/mathematics/function-composition-inverse-function/injective-surjective-bijective-function"
   ),
@@ -124,7 +124,7 @@ export const previewNextRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
 });
 
 /** Exact metadata authored by the next real Function Concept sibling. */
-export const previewNextMetadata = MaterialMetadataSchema.make({
+const previewNextMetadata = MaterialMetadataSchema.make({
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   dateModified: "2026-08-22",
   datePublished: "2025-04-27",
@@ -141,7 +141,7 @@ export const previewNextProjection = makeMaterialLessonProjection(
 );
 
 /** Exact Indonesian route owned by the real Function Concept source. */
-export const previewIdRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
+const previewIdRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
   contentKey: previewRoute.contentKey,
   graph: makeMaterialGraph(
     "mathematics",
@@ -160,7 +160,7 @@ export const previewIdRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
 });
 
 /** Exact Indonesian metadata authored by the real Function Concept lesson. */
-export const previewIdMetadata = MaterialMetadataSchema.make({
+const previewIdMetadata = MaterialMetadataSchema.make({
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   dateModified: "2026-08-22",
   datePublished: "2025-04-27",
@@ -177,7 +177,7 @@ export const previewIdProjection = makeMaterialLessonProjection(
 );
 
 /** Exact German route owned by the real Function Concept source. */
-export const previewDeRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
+const previewDeRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
   contentKey: previewRoute.contentKey,
   graph: makeMaterialGraph(
     "mathematics",
@@ -196,7 +196,7 @@ export const previewDeRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
 });
 
 /** Exact German metadata authored by the real Function Concept lesson. */
-export const previewDeMetadata = MaterialMetadataSchema.make({
+const previewDeMetadata = MaterialMetadataSchema.make({
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   datePublished: "2026-08-22",
   description:

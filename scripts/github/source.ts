@@ -10,7 +10,7 @@ const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
 const COMPOSITE_ACTION_PATTERN = /^actions\/(?:.+\/)?action\.ya?ml$/u;
 
 /** Expected failure while reading or decoding repository workflow policy. */
-export class GithubActionPolicyError extends Schema.TaggedError<GithubActionPolicyError>()(
+class GithubActionPolicyError extends Schema.TaggedError<GithubActionPolicyError>()(
   "GithubActionPolicyError",
   {
     cause: Schema.Unknown,

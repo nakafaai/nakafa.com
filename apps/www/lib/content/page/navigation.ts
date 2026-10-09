@@ -17,7 +17,7 @@ const PageNavigationItemSchema = Schema.Struct({
   title: PageMetadataSchema.fields.title,
 });
 /** One signed Page projected into the shared site navigation contract. */
-export type PageNavigationItem = typeof PageNavigationItemSchema.Type;
+type PageNavigationItem = typeof PageNavigationItemSchema.Type;
 
 const PageNavigationSchema = Schema.Struct({
   developerItem: PageNavigationItemSchema,
@@ -114,7 +114,7 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
 );
 
 /** Caches complete Page navigation under the exact signed family owner. */
-export async function getPageNavigation(locale: Locale) {
+async function getPageNavigation(locale: Locale) {
   "use cache";
 
   const navigation = await Effect.runPromise(

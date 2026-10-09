@@ -7,12 +7,13 @@ import {
 } from "@repo/backend/confect/nina/capability/spec";
 import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
 import { Array as Arr, Schema } from "effect";
+
 /** Schema-owned permission result for a Nina capability in one turn. */
-export const NinaCapabilityDecisionSchema = Schema.Union([
+const NinaCapabilityDecisionSchema = Schema.Union([
   Schema.Struct({ state: Schema.Literal("allowed") }),
   Schema.Struct({ state: Schema.Literal("denied"), reason: Schema.String }),
 ]);
-export type NinaCapabilityDecision = typeof NinaCapabilityDecisionSchema.Type;
+type NinaCapabilityDecision = typeof NinaCapabilityDecisionSchema.Type;
 /** Resolves whether one Nina capability may run under the immutable context pack. */
 export function decideNinaCapability({
   capability,

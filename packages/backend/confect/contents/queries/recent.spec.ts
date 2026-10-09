@@ -26,7 +26,7 @@ export class RecentLearningIoError extends Schema.TaggedError<RecentLearningIoEr
 ) {}
 
 /** Maps thrown Convex IO failures into the Continue Learning error channel. */
-export const RecentLearningIoErrorWire = publicFailure(RecentLearningIoError);
+const RecentLearningIoErrorWire = publicFailure(RecentLearningIoError);
 export default GroupSpec.make().addFunction(
   FunctionSpec.publicQuery({
     name: "getRecentlyViewed",

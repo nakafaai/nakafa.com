@@ -14,9 +14,7 @@ export const getTrendingSubjectsArgs = {
   minViews: Schema.optionalKey(Schema.Finite),
   windowKey: Schema.optionalKey(learningPopularityWindowValidator),
 };
-export const getTrendingSubjectsArgsValidator = Schema.Struct(
-  getTrendingSubjectsArgs
-);
+const getTrendingSubjectsArgsValidator = Schema.Struct(getTrendingSubjectsArgs);
 export const getTrendingSubjectsResultValidator = Schema.mutable(
   Schema.Array(trendingSubjectValidator)
 );

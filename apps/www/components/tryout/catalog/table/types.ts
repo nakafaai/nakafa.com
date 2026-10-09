@@ -11,6 +11,5 @@ export type TryoutSetListArgs = Ref.Args<SetListQuery>;
 export type TryoutSetPage = Ref.Returns<SetListQuery>;
 export type TryoutSetRow = TryoutSetPage["page"][number];
 export type TryoutTrackPage = NonNullable<Ref.Returns<TrackPageQuery>>;
-export type TryoutSetAttemptStatus = NonNullable<TryoutSetRow["attemptStatus"]>;
 export type TryoutSetSort = TryoutSetListArgs["sort"];
 export type TryoutSetStatusFilter = TryoutSetListArgs["filter"];

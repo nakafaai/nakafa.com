@@ -153,7 +153,7 @@ const PublishedProgramRouteSchema = Schema.Struct({
 });
 
 /** Complete immutable data needed by one curriculum route page. */
-export type PublishedProgramRoute = typeof PublishedProgramRouteSchema.Type;
+type PublishedProgramRoute = typeof PublishedProgramRouteSchema.Type;
 
 /** Caches one complete curriculum route under program publication invalidation. */
 export async function getPublishedProgramRoute(

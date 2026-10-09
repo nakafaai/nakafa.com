@@ -23,7 +23,7 @@ const ProductionChange = Schema.Struct({
   path: Schema.String,
   status: Schema.String,
 });
-export type ProductionChange = typeof ProductionChange.Type;
+type ProductionChange = typeof ProductionChange.Type;
 
 /** Expected failure while resolving the production acceptance scope. */
 class ProductionAcceptanceError extends Schema.TaggedError<ProductionAcceptanceError>()(

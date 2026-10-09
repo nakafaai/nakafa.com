@@ -14,18 +14,16 @@ import type { recentlyViewedSubjectValidator } from "@repo/backend/confect/lib/v
 import { cleanSlug } from "@repo/utilities/helper";
 import { Array as Arr, Effect, flow, Schema, Struct } from "effect";
 export type RecentlyViewedSubject = typeof recentlyViewedSubjectValidator.Type;
-export const defaultRecentLearningLimit = 5;
-export const maxRecentLearningLimit = 20;
-export const recentLearningCandidateLimit = 100;
+const defaultRecentLearningLimit = 5;
+const maxRecentLearningLimit = 20;
+const recentLearningCandidateLimit = 100;
 
 /** Convex validator for bounded Continue Learning query inputs. */
 /** Validator-owned argument contract used by the internal query program. */
-export const getRecentlyViewedArgsValidator = Schema.Struct(
-  getRecentlyViewedArgs
-);
-export type ListRecentLearningArgs = typeof getRecentlyViewedArgsValidator.Type;
+const getRecentlyViewedArgsValidator = Schema.Struct(getRecentlyViewedArgs);
+type ListRecentLearningArgs = typeof getRecentlyViewedArgsValidator.Type;
 /** Maps thrown Convex IO failures into the Continue Learning error channel. */
-export function toRecentLearningIoError(error: unknown) {
+function toRecentLearningIoError(error: unknown) {
   return new RecentLearningIoError({
     code: recentLearningIoFailedCode,
     cause: error,
@@ -76,7 +74,7 @@ export const listRecentLearning = Effect.fn(
 );
 
 /** Projects one ranked recent row to the public home-card result shape. */
-export const toRecentlyViewedSubject = Effect.fn(
+const toRecentlyViewedSubject = Effect.fn(
   "contents.recent.toRecentlyViewedSubject"
 )(function* (row: Docs["userLearningRecents"]) {
   const route = yield* hydrateMaterialTarget({

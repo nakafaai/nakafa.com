@@ -55,7 +55,7 @@ const ArticlePreviewStaticParamsSchema = Schema.Struct({
 const PagePreviewStaticParamsSchema = Schema.Struct({
   page: Schema.Array(Schema.String),
 });
-export type PagePreviewStaticParams = typeof PagePreviewStaticParamsSchema.Type;
+type PagePreviewStaticParams = typeof PagePreviewStaticParamsSchema.Type;
 /** Reads the single selected locale used to prerender the preview app shell. */
 export function readPreviewStaticLocaleParams() {
   return readPreviewManifestForPrerender().then((manifest) => {

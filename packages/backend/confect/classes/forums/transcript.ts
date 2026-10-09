@@ -3,7 +3,8 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { enrichForumPosts } from "@repo/backend/confect/classes/forums/posts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect } from "effect";
-export const getForumReadState = Effect.fn(
+
+const getForumReadState = Effect.fn(
   "classes.forums.transcript.getForumReadState"
 )(function* (forumId: Id<"schoolClassForums">, currentUserId: Id<"users">) {
   return yield* (yield* DatabaseReader)

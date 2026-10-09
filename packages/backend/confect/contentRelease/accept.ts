@@ -13,7 +13,7 @@ import { validateRecoveryRelation } from "@repo/backend/confect/contentRelease/r
 import { Effect } from "effect";
 
 /** Builds the cumulative terminal receipt retained by an aborted recovery. */
-export function terminalReceipt(recovery: Docs["contentReleases"]) {
+function terminalReceipt(recovery: Docs["contentReleases"]) {
   const total =
     recovery.checkedItems +
     recovery.stagedItems +

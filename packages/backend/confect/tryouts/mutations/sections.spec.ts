@@ -16,7 +16,7 @@ import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/error";
 import { Schema } from "effect";
 export const SECTION_COMPLETED_RESULT = "completed";
-export const SECTION_STARTED_RESULT = "started";
+const SECTION_STARTED_RESULT = "started";
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({

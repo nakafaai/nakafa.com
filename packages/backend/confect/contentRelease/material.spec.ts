@@ -13,8 +13,9 @@ import {
   releasePageValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { Schema, Struct } from "effect";
-export const materialPageValidator = releasePageValidator(Schema.String);
-export const materialSummaryValidator = Schema.Struct({
+
+const materialPageValidator = releasePageValidator(Schema.String);
+const materialSummaryValidator = Schema.Struct({
   authors: Schema.mutable(Schema.Array(ContentAuthorSchema)),
   // Aksara's date fields add calendar checks, which a return must not add.
   dateModified: Schema.optionalKey(Schema.String),
@@ -24,12 +25,12 @@ export const materialSummaryValidator = Schema.Struct({
   sourcePath: Schema.String,
   title: Schema.String,
 });
-export const materialDiscoveryValidator = Schema.Struct({
+const materialDiscoveryValidator = Schema.Struct({
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   managed: Schema.Boolean,
   materials: Schema.mutable(Schema.Array(materialSummaryValidator)),
 });
-export const materialBucketValidator = Schema.Struct({
+const materialBucketValidator = Schema.Struct({
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   managed: Schema.Boolean,
   materials: Schema.Union([
@@ -37,13 +38,13 @@ export const materialBucketValidator = Schema.Struct({
     Schema.Null,
   ]),
 });
-export const materialBucketsValidator = Schema.Struct({
+const materialBucketsValidator = Schema.Struct({
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   buckets: Schema.mutable(Schema.Array(Schema.String)),
   managed: Schema.Boolean,
   materialCount: Schema.Finite,
 });
-export const materialSitemapValidator = Schema.Union([
+const materialSitemapValidator = Schema.Union([
   Schema.Null,
   Schema.Struct({
     routes: Schema.mutable(
@@ -56,7 +57,7 @@ export const materialSitemapValidator = Schema.Union([
     ),
   }),
 ]);
-export const materialIdentityValidator = Schema.Struct({
+const materialIdentityValidator = Schema.Struct({
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   managed: Schema.Boolean,
   publicPath: Schema.Union([Schema.String, Schema.Null]),

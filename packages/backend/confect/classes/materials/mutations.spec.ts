@@ -8,10 +8,11 @@ import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PermissionDenied } from "@repo/backend/confect/schools/permission/spec";
 import { Schema } from "effect";
+
 /**
  * Reorder direction validator
  */
-export const reorderDirectionValidator = Schema.Literals(["up", "down"]);
+const reorderDirectionValidator = Schema.Literals(["up", "down"]);
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({

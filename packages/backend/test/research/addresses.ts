@@ -23,7 +23,7 @@
  */
 export type GoldenAddress = "none" | "public" | "refused";
 
-export type GoldenVerdict = [string, "allowed" | "refused", GoldenAddress];
+type GoldenVerdict = [string, "allowed" | "refused", GoldenAddress];
 
 export const ADDRESS_VERDICTS: readonly GoldenVerdict[] = [
   // ipaddr.js IPv4 unspecified 0.0.0.0/8

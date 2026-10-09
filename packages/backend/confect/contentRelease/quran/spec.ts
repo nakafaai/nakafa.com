@@ -205,5 +205,5 @@ export const quranSourceFields = {
 };
 
 /** Complete validator-owned source envelope shared by Quran projections. */
-export const quranSourceValidator = Schema.Struct(quranSourceFields);
+const quranSourceValidator = Schema.Struct(quranSourceFields);
 export type QuranSourceEnvelope = typeof quranSourceValidator.Type;

@@ -27,10 +27,7 @@ import {
 } from "react";
 
 /** Props for a prompt form with locally owned attachments. */
-export type PromptInputProps = Omit<
-  HTMLAttributes<HTMLFormElement>,
-  "onSubmit"
-> & {
+type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, "onSubmit"> & {
   accept?: string;
   maxFiles?: number;
   maxFileSize?: number;
@@ -179,9 +176,7 @@ const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
 };
 
 /** Props for the prompt input textarea. */
-export type PromptInputTextareaProps = ComponentProps<
-  typeof InputGroupTextarea
->;
+type PromptInputTextareaProps = ComponentProps<typeof InputGroupTextarea>;
 
 /** Renders prompt text with submit-on-enter and pasted-file support. */
 export function PromptInputTextarea({

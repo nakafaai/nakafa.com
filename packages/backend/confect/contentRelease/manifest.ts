@@ -56,7 +56,7 @@ export const releaseStatus = Effect.fn("contentRelease.releaseStatus")(
 );
 
 /** Confirms an idempotent release still owns the same immutable role slot. */
-export const validateExisting = Effect.fn("contentRelease.validateExisting")(
+const validateExisting = Effect.fn("contentRelease.validateExisting")(
   function* (
     release: Docs["contentReleases"],
     role: ReleaseRole,

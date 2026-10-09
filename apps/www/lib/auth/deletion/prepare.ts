@@ -58,7 +58,7 @@ export const cancelPreparedAccountDeletion = Effect.fn(
   }
 });
 /** Persists one durable browser phase without leaking storage failures. */
-export const persistAccountDeletionPhase = Effect.fn(
+const persistAccountDeletionPhase = Effect.fn(
   "www.auth.persistAccountDeletionPhase"
 )(function* (
   attempt: AccountDeletionBrowserAttempt,

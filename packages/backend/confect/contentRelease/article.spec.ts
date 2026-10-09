@@ -11,7 +11,8 @@ import {
   rendererDomainValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
-export const projectionValidator = Schema.Struct({
+
+const projectionValidator = Schema.Struct({
   appLocale: appLocaleValidator,
   artifactLocale: artifactLocaleValidator,
   contentKey: Schema.String,
@@ -24,13 +25,13 @@ export const projectionValidator = Schema.Struct({
   sequence: Schema.Finite,
   sourcePath: Schema.String,
 });
-export const categoryValidator = Schema.Struct({
+const categoryValidator = Schema.Struct({
   category: Schema.String,
   rendererDomain: rendererDomainValidator,
   route: Schema.String,
   title: Schema.String,
 });
-export const articleSummaryValidator = Schema.Struct({
+const articleSummaryValidator = Schema.Struct({
   articleSlug: Schema.String,
   authors: Schema.mutable(Schema.Array(ContentAuthorSchema)),
   category: Schema.String,
@@ -48,20 +49,20 @@ export const articleSummaryValidator = Schema.Struct({
   }),
   title: Schema.String,
 });
-export const articlePageValidator = releasePageValidator(projectionValidator);
-export const categoryPageValidator = releasePageValidator(categoryValidator);
-export const sitemapBucketsValidator = Schema.Struct({
+const articlePageValidator = releasePageValidator(projectionValidator);
+const categoryPageValidator = releasePageValidator(categoryValidator);
+const sitemapBucketsValidator = Schema.Struct({
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   articleCount: Schema.Finite,
   buckets: Schema.mutable(Schema.Array(Schema.String)),
   managed: Schema.Boolean,
 });
-export const articleDiscoveryValidator = Schema.Struct({
+const articleDiscoveryValidator = Schema.Struct({
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   articles: Schema.mutable(Schema.Array(articleSummaryValidator)),
   managed: Schema.Boolean,
 });
-export const articleBucketValidator = Schema.Struct({
+const articleBucketValidator = Schema.Struct({
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   articles: Schema.Union([
     Schema.mutable(Schema.Array(articleSummaryValidator)),
@@ -69,7 +70,7 @@ export const articleBucketValidator = Schema.Struct({
   ]),
   managed: Schema.Boolean,
 });
-export const sitemapPageValidator = Schema.Union([
+const sitemapPageValidator = Schema.Union([
   Schema.Struct({
     routes: Schema.mutable(
       Schema.Array(
@@ -82,7 +83,7 @@ export const sitemapPageValidator = Schema.Union([
   }),
   Schema.Null,
 ]);
-export const articleModelValidator = Schema.Struct({
+const articleModelValidator = Schema.Struct({
   activeAppLocales: Schema.mutable(Schema.Array(appLocaleValidator)),
   activeReleaseId: Schema.String,
   alternateJson: Schema.mutable(Schema.Array(Schema.String)),

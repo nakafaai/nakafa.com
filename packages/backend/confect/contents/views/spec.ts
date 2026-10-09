@@ -4,7 +4,8 @@ import { contentViewSectionValidator } from "@repo/backend/confect/contents/view
 import { publicFailure } from "@repo/backend/confect/failure";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import { Schema } from "effect";
-export const contentViewIoFailedCode = "CONTENT_VIEW_IO_FAILED";
+
+const contentViewIoFailedCode = "CONTENT_VIEW_IO_FAILED";
 
 /** Current content families accepted by durable engagement history. */
 
@@ -17,9 +18,7 @@ export const recordContentViewArgs = {
   publicPath: Schema.String,
   section: contentViewSectionValidator,
 };
-export const recordContentViewArgsValidator = Schema.Struct(
-  recordContentViewArgs
-);
+const recordContentViewArgsValidator = Schema.Struct(recordContentViewArgs);
 export const recordContentViewResultValidator = Schema.Struct({
   alreadyViewed: Schema.Boolean,
   isNewView: Schema.Boolean,

@@ -8,7 +8,7 @@ const sourceSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
 );
 
 /** Exact minimized context admitted with an operational exception. */
-export const OperationalExceptionPropertiesSchema = Schema.Struct({
+const OperationalExceptionPropertiesSchema = Schema.Struct({
   component: Schema.optional(shortTextSchema),
   component_stack: Schema.optional(Schema.NullOr(componentStackSchema)),
   contentId: Schema.optional(identityTextSchema),

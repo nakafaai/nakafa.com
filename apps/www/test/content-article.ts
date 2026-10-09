@@ -65,7 +65,7 @@ export function makeTestArticleProjection(
 export const testArticleProjection = makeTestArticleProjection();
 
 /** Builds one localized route counterpart for the stable test article. */
-export function makeTestArticleCounterpart(
+function makeTestArticleCounterpart(
   appLocale: "de" | "en" | "id",
   categoryRouteSlugValue: string,
   articleRouteSlugValue: string

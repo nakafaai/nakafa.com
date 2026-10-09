@@ -10,7 +10,7 @@ const APP_ARTWORK_IDENTITIES = {
   "try-out": "tryout/index",
 } as const satisfies Readonly<Record<string, ArtworkIdentity | undefined>>;
 
-export type AppArtworkKey = keyof typeof APP_ARTWORK_IDENTITIES;
+type AppArtworkKey = keyof typeof APP_ARTWORK_IDENTITIES;
 
 /** Maps one app-owned route to its reviewed artwork and social fallback. */
 export function getAppSocialArtwork({

@@ -14,12 +14,12 @@ export const consentCategoryValidator = Schema.Literals([
 export type ConsentCategory = typeof consentCategoryValidator.Type;
 
 /** Notice versions retained as provenance on account consent decisions. */
-export const consentNoticeVersionValidator = Schema.Literals([
+const consentNoticeVersionValidator = Schema.Literals([
   ...CONSENT_NOTICE_VERSIONS,
 ]);
 
 /** The notice version accepted by the current analytics consent API. */
-export const currentConsentNoticeVersionValidator = Schema.Literal(
+const currentConsentNoticeVersionValidator = Schema.Literal(
   ANALYTICS_CONSENT_NOTICE_VERSION
 );
 const consentDecisionFields = {

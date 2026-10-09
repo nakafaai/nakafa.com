@@ -8,7 +8,7 @@ import {
 } from "effect";
 
 /** Expected failure: an authored schema has no provider tool parameter form. */
-export class ProviderToolSchemaError extends Schema.TaggedError<ProviderToolSchemaError>()(
+class ProviderToolSchemaError extends Schema.TaggedError<ProviderToolSchemaError>()(
   "ProviderToolSchemaError",
   {
     message: Schema.String,

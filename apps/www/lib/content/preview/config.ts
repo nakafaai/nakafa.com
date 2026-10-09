@@ -59,7 +59,7 @@ const PreviewRendererConfigSchema = Schema.Struct({
   token: Schema.Redacted(Schema.String),
 });
 /** Ephemeral credentials accepted only by the local renderer endpoint. */
-export type PreviewRendererConfig = typeof PreviewRendererConfigSchema.Type;
+type PreviewRendererConfig = typeof PreviewRendererConfigSchema.Type;
 /** Local preview configuration exists but does not satisfy its strict shape. */
 export class PreviewConfigError extends Schema.TaggedError<PreviewConfigError>()(
   "PreviewConfigError",

@@ -27,7 +27,7 @@ import type {
 import { encodeJsonText } from "@repo/utilities/json";
 import { Clock, Effect } from "effect";
 export type ReadCtx = MutationCtx | QueryCtx;
-export type RuntimeReceipt = typeof tryoutRuntimeBundleReceiptValidator.Type;
+type RuntimeReceipt = typeof tryoutRuntimeBundleReceiptValidator.Type;
 
 /** Reads one permanent runtime bundle by its content-addressed identity. */
 export const findTryoutRuntimeBundleByHash = Effect.fn(
@@ -44,7 +44,7 @@ export const findTryoutRuntimeBundleByHash = Effect.fn(
 });
 
 /** Reads the permanent bundle selected by one snapshot and renderer pair. */
-export const findTryoutRuntimeBundle = Effect.fn(
+const findTryoutRuntimeBundle = Effect.fn(
   "tryouts.runtime.findTryoutRuntimeBundle"
 )(function* (snapshotId: string, rendererManifestHash: string) {
   const database = yield* DatabaseReader;
@@ -100,7 +100,7 @@ export const loadTryoutRuntimeBundle = Effect.fn(
 });
 
 /** Rejects reuse of one bundle identity with different stored bytes. */
-export const verifyStoredRuntimeBundle = Effect.fn(
+const verifyStoredRuntimeBundle = Effect.fn(
   "tryouts.runtime.verifyStoredRuntimeBundle"
 )(function* (
   stored: Docs["tryoutRuntimeBundles"],

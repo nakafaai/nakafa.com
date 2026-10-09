@@ -81,7 +81,7 @@ export const NakafaToolInputSchema = Schema.Struct({
 /**
  * Input schema for the deep research LearningCapability tool.
  */
-export const ResearchToolInputSchema = Schema.Struct({
+const ResearchToolInputSchema = Schema.Struct({
   ...SpecialistToolInputFields,
   sourceRequirements: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
@@ -132,8 +132,8 @@ export const MathToolInputSchema = Schema.Struct({
       `,
     }),
   });
-export type NakafaToolInput = typeof NakafaToolInputSchema.Type;
-export type ResearchToolInput = typeof ResearchToolInputSchema.Type;
+type NakafaToolInput = typeof NakafaToolInputSchema.Type;
+type ResearchToolInput = typeof ResearchToolInputSchema.Type;
 export type MathToolInput = typeof MathToolInputSchema.Type;
 type SpecialistToolInput = MathToolInput | NakafaToolInput | ResearchToolInput;
 /**

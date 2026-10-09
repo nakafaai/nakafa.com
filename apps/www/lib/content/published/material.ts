@@ -15,20 +15,15 @@ import {
 } from "@/lib/content/published/exchange";
 
 /** Exact public material identity sent to the shared runtime seam. */
-export type PublishedMaterialInput = PublishedContentRouteInput;
+type PublishedMaterialInput = PublishedContentRouteInput;
 
 const PublishedMaterialFieldsSchema = Schema.Struct({
   metadata: MaterialMetadataSchema,
   projection: MaterialLessonProjectionSchema,
 });
 /** Verified material projection adapted to the current Nakafa route shell. */
-export type PublishedMaterialData = Omit<PublishedContentData, "projection"> &
+type PublishedMaterialData = Omit<PublishedContentData, "projection"> &
   typeof PublishedMaterialFieldsSchema.Type;
-
-/** Verified material body and source evidence consumed by the page shell. */
-export type PublishedMaterialContent = Readonly<
-  Effect.Success<ReturnType<typeof renderMaterialArtifact>>
->;
 
 /** Strictly narrows one verified runtime exchange to material data. */
 export const decodeMaterialData = Effect.fn("NakafaContent.decodeMaterialData")(

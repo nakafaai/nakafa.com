@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 type ParticleLabelPosition = readonly [number, number, number];
 
 export const CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH = 0.01;
-export const CHEMISTRY_PARTICLE_LABEL_SURFACE_OFFSET_RATIO = 1.05;
+const CHEMISTRY_PARTICLE_LABEL_SURFACE_OFFSET_RATIO = 1.05;
 export const CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO = 1.04;
 
 export function getChemistryParticleLabelFontSize(radius: number) {

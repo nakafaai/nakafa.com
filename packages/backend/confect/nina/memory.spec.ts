@@ -17,7 +17,7 @@ const Count = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 const FactKey = Count;
 
 /** One remembered fact, phrased as a short statement about the learner. */
-export const NinaMemoryText = Schema.Trim.check(
+const NinaMemoryText = Schema.Trim.check(
   Schema.isMinLength(1),
   Schema.isMaxLength(160)
 );
@@ -31,7 +31,7 @@ export const NinaMemoryFact = Schema.Struct({
 });
 
 /** Provider tokens one curation call spent. */
-export const NinaMemoryCall = Schema.Struct({ input: Count, output: Count });
+const NinaMemoryCall = Schema.Struct({ input: Count, output: Count });
 
 /**
  * A learner's opted-in memory. It exists only while memory is on, keeps facts
@@ -49,7 +49,7 @@ export const NinaMemory = Schema.Struct({
 });
 
 /** The facts a learner sees and manages in settings, newest first. */
-export const NinaMemoryView = Schema.Struct({
+const NinaMemoryView = Schema.Struct({
   facts: Schema.mutable(
     Schema.Array(
       NinaMemoryFact.mapFields((fields) => ({
@@ -105,7 +105,7 @@ export const NinaLearnerProfile = Schema.Struct({
  * The memory document and revision a curation read. Turning memory off and on
  * creates a new document, and every write moves the revision.
  */
-export const NinaMemoryRevision = Schema.Struct({
+const NinaMemoryRevision = Schema.Struct({
   id: Id("ninaMemories"),
   revision: Schema.Finite,
 });
