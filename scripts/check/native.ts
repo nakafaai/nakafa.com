@@ -50,7 +50,7 @@ const EQUALITY_OPERATORS = HashSet.make(
   SyntaxKind.ExclamationEqualsToken
 );
 /** Whether a node declares an async function or waits on a Promise. */
-export function isPromiseSyntax(node: Node) {
+function isPromiseSyntax(node: Node) {
   return (
     (isFunctionLikeDeclaration(node) &&
       Arr.some(node.modifiers ?? [], isAsyncKeyword)) ||

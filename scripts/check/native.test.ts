@@ -19,7 +19,7 @@ const findings = Effect.fn("NativePolicyTest.findings")(function* (
 }, Effect.scoped);
 
 describe("native syntax", () => {
-  it.effect("reports Promise syntax in strict domain modules", () =>
+  it.effect("reports Promise syntax in strict domain modules only", () =>
     Effect.gen(function* () {
       const source = `export async function load() {
   await run();
@@ -39,14 +39,28 @@ export const arrow = async () => 1;
         "8 promise",
         "9 promise",
       ]);
-      assert.deepStrictEqual(yield* findings(source), [
-        "1 async",
-        "2 async",
-        "4 async",
-        "8 async",
-        "9 async",
-      ]);
+      assert.deepStrictEqual(yield* findings(source), []);
     })
+  );
+
+  it.effect(
+    "never reports Promise chains or Effect code in strict domain modules",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { Effect } from "effect";
+export const loaded = Promise.all([read()]).then(run);
+export const program = Effect.gen(function* () {
+  const value = yield* Effect.tryPromise(() => read());
+  return value;
+});
+`,
+            SCRIPT
+          ),
+          []
+        );
+      })
   );
 
   it.effect(
