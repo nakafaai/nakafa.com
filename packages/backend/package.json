@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./*": "./*.ts",
+    "./convex/_generated/*": "./convex/_generated/*.js",
     "./scripts/content/acceptance/source.json": "./scripts/content/acceptance/source.json"
   },
   "scripts": {
