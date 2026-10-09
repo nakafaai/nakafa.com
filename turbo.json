@@ -60,7 +60,7 @@
       },
       "contents": {
         "dependencies": {
-          "deny": ["app", "backend", "mail"]
+          "deny": ["app", "backend", "design-system", "mail"]
         }
       },
       "mail": {

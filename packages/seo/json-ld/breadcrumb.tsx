@@ -1,5 +1,5 @@
+import { JsonLd } from "@repo/seo/json-ld";
 import type { BreadcrumbList, ListItem, WithContext } from "schema-dts";
-import { JsonLd } from ".";
 
 interface Props {
   breadcrumbItems: ListItem[];

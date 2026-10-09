@@ -699,12 +699,12 @@ importers:
       '@nakafa/aksara-contracts':
         specifier: 0.48.6
         version: 0.48.6(effect@4.0.2)
-      '@repo/design-system':
-        specifier: workspace:*
-        version: link:../design-system
       '@repo/math':
         specifier: workspace:*
         version: link:../math
+      '@repo/seo':
+        specifier: workspace:*
+        version: link:../seo
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -778,6 +778,9 @@ importers:
       '@repo/math':
         specifier: workspace:*
         version: link:../math
+      '@repo/seo':
+        specifier: workspace:*
+        version: link:../seo
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -993,6 +996,9 @@ importers:
       '@repo/next-config':
         specifier: workspace:*
         version: link:../next-config
+      '@repo/seo':
+        specifier: workspace:*
+        version: link:../seo
       effect:
         specifier: 'catalog:'
         version: 4.0.2

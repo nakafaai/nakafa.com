@@ -6,6 +6,7 @@ import { reactMdxComponents } from "@repo/design-system/components/markdown/reac
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
 import { preprocessLaTeX } from "@repo/math/latex";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import ReactMarkdown from "react-markdown";
@@ -14,7 +15,6 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
 const DEFAULT_ALLOWED_PREFIXES = ["*"];
-const DEFAULT_ORIGIN = "https://nakafa.com";
 const REMARK_PLUGINS = [
   remarkGfm,
   [remarkMath, { singleDollarTextMath: false }],
@@ -40,7 +40,7 @@ export function MarkdownBlock({
   allowedImagePrefixes = DEFAULT_ALLOWED_PREFIXES,
   allowedLinkPrefixes = DEFAULT_ALLOWED_PREFIXES,
   children,
-  defaultOrigin = DEFAULT_ORIGIN,
+  defaultOrigin = SITE_ORIGIN,
 }: MarkdownSecurityProps & { readonly children: string }) {
   const parsedContent = preprocessLaTeX(children.trim());
 

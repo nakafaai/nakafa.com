@@ -1,4 +1,5 @@
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Schema } from "effect";
 
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.check(Schema.isNonEmpty());
@@ -84,8 +85,8 @@ export const COMPANY_IDENTITY = Schema.decodeSync(CompanyIdentitySchema)({
   },
   email: "nakafaai@gmail.com",
   phone: "+62 811-8992-531",
-  url: "https://nakafa.com",
-  logoUrl: "https://nakafa.com/logo.svg",
+  url: SITE_ORIGIN,
+  logoUrl: `${SITE_ORIGIN}/logo.svg`,
   socialProfiles: COMPANY_SOCIAL_PROFILES,
 });
 

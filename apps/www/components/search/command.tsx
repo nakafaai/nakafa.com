@@ -34,6 +34,7 @@ import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
 import { getArticleCategoryIcon } from "@/components/articles/category";
 import { SearchExcerpt } from "@/components/search/excerpt";
+import { useSearchSectionLabels } from "@/components/search/labels";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
   getSubjectMenuHref,
@@ -355,23 +356,6 @@ function useDefaultSearchGroups(
       value: tHoly("holy"),
     },
   ];
-}
-
-/** Resolves localized section labels for grouped command search results. */
-function useSearchSectionLabels(): Record<
-  ContentSearchResultItem["section"],
-  string
-> {
-  const tCommon = useTranslations("Common");
-  const tArticles = useTranslations("Articles");
-  const tHoly = useTranslations("Holy");
-
-  return {
-    articles: tArticles("articles"),
-    material: tCommon("material"),
-    quran: tHoly("quran"),
-    tryout: tCommon("try-out"),
-  };
 }
 
 /** Groups flat Convex search results by section for command rendering. */

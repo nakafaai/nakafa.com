@@ -1,7 +1,7 @@
+import { splitLocalePathname } from "@repo/internationalization/src/href";
 import { routing } from "@repo/internationalization/src/routing";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, Data, Effect, Schema } from "effect";
-import { hasLocale } from "next-intl";
 import {
   readPublishedLocalizedHref,
   toNavigationHref,
@@ -37,25 +37,19 @@ class InvalidLocalizedHrefError extends Data.TaggedError(
 
 const URL_BASE = COMPANY_IDENTITY.url;
 
-/** Narrows the leading path segment to a configured locale, if present. */
-function readLocale(value: string | undefined) {
-  if (value && hasLocale(routing.locales, value)) {
-    return value;
-  }
-}
-
 /**
  * Parses absolute or relative browser hrefs against Nakafa's origin while
  * preserving query/hash state for the final localized navigation.
  */
 function parseLocalizedHref(href: string): ParsedLocalizedHref {
   const url = new URL(href, URL_BASE);
-  const segments = Arr.filter(url.pathname.split("/"), Boolean);
-  const currentLocale = readLocale(segments[0]);
-  const publicSegments = currentLocale ? Arr.drop(segments, 1) : segments;
+  const { locale, publicSegments } = splitLocalePathname(
+    url.pathname,
+    routing.locales
+  );
 
   return {
-    currentLocale,
+    currentLocale: locale,
     hash: url.hash,
     publicPath: Arr.join(publicSegments, "/"),
     search: url.search,

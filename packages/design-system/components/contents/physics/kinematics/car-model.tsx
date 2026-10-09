@@ -1,9 +1,10 @@
 "use client";
 
 import { useGLTF } from "@react-three/drei";
+import { tintMaterial } from "@repo/design-system/components/three/material";
 import { Array as Arr, HashSet } from "effect";
 import { useMemo } from "react";
-import { Box3, Color, type Material, Mesh, Vector3 } from "three";
+import { Box3, Mesh, Vector3 } from "three";
 
 const COLORABLE_CAR_PART_NAMES = HashSet.make("body", "kart-oobi", "spoiler");
 const COLORABLE_CAR_MATERIAL_NAMES = HashSet.make("Body", "Red_Chasis");
@@ -54,28 +55,4 @@ function shouldTintCarPart(mesh: Mesh) {
   return Arr.some(materials, (material) =>
     HashSet.has(COLORABLE_CAR_MATERIAL_NAMES, material.name)
   );
-}
-
-function tintMaterial(material: Mesh["material"], color: string) {
-  if (Arr.isArray(material)) {
-    return Arr.map(material, (item) => tintSingleMaterial(item, color));
-  }
-
-  return tintSingleMaterial(material, color);
-}
-
-function tintSingleMaterial(material: Material, color: string) {
-  const nextMaterial = material.clone();
-
-  if (hasMaterialColor(nextMaterial)) {
-    nextMaterial.color.set(color);
-  }
-
-  return nextMaterial;
-}
-
-function hasMaterialColor(
-  material: Material
-): material is Material & { color: Color } {
-  return "color" in material && material.color instanceof Color;
 }

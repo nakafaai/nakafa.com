@@ -15,11 +15,11 @@ import {
 import {
   CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
   ChemistryParticleLabel,
-  getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, HashMap, Option, Schema } from "effect";
 import { useRef } from "react";
@@ -352,7 +352,7 @@ function AtomParticle({
       </mesh>
       <ChemistryParticleLabel
         color={colors.sphereText}
-        fontSize={getChemistryParticleLabelFontSize(style.radius)}
+        fontSize={getThreeParticleLabelFontSize(style.radius)}
         outlineColor={colors.sphereTextOutline}
         outlineWidth={CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH}
         position={getChemistryParticleLabelPosition(style.radius)}
