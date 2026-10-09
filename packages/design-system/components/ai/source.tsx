@@ -6,7 +6,7 @@ import {
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
 import { cn } from "cn";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import Image from "next/image";
 import { createContext, use, useMemo, useState } from "react";
 
@@ -33,7 +33,7 @@ function getSourceDomain(href: string) {
     return new URL(href).hostname;
   }
 
-  return href.split("/").pop() || href;
+  return Option.getOrElse(Arr.last(href.split("/")), () => "") || href;
 }
 
 function getFaviconUrl({ href }: { href: string }) {

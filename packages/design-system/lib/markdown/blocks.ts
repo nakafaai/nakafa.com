@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, MutableList, Schema } from "effect";
 import { Lexer } from "marked";
 
 const MarkdownBlockModelSchema = Schema.Struct({
@@ -10,13 +10,15 @@ type MarkdownBlockModel = typeof MarkdownBlockModelSchema.Type;
 /** Preserves Marked block boundaries while rejoining split display-math fences. */
 export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   const tokens = Lexer.lex(markdown, { gfm: true });
-  const blocks = tokens.map((token) => token.raw);
+  const blocks = Arr.map(tokens, (token) => token.raw);
 
-  // Post-process to merge consecutive blocks that are part of the same math block
-  const mergedBlocks: string[] = [];
+  // Post-process to merge consecutive blocks that are part of the same math block.
+  // The newest block stays pending, because a later block may still extend it.
+  const mergedBlocks = MutableList.make<string>();
+  let pendingBlock: string | undefined;
 
   for (const currentBlock of blocks) {
-    const previousBlock = mergedBlocks.at(-1);
+    const previousBlock = pendingBlock;
     const hasUnclosedMath =
       previousBlock?.trimStart().startsWith("$$") &&
       countDisplayMathDelimiters(previousBlock) % 2 === 1;
@@ -27,14 +29,20 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
         countDisplayMathDelimiters(currentBlock) === 1);
 
     if (hasUnclosedMath && closesMath) {
-      mergedBlocks[mergedBlocks.length - 1] = previousBlock + currentBlock;
+      pendingBlock = previousBlock + currentBlock;
       continue;
     }
 
-    mergedBlocks.push(currentBlock);
+    if (previousBlock !== undefined) {
+      MutableList.append(mergedBlocks, previousBlock);
+    }
+    pendingBlock = currentBlock;
   }
 
-  return mergedBlocks;
+  if (pendingBlock !== undefined) {
+    MutableList.append(mergedBlocks, pendingBlock);
+  }
+  return MutableList.toArray(mergedBlocks);
 };
 
 /** Counts display-math delimiters without treating unmatched text as failure. */
@@ -49,7 +57,7 @@ export function readMarkdownBlocks(
 ): readonly MarkdownBlockModel[] {
   let offset = 0;
 
-  return parseMarkdownIntoBlocks(markdown).map((content) => {
+  return Arr.map(parseMarkdownIntoBlocks(markdown), (content) => {
     const start = offset;
     offset += content.length;
 

@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -95,7 +96,7 @@ export function ConstantCompositionLab({
           value={selectedModeId}
           variant="outline"
         >
-          {CONSTANT_COMPOSITION_MODE_IDS.map((modeId) => (
+          {Arr.map(CONSTANT_COMPOSITION_MODE_IDS, (modeId) => (
             <ToggleGroupItem
               aria-label={labels.modes[modeId].tabLabel}
               key={modeId}

@@ -10,6 +10,7 @@ import {
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { DoubleSide } from "three";
 
@@ -92,10 +93,10 @@ export function ParticleCluster({
 }) {
   return (
     <group>
-      {points.map((point) => (
+      {Arr.map(points, (point) => (
         <Particle
           color={color}
-          key={point.join(",")}
+          key={Arr.join(Arr.map(point, String), ",")}
           label={label}
           labelColor={labelColor}
           labelOutlineColor={labelOutlineColor}

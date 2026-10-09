@@ -1,4 +1,9 @@
+import {
+  MathAppearanceSchema,
+  SpacePointSchema,
+} from "@nakafa/aksara-contracts/math/base";
 import { createCuboid } from "@repo/design-system/lib/geometry/cuboid";
+import { Schema } from "effect";
 import {
   clipPlaneLine,
   clipPlanePath,
@@ -9,7 +14,6 @@ import {
 } from "@/lib/content/renderer/client/base/visual/clip";
 import { resolvePlaneCurve } from "@/lib/content/renderer/client/base/visual/curve";
 import type {
-  MathAppearance,
   PlaneObject,
   PlanePoint,
   PlaneVisual,
@@ -22,28 +26,32 @@ import {
   resolveVisualProjection,
   type VisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
-export type MathPathArrows = "both" | "end" | "none";
-interface VisualMarker {
-  readonly appearance: MathAppearance;
-  readonly at: SpacePoint;
-  readonly id: string;
-}
-interface VisualPath {
-  readonly appearance: MathAppearance;
-  readonly arrows: MathPathArrows;
-  readonly id: string;
-  readonly points: readonly SpacePoint[];
-}
-interface VisualRegion {
-  readonly appearance: MathAppearance;
-  readonly id: string;
-  readonly vertices: readonly SpacePoint[];
-}
-export interface VisualGeometry {
-  readonly markers: VisualMarker[];
-  readonly paths: VisualPath[];
-  readonly regions: VisualRegion[];
-}
+
+const MathPathArrowsSchema = Schema.Literals(["both", "end", "none"]);
+export type MathPathArrows = typeof MathPathArrowsSchema.Type;
+const VisualMarkerSchema = Schema.Struct({
+  appearance: MathAppearanceSchema,
+  at: SpacePointSchema,
+  id: Schema.String,
+});
+const VisualPathSchema = Schema.Struct({
+  appearance: MathAppearanceSchema,
+  arrows: MathPathArrowsSchema,
+  id: Schema.String,
+  points: Schema.Array(SpacePointSchema),
+});
+type VisualPath = typeof VisualPathSchema.Type;
+const VisualRegionSchema = Schema.Struct({
+  appearance: MathAppearanceSchema,
+  id: Schema.String,
+  vertices: Schema.Array(SpacePointSchema),
+});
+const VisualGeometrySchema = Schema.Struct({
+  markers: Schema.mutable(Schema.Array(VisualMarkerSchema)),
+  paths: Schema.mutable(Schema.Array(VisualPathSchema)),
+  regions: Schema.mutable(Schema.Array(VisualRegionSchema)),
+});
+export type VisualGeometry = typeof VisualGeometrySchema.Type;
 function arrows(
   kind: PlaneObject["kind"] | SpaceObject["kind"]
 ): MathPathArrows {

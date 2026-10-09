@@ -23,7 +23,7 @@ function extractTextFromNode(node: unknown): string {
     return String(node);
   }
   if (Arr.isArray(node)) {
-    return node.map(extractTextFromNode).join("");
+    return Arr.join(Arr.map(node, extractTextFromNode), "");
   }
   if (Predicate.isObject(node) && Predicate.hasProperty(node, "props")) {
     const { props } = node;

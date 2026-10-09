@@ -1,4 +1,5 @@
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 
 const DOT_DELAYS = [0, 250, 500];
 const DOT_SIZES = {
@@ -27,7 +28,7 @@ export function TypingLoader({
         className
       )}
     >
-      {DOT_DELAYS.map((delay) => (
+      {Arr.map(DOT_DELAYS, (delay) => (
         <div
           className={cn(
             "animate-[typing_1s_infinite] rounded-full bg-primary",

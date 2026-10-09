@@ -19,10 +19,10 @@ describe("bacterial growth frames", () => {
       })
     );
 
-    expect(frames.map((frame) => frame.bacteriaCount)).toEqual([
+    expect(Arr.map(frames, (frame) => frame.bacteriaCount)).toEqual([
       100, 200, 400, 800, 1600,
     ]);
-    expect(frames.map((frame) => frame.bacteriaIds.length)).toEqual([
+    expect(Arr.map(frames, (frame) => frame.bacteriaIds.length)).toEqual([
       1, 2, 4, 8, 16,
     ]);
     expect(frames[2]?.bacteriaIds).toEqual([0, 2, 1, 3]);
@@ -30,15 +30,18 @@ describe("bacterial growth frames", () => {
   });
 
   it("keeps every bounded generation visually distinct", () => {
-    const visibleCounts = Array.from({ length: 11 }, (_, generation) =>
-      getBacterialGrowthFrame({
-        formulaType: "exponential",
-        generation,
-        initialCount: 1,
-        maxGenerations: 10,
-        ratio: 2,
-      })
-    ).map((frame) => frame.bacteriaIds.length);
+    const visibleCounts = Arr.map(
+      Array.from({ length: 11 }, (_, generation) =>
+        getBacterialGrowthFrame({
+          formulaType: "exponential",
+          generation,
+          initialCount: 1,
+          maxGenerations: 10,
+          ratio: 2,
+        })
+      ),
+      (frame) => frame.bacteriaIds.length
+    );
 
     expect(visibleCounts).toEqual([1, 2, 4, 8, 16, 32, 64, 97, 98, 99, 100]);
   });
@@ -93,15 +96,18 @@ describe("bacterial growth frames", () => {
   });
 
   it("keeps a large decreasing culture visually distinct through zero", () => {
-    const visibleCounts = Array.from({ length: 12 }, (_, generation) =>
-      getBacterialGrowthFrame({
-        formulaType: "geometric",
-        generation,
-        initialCount: 1000,
-        maxGenerations: 11,
-        ratio: 0.5,
-      })
-    ).map((frame) => frame.bacteriaIds.length);
+    const visibleCounts = Arr.map(
+      Array.from({ length: 12 }, (_, generation) =>
+        getBacterialGrowthFrame({
+          formulaType: "geometric",
+          generation,
+          initialCount: 1000,
+          maxGenerations: 11,
+          ratio: 0.5,
+        })
+      ),
+      (frame) => frame.bacteriaIds.length
+    );
 
     expect(visibleCounts).toEqual([100, 50, 25, 13, 7, 6, 5, 4, 3, 2, 1, 0]);
   });
@@ -117,11 +123,11 @@ describe("bacterial growth frames", () => {
       })
     );
 
-    expect(frames.map((frame) => frame.bacteriaCount)).toEqual([
+    expect(Arr.map(frames, (frame) => frame.bacteriaCount)).toEqual([
       104, 94, 84, 76, 68, 61, 55, 50, 45, 40, 36, 33, 29, 26, 24, 21, 19, 17,
       16, 14, 13,
     ]);
-    expect(frames.map((frame) => frame.bacteriaIds.length)).toEqual([
+    expect(Arr.map(frames, (frame) => frame.bacteriaIds.length)).toEqual([
       100, 90, 81, 73, 65, 59, 53, 48, 43, 38, 35, 32, 28, 25, 23, 20, 18, 16,
       15, 14, 13,
     ]);

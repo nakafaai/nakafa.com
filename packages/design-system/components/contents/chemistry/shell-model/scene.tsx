@@ -7,6 +7,7 @@ import type {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
 
@@ -40,7 +41,7 @@ export function ShellModelScene({
     <group rotation={[-0.28, 0, 0]} scale={1.12}>
       <Nucleus colors={colors} sample={sample} />
 
-      {shells.map((shell, shellIndex) => {
+      {Arr.map(shells, (shell, shellIndex) => {
         const shellConfig = SHELL_RENDER_CONFIG[shellIndex];
 
         if (!shellConfig) {
@@ -58,7 +59,7 @@ export function ShellModelScene({
         );
       })}
 
-      {shells.map((shell, shellIndex) => {
+      {Arr.map(shells, (shell, shellIndex) => {
         const shellConfig = SHELL_RENDER_CONFIG[shellIndex];
 
         if (!shellConfig || shell.electronCount === 0) {
@@ -215,7 +216,7 @@ function OrbitingShellElectrons({
     >
       <group ref={groupRef}>
         <group rotation={[0, shellIndex * 0.24, 0]}>
-          {electrons.map((electronIndex) => {
+          {Arr.map(electrons, (electronIndex) => {
             const angle =
               (2 * Math.PI * electronIndex) / shell.electronCount +
               shellIndex * 0.42;

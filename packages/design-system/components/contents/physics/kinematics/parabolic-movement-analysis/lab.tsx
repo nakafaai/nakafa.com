@@ -33,6 +33,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 const FLASH_COLOR = getColor("ORANGE", 500);
@@ -134,7 +135,7 @@ export function ParabolicMovementAnalysisLab({
           value={scenarioId}
           variant="outline"
         >
-          {PROJECTILE_SCENARIOS.map((scenario) => (
+          {Arr.map(PROJECTILE_SCENARIOS, (scenario) => (
             <ToggleGroupItem key={scenario.id} value={scenario.id}>
               {labels.scenarioNames[scenario.id]}
             </ToggleGroupItem>
@@ -187,7 +188,7 @@ export function ParabolicMovementAnalysisLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-          {facts.map((fact) => (
+          {Arr.map(facts, (fact) => (
             <LabFact
               key={fact.id}
               label={fact.label}

@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { createInequalityGeometry } from "@repo/design-system/lib/geometry/inequality/region";
+import { Array as Arr, MutableList } from "effect";
 
 const DOMAIN = {
   resolution: 2,
@@ -24,7 +25,10 @@ describe("inequality region geometry", () => {
     expect(geometry.getAttribute("position").count).toBe(24);
     expect(geometry.getIndex()?.count).toBe(36);
     expect(
-      Array.from(geometry.getAttribute("normal").array).every(Number.isFinite)
+      Arr.every(
+        Array.from(geometry.getAttribute("normal").array),
+        Number.isFinite
+      )
     ).toBe(true);
     geometry.dispose();
   });
@@ -49,16 +53,16 @@ describe("inequality region geometry", () => {
   );
 
   it("samples 3D cell centers in order and clips surface heights to the z range", () => {
-    const samples: [number, number][] = [];
+    const samples = MutableList.make<[number, number]>();
     const geometry = createInequalityGeometry({
       ...DOMAIN,
       resolution: 4,
       boundaryFunction: (x, y) => {
-        samples.push([x, y]);
+        MutableList.append<[number, number]>(samples, [x, y]);
         return x + y + 0.5;
       },
     });
-    expect(samples).toEqual([
+    expect(MutableList.toArray(samples)).toEqual([
       [-0.5, -0.5],
       [-0.5, 0.5],
       [0.5, -0.5],

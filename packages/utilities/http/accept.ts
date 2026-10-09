@@ -1,4 +1,11 @@
-import { HashMap, MutableHashSet, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  HashMap,
+  MutableHashSet,
+  MutableList,
+  Option,
+  Schema,
+} from "effect";
 
 const ParsedMediaTypeSchema = Schema.Struct({
   parameters: Schema.HashMap(Schema.String, Schema.String),
@@ -78,7 +85,7 @@ export function mergeVaryHeader(
   required: readonly string[]
 ) {
   const source = Option.getOrElse(current, () => "");
-  const values: string[] = [];
+  const values = MutableList.make<string>();
   const names = MutableHashSet.empty<string>();
 
   for (const fieldName of source.split(",")) {
@@ -87,7 +94,7 @@ export function mergeVaryHeader(
     if (!value || MutableHashSet.has(names, normalized)) {
       continue;
     }
-    values.push(value);
+    MutableList.append(values, value);
     MutableHashSet.add(names, normalized);
   }
 
@@ -100,11 +107,11 @@ export function mergeVaryHeader(
     if (MutableHashSet.has(names, normalized)) {
       continue;
     }
-    values.push(fieldName);
+    MutableList.append(values, fieldName);
     MutableHashSet.add(names, normalized);
   }
 
-  return values.join(", ");
+  return Arr.join(MutableList.toArray(values), ", ");
 }
 
 /** Parses valid media ranges and treats malformed ranges as unacceptable. */
@@ -124,19 +131,14 @@ function parseAcceptHeader(
 
   return Option.match(splitOutsideQuotes(acceptHeader.value, ","), {
     onNone: () => [],
-    onSome: (sources) => {
-      const ranges: ParsedMediaType[] = [];
-      for (const source of sources) {
-        if (!trimOptionalWhitespace(source)) {
-          continue;
-        }
-        const parsed = parseMediaType(source, true);
-        if (Option.isSome(parsed)) {
-          ranges.push(parsed.value);
-        }
-      }
-      return ranges;
-    },
+    onSome: (sources) =>
+      Arr.getSomes(
+        Arr.map(sources, (source) =>
+          trimOptionalWhitespace(source)
+            ? parseMediaType(source, true)
+            : Option.none()
+        )
+      ),
   });
 }
 
@@ -323,7 +325,7 @@ function splitOutsideQuotes(
   delimiter: "," | ";"
 ): Option.Option<readonly [string, ...string[]]> {
   let first = "";
-  const middle: string[] = [];
+  const middle = MutableList.make<string>();
   let current = "";
   let escaped = false;
   let hasDelimiter = false;
@@ -347,7 +349,7 @@ function splitOutsideQuotes(
     }
     if (character === delimiter && !quoted) {
       if (hasDelimiter) {
-        middle.push(current);
+        MutableList.append(middle, current);
       } else {
         first = current;
         hasDelimiter = true;
@@ -364,7 +366,7 @@ function splitOutsideQuotes(
   if (!hasDelimiter) {
     return Option.some([current]);
   }
-  return Option.some([first, ...middle, current]);
+  return Option.some([first, ...MutableList.toArray(middle), current]);
 }
 
 function trimOptionalWhitespace(source: string) {

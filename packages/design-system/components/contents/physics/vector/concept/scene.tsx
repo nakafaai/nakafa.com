@@ -6,6 +6,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type { CoordinateTuple as ScenePoint } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Array as Arr } from "effect";
 
 export function VectorConceptScene({
   colors,
@@ -86,7 +87,7 @@ function BridgeStructure({ colors }: { colors: VectorConceptSceneColors }) {
       <RoundedBox args={[5.2, 0.18, 0.78]} position={[0, 0, 0]} radius={0.04}>
         <meshStandardMaterial color={colors.deck} roughness={0.62} />
       </RoundedBox>
-      {[-2.15, 2.15].map((x) => (
+      {Arr.map([-2.15, 2.15], (x) => (
         <group key={`tower-${x}`} position={[x, 1.1, 0]}>
           <mesh castShadow position={[-0.1, 0, 0]}>
             <boxGeometry args={[0.16, 2.2, 0.18]} />
@@ -119,8 +120,8 @@ function LoadCart({
   position: ScenePoint;
   wheelColor: string;
 }) {
-  const wheelPositions = [-0.22, 0.22].flatMap((x) =>
-    [-0.32, 0.32].map((z) => [x, z] as const)
+  const wheelPositions = Arr.flatMap([-0.22, 0.22], (x) =>
+    Arr.map([-0.32, 0.32], (z) => [x, z] as const)
   );
 
   return (
@@ -142,7 +143,7 @@ function LoadCart({
       >
         <meshStandardMaterial color={detailColor} roughness={0.55} />
       </RoundedBox>
-      {[-0.22, 0.22].map((x) => (
+      {Arr.map([-0.22, 0.22], (x) => (
         <mesh
           castShadow
           key={`axle-${x}`}
@@ -153,7 +154,7 @@ function LoadCart({
           <meshStandardMaterial color={wheelColor} roughness={0.58} />
         </mesh>
       ))}
-      {wheelPositions.map(([x, z]) => (
+      {Arr.map(wheelPositions, ([x, z]) => (
         <LoadCartWheel
           color={wheelColor}
           hubColor={hubColor}

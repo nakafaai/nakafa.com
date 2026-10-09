@@ -1,6 +1,6 @@
 import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
 import { LocaleSchema } from "@repo/contents/content";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const MaterialRouteIdentitySchema = Schema.Struct({
   locale: LocaleSchema,
@@ -49,12 +49,15 @@ export function readMaterialContextRef({
   refs: readonly MaterialContextRef[];
   route: MaterialRouteIdentity;
 }) {
-  return refs.find(
-    (ref) =>
-      ref.locale === route.locale &&
-      ref.sourcePath === route.sourcePath &&
-      ref.materialKey === route.materialKey &&
-      ref.programKey === contextRoute.programKey &&
-      ref.nodeKey === contextRoute.nodeKey
+  return Option.getOrUndefined(
+    Arr.findFirst(
+      refs,
+      (ref) =>
+        ref.locale === route.locale &&
+        ref.sourcePath === route.sourcePath &&
+        ref.materialKey === route.materialKey &&
+        ref.programKey === contextRoute.programKey &&
+        ref.nodeKey === contextRoute.nodeKey
+    )
   );
 }

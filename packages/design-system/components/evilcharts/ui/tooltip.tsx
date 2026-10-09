@@ -7,6 +7,7 @@ import {
   type TooltipLabelProps,
 } from "@repo/design-system/components/evilcharts/ui/tooltip-item";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import type * as React from "react";
 import { type DefaultTooltipContentProps, Tooltip } from "recharts";
 import type {
@@ -99,7 +100,7 @@ function ChartTooltipContent({
     >
       {nestLabel ? null : <TooltipLabel {...labelProps} />}
       <div className="grid gap-1.5">
-        {payload.map((item, index) => {
+        {Arr.map(payload, (item, index) => {
           if (item.type === "none") {
             return null;
           }

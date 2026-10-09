@@ -24,6 +24,7 @@ import {
   PolyhedralVirusModel,
   VirusSurfaceSpike,
 } from "@repo/design-system/components/contents/biology/virus-parts";
+import { Array as Arr } from "effect";
 
 const CAPSID_POINTS = createBiologySpherePoints(
   BIOLOGY_RING_POINT_COUNT * 2,
@@ -108,7 +109,7 @@ function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
           />
         </mesh>
 
-        {CAPSID_POINTS.map((point) => (
+        {Arr.map(CAPSID_POINTS, (point) => (
           <mesh key={point.id} position={point.position}>
             <icosahedronGeometry args={[isCapsidFocus ? 0.09 : 0.052, 1]} />
             <meshStandardMaterial color={colors.pathogen} roughness={0.7} />
@@ -124,7 +125,7 @@ function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
           </mesh>
         </PulsingGroup>
 
-        {ENVELOPE_SPIKES.map((anchor, index) => (
+        {Arr.map(ENVELOPE_SPIKES, (anchor, index) => (
           <FloatingGroup key={anchor.id} phase={index * 0.35} travel={0.035}>
             <VirusSurfaceSpike
               anchor={anchor}

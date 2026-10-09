@@ -51,14 +51,14 @@ function shouldTintCarPart(mesh: Mesh) {
     ? mesh.material
     : [mesh.material];
 
-  return materials.some((material) =>
+  return Arr.some(materials, (material) =>
     HashSet.has(COLORABLE_CAR_MATERIAL_NAMES, material.name)
   );
 }
 
 function tintMaterial(material: Mesh["material"], color: string) {
   if (Arr.isArray(material)) {
-    return material.map((item) => tintSingleMaterial(item, color));
+    return Arr.map(material, (item) => tintSingleMaterial(item, color));
   }
 
   return tintSingleMaterial(material, color);

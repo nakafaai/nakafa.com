@@ -35,6 +35,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
@@ -94,7 +95,7 @@ export function StoppingDistanceLab({
           value={String(speed)}
           variant="outline"
         >
-          {STOPPING_DISTANCE_SPEEDS.map((speedOption) => (
+          {Arr.map(STOPPING_DISTANCE_SPEEDS, (speedOption) => (
             <ToggleGroupItem key={speedOption} value={String(speedOption)}>
               <InlineMath math={formatSpeedMath(speedOption)} />
             </ToggleGroupItem>
@@ -282,8 +283,11 @@ function BrakeDust({ dustRef }: { dustRef: RefObject<Group | null> }) {
 
   return (
     <group ref={dustRef} visible={false}>
-      {puffPositions.map((position) => (
-        <mesh key={position.join("-")} position={position}>
+      {Arr.map(puffPositions, (position) => (
+        <mesh
+          key={Arr.join(Arr.map(position, String), "-")}
+          position={position}
+        >
           <sphereGeometry args={[0.3, 12, 8]} />
           <meshBasicMaterial
             color={getColor("GRAY", 200)}
@@ -335,7 +339,7 @@ function Road() {
         <meshStandardMaterial color={getColor("GRAY", 700)} roughness={0.72} />
       </mesh>
 
-      {stripePositions.map((x) => (
+      {Arr.map(stripePositions, (x) => (
         <mesh key={x} position={[x, 0.035, 0]}>
           <boxGeometry args={[0.42, 0.018, 0.06]} />
           <meshStandardMaterial

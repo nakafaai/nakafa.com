@@ -22,7 +22,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -108,7 +108,7 @@ export function SalesChart({
               }
             />
             <Legend />
-            {Rec.keys(chartConfig).map((key, index) => {
+            {Arr.map(Rec.keys(chartConfig), (key, index) => {
               const cue = getBarSeriesCue(index);
 
               return (

@@ -80,7 +80,8 @@ export class MathFontLoadError extends Schema.TaggedError<MathFontLoadError>()(
 export const loadMathFonts = Effect.fn("designSystem.markdown.loadMathFonts")(
   function* (fonts: Pick<FontFaceSet, "load">) {
     yield* Effect.tryPromise({
-      try: () => Promise.all(CORE_MATH_FONTS.map((font) => fonts.load(font))),
+      try: () =>
+        Promise.all(Arr.map(CORE_MATH_FONTS, (font) => fonts.load(font))),
       catch: (cause) => new MathFontLoadError({ cause }),
     });
   }
@@ -91,10 +92,10 @@ export function readMathFonts(html: string): readonly MathFont[] {
   const elements = Array.from(html.matchAll(CLASS_ATTRIBUTE), ([, classes]) =>
     MutableHashSet.fromIterable(classes.split(" "))
   );
-  const matched = MATH_FONT_CLASSES.filter(([, group]) =>
-    elements.some((classes) =>
-      group.every((name) => MutableHashSet.has(classes, name))
+  const matched = Arr.filter(MATH_FONT_CLASSES, ([, group]) =>
+    Arr.some(elements, (classes) =>
+      Arr.every(group, (name) => MutableHashSet.has(classes, name))
     )
-  ).map(([font]) => font);
-  return Arr.dedupe(matched);
+  );
+  return Arr.dedupe(Arr.map(matched, ([font]) => font));
 }

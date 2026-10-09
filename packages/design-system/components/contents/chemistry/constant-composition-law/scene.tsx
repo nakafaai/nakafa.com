@@ -17,7 +17,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
 
 const BEFORE_X = -1.08;
@@ -157,14 +157,14 @@ export function ConstantCompositionScene({
         {labels.after}
       </ThreeLabel>
       <CompositionStage x={BEFORE_X}>
-        {layout.beforeAtoms.map((atomData) => (
+        {Arr.map(layout.beforeAtoms, (atomData) => (
           <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
         ))}
       </CompositionStage>
 
       <CompositionStage x={AFTER_X}>
         <WaterMolecule colors={colors} />
-        {layout.leftoverAtoms.map((atomData) => (
+        {Arr.map(layout.leftoverAtoms, (atomData) => (
           <LeftoverAtom atomData={atomData} colors={colors} key={atomData.id} />
         ))}
       </CompositionStage>
@@ -179,7 +179,7 @@ function CompositionStage({ children, x }: { children: ReactNode; x: number }) {
 function WaterMolecule({ colors }: { colors: ConstantCompositionSceneColors }) {
   return (
     <group rotation={[0, -0.24, 0]} scale={1.12}>
-      {WATER_BONDS.map((bond) => (
+      {Arr.map(WATER_BONDS, (bond) => (
         <Line
           color={colors.bond}
           key={bond.id}
@@ -187,7 +187,7 @@ function WaterMolecule({ colors }: { colors: ConstantCompositionSceneColors }) {
           points={[bond.start, bond.end]}
         />
       ))}
-      {WATER_ATOMS.map((atomData) => (
+      {Arr.map(WATER_ATOMS, (atomData) => (
         <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
       ))}
     </group>

@@ -1,4 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr, Option } from "effect";
 
 export const INSTANTANEOUS_SPEED_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/suv-luxury.glb";
@@ -89,7 +90,10 @@ export function getInstantaneousVelocitySpeedState(
 export function isInstantaneousSpeedCaseId(
   value: string
 ): value is InstantaneousSpeedCaseId {
-  return INSTANTANEOUS_SPEED_CASES.some((scenario) => scenario.id === value);
+  return Arr.some(
+    INSTANTANEOUS_SPEED_CASES,
+    (scenario) => scenario.id === value
+  );
 }
 
 export function formatSignedSpeedMath(value: number) {
@@ -105,9 +109,9 @@ export function formatTimeMath(value: number) {
 }
 
 function getInstantaneousSpeedCaseById(id: InstantaneousSpeedCaseId) {
-  return (
-    INSTANTANEOUS_SPEED_CASES.find((scenario) => scenario.id === id) ??
-    INSTANTANEOUS_SPEED_CASES[0]
+  return Option.getOrElse(
+    Arr.findFirst(INSTANTANEOUS_SPEED_CASES, (scenario) => scenario.id === id),
+    () => INSTANTANEOUS_SPEED_CASES[0]
   );
 }
 

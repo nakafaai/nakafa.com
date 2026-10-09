@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { CliError } from "effect/cli";
 
 export const ProblemDetailsSchema = Schema.Struct({
@@ -63,7 +63,10 @@ export function makeInvocationError(error: CliError.CliError) {
   return new InvocationError({
     message:
       error._tag === "ShowHelp"
-        ? error.errors.map(({ message }) => message).join("\n")
+        ? Arr.join(
+            Arr.map(error.errors, ({ message }) => message),
+            "\n"
+          )
         : error.message,
   });
 }

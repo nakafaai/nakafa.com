@@ -19,6 +19,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -85,7 +86,7 @@ export function PeriodicPropertiesLab({
           value={selectedModeId}
           variant="outline"
         >
-          {PERIODIC_PROPERTY_MODE_IDS.map((modeId) => (
+          {Arr.map(PERIODIC_PROPERTY_MODE_IDS, (modeId) => (
             <ToggleGroupItem
               aria-label={labels.modes[modeId].name}
               key={modeId}

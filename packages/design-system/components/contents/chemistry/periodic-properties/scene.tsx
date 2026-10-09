@@ -11,6 +11,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 const PERIOD_Z = -1.18;
@@ -109,7 +110,7 @@ function TrendTrack({
         to={endPoint}
       />
 
-      {samples.map((sample, sampleIndex) => (
+      {Arr.map(samples, (sample, sampleIndex) => (
         <TrendMarker
           color={color}
           colors={colors}
@@ -231,7 +232,8 @@ type PeriodicPropertyRange = ReturnType<typeof getModeRange>;
  * Calculates the visible value range for the selected property.
  */
 function getModeRange(mode: PeriodicPropertyMode) {
-  const values = [...mode.periodSamples, ...mode.groupSamples].map(
+  const values = Arr.map(
+    [...mode.periodSamples, ...mode.groupSamples],
     ({ value }) => value
   );
 
@@ -284,7 +286,7 @@ function getTrackPoints(axis: TrendAxis, sampleCount: number) {
  * Offsets the guide rail away from markers so direction arrows do not cut through the data.
  */
 function getRailPoints(axis: TrendAxis, markerPoints: readonly ScenePoint[]) {
-  return markerPoints.map(([x, , z]) => {
+  return Arr.map(markerPoints, ([x, , z]) => {
     if (axis === "period") {
       return [x, RAIL_Y, z + PERIOD_RAIL_Z_OFFSET] satisfies ScenePoint;
     }

@@ -19,6 +19,7 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
 
 const chartData = [
@@ -52,7 +53,7 @@ export function RecruitmentChart({
 }: Props) {
   const data = useMemo(
     () =>
-      chartData.map((item) => ({
+      Arr.map(chartData, (item) => ({
         ...item,
         formattedDivision: `${divisionLabel} ${item.division}`,
       })),

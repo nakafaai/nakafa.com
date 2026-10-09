@@ -1,12 +1,12 @@
 import { fileURLToPath } from "node:url";
 import { TEXT_ROLE_PAIRS } from "@repo/design-system/lib/theme/contrast";
 import Color from "colorjs.io";
-import { Effect, FileSystem, Schema } from "effect";
+import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 import postcss, { type AtRule, Root, type Rule } from "postcss";
 
 /** Complete semantic color surface shared by every concrete profile. */
 export const SEMANTIC_COLOR_TOKENS = [
-  ...TEXT_ROLE_PAIRS.flatMap(([foreground, surface]) => [
+  ...Arr.flatMap(TEXT_ROLE_PAIRS, ([foreground, surface]) => [
     `--${surface}`,
     `--${foreground}`,
   ]),
@@ -130,7 +130,7 @@ export function createThemeProfiles(
   names: readonly string[],
   sources: ThemeStyleSources
 ) {
-  return names.map((name): ProfileSource => {
+  return Arr.map(names, (name): ProfileSource => {
     if (name === "light") {
       return { name, root: sources.globals, selector: ":root" };
     }
@@ -177,7 +177,7 @@ export function readDirectValue(container: Rule | AtRule, property: string) {
 
 /** Lists the simple top-level class selectors that own theme profiles. */
 export function readCustomThemeNames(root: Root) {
-  return root.nodes.flatMap((node) => {
+  return Arr.flatMap(root.nodes, (node) => {
     if (node.type !== "rule") {
       return [];
     }
@@ -209,11 +209,9 @@ export function readOklchChannels(value: string) {
 
 /** Projects canonical OKLCH into the required comma-form 8-bit sRGB value. */
 export function toRgbProjection(value: string) {
-  const channels = new Color(value)
-    .to("srgb")
-    .coords.map((channel) =>
-      Math.round(requireColorChannel(channel, value) * 255)
-    );
+  const channels = Arr.map(new Color(value).to("srgb").coords, (channel) =>
+    String(Math.round(requireColorChannel(channel, value) * 255))
+  );
 
-  return `rgb(${channels.join(", ")})`;
+  return `rgb(${Arr.join(channels, ", ")})`;
 }

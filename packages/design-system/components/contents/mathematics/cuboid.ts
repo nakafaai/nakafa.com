@@ -3,6 +3,7 @@ import type {
   ResolvedLine,
 } from "@repo/design-system/components/contents/mathematics/line/spec";
 import { createCuboid } from "@repo/design-system/lib/geometry/cuboid";
+import { Array as Arr } from "effect";
 
 /**
  * Resolves a mathematical cuboid into its twelve exact, axis-aligned edges.
@@ -27,7 +28,7 @@ export function createCuboidLines({
     width,
   });
 
-  return edges.map(([start, end]) => ({
+  return Arr.map(edges, ([start, end]) => ({
     ...(color === undefined ? {} : { color }),
     ...(lineWidth === undefined ? {} : { lineWidth }),
     points: [start, end],

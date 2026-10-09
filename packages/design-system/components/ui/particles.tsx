@@ -11,7 +11,7 @@ import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
-import { Schema } from "effect";
+import { Array as Arr, MutableList, Schema } from "effect";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react";
 
@@ -58,6 +58,63 @@ interface RemapValueProps {
   start1: number;
   start2: number;
   value: number;
+}
+
+/** Maps a value from one range onto another, never below zero. */
+function remapValue({
+  value,
+  start1,
+  end1,
+  start2,
+  end2,
+}: RemapValueProps): number {
+  const remapped =
+    ((value - start1) * (end2 - start2)) / (end1 - start1) + start2;
+  return remapped > 0 ? remapped : 0;
+}
+
+/**
+ * Sets a circle's alpha from its nearest canvas edge: it fades in while clear of
+ * the edges and dims as it nears them.
+ */
+function updateAlpha(circle: Circle, width: number, height: number) {
+  // Handle the alpha value
+  const edge = [
+    circle.x + circle.translateX - circle.size, // distance from left edge
+    width - circle.x - circle.translateX - circle.size, // distance from right edge
+    circle.y + circle.translateY - circle.size, // distance from top edge
+    height - circle.y - circle.translateY - circle.size, // distance from bottom edge
+  ];
+  const closestEdge = Arr.reduce(edge, Number.POSITIVE_INFINITY, (a, b) =>
+    Math.min(a, b)
+  );
+  const remapClosestEdge = Number.parseFloat(
+    remapValue({
+      value: closestEdge,
+      start1: 0,
+      end1: REMAP_EDGE_END,
+      start2: 0,
+      end2: 1,
+    }).toFixed(2)
+  );
+  if (remapClosestEdge > 1) {
+    circle.alpha += ALPHA_FADE_IN_SPEED;
+    if (circle.alpha > circle.targetAlpha) {
+      circle.alpha = circle.targetAlpha;
+    }
+  } else {
+    circle.alpha = circle.targetAlpha * remapClosestEdge;
+  }
+}
+
+/** Reports whether a circle has left the canvas, its radius included. */
+function isOutsideCanvas(circle: Circle, width: number, height: number) {
+  return (
+    circle.x < -circle.size ||
+    circle.x > width + circle.size ||
+    circle.y < -circle.size ||
+    circle.y > height + circle.size
+  );
 }
 
 /**
@@ -137,7 +194,7 @@ export function Particles({
   }, [rng]);
 
   const drawCircle = useCallback(
-    (circle: Circle, update = false) => {
+    (circle: Circle) => {
       if (context.current) {
         const { x, y, translateX, translateY, size, alpha } = circle;
         context.current.translate(translateX, translateY);
@@ -148,10 +205,6 @@ export function Particles({
           : `oklch(0.145 0 0 / ${alpha})`;
         context.current.fill();
         context.current.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        if (!update) {
-          circles.current.push(circle);
-        }
       }
     },
     [dpr, isThemeDark]
@@ -171,6 +224,7 @@ export function Particles({
   const drawParticles = useCallback(
     (showImmediately: boolean) => {
       clearContext();
+      const particles = MutableList.make<Circle>();
       const particleCount = quantity;
       for (let i = 0; i < particleCount; i += 1) {
         const circle = circleParams();
@@ -178,6 +232,14 @@ export function Particles({
           circle.alpha = circle.targetAlpha;
         }
         drawCircle(circle);
+        MutableList.append(particles, circle);
+      }
+      // The list keeps the new circles only where a canvas context draws them.
+      if (context.current) {
+        circles.current = Arr.appendAll(
+          circles.current,
+          MutableList.toArray(particles)
+        );
       }
     },
     [circleParams, clearContext, drawCircle, quantity]
@@ -205,44 +267,22 @@ export function Particles({
     }
   }, [mousePositionRef]);
 
-  const remapValue = useCallback(
-    ({ value, start1, end1, start2, end2 }: RemapValueProps): number => {
-      const remapped =
-        ((value - start1) * (end2 - start2)) / (end1 - start1) + start2;
-      return remapped > 0 ? remapped : 0;
-    },
-    []
-  );
-
   const animate = useCallback(() => {
     onMouseMove();
     clearContext();
-    circles.current.forEach((circle: Circle, i: number) => {
-      // Handle the alpha value
-      const edge = [
-        circle.x + circle.translateX - circle.size, // distance from left edge
-        canvasSize.current.w - circle.x - circle.translateX - circle.size, // distance from right edge
-        circle.y + circle.translateY - circle.size, // distance from top edge
-        canvasSize.current.h - circle.y - circle.translateY - circle.size, // distance from bottom edge
-      ];
-      const closestEdge = edge.reduce((a, b) => Math.min(a, b));
-      const remapClosestEdge = Number.parseFloat(
-        remapValue({
-          value: closestEdge,
-          start1: 0,
-          end1: REMAP_EDGE_END,
-          start2: 0,
-          end2: 1,
-        }).toFixed(2)
-      );
-      if (remapClosestEdge > 1) {
-        circle.alpha += ALPHA_FADE_IN_SPEED;
-        if (circle.alpha > circle.targetAlpha) {
-          circle.alpha = circle.targetAlpha;
-        }
-      } else {
-        circle.alpha = circle.targetAlpha * remapClosestEdge;
+    // The frame visits the circles in the order the in-place loop did: a circle
+    // that leaves the canvas is replaced at the end, and the circle that slides
+    // into its slot is passed over for this frame. A queue replays that order.
+    const queue = MutableList.make<Circle>();
+    MutableList.appendAll(queue, circles.current);
+    const passed = MutableList.make<Circle>();
+    const visits = circles.current.length;
+    for (let visit = 0; visit < visits; visit += 1) {
+      const circle = MutableList.take(queue);
+      if (circle === MutableList.Empty) {
+        break;
       }
+      updateAlpha(circle, canvasSize.current.w, canvasSize.current.h);
       circle.x += circle.dx;
       circle.y += circle.dy;
 
@@ -263,39 +303,38 @@ export function Particles({
       }
 
       // circle gets out of the canvas
-      if (
-        circle.x < -circle.size ||
-        circle.x > canvasSize.current.w + circle.size ||
-        circle.y < -circle.size ||
-        circle.y > canvasSize.current.h + circle.size
-      ) {
-        // remove the circle from the array
-        circles.current.splice(i, 1);
-        // create a new circle
+      if (isOutsideCanvas(circle, canvasSize.current.w, canvasSize.current.h)) {
+        // the circle leaves the list and a new one joins at the end
         const newCircle = circleParams();
         drawCircle(newCircle);
-        // update the circle position
+        MutableList.append(queue, newCircle);
+        // the circle that slides into the freed slot is passed over this frame
+        const slid = MutableList.take(queue);
+        if (slid !== MutableList.Empty) {
+          MutableList.append(passed, slid);
+        }
       } else {
-        drawCircle(
-          {
-            ...circle,
-            x: circle.x,
-            y: circle.y,
-            translateX: circle.translateX,
-            translateY: circle.translateY,
-            alpha: circle.alpha,
-          },
-          true
-        );
+        MutableList.append(passed, circle);
+        drawCircle({
+          ...circle,
+          x: circle.x,
+          y: circle.y,
+          translateX: circle.translateX,
+          translateY: circle.translateY,
+          alpha: circle.alpha,
+        });
       }
-    });
+    }
+    circles.current = Arr.appendAll(
+      MutableList.toArray(passed),
+      MutableList.toArray(queue)
+    );
     animationFrameRef.current = window.requestAnimationFrame(animate);
   }, [
     circleParams,
     clearContext,
     drawCircle,
     ease,
-    remapValue,
     staticity,
     isMobile,
     onMouseMove,

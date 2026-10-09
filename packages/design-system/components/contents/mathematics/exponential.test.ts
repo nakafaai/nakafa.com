@@ -3,7 +3,7 @@ import {
   ExponentialError,
   resolveExponential,
 } from "@repo/design-system/components/contents/mathematics/exponential";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("exponential chart models", () => {
   it.effect(
@@ -39,7 +39,7 @@ describe("exponential chart models", () => {
   it.effect("represents the zero function without changing its values", () =>
     Effect.gen(function* () {
       const plot = yield* resolveExponential({ a: 1, p: 0, n: 2 });
-      expect(plot.curve.every(({ y }) => y === 0)).toBe(true);
+      expect(Arr.every(plot.curve, ({ y }) => y === 0)).toBe(true);
     })
   );
   it.effect.each([

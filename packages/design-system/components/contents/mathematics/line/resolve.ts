@@ -10,6 +10,7 @@ import type {
   AuthoredLine,
   ResolvedLine,
 } from "@repo/design-system/components/contents/mathematics/line/spec";
+import { Array as Arr } from "effect";
 
 /** Expands one declarative circle line into the concrete WebGL contract. */
 function resolveLine(line: AuthoredLine): ResolvedLine[] {
@@ -69,5 +70,5 @@ function resolveLine(line: AuthoredLine): ResolvedLine[] {
 
 /** Resolves authored line primitives while preserving their declared order. */
 export function resolveAuthoredLines(lines: readonly AuthoredLine[]) {
-  return lines.flatMap(resolveLine);
+  return Arr.flatMap(lines, resolveLine);
 }

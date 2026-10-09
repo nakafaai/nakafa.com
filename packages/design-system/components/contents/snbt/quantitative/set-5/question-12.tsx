@@ -1,6 +1,7 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 
 /** Renders the quantitative graph for SNBT set 5 question 12. */
@@ -13,13 +14,16 @@ export function QuestionGraph({
   const endY = 5;
 
   // Function: x = -y^2 + 2y + 8
-  const points = Array.from({
-    length: Math.floor((endY - startY) / step) + 1,
-  }).map((_, i) => {
-    const y = startY + i * step;
-    const x = -(y ** 2) + 2 * y + 8;
-    return { x, y, z: 0 };
-  });
+  const points = Arr.map(
+    Array.from({
+      length: Math.floor((endY - startY) / step) + 1,
+    }),
+    (_, i) => {
+      const y = startY + i * step;
+      const x = -(y ** 2) + 2 * y + 8;
+      return { x, y, z: 0 };
+    }
+  );
 
   // Calculate indices for labels
   // y = 4 (x=0)

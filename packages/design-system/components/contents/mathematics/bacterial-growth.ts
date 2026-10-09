@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, MutableList, Schema } from "effect";
 
 const MAX_VISIBLE_BACTERIA = 100;
 const NonNegativeIntegerSchema = Schema.Finite.pipe(
@@ -87,45 +87,49 @@ function createNextGeneration(
   const daughterCount = nextVisibleCount - bacteriaIds.length;
   const daughtersPerParent = Math.floor(daughterCount / bacteriaIds.length);
   const parentsWithExtraDaughter = daughterCount % bacteriaIds.length;
-  const nextBacteriaIds: number[] = [];
+  const nextBacteriaIds = MutableList.make<number>();
   let availableLineageId = nextLineageId;
 
   for (const [parentIndex, parentId] of bacteriaIds.entries()) {
-    nextBacteriaIds.push(parentId);
+    MutableList.append(nextBacteriaIds, parentId);
 
     const extraDaughter = parentIndex < parentsWithExtraDaughter ? 1 : 0;
     const parentDaughterCount = daughtersPerParent + extraDaughter;
 
     for (let index = 0; index < parentDaughterCount; index += 1) {
-      nextBacteriaIds.push(availableLineageId);
+      MutableList.append(nextBacteriaIds, availableLineageId);
       availableLineageId += 1;
     }
   }
 
   return {
-    bacteriaIds: nextBacteriaIds,
+    bacteriaIds: MutableList.toArray(nextBacteriaIds),
     nextLineageId: availableLineageId,
   };
 }
 
+/**
+ * Splits the counts into runs of equal neighbours. A run starts where a count
+ * differs from the count before it, so NaN starts a run every time.
+ */
 function groupBacteriaCounts(bacteriaCounts: readonly number[]) {
-  const groups: BacteriaCountGroup[] = [];
+  const runStarts = Arr.filter(
+    Array.from({ length: bacteriaCounts.length }, (_, index) => index),
+    (index) =>
+      index === 0 || bacteriaCounts[index] !== bacteriaCounts[index - 1]
+  );
 
-  for (const bacteriaCount of bacteriaCounts) {
-    const previousGroup = groups.at(-1);
+  return Arr.map(runStarts, (start, runIndex) => {
+    const end =
+      runIndex + 1 < runStarts.length
+        ? runStarts[runIndex + 1]
+        : bacteriaCounts.length;
 
-    if (previousGroup?.bacteriaCount === bacteriaCount) {
-      groups[groups.length - 1] = {
-        bacteriaCount,
-        generationCount: previousGroup.generationCount + 1,
-      };
-      continue;
-    }
-
-    groups.push({ bacteriaCount, generationCount: 1 });
-  }
-
-  return groups;
+    return {
+      bacteriaCount: bacteriaCounts[start],
+      generationCount: end - start,
+    };
+  });
 }
 
 function getVisibleBacteriaCounts(
@@ -137,7 +141,7 @@ function getVisibleBacteriaCounts(
     return [...bacteriaCounts];
   }
 
-  const positiveGenerationGroups: BacteriaCountGroup[] = [];
+  const positiveGroups = MutableList.make<BacteriaCountGroup>();
   let smallestPositiveCount = largestBacteriaCount;
   let zeroGenerationCount = 0;
 
@@ -147,23 +151,24 @@ function getVisibleBacteriaCounts(
       continue;
     }
 
-    positiveGenerationGroups.push(group);
+    MutableList.append(positiveGroups, group);
     smallestPositiveCount = Math.min(
       smallestPositiveCount,
       group.bacteriaCount
     );
   }
 
+  const positiveGenerationGroups = MutableList.toArray(positiveGroups);
   const ascendingGenerationGroups = isGrowing
     ? positiveGenerationGroups
-    : [...positiveGenerationGroups].reverse();
+    : Arr.reverse(positiveGenerationGroups);
   const scale = isGrowing
     ? smallestPositiveCount
     : largestBacteriaCount / MAX_VISIBLE_BACTERIA;
 
   const canPreserveEveryDistinctCount =
     ascendingGenerationGroups.length <= MAX_VISIBLE_BACTERIA;
-  const ascendingVisibleGroups: VisibleBacteriaCountGroup[] = [];
+  const visibleGroups = MutableList.make<VisibleBacteriaCountGroup>();
   let previousVisibleCount = 0;
 
   for (const [index, group] of ascendingGenerationGroups.entries()) {
@@ -173,7 +178,10 @@ function getVisibleBacteriaCounts(
     );
 
     if (!canPreserveEveryDistinctCount) {
-      ascendingVisibleGroups.push({ ...group, visibleCount: scaledCount });
+      MutableList.append(visibleGroups, {
+        ...group,
+        visibleCount: scaledCount,
+      });
       continue;
     }
 
@@ -186,14 +194,16 @@ function getVisibleBacteriaCounts(
       Math.max(minimumVisibleCount, scaledCount)
     );
 
-    ascendingVisibleGroups.push({ ...group, visibleCount });
+    MutableList.append(visibleGroups, { ...group, visibleCount });
     previousVisibleCount = visibleCount;
   }
 
+  const ascendingVisibleGroups = MutableList.toArray(visibleGroups);
   const generationOrderedVisibleGroups = isGrowing
     ? ascendingVisibleGroups
-    : [...ascendingVisibleGroups].reverse();
-  const positiveVisibleCounts = generationOrderedVisibleGroups.flatMap(
+    : Arr.reverse(ascendingVisibleGroups);
+  const positiveVisibleCounts = Arr.flatMap(
+    generationOrderedVisibleGroups,
     (group) =>
       Array.from({ length: group.generationCount }, () => group.visibleCount)
   );

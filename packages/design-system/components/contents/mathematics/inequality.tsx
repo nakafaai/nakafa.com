@@ -1,5 +1,6 @@
 // CoordinateSystem renders a dynamic WebGL canvas with SSR disabled.
 // https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr
+
 import {
   CoordinateControls,
   CoordinateProvider,
@@ -11,6 +12,7 @@ import {
   VisualCardBody,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { Array as Arr } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
@@ -31,7 +33,7 @@ export function Inequality({
   cameraPosition,
   cameraTarget,
 }: Props) {
-  const isPlanar = data.every((item) => item.is2D);
+  const isPlanar = Arr.every(data, (item) => Boolean(item.is2D));
   const position: Props["cameraPosition"] =
     cameraPosition ?? (isPlanar ? [0, 0, 15] : undefined);
   const isFrontalPlane =
@@ -51,9 +53,9 @@ export function Inequality({
             }
             cameraTarget={cameraTarget}
           >
-            {data.map((item, index) => (
+            {Arr.map(data, (item, index) => (
               <Inequality3D
-                key={`inequality-${item.boundaryLine2D?.join("_") || index}`}
+                key={`inequality-${(item.boundaryLine2D ? Arr.join(Arr.map(item.boundaryLine2D, String), "_") : undefined) || index}`}
                 {...item}
               />
             ))}

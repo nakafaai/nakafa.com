@@ -4,10 +4,11 @@ import {
   getLineSeriesCue,
   getPointSeriesCue,
 } from "@repo/design-system/lib/charts/series-cue";
+import { Array as Arr } from "effect";
 
 describe("chart series cues", () => {
   it("assigns distinct line strokes and markers", () => {
-    expect([0, 1, 2].map(getLineSeriesCue)).toEqual([
+    expect(Arr.map([0, 1, 2], getLineSeriesCue)).toEqual([
       {
         activeDot: "colored-border",
         dot: "default",
@@ -29,7 +30,7 @@ describe("chart series cues", () => {
   });
 
   it("assigns distinct point shapes", () => {
-    expect([0, 1, 2].map(getPointSeriesCue)).toEqual([
+    expect(Arr.map([0, 1, 2], getPointSeriesCue)).toEqual([
       { activeDot: "colored-border", dot: "default", kind: "point" },
       { activeDot: "square-border", dot: "square", kind: "point" },
       { activeDot: "diamond-border", dot: "diamond", kind: "point" },
@@ -37,7 +38,7 @@ describe("chart series cues", () => {
   });
 
   it("assigns solid, hatched, and rounded bar geometries", () => {
-    expect([0, 1, 2].map(getBarSeriesCue)).toEqual([
+    expect(Arr.map([0, 1, 2], getBarSeriesCue)).toEqual([
       { kind: "bar", radius: 0, variant: "default" },
       { kind: "bar", radius: 4, variant: "hatched" },
       { kind: "bar", radius: 12, variant: "default" },

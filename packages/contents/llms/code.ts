@@ -1,3 +1,5 @@
+import { Array as Arr, MutableList } from "effect";
+
 const CODE_BLOCK_CONTENT_PATTERN = /code:\s*`((?:\\[\s\S]|[^`])*)`/g;
 const CODE_BLOCK_FILENAME_PATTERN = /filename:\s*["']([^"']+)["']/;
 const CODE_BLOCK_LANGUAGE_PATTERN = /language:\s*["']([^"']+)["']/;
@@ -10,7 +12,7 @@ export function formatCodeBlockData(data: string) {
     return "";
   }
 
-  const snippets: string[] = [];
+  const snippets = MutableList.make<string>();
 
   for (const match of data.matchAll(CODE_BLOCK_CONTENT_PATTERN)) {
     const index = match.index;
@@ -25,10 +27,10 @@ export function formatCodeBlockData(data: string) {
       continue;
     }
 
-    snippets.push(formatCodeFence(snippet));
+    MutableList.append(snippets, formatCodeFence(snippet));
   }
 
-  return snippets.join("\n\n");
+  return Arr.join(MutableList.toArray(snippets), "\n\n");
 }
 
 /** Decodes the source escapes that JavaScript template literals cook at runtime. */
@@ -45,17 +47,13 @@ function formatCodeFence({
   filename: string;
   language: string;
 }) {
-  const rows: string[] = [];
+  const fence = `\`\`\`${language}\n${code.trim().replace(TRIPLE_BACKTICKS_PATTERN, "``\\`")}\n\`\`\``;
 
-  if (filename) {
-    rows.push(`File: ${filename}`);
+  if (!filename) {
+    return fence;
   }
 
-  rows.push(
-    `\`\`\`${language}\n${code.trim().replace(TRIPLE_BACKTICKS_PATTERN, "``\\`")}\n\`\`\``
-  );
-
-  return rows.join("\n");
+  return Arr.join([`File: ${filename}`, fence], "\n");
 }
 
 function readPattern(value: string, pattern: RegExp) {

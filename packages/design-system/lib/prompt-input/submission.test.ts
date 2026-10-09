@@ -6,7 +6,7 @@ import {
   PromptInputSubmitError,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 
 function createPromptFile(): PromptInputFile {
   return {
@@ -46,23 +46,23 @@ describe("prompt input submission", () => {
 
   it.effect("awaits asynchronous consumers before applying success state", () =>
     Effect.gen(function* () {
-      const order: string[] = [];
+      const order = MutableList.make<string>();
 
       yield* submitPromptInput({
         event: "submit-event",
         files: [],
         onSubmit: () =>
           Promise.resolve().then(() => {
-            order.push("submitted");
+            MutableList.append(order, "submitted");
             return true;
           }),
         onSuccess: () => {
-          order.push("completed");
+          MutableList.append(order, "completed");
         },
         text: "Hello",
       });
 
-      expect(order).toEqual(["submitted", "completed"]);
+      expect(MutableList.toArray(order)).toEqual(["submitted", "completed"]);
     })
   );
 

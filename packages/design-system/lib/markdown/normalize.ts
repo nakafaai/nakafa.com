@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 // Normalization rules - easy to extend
 const NORMALIZATION_RULES = [
   // Full-width brackets to regular brackets with space
@@ -10,8 +12,7 @@ const NORMALIZATION_RULES = [
 
 /** Converts full-width corner brackets from AI text into spaced ASCII brackets. */
 export function normalizeText(str: string): string {
-  return NORMALIZATION_RULES.reduce(
-    (text, rule) => text.replace(rule.from, rule.to),
-    str
+  return Arr.reduce(NORMALIZATION_RULES, str, (text, rule) =>
+    text.replace(rule.from, rule.to)
   );
 }

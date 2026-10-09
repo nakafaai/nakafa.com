@@ -11,6 +11,7 @@ import {
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
 /**
@@ -51,14 +52,14 @@ export function LengthScene({
         <meshStandardMaterial color={RULER_COLOR} roughness={0.65} />
       </RoundedBox>
 
-      {minorTicks.map((tick) => (
+      {Arr.map(minorTicks, (tick) => (
         <mesh key={tick.id} position={[tick.x, 0.13, -0.34]}>
           <boxGeometry args={[0.025, 0.14, 0.04]} />
           <meshStandardMaterial color={colors.text} />
         </mesh>
       ))}
 
-      {majorTicks.map((tick) => (
+      {Arr.map(majorTicks, (tick) => (
         <mesh key={tick.id} position={[tick.x, 0.15, -0.27]}>
           <boxGeometry args={[0.04, 0.22, 0.06]} />
           <meshStandardMaterial color={colors.text} />
