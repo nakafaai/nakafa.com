@@ -77,7 +77,7 @@ function validateChartConfigColors(
     }
   }
 
-  return Result.succeed(undefined);
+  return Result.void;
 }
 
 // Distribute colors evenly across slots, extra slots go to last color(s)

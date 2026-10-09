@@ -56,11 +56,9 @@ export function ElectronConfigurationLab({
     useState<ElectronConfigurationSampleId>(HYDROGEN_ID);
   const selectedSample = ELECTRON_CONFIGURATION_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
-  const shellResult = getSimpleShellConfiguration(selectedSample.atomicNumber);
-  if (Result.isFailure(shellResult)) {
-    throw shellResult.failure;
-  }
-  const shellConfiguration = shellResult.success;
+  const shellConfiguration = Result.getOrThrow(
+    getSimpleShellConfiguration(selectedSample.atomicNumber)
+  );
   const visibleShells = Arr.filter(
     shellConfiguration,
     (shell) => shell.electronCount > 0

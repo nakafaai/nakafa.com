@@ -56,13 +56,9 @@ export function AtomShellLab({
     useState<AtomShellSampleId>(CALCIUM_ID);
   const selectedSample = ATOM_SHELL_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
-  const shellResult = getEarlyElementShellConfiguration(
-    selectedSample.atomicNumber
+  const shellConfiguration = Result.getOrThrow(
+    getEarlyElementShellConfiguration(selectedSample.atomicNumber)
   );
-  if (Result.isFailure(shellResult)) {
-    throw shellResult.failure;
-  }
-  const shellConfiguration = shellResult.success;
   const visibleShells = Arr.filter(
     shellConfiguration,
     (shell) => shell.electronCount > 0

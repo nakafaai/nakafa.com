@@ -80,10 +80,7 @@ function ChartContainer({
   const uniqueId = useId();
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
   const contextValue = useMemo(() => ({ config }), [config]);
-  const configValidation = validateChartConfigColors(config);
-  if (Result.isFailure(configValidation)) {
-    throw configValidation.failure;
-  }
+  Result.getOrThrow(validateChartConfigColors(config));
 
   return (
     <LazyMotion features={domAnimation} strict>

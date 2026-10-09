@@ -58,11 +58,9 @@ export function ValenceElectronLab({
     useState<ValenceElectronSampleId>(CALCIUM_ID);
   const selectedSample = VALENCE_ELECTRON_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
-  const factsResult = getValenceElectronFacts(selectedSample.atomicNumber);
-  if (Result.isFailure(factsResult)) {
-    throw factsResult.failure;
-  }
-  const facts = factsResult.success;
+  const facts = Result.getOrThrow(
+    getValenceElectronFacts(selectedSample.atomicNumber)
+  );
 
   /** Keeps the current atom selected when ToggleGroup emits an empty value. */
   function handleSampleChange(value: string) {
