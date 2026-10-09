@@ -83,8 +83,12 @@ export function resolvePublicLlmsSectionIndex({
     stripLlmsRouteExtension(cleanSlug).split("/"),
     Boolean
   );
-  const parts =
-    segments.at(-1) === "llms" ? Arr.dropRight(segments, 1) : segments;
+  const parts = Option.exists(
+    Arr.last(segments),
+    (segment) => segment === "llms"
+  )
+    ? Arr.dropRight(segments, 1)
+    : segments;
 
   if (parts.length !== 1) {
     return null;

@@ -161,11 +161,11 @@ export const readPublishedMaterialCards = Effect.fn(
     );
     const title = group.materialCardTitle ?? group.title;
     const description = group.materialCardDescription;
-    const firstItem = items.at(0);
-    if (!firstItem && hasMaterialContext) {
+    const firstItem = Arr.head(items);
+    if (Option.isNone(firstItem) && hasMaterialContext) {
       continue;
     }
-    if (!(description && firstItem)) {
+    if (!(description && Option.isSome(firstItem))) {
       return yield* new PublishedProjectionError({
         appLocale,
         publicPath: route.publicPath,
@@ -173,7 +173,7 @@ export const readPublishedMaterialCards = Effect.fn(
     }
     MutableList.append(cards, {
       description,
-      href: firstItem.href,
+      href: firstItem.value.href,
       items,
       title,
     });

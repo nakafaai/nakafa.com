@@ -10,7 +10,7 @@ import {
   ProgramTranslationSchema,
   type LearningProgram as PublishedLearningProgram,
 } from "@nakafa/aksara-contracts/program/spec";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";
@@ -152,9 +152,9 @@ export function readRuntimeCurriculumBreadcrumbs(
 
 /** Builds the right-sidebar header from one resolved curriculum route. */
 export function readRuntimeCurriculumToc(model: CurriculumRouteModel) {
-  const parent = model.ancestors.at(-1);
+  const parent = Arr.last(model.ancestors);
   return {
-    ...(parent ? { description: parent.title } : {}),
+    ...(Option.isSome(parent) ? { description: parent.value.title } : {}),
     href: `/${model.locale}/${model.route.publicPath}`,
     title: model.route.title,
   };

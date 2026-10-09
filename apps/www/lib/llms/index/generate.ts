@@ -1,6 +1,6 @@
 import type { ContentCacheScope } from "@nakafa/aksara-contracts/cache/content";
 import { routing } from "@repo/internationalization/src/routing";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
@@ -145,9 +145,13 @@ function parseLlmsIndexSlug(cleanSlug: string) {
     return null;
   }
 
-  const segments = parts.slice(2);
-  const prefixParts =
-    segments.at(-1) === "llms" ? Arr.dropRight(segments, 1) : segments;
+  const segments = Arr.drop(parts, 2);
+  const prefixParts = Option.exists(
+    Arr.last(segments),
+    (segment) => segment === "llms"
+  )
+    ? Arr.dropRight(segments, 1)
+    : segments;
 
   return {
     locale: rawLocale,
@@ -221,7 +225,7 @@ const getLocaleIndexEntries = Effect.fn("www.llms.locale.entries")(function* (
     ...Arr.flatMap(sectionEntries, (pageEntries) => pageEntries ?? []),
   ];
 
-  return entries.slice(0, LOCALE_INDEX_ENTRY_LIMIT);
+  return Arr.take(entries, LOCALE_INDEX_ENTRY_LIMIT);
 });
 
 /** Excludes the static site section when building content-backed locale starter links. */

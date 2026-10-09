@@ -3,7 +3,7 @@ import {
   makeQuranLocaleSources,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { getQuranReferences } from "@/lib/content/quran/references";
 
 const expectedSourceIds = {
@@ -45,7 +45,7 @@ describe("Quran bibliography", () => {
       });
       expect(references[1]?.details).toContain(sources.translation.terms.url);
       expect(references[1]?.details).toContain(sources.translation.updateUrl);
-      const tafsirReference = references.at(-1);
+      const tafsirReference = Option.getOrUndefined(Arr.last(references));
       expect(tafsirReference).toMatchObject({
         url: tafsirAccess.source.sourceUrl,
       });

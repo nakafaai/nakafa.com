@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { readTryoutSectionRedirect } from "@/lib/routing/public/tryout";
 
 const readLocalizedPathMock = vi.hoisted(() => vi.fn());
@@ -12,7 +12,7 @@ vi.mock("@/lib/content/tryout/path", () => ({
 function serveActiveRoutes(...paths: readonly string[]) {
   readLocalizedPathMock.mockImplementation(
     ({ publicPath }: { readonly publicPath: string }) =>
-      Effect.succeed(paths.includes(publicPath) ? publicPath : null)
+      Effect.succeed(Arr.contains(paths, publicPath) ? publicPath : null)
   );
 }
 

@@ -187,15 +187,18 @@ describe("local question preview", () => {
               ...questionPromptProjection,
               response: {
                 kind: "multiple-choice",
-                options: Arr.map(response.options, (option) => ({
-                  ...option,
-                  isCorrect: true,
-                })).concat({
-                  isCorrect: false,
-                  label: "Another option",
-                  optionKey: "option-3",
-                  order: 3,
-                }),
+                options: Arr.append(
+                  Arr.map(response.options, (option) => ({
+                    ...option,
+                    isCorrect: true,
+                  })),
+                  {
+                    isCorrect: false,
+                    label: "Another option",
+                    optionKey: "option-3",
+                    order: 3,
+                  }
+                ),
               },
             },
           },

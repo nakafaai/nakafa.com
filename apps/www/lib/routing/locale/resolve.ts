@@ -48,7 +48,7 @@ function parseLocalizedHref(href: string): ParsedLocalizedHref {
   const url = new URL(href, URL_BASE);
   const segments = Arr.filter(url.pathname.split("/"), Boolean);
   const currentLocale = readLocale(segments[0]);
-  const publicSegments = currentLocale ? segments.slice(1) : segments;
+  const publicSegments = currentLocale ? Arr.drop(segments, 1) : segments;
 
   return {
     currentLocale,

@@ -17,7 +17,7 @@ export function readSchoolAuthRedirect(request: NextRequest) {
   const hasLocalePrefix =
     firstSegment !== undefined && hasLocale(routing.locales, firstSegment);
   const schoolSegments = hasLocalePrefix
-    ? routeSegments.slice(1)
+    ? Arr.drop(routeSegments, 1)
     : routeSegments;
 
   if (schoolSegments[0] !== "school" || schoolSegments.length === 1) {
