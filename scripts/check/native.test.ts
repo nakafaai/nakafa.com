@@ -86,6 +86,37 @@ const config = require(name);
     })
   );
 
+  it.effect(
+    "reports Node module loads through import assignments and require functions",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import fs = require("node:fs");
+import type path = require("node:path");
+import url = require(name);
+import entity = Module.Member;
+export const read = (require)("node:child_process");
+export const load = (require as NodeRequire)("node:fs/promises");
+export const make = createRequire(import.meta.url)("node:path");
+export const member = Module.createRequire(import.meta.url)("node:fs");
+export const other = createRequire(import.meta.url)("./local");
+export const dynamic = createRequire(import.meta.url)(name);
+export const hash = createRequire(import.meta.url)("node:crypto");
+export const quiet = run("node:fs");
+export const made = Module.makeRequire()("node:fs");
+export const named = makeRequire()("node:fs");
+`),
+          [
+            "1 node-module",
+            "5 node-module",
+            "6 node-module",
+            "7 node-module",
+            "8 node-module",
+          ]
+        );
+      })
+  );
+
   it.effect("reports a switch on typeof with an object case", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

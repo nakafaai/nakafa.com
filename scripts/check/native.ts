@@ -8,10 +8,12 @@ import {
   isCaseClause,
   isComputedPropertyName,
   isExportDeclaration,
+  isExternalModuleReference,
   isForOfStatement,
   isFunctionLikeDeclaration,
   isIdentifier,
   isImportDeclaration,
+  isImportEqualsDeclaration,
   isMethodDeclaration,
   isNamedExports,
   isNamedImports,
@@ -85,13 +87,38 @@ function loadsExport(node: ExportDeclaration) {
 }
 
 /**
+ * Whether a callee is a `createRequire(...)` call, which returns a `require`
+ * function, such as `createRequire(import.meta.url)`.
+ */
+function isRequireFactory(callee: Node) {
+  if (!isCallExpression(callee)) {
+    return false;
+  }
+  const factory = unwrapped(callee.expression);
+  return (
+    (isIdentifier(factory) && factory.text === "createRequire") ||
+    (isPropertyAccessExpression(factory) &&
+      factory.name.text === "createRequire")
+  );
+}
+
+/**
  * Whether a node loads a Node file system, path, or process module at runtime:
- * an import, a re-export, a dynamic import, or a `require` call, each with a
- * literal module name.
+ * an import, an import assignment, a re-export, a dynamic import, or a call of
+ * `require` or of a `createRequire` function, each with a literal module name.
+ * The callee of a call is unwrapped first, so `(require)` and `(require as
+ * NodeRequire)` are the `require` function.
  */
 function isNodeModuleLoad(node: Node) {
   if (isImportDeclaration(node)) {
     return loadsImport(node) && namesNodeModule(node.moduleSpecifier);
+  }
+  if (isImportEqualsDeclaration(node)) {
+    return (
+      !node.isTypeOnly &&
+      isExternalModuleReference(node.moduleReference) &&
+      namesNodeModule(node.moduleReference.expression)
+    );
   }
   if (isExportDeclaration(node)) {
     return loadsExport(node) && namesNodeModule(node.moduleSpecifier);
@@ -99,9 +126,11 @@ function isNodeModuleLoad(node: Node) {
   if (!isCallExpression(node)) {
     return false;
   }
+  const callee = unwrapped(node.expression);
   const loader =
-    node.expression.kind === SyntaxKind.ImportKeyword ||
-    (isIdentifier(node.expression) && node.expression.text === "require");
+    callee.kind === SyntaxKind.ImportKeyword ||
+    (isIdentifier(callee) && callee.text === "require") ||
+    isRequireFactory(callee);
   const [specifier] = node.arguments;
   return loader && namesNodeModule(specifier);
 }
