@@ -138,64 +138,6 @@ export const named = makeRequire()("node:fs");
       })
   );
 
-  it.effect("reports a switch on typeof with an object case", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* findings(`export function read(value: unknown) {
-  switch (typeof value) {
-    case "object":
-      return value;
-    default:
-      return null;
-  }
-}
-export function text(value: unknown) {
-  switch (typeof value) {
-    case "string":
-      return value;
-    default:
-      return "";
-  }
-}
-`),
-        ["2 switch", "2 typeof-object", "10 switch"]
-      );
-    })
-  );
-
-  it.effect(
-    "reports a switch on a parenthesized or asserted typeof result",
-    () =>
-      Effect.gen(function* () {
-        assert.deepStrictEqual(
-          yield* findings(`export function parenthesized(value: unknown) {
-  switch ((typeof value)) {
-    case "object":
-      return value;
-    default:
-      return null;
-  }
-}
-export function asserted(value: unknown) {
-  switch ((typeof value) as string) {
-    case "object":
-      return value;
-    default:
-      return null;
-  }
-}
-`),
-          [
-            "2 switch",
-            "2 typeof-object",
-            "10 assertion",
-            "10 switch",
-            "10 typeof-object",
-          ]
-        );
-      })
-  );
-
   it.effect(
     "reports a typeof comparison whose typeof operand is parenthesized",
     () =>
@@ -220,23 +162,6 @@ export const flipped = ("object") === typeof value;
           ["1 typeof-object", "2 typeof-object"]
         );
       })
-  );
-
-  it.effect("reports a switch on typeof with a parenthesized object case", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* findings(`export function read(value: unknown) {
-  switch (typeof value) {
-    case ("object"):
-      return value;
-    default:
-      return null;
-  }
-}
-`),
-        ["2 switch", "2 typeof-object"]
-      );
-    })
   );
 
   it.effect("reports raw failure handling and typeof-object narrowing", () =>

@@ -91,6 +91,75 @@ export function call(value: Shape) {
       })
   );
 
+  it.effect("reports a switch on typeof once, as a switch alone", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`export function read(value: unknown) {
+  switch (typeof value) {
+    case "object":
+      return value;
+    default:
+      return null;
+  }
+}
+export function text(value: unknown) {
+  switch (typeof value) {
+    case "string":
+      return value;
+    default:
+      return "";
+  }
+}
+`),
+        ["2 switch", "10 switch"]
+      );
+    })
+  );
+
+  it.effect(
+    "reports a switch on a parenthesized or asserted typeof result once",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`export function parenthesized(value: unknown) {
+  switch ((typeof value)) {
+    case "object":
+      return value;
+    default:
+      return null;
+  }
+}
+export function asserted(value: unknown) {
+  switch ((typeof value) as string) {
+    case "object":
+      return value;
+    default:
+      return null;
+  }
+}
+`),
+          ["2 switch", "10 assertion", "10 switch"]
+        );
+      })
+  );
+
+  it.effect("reports a switch on typeof with a parenthesized object case", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`export function read(value: unknown) {
+  switch (typeof value) {
+    case ("object"):
+      return value;
+    default:
+      return null;
+  }
+}
+`),
+        ["2 switch"]
+      );
+    })
+  );
+
   it.effect("never reports if chains, lookup tables, Match, or text", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

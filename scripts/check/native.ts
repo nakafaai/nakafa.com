@@ -4,7 +4,6 @@ import {
   isAwaitExpression,
   isBinaryExpression,
   isCallExpression,
-  isCaseClause,
   isExportDeclaration,
   isExternalModuleReference,
   isForOfStatement,
@@ -17,7 +16,6 @@ import {
   isPropertyAccessExpression,
   isStringLiteral,
   isStringLiteralLikeNode,
-  isSwitchStatement,
   isTryStatement,
   isTypeOfExpression,
   type Node,
@@ -123,21 +121,11 @@ function isObjectTag(node: Node) {
 }
 
 /**
- * Whether a node compares a typeof result against the object tag, or switches on
- * a typeof result with an `object` case. Parentheses and assertions around an
- * operand or a case label do not change what it compares.
+ * Whether a node compares a typeof result against the object tag. A switch on a
+ * typeof result is a switch statement, which the `switch` rule reports alone.
+ * Parentheses and assertions around an operand do not change what it compares.
  */
 function isTypeofObjectComparison(node: Node) {
-  if (isSwitchStatement(node)) {
-    return (
-      isTypeOfExpression(unwrapped(node.expression)) &&
-      Arr.some(
-        node.caseBlock.clauses,
-        (clause) =>
-          isCaseClause(clause) && isObjectTag(unwrapped(clause.expression))
-      )
-    );
-  }
   if (
     !(
       isBinaryExpression(node) &&
