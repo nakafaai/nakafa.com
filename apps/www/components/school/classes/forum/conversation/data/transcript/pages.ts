@@ -1,4 +1,4 @@
-import { MutableList, Schema } from "effect";
+import { DateTime, MutableList, Schema } from "effect";
 import type {
   Forum,
   ForumPost,
@@ -45,9 +45,12 @@ export function createConversationRows({
   }
   let previousDate: string | null = null;
   let hasInsertedUnreadSeparator = !unreadCue;
+  const localZone = DateTime.zoneMakeLocal();
 
   for (const post of posts) {
-    const currentDate = new Date(post._creationTime).toDateString();
+    const currentDate = DateTime.formatIsoDate(
+      DateTime.setZone(DateTime.makeUnsafe(post._creationTime), localZone)
+    );
 
     if (currentDate !== previousDate) {
       MutableList.append(rows, { type: "date", value: post._creationTime });

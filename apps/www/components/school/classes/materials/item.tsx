@@ -31,7 +31,7 @@ import {
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
 import { formatDistanceToNow } from "date-fns";
-import { Effect } from "effect";
+import { Effect, Match } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Activity, useTransition } from "react";
@@ -52,14 +52,12 @@ import { getLocale } from "@/lib/utils/date";
 function getBadgeVariant(
   status: MaterialGroup["status"]
 ): ComponentProps<typeof Badge>["variant"] {
-  switch (status) {
-    case "published":
-      return "secondary";
-    case "archived":
-      return "destructive";
-    default:
-      return "muted";
-  }
+  return Match.value(status).pipe(
+    Match.withReturnType<ComponentProps<typeof Badge>["variant"]>(),
+    Match.when("published", () => "secondary"),
+    Match.when("archived", () => "destructive"),
+    Match.orElse(() => "muted")
+  );
 }
 
 /** Render one material-group row in the class materials list. */

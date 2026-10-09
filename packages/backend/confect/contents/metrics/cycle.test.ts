@@ -70,7 +70,7 @@ async function applyView(
 describe("contents/metrics/cycle", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(DAY));
+    vi.setSystemTime(DAY);
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -97,7 +97,7 @@ describe("contents/metrics/cycle", () => {
       skippedWindows: 0,
     });
     await target.finishAllScheduledFunctions(vi.runAllTimers);
-    vi.setSystemTime(new Date(DAY + POPULARITY_DAY_MS));
+    vi.setSystemTime(DAY + POPULARITY_DAY_MS);
     const daily = await target.mutation(
       internal.contents.mutations.popularity.scheduleLearningPopularityExpiries,
       {}
@@ -117,7 +117,7 @@ describe("contents/metrics/cycle", () => {
       skippedWindows: 0,
     });
     await target.finishAllScheduledFunctions(vi.runAllTimers);
-    vi.setSystemTime(new Date(DAY + 2 * POPULARITY_DAY_MS));
+    vi.setSystemTime(DAY + 2 * POPULARITY_DAY_MS);
     const weekly = await target.mutation(
       internal.contents.mutations.popularity
         .scheduleLearningPopularityRefreshes,
@@ -220,7 +220,7 @@ describe("contents/metrics/cycle", () => {
       {}
     );
     const nextDay = DAY + POPULARITY_DAY_MS;
-    vi.setSystemTime(new Date(nextDay));
+    vi.setSystemTime(nextDay);
     await applyView(target, nextDay, 2);
     const delayed = await target.mutation(async (ctx) => {
       const result = await ctx.runMutation(

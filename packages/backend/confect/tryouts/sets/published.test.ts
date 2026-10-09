@@ -238,7 +238,7 @@ describe("tryouts/sets/published", () => {
       })
   );
   it("joins signed sets without exposing unpublished progress", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -336,7 +336,7 @@ describe("tryouts/sets/published", () => {
   });
 
   it("links a running attempt's row to the page it continues on", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const activate = async (locales: readonly ("de" | "id")[]) =>
       await t.mutation(async (ctx) => {

@@ -62,9 +62,9 @@ beforeEach(() => {
 describe("rss route", () => {
   it("keeps unchanged publications byte-identical across regeneration times", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-09-19T08:00:00Z"));
+    vi.setSystemTime("2026-09-19T08:00:00Z");
     const before = await (await GET()).text();
-    vi.setSystemTime(new Date("2026-09-19T09:00:00Z"));
+    vi.setSystemTime("2026-09-19T09:00:00Z");
     const after = await (await GET()).text();
 
     expect(after).toBe(before);

@@ -68,7 +68,7 @@ it.each([
 ])(
   "restores the $scenario failure tag from the registered response payload",
   async ({ scenario, tag, code }) => {
-    vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
+    vi.setSystemTime(TRYOUT_TEST_NOW);
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation((ctx) =>
       seedTryoutContentAccessState(ctx, {

@@ -10,7 +10,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { cn } from "cn";
-import { DateTime, Schema } from "effect";
+import { DateTime, Effect, Fiber, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
@@ -112,12 +112,19 @@ export const Reasoning = memo(
     useEffect(() => {
       if (defaultOpen && !isStreaming && isOpen && !hasAutoClosedRef.current) {
         // Add a small delay before closing to allow user to see the content
-        const timer = setTimeout(() => {
-          setIsOpen(false);
-          hasAutoClosedRef.current = true;
-        }, AUTO_CLOSE_DELAY);
+        const timer = Effect.runFork(
+          Effect.delay(
+            Effect.sync(() => {
+              setIsOpen(false);
+              hasAutoClosedRef.current = true;
+            }),
+            AUTO_CLOSE_DELAY
+          )
+        );
 
-        return () => clearTimeout(timer);
+        return () => {
+          Effect.runFork(Fiber.interrupt(timer));
+        };
       }
     }, [isStreaming, isOpen, defaultOpen, setIsOpen]);
 

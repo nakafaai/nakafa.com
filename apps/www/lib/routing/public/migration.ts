@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Match, Option, Schema } from "effect";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
@@ -35,64 +35,58 @@ type ArticleMigration = ArticleCategoryMigration | ArticlePageMigration;
 function readPreviousArticleMigration(
   pathname: string
 ): ArticleMigration | null {
-  switch (pathname) {
-    case "/de/articles/politics":
-      return {
-        kind: "category",
-        previousRoute: "politics",
-        successorRoute: "politik",
-      };
-    case "/de/articles/politics/regional-elections-turmoil":
-      return {
-        kind: "article",
-        previousPath: "articles/politics/regional-elections-turmoil",
-        successorPath:
-          "articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen",
-      };
-    case "/de/articles/politics/pork-barrel-politics-power":
-      return {
-        kind: "article",
-        previousPath: "articles/politics/pork-barrel-politics-power",
-        successorPath:
-          "articles/politik/sozialhilfe-und-wahlpolitische-anreize",
-      };
-    case "/de/articles/politics/nepotism-in-political-governance":
-      return {
+  return Match.value(pathname).pipe(
+    Match.withReturnType<ArticleMigration | null>(),
+    Match.when("/de/articles/politics", () => ({
+      kind: "category",
+      previousRoute: "politics",
+      successorRoute: "politik",
+    })),
+    Match.when("/de/articles/politics/regional-elections-turmoil", () => ({
+      kind: "article",
+      previousPath: "articles/politics/regional-elections-turmoil",
+      successorPath:
+        "articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen",
+    })),
+    Match.when("/de/articles/politics/pork-barrel-politics-power", () => ({
+      kind: "article",
+      previousPath: "articles/politics/pork-barrel-politics-power",
+      successorPath: "articles/politik/sozialhilfe-und-wahlpolitische-anreize",
+    })),
+    Match.when(
+      "/de/articles/politics/nepotism-in-political-governance",
+      () => ({
         kind: "article",
         previousPath: "articles/politics/nepotism-in-political-governance",
         successorPath:
           "articles/politik/nepotismus-und-politische-verantwortung",
-      };
-    case "/de/articles/politics/merah-putih-cabinet-analysis":
-      return {
-        kind: "article",
-        previousPath: "articles/politics/merah-putih-cabinet-analysis",
-        successorPath:
-          "articles/politik/kabinett-merah-putih-und-koalitionspolitik",
-      };
-    case "/de/articles/politics/kim-plus-empty-box":
-      return {
-        kind: "article",
-        previousPath: "articles/politics/kim-plus-empty-box",
-        successorPath: "articles/politik/kim-plus-und-das-leere-feld",
-      };
-    case "/de/articles/politics/flawed-legal-geopolitics":
-      return {
-        kind: "article",
-        previousPath: "articles/politics/flawed-legal-geopolitics",
-        successorPath:
-          "articles/politik/nusantara-rechtsgrundlage-und-sicherheit",
-      };
-    case "/de/articles/politics/dynastic-politics-asian-values":
-      return {
-        kind: "article",
-        previousPath: "articles/politics/dynastic-politics-asian-values",
-        successorPath:
-          "articles/politik/politische-dynastien-und-asiatische-werte",
-      };
-    default:
-      return null;
-  }
+      })
+    ),
+    Match.when("/de/articles/politics/merah-putih-cabinet-analysis", () => ({
+      kind: "article",
+      previousPath: "articles/politics/merah-putih-cabinet-analysis",
+      successorPath:
+        "articles/politik/kabinett-merah-putih-und-koalitionspolitik",
+    })),
+    Match.when("/de/articles/politics/kim-plus-empty-box", () => ({
+      kind: "article",
+      previousPath: "articles/politics/kim-plus-empty-box",
+      successorPath: "articles/politik/kim-plus-und-das-leere-feld",
+    })),
+    Match.when("/de/articles/politics/flawed-legal-geopolitics", () => ({
+      kind: "article",
+      previousPath: "articles/politics/flawed-legal-geopolitics",
+      successorPath:
+        "articles/politik/nusantara-rechtsgrundlage-und-sicherheit",
+    })),
+    Match.when("/de/articles/politics/dynastic-politics-asian-values", () => ({
+      kind: "article",
+      previousPath: "articles/politics/dynastic-politics-asian-values",
+      successorPath:
+        "articles/politik/politische-dynastien-und-asiatische-werte",
+    })),
+    Match.orElse(() => null)
+  );
 }
 
 /** Redirects a category only after its prior route leaves the signed catalog. */
@@ -269,12 +263,15 @@ function readCurrentMaterialTopic({
   readonly grade: string;
   readonly topic: string;
 }) {
-  switch (`${category}/${grade}/${domain}/${topic}`) {
-    case "high-school/10/mathematics/statistics":
-      return "statistics-foundations";
-    case "high-school/11/mathematics/statistics":
-      return "statistics-regression";
-    default:
-      return topic;
-  }
+  return Match.value(`${category}/${grade}/${domain}/${topic}`).pipe(
+    Match.when(
+      "high-school/10/mathematics/statistics",
+      () => "statistics-foundations"
+    ),
+    Match.when(
+      "high-school/11/mathematics/statistics",
+      () => "statistics-regression"
+    ),
+    Match.orElse(() => topic)
+  );
 }

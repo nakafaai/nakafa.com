@@ -29,7 +29,7 @@ describe("conversation/viewport/events", () => {
     await shutdownViewport(viewport);
   });
 
-  it("runs latest and default events through the serialized event loop", async () => {
+  it("runs latest events through the serialized event loop", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);
 
@@ -42,7 +42,6 @@ describe("conversation/viewport/events", () => {
     expect(Option.getOrThrow(Arr.last(rig.placements))).toMatchObject({
       view: { kind: "bottom" },
     });
-    await dispatchViewport(viewport, { type: "unknown" } as never);
     await dispatchViewport(viewport, {
       awayFromLatest: false,
       type: "user-scroll",

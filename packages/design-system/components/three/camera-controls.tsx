@@ -1,5 +1,6 @@
 "use client";
 
+import { useTimeout } from "@mantine/hooks";
 import {
   OrbitControls,
   OrthographicCamera,
@@ -126,9 +127,6 @@ export function CameraControls(props: CameraControlsProps) {
   const pointerActive = useRef(false);
   const settling = useRef(false);
   const pendingFit = useRef(false);
-  const settleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined
-  );
   const framing = useCameraFraming();
   const camera = useThree((state) => state.camera);
   const scene = useThree((state) => state.scene);
@@ -387,6 +385,14 @@ export function CameraControls(props: CameraControlsProps) {
     viewportWidth,
   ]);
 
+  const { start: startSettle, clear: clearSettle } = useTimeout(() => {
+    settling.current = false;
+    if (pendingFit.current) {
+      pendingFit.current = false;
+      framing?.invalidate();
+    }
+  }, 120);
+
   useEffect(() => {
     const previousCursor = domElement.style.cursor;
 
@@ -394,20 +400,14 @@ export function CameraControls(props: CameraControlsProps) {
 
     return () => {
       domElement.style.cursor = previousCursor;
-      clearTimeout(settleTimer.current);
+      clearSettle();
     };
-  }, [domElement]);
+  }, [clearSettle, domElement]);
 
   const releaseAfterDamping = useCallback(() => {
-    clearTimeout(settleTimer.current);
-    settleTimer.current = setTimeout(() => {
-      settling.current = false;
-      if (pendingFit.current) {
-        pendingFit.current = false;
-        framing?.invalidate();
-      }
-    }, 120);
-  }, [framing]);
+    clearSettle();
+    startSettle();
+  }, [clearSettle, startSettle]);
 
   const handleChange = useCallback(() => {
     const controls = controlsRef.current;
@@ -426,11 +426,11 @@ export function CameraControls(props: CameraControlsProps) {
    * Mirrors OrbitControls interaction state into the canvas cursor.
    */
   const handleStart = useCallback(() => {
-    clearTimeout(settleTimer.current);
+    clearSettle();
     pointerActive.current = true;
     settling.current = true;
     domElement.style.cursor = "grabbing";
-  }, [domElement]);
+  }, [clearSettle, domElement]);
 
   /**
    * Restores the visible affordance after OrbitControls releases capture.

@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { DateTime } from "effect";
 import { buildSitemapIndexXml, buildSitemapUrlSetXml } from "@/lib/sitemap/xml";
 
 describe("sitemap XML serialization", () => {
@@ -41,7 +42,9 @@ describe("sitemap XML serialization", () => {
   it("writes a Date modification time as an ISO timestamp", () => {
     const xml = buildSitemapUrlSetXml([
       {
-        lastModified: new Date("2025-01-01T00:00:00.000Z"),
+        lastModified: DateTime.toDateUtc(
+          DateTime.makeUnsafe("2025-01-01T00:00:00.000Z")
+        ),
         url: "https://nakafa.com/en",
       },
     ]);

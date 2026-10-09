@@ -7,6 +7,7 @@ import { products } from "@repo/backend/confect/utils/polar/products";
 import { api } from "@repo/backend/convex/_generated/api";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import type { FunctionArgs } from "convex/server";
+import { DateTime } from "effect";
 
 const startAccessArgs: FunctionArgs<
   typeof api.tryouts.queries.access.getStartAccess
@@ -59,7 +60,9 @@ describe("tryouts/queries/access", () => {
         metadata: {},
         userId: seeded.userId,
       });
-      const timestamp = new Date(TRYOUT_TEST_NOW).toISOString();
+      const timestamp = DateTime.formatIso(
+        DateTime.makeUnsafe(TRYOUT_TEST_NOW)
+      );
       await ctx.db.insert("subscriptions", {
         amount: null,
         cancelAtPeriodEnd: false,

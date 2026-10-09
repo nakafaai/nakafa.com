@@ -14,7 +14,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr } from "effect";
+import { Array as Arr, Effect, Fiber, Schedule } from "effect";
 import {
   AnimatePresence,
   domMax,
@@ -100,16 +100,23 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
       return;
     }
 
-    const interval = setInterval(() => {
-      setTableCount((prev) => {
-        if (prev < maxTables) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, ANIMATION_INTERVAL_MS / speed);
+    const interval = Effect.runFork(
+      Effect.schedule(
+        Effect.sync(() => {
+          setTableCount((prev) => {
+            if (prev < maxTables) {
+              return prev + 1;
+            }
+            return prev;
+          });
+        }),
+        Schedule.spaced(ANIMATION_INTERVAL_MS / speed)
+      )
+    );
 
-    return () => clearInterval(interval);
+    return () => {
+      Effect.runFork(Fiber.interrupt(interval));
+    };
   }, [deferredAnimating, deferredTableCount, maxTables, speed]);
 
   const resetAnimation = useCallback(() => {
