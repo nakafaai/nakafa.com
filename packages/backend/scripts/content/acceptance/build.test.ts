@@ -1,14 +1,19 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, expect, layer } from "@effect/vitest";
 import { TrustedKeySchema } from "@nakafa/aksara-contracts/signature/trusted";
+import type { withAnalyticsSink } from "@repo/backend/scripts/content/acceptance/analytics";
 import {
   prepareAcceptance,
   runAcceptance,
 } from "@repo/backend/scripts/content/acceptance/build";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import type { withLocalBackend } from "@repo/backend/scripts/content/acceptance/process";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Exit, Layer, MutableList } from "effect";
+
+/** What a program run under the acceptance backend or analytics sink can fail with. */
+type AcceptanceError = Effect.Error<ReturnType<typeof runAcceptance>>;
 
 const mocks = vi.hoisted(() => ({
   discard: vi.fn(),
@@ -17,10 +22,10 @@ const mocks = vi.hoisted(() => ({
   read: vi.fn(),
   release: vi.fn(),
   reserve: vi.fn(),
-  backend: vi.fn(),
+  backend: vi.fn<typeof withLocalBackend<void, AcceptanceError, never>>(),
   command: vi.fn(),
   publish: vi.fn(),
-  sink: vi.fn(),
+  sink: vi.fn<typeof withAnalyticsSink<void, AcceptanceError, never>>(),
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/analytics", () => ({
   withAnalyticsSink: mocks.sink,

@@ -1,19 +1,35 @@
 import { fileURLToPath } from "node:url";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import type {
+  prepareAcceptance,
+  runAcceptance,
+} from "@repo/backend/scripts/content/acceptance/build";
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import type { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import type { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
+import type { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem, Schema } from "effect";
 
+/** What the CLI can fail with: each operation's failures, the usage error, and the path lookup's. */
+type EntryError =
+  | Effect.Error<ReturnType<typeof prepareAcceptance>>
+  | Effect.Error<ReturnType<typeof runAcceptance>>
+  | Effect.Error<ReturnType<typeof cleanLocalRuntime>>
+  | Effect.Error<ReturnType<typeof createAcceptanceLearner>>
+  | ReturnType<typeof acceptanceRuntimeError>
+  | Effect.Error<ReturnType<FileSystem.FileSystem["realPath"]>>;
+
 const mocks = vi.hoisted(() => {
-  let entry: Effect.Effect<unknown, unknown> | undefined;
+  let entry: Effect.Effect<void, EntryError> | undefined;
   return {
     prepare: vi.fn(),
     run: vi.fn(),
     clean: vi.fn(),
     learner: vi.fn(),
     getEntry: () => entry,
-    runMain: vi.fn((program: Effect.Effect<unknown, unknown>) => {
+    runMain: vi.fn((program: Effect.Effect<void, EntryError>) => {
       entry = program;
     }),
   };

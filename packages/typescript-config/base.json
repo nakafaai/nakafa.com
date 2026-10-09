@@ -19,6 +19,7 @@
           "abortControllerInEffect": "error",
           "acquireReleaseDisposable": "error",
           "allOfMapToForEach": "error",
+          "anyUnknownInErrorContext": "error",
           "catchAllTagDispatchToCatchTag": "error",
           "catchAllToMapError": "error",
           "catchChainToFirstSuccessOf": "error",

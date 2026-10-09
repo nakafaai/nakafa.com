@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
@@ -44,7 +44,7 @@ import {
   testUpsertJson,
 } from "@repo/backend/test/content/release";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, Exit, Schema } from "effect";
+import { Array as Arr, Effect, Exit, Result, Schema } from "effect";
 
 const ArtifactJson = Schema.fromJsonString(SignedContentArtifactSchema);
 const ItemJson = Schema.fromJsonString(ContentReleaseItemSchema);
@@ -243,7 +243,9 @@ describe("contentRelease/parse", () => {
   it.live("parses unknown stored JSON once and maps invalid bytes", () =>
     Effect.gen(function* () {
       expect(yield* parseStoredJson('{"ok":true}')).toEqual({ ok: true });
-      expect(yield* parseStoredJson("{").pipe(Effect.flip)).toMatchObject({
+      const result = yield* Effect.result(parseStoredJson("{"));
+      assert(Result.isFailure(result));
+      expect(result.failure).toMatchObject({
         code: "CONTENT_RELEASE_INTEGRITY",
       });
     })

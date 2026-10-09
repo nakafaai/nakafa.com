@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Fiber } from "effect";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
+import { Effect, Fiber, Result } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import {
@@ -252,7 +252,9 @@ function expectCopyFailure(
   code: OpenContentCopyError["code"]
 ) {
   return Effect.gen(function* () {
-    const failure = yield* Effect.flip(program);
+    const result = yield* Effect.result(program);
+    assert(Result.isFailure(result));
+    const failure = result.failure;
     expect(failure).toBeInstanceOf(OpenContentCopyError);
     expect(failure).toEqual(expect.objectContaining({ code }));
   });

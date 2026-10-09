@@ -59,7 +59,7 @@ function dropped() {
  * One lazy query, like Confect's: each run sends a new request and receives
  * the next scripted outcome.
  */
-function scriptQuery(...outcomes: Effect.Effect<unknown, unknown>[]) {
+function scriptQuery<E>(...outcomes: Effect.Effect<unknown, E>[]) {
   let runs = 0;
   queryMock.mockReturnValueOnce(
     Effect.suspend(() => {
@@ -102,7 +102,7 @@ function runQuery(
 }
 
 /** How many times a query that always fails with this error runs before the failure is final. */
-function runsBeforeFailure(failure: unknown) {
+function runsBeforeFailure<E>(failure: E) {
   return Effect.gen(function* () {
     const query = scriptQuery(Effect.fail(failure));
     yield* runQuery();
