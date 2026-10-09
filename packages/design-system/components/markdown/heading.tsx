@@ -39,7 +39,7 @@ function extractTextFromNode(node: unknown): string {
 
     // Handle regular React elements (content is in 'children')
     if (Predicate.isObject(props) && Predicate.hasProperty(props, "children")) {
-      return extractTextFromNode(props.children as ReactNode);
+      return extractTextFromNode(props.children);
     }
   }
   return "";

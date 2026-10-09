@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/content/material/cursor";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
-import { Effect, Layer, Option, Predicate } from "effect";
+import { Array as Arr, Effect, Layer, Option, Predicate } from "effect";
 
 /** Reads material identities and groups through their native ordered indexes. */
 export const materialLayer = Layer.merge(
@@ -154,15 +154,16 @@ export const materialLayer = Layer.merge(
                 cursor: null,
               })
               .pipe(Effect.orDie);
-            const last = stored.page.at(-1);
+            const last = Arr.last(stored.page);
             const split = Predicate.isNullish(stored.splitCursor)
               ? undefined
               : stored.page[Math.floor((stored.page.length - 1) / 2)];
             return {
               ...stored,
-              continueCursor: last
-                ? materialPosition(last)
-                : (options.cursor ?? ""),
+              continueCursor: Option.match(last, {
+                onNone: () => options.cursor ?? "",
+                onSome: materialPosition,
+              }),
               ...(split
                 ? {
                     splitCursor: materialPosition(split),

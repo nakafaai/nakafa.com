@@ -19,36 +19,31 @@ describe("contentRelease/article/verify", () => {
           Effect.gen(function* () {
             const targetCtx = yield* MutationCtx;
             yield* Effect.promise(() => insertRuntimeArticles(targetCtx, 1));
-            expect(
-              yield* Effect.gen(function* () {
-                const row = yield* Effect.promise(() =>
-                  targetCtx.db.query("articleCatalog").unique()
-                );
-                if (!row) {
-                  throw new Error("Expected one active article row.");
-                }
-                return yield* verifyArticle(row, row.sequence).pipe(
-                  Effect.provide(articleLayer)
-                );
-              })
-            ).toMatchObject({
+            const row = yield* Effect.promise(() =>
+              targetCtx.db.query("articleCatalog").unique()
+            );
+            if (!row) {
+              throw new Error("Expected one active article row.");
+            }
+            const verified = yield* verifyArticle(row, row.sequence).pipe(
+              Effect.provide(articleLayer)
+            );
+            expect(verified).toMatchObject({
               projection: {
                 kind: "article",
               },
             });
-            yield* Effect.gen(function* () {
-              const row = yield* Effect.promise(() =>
-                targetCtx.db.query("articleCatalog").unique()
-              );
-              if (!row) {
-                throw new Error("Expected one active article row.");
-              }
-              yield* Effect.promise(() =>
-                targetCtx.db.patch("articleCatalog", row._id, {
-                  assetId: "asset:en:article:politics:article:politics:wrong",
-                })
-              );
-            });
+            const corruptRow = yield* Effect.promise(() =>
+              targetCtx.db.query("articleCatalog").unique()
+            );
+            if (!corruptRow) {
+              throw new Error("Expected one active article row.");
+            }
+            yield* Effect.promise(() =>
+              targetCtx.db.patch("articleCatalog", corruptRow._id, {
+                assetId: "asset:en:article:politics:article:politics:wrong",
+              })
+            );
             expect(
               yield* Effect.gen(function* () {
                 const row = yield* Effect.promise(() =>
@@ -77,19 +72,17 @@ describe("contentRelease/article/verify", () => {
           Effect.gen(function* () {
             const targetCtx = yield* MutationCtx;
             yield* Effect.promise(() => insertRuntimeArticles(targetCtx, 1));
-            yield* Effect.gen(function* () {
-              const category = yield* Effect.promise(() =>
-                targetCtx.db.query("articleCategories").unique()
-              );
-              if (!category) {
-                throw new Error("Expected one active article category.");
-              }
-              yield* Effect.promise(() =>
-                targetCtx.db.patch("articleCategories", category._id, {
-                  route: "government",
-                })
-              );
-            });
+            const category = yield* Effect.promise(() =>
+              targetCtx.db.query("articleCategories").unique()
+            );
+            if (!category) {
+              throw new Error("Expected one active article category.");
+            }
+            yield* Effect.promise(() =>
+              targetCtx.db.patch("articleCategories", category._id, {
+                route: "government",
+              })
+            );
             expect(
               yield* Effect.gen(function* () {
                 const category = yield* Effect.promise(() =>

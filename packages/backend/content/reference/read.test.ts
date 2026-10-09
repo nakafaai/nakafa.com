@@ -235,19 +235,17 @@ describe("contentRelease/reference/read", () => {
             yield* Effect.promise(() =>
               activateQuranSnapshot(targetCtx, [quran])
             );
-            yield* Effect.gen(function* () {
-              const search = yield* Effect.promise(() =>
-                targetCtx.db.query("quranSearch").unique()
-              );
-              if (!search) {
-                throw new Error("Expected one Quran search fixture.");
-              }
-              yield* Effect.promise(() =>
-                targetCtx.db.patch("quranSearch", search._id, {
-                  assetId: other.graph.assetId,
-                })
-              );
-            });
+            const search = yield* Effect.promise(() =>
+              targetCtx.db.query("quranSearch").unique()
+            );
+            if (!search) {
+              throw new Error("Expected one Quran search fixture.");
+            }
+            yield* Effect.promise(() =>
+              targetCtx.db.patch("quranSearch", search._id, {
+                assetId: other.graph.assetId,
+              })
+            );
             expect(
               yield* (yield* QueryRunner)
                 .runQuery(refs.public.contentRelease.reference.read, {

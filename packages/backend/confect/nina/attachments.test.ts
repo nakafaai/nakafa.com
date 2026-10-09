@@ -36,7 +36,8 @@ type UploadId = Docs["ninaUploads"]["_id"];
  */
 async function seedUploads(t: TestTransaction, files: readonly StoredFile[]) {
   let fileIds: readonly string[] = [];
-  for (const [index, file] of files.entries()) {
+  const rows = Arr.map(files, (file, index) => ({ file, index }));
+  for (const { file, index } of rows) {
     const fileId = await t.action(
       async (ctx) =>
         (

@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 describe("contentRelease/quran/markdown", () => {
   it.effect("returns a normalized unmanaged markdown projection", () =>
@@ -151,7 +151,9 @@ describe("contentRelease/quran/markdown", () => {
             makeQuranMeaning(2)
           );
           expect(markdown.verses[0]?.arabic).toBe("آية 1");
-          expect(markdown.verses.at(-1)?.number.inSurah).toBe(80);
+          expect(
+            Option.getOrThrow(Arr.last(markdown.verses)).number.inSurah
+          ).toBe(80);
         })
       );
     })

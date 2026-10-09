@@ -170,7 +170,8 @@ export const readQuranLocaleSources = Effect.fn(
 )(function* (snapshotId: string, appLocale: AppLocaleCode) {
   const attribution = yield* readQuranAttributionRow(snapshotId);
   if (
-    !attribution.payload.activeAppLocales.includes(
+    !Arr.contains(
+      attribution.payload.activeAppLocales,
       AppLocaleSchema.make(appLocale)
     )
   ) {

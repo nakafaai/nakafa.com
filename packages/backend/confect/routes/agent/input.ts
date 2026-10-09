@@ -143,7 +143,7 @@ export function hasRequestBody(request: Request) {
 function assertAllowedParameters(url: URL, allowed: readonly string[]) {
   return Effect.gen(function* () {
     for (const key of url.searchParams.keys()) {
-      if (allowed.includes(key)) {
+      if (Arr.contains(allowed, key)) {
         continue;
       }
       return yield* new AgentHttpInputError({

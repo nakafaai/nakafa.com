@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import {
   type ContentFamily,
   ContentFamilySchema,
@@ -37,9 +38,7 @@ export async function insertCompletedRelease(
       index.eq("releaseId", identity.releaseId)
     )
     .unique();
-  if (!release) {
-    throw new Error("Expected one completed content release.");
-  }
+  assert.ok(release, "Expected one completed content release.");
   await ctx.db.patch("contentReleases", release._id, {
     releaseJson: testReleaseJson({
       baseManifestHash: base?.manifestHash,
@@ -89,9 +88,7 @@ export async function selectActiveRelease(
   identity: TestIdentity
 ) {
   const state = await ctx.db.query("contentState").unique();
-  if (!state) {
-    throw new Error("Expected content release state.");
-  }
+  assert.ok(state, "Expected content release state.");
   await ctx.db.patch("contentState", state._id, {
     activeManifestHash: identity.manifestHash,
     activeReleaseId: identity.releaseId,
@@ -132,5 +129,3 @@ export async function insertModelBuild(
   assert(build);
   return build;
 }
-
-import { assert } from "@effect/vitest";

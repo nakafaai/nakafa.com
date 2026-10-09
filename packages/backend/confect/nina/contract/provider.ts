@@ -3,8 +3,22 @@ import {
   JsonSchema,
   Predicate,
   Record as Rec,
+  Result,
   Schema,
 } from "effect";
+
+/** Expected failure: an authored schema has no provider tool parameter form. */
+export class ProviderToolSchemaError extends Schema.TaggedError<ProviderToolSchemaError>()(
+  "ProviderToolSchemaError",
+  {
+    message: Schema.String,
+    reason: Schema.Literals([
+      "unionBranchNotObject",
+      "unsupportedProperty",
+      "notObjectOrUnion",
+    ]),
+  }
+) {}
 
 const ObjectJsonSchemaSchema = Schema.Struct({
   properties: Schema.Record(Schema.String, Schema.Unknown),
@@ -49,18 +63,25 @@ function isArraySchema(schema: unknown): schema is ArrayJsonSchema {
 }
 
 /** Requires every top-level Effect union branch to define object parameters. */
-function objectVariants(schema: JsonSchema.JsonSchema) {
+function objectVariants(
+  schema: JsonSchema.JsonSchema
+): Result.Result<readonly ObjectJsonSchema[], ProviderToolSchemaError> {
   if (!Arr.isArray(schema.anyOf)) {
-    return [];
+    return Result.succeed([]);
   }
-  return Arr.map(schema.anyOf, (variant) => {
-    if (!isObjectSchema(variant)) {
-      throw new Error(
-        "Provider-compatible tool schema unions require every branch to be an object."
-      );
-    }
-    return variant;
-  });
+  return Result.all(
+    Arr.map(schema.anyOf, (variant) =>
+      isObjectSchema(variant)
+        ? Result.succeed(variant)
+        : Result.fail(
+            new ProviderToolSchemaError({
+              message:
+                "Provider-compatible tool schema unions require every branch to be an object.",
+              reason: "unionBranchNotObject",
+            })
+          )
+    )
+  );
 }
 
 /** Preserves declared enum order while removing duplicate enum values. */
@@ -179,28 +200,47 @@ function mergePropertySchema(
 }
 
 /** Returns a generated property schema or fails on an unsupported boolean form. */
-function requirePropertySchema(value: unknown, name: string) {
+function requirePropertySchema(
+  value: unknown,
+  name: string
+): Result.Result<JsonSchema.JsonSchema, ProviderToolSchemaError> {
   if (Predicate.isReadonlyObject(value)) {
-    return value;
+    return Result.succeed(value);
   }
-  throw new Error(
-    `Effect generated an unsupported schema for property ${name}.`
+  return Result.fail(
+    new ProviderToolSchemaError({
+      message: `Effect generated an unsupported schema for property ${name}.`,
+      reason: "unsupportedProperty",
+    })
+  );
+}
+
+/** Reads every property of every object union variant in declaration order. */
+function readVariantProperties(variants: readonly ObjectJsonSchema[]) {
+  return Result.all(
+    Arr.flatMap(variants, (variant) =>
+      Arr.map(Rec.toEntries(variant.properties), ([name, value]) =>
+        Result.map(requirePropertySchema(value, name), (property) => ({
+          name,
+          property,
+        }))
+      )
+    )
   );
 }
 
 /** Builds one optional-property map from object union variants. */
 function mergeVariantProperties(variants: readonly ObjectJsonSchema[]) {
-  const properties: Record<string, JsonSchema.JsonSchema> = {};
-  for (const variant of variants) {
-    for (const [name, value] of Rec.toEntries(variant.properties)) {
-      const property = requirePropertySchema(value, name);
+  return Result.map(readVariantProperties(variants), (entries) => {
+    const properties: Record<string, JsonSchema.JsonSchema> = {};
+    for (const { name, property } of entries) {
       const existing = properties[name];
       properties[name] = existing
         ? mergePropertySchema(existing, property)
         : property;
     }
-  }
-  return properties;
+    return properties;
+  });
 }
 
 /** Keeps schema metadata while removing provider-hostile top-level unions. */
@@ -230,28 +270,34 @@ function withDefinitions(document: JsonSchema.Document<"draft-07">) {
 /**
  * Builds an object-shaped schema for providers that reject top-level unions.
  * This synchronous AI SDK construction boundary accepts authored schemas only.
- * Unsupported schema shapes are programming defects. Runtime values still use
- * the original Effect validator. Named nonrecursive fields stay inline so union
- * merging does not depend on JSON Schema reference-resolution helpers.
+ * Unsupported schema shapes return a ProviderToolSchemaError, and authored
+ * callers unwrap it at module load. Runtime values still use the original
+ * Effect validator. Named nonrecursive fields stay inline so union merging does
+ * not depend on JSON Schema reference-resolution helpers.
  */
 export const providerCompatibleObjectSchema = <A, I>(
   schema: Schema.Codec<A, I, never, never>
-) => {
+): Result.Result<JsonSchema.JsonSchema, ProviderToolSchemaError> => {
   const document = toDraft07Document(schema);
   const modelSchema = withDefinitions(document);
   if (isObjectSchema(modelSchema)) {
-    return modelSchema;
+    return Result.succeed(modelSchema);
   }
-  const variants = objectVariants(modelSchema);
-  if (variants.length === 0) {
-    throw new Error(
-      "Provider-compatible tool schemas require an object or object union."
-    );
-  }
-  return {
-    ...withoutTopLevelAnyOf(modelSchema),
-    properties: mergeVariantProperties(variants),
-    required: [],
-    type: "object",
-  };
+  return Result.flatMap(objectVariants(modelSchema), (variants) => {
+    if (variants.length === 0) {
+      return Result.fail(
+        new ProviderToolSchemaError({
+          message:
+            "Provider-compatible tool schemas require an object or object union.",
+          reason: "notObjectOrUnion",
+        })
+      );
+    }
+    return Result.map(mergeVariantProperties(variants), (properties) => ({
+      ...withoutTopLevelAnyOf(modelSchema),
+      properties,
+      required: [],
+      type: "object",
+    }));
+  });
 };

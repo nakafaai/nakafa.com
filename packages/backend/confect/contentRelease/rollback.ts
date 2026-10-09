@@ -28,7 +28,7 @@ import {
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** Proves one release is an exact active or verified-candidate rollback source. */
 const rollbackSource = Effect.fn("contentRelease.rollbackSource")(function* (
@@ -43,7 +43,10 @@ export function makeRollbackPage(
   total: number,
   records: readonly RollbackRecord[]
 ): RollbackPage {
-  const nextIndex = records.at(-1)?.index ?? request.afterIndex;
+  const nextIndex = Option.match(Arr.last(records), {
+    onNone: () => request.afterIndex,
+    onSome: (record) => record.index,
+  });
   return {
     done: nextIndex === total - 1,
     nextIndex,
@@ -100,29 +103,37 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
       })
       .pipe(Effect.orDie);
     let records: RollbackRecord[] = [];
-    for (const [offset, row] of rowPage.page.entries()) {
-      if (row.index !== request.afterIndex + offset + 1) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Rollback source ${request.rollbackOf} is not contiguous.`
-        );
-      }
-      const record = yield* rollbackRecord(row);
-      const candidate = makeRollbackPage(request, total, [...records, record]);
-      if (
-        new TextEncoder().encode(canonicalizeRollbackPage(candidate))
-          .byteLength > MAX_ROLLBACK_PAGE_BYTES
-      ) {
-        if (records.length === 0) {
+    // The walk stops at the first row that would pass the byte ceiling, so no
+    // later row is read.
+    yield* Effect.findFirst(rowPage.page, (row, offset) =>
+      Effect.gen(function* () {
+        if (row.index !== request.afterIndex + offset + 1) {
           return yield* releaseFail(
-            "CONTENT_RELEASE_LIMIT",
-            `Rollback transition ${request.rollbackOf}/${row.index} exceeds the page byte ceiling.`
+            "CONTENT_RELEASE_INTEGRITY",
+            `Rollback source ${request.rollbackOf} is not contiguous.`
           );
         }
-        break;
-      }
-      records = Arr.append(records, record);
-    }
+        const record = yield* rollbackRecord(row);
+        const candidate = makeRollbackPage(request, total, [
+          ...records,
+          record,
+        ]);
+        if (
+          new TextEncoder().encode(canonicalizeRollbackPage(candidate))
+            .byteLength > MAX_ROLLBACK_PAGE_BYTES
+        ) {
+          if (records.length === 0) {
+            return yield* releaseFail(
+              "CONTENT_RELEASE_LIMIT",
+              `Rollback transition ${request.rollbackOf}/${row.index} exceeds the page byte ceiling.`
+            );
+          }
+          return true;
+        }
+        records = Arr.append(records, record);
+        return false;
+      })
+    );
     return canonicalizeRollbackPage(makeRollbackPage(request, total, records));
   }
 );
@@ -192,20 +203,26 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
       )
       .take(request.limit)
       .pipe(Effect.orDie);
-    let records: RouteRollbackRecord[] = [];
-    for (const [offset, row] of rows.entries()) {
-      if (row.index !== request.afterIndex + offset + 1) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Route rollback source ${request.rollbackOf} is not contiguous.`
-        );
-      }
-      records = Arr.append(records, {
-        current: yield* decodeRouteJson(row.routeJson),
-        priorContentKey: yield* priorRouteOwner(row, baseSequence),
-      });
-    }
-    const nextIndex = records.at(-1)?.current.index ?? request.afterIndex;
+    const records: RouteRollbackRecord[] = yield* Effect.forEach(
+      rows,
+      (row, offset) =>
+        Effect.gen(function* () {
+          if (row.index !== request.afterIndex + offset + 1) {
+            return yield* releaseFail(
+              "CONTENT_RELEASE_INTEGRITY",
+              `Route rollback source ${request.rollbackOf} is not contiguous.`
+            );
+          }
+          return {
+            current: yield* decodeRouteJson(row.routeJson),
+            priorContentKey: yield* priorRouteOwner(row, baseSequence),
+          };
+        })
+    );
+    const nextIndex = Option.match(Arr.last(records), {
+      onNone: () => request.afterIndex,
+      onSome: (record) => record.current.index,
+    });
     const page: RoutePage = {
       done: nextIndex === total - 1,
       nextIndex,

@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
@@ -80,9 +81,7 @@ export async function retireStoredAnchorPayload(
     .query("contentReleases")
     .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
     .unique();
-  if (!release) {
-    throw new Error(`Expected stored anchor ${releaseId}.`);
-  }
+  assert.ok(release, `Expected stored anchor ${releaseId}.`);
   const retired = decodeStoredObject(release.releaseJson);
   const manifest = Schema.decodeUnknownSync(StoredObjectSchema)(
     retired.manifest
@@ -138,9 +137,7 @@ export async function insertAnchoredActiveRelease(
     verifiedAt: now,
   });
   const active = await ctx.db.get("contentReleases", activeId);
-  if (!active) {
-    throw new Error("Expected the anchored active release fixture.");
-  }
+  assert.ok(active, "Expected the anchored active release fixture.");
   await ctx.db.patch("contentReleases", activeId, {
     receiptJson: encodeJsonText(
       makePublicationReceipt(

@@ -3,7 +3,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { hasMaterialReadModel } from "@repo/backend/confect/contentRelease/material/state";
 import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type ActiveIdentity = Exclude<
   Effect.Success<ReturnType<typeof loadActiveIdentity>>,
@@ -38,7 +38,7 @@ const loadMaterialCatalogOwner = Effect.fn(
     };
   }
   const families = yield* loadReleaseFamilies(active.release);
-  const managed = families.result.includes("material");
+  const managed = Arr.contains(families.result, "material");
   const ready = hasMaterialReadModel(active);
   if (!ready && managed) {
     return yield* releaseFail(

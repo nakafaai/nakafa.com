@@ -6,7 +6,7 @@ import {
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import { agentTrustKeys } from "@repo/backend/keys";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 const TRAILING_DOT = /\.$/;
 const CLOUD_HOST = /^[a-z0-9-]+\.convex\.cloud$/;
@@ -29,7 +29,7 @@ const AgentTrustSchema = Schema.Struct({
     }
     return (
       (target.protocol === "http:" &&
-        ["127.0.0.1", "localhost", "[::1]"].includes(hostname)) ||
+        Arr.contains(["127.0.0.1", "localhost", "[::1]"], hostname)) ||
       (target.protocol === "https:" && CLOUD_HOST.test(hostname))
     );
   })

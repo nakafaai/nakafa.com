@@ -1,4 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
+import { assert } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   inheritContentSnapshots,
@@ -173,9 +174,7 @@ export function readRuntimeRetention(
 ) {
   return t.mutation(async (ctx) => {
     const row = await ctx.db.get("tryoutRuntimeBundles", rowId);
-    if (!row) {
-      throw new Error("Expected retained runtime pair.");
-    }
+    assert.ok(row, "Expected retained runtime pair.");
     return Effect.runPromise(
       readTryoutRuntimeRetention(row).pipe(
         Effect.provide(

@@ -1,4 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
+import { assert } from "@effect/vitest";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   AppLocaleSchema,
@@ -181,9 +182,10 @@ export async function insertRuntimeIndex(
         .eq("sequence", sequence)
     )
     .unique();
-  if (!(head?.projectionJson && head.operation === "upsert")) {
-    throw new Error("Expected one complete searchable runtime head.");
-  }
+  assert.ok(
+    head?.projectionJson && head.operation === "upsert",
+    "Expected one complete searchable runtime head."
+  );
   const projection = Schema.decodeSync(ContentProjectionJsonSchema)(
     head.projectionJson
   );
@@ -282,9 +284,10 @@ export async function insertRuntimeHead(
   const projection = Schema.decodeSync(ContentProjectionJsonSchema)(
     projectionJson
   );
-  if (projection.kind === "question-body") {
-    throw new Error("A public runtime head cannot route a question body.");
-  }
+  assert.ok(
+    projection.kind !== "question-body",
+    "A public runtime head cannot route a question body."
+  );
   const resolved = {
     ...options,
     appLocale: options?.appLocale ?? projection.appLocale,
@@ -341,9 +344,7 @@ export async function insertSignedHead(
     ctx.db.query("contentHeads").unique(),
     ctx.db.query("contentArtifacts").unique(),
   ]);
-  if (!(head && storedArtifact)) {
-    throw new Error("Expected one complete runtime head.");
-  }
+  assert.ok(head && storedArtifact, "Expected one complete runtime head.");
   await Promise.all([
     ctx.db.patch("contentHeads", head._id, {
       projectionHash: hashContentProjection(projection),

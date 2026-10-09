@@ -135,39 +135,37 @@ describe("contentRelease/article/sitemap", () => {
       yield* t.run(
         Effect.gen(function* () {
           const tCtx = yield* MutationCtx;
-          yield* Effect.gen(function* () {
-            yield* Effect.promise(() => insertRuntimeArticles(tCtx, 1));
-            const existing = yield* Effect.promise(() =>
-              tCtx.db.query("articleBuckets").unique()
-            );
-            if (!existing) {
-              throw new Error("Expected one active article bucket.");
-            }
-            for (let index = 0; index < 4096; index += 1) {
-              const bucket = index.toString(16).padStart(3, "0");
-              if (bucket === existing.bucket) {
-                continue;
-              }
-              yield* Effect.promise(() =>
-                tCtx.db.insert("articleBuckets", {
-                  appLocale: "en",
-                  articleCount: 1,
-                  bucket,
-                  categoryCount: 0,
-                  slot: "blue",
-                })
-              );
+          yield* Effect.promise(() => insertRuntimeArticles(tCtx, 1));
+          const existing = yield* Effect.promise(() =>
+            tCtx.db.query("articleBuckets").unique()
+          );
+          if (!existing) {
+            throw new Error("Expected one active article bucket.");
+          }
+          for (let index = 0; index < 4096; index += 1) {
+            const bucket = index.toString(16).padStart(3, "0");
+            if (bucket === existing.bucket) {
+              continue;
             }
             yield* Effect.promise(() =>
               tCtx.db.insert("articleBuckets", {
                 appLocale: "en",
                 articleCount: 1,
-                bucket: "zzz",
+                bucket,
                 categoryCount: 0,
                 slot: "blue",
               })
             );
-          });
+          }
+          yield* Effect.promise(() =>
+            tCtx.db.insert("articleBuckets", {
+              appLocale: "en",
+              articleCount: 1,
+              bucket: "zzz",
+              categoryCount: 0,
+              slot: "blue",
+            })
+          );
           expect(
             yield* readArticleBuckets("en").pipe(
               Effect.provide(articleLayer),
@@ -186,20 +184,18 @@ describe("contentRelease/article/sitemap", () => {
       yield* t.run(
         Effect.gen(function* () {
           const tCtx = yield* MutationCtx;
-          yield* Effect.gen(function* () {
-            yield* Effect.promise(() => insertRuntimeArticles(tCtx, 1));
-            const bucket = yield* Effect.promise(() =>
-              tCtx.db.query("articleBuckets").unique()
-            );
-            if (!bucket) {
-              throw new Error("Expected one article sitemap bucket.");
-            }
-            yield* Effect.promise(() =>
-              tCtx.db.patch("articleBuckets", bucket._id, {
-                articleCount: 2,
-              })
-            );
-          });
+          yield* Effect.promise(() => insertRuntimeArticles(tCtx, 1));
+          const bucketToCorrupt = yield* Effect.promise(() =>
+            tCtx.db.query("articleBuckets").unique()
+          );
+          if (!bucketToCorrupt) {
+            throw new Error("Expected one article sitemap bucket.");
+          }
+          yield* Effect.promise(() =>
+            tCtx.db.patch("articleBuckets", bucketToCorrupt._id, {
+              articleCount: 2,
+            })
+          );
           const bucket = yield* Effect.promise(() =>
             tCtx.db.query("articleBuckets").unique()
           );

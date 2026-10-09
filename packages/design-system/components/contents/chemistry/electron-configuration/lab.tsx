@@ -1,5 +1,6 @@
 "use client";
 
+import { getOuterOccupiedShell } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import {
   ELECTRON_CONFIGURATION_SAMPLE_IDS,
   ELECTRON_CONFIGURATION_SAMPLES,
@@ -21,7 +22,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Result } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -56,17 +57,14 @@ export function ElectronConfigurationLab({
     useState<ElectronConfigurationSampleId>(HYDROGEN_ID);
   const selectedSample = ELECTRON_CONFIGURATION_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
-  const shellConfiguration = getSimpleShellConfiguration(
-    selectedSample.atomicNumber
+  const shellConfiguration = Result.getOrThrow(
+    getSimpleShellConfiguration(selectedSample.atomicNumber)
   );
   const visibleShells = Arr.filter(
     shellConfiguration,
     (shell) => shell.electronCount > 0
   );
-  const outerShell = Option.getOrThrowWith(
-    Arr.last(visibleShells),
-    () => new Error("Electron configuration requires at least one shell.")
-  );
+  const outerShell = getOuterOccupiedShell(shellConfiguration);
   const configurationMath = Arr.join(
     Arr.map(visibleShells, (shell) => String(shell.electronCount)),
     ", "

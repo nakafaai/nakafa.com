@@ -20,6 +20,9 @@ type ParabolicLaunchScenario = typeof ParabolicLaunchScenarioSchema.Type;
 
 type VectorTuple = [number, number, number];
 
+const PARABOLIC_CAMERA_POSITION: VectorTuple = [-4.7, 3.15, 5.35];
+const PARABOLIC_CAMERA_TARGET: VectorTuple = [0, 0.85, 0];
+
 const PARABOLIC_GRAVITY = 10;
 export const DEFAULT_PARABOLIC_LAUNCH_ID =
   "balanced-angle" satisfies ParabolicLaunchId;
@@ -28,8 +31,8 @@ export const PARABOLIC_SCENE = {
   animationSeconds: 4,
   ballRadius: 0.2,
   cameraFov: 38,
-  cameraPosition: [-4.7, 3.15, 5.35] as VectorTuple,
-  cameraTarget: [0, 0.85, 0] as VectorTuple,
+  cameraPosition: PARABOLIC_CAMERA_POSITION,
+  cameraTarget: PARABOLIC_CAMERA_TARGET,
   ghostCount: 7,
   groundPadding: 1.9,
   groundWidth: 3,

@@ -10,7 +10,7 @@ import {
 import source from "@repo/backend/scripts/content/acceptance/source.json" with {
   type: "json",
 };
-import { Array as Arr, Effect, FileSystem } from "effect";
+import { Array as Arr, Effect, FileSystem, Option } from "effect";
 
 const mocks = vi.hoisted(() => ({ command: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
@@ -58,7 +58,7 @@ describe("pinned Aksara acceptance publication", () => {
             args: readonly string[];
             stdoutPath: string;
           }) =>
-            spec.args.includes("renderer:manifest")
+            Arr.contains(spec.args, "renderer:manifest")
               ? fs.writeFileString(spec.stdoutPath, "test-real-renderer-output")
               : Effect.void
         );
@@ -76,7 +76,10 @@ describe("pinned Aksara acceptance publication", () => {
           args: ["--silent", "--filter", "www", "renderer:manifest"],
         });
         expect(
-          Arr.map(calls.slice(1, 6), ({ command, args }) => [command, ...args])
+          Arr.map(Arr.take(Arr.drop(calls, 1), 5), ({ command, args }) => [
+            command,
+            ...args,
+          ])
         ).toEqual([
           ["git", "init", "--quiet"],
           ["git", "remote", "add", "origin", source.repository],
@@ -100,7 +103,7 @@ describe("pinned Aksara acceptance publication", () => {
           ],
           ["pnpm", "install", "--frozen-lockfile", "--prefer-offline"],
         ]);
-        expect(calls.at(-1)).toMatchObject({
+        expect(Option.getOrThrow(Arr.last(calls))).toMatchObject({
           command: "pnpm",
           cwd: `${runtime.directory}/source`,
           args: ["--filter", "@nakafa/aksara-cli", "acceptance"],

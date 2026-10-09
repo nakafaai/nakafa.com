@@ -170,20 +170,23 @@ const stagePlacement = Effect.fn("contents.views.test.stagePlacement")(
         };
       })
     );
-    for (const [offset, row] of rows.entries()) {
-      yield* Effect.promise(() =>
-        target.mutation((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            stageProgramRow(
-              snapshotId,
-              offset + 100,
-              row.source.record,
-              row.rowJson
-            ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
+    yield* Effect.forEach(
+      rows,
+      (row, offset) =>
+        Effect.promise(() =>
+          target.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              stageProgramRow(
+                snapshotId,
+                offset + 100,
+                row.source.record,
+                row.rowJson
+              ).pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
+            )
           )
-        )
-      );
-    }
+        ),
+      { discard: true }
+    );
   }
 );
 

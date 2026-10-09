@@ -117,29 +117,25 @@ describe("contentRelease/material/identity", () => {
             Effect.gen(function* () {
               const staleCtx = yield* MutationCtx;
               yield* activateMaterialCatalog();
-              yield* Effect.gen(function* () {
-                const row = yield* Effect.promise(() =>
-                  staleCtx.db
-                    .query("materialCatalog")
-                    .withIndex(
-                      "by_slot_and_contentKey_and_appLocale",
-                      (index) =>
-                        index
-                          .eq("slot", "blue")
-                          .eq("contentKey", projection.contentKey)
-                          .eq("appLocale", projection.appLocale)
-                    )
-                    .unique()
-                );
-                if (!row) {
-                  throw new Error("Expected one current material row.");
-                }
-                yield* Effect.promise(() =>
-                  staleCtx.db.patch("materialCatalog", row._id, {
-                    sequence: 2,
-                  })
-                );
-              });
+              const row = yield* Effect.promise(() =>
+                staleCtx.db
+                  .query("materialCatalog")
+                  .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
+                    index
+                      .eq("slot", "blue")
+                      .eq("contentKey", projection.contentKey)
+                      .eq("appLocale", projection.appLocale)
+                  )
+                  .unique()
+              );
+              if (!row) {
+                throw new Error("Expected one current material row.");
+              }
+              yield* Effect.promise(() =>
+                staleCtx.db.patch("materialCatalog", row._id, {
+                  sequence: 2,
+                })
+              );
               expect(
                 yield* readMaterialIdentity(identity).pipe(
                   Effect.provide(materialLayer),

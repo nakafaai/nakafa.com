@@ -1,5 +1,8 @@
-import { getEarlyElementShellConfiguration } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
-import { Array as Arr, Option, Schema } from "effect";
+import {
+  getEarlyElementShellConfiguration,
+  getOuterOccupiedShell,
+} from "@repo/design-system/components/contents/chemistry/atom-shell/data";
+import { Array as Arr, Result, Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
@@ -66,22 +69,24 @@ export function isValenceElectronSampleId(
  * Reads the outer occupied shell and valence-electron count for a neutral atom up to calcium.
  */
 export function getValenceElectronFacts(atomicNumber: number) {
-  const shellConfiguration = Arr.filter(
+  return Result.map(
     getEarlyElementShellConfiguration(atomicNumber),
-    (shell) => shell.electronCount > 0
-  );
-  const outerShell = Option.getOrThrowWith(
-    Arr.last(shellConfiguration),
-    () => new Error("Valence electrons require at least one occupied shell.")
-  );
+    (configuration) => {
+      const shellConfiguration = Arr.filter(
+        configuration,
+        (shell) => shell.electronCount > 0
+      );
+      const outerShell = getOuterOccupiedShell(configuration);
 
-  return {
-    configurationMath: Arr.join(
-      Arr.map(shellConfiguration, (shell) => String(shell.electronCount)),
-      ", "
-    ),
-    outerShell,
-    shellConfiguration,
-    valenceElectronCount: outerShell.electronCount,
-  };
+      return {
+        configurationMath: Arr.join(
+          Arr.map(shellConfiguration, (shell) => String(shell.electronCount)),
+          ", "
+        ),
+        outerShell,
+        shellConfiguration,
+        valenceElectronCount: outerShell.electronCount,
+      };
+    }
+  );
 }

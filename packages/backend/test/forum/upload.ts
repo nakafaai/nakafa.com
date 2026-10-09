@@ -9,7 +9,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Creates a real authorized upload capability for the route contract. */
 export const createPendingUpload = Effect.fn(
@@ -73,8 +73,11 @@ export const createPendingUpload = Effect.fn(
     })
   );
   const capability = new URL(upload.uploadUrl);
-  const uploadToken = yield* Schema.decodeUnknownEffect(Schema.NonEmptyString)(
-    capability.pathname.split("/").at(-1)
+  const lastSegment = yield* Effect.orDie(
+    Effect.fromOption(Arr.last(capability.pathname.split("/")))
+  );
+  const uploadToken = yield* Schema.decodeEffect(Schema.NonEmptyString)(
+    lastSegment
   );
   return {
     capabilityPath: capability.pathname,

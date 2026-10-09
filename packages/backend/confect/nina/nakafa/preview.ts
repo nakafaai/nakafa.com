@@ -2,6 +2,7 @@ import type { NakafaAgentQuranReference } from "@repo/contents/agent/schema/qura
 import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
 import type { NakafaAgentReadableContentRef } from "@repo/contents/agent/schema/ref";
 import type { NakafaAgentTaxonomy } from "@repo/contents/agent/schema/taxonomy";
+import { Array as Arr, Option } from "effect";
 
 /** Builds the bounded UI preview for a full content read. */
 export function previewRead(result: NakafaAgentMarkdown) {
@@ -16,16 +17,22 @@ export function previewRead(result: NakafaAgentMarkdown) {
 
 /** Builds the bounded UI preview for a Quran reference. */
 export function previewQuran(result: NakafaAgentQuranReference) {
-  const firstVerse = result.verses.at(0);
-  const lastVerse = result.verses.at(-1);
+  const firstVerse = Arr.head(result.verses);
+  const lastVerse = Arr.last(result.verses);
 
   return {
     ...previewContentRef(result),
-    from_verse: firstVerse?.number ?? 1,
+    from_verse: Option.match(firstVerse, {
+      onNone: () => 1,
+      onSome: (verse) => verse.number,
+    }),
     meaning: result.meaning,
     name: result.name,
     revelation: result.revelation,
-    to_verse: lastVerse?.number ?? firstVerse?.number ?? 1,
+    to_verse: Option.match(lastVerse, {
+      onNone: () => 1,
+      onSome: (verse) => verse.number,
+    }),
     verse_count: result.verses.length,
   };
 }

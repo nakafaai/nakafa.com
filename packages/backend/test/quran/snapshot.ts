@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
   type Sha256Hash,
@@ -43,7 +44,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const QURAN_SEARCH_COUNT = QURAN_SURAH_COUNT * ACTIVE_APP_LOCALES.length;
 const QURAN_SOURCE_FILE_COUNT = quranSourceFileCount(ACTIVE_APP_LOCALES);
@@ -126,9 +127,7 @@ async function completeTestRelease(ctx: MutationCtx) {
     ctx.db.query("contentReleases").unique(),
     ctx.db.query("contentState").unique(),
   ]);
-  if (!(release && state)) {
-    throw new Error("Expected one technical Quran release.");
-  }
+  assert.ok(release && state, "Expected one technical Quran release.");
   await ctx.db.patch("contentReleases", release._id, {
     completedAt: 1,
     status: "completed",
@@ -185,11 +184,15 @@ export async function activateQuranSnapshot(
     snapshotJson: encodeSnapshotJson(snapshot),
     verifiedAt: 1,
   });
-  for (const [index, record] of records.entries()) {
-    const search =
+  const rows = Arr.map(records, (record, index) => ({
+    index,
+    record,
+    search:
       record.payload.kind === "quran-search"
         ? quranSearchFacts(record.payload)
-        : null;
+        : null,
+  }));
+  for (const { index, record, search } of rows) {
     await ctx.db.insert("quranRows", {
       ...quranRowFacts(record),
       index,
@@ -242,9 +245,7 @@ export async function restoreAbsentQuranSnapshot(
     status: "completed",
   });
   const state = await ctx.db.query("contentState").unique();
-  if (!state) {
-    throw new Error("Expected active technical Quran state.");
-  }
+  assert.ok(state, "Expected active technical Quran state.");
   await ctx.db.patch("contentState", state._id, {
     activeManifestHash: recovery.manifestHash,
     activeReleaseId: recovery.releaseId,

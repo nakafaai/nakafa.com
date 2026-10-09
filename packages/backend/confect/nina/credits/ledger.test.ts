@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { products } from "@repo/backend/confect/utils/polar/products";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { Array as Arr, DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect, Option } from "effect";
 
 const NOW = Date.UTC(2026, 8, 1);
 async function fixture(credits = 2, creditsResetAt = NOW) {
@@ -223,7 +223,10 @@ describe("Nina credit transactions", () => {
       }));
       expect(result.user?.credits).toBe(resubscribe ? 3000 : 10);
       expect(result.user?.planCreditGrantId).not.toBe(hold.planCreditGrantId);
-      expect(result.ledger.at(-1)).toMatchObject({ type: "refund", amount: 0 });
+      expect(Option.getOrThrow(Arr.last(result.ledger))).toMatchObject({
+        type: "refund",
+        amount: 0,
+      });
     }
   );
 });

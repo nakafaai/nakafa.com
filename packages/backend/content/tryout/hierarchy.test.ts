@@ -104,10 +104,9 @@ describe("signed try-out hierarchy relationships", () => {
             )
           );
           const index = yield* indexPublishedCatalog(catalog);
-          const set = index.sets.at(0);
-          if (set === undefined) {
-            return yield* Effect.die("Expected a signed set.");
-          }
+          const set = yield* Effect.orDie(
+            Effect.fromOption(Arr.head(index.sets))
+          );
           expect(
             yield* readPublishedSetParents(index, set).pipe(Effect.flip)
           ).toMatchObject({
@@ -171,10 +170,9 @@ describe("signed try-out hierarchy relationships", () => {
             )
           );
           const index = yield* indexPublishedCatalog(changed);
-          const set = index.sets.at(0);
-          if (set === undefined) {
-            return yield* Effect.die("Expected a signed set.");
-          }
+          const set = yield* Effect.orDie(
+            Effect.fromOption(Arr.head(index.sets))
+          );
           expect(
             yield* readPublishedSetSections(index, set).pipe(Effect.flip)
           ).toMatchObject({

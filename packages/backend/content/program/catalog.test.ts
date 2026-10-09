@@ -147,22 +147,20 @@ describe("contentRelease/program/catalog", () => {
         Effect.gen(function* () {
           const tCtx = yield* MutationCtx;
           yield* activateProgramSnapshot(data);
-          yield* Effect.gen(function* () {
-            const program = yield* Effect.promise(() =>
-              tCtx.db
-                .query("programCatalog")
-                .withIndex("by_snapshotId_and_programKey", (index) =>
-                  index
-                    .eq("snapshotId", data.snapshotId)
-                    .eq("programKey", "technical-program-1")
-                )
-                .unique()
-            );
-            if (!program) {
-              throw new Error("Expected one technical program.");
-            }
-            yield* Effect.promise(() => tCtx.db.delete(program._id));
-          });
+          const program = yield* Effect.promise(() =>
+            tCtx.db
+              .query("programCatalog")
+              .withIndex("by_snapshotId_and_programKey", (index) =>
+                index
+                  .eq("snapshotId", data.snapshotId)
+                  .eq("programKey", "technical-program-1")
+              )
+              .unique()
+          );
+          if (!program) {
+            throw new Error("Expected one technical program.");
+          }
+          yield* Effect.promise(() => tCtx.db.delete(program._id));
           expect(
             yield* readProgramCatalog("en").pipe(
               Effect.provide(programLayer),
@@ -183,23 +181,21 @@ describe("contentRelease/program/catalog", () => {
         Effect.gen(function* () {
           const tCtx = yield* MutationCtx;
           yield* activateProgramSnapshot(data);
-          yield* Effect.gen(function* () {
-            const root = yield* Effect.promise(() =>
-              tCtx.db
-                .query("curriculumRoutes")
-                .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
-                  index
-                    .eq("snapshotId", data.snapshotId)
-                    .eq("appLocale", "en")
-                    .eq("path", "curriculum/technical-program-1")
-                )
-                .unique()
-            );
-            if (!root) {
-              throw new Error("Expected one English technical program root.");
-            }
-            yield* Effect.promise(() => tCtx.db.delete(root._id));
-          });
+          const root = yield* Effect.promise(() =>
+            tCtx.db
+              .query("curriculumRoutes")
+              .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
+                index
+                  .eq("snapshotId", data.snapshotId)
+                  .eq("appLocale", "en")
+                  .eq("path", "curriculum/technical-program-1")
+              )
+              .unique()
+          );
+          if (!root) {
+            throw new Error("Expected one English technical program root.");
+          }
+          yield* Effect.promise(() => tCtx.db.delete(root._id));
           expect(
             yield* readProgramCatalog("en").pipe(
               Effect.provide(programLayer),
@@ -220,20 +216,18 @@ describe("contentRelease/program/catalog", () => {
         Effect.gen(function* () {
           const tCtx = yield* MutationCtx;
           yield* activateProgramSnapshot(data);
-          yield* Effect.gen(function* () {
-            for (let index = 2; index < 101; index += 1) {
-              yield* Effect.promise(() =>
-                tCtx.db.insert("programCatalog", {
-                  displayOrder: index,
-                  index: index + 4,
-                  programKey: `overflow-program-${index}`,
-                  rowHash: "not-read",
-                  rowJson: "not-read",
-                  snapshotId: data.snapshotId,
-                })
-              );
-            }
-          });
+          for (let index = 2; index < 101; index += 1) {
+            yield* Effect.promise(() =>
+              tCtx.db.insert("programCatalog", {
+                displayOrder: index,
+                index: index + 4,
+                programKey: `overflow-program-${index}`,
+                rowHash: "not-read",
+                rowJson: "not-read",
+                snapshotId: data.snapshotId,
+              })
+            );
+          }
           expect(
             yield* readProgramCatalog("en").pipe(
               Effect.provide(programLayer),

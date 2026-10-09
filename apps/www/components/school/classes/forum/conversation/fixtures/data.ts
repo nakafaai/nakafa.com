@@ -1,12 +1,22 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, HashMap } from "effect";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Array as Arr, HashMap, Schema } from "effect";
 import type {
   Forum,
   ForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/transcript/pages";
 
-export const conversationTestForumId = "forum_1" as Id<"schoolClassForums">;
+const decodePostId = Schema.decodeUnknownSync(Id("schoolClassForumPosts"));
+const conversationTestClassId = Schema.decodeUnknownSync(Id("schoolClasses"))(
+  "class_1"
+);
+const conversationTestSchoolId = Schema.decodeUnknownSync(Id("schools"))(
+  "school_1"
+);
+const conversationTestUserId = Schema.decodeUnknownSync(Id("users"))("user_1");
+export const conversationTestForumId = Schema.decodeUnknownSync(
+  Id("schoolClassForums")
+)("forum_1");
 export const conversationTestFirstPost = createConversationTestPost({
   postId: "post_1",
   sequence: 1,
@@ -48,11 +58,11 @@ export function createConversationTestPost({
 
   return {
     _creationTime: resolvedCreatedAt,
-    _id: postId as Id<"schoolClassForumPosts">,
+    _id: decodePostId(postId),
     attachments: [],
     body: `post-${sequence}`,
-    classId: "class_1" as Id<"schoolClasses">,
-    createdBy: "user_1" as Id<"users">,
+    classId: conversationTestClassId,
+    createdBy: conversationTestUserId,
     forumId: conversationTestForumId,
     isUnread,
     mentions: [],
@@ -73,17 +83,17 @@ export function createConversationTestForum() {
     _creationTime: Date.UTC(2026, 3, 20, 7, 0, 0),
     _id: conversationTestForumId,
     body: "body",
-    classId: "class_1" as Id<"schoolClasses">,
-    createdBy: "user_1" as Id<"users">,
+    classId: conversationTestClassId,
+    createdBy: conversationTestUserId,
     isPinned: false,
     lastPostAt: Date.UTC(2026, 3, 21, 8, 0, 0),
-    lastPostBy: "user_1" as Id<"users">,
+    lastPostBy: conversationTestUserId,
     myReactions: [],
     nextPostSequence: 4,
     postCount: 3,
     reactionCounts: [],
     reactionUsers: [],
-    schoolId: "school_1" as Id<"schools">,
+    schoolId: conversationTestSchoolId,
     status: "open",
     tag: "general",
     title: "Forum",

@@ -25,7 +25,7 @@ describe("signed Quran verse projection", () => {
               translations: [
                 verse.translations[0],
                 ...Arr.filter(
-                  verse.translations.slice(1),
+                  Arr.drop(verse.translations, 1),
                   ({ appLocale }) => appLocale !== "de"
                 ),
               ],
@@ -50,7 +50,7 @@ describe("signed Quran verse projection", () => {
             ...verse,
             translations: [
               { ...translation, value: { text: "Text [99]", footnotes: "" } },
-              ...verse.translations.slice(1),
+              ...Arr.drop(verse.translations, 1),
             ],
           },
           translation.appLocale,

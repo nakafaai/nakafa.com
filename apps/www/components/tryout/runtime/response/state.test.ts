@@ -1,4 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
 import {
   applyOptimisticTryoutResponse,
   assignCategorySelection,
@@ -10,6 +12,10 @@ import type {
 } from "@/components/tryout/runtime/types";
 
 const NOW = 1_783_425_600_000;
+const decodePlacementId = Schema.decodeUnknownSync(
+  Id("tryoutAttemptPlacements")
+);
+const decodeAttemptId = Schema.decodeUnknownSync(Id("tryoutAttempts"));
 
 describe("try-out response state", () => {
   it("adds and removes multiple choices in authored order", () => {
@@ -157,7 +163,7 @@ describe("try-out response state", () => {
     expect(
       applyOptimisticTryoutResponse(
         runtime,
-        { placementId: "missing" as never, selection: null },
+        { placementId: decodePlacementId("missing"), selection: null },
         NOW
       )
     ).toBeNull();
@@ -219,7 +225,7 @@ describe("try-out response state", () => {
 function makeMultipleQuestion(): TryoutRuntimeQuestion {
   return {
     contentHash: "content-hash",
-    placementId: "placement" as TryoutRuntimeQuestion["placementId"],
+    placementId: decodePlacementId("placement"),
     questionOrder: 1,
     response: null,
     responseSpec: {
@@ -302,7 +308,7 @@ function makeResponse(
 
 function makeRuntime(question: TryoutRuntimeQuestion): TryoutSectionRuntime {
   return {
-    attemptId: "attempt" as TryoutSectionRuntime["attemptId"],
+    attemptId: decodeAttemptId("attempt"),
     expiresAt: NOW + 1000,
     questions: [question],
     section: {

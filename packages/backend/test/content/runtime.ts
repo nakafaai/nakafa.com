@@ -1,4 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
+import { assert } from "@effect/vitest";
 import {
   type ContentFamily,
   ContentFamilySchema,
@@ -260,9 +261,7 @@ export async function insertRuntimeArticles(
 ) {
   await insertRuntimeRelease(ctx);
   const state = await ctx.db.query("contentState").unique();
-  if (!state) {
-    throw new Error("Expected one active content state.");
-  }
+  assert.ok(state, "Expected one active content state.");
   await ctx.db.patch("contentState", state._id, {
     articleManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
     articleReleaseId: TEST_RUNTIME_RELEASE.releaseId,
@@ -297,9 +296,7 @@ export async function insertRuntimeArticles(
           .eq("sequence", TEST_RUNTIME_RELEASE.sequence)
       )
       .unique();
-    if (!head) {
-      throw new Error("Expected one active article head.");
-    }
+    assert.ok(head, "Expected one active article head.");
     await Effect.runPromise(
       writeArticle(state.articleSlot, head, projection).pipe(
         Effect.provide(
@@ -314,9 +311,7 @@ export async function insertRuntimeArticles(
 export async function insertSignedRelease(ctx: MutationCtx) {
   await insertRuntimeRelease(ctx);
   const release = await ctx.db.query("contentReleases").unique();
-  if (!release) {
-    throw new Error("Expected one runtime release.");
-  }
+  assert.ok(release, "Expected one runtime release.");
   await ctx.db.patch("contentReleases", release._id, {
     releaseJson: encodeJsonText(TEST_RUNTIME_ENVELOPE),
     rendererJson: encodeJsonText(TEST_PROOF_RENDERER),

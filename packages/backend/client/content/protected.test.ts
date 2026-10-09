@@ -36,7 +36,7 @@ import {
 } from "@repo/backend/test/content/proof";
 import { testPublicationScope } from "@repo/backend/test/content/release";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const endpoint = `https://example.convex.site${PROTECTED_CONTENT_RUNTIME_PATH}`;
 const target = {
@@ -197,11 +197,11 @@ describe("protected content runtime client", () => {
         yield* readProtectedContent(target, request, TEST_PROOF_RENDERER)
       ).toMatchObject({ items: [{ delivery: "authenticated" }] });
       expect(fetchMock).toHaveBeenCalledOnce();
-      const call = fetchMock.mock.calls.at(0);
-      expect(call?.[0]).toEqual(new URL(endpoint));
+      const call = Option.getOrThrow(Arr.head(fetchMock.mock.calls));
+      expect(call[0]).toEqual(new URL(endpoint));
       expect(
         yield* Effect.promise(
-          (): Promise<unknown> => new Response(call?.[1]?.body).json()
+          (): Promise<unknown> => new Response(call[1]?.body).json()
         )
       ).toEqual(request);
       expect(verifyProtectedContentRuntimeExchange).toHaveBeenCalledOnce();

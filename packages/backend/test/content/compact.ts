@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -17,7 +18,7 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
-import { DateTime } from "effect";
+import { Array as Arr, DateTime } from "effect";
 
 export const COMPACTION_OLD_TIME =
   DateTime.toEpochMillis(DateTime.nowUnsafe()) - ROLLBACK_RETENTION_MS - 1000;
@@ -52,9 +53,7 @@ export async function insertCompletedRelease(
       query.eq("releaseId", identity.releaseId)
     )
     .unique();
-  if (!release) {
-    throw new Error(`Expected release ${identity.releaseId}.`);
-  }
+  assert.ok(release, `Expected release ${identity.releaseId}.`);
   await ctx.db.patch("contentReleases", release._id, { createdAt });
 }
 
@@ -117,7 +116,11 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
   const releases = Array.from({ length: 5 }, (_, index) =>
     compactionIdentity(index + 1)
   );
-  for (const [index, release] of releases.entries()) {
+  const indexedReleases = Arr.map(releases, (release, index) => ({
+    index,
+    release,
+  }));
+  for (const { index, release } of indexedReleases) {
     await insertCompletedRelease(
       ctx,
       release,
@@ -131,9 +134,10 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
   const third = releases[2];
   const fourth = releases[3];
   const fifth = releases[4];
-  if (!(first && third && fourth && fifth)) {
-    throw new Error("Expected five compaction releases.");
-  }
+  assert.ok(
+    first && third && fourth && fifth,
+    "Expected five compaction releases."
+  );
   await insertTestState(ctx, { active: fifth, nextSequence: 6 });
   for (let index = 0; index < 40; index += 1) {
     const contentKey = `test:compact-${index}`;

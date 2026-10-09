@@ -22,18 +22,16 @@ const start = FunctionImpl.make(
   spec,
   "start",
   Effect.fn("tryouts.mutations.sections.start")(function* (args) {
-    return yield* Effect.gen(function* () {
-      const { appUser } = yield* requireAuth();
-      const attempt = yield* requireOwnedAttempt({
-        attemptId: args.attemptId,
-        userId: appUser._id,
-      });
-      const now = yield* Clock.currentTimeMillis;
-      return yield* startSectionAttempt({
-        attempt,
-        now,
-        sectionKey: args.sectionKey,
-      });
+    const { appUser } = yield* requireAuth();
+    const attempt = yield* requireOwnedAttempt({
+      attemptId: args.attemptId,
+      userId: appUser._id,
+    });
+    const now = yield* Clock.currentTimeMillis;
+    return yield* startSectionAttempt({
+      attempt,
+      now,
+      sectionKey: args.sectionKey,
     });
   })
 );
@@ -42,37 +40,35 @@ const complete = FunctionImpl.make(
   spec,
   "complete",
   Effect.fn("tryouts.mutations.sections.complete")(function* (args) {
-    return yield* Effect.gen(function* () {
-      const { appUser } = yield* requireAuth();
-      const attempt = yield* requireOwnedAttempt({
-        attemptId: args.attemptId,
-        userId: appUser._id,
-      });
-      if (attempt.status !== "in-progress") {
-        return yield* new TryoutAttemptStateError({
-          code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-          message: "Try-out attempt is not active.",
-        });
-      }
-      const now = yield* Clock.currentTimeMillis;
-      if (now >= attempt.expiresAt) {
-        return yield* new TryoutAttemptStateError({
-          code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
-          message: "Try-out attempt time has expired.",
-        });
-      }
-      const section = yield* requireActiveSectionAttempt({
-        attempt,
-        sectionKey: args.sectionKey,
-      });
-      yield* finalizeSectionAttempt({
-        attempt,
-        endReason: getSectionEndReason(section, now),
-        now,
-        section,
-      });
-      return sectionCompletedResult;
+    const { appUser } = yield* requireAuth();
+    const attempt = yield* requireOwnedAttempt({
+      attemptId: args.attemptId,
+      userId: appUser._id,
     });
+    if (attempt.status !== "in-progress") {
+      return yield* new TryoutAttemptStateError({
+        code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+        message: "Try-out attempt is not active.",
+      });
+    }
+    const now = yield* Clock.currentTimeMillis;
+    if (now >= attempt.expiresAt) {
+      return yield* new TryoutAttemptStateError({
+        code: "TRYOUT_ATTEMPT_NOT_ACTIVE",
+        message: "Try-out attempt time has expired.",
+      });
+    }
+    const section = yield* requireActiveSectionAttempt({
+      attempt,
+      sectionKey: args.sectionKey,
+    });
+    yield* finalizeSectionAttempt({
+      attempt,
+      endReason: getSectionEndReason(section, now),
+      now,
+      section,
+    });
+    return sectionCompletedResult;
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/test/nina/specialist";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
-import { Effect, MutableList } from "effect";
+import { Array as Arr, Effect, MutableList, Option } from "effect";
 
 vi.mock("@repo/backend/agent/search", () => ({ searchNakafaContent: vi.fn() }));
 afterEach(() => vi.restoreAllMocks());
@@ -80,7 +80,9 @@ describe("Nina content search", () => {
       result: null,
       text: "Search verification failed.",
     });
-    expect(MutableList.toArray(artifacts).at(-1)).toMatchObject({
+    expect(
+      Option.getOrThrow(Arr.last(MutableList.toArray(artifacts)))
+    ).toMatchObject({
       data: { status: "error", error: output.text },
     });
   });

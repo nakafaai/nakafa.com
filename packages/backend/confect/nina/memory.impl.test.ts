@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/confect/nina/memory.spec";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 
 const get = Ref.getFunctionReference(refs.public.nina.memory.get);
 const enable = Ref.getFunctionReference(refs.public.nina.memory.enable);
@@ -109,9 +109,12 @@ describe("Nina learner memory", () => {
       });
     }
     const view = await f.owner.query(get, {});
-    expect(view?.facts).toHaveLength(MEMORY_FACTS);
-    expect(view?.facts[0]?.text).toBe("Fakta 9-2.");
-    expect(view?.facts.at(-1)?.text).toBe("Fakta 0-0.");
+    const facts: ReadonlyArray<{ readonly text: string }> = Option.getOrThrow(
+      Option.fromNullishOr(view)
+    ).facts;
+    expect(facts).toHaveLength(MEMORY_FACTS);
+    expect(facts[0]?.text).toBe("Fakta 9-2.");
+    expect(Option.getOrThrow(Arr.last(facts)).text).toBe("Fakta 0-0.");
   });
 
   it("changes nothing from a curation that raced a newer write, but counts it", async () => {

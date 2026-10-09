@@ -12,15 +12,13 @@ const getStartAccess = FunctionImpl.make(
   spec,
   "getStartAccess",
   Effect.fn("tryouts.queries.access.getStartAccess")(function* (args) {
-    return yield* Effect.gen(function* () {
-      const auth = yield* getOptionalAppUserForRead();
-      if (!auth) {
-        return anonymousStartAccess;
-      }
-      return yield* getTryoutStartAccess({
-        ...args,
-        userId: auth.appUser._id,
-      });
+    const auth = yield* getOptionalAppUserForRead();
+    if (!auth) {
+      return anonymousStartAccess;
+    }
+    return yield* getTryoutStartAccess({
+      ...args,
+      userId: auth.appUser._id,
     });
   })
 );

@@ -6,6 +6,7 @@ import {
   type AtomShellSampleId,
   CALCIUM_ID,
   getEarlyElementShellConfiguration,
+  getOuterOccupiedShell,
   isAtomShellSampleId,
 } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import { ShellModelCanvas } from "@repo/design-system/components/contents/chemistry/shell-model/canvas";
@@ -21,7 +22,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Result } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -56,17 +57,14 @@ export function AtomShellLab({
     useState<AtomShellSampleId>(CALCIUM_ID);
   const selectedSample = ATOM_SHELL_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
-  const shellConfiguration = getEarlyElementShellConfiguration(
-    selectedSample.atomicNumber
+  const shellConfiguration = Result.getOrThrow(
+    getEarlyElementShellConfiguration(selectedSample.atomicNumber)
   );
   const visibleShells = Arr.filter(
     shellConfiguration,
     (shell) => shell.electronCount > 0
   );
-  const outerShell = Option.getOrThrowWith(
-    Arr.last(visibleShells),
-    () => new Error("Atom shell lab requires at least one occupied shell.")
-  );
+  const outerShell = getOuterOccupiedShell(shellConfiguration);
   const configurationMath = Arr.join(
     Arr.map(visibleShells, (shell) => String(shell.electronCount)),
     ", "

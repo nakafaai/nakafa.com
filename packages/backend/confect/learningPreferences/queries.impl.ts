@@ -28,13 +28,11 @@ const getCurrent = FunctionImpl.make(
   spec,
   "getCurrent",
   Effect.fn("learningPreferences.queries.getCurrent")(function* ({ locale }) {
-    return yield* Effect.gen(function* () {
-      const user = yield* getOptionalAppUserForRead();
-      if (!user) {
-        return null;
-      }
-      return yield* readCurrentCurriculumProgram(locale, user.appUser._id);
-    });
+    const user = yield* getOptionalAppUserForRead();
+    if (!user) {
+      return null;
+    }
+    return yield* readCurrentCurriculumProgram(locale, user.appUser._id);
   })
 );
 const getCurrentTryout = FunctionImpl.make(
@@ -42,23 +40,21 @@ const getCurrentTryout = FunctionImpl.make(
   spec,
   "getCurrentTryout",
   Effect.fn("learningPreferences.queries.getCurrentTryout")(function* (args) {
-    return yield* Effect.gen(function* () {
-      const user = yield* getOptionalAppUserForRead();
-      if (!user) {
-        return null;
-      }
-      const preference = yield* readCurrentTryoutCountry({
-        locale: args.locale,
-        userId: user.appUser._id,
-      });
-      if (!preference) {
-        return null;
-      }
-      return {
-        country: toTryoutCountryOption(preference.country),
-        preferredTryoutCountryKey: preference.preferredTryoutCountryKey,
-      };
+    const user = yield* getOptionalAppUserForRead();
+    if (!user) {
+      return null;
+    }
+    const preference = yield* readCurrentTryoutCountry({
+      locale: args.locale,
+      userId: user.appUser._id,
     });
+    if (!preference) {
+      return null;
+    }
+    return {
+      country: toTryoutCountryOption(preference.country),
+      preferredTryoutCountryKey: preference.preferredTryoutCountryKey,
+    };
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

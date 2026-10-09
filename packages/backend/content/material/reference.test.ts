@@ -45,24 +45,22 @@ describe("material reference integrity", () => {
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
             yield* activateMaterialCatalog();
-            yield* Effect.gen(function* () {
-              const rows = yield* Effect.promise(() =>
-                tCtx.db.query("materialCatalog").collect()
-              );
-              const other = Arr.findFirst(
-                rows,
-                (row) =>
-                  row.appLocale === "en" &&
-                  row.contentKey !== projection.contentKey
-              );
-              assert(Option.isSome(other));
-              yield* Effect.promise(() =>
-                tCtx.db.patch("materialCatalog", other.value._id, {
-                  assetId: projection.graph.assetId,
-                  publicPath: projection.publicPath,
-                })
-              );
-            });
+            const rows = yield* Effect.promise(() =>
+              tCtx.db.query("materialCatalog").collect()
+            );
+            const other = Arr.findFirst(
+              rows,
+              (row) =>
+                row.appLocale === "en" &&
+                row.contentKey !== projection.contentKey
+            );
+            assert(Option.isSome(other));
+            yield* Effect.promise(() =>
+              tCtx.db.patch("materialCatalog", other.value._id, {
+                assetId: projection.graph.assetId,
+                publicPath: projection.publicPath,
+              })
+            );
             const input = yield* resolveReferenceInput(
               kind === "route"
                 ? {
@@ -99,21 +97,19 @@ describe("material reference integrity", () => {
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
             yield* activateMaterialCatalog();
-            yield* Effect.gen(function* () {
-              const rows = yield* Effect.promise(() =>
-                tCtx.db.query("materialCatalog").collect()
+            const rows = yield* Effect.promise(() =>
+              tCtx.db.query("materialCatalog").collect()
+            );
+            for (const row of Arr.filter(
+              rows,
+              (candidate) => candidate.appLocale === "en"
+            )) {
+              yield* Effect.promise(() =>
+                tCtx.db.patch("materialCatalog", row._id, {
+                  topicAssetId: "foreign-topic-identity",
+                })
               );
-              for (const row of Arr.filter(
-                rows,
-                (candidate) => candidate.appLocale === "en"
-              )) {
-                yield* Effect.promise(() =>
-                  tCtx.db.patch("materialCatalog", row._id, {
-                    topicAssetId: "foreign-topic-identity",
-                  })
-                );
-              }
-            });
+            }
             const input = yield* resolveReferenceInput({
               kind: "route",
               appLocale: "en",

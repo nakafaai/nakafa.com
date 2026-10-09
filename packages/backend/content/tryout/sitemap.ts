@@ -41,6 +41,6 @@ export const readTryoutSitemapPage = Effect.fn(
     return null;
   }
   return {
-    paths: paths.slice(start, start + CONTENT_SITEMAP_ROUTE_PAGE_SIZE),
+    paths: Arr.take(Arr.drop(paths, start), CONTENT_SITEMAP_ROUTE_PAGE_SIZE),
   };
 });

@@ -192,20 +192,24 @@ const getCustomerIntegrityReport = Effect.fn(
 });
 /** Prints the current customer cohesion report for one deployment. */
 const main = Effect.fn("customers.verify")(function* () {
-  const args = yield* Effect.sync(() => process.argv.slice(2));
-  const prod = args.includes("--prod");
+  const args = yield* Effect.sync(() => Arr.drop(process.argv, 2));
+  const prod = Arr.contains(args, "--prod");
   const report = yield* getCustomerIntegrityReport(prod);
   const json = encodePrettyJsonText({
     customerCount: report.customerCount,
     customersWithExternalIdMismatchCount:
       report.customersWithExternalIdMismatch.length,
     orphanCustomerCount: report.orphanCustomers.length,
-    sampleCustomersWithExternalIdMismatch:
-      report.customersWithExternalIdMismatch.slice(0, 10),
-    sampleOrphanCustomers: report.orphanCustomers.slice(0, 10),
-    sampleSubscriptionsWithoutLocalCustomer:
-      report.subscriptionsWithoutLocalCustomer.slice(0, 10),
-    sampleUsersWithoutCustomer: report.usersWithoutCustomer.slice(0, 10),
+    sampleCustomersWithExternalIdMismatch: Arr.take(
+      report.customersWithExternalIdMismatch,
+      10
+    ),
+    sampleOrphanCustomers: Arr.take(report.orphanCustomers, 10),
+    sampleSubscriptionsWithoutLocalCustomer: Arr.take(
+      report.subscriptionsWithoutLocalCustomer,
+      10
+    ),
+    sampleUsersWithoutCustomer: Arr.take(report.usersWithoutCustomer, 10),
     subscriptionsWithoutLocalCustomerCount:
       report.subscriptionsWithoutLocalCustomer.length,
     userCount: report.userCount,

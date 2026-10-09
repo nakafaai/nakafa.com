@@ -28,14 +28,12 @@ describe("contentRelease/quran/verify", () => {
           const snapshotId = yield* Effect.promise(() =>
             activateQuranSnapshot(tCtx, [makeQuranSearch("en", 1)])
           );
-          yield* Effect.gen(function* () {
-            const row = yield* Effect.promise(() => loadRow(tCtx));
-            yield* Effect.promise(() =>
-              tCtx.db.patch("quranRows", row._id, {
-                rowJson: "{}",
-              })
-            );
-          });
+          const row = yield* Effect.promise(() => loadRow(tCtx));
+          yield* Effect.promise(() =>
+            tCtx.db.patch("quranRows", row._id, {
+              rowJson: "{}",
+            })
+          );
           expect(
             yield* verifyQuranRow(
               yield* Effect.promise(() => loadRow(tCtx)),
@@ -58,14 +56,12 @@ describe("contentRelease/quran/verify", () => {
           const signedId = yield* Effect.promise(() =>
             activateQuranSnapshot(signedCtx, [makeQuranSearch("en", 1)])
           );
-          yield* Effect.gen(function* () {
-            const row = yield* Effect.promise(() => loadRow(signedCtx));
-            yield* Effect.promise(() =>
-              signedCtx.db.patch("quranRows", row._id, {
-                rowHash: `sha256:${"9".repeat(64)}`,
-              })
-            );
-          });
+          const row = yield* Effect.promise(() => loadRow(signedCtx));
+          yield* Effect.promise(() =>
+            signedCtx.db.patch("quranRows", row._id, {
+              rowHash: `sha256:${"9".repeat(64)}`,
+            })
+          );
           expect(
             yield* Effect.gen(function* () {
               const row = yield* Effect.promise(() => loadRow(signedCtx));
@@ -114,14 +110,12 @@ describe("contentRelease/quran/verify", () => {
           const snapshotId = yield* Effect.promise(() =>
             activateQuranSnapshot(tCtx, [makeQuranSearch("en", 1)])
           );
-          yield* Effect.gen(function* () {
-            const row = yield* Effect.promise(() => loadRow(tCtx));
-            yield* Effect.promise(() =>
-              tCtx.db.patch("quranRows", row._id, {
-                appLocale: "id",
-              })
-            );
-          });
+          const row = yield* Effect.promise(() => loadRow(tCtx));
+          yield* Effect.promise(() =>
+            tCtx.db.patch("quranRows", row._id, {
+              appLocale: "id",
+            })
+          );
           expect(
             yield* Effect.gen(function* () {
               const row = yield* Effect.promise(() => loadRow(tCtx));
@@ -149,14 +143,12 @@ describe("contentRelease/quran/verify", () => {
             const snapshotId = yield* Effect.promise(() =>
               activateQuranSnapshot(tCtx, [makeQuranSearch("en", 1)])
             );
-            yield* Effect.gen(function* () {
-              const row = yield* Effect.promise(() => loadRow(tCtx));
-              yield* Effect.promise(() =>
-                tCtx.db.patch("quranRows", row._id, {
-                  identity: `search:en:1:${"x".repeat(QURAN_SEARCH_DOCUMENT_LIMIT)}`,
-                })
-              );
-            });
+            const row = yield* Effect.promise(() => loadRow(tCtx));
+            yield* Effect.promise(() =>
+              tCtx.db.patch("quranRows", row._id, {
+                identity: `search:en:1:${"x".repeat(QURAN_SEARCH_DOCUMENT_LIMIT)}`,
+              })
+            );
             expect(
               yield* Effect.gen(function* () {
                 const row = yield* Effect.promise(() => loadRow(tCtx));

@@ -7,7 +7,7 @@ import { readQuranSurahs } from "@repo/backend/content/quran/catalog";
 import { quranLayer } from "@repo/backend/content/quran/confect";
 import { makeQuranSurah } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Builds the complete technical surah catalog. */
 function makeSurahCatalog() {
@@ -75,7 +75,7 @@ describe("contentRelease/quran/catalog", () => {
           yield* Effect.promise(() =>
             activateQuranSnapshot(
               incompleteCtx,
-              makeSurahCatalog().slice(0, QURAN_SURAH_COUNT - 1)
+              Arr.take(makeSurahCatalog(), QURAN_SURAH_COUNT - 1)
             )
           );
           expect(

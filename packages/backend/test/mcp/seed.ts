@@ -1,3 +1,4 @@
+import { assert } from "@effect/vitest";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
   insertRuntimeArticles,
@@ -25,9 +26,7 @@ export async function seedArticle(test: BackendTest) {
       plainText: "rational function grade eleven asymptote",
     });
     const state = await ctx.db.query("contentState").unique();
-    if (!state) {
-      throw new Error("Expected one active content state.");
-    }
+    assert.ok(state, "Expected one active content state.");
     await ctx.db.patch("contentState", state._id, {
       searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
       searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,

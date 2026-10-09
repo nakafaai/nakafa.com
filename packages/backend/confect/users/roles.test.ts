@@ -9,7 +9,9 @@ import { Array as Arr } from "effect";
 describe("users/roles", () => {
   it("keeps self-selectable roles within persisted roles", () => {
     expect(
-      Arr.every(selfSelectableUserRoles, (role) => userRoles.includes(role))
+      Arr.every(selfSelectableUserRoles, (role) =>
+        Arr.contains(userRoles, role)
+      )
     ).toBe(true);
   });
 
