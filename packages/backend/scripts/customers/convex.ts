@@ -1,5 +1,3 @@
-import { homedir } from "node:os";
-import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { FetchClient } from "@repo/utilities/http/client";
@@ -75,8 +73,12 @@ const decodeUtf8 = (bytes: Uint8Array) =>
 const readBackendEnv = Effect.fn("customers.readBackendEnv")(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  // This module's own file URL always converts, so a failure stays a defect.
+  const modulePath = yield* path
+    .fromFileUrl(new URL(import.meta.url))
+    .pipe(Effect.orDie);
   const backendEnvPath = path.resolve(
-    path.dirname(fileURLToPath(import.meta.url)),
+    path.dirname(modulePath),
     "../..",
     ".env.local"
   );
@@ -122,7 +124,20 @@ const getLocalAccessToken = Effect.fn("customers.getLocalAccessToken")(
   function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const configPath = path.resolve(homedir(), ".convex", "config.json");
+    // Reads the process HOME alone, as homedir() did, and keeps an empty value.
+    const home = yield* Config.String("HOME").pipe(
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromEnv({ preserveEmptyStrings: true })
+      ),
+      Effect.mapError(
+        () =>
+          new CustomerConvexConfigError({
+            message: "HOME is not configured for local Convex login",
+          })
+      )
+    );
+    const configPath = path.resolve(home, ".convex", "config.json");
     const bytes = yield* fileSystem.readFile(configPath).pipe(
       Effect.mapError(
         () =>
