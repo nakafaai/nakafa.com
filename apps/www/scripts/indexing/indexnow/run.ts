@@ -4,8 +4,7 @@ import {
   listUnsubmittedUrls,
   loadSubmissionHistory,
   type SubmissionHistory,
-  saveSubmissionHistory,
-  updateSubmissionHistory,
+  saveAcceptedUrls,
 } from "@/scripts/indexing/history";
 import {
   readBingWebmasterApiKey,
@@ -93,26 +92,17 @@ const runIndexNowSubmission = Effect.fn(
     return history;
   }
 
-  const successfulUrls = yield* submitUrlsToIndexNow(
+  const { failure, submittedUrls } = yield* submitUrlsToIndexNow(
     unsubmittedUrls,
     INDEXNOW_KEY
   );
 
-  if (successfulUrls.length === 0) {
-    return history;
-  }
-
-  const updatedHistory = yield* updateSubmissionHistory({
+  return yield* saveAcceptedUrls({
+    failure,
     history,
     service: "indexNow",
-    urls: successfulUrls,
+    submittedUrls,
   });
-  yield* saveSubmissionHistory(updatedHistory);
-  yield* Effect.logInfo(
-    `Submission history updated for IndexNow with ${successfulUrls.length} successfully submitted URLs.`
-  );
-
-  return updatedHistory;
 });
 
 /** Submits canonical URLs to Bing when the optional Webmaster API key exists. */
@@ -181,23 +171,17 @@ const submitBingBatch = Effect.fn("scripts.indexing.indexNow.runBingBatch")(
       return history;
     }
 
-    const successfulUrls = yield* submitUrlsToBing(unsubmittedUrls, apiKey);
-
-    if (successfulUrls.length === 0) {
-      return history;
-    }
-
-    const updatedHistory = yield* updateSubmissionHistory({
-      history,
-      service: "bing",
-      urls: successfulUrls,
-    });
-    yield* saveSubmissionHistory(updatedHistory);
-    yield* Effect.logInfo(
-      `Submission history updated for Bing with ${successfulUrls.length} successfully submitted URLs.`
+    const { failure, submittedUrls } = yield* submitUrlsToBing(
+      unsubmittedUrls,
+      apiKey
     );
 
-    return updatedHistory;
+    return yield* saveAcceptedUrls({
+      failure,
+      history,
+      service: "bing",
+      submittedUrls,
+    });
   }
 );
 

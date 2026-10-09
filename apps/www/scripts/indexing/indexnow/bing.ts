@@ -1,5 +1,5 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
-import { Config, Effect, MutableList, Option, Schema } from "effect";
+import { Config, Effect, MutableList, Option, Result, Schema } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
 import { BingSubmitError } from "@/scripts/indexing/errors";
 import { INDEXING_HOST } from "@/scripts/indexing/paths";
@@ -39,13 +39,15 @@ export const readBingWebmasterApiKey = Effect.fn(
  * Submits canonical sitemap URLs to Bing's URL Submission API.
  *
  * The adapter respects Bing quota messages by reducing batch size or stopping
- * when the endpoint reports the daily quota has already been exhausted.
+ * when the endpoint reports the daily quota has already been exhausted. It
+ * returns the URLs Bing accepted and, when a batch fails, the typed failure
+ * that ended the call, so the caller saves the accepted URLs before it fails.
  */
 export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
   function* (urls: readonly string[], apiKey: string) {
     if (urls.length === 0) {
       yield* Effect.logInfo("No new URLs to submit to Bing.");
-      return [];
+      return { failure: Option.none(), submittedUrls: [] };
     }
     let batchSize = BATCH_SIZE;
     let submittedCount = 0;
@@ -64,12 +66,19 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
       );
       const startIndex = submittedCount + 1;
       const endIndex = submittedCount + batch.length;
-      const result = yield* submitBatchToBing({
+      const outcome = yield* submitBatchToBing({
         apiKey,
         batch,
         endIndex,
         startIndex,
-      });
+      }).pipe(Effect.result);
+      if (Result.isFailure(outcome)) {
+        return {
+          failure: Option.some(outcome.failure),
+          submittedUrls: MutableList.toArray(successfullySubmitted),
+        };
+      }
+      const result = outcome.success;
       if (result.submittedUrls.length > 0) {
         MutableList.appendAll(successfullySubmitted, result.submittedUrls);
         submittedCount += result.submittedUrls.length;
@@ -99,7 +108,10 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
     yield* Effect.logInfo(
       `Bing URL Submission API process completed. Submitted ${successfullySubmitted.length}/${urls.length} URLs.`
     );
-    return MutableList.toArray(successfullySubmitted);
+    return {
+      failure: Option.none(),
+      submittedUrls: MutableList.toArray(successfullySubmitted),
+    };
   }
 );
 /** Submits one Bing batch and converts quota responses into caller decisions. */
@@ -203,21 +215,26 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
         submittedUrls: [],
       };
     }
-    if (responseText.includes("Quota remaining")) {
-      const quotaRemaining = yield* readRemainingBingQuota(responseText);
-      if (quotaRemaining !== undefined) {
-        yield* Effect.logInfo(
-          `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
-        );
-        return {
-          quotaRemaining,
-          shouldStop: false,
-          submittedUrls: [],
-        };
-      }
+    if (!responseText.includes("Quota remaining")) {
+      return yield* new BingSubmitError({
+        cause: status,
+        message: `Bing failed with HTTP ${status}.`,
+      });
     }
+    const quotaRemaining = yield* readRemainingBingQuota(responseText);
+    if (quotaRemaining === undefined) {
+      // A quota message without a usable number stops the run quietly.
+      return {
+        quotaRemaining: undefined,
+        shouldStop: true,
+        submittedUrls: [],
+      };
+    }
+    yield* Effect.logInfo(
+      `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
+    );
     return {
-      quotaRemaining: undefined,
+      quotaRemaining,
       shouldStop: false,
       submittedUrls: [],
     };
@@ -242,7 +259,7 @@ const readRemainingBingQuota = Effect.fn("scripts.indexing.bing.readQuota")(
       return;
     }
     const remainingQuota = Number.parseInt(remainingQuotaMatch[1], 10);
-    if (Number.isNaN(remainingQuota) || remainingQuota <= 0) {
+    if (remainingQuota <= 0) {
       return;
     }
     return remainingQuota;
