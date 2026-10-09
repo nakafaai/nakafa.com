@@ -5,6 +5,7 @@ import {
   Effect,
   FileSystem,
   Option,
+  Record as Rec,
   Schema,
 } from "effect";
 import {
@@ -145,7 +146,7 @@ export function listUnsubmittedUrls({
   service: SubmissionService;
   urls: readonly string[];
 }) {
-  return Arr.filter(urls, (url) => !history[service][url]);
+  return Arr.filter(urls, (url) => !Rec.has(history[service], url));
 }
 /** Adds successful notifications to one service's ignored local history. */
 export const updateSubmissionHistory = Effect.fn(
@@ -178,7 +179,9 @@ const SERVICE_NAMES: Record<SubmissionService, string> = {
 /**
  * Saves the URLs that one service's call accepted, then raises the typed failure
  * that ended the call, if one did. Accepted URLs are saved first, so a later run
- * does not submit them again. A call that accepted nothing saves nothing.
+ * does not submit them again. A call that accepted nothing saves nothing. When
+ * the save fails too, the save failure is raised and the call's failure is
+ * logged first, so the operator sees both.
  */
 export const saveAcceptedUrls = Effect.fn(
   "scripts.indexing.history.saveAccepted"
@@ -202,7 +205,14 @@ export const saveAcceptedUrls = Effect.fn(
       service,
       urls: submittedUrls,
     });
-    yield* saveSubmissionHistory(updatedHistory);
+    yield* saveSubmissionHistory(updatedHistory).pipe(
+      // A failed save raises its own error, so the failure that ended the call is logged first.
+      Effect.tapError(() =>
+        Option.isSome(failure)
+          ? Effect.logError(failure.value.message)
+          : Effect.void
+      )
+    );
     yield* Effect.logInfo(
       `Submission history updated for ${SERVICE_NAMES[service]} with ${submittedUrls.length} successfully submitted URLs.`
     );

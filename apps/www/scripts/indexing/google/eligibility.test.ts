@@ -6,18 +6,9 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Fiber } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
+import { ARTICLE, JOB_POSTING } from "@/scripts/indexing/fixture";
 import { getEligibleGoogleIndexingUrls } from "@/scripts/indexing/google/eligibility";
 
-const JOB_POSTING = encodeJsonText({
-  "@context": "https://schema.org",
-  "@type": "JobPosting",
-  title: "Teacher",
-});
-const ARTICLE = encodeJsonText({
-  "@context": "https://schema.org",
-  "@type": "Article",
-  headline: "Vektor",
-});
 const LIVE_VIDEO = encodeJsonText({
   "@context": "https://schema.org",
   "@type": "VideoObject",

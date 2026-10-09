@@ -41,7 +41,7 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
         const eligibleUrls = yield* getEligibleGoogleIndexingUrls(batch);
 
         if (eligibleUrls.length === 0) {
-          return;
+          return false;
         }
 
         if (!history) {
@@ -63,7 +63,7 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
         );
 
         if (urls.length === 0) {
-          return;
+          return false;
         }
 
         if (!accessToken) {
@@ -77,7 +77,7 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
 
         queuedCount += urls.length;
 
-        const { failure, submittedUrls } = yield* submitUrlsToGoogle(
+        const { failure, stopped, submittedUrls } = yield* submitUrlsToGoogle(
           urls,
           accessToken
         );
@@ -89,6 +89,9 @@ export const runGoogleIndexing = Effect.fn("scripts.indexing.google.run")(
           service: "googleIndexingApi",
           submittedUrls,
         });
+
+        // A stop ends the run here: the accepted URLs are saved, and no later batch is read.
+        return stopped;
       })
     );
 
