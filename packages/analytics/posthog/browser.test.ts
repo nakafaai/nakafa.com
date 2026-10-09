@@ -19,7 +19,7 @@ const client = {
 };
 
 vi.mock("@repo/analytics/keys", () => ({
-  keys: () => ({
+  postHogPublicKeys: () => ({
     NEXT_PUBLIC_POSTHOG_KEY: "phc_test",
     NEXT_PUBLIC_POSTHOG_UI_HOST: "https://eu.posthog.com",
   }),

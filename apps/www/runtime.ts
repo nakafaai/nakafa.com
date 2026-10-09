@@ -3,6 +3,7 @@ import {
   isProtectedProduction,
 } from "@repo/backend/content/deployment";
 import { convexKeys } from "@repo/backend/keys";
+import { InvalidEnvironmentError } from "@repo/utilities/env";
 import { Config, ConfigProvider, Effect, Schema } from "effect";
 
 const VercelIdentitySchema = Schema.Struct({
@@ -209,9 +210,13 @@ export function readRuntimeConfig() {
     VERCEL_TARGET_ENV: process.env.VERCEL_TARGET_ENV,
   } satisfies Record<keyof typeof runtimeEnvConfig, string | undefined>;
   const env = Effect.runSync(
-    Config.all(runtimeEnvConfig).parse(
-      ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true })
-    )
+    Config.all(runtimeEnvConfig)
+      .parse(ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true }))
+      .pipe(
+        Effect.mapError(
+          (error) => new InvalidEnvironmentError({ details: error.message })
+        )
+      )
   );
   const target = {
     agent: env.CONVEX_AGENT_MODE,

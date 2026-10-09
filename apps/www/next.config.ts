@@ -11,6 +11,7 @@ import {
   hasPreviewRenderer,
 } from "@repo/next-config/preview";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { InvalidEnvironmentError } from "@repo/utilities/env";
 import { Config, ConfigProvider, Effect, Schema } from "effect";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
@@ -38,9 +39,17 @@ const configEnvValues = {
   PORTLESS_URL: process.env.PORTLESS_URL,
 } satisfies Record<keyof typeof configEnvConfig, string | undefined>;
 const configEnv = Effect.runSync(
-  Config.all(configEnvConfig).parse(
-    ConfigProvider.fromUnknown(configEnvValues, { preserveEmptyStrings: true })
-  )
+  Config.all(configEnvConfig)
+    .parse(
+      ConfigProvider.fromUnknown(configEnvValues, {
+        preserveEmptyStrings: true,
+      })
+    )
+    .pipe(
+      Effect.mapError(
+        (error) => new InvalidEnvironmentError({ details: error.message })
+      )
+    )
 );
 const localConvexConnectSources = createLoopbackConnectSources(
   new URL(runtime.query)

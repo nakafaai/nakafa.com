@@ -1,24 +1,16 @@
-import { convexKeys, convexSiteKeys } from "@repo/backend/keys";
 import { publicationKeys, siteUrlKeys } from "@repo/next-config/keys";
-import { createEnv } from "@t3-oss/env-nextjs";
-import { Schema } from "effect";
+import { clientEnv } from "@/env.client";
 
 /**
- * Validates environment values consumed by `www` runtime modules.
+ * Validates environment values consumed by `www` server modules. The browser
+ * imports `@/env.client`, which holds only public values.
  *
  * Package-specific integrations such as AI clients, CAS, Polar, and Convex
  * backend functions keep their own env contracts at the capability that reads
  * those values.
  */
-export const env = createEnv({
-  extends: [publicationKeys(), siteUrlKeys(), convexKeys(), convexSiteKeys()],
-  client: {
-    NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: Schema.toStandardSchemaV1(
-      Schema.UndefinedOr(Schema.Literals(["true", "false"]))
-    ),
-  },
-  runtimeEnv: {
-    NEXT_PUBLIC_AKSARA_PREVIEW_CHILD:
-      process.env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD,
-  },
-});
+export const env = {
+  ...clientEnv,
+  ...publicationKeys(),
+  ...siteUrlKeys(),
+};

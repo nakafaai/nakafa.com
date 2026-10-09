@@ -1,26 +1,46 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { Config, ConfigProvider, Effect, Schema } from "effect";
+import { Config, ConfigProvider, Effect, Result, Schema } from "effect";
 
-const requiredStringSchema = Schema.toStandardSchemaV1(Schema.NonEmptyString);
-const requiredUrlSchema = Schema.toStandardSchemaV1(
-  Schema.String.pipe(
-    Schema.check(
-      Schema.makeFilter((value) => URL.canParse(value), {
-        message: "Expected a valid URL.",
-      })
-    )
+/** One environment value failed its schema. The message keeps the variable name. */
+class InvalidEnvironmentError extends Schema.TaggedError<InvalidEnvironmentError>()(
+  "InvalidEnvironmentError",
+  { details: Schema.String }
+) {
+  get message() {
+    return `Invalid environment variables: ${this.details}`;
+  }
+}
+
+const requiredUrlSchema = Schema.String.pipe(
+  Schema.check(
+    Schema.makeFilter((value) => URL.canParse(value), {
+      message: "Expected a valid URL.",
+    })
   )
 );
+const appUrlSchema = Schema.Struct({
+  NEXT_PUBLIC_APP_URL: Schema.NonEmptyString,
+});
 /** Defines the Aksara token accepted by publication-owned WWW routes. */
-export const publicationKeys = () =>
-  createEnv({
-    server: {
-      AKSARA_PUBLICATION_TOKEN: requiredStringSchema,
-    },
-    runtimeEnv: {
-      AKSARA_PUBLICATION_TOKEN: process.env.AKSARA_PUBLICATION_TOKEN,
-    },
-  });
+export const publicationKeys = () => {
+  const config = {
+    AKSARA_PUBLICATION_TOKEN: Config.schema(
+      Schema.NonEmptyString,
+      "AKSARA_PUBLICATION_TOKEN"
+    ),
+  };
+  const values = {
+    AKSARA_PUBLICATION_TOKEN: process.env.AKSARA_PUBLICATION_TOKEN,
+  } satisfies Record<keyof typeof config, string | undefined>;
+  return Effect.runSync(
+    Config.all(config)
+      .parse(ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true }))
+      .pipe(
+        Effect.mapError(
+          (error) => new InvalidEnvironmentError({ details: error.message })
+        )
+      )
+  );
+};
 /** Defines the private token used only by executable-content runtime reads. */
 export const contentRuntimeKeys = () => {
   const config = {
@@ -33,9 +53,13 @@ export const contentRuntimeKeys = () => {
     CONTENT_RUNTIME_TOKEN: process.env.CONTENT_RUNTIME_TOKEN,
   } satisfies Record<keyof typeof config, string | undefined>;
   return Effect.runSync(
-    Config.all(config).parse(
-      ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true })
-    )
+    Config.all(config)
+      .parse(ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true }))
+      .pipe(
+        Effect.mapError(
+          (error) => new InvalidEnvironmentError({ details: error.message })
+        )
+      )
   );
 };
 /** Reads the private target required by signed public content consumers. */
@@ -47,25 +71,37 @@ export function readContentRuntimeTarget(siteUrl: string) {
   };
 }
 /** Defines the canonical site URL used by server-side absolute URL builders. */
-export const siteUrlKeys = () =>
-  createEnv({
-    server: {
-      SITE_URL: requiredUrlSchema,
-    },
-    runtimeEnv: {
-      SITE_URL: process.env.SITE_URL,
-    },
-  });
-/** Defines the public app origin that client and server absolute URL builders share. */
-export const appUrlKeys = () =>
-  createEnv({
-    client: {
-      NEXT_PUBLIC_APP_URL: requiredStringSchema,
-    },
-    runtimeEnv: {
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    },
-  });
+export const siteUrlKeys = () => {
+  const config = {
+    SITE_URL: Config.schema(requiredUrlSchema, "SITE_URL"),
+  };
+  const values = {
+    SITE_URL: process.env.SITE_URL,
+  } satisfies Record<keyof typeof config, string | undefined>;
+  return Effect.runSync(
+    Config.all(config)
+      .parse(ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true }))
+      .pipe(
+        Effect.mapError(
+          (error) => new InvalidEnvironmentError({ details: error.message })
+        )
+      )
+  );
+};
+/**
+ * Defines the public app origin that client and server absolute URL builders
+ * share. It decodes synchronously, because it runs on every render of a client
+ * component and must not start an Effect runtime.
+ */
+export const appUrlKeys = () => {
+  const values = {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  } satisfies Record<keyof typeof appUrlSchema.Type, string | undefined>;
+  return Result.getOrThrowWith(
+    Schema.decodeUnknownResult(appUrlSchema)(values),
+    (error) => new InvalidEnvironmentError({ details: error.message })
+  );
+};
 /** Reads the Aksara preview fields, each absent unless the development child sets it. */
 export const previewKeys = () => {
   const optional = Schema.UndefinedOr(Schema.String);
@@ -108,8 +144,12 @@ export const previewKeys = () => {
     AKSARA_PREVIEW_RENDERER_TOKEN: process.env.AKSARA_PREVIEW_RENDERER_TOKEN,
   } satisfies Record<keyof typeof config, string | undefined>;
   return Effect.runSync(
-    Config.all(config).parse(
-      ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true })
-    )
+    Config.all(config)
+      .parse(ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true }))
+      .pipe(
+        Effect.mapError(
+          (error) => new InvalidEnvironmentError({ details: error.message })
+        )
+      )
   );
 };
