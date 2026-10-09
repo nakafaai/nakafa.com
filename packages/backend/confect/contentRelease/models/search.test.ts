@@ -64,7 +64,7 @@ async function setup() {
 describe("contentRelease/models/search", () => {
   it("keeps unchanged rows and terminates a multi-page merge without model writes", async () => {
     const { t, advance } = await setup();
-    const rows = ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) =>
+    const rows = Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (appLocale) =>
       Array.from(
         {
           length: 32,

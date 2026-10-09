@@ -20,7 +20,7 @@ import {
   type NakafaAgentQuranReferenceInput,
   NakafaAgentQuranReferenceOptionsSchema,
 } from "@repo/contents/agent/schema/quran/input";
-import { Effect, Option, Struct } from "effect";
+import { Array as Arr, Effect, Option, Struct } from "effect";
 
 const quranCatalogReference = refs.public.contentRelease.quran.surahs;
 const quranPassage = refs.public.contentRelease.quran.passage;
@@ -74,14 +74,15 @@ const readNakafaQuranRequest = Effect.fn("agent.readNakafaQuranRequest")(
     const catalog = yield* decodePublishedQuranCatalog(catalogResult).pipe(
       Effect.mapError(quranReadError)
     );
-    const exceededSurah = catalog.surahs.find(
+    const exceededSurah = Arr.findFirst(
+      catalog.surahs,
       (candidate) =>
         candidate.number === parsed.surah &&
         lastVerse > candidate.numberOfVerses
     );
-    if (exceededSurah) {
+    if (Option.isSome(exceededSurah)) {
       return yield* invalidRange(
-        `Surah ${parsed.surah} ends at verse ${exceededSurah.numberOfVerses}.`
+        `Surah ${parsed.surah} ends at verse ${exceededSurah.value.numberOfVerses}.`
       );
     }
     return parsed;

@@ -12,7 +12,7 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
-import { Predicate } from "effect";
+import { Array as Arr, Predicate } from "effect";
 
 const ARTICLE_VIEW_PROJECTION = testArticleProjection(0);
 
@@ -111,10 +111,13 @@ export async function readContentViewState(
       .query("_scheduled_functions")
       .take(20);
     return {
-      contentViewEvents: scheduledFunctions.filter(isContentViewedEventJob),
+      contentViewEvents: Arr.filter(
+        scheduledFunctions,
+        isContentViewedEventJob
+      ),
       engagementQueue: await ctx.db.query("learningEngagementQueue").take(20),
       recents: await ctx.db.query("userLearningRecents").take(20),
-      scheduledJobs: scheduledFunctions.filter(isAnalyticsPartitionJob),
+      scheduledJobs: Arr.filter(scheduledFunctions, isAnalyticsPartitionJob),
       viewerSignals: await ctx.db
         .query("learningPopularityViewerSignals")
         .take(20),

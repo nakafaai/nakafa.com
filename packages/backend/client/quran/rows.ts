@@ -11,7 +11,7 @@ import {
   PublishedQuranRowSchema,
   PublishedQuranSurahSchema,
 } from "@repo/backend/content/quran/contract";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
 export type QuranSearchRow = typeof QuranSearchRowSchema.Type;
@@ -125,7 +125,8 @@ export const decodeQuranChunkVerses = Effect.fn(
       "Quran chunks are missing, out of order, or belong to another surah."
     );
   }
-  return chunks.flatMap(
+  return Arr.flatMap(
+    chunks,
     (chunk: QuranChunkRow) => chunk.verses
   ) satisfies readonly QuranRuntimeVerse[];
 });

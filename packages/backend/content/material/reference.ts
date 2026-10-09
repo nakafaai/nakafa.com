@@ -6,7 +6,7 @@ import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpe
 import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Reads one exact active material through its authenticated catalog row. */
 export const readMaterialReference = Effect.fn(
@@ -94,12 +94,12 @@ const readMaterialRows = Effect.fn("contentRelease.readMaterialReferenceRows")(
           }
     );
     return [
-      ...rows.lessons.map((row) => ({
+      ...Arr.map(rows.lessons, (row) => ({
         appLocale: input.appLocale,
         kind: "lesson" as const,
         row,
       })),
-      ...Option.toArray(rows.topic).map((row) => ({
+      ...Arr.map(Option.toArray(rows.topic), (row) => ({
         appLocale: input.appLocale,
         kind: "topic" as const,
         row,

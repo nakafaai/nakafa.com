@@ -4,7 +4,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { QURAN_PAGE_CHUNK_LIMIT } from "@repo/backend/confect/contentRelease/quran/limits";
 import { verifyQuranRow } from "@repo/backend/confect/contentRelease/quran/verify";
 import { QuranSource } from "@repo/backend/content/quran/source";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
 const QuranChunkInputSchema = Schema.Struct({
@@ -30,7 +30,7 @@ function hasCoherentChunks(
 ) {
   const firstChunk = chunkStart(input.fromVerse);
   let expectedFirstQuranNumber: number | undefined;
-  return chunks.every((chunk, index) => {
+  return Arr.every(chunks, (chunk, index) => {
     const expectedFirstVerse = firstChunk + index * QURAN_CHUNK_SIZE;
     const expectedLastVerse = Math.min(
       expectedFirstVerse + QURAN_CHUNK_SIZE - 1,
@@ -85,7 +85,7 @@ export const readQuranChunks = Effect.fn("contentRelease.readQuranChunks")(
       );
     }
     return {
-      rowJson: stored.map(({ rowJson }) => rowJson),
+      rowJson: Arr.map(stored, ({ rowJson }) => rowJson),
       rows: chunks,
     };
   }

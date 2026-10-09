@@ -5,7 +5,7 @@ import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpe
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Reads one exact active article through its authenticated catalog row. */
 export const readArticleReference = Effect.fn(
@@ -52,7 +52,7 @@ const readArticleRows = Effect.fn("contentRelease.readArticleReferenceRows")(
     const rows = yield* input.kind === "route"
       ? source.byPublicPath(slot, input.appLocale, input.publicPath)
       : source.byAssetId(slot, input.appLocale, input.contentId);
-    return rows.map((row) => ({
+    return Arr.map(rows, (row) => ({
       appLocale: input.appLocale,
       row,
     }));

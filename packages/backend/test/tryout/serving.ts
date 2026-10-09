@@ -25,7 +25,7 @@ import {
   makeTryoutStartPlacement,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, MutableHashMap, Schema } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Option, Schema } from "effect";
 
 /** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -43,12 +43,13 @@ export const makeTryoutRuntimeSource = Effect.fn(
   const t = convexTest(schema, convexModules);
   const catalog =
     input?.catalog ??
-    ACTIVE_APP_LOCALE_CODES.flatMap((appLocale) =>
+    Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (appLocale) =>
       makeTryoutStartHierarchy(appLocale, "visible")
     );
   const sourcePlacements =
-    input?.placements ?? ACTIVE_APP_LOCALE_CODES.map(makeTryoutStartPlacement);
-  const artifacts = sourcePlacements.flatMap((placement) => [
+    input?.placements ??
+    Arr.map(ACTIVE_APP_LOCALE_CODES, makeTryoutStartPlacement);
+  const artifacts = Arr.flatMap(sourcePlacements, (placement) => [
     testSignedArtifact(placement.rendererDomain, {
       contentKey: placement.questionContentKey,
       artifactLocale: placement.questionArtifactLocale,
@@ -62,24 +63,26 @@ export const makeTryoutRuntimeSource = Effect.fn(
       ...(compiledCode === undefined ? {} : { compiledCode }),
     }),
   ]);
-  const placements = sourcePlacements.map((placement) => {
-    const question = artifacts.find(
+  const placements = Arr.map(sourcePlacements, (placement) => {
+    const question = Arr.findFirst(
+      artifacts,
       (artifact) =>
         artifact.payload.contentKey === placement.questionContentKey &&
         artifact.payload.artifactLocale === placement.questionArtifactLocale
     );
-    const answer = artifacts.find(
+    const answer = Arr.findFirst(
+      artifacts,
       (artifact) =>
         artifact.payload.contentKey === placement.answerContentKey &&
         artifact.payload.artifactLocale === placement.answerArtifactLocale
     );
-    if (!(question && answer)) {
+    if (!(Option.isSome(question) && Option.isSome(answer))) {
       throw new Error("Missing technical try-out artifacts.");
     }
     return {
       ...placement,
-      questionArtifactHash: question.artifactHash,
-      answerArtifactHash: answer.artifactHash,
+      questionArtifactHash: question.value.artifactHash,
+      answerArtifactHash: answer.value.artifactHash,
     };
   });
   const snapshotId = yield* Effect.promise(() =>
@@ -141,7 +144,7 @@ export const makeTryoutRuntimeSource = Effect.fn(
   MutableHashMap.set(
     fixture.source,
     "contentArtifacts",
-    artifacts.map((artifact) => ({
+    Arr.map(artifacts, (artifact) => ({
       artifactHash: artifact.artifactHash,
       artifactJson: encodeJson(artifact),
     }))

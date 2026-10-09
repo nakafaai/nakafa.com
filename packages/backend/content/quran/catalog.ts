@@ -3,7 +3,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { QuranSource } from "@repo/backend/content/quran/source";
 import { verifyQuranSurahRow } from "@repo/backend/content/quran/surah";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Loads and authenticates the complete ordered Quran surah catalog. */
 const loadQuranCatalog = Effect.fn("contentRelease.loadQuranCatalog")(
@@ -30,8 +30,11 @@ const loadQuranCatalog = Effect.fn("contentRelease.loadQuranCatalog")(
     const surahs = yield* Effect.forEach(stored, (row) =>
       verifyQuranSurahRow(row, owner.snapshotId)
     );
-    const invalid = surahs.find((surah, index) => surah.number !== index + 1);
-    if (invalid) {
+    const invalid = Arr.findFirst(
+      surahs,
+      (surah, index) => surah.number !== index + 1
+    );
+    if (Option.isSome(invalid)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         "Active Quran catalog lost its canonical surah order."
@@ -57,7 +60,7 @@ export const readQuranSurahs = Effect.fn("contentRelease.readQuranSurahs")(
     }
     return {
       ...catalog.owner,
-      rowJson: catalog.stored.map(({ rowJson }) => rowJson),
+      rowJson: Arr.map(catalog.stored, ({ rowJson }) => rowJson),
     };
   }
 );

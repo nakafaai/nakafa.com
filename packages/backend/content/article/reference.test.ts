@@ -8,7 +8,7 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 describe("article reference integrity", () => {
   it.effect(
@@ -53,12 +53,13 @@ describe("article reference integrity", () => {
                 const rows = yield* Effect.promise(() =>
                   tCtx.db.query("articleCatalog").collect()
                 );
-                const other = rows.find(
+                const other = Arr.findFirst(
+                  rows,
                   (row) => row.contentKey !== projection.contentKey
                 );
-                assert(other);
+                assert(Option.isSome(other));
                 yield* Effect.promise(() =>
-                  tCtx.db.patch("articleCatalog", other._id, {
+                  tCtx.db.patch("articleCatalog", other.value._id, {
                     assetId: projection.graph.assetId,
                     publicPath: projection.publicPath,
                   })
