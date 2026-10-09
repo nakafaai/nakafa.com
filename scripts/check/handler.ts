@@ -1,6 +1,7 @@
 import { Array as Arr } from "effect";
 import {
   isComputedPropertyName,
+  isFunctionLikeDeclaration,
   isIdentifier,
   isMethodDeclaration,
   isPropertyAssignment,
@@ -74,10 +75,28 @@ export function handlerFunctions(
   return Arr.flatMap(options.properties, handlerOption);
 }
 
-/** Whether a node is one of the handler functions or sits inside one. */
+/**
+ * Whether a node is one of the handler functions or sits inside one, at any depth.
+ * A Confect workflow handler keeps its nested callbacks, because the workflow engine
+ * owns every step of the handler.
+ */
 export function insideHandler(node: Node, handlers: readonly Node[]): boolean {
   if (Arr.some(handlers, (handler) => handler === node)) {
     return true;
   }
   return !isSourceFile(node) && insideHandler(node.parent, handlers);
+}
+
+/**
+ * Returns the nearest function that encloses a node, or `undefined` at the top
+ * level of a module. A callback that a handler contains is its own nearest
+ * function, so a node inside it is not directly in the handler.
+ */
+export function enclosingFunction(node: Node): Node | undefined {
+  if (isSourceFile(node)) {
+    return undefined;
+  }
+  return isFunctionLikeDeclaration(node.parent)
+    ? node.parent
+    : enclosingFunction(node.parent);
 }

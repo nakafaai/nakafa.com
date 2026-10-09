@@ -7,7 +7,11 @@ import {
   type Node,
   type SourceFile,
 } from "typescript/unstable/ast";
-import { handlerFunctions, insideHandler } from "#scripts/check/handler";
+import {
+  enclosingFunction,
+  handlerFunctions,
+  insideHandler,
+} from "#scripts/check/handler";
 import { descendants, parseSources } from "#scripts/check/source";
 
 const CODE = "apps/www/lib/example.ts";
@@ -68,7 +72,50 @@ const throwPlacement = Effect.fn("HandlerTest.throwPlacement")(function* (
   );
 }, Effect.scoped);
 
+/**
+ * Lists each throw statement of a module as `line` and the line that starts its
+ * nearest enclosing function, or `module` at the top level.
+ */
+const nearestFunctionLines = Effect.fn("HandlerTest.nearestFunctionLines")(
+  function* (sourceText: string) {
+    const { modules } = yield* parseSources([{ file: CODE, sourceText }]);
+    return Arr.sort(
+      Arr.flatMap(modules, ({ sourceFile }) =>
+        Arr.flatMap(descendants(sourceFile), (node) => {
+          if (!isThrowStatement(node)) {
+            return [];
+          }
+          const owner = enclosingFunction(node);
+          const ownerLine =
+            owner === undefined ? "module" : lineOf(sourceFile, owner);
+          return [`${lineOf(sourceFile, node)} ${ownerLine}`];
+        })
+      ),
+      Order.String
+    );
+  },
+  Effect.scoped
+);
+
 describe("handler functions", () => {
+  it.effect("names the nearest function that encloses each throw", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* nearestFunctionLines(`export const a = build({
+  handler: (ctx) => {
+    if (!ctx) throw new Error("direct");
+    ctx.run(() => {
+      throw new Error("nested");
+    });
+  },
+});
+throw new Error("outside");
+`),
+        ["3 2", "5 4", "9 module"]
+      );
+    })
+  );
+
   it.effect(
     "names the handler of each options object in every spelling of its key",
     () =>

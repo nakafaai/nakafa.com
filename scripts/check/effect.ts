@@ -176,23 +176,31 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
         : Result.succeed({ file, nodes: descendants(sourceFile), sourceFile })
     );
     const pageKeys = pageKeysOf(authored);
-    const candidates = Arr.flatMap(authored, ({ file, nodes, sourceFile }) => {
-      const runtime = outsidePage(file, sourceFile, nodes, pageKeys);
-      return Arr.filterMap(
-        Arr.flatten([
-          globalCandidates(sourceFile, runtime),
-          nativeCandidates(sourceFile, runtime),
-          shapeCandidates(file, sourceFile, nodes, runtime),
-          assertionCandidates(sourceFile, nodes),
-          dispatchCandidates(sourceFile, nodes),
-          failureCandidates(sourceFile, runtime),
-        ]),
-        (found) =>
-          covers(found.rule, file, sourceFile)
-            ? Result.succeed({ ...found, file })
-            : Result.failVoid
-      );
-    });
+    const perModule = yield* Effect.forEach(
+      authored,
+      ({ file, nodes, sourceFile }) => {
+        const runtime = outsidePage(file, sourceFile, nodes, pageKeys);
+        return Effect.map(
+          failureCandidates(sourceFile, runtime, bind),
+          (failures) =>
+            Arr.filterMap(
+              Arr.flatten([
+                globalCandidates(sourceFile, runtime),
+                nativeCandidates(sourceFile, runtime),
+                shapeCandidates(file, sourceFile, nodes, runtime),
+                assertionCandidates(sourceFile, nodes),
+                dispatchCandidates(sourceFile, nodes),
+                failures,
+              ]),
+              (found) =>
+                covers(found.rule, file, sourceFile)
+                  ? Result.succeed({ ...found, file })
+                  : Result.failVoid
+            )
+        );
+      }
+    );
+    const candidates = Arr.flatten(perModule);
     const [bound, unbound] = Arr.partition(candidates, (found) =>
       found.reference === undefined
         ? Result.fail(found)
