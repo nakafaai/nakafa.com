@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   inspectCompilerConfigs,
   isCompilerConfig,
@@ -100,6 +100,34 @@ describe("compiler configuration policy", () => {
         `${NEXT}: remove its plugins array and inherit the one in ${BASE}, so the @effect/language-service block is written once.`,
         `${LIBRARY}: remove its plugins array and inherit the one in ${BASE}, so the @effect/language-service block is written once.`,
       ]
+    );
+  });
+
+  it("compares the shared block with the repository that owns the check", () => {
+    const owner = Option.some({
+      diagnosticSeverity: { instanceOfSchema: "off" },
+      name: "@effect/language-service",
+    });
+    assert.deepStrictEqual(
+      inspectCompilerConfigs(
+        PACKAGE,
+        [{ file: BASE, sourceText: config(undefined, [RULES]) }],
+        PLUGIN_RULES,
+        owner
+      ),
+      [
+        `${BASE}: set instanceOfSchema to "off" in diagnosticSeverity, as the repository that owns this check decides it, so both repositories enforce the same rules.`,
+      ]
+    );
+    // A repository with no shared block has nothing to compare; its own report stands.
+    assert.deepStrictEqual(
+      inspectCompilerConfigs(
+        PACKAGE,
+        [{ file: BASE, sourceText: config(undefined) }],
+        PLUGIN_RULES,
+        owner
+      ),
+      [unreached(BASE)]
     );
   });
 
