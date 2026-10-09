@@ -23,7 +23,7 @@ const reportStartupFailure = Effect.fn("NakafaCli.reportStartupFailure")(
 
 const program = Effect.gen(function* () {
   const version = yield* readPackageVersion(
-    new URL("../package.json", import.meta.url)
+    `${import.meta.dirname}/../package.json`
   );
   return yield* runCli(Arr.drop(process.argv, 2), {
     version,

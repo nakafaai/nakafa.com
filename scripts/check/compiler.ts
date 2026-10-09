@@ -1,7 +1,6 @@
 import {
   Array as Arr,
   Effect,
-  Equal,
   FileSystem,
   Option,
   Path,
@@ -120,12 +119,12 @@ function parentOf(file: string, parent: unknown, sharedPrefix: string) {
 
 /**
  * Reports compiler configurations that would run the typecheck without the
- * shared Effect language service rules. A `plugins` array replaces the one it
- * extends, so only shared configurations declare one, each of them carries
- * the same Effect block, and every other configuration reaches such a block
- * through what it extends. A configuration the check cannot read or follow is
- * reported instead of skipped. The shared block decides every rule in `rules`,
- * the names the installed plugin defines.
+ * shared Effect language service rules, or that would write those rules a
+ * second time. A `plugins` array replaces the one it extends, so one shared
+ * configuration declares the only one, and every other configuration, shared
+ * or not, reaches its Effect block through what it extends. A configuration
+ * the check cannot read or follow is reported instead of skipped. The block
+ * decides every rule in `rules`, the names the installed plugin defines.
  */
 export function inspectCompilerConfigs(
   sharedPackage: string,
@@ -194,6 +193,12 @@ export function inspectCompilerConfigs(
         `${file}: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.`,
       ];
     }
+    const owner = Option.filter(reference, (found) => found.file !== file);
+    if (plugins !== undefined && Option.isSome(owner)) {
+      return [
+        `${file}: remove its plugins array and inherit the one in ${owner.value.file}, so the ${PLUGIN_NAME} block is written once.`,
+      ];
+    }
     if (plugins !== undefined && Option.isNone(block)) {
       return [
         `${file}: add the ${PLUGIN_NAME} block to its plugins array, because a plugins array replaces the one it extends.`,
@@ -204,15 +209,7 @@ export function inspectCompilerConfigs(
         `${file}: extend a shared configuration that declares the ${PLUGIN_NAME} block, by its ${sharedPrefix} name or by a relative path, or declare the block in a shared configuration that extends nothing.`,
       ];
     }
-    return Option.match(Option.all({ block, reference }), {
-      onNone: () => [],
-      onSome: (found) =>
-        Equal.equals(found.block, found.reference.block)
-          ? []
-          : [
-              `${file}: its ${PLUGIN_NAME} block differs from ${found.reference.file}; keep them identical so every workspace enforces the same rules.`,
-            ],
-    });
+    return [];
   });
   return Arr.appendAll(reports, undecided);
 }

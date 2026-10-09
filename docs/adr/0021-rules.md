@@ -149,11 +149,18 @@ tests and framework configuration, by `new-promise`. The rule counts only while
 
 ## Consequences
 
-- Both shared configurations list every rule the installed plugin defines,
-  as `error`, or as `off` for a rule in the table above. The source check reads
-  the plugin's own rule list and rejects a rule that has no decision, a name
-  the plugin no longer defines, and any other severity. So a plugin upgrade
-  that adds a rule fails the check until the rule is decided.
+- `packages/typescript-config/base.json` lists every rule the installed plugin
+  defines, as `error`, or as `off` for a rule in the table above. It holds the
+  only `plugins` array of the repository: a `plugins` array replaces the one it
+  extends, so a second array would have to repeat the whole block. Every other
+  configuration, the Next.js one included, inherits it. Next.js does not need
+  a plugin entry of its own: measured on Next.js 16.4, its type generation, the
+  start of its dev server, and the configuration step of its build leave the
+  app's configuration unchanged without one.
+- The source check reads the plugin's own rule list and rejects a rule that has
+  no decision, a name the plugin no longer defines, any other severity, and a
+  second `plugins` array anywhere. So a plugin upgrade that adds a rule fails
+  the check until the rule is decided.
 - A new place that a framework forces is added to the source check as a
   construction, with a test for the reported and the unreported form.
 - Keep `new X({...})` for Schema error classes.
