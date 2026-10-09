@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import { InvalidEnvironmentError, readEnvironment } from "@repo/utilities/env";
 import { Result, Schema } from "effect";
 
@@ -17,6 +17,16 @@ describe("readEnvironment", () => {
         TOKEN: "secret",
       })
     ).toEqual({ PORT: 3000, REGION: undefined, TOKEN: "secret" });
+  });
+
+  it("requires one value for every key", () => {
+    expectTypeOf(readEnvironment<typeof fields>)
+      .parameter(1)
+      .toEqualTypeOf<{
+        readonly PORT: string | undefined;
+        readonly REGION: string | undefined;
+        readonly TOKEN: string | undefined;
+      }>();
   });
 
   it("keeps an empty string as a set value", () => {
