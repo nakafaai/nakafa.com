@@ -5,7 +5,8 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/agent/errors";
-import { Array as Arr, Effect } from "effect";
+import { sha256Hex } from "@repo/utilities/digest";
+import { Effect } from "effect";
 
 const MAX_CLIENT_ADDRESS_LENGTH = 256;
 
@@ -48,19 +49,13 @@ const readClientKey = Effect.fn("agent.readClientKey")(function* (
       message: "The public API quota identity is unavailable.",
     });
   }
-  const digest = yield* Effect.tryPromise({
-    catch: (error) =>
-      new NakafaAgentDataReadError({
-        cause: getUnknownErrorMessage(error),
-        message: "The public API quota identity is unavailable.",
-      }),
-    try: () =>
-      crypto.subtle.digest("SHA-256", new TextEncoder().encode(address)),
-  });
-  return Arr.join(
-    Array.from(new Uint8Array(digest), (byte) =>
-      byte.toString(16).padStart(2, "0")
-    ),
-    ""
+  return yield* sha256Hex(address).pipe(
+    Effect.mapError(
+      (error) =>
+        new NakafaAgentDataReadError({
+          cause: getUnknownErrorMessage(error.reason.cause),
+          message: "The public API quota identity is unavailable.",
+        })
+    )
   );
 });
