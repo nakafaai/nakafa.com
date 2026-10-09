@@ -16,12 +16,29 @@ export class AuthRequestDeadline extends Schema.TaggedError<AuthRequestDeadline>
 ) {}
 
 /**
- * Sends one Better Auth request under the shared attempt deadline, and aborts it
- * when the caller aborts.
+ * Fails at once when the caller's signal aborts. The browser owns that signal,
+ * so this watches it instead of creating one.
+ */
+const abortedByCaller = (caller: AbortSignal) =>
+  Effect.callback<never, AuthRequestFailed>((resume) => {
+    const abort = () =>
+      resume(Effect.fail(new AuthRequestFailed({ cause: caller.reason })));
+    if (caller.aborted) {
+      abort();
+      return;
+    }
+    caller.addEventListener("abort", abort, { once: true });
+    return Effect.sync(() => caller.removeEventListener("abort", abort));
+  });
+
+/**
+ * Sends one Better Auth request under the shared attempt deadline, and fails at
+ * once when the caller aborts.
  *
  * Better-fetch arms its own `timeout` only for a request without a signal, and
  * Better Auth's session read always sends one. The deadline therefore lives here,
- * where every request passes. The abort closes the request at the deadline.
+ * where every request passes. Interrupting the request aborts its fetch, so the
+ * deadline and the caller's abort both close the connection.
  */
 export const requestWithDeadline = Effect.fn("www.auth.requestWithDeadline")(
   function* (
@@ -29,29 +46,19 @@ export const requestWithDeadline = Effect.fn("www.auth.requestWithDeadline")(
     input: RequestInfo | URL,
     init: RequestInit = {}
   ) {
-    const controller = new AbortController();
-    const caller = init.signal;
-    const abortRequest = () => controller.abort();
-    if (caller?.aborted) {
-      controller.abort();
-    }
-    caller?.addEventListener("abort", abortRequest, { once: true });
-
-    return yield* Effect.tryPromise({
-      try: () => send(input, { ...init, signal: controller.signal }),
+    const request = Effect.tryPromise({
+      try: (signal) => send(input, { ...init, signal }),
       catch: (cause) => new AuthRequestFailed({ cause }),
     }).pipe(
       Effect.timeoutOrElse({
         duration: NETWORK_ATTEMPT_DEADLINE,
-        orElse: () =>
-          Effect.sync(() => controller.abort()).pipe(
-            Effect.andThen(Effect.fail(new AuthRequestDeadline()))
-          ),
-      }),
-      Effect.ensuring(
-        Effect.sync(() => caller?.removeEventListener("abort", abortRequest))
-      )
+        orElse: () => Effect.fail(new AuthRequestDeadline()),
+      })
     );
+    const answer = init.signal
+      ? Effect.raceFirst(request, abortedByCaller(init.signal))
+      : request;
+    return yield* answer;
   }
 );
 

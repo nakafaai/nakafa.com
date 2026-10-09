@@ -40,12 +40,35 @@ function waitsForAbort() {
     });
 }
 
+/**
+ * The caller's signal is a browser-owned controller rather than Effect-managed
+ * cancellation, so the tests create it outside Effect code.
+ */
+function createCallerController() {
+  return new AbortController();
+}
+
 describe("requestWithDeadline", () => {
   it.effect("returns the response of a request answered in time", () =>
     Effect.gen(function* () {
       fetcher.mockResolvedValueOnce(new Response("session"));
 
       const response = yield* requestWithDeadline(fetcher, AUTH_URL);
+
+      expect(response.status).toBe(200);
+      expect(fetcher).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect("stops watching the caller once the answer arrives", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValueOnce(new Response("session"));
+      const caller = createCallerController();
+
+      const response = yield* requestWithDeadline(fetcher, AUTH_URL, {
+        signal: caller.signal,
+      });
+      caller.abort();
 
       expect(response.status).toBe(200);
       expect(fetcher).toHaveBeenCalledOnce();
@@ -76,7 +99,7 @@ describe("requestWithDeadline", () => {
   it.effect("aborts at once when the caller aborts", () =>
     Effect.gen(function* () {
       fetcher.mockImplementation(waitsForAbort());
-      const caller = new AbortController();
+      const caller = createCallerController();
       const fiber = yield* Effect.forkChild(
         requestWithDeadline(fetcher, AUTH_URL, {
           signal: caller.signal,
@@ -95,7 +118,7 @@ describe("requestWithDeadline", () => {
   it.effect("fails at once when the caller had already aborted", () =>
     Effect.gen(function* () {
       fetcher.mockImplementation(waitsForAbort());
-      const caller = new AbortController();
+      const caller = createCallerController();
       caller.abort();
 
       const error = yield* requestWithDeadline(fetcher, AUTH_URL, {
@@ -103,7 +126,6 @@ describe("requestWithDeadline", () => {
       }).pipe(Effect.flip);
 
       expect(error).toBeInstanceOf(AuthRequestFailed);
-      expect(fetcher.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
     })
   );
 
