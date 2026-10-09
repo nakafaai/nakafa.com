@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import { createContentContractError } from "@repo/backend/client/content/status";
 import {
@@ -12,7 +12,7 @@ import {
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
-import { Duration, Effect, Fiber } from "effect";
+import { Duration, Effect, Fiber, Result } from "effect";
 import { HttpClientRequest, HttpClientResponse } from "effect/http";
 import { TestClock } from "effect/testing";
 
@@ -438,11 +438,11 @@ describe("content runtime transport", () => {
         [createResponse("x".repeat(20), 200), "response-size"],
       ];
       for (const [response, reason] of invalid) {
-        expect(
-          yield* readContentResponse(received(response), endpoint, 10).pipe(
-            Effect.flip
-          )
-        ).toMatchObject({ reason });
+        const result = yield* Effect.result(
+          readContentResponse(received(response), endpoint, 10)
+        );
+        assert(Result.isFailure(result));
+        expect(result.failure).toMatchObject({ reason });
       }
     })
   );

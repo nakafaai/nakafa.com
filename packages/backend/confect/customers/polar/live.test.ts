@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import { polarGateway } from "@repo/backend/confect/customers/polar/live";
 import type {
   EnsurePolarCustomerInput,
@@ -7,7 +7,7 @@ import type {
   PolarDuplicateEmailError,
   StoredPolarCustomer,
 } from "@repo/backend/confect/customers/polar/spec";
-import { ConfigProvider, Effect, Record as Rec } from "effect";
+import { ConfigProvider, Effect, Record as Rec, Result } from "effect";
 
 const polarFetch = vi.hoisted(() => vi.fn<typeof fetch>());
 vi.stubGlobal("fetch", polarFetch);
@@ -45,6 +45,13 @@ const checkout: PolarCheckoutInput = {
   productIds: ["pro"],
   successUrl: "https://example.com/success",
 };
+/** Reads the failure of an effect that must fail, and fails the test when it succeeds. */
+const failureOf = <E>(effect: Effect.Effect<unknown, E>) =>
+  Effect.gen(function* () {
+    const result = yield* Effect.result(effect);
+    assert(Result.isFailure(result));
+    return result.failure;
+  });
 const operations: ReadonlyArray<{
   readonly code: string;
   readonly effect: Effect.Effect<
@@ -264,13 +271,13 @@ describe("live Polar gateway", () => {
           polarFetch.mockResolvedValueOnce(
             reply(500, { detail: "provider unavailable" })
           );
-          expect(yield* operation.effect.pipe(Effect.flip)).toMatchObject({
+          expect(yield* failureOf(operation.effect)).toMatchObject({
             code: operation.code,
             cause: expect.objectContaining({ statusCode: 500 }),
             message: expect.not.stringContaining("provider unavailable"),
           });
           polarFetch.mockRejectedValueOnce(new TypeError("connection lost"));
-          expect(yield* operation.effect.pipe(Effect.flip)).toMatchObject({
+          expect(yield* failureOf(operation.effect)).toMatchObject({
             code: operation.code,
             cause: expect.objectContaining({
               message: expect.stringContaining("connection lost"),
@@ -286,7 +293,7 @@ describe("live Polar gateway", () => {
     () =>
       Effect.gen(function* () {
         for (const operation of operations) {
-          expect(yield* operation.effect.pipe(Effect.flip)).toMatchObject({
+          expect(yield* failureOf(operation.effect)).toMatchObject({
             code: operation.code,
             message: expect.not.stringContaining("polar_test"),
           });
@@ -320,7 +327,7 @@ describe("live Polar gateway", () => {
           polarFetch.mockResolvedValueOnce(
             reply(403, { detail: "access denied" })
           );
-          expect(yield* lookup.pipe(Effect.flip)).toMatchObject({
+          expect(yield* failureOf(lookup)).toMatchObject({
             cause: expect.objectContaining({ statusCode: 403 }),
           });
         }

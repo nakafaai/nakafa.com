@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import {
   Ed25519SignatureSchema,
   ReleaseIdSchema,
@@ -20,7 +20,7 @@ import {
   TEST_RUNTIME_RELEASE_ID,
 } from "@repo/backend/test/runtime/ingress";
 import { convexTest } from "convex-test";
-import { Array as Arr, type Cause, Effect, Order } from "effect";
+import { Array as Arr, type Cause, Effect, Order, Result } from "effect";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_ID: keyId, TEST_KEY_RESOLVER: resolver } = await import(
@@ -36,7 +36,9 @@ vi.mock("@repo/backend/content/trust", async () => {
 const failureMessage = Effect.fn("test.runtime.failureMessage")(function* (
   program: Effect.Effect<unknown, Cause.UnknownError>
 ) {
-  const failure = yield* Effect.flip(program);
+  const result = yield* Effect.result(program);
+  assert(Result.isFailure(result));
+  const failure = result.failure;
   if (!(failure.cause instanceof Error)) {
     return yield* Effect.die("Expected an Error rejection from convex-test.");
   }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { PublicationReceiptSchema } from "@nakafa/aksara-contracts/release";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
@@ -15,7 +15,7 @@ import schema from "@repo/backend/convex/schema";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { TEST_PROOF_WORKFLOW_ID } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { Effect, Schema, Struct } from "effect";
+import { Effect, Result, Schema, Struct } from "effect";
 
 const ReceiptJsonSchema = Schema.fromJsonString(PublicationReceiptSchema);
 const encodeReceiptJson = Schema.encodeUnknownSync(ReceiptJsonSchema);
@@ -58,9 +58,11 @@ function verifiedRelease(release: Docs["contentReleases"]) {
 }
 
 /** Asserts that one durable evidence program fails closed. */
-function expectIntegrity<A>(program: Effect.Effect<A, unknown>) {
+function expectIntegrity<A, E>(program: Effect.Effect<A, E>) {
   return Effect.gen(function* () {
-    expect(yield* program.pipe(Effect.flip)).toMatchObject({
+    const result = yield* Effect.result(program);
+    assert(Result.isFailure(result));
+    expect(result.failure).toMatchObject({
       code: "CONTENT_RELEASE_INTEGRITY",
     });
   });

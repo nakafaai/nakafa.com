@@ -98,8 +98,8 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
 });
 
 /** Runs one scenario inside a mutation of a fresh deployment. */
-const scenario = <A, E extends Value>(
-  body: Effect.Effect<A, unknown, DatabaseReader | DatabaseWriter>,
+const scenario = <A, Failure, E extends Value>(
+  body: Effect.Effect<A, Failure, DatabaseReader | DatabaseWriter>,
   returns: Schema.Codec<A, E>
 ) =>
   Effect.gen(function* () {
