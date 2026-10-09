@@ -7,7 +7,7 @@ import { createNinaAgentContext } from "@repo/backend/confect/nina/contract/turn
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { createFocusTest } from "@repo/backend/test/nina/focus";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/agent/content", () => ({

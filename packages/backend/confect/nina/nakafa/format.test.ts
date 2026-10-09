@@ -6,8 +6,8 @@ import {
   formatTaxonomy,
 } from "@repo/backend/confect/nina/nakafa/format";
 import { makeQuranFixture } from "@repo/backend/test/nina/quran";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/agent/schema/quran/reference";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Schema } from "effect";
 
 const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];

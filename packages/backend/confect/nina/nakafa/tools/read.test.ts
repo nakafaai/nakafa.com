@@ -7,8 +7,8 @@ import {
   runSpecialist,
 } from "@repo/backend/test/nina/specialist";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 

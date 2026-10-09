@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 
 describe("Nakafa content reference fixtures", () => {
   it("rejects runtime section values outside the agent contract", () => {

@@ -3,19 +3,19 @@
 import { NodeFileSystem } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import {
-  createThemeProfiles,
-  findTopLevelRule,
-  readDirectValue,
-  readThemeStyleSources,
-  toRgbProjection,
-} from "@repo/design-system/lib/theme/contract";
-import {
   DEFAULT_THEME,
   getThemeAppearance,
   getThemeShaderAlphaColor,
   getThemeShaderColor,
   themes,
 } from "@repo/design-system/lib/theme/registry";
+import {
+  createThemeProfiles,
+  findTopLevelRule,
+  readDirectValue,
+  readThemeStyleSources,
+  toRgbProjection,
+} from "@repo/design-system/test/contract";
 import { Array as Arr, Effect } from "effect";
 
 const readSources = readThemeStyleSources().pipe(

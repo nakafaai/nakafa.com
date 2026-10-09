@@ -4,7 +4,7 @@ import {
   previewRead,
 } from "@repo/backend/confect/nina/nakafa/preview";
 import { makeQuranFixture } from "@repo/backend/test/nina/quran";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 
 describe("nakafa previews", () => {
   it("omits an unavailable content description", () => {

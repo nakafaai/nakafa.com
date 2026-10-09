@@ -4,7 +4,7 @@ import {
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
 import { formatRead } from "@repo/backend/confect/nina/nakafa/sections";
-import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Array as Arr } from "effect";
 
 const MORE_SECTIONS = /- \d+ more sections$/;
