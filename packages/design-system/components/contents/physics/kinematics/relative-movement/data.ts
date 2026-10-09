@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 export const RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/hatchback-sports.glb";
 
@@ -13,12 +13,14 @@ export const RELATIVE_MOVEMENT_CASE_IDS = [
 export type RelativeMovementCaseId =
   (typeof RELATIVE_MOVEMENT_CASE_IDS)[number];
 
+const RelativeMovementCaseSchema = Schema.Struct({
+  observerSpeed: Schema.Finite,
+  targetSpeed: Schema.Finite,
+});
+
 const RELATIVE_MOVEMENT_CASES: Record<
   RelativeMovementCaseId,
-  {
-    observerSpeed: number;
-    targetSpeed: number;
-  }
+  typeof RelativeMovementCaseSchema.Type
 > = {
   "opposite-direction": {
     observerSpeed: 12,

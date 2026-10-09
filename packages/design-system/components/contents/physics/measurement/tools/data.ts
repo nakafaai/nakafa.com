@@ -1,5 +1,6 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
+import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
 
@@ -55,7 +56,15 @@ const MeasurementToolIdSchema = Schema.Literals([
   TIME_TOOL_ID,
 ]);
 export type MeasurementToolId = typeof MeasurementToolIdSchema.Type;
-type CameraPoint = readonly [number, number, number];
+
+const MeasurementControlSchema = Schema.Struct({
+  defaultValue: Schema.Finite,
+  fractionDigits: Schema.Finite,
+  max: Schema.Finite,
+  min: Schema.Finite,
+  step: Schema.Finite,
+  unit: Schema.String,
+});
 
 export const MEASUREMENT_CONTROLS = {
   [LENGTH_TOOL_ID]: {
@@ -82,17 +91,7 @@ export const MEASUREMENT_CONTROLS = {
     step: STOPWATCH_STEP_SECONDS,
     unit: "s",
   },
-} satisfies Record<
-  MeasurementToolId,
-  {
-    defaultValue: number;
-    fractionDigits: number;
-    max: number;
-    min: number;
-    step: number;
-    unit: string;
-  }
->;
+} satisfies Record<MeasurementToolId, typeof MeasurementControlSchema.Type>;
 
 export const TOOL_VIEW_CONFIG = {
   [LENGTH_TOOL_ID]: {
@@ -110,14 +109,7 @@ export const TOOL_VIEW_CONFIG = {
     cameraTarget: [0, 0.45, 0],
     narrowCameraPosition: [0, 2.1, 8.6],
   },
-} satisfies Record<
-  MeasurementToolId,
-  {
-    cameraPosition: CameraPoint;
-    cameraTarget: CameraPoint;
-    narrowCameraPosition: CameraPoint;
-  }
->;
+} satisfies Record<MeasurementToolId, NarrowCameraPose>;
 
 const ToolLabelsSchema = Schema.Struct({
   control: Schema.String,
