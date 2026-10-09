@@ -9,11 +9,13 @@ import { type Box3, MathUtils, Matrix4, Vector3 } from "three";
 
 const VIEWPORT_EDGE_SPACE = 24;
 
+const CameraLabelFitAxisSchema = Schema.Literals(["horizontal", "vertical"]);
+
 /** A fixed-size label cannot fit the supported viewport and content together. */
 export class CameraLabelFitError extends Schema.TaggedError<CameraLabelFitError>()(
   "CameraLabelFitError",
   {
-    axis: Schema.Literals(["horizontal", "vertical"]),
+    axis: CameraLabelFitAxisSchema,
     availablePixels: Schema.Finite,
     projection: Schema.Literals(["perspective", "orthographic"]),
   }
@@ -25,6 +27,12 @@ const AxisConstraintSchema = Schema.Struct({
 });
 
 type AxisConstraint = typeof AxisConstraintSchema.Type;
+
+const AxisFitSchema = Schema.Struct({
+  availablePixels: Schema.Finite,
+  axis: CameraLabelFitAxisSchema,
+  constraints: Schema.Array(AxisConstraintSchema),
+});
 
 /**
  * Fits finite world bounds along the existing viewing direction. The camera
@@ -234,11 +242,7 @@ const solvePixelConstraints = Effect.fn("camera.solvePixelConstraints")(
         constraints: vertical,
         availablePixels: height - 2 * VIEWPORT_EDGE_SPACE,
       },
-    ] satisfies readonly {
-      axis: CameraLabelFitError["axis"];
-      constraints: readonly AxisConstraint[];
-      availablePixels: number;
-    }[];
+    ] satisfies readonly (typeof AxisFitSchema.Type)[];
     for (const { axis, availablePixels, constraints } of dimensions) {
       for (const { lower } of constraints) {
         for (const { upper } of constraints) {
