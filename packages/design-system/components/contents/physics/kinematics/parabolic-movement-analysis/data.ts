@@ -1,9 +1,9 @@
-import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
-import { formatTrimmedFixedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
+import {
+  type DecimalSeparator,
+  formatTrimmedNumber,
+} from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
-
-export type ProjectileAnalysisDecimalSeparator = "comma" | "dot";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const ProjectileScenarioIdSchema = Schema.Literals([
   "sixty-degree",
@@ -125,7 +125,7 @@ export function getProjectilePoint(
   motion: ProjectileMotionState,
   time: number
 ) {
-  const safeTime = clamp(time, 0, motion.flightTime);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: motion.flightTime });
   const xMeters = motion.horizontalVelocity * safeTime;
   const yMeters =
     motion.verticalVelocity * safeTime -
@@ -141,7 +141,7 @@ export function getProjectilePoint(
 }
 
 export function getVelocityAtTime(motion: ProjectileMotionState, time: number) {
-  const safeTime = clamp(time, 0, motion.flightTime);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: motion.flightTime });
   const verticalVelocity =
     motion.verticalVelocity - PROJECTILE_GRAVITY * safeTime;
 
@@ -173,13 +173,10 @@ export function getProjectileLoopSample(
 export function formatVelocityVectorMath(
   horizontalVelocity: number,
   verticalVelocity: number,
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator
+  decimalSeparator?: DecimalSeparator
 ) {
-  const horizontal = formatTrimmedFixedNumber(
-    horizontalVelocity,
-    decimalSeparator
-  );
-  const vertical = formatTrimmedFixedNumber(verticalVelocity, decimalSeparator);
+  const horizontal = formatTrimmedNumber(horizontalVelocity, decimalSeparator);
+  const vertical = formatTrimmedNumber(verticalVelocity, decimalSeparator);
 
   return `\\langle ${horizontal}, ${vertical}\\rangle\\text{ m/s}`;
 }

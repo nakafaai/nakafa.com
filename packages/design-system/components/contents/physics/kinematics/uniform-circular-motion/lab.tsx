@@ -6,6 +6,7 @@ import {
   formatRoundedMeterMath,
   formatRoundedSecondMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import {
   formatCircularMotionDecimal,
   getUniformCircularMotionState,
@@ -15,7 +16,6 @@ import {
   UNIFORM_CIRCULAR_MOTION_COLORS,
   UNIFORM_CIRCULAR_MOTION_PERIODS,
   UNIFORM_CIRCULAR_MOTION_SCENE,
-  type UniformCircularMotionDecimalSeparator,
   type UniformCircularMotionPeriod,
   type UniformCircularMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-circular-motion/data";
@@ -48,7 +48,7 @@ const SHADOW_CAMERA_RADIUS =
   UNIFORM_CIRCULAR_MOTION_SCENE.carScale;
 
 interface UniformCircularMotionLabProps {
-  decimalSeparator?: UniformCircularMotionDecimalSeparator;
+  decimalSeparator?: DecimalSeparator;
   description: ReactNode;
   labels: {
     acceleration: ReactNode;

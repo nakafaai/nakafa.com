@@ -2,8 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 
 import {
   formatKeptZeroNumber,
+  formatSignedKeptZeroNumber,
   formatSignedTrimmedNumber,
-  formatTrimmedFixedNumber,
   formatTrimmedNumber,
 } from "@repo/design-system/components/contents/physics/kinematics/number";
 
@@ -15,24 +15,26 @@ describe("formatKeptZeroNumber", () => {
   });
 });
 
-describe("formatTrimmedNumber", () => {
-  it("drops the zero tenth and writes a comma separator as {,}", () => {
-    expect(formatTrimmedNumber(2.04)).toBe("2");
-    expect(formatTrimmedNumber(2.5)).toBe("2.5");
-    expect(formatTrimmedNumber(2.5, "comma")).toBe("2{,}5");
-    expect(formatTrimmedNumber(2, "comma")).toBe("2");
-  });
-
-  it("writes a whole number above 2 ** 53 in its shortest form", () => {
-    expect(formatTrimmedNumber(2 ** 60)).toBe("1152921504606847000");
+describe("formatSignedKeptZeroNumber", () => {
+  it("adds a plus sign to a positive value and keeps the minus sign of a negative one", () => {
+    expect(formatSignedKeptZeroNumber(2.04)).toBe("+2.0");
+    expect(formatSignedKeptZeroNumber(3)).toBe("+3");
+    expect(formatSignedKeptZeroNumber(-2.5)).toBe("-2.5");
   });
 });
 
-describe("formatTrimmedFixedNumber", () => {
-  it("drops the zero tenth, also from a whole number above 2 ** 53", () => {
-    expect(formatTrimmedFixedNumber(2.04)).toBe("2");
-    expect(formatTrimmedFixedNumber(2.5, "comma")).toBe("2{,}5");
-    expect(formatTrimmedFixedNumber(2 ** 60)).toBe("1152921504606846976");
+describe("formatTrimmedNumber", () => {
+  it("drops the zero tenth, where the kept-zero rule prints it", () => {
+    expect(formatTrimmedNumber(2.04)).toBe("2");
+    expect(formatTrimmedNumber(2)).toBe("2");
+    expect(formatTrimmedNumber(2.5)).toBe("2.5");
+    expect(formatTrimmedNumber(-0.04)).toBe("-0");
+  });
+
+  it("writes a comma separator as {,}", () => {
+    expect(formatTrimmedNumber(2.5, "comma")).toBe("2{,}5");
+    expect(formatTrimmedNumber(2, "comma")).toBe("2");
+    expect(formatTrimmedNumber(2.5, "dot")).toBe("2.5");
   });
 });
 

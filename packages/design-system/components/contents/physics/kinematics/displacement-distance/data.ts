@@ -1,7 +1,9 @@
-import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
-import { formatKeptZeroNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
-import { Array as Arr, Option, Schema } from "effect";
+import {
+  formatKeptZeroNumber,
+  formatSignedKeptZeroNumber,
+} from "@repo/design-system/components/contents/physics/kinematics/number";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 export const DISPLACEMENT_DISTANCE_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/taxi.glb";
@@ -115,7 +117,8 @@ export function getRouteSampleAtProgress(
   state: DisplacementDistanceState,
   progress: number
 ) {
-  const targetDistance = state.distance * clamp(progress, 0, 1);
+  const targetDistance =
+    state.distance * Num.clamp(progress, { minimum: 0, maximum: 1 });
   let traveled = 0;
 
   for (const segment of state.segments) {
@@ -164,7 +167,7 @@ export function formatVectorMath(
   const zPart =
     vector.z === 0
       ? ""
-      : `${xPart ? formatSignedNumber(vector.z) : formatKeptZeroNumber(vector.z)}\\hat{j}`;
+      : `${xPart ? formatSignedKeptZeroNumber(vector.z) : formatKeptZeroNumber(vector.z)}\\hat{j}`;
 
   return `\\Delta\\vec{r}=${xPart}${zPart}\\text{ m}`;
 }
@@ -257,10 +260,4 @@ function normalizePoint(point: RoutePoint) {
     x: point.x / length,
     z: point.z / length,
   };
-}
-
-function formatSignedNumber(value: number) {
-  return value >= 0
-    ? `+${formatKeptZeroNumber(value)}`
-    : formatKeptZeroNumber(value);
 }

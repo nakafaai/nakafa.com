@@ -1,7 +1,6 @@
-import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
   "straight",
@@ -11,7 +10,6 @@ export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
 
 export type AverageVelocitySpeedCaseId =
   (typeof AVERAGE_VELOCITY_SPEED_CASE_IDS)[number];
-export type AverageVelocitySpeedDecimalSeparator = "comma" | "dot";
 
 const Point2Schema = Schema.Struct({
   x: Schema.Finite,
@@ -151,7 +149,10 @@ export function getAverageMotionRouteSample(
   motion: AverageVelocitySpeedState,
   elapsedSeconds: number
 ) {
-  const elapsed = clamp(elapsedSeconds, 0, motion.duration);
+  const elapsed = Num.clamp(elapsedSeconds, {
+    minimum: 0,
+    maximum: motion.duration,
+  });
   const targetDistance = (elapsed / motion.duration) * motion.distance;
   let traveled = 0;
 

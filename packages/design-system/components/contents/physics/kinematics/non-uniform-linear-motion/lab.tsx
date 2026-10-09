@@ -1,10 +1,12 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { formatAccelerationMath } from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
+  formatAccelerationMath,
+  formatTrimmedMeterMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
 import {
   DEFAULT_GLBB_SCENARIO_ID,
-  formatMeterMath,
   formatVelocityMath,
   GLBB_COLORS,
   GLBB_SCENARIOS,
@@ -176,7 +178,7 @@ export function NonUniformLinearMotionLab({
             label={labels.factLabels.displacement}
             value={
               <InlineMath
-                math={`\\Delta x=${formatMeterMath(motion.displacement)}`}
+                math={`\\Delta x=${formatTrimmedMeterMath(motion.displacement)}`}
               />
             }
           />

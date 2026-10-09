@@ -3,8 +3,8 @@
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
+import { formatSignedRoundedSpeedMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import {
-  formatSignedSpeedMath,
   getRelativeMovementState,
   isRelativeMovementCaseId,
   RELATIVE_MOVEMENT_CAMERA,
@@ -141,21 +141,25 @@ export function RelativeMovementLab({
             indicatorColor={OBSERVER_COLOR}
             label={labels.factLabels.observer}
             value={
-              <InlineMath math={formatSignedSpeedMath(motion.observerSpeed)} />
+              <InlineMath
+                math={formatSignedRoundedSpeedMath(motion.observerSpeed)}
+              />
             }
           />
           <VisualFactIndicator
             indicatorColor={TARGET_COLOR}
             label={labels.factLabels.target}
             value={
-              <InlineMath math={formatSignedSpeedMath(motion.targetSpeed)} />
+              <InlineMath
+                math={formatSignedRoundedSpeedMath(motion.targetSpeed)}
+              />
             }
           />
           <VisualFactIndicator
             label={labels.factLabels.relativeVelocity}
             value={
               <InlineMath
-                math={`v_{B/A}=${formatSignedSpeedMath(
+                math={`v_{B/A}=${formatSignedRoundedSpeedMath(
                   motion.relativeVelocity
                 )}`}
               />

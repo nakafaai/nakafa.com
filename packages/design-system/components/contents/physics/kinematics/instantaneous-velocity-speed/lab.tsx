@@ -4,7 +4,6 @@ import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import {
   DEFAULT_INSTANTANEOUS_SPEED_CASE_ID,
-  formatSignedSpeedMath,
   getInstantaneousVelocitySpeedState,
   INSTANTANEOUS_SPEED_CAMERA,
   INSTANTANEOUS_SPEED_CAR_MODEL_PATH,
@@ -19,6 +18,7 @@ import { lerp } from "@repo/design-system/components/contents/physics/kinematics
 import {
   formatRoundedSecondMath,
   formatRoundedSpeedMath,
+  formatSignedRoundedSpeedMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
@@ -37,6 +37,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -85,7 +86,7 @@ export function InstantaneousVelocitySpeedLab({
     {
       id: "velocity",
       label: labels.factLabels.velocity,
-      math: formatSignedSpeedMath(motion.velocity),
+      math: formatSignedRoundedSpeedMath(motion.velocity),
     },
   ];
 
@@ -157,7 +158,11 @@ export function InstantaneousVelocitySpeedLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {Arr.map(facts, (fact) => (
-            <LabFact key={fact.id} label={fact.label} math={fact.math} />
+            <VisualFactTabular
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
           ))}
         </dl>
         <VisualCardFullscreen />
@@ -341,17 +346,6 @@ function AnimatedCar({ motion }: { motion: InstantaneousVelocitySpeedState }) {
         />
       </group>
     </CameraBounds>
-  );
-}
-
-function LabFact({ label, math }: { label: ReactNode; math: string }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">
-        <InlineMath math={math} />
-      </dd>
-    </div>
   );
 }
 

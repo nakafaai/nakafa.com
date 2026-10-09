@@ -1,3 +1,4 @@
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 
@@ -12,8 +13,6 @@ export const UNIFORM_CIRCULAR_MOTION_PERIODS = [8, 6, 4] as const;
 
 export type UniformCircularMotionPeriod =
   (typeof UNIFORM_CIRCULAR_MOTION_PERIODS)[number];
-
-export type UniformCircularMotionDecimalSeparator = "comma" | "dot";
 
 const TRACK_RADIUS = 4;
 
@@ -61,7 +60,7 @@ export function isUniformCircularMotionPeriod(
 
 export function formatCircularMotionDecimal(
   value: number,
-  decimalSeparator?: UniformCircularMotionDecimalSeparator
+  decimalSeparator?: DecimalSeparator
 ) {
   const rounded = value.toFixed(2);
 

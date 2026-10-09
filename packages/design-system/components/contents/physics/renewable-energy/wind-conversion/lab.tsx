@@ -15,7 +15,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { VisualFactCompact } from "@repo/design-system/components/visual/fact";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr } from "effect";
@@ -125,11 +125,8 @@ export function WindEnergyConversionLab({
       </VisualCardBody>
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFactCompact label={labels.flowLabel} value={labels.flow} />
-          <VisualFactCompact
-            label={labels.meaningLabel}
-            value={labels.meaning}
-          />
+          <VisualFact label={labels.flowLabel} value={labels.flow} />
+          <VisualFact label={labels.meaningLabel} value={labels.meaning} />
         </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>

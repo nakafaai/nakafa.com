@@ -2,7 +2,7 @@ import {
   type DecimalSeparator,
   formatKeptZeroNumber,
   formatSignedTrimmedNumber,
-  formatTrimmedFixedNumber,
+  formatTrimmedNumber,
 } from "@repo/design-system/components/contents/physics/kinematics/number";
 
 /** An acceleration in m/s^2 with its sign, for example "+2" or "-1.5". */
@@ -16,27 +16,27 @@ export function formatKeptZeroMeterMath(value: number) {
 }
 
 /** A distance in meters with the zero tenth dropped. */
-export function formatTrimmedFixedMeterMath(
+export function formatTrimmedMeterMath(
   value: number,
   decimalSeparator?: DecimalSeparator
 ) {
-  return `${formatTrimmedFixedNumber(value, decimalSeparator)}\\text{ m}`;
+  return `${formatTrimmedNumber(value, decimalSeparator)}\\text{ m}`;
 }
 
 /** A speed in m/s with the zero tenth dropped. */
-export function formatTrimmedFixedSpeedMath(
+export function formatTrimmedSpeedMath(
   value: number,
   decimalSeparator?: DecimalSeparator
 ) {
-  return `${formatTrimmedFixedNumber(value, decimalSeparator)}\\text{ m/s}`;
+  return `${formatTrimmedNumber(value, decimalSeparator)}\\text{ m/s}`;
 }
 
 /** A time in seconds with the zero tenth dropped. */
-export function formatTrimmedFixedSecondMath(
+export function formatTrimmedSecondMath(
   value: number,
   decimalSeparator?: DecimalSeparator
 ) {
-  return `${formatTrimmedFixedNumber(value, decimalSeparator)}\\text{ s}`;
+  return `${formatTrimmedNumber(value, decimalSeparator)}\\text{ s}`;
 }
 
 /** A distance in meters rounded to a whole number. */
@@ -47,6 +47,13 @@ export function formatRoundedMeterMath(value: number) {
 /** A speed in m/s rounded to a whole number. */
 export function formatRoundedSpeedMath(value: number) {
   return `${Math.round(value)}\\text{ m/s}`;
+}
+
+/** A speed in m/s rounded to a whole number, with a plus sign when positive. */
+export function formatSignedRoundedSpeedMath(value: number) {
+  const sign = value > 0 ? "+" : "";
+
+  return `${sign}${Math.round(value)}\\text{ m/s}`;
 }
 
 /** A time in seconds rounded to a whole number. */

@@ -3,9 +3,10 @@
 import { useFrame } from "@react-three/fiber";
 import {
   formatRoundedSpeedMath,
-  formatTrimmedFixedMeterMath,
-  formatTrimmedFixedSecondMath,
+  formatTrimmedMeterMath,
+  formatTrimmedSecondMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
@@ -39,7 +40,6 @@ const CAMERA_TARGET = [0, 1.22, 0] as const;
 const TRAIL_POINT_COUNT = 8;
 
 type Mode = (typeof MODES)[number];
-type DecimalSeparator = "comma" | "dot";
 
 interface VerticalMovementLabProps {
   decimalSeparator?: DecimalSeparator;
@@ -139,7 +139,7 @@ export function VerticalMovementLab({
             label={labels.maxHeight}
             value={
               <InlineMath
-                math={formatTrimmedFixedMeterMath(
+                math={formatTrimmedMeterMath(
                   motion.maxHeight,
                   decimalSeparator
                 )}
@@ -150,7 +150,7 @@ export function VerticalMovementLab({
             label={labels.time}
             value={
               <InlineMath
-                math={formatTrimmedFixedSecondMath(
+                math={formatTrimmedSecondMath(
                   motion.motionTime,
                   decimalSeparator
                 )}

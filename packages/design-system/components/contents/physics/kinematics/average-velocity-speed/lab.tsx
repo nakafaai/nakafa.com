@@ -4,16 +4,16 @@ import {
   AVERAGE_VELOCITY_SPEED_CASE_IDS,
   AVERAGE_VELOCITY_SPEED_COLORS,
   type AverageVelocitySpeedCaseId,
-  type AverageVelocitySpeedDecimalSeparator,
   getAverageVelocitySpeedState,
   isAverageVelocitySpeedCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
 import { AverageMotionStage } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/scene";
 import {
-  formatTrimmedFixedMeterMath,
-  formatTrimmedFixedSecondMath,
-  formatTrimmedFixedSpeedMath,
+  formatTrimmedMeterMath,
+  formatTrimmedSecondMath,
+  formatTrimmedSpeedMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -29,11 +29,12 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo, useState } from "react";
 
 interface AverageVelocitySpeedLabProps {
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator;
+  decimalSeparator?: DecimalSeparator;
   description: ReactNode;
   labels: {
     chooseCase: string;
@@ -62,7 +63,7 @@ export function AverageVelocitySpeedLab({
     {
       id: "distance",
       label: labels.factLabels.distance,
-      math: `s_{\\text{total}}=${formatTrimmedFixedMeterMath(
+      math: `s_{\\text{total}}=${formatTrimmedMeterMath(
         motion.distance,
         decimalSeparator
       )}`,
@@ -71,7 +72,7 @@ export function AverageVelocitySpeedLab({
     {
       id: "displacement",
       label: labels.factLabels.displacement,
-      math: `|\\Delta \\vec r|=${formatTrimmedFixedMeterMath(
+      math: `|\\Delta \\vec r|=${formatTrimmedMeterMath(
         motion.displacement,
         decimalSeparator
       )}`,
@@ -80,12 +81,12 @@ export function AverageVelocitySpeedLab({
     {
       id: "time",
       label: labels.factLabels.time,
-      math: `\\Delta t=${formatTrimmedFixedSecondMath(motion.duration, decimalSeparator)}`,
+      math: `\\Delta t=${formatTrimmedSecondMath(motion.duration, decimalSeparator)}`,
     },
     {
       id: "speed",
       label: labels.factLabels.speed,
-      math: `\\frac{s_{\\text{total}}}{\\Delta t}=${formatTrimmedFixedSpeedMath(
+      math: `\\frac{s_{\\text{total}}}{\\Delta t}=${formatTrimmedSpeedMath(
         motion.speed,
         decimalSeparator
       )}`,
@@ -93,7 +94,7 @@ export function AverageVelocitySpeedLab({
     {
       id: "velocity",
       label: labels.factLabels.velocity,
-      math: `\\frac{|\\Delta \\vec r|}{\\Delta t}=${formatTrimmedFixedSpeedMath(
+      math: `\\frac{|\\Delta \\vec r|}{\\Delta t}=${formatTrimmedSpeedMath(
         motion.velocityMagnitude,
         decimalSeparator
       )}`,
@@ -142,21 +143,14 @@ export function AverageVelocitySpeedLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {Arr.map(facts, (fact) => (
-            <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
-              <dt className="flex items-center gap-2 text-muted-foreground">
-                {"markerColor" in fact ? (
-                  <span
-                    aria-hidden
-                    className="size-2 rounded-full"
-                    style={{ backgroundColor: fact.markerColor }}
-                  />
-                ) : null}
-                {fact.label}
-              </dt>
-              <dd className="wrap-break-word text-foreground tabular-nums">
-                <InlineMath math={fact.math} />
-              </dd>
-            </div>
+            <VisualFactIndicator
+              indicatorColor={
+                "markerColor" in fact ? fact.markerColor : undefined
+              }
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
           ))}
         </dl>
         <VisualCardFullscreen />

@@ -5,13 +5,15 @@ import {
   ACCELERATION_LAB_SCENE,
   type AccelerationCaseId,
   DEFAULT_ACCELERATION_CASE_ID,
-  formatMeterPerSecondMath,
-  formatSecondMath,
   getAccelerationMotionState,
   isAccelerationCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { SpaceFlightScene } from "@repo/design-system/components/contents/physics/kinematics/acceleration/scene";
-import { formatAccelerationMath } from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
+  formatAccelerationMath,
+  formatTrimmedSecondMath,
+  formatTrimmedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -62,7 +64,7 @@ export function AccelerationLab({
     {
       id: "initial-velocity",
       label: labels.factLabels.initialVelocity,
-      math: `v_0=${formatMeterPerSecondMath(motion.scenario.v0)}`,
+      math: `v_0=${formatTrimmedSpeedMath(motion.scenario.v0)}`,
     },
     {
       id: "acceleration",
@@ -73,12 +75,12 @@ export function AccelerationLab({
     {
       id: "final-velocity",
       label: labels.factLabels.finalVelocity,
-      math: `v_t=${formatMeterPerSecondMath(motion.scenario.v1)}`,
+      math: `v_t=${formatTrimmedSpeedMath(motion.scenario.v1)}`,
     },
     {
       id: "time-step",
       label: labels.factLabels.timeStep,
-      math: `\\Delta t=${formatSecondMath(1)}`,
+      math: `\\Delta t=${formatTrimmedSecondMath(1)}`,
     },
   ];
 

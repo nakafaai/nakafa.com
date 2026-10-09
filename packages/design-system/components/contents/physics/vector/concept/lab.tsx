@@ -31,7 +31,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { VisualFactCompact } from "@repo/design-system/components/visual/fact";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Effect } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -136,18 +136,9 @@ export function VectorConceptLab({
       </VisualCardBody>
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <VisualFactCompact
-            label={labels.magnitude}
-            value={labels.magnitudeValue}
-          />
-          <VisualFactCompact
-            label={labels.direction}
-            value={labels.directionValue}
-          />
-          <VisualFactCompact
-            label={labels.netIdea}
-            value={labels.netIdeaValue}
-          />
+          <VisualFact label={labels.magnitude} value={labels.magnitudeValue} />
+          <VisualFact label={labels.direction} value={labels.directionValue} />
+          <VisualFact label={labels.netIdea} value={labels.netIdeaValue} />
         </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>

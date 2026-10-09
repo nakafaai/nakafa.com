@@ -12,42 +12,30 @@ export function formatKeptZeroNumber(value: number) {
 }
 
 /**
- * Drops the zero tenth: whole numbers print as written, and other values print
- * with one decimal minus a trailing zero, so 2.04 prints "2". A comma separator
- * writes the decimal point as "{,}".
+ * A signed number that keeps the zero tenth: a positive value gets a plus sign,
+ * and a negative value keeps its minus sign.
+ */
+export function formatSignedKeptZeroNumber(value: number) {
+  return value > 0
+    ? `+${formatKeptZeroNumber(value)}`
+    : formatKeptZeroNumber(value);
+}
+
+/**
+ * Drops the zero tenth: a value prints with one decimal minus a trailing zero,
+ * so 2.04 prints "2". A comma separator writes the decimal point as "{,}".
  */
 export function formatTrimmedNumber(
   value: number,
   decimalSeparator?: DecimalSeparator
 ) {
-  const rounded = Number.isInteger(value)
-    ? value.toString()
-    : value.toFixed(1).replace(TRAILING_ZERO_PATTERN, "");
+  const trimmed = value.toFixed(1).replace(TRAILING_ZERO_PATTERN, "");
 
   if (decimalSeparator === "comma") {
-    return rounded.replace(".", "{,}");
+    return trimmed.replace(".", "{,}");
   }
 
-  return rounded;
-}
-
-/**
- * Drops the zero tenth from every value, whole numbers included, after
- * toFixed(1). Above 2 ** 53 it prints the exact binary value: 2 ** 60 prints
- * "1152921504606846976" here, where formatTrimmedNumber prints the shortest
- * form "1152921504606847000".
- */
-export function formatTrimmedFixedNumber(
-  value: number,
-  decimalSeparator?: DecimalSeparator
-) {
-  const formatted = value.toFixed(1).replace(TRAILING_ZERO_PATTERN, "");
-
-  if (decimalSeparator === "comma") {
-    return formatted.replace(".", "{,}");
-  }
-
-  return formatted;
+  return trimmed;
 }
 
 /**

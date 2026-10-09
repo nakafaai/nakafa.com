@@ -36,6 +36,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
@@ -164,21 +165,12 @@ export function UniformLinearMotionLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {Arr.map(facts, (fact) => (
-            <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
-              <dt className="flex items-center gap-2 text-muted-foreground">
-                {fact.indicatorColor ? (
-                  <span
-                    aria-hidden="true"
-                    className="size-2 rounded-full"
-                    style={{ backgroundColor: fact.indicatorColor }}
-                  />
-                ) : null}
-                {fact.label}
-              </dt>
-              <dd className="wrap-break-word text-foreground tabular-nums">
-                <InlineMath math={fact.math} />
-              </dd>
-            </div>
+            <VisualFactIndicator
+              indicatorColor={fact.indicatorColor}
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
           ))}
         </dl>
         <VisualCardFullscreen />

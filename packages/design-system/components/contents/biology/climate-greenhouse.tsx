@@ -20,7 +20,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { VisualFactCompact } from "@repo/design-system/components/visual/fact";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
@@ -98,14 +98,8 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
       </VisualCardBody>
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFactCompact
-            label={labels.heatFlowLabel}
-            value={labels.heatFlow}
-          />
-          <VisualFactCompact
-            label={labels.meaningLabel}
-            value={labels.meaning}
-          />
+          <VisualFact label={labels.heatFlowLabel} value={labels.heatFlow} />
+          <VisualFact label={labels.meaningLabel} value={labels.meaning} />
         </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>

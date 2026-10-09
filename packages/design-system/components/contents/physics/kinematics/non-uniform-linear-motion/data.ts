@@ -1,10 +1,6 @@
-import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
-import {
-  formatSignedTrimmedNumber,
-  formatTrimmedNumber,
-} from "@repo/design-system/components/contents/physics/kinematics/number";
+import { formatSignedTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const GlbbScenarioIdSchema = Schema.Literals([
   "from-rest",
@@ -146,7 +142,7 @@ export function getGlbbPositionSample(
   time: number,
   trainStartX: number
 ) {
-  const safeTime = clamp(time, 0, scenario.duration);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: scenario.duration });
   const displacement = getDisplacementAt(scenario, safeTime);
 
   return {
@@ -173,10 +169,6 @@ function getDisplacementAt(scenario: GlbbScenario, time: number) {
   return (
     scenario.initialVelocity * time + (scenario.acceleration * time ** 2) / 2
   );
-}
-
-export function formatMeterMath(value: number) {
-  return `${formatTrimmedNumber(value)}\\text{ m}`;
 }
 
 export function formatVelocityMath(value: number) {

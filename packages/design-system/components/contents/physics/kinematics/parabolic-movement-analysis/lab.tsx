@@ -1,10 +1,11 @@
 "use client";
 
 import {
-  formatTrimmedFixedMeterMath,
-  formatTrimmedFixedSecondMath,
-  formatTrimmedFixedSpeedMath,
+  formatTrimmedMeterMath,
+  formatTrimmedSecondMath,
+  formatTrimmedSpeedMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
   formatVelocityVectorMath,
@@ -14,7 +15,6 @@ import {
   PROJECTILE_INSTANT_TIME,
   PROJECTILE_SCENARIOS,
   PROJECTILE_SCENE,
-  type ProjectileAnalysisDecimalSeparator,
   type ProjectileScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { PirateProjectileScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/scene";
@@ -42,7 +42,7 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 const FLASH_COLOR = getColor("ORANGE", 500);
 
 interface ProjectileAnalysisLabProps {
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator;
+  decimalSeparator?: DecimalSeparator;
   description: ReactNode;
   labels: {
     chooseScenario: string;
@@ -78,7 +78,7 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "horizontal-component",
       label: labels.factLabels.horizontalComponent,
-      math: `v_{0x}=${formatTrimmedFixedSpeedMath(
+      math: `v_{0x}=${formatTrimmedSpeedMath(
         motion.horizontalVelocity,
         decimalSeparator
       )}`,
@@ -86,7 +86,7 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "vertical-component",
       label: labels.factLabels.verticalComponent,
-      math: `v_{0y}=${formatTrimmedFixedSpeedMath(
+      math: `v_{0y}=${formatTrimmedSpeedMath(
         motion.verticalVelocity,
         decimalSeparator
       )}`,
@@ -94,17 +94,17 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "peak-time",
       label: labels.factLabels.peakTime,
-      math: `t=${formatTrimmedFixedSecondMath(motion.peakTime, decimalSeparator)}`,
+      math: `t=${formatTrimmedSecondMath(motion.peakTime, decimalSeparator)}`,
     },
     {
       id: "flight-time",
       label: labels.factLabels.flightTime,
-      math: `T=${formatTrimmedFixedSecondMath(motion.flightTime, decimalSeparator)}`,
+      math: `T=${formatTrimmedSecondMath(motion.flightTime, decimalSeparator)}`,
     },
     {
       id: "range",
       label: labels.factLabels.range,
-      math: `R=${formatTrimmedFixedMeterMath(motion.range, decimalSeparator)}`,
+      math: `R=${formatTrimmedMeterMath(motion.range, decimalSeparator)}`,
     },
     {
       id: "instantaneous-velocity",

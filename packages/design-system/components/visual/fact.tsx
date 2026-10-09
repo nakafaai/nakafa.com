@@ -10,23 +10,7 @@ function VisualFact({ label, value }: { label: ReactNode; value: ReactNode }) {
   );
 }
 
-/** A reading whose label keeps the text size of its footer list. */
-function VisualFactCompact({
-  label,
-  value,
-}: {
-  label: ReactNode;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
-  );
-}
-
-/** A compact reading whose value uses tabular numerals, so digits keep their width. */
+/** A reading whose value uses tabular numerals, so digits keep their width. */
 function VisualFactTabular({
   label,
   value,
@@ -69,9 +53,4 @@ function VisualFactIndicator({
   );
 }
 
-export {
-  VisualFact,
-  VisualFactCompact,
-  VisualFactIndicator,
-  VisualFactTabular,
-};
+export { VisualFact, VisualFactIndicator, VisualFactTabular };

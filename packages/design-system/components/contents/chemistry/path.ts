@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import type { Vector3 } from "three";
 
 /**
@@ -7,11 +8,9 @@ export function createPath(
   pointCount: number,
   getPointAtProgress: (progress: number) => Vector3
 ) {
-  return Array.from({ length: pointCount }, (_, index) => {
-    const progress = index / (pointCount - 1);
-
-    return getPointAtProgress(progress);
-  });
+  return Arr.makeBy(pointCount, (index) =>
+    getPointAtProgress(index / (pointCount - 1))
+  );
 }
 
 /**

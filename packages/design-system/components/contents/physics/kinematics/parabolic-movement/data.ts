@@ -1,9 +1,6 @@
-import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
 import { formatTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
-
-export type ParabolicMovementDecimalSeparator = "comma" | "dot";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const ParabolicLaunchIdSchema = Schema.Literals([
   "low-angle",
@@ -107,7 +104,7 @@ export function getParabolicMotionState(id: ParabolicLaunchId) {
 }
 
 export function getProjectilePoint(motion: ParabolicMotionState, time: number) {
-  const safeTime = clamp(time, 0, motion.flightTime);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: motion.flightTime });
   const xMeters = motion.horizontalVelocity * safeTime;
   const yMeters =
     motion.verticalVelocity * safeTime -
@@ -126,7 +123,7 @@ export function getProjectileVelocityAt(
   motion: ParabolicMotionState,
   time: number
 ) {
-  const safeTime = clamp(time, 0, motion.flightTime);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: motion.flightTime });
 
   return {
     horizontalVelocity: motion.horizontalVelocity,
@@ -155,27 +152,6 @@ export function getParabolicLoopSample(
 
 export function formatAngleMath(value: number) {
   return `\\theta=${formatTrimmedNumber(value)}^\\circ`;
-}
-
-export function formatMeterMath(
-  value: number,
-  decimalSeparator?: ParabolicMovementDecimalSeparator
-) {
-  return `${formatTrimmedNumber(value, decimalSeparator)}\\text{ m}`;
-}
-
-export function formatSecondMath(
-  value: number,
-  decimalSeparator?: ParabolicMovementDecimalSeparator
-) {
-  return `${formatTrimmedNumber(value, decimalSeparator)}\\text{ s}`;
-}
-
-export function formatSpeedMath(
-  value: number,
-  decimalSeparator?: ParabolicMovementDecimalSeparator
-) {
-  return `${formatTrimmedNumber(value, decimalSeparator)}\\text{ m/s}`;
 }
 
 function getEqualTimeSamples(duration: number, sampleCount: number) {

@@ -1,7 +1,5 @@
-import { clamp } from "@repo/design-system/components/contents/physics/kinematics/clamp";
-import { formatTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const AccelerationCaseIdSchema = Schema.Literals([
   "speed-up",
@@ -201,7 +199,10 @@ export function getAccelerationPositionSample(
   time: number,
   startX: number
 ) {
-  const safeTime = clamp(time, 0, getAccelerationDuration(scenario));
+  const safeTime = Num.clamp(time, {
+    minimum: 0,
+    maximum: getAccelerationDuration(scenario),
+  });
   const displacement = getAccelerationDisplacementAt(scenario, safeTime);
 
   return {
@@ -242,14 +243,6 @@ export function getMotionPoints() {
   }
 
   return [firstSegment.start, ...Arr.map(segments, (segment) => segment.end)];
-}
-
-export function formatMeterPerSecondMath(value: number) {
-  return `${formatTrimmedNumber(value)}\\text{ m/s}`;
-}
-
-export function formatSecondMath(value: number) {
-  return `${formatTrimmedNumber(value)}\\text{ s}`;
 }
 
 function getAccelerationDisplacementAt(item: AccelerationCase, time: number) {
