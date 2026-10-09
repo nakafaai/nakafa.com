@@ -33,7 +33,7 @@ import {
 } from "@repo/backend/test/program/snapshot";
 import { makeQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** Signs one genesis release that replaces the technical program snapshot. */
 function programRelease(data: ProgramSnapshotData, releaseId: string) {
@@ -235,8 +235,8 @@ describe("contentRelease/proof/snapshot", () => {
           )
         )
       );
-      const secondRow = data.rowJson.at(1);
-      if (!secondRow) {
+      const secondRow = Arr.get(data.rowJson, 1);
+      if (Option.isNone(secondRow) || !secondRow.value) {
         throw new Error("Expected a second program snapshot row.");
       }
       yield* Effect.promise(() =>
@@ -251,7 +251,7 @@ describe("contentRelease/proof/snapshot", () => {
             throw new Error("Expected first program row.");
           }
           await ctx.db.patch("programCatalog", first._id, {
-            rowJson: secondRow,
+            rowJson: secondRow.value,
           });
         })
       );

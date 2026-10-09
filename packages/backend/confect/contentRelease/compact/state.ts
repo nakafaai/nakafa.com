@@ -235,8 +235,11 @@ const retainedFloor = Effect.fn("contentRelease.retainedFloor")(function* (
   if (page.isDone) {
     return ceiling;
   }
-  const boundary = releases.at(-1);
-  return boundary ? Math.min(boundary.sequence, ceiling) : from;
+  const boundary = Arr.last(releases);
+  return Option.match(boundary, {
+    onNone: () => from,
+    onSome: (release) => Math.min(release.sequence, ceiling),
+  });
 });
 
 /** Validates and returns a previously persisted compaction cycle. */

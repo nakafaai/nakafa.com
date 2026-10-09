@@ -188,7 +188,11 @@ describe("contentRelease/compact", () => {
         },
         (_, index) => compactionIdentity(index + 1)
       );
-      for (const [index, release] of releases.entries()) {
+      const indexedReleases = Arr.map(releases, (release, index) => ({
+        index,
+        release,
+      }));
+      for (const { index, release } of indexedReleases) {
         await insertCompletedRelease(
           ctx,
           release,

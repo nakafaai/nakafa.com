@@ -28,7 +28,7 @@ import {
   ROUTE_CATALOG_PAGE_LIMIT,
 } from "@repo/backend/confect/contentRelease/spec";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** Proves one release is an exact active or verified-candidate rollback source. */
 const rollbackSource = Effect.fn("contentRelease.rollbackSource")(function* (
@@ -43,7 +43,10 @@ export function makeRollbackPage(
   total: number,
   records: readonly RollbackRecord[]
 ): RollbackPage {
-  const nextIndex = records.at(-1)?.index ?? request.afterIndex;
+  const nextIndex = Option.match(Arr.last(records), {
+    onNone: () => request.afterIndex,
+    onSome: (record) => record.index,
+  });
   return {
     done: nextIndex === total - 1,
     nextIndex,
@@ -192,20 +195,26 @@ export const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
       )
       .take(request.limit)
       .pipe(Effect.orDie);
-    let records: RouteRollbackRecord[] = [];
-    for (const [offset, row] of rows.entries()) {
-      if (row.index !== request.afterIndex + offset + 1) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Route rollback source ${request.rollbackOf} is not contiguous.`
-        );
-      }
-      records = Arr.append(records, {
-        current: yield* decodeRouteJson(row.routeJson),
-        priorContentKey: yield* priorRouteOwner(row, baseSequence),
-      });
-    }
-    const nextIndex = records.at(-1)?.current.index ?? request.afterIndex;
+    const records: RouteRollbackRecord[] = yield* Effect.forEach(
+      rows,
+      (row, offset) =>
+        Effect.gen(function* () {
+          if (row.index !== request.afterIndex + offset + 1) {
+            return yield* releaseFail(
+              "CONTENT_RELEASE_INTEGRITY",
+              `Route rollback source ${request.rollbackOf} is not contiguous.`
+            );
+          }
+          return {
+            current: yield* decodeRouteJson(row.routeJson),
+            priorContentKey: yield* priorRouteOwner(row, baseSequence),
+          };
+        })
+    );
+    const nextIndex = Option.match(Arr.last(records), {
+      onNone: () => request.afterIndex,
+      onSome: (record) => record.current.index,
+    });
     const page: RoutePage = {
       done: nextIndex === total - 1,
       nextIndex,

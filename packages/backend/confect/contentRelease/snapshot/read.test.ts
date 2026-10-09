@@ -282,7 +282,7 @@ describe("contentRelease/snapshot/read", () => {
           done: false,
           firstIndex: 0,
           nextBatchIndex: 0,
-          rowJson: data.rowJson.slice(0, batchSize),
+          rowJson: Arr.take(data.rowJson, batchSize),
           snapshotId: data.snapshotId,
         })
       );
@@ -298,7 +298,7 @@ describe("contentRelease/snapshot/read", () => {
           done: false,
           firstIndex: batchSize,
           nextBatchIndex: 1,
-          rowJson: data.rowJson.slice(batchSize, batchSize * 2),
+          rowJson: Arr.take(Arr.drop(data.rowJson, batchSize), batchSize),
           snapshotId: data.snapshotId,
         })
       );
@@ -314,7 +314,7 @@ describe("contentRelease/snapshot/read", () => {
           done: true,
           firstIndex: batchSize * 2,
           nextBatchIndex: 2,
-          rowJson: data.rowJson.slice(batchSize * 2),
+          rowJson: Arr.drop(data.rowJson, batchSize * 2),
           snapshotId: data.snapshotId,
         })
       );

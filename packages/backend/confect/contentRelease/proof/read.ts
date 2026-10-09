@@ -103,7 +103,10 @@ export const routePageProgram = Effect.fn("contentRelease.routeProofPage")(
     }));
     return {
       done: stored.isDone,
-      nextIndex: rows.at(-1)?.index ?? afterIndex,
+      nextIndex: Option.match(Arr.last(rows), {
+        onNone: () => afterIndex,
+        onSome: (row) => row.index,
+      }),
       rows,
     };
   }
@@ -309,7 +312,10 @@ export const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       break;
     }
   }
-  const nextIndex = rows.at(-1)?.index ?? afterIndex;
+  const nextIndex = Option.match(Arr.last(rows), {
+    onNone: () => afterIndex,
+    onSome: (row) => row.index,
+  });
   const consumedAll = rows.length === stored.page.length;
   return {
     done: consumedAll && stored.isDone,
