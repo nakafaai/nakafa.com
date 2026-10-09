@@ -15,5 +15,3 @@ export const MathStepStatusSchema = Schema.Literals([
   description:
     "Whether the verified math evidence includes complete, partial, or unavailable derivation steps.",
 });
-export type MathStatus = typeof MathStatusSchema.Type;
-export type MathStepStatus = typeof MathStepStatusSchema.Type;

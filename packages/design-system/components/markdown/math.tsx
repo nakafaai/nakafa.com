@@ -64,18 +64,6 @@ function KatexMarkup({
 }
 
 /**
- * Renders one KaTeX block without the surrounding card shell.
- */
-
-export function BlockMathKatex(props: MathComponentProps) {
-  return (
-    <div data-markdown-ignore="">
-      <KatexMarkup displayMode={true} {...props} />
-    </div>
-  );
-}
-
-/**
  * Groups consecutive math blocks into one stacked card.
  *
  * Use this in MDX whenever multiple BlockMath rows are part of the same

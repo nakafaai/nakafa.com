@@ -26,8 +26,6 @@ export const creditTransactionMetadataValidator = Schema.Record(
   Schema.String,
   creditTransactionMetadataValueValidator
 );
-export type CreditTransactionMetadata =
-  typeof creditTransactionMetadataValidator.Type;
 export const creditTransactionValidator = Schema.Struct({
   userId: IdSchema("users"),
   amount: Schema.Finite,

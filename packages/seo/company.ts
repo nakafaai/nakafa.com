@@ -54,8 +54,6 @@ export const CompanyIdentitySchema = Schema.Struct({
   }),
 });
 
-export type CompanyIdentity = typeof CompanyIdentitySchema.Type;
-
 /**
  * Public-safe corporate identity, registration, representation, address, and
  * telephone facts verified against the Indonesian company registration and

@@ -5,7 +5,6 @@ import {
 } from "@repo/backend/test/content/proof";
 import type { TestIdentity } from "@repo/backend/test/content/state";
 
-export const TEST_RUNTIME_NOW = Date.UTC(2026, 6, 23, 12);
 export const TEST_RUNTIME_PATH = "subjects/test/runtime";
 
 const runtimeReleaseId = ReleaseIdSchema.make("release-runtime");

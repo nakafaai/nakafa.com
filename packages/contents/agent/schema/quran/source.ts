@@ -116,15 +116,6 @@ export const NakafaQuranGermanReadingSourcesSchema = makeReadingSourcesSchema(
   quranTranslationSourceId(GERMAN_APP_LOCALE_CODE)
 );
 
-/** Exact signed Arabic and locale-selected translation sources. */
-export const NakafaQuranReadingSourcesSchema = Schema.Union([
-  NakafaQuranEnglishReadingSourcesSchema,
-  NakafaQuranIndonesianReadingSourcesSchema,
-  NakafaQuranGermanReadingSourcesSchema,
-]).annotate({
-  description: "Sources for the returned Arabic and translation.",
-});
-
 /** Narrows one embedded source to its Aksara-owned Tafsir identity. */
 function makeEmbeddedTafsirSourceSchema<const Id extends QuranEmbeddedSourceId>(
   sourceId: Id
@@ -171,17 +162,3 @@ export const NakafaQuranGermanTafsirAccessSchema = Schema.Struct({
     quranTafsirSourceId(GERMAN_APP_LOCALE_CODE)
   ),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-
-/** Signed locale-specific access to embedded or official external tafsir. */
-export const NakafaQuranTafsirAccessSchema = Schema.Union([
-  NakafaQuranEnglishTafsirAccessSchema,
-  NakafaQuranIndonesianTafsirAccessSchema,
-  NakafaQuranGermanTafsirAccessSchema,
-]).annotate({
-  description:
-    "Signed tafsir access. External editions are linked but their text is not republished.",
-});
-
-export type NakafaQuranReadingSources =
-  typeof NakafaQuranReadingSourcesSchema.Type;
-export type NakafaQuranTafsirAccess = typeof NakafaQuranTafsirAccessSchema.Type;

@@ -14,7 +14,6 @@ import { hasProofTransactionHeadroom } from "@repo/backend/confect/contentReleas
 import type {
   artifactProofPageValidator,
   proofPageValidator,
-  proofStateValidator,
   routePageValidator,
 } from "@repo/backend/confect/contentRelease/proof/read.spec";
 import {
@@ -25,7 +24,6 @@ import {
 import { getConvexSize } from "convex/values";
 import { Array as Arr, Effect, Option, Order, Struct } from "effect";
 export type ProofPage = typeof proofPageValidator.Type;
-export type ProofState = typeof proofStateValidator.Type;
 export type ArtifactProofPage = typeof artifactProofPageValidator.Type;
 export type RouteProofPage = typeof routePageValidator.Type;
 
