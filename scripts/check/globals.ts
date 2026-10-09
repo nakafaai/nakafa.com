@@ -24,7 +24,7 @@ import {
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { candidate, type Rule } from "#scripts/check/rules";
+import { candidate, loadsImport, type Rule } from "#scripts/check/rules";
 import { unwrapped, wrapped } from "#scripts/check/wrapper";
 
 type RuleId = typeof Rule.Type;
@@ -87,8 +87,9 @@ const GLOBALS = HashSet.union(
 const GLOBAL_OBJECTS = HashSet.make("global", "globalThis", "self", "window");
 /** Variables bundlers replace at build time, which no runtime Config read can stand in for. */
 const BUILD_CONSTANTS = HashSet.make("NEXT_RUNTIME", "NODE_ENV");
-const ENV_FACTORIES = HashSet.make("@t3-oss/env-core", "@t3-oss/env-nextjs");
-const RUNTIME_ENV = HashSet.make("experimental__runtimeEnv", "runtimeEnv");
+/** The module and the function that own the environment seam of code that Next.js bundles. */
+const ENV_SEAM_MODULE = "@repo/utilities/env";
+const ENV_SEAM = "readEnvironment";
 const ASSIGNMENTS = HashSet.make(
   SyntaxKind.AmpersandAmpersandEqualsToken,
   SyntaxKind.BarBarEqualsToken,
@@ -167,51 +168,48 @@ function bypassesConfig(env: Node) {
   );
 }
 
-/** Returns the expression a `process.env` access contributes to its object. */
-function envValue(env: Node) {
+/**
+ * Whether a `process.env` access is one value of the record that a
+ * `readEnvironment` call decodes: `NAME: process.env.NAME` in the object literal
+ * of its second argument. That is the seam where Next.js inlines public
+ * variables, so the read is a plain property access and its key is the name of
+ * the variable.
+ */
+function isSeamValue(env: Node) {
   const access = env.parent;
-  if (!accesses(access, env)) {
-    return env;
+  if (!(isPropertyAccessExpression(access) && access.expression === env)) {
+    return false;
   }
   const entry = access.parent;
-  return isPropertyAssignment(entry) && entry.initializer === access
-    ? entry.parent
-    : access;
-}
-
-/**
- * Whether a `process.env` access is a value of the `runtimeEnv` mapping in a
- * t3 `createEnv` call, the seam where Next.js inlines public variables.
- */
-function isRuntimeEnv(env: Node) {
-  const value = envValue(env);
-  const property = value.parent;
   if (
     !(
-      isPropertyAssignment(property) &&
-      property.initializer === value &&
-      isIdentifier(property.name) &&
-      HashSet.has(RUNTIME_ENV, property.name.text)
+      isPropertyAssignment(entry) &&
+      entry.initializer === access &&
+      isIdentifier(entry.name) &&
+      entry.name.text === access.name.text
     )
   ) {
     return false;
   }
-  const call = property.parent.parent;
+  const record = entry.parent;
+  const call = record.parent;
   return (
     isCallExpression(call) &&
+    call.arguments[1] === record &&
     isIdentifier(call.expression) &&
-    call.expression.text === "createEnv"
+    call.expression.text === ENV_SEAM
   );
 }
 
-/** Whether the module imports `createEnv` from a t3 env package. */
-function importsEnvFactory(sourceFile: SourceFile) {
+/** Whether the module imports `readEnvironment`, as a value, from its owner. */
+function importsEnvSeam(sourceFile: SourceFile) {
   return Arr.some(sourceFile.statements, (statement) => {
     if (
       !(
         isImportDeclaration(statement) &&
+        loadsImport(statement) &&
         isStringLiteral(statement.moduleSpecifier) &&
-        HashSet.has(ENV_FACTORIES, statement.moduleSpecifier.text)
+        statement.moduleSpecifier.text === ENV_SEAM_MODULE
       )
     ) {
       return false;
@@ -220,7 +218,7 @@ function importsEnvFactory(sourceFile: SourceFile) {
     return (
       bindings !== undefined &&
       isNamedImports(bindings) &&
-      Arr.some(bindings.elements, ({ name }) => name.text === "createEnv")
+      Arr.some(bindings.elements, ({ name }) => name.text === ENV_SEAM)
     );
   });
 }
@@ -258,7 +256,7 @@ function directRule(
     }
     if (
       name === "process" &&
-      (bypassesConfig(parent) || (envSeam && isRuntimeEnv(parent)))
+      (bypassesConfig(parent) || (envSeam && isSeamValue(parent)))
     ) {
       return Option.none();
     }
@@ -377,7 +375,7 @@ export function globalCandidates(
   sourceFile: SourceFile,
   nodes: readonly Node[]
 ) {
-  const envSeam = importsEnvFactory(sourceFile);
+  const envSeam = importsEnvSeam(sourceFile);
   return Arr.flatMap(nodes, (node) =>
     referenceCandidates(sourceFile, node, envSeam)
   );
