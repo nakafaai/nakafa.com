@@ -1,4 +1,4 @@
-import { Array as Arr, type Effect, HashSet, Result } from "effect";
+import { Array as Arr, type Effect, HashSet, Option, Result } from "effect";
 import {
   isArrowFunction,
   isCallExpression,
@@ -101,32 +101,34 @@ function resolveSpecifier(file: string, specifier: string) {
  * the exported name, so an aliased import still names the original function.
  */
 function declaredFunction(file: string, sourceFile: SourceFile, local: string) {
-  for (const statement of sourceFile.statements) {
-    if (
-      !(
-        isImportDeclaration(statement) &&
-        isStringLiteral(statement.moduleSpecifier)
-      )
-    ) {
-      continue;
-    }
-    const bindings = statement.importClause?.namedBindings;
-    if (bindings === undefined || !isNamedImports(bindings)) {
-      continue;
-    }
-    const element = Arr.findFirst(
-      bindings.elements,
-      (candidate) => candidate.name.text === local
-    );
-    if (element._tag === "Some") {
-      const name = element.value.propertyName?.text ?? local;
-      return Result.map(
-        resolveSpecifier(file, statement.moduleSpecifier.text),
-        (module) => functionKey(module, name)
-      );
-    }
+  const imported = Arr.findFirst(
+    Arr.flatMap(sourceFile.statements, namedImports),
+    ({ element }) => element.name.text === local
+  );
+  return Option.match(imported, {
+    onNone: () => Result.succeed(functionKey(moduleKey(file), local)),
+    onSome: ({ element, specifier }) =>
+      Result.map(resolveSpecifier(file, specifier), (module) =>
+        functionKey(module, element.propertyName?.text ?? local)
+      ),
+  });
+}
+
+/** Returns each element of a statement's named imports, with the module it imports from. */
+function namedImports(statement: Node) {
+  if (
+    !(
+      isImportDeclaration(statement) &&
+      isStringLiteral(statement.moduleSpecifier)
+    )
+  ) {
+    return [];
   }
-  return Result.succeed(functionKey(moduleKey(file), local));
+  const specifier = statement.moduleSpecifier.text;
+  const bindings = statement.importClause?.namedBindings;
+  return bindings !== undefined && isNamedImports(bindings)
+    ? Arr.map(bindings.elements, (element) => ({ element, specifier }))
+    : [];
 }
 
 /**

@@ -195,7 +195,7 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
       node.name && isIdentifier(node.name)
         ? symbolAt(symbols, node.name)
         : undefined;
-    return symbol ? [[symbol, node] as const] : [];
+    return symbol ? [Tuple.make(symbol, node)] : [];
   });
 
   function resolve(
@@ -284,7 +284,7 @@ function resolver(nodes: readonly Node[], symbols: Symbols) {
     }
     if (
       isIdentifier(node.typeName) &&
-      ["Awaited", "ReturnType", "Pick"].includes(node.typeName.text)
+      Arr.contains(["Awaited", "ReturnType", "Pick"], node.typeName.text)
     ) {
       return resolve(node.typeArguments?.[0], next);
     }
@@ -404,7 +404,7 @@ export function convexTestBoundary(
   if (
     !(
       isPropertyAccessExpression(runner) &&
-      ["runPromise", "runPromiseWith"].includes(runner.name.text)
+      Arr.contains(["runPromise", "runPromiseWith"], runner.name.text)
     )
   ) {
     return false;

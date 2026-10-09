@@ -5,6 +5,7 @@ import {
   Record as Rec,
   Result,
   Schema,
+  Tuple,
 } from "effect";
 import {
   isIdentifier,
@@ -89,10 +90,10 @@ const inspectTest = Effect.fn("RepositoryPolicy.inspectEffectTest")(function* (
       const shorthands = Arr.flatMap(nodes, (node) =>
         isShorthandPropertyAssignment(node) && isIdentifier(node.name)
           ? [
-              [
+              Tuple.make(
                 node.name,
-                project.checker.getShorthandAssignmentValueSymbol(node),
-              ] as const,
+                project.checker.getShorthandAssignmentValueSymbol(node)
+              ),
             ]
           : []
       );
