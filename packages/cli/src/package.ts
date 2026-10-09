@@ -1,5 +1,4 @@
-import { fileURLToPath } from "node:url";
-import { Effect, FileSystem, Schema } from "effect";
+import { Effect, FileSystem, Path, Schema } from "effect";
 import { CliStartupError } from "#cli/error";
 
 export const REQUIRED_PACKED_FILES = [
@@ -11,21 +10,23 @@ export const REQUIRED_PACKED_FILES = [
 
 const PackageMetadataSchema = Schema.Struct({ version: Schema.String });
 
+const toMetadataReadError = (cause: unknown) =>
+  new CliStartupError({
+    cause,
+    message: "Unable to read the Nakafa CLI package metadata.",
+  });
+
 /** Reads and validates the version bundled with the installed CLI package. */
 export const readPackageVersion = Effect.fn("NakafaCli.readPackageVersion")(
   function* (packageUrl: URL) {
     const fileSystem = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const packagePath = yield* path
+      .fromFileUrl(packageUrl)
+      .pipe(Effect.mapError(toMetadataReadError));
     const source = yield* fileSystem
-      .readFileString(fileURLToPath(packageUrl))
-      .pipe(
-        Effect.mapError(
-          (cause) =>
-            new CliStartupError({
-              cause,
-              message: "Unable to read the Nakafa CLI package metadata.",
-            })
-        )
-      );
+      .readFileString(packagePath)
+      .pipe(Effect.mapError(toMetadataReadError));
     const metadata = yield* Schema.decodeEffect(
       Schema.fromJsonString(PackageMetadataSchema)
     )(source).pipe(

@@ -106,6 +106,9 @@ describe("Nakafa CLI package", () => {
       const missing = yield* readPackageVersion(
         pathToFileURL(path.join(directory, "missing.json"))
       ).pipe(Effect.result);
+      const unsupported = yield* readPackageVersion(
+        new URL("https://example.com/package.json")
+      ).pipe(Effect.result);
 
       expect(valid).toBe("9.8.7");
       expect(Result.isFailure(invalid) && invalid.failure.message).toContain(
@@ -114,6 +117,12 @@ describe("Nakafa CLI package", () => {
       expect(Result.isFailure(missing) && missing.failure.message).toContain(
         "Unable to read"
       );
+      expect(
+        Result.isFailure(unsupported) && unsupported.failure
+      ).toMatchObject({
+        _tag: "CliStartupError",
+        message: "Unable to read the Nakafa CLI package metadata.",
+      });
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
