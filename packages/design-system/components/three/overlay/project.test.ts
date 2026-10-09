@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import type { Size } from "@react-three/fiber";
 import {
   isBehindCamera,
+  isNearerThanHit,
   objectScale,
   objectZIndex,
   projectToOverlay,
@@ -177,5 +178,23 @@ describe("objectZIndex", () => {
     expect(
       objectZIndex(new Vector3(0, 0, 0), new Camera(), Z_RANGE)
     ).toBeUndefined();
+  });
+});
+
+describe("isNearerThanHit", () => {
+  it("keeps a label visible when the camera ray hits nothing", () => {
+    expect(isNearerThanHit(7, undefined)).toBe(true);
+  });
+
+  it("keeps a label in front of the nearest hit", () => {
+    expect(isNearerThanHit(3, 5)).toBe(true);
+  });
+
+  it("hides a label behind the nearest hit", () => {
+    expect(isNearerThanHit(7, 5)).toBe(false);
+  });
+
+  it("hides a label at the same distance as the hit", () => {
+    expect(isNearerThanHit(5, 5)).toBe(false);
   });
 });

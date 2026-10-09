@@ -68,3 +68,15 @@ export function objectZIndex(
   const intercept = range[1] - slope * camera.far;
   return Math.round(slope * distance + intercept);
 }
+
+/**
+ * Whether a label lies strictly nearer the camera than the nearest object that
+ * its camera ray hits. A ray that hits nothing leaves the label unobstructed,
+ * and a label at the same distance as the hit counts as obstructed, as in drei.
+ */
+export function isNearerThanHit(
+  labelDistance: number,
+  hitDistance: number | undefined
+): boolean {
+  return hitDistance === undefined || labelDistance < hitDistance;
+}
