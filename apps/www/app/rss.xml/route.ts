@@ -116,11 +116,14 @@ function getFeedContentRoutes() {
         }
       );
 
-      return Arr.sortWith(
-        Arr.flatten(Arr.flatten(routes)),
-        (route) => route.datePublished,
-        Order.flip(Order.Number)
-      ).slice(0, RSS_CONTENT_ROUTE_LIMIT);
+      return Arr.take(
+        Arr.sortWith(
+          Arr.flatten(Arr.flatten(routes)),
+          (route) => route.datePublished,
+          Order.flip(Order.Number)
+        ),
+        RSS_CONTENT_ROUTE_LIMIT
+      );
     })
   );
 }

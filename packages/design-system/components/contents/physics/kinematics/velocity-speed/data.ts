@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 
 export const VELOCITY_SPEED_CAR_MODEL_PATH =
   "/models/physics/kinematics/poly-pizza-dodge-charger/dodge-charger.glb";
@@ -153,10 +153,13 @@ export function getVelocitySpeedSample(
     traveled = nextTraveled;
   }
 
-  const lastSegment = motion.segments.at(-1);
+  const lastSegment = Arr.last(motion.segments);
 
   return {
-    direction: lastSegment?.direction ?? 1,
+    direction: Option.match(lastSegment, {
+      onNone: () => 1,
+      onSome: (segment) => segment.direction,
+    }),
     x: motion.endX,
   };
 }

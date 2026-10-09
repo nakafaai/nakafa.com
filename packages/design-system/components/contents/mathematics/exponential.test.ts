@@ -3,7 +3,7 @@ import {
   ExponentialError,
   resolveExponential,
 } from "@repo/design-system/components/contents/mathematics/exponential";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 describe("exponential chart models", () => {
   it.effect(
@@ -12,7 +12,9 @@ describe("exponential chart models", () => {
       Effect.gen(function* () {
         const plot = yield* resolveExponential({ a: 2, p: 30 });
         expect(plot.values).toHaveLength(11);
-        expect(plot.values.at(-1)).toEqual({ x: 10, y: 30_720 });
+        expect(Arr.last(plot.values)).toEqual(
+          Option.some({ x: 10, y: 30_720 })
+        );
         for (const point of plot.curve) {
           expect(point.y).toBeCloseTo(30 * 2 ** point.x, 8);
         }

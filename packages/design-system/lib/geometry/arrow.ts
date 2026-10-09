@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 type ArrowPosition = "both" | "end" | "start";
 
@@ -22,15 +22,20 @@ export function resolveArrowSize(
 ) {
   const start = points[0];
   const next = points[1];
-  const previous = points.at(-2);
-  const end = points.at(-1);
-  if (!(start && next && previous && end) || requestedSize <= 0) {
+  const previous = Arr.get(points, points.length - 2);
+  const end = Arr.last(points);
+  if (
+    !(start && next && Option.isSome(previous) && Option.isSome(end)) ||
+    requestedSize <= 0
+  ) {
     return 0;
   }
 
   const terminalLengths = Arr.appendAll(
     position === "start" || position === "both" ? [distance(start, next)] : [],
-    position === "end" || position === "both" ? [distance(previous, end)] : []
+    position === "end" || position === "both"
+      ? [distance(previous.value, end.value)]
+      : []
   );
   const shortest = Math.min(...terminalLengths);
   if (!(Number.isFinite(shortest) && shortest > 0)) {

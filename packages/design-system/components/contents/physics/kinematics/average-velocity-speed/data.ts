@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
   "straight",
@@ -129,7 +129,9 @@ export function getAverageVelocitySpeedState(
   const segments = createRouteSegments(config);
   const distance = getRouteLength(segments);
   const start = getSegmentStart(segments[0]);
-  const end = getSegmentEnd(segments.at(-1) ?? segments[0]);
+  const end = getSegmentEnd(
+    Option.getOrElse(Arr.last(segments), () => segments[0])
+  );
   const displacement = getDistance(start, end);
 
   return {
@@ -170,7 +172,10 @@ export function getAverageMotionRouteSample(
   }
 
   return {
-    ...sampleSegment(motion.segments.at(-1) ?? motion.segments[0], 1),
+    ...sampleSegment(
+      Option.getOrElse(Arr.last(motion.segments), () => motion.segments[0]),
+      1
+    ),
     traveledDistance: motion.distance,
   };
 }

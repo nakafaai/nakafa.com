@@ -26,8 +26,8 @@
     "typecheck": "pnpm codegen && tsc --project tsconfig.json --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@confect/core": "10.0.0",
-    "@confect/server": "10.0.0",
+    "@confect/core": "10.1.0",
+    "@confect/server": "10.1.0",
     "@convex-dev/agent": "0.7.7",
     "@convex-dev/aggregate": "^0.3.1",
     "@convex-dev/ai-sdk-provider": "catalog:",
@@ -68,8 +68,8 @@
     "unified": "11.0.5"
   },
   "devDependencies": {
-    "@confect/cli": "10.0.0",
-    "@confect/test": "10.0.0",
+    "@confect/cli": "10.1.0",
+    "@confect/test": "10.1.0",
     "@edge-runtime/vm": "^5.0.0",
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",

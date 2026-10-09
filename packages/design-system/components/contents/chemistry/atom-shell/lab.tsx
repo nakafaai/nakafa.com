@@ -21,7 +21,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -63,15 +63,14 @@ export function AtomShellLab({
     shellConfiguration,
     (shell) => shell.electronCount > 0
   );
-  const outerShell = visibleShells.at(-1);
+  const outerShell = Option.getOrThrowWith(
+    Arr.last(visibleShells),
+    () => new Error("Atom shell lab requires at least one occupied shell.")
+  );
   const configurationMath = Arr.join(
     Arr.map(visibleShells, (shell) => String(shell.electronCount)),
     ", "
   );
-
-  if (!outerShell) {
-    throw new Error("Atom shell lab requires at least one occupied shell.");
-  }
 
   /** Keeps the current atom selected when ToggleGroup emits an empty value. */
   function handleSampleChange(value: string) {

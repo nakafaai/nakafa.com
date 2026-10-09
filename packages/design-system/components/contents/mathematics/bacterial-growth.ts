@@ -67,7 +67,7 @@ function createNextGeneration(
 ) {
   if (nextVisibleCount <= bacteriaIds.length) {
     return {
-      bacteriaIds: bacteriaIds.slice(0, nextVisibleCount),
+      bacteriaIds: Arr.take(bacteriaIds, nextVisibleCount),
       nextLineageId,
     };
   }
@@ -90,7 +90,7 @@ function createNextGeneration(
   const nextBacteriaIds = MutableList.make<number>();
   let availableLineageId = nextLineageId;
 
-  for (const [parentIndex, parentId] of bacteriaIds.entries()) {
+  Arr.forEach(bacteriaIds, (parentId, parentIndex) => {
     MutableList.append(nextBacteriaIds, parentId);
 
     const extraDaughter = parentIndex < parentsWithExtraDaughter ? 1 : 0;
@@ -100,7 +100,7 @@ function createNextGeneration(
       MutableList.append(nextBacteriaIds, availableLineageId);
       availableLineageId += 1;
     }
-  }
+  });
 
   return {
     bacteriaIds: MutableList.toArray(nextBacteriaIds),
@@ -171,7 +171,7 @@ function getVisibleBacteriaCounts(
   const visibleGroups = MutableList.make<VisibleBacteriaCountGroup>();
   let previousVisibleCount = 0;
 
-  for (const [index, group] of ascendingGenerationGroups.entries()) {
+  Arr.forEach(ascendingGenerationGroups, (group, index) => {
     const scaledCount = Math.min(
       MAX_VISIBLE_BACTERIA,
       Math.max(1, Math.round(group.bacteriaCount / scale))
@@ -182,7 +182,7 @@ function getVisibleBacteriaCounts(
         ...group,
         visibleCount: scaledCount,
       });
-      continue;
+      return;
     }
 
     const remainingDistinctCounts =
@@ -196,7 +196,7 @@ function getVisibleBacteriaCounts(
 
     MutableList.append(visibleGroups, { ...group, visibleCount });
     previousVisibleCount = visibleCount;
-  }
+  });
 
   const ascendingVisibleGroups = MutableList.toArray(visibleGroups);
   const generationOrderedVisibleGroups = isGrowing

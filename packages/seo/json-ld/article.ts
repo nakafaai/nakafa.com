@@ -6,7 +6,7 @@ import {
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { ORGANIZATION_ID } from "@repo/seo/json-ld/constants";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const SCHEMA_ORG = "https://schema.org";
 
@@ -86,7 +86,10 @@ export const ArticleJsonLdSchema = Schema.Tuple([
 ]).check(
   Schema.makeFilter(
     ([article, breadcrumb]) =>
-      breadcrumb.itemListElement.at(-1)?.item === article.url,
+      Option.exists(
+        Arr.last(breadcrumb.itemListElement),
+        (item) => item.item === article.url
+      ),
     { message: "Expected the breadcrumb to end at the article URL." }
   )
 );

@@ -1,4 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
+import { Array as Arr, Option } from "effect";
 import type { NextRequest } from "next/server";
 import { hasLocale, type Locale } from "next-intl";
 import { readOgMetadata } from "@/app/og/content";
@@ -16,11 +17,16 @@ export async function GET(
     ? slug[0]
     : routing.defaultLocale;
   const cleanSlug: string[] = hasLocale(routing.locales, slug[0])
-    ? slug.slice(1)
+    ? Arr.drop(slug, 1)
     : slug;
 
-  const contentSlug =
-    cleanSlug.at(-1) === "image.png" ? cleanSlug.slice(0, -1) : cleanSlug;
+  const endsWithImageFile = Option.exists(
+    Arr.last(cleanSlug),
+    (segment) => segment === "image.png"
+  );
+  const contentSlug = endsWithImageFile
+    ? Arr.dropRight(cleanSlug, 1)
+    : cleanSlug;
 
   const copy = await readOgMetadata(locale, contentSlug);
   if (!copy) {

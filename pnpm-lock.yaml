@@ -22,8 +22,8 @@ catalogs:
       specifier: 5.0.3
       version: 5.0.3
     ai:
-      specifier: 7.0.135
-      version: 7.0.135
+      specifier: 7.0.136
+      version: 7.0.136
     effect:
       specifier: 4.0.1
       version: 4.0.1
@@ -193,17 +193,17 @@ importers:
   apps/www:
     dependencies:
       '@confect/core':
-        specifier: 10.0.0
-        version: 10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+        specifier: 10.1.0
+        version: 10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       '@confect/js':
-        specifier: 10.0.0
-        version: 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+        specifier: 10.1.0
+        version: 10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       '@confect/react':
-        specifier: 10.0.0
-        version: 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)(react@19.2.8)
+        specifier: 10.1.0
+        version: 10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)(react@19.2.8)
       '@convex-dev/agent':
         specifier: 0.7.7
-        version: 0.7.7(@ai-sdk/provider-utils@5.0.58(zod@4.6.5))(@ai-sdk/provider@4.0.26)(ai@7.0.135(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
+        version: 0.7.7(@ai-sdk/provider-utils@5.0.58(zod@4.6.5))(@ai-sdk/provider@4.0.26)(ai@7.0.136(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/better-auth':
         specifier: 0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.33(next@16.4.0(@babel/core@8.0.5)(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.16)(vitest@5.0.3))(convex@1.46.0(react@19.2.8))(hono@4.13.13)(next@16.4.0(@babel/core@8.0.5)(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
@@ -275,7 +275,7 @@ importers:
         version: 3.9.11(ws@8.22.0)
       ai:
         specifier: 'catalog:'
-        version: 7.0.135(zod@4.6.5)
+        version: 7.0.136(zod@4.6.5)
       any-ascii:
         specifier: ^0.3.3
         version: 0.3.3
@@ -432,20 +432,20 @@ importers:
   packages/backend:
     dependencies:
       '@confect/core':
-        specifier: 10.0.0
-        version: 10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+        specifier: 10.1.0
+        version: 10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       '@confect/server':
-        specifier: 10.0.0
-        version: 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+        specifier: 10.1.0
+        version: 10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       '@convex-dev/agent':
         specifier: 0.7.7
-        version: 0.7.7(@ai-sdk/provider-utils@5.0.58(zod@4.6.5))(@ai-sdk/provider@4.0.26)(ai@7.0.135(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
+        version: 0.7.7(@ai-sdk/provider-utils@5.0.58(zod@4.6.5))(@ai-sdk/provider@4.0.26)(ai@7.0.136(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/aggregate':
         specifier: ^0.3.1
         version: 0.3.1(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5)
       '@convex-dev/ai-sdk-provider':
         specifier: 'catalog:'
-        version: 0.2.1(ai@7.0.135(zod@4.6.5))(convex@1.46.0(react@19.2.8))
+        version: 0.2.1(ai@7.0.136(zod@4.6.5))(convex@1.46.0(react@19.2.8))
       '@convex-dev/better-auth':
         specifier: 0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.33(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.16)(vitest@5.0.3))(convex@1.46.0(react@19.2.8))(hono@4.13.13)(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
@@ -502,7 +502,7 @@ importers:
         version: 0.12.0
       ai:
         specifier: 'catalog:'
-        version: 7.0.135(zod@4.6.5)
+        version: 7.0.136(zod@4.6.5)
       better-auth:
         specifier: 1.6.33
         version: 1.6.33(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.16)(vitest@5.0.3)
@@ -553,11 +553,11 @@ importers:
         version: 11.0.5
     devDependencies:
       '@confect/cli':
-        specifier: 10.0.0
-        version: 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@confect/server@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1))(effect@4.0.1)(redis@6.2.1)
+        specifier: 10.1.0
+        version: 10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@confect/server@10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1))(effect@4.0.1)(redis@6.2.1)
       '@confect/test':
-        specifier: 10.0.0
-        version: 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@confect/server@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex-test@0.0.60(convex@1.46.0(react@19.2.8)))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+        specifier: 10.1.0
+        version: 10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@confect/server@10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex-test@0.0.60(convex@1.46.0(react@19.2.8)))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
@@ -732,7 +732,7 @@ importers:
         version: 2.0.14
       ai:
         specifier: 'catalog:'
-        version: 7.0.135(zod@4.6.5)
+        version: 7.0.136(zod@4.6.5)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1099,8 +1099,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/gateway@4.0.109':
-    resolution: {integrity: sha512-5285aXDemutkSNF08ESzp3uUXqnvUCahtq7iaEqwvJNAGY8l8k3G0PGCWNnRg8l18BbDI3nj/bs+/20DkGl4cQ==}
+  '@ai-sdk/gateway@4.0.110':
+    resolution: {integrity: sha512-5IwnOR6v7KC+D9eddUqsCobXl/FbLUVb2LaQc/uyuQdpP3/n9s0YLc9zl4/W3IS/R2pjHrqUfCzEAeOu7bFLoQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1657,57 +1657,57 @@ packages:
     resolution: {integrity: sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==}
     engines: {node: '>= 20.12.0'}
 
-  '@confect/cli@10.0.0':
-    resolution: {integrity: sha512-bbeLUBWoq7fBRgdAXEVAbSApEErfxeksoxUDFWN3avcQBnfR4pbmAB2RcKtWexjEpbEsxZGpiy2ALISguzf+Fg==}
+  '@confect/cli@10.1.0':
+    resolution: {integrity: sha512-BnqtrJxujP2TIQvCj0Wubn73v5Sx02WUBb47YaOZnl8fqXFzmmPtjqtEUerZqdKiolRy8g31oPG5kwZijhAJfA==}
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
-      '@confect/core': ^10.0.0
-      '@confect/server': ^10.0.0
-      effect: ^4.0.0
+      '@confect/core': ^10.1.0
+      '@confect/server': ^10.1.0
+      effect: ^4.0.1
 
-  '@confect/core@10.0.0':
-    resolution: {integrity: sha512-Bb9/P8H4X4wBZevT+k8QPgVec+/v6DOeYciZ00EXORqXJi32dEUim+jNemgrVXfr4uSp+2Q6B2JE1ZdRUQ1nsg==}
+  '@confect/core@10.1.0':
+    resolution: {integrity: sha512-4QGFg1du6u+xyTvh4N/K0NJnybdjEftEHSQwW2iI/a83weq7qM9110C8WMxAchghK6CHmvE3A3P+5mv2lEXZSQ==}
     engines: {node: '>=24'}
     peerDependencies:
       convex: ^1.32.0
       effect: ^4.0.0
 
-  '@confect/js@10.0.0':
-    resolution: {integrity: sha512-1bw1pVh4IhY3oPm8CTgY0yWAOai3+QvKHY5GiYea3mRGx9NWKFQDa+6K9+xGMcZARK74JpVc2B2xkOkDsTl3TQ==}
+  '@confect/js@10.1.0':
+    resolution: {integrity: sha512-WD/qCDMuQSz/kgO0LruTbJBXWjhOTu7eHh4H2B569TKJAqABFWCXd7K1nikKf75Y9GoYCuiE4xeEcGd7GE2ibg==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@confect/core': ^10.0.0
+      '@confect/core': ^10.1.0
       convex: ^1.32.0
       effect: ^4.0.0
 
-  '@confect/react@10.0.0':
-    resolution: {integrity: sha512-DlMAYn+M9oknTgXqC7ZUeviXNnd2V1MPa4NwdHZZ/vu8uG3rgwgO+nBgaxrw/J2RIwlVzmuGphp6cL/v/ZJivQ==}
+  '@confect/react@10.1.0':
+    resolution: {integrity: sha512-It5YHlS/EEiWAZKpC1R8clKMmgLMx3gJf30ASYt7tyhA+6IH0tADv+cxPpSN4zgS2iYbIG+AxdIwwEnWeYx9GQ==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@confect/core': ^10.0.0
+      '@confect/core': ^10.1.0
       convex: ^1.36.0
       effect: ^4.0.0
       react: 19.2.8
 
-  '@confect/server@10.0.0':
-    resolution: {integrity: sha512-4zn/q5+uVCA1vsMfiYZ7Qfspiept0L+EvyKWZQd4MawaJwzDiVaL23gQ3kydn5XQnZu49EUnK4W+ZEFcPGvPTw==}
+  '@confect/server@10.1.0':
+    resolution: {integrity: sha512-TbQR4Sz/7LLelef0gs3868Hpca2dvi8Otw9LcL3foBn/AsoMVa55XGKpoXwVlTWnD6HL8RrMzBp7hMGiS5bZrQ==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@confect/core': ^10.0.0
+      '@confect/core': ^10.1.0
       '@effect/platform-node': 4.0.1
       convex: ^1.45.0
-      effect: ^4.0.0
+      effect: ^4.0.1
     peerDependenciesMeta:
       '@effect/platform-node':
         optional: true
 
-  '@confect/test@10.0.0':
-    resolution: {integrity: sha512-PtS+V/cklJ5Q58JcKbm5EMZGac2UN1MkK8MDRWDc2mmkLqPymKCZBErHGVUeCxACXZsPkNP9gljSRMmdgvA8ww==}
+  '@confect/test@10.1.0':
+    resolution: {integrity: sha512-fEyEh6fVesByKBXqQaETwp0LK8FQCVBfg3Wi6tgjZpY45h7OBofHpsYgfRqzlxtPrniGm4rq9L0KCgdE+0BK7w==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@confect/core': ^10.0.0
-      '@confect/server': ^10.0.0
+      '@confect/core': ^10.1.0
+      '@confect/server': ^10.1.0
       convex: ^1.32.0
       convex-test: '>=0.0.50 <0.1.0'
       effect: ^4.0.0
@@ -4167,8 +4167,8 @@ packages:
     resolution: {integrity: sha512-TQf59BsZnytt8GdJKLPfUZ54g/iaUL2OWDSFCCvMOhsHduDQxO8xC4PNeyIkVcA5KwL2phPSv0douC0fgWzmnA==}
     engines: {node: '>= 20'}
 
-  ai@7.0.135:
-    resolution: {integrity: sha512-/fR5b8VX2U0U0oMmD0hSrNNWXtT1vVi+BK0He6g3tjOi2m+rerW501WLMw5auDBFbsgg2xdaMqthVMioVhDbDQ==}
+  ai@7.0.136:
+    resolution: {integrity: sha512-quFXFKEw7qUZL9v2ciJ9eruQYq9KUo3F+mDhwdL/pi7ZPu0bj7UX6yv55oAUiMjbGXd8MZRzIcu0oPc4y9llQw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -7691,7 +7691,7 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.28(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/gateway@4.0.109(zod@4.6.5)':
+  '@ai-sdk/gateway@4.0.110(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.26
       '@ai-sdk/provider-utils': 5.0.58(zod@4.6.5)
@@ -8361,10 +8361,10 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@confect/cli@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@confect/server@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1))(effect@4.0.1)(redis@6.2.1)':
+  '@confect/cli@10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@confect/server@10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1))(effect@4.0.1)(redis@6.2.1)':
     dependencies:
-      '@confect/core': 10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
-      '@confect/server': 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+      '@confect/core': 10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+      '@confect/server': 10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       '@effect/platform-node': 4.0.1(effect@4.0.1)(redis@6.2.1)
       bundle-require: 5.1.0(esbuild@0.28.2)
       code-block-writer: 13.0.3
@@ -8376,27 +8376,27 @@ snapshots:
       - redis
       - utf-8-validate
 
-  '@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)':
+  '@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)':
     dependencies:
       convex: 1.46.0(react@19.2.8)
       effect: 4.0.1
 
-  '@confect/js@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)':
+  '@confect/js@10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)':
     dependencies:
-      '@confect/core': 10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+      '@confect/core': 10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       convex: 1.46.0(react@19.2.8)
       effect: 4.0.1
 
-  '@confect/react@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)(react@19.2.8)':
+  '@confect/react@10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)(react@19.2.8)':
     dependencies:
-      '@confect/core': 10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+      '@confect/core': 10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       convex: 1.46.0(react@19.2.8)
       effect: 4.0.1
       react: 19.2.8
 
-  '@confect/server@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)':
+  '@confect/server@10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)':
     dependencies:
-      '@confect/core': 10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+      '@confect/core': 10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       '@effect/ai-openai-compat': 4.0.1(effect@4.0.1)
       '@effect/ai-openrouter': 4.0.1(effect@4.0.1)
       convex: 1.46.0(react@19.2.8)
@@ -8404,19 +8404,19 @@ snapshots:
     optionalDependencies:
       '@effect/platform-node': 4.0.1(effect@4.0.1)(redis@6.2.1)
 
-  '@confect/test@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@confect/server@10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex-test@0.0.60(convex@1.46.0(react@19.2.8)))(convex@1.46.0(react@19.2.8))(effect@4.0.1)':
+  '@confect/test@10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@confect/server@10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1))(convex-test@0.0.60(convex@1.46.0(react@19.2.8)))(convex@1.46.0(react@19.2.8))(effect@4.0.1)':
     dependencies:
-      '@confect/core': 10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
-      '@confect/server': 10.0.0(@confect/core@10.0.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+      '@confect/core': 10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1)
+      '@confect/server': 10.1.0(@confect/core@10.1.0(convex@1.46.0(react@19.2.8))(effect@4.0.1))(@effect/platform-node@4.0.1(effect@4.0.1)(redis@6.2.1))(convex@1.46.0(react@19.2.8))(effect@4.0.1)
       convex: 1.46.0(react@19.2.8)
       convex-test: 0.0.60(convex@1.46.0(react@19.2.8))
       effect: 4.0.1
 
-  '@convex-dev/agent@0.7.7(@ai-sdk/provider-utils@5.0.58(zod@4.6.5))(@ai-sdk/provider@4.0.26)(ai@7.0.135(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)':
+  '@convex-dev/agent@0.7.7(@ai-sdk/provider-utils@5.0.58(zod@4.6.5))(@ai-sdk/provider@4.0.26)(ai@7.0.136(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5))(convex@1.46.0(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@ai-sdk/provider': 4.0.26
       '@ai-sdk/provider-utils': 5.0.58(zod@4.6.5)
-      ai: 7.0.135(zod@4.6.5)
+      ai: 7.0.136(zod@4.6.5)
       convex: 1.46.0(react@19.2.8)
       convex-helpers: 0.1.128(@standard-schema/spec@1.1.0)(convex@1.46.0(react@19.2.8))(hono@4.13.13)(react@19.2.8)(typescript@7.0.2)(zod@4.6.5)
     optionalDependencies:
@@ -8435,12 +8435,12 @@ snapshots:
       - typescript
       - zod
 
-  '@convex-dev/ai-sdk-provider@0.2.1(ai@7.0.135(zod@4.6.5))(convex@1.46.0(react@19.2.8))':
+  '@convex-dev/ai-sdk-provider@0.2.1(ai@7.0.136(zod@4.6.5))(convex@1.46.0(react@19.2.8))':
     dependencies:
       '@ai-sdk/anthropic': 4.0.40(zod@4.6.5)
       '@ai-sdk/openai': 4.0.45(zod@4.6.5)
       '@ai-sdk/openai-compatible': 3.0.14(zod@4.6.5)
-      ai: 7.0.135(zod@4.6.5)
+      ai: 7.0.136(zod@4.6.5)
       convex: 1.46.0(react@19.2.8)
       zod: 4.6.5
 
@@ -10543,9 +10543,9 @@ snapshots:
 
   agent-base@9.0.0: {}
 
-  ai@7.0.135(zod@4.6.5):
+  ai@7.0.136(zod@4.6.5):
     dependencies:
-      '@ai-sdk/gateway': 4.0.109(zod@4.6.5)
+      '@ai-sdk/gateway': 4.0.110(zod@4.6.5)
       '@ai-sdk/provider': 4.0.26
       '@ai-sdk/provider-utils': 5.0.58(zod@4.6.5)
       zod: 4.6.5

@@ -156,7 +156,7 @@ function clipStart(
         (screenProgress * previous.w) /
         (current.w * (1 - screenProgress) + screenProgress * previous.w);
       const boundary = points[index - 1].clone().lerp(points[index], progress);
-      return [boundary, ...points.slice(index)];
+      return [boundary, ...Arr.drop(points, index)];
     }
     previous = current;
   }

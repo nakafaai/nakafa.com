@@ -68,93 +68,98 @@ export const makeArticleRuntimeSource = Effect.fn(
     string,
     PublicationRow<"articleCategories">
   >();
-  for (const [index, projection] of projections.entries()) {
-    const artifact = testSignedArtifact("politics", {
-      artifactLocale: activeAppLocaleCode(projection.appLocale),
-      contentKey: projection.contentKey,
-    });
-    const projectionHash = hashContentProjection(projection);
-    const identity = {
-      contentKey: projection.contentKey,
-      projectionHash,
-      releaseId: signed.manifest.releaseId,
-      sequence: fixture.state.activeSequence,
-    };
-    MutableList.append(heads, {
-      ...identity,
-      artifactHash: artifact.artifactHash,
-      artifactLocale: projection.artifactLocale,
-      compilerConfigHash: artifact.payload.compilerConfigHash,
-      delivery: "public",
-      family: "article",
-      index,
-      operation: "upsert",
-      projectionJson: canonicalizeArticleProjection(projection),
-      rendererDomain: "politics",
-      sourceHash: artifact.payload.sourceHash,
-      sourcePath: `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`,
-    });
-    MutableList.append(bindings, {
-      appLocale: projection.appLocale,
-      batchHash: testTextHash("article snapshot routes"),
-      batchIndex: 0,
-      contentKey: projection.contentKey,
-      index,
-      operation: "bind",
-      publicPath: projection.publicPath,
-      releaseId: signed.manifest.releaseId,
-      routeJson: testRouteJson({
-        appLocale: projection.appLocale,
-        contentKey: projection.contentKey,
-        index,
-        publicPath: projection.publicPath,
-        releaseId: signed.manifest.releaseId,
+  yield* Effect.forEach(
+    projections,
+    (projection, index) =>
+      Effect.gen(function* () {
+        const artifact = testSignedArtifact("politics", {
+          artifactLocale: activeAppLocaleCode(projection.appLocale),
+          contentKey: projection.contentKey,
+        });
+        const projectionHash = hashContentProjection(projection);
+        const identity = {
+          contentKey: projection.contentKey,
+          projectionHash,
+          releaseId: signed.manifest.releaseId,
+          sequence: fixture.state.activeSequence,
+        };
+        MutableList.append(heads, {
+          ...identity,
+          artifactHash: artifact.artifactHash,
+          artifactLocale: projection.artifactLocale,
+          compilerConfigHash: artifact.payload.compilerConfigHash,
+          delivery: "public",
+          family: "article",
+          index,
+          operation: "upsert",
+          projectionJson: canonicalizeArticleProjection(projection),
+          rendererDomain: "politics",
+          sourceHash: artifact.payload.sourceHash,
+          sourcePath: `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`,
+        });
+        MutableList.append(bindings, {
+          appLocale: projection.appLocale,
+          batchHash: testTextHash("article snapshot routes"),
+          batchIndex: 0,
+          contentKey: projection.contentKey,
+          index,
+          operation: "bind",
+          publicPath: projection.publicPath,
+          releaseId: signed.manifest.releaseId,
+          routeJson: testRouteJson({
+            appLocale: projection.appLocale,
+            contentKey: projection.contentKey,
+            index,
+            publicPath: projection.publicPath,
+            releaseId: signed.manifest.releaseId,
+          }),
+          sequence: fixture.state.activeSequence,
+        });
+        MutableList.append(artifacts, {
+          artifactHash: artifact.artifactHash,
+          artifactJson: yield* Schema.encodeEffect(SignedArtifactJsonSchema)(
+            artifact
+          ),
+        });
+        const bucket = getHashBucket(projectionHash);
+        MutableList.append(catalog, {
+          ...identity,
+          ...Struct.pick(projection.metadata, ["dateModified"]),
+          appLocale: projection.appLocale,
+          assetId: projection.graph.assetId,
+          bucket,
+          category: projection.category,
+          categoryTitle: projection.categoryTitle,
+          datePublished: projection.metadata.datePublished,
+          publicPath: projection.publicPath,
+          rendererDomain: "politics",
+          slot: fixture.state.articleSlot,
+        });
+        MutableHashMap.set(
+          categories,
+          `${projection.appLocale}/${projection.category}`,
+          {
+            ...identity,
+            appLocale: projection.appLocale,
+            bucket,
+            category: projection.category,
+            rendererDomain: "politics",
+            route: projection.categoryRouteSlug,
+            slot: fixture.state.articleSlot,
+            title: projection.categoryTitle,
+          }
+        );
+        MutableList.append(search, {
+          ...identity,
+          appLocale: projection.appLocale,
+          family: "article",
+          publicPath: projection.publicPath,
+          slot: fixture.state.searchSlot,
+          text: projection.metadata.title,
+        });
       }),
-      sequence: fixture.state.activeSequence,
-    });
-    MutableList.append(artifacts, {
-      artifactHash: artifact.artifactHash,
-      artifactJson: yield* Schema.encodeEffect(SignedArtifactJsonSchema)(
-        artifact
-      ),
-    });
-    const bucket = getHashBucket(projectionHash);
-    MutableList.append(catalog, {
-      ...identity,
-      ...Struct.pick(projection.metadata, ["dateModified"]),
-      appLocale: projection.appLocale,
-      assetId: projection.graph.assetId,
-      bucket,
-      category: projection.category,
-      categoryTitle: projection.categoryTitle,
-      datePublished: projection.metadata.datePublished,
-      publicPath: projection.publicPath,
-      rendererDomain: "politics",
-      slot: fixture.state.articleSlot,
-    });
-    MutableHashMap.set(
-      categories,
-      `${projection.appLocale}/${projection.category}`,
-      {
-        ...identity,
-        appLocale: projection.appLocale,
-        bucket,
-        category: projection.category,
-        rendererDomain: "politics",
-        route: projection.categoryRouteSlug,
-        slot: fixture.state.articleSlot,
-        title: projection.categoryTitle,
-      }
-    );
-    MutableList.append(search, {
-      ...identity,
-      appLocale: projection.appLocale,
-      family: "article",
-      publicPath: projection.publicPath,
-      slot: fixture.state.searchSlot,
-      text: projection.metadata.title,
-    });
-  }
+    { discard: true }
+  );
   const catalogRows = MutableList.toArray(catalog);
   const partitionRows = [
     ...Arr.map(catalogRows, (row) => ({ row, article: 1, category: 0 })),

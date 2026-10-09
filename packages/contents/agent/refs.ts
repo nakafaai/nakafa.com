@@ -51,18 +51,20 @@ export function parseNakafaUrlRoute(input: string) {
     normalized.replace(MARKDOWN_EXTENSION_PATTERN, "")
   );
   const segments = Arr.filter(cleanInput.split("/"), Boolean);
-  const firstSegment = segments.at(0);
+  const firstSegment = Arr.head(segments);
 
-  if (!firstSegment) {
+  if (Option.isNone(firstSegment)) {
     return Option.none<NakafaUrlRoute>();
   }
 
-  const parsedLocale = Schema.decodeUnknownOption(LocaleSchema)(firstSegment);
+  const parsedLocale = Schema.decodeUnknownOption(LocaleSchema)(
+    firstSegment.value
+  );
   if (Option.isNone(parsedLocale)) {
     return Option.none<NakafaUrlRoute>();
   }
 
-  const route = Arr.join(segments.slice(1), "/");
+  const route = Arr.join(Arr.drop(segments, 1), "/");
   const parsedRoute = Schema.decodeOption(NakafaAgentContentRouteSchema)(route);
 
   if (Option.isNone(parsedRoute)) {

@@ -77,14 +77,14 @@ export function PromptInput({
     }
 
     const onDragOver = (event: DragEvent) => {
-      if (event.dataTransfer?.types?.includes("Files")) {
+      if (Arr.contains(event.dataTransfer?.types ?? [], "Files")) {
         event.preventDefault();
       }
     };
     const onDrop = (event: DragEvent) => {
       const droppedFiles = event.dataTransfer?.files;
       if (
-        event.dataTransfer?.types?.includes("Files") ||
+        Arr.contains(event.dataTransfer?.types ?? [], "Files") ||
         (droppedFiles && droppedFiles.length > 0)
       ) {
         event.preventDefault();

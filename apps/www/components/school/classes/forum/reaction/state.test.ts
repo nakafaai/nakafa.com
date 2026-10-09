@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr, Option } from "effect";
 import { toggleReactionState } from "@/components/school/classes/forum/reaction/state";
 
 const state = {
@@ -122,7 +123,7 @@ describe("toggleReactionState", () => {
   it("creates a preview without inventing an unavailable name", () => {
     const result = toggleReactionState(state, "🔥");
 
-    expect(result.reactionUsers.at(-1)).toEqual({
+    expect(Option.getOrThrow(Arr.last(result.reactionUsers))).toEqual({
       count: 1,
       emoji: "🔥",
       reactors: [],

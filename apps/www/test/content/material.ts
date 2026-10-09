@@ -59,85 +59,90 @@ export const makeMaterialRuntimeSource = Effect.fn(
   const artifacts = MutableList.make<PublicationRow<"contentArtifacts">>();
   const catalog = MutableList.make<PublicationRow<"materialCatalog">>();
   const search = MutableList.make<PublicationRow<"contentIndex">>();
-  for (const [index, projection] of projections.entries()) {
-    const artifact = testSignedArtifact("mathematics", {
-      artifactLocale: activeAppLocaleCode(projection.appLocale),
-      contentKey: projection.contentKey,
-    });
-    const projectionHash = hashContentProjection(projection);
-    const projectionJson = canonicalizeMaterialProjection(projection);
-    const sourcePath = `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`;
-    const publicIdentity = {
-      contentKey: projection.contentKey,
-      projectionHash,
-      publicPath: projection.publicPath,
-      releaseId: signed.manifest.releaseId,
-      sequence: fixture.state.activeSequence,
-    };
-    MutableList.append(heads, {
-      ...Struct.omit(publicIdentity, ["publicPath"]),
-      artifactHash: artifact.artifactHash,
-      artifactLocale: projection.artifactLocale,
-      compilerConfigHash: artifact.payload.compilerConfigHash,
-      delivery: "public",
-      family: "material",
-      index,
-      operation: "upsert",
-      projectionJson,
-      rendererDomain: "mathematics",
-      sourceHash: artifact.payload.sourceHash,
-      sourcePath,
-    });
-    MutableList.append(bindings, {
-      appLocale: projection.appLocale,
-      batchHash: testTextHash("material snapshot routes"),
-      batchIndex: 0,
-      contentKey: projection.contentKey,
-      index,
-      operation: "bind",
-      publicPath: projection.publicPath,
-      releaseId: signed.manifest.releaseId,
-      routeJson: testRouteJson({
-        appLocale: projection.appLocale,
-        contentKey: projection.contentKey,
-        index,
-        publicPath: projection.publicPath,
-        releaseId: signed.manifest.releaseId,
+  yield* Effect.forEach(
+    projections,
+    (projection, index) =>
+      Effect.gen(function* () {
+        const artifact = testSignedArtifact("mathematics", {
+          artifactLocale: activeAppLocaleCode(projection.appLocale),
+          contentKey: projection.contentKey,
+        });
+        const projectionHash = hashContentProjection(projection);
+        const projectionJson = canonicalizeMaterialProjection(projection);
+        const sourcePath = `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`;
+        const publicIdentity = {
+          contentKey: projection.contentKey,
+          projectionHash,
+          publicPath: projection.publicPath,
+          releaseId: signed.manifest.releaseId,
+          sequence: fixture.state.activeSequence,
+        };
+        MutableList.append(heads, {
+          ...Struct.omit(publicIdentity, ["publicPath"]),
+          artifactHash: artifact.artifactHash,
+          artifactLocale: projection.artifactLocale,
+          compilerConfigHash: artifact.payload.compilerConfigHash,
+          delivery: "public",
+          family: "material",
+          index,
+          operation: "upsert",
+          projectionJson,
+          rendererDomain: "mathematics",
+          sourceHash: artifact.payload.sourceHash,
+          sourcePath,
+        });
+        MutableList.append(bindings, {
+          appLocale: projection.appLocale,
+          batchHash: testTextHash("material snapshot routes"),
+          batchIndex: 0,
+          contentKey: projection.contentKey,
+          index,
+          operation: "bind",
+          publicPath: projection.publicPath,
+          releaseId: signed.manifest.releaseId,
+          routeJson: testRouteJson({
+            appLocale: projection.appLocale,
+            contentKey: projection.contentKey,
+            index,
+            publicPath: projection.publicPath,
+            releaseId: signed.manifest.releaseId,
+          }),
+          sequence: fixture.state.activeSequence,
+        });
+        MutableList.append(artifacts, {
+          artifactHash: artifact.artifactHash,
+          artifactJson: yield* Schema.encodeEffect(SignedArtifactJsonSchema)(
+            artifact
+          ),
+        });
+        const topic = yield* deriveMaterialTopicReference(projection);
+        const bucket = getHashBucket(projectionHash);
+        MutableList.append(catalog, {
+          ...publicIdentity,
+          appLocale: projection.appLocale,
+          assetId: projection.graph.assetId,
+          bucket,
+          ...Struct.pick(projection.metadata, ["dateModified"]),
+          datePublished: projection.metadata.datePublished,
+          materialKey: projection.materialKey,
+          order: projection.order,
+          parentPath: projection.parentPath,
+          projectionJson,
+          rendererDomain: "mathematics",
+          slot: fixture.state.materialSlot,
+          sourcePath,
+          topicAssetId: topic.graph.assetId,
+        });
+        MutableList.append(search, {
+          ...publicIdentity,
+          appLocale: projection.appLocale,
+          family: "material",
+          slot: fixture.state.searchSlot,
+          text: projection.metadata.title,
+        });
       }),
-      sequence: fixture.state.activeSequence,
-    });
-    MutableList.append(artifacts, {
-      artifactHash: artifact.artifactHash,
-      artifactJson: yield* Schema.encodeEffect(SignedArtifactJsonSchema)(
-        artifact
-      ),
-    });
-    const topic = yield* deriveMaterialTopicReference(projection);
-    const bucket = getHashBucket(projectionHash);
-    MutableList.append(catalog, {
-      ...publicIdentity,
-      appLocale: projection.appLocale,
-      assetId: projection.graph.assetId,
-      bucket,
-      ...Struct.pick(projection.metadata, ["dateModified"]),
-      datePublished: projection.metadata.datePublished,
-      materialKey: projection.materialKey,
-      order: projection.order,
-      parentPath: projection.parentPath,
-      projectionJson,
-      rendererDomain: "mathematics",
-      slot: fixture.state.materialSlot,
-      sourcePath,
-      topicAssetId: topic.graph.assetId,
-    });
-    MutableList.append(search, {
-      ...publicIdentity,
-      appLocale: projection.appLocale,
-      family: "material",
-      slot: fixture.state.searchSlot,
-      text: projection.metadata.title,
-    });
-  }
+    { discard: true }
+  );
   const catalogRows = MutableList.toArray(catalog);
   const buckets = Arr.map(
     Rec.values(

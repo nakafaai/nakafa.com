@@ -12,6 +12,7 @@ import {
 } from "@repo/design-system/components/markdown/react/node";
 import { readMermaidMetadata } from "@repo/design-system/lib/markdown/mermaid";
 import { cn } from "cn";
+import { Array as Arr, Option } from "effect";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
@@ -41,7 +42,10 @@ export const reactCodeComponents: ReactMarkdownComponents = {
       );
     }
 
-    const language = className?.match(LANGUAGE_REGEX)?.at(1) ?? "";
+    const language = Option.getOrElse(
+      Arr.get(className?.match(LANGUAGE_REGEX) ?? [], 1),
+      () => ""
+    );
     const code = readMarkdownNodeText(node);
 
     if (language === "math") {

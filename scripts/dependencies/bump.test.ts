@@ -144,13 +144,15 @@ describe("dependency updates", () => {
           "--recursive",
           "--latest",
         ]);
-        assert.deepStrictEqual(result.commands.at(-1), [
-          "outdated",
-          "--recursive",
-          "--format",
-          "json",
-        ]);
-        assert.ok(result.output.at(-1)?.startsWith("Routine dependencies and"));
+        assert.deepStrictEqual(
+          Arr.last(result.commands),
+          Option.some(["outdated", "--recursive", "--format", "json"])
+        );
+        assert.ok(
+          Option.exists(Arr.last(result.output), (message) =>
+            message.startsWith("Routine dependencies and")
+          )
+        );
         assert.ok(
           Arr.some(result.output, (message) =>
             message.startsWith("actions/checkout:")
