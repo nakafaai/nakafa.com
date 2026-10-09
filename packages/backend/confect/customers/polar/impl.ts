@@ -9,10 +9,8 @@ import {
   polarCustomerErrorCode,
   type StoredPolarCustomer,
 } from "@repo/backend/confect/customers/polar/spec";
-import { Effect, Result, Schema } from "effect";
-
-/** Writes metadata as the same JSON text JSON.stringify produces, for the sync comparison. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect, Result } from "effect";
 
 /** Normalizes one decoded Polar customer into the subset persisted locally. */
 export const normalizeStoredCustomer: (
@@ -60,8 +58,8 @@ export const syncExistingCustomer: (
       polarCustomerId: storedCustomer.id,
     });
   }
-  const currentMetadata = encodeJson(storedCustomer.metadata);
-  const nextMetadata = encodeJson(input.metadata ?? {});
+  const currentMetadata = encodeJsonText(storedCustomer.metadata);
+  const nextMetadata = encodeJsonText(input.metadata ?? {});
   const alreadySynced =
     storedCustomer.email === input.email &&
     storedCustomer.name === input.name &&

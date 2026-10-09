@@ -5,6 +5,7 @@ import {
   postHogErasureConfigErrorCode,
   postHogErasureRequestErrorCode,
 } from "@repo/backend/confect/analytics/erasure/action.spec";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Config, Effect, Redacted, Schema } from "effect";
 export const postHogIngestionHostnameSuffix = /\.i\.posthog\.com$/;
 export const postHogProjectIdPattern = /^[1-9]\d*$/;
@@ -25,7 +26,6 @@ const PostHogErasureConfigSchema = Schema.Struct({
   projectId: Schema.String,
 });
 export type PostHogErasureConfig = typeof PostHogErasureConfigSchema.Type;
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 const PostHogBulkEraseJsonSchema = Schema.fromJsonString(
   PostHogBulkEraseResponseSchema
 );
@@ -149,7 +149,7 @@ export const erasePostHogPerson = Effect.fn(
       code: postHogErasureRequestErrorCode,
       message: "PostHog person erasure request timed out.",
     });
-  const body = yield* Schema.encodeEffect(JsonText)({
+  const body = yield* Schema.encodeEffect(JsonTextSchema)({
     delete_events: true,
     delete_recordings: true,
     distinct_ids: [distinctId],

@@ -5,9 +5,8 @@ import {
   createGridGeometry,
   createSymmetricFrame,
 } from "@repo/design-system/components/three/frame";
-import { Array as Arr, Order, Schema } from "effect";
-
-const PlainJsonSchema = Schema.fromJsonString(Schema.Unknown);
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Order } from "effect";
 
 const asymmetricFrame = {
   x: { max: 1.8, min: -0.9 },
@@ -289,7 +288,7 @@ describe("coordinate frame geometry", () => {
     );
 
     expect(points.length).toBeLessThanOrEqual(8);
-    const encodeSegment = Schema.encodeSync(PlainJsonSchema);
+    const encodeSegment = encodeJsonText;
     expect(
       Arr.dedupe(Arr.map(segments, (segment) => encodeSegment(segment))).length
     ).toBe(segments.length);

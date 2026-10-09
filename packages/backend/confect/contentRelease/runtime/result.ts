@@ -2,6 +2,7 @@ import {
   type ContentRuntimeFailureCodeSchema,
   ContentRuntimeFailureSchema,
 } from "@nakafa/aksara-contracts/runtime/result";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Result, Schema } from "effect";
 
 type ContentRuntimeFailureCode = typeof ContentRuntimeFailureCodeSchema.Type;
@@ -11,8 +12,6 @@ export const RuntimeHttpResultSchema = Schema.Struct({
   status: Schema.Finite,
 });
 export type RuntimeHttpResult = typeof RuntimeHttpResultSchema.Type;
-/** Stringifies one value it already holds to JSON text, with no shape check. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Encodes one sanitized runtime failure through the shared contract. */
 export function failureResult(
   code: ContentRuntimeFailureCode,
@@ -23,7 +22,7 @@ export function failureResult(
     kind: "failure",
   });
   return {
-    body: encodeJson(failure),
+    body: encodeJsonText(failure),
     status,
   };
 }
@@ -40,7 +39,7 @@ export function encodeRuntimeResult<A, I>(
   if (Result.isFailure(decoded)) {
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
-  const body = encodeJson(decoded.success);
+  const body = encodeJsonText(decoded.success);
   if (new TextEncoder().encode(body).byteLength > maxBytes) {
     return failureResult("CONTENT_RUNTIME_RESPONSE_TOO_LARGE", 500);
   }

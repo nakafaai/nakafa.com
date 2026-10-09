@@ -35,10 +35,8 @@ import {
   testUpsertJson,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Schema } from "effect";
-
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const NOW = Date.UTC(2026, 6, 23, 12);
 type RollbackFixtureFamily = "material" | "question";
@@ -131,7 +129,7 @@ export async function activateRollbackFixture(
     completedAt: NOW,
     proofAt: NOW,
     proofJson: "{}",
-    receiptJson: encodeJson(receipt),
+    receiptJson: encodeJsonText(receipt),
     status: "completed",
     verifiedAt: NOW,
   });
@@ -306,7 +304,7 @@ export async function insertRollbackItem(
       sourcePath: currentSourcePath,
     },
     compiledCode,
-    signedArtifact ? encodeJson(signedArtifact) : undefined
+    signedArtifact ? encodeJsonText(signedArtifact) : undefined
   );
   if (previousExists) {
     await insertVersion(

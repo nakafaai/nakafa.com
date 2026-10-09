@@ -20,6 +20,7 @@ import {
   LocalSigningIdentitySchema,
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
   Crypto,
@@ -52,8 +53,6 @@ const RuntimeManifest = Schema.Struct({
   site: LoopbackUrl,
 });
 export type LocalRuntime = typeof RuntimeManifest.Type;
-/** Plain JSON text: for every value `JSON.stringify` serializes, encoding yields the same bytes; `undefined` fails instead. */
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 /** Hashes text with SHA-256 through Effect's `Crypto` and returns the hex digest. */
 const sha256Hex = Effect.fn("ContentAcceptance.sha256Hex")(function* (
   text: string
@@ -220,7 +219,7 @@ export const initializeLocalRuntime = Effect.fn(
     );
   yield* fs.writeFileString(
     `${backend}/convex.json`,
-    yield* Schema.encodeEffect(JsonText)({
+    yield* Schema.encodeEffect(JsonTextSchema)({
       ...config,
       functions: path.relative(backend, `${root}/packages/backend/convex`),
     })
@@ -278,7 +277,7 @@ export const initializeLocalRuntime = Effect.fn(
             AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
             AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
           }),
-          ([key, value]) => `${key}=${Schema.encodeSync(JsonText)(value)}`
+          ([key, value]) => `${key}=${encodeJsonText(value)}`
         ),
         // Convex reads these lines with dotenv, which keeps a double-quoted
         // value's escaped quotes but takes a single-quoted one literally.
@@ -307,7 +306,7 @@ export const initializeLocalRuntime = Effect.fn(
   };
   yield* fs.writeFileString(
     `${directory}/manifest.json`,
-    yield* Schema.encodeEffect(JsonText)(runtime),
+    yield* Schema.encodeEffect(JsonTextSchema)(runtime),
     { mode: 0o600, flag: "wx" }
   );
   return runtime;

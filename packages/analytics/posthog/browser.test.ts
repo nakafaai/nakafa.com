@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Deferred, Effect, Fiber, Ref, Schema } from "effect";
 import type { CaptureResult } from "posthog-js";
 
@@ -424,9 +425,9 @@ describe("two-tier PostHog browser runtime", () => {
         }),
         { source: "browser-test" }
       );
-      const encodedCalls = yield* Schema.encodeUnknownEffect(
-        Schema.fromJsonString(Schema.Unknown)
-      )(client.captureException.mock.calls);
+      const encodedCalls = yield* Schema.encodeUnknownEffect(JsonTextSchema)(
+        client.captureException.mock.calls
+      );
       expect(encodedCalls).not.toContain("user@example.com");
       expect(client.reset).toHaveBeenLastCalledWith(true);
     })

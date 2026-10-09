@@ -2,6 +2,7 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const PROGRAM_POSITION_PREFIX = "program-route|";
@@ -17,10 +18,9 @@ export function isProgramPosition(cursor: string) {
   return cursor.startsWith(PROGRAM_POSITION_PREFIX);
 }
 
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Encodes the immutable localized route boundary without database identities. */
 export function programPosition(row: RouteRow) {
-  return `${PROGRAM_POSITION_PREFIX}${encodeJson([row.snapshotId, row.appLocale, row.path])}`;
+  return `${PROGRAM_POSITION_PREFIX}${encodeJsonText([row.snapshotId, row.appLocale, row.path])}`;
 }
 
 /** Requires a curriculum cursor to belong to its exact snapshot and locale. */

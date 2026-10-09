@@ -45,15 +45,12 @@ import {
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime/values";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Plain codec: parses the same text as JSON.parse, so each expected response keeps its exact values. */
-const decodeJson = Schema.decodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const decodeJson = Schema.decodeUnknownSync(JsonTextSchema);
 
 type RuntimeRow = Exclude<
   FunctionReturnType<
@@ -167,7 +164,7 @@ export function runtimeContentKey(
 
 /** Creates one exact public runtime request body. */
 export function publicRuntimeRequest() {
-  return encodeJson({
+  return encodeJsonText({
     delivery: "public",
     appLocale: "en",
     publicPath: TEST_RUNTIME_PATH,
@@ -321,7 +318,7 @@ export async function insertSignedRelease(ctx: MutationCtx) {
     throw new Error("Expected one runtime release.");
   }
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: encodeJson(TEST_RUNTIME_ENVELOPE),
-    rendererJson: encodeJson(TEST_PROOF_RENDERER),
+    releaseJson: encodeJsonText(TEST_RUNTIME_ENVELOPE),
+    rendererJson: encodeJsonText(TEST_PROOF_RENDERER),
   });
 }

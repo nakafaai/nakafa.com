@@ -12,6 +12,7 @@ import {
 } from "@repo/backend/client/content/errors";
 import { readPublicContent } from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 import type { PublishedContentInput } from "@/lib/content/published/exchange";
 import {
@@ -93,9 +94,7 @@ describe("published content exchange", () => {
     "verifies a coherent query delivery against the live renderer",
     () =>
       Effect.gen(function* () {
-        const source = yield* Schema.encodeEffect(
-          Schema.fromJsonString(Schema.Unknown)
-        )(found);
+        const source = yield* Schema.encodeEffect(JsonTextSchema)(found);
         verifyPublicContentDeliveryMock.mockReturnValue(Effect.succeed(found));
 
         expect(yield* decodePublishedDelivery(routeInput, source)).toEqual({

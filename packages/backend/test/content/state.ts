@@ -28,6 +28,7 @@ import {
   testRendererJson,
   testStoredReachability,
 } from "@repo/backend/test/content/release";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Schema } from "effect";
 
 export const TestIdentitySchema = Schema.Struct({
@@ -73,8 +74,6 @@ const TestStateOptionsSchema = Schema.Struct({
 });
 type TestStateOptions = typeof TestStateOptionsSchema.Type;
 
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** A JSON object whose fields are kept exactly as stored, so the patch keeps every key. */
 const StoredObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
 const decodeStoredObject = Schema.decodeUnknownSync(
@@ -143,7 +142,7 @@ export async function insertZeroRelease(
     ...(terminal
       ? {
           completedAt: now,
-          receiptJson: encodeJson(receipt),
+          receiptJson: encodeJsonText(receipt),
         }
       : {}),
     baseFamilies: [...options.ownership.base],
@@ -244,7 +243,7 @@ export async function insertAbortedRelease(ctx: MutationCtx) {
     checkedItems: 0,
     createdAt: now,
     releaseId,
-    releaseJson: encodeJson(signed),
+    releaseJson: encodeJsonText(signed),
     rendererJson: "{}",
     resultFamilies: [],
     role: "candidate",
@@ -286,7 +285,7 @@ export async function patchStoredOriginRelease(
     stored.manifest
   );
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: encodeJson({
+    releaseJson: encodeJsonText({
       ...stored,
       manifest: {
         ...manifest,
@@ -332,10 +331,10 @@ export async function insertActiveRelease(
     createdAt: now,
     proofAt: now,
     proofJson: "{}",
-    receiptJson: encodeJson(receipt),
+    receiptJson: encodeJsonText(receipt),
     releaseId: activeReleaseId,
-    releaseJson: encodeJson(active),
-    rendererJson: encodeJson(TEST_PROOF_RENDERER),
+    releaseJson: encodeJsonText(active),
+    rendererJson: encodeJsonText(TEST_PROOF_RENDERER),
     resultFamilies: [],
     role: "candidate",
     sequence: 1,

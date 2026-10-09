@@ -1,5 +1,6 @@
 import { hashText } from "@repo/backend/confect/contentRelease/digest";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const BatchKindSchema = Schema.Literals([
@@ -9,7 +10,6 @@ const BatchKindSchema = Schema.Literals([
   "route",
   "snapshot",
 ]);
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 /** Computes the exact ordered request identity for idempotent batch retries. */
 export const hashBatch = Effect.fn("contentRelease.hashBatch")(function* (
   kind: typeof BatchKindSchema.Type,

@@ -1,4 +1,5 @@
 "use client";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Data, Effect, Option, Schema } from "effect";
 
 const AI_DRAFT_STORAGE_KEY = "nakafa-ai-draft";
@@ -7,7 +8,6 @@ const AiDraftRecordSchema = Schema.Struct({
   owner: Schema.String,
   text: Schema.String,
 });
-const AiDraftJson = Schema.fromJsonString(Schema.Unknown);
 const AiDraftResolutionSchema = Schema.Struct({
   ownerId: Schema.NullOr(Schema.String),
   pendingText: Schema.String,
@@ -24,7 +24,7 @@ function encodeDraftOwner(ownerId: string | null) {
 }
 /** Encodes one draft record as the JSON text kept in session storage. */
 function encodeAiDraftRecord(owner: string, text: string) {
-  return Schema.encodeSync(AiDraftJson)({ owner, text });
+  return encodeJsonText({ owner, text });
 }
 /** Removes every tab-scoped value owned by the Nina draft handoff. */
 function removeAiDraft() {

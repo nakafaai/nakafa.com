@@ -1,9 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { runAgentRequest } from "@repo/backend/confect/routes/agent/runtime";
-import { Effect, Schema } from "effect";
-
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect } from "effect";
 
 describe("agent HTTP execution", () => {
   it.effect(
@@ -24,7 +23,9 @@ describe("agent HTTP execution", () => {
           request_id: "request-defect",
           instance: "/v1/search",
         });
-        expect(encodeJson(body)).not.toContain("private storage credential");
+        expect(encodeJsonText(body)).not.toContain(
+          "private storage credential"
+        );
       })
   );
 });

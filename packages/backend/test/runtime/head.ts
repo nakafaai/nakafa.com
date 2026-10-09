@@ -28,6 +28,7 @@ import {
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime/values";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const RuntimeHeadOptionsSchema = Schema.Struct({
@@ -52,8 +53,6 @@ type RuntimeHeadOptions = typeof RuntimeHeadOptionsSchema.Type;
 const ContentProjectionJsonSchema = Schema.fromJsonString(
   ContentProjectionSchema
 );
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Builds one material projection that owns the requested runtime route. */
 function runtimeProjectionJson(
@@ -351,7 +350,7 @@ export async function insertSignedHead(
       sourceHash: artifact.payload.sourceHash,
     }),
     ctx.db.patch("contentArtifacts", storedArtifact._id, {
-      artifactJson: encodeJson(artifact),
+      artifactJson: encodeJsonText(artifact),
     }),
   ]);
 }

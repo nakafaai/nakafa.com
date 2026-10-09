@@ -9,11 +9,11 @@ import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 7, 31, 5, 0, 0);
-const JsonSchema = Schema.fromJsonString(Schema.Unknown);
 const checkoutStartedEvent = {
   name: "checkout started",
   properties: {
@@ -95,7 +95,7 @@ describe("customers/checkout/admission", () => {
             ctx.db.system.query("_scheduled_functions").collect()
           )
         );
-        const encodedProperties = yield* Schema.encodeEffect(JsonSchema)(
+        const encodedProperties = yield* Schema.encodeEffect(JsonTextSchema)(
           checkoutStartedEvent.properties
         );
 

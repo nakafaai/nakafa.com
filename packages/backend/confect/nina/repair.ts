@@ -6,10 +6,9 @@ import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { defaultModel } from "@repo/backend/confect/gateway/model";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import type { NinaToolSet } from "@repo/backend/confect/nina/step";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { NoSuchToolError, Output, type ToolCallRepairFunction } from "ai";
 import { Array as Arr, Effect, Schema } from "effect";
-
-const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 class NinaRepairError extends Schema.TaggedError<NinaRepairError>()(
   "NinaRepairError",
@@ -53,7 +52,7 @@ export const repairToolCall = Effect.fn("nina.repair")(
       languageModel: handle.model,
       usageHandler,
     });
-    const acceptedSchema = yield* Schema.encodeEffect(jsonTextSchema)(
+    const acceptedSchema = yield* Schema.encodeEffect(JsonTextSchema)(
       schema
     ).pipe(Effect.orDie);
     const result = yield* Effect.tryPromise({
@@ -81,7 +80,7 @@ export const repairToolCall = Effect.fn("nina.repair")(
           .then((generated) => generated.output),
       catch: () => new NinaRepairError({ phase: "generation" }),
     });
-    const input = yield* Schema.encodeEffect(jsonTextSchema)(result).pipe(
+    const input = yield* Schema.encodeEffect(JsonTextSchema)(result).pipe(
       Effect.orDie
     );
     return { ...toolCall, input };

@@ -12,6 +12,7 @@ import {
   testTextHash,
 } from "@repo/backend/test/content/release";
 import type { RuntimeIngressFixture } from "@repo/backend/test/runtime/ingress";
+import { encodeJsonText } from "@repo/utilities/json";
 import type { TestConvex } from "convex-test";
 import { Effect, Schema } from "effect";
 
@@ -23,8 +24,6 @@ const RendererJsonSchema = Schema.fromJsonString(
   RendererManifestEnvelopeSchema
 );
 const SnapshotJsonSchema = Schema.fromJsonString(ContentSnapshotManifestSchema);
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Stores one authenticated fixture through the production runtime capability. */
 export const storeRuntimeFixture = Effect.fn("test.runtime.storeFixture")(
@@ -121,7 +120,7 @@ export async function insertTestTryoutRuntimeBundle(
   });
   const bundleId = await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: bundle.bundleHash,
-    bundleJson: encodeJson(bundle),
+    bundleJson: encodeJsonText(bundle),
     cleanupReleaseId: bundle.payload.sourceReleaseId,
     createdAt: 1,
     rendererJson: release.rendererJson,

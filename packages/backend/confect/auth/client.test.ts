@@ -5,13 +5,13 @@ import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/confect/auth/d
 import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { encodeJsonText } from "@repo/utilities/json";
 import { getFunctionName, makeFunctionReference } from "convex/server";
-import { Array as Arr, pipe, Schema } from "effect";
+import { Array as Arr, pipe } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const BASE64_PADDING_PATTERN = /[=]+$/;
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 const finalizeDeletedUserCleanupReference = makeFunctionReference<
   "mutation",
   {
@@ -20,7 +20,7 @@ const finalizeDeletedUserCleanupReference = makeFunctionReference<
   null
 >("customers/deletion/workflow:finalizeDeletedUserCleanup");
 function encodeGoogleTokenPart(value: object) {
-  return btoa(Schema.encodeSync(JsonText)(value))
+  return btoa(encodeJsonText(value))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
     .replace(BASE64_PADDING_PATTERN, "");
@@ -70,7 +70,7 @@ async function signUpGoogleLearner(
   });
   vi.stubGlobal("fetch", tokenExchange);
   const signInResponse = await test.fetch("/api/auth/sign-in/social", {
-    body: Schema.encodeSync(JsonText)({
+    body: encodeJsonText({
       callbackURL: "/en",
       provider: "google",
     }),

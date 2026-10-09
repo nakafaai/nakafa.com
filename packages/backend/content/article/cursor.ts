@@ -9,6 +9,7 @@ import {
   encodeArticlePublicationCursor,
   hasArticlePublicationCursorPrefix,
 } from "@repo/contents/publication";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const publicationFields = [
@@ -25,7 +26,6 @@ const PublicationCursorSchema = Schema.Union([
 const PublicationCursorJsonSchema = Schema.fromJsonString(
   PublicationCursorSchema
 );
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Authenticates the position encoded by one non-empty public cursor. */
 const readPublicationPosition = Effect.fn(
@@ -56,7 +56,7 @@ export function articlePublicationCursor(
   row: PublicationRow<"articleCatalog">
 ) {
   return encodeArticlePublicationCursor(
-    Schema.encodeSync(JsonTextSchema)([
+    encodeJsonText([
       row.slot,
       row.appLocale,
       row.category,

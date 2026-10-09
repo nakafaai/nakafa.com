@@ -11,8 +11,9 @@ import {
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
 import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
+import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/nakafa/tools/read", () => ({
   read: vi.fn(),
@@ -37,7 +38,6 @@ const content = readNakafaContentRefFixture(
   "articles"
 );
 const final = providerStep([{ type: "text", text: "A bounded explanation." }]);
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 function call(toolName: string, input: object) {
   return providerStep(
     [
@@ -45,7 +45,7 @@ function call(toolName: string, input: object) {
         type: "tool-call",
         toolName,
         toolCallId: toolName,
-        input: encodeJson(input),
+        input: encodeJsonText(input),
       },
     ],
     "tool-calls"
