@@ -5,7 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -114,7 +114,7 @@ export async function generateStaticParams({
     const preview = await readArticlePreviewStaticParams(
       AppLocaleSchema.make(locale)
     );
-    return preview.map(({ category }) => ({ category }));
+    return Arr.map(preview, ({ category }) => ({ category }));
   }
   const route = await Effect.runPromise(
     readPublishedArticlePrerenderRoute(locale)
@@ -214,7 +214,7 @@ async function CategoryPage({
       />
       <CollectionPageJsonLd
         description={t("description")}
-        items={articles.map((article) => ({
+        items={Arr.map(articles, (article) => ({
           url: `https://nakafa.com/${locale}/${article.publicPath}`,
           name: article.title,
         }))}
@@ -228,7 +228,7 @@ async function CategoryPage({
       />
       <LayoutContent>
         <ContainerList>
-          {articles.map((article) => (
+          {Arr.map(articles, (article) => (
             <CardArticle article={article} key={article.publicPath} />
           ))}
         </ContainerList>

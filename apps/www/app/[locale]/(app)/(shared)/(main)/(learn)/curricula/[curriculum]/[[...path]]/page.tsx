@@ -1,5 +1,5 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
@@ -248,7 +248,7 @@ async function CurriculumRouteBody({ model }: { model: CurriculumRouteModel }) {
   if (materialCards.length > 0) {
     return (
       <ContainerList className="pt-6 sm:grid-cols-1">
-        {materialCards.map((material) => (
+        {Arr.map(materialCards, (material) => (
           <CardMaterial key={material.href} material={material} />
         ))}
       </ContainerList>

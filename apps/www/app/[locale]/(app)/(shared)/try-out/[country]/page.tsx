@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
@@ -90,7 +90,7 @@ export default async function Page({
     getTranslations({ locale, namespace: "Tryouts" }),
   ]);
   const countryOptions = buildTryoutCountryOptions(locale, hub.countries);
-  const exams = page.exams.map((exam) => {
+  const exams = Arr.map(page.exams, (exam) => {
     const artwork = Effect.runSync(
       resolveTryoutExamArtwork({
         countryKey: page.country.countryKey,

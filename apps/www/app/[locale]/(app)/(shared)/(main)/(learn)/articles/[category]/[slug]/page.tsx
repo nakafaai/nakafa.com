@@ -3,7 +3,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { JsonLd } from "@repo/seo/json-ld";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -97,7 +97,7 @@ export async function generateMetadata({
     title: { absolute: title },
     description,
     alternates,
-    authors: metadata.authors.map(({ name }) => ({ name })),
+    authors: Arr.map(metadata.authors, ({ name }) => ({ name })),
     category: categoryLabel,
     keywords,
     ...socialMetadata,

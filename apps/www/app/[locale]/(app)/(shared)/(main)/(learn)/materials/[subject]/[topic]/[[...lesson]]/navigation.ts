@@ -1,6 +1,7 @@
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentPagination } from "@repo/contents/content";
 import { toContextualMaterialHref } from "@repo/contents/route/material/context";
+import { Array as Arr, Option, Order } from "effect";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 
@@ -43,7 +44,7 @@ export function toMaterialNavigationPage(page: MaterialPageContent) {
   return {
     kind: page.kind,
     route: identity,
-    siblings: page.siblings.map(toMaterialNavigationRoute),
+    siblings: Arr.map(page.siblings, toMaterialNavigationRoute),
   };
 }
 
@@ -57,14 +58,20 @@ export function toMaterialHref(route: {
   return `/${route.appLocale}/${route.publicPath}`;
 }
 
+/** Orders routes by their canonical path in the locale's collation. */
+const orderByLocalePath = Order.make<MaterialNavigationRoute>((left, right) => {
+  const difference = left.publicPath.localeCompare(right.publicPath);
+  if (difference < 0) {
+    return -1;
+  }
+  return difference > 0 ? 1 : 0;
+});
+
 /** Orders signed sibling routes by authored order and canonical path. */
-function compareMaterialRoute(
-  left: MaterialNavigationRoute,
-  right: MaterialNavigationRoute
-) {
-  const order = left.order - right.order;
-  return order === 0 ? left.publicPath.localeCompare(right.publicPath) : order;
-}
+const compareMaterialRoute = Order.combine(
+  Order.mapInput(Order.Number, (route: MaterialNavigationRoute) => route.order),
+  orderByLocalePath
+);
 
 /** Builds sibling pagination with one optional context-aware href resolver. */
 function readRoutePagination(
@@ -72,11 +79,12 @@ function readRoutePagination(
   siblings: readonly MaterialNavigationRoute[],
   toHref?: (target: MaterialNavigationRoute) => string
 ): ContentPagination {
-  const ordered = Array.from(siblings).sort(compareMaterialRoute);
-  const currentIndex = ordered.findIndex(
+  const ordered = Arr.sort(siblings, compareMaterialRoute);
+  const currentIndex = Arr.findFirstIndex(
+    ordered,
     (sibling) => sibling.publicPath === current.publicPath
   );
-  if (currentIndex < 0) {
+  if (Option.isNone(currentIndex)) {
     return { next: emptyItem, prev: emptyItem };
   }
 
@@ -89,8 +97,8 @@ function readRoutePagination(
       title: target.metadata.title,
     };
   };
-  const next = ordered[currentIndex + 1];
-  const prev = ordered[currentIndex - 1];
+  const next = ordered[currentIndex.value + 1];
+  const prev = ordered[currentIndex.value - 1];
   return {
     next: toItem(next),
     prev: toItem(prev),
