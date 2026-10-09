@@ -2,6 +2,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import type { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
+import type { SearchFamily } from "@repo/backend/confect/contentRelease/search/spec";
 import { resolveSearchProjection } from "@repo/backend/confect/contentRelease/search/verify";
 import { buildContentSearchDocument } from "@repo/backend/confect/contents/helpers/search/documents";
 import {
@@ -18,7 +19,7 @@ type ContentSearchInput = typeof contentSearchInputValidator.Type;
 type PublishedSearchOwner = NonNullable<
   Effect.Success<ReturnType<typeof loadSearchOwner>>
 >;
-type PublishedFamily = "article" | "material";
+type PublishedFamily = SearchFamily;
 /** Returns active searchable families selected by the requested UI section. */
 export function getPublishedSearchFamilies(
   owner: PublishedSearchOwner | null,
