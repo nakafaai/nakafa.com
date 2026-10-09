@@ -8,6 +8,7 @@ import {
   Effect,
   FileSystem,
   Layer,
+  Logger,
   MutableList,
   Option,
   Path,
@@ -70,6 +71,14 @@ const recordWrites = (events: MutableList.MutableList<string>) =>
         MutableList.append(events, `write ${path} ${text}`);
       }),
   });
+
+/** Routes every log line of an effect into `lines`, instead of the console. */
+const recordLogs = (lines: MutableList.MutableList<string>) =>
+  Logger.layer([
+    Logger.make<unknown, void>(({ message }) => {
+      MutableList.append(lines, String(message));
+    }),
+  ]);
 
 describe("loadSubmissionHistory", () => {
   it.effect("returns the empty history when no history file exists", () =>
@@ -498,5 +507,42 @@ describe("saveAcceptedUrls", () => {
           })
         )
       )
+  );
+
+  it.effect(
+    "logs the service failure and raises the history write failure when both occur",
+    () => {
+      const lines = MutableList.make<string>();
+      const failure = new IndexNowSubmitError({
+        cause: 500,
+        message: "IndexNow batch 1 failed with HTTP 500.",
+      });
+      return Effect.gen(function* () {
+        const { submissionHistory } = yield* indexingFiles;
+
+        const error = yield* saveAcceptedUrls({
+          failure: Option.some(failure),
+          history: EMPTY_HISTORY,
+          service: "indexNow",
+          submittedUrls: [FIRST],
+        }).pipe(Effect.flip);
+
+        expect(error).toMatchObject({
+          _tag: "SubmissionHistoryError",
+          message: `Failed to write ${submissionHistory}.`,
+        });
+        expect(MutableList.toArray(lines)).toContain(failure.message);
+      }).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            scriptedFiles({
+              writeFileString: () =>
+                Effect.fail(platformFailure("writeFileString")),
+            }),
+            recordLogs(lines)
+          )
+        )
+      );
+    }
   );
 });
