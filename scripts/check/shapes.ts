@@ -81,7 +81,8 @@ function isLiteralValue(literal: Node): boolean {
 
 /**
  * Whether a type is an object literal of one or more properties, each with a
- * literal type, such as `{ readonly family: "program" }`.
+ * literal type or a selector of its own, such as `{ readonly family: "program" }`
+ * or `{ translation: { id: "english" } }`.
  */
 function isSelector(type: TypeNode | undefined): boolean {
   return (
@@ -93,7 +94,7 @@ function isSelector(type: TypeNode | undefined): boolean {
       (member) =>
         isPropertySignatureDeclaration(member) &&
         member.type !== undefined &&
-        isLiteralType(member.type)
+        (isLiteralType(member.type) || isSelector(member.type))
     )
   );
 }
@@ -118,7 +119,7 @@ function selectsMembers(type: TypeReferenceNode) {
  * second argument is skipped, because it picks union members and declares no
  * shape.
  */
-function objectLiterals(type: TypeNode): readonly TypeLiteralNode[] {
+export function objectLiterals(type: TypeNode): readonly TypeLiteralNode[] {
   if (isTypeLiteralNode(type)) {
     return [type];
   }
