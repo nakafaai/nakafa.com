@@ -1,4 +1,5 @@
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import {
   getSearchExcerptParts,
   hasSearchExcerpt,
@@ -22,7 +23,7 @@ export function SearchExcerpt({
 
   return (
     <p className={cn(className)}>
-      {getSearchExcerptParts(excerpt, query).map((part) =>
+      {Arr.map(getSearchExcerptParts(excerpt, query), (part) =>
         part.highlighted ? <mark key={part.key}>{part.text}</mark> : part.text
       )}
     </p>
