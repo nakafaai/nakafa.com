@@ -19,6 +19,7 @@ import {
   testRouteJson,
   testTextHash,
 } from "@repo/backend/test/content/release";
+import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   Data,
@@ -28,9 +29,6 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
-
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 export const TEST_PUBLICATION_RELEASE = testSignedRelease(
   testEmptyManifest(ReleaseIdSchema.make("publication-active"))
@@ -70,8 +68,8 @@ export function makeRuntimeSource(
     checkedItems: 0,
     createdAt: 100,
     releaseId: signed.manifest.releaseId,
-    releaseJson: encodeJson(signed),
-    rendererJson: encodeJson(TEST_PROOF_RENDERER),
+    releaseJson: encodeJsonText(signed),
+    rendererJson: encodeJsonText(TEST_PROOF_RENDERER),
     resultFamilies: [...resultFamilies],
     role: "candidate",
     sequence: 9,
@@ -138,7 +136,7 @@ export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
   MutableHashMap.set(fixture.source, "contentArtifacts", [
     {
       artifactHash: artifact.artifactHash,
-      artifactJson: encodeJson(artifact),
+      artifactJson: encodeJsonText(artifact),
     },
   ]);
   MutableHashMap.set(fixture.source, "contentKeys", [

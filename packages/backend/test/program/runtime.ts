@@ -9,10 +9,8 @@ import {
 import { makeRuntimeSource } from "@repo/backend/test/content/publication";
 import { testPublicationScope } from "@repo/backend/test/content/release";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
-import { Effect, MutableHashMap, Schema } from "effect";
-
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect, MutableHashMap } from "effect";
 
 /** Creates the complete active program publication and its indexed consumer rows. */
 export const makeProgramRuntimeSource = Effect.fn(
@@ -24,7 +22,12 @@ export const makeProgramRuntimeSource = Effect.fn(
     Effect.forEach(
       data.rows,
       (row, index) =>
-        stageProgramRow(data.snapshotId, index, row.record, encodeJson(row)),
+        stageProgramRow(
+          data.snapshotId,
+          index,
+          row.record,
+          encodeJsonText(row)
+        ),
       { discard: true }
     )
   );

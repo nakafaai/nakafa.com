@@ -24,18 +24,16 @@ import {
 } from "@repo/backend/test/content/proof";
 import { completeContentProof } from "@repo/backend/test/content/verify";
 import { FetchClient } from "@repo/utilities/http/client";
+import { encodeJsonText } from "@repo/utilities/json";
 import type { TestConvex } from "convex-test";
 import { Effect, Layer, Schema } from "effect";
-
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Executes one request through the real Node dispatcher and technical key. */
 export async function sendPublication(
   target: TestConvex<typeof schema>,
   request: unknown
 ) {
-  const source = encodeJson(request);
+  const source = encodeJsonText(request);
   const result = await target.action((ctx) =>
     Effect.runPromise(
       dispatchPublication(
