@@ -34,20 +34,9 @@ export default Table.make(() =>
     "content_id",
     "contextKey",
   ])
-  .index("by_userId_and_section_and_locale_and_lastViewedAt", [
-    "userId",
-    "section",
-    "locale",
-    "lastViewedAt",
-  ])
   .index("by_deviceId_and_content_id_and_contextKey_and_lastViewedAt", [
     "deviceId",
     "content_id",
     "contextKey",
-    "lastViewedAt",
-  ])
-  .index("by_locale_and_section_and_lastViewedAt", [
-    "locale",
-    "section",
     "lastViewedAt",
   ]);
