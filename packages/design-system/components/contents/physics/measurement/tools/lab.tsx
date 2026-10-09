@@ -38,6 +38,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -179,15 +180,15 @@ export function MeasurementToolsLab({
       </VisualCardBody>
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <ToolFact
+          <VisualFact
             label={labels.instrument}
             value={selectedLabels.instrument}
           />
-          <ToolFact
+          <VisualFact
             label={labels.measuredObject}
             value={selectedLabels.object}
           />
-          <ToolFact
+          <VisualFact
             label={labels.reading}
             value={<InlineMath math={selectedReadingMath} />}
           />
@@ -220,17 +221,5 @@ function ResponsiveMeasurementCamera({
       fov={45}
       framing="content"
     />
-  );
-}
-
-/**
- * Renders one compact label-value fact without badge styling.
- */
-function ToolFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

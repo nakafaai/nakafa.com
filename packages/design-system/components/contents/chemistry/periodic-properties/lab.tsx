@@ -19,6 +19,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -109,19 +110,19 @@ export function PeriodicPropertiesLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <TrendFact
+          <VisualFact
             label={labels.factLabels.question}
             value={selectedLabels.question}
           />
-          <TrendFact
+          <VisualFact
             label={labels.factLabels.period}
             value={selectedLabels.periodTrend}
           />
-          <TrendFact
+          <VisualFact
             label={labels.factLabels.group}
             value={selectedLabels.groupTrend}
           />
-          <TrendFact
+          <VisualFact
             label={labels.factLabels.cause}
             value={selectedLabels.cause}
           />
@@ -129,17 +130,5 @@ export function PeriodicPropertiesLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * Presents one compact fact below the model.
- */
-function TrendFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

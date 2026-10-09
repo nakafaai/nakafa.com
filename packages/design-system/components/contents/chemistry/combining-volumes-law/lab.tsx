@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -145,8 +146,11 @@ export function CombiningVolumesLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <LabFact label={labels.ratioLabel} value={selectedLabels.ratio} />
-          <LabFact label={labels.exampleLabel} value={selectedLabels.example} />
+          <VisualFact label={labels.ratioLabel} value={selectedLabels.ratio} />
+          <VisualFact
+            label={labels.exampleLabel}
+            value={selectedLabels.example}
+          />
         </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
@@ -168,14 +172,5 @@ function CombiningVolumesCameraControls() {
       fov={42}
       framing="content"
     />
-  );
-}
-
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

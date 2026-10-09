@@ -26,6 +26,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -123,10 +124,10 @@ export function ModernPeriodicTableLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          <LabFact label={labels.focusLabel} value={selectedLabels.name} />
-          <LabFact label={labels.group} value="1–18" />
-          <LabFact label={labels.period} value="1–7" />
-          <LabFact
+          <VisualFact label={labels.focusLabel} value={selectedLabels.name} />
+          <VisualFact label={labels.group} value="1–18" />
+          <VisualFact label={labels.period} value="1–7" />
+          <VisualFact
             label={labels.atomicNumber}
             value={<InlineMath math="Z" />}
           />
@@ -134,18 +135,6 @@ export function ModernPeriodicTableLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * Presents one compact fact below the model.
- */
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }
 

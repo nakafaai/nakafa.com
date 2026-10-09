@@ -19,6 +19,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -135,15 +136,15 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
           </section>
 
           <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            <IsotopeFact
+            <VisualFact
               label={labels.atomicNumber}
               value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
             />
-            <IsotopeFact
+            <VisualFact
               label={labels.massNumber}
               value={<InlineMath math={`A = ${selectedSample.massNumber}`} />}
             />
-            <IsotopeFact
+            <VisualFact
               label={labels.neutrons}
               value={
                 <InlineMath
@@ -151,7 +152,7 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
                 />
               }
             />
-            <IsotopeFact
+            <VisualFact
               label={labels.abundance}
               value={selectedLabels.abundance}
             />
@@ -237,18 +238,6 @@ function ParticleDot({
     <span aria-hidden className={particleDotVariants({ type })}>
       <InlineMath math={label} />
     </span>
-  );
-}
-
-/**
- * Shows one isotope notation fact.
- */
-function IsotopeFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }
 

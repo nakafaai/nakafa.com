@@ -21,6 +21,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -92,7 +93,7 @@ export function DaltonEvidenceLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           {Arr.map(selectedLabels.facts, (fact) => (
-            <LabFact
+            <VisualFact
               key={fact.label}
               label={fact.label}
               value={<InlineMath math={fact.value} />}
@@ -102,17 +103,5 @@ export function DaltonEvidenceLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * Renders one compact ratio fact in the lab footer.
- */
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

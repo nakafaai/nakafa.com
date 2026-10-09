@@ -19,6 +19,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -116,15 +117,15 @@ export function AtomSymbolLab({
           </section>
 
           <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            <NotationFact
+            <VisualFact
               label={labels.massNumber}
               value={<InlineMath math={`A = ${selectedSample.massNumber}`} />}
             />
-            <NotationFact
+            <VisualFact
               label={labels.atomicNumber}
               value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
             />
-            <NotationFact
+            <VisualFact
               label={labels.elementSymbol}
               value={
                 <InlineMath math={`X = \\mathrm{${selectedSample.symbol}}`} />
@@ -159,18 +160,6 @@ export function AtomSymbolLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * Shows one part of the atomic notation without creating nested cards.
- */
-function NotationFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }
 

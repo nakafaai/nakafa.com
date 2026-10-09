@@ -21,6 +21,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -147,11 +148,11 @@ export function IonLab({ title, description, labels }: IonLabProps) {
         </div>
 
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <IonFact
+          <VisualFact
             label={labels.electronChange}
             value={selectedLabels.action}
           />
-          <IonFact
+          <VisualFact
             label={labels.electrons}
             value={<InlineMath math={`e^-: ${electronFlowMath}`} />}
           />
@@ -160,11 +161,11 @@ export function IonLab({ title, description, labels }: IonLabProps) {
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <IonFact
+          <VisualFact
             label={labels.protons}
             value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
           />
-          <IonFact
+          <VisualFact
             label={labels.neutrons}
             value={
               <InlineMath
@@ -172,7 +173,7 @@ export function IonLab({ title, description, labels }: IonLabProps) {
               />
             }
           />
-          <IonFact
+          <VisualFact
             label={labels.charge}
             value={
               <InlineMath
@@ -269,18 +270,6 @@ function IonMiniFact({ label, value }: { label: string; value: ReactNode }) {
     <div className="flex min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="text-foreground">{value}</dd>
-    </div>
-  );
-}
-
-/**
- * Renders one compact ion fact.
- */
-function IonFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
     </div>
   );
 }

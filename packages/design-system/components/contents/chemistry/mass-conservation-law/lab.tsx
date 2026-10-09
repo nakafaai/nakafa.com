@@ -28,6 +28,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -142,8 +143,11 @@ export function MassConservationLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <LabFact label={labels.systemLabel} value={selectedLabels.system} />
-          <LabFact
+          <VisualFact
+            label={labels.systemLabel}
+            value={selectedLabels.system}
+          />
+          <VisualFact
             label={labels.calculationLabel}
             value={selectedLabels.calculation}
           />
@@ -167,14 +171,5 @@ function MassConservationCameraControls() {
       cameraTarget={MASS_CONSERVATION_SCENE_VIEW.cameraTarget}
       fov={42}
     />
-  );
-}
-
-function LabFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }
