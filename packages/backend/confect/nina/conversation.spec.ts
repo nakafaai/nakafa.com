@@ -4,29 +4,8 @@ import chats from "@repo/backend/confect/_generated/tables/chats";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import {
-  NinaTurnFacts,
-  NinaTurnState,
-} from "@repo/backend/confect/nina/turns.spec";
-import { Schema, Struct } from "effect";
-
-/** Public response facts exclude account, billing-period and private page context. */
-export const NinaTurnSummary = Schema.Struct({
-  ...NinaTurnFacts.fields,
-  state: NinaTurnState,
-}).mapFields(
-  Struct.pick([
-    "order",
-    "state",
-    "modelId",
-    "credits",
-    "usage",
-    "tokens",
-    "suggestions",
-    "promptMessageId",
-    "promptedAt",
-  ])
-);
+import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
+import { Schema } from "effect";
 
 export default GroupSpec.make().addFunction(
   FunctionSpec.publicQuery({

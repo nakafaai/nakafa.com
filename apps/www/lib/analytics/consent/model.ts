@@ -5,7 +5,7 @@ import {
   ANALYTICS_CONSENT_CATEGORY,
   type AnalyticsConsentState,
 } from "@repo/analytics/consent";
-import refs from "@repo/backend/confect/_generated/refs";
+import consents from "@repo/backend/confect/_generated/refs/consents";
 import { Option } from "effect";
 import { useState } from "react";
 import { useStore } from "zustand";
@@ -78,11 +78,11 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
   const identity = useViewer((state) => state);
   const user = identity.account;
   const isPreviewChild = mode === "preview";
-  const setAccountConsent = useMutation(refs.public.consents.current.set);
+  const setAccountConsent = useMutation(consents.current.set);
   const shouldLoadAccountConsent =
     mode === "live" && isAuthenticated && !isAuthLoading && !!user;
   const accountConsentQuery = useQuery(
-    refs.public.consents.current.get,
+    consents.current.get,
     shouldLoadAccountConsent ? { category: ANALYTICS_CONSENT_CATEGORY } : "skip"
   );
   const isAccountConsentResolved = QueryResult.isSuccess(accountConsentQuery);

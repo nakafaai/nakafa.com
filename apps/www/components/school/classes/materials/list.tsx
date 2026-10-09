@@ -2,7 +2,7 @@
 
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { useDebouncedValue } from "@mantine/hooks";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import { PERMISSIONS } from "@repo/backend/confect/schools/permission/spec";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useTranslations } from "next-intl";
@@ -23,7 +23,7 @@ export function SchoolClassesMaterialsList() {
   const { can } = useClassPermissions();
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
   const pagination = usePaginatedQuery(
-    refs.public.classes.materials.queries.getMaterialGroups,
+    classes.materials.queries.getMaterialGroups,
     {
       classId,
       q: debouncedQ,

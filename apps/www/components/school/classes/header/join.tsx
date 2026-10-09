@@ -3,7 +3,7 @@
 import { useMutation } from "@confect/react";
 import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -36,7 +36,7 @@ export function SchoolClassesHeaderJoin() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, openHandlers] = useDisclosure(false);
-  const joinClass = useMutation(refs.public.classes.mutations.joinClass);
+  const joinClass = useMutation(classes.mutations.joinClass);
   const form = useForm({
     defaultValues,
     validators: {

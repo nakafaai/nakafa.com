@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import schools from "@repo/backend/confect/_generated/refs/schools";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
@@ -13,15 +13,13 @@ import { DataFailure } from "@/components/shared/failure";
 export function SchoolSelectList({
   initialSchoolPage,
 }: {
-  initialSchoolPage: Ref.Returns<
-    typeof refs.public.schools.queries.getMySchoolsPage
-  >;
+  initialSchoolPage: Ref.Returns<typeof schools.queries.getMySchoolsPage>;
 }) {
   const t = useTranslations("School.Onboarding");
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const pagination = usePaginatedQuery(
-    refs.public.schools.queries.getMySchoolsPage,
+    schools.queries.getMySchoolsPage,
     isAuthenticated && !isLoading ? {} : "skip",
     {
       initialNumItems: 20,

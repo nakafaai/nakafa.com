@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import {
   MATERIAL_CONTEXT_QUERY_PARAM,
@@ -69,7 +69,7 @@ function useMaterialNavigation({ page }: MaterialContextProps) {
   );
   const enabled = context !== undefined && page.kind === "published";
   const result = useQuery(
-    refs.public.contentRelease.program.context,
+    contentRelease.program.context,
     enabled
       ? {
           appLocale: page.route.appLocale,

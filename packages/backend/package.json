@@ -10,7 +10,7 @@
   "scripts": {
     "acceptance": "node scripts/content/acceptance/main.ts",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "codegen": "confect codegen",
+    "codegen": "confect codegen && node scripts/refs/main.ts",
     "confect:dev": "confect dev",
     "customers:verify": "tsx scripts/customers/verify.ts",
     "customers:verify:prod": "tsx scripts/customers/verify.ts --prod",

@@ -4,7 +4,7 @@ import { WelcomeIntentError } from "@repo/backend/confect/emails/welcome/spec";
 import {
   AccountReadyEmailInputError,
   AccountReadyEmailRenderError,
-} from "@repo/email/templates/ready/content";
+} from "@repo/email/templates/ready/contract";
 import { Schema } from "effect";
 export default GroupSpec.makeNode().addFunction(
   FunctionSpec.internalNodeAction({

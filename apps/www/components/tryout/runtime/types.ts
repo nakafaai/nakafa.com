@@ -1,10 +1,10 @@
 import type { Ref } from "@confect/core";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 
 /** Cohesive reactive state returned for one try-out section route. */
 export type TryoutSectionState = NonNullable<
-  Ref.Returns<typeof refs.public.tryouts.queries.runtime.getSectionAttemptState>
+  Ref.Returns<typeof tryouts.queries.runtime.getSectionAttemptState>
 >;
 
 /** Attempt state returned with one reactive try-out section. */

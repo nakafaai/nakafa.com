@@ -3,7 +3,10 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { MessagePage, StreamRequest } from "@repo/backend/confect/nina/schema";
+import {
+  MessagePage,
+  StreamRequest,
+} from "@repo/backend/confect/nina/contract/message";
 import { Schema } from "effect";
 
 export class NinaReadError extends Schema.TaggedError<NinaReadError>()(

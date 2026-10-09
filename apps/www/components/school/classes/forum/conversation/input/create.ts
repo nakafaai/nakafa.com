@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
 import { useMutation } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { randomUuid } from "@repo/utilities/uuid";
 import { DateTime, Effect, Option } from "effect";
@@ -10,7 +10,7 @@ import { createOptimisticForumPost } from "@/components/school/classes/forum/con
 import { useViewer } from "@/lib/identity/client";
 
 type CreateForumPostArgs = Ref.Args<
-  typeof refs.public.classes.forums.mutations.posts.createForumPost
+  typeof classes.forums.mutations.posts.createForumPost
 >;
 
 /** Creates the Convex post mutation with a transcript-shaped optimistic update. */
@@ -18,7 +18,7 @@ export function useCreateForumPost() {
   const currentUser = useViewer((state) => state.account);
   const forum = useData((state) => state.forum);
   const createForumPost = useMutation(
-    refs.public.classes.forums.mutations.posts.createForumPost
+    classes.forums.mutations.posts.createForumPost
   );
 
   return (args: CreateForumPostArgs) => {
@@ -31,7 +31,7 @@ export function useCreateForumPost() {
     const optimisticMutation = createForumPost.withOptimisticUpdate(
       (localStore, optimisticArgs) => {
         const cached = localStore.getQuery(
-          refs.public.classes.forums.queries.pages.getForumPosts,
+          classes.forums.queries.pages.getForumPosts,
           { forumId: optimisticArgs.forumId }
         );
 
@@ -45,7 +45,7 @@ export function useCreateForumPost() {
           : undefined;
 
         localStore.setQuery(
-          refs.public.classes.forums.queries.pages.getForumPosts,
+          classes.forums.queries.pages.getForumPosts,
           { forumId: optimisticArgs.forumId },
           Option.some([
             ...posts,

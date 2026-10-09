@@ -18,6 +18,7 @@ import {
 import { readAuthoredSources, readAuthoredTree } from "#scripts/check/files";
 import { inspectGatewaySource } from "#scripts/check/gateway";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
+import { inspectRefsSource } from "#scripts/check/refs";
 import { parseSources } from "#scripts/check/source";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
 import { runEntry } from "#scripts/entry";
@@ -43,9 +44,9 @@ function lineReport(lines: readonly string[]) {
 }
 
 /**
- * Applies the Effect-native, gateway, React, and state source policies to authored
- * modules through one native compiler batch. Every Effect-native finding is a
- * violation: no baseline or allowlist holds one back.
+ * Applies the Effect-native, gateway, React, state, and refs source policies to
+ * authored modules through one native compiler batch. Every Effect-native finding
+ * is a violation: no baseline or allowlist holds one back.
  */
 const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
   sources: Parameters<typeof parseSources>[0]
@@ -58,6 +59,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectGatewaySource(file, sourceFile),
         inspectReactSource(file, sourceFile),
         inspectStateSource(file, sourceFile),
+        inspectRefsSource(file, sourceFile),
       ])
     )
   );

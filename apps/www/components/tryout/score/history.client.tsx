@@ -8,7 +8,7 @@ import {
   Tick01Icon,
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -35,7 +35,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { TryoutScoreCard } from "@/components/tryout/score/card";
 import { getLocale } from "@/lib/utils/date";
 
-type HistoryQuery = typeof refs.public.tryouts.queries.history.bySet;
+type HistoryQuery = typeof tryouts.queries.history.bySet;
 type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
 type HistoryRow = Ref.Returns<HistoryQuery>["page"][number];
 type ScoredHistoryRow = TryoutAttemptHistoryProps["value"]["attempts"][number];
@@ -220,7 +220,7 @@ export function TryoutAttemptResults({ value }: TryoutAttemptResultsProps) {
     HistoryRow["attemptId"] | null
   >(null);
   const history = usePaginatedQuery(
-    refs.public.tryouts.queries.history.bySet,
+    tryouts.queries.history.bySet,
     isAuthenticated ? value.identity : "skip",
     { initialNumItems: 25 }
   );

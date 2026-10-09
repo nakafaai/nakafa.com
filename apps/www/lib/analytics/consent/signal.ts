@@ -7,7 +7,7 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   hasBrowserPrivacySignal,
 } from "@repo/analytics/consent";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type consents from "@repo/backend/confect/_generated/refs/consents";
 
 import { Effect, Option, Schedule, Schema } from "effect";
 
@@ -15,10 +15,10 @@ const accountConsentPersistenceFailedCode =
   "ACCOUNT_CONSENT_PERSISTENCE_FAILED";
 const accountConsentRejectedCode = "ACCOUNT_CONSENT_REJECTED";
 const accountConsentRetrySchedule = Schedule.spaced("10 seconds");
-type SetAccountConsentArgs = Ref.Args<typeof refs.public.consents.current.set>;
+type SetAccountConsentArgs = Ref.Args<typeof consents.current.set>;
 type SetAccountConsent = (
   args: SetAccountConsentArgs
-) => InvokeReturn<typeof refs.public.consents.current.set>;
+) => InvokeReturn<typeof consents.current.set>;
 
 const BrowserPrivacySignalSchema = Schema.Struct({
   doNotTrack: Schema.NullishOr(Schema.String),
@@ -167,9 +167,7 @@ export const revokeAccountAnalyticsGrant = Effect.fn(
     Effect.gen(function* () {
       const hasBrowserPrivacySignal = yield* currentBrowserPrivacySignal;
       if (!hasBrowserPrivacySignal) {
-        return Option.none<
-          Ref.Returns<typeof refs.public.consents.current.set>
-        >();
+        return Option.none<Ref.Returns<typeof consents.current.set>>();
       }
 
       const decision = yield* persistAccountAnalyticsConsent(

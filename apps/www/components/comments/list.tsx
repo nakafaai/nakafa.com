@@ -5,7 +5,7 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import comments from "@repo/backend/confect/_generated/refs/comments";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { randomUuid } from "@repo/utilities/uuid";
 import { DateTime, Effect, Schema } from "effect";
@@ -35,11 +35,11 @@ export function CommentsList({ slug }: { slug: string }) {
   const user = useViewer((state) => state.account);
   const actionError = useTranslations("Common")("action-error");
   const pagination = usePaginatedQuery(
-    refs.public.comments.queries.getCommentsBySlug,
+    comments.queries.getCommentsBySlug,
     { slug },
     { initialNumItems: 25 }
   );
-  const addComment = useMutation(refs.public.comments.mutations.addComment);
+  const addComment = useMutation(comments.mutations.addComment);
   const [drafts, showDraft] = useOptimistic(
     noDrafts,
     (previous, draft: Draft) => [draft, ...previous]

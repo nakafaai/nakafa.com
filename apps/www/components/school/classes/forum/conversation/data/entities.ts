@@ -1,11 +1,11 @@
 import type { Ref } from "@confect/core";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type classes from "@repo/backend/confect/_generated/refs/classes";
 import { forumFeedPostValidator } from "@repo/backend/confect/classes/forums/validators";
 import { Schema } from "effect";
 
 /** Forum metadata returned by the live Convex forum query. */
 export type Forum = NonNullable<
-  Ref.Returns<typeof refs.public.classes.forums.queries.forums.getForum>
+  Ref.Returns<typeof classes.forums.queries.forums.getForum>
 >;
 
 /** Transcript post row, including client-only optimistic rows before Convex confirms them. */

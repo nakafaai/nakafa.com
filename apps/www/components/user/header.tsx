@@ -3,7 +3,7 @@
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { Settings01Icon } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import auth from "@repo/backend/confect/_generated/refs/auth";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Avatar,
@@ -24,13 +24,13 @@ export function UserHeader({
   initialOwnerEmail,
 }: {
   userId: Id<"users">;
-  initialProfile: Ref.Returns<typeof refs.public.auth.queries.getUserById>;
+  initialProfile: Ref.Returns<typeof auth.queries.getUserById>;
   initialOwnerEmail: string | null;
 }) {
   const t = useTranslations("Auth");
   const tCommon = useTranslations("Common");
 
-  const userQuery = useQuery(refs.public.auth.queries.getUserById, {
+  const userQuery = useQuery(auth.queries.getUserById, {
     userId,
   });
   const user = QueryResult.isSuccess(userQuery)

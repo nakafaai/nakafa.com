@@ -5,7 +5,7 @@ import {
   ArrowTurnBackwardIcon,
   ArrowTurnForwardIcon,
 } from "@hugeicons/core-free-icons";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type comments from "@repo/backend/confect/_generated/refs/comments";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
   Avatar,
@@ -38,7 +38,7 @@ import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
 export type CommentWithUser = Ref.Returns<
-  typeof refs.public.comments.queries.getCommentsBySlug
+  typeof comments.queries.getCommentsBySlug
 >["page"][number];
 const CommentDisplayIdentitySchema = Schema.Struct({
   _id: Schema.String,

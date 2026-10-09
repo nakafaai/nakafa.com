@@ -5,7 +5,7 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
@@ -23,7 +23,7 @@ export const readPublishedMaterialPrerenderRoute = Effect.fn(
     publicPath: "materials",
   };
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.material.publications, {
+    client.query(contentRelease.material.publications, {
       appLocale,
       expectedManifestHash: null,
       expectedReleaseId: null,

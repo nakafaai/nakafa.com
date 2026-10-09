@@ -10,7 +10,7 @@ import {
   toQuranInterpretationRequestError,
 } from "@repo/backend/client/quran/interpretation";
 import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import {
   Drawer,
   DrawerHeader,
@@ -34,9 +34,7 @@ import { reportClientException } from "@/lib/analytics/client";
 import { httpLayer } from "@/lib/convex/http";
 
 interface Props {
-  appLocale: Ref.Args<
-    typeof refs.public.contentRelease.quran.tafsir
-  >["appLocale"];
+  appLocale: Ref.Args<typeof contentRelease.quran.tafsir>["appLocale"];
   children: ReactNode;
   errorMessage: string;
   label: string;
@@ -158,7 +156,7 @@ export function QuranInterpretationControls({
       );
     };
     const program = Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.contentRelease.quran.tafsir, {
+      client.query(contentRelease.quran.tafsir, {
         expectedSnapshotId: snapshotId,
         appLocale,
         surahNumber,

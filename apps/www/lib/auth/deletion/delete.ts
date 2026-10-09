@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
 import type { HttpClient } from "@confect/js";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type auth from "@repo/backend/confect/_generated/refs/auth";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
@@ -44,7 +44,7 @@ type ReconcileAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
 ) => Effect.Effect<
   AccountDeletionAttemptStatus,
-  | Ref.Error<typeof refs.public.auth.deletion.getAccountDeletionAttemptStatus>
+  | Ref.Error<typeof auth.deletion.getAccountDeletionAttemptStatus>
   | HttpClient.HttpClientError
   | Schema.SchemaError
 >;
