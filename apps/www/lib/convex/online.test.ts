@@ -147,6 +147,24 @@ describe("Convex online state", () => {
       })
   );
 
+  it.effect("keeps waiting through a change that leaves the socket down", () =>
+    Effect.gen(function* () {
+      const convex = client(DROPPED);
+      const fiber = yield* Effect.forkChild(requireConvexOnline(convex));
+      yield* TestClock.adjust("1 second");
+
+      convex.change({ ...DROPPED, connectionRetries: 1 });
+      yield* TestClock.adjust("1 second");
+      expect(fiber.pollUnsafe()).toBeUndefined();
+      expect(convex.subscribers()).toBe(1);
+
+      convex.change(CONNECTED);
+      yield* Fiber.join(fiber);
+
+      expect(convex.subscribers()).toBe(0);
+    })
+  );
+
   it.effect("refuses a call when the socket stays down for five seconds", () =>
     Effect.gen(function* () {
       const convex = client(DROPPED);
