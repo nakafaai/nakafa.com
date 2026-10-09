@@ -1,21 +1,11 @@
-import { Array as Arr, Match, Schema } from "effect";
+import { Match, Schema } from "effect";
+import type { Identifier, Node, SourceFile } from "typescript/unstable/ast";
 import {
-  type ExportDeclaration,
-  type Identifier,
-  type ImportDeclaration,
-  isExportAssignment,
-  isExportDeclaration,
-  isIdentifier,
-  isImportDeclaration,
-  isNamedExports,
-  isNamedImports,
-  isSatisfiesExpression,
-  isStringLiteral,
-  isTypeReferenceNode,
-  type Node,
-  type SourceFile,
-  SyntaxKind,
-} from "typescript/unstable/ast";
+  isConfiguration,
+  isReactModule,
+  STRICT_PATTERN,
+  TEST_PATTERN,
+} from "#scripts/check/kinds";
 import type { Binding } from "#scripts/check/source";
 
 /** Every Effect-native source rule, by the id each violation reports. */
@@ -24,6 +14,7 @@ export const Rule = Schema.Literals([
   "array-method",
   "array-mutation",
   "array-search",
+  "assertion",
   "clock",
   "console",
   "data-type",
@@ -32,21 +23,35 @@ export const Rule = Schema.Literals([
   "fetch",
   "json",
   "map-set",
+  "new-promise",
   "node-module",
   "object-helper",
   "promise",
   "random",
+  "switch",
+  "throw",
   "timer",
   "try-catch",
   "typeof-object",
 ]);
 
 /**
- * The authored modules a rule inspects: every module, code outside framework
- * configuration, code outside React modules, or the domain code of the strict
- * Confect and script folders, tests excluded.
+ * The authored modules a rule inspects: every module (`every`); code outside
+ * framework configuration (`code`); code outside framework configuration and
+ * React modules, tests included (`logic`); the domain code of the strict
+ * Confect and script folders, tests excluded (`domain`); product code, which is
+ * outside framework configuration, React modules, and tests (`product`); and
+ * source code, which is outside framework configuration and tests, React modules
+ * included (`source`).
  */
-const RuleScope = Schema.Literals(["every", "code", "logic", "domain"]);
+const RuleScope = Schema.Literals([
+  "every",
+  "code",
+  "logic",
+  "domain",
+  "product",
+  "source",
+]);
 
 /** One rule's scope and the Effect-native replacement it names. */
 const RuleDefinition = Schema.Struct({
@@ -74,6 +79,11 @@ export const RULES = {
   "array-search": {
     message:
       "search arrays with Array.findFirst, Array.findLast, Array.findFirstIndex, Array.findLastIndex, Array.get, Array.head, or Array.last from effect, which return an Option, instead of a native find, at, indexOf, or lastIndexOf method.",
+    scope: "code",
+  },
+  assertion: {
+    message:
+      "narrow the value with a Schema or a Predicate from effect instead of an as, angle-bracket, or non-null assertion.",
     scope: "code",
   },
   clock: {
@@ -125,15 +135,30 @@ export const RULES = {
       "use Record.keys, Record.values, Record.toEntries, or Record.fromEntries from effect instead of the Object helper.",
     scope: "code",
   },
+  "new-promise": {
+    message:
+      "build the value with Effect.callback, Effect.promise, or a Deferred from effect, and run it at the framework boundary, instead of new Promise or Promise.withResolvers.",
+    scope: "source",
+  },
   promise: {
     message:
-      "compose Effects with Effect.fn, wrapping a Promise SDK once in Effect.tryPromise, instead of new Promise, async functions, or await.",
+      "compose Effects with Effect.fn, wrapping a Promise SDK once in Effect.tryPromise, instead of async functions or await.",
     scope: "domain",
   },
   random: {
     message:
       "draw random values from Random in effect instead of Math.random, and draw a UUID with randomUuid from @repo/utilities/uuid, which reads Effect's Crypto service, instead of crypto.randomUUID.",
     scope: "code",
+  },
+  switch: {
+    message:
+      "match on the value with Match from effect, such as Match.value with Match.tags, Match.discriminators, or Match.when, instead of a switch statement.",
+    scope: "every",
+  },
+  throw: {
+    message:
+      "fail with a Schema.TaggedError or Data.TaggedError through the Effect error channel, or return a Result or an Option, instead of a throw statement.",
+    scope: "product",
   },
   timer: {
     message:
@@ -151,152 +176,7 @@ export const RULES = {
   },
 } satisfies Record<typeof Rule.Type, typeof RuleDefinition.Type>;
 
-const CONFIGURATION_FILE_PATTERN = /(?:^|\/)[^/]+\.config\.[cm]?tsx?$/u;
-/**
- * The configuration APIs that framework configuration imports: Vitest's, and
- * Vercel's by any of its subpaths.
- */
-const CONFIGURATION_MODULE_PATTERN =
-  /^(?:vitest\/config|@vercel\/config(?:\/.*)?)$/u;
-const STRICT_PATTERN = /^(?:packages\/backend\/confect|scripts)\//u;
-/** Tests and the `test.*.ts` modules that set up and support them. */
-const TEST_PATTERN = /(?:\.test\.tsx?|(?:^|\/)test\.[^/]+\.ts)$/u;
-const JSX_PATTERN = /\.tsx$/u;
-const REACT_PATTERN = /^react(?:-dom)?(?:\/|$)/u;
 const GLOBAL_ONLY: readonly (typeof Binding.Type)[] = ["global"];
-/** Framework configuration types name what they configure, such as `NextConfig` or Convex's `AuthConfig`. */
-const CONFIGURATION_TYPE_PATTERN = /Config$/u;
-/** Relative paths, app aliases, and workspace packages name repository modules rather than framework packages. */
-export const REPOSITORY_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;
-
-/** Whether a module imports a module specifier that `pattern` matches. */
-export function imports(sourceFile: SourceFile, pattern: RegExp) {
-  return Arr.some(
-    sourceFile.statements,
-    (statement) =>
-      isImportDeclaration(statement) &&
-      isStringLiteral(statement.moduleSpecifier) &&
-      pattern.test(statement.moduleSpecifier.text)
-  );
-}
-
-/** Whether a module imports `name` by a named import from a framework package. */
-function importsFromPackage(sourceFile: SourceFile, name: string) {
-  return Arr.some(sourceFile.statements, (statement) => {
-    if (
-      !(
-        isImportDeclaration(statement) &&
-        isStringLiteral(statement.moduleSpecifier)
-      ) ||
-      REPOSITORY_SPECIFIER_PATTERN.test(statement.moduleSpecifier.text)
-    ) {
-      return false;
-    }
-    const bindings = statement.importClause?.namedBindings;
-    return (
-      bindings !== undefined &&
-      isNamedImports(bindings) &&
-      Arr.some(bindings.elements, (element) => element.name.text === name)
-    );
-  });
-}
-
-/**
- * Whether the default export `satisfies` a configuration type that a framework
- * package defines, as the Confect source of `convex/auth.config.ts` does with
- * Convex's `AuthConfig`.
- */
-function exportsFrameworkConfiguration(sourceFile: SourceFile) {
-  return Arr.some(sourceFile.statements, (statement) => {
-    if (
-      !(
-        isExportAssignment(statement) &&
-        isSatisfiesExpression(statement.expression)
-      )
-    ) {
-      return false;
-    }
-    const { type } = statement.expression;
-    return (
-      isTypeReferenceNode(type) &&
-      isIdentifier(type.typeName) &&
-      CONFIGURATION_TYPE_PATTERN.test(type.typeName.text) &&
-      importsFromPackage(sourceFile, type.typeName.text)
-    );
-  });
-}
-
-/**
- * Whether a module configures a framework: by file name, through the Vitest
- * configuration API, or by a default export that satisfies a framework
- * package's configuration type.
- */
-function isConfiguration(file: string, sourceFile: SourceFile) {
-  return (
-    CONFIGURATION_FILE_PATTERN.test(file) ||
-    imports(sourceFile, CONFIGURATION_MODULE_PATTERN) ||
-    exportsFrameworkConfiguration(sourceFile)
-  );
-}
-
-/**
- * Whether an import declaration loads at runtime: it is not `import type`, and it
- * does not name only types.
- */
-export function loadsImport(node: ImportDeclaration) {
-  const clause = node.importClause;
-  const bindings = clause?.namedBindings;
-  return !(
-    clause?.phaseModifier === SyntaxKind.TypeKeyword ||
-    (clause?.name === undefined &&
-      bindings !== undefined &&
-      isNamedImports(bindings) &&
-      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
-  );
-}
-
-/**
- * Whether an export declaration loads at runtime: it is not `export type`, and it
- * does not name only types.
- */
-export function loadsExport(node: ExportDeclaration) {
-  const bindings = node.exportClause;
-  return !(
-    node.isTypeOnly ||
-    (bindings !== undefined &&
-      isNamedExports(bindings) &&
-      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
-  );
-}
-
-/**
- * Whether a module loads, at runtime, a module whose specifier `pattern` matches,
- * through an import or a re-export. A type-only import or re-export does not
- * count, so a helper that imports only React types is not a React module.
- */
-function loadsModule(sourceFile: SourceFile, pattern: RegExp) {
-  return Arr.some(sourceFile.statements, (statement) => {
-    if (isImportDeclaration(statement)) {
-      return (
-        loadsImport(statement) &&
-        isStringLiteral(statement.moduleSpecifier) &&
-        pattern.test(statement.moduleSpecifier.text)
-      );
-    }
-    return (
-      isExportDeclaration(statement) &&
-      loadsExport(statement) &&
-      statement.moduleSpecifier !== undefined &&
-      isStringLiteral(statement.moduleSpecifier) &&
-      pattern.test(statement.moduleSpecifier.text)
-    );
-  });
-}
-
-/** Whether a module renders or hooks into React, where timers belong to effects and handlers. */
-function isReactModule(file: string, sourceFile: SourceFile) {
-  return JSX_PATTERN.test(file) || loadsModule(sourceFile, REACT_PATTERN);
-}
 
 /** Whether `rule` inspects the authored module `file`. */
 export function covers(
@@ -315,6 +195,19 @@ export function covers(
     Match.when(
       "domain",
       () => STRICT_PATTERN.test(file) && !TEST_PATTERN.test(file)
+    ),
+    Match.when(
+      "product",
+      () =>
+        !(
+          isConfiguration(file, sourceFile) ||
+          isReactModule(file, sourceFile) ||
+          TEST_PATTERN.test(file)
+        )
+    ),
+    Match.when(
+      "source",
+      () => !(isConfiguration(file, sourceFile) || TEST_PATTERN.test(file))
     ),
     Match.exhaustive
   );
