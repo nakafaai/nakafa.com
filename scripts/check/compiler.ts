@@ -9,6 +9,7 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
+import { undecidedRules } from "#scripts/check/plugin";
 import type { RepositorySource } from "#scripts/check/source";
 
 const PLUGIN_NAME = "@effect/language-service";
@@ -123,11 +124,13 @@ function parentOf(file: string, parent: unknown, sharedPrefix: string) {
  * extends, so only shared configurations declare one, each of them carries
  * the same Effect block, and every other configuration reaches such a block
  * through what it extends. A configuration the check cannot read or follow is
- * reported instead of skipped.
+ * reported instead of skipped. The shared block decides every rule in `rules`,
+ * the names the installed plugin defines.
  */
 export function inspectCompilerConfigs(
   sharedPackage: string,
-  configs: readonly (typeof RepositorySource.Type)[]
+  configs: readonly (typeof RepositorySource.Type)[],
+  rules: readonly string[]
 ) {
   const sharedPrefix = `${sharedPackage}/`;
   const inspected = Arr.map(configs, ({ file, sourceText }) => {
@@ -175,7 +178,11 @@ export function inspectCompilerConfigs(
             : Option.isSome(entry.block),
       }
     );
-  return Arr.flatMap(inspected, ({ block, config, file, shared }) => {
+  const undecided = Option.match(reference, {
+    onNone: () => [],
+    onSome: (found) => undecidedRules(found.file, found.block, rules),
+  });
+  const reports = Arr.flatMap(inspected, ({ block, config, file, shared }) => {
     if (Option.isNone(config)) {
       return [
         `${file}: write this compiler configuration as plain JSON, without comments or trailing commas, so the check can read its plugins.`,
@@ -207,4 +214,5 @@ export function inspectCompilerConfigs(
             ],
     });
   });
+  return Arr.appendAll(reports, undecided);
 }

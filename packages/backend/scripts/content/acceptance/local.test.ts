@@ -12,6 +12,7 @@ import {
   releaseLocalRuntime,
   reserveLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
+import { anonymousConvexCommand, fixture } from "@repo/backend/test/acceptance";
 import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
@@ -31,52 +32,11 @@ const environment =
   "VITE_CONVEX_URL=http://127.0.0.1:43120\nVITE_CONVEX_SITE_URL=http://127.0.0.1:43121\n";
 const LOCAL_JWKS_LINE =
   /^JWKS='\[\{"alg":"RS256","createdAt":\d+,"id":"[^"]+","privateKey":"\\"[0-9a-f]+\\"","publicKey":"\{[^']+\}"\}\]'$/mu;
-const fixture = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const directory = yield* fs.makeTempDirectoryScoped({
-    directory: tmpdir(),
-    prefix: "acceptance-local-test-",
-  });
-  const root = yield* fs.realPath(directory);
-  yield* fs.makeDirectory(`${root}/packages/backend`, { recursive: true });
-  yield* fs.writeFileString(
-    `${root}/packages/backend/convex.json`,
-    '{"node":{"nodeVersion":"24"}}'
-  );
-  yield* fs.writeFileString(
-    `${root}/packages/backend/.env.local`,
-    "CONVEX_DEPLOYMENT=developer-owned"
-  );
-  yield* fs.makeDirectory(`${root}/packages/backend/.convex`);
-  return { fs, root };
-});
 const initialize = (source = environment) => {
   // Temporary roots that existed while their Convex command ran.
   const temporaryRoots = MutableList.make<string>();
   mocks.command.mockImplementation(
-    (spec: {
-      args: readonly string[];
-      cwd: string;
-      env: Readonly<Record<string, string | undefined>>;
-    }) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = spec.env.TMPDIR;
-        if (root !== undefined && (yield* fs.exists(root))) {
-          MutableList.append(temporaryRoots, root);
-        }
-        if (spec.args[1] !== "init") {
-          return;
-        }
-        yield* fs.writeFileString(`${spec.cwd}/.env.local`, source);
-        yield* fs.makeDirectory(`${spec.cwd}/.convex/local/default`, {
-          recursive: true,
-        });
-        yield* fs.writeFileString(
-          `${spec.cwd}/.convex/local/default/config.json`,
-          '{"ports":{"cloud":43120,"site":43121}}'
-        );
-      })
+    anonymousConvexCommand(source, temporaryRoots)
   );
   return temporaryRoots;
 };

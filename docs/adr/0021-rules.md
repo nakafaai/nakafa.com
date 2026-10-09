@@ -102,6 +102,38 @@ function is in the page too, and a nested function with the same name is
 ordinary code. The page keeps its platform globals, native syntax, shapes, and
 throws, but `switch` statements and assertions are still reported there.
 
+### A detached process service
+
+`node-module` reports every load of Node's file, path, and process modules, also
+through `require`, `createRequire`, a dynamic import, and
+`process.getBuiltinModule`. It has one construction: the import of `spawn` from
+`node:child_process` in a detached process service. All of these hold:
+
+- The module imports `Context` and `Layer` from `effect`, declares a top-level
+  class that extends `Context.Service<Self, Shape>()("Id")`, and builds that
+  class's layer with `Layer.succeed`, `Layer.effect`, or `Layer.sync`.
+- The import declaration binds `spawn` under that name, and nothing else at run
+  time.
+- The module calls `spawn`, and the last argument of every call is an object
+  literal with `detached: true`: each child leads a process group of its own.
+
+Effect's spawner owns termination (4.0.2, `NodeChildProcessSpawner.ts`, lines
+549 to 568). When the scope closes it signals the child's process group, also
+after the child ended by itself with code zero, as long as the handle is
+referenced. When the child exits with another code it signals the group at
+once. `unref` turns the signals at scope close off, but it also removes the
+child from the event loop, so the parent no longer stays alive for it. No
+option leaves termination to the caller. So a service cannot both never signal
+a group whose leader already ended and keep the parent alive while it waits. It
+starts its child with Node's API behind its own seam. nakafa.com has no such
+module. Aksara's CLI has one, and aksara #421 pins its lifetime properties with
+tests.
+
+Every other load of the process module is still reported in such a module, and
+so are the file and path modules. A child that is not detached has no group to
+own, so Effect's `ChildProcess` starts it. When the spawner offers a way to own
+termination, the construction goes away.
+
 ### Promise syntax
 
 `async` and `await` are a rule only in the domain folders. Most of that code
@@ -117,9 +149,11 @@ tests and framework configuration, by `new-promise`. The rule counts only while
 
 ## Consequences
 
-- A compiler rule that is neither an error nor in the table above is open work,
-  not a decision. It becomes an error in the pull request that clears its last
-  site.
+- Both shared configurations list every rule the installed plugin defines,
+  as `error`, or as `off` for a rule in the table above. The source check reads
+  the plugin's own rule list and rejects a rule that has no decision, a name
+  the plugin no longer defines, and any other severity. So a plugin upgrade
+  that adds a rule fails the check until the rule is decided.
 - A new place that a framework forces is added to the source check as a
   construction, with a test for the reported and the unreported form.
 - Keep `new X({...})` for Schema error classes.
