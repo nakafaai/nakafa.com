@@ -54,6 +54,7 @@ describe("CurrentWeatherSummarySchema", () => {
       city: "Jakarta",
       condition: "light rain",
       country: "ID",
+      countryName: "Indonesia",
       icon: "10d",
       temperatureKelvin: 300.4,
     });

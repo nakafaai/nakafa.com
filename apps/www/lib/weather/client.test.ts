@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer, Result } from "effect";
 import {
   HttpClient,
@@ -107,6 +107,7 @@ describe("getCurrentWeather", () => {
           city: "Jakarta",
           condition: "light rain",
           country: "ID",
+          countryName: "Indonesia",
           icon: "10d",
           temperatureKelvin: 300.4,
         })
@@ -151,6 +152,20 @@ describe("getCurrentWeather", () => {
         return;
       }
       expect(result.failure).toMatchObject({ _tag: "SchemaError" });
+    })
+  );
+  it.effect("omits the country name when OpenWeather names no country", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
+      const result = yield* runWeather(() =>
+        Response.json({
+          ...currentWeatherResponse,
+          sys: { country: "" },
+        })
+      );
+      assert(Result.isSuccess(result));
+      expect(result.success.country).toBe("");
+      expect(result.success).not.toHaveProperty("countryName");
     })
   );
   it.effect(

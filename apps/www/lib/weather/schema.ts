@@ -22,6 +22,8 @@ export const CurrentWeatherSummarySchema = Schema.Struct({
   city: Schema.String,
   condition: Schema.String,
   country: Schema.String,
+  /** The country name the server resolved from `country`; absent when the weather service names no country. */
+  countryName: Schema.optionalKey(Schema.String),
   icon: Schema.String,
   temperatureKelvin: Schema.Finite,
 });
