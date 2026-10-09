@@ -1,6 +1,5 @@
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { createAgentEdgeRoutes } from "@repo/backend/agent/route";
-import { NAKAFA_VERCEL_DEPLOYMENT_ENABLED } from "@repo/backend/vercel";
 import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
@@ -8,7 +7,10 @@ export const config: VercelConfig = {
   framework: null,
   outputDirectory: "public",
   git: {
-    deploymentEnabled: NAKAFA_VERCEL_DEPLOYMENT_ENABLED,
+    deploymentEnabled: {
+      "**": false,
+      main: true,
+    },
   },
   ...createAgentEdgeRoutes({
     contract: NAKAFA_MCP_EDGE_CONTRACT,
