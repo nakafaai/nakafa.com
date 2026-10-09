@@ -3,7 +3,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
-import { slugify } from "@repo/utilities/slug";
+import { toAnchorSlug } from "@repo/utilities/slug";
 
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -88,7 +88,7 @@ export const decodePublishedMaterialContext = Effect.fn(
   return {
     context,
     group,
-    href: `/${locale}/${parent.publicPath}#${slugify(label)}`,
+    href: `/${locale}/${parent.publicPath}#${toAnchorSlug(label)}`,
     label,
     mapping,
     parent,
