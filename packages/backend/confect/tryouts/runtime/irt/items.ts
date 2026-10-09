@@ -5,8 +5,8 @@ import irtScaleItemsTable from "@repo/backend/confect/_generated/tables/irtScale
 import irtScaleVersionsTable from "@repo/backend/confect/_generated/tables/irtScaleVersions";
 import { TryoutResponseIntegrityError } from "@repo/backend/confect/tryouts/response/spec";
 import {
-  TryoutRuntimeError,
   toTryoutRuntimeError,
+  tryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
 import {
   Array as Arr,
@@ -86,7 +86,7 @@ export const loadSectionIrtSource = Effect.fn(
     run.questionCount !== args.placements.length ||
     run.status !== "completed"
   ) {
-    return yield* irtRuntimeError(
+    return yield* tryoutRuntimeError(
       "TRYOUT_IRT_CALIBRATION_RUN_MISMATCH",
       "IRT calibration run does not match the frozen section."
     );
@@ -116,7 +116,7 @@ const requireIrtScaleVersion = Effect.fn(
   const database = yield* DatabaseReader;
   const scaleVersionId = attempt.scaleVersionId;
   if (!scaleVersionId) {
-    return yield* irtRuntimeError(
+    return yield* tryoutRuntimeError(
       "TRYOUT_IRT_SCALE_REQUIRED",
       "Attempt IRT scale is missing for this try-out."
     );
@@ -131,7 +131,7 @@ const requireIrtScaleVersion = Effect.fn(
   if (scale && scaleBelongsToAttempt(scale, attempt)) {
     return scale;
   }
-  return yield* irtRuntimeError(
+  return yield* tryoutRuntimeError(
     "TRYOUT_IRT_SCALE_REQUIRED",
     "Attempt IRT scale is missing for this try-out."
   );
@@ -142,7 +142,7 @@ const loadAttemptScale = Effect.fn("tryouts.runtime.loadAttemptScale")(
   function* (attempt: TryoutAttempt) {
     const scale = yield* requireIrtScaleVersion(attempt);
     if (scale.questionCount !== attempt.totalQuestions) {
-      return yield* irtRuntimeError(
+      return yield* tryoutRuntimeError(
         "TRYOUT_IRT_SCALE_COUNT_MISMATCH",
         "IRT scale question count does not match the attempt."
       );
@@ -193,7 +193,7 @@ const validateIrtScaleItems = Effect.fn(
   readonly scale: Docs["irtScaleVersions"];
 }) {
   if (args.items.length !== args.placements.length) {
-    return yield* irtRuntimeError(
+    return yield* tryoutRuntimeError(
       "TRYOUT_IRT_ITEM_COUNT_MISMATCH",
       "IRT scale item count does not match the placement inventory."
     );
@@ -216,7 +216,7 @@ const validateIrtScaleItems = Effect.fn(
   let validated: TryoutIrtSource["items"][number][] = [];
   for (const item of args.items) {
     if (MutableHashSet.has(itemIdentities, item.placementIdentity)) {
-      return yield* irtRuntimeError(
+      return yield* tryoutRuntimeError(
         "TRYOUT_IRT_ITEM_DUPLICATE",
         "IRT scale contains a duplicate placement item."
       );
@@ -231,7 +231,7 @@ const validateIrtScaleItems = Effect.fn(
         item.placementRowHash === placement.placementRowHash
       )
     ) {
-      return yield* irtRuntimeError(
+      return yield* tryoutRuntimeError(
         "TRYOUT_IRT_ITEM_STALE",
         "IRT scale item is missing or stale for one try-out question."
       );
@@ -244,11 +244,3 @@ const validateIrtScaleItems = Effect.fn(
   }
   return validated;
 });
-
-/** Creates one stable typed IRT runtime failure. */
-function irtRuntimeError(code: TryoutRuntimeError["code"], message: string) {
-  return new TryoutRuntimeError({
-    code,
-    message,
-  });
-}

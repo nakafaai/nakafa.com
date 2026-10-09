@@ -11,8 +11,8 @@ import { TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT } from "@repo/backend/confect/c
 import { freeze } from "@repo/backend/confect/response/projection";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
-  TryoutRuntimeError,
   toTryoutRuntimeError,
+  tryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
 import type { TryoutSnapshotSource } from "@repo/backend/confect/tryouts/start/source";
 import { toTryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
@@ -95,7 +95,8 @@ export const createAttemptPlacements = Effect.fn(
       snapshot.sectionRowHash !== source.section.rowHash ||
       snapshot.questionCount !== source.placements.length
     ) {
-      return yield* startMismatch(
+      return yield* tryoutRuntimeError(
+        "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
         "Try-out section changed before its attempt was frozen."
       );
     }
@@ -127,7 +128,8 @@ export const createAttemptPlacements = Effect.fn(
         getDocumentSize(frozenPlacement) >=
         TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT
       ) {
-        return yield* startMismatch(
+        return yield* tryoutRuntimeError(
+          "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
           "Try-out placement exceeds the runtime read ceiling."
         );
       }
@@ -138,11 +140,3 @@ export const createAttemptPlacements = Effect.fn(
     }
   }
 });
-
-/** Creates one typed fail-closed snapshot mismatch. */
-function startMismatch(message: string) {
-  return new TryoutRuntimeError({
-    code: "TRYOUT_SECTION_SNAPSHOT_MISMATCH",
-    message,
-  });
-}
