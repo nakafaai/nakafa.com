@@ -3,8 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Effect } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { CurrentWeatherSummarySchema } from "@/lib/weather/schema";
-
-const WEATHER_REQUEST_TIMEOUT = "10 seconds";
+import { WEATHER_REQUEST_TIMEOUT } from "@/lib/weather/transport";
 
 /** Load the current weather summary through the app API route. */
 const fetchWeather = Effect.fn("www.weather.fetch")(function* () {
