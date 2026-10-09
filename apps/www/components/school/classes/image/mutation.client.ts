@@ -4,7 +4,7 @@ import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import classes from "@repo/backend/confect/_generated/refs/classes";
 import type { SchoolClassImage } from "@repo/backend/confect/classes/schema";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { updateClassImageState } from "@/components/school/classes/image/state";
 import { useClass } from "@/lib/school/classes/context";
 
@@ -23,7 +23,7 @@ function updateClassLists(
       query.args,
       Option.some({
         ...query.value.value,
-        page: query.value.value.page.map((schoolClass) =>
+        page: Arr.map(query.value.value.page, (schoolClass) =>
           schoolClass._id === classId
             ? {
                 ...schoolClass,

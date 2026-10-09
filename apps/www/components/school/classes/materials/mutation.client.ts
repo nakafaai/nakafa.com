@@ -5,7 +5,7 @@ import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import classes from "@repo/backend/confect/_generated/refs/classes";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { DateTime, Option } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 import { updateMaterialGroupState } from "@/components/school/classes/materials/state";
 import { reorderPage } from "@/components/school/classes/order";
 
@@ -27,7 +27,10 @@ function removeGroup(
         query.args,
         Option.some({
           ...query.value.value,
-          page: query.value.value.page.filter((group) => group._id !== groupId),
+          page: Arr.filter(
+            query.value.value.page,
+            (group) => group._id !== groupId
+          ),
         })
       );
     }
@@ -51,7 +54,7 @@ function updateMaterialGroupQueries(
       query.args,
       Option.some({
         ...query.value.value,
-        page: query.value.value.page.map((group) =>
+        page: Arr.map(query.value.value.page, (group) =>
           group._id === args.groupId
             ? updateMaterialGroupState(group, args, updatedAt)
             : group

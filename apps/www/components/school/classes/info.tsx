@@ -17,7 +17,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -127,7 +127,7 @@ function InfoCustomizeButton() {
 
         <div className="relative flex size-full flex-col overflow-hidden">
           <div className="scrollbar-hide grid grid-cols-2 gap-3 overflow-y-auto p-6">
-            {getImageList().map((image) => (
+            {Arr.map(getImageList(), (image) => (
               <button
                 className="relative size-full min-h-22 cursor-pointer overflow-hidden rounded-sm border border-transparent transition-[opacity,border-color] ease-out hover:border-primary disabled:pointer-events-none disabled:opacity-50"
                 disabled={isPending}
@@ -155,5 +155,5 @@ function InfoCustomizeButton() {
 
 /** Return the selectable class cover images shown in the customization sheet. */
 function getImageList() {
-  return CLASS_IMAGE_ENTRIES.map(([value, src]) => ({ value, src }));
+  return Arr.map(CLASS_IMAGE_ENTRIES, ([value, src]) => ({ value, src }));
 }
