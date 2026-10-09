@@ -146,31 +146,21 @@ export function getColor(...args: ColorArgs) {
   }
 
   return Match.value(args).pipe(
-    Match.when(["AMBER", Match.any], ([, shade]) => COLOR_SHADES.AMBER[shade]),
-    Match.when(["BLUE", Match.any], ([, shade]) => COLOR_SHADES.BLUE[shade]),
-    Match.when(
-      ["EMERALD", Match.any],
-      ([, shade]) => COLOR_SHADES.EMERALD[shade]
-    ),
-    Match.when(["GRAY", Match.any], ([, shade]) => COLOR_SHADES.GRAY[shade]),
-    Match.when(
-      ["NEUTRAL", Match.any],
-      ([, shade]) => COLOR_SHADES.NEUTRAL[shade]
-    ),
-    Match.when(
-      ["ORANGE", Match.any],
-      ([, shade]) => COLOR_SHADES.ORANGE[shade]
-    ),
-    Match.when(["RED", Match.any], ([, shade]) => COLOR_SHADES.RED[shade]),
-    Match.when(["SKY", Match.any], ([, shade]) => COLOR_SHADES.SKY[shade]),
-    Match.when(["SLATE", Match.any], ([, shade]) => COLOR_SHADES.SLATE[shade]),
-    Match.when(["STONE", Match.any], ([, shade]) => COLOR_SHADES.STONE[shade]),
-    Match.when(["TEAL", Match.any], ([, shade]) => COLOR_SHADES.TEAL[shade]),
-    Match.when(
-      ["VIOLET", Match.any],
-      ([, shade]) => COLOR_SHADES.VIOLET[shade]
-    ),
-    Match.when(["ZINC", Match.any], ([, shade]) => COLOR_SHADES.ZINC[shade]),
+    Match.discriminators("0")({
+      AMBER: ([, shade]) => COLOR_SHADES.AMBER[shade],
+      BLUE: ([, shade]) => COLOR_SHADES.BLUE[shade],
+      EMERALD: ([, shade]) => COLOR_SHADES.EMERALD[shade],
+      GRAY: ([, shade]) => COLOR_SHADES.GRAY[shade],
+      NEUTRAL: ([, shade]) => COLOR_SHADES.NEUTRAL[shade],
+      ORANGE: ([, shade]) => COLOR_SHADES.ORANGE[shade],
+      RED: ([, shade]) => COLOR_SHADES.RED[shade],
+      SKY: ([, shade]) => COLOR_SHADES.SKY[shade],
+      SLATE: ([, shade]) => COLOR_SHADES.SLATE[shade],
+      STONE: ([, shade]) => COLOR_SHADES.STONE[shade],
+      TEAL: ([, shade]) => COLOR_SHADES.TEAL[shade],
+      VIOLET: ([, shade]) => COLOR_SHADES.VIOLET[shade],
+      ZINC: ([, shade]) => COLOR_SHADES.ZINC[shade],
+    }),
     Match.orElse(() => {
       throw new Error(`Unknown shaded color: ${args[0]}`);
     })
