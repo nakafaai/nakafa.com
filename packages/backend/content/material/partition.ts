@@ -8,7 +8,7 @@ import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Option } from "effect";
 
 /** Verifies one catalog row and keeps the row beside its verified material. */
 const verifyPartitionRow = (row: PublicationRow<"materialCatalog">) =>
@@ -16,12 +16,6 @@ const verifyPartitionRow = (row: PublicationRow<"materialCatalog">) =>
 
 /** One verified material of a discovery partition, with its owning catalog row. */
 type PartitionMaterial = Effect.Success<ReturnType<typeof verifyPartitionRow>>;
-
-/** A material partition of a release that does not manage materials. */
-const UnmanagedPartitionSchema = Schema.Struct({
-  activeReleaseId: Schema.NullOr(Schema.String),
-  kind: Schema.Literal("unmanaged"),
-});
 
 /** Reads a transaction-bounded group of complete material discovery buckets. */
 export const readMaterialPartition = Effect.fn(
@@ -46,8 +40,8 @@ export const readMaterialPartition = Effect.fn(
   if (!(owner.active && owner.managed && owner.slot)) {
     return {
       activeReleaseId,
-      kind: "unmanaged",
-    } satisfies typeof UnmanagedPartitionSchema.Type;
+      kind: "unmanaged" as const,
+    };
   }
   const source = yield* MaterialSource;
   const materials = MutableList.make<PartitionMaterial>();
