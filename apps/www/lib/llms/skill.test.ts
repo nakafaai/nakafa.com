@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "@effect/vitest";
 import { languages } from "@repo/internationalization/data/lang";
+import { Effect } from "effect";
 import { getNakafaAgentSkillIndex, getNakafaSkillText } from "@/lib/llms/skill";
 
 describe("Nakafa public agent skill", () => {
@@ -25,25 +26,29 @@ describe("Nakafa public agent skill", () => {
     }
   });
 
-  it("builds the agent-skills discovery manifest with a matching digest", () => {
-    const index = getNakafaAgentSkillIndex();
-    const digest = createHash("sha256")
-      .update(getNakafaSkillText())
-      .digest("hex");
+  it.effect(
+    "builds the agent-skills discovery manifest with a matching digest",
+    () =>
+      Effect.gen(function* () {
+        const index = yield* getNakafaAgentSkillIndex();
+        const digest = createHash("sha256")
+          .update(getNakafaSkillText())
+          .digest("hex");
 
-    expect(index).toStrictEqual({
-      $schema: "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
-      skills: [
-        {
-          name: "nakafa",
-          type: "skill-md",
-          description: expect.stringContaining(
-            "multilingual educational lessons"
-          ),
-          url: "/.well-known/agent-skills/nakafa/SKILL.md",
-          digest: `sha256:${digest}`,
-        },
-      ],
-    });
-  });
+        expect(index).toStrictEqual({
+          $schema: "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+          skills: [
+            {
+              name: "nakafa",
+              type: "skill-md",
+              description: expect.stringContaining(
+                "multilingual educational lessons"
+              ),
+              url: "/.well-known/agent-skills/nakafa/SKILL.md",
+              digest: `sha256:${digest}`,
+            },
+          ],
+        });
+      })
+  );
 });

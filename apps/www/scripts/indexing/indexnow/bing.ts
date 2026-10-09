@@ -1,5 +1,13 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
-import { Config, Effect, MutableList, Option, Result, Schema } from "effect";
+import {
+  Array as Arr,
+  Config,
+  Effect,
+  MutableList,
+  Option,
+  Result,
+  Schema,
+} from "effect";
 import { HttpBody, HttpClient } from "effect/http";
 import { BingSubmitError } from "@/scripts/indexing/errors";
 import { INDEXING_HOST } from "@/scripts/indexing/paths";
@@ -65,10 +73,7 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
         batchSize,
         urls.length - submittedCount
       );
-      const batch = urls.slice(
-        submittedCount,
-        submittedCount + currentBatchSize
-      );
+      const batch = Arr.take(Arr.drop(urls, submittedCount), currentBatchSize);
       const startIndex = submittedCount + 1;
       const endIndex = submittedCount + batch.length;
       const outcome = yield* submitBatchToBing({

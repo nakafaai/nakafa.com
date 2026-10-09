@@ -6,10 +6,17 @@ import { Effect, Schema } from "effect";
 import type { AppConfig } from "next-intl";
 import { toast } from "sonner";
 
-/** A transport failure leaves the mutation's outcome unconfirmed. */
+/**
+ * A transport failure leaves the mutation's outcome unconfirmed. A call refused
+ * while the client is offline (`NINA_OFFLINE`) never started, so nothing is
+ * unconfirmed and nothing is reported.
+ */
 export class NinaConnectionError extends Schema.TaggedError<NinaConnectionError>()(
   "NinaConnectionError",
-  { code: Schema.Literal("NINA_CONNECTION_FAILED"), message: Schema.String }
+  {
+    code: Schema.Literals(["NINA_CONNECTION_FAILED", "NINA_OFFLINE"]),
+    message: Schema.String,
+  }
 ) {}
 
 export type NinaFailure =
@@ -36,6 +43,7 @@ export const ninaFailureFeedback = {
     action: "retry",
     report: true,
   },
+  NINA_OFFLINE: { message: "connection", action: "retry", report: false },
   INSUFFICIENT_CREDITS: {
     message: "credits",
     action: "credits",

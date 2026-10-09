@@ -68,4 +68,31 @@ describe("public agent quota", () => {
       });
     });
   });
+
+  it("does not admit unmetered reads without a usable client identity", async () => {
+    for (const address of [undefined, "   ", "1".repeat(257)]) {
+      await createConvexTestWithBetterAuth().action(async (ctx) => {
+        const headers = new Headers();
+        if (address !== undefined) {
+          headers.set(NAKAFA_EDGE_CLIENT_IP_HEADER, address);
+        }
+        const input = new Request("https://api.nakafa.com/search", { headers });
+        const response = await Effect.runPromise(
+          runAgentRequest(
+            input,
+            "identity-missing",
+            enforceAgentReadLimit(input).pipe(
+              Effect.as(new Response("admitted"))
+            )
+          ).pipe(
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
+        );
+        expect(response.status).toBe(503);
+        expect(await response.json()).toMatchObject({
+          code: "SERVICE_UNAVAILABLE",
+        });
+      });
+    }
+  });
 });

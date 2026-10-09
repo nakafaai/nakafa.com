@@ -9,17 +9,25 @@ import {
 import type { Rule } from "#scripts/check/rules";
 import { unwrapped } from "#scripts/check/wrapper";
 
-/** Array methods that transform, read, or search an array and have no String counterpart. `join` is among them: the receiver's type tells an array's join from the path helper of the same name. */
+/**
+ * Array methods that transform or read an array. Some also exist on String, such
+ * as `includes` and `slice`, and `join` on a path helper, so the receiver's type
+ * decides which calls count.
+ */
 const ARRAY_METHODS = HashSet.make(
+  "concat",
+  "entries",
   "every",
   "filter",
   "flat",
   "flatMap",
   "forEach",
+  "includes",
   "join",
   "map",
   "reduce",
   "reduceRight",
+  "slice",
   "some",
   "toReversed",
   "toSorted",
@@ -37,12 +45,18 @@ const MUTATION_METHODS = HashSet.make(
   "splice",
   "unshift"
 );
-/** Array methods that search for one element, which Effect returns as an Option. */
+/**
+ * Array methods that look up one element or its index, which Effect returns as an
+ * Option. `at`, `indexOf`, and `lastIndexOf` also exist on String.
+ */
 const SEARCH_METHODS = HashSet.make(
+  "at",
   "find",
   "findIndex",
   "findLast",
-  "findLastIndex"
+  "findLastIndex",
+  "indexOf",
+  "lastIndexOf"
 );
 
 /** The three rules that judge an array method call by its receiver's type. */
