@@ -1,5 +1,5 @@
 import { getEarlyElementShellConfiguration } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
@@ -70,11 +70,10 @@ export function getValenceElectronFacts(atomicNumber: number) {
     getEarlyElementShellConfiguration(atomicNumber),
     (shell) => shell.electronCount > 0
   );
-  const outerShell = shellConfiguration.at(-1);
-
-  if (!outerShell) {
-    throw new Error("Valence electrons require at least one occupied shell.");
-  }
+  const outerShell = Option.getOrThrowWith(
+    Arr.last(shellConfiguration),
+    () => new Error("Valence electrons require at least one occupied shell.")
+  );
 
   return {
     configurationMath: Arr.join(

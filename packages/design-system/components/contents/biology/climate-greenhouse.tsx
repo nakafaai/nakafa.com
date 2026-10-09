@@ -217,7 +217,7 @@ function HeatParticles({
 
   return (
     <CameraBounds motion={{ rotation: "y" }} objectRef={refObject}>
-      {Arr.map(HEAT_PARTICLE_IDS.slice(0, particleCount), (id, index) => (
+      {Arr.map(Arr.take(HEAT_PARTICLE_IDS, particleCount), (id, index) => (
         <mesh key={id} position={getHeatParticlePosition(index, particleCount)}>
           <sphereGeometry args={[0.026, 18, 12]} />
           <meshStandardMaterial

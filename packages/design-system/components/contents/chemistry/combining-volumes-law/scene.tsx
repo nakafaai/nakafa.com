@@ -381,7 +381,7 @@ function molecule(atoms: readonly MoleculeAtom[]) {
   return {
     atoms,
     bonds: Arr.map(
-      atoms.slice(1),
+      Arr.drop(atoms, 1),
       (atomData) => [atoms[0].id, atomData.id] as const
     ),
   };

@@ -7,12 +7,12 @@ describe("theme picker options", () => {
   it("stays synchronized with every runtime theme definition", () => {
     expect(themeOptions).toHaveLength(themes.length);
 
-    for (const [index, option] of themeOptions.entries()) {
+    Arr.forEach(themeOptions, (option, index) => {
       const { icon, ...runtimeDefinition } = option;
 
       expect(icon).toBeDefined();
       expect(runtimeDefinition).toEqual(themes[index]);
-    }
+    });
   });
 
   it("defines one icon for every selectable value", () => {

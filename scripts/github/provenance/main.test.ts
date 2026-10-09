@@ -160,7 +160,7 @@ describe("provenance verifier CLI", () => {
         prefix: "provenance-missing-",
       });
       const invalid = yield* runVerifier([
-        ...cliArguments(`${directory}/audit.json`).slice(0, -1),
+        ...Arr.dropRight(cliArguments(`${directory}/audit.json`), 1),
         "npm-staging",
       ]);
       const missing = yield* runVerifier(

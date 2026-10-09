@@ -217,14 +217,16 @@ function readTriangleAngle(attributes: MdxAttribute[]) {
   if (Arr.some(attributes, isExpressionAttribute)) {
     return Option.none();
   }
-  const attribute = Arr.filter(
-    attributes,
-    (candidate) => readAttributeName(candidate) === "angle"
-  ).at(-1);
-  if (!attribute) {
+  const attribute = Arr.last(
+    Arr.filter(
+      attributes,
+      (candidate) => readAttributeName(candidate) === "angle"
+    )
+  );
+  if (Option.isNone(attribute)) {
     return Option.some(ISOSCELES_RIGHT_TRIANGLE_ANGLE);
   }
-  const { value } = attribute;
+  const { value } = attribute.value;
   if (!isExpressionValue(value)) {
     return Option.none();
   }
@@ -311,7 +313,7 @@ function renderGenericComponentRows(
 function renderAttribute(attribute: MdxAttribute, omittedAttributes: string[]) {
   const name = readAttributeName(attribute);
 
-  if (!name || omittedAttributes.includes(name)) {
+  if (!name || Arr.contains(omittedAttributes, name)) {
     return "";
   }
 

@@ -284,7 +284,7 @@ describe("coordinate frame geometry", () => {
     });
     const points = [...grid.xy.cells, ...grid.xy.sections];
     const segments = Array.from({ length: points.length / 2 }, (_, index) =>
-      points.slice(index * 2, index * 2 + 2)
+      Arr.take(Arr.drop(points, index * 2), 2)
     );
 
     expect(points.length).toBeLessThanOrEqual(8);

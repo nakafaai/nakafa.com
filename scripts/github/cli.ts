@@ -260,7 +260,7 @@ function executionBoundaryProblems(
   const publishNeeds = publish.needs;
   const consumesBuild =
     publishNeeds === "build" ||
-    (Arr.isArray(publishNeeds) && publishNeeds.includes("build"));
+    (Arr.isArray(publishNeeds) && Arr.contains(publishNeeds, "build"));
   const verifyNeeds = Arr.isArray(verify.needs)
     ? verify.needs
     : Arr.filter([verify.needs], (need) => need !== undefined);
@@ -293,8 +293,8 @@ function executionBoundaryProblems(
     ),
     problemWhen(
       verifyNeeds.length !== 2 ||
-        !verifyNeeds.includes("build") ||
-        !verifyNeeds.includes("publish"),
+        !Arr.contains(verifyNeeds, "build") ||
+        !Arr.contains(verifyNeeds, "publish"),
       "CLI verification must consume build and publication."
     ),
     runtimeProblems("publication", publish),
