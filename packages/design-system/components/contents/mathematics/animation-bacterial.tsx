@@ -1,6 +1,6 @@
 "use client";
 
-import { useIntersection, useInterval } from "@mantine/hooks";
+import { useIntersection } from "@mantine/hooks";
 import {
   BacterialGenerations,
   BacterialPlayback,
@@ -17,7 +17,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Effect, Fiber, Schedule, Schema } from "effect";
 import {
   AnimatePresence,
   domMax,
@@ -117,23 +117,29 @@ export function BacterialGrowth({
   });
   const frame = getBacterialGrowthFrame(frameInput);
 
-  const { start: startInterval, stop: stopInterval } = useInterval(() => {
-    setGeneration((prev) => {
-      if (prev < maxGenerations) {
-        return prev + 1;
-      }
-      return prev;
-    });
-  }, SPEED_INTERVAL / speed);
-
   useEffect(() => {
     if (!isAnimating) {
       return;
     }
 
-    startInterval();
-    return stopInterval;
-  }, [isAnimating, startInterval, stopInterval]);
+    const interval = Effect.runFork(
+      Effect.schedule(
+        Effect.sync(() => {
+          setGeneration((prev) => {
+            if (prev < maxGenerations) {
+              return prev + 1;
+            }
+            return prev;
+          });
+        }),
+        Schedule.spaced(SPEED_INTERVAL / speed)
+      )
+    );
+
+    return () => {
+      Effect.runFork(Fiber.interrupt(interval));
+    };
+  }, [isAnimating, maxGenerations, speed]);
 
   function resetAnimation() {
     setGeneration(0);

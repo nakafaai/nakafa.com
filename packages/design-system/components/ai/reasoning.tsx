@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowDown01Icon, BrainIcon } from "@hugeicons/core-free-icons";
-import { useTimeout } from "@mantine/hooks";
 import {
   Collapsible,
   CollapsibleContent,
@@ -11,7 +10,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { cn } from "cn";
-import { DateTime, Schema } from "effect";
+import { DateTime, Effect, Fiber, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
@@ -109,20 +108,25 @@ export const Reasoning = memo(
 
     const duration = durationProp ?? timing.duration;
 
-    const { start: startAutoClose, clear: clearAutoClose } = useTimeout(() => {
-      setIsOpen(false);
-      hasAutoClosedRef.current = true;
-    }, AUTO_CLOSE_DELAY);
-
     // Auto-open when streaming starts, auto-close when streaming ends (once only)
     useEffect(() => {
       if (defaultOpen && !isStreaming && isOpen && !hasAutoClosedRef.current) {
         // Add a small delay before closing to allow user to see the content
-        startAutoClose();
+        const timer = Effect.runFork(
+          Effect.delay(
+            Effect.sync(() => {
+              setIsOpen(false);
+              hasAutoClosedRef.current = true;
+            }),
+            AUTO_CLOSE_DELAY
+          )
+        );
 
-        return clearAutoClose;
+        return () => {
+          Effect.runFork(Fiber.interrupt(timer));
+        };
       }
-    }, [isStreaming, isOpen, defaultOpen, startAutoClose, clearAutoClose]);
+    }, [isStreaming, isOpen, defaultOpen, setIsOpen]);
 
     const reasoning = useMemo(
       () => ({ duration, hasContent, isOpen, isStreaming }),

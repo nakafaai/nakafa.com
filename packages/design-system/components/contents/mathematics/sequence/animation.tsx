@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
-import { useIntersection, useInterval, useMediaQuery } from "@mantine/hooks";
+import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
 import { getTableChairArrangement } from "@repo/design-system/components/contents/mathematics/sequence/arrangement";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -14,7 +14,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr } from "effect";
+import { Array as Arr, Effect, Fiber, Schedule } from "effect";
 import {
   AnimatePresence,
   domMax,
@@ -89,18 +89,6 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
   // Calculate chair count based on the formula U_n = 2n + 2
   const chairCount = 2 * deferredTableCount + 2;
 
-  const { start: startTableInterval, stop: stopTableInterval } = useInterval(
-    () => {
-      setTableCount((prev) => {
-        if (prev < maxTables) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    },
-    ANIMATION_INTERVAL_MS / speed
-  );
-
   useEffect(() => {
     // Stop playing when maximum table count is reached
     if (deferredTableCount >= maxTables) {
@@ -112,15 +100,24 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
       return;
     }
 
-    startTableInterval();
-    return stopTableInterval;
-  }, [
-    deferredAnimating,
-    deferredTableCount,
-    maxTables,
-    startTableInterval,
-    stopTableInterval,
-  ]);
+    const interval = Effect.runFork(
+      Effect.schedule(
+        Effect.sync(() => {
+          setTableCount((prev) => {
+            if (prev < maxTables) {
+              return prev + 1;
+            }
+            return prev;
+          });
+        }),
+        Schedule.spaced(ANIMATION_INTERVAL_MS / speed)
+      )
+    );
+
+    return () => {
+      Effect.runFork(Fiber.interrupt(interval));
+    };
+  }, [deferredAnimating, deferredTableCount, maxTables, speed]);
 
   const resetAnimation = useCallback(() => {
     setTableCount(1);
