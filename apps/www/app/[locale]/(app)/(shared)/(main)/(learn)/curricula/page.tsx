@@ -1,4 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { Array as Arr } from "effect";
@@ -87,10 +88,10 @@ export default async function Page() {
         description={description}
         items={Arr.map(catalog.entries, ({ route }) => ({
           name: route.title,
-          url: `https://nakafa.com/${locale}/${route.publicPath}`,
+          url: `${COMPANY_IDENTITY.url}/${locale}/${route.publicPath}`,
         }))}
         name={title}
-        url={`https://nakafa.com${path}`}
+        url={`${COMPANY_IDENTITY.url}${path}`}
       />
       <LayoutMaterial>
         <LayoutMaterialContent>

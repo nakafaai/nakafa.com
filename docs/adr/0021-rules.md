@@ -66,7 +66,7 @@ run time, or a module that starts with `"use client"` as its first statement.
 
 A test file is named `*.test.ts`, `*.test.tsx`, or `test.<name>.ts`, such as
 `test.setup.ts` or `test.helpers.ts`, which only tests load. Any other module
-that supports tests, such as `apps/www/test/fixtures.ts`, is product code.
+that supports tests, such as `apps/www/test/content-page.ts`, is product code.
 
 A framework configuration file is named `*.config.ts`, `.mts`, `.cts`, or
 `.tsx`, imports the Vitest or Vercel configuration API, or has a default export

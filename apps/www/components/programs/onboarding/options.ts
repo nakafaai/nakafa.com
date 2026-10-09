@@ -13,6 +13,7 @@ import {
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import { Array as Arr } from "effect";
 
+import type { RegionCountryCode } from "@/components/shared/flag";
 import { roleIconByValue } from "@/lib/data/roles";
 
 export type OnboardingAnswer = Ref.Args<
@@ -33,7 +34,7 @@ export type OnboardingFocus = Extract<
 export type OnboardingItemName = OnboardingAnswer["kind"];
 
 interface OnboardingOption<Value extends string> {
-  readonly countryCode?: string;
+  readonly countryCode?: RegionCountryCode;
   readonly descriptionKey?: string;
   readonly icon?: IconSvgElement;
   readonly titleKey: string;

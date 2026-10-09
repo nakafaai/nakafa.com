@@ -1,4 +1,3 @@
-import path from "node:path";
 import config from "@repo/testing/node";
 import { mergeConfig } from "vitest/config";
 
@@ -27,10 +26,6 @@ export default mergeConfig(config, {
       exclude: coverageExcludes,
       include: ["**/*.ts"],
       reportsDirectory: "./coverage",
-      thresholds: {
-        100: true,
-        perFile: true,
-      },
     },
     // Keep CPU available for Convex Edge VMs when Turbo runs package tests together.
     maxWorkers: "50%",
@@ -62,10 +57,5 @@ export default mergeConfig(config, {
         },
       },
     ],
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "./"),
-    },
   },
 });

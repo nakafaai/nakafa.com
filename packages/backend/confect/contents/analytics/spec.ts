@@ -57,8 +57,6 @@ export const pruneLearningPopularityResultValidator = Schema.Struct({
   viewersDeleted: Schema.Finite,
   waitingForMaintenance: Schema.Boolean,
 });
-export type PruneLearningPopularityResult =
-  typeof pruneLearningPopularityResultValidator.Type;
 export const refreshLearningPopularityWindowPageArgs = {
   cursor: Schema.optionalKey(Schema.String),
   day: Schema.Finite,
@@ -100,26 +98,12 @@ export const expireLearningPopularityWindowPageResultValidator = Schema.Struct({
 });
 export type ScheduleContentAnalyticsPartitionArgs =
   typeof scheduleContentAnalyticsPartitionArgsValidator.Type;
-export type ScheduleContentAnalyticsPartitionsResult =
-  typeof scheduleContentAnalyticsPartitionsResultValidator.Type;
-export type ScheduleContentAnalyticsPartitionResult =
-  typeof scheduleContentAnalyticsPartitionResultValidator.Type;
 export type ProcessContentAnalyticsPartitionArgs =
   typeof processContentAnalyticsPartitionArgsValidator.Type;
-export type ProcessContentAnalyticsPartitionResult =
-  typeof processContentAnalyticsPartitionResultValidator.Type;
-export type ScheduleLearningPopularityRefreshesResult =
-  typeof scheduleLearningPopularityRefreshesResultValidator.Type;
-export type ScheduleLearningPopularityExpiriesResult =
-  typeof scheduleLearningPopularityExpiriesResultValidator.Type;
 export type RefreshLearningPopularityWindowPageArgs =
   typeof refreshLearningPopularityWindowPageArgsValidator.Type;
-export type RefreshLearningPopularityWindowPageResult =
-  typeof refreshLearningPopularityWindowPageResultValidator.Type;
 export type ExpireLearningPopularityWindowPageArgs =
   typeof expireLearningPopularityWindowPageArgsValidator.Type;
-export type ExpireLearningPopularityWindowPageResult =
-  typeof expireLearningPopularityWindowPageResultValidator.Type;
 
 /** Raised when a requested analytics partition is outside the configured set. */
 export class InvalidContentAnalyticsPartitionError extends Schema.TaggedError<InvalidContentAnalyticsPartitionError>()(

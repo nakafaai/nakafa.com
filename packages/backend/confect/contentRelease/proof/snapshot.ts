@@ -13,6 +13,7 @@ import { verifyContentSnapshots } from "@nakafa/aksara-contracts/release/snapsho
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import type { ReleaseRole } from "@repo/backend/confect/contentRelease/model";
 import {
   decodeReleaseJson,
   decodeSnapshotJson,
@@ -122,7 +123,7 @@ export const verifyReleaseSnapshots = Effect.fn(
   "contentRelease.verifyReleaseSnapshots"
 )(function* (
   release: SignedContentRelease,
-  role: "candidate" | "recovery",
+  role: ReleaseRole,
   stagedSnapshotBatches: number,
   stagedSnapshotRows: number
 ) {

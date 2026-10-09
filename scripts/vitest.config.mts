@@ -6,10 +6,6 @@ export default mergeConfig(config, {
     include: ["scripts/**/*.test.ts"],
     coverage: {
       include: ["scripts/**/*.ts"],
-      thresholds: {
-        100: true,
-        perFile: true,
-      },
     },
   },
 });

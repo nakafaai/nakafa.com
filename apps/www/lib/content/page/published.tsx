@@ -80,11 +80,6 @@ const renderPageArtifact = Effect.fn("NakafaContent.renderPageArtifact")(
   }
 );
 
-/** Reviewed Page body and its immutable publication evidence. */
-export type PublishedPageContent = Effect.Success<
-  ReturnType<typeof renderPageArtifact>
->;
-
 /** Caches one current Page while preserving a truthful signed absence. */
 export async function getCurrentPublishedPage(
   input: CurrentPublishedPageInput

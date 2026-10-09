@@ -21,7 +21,7 @@ import { Clock, Effect } from "effect";
 
 type AppLocale = typeof appLocaleValidator.Type;
 type ArtifactLocale = typeof artifactLocaleValidator.Type;
-type ReleaseRole = typeof releaseRoleValidator.Type;
+export type ReleaseRole = typeof releaseRoleValidator.Type;
 
 /** Reads the singleton publication identity through its exact index. */
 export const loadState = Effect.fn("contentRelease.loadState")(function* () {

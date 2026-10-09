@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type AnalyticsConsentScope,
   AnonymousAnalyticsConsentDecidedAtSchema,
   CONSENT_DECISION_MECHANISMS,
   CONSENT_NOTICE_VERSIONS,
@@ -331,7 +332,7 @@ export function suspendBrowserAnalyticsIdentity() {
 /** Adds the exact affirmative decision provenance to every granted event. */
 function createConsentEventProperties(
   identity: BrowserAnalyticsIdentity,
-  scope: "account" | "anonymous"
+  scope: AnalyticsConsentScope
 ) {
   return {
     $geoip_disable: false,

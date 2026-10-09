@@ -1,4 +1,4 @@
-import { Array as Arr, Match } from "effect";
+import { Match } from "effect";
 
 /** Default visualization accents from the Tailwind CSS palette. */
 const COLOR_KEYS = [
@@ -165,32 +165,4 @@ export function getColor(...args: ColorArgs) {
   }
 
   return readShade(args);
-}
-
-/**
- * Get a random color from the COLORS object
- * @param exclude - The keys of the colors to exclude
- * @param seed - A seed for deterministic selection
- * @returns The random color value
- */
-export function randomColor(exclude?: ColorName[], seed?: string | number) {
-  const availableKeys = Arr.filter(
-    COLOR_KEYS,
-    (key) => !(exclude && Arr.some(exclude, (excludeKey) => excludeKey === key))
-  );
-
-  if (availableKeys.length === 0) {
-    return COLORS[COLOR_KEYS[0]];
-  }
-
-  // Deterministic hash-based selection
-  let seedNum = 0;
-  if (typeof seed === "number") {
-    seedNum = seed;
-  } else if (seed) {
-    seedNum = Arr.reduce(seed, 0, (acc, char) => acc + char.charCodeAt(0));
-  }
-  const index = seedNum % availableKeys.length;
-
-  return COLORS[availableKeys[index]];
 }

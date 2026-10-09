@@ -1,3 +1,4 @@
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { HashSet, Schema } from "effect";
 
 /** One DNS label of lowercase letters and digits with single inner hyphens, so never `xn--`. */
@@ -74,9 +75,7 @@ export const reservedSlugs = HashSet.fromIterable([
   "test",
   "verify",
   "webmail",
-  "de",
-  "en",
-  "id",
+  ...APP_LOCALE_CODES,
   "onboarding",
   "select",
 ]);

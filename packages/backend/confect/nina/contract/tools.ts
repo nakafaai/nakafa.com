@@ -1,6 +1,5 @@
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
-import { type InferUITools, tool } from "ai";
 import { Array as Arr, pipe, Schema, Struct } from "effect";
 
 /** Builds a non-empty string with direct model-facing metadata. */
@@ -202,18 +201,3 @@ export const researchToolInputSchema = createEffectSchema(
 );
 export const mathToolInputSchema = createEffectSchema(MathToolInputSchema);
 export const textOutputSchema = createEffectSchema(Schema.String);
-const uiTools = {
-  nakafa: tool({
-    inputSchema: nakafaToolInputSchema,
-    outputSchema: textOutputSchema,
-  }),
-  deepResearch: tool({
-    inputSchema: researchToolInputSchema,
-    outputSchema: textOutputSchema,
-  }),
-  math: tool({
-    inputSchema: mathToolInputSchema,
-    outputSchema: textOutputSchema,
-  }),
-};
-export type MyUITools = InferUITools<typeof uiTools>;

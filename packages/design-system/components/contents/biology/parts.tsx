@@ -2,7 +2,6 @@
 
 import { Line } from "@react-three/drei";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, Vector3 } from "three";
@@ -162,35 +161,6 @@ export function RnaSingleStrand({
         radius={markerRadius}
       />
     </group>
-  );
-}
-
-/**
- * Renders a theme-aware base plane for scenes that need environmental context.
- */
-export function BiologyGround({
-  color,
-  scale = [3.8, 0.08, 2.4],
-}: {
-  color: string;
-  scale?: BiologyScenePoint;
-}) {
-  return (
-    <CameraBounds exclude>
-      <mesh
-        position={[0, -0.9, 0]}
-        receiveShadow
-        scale={[scale[0] / 2, scale[1], scale[2] / 2]}
-      >
-        <cylinderGeometry args={[1, 1, 1, 56]} />
-        <meshStandardMaterial
-          color={color}
-          depthWrite={false}
-          opacity={0.26}
-          transparent
-        />
-      </mesh>
-    </CameraBounds>
   );
 }
 

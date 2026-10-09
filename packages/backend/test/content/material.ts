@@ -1,4 +1,3 @@
-import { assert } from "@effect/vitest";
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
 import {
   ContentKeySchema,
@@ -13,13 +12,11 @@ import {
 import {
   canonicalizeMaterialProjection,
   MaterialKeySchema,
-  type MaterialLessonProjection,
   MaterialLessonProjectionSchema,
   MaterialSectionSchema,
   materialPublicNamespace,
 } from "@nakafa/aksara-contracts/projection/material";
-import { createNakafaContentRefFromGraphProjection } from "@repo/contents/agent/refs";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
 const TEST_MATERIAL_DOMAIN = "mathematics";
 const testTopicPrefixes = {
@@ -42,23 +39,6 @@ export function testMaterialPublicPath(
   appLocale: ActiveAppLocaleCode = "en"
 ) {
   return `${readTestMaterialPrefix(appLocale)}/technical-heads/head-${index}`;
-}
-
-/** Creates one complete agent reference from a material projection fixture. */
-export function makeMaterialContentRef(projection: MaterialLessonProjection) {
-  const ref = createNakafaContentRefFromGraphProjection({
-    ...projection.graph,
-    content_id: projection.graph.assetId,
-    locale: projection.appLocale,
-    route: projection.publicPath,
-    section: "material",
-    sourcePath: projection.contentKey,
-  });
-  assert.ok(
-    Option.isSome(ref),
-    "Expected one valid material content reference."
-  );
-  return ref.value;
 }
 
 /** Creates the exact graph identity derived from one material source key. */
