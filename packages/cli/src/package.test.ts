@@ -244,6 +244,9 @@ describe("Nakafa CLI package", () => {
           stdout: "",
         });
       }).pipe(Effect.provide(NodeServices.layer)),
-    { timeout: 30_000 }
+    // The bound only stops a hang. The case builds, packs, installs, and starts
+    // the executable four times, which takes about 21 seconds on a CI runner
+    // and has passed 30 seconds on a slow one.
+    { timeout: 60_000 }
   );
 });
