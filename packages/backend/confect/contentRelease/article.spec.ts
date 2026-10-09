@@ -1,12 +1,13 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
-import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import { articleApiPageValidator } from "@repo/backend/confect/contentRelease/article/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   appLocaleValidator,
   artifactLocaleValidator,
+  releaseApiPageArgs,
+  releasePageArgs,
+  releasePageValidator,
   rendererDomainValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
@@ -47,22 +48,8 @@ export const articleSummaryValidator = Schema.Struct({
   }),
   title: Schema.String,
 });
-export const articlePageValidator = Schema.Struct({
-  activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
-  activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
-  managed: Schema.Boolean,
-  result: PaginationResultSchema(projectionValidator),
-  sourceRevision: Schema.Union([Schema.String, Schema.Null]),
-  stale: Schema.Boolean,
-});
-export const categoryPageValidator = Schema.Struct({
-  activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
-  activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
-  managed: Schema.Boolean,
-  result: PaginationResultSchema(categoryValidator),
-  sourceRevision: Schema.Union([Schema.String, Schema.Null]),
-  stale: Schema.Boolean,
-});
+export const articlePageValidator = releasePageValidator(projectionValidator);
+export const categoryPageValidator = releasePageValidator(categoryValidator);
 export const sitemapBucketsValidator = Schema.Struct({
   activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
   articleCount: Schema.Finite,
@@ -122,12 +109,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "apiPage",
-      args: () => ({
-        cursor: Schema.Union([Schema.String, Schema.Null]),
-        limit: Schema.Finite,
-        appLocale: appLocaleValidator,
-        prefix: Schema.String,
-      }),
+      args: () => releaseApiPageArgs,
       returns: () => articleApiPageValidator,
       error: () => ReleaseError,
     })
@@ -151,10 +133,7 @@ export default GroupSpec.make()
       name: "publications",
       args: () => ({
         category: Schema.String,
-        expectedManifestHash: Schema.Union([Schema.String, Schema.Null]),
-        expectedReleaseId: Schema.Union([Schema.String, Schema.Null]),
-        appLocale: appLocaleValidator,
-        paginationOpts: PaginationOptionsSchema,
+        ...releasePageArgs,
       }),
       returns: () => articlePageValidator,
       error: () => ReleaseError,
@@ -163,12 +142,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "categories",
-      args: () => ({
-        expectedManifestHash: Schema.Union([Schema.String, Schema.Null]),
-        expectedReleaseId: Schema.Union([Schema.String, Schema.Null]),
-        appLocale: appLocaleValidator,
-        paginationOpts: PaginationOptionsSchema,
-      }),
+      args: () => releasePageArgs,
       returns: () => categoryPageValidator,
       error: () => ReleaseError,
     })

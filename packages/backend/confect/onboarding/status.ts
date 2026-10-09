@@ -1,23 +1,13 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import type {
-  OnboardingFocus,
-  OnboardingRegion,
-} from "@repo/backend/confect/onboarding/schema";
-import {
-  isSelfSelectableUserRole,
-  type SelfSelectableUserRole,
-} from "@repo/backend/confect/users/roles";
+import type { onboardingProfileValidator } from "@repo/backend/confect/onboarding/schema";
+import { isSelfSelectableUserRole } from "@repo/backend/confect/users/roles";
 
 type OnboardingProfile = Docs["onboardingProfiles"];
 
 /** Projects one private database row into the public draft shape. */
-export function toOnboardingProfile(profile: {
-  readonly completedAt?: number;
-  readonly focus?: OnboardingFocus;
-  readonly region?: OnboardingRegion;
-  readonly role?: SelfSelectableUserRole;
-  readonly updatedAt: number;
-}) {
+export function toOnboardingProfile(
+  profile: typeof onboardingProfileValidator.Type
+) {
   return {
     ...(profile.completedAt === undefined
       ? {}

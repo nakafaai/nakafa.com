@@ -16,7 +16,7 @@ import {
   CollapsibleContent,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { slugify } from "@repo/utilities/slug";
+import { toAnchorSlug } from "@repo/utilities/slug";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useLayoutEffect, useState } from "react";
@@ -59,7 +59,7 @@ export function CardMaterial({ material }: Props) {
     [open]
   );
 
-  const id = slugify(material.title);
+  const id = toAnchorSlug(material.title);
 
   return (
     <Card className="overflow-hidden pb-0">

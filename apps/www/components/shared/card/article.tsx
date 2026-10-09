@@ -11,7 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { slugify } from "@repo/utilities/slug";
+import { toAnchorSlug } from "@repo/utilities/slug";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
@@ -26,7 +26,7 @@ interface Props {
 export function CardArticle({ article }: Props) {
   const t = useTranslations("Articles");
 
-  const id = slugify(article.title);
+  const id = toAnchorSlug(article.title);
 
   return (
     <IntentLink

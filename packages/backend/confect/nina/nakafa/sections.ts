@@ -4,7 +4,7 @@ import {
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
 import type { NakafaAgentMarkdown } from "@repo/contents/agent/schema/read";
-import { slugify } from "@repo/utilities/slug";
+import { toAnchorSlug } from "@repo/utilities/slug";
 import {
   Array as Arr,
   MutableHashMap,
@@ -52,7 +52,7 @@ function splitSections(markdown: string) {
     }
     close();
     title = heading[1];
-    const base = slugify(title);
+    const base = toAnchorSlug(title);
     const seen =
       Option.getOrElse(MutableHashMap.get(counts, base), () => 0) + 1;
     MutableHashMap.set(counts, base, seen);

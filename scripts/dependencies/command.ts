@@ -1,11 +1,6 @@
-import {
-  Array as Arr,
-  Effect,
-  type PlatformError,
-  Schema,
-  Stream,
-} from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { ChildProcess } from "effect/process";
+import { collectText } from "#scripts/process";
 
 const RunOptionsSchema = Schema.Struct({
   capture: Schema.optionalKey(Schema.Boolean),
@@ -20,19 +15,6 @@ export class DependencyCommandError extends Schema.TaggedError<DependencyCommand
     message: Schema.String,
   }
 ) {}
-
-/** Collects one child-process stream as UTF-8 text. */
-function collectText(
-  stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>
-) {
-  return stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(
-      () => "",
-      (output, chunk) => output + chunk
-    )
-  );
-}
 
 /** Runs pnpm without a shell and optionally captures its exact output. */
 export const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (

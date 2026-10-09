@@ -9,15 +9,13 @@ import {
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { decodePublicRuntimeRow } from "@repo/backend/content/publication/exchange";
 import {
   formatQuranMeaning,
   quranMarkdownValidator,
 } from "@repo/backend/content/quran/contract";
-import {
-  getUnknownErrorMessage,
-  NakafaAgentDataReadError,
-} from "@repo/contents/agent/errors";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { createNakafaContentRefFromSummary } from "@repo/contents/agent/refs";
 import {
   type NakafaAgentMarkdown,

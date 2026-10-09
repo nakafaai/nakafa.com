@@ -1,6 +1,4 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
-import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
@@ -8,16 +6,14 @@ import {
   materialModelValidator,
   materialNavigationValidator,
 } from "@repo/backend/confect/contentRelease/material/spec";
-import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
+import {
+  appLocaleValidator,
+  releaseApiPageArgs,
+  releasePageArgs,
+  releasePageValidator,
+} from "@repo/backend/confect/contentRelease/spec";
 import { Schema, Struct } from "effect";
-export const materialPageValidator = Schema.Struct({
-  activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
-  activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
-  managed: Schema.Boolean,
-  result: PaginationResultSchema(Schema.String),
-  sourceRevision: Schema.Union([Schema.String, Schema.Null]),
-  stale: Schema.Boolean,
-});
+export const materialPageValidator = releasePageValidator(Schema.String);
 export const materialSummaryValidator = Schema.Struct({
   authors: Schema.mutable(Schema.Array(ContentAuthorSchema)),
   // Aksara's date fields add calendar checks, which a return must not add.
@@ -112,12 +108,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "apiPage",
-      args: () => ({
-        cursor: Schema.Union([Schema.String, Schema.Null]),
-        limit: Schema.Finite,
-        appLocale: appLocaleValidator,
-        prefix: Schema.String,
-      }),
+      args: () => releaseApiPageArgs,
       returns: () => materialApiPageValidator,
       error: () => ReleaseError,
     })
@@ -182,12 +173,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "publications",
-      args: () => ({
-        expectedManifestHash: Schema.Union([Schema.String, Schema.Null]),
-        expectedReleaseId: Schema.Union([Schema.String, Schema.Null]),
-        appLocale: appLocaleValidator,
-        paginationOpts: PaginationOptionsSchema,
-      }),
+      args: () => releasePageArgs,
       returns: () => materialPageValidator,
       error: () => ReleaseError,
     })

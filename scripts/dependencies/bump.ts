@@ -1,3 +1,4 @@
+import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
   Config,
@@ -9,7 +10,6 @@ import {
   Result,
   Schema,
 } from "effect";
-import { FetchHttpClient } from "effect/http";
 import { DependencyCommandError, runPnpm } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
@@ -253,7 +253,5 @@ export const bumpDependencies = Effect.fn("RepositoryPolicy.bumpDependencies")(
 
 runEntry(
   import.meta.main,
-  bumpDependencies({ root: process.cwd() }).pipe(
-    Effect.provide(FetchHttpClient.layer)
-  )
+  bumpDependencies({ root: process.cwd() }).pipe(Effect.provide(FetchClient))
 );

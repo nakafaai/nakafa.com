@@ -3,7 +3,7 @@ import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { slugify } from "@repo/utilities/slug";
+import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -197,7 +197,7 @@ async function CachedSurahShell({
     const label = t("verse-count", { count: verse.number.inSurah });
 
     return {
-      id: slugify(label),
+      id: toAnchorSlug(label),
       label,
       verse,
     };
