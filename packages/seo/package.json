@@ -13,7 +13,7 @@
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
     "next": "16.4.0",
-    "next-intl": "^4.14.9",
+    "next-intl": "catalog:",
     "react": "19.2.8",
     "schema-dts": "^2.1.0"
   },
