@@ -20,6 +20,7 @@ import {
 } from "#scripts/check/effect";
 import { readAuthoredSources, readAuthoredTree } from "#scripts/check/files";
 import { inspectGatewaySource } from "#scripts/check/gateway";
+import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
@@ -133,6 +134,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         )
     );
     const sharedPackage = yield* sharedPackageName(root);
+    const pluginRules = yield* pluginRuleNames(root);
     const projectConfigs = Arr.map(
       Arr.filter(configs, ({ file }) => isProjectConfig(file)),
       ({ file }) => file
@@ -158,7 +160,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         ),
         lineReport(runnerViolations),
         lineReport(sourceViolations),
-        lineReport(inspectCompilerConfigs(sharedPackage, configs)),
+        lineReport(inspectCompilerConfigs(sharedPackage, configs, pluginRules)),
         lineReport(
           Arr.flatMap(sources, ({ file, sourceText }) =>
             inspectTailwindSource(file, sourceText)

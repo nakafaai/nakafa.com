@@ -17,6 +17,7 @@ import {
 } from "typescript/unstable/ast";
 import { loadsExport, loadsImport } from "#scripts/check/kinds";
 import { candidate } from "#scripts/check/rules";
+import { detachedSpawnImports } from "#scripts/check/service";
 import { unwrapped } from "#scripts/check/wrapper";
 
 const NODE_MODULES = HashSet.make(
@@ -68,9 +69,9 @@ function isRequireFactory(callee: Node) {
 /**
  * Whether a node loads a Node file system, path, or process module at runtime:
  * an import, an import assignment, a re-export, a dynamic import, or a call of
- * `require` or of a `createRequire` function, each with a literal module name.
- * The callee of a call is unwrapped first, so `(require)` and `(require as
- * NodeRequire)` are the `require` function.
+ * `require`, of a `createRequire` function, or of `getBuiltinModule`, each
+ * with a literal module name. The callee of a call is unwrapped first, so
+ * `(require)` and `(require as NodeRequire)` are the `require` function.
  */
 function isNodeModuleLoad(node: Node) {
   if (isImportDeclaration(node)) {
@@ -93,6 +94,8 @@ function isNodeModuleLoad(node: Node) {
   const loader =
     callee.kind === SyntaxKind.ImportKeyword ||
     (isIdentifier(callee) && callee.text === "require") ||
+    (isPropertyAccessExpression(callee) &&
+      callee.name.text === "getBuiltinModule") ||
     isRequireFactory(callee);
   const [specifier] = node.arguments;
   return loader && namesNodeModule(specifier);
@@ -143,10 +146,17 @@ function syntaxCandidates(sourceFile: SourceFile, node: Node) {
  * Effect replaces: Node module imports, raw failure handling, and hand-rolled
  * narrowing. Promise syntax is judged by `promise.ts`, and array methods by the
  * typed pass in `arrays.ts`.
+ * A detached process service keeps its import of `spawn`, as `service.ts`
+ * sets out.
  */
 export function nativeCandidates(
   sourceFile: SourceFile,
   nodes: readonly Node[]
 ) {
-  return Arr.flatMap(nodes, (node) => syntaxCandidates(sourceFile, node));
+  const kept = detachedSpawnImports(sourceFile, nodes);
+  return Arr.flatMap(nodes, (node) =>
+    Arr.some(kept, (statement) => statement === node)
+      ? []
+      : syntaxCandidates(sourceFile, node)
+  );
 }

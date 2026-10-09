@@ -25,7 +25,13 @@ const sharedPackageFiles = (manifest: string) => ({
   "packages/typescript-config/package.json": manifest,
 });
 
-/** Writes fixture files below one repository root. */
+/** The installed compiler plugin of every fixture: it defines no rule, so no fixture owes a decision. */
+const PLUGIN_FILES = {
+  "node_modules/@effect/tsgo/schema.json":
+    '{"definitions":{"effectLanguageServicePluginDiagnosticSeverityDefinition":{"properties":{}}}}\n',
+};
+
+/** Writes fixture files below one repository root, beside the fixture's compiler plugin. */
 const writeFixtures = Effect.fn("TestPolicyTest.writeFixtures")(function* (
   root: string,
   files: Readonly<Record<string, string>>
@@ -33,7 +39,7 @@ const writeFixtures = Effect.fn("TestPolicyTest.writeFixtures")(function* (
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* Effect.forEach(
-    Rec.toEntries(files),
+    Rec.toEntries({ ...PLUGIN_FILES, ...files }),
     ([file, content]) =>
       Effect.andThen(
         fileSystem.makeDirectory(path.dirname(path.join(root, file)), {

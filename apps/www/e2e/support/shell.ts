@@ -1,12 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import {
-  Array as Arr,
-  Effect,
-  Number as Num,
-  Option,
-  pipe,
-  Schema,
-} from "effect";
+import { Array as Arr, Effect, Option, pipe, Schema } from "effect";
 import { recordLayoutShifts } from "@/e2e/support/layout";
 
 const SAMPLES_KEY = "nakafaShellSamples";
@@ -26,9 +19,13 @@ const ShellSamples = Schema.Struct({
   frames: Schema.mutable(Schema.Array(ShellFrame)),
 });
 
-/** The layout shifts the page recorded, each with the time it started. */
+/** The layout shifts the page recorded, each with the time it started and what moved. */
 const RecordedShifts = Schema.Array(
-  Schema.Struct({ time: Schema.Finite, value: Schema.Finite })
+  Schema.Struct({
+    sources: Schema.Array(Schema.String),
+    time: Schema.Finite,
+    value: Schema.Finite,
+  })
 );
 
 /** What the browser rendered of the app shell since one point in time. */
@@ -38,8 +35,11 @@ const ShellObservation = Schema.Struct({
   headinglessFrames: Schema.Int,
   /** Frames without any visible `<main>`. */
   hiddenFrames: Schema.Int,
-  /** Summed layout shift, including shifts right after input. */
-  layoutShift: Schema.Finite,
+  /**
+   * One line per layout shift, shifts right after input included: its value,
+   * its time, and each element that moved. A stable page has none.
+   */
+  layoutShifts: Schema.Array(Schema.String),
   /**
    * The shell's lock state over the frames that show it, one entry per
    * change, so `[false, true]` locks once and `[true]` never shows the
@@ -142,7 +142,7 @@ export function expectStillShell(
   expect(observation.hiddenFrames).toBe(0);
   expect(observation.headinglessFrames).toBe(0);
   expect(observation.shells).toBe(1);
-  expect(observation.layoutShift).toBe(0);
+  expect(observation.layoutShifts).toEqual([]);
   expect(observation.locks).toEqual(locks);
   expect(observation.markedFrames).toBe(0);
 }
@@ -164,11 +164,13 @@ export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
         (frame) => showsShell(frame) && !frame.heading
       ),
       hiddenFrames: Arr.countBy(frames, (frame) => !showsShell(frame)),
-      layoutShift: pipe(
+      layoutShifts: pipe(
         shifts,
         Arr.filter((shift) => shift.time >= since),
-        Arr.map((shift) => shift.value),
-        Num.sumAll
+        Arr.map(
+          (shift) =>
+            `${shift.value} at ${Math.round(shift.time)} ms: ${Arr.join(shift.sources, "; ")}`
+        )
       ),
       locks: pipe(
         frames,

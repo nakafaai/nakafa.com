@@ -13,6 +13,8 @@ const RULES = {
   diagnosticSeverity: { instanceOfSchema: "error" },
   name: "@effect/language-service",
 };
+/** The rules the fixture plugin defines: the one the fixture block decides. */
+const PLUGIN_RULES = ["instanceOfSchema"];
 
 /** Renders one compiler configuration with the given parent and plugins. */
 function config(
@@ -51,72 +53,75 @@ describe("compiler configuration policy", () => {
 
   it("accepts configurations that reach the same shared rules", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs(PACKAGE, [
-        {
-          file: "apps/www/tsconfig.json",
-          sourceText: config("@repo/typescript-config/nextjs.json"),
-        },
-        {
-          file: "packages/backend/convex/tsconfig.json",
-          sourceText: config("../tsconfig.json"),
-        },
-        {
-          file: "packages/backend/tsconfig.json",
-          sourceText: config("../typescript-config/./library.json"),
-        },
-        { file: BASE, sourceText: config(undefined, [RULES]) },
-        { file: LIBRARY, sourceText: config("./base.json") },
-        {
-          file: NEXT,
-          sourceText: config("./base.json", [
-            { name: "next" },
-            {
-              name: "@effect/language-service",
-              diagnosticSeverity: { instanceOfSchema: "error" },
-            },
-          ]),
-        },
-        {
-          file: "scripts/tsconfig.json",
-          sourceText: config("../packages/typescript-config/base.json"),
-        },
-      ]),
+      inspectCompilerConfigs(
+        PACKAGE,
+        [
+          {
+            file: "apps/www/tsconfig.json",
+            sourceText: config("@repo/typescript-config/nextjs.json"),
+          },
+          {
+            file: "packages/backend/convex/tsconfig.json",
+            sourceText: config("../tsconfig.json"),
+          },
+          {
+            file: "packages/backend/tsconfig.json",
+            sourceText: config("../typescript-config/./library.json"),
+          },
+          { file: BASE, sourceText: config(undefined, [RULES]) },
+          { file: LIBRARY, sourceText: config("./base.json") },
+          { file: NEXT, sourceText: config("./base.json") },
+          {
+            file: "scripts/tsconfig.json",
+            sourceText: config("../packages/typescript-config/base.json"),
+          },
+        ],
+        PLUGIN_RULES
+      ),
       []
     );
   });
 
-  it("rejects a shared configuration whose rules differ", () => {
+  it("rejects a second shared configuration that declares plugins", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs(PACKAGE, [
-        { file: BASE, sourceText: config(undefined, [RULES]) },
-        {
-          file: NEXT,
-          sourceText: config("./base.json", [
-            { ...RULES, diagnosticSeverity: { instanceOfSchema: "off" } },
-          ]),
-        },
-      ]),
+      inspectCompilerConfigs(
+        PACKAGE,
+        [
+          { file: BASE, sourceText: config(undefined, [RULES]) },
+          {
+            file: NEXT,
+            sourceText: config("./base.json", [{ name: "next" }, RULES]),
+          },
+          { file: LIBRARY, sourceText: config("./base.json", []) },
+        ],
+        PLUGIN_RULES
+      ),
       [
-        `${NEXT}: its @effect/language-service block differs from ${BASE}; keep them identical so every workspace enforces the same rules.`,
+        `${NEXT}: remove its plugins array and inherit the one in ${BASE}, so the @effect/language-service block is written once.`,
+        `${LIBRARY}: remove its plugins array and inherit the one in ${BASE}, so the @effect/language-service block is written once.`,
       ]
     );
   });
 
   it("rejects every configuration a dropped block leaves without rules", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs(PACKAGE, [
-        {
-          file: "apps/api/tsconfig.json",
-          sourceText: config("@repo/typescript-config/library.json"),
-        },
-        {
-          file: "apps/www/tsconfig.json",
-          sourceText: config("@repo/typescript-config/nextjs.json"),
-        },
-        { file: BASE, sourceText: config(undefined) },
-        { file: LIBRARY, sourceText: config("./base.json") },
-        { file: NEXT, sourceText: config("./base.json", [{ name: "next" }]) },
-      ]),
+      inspectCompilerConfigs(
+        PACKAGE,
+        [
+          {
+            file: "apps/api/tsconfig.json",
+            sourceText: config("@repo/typescript-config/library.json"),
+          },
+          {
+            file: "apps/www/tsconfig.json",
+            sourceText: config("@repo/typescript-config/nextjs.json"),
+          },
+          { file: BASE, sourceText: config(undefined) },
+          { file: LIBRARY, sourceText: config("./base.json") },
+          { file: NEXT, sourceText: config("./base.json", [{ name: "next" }]) },
+        ],
+        PLUGIN_RULES
+      ),
       [
         unreached("apps/api/tsconfig.json"),
         unreached("apps/www/tsconfig.json"),
@@ -129,19 +134,23 @@ describe("compiler configuration policy", () => {
 
   it("rejects a workspace configuration that declares plugins", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs(PACKAGE, [
-        {
-          file: "apps/www/tsconfig.json",
-          sourceText: config("@repo/typescript-config/base.json", [
-            { name: "next" },
-          ]),
-        },
-        { file: BASE, sourceText: config(undefined, [RULES]) },
-        {
-          file: "packages/design-system/tsconfig.json",
-          sourceText: config("@repo/typescript-config/base.json", [RULES]),
-        },
-      ]),
+      inspectCompilerConfigs(
+        PACKAGE,
+        [
+          {
+            file: "apps/www/tsconfig.json",
+            sourceText: config("@repo/typescript-config/base.json", [
+              { name: "next" },
+            ]),
+          },
+          { file: BASE, sourceText: config(undefined, [RULES]) },
+          {
+            file: "packages/design-system/tsconfig.json",
+            sourceText: config("@repo/typescript-config/base.json", [RULES]),
+          },
+        ],
+        PLUGIN_RULES
+      ),
       [
         "apps/www/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.",
         "packages/design-system/tsconfig.json: remove its plugins array and inherit the shared one, because a plugins array replaces the one it extends.",
@@ -149,36 +158,53 @@ describe("compiler configuration policy", () => {
     );
   });
 
+  it("reports a rule the shared block leaves undecided", () => {
+    assert.deepStrictEqual(
+      inspectCompilerConfigs(
+        PACKAGE,
+        [{ file: BASE, sourceText: config(undefined, [RULES]) }],
+        ["floatingEffect", "instanceOfSchema"]
+      ),
+      [
+        `${BASE}: decide the plugin rule floatingEffect: list it in diagnosticSeverity as "error", or as "off" with its reason in docs/adr/0021-rules.md.`,
+      ]
+    );
+  });
+
   it("rejects a configuration it cannot read or follow", () => {
     assert.deepStrictEqual(
-      inspectCompilerConfigs(PACKAGE, [
-        { file: "apps/api/tsconfig.json", sourceText: config(undefined) },
-        {
-          file: "apps/cycle/tsconfig.json",
-          sourceText: config("./tsconfig.json"),
-        },
-        {
-          file: "apps/email/tsconfig.json",
-          sourceText: config(["@repo/typescript-config/base.json"]),
-        },
-        {
-          file: "apps/mcp/tsconfig.json",
-          sourceText: config("@tsconfig/node24/tsconfig.json"),
-        },
-        {
-          file: "apps/www/tsconfig.json",
-          sourceText: config("@repo/typescript-config/nextjs.json"),
-        },
-        { file: BASE, sourceText: config(undefined, [RULES]) },
-        {
-          file: NEXT,
-          sourceText: '{ // Next.js\n  "extends": "./base.json",\n}',
-        },
-        {
-          file: "packages/seo/tsconfig.json",
-          sourceText: config("@repo/typescript-config/missing.json"),
-        },
-      ]),
+      inspectCompilerConfigs(
+        PACKAGE,
+        [
+          { file: "apps/api/tsconfig.json", sourceText: config(undefined) },
+          {
+            file: "apps/cycle/tsconfig.json",
+            sourceText: config("./tsconfig.json"),
+          },
+          {
+            file: "apps/email/tsconfig.json",
+            sourceText: config(["@repo/typescript-config/base.json"]),
+          },
+          {
+            file: "apps/mcp/tsconfig.json",
+            sourceText: config("@tsconfig/node24/tsconfig.json"),
+          },
+          {
+            file: "apps/www/tsconfig.json",
+            sourceText: config("@repo/typescript-config/nextjs.json"),
+          },
+          { file: BASE, sourceText: config(undefined, [RULES]) },
+          {
+            file: NEXT,
+            sourceText: '{ // Next.js\n  "extends": "./base.json",\n}',
+          },
+          {
+            file: "packages/seo/tsconfig.json",
+            sourceText: config("@repo/typescript-config/missing.json"),
+          },
+        ],
+        PLUGIN_RULES
+      ),
       [
         unreached("apps/api/tsconfig.json"),
         unreached("apps/cycle/tsconfig.json"),
