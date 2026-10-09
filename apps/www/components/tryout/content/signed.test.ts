@@ -43,14 +43,8 @@ import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { JsonTextSchema } from "@repo/utilities/json";
-import {
-  Array as Arr,
-  type Context,
-  Effect,
-  Layer,
-  Predicate,
-  Schema,
-} from "effect";
+import type { FunctionReference } from "convex/server";
+import { Array as Arr, Effect, Layer, Predicate, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
@@ -66,7 +60,12 @@ const cacheMock = vi.hoisted(() => vi.fn());
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const tokenMock = vi.hoisted(() => vi.fn());
 const queryMock = vi.hoisted(() =>
-  vi.fn<Context.Service.Shape<typeof HttpClient.HttpClient>["query"]>()
+  vi.fn<
+    (
+      functionReference: FunctionReference<"query">,
+      encodedArgs: unknown
+    ) => PromiseLike<unknown>
+  >()
 );
 const siteUrl = "https://runtime.example.test";
 const endpoint = `${siteUrl}${PROTECTED_CONTENT_RUNTIME_PATH}`;
@@ -84,8 +83,15 @@ vi.mock("@confect/js", async (importOriginal) => {
             const client = yield* HttpClient.HttpClient;
             return {
               ...client,
-              query: (reference, ...request) =>
-                queryMock(reference, request[0] ?? {}),
+              query: (reference, ...[args]) => {
+                assert(args !== undefined);
+                return Ref.runWithCodec(
+                  reference,
+                  args,
+                  queryMock,
+                  (cause) => new HttpClient.HttpClientError({ cause })
+                );
+              },
             };
           })
         ).pipe(Layer.provide(HttpClient.layer(...args)));
@@ -166,19 +172,12 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
         (selector) => selector.delivery === "authenticated"
       ),
     };
-    queryMock.mockImplementation((reference, ...args) => {
+    queryMock.mockImplementation((functionReference, encodedArgs) => {
       expect(layerMock).toHaveBeenLastCalledWith("https://test.convex.cloud", {
         auth: "technical-session-token",
       });
-      return Ref.runWithCodec(
-        reference,
-        args[0] ?? {},
-        (functionReference, encodedArgs) => {
-          assert(Predicate.isObject(encodedArgs));
-          return owned.query(functionReference, encodedArgs);
-        },
-        (cause) => new HttpClient.HttpClientError({ cause })
-      );
+      assert(Predicate.isObject(encodedArgs));
+      return owned.query(functionReference, encodedArgs);
     });
     const question = yield* Effect.fromNullishOr(access.questions[0]);
     const answer = yield* Effect.fromNullishOr(access.answers[0]);
@@ -338,12 +337,10 @@ describe("signed try-out execution", () => {
         );
         expect(row).not.toBeNull();
         const found = yield* Effect.fromNullishOr(row);
-        queryMock.mockReturnValue(
-          Effect.succeed({
-            ...found,
-            items: Arr.take(found.items, 1),
-          })
-        );
+        queryMock.mockResolvedValue({
+          ...found,
+          items: Arr.take(found.items, 1),
+        });
         expect(
           yield* loadSignedTryoutContent(
             fixture.attemptId,
@@ -495,7 +492,7 @@ describe("signed try-out execution", () => {
         const cause = new HttpClient.HttpClientError({
           cause: new TypeError("Authorization query unavailable."),
         });
-        queryMock.mockReturnValueOnce(Effect.fail(cause));
+        queryMock.mockRejectedValueOnce(cause.cause);
         expect(
           yield* loadSignedTryoutContent(
             fixture.attemptId,

@@ -144,7 +144,7 @@ const seedClient = Effect.fn("tryouts.queries.attemptPage.test.seedClient")(
 
 const expectRejected = Effect.fn(
   "tryouts.queries.attemptPage.test.expectRejected"
-)(function* (operation: () => PromiseLike<unknown>, expected: string) {
+)(function* <A>(operation: () => PromiseLike<A>, expected: string) {
   const failure = yield* Effect.tryPromise(operation).pipe(Effect.flip);
   expect(failure.cause).toEqual(
     expect.objectContaining({ message: expect.stringContaining(expected) })
