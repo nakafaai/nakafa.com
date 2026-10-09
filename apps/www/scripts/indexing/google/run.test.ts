@@ -432,4 +432,33 @@ describe("runGoogleIndexing", () => {
       ]);
     });
   });
+
+  it.effect(
+    "reads the second sitemap batch after a first batch with no eligible URL, and publishes its URL",
+    () => {
+      const events = MutableList.make<string>();
+      const lines = MutableList.make<string>();
+      const urls = Arr.makeBy(501, pageUrl);
+      return Effect.gen(function* () {
+        const { submissionHistory } = yield* indexingPaths;
+        const memory = memoryFiles(events, []);
+        sitemapOf(urls);
+        answerRun(events, [pageUrl(500)], accepted);
+
+        yield* runToEnd(runGoogle(memory.layer, lines));
+
+        expect(MutableList.toArray(events)).toEqual([
+          `publish ${pageUrl(500)}`,
+          `write ${submissionHistory}`,
+        ]);
+        expect(MutableList.toArray(lines)).toContain(
+          "Google sitemap batches processed: 2"
+        );
+        const history = yield* loadSubmissionHistory().pipe(
+          Effect.provide(memory.layer)
+        );
+        expect(Rec.keys(history.googleIndexingApi)).toEqual([pageUrl(500)]);
+      });
+    }
+  );
 });
