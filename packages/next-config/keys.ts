@@ -1,5 +1,5 @@
 import { createEnv } from "@t3-oss/env-nextjs";
-import { Schema } from "effect";
+import { Config, ConfigProvider, Effect, Schema } from "effect";
 
 const requiredStringSchema = Schema.toStandardSchemaV1(Schema.NonEmptyString);
 const requiredUrlSchema = Schema.toStandardSchemaV1(
@@ -10,9 +10,6 @@ const requiredUrlSchema = Schema.toStandardSchemaV1(
       })
     )
   )
-);
-const optionalStringSchema = Schema.toStandardSchemaV1(
-  Schema.UndefinedOr(Schema.String)
 );
 /** Defines the Aksara token accepted by publication-owned WWW routes. */
 export const publicationKeys = () =>
@@ -25,15 +22,22 @@ export const publicationKeys = () =>
     },
   });
 /** Defines the private token used only by executable-content runtime reads. */
-export const contentRuntimeKeys = () =>
-  createEnv({
-    server: {
-      CONTENT_RUNTIME_TOKEN: requiredStringSchema,
-    },
-    runtimeEnv: {
-      CONTENT_RUNTIME_TOKEN: process.env.CONTENT_RUNTIME_TOKEN,
-    },
-  });
+export const contentRuntimeKeys = () => {
+  const config = {
+    CONTENT_RUNTIME_TOKEN: Config.schema(
+      Schema.NonEmptyString,
+      "CONTENT_RUNTIME_TOKEN"
+    ),
+  };
+  const values = {
+    CONTENT_RUNTIME_TOKEN: process.env.CONTENT_RUNTIME_TOKEN,
+  } satisfies Record<keyof typeof config, string | undefined>;
+  return Effect.runSync(
+    Config.all(config).parse(
+      ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true })
+    )
+  );
+};
 /** Reads the private target required by signed public content consumers. */
 export function readContentRuntimeTarget(siteUrl: string) {
   const keys = contentRuntimeKeys();
@@ -63,27 +67,49 @@ export const appUrlKeys = () =>
     },
   });
 /** Reads the Aksara preview fields, each absent unless the development child sets it. */
-export const previewKeys = () =>
-  createEnv({
-    server: {
-      AKSARA_PREVIEW_EVENTS_PATH: optionalStringSchema,
-      AKSARA_PREVIEW_KEY_ID: optionalStringSchema,
-      AKSARA_PREVIEW_MANIFEST_PATH: optionalStringSchema,
-      AKSARA_PREVIEW_ORIGIN: optionalStringSchema,
-      AKSARA_PREVIEW_PUBLIC_KEY: optionalStringSchema,
-      AKSARA_PREVIEW_PROVIDER_TOKEN: optionalStringSchema,
-      AKSARA_PREVIEW_RENDERER_SECRET: optionalStringSchema,
-      AKSARA_PREVIEW_RENDERER_TOKEN: optionalStringSchema,
-    },
-    runtimeEnv: {
-      AKSARA_PREVIEW_EVENTS_PATH: process.env.AKSARA_PREVIEW_EVENTS_PATH,
-      AKSARA_PREVIEW_KEY_ID: process.env.AKSARA_PREVIEW_KEY_ID,
-      AKSARA_PREVIEW_MANIFEST_PATH: process.env.AKSARA_PREVIEW_MANIFEST_PATH,
-      AKSARA_PREVIEW_ORIGIN: process.env.AKSARA_PREVIEW_ORIGIN,
-      AKSARA_PREVIEW_PUBLIC_KEY: process.env.AKSARA_PREVIEW_PUBLIC_KEY,
-      AKSARA_PREVIEW_PROVIDER_TOKEN: process.env.AKSARA_PREVIEW_PROVIDER_TOKEN,
-      AKSARA_PREVIEW_RENDERER_SECRET:
-        process.env.AKSARA_PREVIEW_RENDERER_SECRET,
-      AKSARA_PREVIEW_RENDERER_TOKEN: process.env.AKSARA_PREVIEW_RENDERER_TOKEN,
-    },
-  });
+export const previewKeys = () => {
+  const optional = Schema.UndefinedOr(Schema.String);
+  const config = {
+    AKSARA_PREVIEW_EVENTS_PATH: Config.schema(
+      optional,
+      "AKSARA_PREVIEW_EVENTS_PATH"
+    ),
+    AKSARA_PREVIEW_KEY_ID: Config.schema(optional, "AKSARA_PREVIEW_KEY_ID"),
+    AKSARA_PREVIEW_MANIFEST_PATH: Config.schema(
+      optional,
+      "AKSARA_PREVIEW_MANIFEST_PATH"
+    ),
+    AKSARA_PREVIEW_ORIGIN: Config.schema(optional, "AKSARA_PREVIEW_ORIGIN"),
+    AKSARA_PREVIEW_PUBLIC_KEY: Config.schema(
+      optional,
+      "AKSARA_PREVIEW_PUBLIC_KEY"
+    ),
+    AKSARA_PREVIEW_PROVIDER_TOKEN: Config.schema(
+      optional,
+      "AKSARA_PREVIEW_PROVIDER_TOKEN"
+    ),
+    AKSARA_PREVIEW_RENDERER_SECRET: Config.schema(
+      optional,
+      "AKSARA_PREVIEW_RENDERER_SECRET"
+    ),
+    AKSARA_PREVIEW_RENDERER_TOKEN: Config.schema(
+      optional,
+      "AKSARA_PREVIEW_RENDERER_TOKEN"
+    ),
+  };
+  const values = {
+    AKSARA_PREVIEW_EVENTS_PATH: process.env.AKSARA_PREVIEW_EVENTS_PATH,
+    AKSARA_PREVIEW_KEY_ID: process.env.AKSARA_PREVIEW_KEY_ID,
+    AKSARA_PREVIEW_MANIFEST_PATH: process.env.AKSARA_PREVIEW_MANIFEST_PATH,
+    AKSARA_PREVIEW_ORIGIN: process.env.AKSARA_PREVIEW_ORIGIN,
+    AKSARA_PREVIEW_PUBLIC_KEY: process.env.AKSARA_PREVIEW_PUBLIC_KEY,
+    AKSARA_PREVIEW_PROVIDER_TOKEN: process.env.AKSARA_PREVIEW_PROVIDER_TOKEN,
+    AKSARA_PREVIEW_RENDERER_SECRET: process.env.AKSARA_PREVIEW_RENDERER_SECRET,
+    AKSARA_PREVIEW_RENDERER_TOKEN: process.env.AKSARA_PREVIEW_RENDERER_TOKEN,
+  } satisfies Record<keyof typeof config, string | undefined>;
+  return Effect.runSync(
+    Config.all(config).parse(
+      ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true })
+    )
+  );
+};

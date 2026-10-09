@@ -11,8 +11,7 @@ import {
   hasPreviewRenderer,
 } from "@repo/next-config/preview";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
-import { createEnv } from "@t3-oss/env-nextjs";
-import { Schema } from "effect";
+import { Config, ConfigProvider, Effect, Schema } from "effect";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import {
@@ -24,21 +23,25 @@ import { createOgRouteAliasRewrites } from "@/lib/og/route";
 import { readRuntimeConfig } from "@/runtime";
 
 const runtime = readRuntimeConfig();
-const configEnv = createEnv({
-  server: {
-    NEXT_EXPOSE_TESTING_API: Schema.toStandardSchemaV1(
-      Schema.UndefinedOr(Schema.Literal("true"))
-    ),
-    PORTLESS_URL: Schema.toStandardSchemaV1(
-      Schema.UndefinedOr(Schema.URLFromString)
-    ),
-  },
-  client: {},
-  runtimeEnv: {
-    NEXT_EXPOSE_TESTING_API: process.env.NEXT_EXPOSE_TESTING_API,
-    PORTLESS_URL: process.env.PORTLESS_URL,
-  },
-});
+const configEnvConfig = {
+  NEXT_EXPOSE_TESTING_API: Config.schema(
+    Schema.UndefinedOr(Schema.Literal("true")),
+    "NEXT_EXPOSE_TESTING_API"
+  ),
+  PORTLESS_URL: Config.schema(
+    Schema.UndefinedOr(Schema.URLFromString),
+    "PORTLESS_URL"
+  ),
+};
+const configEnvValues = {
+  NEXT_EXPOSE_TESTING_API: process.env.NEXT_EXPOSE_TESTING_API,
+  PORTLESS_URL: process.env.PORTLESS_URL,
+} satisfies Record<keyof typeof configEnvConfig, string | undefined>;
+const configEnv = Effect.runSync(
+  Config.all(configEnvConfig).parse(
+    ConfigProvider.fromUnknown(configEnvValues, { preserveEmptyStrings: true })
+  )
+);
 const localConvexConnectSources = createLoopbackConnectSources(
   new URL(runtime.query)
 );

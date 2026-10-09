@@ -3,8 +3,7 @@ import {
   isProtectedProduction,
 } from "@repo/backend/content/deployment";
 import { convexKeys } from "@repo/backend/keys";
-import { createEnv } from "@t3-oss/env-nextjs";
-import { Effect, Schema } from "effect";
+import { Config, ConfigProvider, Effect, Schema } from "effect";
 
 const VercelIdentitySchema = Schema.Struct({
   deployment: Schema.UndefinedOr(Schema.String),
@@ -170,66 +169,53 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
   }
 );
 
+const optionalText = Schema.UndefinedOr(Schema.String);
+const runtimeEnvConfig = {
+  CONVEX_AGENT_MODE: Config.schema(
+    Schema.UndefinedOr(Schema.Literal("anonymous")),
+    "CONVEX_AGENT_MODE"
+  ),
+  NEXT_PUBLIC_CONVEX_SITE_URL: Config.schema(
+    optionalText,
+    "NEXT_PUBLIC_CONVEX_SITE_URL"
+  ),
+  VERCEL: Config.schema(Schema.UndefinedOr(Schema.Literal("1")), "VERCEL"),
+  VERCEL_DEPLOYMENT_ID: Config.schema(optionalText, "VERCEL_DEPLOYMENT_ID"),
+  VERCEL_ENV: Config.schema(optionalText, "VERCEL_ENV"),
+  VERCEL_GIT_COMMIT_REF: Config.schema(optionalText, "VERCEL_GIT_COMMIT_REF"),
+  VERCEL_GIT_COMMIT_SHA: Config.schema(optionalText, "VERCEL_GIT_COMMIT_SHA"),
+  VERCEL_GIT_PROVIDER: Config.schema(optionalText, "VERCEL_GIT_PROVIDER"),
+  VERCEL_GIT_REPO_OWNER: Config.schema(optionalText, "VERCEL_GIT_REPO_OWNER"),
+  VERCEL_GIT_REPO_SLUG: Config.schema(optionalText, "VERCEL_GIT_REPO_SLUG"),
+  VERCEL_PROJECT_ID: Config.schema(optionalText, "VERCEL_PROJECT_ID"),
+  VERCEL_TARGET_ENV: Config.schema(optionalText, "VERCEL_TARGET_ENV"),
+};
+
 /** Reads and validates the content runtime used by Next configuration. */
 export function readRuntimeConfig() {
-  const env = createEnv({
-    extends: [convexKeys()],
-    server: {
-      CONVEX_AGENT_MODE: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.Literal("anonymous"))
-      ),
-      VERCEL: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.Literal("1"))
-      ),
-      VERCEL_DEPLOYMENT_ID: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_ENV: Schema.toStandardSchemaV1(Schema.UndefinedOr(Schema.String)),
-      VERCEL_GIT_COMMIT_REF: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_GIT_COMMIT_SHA: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_GIT_PROVIDER: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_GIT_REPO_OWNER: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_GIT_REPO_SLUG: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_PROJECT_ID: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_TARGET_ENV: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-    },
-    client: {
-      NEXT_PUBLIC_CONVEX_SITE_URL: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-    },
-    runtimeEnv: {
-      CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
-      NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
-      VERCEL: process.env.VERCEL,
-      VERCEL_DEPLOYMENT_ID: process.env.VERCEL_DEPLOYMENT_ID,
-      VERCEL_ENV: process.env.VERCEL_ENV,
-      VERCEL_GIT_COMMIT_REF: process.env.VERCEL_GIT_COMMIT_REF,
-      VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
-      VERCEL_GIT_PROVIDER: process.env.VERCEL_GIT_PROVIDER,
-      VERCEL_GIT_REPO_OWNER: process.env.VERCEL_GIT_REPO_OWNER,
-      VERCEL_GIT_REPO_SLUG: process.env.VERCEL_GIT_REPO_SLUG,
-      VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
-      VERCEL_TARGET_ENV: process.env.VERCEL_TARGET_ENV,
-    },
-  });
+  const convex = convexKeys();
+  const values = {
+    CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
+    NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
+    VERCEL: process.env.VERCEL,
+    VERCEL_DEPLOYMENT_ID: process.env.VERCEL_DEPLOYMENT_ID,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+    VERCEL_GIT_COMMIT_REF: process.env.VERCEL_GIT_COMMIT_REF,
+    VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
+    VERCEL_GIT_PROVIDER: process.env.VERCEL_GIT_PROVIDER,
+    VERCEL_GIT_REPO_OWNER: process.env.VERCEL_GIT_REPO_OWNER,
+    VERCEL_GIT_REPO_SLUG: process.env.VERCEL_GIT_REPO_SLUG,
+    VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
+    VERCEL_TARGET_ENV: process.env.VERCEL_TARGET_ENV,
+  } satisfies Record<keyof typeof runtimeEnvConfig, string | undefined>;
+  const env = Effect.runSync(
+    Config.all(runtimeEnvConfig).parse(
+      ConfigProvider.fromUnknown(values, { preserveEmptyStrings: true })
+    )
+  );
   const target = {
     agent: env.CONVEX_AGENT_MODE,
-    query: env.NEXT_PUBLIC_CONVEX_URL,
+    query: convex.NEXT_PUBLIC_CONVEX_URL,
     site: env.NEXT_PUBLIC_CONVEX_SITE_URL,
     vercel: {
       deployment: env.VERCEL_DEPLOYMENT_ID,
