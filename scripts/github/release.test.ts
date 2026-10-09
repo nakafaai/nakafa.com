@@ -1,10 +1,19 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, Layer, Option, Redacted, Result } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Fiber,
+  Layer,
+  Option,
+  Redacted,
+  Result,
+} from "effect";
 import {
   HttpClient,
   type HttpClientRequest,
   HttpClientResponse,
 } from "effect/http";
+import { TestClock } from "effect/testing";
 import {
   fetchLatestGithubActionTag,
   githubActionReleaseReviews,
@@ -133,6 +142,25 @@ describe("GitHub Action releases", () => {
       expect(result.failure).toMatchObject({
         _tag: "GithubActionReleaseError",
         message: "Unable to read the latest actions/checkout release.",
+      });
+    })
+  );
+
+  it.effect("fails with the release error at the 10 second deadline", () =>
+    Effect.gen(function* () {
+      const neverAnswers = HttpClient.make(() => Effect.never);
+      const fiber = yield* Effect.forkChild(
+        fetchLatestGithubActionTag({ repository: "actions/checkout" }).pipe(
+          Effect.provideService(HttpClient.HttpClient, neverAnswers),
+          Effect.flip
+        )
+      );
+      yield* TestClock.adjust("10 seconds");
+
+      expect(yield* Fiber.join(fiber)).toMatchObject({
+        _tag: "GithubActionReleaseError",
+        message:
+          "Unable to read the latest actions/checkout release within 10 seconds.",
       });
     })
   );

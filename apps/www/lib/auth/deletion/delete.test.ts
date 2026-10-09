@@ -19,7 +19,9 @@ import {
   AccountDeletionRequestUncertain,
   AccountDeletionSchoolMemberRequired,
   AccountDeletionSessionExpired,
+  accountDeletionErrorCode,
 } from "@/lib/auth/deletion/errors";
+import { AuthRequestDeadline } from "@/lib/auth/request";
 
 type AccountDeletionOperations = Parameters<typeof deleteCurrentAccount>[0];
 vi.mock("@/lib/auth/client", () => ({
@@ -191,6 +193,49 @@ describe("account deletion", () => {
       ).toBeUndefined();
       expect(cancelPreparation).not.toHaveBeenCalled();
     })
+  );
+  it.effect(
+    "reconciles a delete that misses the browser deadline and accepts a committed account",
+    () =>
+      Effect.gen(function* () {
+        const reconcile = vi.fn(() =>
+          Effect.succeed(accountDeletionAttemptStatus.committed)
+        );
+        vi.mocked(authClient.deleteUser).mockRejectedValueOnce(
+          new AuthRequestDeadline()
+        );
+
+        expect(
+          yield* deleteCurrentAccount(createDeletionOperations({ reconcile }))
+        ).toBeUndefined();
+        expect(authClient.deleteUser).toHaveBeenCalledOnce();
+        expect(reconcile).toHaveBeenCalledOnce();
+      })
+  );
+  it.effect(
+    "keeps a delete that misses the browser deadline uncertain while the account remains",
+    () =>
+      Effect.gen(function* () {
+        const reconcile = vi.fn(() =>
+          Effect.succeed(accountDeletionAttemptStatus.pending)
+        );
+        vi.mocked(authClient.deleteUser).mockRejectedValueOnce(
+          new AuthRequestDeadline()
+        );
+
+        expect(
+          yield* deleteCurrentAccount(
+            createDeletionOperations({ reconcile })
+          ).pipe(Effect.flip)
+        ).toStrictEqual(
+          new AccountDeletionRequestUncertain({
+            attemptId: ATTEMPT_ID,
+            code: accountDeletionErrorCode.requestUncertain,
+            phase: accountDeletionRequestPhase.deletion,
+          })
+        );
+        expect(reconcile).toHaveBeenCalledOnce();
+      })
   );
   it.effect(
     "proves a lost success before accepting an unauthorized retry",

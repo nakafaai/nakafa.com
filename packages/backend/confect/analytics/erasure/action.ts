@@ -1,3 +1,4 @@
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import {
   PostHogErasureConfigError,
   PostHogErasureRequestError,
@@ -25,6 +26,30 @@ const PostHogErasureConfigSchema = Schema.Struct({
   projectId: Schema.String,
 });
 export type PostHogErasureConfig = typeof PostHogErasureConfigSchema.Type;
+const PostHogBulkEraseJsonSchema = Schema.fromJsonString(
+  PostHogBulkEraseResponseSchema
+);
+
+/**
+ * Reads one erasure answer: its status, and for a success its body text. A body
+ * that cannot be read leaves the text undefined, so decoding reports the answer
+ * as an invalid response.
+ */
+function readErasureAnswer(
+  response: Response
+): Promise<{ ok: boolean; status: number; text: string | undefined }> {
+  if (!response.ok) {
+    return Promise.resolve({
+      ok: false,
+      status: response.status,
+      text: undefined,
+    });
+  }
+  return response.text().then(
+    (text) => ({ ok: true, status: response.status, text }),
+    () => ({ ok: true, status: response.status, text: undefined })
+  );
+}
 
 /** Reads named Convex settings without exposing credentials in decode errors. */
 const readPostHogErasureConfig = Effect.fn(
@@ -119,14 +144,21 @@ export const erasePostHogPerson = Effect.fn(
       code: postHogErasureRequestErrorCode,
       message: "PostHog person erasure request could not be sent.",
     });
+  const requestTimedOut = () =>
+    new PostHogErasureRequestError({
+      code: postHogErasureRequestErrorCode,
+      message: "PostHog person erasure request timed out.",
+    });
   const body = yield* Schema.encodeEffect(JsonTextSchema)({
     delete_events: true,
     delete_recordings: true,
     distinct_ids: [distinctId],
     keep_person: false,
   }).pipe(Effect.orDie);
-  const response = yield* Effect.tryPromise({
-    try: () =>
+  // The signal belongs to the send and to the body read, so the deadline aborts
+  // both and the socket closes with the request.
+  const answer = yield* Effect.tryPromise({
+    try: (signal) =>
       request(endpoint, {
         body,
         headers: {
@@ -134,26 +166,24 @@ export const erasePostHogPerson = Effect.fn(
           "Content-Type": "application/json",
         },
         method: "POST",
-      }),
+        signal,
+      }).then(readErasureAnswer),
     catch: requestNotSent,
-  });
-  if (!response.ok) {
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: NETWORK_ATTEMPT_DEADLINE,
+      orElse: () => Effect.fail(requestTimedOut()),
+    })
+  );
+  if (!answer.ok) {
     return yield* new PostHogErasureRequestError({
       code: postHogErasureRequestErrorCode,
-      message: `PostHog person erasure returned HTTP ${response.status}.`,
+      message: `PostHog person erasure returned HTTP ${answer.status}.`,
     });
   }
-  const responseBody = yield* Effect.tryPromise({
-    try: (): Promise<unknown> => response.json(),
-    catch: () =>
-      new PostHogErasureRequestError({
-        code: postHogErasureRequestErrorCode,
-        message: "PostHog person erasure returned an invalid response.",
-      }),
-  });
-  const result = yield* Schema.decodeUnknownEffect(
-    PostHogBulkEraseResponseSchema
-  )(responseBody).pipe(
+  const result = yield* Schema.decodeUnknownEffect(PostHogBulkEraseJsonSchema)(
+    answer.text
+  ).pipe(
     Effect.mapError(
       () =>
         new PostHogErasureRequestError({
