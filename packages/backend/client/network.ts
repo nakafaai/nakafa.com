@@ -1,5 +1,6 @@
 import {
   Array as Arr,
+  Data,
   Duration,
   Effect,
   HashSet,
@@ -172,3 +173,63 @@ function inspectNetworkNode(current: object, remainingCapacity: number) {
 export function isRetryableNetworkError(error: NetworkRequestError) {
   return error.networkCodes.length > 0;
 }
+
+/**
+ * One failed attempt that the shared schedule may repeat. `failure` is the
+ * caller's own error.
+ */
+export class RetryableNetworkAttempt<Failure> extends Data.TaggedError(
+  "RetryableNetworkAttempt"
+)<{
+  readonly failure: Failure;
+}> {}
+
+/**
+ * Keeps the caller's failure, marked retryable only when the transport cause is
+ * one that is safe to repeat. Pass the cause itself: effect/http keeps it at
+ * `error.reason.cause`, and @confect/js keeps it at `error.cause`.
+ */
+export function classifyNetworkFailure<Failure>(
+  cause: unknown,
+  failure: Failure
+): Failure | RetryableNetworkAttempt<Failure> {
+  return isRetryableNetworkError(createNetworkRequestError(cause))
+    ? new RetryableNetworkAttempt({ failure })
+    : failure;
+}
+
+/**
+ * Runs one attempt under NETWORK_ATTEMPT_DEADLINE and repeats it on
+ * NETWORK_RETRY_SCHEDULE while it fails retryably. A missed deadline is a
+ * retryable failure that carries `deadlineFailure`. The last failure leaves
+ * unwrapped, so every caller keeps its own error type.
+ */
+export const retryNetworkAttempt = Effect.fn("network.retryAttempt")(function* <
+  A,
+  Failure,
+  Requirements,
+>(
+  attempt: Effect.Effect<
+    A,
+    Failure | RetryableNetworkAttempt<Failure>,
+    Requirements
+  >,
+  deadlineFailure: Failure
+) {
+  return yield* attempt.pipe(
+    Effect.timeoutOrElse({
+      duration: NETWORK_ATTEMPT_DEADLINE,
+      orElse: () =>
+        Effect.fail(new RetryableNetworkAttempt({ failure: deadlineFailure })),
+    }),
+    Effect.retry({
+      schedule: NETWORK_RETRY_SCHEDULE,
+      while: (error) => error instanceof RetryableNetworkAttempt,
+    }),
+    Effect.catchIf(
+      (error): error is RetryableNetworkAttempt<Failure> =>
+        error instanceof RetryableNetworkAttempt,
+      ({ failure }) => Effect.fail(failure)
+    )
+  );
+});

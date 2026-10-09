@@ -2,10 +2,13 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import {
+  classifyNetworkFailure,
   createNetworkRequestError,
   isRetryableNetworkError,
   NETWORK_RETRY_SCHEDULE,
   NetworkRequestError,
+  RetryableNetworkAttempt,
+  retryNetworkAttempt,
 } from "@repo/backend/client/network";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Duration, Effect, Fiber, Ref } from "effect";
@@ -111,6 +114,22 @@ describe("network request classification", () => {
       expect(encodeJsonText(error)).not.toContain("private");
     }
   });
+
+  it("keeps a terminal cause as the caller's failure and marks a retryable one", () => {
+    const failure = "caller failure";
+    const retryableCause = new TypeError("fetch failed", {
+      cause: Object.assign(new Error("private socket detail"), {
+        code: "ECONNRESET",
+      }),
+    });
+
+    expect(
+      classifyNetworkFailure(new Error("unclassified fetch failure"), failure)
+    ).toBe(failure);
+    const classified = classifyNetworkFailure(retryableCause, failure);
+    expect(classified).toBeInstanceOf(RetryableNetworkAttempt);
+    expect(classified).toMatchObject({ failure });
+  });
 });
 
 describe("network retry schedule", () => {
@@ -139,5 +158,98 @@ describe("network retry schedule", () => {
         yield* TestClock.adjust(Duration.seconds(60));
         expect(yield* Ref.get(attempts)).toBe(3);
       })
+  );
+});
+
+describe("network attempt retry", () => {
+  it.effect("returns the first success without a repeat", () =>
+    Effect.gen(function* () {
+      const attempts = yield* Ref.make(0);
+      const attempt = Ref.update(attempts, (count) => count + 1).pipe(
+        Effect.as("answer")
+      );
+
+      expect(yield* retryNetworkAttempt(attempt, "deadline failure")).toBe(
+        "answer"
+      );
+      expect(yield* Ref.get(attempts)).toBe(1);
+    })
+  );
+
+  it.effect(
+    "repeats a retryable failure after 500 milliseconds and then 1 second, and fails with the caller's failure unwrapped",
+    () =>
+      Effect.gen(function* () {
+        const attempts = yield* Ref.make(0);
+        const attempt = Ref.update(attempts, (count) => count + 1).pipe(
+          Effect.andThen(
+            Effect.fail(
+              new RetryableNetworkAttempt({ failure: "network failure" })
+            )
+          )
+        );
+        const fiber = yield* Effect.forkChild(
+          retryNetworkAttempt(attempt, "deadline failure").pipe(Effect.flip)
+        );
+
+        yield* TestClock.adjust(Duration.millis(499));
+        expect(yield* Ref.get(attempts)).toBe(1);
+        yield* TestClock.adjust(Duration.millis(1));
+        expect(yield* Ref.get(attempts)).toBe(2);
+        yield* TestClock.adjust(Duration.millis(999));
+        expect(yield* Ref.get(attempts)).toBe(2);
+        yield* TestClock.adjust(Duration.millis(1));
+        expect(yield* Ref.get(attempts)).toBe(3);
+
+        expect(yield* Fiber.join(fiber)).toBe("network failure");
+        yield* TestClock.adjust(Duration.seconds(60));
+        expect(yield* Ref.get(attempts)).toBe(3);
+      })
+  );
+
+  it.effect(
+    "repeats a missed deadline, then fails with the deadline failure after 31.5 seconds",
+    () =>
+      Effect.gen(function* () {
+        const attempts = yield* Ref.make(0);
+        const attempt = Ref.update(attempts, (count) => count + 1).pipe(
+          Effect.andThen(Effect.never)
+        );
+        const fiber = yield* Effect.forkChild(
+          retryNetworkAttempt(attempt, "deadline failure").pipe(Effect.flip)
+        );
+
+        // Each attempt ends at its ten second deadline. The waits are 500 milliseconds, then 1 second.
+        yield* TestClock.adjust(Duration.millis(10_499));
+        expect(yield* Ref.get(attempts)).toBe(1);
+        yield* TestClock.adjust(Duration.millis(1));
+        expect(yield* Ref.get(attempts)).toBe(2);
+        yield* TestClock.adjust(Duration.millis(10_999));
+        expect(yield* Ref.get(attempts)).toBe(2);
+        yield* TestClock.adjust(Duration.millis(1));
+        expect(yield* Ref.get(attempts)).toBe(3);
+        yield* TestClock.adjust(Duration.millis(9999));
+        expect(yield* Ref.get(attempts)).toBe(3);
+
+        yield* TestClock.adjust(Duration.millis(1));
+        expect(yield* Fiber.join(fiber)).toBe("deadline failure");
+        expect(yield* Ref.get(attempts)).toBe(3);
+      })
+  );
+
+  it.effect("returns a failure that is not retryable at once, unwrapped", () =>
+    Effect.gen(function* () {
+      const attempts = yield* Ref.make(0);
+      const attempt = Ref.update(attempts, (count) => count + 1).pipe(
+        Effect.andThen(Effect.fail("terminal failure"))
+      );
+
+      expect(
+        yield* retryNetworkAttempt(attempt, "deadline failure").pipe(
+          Effect.flip
+        )
+      ).toBe("terminal failure");
+      expect(yield* Ref.get(attempts)).toBe(1);
+    })
   );
 });
