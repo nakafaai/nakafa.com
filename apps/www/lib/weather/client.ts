@@ -1,3 +1,4 @@
+import { getCountryName } from "@repo/design-system/lib/locale/country";
 import { timeOperation } from "@repo/utilities/logging/effect";
 import { Array as Arr, Config, Effect, Option, Redacted, Schema } from "effect";
 import {
@@ -61,10 +62,12 @@ export const getCurrentWeather = Effect.fn("weather.getCurrentWeather")(
           Effect.annotateLogs(context)
         );
         const condition = Option.getOrUndefined(Arr.head(response.weather));
+        const countryName = getCountryName(response.sys.country);
         return {
           city: response.name,
           condition: condition?.description ?? DEFAULT_CONDITION,
           country: response.sys.country,
+          ...(countryName === undefined ? {} : { countryName }),
           icon: condition?.icon ?? DEFAULT_ICON,
           temperatureKelvin: response.main.temp,
         } satisfies CurrentWeatherSummary;

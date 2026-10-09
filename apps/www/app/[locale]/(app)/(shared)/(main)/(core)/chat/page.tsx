@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { ChatNew } from "@/components/ai/chat/new";
 import { HomeTitle } from "@/components/ai/home/title";
 import { Videos } from "@/components/ai/home/videos";
-import { Weather } from "@/components/ai/home/weather";
+import { DeferredWeather } from "@/components/ai/home/weather/deferred";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { getSocialMetadata } from "@/lib/utils/metadata";
@@ -42,7 +42,7 @@ export default function Page() {
     <ChatNew title={<HomeTitle />}>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Videos />
-        <Weather />
+        <DeferredWeather />
       </div>
     </ChatNew>
   );
