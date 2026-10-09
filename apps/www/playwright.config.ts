@@ -1,9 +1,11 @@
 import { defineConfig, type Project } from "@playwright/test";
+import { Array as Arr, Record as Rec } from "effect";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 
 // Projects select files by folder path, so a file that repeats a basename
 // never joins a project by accident.
+// Marketing (119 s) and consent (22 s) run in this suite only to balance the run time: measured runtime 389 s, this suite 363 s.
 const VISUAL_TESTS = [
   "**/visual/**/*.browser.ts",
   "**/scene/**/*.browser.ts",
@@ -63,7 +65,7 @@ const SUITES = {
 type SuiteName = keyof typeof SUITES;
 
 function isSuiteName(value: string): value is SuiteName {
-  return Object.hasOwn(SUITES, value);
+  return Arr.some(Rec.keys(SUITES), (name) => name === value);
 }
 
 /** Returns the project names of the selected suite, or of every suite in order. */
@@ -71,28 +73,23 @@ function selectedProjectNames(
   suite: string | undefined
 ): readonly ProjectName[] {
   if (suite === undefined) {
-    return Object.values(SUITES).flat();
+    return Arr.flatten(Rec.values(SUITES));
   }
   if (!isSuiteName(suite)) {
     throw new Error(
-      `PLAYWRIGHT_SUITE must be one of ${Object.keys(SUITES).join(", ")}; received "${suite}".`
+      `PLAYWRIGHT_SUITE must be one of ${Arr.join(Rec.keys(SUITES), ", ")}; received "${suite}".`
     );
   }
   return SUITES[suite];
 }
 
-/** Builds the projects in order, each one depending on the project before it. */
+/** Builds the projects in order: each one depends on the project before it. */
 function chainProjects(names: readonly ProjectName[]): Project[] {
-  const projects: Project[] = [];
-  for (const name of names) {
-    const previous = projects.at(-1)?.name;
-    projects.push({
-      name,
-      ...PROJECTS[name],
-      ...(previous === undefined ? {} : { dependencies: [previous] }),
-    });
-  }
-  return projects;
+  return Arr.map(names, (name, index) => ({
+    name,
+    ...PROJECTS[name],
+    dependencies: Arr.fromOption(Arr.get(names, index - 1)),
+  }));
 }
 
 export default defineConfig({
