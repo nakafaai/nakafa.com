@@ -14,13 +14,14 @@ import {
   codeFencePreVariants,
 } from "@repo/design-system/components/markdown/react/variants";
 import { languageIconMap } from "@repo/design-system/lib/code-block/icons";
+import type { ThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
 import type { BundledTheme } from "shiki";
 
 const CODE_THEMES = {
   dark: "github-dark",
   light: "github-light",
-} satisfies Record<"dark" | "light", BundledTheme>;
+} satisfies Record<ThemeAppearance, BundledTheme>;
 
 interface MarkdownCodeBlockProps {
   readonly className?: string | undefined;
