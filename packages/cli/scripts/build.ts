@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { layer as nodeFileSystemLayer } from "@effect/platform-node/NodeFileSystem";
 import { runMain } from "@effect/platform-node/NodeRuntime";
 import { Effect, FileSystem, Schema } from "effect";
@@ -12,9 +11,9 @@ class CliBuildError extends Schema.TaggedError<CliBuildError>()(
   }
 ) {}
 
-const outputDirectory = fileURLToPath(new URL("../dist/", import.meta.url));
-const outputFile = fileURLToPath(new URL("../dist/main.js", import.meta.url));
-const entryPoint = fileURLToPath(new URL("../src/main.ts", import.meta.url));
+const outputDirectory = `${import.meta.dirname}/../dist/`;
+const outputFile = `${import.meta.dirname}/../dist/main.js`;
+const entryPoint = `${import.meta.dirname}/../src/main.ts`;
 
 const buildCli = Effect.fn("NakafaCli.build")(function* () {
   const fileSystem = yield* FileSystem.FileSystem;

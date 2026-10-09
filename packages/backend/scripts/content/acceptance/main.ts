@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import { runMain } from "@effect/platform-node/NodeRuntime";
 import { layer } from "@effect/platform-node/NodeServices";
 import {
@@ -14,9 +13,7 @@ import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 
 const main = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const root = yield* fs.realPath(
-    fileURLToPath(new URL("../../../../../", import.meta.url))
-  );
+  const root = yield* fs.realPath(`${import.meta.dirname}/../../../../..`);
   const mode = process.argv[2];
   if (mode === "prepare") {
     return yield* prepareAcceptance(root);
