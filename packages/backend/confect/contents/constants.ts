@@ -20,6 +20,3 @@ export const CONTENT_ANALYTICS_PARTITIONS = Array.from(
   },
   (_, partition) => partition
 );
-
-/** Public Nakafa website origin used for canonical content URLs. */
-export const NAKAFA_CONTENT_BASE_URL = "https://nakafa.com";

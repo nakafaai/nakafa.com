@@ -1,4 +1,4 @@
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug } from "@repo/utilities/slug";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 

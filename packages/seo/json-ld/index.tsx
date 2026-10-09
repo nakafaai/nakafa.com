@@ -1,4 +1,4 @@
-import { createStableId } from "@repo/utilities/helper";
+import { createStableId } from "@repo/utilities/id";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Schema } from "effect";
 import type { Thing, WithContext } from "schema-dts";
