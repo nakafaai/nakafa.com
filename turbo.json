@@ -102,10 +102,6 @@
       "cache": false,
       "persistent": true
     },
-    "test:coverage": {
-      "dependsOn": ["transit"],
-      "outputs": ["coverage/**"]
-    },
     "format": {
       "dependsOn": ["^format"],
       "cache": false,

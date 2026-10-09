@@ -168,7 +168,6 @@ pnpm dev:all
 pnpm build
 pnpm start
 pnpm test
-pnpm test:coverage
 pnpm lint
 pnpm security:audit
 pnpm format
