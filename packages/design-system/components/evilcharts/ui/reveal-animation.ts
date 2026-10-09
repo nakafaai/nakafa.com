@@ -1,6 +1,6 @@
 "use client";
 
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 import { useEffect, useEffectEvent, useState } from "react";
 
 const BAR_REVEAL_DURATION_MS = 500;
@@ -30,16 +30,12 @@ function getOrderedRevealStep(
   const lastIndex = dataLength - 1;
   const center = lastIndex / 2;
 
-  switch (animationType) {
-    case "right-to-left":
-      return lastIndex - index;
-    case "center-out":
-      return Math.abs(index - center);
-    case "edges-in":
-      return center - Math.abs(index - center);
-    default:
-      return index;
-  }
+  return Match.value(animationType).pipe(
+    Match.when("right-to-left", () => lastIndex - index),
+    Match.when("center-out", () => Math.abs(index - center)),
+    Match.when("edges-in", () => center - Math.abs(index - center)),
+    Match.orElse(() => index)
+  );
 }
 
 /**

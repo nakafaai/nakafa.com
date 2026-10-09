@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Match } from "effect";
 
 /** Default visualization accents from the Tailwind CSS palette. */
 const COLOR_KEYS = [
@@ -145,36 +145,36 @@ export function getColor(...args: ColorArgs) {
     return COLOR_VALUES[args[0]];
   }
 
-  switch (args[0]) {
-    case "AMBER":
-      return COLOR_SHADES.AMBER[args[1]];
-    case "BLUE":
-      return COLOR_SHADES.BLUE[args[1]];
-    case "EMERALD":
-      return COLOR_SHADES.EMERALD[args[1]];
-    case "GRAY":
-      return COLOR_SHADES.GRAY[args[1]];
-    case "NEUTRAL":
-      return COLOR_SHADES.NEUTRAL[args[1]];
-    case "ORANGE":
-      return COLOR_SHADES.ORANGE[args[1]];
-    case "RED":
-      return COLOR_SHADES.RED[args[1]];
-    case "SKY":
-      return COLOR_SHADES.SKY[args[1]];
-    case "SLATE":
-      return COLOR_SHADES.SLATE[args[1]];
-    case "STONE":
-      return COLOR_SHADES.STONE[args[1]];
-    case "TEAL":
-      return COLOR_SHADES.TEAL[args[1]];
-    case "VIOLET":
-      return COLOR_SHADES.VIOLET[args[1]];
-    case "ZINC":
-      return COLOR_SHADES.ZINC[args[1]];
-    default:
+  return Match.value(args).pipe(
+    Match.when(["AMBER", Match.any], ([, shade]) => COLOR_SHADES.AMBER[shade]),
+    Match.when(["BLUE", Match.any], ([, shade]) => COLOR_SHADES.BLUE[shade]),
+    Match.when(
+      ["EMERALD", Match.any],
+      ([, shade]) => COLOR_SHADES.EMERALD[shade]
+    ),
+    Match.when(["GRAY", Match.any], ([, shade]) => COLOR_SHADES.GRAY[shade]),
+    Match.when(
+      ["NEUTRAL", Match.any],
+      ([, shade]) => COLOR_SHADES.NEUTRAL[shade]
+    ),
+    Match.when(
+      ["ORANGE", Match.any],
+      ([, shade]) => COLOR_SHADES.ORANGE[shade]
+    ),
+    Match.when(["RED", Match.any], ([, shade]) => COLOR_SHADES.RED[shade]),
+    Match.when(["SKY", Match.any], ([, shade]) => COLOR_SHADES.SKY[shade]),
+    Match.when(["SLATE", Match.any], ([, shade]) => COLOR_SHADES.SLATE[shade]),
+    Match.when(["STONE", Match.any], ([, shade]) => COLOR_SHADES.STONE[shade]),
+    Match.when(["TEAL", Match.any], ([, shade]) => COLOR_SHADES.TEAL[shade]),
+    Match.when(
+      ["VIOLET", Match.any],
+      ([, shade]) => COLOR_SHADES.VIOLET[shade]
+    ),
+    Match.when(["ZINC", Match.any], ([, shade]) => COLOR_SHADES.ZINC[shade]),
+    Match.orElse(() => {
       throw new Error(`Unknown shaded color: ${args[0]}`);
-  }
+    })
+  );
 }
 
 /**
