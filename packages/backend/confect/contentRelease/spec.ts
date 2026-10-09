@@ -242,7 +242,7 @@ export const releaseSnapshotTransitionsValidator = Schema.Record(
 /** Completed publication evidence stored and returned without body replay. */
 export const publicationReceiptValidator = Schema.Struct({
   activatedHeads: Schema.Finite,
-  activeAppLocales: Schema.mutable(Schema.Array(appLocaleValidator)),
+  activeAppLocales: Schema.mutable(Schema.NonEmptyArray(appLocaleValidator)),
   deletedHeads: Schema.Finite,
   manifestHash: Schema.String,
   projectionDigest: Schema.String,
