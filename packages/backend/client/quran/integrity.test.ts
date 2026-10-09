@@ -7,7 +7,9 @@ import { Array as Arr } from "effect";
 
 /** Builds the minimal validator-independent verse identity used by integrity checks. */
 function verses(...numbers: number[]) {
-  return Arr.map(numbers, (inSurah) => ({ number: { inSurah } }));
+  return Arr.map(numbers, (inSurah) => ({
+    number: { inQuran: inSurah, inSurah },
+  }));
 }
 
 /** Builds the minimal surah identity used by neighboring-page checks. */
