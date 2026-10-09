@@ -1,4 +1,5 @@
 import {
+  type TryoutCatalogRowSchema,
   type TryoutCountry,
   TryoutCountrySchema,
   type TryoutExam,
@@ -17,6 +18,7 @@ import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import {
   Array as Arr,
   Effect,
+  Match,
   MutableHashSet,
   MutableList,
   Option,
@@ -46,6 +48,15 @@ export const indexPublishedCatalog = Effect.fn(
   const sets = MutableList.make<TryoutSet>();
   const tracks = MutableList.make<TryoutTrack>();
   const publicPaths = MutableHashSet.empty<string>();
+  const appendRow = Match.type<typeof TryoutCatalogRowSchema.Type>().pipe(
+    Match.discriminators("kind")({
+      country: (row) => MutableList.append(countries, row),
+      exam: (row) => MutableList.append(exams, row),
+      section: (row) => MutableList.append(sections, row),
+      set: (row) => MutableList.append(sets, row),
+    }),
+    Match.orElse((row) => MutableList.append(tracks, row))
+  );
   for (const { row } of catalog.entries) {
     if ("publicPath" in row && row.publicPath !== undefined) {
       if (MutableHashSet.has(publicPaths, row.publicPath)) {
@@ -55,23 +66,7 @@ export const indexPublishedCatalog = Effect.fn(
       }
       MutableHashSet.add(publicPaths, row.publicPath);
     }
-    switch (row.kind) {
-      case "country":
-        MutableList.append(countries, row);
-        break;
-      case "exam":
-        MutableList.append(exams, row);
-        break;
-      case "section":
-        MutableList.append(sections, row);
-        break;
-      case "set":
-        MutableList.append(sets, row);
-        break;
-      default:
-        MutableList.append(tracks, row);
-        break;
-    }
+    appendRow(row);
   }
   const index: PublishedCatalogIndex = {
     countries: MutableList.toArray(countries),

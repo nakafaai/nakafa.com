@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import type { Change } from "convex-helpers/server/triggers";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Match, Option } from "effect";
 
 /**
  * Trigger handler for schoolClassForumReactions table changes.
@@ -21,71 +21,78 @@ export const forumReactionsHandler = Effect.fn(
 )(function* (change: Change<DataModel, "schoolClassForumReactions">) {
   const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  switch (change.operation) {
-    case "insert": {
-      const reaction = change.newDoc;
-      const forum = yield* database
-        .table("schoolClassForums")
-        .get(reaction.forumId);
-      let reactionCounts = [...forum.reactionCounts];
-      const existingIndex = Option.getOrElse(
-        Arr.findFirstIndex(reactionCounts, (r) => r.emoji === reaction.emoji),
-        () => -1
-      );
-      if (existingIndex >= 0) {
-        reactionCounts[existingIndex] = {
-          emoji: reaction.emoji,
-          count: reactionCounts[existingIndex].count + 1,
-        };
-      } else {
-        reactionCounts = Arr.append(reactionCounts, {
-          emoji: reaction.emoji,
-          count: 1,
-        });
-      }
-      yield* writer.table("schoolClassForums").patch(reaction.forumId, {
-        reactionCounts,
-      });
-      break;
-    }
-    case "delete": {
-      const oldReaction = change.oldDoc;
-      const forum = yield* database
-        .table("schoolClassForums")
-        .get(oldReaction.forumId)
-        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
-      if (forum) {
-        const reactionCounts = [...forum.reactionCounts];
-        const existingIndex = Option.getOrElse(
-          Arr.findFirstIndex(
+  yield* Match.value(change).pipe(
+    Match.discriminators("operation")({
+      insert: (insertion) =>
+        Effect.gen(function* () {
+          const reaction = insertion.newDoc;
+          const forum = yield* database
+            .table("schoolClassForums")
+            .get(reaction.forumId);
+          let reactionCounts = [...forum.reactionCounts];
+          const existingIndex = Option.getOrElse(
+            Arr.findFirstIndex(
+              reactionCounts,
+              (r) => r.emoji === reaction.emoji
+            ),
+            () => -1
+          );
+          if (existingIndex >= 0) {
+            reactionCounts[existingIndex] = {
+              emoji: reaction.emoji,
+              count: reactionCounts[existingIndex].count + 1,
+            };
+          } else {
+            reactionCounts = Arr.append(reactionCounts, {
+              emoji: reaction.emoji,
+              count: 1,
+            });
+          }
+          yield* writer.table("schoolClassForums").patch(reaction.forumId, {
             reactionCounts,
-            (r) => r.emoji === oldReaction.emoji
-          ),
-          () => -1
-        );
-        if (existingIndex >= 0) {
-          const newCount = reactionCounts[existingIndex].count - 1;
-          const before = Arr.take(reactionCounts, existingIndex);
-          const after = Arr.drop(reactionCounts, existingIndex + 1);
-          const remaining =
-            newCount <= 0
-              ? Arr.appendAll(before, after)
-              : Arr.appendAll(
-                  Arr.append(before, {
-                    emoji: oldReaction.emoji,
-                    count: newCount,
-                  }),
-                  after
-                );
-          yield* writer.table("schoolClassForums").patch(oldReaction.forumId, {
-            reactionCounts: remaining,
           });
-        }
-      }
-      break;
-    }
-    default: {
-      break;
-    }
-  }
+        }),
+      delete: (deletion) =>
+        Effect.gen(function* () {
+          const oldReaction = deletion.oldDoc;
+          const forum = yield* database
+            .table("schoolClassForums")
+            .get(oldReaction.forumId)
+            .pipe(
+              Effect.catchTag("GetByIdFailure", () => Effect.succeed(null))
+            );
+          if (forum) {
+            const reactionCounts = [...forum.reactionCounts];
+            const existingIndex = Option.getOrElse(
+              Arr.findFirstIndex(
+                reactionCounts,
+                (r) => r.emoji === oldReaction.emoji
+              ),
+              () => -1
+            );
+            if (existingIndex >= 0) {
+              const newCount = reactionCounts[existingIndex].count - 1;
+              const before = Arr.take(reactionCounts, existingIndex);
+              const after = Arr.drop(reactionCounts, existingIndex + 1);
+              const remaining =
+                newCount <= 0
+                  ? Arr.appendAll(before, after)
+                  : Arr.appendAll(
+                      Arr.append(before, {
+                        emoji: oldReaction.emoji,
+                        count: newCount,
+                      }),
+                      after
+                    );
+              yield* writer
+                .table("schoolClassForums")
+                .patch(oldReaction.forumId, {
+                  reactionCounts: remaining,
+                });
+            }
+          }
+        }),
+    }),
+    Match.orElse(() => Effect.void)
+  );
 }, Effect.orDie);

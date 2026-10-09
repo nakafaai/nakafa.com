@@ -24,7 +24,7 @@ import {
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Struct } from "effect";
+import { Array as Arr, Effect, Match, Struct } from "effect";
 
 const readManifest = internal.contentRelease.snapshot.read.manifest;
 const readRows = internal.contentRelease.snapshot.read.rows;
@@ -96,47 +96,45 @@ describe("contentRelease/snapshot/read", () => {
               .collect();
             const [first, second, last] = rows;
             assert(first && second && last);
-            switch (scenario) {
-              case "empty":
+            await Match.value(scenario).pipe(
+              Match.when("empty", async () => {
                 for (const row of rows) {
                   await ctx.db.delete("snapshotBatches", row._id);
                 }
-                break;
-              case "missing-tail":
-                await ctx.db.delete("snapshotBatches", last._id);
-                break;
-              case "missing-cursor":
-                await ctx.db.delete("snapshotBatches", first._id);
-                break;
-              case "duplicate":
-              case "duplicate-cursor":
-                await ctx.db.insert(
+              }),
+              Match.when("missing-tail", () =>
+                ctx.db.delete("snapshotBatches", last._id)
+              ),
+              Match.when("missing-cursor", () =>
+                ctx.db.delete("snapshotBatches", first._id)
+              ),
+              Match.whenOr("duplicate", "duplicate-cursor", () =>
+                ctx.db.insert(
                   "snapshotBatches",
                   Struct.omit(first, ["_id", "_creationTime"])
-                );
-                break;
-              case "shifted":
-                await ctx.db.patch("snapshotBatches", second._id, {
+                )
+              ),
+              Match.when("shifted", () =>
+                ctx.db.patch("snapshotBatches", second._id, {
                   firstIndex: 4,
-                });
-                break;
-              case "oversized":
-                await ctx.db.patch("snapshotBatches", second._id, {
+                })
+              ),
+              Match.when("oversized", () =>
+                ctx.db.patch("snapshotBatches", second._id, {
                   rowCount: data.rowJson.length,
-                });
-                break;
-              case "foreign-cursor":
-                await ctx.db.patch("snapshotBatches", first._id, {
+                })
+              ),
+              Match.when("foreign-cursor", () =>
+                ctx.db.patch("snapshotBatches", first._id, {
                   snapshotId: TEST_DIGEST,
-                });
-                break;
-              case "false-terminal":
+                })
+              ),
+              Match.when("false-terminal", async () => {
                 await ctx.db.delete("snapshotBatches", second._id);
                 await ctx.db.delete("snapshotBatches", last._id);
-                break;
-              default:
-                break;
-            }
+              }),
+              Match.orElse(() => undefined)
+            );
           });
           await expect(
             t.query(readRows, {
