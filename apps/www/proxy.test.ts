@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
 import type { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
@@ -216,16 +216,21 @@ describe("proxy", () => {
         config,
         url,
       });
-    expect([...matched, "/MISSING.XML", "/llms.txt"].every(matches)).toBe(true);
+    expect(Arr.every([...matched, "/MISSING.XML", "/llms.txt"], matches)).toBe(
+      true
+    );
     expect(
-      [
-        "/en/example.og",
-        "/fr/example.png",
-        "/FR/example.png",
-        "/EN/example.png",
-      ].every(matches)
+      Arr.every(
+        [
+          "/en/example.og",
+          "/fr/example.png",
+          "/FR/example.png",
+          "/EN/example.png",
+        ],
+        matches
+      )
     ).toBe(true);
-    expect(bypassed.some(matches)).toBe(false);
+    expect(Arr.some(bypassed, matches)).toBe(false);
   });
   it.each(["/en/example.og", "/en/example.png", "/og/example/image.png"])(
     "delegates the active OG alias %s before document routing",
