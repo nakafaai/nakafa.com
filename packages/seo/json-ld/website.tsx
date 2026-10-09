@@ -1,7 +1,7 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { ORGANIZATION_REFERENCE } from "@repo/seo/json-ld/constants";
 import { type Locale, useTranslations } from "next-intl";
-import type { SearchAction, WebSite, WithContext } from "schema-dts";
+import type { WebSite, WithContext } from "schema-dts";
 import { JsonLd } from ".";
 
 interface Props {
@@ -15,7 +15,7 @@ const searchAction = {
     urlTemplate: `${COMPANY_IDENTITY.url}/search?q={search_term_string}`,
   },
   "query-input": "required name=search_term_string",
-} satisfies SearchAction & { "query-input": string };
+} as const;
 
 export function WebsiteJsonLd({ locale }: Props) {
   const t = useTranslations("Metadata");

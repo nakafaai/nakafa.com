@@ -1,8 +1,15 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
+import { Schema } from "effect";
 import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
+
+const SurahPageSchema = Schema.Struct({
+  nextSurah: QuranSurahRowSchema,
+  prevSurah: Schema.Null,
+  surahData: QuranSurahRowSchema,
+});
 
 describe("quran page helpers", () => {
   it("builds pagination from source-authenticated surah names", () => {
@@ -43,11 +50,7 @@ describe("quran page helpers", () => {
 });
 
 /** Builds one Quran surah page fixture matching Convex runtime output. */
-function surahPage(): {
-  nextSurah: QuranSurahRow;
-  prevSurah: null;
-  surahData: QuranSurahRow;
-} {
+function surahPage(): typeof SurahPageSchema.Type {
   return {
     nextSurah: {
       kind: "quran-surah",

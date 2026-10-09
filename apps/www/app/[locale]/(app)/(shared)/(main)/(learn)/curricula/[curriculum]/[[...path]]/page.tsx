@@ -36,7 +36,7 @@ import {
   readRuntimeCurriculumToc,
   resolveRuntimeCurriculumRoute,
 } from "@/lib/curriculum/model";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getLocaleOrThrow, type LocaleRouteParams } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
@@ -62,7 +62,7 @@ const CurriculumNestedHeader = dynamic(
 export async function generateStaticParams({
   params,
 }: {
-  params: { locale: string };
+  params: LocaleRouteParams;
 }) {
   const locale = getLocaleOrThrow(params.locale);
   const route = await Effect.runPromise(

@@ -4,7 +4,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { ModelId, ModelKey } from "@repo/backend/confect/gateway/model";
-import { Array as Arr } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 
 const modelIcons = {
   "nakafa-lite": LaurelWreathRight03Icon,
@@ -21,28 +21,21 @@ const modelSubtitleKeys = {
   "nakafa-pro": "model-subtitle-nakafa-pro",
 } as const satisfies Record<ModelKey, string>;
 
-const aiModelsById = {
-  "nakafa-lite": {
-    icon: modelIcons["nakafa-lite"],
-    label: modelLabels["nakafa-lite"],
-    subtitleKey: modelSubtitleKeys["nakafa-lite"],
-    value: ModelId.make("nakafa-lite"),
-  },
-  "nakafa-pro": {
-    icon: modelIcons["nakafa-pro"],
-    label: modelLabels["nakafa-pro"],
-    subtitleKey: modelSubtitleKeys["nakafa-pro"],
-    value: ModelId.make("nakafa-pro"),
-  },
-} satisfies Record<
-  ModelKey,
-  {
-    icon: IconSvgElement;
-    label: (typeof modelLabels)[ModelKey];
-    subtitleKey: (typeof modelSubtitleKeys)[ModelKey];
-    value: ModelId;
-  }
->;
+/** Builds the display row of one model from its key. */
+function aiModelRow(key: ModelKey) {
+  return {
+    icon: modelIcons[key],
+    label: modelLabels[key],
+    subtitleKey: modelSubtitleKeys[key],
+    value: ModelId.make(key),
+  };
+}
+
+/** Builds each row once, so `aiModels` and `getAiModel` return the same object. */
+const aiModelsById = Rec.fromIterableWith(ModelKey.literals, (key) => [
+  key,
+  aiModelRow(key),
+]);
 
 export const aiModels = Arr.map(
   ModelKey.literals,

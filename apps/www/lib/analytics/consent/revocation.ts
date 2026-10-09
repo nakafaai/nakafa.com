@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import {
   type AnalyticsConsentPromptIdentity,
   type AnalyticsConsentSessionOperation,
+  type AnalyticsConsentSessionOverride,
   canCommitAnalyticsConsentRevocation,
   setAnalyticsConsentSessionOverride,
 } from "@/lib/analytics/consent/session";
@@ -56,9 +57,10 @@ export function useAccountAnalyticsConsentRevocation({
     revocationRef.current = { owner: revocationOwner, promptIdentity };
 
     const recordRevocation = (
-      override:
-        | { readonly persistence: "failed" }
-        | { readonly decidedAt: number; readonly persistence: "saved" }
+      override: Exclude<
+        AnalyticsConsentSessionOverride,
+        { readonly persistence: "pending" }
+      >
     ) =>
       Effect.sync(() =>
         setSessionOverrides((current) => {
