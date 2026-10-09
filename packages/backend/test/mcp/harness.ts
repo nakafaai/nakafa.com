@@ -2,6 +2,7 @@ import { RateLimiter } from "@convex-dev/rate-limiter";
 import { expect } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { seedArticle, seedQuran } from "@repo/backend/test/mcp/seed";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Record, Schema } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
@@ -38,9 +39,8 @@ const DEFAULT_HEADERS: Readonly<Record<string, string | null>> = {
   "x-request-id": GOLDEN_REQUEST_ID,
 };
 
-const JsonCodec = Schema.fromJsonString(Schema.Unknown);
-const encodeJson = Schema.encodeSync(JsonCodec);
-const decodeJson = Schema.decodeUnknownEffect(JsonCodec);
+const encodeJson = encodeJsonText;
+const decodeJson = Schema.decodeUnknownEffect(JsonTextSchema);
 
 /** One request as a client sends it. A header set to null is left out. */
 const McpRequestSchema = Schema.Struct({

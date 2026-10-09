@@ -4,6 +4,7 @@ import {
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
+import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
   Effect,
@@ -99,9 +100,7 @@ function contentSeoError(href: string, surface: string) {
   return new ContentSeoContractError({ href, surface });
 }
 
-const decodeJsonText = Schema.decodeUnknownEffect(
-  Schema.fromJsonString(Schema.Unknown)
-);
+const decodeJsonText = Schema.decodeUnknownEffect(JsonTextSchema);
 
 /** Selects the page's own document among the site-wide JSON-LD scripts. */
 const isArticleDocument = Schema.is(

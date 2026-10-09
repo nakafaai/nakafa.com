@@ -2,6 +2,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const CATEGORY_POSITION_PREFIX = "article-category|";
@@ -10,7 +11,6 @@ const CategoryPositionSchema = Schema.Tuple([
   AppLocaleSchema,
   ArticleCategorySchema,
 ]);
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 type CategoryRow = PublicationRow<"articleCategories">;
 
 /** Recognizes semantic category positions inside the release cursor envelope. */
@@ -20,11 +20,7 @@ export function isCategoryPosition(cursor: string) {
 
 /** Encodes the unique localized category boundary shared by build and live reads. */
 export function categoryPosition(row: CategoryRow) {
-  const key = Schema.encodeSync(JsonTextSchema)([
-    row.slot,
-    row.appLocale,
-    row.category,
-  ]);
+  const key = encodeJsonText([row.slot, row.appLocale, row.category]);
   return `${CATEGORY_POSITION_PREFIX}${key}`;
 }
 

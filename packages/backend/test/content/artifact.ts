@@ -6,11 +6,10 @@ import {
   TEST_DIGEST,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import type { Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Stores one artifact body with the facts that staging writes beside it. */
 export async function insertTestArtifact(
@@ -43,7 +42,7 @@ export function testArtifactJson(options?: {
   readonly rendererDomain?: RendererDomain | undefined;
 }) {
   const compiledCode = options?.compiledCode ?? "return {};";
-  return encodeJson({
+  return encodeJsonText({
     artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
     keyId: "test-key",
     payload: {

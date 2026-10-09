@@ -11,11 +11,11 @@ import {
   PublishedQuranRowSchema,
   PublishedQuranSurahSchema,
 } from "@repo/backend/content/quran/contract";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
 export type QuranSearchRow = typeof QuranSearchRowSchema.Type;
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 /** Parses one stored signed row without weakening its runtime boundary. */
 const parseQuranRow = Effect.fn("NakafaQuran.parseRow")(function* (

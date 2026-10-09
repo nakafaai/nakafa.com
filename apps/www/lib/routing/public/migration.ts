@@ -6,7 +6,8 @@ import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { httpLayer } from "@/lib/convex/http";
-import { readTryoutSectionRedirect } from "@/lib/routing/public/tryout";
+import { permanentRedirect } from "@/lib/routing/public/redirect";
+import { readTryoutRedirect } from "@/lib/routing/public/tryout";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
 const PREVIOUS_MATERIAL_LEVELS = HashSet.make(
@@ -110,7 +111,7 @@ const readArticleCategoryRedirect = Effect.fn(
   if (previousExists || !successorExists) {
     return null;
   }
-  return `/de/articles/${migration.successorRoute}`;
+  return permanentRedirect(`/de/articles/${migration.successorRoute}`);
 });
 
 /** Redirects an article only when one active release owns the exact successor. */
@@ -143,7 +144,7 @@ const readArticlePageRedirect = Effect.fn(
   if (previous.kind !== "missing" || successor.kind !== "found") {
     return null;
   }
-  return `/de/${migration.successorPath}`;
+  return permanentRedirect(`/de/${migration.successorPath}`);
 });
 
 /** Resolves a redirect only against the currently active signed route model. */
@@ -155,8 +156,10 @@ function readArticleMigrationRedirect(migration: ArticleMigration) {
 }
 
 /**
- * Resolves one retired public URL to its exact current successor. A try-out
- * URL that carries an attempt stays on the route its attempt was frozen to.
+ * Resolves one retired public URL to its exact current successor, with the
+ * status that answers it: a try-out rule answers 307 or 308, and every other
+ * rule answers 308. A try-out URL that carries an attempt stays on the route
+ * its attempt was frozen to.
  */
 export const readPublicUrlMigrationRedirect = Effect.fn(
   "www.routing.publicHtml.urlMigrationRedirect"
@@ -178,7 +181,7 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   }
   const tryoutRedirect = hasAttemptCapability
     ? null
-    : yield* readTryoutSectionRedirect(pathname);
+    : yield* readTryoutRedirect(pathname);
   if (tryoutRedirect) {
     return tryoutRedirect;
   }
@@ -192,7 +195,9 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   if (!(redirect.activeReleaseId && redirect.managed && redirect.publicPath)) {
     return null;
   }
-  return `/${identity.value.appLocale}/${redirect.publicPath}`;
+  return permanentRedirect(
+    `/${identity.value.appLocale}/${redirect.publicPath}`
+  );
 });
 
 /** Decodes one exact retired subject lesson URL into its stable content key. */

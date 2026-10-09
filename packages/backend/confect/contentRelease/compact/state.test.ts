@@ -15,6 +15,7 @@ import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { DateTime, Effect, Schema } from "effect";
 
@@ -303,7 +304,7 @@ describe("contentRelease/compact/state", () => {
       )(row.releaseJson);
       // Plain codec: a typed encode would strip the excess manifest field.
       await ctx.db.patch("contentReleases", row._id, {
-        releaseJson: Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
+        releaseJson: encodeJsonText({
           ...stored,
           manifest: {
             ...stored.manifest,

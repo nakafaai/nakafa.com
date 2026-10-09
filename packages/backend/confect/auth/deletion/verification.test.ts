@@ -9,10 +9,10 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 21, 0, 0);
-const JsonText = Schema.fromJsonString(Schema.Unknown);
 const decodeVerificationPage = Schema.decodeUnknownSync(
   Schema.Struct({
     page: Schema.Array(
@@ -154,7 +154,7 @@ describe("auth/deletion/verification", () => {
             },
           })
         );
-        const oauthLinkState = yield* Schema.encodeEffect(JsonText)({
+        const oauthLinkState = yield* Schema.encodeEffect(JsonTextSchema)({
           callbackURL: "https://nakafa.com/id",
           codeVerifier: "verifier",
           expiresAt: NOW + 60_000,

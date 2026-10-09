@@ -42,6 +42,7 @@ import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { type Context, Effect, Layer, Predicate, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
@@ -198,8 +199,6 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
 });
-/** Plain JSON codec: the body is the same bytes JSON.stringify writes, with every key kept. */
-const plainJson = Schema.fromJsonString(Schema.Unknown);
 
 describe("signed try-out execution", () => {
   it.effect(
@@ -284,7 +283,7 @@ describe("signed try-out execution", () => {
           )
         );
         assert.isNotNull(found);
-        const body = yield* Schema.encodeEffect(plainJson)(found);
+        const body = yield* Schema.encodeEffect(JsonTextSchema)(found);
         const response = new Response(body, {
           headers: {
             "content-type": "application/json",

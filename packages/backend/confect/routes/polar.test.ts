@@ -10,11 +10,10 @@ import { polarGateway } from "@repo/backend/confect/customers/polar/live";
 import { PolarPayloadError } from "@repo/backend/confect/customers/polar/payload";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { polarCustomer, polarSubscription } from "@repo/backend/test/polar";
+import { encodeJsonText } from "@repo/utilities/json";
 import { DateTime, Effect, Schema } from "effect";
 
 const WEBHOOK_SECRET = "polar_webhook_route_test";
-/** Builds each webhook body once: the signature and the request send this same text. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 const mocks = vi.hoisted(() => ({
   processEvent: vi.fn(),
@@ -94,7 +93,7 @@ const postDeletion = Effect.fn("routes.polar.test.postDeletion")(function* (
   data: unknown
 ) {
   const target = yield* Confect;
-  const body = encodeJson({ data, type: "customer.deleted" });
+  const body = encodeJsonText({ data, type: "customer.deleted" });
   const headers = yield* Effect.promise(() => signWebhook(body));
   return yield* target.fetch("/polar/events", {
     body,
@@ -366,7 +365,7 @@ describe("Polar webhook decoding at the route", () => {
   it.effect("rejects a customer created without an email", () =>
     Effect.gen(function* () {
       const response = yield* postSignedWebhook(
-        encodeJson({
+        encodeJsonText({
           data: { ...polarCustomer, email: undefined },
           type: "customer.created",
         })
@@ -380,7 +379,7 @@ describe("Polar webhook decoding at the route", () => {
   it.effect("rejects a team customer created without an email", () =>
     Effect.gen(function* () {
       const response = yield* postSignedWebhook(
-        encodeJson({
+        encodeJsonText({
           data: { ...polarCustomer, email: null, type: "team" },
           type: "customer.created",
         })
@@ -396,7 +395,7 @@ describe("Polar webhook decoding at the route", () => {
     () =>
       Effect.gen(function* () {
         const response = yield* postSignedWebhook(
-          encodeJson({ data: {}, type: "order.created" })
+          encodeJsonText({ data: {}, type: "order.created" })
         );
 
         expect(response.status).toBe(202);
@@ -447,7 +446,7 @@ describe("Polar webhook decoding at the route", () => {
   it.effect("rejects a subscription whose amount is not an integer", () =>
     Effect.gen(function* () {
       const response = yield* postSignedWebhook(
-        encodeJson({
+        encodeJsonText({
           data: { ...polarSubscription, amount: 10.5 },
           type: "subscription.updated",
         })
@@ -463,7 +462,7 @@ describe("Polar webhook decoding at the route", () => {
     () =>
       Effect.gen(function* () {
         const response = yield* postSignedWebhook(
-          encodeJson({
+          encodeJsonText({
             data: { ...polarSubscription, prices: "not read" },
             type: "subscription.updated",
           })

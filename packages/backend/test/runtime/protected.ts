@@ -21,10 +21,9 @@ import {
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Schema } from "effect";
 
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const SignedReleaseJsonSchema = Schema.fromJsonString(
   SignedContentReleaseSchema
 );
@@ -54,7 +53,7 @@ function insertArtifact(
 ) {
   return insertTestArtifact(ctx, {
     artifactHash: artifact.artifactHash,
-    artifactJson: encodeJson(artifact),
+    artifactJson: encodeJsonText(artifact),
   });
 }
 
@@ -157,10 +156,10 @@ export async function insertProtectedRuntime(
   });
   const runtimeId = await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: bundle.bundleHash,
-    bundleJson: encodeJson(bundle),
+    bundleJson: encodeJsonText(bundle),
     cleanupReleaseId: bundle.payload.sourceReleaseId,
     createdAt: 1,
-    rendererJson: encodeJson(TEST_PROOF_RENDERER),
+    rendererJson: encodeJsonText(TEST_PROOF_RENDERER),
     rendererManifestHash: bundle.payload.rendererManifestHash,
     snapshotId,
     sourceGitSha: bundle.payload.sourceGitSha,
@@ -168,8 +167,8 @@ export async function insertProtectedRuntime(
     sourceReleaseId: bundle.payload.sourceReleaseId,
   });
   await ctx.db.patch(release._id, {
-    releaseJson: encodeJson(signedRelease),
-    rendererJson: encodeJson(TEST_PROOF_RENDERER),
+    releaseJson: encodeJsonText(signedRelease),
+    rendererJson: encodeJsonText(TEST_PROOF_RENDERER),
     tryoutRuntimeBundleHash: bundle.bundleHash,
   });
   await Promise.all(

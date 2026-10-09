@@ -23,6 +23,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import type { User } from "better-auth";
 import { Array as Arr, Effect, pipe, Schema } from "effect";
 
@@ -38,7 +39,6 @@ vi.mock("@convex-dev/better-auth/plugins", async (importOriginal) => {
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const SITE_URL = new URL("http://localhost:3000");
-const JsonSchema = Schema.fromJsonString(Schema.Unknown);
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
@@ -166,7 +166,7 @@ describe("auth/runtime", () => {
       const discovery = yield* Effect.promise(() =>
         test.fetch("/.well-known/openid-configuration")
       );
-      const body = yield* Schema.encodeEffect(JsonSchema)({
+      const body = yield* Schema.encodeEffect(JsonTextSchema)({
         callbackURL: "/en/home",
         provider: "google",
       });
@@ -200,7 +200,7 @@ describe("auth/runtime", () => {
         const errorCallbackURL = `/en/auth/error?${new URLSearchParams({
           intent,
         })}`;
-        const signInBody = yield* Schema.encodeEffect(JsonSchema)({
+        const signInBody = yield* Schema.encodeEffect(JsonTextSchema)({
           callbackURL: "/en/onboarding",
           errorCallbackURL,
           provider: "google",
@@ -344,7 +344,7 @@ describe("auth/runtime", () => {
         });
         expect(prepare).toHaveBeenCalledOnce();
         const serializedFailure =
-          yield* Schema.encodeEffect(JsonSchema)(failure);
+          yield* Schema.encodeEffect(JsonTextSchema)(failure);
         expect(serializedFailure).not.toContain("private adapter detail");
       })
   );
@@ -465,11 +465,11 @@ it("publishes only public key material from configured Better Auth signing keys"
   vi.stubEnv("CONVEX_SITE_URL", "https://technical-auth.convex.site");
   vi.stubEnv(
     "JWKS",
-    Schema.encodeSync(JsonSchema)([
+    encodeJsonText([
       {
         id: "technical-signing-key",
         alg: "RS256",
-        publicKey: Schema.encodeSync(JsonSchema)(publicKey),
+        publicKey: encodeJsonText(publicKey),
         privateKey: "private-material-must-not-be-published",
         createdAt: NOW,
       },
@@ -483,7 +483,7 @@ it("publishes only public key material from configured Better Auth signing keys"
     issuer: "https://technical-auth.convex.site",
     algorithm: "RS256",
   });
-  const keys = Schema.decodeSync(JsonSchema)(
+  const keys = Schema.decodeSync(JsonTextSchema)(
     atob(provider.jwks.slice(provider.jwks.indexOf(",") + 1))
   );
   expect(keys).toEqual({
@@ -495,7 +495,7 @@ it("publishes only public key material from configured Better Auth signing keys"
       },
     ],
   });
-  expect(Schema.encodeSync(JsonSchema)(keys)).not.toContain("private-material");
+  expect(encodeJsonText(keys)).not.toContain("private-material");
   const t = createConvexTestWithBetterAuth();
   const ids = await t.action(async (ctx) =>
     Arr.map(createAuthOptions(ctx).plugins, (plugin) => plugin.id)

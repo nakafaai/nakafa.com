@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect, Option } from "effect";
 import {
   ContentViewDeviceStorageFailed,
   clearContentViewDevice,
@@ -11,8 +12,6 @@ import {
 
 const DEVICE_KEY = "nakafa-device-id";
 const CREATED_DEVICE_PATTERN = /^\d+-[\w-]{9}$/;
-/** Writes the JSON text earlier releases stored, including values the device contract rejects. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const unavailableStorage = {
   getItem: () => {
     throw new Error("storage unavailable");
@@ -81,13 +80,15 @@ describe("content-view device storage", () => {
 
       expect(created).toMatch(CREATED_DEVICE_PATTERN);
       expect(reused).toBe(created);
-      expect(window.localStorage.getItem(DEVICE_KEY)).toBe(encodeJson(created));
+      expect(window.localStorage.getItem(DEVICE_KEY)).toBe(
+        encodeJsonText(created)
+      );
     })
   );
 
   it.effect("keeps an identifier stored by an earlier release", () =>
     Effect.gen(function* () {
-      window.localStorage.setItem(DEVICE_KEY, encodeJson("legacy-device"));
+      window.localStorage.setItem(DEVICE_KEY, encodeJsonText("legacy-device"));
 
       const deviceId = yield* ensureContentViewDevice();
 
@@ -97,14 +98,14 @@ describe("content-view device storage", () => {
 
   it.effect("replaces an empty or malformed stored value", () =>
     Effect.gen(function* () {
-      for (const stored of [encodeJson(""), "not-json"]) {
+      for (const stored of [encodeJsonText(""), "not-json"]) {
         window.localStorage.setItem(DEVICE_KEY, stored);
 
         const deviceId = yield* ensureContentViewDevice();
 
         expect(deviceId).toMatch(CREATED_DEVICE_PATTERN);
         expect(window.localStorage.getItem(DEVICE_KEY)).toBe(
-          encodeJson(deviceId)
+          encodeJsonText(deviceId)
         );
       }
     })
@@ -132,7 +133,7 @@ describe("content-view device storage", () => {
         Option.getOrThrow(accountDevice)
       );
       expect(window.localStorage.getItem(DEVICE_KEY)).toBe(
-        encodeJson(Option.getOrThrow(device).deviceId)
+        encodeJsonText(Option.getOrThrow(device).deviceId)
       );
     })
   );

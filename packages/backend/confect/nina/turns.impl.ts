@@ -18,9 +18,8 @@ import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { DEFAULT_TITLE } from "@repo/backend/confect/nina/presentation.spec";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
+import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Clock, Duration, Effect, Layer, Schema } from "effect";
-
-const jsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 const writeFailure = () =>
   new NinaTurnError({
@@ -36,7 +35,7 @@ const start = FunctionImpl.make(
     const { appUser } = yield* requireAuth();
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const fingerprintText = yield* Schema.encodeEffect(jsonTextSchema)([
+    const fingerprintText = yield* Schema.encodeEffect(JsonTextSchema)([
       args.chatId ?? null,
       args.modelId,
       args.input,

@@ -15,11 +15,10 @@ import {
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
 import { ARTICLE_PUBLICATION_CURSOR_PREFIX } from "@repo/contents/publication";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { getDocumentSize } from "convex/values";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Schema } from "effect";
-
-const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 
 describe("contentRelease/article/order", () => {
   it("fails closed for an exhausted budget or an invalid stored numeric value", async () => {
@@ -187,7 +186,7 @@ describe("contentRelease/article/order", () => {
     if (!first) {
       throw new Error("Expected an article position fixture.");
     }
-    const encodedPosition = Schema.encodeSync(JsonTextSchema)([
+    const encodedPosition = encodeJsonText([
       first.slot,
       first.appLocale,
       first.category,

@@ -24,11 +24,9 @@ import {
   makeTryoutStartHierarchy,
   makeTryoutStartPlacement,
 } from "@repo/backend/test/tryout/source";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, MutableHashMap, Option, Schema } from "effect";
-
-/** Plain codec: writes the same bytes as JSON.stringify. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
 
 /** Creates an inherited active try-out snapshot with authentic immutable bundle dependencies. */
 export const makeTryoutRuntimeSource = Effect.fn(
@@ -146,15 +144,15 @@ export const makeTryoutRuntimeSource = Effect.fn(
     "contentArtifacts",
     Arr.map(artifacts, (artifact) => ({
       artifactHash: artifact.artifactHash,
-      artifactJson: encodeJson(artifact),
+      artifactJson: encodeJsonText(artifact),
     }))
   );
   MutableHashMap.set(fixture.source, "tryoutRuntimeBundles", [
     {
       bundleHash: bundle.bundleHash,
-      bundleJson: encodeJson(bundle),
+      bundleJson: encodeJsonText(bundle),
       createdAt: 1,
-      rendererJson: encodeJson(TEST_PROOF_RENDERER),
+      rendererJson: encodeJsonText(TEST_PROOF_RENDERER),
       rendererManifestHash: TEST_PROOF_RENDERER.hash,
       snapshotId,
       sourceGitSha: bundle.payload.sourceGitSha,
