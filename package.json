@@ -42,7 +42,6 @@
     "security:audit": "bash scripts/osv",
     "start": "turbo run start",
     "test": "pnpm check && pnpm test:scripts && turbo run test",
-    "test:coverage": "pnpm check && turbo run test:coverage",
     "test:scripts": "pnpm typecheck:scripts && vitest run --config scripts/vitest.config.mts",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",

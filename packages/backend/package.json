@@ -21,7 +21,6 @@
     "insights": "convex insights",
     "setup": "pnpm codegen && convex dev --once",
     "test": "pnpm codegen && vitest run",
-    "test:coverage": "pnpm codegen && vitest run --coverage",
     "test:debug": "pnpm codegen && vitest --inspect-brk --no-file-parallelism",
     "test:watch": "pnpm codegen && vitest watch",
     "typecheck": "pnpm codegen && tsc --project tsconfig.json --noEmit --emitDeclarationOnly false"
