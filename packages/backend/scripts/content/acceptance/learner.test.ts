@@ -4,7 +4,14 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
-import { Array as Arr, Effect, FileSystem, MutableList, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  MutableList,
+  Option,
+  Schema,
+} from "effect";
 
 const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
@@ -49,7 +56,7 @@ function answerCommands(createdUser = '{"_creationTime":1,"_id":"user-1"}') {
     Effect.gen(function* () {
       MutableList.append(specs, spec);
       const fs = yield* FileSystem.FileSystem;
-      const output = spec.args.includes("auth/lifecycle:onCreate")
+      const output = Arr.contains(spec.args, "auth/lifecycle:onCreate")
         ? "null"
         : createdUser;
       yield* fs.writeFileString(spec.stdoutPath, output);
@@ -68,7 +75,9 @@ const fixture = Effect.gen(function* () {
 });
 
 const readInput = (spec: CommandSpec | undefined) =>
-  Schema.decodeEffect(CommandInput)(spec?.args.at(-1) ?? "");
+  Schema.decodeEffect(CommandInput)(
+    Option.getOrElse(Arr.last(spec?.args ?? []), () => "")
+  );
 
 describe("synthetic acceptance learner", () => {
   afterEach(() => {
@@ -86,7 +95,9 @@ describe("synthetic acceptance learner", () => {
         yield* createAcceptanceLearner(root, `${root}/second.json`);
 
         const calls = MutableList.toArray(specs);
-        expect(Arr.map(calls, (spec) => spec.args.slice(1, -1))).toEqual([
+        expect(
+          Arr.map(calls, (spec) => Arr.dropRight(Arr.drop(spec.args, 1), 1))
+        ).toEqual([
           ["run", "--component", "betterAuth", "adapter:create"],
           ["run", "auth/lifecycle:onCreate"],
           ["run", "--component", "betterAuth", "adapter:create"],
