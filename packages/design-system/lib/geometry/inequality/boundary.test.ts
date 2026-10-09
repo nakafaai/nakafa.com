@@ -19,13 +19,13 @@ describe("inequality boundary segments", () => {
       boundaryLine2D: [0, 1, 0],
     });
     expect(points).toHaveLength(14);
-    expect(points.slice(0, 4)).toEqual([
+    expect(Arr.take(points, 4)).toEqual([
       [-1, 0, -1],
       [0, -0, -1],
       [-1, 0, 1],
       [0, -0, 1],
     ]);
-    expect(points.slice(-2)).toEqual([
+    expect(Arr.takeRight(points, 2)).toEqual([
       [1, -0, -1],
       [1, -0, 1],
     ]);
@@ -38,7 +38,7 @@ describe("inequality boundary segments", () => {
       boundaryLine2D: [1, 0, 0],
     });
     expect(points).toHaveLength(8);
-    expect(points.slice(0, 4)).toEqual([
+    expect(Arr.take(points, 4)).toEqual([
       [0, -1, -1],
       [-0, 0, -1],
       [0, -1, 1],
@@ -79,13 +79,13 @@ describe("inequality boundary segments", () => {
       boundaryFunction: (x, y) => x + y,
     });
     expect(points).toHaveLength(16);
-    expect(points.slice(0, 4)).toEqual([
+    expect(Arr.take(points, 4)).toEqual([
       [0, -1, -1],
       [1, -1, 0],
       [-1, 0, -1],
       [0, 0, 0],
     ]);
-    expect(points.slice(-4)).toEqual([
+    expect(Arr.takeRight(points, 4)).toEqual([
       [0, 0, 0],
       [0, 1, 1],
       [1, -1, 0],
