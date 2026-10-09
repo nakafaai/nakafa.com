@@ -1,5 +1,7 @@
+import { SITE_ORIGIN } from "@repo/seo/origin";
+
 /** Public Nakafa website origin used for canonical content URLs. */
-export const NAKAFA_BASE_URL = "https://nakafa.com";
+export const NAKAFA_BASE_URL = SITE_ORIGIN;
 
 /** Canonical public REST API origin. */
 export const NAKAFA_API_BASE_URL = "https://api.nakafa.com";

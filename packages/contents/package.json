@@ -13,6 +13,7 @@
     "@hugeicons/core-free-icons": "catalog:",
     "@nakafa/aksara-contracts": "0.48.5",
     "@repo/math": "workspace:*",
+    "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
     "remark-mdx": "catalog:",

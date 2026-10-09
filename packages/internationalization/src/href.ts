@@ -1,4 +1,5 @@
 import { previewRouting } from "@repo/internationalization/src/routing";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 
@@ -6,7 +7,6 @@ const ABSOLUTE_URL_REGEX = /^https?:\/\//;
 const HASH_ONLY_REGEX = /^#/;
 const MAIL_OR_TEL_REGEX = /^(mailto:|tel:)/;
 const PROTOCOL_RELATIVE_REGEX = /^\/\//;
-const URL_BASE = "https://nakafa.com";
 
 /** Returns whether one href should bypass internal locale normalization. */
 function shouldBypassInternalHrefNormalization(href: string) {
@@ -46,7 +46,7 @@ export function normalizeLocalizedInternalHref(href: string) {
     return href;
   }
 
-  const url = new URL(href, URL_BASE);
+  const url = new URL(href, SITE_ORIGIN);
   const { locale, publicSegments } = splitLocalePathname(
     url.pathname,
     previewRouting.locales
