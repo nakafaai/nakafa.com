@@ -545,10 +545,10 @@ describe("Effect source identity", () => {
     Effect.gen(function* () {
       const fixture = yield* makeRepositories();
       const head = yield* installNextRelease(fixture);
-      const failure = yield* Effect.flip(update(fixture));
-
+      const result = yield* Effect.result(update(fixture));
+      assert(result._tag === "Failure");
       assert.deepStrictEqual(
-        [failure._tag, failure.message],
+        [result.failure._tag, result.failure.message],
         [error, message(fixture)]
       );
       assert.strictEqual(
