@@ -1,3 +1,4 @@
+import { NAKAFA_VERCEL_DEPLOYMENT_ENABLED } from "@repo/backend/vercel";
 import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
@@ -5,9 +6,6 @@ export const config: VercelConfig = {
   // Keep database work beside the US East Convex production deployment.
   regions: ["iad1"],
   git: {
-    deploymentEnabled: {
-      "**": false,
-      main: true,
-    },
+    deploymentEnabled: NAKAFA_VERCEL_DEPLOYMENT_ENABLED,
   },
 };

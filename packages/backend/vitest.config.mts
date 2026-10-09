@@ -17,6 +17,7 @@ const coverageExcludes = [
   "confect/http.ts",
   "confect/test.*.ts",
   "test/**",
+  "vercel.ts",
 ];
 
 export default mergeConfig(config, {
