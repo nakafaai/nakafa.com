@@ -257,7 +257,10 @@ describe("native Nina settlement", () => {
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("failed");
     expect(state.user?.credits).toBe(10);
-    expect(state.ledger.at(-1)).toMatchObject({ type: "refund", amount: 0 });
+    expect(Option.getOrThrow(Arr.last(state.ledger))).toMatchObject({
+      type: "refund",
+      amount: 0,
+    });
   });
   it.each([
     "deleted-user",

@@ -10,7 +10,7 @@ import {
 } from "@repo/backend/content/article/category-cursor";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
-import { Effect, Layer, Option, Predicate } from "effect";
+import { Array as Arr, Effect, Layer, Option, Predicate } from "effect";
 
 /** Preserves native article indexes and every deployed publication cursor. */
 export const articleLayer = Layer.merge(
@@ -113,15 +113,16 @@ export const articleLayer = Layer.merge(
                 cursor: null,
               })
               .pipe(Effect.orDie);
-            const last = stored.page.at(-1);
+            const last = Arr.last(stored.page);
             const split = Predicate.isNullish(stored.splitCursor)
               ? undefined
               : stored.page[Math.floor((stored.page.length - 1) / 2)];
             return {
               ...stored,
-              continueCursor: last
-                ? categoryPosition(last)
-                : (options.cursor ?? ""),
+              continueCursor: Option.match(last, {
+                onNone: () => options.cursor ?? "",
+                onSome: categoryPosition,
+              }),
               ...(split
                 ? {
                     splitCursor: categoryPosition(split),

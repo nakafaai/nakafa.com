@@ -84,7 +84,7 @@ describe("attempt content verification", () => {
         {
           bytes: {
             ...row,
-            items: [changedArtifact, ...row.items.slice(1)],
+            items: [changedArtifact, ...Arr.drop(row.items, 1)],
           },
           expectedTag: "ArtifactHashMismatchError",
         },
@@ -230,7 +230,7 @@ describe("attempt content verification", () => {
                   signature,
                 }),
               },
-              ...row.items.slice(1),
+              ...Arr.drop(row.items, 1),
             ],
           },
           TEST_PROOF_RENDERER

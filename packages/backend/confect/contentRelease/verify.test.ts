@@ -66,7 +66,7 @@ async function stagePagedFixture(t: TestConvex<typeof schema>) {
     batchIndex += 1
   ) {
     const batchStart = batchIndex * RELEASE_PAGE_LIMIT;
-    const batch = changes.slice(batchStart, batchStart + RELEASE_PAGE_LIMIT);
+    const batch = Arr.take(Arr.drop(changes, batchStart), RELEASE_PAGE_LIMIT);
     await t.mutation(stageItems, {
       batchIndex,
       itemJson: Arr.map(batch, ({ item }) => item),

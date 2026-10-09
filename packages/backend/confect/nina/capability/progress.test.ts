@@ -9,10 +9,12 @@ import {
   streamCapability,
 } from "@repo/backend/confect/nina/capability/progress";
 import {
+  Array as Arr,
   Deferred,
   Effect,
   Exit,
   Fiber,
+  Option,
   Ref,
   Result,
   Schema,
@@ -48,13 +50,15 @@ it.effect(
           }),
         options
       ).pipe(Stream.runCollect);
-      expect(snapshots.at(-1)).toEqual({
-        text: "Verified evidence",
-        artifacts: [
-          { ...loading, data: { ...loading.data, status: "done" } },
-          { ...loading, id: "search-2" },
-        ],
-      });
+      expect(Arr.last(snapshots)).toEqual(
+        Option.some({
+          text: "Verified evidence",
+          artifacts: [
+            { ...loading, data: { ...loading.data, status: "done" } },
+            { ...loading, id: "search-2" },
+          ],
+        })
+      );
     })
 );
 
@@ -67,7 +71,7 @@ it.effect("bounds oversized evidence and tells the model how to continue", () =>
         }),
       options
     ).pipe(Stream.runCollect);
-    const text = snapshots.at(-1)?.text ?? "";
+    const text = Option.getOrThrow(Arr.last(snapshots)).text;
     expect(countTextTokens(text)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
     expect(text).toContain("Ask a narrower question.");
   })
@@ -107,8 +111,8 @@ it.effect("retains gathered steps with a typed specialist failure", () =>
         ),
       options
     ).pipe(Stream.runCollect);
-    const final = yield* Schema.decodeUnknownEffect(CapabilityOutputSchema)(
-      snapshots.at(-1)
+    const final = yield* Schema.decodeEffect(CapabilityOutputSchema)(
+      Option.getOrThrow(Arr.last(snapshots))
     );
     expect(final).toEqual({
       artifacts: [loading],
@@ -192,6 +196,8 @@ it.effect(
         () => Effect.succeed({ text: "Completed" }),
         { ...options, signal: yield* Effect.abortSignal }
       ).pipe(Stream.runCollect);
-      expect(result.at(-1)).toEqual({ text: "Completed", artifacts: [] });
+      expect(Arr.last(result)).toEqual(
+        Option.some({ text: "Completed", artifacts: [] })
+      );
     })
 );

@@ -5,7 +5,7 @@ import {
   PermissionDenied,
   ROLE_PERMISSIONS,
 } from "@repo/backend/confect/schools/permission/spec";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const PermissionTargetSchema = Schema.Struct({
   classId: Schema.optionalKey(IdSchema("schoolClasses")),
@@ -29,7 +29,7 @@ const checkPermission = Effect.fn("permissions.check")(function* (
       );
     if (
       schoolMember &&
-      ROLE_PERMISSIONS[schoolMember.role].includes(permission)
+      Arr.contains(ROLE_PERMISSIONS[schoolMember.role], permission)
     ) {
       return true;
     }
@@ -47,13 +47,13 @@ const checkPermission = Effect.fn("permissions.check")(function* (
   if (!classMember) {
     return false;
   }
-  if (ROLE_PERMISSIONS[classMember.role].includes(permission)) {
+  if (Arr.contains(ROLE_PERMISSIONS[classMember.role], permission)) {
     return true;
   }
   if (classMember.role !== "teacher" || !classMember.teacherRole) {
     return false;
   }
-  return ROLE_PERMISSIONS[classMember.teacherRole].includes(permission);
+  return Arr.contains(ROLE_PERMISSIONS[classMember.teacherRole], permission);
 });
 
 /** Requires an explicit school or class grant using the existing FORBIDDEN contract. */

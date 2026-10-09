@@ -85,7 +85,7 @@ function reviseFacts(
     }
   }
   return {
-    facts: [...kept, ...rewritten, ...added].slice(-MEMORY_FACTS),
+    facts: Arr.takeRight([...kept, ...rewritten, ...added], MEMORY_FACTS),
     next: memory.next + added.length,
   };
 }

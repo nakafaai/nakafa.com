@@ -241,10 +241,13 @@ const getPeople = FunctionImpl.make(
         startIndex + paginationOpts.numItems,
         people.length
       );
+      // A negative end counts back from the end, as slice did.
+      const wholeEnd = Math.trunc(endIndex);
+      const pageEnd = wholeEnd < 0 ? people.length + wholeEnd : endIndex;
       return {
         continueCursor: `${endIndex}`,
         isDone: endIndex >= people.length,
-        page: people.slice(startIndex, endIndex),
+        page: Arr.take(Arr.drop(people, startIndex), pageEnd - startIndex),
       };
     }
     const membersPage = yield* database

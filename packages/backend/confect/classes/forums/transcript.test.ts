@@ -13,7 +13,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 
 const FORUM_CREATED_AT = Date.UTC(2026, 3, 18, 8, 0, 0);
 async function insertMemberships(
@@ -263,6 +263,6 @@ describe("classes/forums/queries/pages", () => {
     expect(result[0]?.sequence).toBe(
       totalPosts - MAX_FORUM_TRANSCRIPT_POSTS + 1
     );
-    expect(result.at(-1)?.sequence).toBe(totalPosts);
+    expect(Option.getOrUndefined(Arr.last(result))?.sequence).toBe(totalPosts);
   });
 });

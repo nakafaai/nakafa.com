@@ -14,7 +14,7 @@ import {
   makeQuranMeaning,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const source = {
   activeManifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
@@ -38,8 +38,10 @@ describe("signed Quran catalog decoder", () => {
       );
 
       expect(catalog.surahs).toHaveLength(114);
-      expect(catalog.surahs.at(0)?.name.meaning).toEqual(makeQuranMeaning(1));
-      expect(catalog.surahs.at(-1)?.number).toBe(114);
+      expect(Option.getOrThrow(Arr.head(catalog.surahs)).name.meaning).toEqual(
+        makeQuranMeaning(1)
+      );
+      expect(Option.getOrThrow(Arr.last(catalog.surahs)).number).toBe(114);
     })
   );
 

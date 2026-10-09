@@ -154,7 +154,7 @@ describe("contentRelease/program registered queries", () => {
             },
           })
         );
-        expect(split.result.page).toEqual(first.result.page.slice(1));
+        expect(split.result.page).toEqual(Arr.drop(first.result.page, 1));
         yield* Effect.promise(() =>
           expect(
             t.query(program.page, {

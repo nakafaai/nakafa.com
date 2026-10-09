@@ -236,7 +236,7 @@ export default spec;
           const expected = `${Arr.join(fn.path, "/")}:${fn.name}`;
           const inModule = Option.flatMap(
             Record.get(modules, fn.path[0]),
-            (module) => valueAt(module, [...fn.path.slice(1), fn.name])
+            (module) => valueAt(module, [...Arr.drop(fn.path, 1), fn.name])
           );
           const inFullSpec = valueAt(refs.public, [...fn.path, fn.name]);
           expect(
@@ -267,7 +267,7 @@ export default spec;
           );
           const reached = Option.flatMap(
             Record.get(modules, leaf.path[0]),
-            (module) => valueAt(module, leaf.path.slice(1))
+            (module) => valueAt(module, Arr.drop(leaf.path, 1))
           );
           if (!isPublic) {
             expect(Option.isNone(reached)).toBe(true);

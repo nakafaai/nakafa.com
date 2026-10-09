@@ -8,7 +8,7 @@ import { deployment, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Order } from "effect";
+import { Array as Arr, Effect, Option, Order } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -70,17 +70,19 @@ describe("Nina presentation after an answer", () => {
     await f.t.action(run, { turnId: f.turnId });
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
     expect(model.doGenerateCalls).toHaveLength(1);
-    const prompt = model.doGenerateCalls[0]?.prompt;
-    expect(prompt?.at(-1)?.role).toBe("user");
-    expect(prompt?.at(-2)).toMatchObject({
-      role: "assistant",
-      content: [
-        {
-          type: "text",
-          text: "A limit describes the value approached.",
-        },
-      ],
-    });
+    const prompt = model.doGenerateCalls[0]?.prompt ?? [];
+    expect(Option.getOrThrow(Arr.last(prompt)).role).toBe("user");
+    expect(Option.getOrThrow(Arr.get(prompt, prompt.length - 2))).toMatchObject(
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "text",
+            text: "A limit describes the value approached.",
+          },
+        ],
+      }
+    );
     const messages = await f.t.query(
       components.nina.messages.listMessagesByThreadId,
       {
@@ -92,7 +94,7 @@ describe("Nina presentation after an answer", () => {
     expect(
       Arr.filter(messages.page, (message) => message.message?.role === "user")
     ).toHaveLength(2);
-    expect(messages.page.at(-1)?.message).toMatchObject({
+    expect(Option.getOrThrow(Arr.last(messages.page)).message).toMatchObject({
       role: "assistant",
     });
     expect(
@@ -136,7 +138,9 @@ describe("Nina presentation after an answer", () => {
       "A limit describes the value approached."
     );
     expect(encodeJsonText(suggestions?.prompt)).not.toContain("photosynthesis");
-    expect(suggestions?.prompt.at(-1)?.role).toBe("user");
+    expect(Option.getOrThrow(Arr.last(suggestions?.prompt ?? [])).role).toBe(
+      "user"
+    );
     expect(encodeJsonText(title?.prompt)).toContain("Explain a limit.");
     expect(encodeJsonText(title?.prompt)).not.toContain(
       "A limit describes the value approached."

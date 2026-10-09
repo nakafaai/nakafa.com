@@ -43,7 +43,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const QURAN_SEARCH_COUNT = QURAN_SURAH_COUNT * ACTIVE_APP_LOCALES.length;
 const QURAN_SOURCE_FILE_COUNT = quranSourceFileCount(ACTIVE_APP_LOCALES);
@@ -185,11 +185,15 @@ export async function activateQuranSnapshot(
     snapshotJson: encodeSnapshotJson(snapshot),
     verifiedAt: 1,
   });
-  for (const [index, record] of records.entries()) {
-    const search =
+  const rows = Arr.map(records, (record, index) => ({
+    index,
+    record,
+    search:
       record.payload.kind === "quran-search"
         ? quranSearchFacts(record.payload)
-        : null;
+        : null,
+  }));
+  for (const { index, record, search } of rows) {
     await ctx.db.insert("quranRows", {
       ...quranRowFacts(record),
       index,

@@ -146,7 +146,7 @@ describe("tryouts/runtime/score", () => {
               }
               const choice =
                 placement.responseSpec.kind === "single-choice"
-                  ? placement.responseSpec.options.at(0)
+                  ? placement.responseSpec.options[0]
                   : undefined;
               if (!choice) {
                 return yield* Effect.die("Expected one frozen try-out choice.");
@@ -267,7 +267,7 @@ describe("tryouts/runtime/score", () => {
                 const section = yield* Effect.promise(() =>
                   ctx.db.get(fixture.sectionAttemptId)
                 );
-                const snapshot = attempt?.sectionSnapshots.at(0);
+                const snapshot = attempt?.sectionSnapshots[0];
                 if (!(attempt && placement && section && snapshot)) {
                   return yield* Effect.die(
                     "Expected a complete try-out integrity fixture."
