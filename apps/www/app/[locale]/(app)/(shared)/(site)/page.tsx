@@ -1,3 +1,4 @@
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import { Array as Arr } from "effect";
@@ -60,7 +61,7 @@ export async function generateMetadata({
     openGraph: {
       title: t("title"),
       description: t("description"),
-      url: `https://nakafa.com${path}`,
+      url: `${COMPANY_IDENTITY.url}${path}`,
       siteName: "Nakafa",
       locale,
       type: "website",
@@ -102,7 +103,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
             : `${tSubject(category.title)} ${tSubject(item.title)}`;
         const description = tSubject("grade-description");
         return {
-          url: `https://nakafa.com/${locale}${getSubjectMenuHref(item, locale)}`,
+          url: `${COMPANY_IDENTITY.url}/${locale}${getSubjectMenuHref(item, locale)}`,
           name,
           description,
         };
@@ -115,7 +116,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
     question: tFaq(`q${number}`),
   }));
 
-  const url = `https://nakafa.com/${locale}`;
+  const url = `${COMPANY_IDENTITY.url}/${locale}`;
 
   return (
     <>

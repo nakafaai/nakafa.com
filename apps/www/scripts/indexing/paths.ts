@@ -1,7 +1,8 @@
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Effect, Path } from "effect";
 
 /** Canonical production host used by sitemap, IndexNow, Bing, and Google checks. */
-export const INDEXING_HOST = "https://nakafa.com";
+export const INDEXING_HOST = COMPANY_IDENTITY.url;
 
 /** Hostname submitted to IndexNow after sitemap URLs prove canonical coverage. */
 export const INDEXING_HOSTNAME = new URL(INDEXING_HOST).hostname;

@@ -1,5 +1,6 @@
 import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/agent/constants";
 import { languages } from "@repo/internationalization/data/lang";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { sha256Hex } from "@repo/utilities/digest";
 import { Array as Arr, Effect } from "effect";
 
@@ -33,7 +34,7 @@ export function getNakafaSkillText() {
       "",
       "## Discovery",
       "",
-      "- Start with `https://nakafa.com/llms.txt` for locale, section, and bounded page indexes.",
+      `- Start with \`${COMPANY_IDENTITY.url}/llms.txt\` for locale, section, and bounded page indexes.`,
       "- Follow bounded page-index links to discover page-level `.md` URLs without loading the whole corpus.",
       "- Prefer same-origin `.md` URLs for focused page retrieval.",
       "- Send `Accept: text/markdown` when requesting normal content URLs.",
