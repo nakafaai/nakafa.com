@@ -95,14 +95,14 @@ function appendPaths(
   paths: readonly (readonly (PlanePoint | SpacePoint)[])[],
   projection: VisualProjection
 ) {
-  for (const [index, points] of paths.entries()) {
+  Arr.forEach(paths, (points, index) => {
     appendPath(geometry, {
       appearance: object.appearance,
       arrows: arrows(object.kind),
       id: paths.length === 1 ? object.id : `${object.id}:part:${index + 1}`,
       points: Arr.map(points, (point) => projectVisualPoint(point, projection)),
     });
-  }
+  });
 }
 function appendPlane(
   geometry: GeometryBuilder,
@@ -185,14 +185,14 @@ function appendSpace(
   }
   if (object.kind === "cuboid") {
     const cuboid = createCuboid({ center: object.center, ...object.size });
-    for (const [index, edge] of cuboid.edges.entries()) {
+    Arr.forEach(cuboid.edges, (edge, index) => {
       appendPaths(
         geometry,
         { ...object, id: `${object.id}:edge:${index + 1}` },
         clipSpacePath(scene.frame, edge),
         projection
       );
-    }
+    });
     return;
   }
   if (object.kind === "line" || object.kind === "ray") {

@@ -135,17 +135,11 @@ export function createConversationTestFindItemIndex(
   offsets: readonly number[]
 ) {
   return (offset: number) => {
-    let lastMatchingIndex = 0;
-
-    for (const [index, itemOffset] of offsets.entries()) {
-      if (itemOffset > offset) {
-        break;
-      }
-
-      lastMatchingIndex = index;
-    }
-
-    return lastMatchingIndex;
+    const leadingOffsets = Arr.takeWhile(
+      offsets,
+      (itemOffset) => !(itemOffset > offset)
+    );
+    return Math.max(0, leadingOffsets.length - 1);
   };
 }
 

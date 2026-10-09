@@ -105,7 +105,7 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
         <div className="grid gap-3">
           <PricingFeature icon={Rocket01Icon} text={proFeatures[0]} />
           <div className="grid gap-3 border-t pt-3">
-            {Arr.map(proFeatures.slice(1), (feature) => (
+            {Arr.map(Arr.drop(proFeatures, 1), (feature) => (
               <PricingFeature key={feature} text={feature} />
             ))}
           </div>

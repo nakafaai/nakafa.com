@@ -133,7 +133,9 @@ describe("conversation/viewport/read", () => {
       yield* Effect.promise(() => shutdownViewport(viewport));
       yield* Deferred.succeed(flushRead, undefined);
       yield* Effect.promise(() =>
-        waitForState(viewport, () => rig.readPostIds.includes(firstPost._id))
+        waitForState(viewport, () =>
+          Arr.contains(rig.readPostIds, firstPost._id)
+        )
       );
       expect(rig.readPostIds).toContain(firstPost._id);
     })

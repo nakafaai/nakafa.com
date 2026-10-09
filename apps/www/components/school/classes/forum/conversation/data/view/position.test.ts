@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { HashMap } from "effect";
+import { Array as Arr, HashMap } from "effect";
 import {
   captureConversationView,
   hasConversationViewReached,
@@ -46,7 +46,7 @@ describe("conversation/data/view/position", () => {
     expect(
       captureConversationView({
         handle: createHandle({ scrollOffset: 0, viewportSize: 90 }).handle,
-        rows: rows.slice(0, 2),
+        rows: Arr.take(rows, 2),
       })
     ).toBeNull();
   });

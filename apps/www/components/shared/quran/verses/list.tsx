@@ -1,7 +1,7 @@
 "use client";
 
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   QuranInterpretationButton,
   QuranInterpretationLink,
@@ -33,14 +33,14 @@ type VerseItem = QuranVerseListProps["items"][number];
  * rather than a rendered element tree for every verse.
  */
 export function QuranVerseList({ items }: QuranVerseListProps) {
-  const last = items.at(-1);
-  const tail = items.slice(QURAN_FLOW_VERSES);
+  const last = Arr.last(items);
+  const tail = Arr.drop(items, QURAN_FLOW_VERSES);
 
   return (
     <div>
-      {Arr.map(items.slice(0, QURAN_FLOW_VERSES), (item) => (
+      {Arr.map(Arr.take(items, QURAN_FLOW_VERSES), (item) => (
         <QuranSurahVerse
-          isLast={item === last}
+          isLast={Option.exists(last, (value) => value === item)}
           item={item}
           key={item.verse.number.inQuran}
         />
@@ -49,7 +49,7 @@ export function QuranVerseList({ items }: QuranVerseListProps) {
         <WindowVirtualized data={tail}>
           {(item) => (
             <QuranSurahVerse
-              isLast={item === last}
+              isLast={Option.exists(last, (value) => value === item)}
               item={item}
               key={item.verse.number.inQuran}
             />
