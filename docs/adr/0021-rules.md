@@ -197,9 +197,11 @@ that needs that much explanation holds more than one capability.
 An exported name is the interface of its module. The check reports an exported
 name that no other module mentions: it loses `export`, and Biome then reports
 the declaration when its own module does not use it either. A name counts as
-mentioned when the word appears in a second module, generated and declaration
-files included, so the check never reports a name that something imports, and
-it misses an unused name that another module happens to spell.
+mentioned when the word appears in a second module, so the check never reports
+a name that something imports, and it misses an unused name that another
+module happens to spell. Every module can mention a name: generated and
+declaration files, the scripts of the agent skills folder, and the modules at
+the repository root.
 
 The check does not judge a module whose exports are read by name from outside
 the repository's imports: the Next.js file conventions of an app, its
@@ -207,6 +209,12 @@ the repository's imports: the Next.js file conventions of an app, its
 package. It also leaves `packages/design-system/components/ui`, which keeps
 every part its shadcn upstream ships. A default export has no name to import
 and is not judged.
+
+Where a compiler configuration turns `declaration` on, the compiler needs an
+exported name wherever an exported signature reaches it, also by inference
+through another module, and no syntax rule can see that. So the check does not
+judge the modules below such a configuration, and it judges none when a shared
+or root configuration turns the option on. There the typecheck decides.
 
 ### Vercel deployment policy
 

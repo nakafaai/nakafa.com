@@ -1,7 +1,11 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, FileSystem, Path, Record as Rec } from "effect";
-import { inspectExports, publishedDirectories } from "#scripts/check/exports";
+import {
+  declarationDirectories,
+  inspectExports,
+  publishedDirectories,
+} from "#scripts/check/exports";
 import { parseSources } from "#scripts/check/source";
 
 const MODULE = "packages/shop/cart.ts";
@@ -14,13 +18,13 @@ function report(line: number, name: string, file = MODULE) {
 
 /**
  * Inspects fixture modules with the export policy alone. `others` holds the
- * text of modules that no rule judges, and `published` the directories of the
- * published workspaces.
+ * text of modules that no rule judges, and `unjudged` the directories whose
+ * exports the check cannot judge.
  */
 function inspect(
   files: Readonly<Record<string, string>>,
   others: readonly string[] = [],
-  published: readonly string[] = []
+  unjudged: readonly string[] = []
 ) {
   const sources = Arr.map(Rec.toEntries(files), ([file, sourceText]) => ({
     file,
@@ -34,7 +38,7 @@ function inspect(
           Arr.map(sources, ({ sourceText }) => sourceText),
           others
         ),
-        published
+        unjudged
       )
     )
   );
@@ -165,6 +169,38 @@ export const { tax } = source;
       );
     })
   );
+
+  it.effect("judges nothing when every module emits declarations", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect({ [MODULE]: "export class Failure {}\n" }, [], [""]),
+        []
+      );
+    })
+  );
+
+  it("names the directories that emit declarations", () => {
+    const on = '{"compilerOptions":{"declaration":true,"noEmit":true}}';
+    assert.deepStrictEqual(
+      declarationDirectories([
+        { file: "packages/cli/tsconfig.build.json", sourceText: on },
+        { file: "packages/shop/tsconfig.json", sourceText: "// not JSON" },
+        {
+          file: "apps/www/tsconfig.json",
+          sourceText: '{"compilerOptions":{"declaration":false}}',
+        },
+        { file: "scripts/tsconfig.json", sourceText: '{"extends":"../base"}' },
+      ]),
+      ["packages/cli/"]
+    );
+    assert.deepStrictEqual(
+      declarationDirectories([
+        { file: "packages/typescript-config/base.json", sourceText: on },
+        { file: "tsconfig.json", sourceText: on },
+      ]),
+      ["", ""]
+    );
+  });
 
   it.effect("names each workspace whose manifest is not private", () =>
     Effect.gen(function* () {

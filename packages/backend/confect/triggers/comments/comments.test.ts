@@ -109,6 +109,7 @@ describe("triggers/comments/comments", () => {
       slug: "/en/articles/politics/example",
       text: "Parent comment",
     });
+    const created = await t.query((ctx) => ctx.db.get("comments", parentId));
     const replyId = await replier.mutation(api.comments.mutations.addComment, {
       slug: "en/articles/politics/example",
       text: "Reply comment",
@@ -120,7 +121,7 @@ describe("triggers/comments/comments", () => {
       reply: await ctx.db.get("comments", replyId),
     }));
 
-    expect(replyState.parent).toMatchObject({ replyCount: 1 });
+    expect(replyState.parent).toEqual({ ...created, replyCount: 1 });
     expect(replyState.reply).toMatchObject({
       parentId,
       replyToText: "Parent comment",
@@ -137,7 +138,7 @@ describe("triggers/comments/comments", () => {
       reply: await ctx.db.get("comments", replyId),
     }));
 
-    expect(deleteState.parent).toMatchObject({ replyCount: 0 });
+    expect(deleteState.parent).toEqual(created);
     expect(deleteState.reply).toBeNull();
   });
 

@@ -26,7 +26,7 @@ import {
   SyntaxKind,
 } from "typescript/unstable/ast";
 import { RepositoryReadError } from "#scripts/check/files";
-import { isGenerated } from "#scripts/check/source";
+import { isGenerated, type RepositorySource } from "#scripts/check/source";
 
 /** Everything between two words. A word is a run of identifier characters. */
 const WORD_BREAK_PATTERN = /[^\w$]+/u;
@@ -84,6 +84,40 @@ export const publishedDirectories = Effect.fn(
   );
 });
 
+/** What a compiler configuration says about declaration output. */
+const DeclarationConfig = Schema.fromJsonString(
+  Schema.Struct({
+    compilerOptions: Schema.Struct({ declaration: Schema.Literal(true) }),
+  })
+);
+const decodeDeclarationConfig = Schema.decodeUnknownOption(DeclarationConfig);
+/** The folder of the shared configurations, which every workspace extends. */
+const SHARED_CONFIG_DIRECTORY = "packages/typescript-config/";
+/** The file name at the end of a repository-relative path. */
+const FILE_NAME_PATTERN = /[^/]+$/u;
+
+/**
+ * Returns the directories whose modules a compiler configuration emits
+ * declarations for, each with a trailing "/": the folder of a configuration
+ * that turns `declaration` on, and the whole repository, as "", when a shared
+ * or root configuration does. There the compiler needs an exported name
+ * wherever an exported signature reaches it, also by inference, so only the
+ * compiler can tell which exports are unused.
+ */
+export function declarationDirectories(
+  configs: readonly (typeof RepositorySource.Type)[]
+) {
+  return Arr.filterMap(configs, ({ file, sourceText }) =>
+    Option.isSome(decodeDeclarationConfig(sourceText))
+      ? Result.succeed(
+          Str.startsWith(SHARED_CONFIG_DIRECTORY)(file)
+            ? ""
+            : Str.replace(FILE_NAME_PATTERN, "")(file)
+        )
+      : Result.failVoid
+  );
+}
+
 /** Whether a declaration carries `export` without `default`. */
 function exportsByName(modifiers: readonly Node[] | undefined) {
   const kinds = Arr.map(modifiers ?? [], ({ kind }) => kind);
@@ -140,8 +174,9 @@ function exportedNames(statement: Statement): readonly string[] {
  * generated, and declaration files alike. A name counts as mentioned when the
  * word appears in a second text, so the rule never reports a name that
  * something imports, and it misses an unused name that another module happens
- * to spell. `published` lists the directories of the workspaces that are
- * published as packages, whose exports another repository reads.
+ * to spell. `unjudged` lists the directories whose exports this check cannot
+ * judge: the workspaces that are published as packages, and the modules that a
+ * compiler configuration emits declarations for.
  */
 export function inspectExports(
   modules: readonly {
@@ -149,13 +184,13 @@ export function inspectExports(
     readonly sourceFile: SourceFile;
   }[],
   texts: readonly string[],
-  published: readonly string[]
+  unjudged: readonly string[]
 ): readonly string[] {
   const declared = Arr.flatMap(modules, ({ file, sourceFile }) =>
     isGenerated(sourceFile) ||
     Str.startsWith(COMPONENT_SET_DIRECTORY)(file) ||
     Arr.some(FRAMEWORK_MODULE_PATTERNS, (pattern) => pattern.test(file)) ||
-    Arr.some(published, (directory) => Str.startsWith(directory)(file))
+    Arr.some(unjudged, (directory) => Str.startsWith(directory)(file))
       ? []
       : Arr.flatMap(sourceFile.statements, (statement) =>
           Arr.map(exportedNames(statement), (name) => ({

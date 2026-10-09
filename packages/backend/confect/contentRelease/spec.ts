@@ -15,7 +15,7 @@ import {
 import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { ContentSnapshotStateSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 /** Current Convex data-read ceiling for one query or mutation transaction. */
 export const TRANSACTION_READ_LIMIT = 16 * 1024 * 1024;
 
@@ -228,18 +228,16 @@ const snapshotStateValidator = Schema.Struct({
 });
 
 /** Snapshot transition facts history retention reads without the manifest. */
-export const releaseSnapshotTransitionValidator = Schema.Struct({
-  baseSnapshotId: Schema.Union([Schema.String, Schema.Null]),
-  mode: ContentSnapshotStateSchema.fields.mode,
-  resultSnapshotId: Schema.Union([Schema.String, Schema.Null]),
-});
+export const releaseSnapshotTransitionValidator =
+  snapshotStateValidator.mapFields(
+    Struct.pick(["baseSnapshotId", "mode", "resultSnapshotId"])
+  );
 
 /** Fixed per-family snapshot transitions stored beside one release. */
-export const releaseSnapshotTransitionsValidator = Schema.Struct({
-  program: releaseSnapshotTransitionValidator,
-  quran: releaseSnapshotTransitionValidator,
-  tryout: releaseSnapshotTransitionValidator,
-});
+export const releaseSnapshotTransitionsValidator = Schema.Record(
+  snapshotFamilyValidator,
+  releaseSnapshotTransitionValidator
+);
 
 /** Completed publication evidence stored and returned without body replay. */
 export const publicationReceiptValidator = Schema.Struct({
