@@ -5,6 +5,7 @@ import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import schools from "@repo/backend/confect/_generated/refs/schools";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -38,7 +39,7 @@ export function SchoolSelectList({
     <>
       {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
       <section className="grid gap-4">
-        {results.map((school) => (
+        {Arr.map(results, (school) => (
           <NavigationLink
             className="flex flex-col gap-2 rounded-xl border bg-card px-5 py-4 shadow-sm transition-colors ease-out hover:border-primary/50 hover:bg-[color-mix(in_oklch,var(--primary)_1%,var(--background))]"
             href={`/school/${school.slug}`}

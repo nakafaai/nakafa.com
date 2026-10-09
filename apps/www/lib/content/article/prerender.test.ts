@@ -10,7 +10,7 @@ import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projecti
 import type contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { Effect, Layer } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 import { readPublishedArticlePrerenderRoute } from "@/lib/content/article/prerender";
 import { makeArticleRuntimeSource } from "@/test/content/article";
 import {
@@ -81,10 +81,11 @@ function articlePage(): Ref.Returns<
     result: {
       continueCursor: "more-articles",
       isDone: false,
-      page: [
-        testArticleProjection,
-        makeTestArticleProjection("older", "2023-01-01"),
-      ].map(
+      page: Arr.map(
+        [
+          testArticleProjection,
+          makeTestArticleProjection("older", "2023-01-01"),
+        ],
         (projection): ArticleRow => ({
           appLocale: projection.appLocale,
           artifactLocale: projection.artifactLocale,

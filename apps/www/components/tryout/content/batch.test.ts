@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   planTryoutContentBatches,
   restoreTryoutContentOrder,
@@ -19,17 +19,17 @@ describe("try-out signed content batches", () => {
       const answers = ["answer-1", "answer-2", "answer-3"];
       const plan = planTryoutContentBatches(questions, answers);
 
-      expect(plan.batches.map(({ length }) => length)).toEqual([
+      expect(Arr.map(plan.batches, ({ length }) => length)).toEqual([
         MAX_PROTECTED_RUNTIME_SELECTORS,
         2,
       ]);
-      const renderedBatches = plan.batches.map((batch) =>
-        batch.map((entry) => `rendered:${entry}`)
+      const renderedBatches = Arr.map(plan.batches, (batch) =>
+        Arr.map(batch, (entry) => `rendered:${entry}`)
       );
 
       expect(yield* restoreTryoutContentOrder(plan, renderedBatches)).toEqual({
-        answers: answers.map((answer) => `rendered:${answer}`),
-        questions: questions.map((question) => `rendered:${question}`),
+        answers: Arr.map(answers, (answer) => `rendered:${answer}`),
+        questions: Arr.map(questions, (question) => `rendered:${question}`),
       });
     })
   );

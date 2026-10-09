@@ -1,5 +1,6 @@
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
+import { Array as Arr } from "effect";
 
 /** Builds the local dedupe key for an engaged content-view attempt. */
 export function createContentViewKey({
@@ -19,12 +20,15 @@ export function createContentViewKey({
     ? `user:${signedInUserId ?? "pending"}`
     : "anonymous";
 
-  return [
-    viewerKey,
-    locale,
-    contentId ?? "untracked",
-    context?.mode ?? "canonical",
-    context?.programKey ?? "",
-    context?.nodeKey ?? "",
-  ].join(":");
+  return Arr.join(
+    [
+      viewerKey,
+      locale,
+      contentId ?? "untracked",
+      context?.mode ?? "canonical",
+      context?.programKey ?? "",
+      context?.nodeKey ?? "",
+    ],
+    ":"
+  );
 }

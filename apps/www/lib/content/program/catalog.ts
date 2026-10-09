@@ -9,7 +9,7 @@ import {
 } from "@nakafa/aksara-contracts/program/spec";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import {
@@ -49,15 +49,21 @@ export const readPublishedProgramCatalog = Effect.fn(
     ),
   ]);
   const entries = yield* Effect.forEach(routes, (route) => {
-    const program = programs.find(({ key }) => key === route.programKey);
-    const translation = program?.translations.find(
-      (candidate) => candidate.appLocale === appLocale
+    const program = Arr.findFirst(
+      programs,
+      ({ key }) => key === route.programKey
+    );
+    const translation = Option.flatMap(program, (found) =>
+      Arr.findFirst(
+        found.translations,
+        (candidate) => candidate.appLocale === appLocale
+      )
     );
     if (
       route.appLocale !== appLocale ||
       route.level !== "track" ||
-      !program ||
-      !translation
+      Option.isNone(program) ||
+      Option.isNone(translation)
     ) {
       return Effect.fail(
         new PublishedProjectionError({
@@ -67,9 +73,9 @@ export const readPublishedProgramCatalog = Effect.fn(
       );
     }
     return Effect.succeed({
-      program,
+      program: program.value,
       route,
-      translation,
+      translation: translation.value,
     });
   });
   return {
@@ -98,14 +104,14 @@ export const readPublishedProgramPrerenderRoute = Effect.fn(
   "NakafaProgram.readPrerenderRoute"
 )(function* (locale: Locale) {
   const catalog = yield* readPublishedProgramCatalog(locale);
-  const entry = catalog.entries.find(({ route }) => route.sitemap);
-  if (!entry) {
+  const entry = Arr.findFirst(catalog.entries, ({ route }) => route.sitemap);
+  if (Option.isNone(entry)) {
     return yield* new PublishedProjectionError({
       appLocale: AppLocaleSchema.make(locale),
       publicPath: "curricula",
     });
   }
-  return entry.route;
+  return entry.value.route;
 });
 
 /** Reads the authenticated featured subjects, one route per subject, for the About feature list. */

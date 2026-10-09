@@ -16,7 +16,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Link } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
 import { formatDistanceToNow } from "date-fns";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { useParams, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
@@ -93,7 +93,7 @@ function SchoolClassesForumListContent() {
       {PaginatedQueryResult.isFailure(pagination) && <DataFailure />}
       <div className="flex flex-col">
         <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
-          {results.map((forum) => {
+          {Arr.map(results, (forum) => {
             const Icon = getTagIcon(forum.tag);
             const href = getSchoolClassesForumHref({
               classRouteId: routeParams.id,
@@ -208,10 +208,11 @@ function TopReaction({ forum }: { forum: ForumListItem }) {
   if (!firstReaction) {
     return null;
   }
-  const topReaction = forum.reactionCounts.reduce(
+  const topReaction = Arr.reduce(
+    forum.reactionCounts,
+    firstReaction,
     (maxReaction, reaction) =>
-      reaction.count > maxReaction.count ? reaction : maxReaction,
-    firstReaction
+      reaction.count > maxReaction.count ? reaction : maxReaction
   );
   const isMyReaction = forum.myReactions.includes(topReaction.emoji);
 

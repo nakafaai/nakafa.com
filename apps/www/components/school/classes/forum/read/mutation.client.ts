@@ -3,7 +3,7 @@
 import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import classes from "@repo/backend/confect/_generated/refs/classes";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import { markTranscriptRead } from "@/components/school/classes/forum/read/state";
 
 /** Replace the unread count across every loaded forum-list page. */
@@ -24,7 +24,7 @@ function updateForumLists(
       query.args,
       Option.some({
         ...query.value.value,
-        page: query.value.value.page.map((forum) =>
+        page: Arr.map(query.value.value.page, (forum) =>
           forum._id === forumId
             ? {
                 ...forum,

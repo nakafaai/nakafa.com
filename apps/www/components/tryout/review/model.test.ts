@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { projectTryoutReview } from "@/components/tryout/review/model";
 
@@ -175,11 +175,11 @@ function createContent(
   identities: readonly (typeof FIRST_IDENTITY)[]
 ): TryoutRuntimeContent {
   return {
-    answers: identities.map((identity) => ({
+    answers: Arr.map(identities, (identity) => ({
       answer: `answer:${identity.sourcePath}`,
       ...identity,
     })),
-    questions: identities.map((identity) => ({
+    questions: Arr.map(identities, (identity) => ({
       content: `question:${identity.sourcePath}`,
       ...identity,
     })),

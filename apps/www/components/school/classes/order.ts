@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const OrderedRowSchema = Schema.Struct({
   _id: Schema.String,
@@ -13,10 +13,14 @@ export function reorderPage<T extends OrderedRow>(
   rowId: string,
   direction: "down" | "up"
 ): T[] {
-  const rowIndex = page.findIndex((row) => row._id === rowId);
+  const found = Arr.findFirstIndex(page, (row) => row._id === rowId);
+  if (Option.isNone(found)) {
+    return page;
+  }
+  const rowIndex = found.value;
   const neighborIndex = rowIndex + (direction === "up" ? -1 : 1);
 
-  if (rowIndex < 0 || neighborIndex < 0 || neighborIndex >= page.length) {
+  if (neighborIndex < 0 || neighborIndex >= page.length) {
     return page;
   }
 

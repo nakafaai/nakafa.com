@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { format } from "date-fns";
-import { Effect, HashSet } from "effect";
+import { Array as Arr, Effect, HashSet } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context";
@@ -123,7 +123,7 @@ function ForumReactions() {
   };
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {forum.reactionUsers.map(({ emoji, count, reactors }) => {
+      {Arr.map(forum.reactionUsers, ({ emoji, count, reactors }) => {
         const isMyReaction = HashSet.has(myReactions, emoji);
         const moreCount = count - reactors.length;
         return (
@@ -153,11 +153,11 @@ function ForumReactions() {
                 <p className="line-clamp-2 text-sm leading-tight">
                   {moreCount > 0
                     ? t("reacted-by-more", {
-                        names: reactors.join(", "),
+                        names: Arr.join(reactors, ", "),
                         count: moreCount,
                       })
                     : t("reacted-by", {
-                        names: reactors.join(", "),
+                        names: Arr.join(reactors, ", "),
                       })}
                 </p>
               </div>

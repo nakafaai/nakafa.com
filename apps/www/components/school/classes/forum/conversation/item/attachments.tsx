@@ -2,6 +2,7 @@ import { FileIcon } from "@hugeicons/core-free-icons";
 import type { PostAttachment } from "@repo/backend/confect/classes/forums/posts";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { formatFileSize } from "@repo/design-system/lib/files/size";
+import { Array as Arr } from "effect";
 import Image from "next/image";
 
 /**
@@ -17,16 +18,17 @@ export function PostAttachments({
     return null;
   }
 
-  const images = attachments.filter((item) =>
+  const images = Arr.filter(attachments, (item) =>
     item.mimeType.startsWith("image/")
   );
-  const files = attachments.filter(
+  const files = Arr.filter(
+    attachments,
     (item) => !item.mimeType.startsWith("image/")
   );
 
   return (
     <div className="flex flex-col gap-1">
-      {images.map((attachment) => {
+      {Arr.map(images, (attachment) => {
         if (!attachment.url) {
           return null;
         }
@@ -51,7 +53,7 @@ export function PostAttachments({
       })}
 
       <div className="flex flex-wrap gap-1">
-        {files.map((attachment) => (
+        {Arr.map(files, (attachment) => (
           <a
             className="group/file flex items-center gap-2 rounded-sm border bg-background p-2 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
             href={attachment.url ?? "#"}

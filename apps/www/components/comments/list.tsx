@@ -8,7 +8,7 @@ import {
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { randomUuid } from "@repo/utilities/uuid";
-import { DateTime, Effect, Schema } from "effect";
+import { Array as Arr, DateTime, Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useOptimistic } from "react";
 import { toast } from "sonner";
@@ -93,12 +93,13 @@ export function CommentsList({ slug }: { slug: string }) {
       <CommentsAdd onSubmit={submit} />
       {PaginatedQueryResult.isFailure(pagination) ? <DataFailure /> : null}
       <div className="flex flex-col gap-4">
-        {drafts
-          .filter((comment) => comment.slug === slug)
-          .map((comment) => (
+        {Arr.map(
+          Arr.filter(drafts, (comment) => comment.slug === slug),
+          (comment) => (
             <CommentContent comment={comment} key={comment._id} />
-          ))}
-        {pagination.results.map((comment) => (
+          )
+        )}
+        {Arr.map(pagination.results, (comment) => (
           <CommentItem comment={comment} key={comment._id} submit={submit} />
         ))}
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (

@@ -9,7 +9,7 @@ import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { Effect, Option, Result, Schema } from "effect";
+import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import {
@@ -73,7 +73,7 @@ export function readPreviewStaticLocaleParams() {
 function hasSameSegments(left: readonly string[], right: readonly string[]) {
   return (
     left.length === right.length &&
-    left.every((segment, index) => segment === right[index])
+    Arr.every(left, (segment, index) => segment === right[index])
   );
 }
 /** Checks whether one manifest document owns the requested physical route. */
@@ -190,19 +190,26 @@ export function readPagePreviewStaticParams(appLocale: AppLocale) {
 }
 /** Resolves a next-intl material rewrite back to its canonical public path. */
 function resolveInternalRoute({ localeHint, pathname }: InternalRouteInput) {
-  const [locale, appSegment, ...segments] = pathname.split("/").filter(Boolean);
+  const [locale, appSegment, ...segments] = Arr.filter(
+    pathname.split("/"),
+    Boolean
+  );
   if (!(hasLocale(APP_LOCALE_CODES, locale) && localeHint === locale)) {
     return Option.none<PreviewRouteInput>();
   }
-  const surface = PUBLIC_ROUTE_SURFACES.find(
+  const surface = Arr.findFirst(
+    PUBLIC_ROUTE_SURFACES,
     (candidate) => candidate.key === "subject"
   );
-  if (!(surface && appSegment === surface.appSegment && segments.length >= 3)) {
+  if (
+    Option.isNone(surface) ||
+    !(appSegment === surface.value.appSegment && segments.length >= 3)
+  ) {
     return Option.none<PreviewRouteInput>();
   }
   return Option.some({
     appLocale: AppLocaleSchema.make(locale),
-    publicPath: [surface.routeSlugs[locale], ...segments].join("/"),
+    publicPath: Arr.join([surface.value.routeSlugs[locale], ...segments], "/"),
   });
 }
 /** Reports whether the selected changed document owns one exact public route. */
@@ -225,13 +232,13 @@ export const matchesPreviewRoute = Effect.fn(
 export const matchesPreviewPathname = Effect.fn(
   "NakafaContent.matchesPreviewPathname"
 )(function* (pathname: string) {
-  const [locale, ...segments] = pathname.split("/").filter(Boolean);
+  const [locale, ...segments] = Arr.filter(pathname.split("/"), Boolean);
   if (!(hasLocale(APP_LOCALE_CODES, locale) && segments.length > 0)) {
     return false;
   }
   return yield* matchesPreviewRoute({
     appLocale: AppLocaleSchema.make(locale),
-    publicPath: segments.join("/"),
+    publicPath: Arr.join(segments, "/"),
   });
 });
 /** Allows only the selected local document through next-intl's internal pass. */

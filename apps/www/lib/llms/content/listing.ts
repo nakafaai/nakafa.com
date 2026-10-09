@@ -1,5 +1,5 @@
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedArticleCategory } from "@/lib/content/article/category";
 import { readPublishedCategoryArticles } from "@/lib/content/article/discovery";
@@ -41,7 +41,7 @@ export const getContentListingLlmsEntries = Effect.fn(
 
 /** Parses one exact article listing through the current Aksara contract. */
 function readArticleListingCategory(route: string) {
-  const [root, category, ...remaining] = route.split("/").filter(Boolean);
+  const [root, category, ...remaining] = Arr.filter(route.split("/"), Boolean);
   if (
     root !== "articles" ||
     remaining.length > 0 ||

@@ -1,5 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
-import { Data, Effect, Schema } from "effect";
+import { Array as Arr, Data, Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
@@ -46,14 +46,14 @@ function readLocale(value: string | undefined) {
  */
 function parseLocalizedHref(href: string): ParsedLocalizedHref {
   const url = new URL(href, URL_BASE);
-  const segments = url.pathname.split("/").filter(Boolean);
+  const segments = Arr.filter(url.pathname.split("/"), Boolean);
   const currentLocale = readLocale(segments[0]);
-  const publicSegments = currentLocale ? segments.slice(1) : segments;
+  const publicSegments = currentLocale ? Arr.drop(segments, 1) : segments;
 
   return {
     currentLocale,
     hash: url.hash,
-    publicPath: publicSegments.join("/"),
+    publicPath: Arr.join(publicSegments, "/"),
     search: url.search,
   };
 }

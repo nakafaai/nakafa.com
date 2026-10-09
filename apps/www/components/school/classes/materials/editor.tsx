@@ -36,7 +36,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
 import { startOfDay } from "date-fns";
-import { DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState } from "react";
 import { toast } from "sonner";
@@ -320,7 +320,7 @@ function MaterialGroupDialogShell<E>({
                       align="start"
                       className="w-(--anchor-width)"
                     >
-                      {materialStatusList.map((status) => (
+                      {Arr.map(materialStatusList, (status) => (
                         <DropdownMenuItem
                           className="cursor-pointer"
                           key={status.value}

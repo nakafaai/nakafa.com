@@ -32,7 +32,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { cn } from "cn";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
@@ -257,7 +257,7 @@ function SchoolClassesForumNewContent() {
                         align="start"
                         className="w-(--anchor-width)"
                       >
-                        {availableTags.map((tag) => (
+                        {Arr.map(availableTags, (tag) => (
                           <DropdownMenuItem
                             className="cursor-pointer"
                             key={tag.value}

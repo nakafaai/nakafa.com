@@ -13,7 +13,7 @@ const RunOptionsSchema = Schema.Struct({
 type RunOptions = typeof RunOptionsSchema.Type;
 
 /** Expected failure while running pnpm for dependency maintenance. */
-class DependencyCommandError extends Schema.TaggedError<DependencyCommandError>()(
+export class DependencyCommandError extends Schema.TaggedError<DependencyCommandError>()(
   "DependencyCommandError",
   {
     cause: Schema.Unknown,

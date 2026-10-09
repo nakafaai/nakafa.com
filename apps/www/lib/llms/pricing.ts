@@ -1,5 +1,5 @@
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { Locale } from "next-intl";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
@@ -23,27 +23,34 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
   const messages = yield* Effect.promise(() => loadLocaleMessages(locale));
   const pricing = messages.Pricing;
   const page = messages.PricingPage;
-  const questions = pricingFaqNumbers
-    .map((number) => `### ${page[`q${number}`]}\n\n${page[`a${number}`]}`)
-    .join("\n\n");
+  const questions = Arr.join(
+    Arr.map(
+      pricingFaqNumbers,
+      (number) => `### ${page[`q${number}`]}\n\n${page[`a${number}`]}`
+    ),
+    "\n\n"
+  );
   const url = `${BASE_URL}/${locale}/pricing`;
 
-  return [
-    ...buildHeader({
-      description: page["metadata-description"],
-      title: page["metadata-title"],
-      url,
-    }),
-    `## ${getPlainHeading(page.headline)}`,
-    page.description,
-    `## ${pricing["free-title"]}`,
-    pricing["free-description"],
-    ...freePlanFeatures.map((key) => `- ${pricing[key]}`),
-    `## ${pricing["pro-title"]}`,
-    pricing["pro-description"],
-    ...proPlanFeatures.map((key) => `- ${pricing[key]}`),
-    `Current price and checkout: ${url}`,
-    `## ${getPlainHeading(page["faq-headline"])}`,
-    questions,
-  ].join("\n\n");
+  return Arr.join(
+    [
+      ...buildHeader({
+        description: page["metadata-description"],
+        title: page["metadata-title"],
+        url,
+      }),
+      `## ${getPlainHeading(page.headline)}`,
+      page.description,
+      `## ${pricing["free-title"]}`,
+      pricing["free-description"],
+      ...Arr.map(freePlanFeatures, (key) => `- ${pricing[key]}`),
+      `## ${pricing["pro-title"]}`,
+      pricing["pro-description"],
+      ...Arr.map(proPlanFeatures, (key) => `- ${pricing[key]}`),
+      `Current price and checkout: ${url}`,
+      `## ${getPlainHeading(page["faq-headline"])}`,
+      questions,
+    ],
+    "\n\n"
+  );
 });

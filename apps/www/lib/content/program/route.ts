@@ -9,7 +9,7 @@ import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curricul
 import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
@@ -117,7 +117,7 @@ export const readPublishedProgramRoute = Effect.fn(
     route.appLocale !== appLocale ||
     route.publicPath !== publicPath ||
     program.key !== route.programKey ||
-    materials.some((material) => material.appLocale !== appLocale)
+    Arr.some(materials, (material) => material.appLocale !== appLocale)
   ) {
     return yield* new PublishedProjectionError({
       appLocale,

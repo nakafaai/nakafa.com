@@ -27,6 +27,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -69,7 +70,7 @@ export function ContributorGallery({
   return (
     <>
       <div className={galleryVariants({ variant })} data-contributor-gallery="">
-        {contributors.map((contributor) => (
+        {Arr.map(contributors, (contributor) => (
           <Tooltip key={contributor.username}>
             <TooltipTrigger
               render={

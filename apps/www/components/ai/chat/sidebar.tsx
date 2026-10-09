@@ -30,6 +30,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
+import { Array as Arr } from "effect";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
@@ -127,7 +128,7 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
   return (
     <SidebarMenu>
       {!searchQuery &&
-        drafts.map((key) => (
+        Arr.map(drafts, (key) => (
           <SidebarMenuItem key={key}>
             <SidebarMenuButton disabled isActive={!id}>
               <HugeIcons icon={SquareLock01Icon} />
@@ -135,7 +136,7 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
-      {results.map((chat) => {
+      {Arr.map(results, (chat) => {
         const isPrivate = chat.visibility === "private";
         return (
           <SidebarMenuItem key={chat._id}>

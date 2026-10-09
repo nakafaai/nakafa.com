@@ -13,7 +13,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
@@ -67,7 +67,7 @@ export function AiChatModel() {
             onValueChange={handleValueChange}
             value={model}
           >
-            {aiModels.map((item) => (
+            {Arr.map(aiModels, (item) => (
               <DropdownMenuRadioItem key={item.value} value={item.value}>
                 <HugeIcons icon={item.icon} />
                 <span className="grid gap-0.5">

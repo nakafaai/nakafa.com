@@ -9,6 +9,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { IconCircleFilled } from "@tabler/icons-react";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
@@ -33,7 +34,7 @@ function ThemeGroup({ options }: { options: typeof themeOptions }) {
 
   return (
     <DropdownMenuGroup>
-      {options.map((theme) => (
+      {Arr.map(options, (theme) => (
         <DropdownMenuItem
           className="cursor-pointer"
           key={theme.value}

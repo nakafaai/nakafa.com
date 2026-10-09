@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import {
   testArticleDeProjection,
@@ -29,10 +29,14 @@ const articleProjections = [
   testArticleIdProjection,
   testArticleDeProjection,
 ];
-const articleLocalePairs = articleProjections.flatMap((current) =>
-  articleProjections
-    .filter((target) => target.appLocale !== current.appLocale)
-    .map((target) => ({ current, target }))
+const articleLocalePairs = Arr.flatMap(articleProjections, (current) =>
+  Arr.map(
+    Arr.filter(
+      articleProjections,
+      (target) => target.appLocale !== current.appLocale
+    ),
+    (target) => ({ current, target })
+  )
 );
 const idProgramSubject = readTestPublishedRoute(
   "kurikulum/merdeka/kelas-11/matematika",
@@ -70,22 +74,24 @@ beforeEach(() => {
   publishedMocks.articleCategory
     .mockReset()
     .mockImplementation((route: string, locale: string) => {
-      const projection = articleProjections.find(
+      const projection = Arr.findFirst(
+        articleProjections,
         (article) =>
           article.appLocale === locale && article.categoryRouteSlug === route
       );
       return Effect.succeed(
-        projection
-          ? Option.some({ category: projection.category })
-          : Option.none()
+        Option.map(projection, (found) => ({ category: found.category }))
       );
     });
   publishedMocks.articleRoute
     .mockReset()
     .mockImplementation((locale: string, publicPath: string) => {
-      const projection = articleProjections.find(
-        (article) =>
-          article.appLocale === locale && article.publicPath === publicPath
+      const projection = Option.getOrNull(
+        Arr.findFirst(
+          articleProjections,
+          (article) =>
+            article.appLocale === locale && article.publicPath === publicPath
+        )
       );
       return Effect.succeed(
         projection
@@ -99,7 +105,7 @@ beforeEach(() => {
     });
   publishedMocks.categoryAlternates.mockReset().mockReturnValue(
     Effect.succeed(
-      articleProjections.map((article) => ({
+      Arr.map(articleProjections, (article) => ({
         appLocale: article.appLocale,
         publicPath: article.parentPath,
       }))

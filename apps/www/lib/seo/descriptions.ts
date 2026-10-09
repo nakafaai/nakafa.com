@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 /**
  * Creates an SEO-optimized description by concatenating parts and truncating
  * at word boundary when exceeding max length.
@@ -37,23 +39,24 @@ export function createSEODescription(
   const { maxLength = 160 } = options;
 
   // Filter out invalid parts and trim
-  const validParts = parts
-    .filter((part): part is string => Boolean(part?.trim()))
-    .map((part) => part.trim());
+  const validParts = Arr.map(
+    Arr.filter(parts, (part): part is string => Boolean(part?.trim())),
+    (part) => part.trim()
+  );
 
   if (validParts.length === 0) {
     return "";
   }
 
   // Join all parts with sentence spacing without duplicating punctuation.
-  const joined = validParts.reduce((description, part) => {
+  const joined = Arr.reduce(validParts, "", (description, part) => {
     if (!description) {
       return part;
     }
 
     const separator = SENTENCE_END_REGEX.test(description) ? " " : ". ";
     return `${description}${separator}${part}`;
-  }, "");
+  });
 
   // If under maxLength, return as-is
   if (joined.length <= maxLength) {

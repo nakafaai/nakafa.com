@@ -10,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { HashSet } from "effect";
+import { Array as Arr, HashSet, Option } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 import {
@@ -106,21 +106,33 @@ export function HomeExplore() {
   const items = getForYouNavigationItems();
   const preferredCurriculumHref = usePreferredCurriculumHref(locale);
   const preferredTryoutHref = usePreferredTryoutHref(locale);
-  const visibleCardIds = HashSet.fromIterable(items.map((item) => item.id));
-  const subjectNavigationItem = items.find((item) => item.id === "subject");
-  const tryoutNavigationItem = items.find((item) => item.id === "tryOut");
-  const subjectHref = subjectNavigationItem
-    ? getForYouNavigationHref(subjectNavigationItem, locale, {
+  const visibleCardIds = HashSet.fromIterable(
+    Arr.map(items, (item) => item.id)
+  );
+  const subjectNavigationItem = Arr.findFirst(
+    items,
+    (item) => item.id === "subject"
+  );
+  const tryoutNavigationItem = Arr.findFirst(
+    items,
+    (item) => item.id === "tryOut"
+  );
+  const subjectHref = Option.match(subjectNavigationItem, {
+    onNone: () => "/curriculum",
+    onSome: (item) =>
+      getForYouNavigationHref(item, locale, {
         preferredCurriculumHref,
         preferredTryoutHref,
-      })
-    : "/curriculum";
-  const tryoutHref = tryoutNavigationItem
-    ? getForYouNavigationHref(tryoutNavigationItem, locale, {
+      }),
+  });
+  const tryoutHref = Option.match(tryoutNavigationItem, {
+    onNone: () => "/try-out",
+    onSome: (item) =>
+      getForYouNavigationHref(item, locale, {
         preferredCurriculumHref,
         preferredTryoutHref,
-      })
-    : "/try-out";
+      }),
+  });
   return (
     <section className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">

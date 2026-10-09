@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, MutableList } from "effect";
 
 const HIGHLIGHT_TOKEN_LIMIT = 8;
 const TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;
@@ -18,8 +18,11 @@ export function getSearchExcerptParts(excerpt: string, query: string) {
     return [createPart({ highlighted: false, start: 0, text: excerpt })];
   }
 
-  const parts: SearchExcerptPart[] = [];
-  const pattern = new RegExp(`(${tokens.map(escapeRegExp).join("|")})`, "giu");
+  const parts = MutableList.make<SearchExcerptPart>();
+  const pattern = new RegExp(
+    `(${Arr.join(Arr.map(tokens, escapeRegExp), "|")})`,
+    "giu"
+  );
   let lastIndex = 0;
 
   for (const match of excerpt.matchAll(pattern)) {
@@ -27,7 +30,8 @@ export function getSearchExcerptParts(excerpt: string, query: string) {
     const index = match.index;
 
     if (index > lastIndex) {
-      parts.push(
+      MutableList.append(
+        parts,
         createPart({
           highlighted: false,
           start: lastIndex,
@@ -36,12 +40,16 @@ export function getSearchExcerptParts(excerpt: string, query: string) {
       );
     }
 
-    parts.push(createPart({ highlighted: true, start: index, text }));
+    MutableList.append(
+      parts,
+      createPart({ highlighted: true, start: index, text })
+    );
     lastIndex = index + text.length;
   }
 
   if (lastIndex < excerpt.length) {
-    parts.push(
+    MutableList.append(
+      parts,
       createPart({
         highlighted: false,
         start: lastIndex,
@@ -51,7 +59,7 @@ export function getSearchExcerptParts(excerpt: string, query: string) {
   }
 
   return parts.length > 0
-    ? parts
+    ? MutableList.toArray(parts)
     : [createPart({ highlighted: false, start: 0, text: excerpt })];
 }
 

@@ -1,5 +1,5 @@
 import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, MutableList, Schema } from "effect";
 
 /** Ordered selector batches plus the question and answer partition boundary. */
 export interface TryoutContentBatchPlan<Selector> {
@@ -20,18 +20,19 @@ export function planTryoutContentBatches<Question, Answer>(
   answers: readonly Answer[]
 ): TryoutContentBatchPlan<Question | Answer> {
   const selectors: readonly (Question | Answer)[] = [...questions, ...answers];
-  const batches: (readonly (Question | Answer)[])[] = [];
+  const batches = MutableList.make<readonly (Question | Answer)[]>();
   for (
     let start = 0;
     start < selectors.length;
     start += MAX_PROTECTED_RUNTIME_SELECTORS
   ) {
-    batches.push(
+    MutableList.append(
+      batches,
       selectors.slice(start, start + MAX_PROTECTED_RUNTIME_SELECTORS)
     );
   }
   return {
-    batches,
+    batches: MutableList.toArray(batches),
     questionCount: questions.length,
     selectorCount: selectors.length,
   };
@@ -47,13 +48,14 @@ export const restoreTryoutContentOrder = Effect.fn(
   if (renderedBatches.length !== plan.batches.length) {
     return yield* new TryoutContentBatchOrderError();
   }
-  const sameBatchShape = plan.batches.every(
+  const sameBatchShape = Arr.every(
+    plan.batches,
     (batch, index) => batch.length === renderedBatches[index]?.length
   );
   if (!sameBatchShape) {
     return yield* new TryoutContentBatchOrderError();
   }
-  const entries = renderedBatches.flat();
+  const entries = Arr.flatten(renderedBatches);
   if (entries.length !== plan.selectorCount) {
     return yield* new TryoutContentBatchOrderError();
   }

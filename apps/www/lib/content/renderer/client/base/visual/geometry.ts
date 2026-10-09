@@ -3,7 +3,7 @@ import {
   SpacePointSchema,
 } from "@nakafa/aksara-contracts/math/base";
 import { createCuboid } from "@repo/design-system/lib/geometry/cuboid";
-import { Schema } from "effect";
+import { Array as Arr, MutableList, Schema } from "effect";
 import {
   clipPlaneLine,
   clipPlanePath,
@@ -34,6 +34,7 @@ const VisualMarkerSchema = Schema.Struct({
   at: SpacePointSchema,
   id: Schema.String,
 });
+type VisualMarker = typeof VisualMarkerSchema.Type;
 const VisualPathSchema = Schema.Struct({
   appearance: MathAppearanceSchema,
   arrows: MathPathArrowsSchema,
@@ -46,6 +47,7 @@ const VisualRegionSchema = Schema.Struct({
   id: Schema.String,
   vertices: Schema.Array(SpacePointSchema),
 });
+type VisualRegion = typeof VisualRegionSchema.Type;
 const VisualGeometrySchema = Schema.Struct({
   markers: Schema.mutable(Schema.Array(VisualMarkerSchema)),
   paths: Schema.mutable(Schema.Array(VisualPathSchema)),
@@ -60,25 +62,35 @@ function arrows(
   }
   return kind === "ray" ? "end" : "none";
 }
-function appendPath(geometry: VisualGeometry, path: VisualPath) {
+/** Collects the markers, paths, and regions of one scene in the order its objects add them. */
+function createGeometryBuilder() {
+  return {
+    markers: MutableList.make<VisualMarker>(),
+    paths: MutableList.make<VisualPath>(),
+    regions: MutableList.make<VisualRegion>(),
+  };
+}
+type GeometryBuilder = ReturnType<typeof createGeometryBuilder>;
+function appendPath(geometry: GeometryBuilder, path: VisualPath) {
   const first = path.points[0];
   if (
     first &&
-    path.points.every(
+    Arr.every(
+      path.points,
       ({ x, y, z }) => x === first.x && y === first.y && z === first.z
     )
   ) {
-    geometry.markers.push({
+    MutableList.append(geometry.markers, {
       appearance: path.appearance,
       at: first,
       id: path.id,
     });
     return;
   }
-  geometry.paths.push(path);
+  MutableList.append(geometry.paths, path);
 }
 function appendPaths(
-  geometry: VisualGeometry,
+  geometry: GeometryBuilder,
   object: PlaneObject | SpaceObject,
   paths: readonly (readonly (PlanePoint | SpacePoint)[])[],
   projection: VisualProjection
@@ -88,19 +100,19 @@ function appendPaths(
       appearance: object.appearance,
       arrows: arrows(object.kind),
       id: paths.length === 1 ? object.id : `${object.id}:part:${index + 1}`,
-      points: points.map((point) => projectVisualPoint(point, projection)),
+      points: Arr.map(points, (point) => projectVisualPoint(point, projection)),
     });
   }
 }
 function appendPlane(
-  geometry: VisualGeometry,
+  geometry: GeometryBuilder,
   scene: PlaneVisual,
   projection: VisualProjection,
   object: PlaneObject
 ) {
   if (object.kind === "point") {
     if (containsPlanePoint(scene.frame, object.at)) {
-      geometry.markers.push({
+      MutableList.append(geometry.markers, {
         appearance: object.appearance,
         at: projectVisualPoint(object.at, projection),
         id: object.id,
@@ -122,10 +134,10 @@ function appendPlane(
     return;
   }
   if (object.kind === "polygon") {
-    geometry.regions.push({
+    MutableList.append(geometry.regions, {
       appearance: object.appearance,
       id: object.id,
-      vertices: object.vertices.map((point) =>
+      vertices: Arr.map(object.vertices, (point) =>
         projectVisualPoint(point, projection)
       ),
     });
@@ -156,14 +168,14 @@ function appendPlane(
   );
 }
 function appendSpace(
-  geometry: VisualGeometry,
+  geometry: GeometryBuilder,
   scene: SpaceVisual,
   projection: VisualProjection,
   object: SpaceObject
 ) {
   if (object.kind === "point") {
     if (containsSpacePoint(scene.frame, object.at)) {
-      geometry.markers.push({
+      MutableList.append(geometry.markers, {
         appearance: object.appearance,
         at: projectVisualPoint(object.at, projection),
         id: object.id,
@@ -207,7 +219,7 @@ export function resolveVisualGeometry(
   scene: PlaneVisual | SpaceVisual,
   projection = resolveVisualProjection(scene)
 ): VisualGeometry {
-  const geometry: VisualGeometry = { markers: [], paths: [], regions: [] };
+  const geometry = createGeometryBuilder();
   if (scene.space === "plane") {
     for (const object of scene.objects) {
       appendPlane(geometry, scene, projection, object);
@@ -217,5 +229,9 @@ export function resolveVisualGeometry(
       appendSpace(geometry, scene, projection, object);
     }
   }
-  return geometry;
+  return {
+    markers: MutableList.takeAll(geometry.markers),
+    paths: MutableList.takeAll(geometry.paths),
+    regions: MutableList.takeAll(geometry.regions),
+  };
 }

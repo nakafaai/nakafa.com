@@ -22,7 +22,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useForm } from "@tanstack/react-form";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
@@ -117,7 +117,7 @@ function UserSettingsCurriculumForm({
   const locale = useLocale();
   const t = useTranslations("Auth");
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(programs);
-  const selectItems = programs.map((program) => ({
+  const selectItems = Arr.map(programs, (program) => ({
     label: (
       <>
         <CountryFlagIcon countryCode={program.countryCode} />
@@ -197,7 +197,7 @@ function UserSettingsCurriculumForm({
                   </SelectTrigger>
                   <SelectContent className="max-w-(--available-width)">
                     <SelectGroup>
-                      {programs.map((program) => (
+                      {Arr.map(programs, (program) => (
                         <SelectItem key={program.key} value={program.key}>
                           <CountryFlagIcon countryCode={program.countryCode} />
                           <span className="min-w-0 whitespace-normal leading-snug">
@@ -264,10 +264,11 @@ function submitCurriculumPreference({
         (cause) => new CurriculumPreferenceValidationError({ cause })
       )
     );
-    const program = programs.find(
+    const program = Arr.findFirst(
+      programs,
       (candidate) => candidate.key === formValue.preferredCurriculumProgramKey
     );
-    if (!program) {
+    if (Option.isNone(program)) {
       return yield* new CurriculumPreferenceValidationError({
         cause: formValue.preferredCurriculumProgramKey,
       });

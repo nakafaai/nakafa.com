@@ -4,6 +4,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import { formatFileSize } from "@repo/design-system/lib/files/size";
 import { cn } from "cn";
+import { Array as Arr } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Activity } from "react";
@@ -32,7 +33,7 @@ export function AttachmentPreviews({
         !hasReplyTo && "rounded-t-md"
       )}
     >
-      {files.map(({ id, file, preview }) => {
+      {Arr.map(files, ({ id, file, preview }) => {
         const isImage = file.type.startsWith("image/");
 
         return (

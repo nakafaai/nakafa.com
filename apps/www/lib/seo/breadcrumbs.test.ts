@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 
 describe("createBreadcrumbItems", () => {
@@ -71,11 +72,16 @@ describe("createBreadcrumbItems", () => {
       { name: "Materials", path: "en/subjects/chemistry" },
     ]);
 
-    expect(result.map((item) => item.item)).toEqual([
+    expect(Arr.map(result, (item) => item.item)).toEqual([
       "https://nakafa.com/en",
       "https://nakafa.com/en/try-out/indonesia/snbt",
       "https://nakafa.com/en/subjects/chemistry",
     ]);
-    expect(result.map((item) => item.item).join("\n")).not.toContain("/en/en/");
+    expect(
+      Arr.join(
+        Arr.map(result, (item) => item.item),
+        "\n"
+      )
+    ).not.toContain("/en/en/");
   });
 });

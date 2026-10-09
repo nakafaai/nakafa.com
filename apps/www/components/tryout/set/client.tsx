@@ -3,6 +3,7 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Array as Arr, Option } from "effect";
 import { useLocale } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -306,10 +307,13 @@ function getStartDestination({
       sectionKey: activeAttempt.resumeSectionKey,
     };
   }
-  const resumeSection =
-    page.sections.find(
+  const resumeSection = Option.getOrElse(
+    Arr.findFirst(
+      page.sections,
       (section) => section.sectionKey === activeAttempt?.resumeSectionKey
-    ) ?? page.entrySection;
+    ),
+    () => page.entrySection
+  );
   const section = activeAttempt ? resumeSection : startEntrySection;
   if (!section) {
     return null;

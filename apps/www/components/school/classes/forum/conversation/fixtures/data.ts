@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { HashMap } from "effect";
+import { Array as Arr, HashMap } from "effect";
 import type {
   Forum,
   ForumPost,
@@ -151,7 +151,7 @@ export function createConversationTestFindItemIndex(
 
 /** Creates one row-backed `virtua` handle fixture for transcript tests. */
 export function createConversationTestRowsHandle({
-  offsets = conversationTestRows.map((_, index) => index * 100),
+  offsets = Arr.map(conversationTestRows, (_, index) => index * 100),
   getItemOffset = (index: number) => index * 100,
   getItemSize = () => 100,
   scrollOffset,

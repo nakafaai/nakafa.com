@@ -1,5 +1,5 @@
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { Locale } from "next-intl";
 
 const SITE_ORIGIN = `https://${MAIN_DOMAIN}`;
@@ -35,7 +35,7 @@ export function createBreadcrumbItems(
   locale: Locale,
   entries: BreadcrumbEntry[]
 ) {
-  return entries.map((entry, index) => {
+  return Arr.map(entries, (entry, index) => {
     const path = normalizeBreadcrumbPath(entry.path, locale);
 
     return {

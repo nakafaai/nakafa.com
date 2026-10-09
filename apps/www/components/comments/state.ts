@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import type comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Array as Arr, Option } from "effect";
 
 type Comment = Ref.Returns<
   typeof comments.queries.getCommentsByUserId
@@ -35,17 +36,17 @@ export function deleteCommentFromPage<T extends Comment>(
   page: T[],
   commentId: Id<"comments">
 ): T[] {
-  const removed = page.find((comment) => comment._id === commentId);
-  if (!removed) {
+  const removed = Arr.findFirst(page, (comment) => comment._id === commentId);
+  if (Option.isNone(removed)) {
     return page;
   }
 
-  return page.flatMap((comment) => {
+  return Arr.flatMap(page, (comment) => {
     if (comment._id === commentId) {
       return [];
     }
 
-    if (removed.parentId === comment._id) {
+    if (removed.value.parentId === comment._id) {
       return [{ ...comment, replyCount: Math.max(0, comment.replyCount - 1) }];
     }
 

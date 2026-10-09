@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 export function FooterArt() {
   const items = Array.from({ length: 24 }, (_, index) => ({
     id: `footer-art-bar-${index}`,
@@ -7,7 +9,7 @@ export function FooterArt() {
 
   return (
     <div className="bg-foreground pb-36">
-      {items.map((item) => (
+      {Arr.map(items, (item) => (
         <div
           className="bg-background"
           key={item.id}

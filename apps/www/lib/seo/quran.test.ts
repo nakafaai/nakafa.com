@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { generateQuranMetadata } from "@/lib/seo/quran";
 
 const { mockGetTranslations } = vi.hoisted(() => ({
@@ -45,13 +45,17 @@ describe("generateQuranMetadata", () => {
           return `Read Surah ${getValue(values, "name")} with ${getValue(values, "numberOfVerses")} verses.`;
         }
         if (key === "quran.keywords") {
-          return [
-            getValue(values, "name"),
-            getValue(values, "translation"),
-            getValue(values, "revelation"),
-          ]
-            .filter((value) => value !== "__EMPTY__")
-            .join(", ");
+          return Arr.join(
+            Arr.filter(
+              [
+                getValue(values, "name"),
+                getValue(values, "translation"),
+                getValue(values, "revelation"),
+              ],
+              (value) => value !== "__EMPTY__"
+            ),
+            ", "
+          );
         }
         const translation = getValue(values, "translation");
         const translationSuffix =

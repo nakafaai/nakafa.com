@@ -8,7 +8,7 @@ import {
 } from "@nakafa/aksara-contracts/renderer/domain";
 import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Effect, HashSet, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, MutableList, Schema } from "effect";
 import { domainRenderers as aiDsRenderers } from "@/lib/content/renderer/domain/ai";
 import { baseRenderers } from "@/lib/content/renderer/domain/base";
 import { domainRenderers as biologyRenderers } from "@/lib/content/renderer/domain/biology";
@@ -86,7 +86,7 @@ function findImplementations(
   componentName: string,
   implementations: readonly RendererImplementation[]
 ) {
-  return implementations.filter(({ name }) => name === componentName);
+  return Arr.filter(implementations, ({ name }) => name === componentName);
 }
 
 /** Resolves signed names to one semantic or physical implementation owner. */
@@ -96,7 +96,7 @@ export const selectRendererImplementations = Effect.fn(
   const domainRenderers =
     rendererDomainImplementations[selection.rendererDomain];
 
-  const selected: SelectedRenderer[] = [];
+  const selected = MutableList.make<SelectedRenderer>();
   for (const name of selection.requiredComponents) {
     const isSemantic = HashSet.has(semanticNames, name);
     const baseImplementations = findImplementations(name, baseRenderers);
@@ -114,17 +114,23 @@ export const selectRendererImplementations = Effect.fn(
       });
     }
     if (isSemantic) {
-      selected.push({ kind: "semantic", name });
+      MutableList.append(selected, { kind: "semantic", name });
       continue;
     }
     const baseImplementation = baseImplementations[0];
     if (baseImplementation !== undefined) {
-      selected.push({ kind: "implementation", ...baseImplementation });
+      MutableList.append(selected, {
+        kind: "implementation",
+        ...baseImplementation,
+      });
       continue;
     }
     const domainImplementation = domainImplementations[0];
     if (domainImplementation !== undefined) {
-      selected.push({ kind: "implementation", ...domainImplementation });
+      MutableList.append(selected, {
+        kind: "implementation",
+        ...domainImplementation,
+      });
       continue;
     }
     return yield* new RendererImplementationMissing({
@@ -133,5 +139,5 @@ export const selectRendererImplementations = Effect.fn(
       rendererDomain: selection.rendererDomain,
     });
   }
-  return selected;
+  return MutableList.takeAll(selected);
 });
