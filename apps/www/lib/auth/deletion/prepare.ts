@@ -1,5 +1,5 @@
 import type { InvokeReturn } from "@confect/react";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type auth from "@repo/backend/confect/_generated/refs/auth";
 import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/confect/auth/deletion/constants";
 import {
   type AccountDeletionBrowserAttempt,
@@ -22,14 +22,10 @@ import {
 type AccountDeletionAttemptId = AccountDeletionBrowserAttempt["attemptId"];
 export type CancelAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
-) => InvokeReturn<
-  typeof refs.public.auth.deletion.cancelAccountDeletionAttempt
->;
+) => InvokeReturn<typeof auth.deletion.cancelAccountDeletionAttempt>;
 export type PrepareAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
-) => InvokeReturn<
-  typeof refs.public.auth.deletion.prepareCurrentAccountDeletion
->;
+) => InvokeReturn<typeof auth.deletion.prepareCurrentAccountDeletion>;
 export type PersistAccountDeletionAttempt = (
   attempt: AccountDeletionBrowserAttempt
 ) => Effect.Effect<void, AccountDeletionAttemptStorageFailed>;

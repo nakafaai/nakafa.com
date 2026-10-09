@@ -11,7 +11,7 @@ const { fetchMutation, fetchQuery } = vi.hoisted(() => ({
 
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import refs from "@repo/backend/confect/_generated/refs";
+import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { Duration, Effect, Fiber, Layer } from "effect";
 import { TestClock } from "effect/testing";
 import {
@@ -53,10 +53,7 @@ describe("onboarding server adapter", () => {
       };
       vi.mocked(fetchQuery).mockReturnValue(Effect.succeed(status));
       expect(yield* readOnboardingStatus("test-token")).toEqual(status);
-      expect(fetchQuery).toHaveBeenCalledWith(
-        refs.public.onboarding.queries.getStatus,
-        {}
-      );
+      expect(fetchQuery).toHaveBeenCalledWith(onboarding.queries.getStatus, {});
       expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud", {
         auth: "test-token",
       });
@@ -85,7 +82,7 @@ describe("onboarding server adapter", () => {
       vi.mocked(fetchMutation).mockReturnValue(Effect.succeed(admission));
       expect(yield* recordOnboardingAdmission("test-token")).toEqual(admission);
       expect(fetchMutation).toHaveBeenCalledWith(
-        refs.public.onboarding.mutations.admit,
+        onboarding.mutations.admit,
         {}
       );
       expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud", {

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Layer, Schema } from "effect";
 import {
   getArticleModel,
@@ -112,7 +112,7 @@ describe("coherent article publication", () => {
       published,
     });
     expect(queryMock).toHaveBeenCalledExactlyOnceWith(
-      refs.public.contentRelease.article.delivery,
+      contentRelease.article.delivery,
       {
         appLocale: "en",
         publicPath: projection.publicPath,

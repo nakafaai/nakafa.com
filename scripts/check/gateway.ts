@@ -4,12 +4,9 @@ import {
   type Expression,
   type ImportSpecifier,
   isBinaryExpression,
-  isCallExpression,
   isExportDeclaration,
   isIdentifier,
   isImportDeclaration,
-  isImportTypeNode,
-  isLiteralTypeNode,
   isNamedExports,
   isNamedImports,
   isNamespaceImport,
@@ -22,7 +19,7 @@ import {
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { descendants } from "#scripts/check/source";
+import { descendants, namesModule } from "#scripts/check/source";
 
 /** The one module that calls a model, through the Convex AI gateway provider. */
 const GATEWAY_MODULE = "packages/backend/confect/gateway/";
@@ -50,18 +47,6 @@ const CLIENT_RULE =
   "take model handles from the Gateway service in confect/gateway instead of the AI SDK's gateway client";
 const MODEL_RULE =
   "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK resolves through its default Vercel gateway";
-
-/** Whether a string literal names the module of an import, a re-export, an import type, or a dynamic import. */
-function namesModule(node: Node) {
-  const owner = node.parent;
-  return (
-    isImportDeclaration(owner) ||
-    isExportDeclaration(owner) ||
-    (isLiteralTypeNode(owner) && isImportTypeNode(owner.parent)) ||
-    (isCallExpression(owner) &&
-      owner.expression.kind === SyntaxKind.ImportKeyword)
-  );
-}
 
 /** Whether import or export specifiers name the AI SDK's gateway client. */
 function namesClient(

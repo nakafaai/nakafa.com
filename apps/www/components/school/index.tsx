@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import refs from "@repo/backend/confect/_generated/refs";
+import schools from "@repo/backend/confect/_generated/refs/schools";
 import { Effect } from "effect";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
@@ -18,7 +18,7 @@ export async function School({
   if (token) {
     const landingState = await Effect.runPromise(
       Effect.flatMap(HttpClient.HttpClient, (client) =>
-        client.query(refs.public.schools.queries.getMySchoolLandingState, {})
+        client.query(schools.queries.getMySchoolLandingState, {})
       ).pipe(
         Effect.provide(
           httpLayer({

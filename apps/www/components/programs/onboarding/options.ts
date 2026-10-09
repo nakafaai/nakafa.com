@@ -5,7 +5,7 @@ import {
   Quiz03Icon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import {
   onboardingFocuses,
   onboardingRegions,
@@ -15,7 +15,7 @@ import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import { roleIconByValue } from "@/lib/data/roles";
 
 export type OnboardingAnswer = Ref.Args<
-  typeof refs.public.onboarding.mutations.saveAnswer
+  typeof onboarding.mutations.saveAnswer
 >["answer"];
 export type OnboardingRole = Extract<
   OnboardingAnswer,

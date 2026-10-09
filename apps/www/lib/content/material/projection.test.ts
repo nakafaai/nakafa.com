@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 
 import { Effect, Schema } from "effect";
 import { decodePublishedMaterialContext } from "@/lib/content/material/projection";
@@ -27,7 +27,7 @@ const result = {
   mappingJson: testCurriculumRowJson(mapping),
   parentJson: testCurriculumRowJson(testProgramSubject),
   resolvedCanonicalPath: mapping.canonicalPath ?? null,
-} satisfies Ref.Returns<typeof refs.public.contentRelease.program.context>;
+} satisfies Ref.Returns<typeof contentRelease.program.context>;
 
 describe("published material context projection", () => {
   it.effect("builds the return link only from verified curriculum rows", () =>
@@ -158,19 +158,18 @@ describe("published material context projection", () => {
       },
     ],
     ["malformed row", { ...result, groupJson: "{" }],
-  ] satisfies [
-    string,
-    Ref.Returns<typeof refs.public.contentRelease.program.context>,
-  ][])("rejects %s with the typed projection error", ([, input]) =>
-    Effect.gen(function* () {
-      expect(
-        yield* decodePublishedMaterialContext(
-          "en",
-          previewProjection,
-          context,
-          input
-        ).pipe(Effect.flip)
-      ).toMatchObject({ _tag: "PublishedProjectionError" });
-    })
+  ] satisfies [string, Ref.Returns<typeof contentRelease.program.context>][])(
+    "rejects %s with the typed projection error",
+    ([, input]) =>
+      Effect.gen(function* () {
+        expect(
+          yield* decodePublishedMaterialContext(
+            "en",
+            previewProjection,
+            context,
+            input
+          ).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+      })
   );
 });

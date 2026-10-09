@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 import { useMutation } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Clock, Effect, Option, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -16,18 +16,18 @@ import { reportClientException } from "@/lib/analytics/client";
 /** Owns the mutation, optimistic cache, and error boundary for responses. */
 export function useTryoutResponseSubmit() {
   const saveResponse = useMutation(
-    refs.public.tryouts.mutations.responses.save
+    tryouts.mutations.responses.save
   ).withOptimisticUpdate((localStore, args) => {
     const selectedAt = Effect.runSync(Clock.currentTimeMillis);
     updateRuntimeQueries(
       localStore,
-      refs.public.tryouts.queries.runtime.getSectionAttemptState,
+      tryouts.queries.runtime.getSectionAttemptState,
       args,
       selectedAt
     );
     updateRuntimeQueries(
       localStore,
-      refs.public.tryouts.queries.runtime.getSetAttemptState,
+      tryouts.queries.runtime.getSetAttemptState,
       args,
       selectedAt
     );
@@ -61,14 +61,12 @@ export function useTryoutResponseSubmit() {
 type OptimisticStore = Parameters<
   Parameters<ReturnType<typeof useMutation>["withOptimisticUpdate"]>[0]
 >[0];
-type SaveResponseArgs = Ref.Args<
-  typeof refs.public.tryouts.mutations.responses.save
->;
+type SaveResponseArgs = Ref.Args<typeof tryouts.mutations.responses.save>;
 
 function updateRuntimeQueries<
   Query extends
-    | typeof refs.public.tryouts.queries.runtime.getSectionAttemptState
-    | typeof refs.public.tryouts.queries.runtime.getSetAttemptState,
+    | typeof tryouts.queries.runtime.getSectionAttemptState
+    | typeof tryouts.queries.runtime.getSetAttemptState,
 >(
   localStore: OptimisticStore,
   query: Query,
@@ -101,9 +99,7 @@ function updateRuntimeQueries<
 function handleSubmitError(
   error: unknown,
   tTryouts: ReturnType<typeof useTranslations>,
-  errorCode?: Ref.Error<
-    typeof refs.public.tryouts.mutations.responses.save
-  >["code"]
+  errorCode?: Ref.Error<typeof tryouts.mutations.responses.save>["code"]
 ) {
   if (
     errorCode === "TRYOUT_EXPIRED" ||

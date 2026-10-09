@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 
-import type refs from "@repo/backend/confect/_generated/refs";
+import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Schema } from "effect";
 
@@ -16,8 +16,7 @@ import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
-type CountryPageQuery =
-  typeof refs.public.tryouts.queries.catalog.getCountryPage;
+type CountryPageQuery = typeof tryouts.queries.catalog.getCountryPage;
 type CountryPage = NonNullable<Ref.Returns<CountryPageQuery>>;
 const CountryExamCardImageSchema = Schema.Struct({
   imageSrc: Schema.optionalKey(Schema.String),

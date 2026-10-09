@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
@@ -17,7 +17,7 @@ export const readPublishedArticleBuckets = Effect.fn(
 )(function* (locale: Locale, expectedActiveReleaseId?: ContentReleasePin) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.article.sitemapBuckets, {
+    client.query(contentRelease.article.sitemapBuckets, {
       appLocale,
     })
   ).pipe(Effect.provide(httpLayer()));
@@ -48,7 +48,7 @@ export const readPublishedArticleSitemap = Effect.fn(
 )(function* (locale: Locale, bucket: string) {
   const appLocale = AppLocaleSchema.make(locale);
   return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.article.sitemapPage, {
+    client.query(contentRelease.article.sitemapPage, {
       appLocale,
       bucket,
     })

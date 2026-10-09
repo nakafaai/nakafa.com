@@ -8,7 +8,7 @@ import {
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
@@ -19,7 +19,7 @@ import {
 import { httpLayer } from "@/lib/convex/http";
 
 type MaterialSummary = Ref.Returns<
-  typeof refs.public.contentRelease.material.latest
+  typeof contentRelease.material.latest
 >["materials"][number];
 const PublishedMaterialSummarySchema = Schema.Struct({
   authors: Schema.Array(ContentAuthorSchema),
@@ -81,7 +81,7 @@ export const readPublishedMaterialBucket = Effect.fn(
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.material.bucket, {
+    client.query(contentRelease.material.bucket, {
       appLocale,
       bucket,
     })
@@ -124,7 +124,7 @@ export const readPublishedLatestMaterials = Effect.fn(
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.material.latest, {
+    client.query(contentRelease.material.latest, {
       appLocale,
       limit,
     })

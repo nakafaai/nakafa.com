@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
-import type refs from "@repo/backend/confect/_generated/refs";
+import type learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -11,12 +11,12 @@ import { reportClientException } from "@/lib/analytics/client";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 type SavePreferredTryoutArgs = Ref.Args<
-  typeof refs.public.learningPreferences.mutations.setPreferredTryoutCountry
+  typeof learningPreferences.mutations.setPreferredTryoutCountry
 >;
 type SavePreferredTryout = (
   args: SavePreferredTryoutArgs
 ) => InvokeReturn<
-  typeof refs.public.learningPreferences.mutations.setPreferredTryoutCountry
+  typeof learningPreferences.mutations.setPreferredTryoutCountry
 >;
 /** Expected failure when a background try-out preference save fails. */
 class TryoutPreferenceSaveError extends Schema.TaggedError<TryoutPreferenceSaveError>()(

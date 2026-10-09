@@ -6,7 +6,7 @@ import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog"
 import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
 import { decodePublishedQuranSource } from "@repo/backend/client/quran/publication";
 import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import { cacheTag } from "next/cache";
 import type { Locale } from "next-intl";
@@ -18,7 +18,7 @@ export const readPublishedQuranIdentity = Effect.fn(
   "NakafaQuran.readPublishedIdentity"
 )(function* () {
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.quran.attribution, {})
+    client.query(contentRelease.quran.attribution, {})
   ).pipe(Effect.provide(httpLayer()));
   return yield* decodePublishedQuranSource(result, "attribution");
 });
@@ -28,7 +28,7 @@ export const readPublishedQuranCatalog = Effect.fn(
   "NakafaQuran.readPublishedCatalog"
 )(function* () {
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.quran.surahs, {})
+    client.query(contentRelease.quran.surahs, {})
   ).pipe(Effect.provide(httpLayer()));
   return yield* decodePublishedQuranCatalog(result);
 });
@@ -40,7 +40,7 @@ export const readPublishedQuranMarkdown = Effect.fn(
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
     client.query(
-      refs.public.contentRelease.quran.prose,
+      contentRelease.quran.prose,
       verseLimit === undefined
         ? {
             appLocale,
@@ -69,7 +69,7 @@ const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
   function* (locale: Locale, surahNumber: number) {
     const appLocale = AppLocaleSchema.make(locale);
     const result = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(refs.public.contentRelease.quran.page, {
+      client.query(contentRelease.quran.page, {
         appLocale,
         surahNumber,
       })

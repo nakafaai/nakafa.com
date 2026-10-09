@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { httpLayer } from "@/lib/convex/http";
@@ -11,7 +11,7 @@ export const readPublishedTryoutSitemapCount = Effect.fn(
   "www.tryouts.readSitemapCount"
 )(function* (locale: Locale) {
   return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.tryout.sitemapCount, {
+    client.query(contentRelease.tryout.sitemapCount, {
       appLocale: AppLocaleSchema.make(locale),
     })
   ).pipe(Effect.provide(httpLayer()));
@@ -22,7 +22,7 @@ export const readPublishedTryoutSitemap = Effect.fn(
   "www.tryouts.readSitemapPage"
 )(function* (locale: Locale, page: number) {
   return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(refs.public.contentRelease.tryout.sitemapPage, {
+    client.query(contentRelease.tryout.sitemapPage, {
       appLocale: AppLocaleSchema.make(locale),
       page,
     })

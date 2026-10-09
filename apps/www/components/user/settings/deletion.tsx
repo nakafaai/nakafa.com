@@ -6,7 +6,7 @@ import {
   Delete02Icon,
   Login01Icon,
 } from "@hugeicons/core-free-icons";
-import refs from "@repo/backend/confect/_generated/refs";
+import auth from "@repo/backend/confect/_generated/refs/auth";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   Alert,
@@ -56,10 +56,10 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
   const cancelAccountDeletion = useMutation(
-    refs.public.auth.deletion.cancelAccountDeletionAttempt
+    auth.deletion.cancelAccountDeletionAttempt
   );
   const prepareAccountDeletion = useMutation(
-    refs.public.auth.deletion.prepareCurrentAccountDeletion
+    auth.deletion.prepareCurrentAccountDeletion
   );
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<DialogError>(null);
@@ -90,10 +90,9 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
               prepare: (attemptId) => prepareAccountDeletion({ attemptId }),
               reconcile: (attemptId) =>
                 Effect.flatMap(HttpClient.HttpClient, (client) =>
-                  client.query(
-                    refs.public.auth.deletion.getAccountDeletionAttemptStatus,
-                    { attemptId }
-                  )
+                  client.query(auth.deletion.getAccountDeletionAttemptStatus, {
+                    attemptId,
+                  })
                 ).pipe(Effect.provide(httpLayer())),
             })
           ),

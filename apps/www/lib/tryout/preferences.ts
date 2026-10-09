@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
-import refs from "@repo/backend/confect/_generated/refs";
+import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import type { Locale } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
@@ -15,7 +15,7 @@ export function usePreferredTryoutHref(locale: Locale) {
   const queryArgs =
     isAuthenticated && !isLoading && activeLocale ? { locale } : "skip";
   const preference = useQuery(
-    refs.public.learningPreferences.queries.getCurrentTryout,
+    learningPreferences.queries.getCurrentTryout,
     queryArgs
   );
 

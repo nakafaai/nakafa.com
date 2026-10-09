@@ -2,13 +2,11 @@
 
 import type { Ref } from "@confect/core";
 
-import type refs from "@repo/backend/confect/_generated/refs";
+import type schools from "@repo/backend/confect/_generated/refs/schools";
 
 import { createContext, use, useState } from "react";
 
-type SchoolRouteValue = Ref.Returns<
-  typeof refs.public.schools.queries.getSchoolBySlug
->;
+type SchoolRouteValue = Ref.Returns<typeof schools.queries.getSchoolBySlug>;
 
 function createSchoolContextValue(value: SchoolRouteValue) {
   return {
