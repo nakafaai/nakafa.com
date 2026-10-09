@@ -217,8 +217,3 @@ describe("current content reference metadata", () => {
       })
   );
 });
-vi.mock("@/env", () => ({
-  env: {
-    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
-  },
-}));

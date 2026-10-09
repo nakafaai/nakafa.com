@@ -108,7 +108,6 @@ vi.mock("@/env.client", () => ({
 }));
 vi.mock("@/env", () => ({
   env: {
-    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
     get NEXT_PUBLIC_CONVEX_SITE_URL() {
       return runtimeSiteMock();
     },
