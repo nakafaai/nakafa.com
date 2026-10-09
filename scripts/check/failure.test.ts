@@ -65,7 +65,7 @@ export function other(cause: unknown) {
   );
 
   it.effect(
-    "reports a throw in a component, a Next.js file, a test, and a script",
+    "reports a throw in a plain module, a route, and a script, never in React, configuration, or tests",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -91,6 +91,21 @@ export function other(cause: unknown) {
                 'export const read = () => { throw new Error("read"); };\n',
             },
             {
+              file: "apps/www/lib/client.ts",
+              sourceText:
+                '"use client";\nexport const read = () => { throw new Error("client"); };\n',
+            },
+            {
+              file: "apps/www/lib/hook.ts",
+              sourceText:
+                'import { useState } from "react";\nexport const read = () => { throw new Error("hook"); };\n',
+            },
+            {
+              file: "apps/www/next.config.ts",
+              sourceText:
+                'export const config = () => { throw new Error("config"); };\n',
+            },
+            {
               file: "scripts/tool.test.ts",
               sourceText:
                 'export const test = () => { throw new Error("test"); };\n',
@@ -102,11 +117,8 @@ export function other(cause: unknown) {
             },
           ]),
           [
-            "apps/www/app/[locale]/page.tsx:1 throw",
             "apps/www/app/api/route.ts:1 throw",
-            "apps/www/components/guard.tsx:1 throw",
             "apps/www/lib/read.ts:1 throw",
-            "scripts/tool.test.ts:1 throw",
             "scripts/tool.ts:1 throw",
           ]
         );
@@ -126,6 +138,209 @@ export const message = "throw an error";
 export const note = \`throw \${reason}\`;
 `),
           []
+        );
+      })
+  );
+
+  it.effect(
+    "exempts a Convex application error thrown in a vanilla Convex handler",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { mutation } from "@repo/backend/components/betterAuth/_generated/server";
+import { ConvexError, v } from "convex/values";
+export const setUser = mutation({
+  args: { authId: v.string() },
+  handler: (ctx, args) => {
+    if (!args.authId) {
+      throw new ConvexError({ code: "MISSING" });
+    }
+    throw new Error("unexpected");
+  },
+});
+`),
+          ["9 throw"]
+        );
+      })
+  );
+
+  it.effect(
+    "reports a Convex application error thrown outside a handler, from another module, or from a local class",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { ConvexError } from "convex/values";
+export const fail = () => {
+  throw new ConvexError("outside");
+};
+`),
+          ["3 throw"]
+        );
+        assert.deepStrictEqual(
+          yield* findings(`import { ConvexError } from "./errors";
+export const setUser = mutation({
+  handler: (ctx) => {
+    throw new ConvexError("other module");
+  },
+});
+`),
+          ["4 throw"]
+        );
+        assert.deepStrictEqual(
+          yield* findings(`class ConvexError {}
+export const setUser = mutation({
+  handler: (ctx) => {
+    throw new ConvexError();
+  },
+});
+`),
+          ["4 throw"]
+        );
+      })
+  );
+
+  it.effect(
+    "reports a Convex application error thrown from a call that is not a Convex builder",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { ConvexError } from "convex/values";
+export const wrapped = wrap({
+  handler: (ctx) => {
+    throw new ConvexError("wrapped");
+  },
+});
+`),
+          ["4 throw"]
+        );
+      })
+  );
+
+  it.effect(
+    "exempts a Convex application error thrown anywhere inside a handler",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { ConvexError } from "convex/values";
+export const search = query({
+  handler: (ctx) => {
+    ctx.run(() => {
+      throw new ConvexError("nested");
+    });
+  },
+});
+export const method = action({
+  handler(ctx) {
+    throw new ConvexError("method");
+  },
+});
+function handleBound(ctx) {
+  throw new ConvexError("bound");
+}
+export const bound = internalMutation({ handler: handleBound });
+`),
+          []
+        );
+      })
+  );
+
+  it.effect(
+    "exempts a Convex application error under the local name of its named import",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { ConvexError as Failure } from "convex/values";
+export const setUser = mutation({
+  handler: (ctx) => {
+    throw new Failure("aliased");
+  },
+});
+`),
+          []
+        );
+      })
+  );
+
+  it.effect(
+    "reports a Convex application error that a namespace or side-effect import binds",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import "convex/values";
+import * as values from "convex/values";
+export const setUser = mutation({
+  handler: (ctx) => {
+    throw new values.ConvexError("namespace");
+  },
+});
+`),
+          ["5 throw"]
+        );
+      })
+  );
+
+  it.effect(
+    "reads the handler only from an options object of a builder call",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { ConvexError } from "convex/values";
+export const bare = mutation();
+export const named = mutation(options, () => {
+  throw new ConvexError("argument");
+});
+`),
+          ["4 throw"]
+        );
+      })
+  );
+
+  it.effect(
+    "exempts a throw inside a browser page function, however deeply it is nested",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { type Page } from "@playwright/test";
+export function probe(page: Page) {
+  page.evaluate(() => {
+    setTimeout(() => {
+      throw new Error("in page");
+    });
+  });
+  throw new Error("outside");
+}
+`,
+            "apps/www/e2e/support/probe.browser.ts"
+          ),
+          ["8 throw"]
+        );
+      })
+  );
+
+  it.effect(
+    "exempts a throw in a helper that a Playwright module passes to the page by name",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* fileFindings([
+            {
+              file: "apps/www/e2e/support/frames.ts",
+              sourceText:
+                'export function countFrames() {\n  throw new Error("frames");\n}\n',
+            },
+            {
+              file: "apps/www/e2e/frames.browser.ts",
+              sourceText:
+                'import { test } from "@playwright/test";\nimport { countFrames } from "./support/frames";\npage.evaluate(countFrames);\n',
+            },
+            {
+              file: "apps/www/lib/frames.ts",
+              sourceText:
+                'export function countFrames() {\n  throw new Error("frames");\n}\n',
+            },
+          ]),
+          ["apps/www/lib/frames.ts:2 throw"]
         );
       })
   );

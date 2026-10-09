@@ -5,7 +5,6 @@ import {
   isBinaryExpression,
   isCallExpression,
   isCaseClause,
-  isComputedPropertyName,
   isExportDeclaration,
   isExternalModuleReference,
   isForOfStatement,
@@ -13,25 +12,21 @@ import {
   isIdentifier,
   isImportDeclaration,
   isImportEqualsDeclaration,
-  isMethodDeclaration,
   isNamedImports,
   isObjectLiteralExpression,
   isPropertyAccessExpression,
-  isPropertyAssignment,
-  isShorthandPropertyAssignment,
-  isSourceFile,
   isStringLiteral,
   isStringLiteralLikeNode,
   isSwitchStatement,
   isTryStatement,
   isTypeOfExpression,
   type Node,
-  type PropertyName,
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { candidate, loadsExport, loadsImport } from "#scripts/check/rules";
-import { boundFunctions, isFunctionValue } from "#scripts/check/scope";
+import { handlerFunctions, insideHandler } from "#scripts/check/handler";
+import { loadsExport, loadsImport } from "#scripts/check/kinds";
+import { candidate } from "#scripts/check/rules";
 import { unwrapped } from "#scripts/check/wrapper";
 
 const NODE_MODULES = HashSet.make(
@@ -162,8 +157,6 @@ function isTypeofObjectComparison(node: Node) {
 /** The Confect module whose `workflow` export defines durable workflows. */
 const WORKFLOW_MODULE = "@repo/backend/confect/workflow";
 const WORKFLOW_EXPORT = "workflow";
-/** The option of `workflow.define` that holds a workflow's handler. */
-const HANDLER_KEY = "handler";
 
 /**
  * Returns the local names a module binds to the `workflow` export of the
@@ -189,53 +182,6 @@ function workflowNames(sourceFile: SourceFile) {
         )
       : [];
   });
-}
-
-/**
- * Returns the static key that a property name spells: an identifier, a string,
- * or a computed string, such as `handler`, `"handler"`, or `["handler"]`.
- */
-function propertyName(name: PropertyName): string | undefined {
-  if (isIdentifier(name) || isStringLiteral(name)) {
-    return name.text;
-  }
-  return isComputedPropertyName(name) && isStringLiteral(name.expression)
-    ? name.expression.text
-    : undefined;
-}
-
-/**
- * Returns the functions a handler value names: the function itself when it is
- * written inline, or the function that an identifier binds where it stands.
- */
-function handlerFunctions(handler: Node): readonly Node[] {
-  const value = unwrapped(handler);
-  if (isFunctionValue(value)) {
-    return [value];
-  }
-  return isIdentifier(value) ? boundFunctions(value) : [];
-}
-
-/**
- * Returns the handler functions that one option of `workflow.define` names: a
- * method called `handler`, the value of a `handler` property, or the variable
- * that a shorthand `handler` reads.
- */
-function handlerOptions(option: Node): readonly Node[] {
-  if (isMethodDeclaration(option)) {
-    return propertyName(option.name) === HANDLER_KEY ? [option] : [];
-  }
-  if (isPropertyAssignment(option)) {
-    return propertyName(option.name) === HANDLER_KEY
-      ? handlerFunctions(option.initializer)
-      : [];
-  }
-  if (isShorthandPropertyAssignment(option)) {
-    return propertyName(option.name) === HANDLER_KEY
-      ? handlerFunctions(option.name)
-      : [];
-  }
-  return [];
 }
 
 /**
@@ -266,16 +212,8 @@ function workflowHandlers(sourceFile: SourceFile, nodes: readonly Node[]) {
     if (options === undefined || !isObjectLiteralExpression(options)) {
       return [];
     }
-    return Arr.flatMap(options.properties, handlerOptions);
+    return handlerFunctions(options);
   });
-}
-
-/** Whether a node is one of the handler functions or sits inside one. */
-function insideHandler(node: Node, handlers: readonly Node[]): boolean {
-  if (Arr.some(handlers, (handler) => handler === node)) {
-    return true;
-  }
-  return !isSourceFile(node) && insideHandler(node.parent, handlers);
 }
 
 /** Returns the native Promise, module, and failure syntax at one node. */

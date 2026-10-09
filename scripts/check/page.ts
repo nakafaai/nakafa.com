@@ -14,7 +14,7 @@ import {
   type Node,
   type SourceFile,
 } from "typescript/unstable/ast";
-import { imports } from "#scripts/check/rules";
+import { imports } from "#scripts/check/kinds";
 import { descendants, type parseSources } from "#scripts/check/source";
 
 const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;

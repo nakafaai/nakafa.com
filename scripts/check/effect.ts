@@ -187,7 +187,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
           assertionCandidates(sourceFile, nodes),
           asyncCandidates(file, sourceFile, nodes),
           dispatchCandidates(sourceFile, nodes),
-          failureCandidates(sourceFile, nodes),
+          failureCandidates(sourceFile, runtime),
         ]),
         (found) =>
           covers(found.rule, file, sourceFile)
