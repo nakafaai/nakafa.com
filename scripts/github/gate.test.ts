@@ -4,6 +4,7 @@ import { capture, makeCapture } from "#scripts/capture";
 import { type GateInput, runGate, validateGate } from "#scripts/github/gate";
 
 const required: GateInput = {
+  backendOutcome: "success",
   fullOutcome: "success",
   productionOutcome: "success",
   productionRequired: true,
@@ -13,6 +14,7 @@ const required: GateInput = {
 };
 
 const validEnvironment = {
+  BACKEND_OUTCOME: "success",
   FULL_OUTCOME: "success",
   PRODUCTION_OUTCOME: "success",
   PRODUCTION_REQUIRED: "true",
@@ -84,6 +86,15 @@ describe("terminal CI gate", () => {
   it.effect.each([
     { input: { ...required, scopeOutcome: "failure" }, name: "scope" },
     { input: { ...required, fullOutcome: "skipped" }, name: "quality" },
+    { input: { ...required, backendOutcome: "failure" }, name: "backend" },
+    {
+      input: { ...required, backendOutcome: "skipped" },
+      name: "skipped backend",
+    },
+    {
+      input: { ...required, backendOutcome: "cancelled" },
+      name: "cancelled backend",
+    },
     {
       input: {
         ...required,
@@ -117,6 +128,22 @@ describe("terminal CI gate", () => {
     )
   );
 
+  it.effect(
+    "decodes the Doctor environment, which skips production and backend",
+    () =>
+      Effect.gen(function* () {
+        const { result, stdout } = yield* runCapturedGate("doctor", {
+          ...validEnvironment,
+          BACKEND_OUTCOME: "skipped",
+          PRODUCTION_OUTCOME: "skipped",
+        });
+        expect(Result.isSuccess(result)).toBe(true);
+        expect(stdout).toEqual([
+          "React Doctor completed on the current candidate.\n",
+        ]);
+      })
+  );
+
   it.effect("decodes the complete required-check environment", () =>
     Effect.gen(function* () {
       const { result, stdout } = yield* runCapturedGate(
@@ -144,6 +171,7 @@ describe("terminal CI gate", () => {
     {
       expected: "CI gate flags are incomplete.",
       environment: {
+        BACKEND_OUTCOME: "success",
         FULL_OUTCOME: "success",
         PRODUCTION_OUTCOME: "success",
         SCOPE_OUTCOME: "success",
@@ -154,6 +182,22 @@ describe("terminal CI gate", () => {
       expected:
         "Production acceptance finished with skipped; expected success.",
       environment: { ...validEnvironment, PRODUCTION_OUTCOME: "skipped" },
+      role: "required",
+    },
+    {
+      expected: "Backend tests finished with skipped; expected success.",
+      environment: { ...validEnvironment, BACKEND_OUTCOME: "skipped" },
+      role: "required",
+    },
+    {
+      expected: "BACKEND_OUTCOME has an invalid CI value.",
+      environment: {
+        FULL_OUTCOME: "success",
+        PRODUCTION_OUTCOME: "success",
+        PRODUCTION_REQUIRED: "true",
+        SCOPE_OUTCOME: "success",
+        TRUSTED_CANDIDATE: "true",
+      },
       role: "required",
     },
   ])(
