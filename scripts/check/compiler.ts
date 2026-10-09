@@ -1,7 +1,10 @@
 import {
   Array as Arr,
+  Effect,
   Equal,
+  FileSystem,
   Option,
+  Path,
   Predicate,
   Record as Rec,
   Schema,
@@ -9,9 +12,9 @@ import {
 import type { RepositorySource } from "#scripts/check/source";
 
 const PLUGIN_NAME = "@effect/language-service";
-/** The package name and the folder of the shared configurations. */
-const SHARED_PACKAGE = "@repo/typescript-config/";
+/** The folder of the shared configurations, and the manifest that names their package. */
 const SHARED_ROOT = "packages/typescript-config/";
+const PACKAGE_FILE = "package.json";
 /** The shared configurations every workspace extends. */
 const SHARED_CONFIG_PATTERN =
   /^packages\/typescript-config\/(?!package\.json$)[^/]+\.json$/u;
@@ -31,6 +34,19 @@ const CompilerConfig = Schema.fromJsonString(
   })
 );
 const decodeConfig = Schema.decodeUnknownOption(CompilerConfig);
+/** The package manifest of the shared configurations, which declares the package's name. */
+const PackageManifest = Schema.fromJsonString(
+  Schema.Struct({ name: Schema.String })
+);
+
+/** The repository's shared compiler configuration package cannot be named. */
+export class SharedPackageError extends Schema.TaggedError<SharedPackageError>()(
+  "SharedPackageError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+  }
+) {}
 
 /** Whether a repository-relative path names a compiler configuration. */
 export function isCompilerConfig(file: string) {
@@ -38,6 +54,38 @@ export function isCompilerConfig(file: string) {
     SHARED_CONFIG_PATTERN.test(file) || WORKSPACE_CONFIG_PATTERN.test(file)
   );
 }
+
+/**
+ * Reads the package name that the repository declares for its shared compiler
+ * configurations, so the policy names the repository's own package and no other.
+ */
+export const sharedPackageName = Effect.fn(
+  "RepositoryPolicy.sharedPackageName"
+)(function* (root: string) {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const source = yield* fileSystem
+    .readFileString(path.join(root, SHARED_ROOT, PACKAGE_FILE))
+    .pipe(
+      Effect.mapError(
+        (cause) =>
+          new SharedPackageError({
+            cause,
+            message: `${SHARED_ROOT}${PACKAGE_FILE} is missing or unreadable, so the compiler configuration policy cannot name the shared package.`,
+          })
+      )
+    );
+  const manifest = yield* Schema.decodeEffect(PackageManifest)(source).pipe(
+    Effect.mapError(
+      (cause) =>
+        new SharedPackageError({
+          cause,
+          message: `${SHARED_ROOT}${PACKAGE_FILE} must be JSON with a string name, so the compiler configuration policy cannot name the shared package.`,
+        })
+    )
+  );
+  return manifest.name;
+});
 
 /** Joins a relative path onto a folder, resolving `.` and `..` segments. */
 function resolveRelative(folder: readonly string[], relative: string) {
@@ -53,16 +101,16 @@ function resolveRelative(folder: readonly string[], relative: string) {
 }
 
 /**
- * Returns the configuration an `extends` value names: a shared one by its
- * package name, or any one by a path relative to `file`. Any other value,
- * such as a list or a package preset, names nothing the check can follow.
+ * Returns the configuration an `extends` value names: a shared one by the shared
+ * package's name, or any one by a path relative to `file`. Any other value, such
+ * as a list or a package preset, names nothing the check can follow.
  */
-function parentOf(file: string, parent: unknown) {
+function parentOf(file: string, parent: unknown, sharedPrefix: string) {
   if (!Predicate.isString(parent)) {
     return Option.none();
   }
-  if (parent.startsWith(SHARED_PACKAGE)) {
-    return Option.some(`${SHARED_ROOT}${parent.slice(SHARED_PACKAGE.length)}`);
+  if (parent.startsWith(sharedPrefix)) {
+    return Option.some(`${SHARED_ROOT}${parent.slice(sharedPrefix.length)}`);
   }
   return parent.startsWith(".")
     ? Option.some(resolveRelative(Arr.dropRight(file.split("/"), 1), parent))
@@ -78,8 +126,10 @@ function parentOf(file: string, parent: unknown) {
  * reported instead of skipped.
  */
 export function inspectCompilerConfigs(
+  sharedPackage: string,
   configs: readonly (typeof RepositorySource.Type)[]
 ) {
+  const sharedPrefix = `${sharedPackage}/`;
   const inspected = Arr.map(configs, ({ file, sourceText }) => {
     const config = decodeConfig(sourceText);
     return {
@@ -118,7 +168,7 @@ export function inspectCompilerConfigs(
         onSome: ({ config, entry }) =>
           config.compilerOptions?.plugins === undefined
             ? depth > 0 &&
-              Option.match(parentOf(file, config.extends), {
+              Option.match(parentOf(file, config.extends, sharedPrefix), {
                 onNone: () => false,
                 onSome: (parent) => receives(parent, depth - 1),
               })
@@ -144,7 +194,7 @@ export function inspectCompilerConfigs(
     }
     if (!receives(file, inspected.length)) {
       return [
-        `${file}: extend a shared configuration that declares the ${PLUGIN_NAME} block, by its ${SHARED_PACKAGE} name or by a relative path, or declare the block in a shared configuration that extends nothing.`,
+        `${file}: extend a shared configuration that declares the ${PLUGIN_NAME} block, by its ${sharedPrefix} name or by a relative path, or declare the block in a shared configuration that extends nothing.`,
       ];
     }
     return Option.match(Option.all({ block, reference }), {

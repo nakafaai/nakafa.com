@@ -10,6 +10,7 @@ import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
 import {
   inspectCompilerConfigs,
   isCompilerConfig,
+  sharedPackageName,
 } from "#scripts/check/compiler";
 import {
   effectFindings,
@@ -131,6 +132,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
           (sourceText) => ({ file, sourceText })
         )
     );
+    const sharedPackage = yield* sharedPackageName(root);
     const projectConfigs = Arr.map(
       Arr.filter(configs, ({ file }) => isProjectConfig(file)),
       ({ file }) => file
@@ -156,7 +158,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         ),
         lineReport(runnerViolations),
         lineReport(sourceViolations),
-        lineReport(inspectCompilerConfigs(configs)),
+        lineReport(inspectCompilerConfigs(sharedPackage, configs)),
         lineReport(
           Arr.flatMap(sources, ({ file, sourceText }) =>
             inspectTailwindSource(file, sourceText)

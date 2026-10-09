@@ -18,6 +18,13 @@ import { checkTestPolicy } from "#scripts/check/tests";
 const CLEAN_TEST =
   'import { it } from "@effect/vitest";\nit("reads", () => {});\n';
 
+/** A shared compiler configuration with its Effect block, beside the package manifest text given. */
+const sharedPackageFiles = (manifest: string) => ({
+  "packages/typescript-config/base.json":
+    '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
+  "packages/typescript-config/package.json": manifest,
+});
+
 /** Writes fixture files below one repository root. */
 const writeFixtures = Effect.fn("TestPolicyTest.writeFixtures")(function* (
   root: string,
@@ -101,6 +108,8 @@ describe("test ownership policy", () => {
         "packages/core/node_modules/dependency/view.test.tsx": CLEAN_TEST,
         "packages/typescript-config/base.json":
           '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
+        "packages/typescript-config/package.json":
+          '{"name":"@repo/typescript-config"}\n',
         "packages/core/types.d.ts":
           'export declare const narrowed: typeof value === "object";\n',
         "scripts/tool.test.ts": CLEAN_TEST,
@@ -138,6 +147,8 @@ describe("test ownership policy", () => {
           "export const store = new Map();\nexport const names = Object.keys(value);\n",
         "apps/web/tsconfig.json":
           '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
+        "packages/typescript-config/package.json":
+          '{"name":"@repo/typescript-config"}\n',
         "tsconfig.json": '{"compilerOptions":{"plugins":[]}}\n',
       });
 
@@ -220,6 +231,8 @@ describe("test ownership policy", () => {
         "packages/core/value.ts": "export const value = 1;\n",
         "packages/typescript-config/base.json":
           '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
+        "packages/typescript-config/package.json":
+          '{"name":"@repo/typescript-config"}\n',
         "scripts/tool.ts": "export const tool = true;\n",
         "tsconfig.json":
           '{"extends":"./packages/typescript-config/base.json"}\n',
@@ -268,5 +281,98 @@ describe("test ownership policy", () => {
         ]
       );
     }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("names the shared package that the repository declares", () =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const root = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "test-policy-declared-package-",
+      });
+      yield* writeFixtures(root, {
+        ...sharedPackageFiles('{"name":"@nakafa/typescript-config"}\n'),
+        "apps/web/tsconfig.json":
+          '{"extends":"@nakafa/typescript-config/base.json"}\n',
+      });
+
+      assert.deepStrictEqual(yield* checkFixture(root), {
+        status: 0,
+        stderr: [],
+        stdout: ["Test ownership checks passed.\n"],
+      });
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "rejects a shared package name that the repository does not declare",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const root = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "test-policy-undeclared-package-",
+        });
+        yield* writeFixtures(root, {
+          ...sharedPackageFiles('{"name":"@nakafa/typescript-config"}\n'),
+          "apps/web/tsconfig.json":
+            '{"extends":"@repo/typescript-config/base.json"}\n',
+        });
+
+        assert.deepStrictEqual(yield* checkFixture(root), {
+          status: 1,
+          stderr: [
+            "apps/web/tsconfig.json: extend a shared configuration that declares the @effect/language-service block, by its @nakafa/typescript-config/ name or by a relative path, or declare the block in a shared configuration that extends nothing.\n",
+          ],
+          stdout: [],
+        });
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "fails with a typed error when the shared package file is missing",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const root = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "test-policy-missing-package-",
+        });
+        yield* writeFixtures(root, {
+          "apps/web/value.ts": "export const value = 1;\n",
+          "packages/typescript-config/base.json":
+            '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
+        });
+
+        const failure = yield* checkFixture(root).pipe(Effect.flip);
+        assert.deepStrictEqual(
+          [failure._tag, failure.message],
+          [
+            "SharedPackageError",
+            "packages/typescript-config/package.json is missing or unreadable, so the compiler configuration policy cannot name the shared package.",
+          ]
+        );
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "fails with a typed error when the shared package file names no package",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const root = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "test-policy-unnamed-package-",
+        });
+        yield* writeFixtures(root, {
+          ...sharedPackageFiles('{"version":"0.1.0"}\n'),
+          "apps/web/value.ts": "export const value = 1;\n",
+        });
+
+        const failure = yield* checkFixture(root).pipe(Effect.flip);
+        assert.deepStrictEqual(
+          [failure._tag, failure.message],
+          [
+            "SharedPackageError",
+            "packages/typescript-config/package.json must be JSON with a string name, so the compiler configuration policy cannot name the shared package.",
+          ]
+        );
+      }).pipe(Effect.provide(NodeServices.layer))
   );
 });
