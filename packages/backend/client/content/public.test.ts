@@ -36,7 +36,7 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
 const batchEndpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_BATCH_PATH}`;
@@ -262,7 +262,7 @@ describe("public content runtime client", () => {
       expect(fetchMock).toHaveBeenCalledOnce();
       expect(fetchMock.mock.calls[0]?.[0]).toEqual(new URL(batchEndpoint));
       expect(yield* sentJson()).toEqual({
-        requests: inputs.map(({ appLocale, publicPath }) => ({
+        requests: Arr.map(inputs, ({ appLocale, publicPath }) => ({
           appLocale,
           delivery: "public",
           publicPath,
@@ -270,8 +270,11 @@ describe("public content runtime client", () => {
       });
       expect(verifyMock).toHaveBeenCalledTimes(8);
       expect(
-        verifyMock.mock.calls.map(([exchange]) => exchange.request.publicPath)
-      ).toEqual(inputs.map(({ publicPath }) => publicPath));
+        Arr.map(
+          verifyMock.mock.calls,
+          ([exchange]) => exchange.request.publicPath
+        )
+      ).toEqual(Arr.map(inputs, ({ publicPath }) => publicPath));
     })
   );
 

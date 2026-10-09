@@ -21,7 +21,7 @@ import {
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
-import { Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 
 const identity: TryoutSectionIdentity = {
   countryKey: "indonesia",
@@ -83,11 +83,12 @@ async function activateSection(questionCount = 1) {
   const t = convexTest(schema, convexModules);
   const snapshotId = await t.mutation((ctx) =>
     activateTryoutSnapshot(ctx, {
-      catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
+      catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
         makeTryoutCatalogRow(locale).record.row,
         makeTechnicalSection(locale, questionCount),
       ]),
-      placements: ACTIVE_APP_LOCALE_CODES.map(
+      placements: Arr.map(
+        ACTIVE_APP_LOCALE_CODES,
         (locale) => makeTryoutPlacementRow(locale).record.row
       ),
     })
@@ -216,11 +217,14 @@ describe("contentRelease/tryout/section", () => {
     const missingPlacement = await activateSection();
     await missingPlacement.t.mutation(async (ctx) => {
       const placements = await ctx.db.query("tryoutPlacements").collect();
-      const placement = placements.find(({ appLocale }) => appLocale === "en");
-      if (!placement) {
+      const placement = Arr.findFirst(
+        placements,
+        ({ appLocale }) => appLocale === "en"
+      );
+      if (Option.isNone(placement)) {
         throw new Error("Expected one technical placement.");
       }
-      await ctx.db.delete(placement._id);
+      await ctx.db.delete(placement.value._id);
     });
     await expect(
       missingPlacement.t.query((ctx) =>
@@ -262,11 +266,11 @@ describe("contentRelease/tryout/section", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       activateTryoutSnapshot(ctx, {
-        catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
+        catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
           makeTryoutCatalogRow(locale).record.row,
           makeTechnicalSection(locale),
         ]),
-        placements: ACTIVE_APP_LOCALE_CODES.map((locale) =>
+        placements: Arr.map(ACTIVE_APP_LOCALE_CODES, (locale) =>
           locale === "en"
             ? makeTechnicalPlacement(locale, 2)
             : makeTryoutPlacementRow(locale).record.row

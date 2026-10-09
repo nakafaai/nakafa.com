@@ -17,7 +17,7 @@ import {
 import { readQuranRow } from "@repo/backend/content/quran/row";
 import { readQuranLocaleSources } from "@repo/backend/content/quran/sources";
 import { readQuranSurahRow } from "@repo/backend/content/quran/surah";
-import { Effect, Schema, Struct } from "effect";
+import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 const QuranPassageSourceRequestSchema = Schema.Struct({
   ...quranReferenceArgsValidator.mapFields(Struct.omit(["appLocale"])).fields,
@@ -161,13 +161,12 @@ export const readQuranPassage = Effect.fn("contentRelease.readQuranPassage")(
         concurrency: "unbounded",
       }
     );
-    const selectedVerses = loaded.passage.chunks.rows
-      .flatMap((chunk) => chunk.verses)
-      .filter(
-        (verse) =>
-          verse.number.inSurah >= loaded.input.fromVerse &&
-          verse.number.inSurah <= loaded.input.toVerse
-      );
+    const selectedVerses = Arr.filter(
+      Arr.flatMap(loaded.passage.chunks.rows, (chunk) => chunk.verses),
+      (verse) =>
+        verse.number.inSurah >= loaded.input.fromVerse &&
+        verse.number.inSurah <= loaded.input.toVerse
+    );
     const projected = separateQuranRuntimeBismillah(bismillah, selectedVerses);
     yield* verifyQuranBismillah(bismillah, projected.preBismillah);
     return {

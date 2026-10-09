@@ -2,16 +2,22 @@ import type {
   TryoutSection,
   TryoutSet,
 } from "@nakafa/aksara-contracts/tryout/catalog";
+import { Array as Arr } from "effect";
 
 /** Returns the questions one decoded section list proves. */
 /** Returns the questions one decoded section list proves. */
 function countQuestions(sections: readonly TryoutSection[]) {
-  return sections.reduce((total, section) => total + section.questionCount, 0);
+  return Arr.reduce(
+    sections,
+    0,
+    (total, section) => total + section.questionCount
+  );
 }
 
 /** Returns the visible sections one decoded section list proves. */
 function countVisible(sections: readonly TryoutSection[]) {
-  return sections.filter((section) => section.visibility === "visible").length;
+  return Arr.filter(sections, (section) => section.visibility === "visible")
+    .length;
 }
 
 /**

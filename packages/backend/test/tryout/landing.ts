@@ -12,7 +12,7 @@ import {
   makeTryoutStartHierarchy,
   makeTryoutStartPlacement,
 } from "@repo/backend/test/tryout/source";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 const LANDING_SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 const LANDING_SOURCE_ROOT =
@@ -27,10 +27,10 @@ export async function activateLandingSource(
   visibility: "internal-entry" | "visible"
 ) {
   const snapshotId = await activateTryoutSnapshot(ctx, {
-    catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+    catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
       makeLandingHierarchy(locale, visibility)
     ),
-    placements: ACTIVE_APP_LOCALE_CODES.map(makeLandingPlacement),
+    placements: Arr.map(ACTIVE_APP_LOCALE_CODES, makeLandingPlacement),
   });
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
   return snapshotId;
@@ -43,53 +43,56 @@ export function makeLandingHierarchy(
   scoringStrategy: "raw" | "irt" = "raw"
 ) {
   return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
-    makeTryoutStartHierarchy(locale, visibility, scoringStrategy).map((row) => {
-      switch (row.kind) {
-        case "country":
-          return row;
-        case "exam":
-          return {
-            ...row,
-            examKey: LANDING_FEATURED_TRYOUT.examKey,
-            publicPath: "try-out/indonesia/snbt",
-            title: "SNBT",
-          };
-        case "track":
-          return {
-            ...row,
-            examKey: LANDING_FEATURED_TRYOUT.examKey,
-            publicPath: "try-out/indonesia/snbt/2027",
-            title: "Year 2027",
-            trackKey: LANDING_FEATURED_TRYOUT.trackKey,
-            trackKind: "year",
-          };
-        case "set":
-          return {
-            ...row,
-            examKey: LANDING_FEATURED_TRYOUT.examKey,
-            publicPath: LANDING_SET_PATH,
-            setKey: LANDING_FEATURED_TRYOUT.setKey,
-            title: "Set 1",
-            trackKey: LANDING_FEATURED_TRYOUT.trackKey,
-          };
-        case "section":
-          return {
-            ...row,
-            examKey: LANDING_FEATURED_TRYOUT.examKey,
-            publicPath:
-              visibility === "visible"
-                ? `${LANDING_SET_PATH}/${LANDING_FEATURED_TRYOUT.sectionKey}`
-                : undefined,
-            questionSourcePath: LANDING_SOURCE_ROOT,
-            sectionKey: LANDING_FEATURED_TRYOUT.sectionKey,
-            setKey: LANDING_FEATURED_TRYOUT.setKey,
-            title: "Quantitative Knowledge",
-            trackKey: LANDING_FEATURED_TRYOUT.trackKey,
-          };
-        default:
-          return row;
+    Arr.map(
+      makeTryoutStartHierarchy(locale, visibility, scoringStrategy),
+      (row) => {
+        switch (row.kind) {
+          case "country":
+            return row;
+          case "exam":
+            return {
+              ...row,
+              examKey: LANDING_FEATURED_TRYOUT.examKey,
+              publicPath: "try-out/indonesia/snbt",
+              title: "SNBT",
+            };
+          case "track":
+            return {
+              ...row,
+              examKey: LANDING_FEATURED_TRYOUT.examKey,
+              publicPath: "try-out/indonesia/snbt/2027",
+              title: "Year 2027",
+              trackKey: LANDING_FEATURED_TRYOUT.trackKey,
+              trackKind: "year",
+            };
+          case "set":
+            return {
+              ...row,
+              examKey: LANDING_FEATURED_TRYOUT.examKey,
+              publicPath: LANDING_SET_PATH,
+              setKey: LANDING_FEATURED_TRYOUT.setKey,
+              title: "Set 1",
+              trackKey: LANDING_FEATURED_TRYOUT.trackKey,
+            };
+          case "section":
+            return {
+              ...row,
+              examKey: LANDING_FEATURED_TRYOUT.examKey,
+              publicPath:
+                visibility === "visible"
+                  ? `${LANDING_SET_PATH}/${LANDING_FEATURED_TRYOUT.sectionKey}`
+                  : undefined,
+              questionSourcePath: LANDING_SOURCE_ROOT,
+              sectionKey: LANDING_FEATURED_TRYOUT.sectionKey,
+              setKey: LANDING_FEATURED_TRYOUT.setKey,
+              title: "Quantitative Knowledge",
+              trackKey: LANDING_FEATURED_TRYOUT.trackKey,
+            };
+          default:
+            return row;
+        }
       }
-    })
+    )
   );
 }
 
@@ -110,9 +113,9 @@ export function makeLandingPlacement(locale: ActiveAppLocaleCode) {
 /** Supplies the exact pinned landing catalog and its locale-specific placements. */
 export function makeLandingSource() {
   return {
-    catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+    catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
       makeLandingHierarchy(locale, "visible")
     ),
-    placements: ACTIVE_APP_LOCALE_CODES.map(makeLandingPlacement),
+    placements: Arr.map(ACTIVE_APP_LOCALE_CODES, makeLandingPlacement),
   };
 }

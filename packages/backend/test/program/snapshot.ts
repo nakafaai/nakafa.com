@@ -51,7 +51,7 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
-import { Effect, Stream } from "effect";
+import { Array as Arr, Effect, Option, Order, pipe, Stream } from "effect";
 /** Builds one explicit technical program row for backend protocol tests. */
 export function makeTechnicalProgram(
   index: number,
@@ -102,10 +102,11 @@ function technicalCurriculum(
   appLocale: ActiveAppLocale
 ) {
   const appLocaleCode = activeAppLocaleCode(appLocale);
-  const translation = program.translations.find(
+  const translation = Arr.findFirst(
+    program.translations,
     (candidate) => candidate.appLocale === appLocale
   );
-  if (!translation) {
+  if (Option.isNone(translation)) {
     throw new Error(
       `Technical program ${program.key} is missing ${appLocale} copy.`
     );
@@ -119,20 +120,20 @@ function technicalCurriculum(
     order: program.displayOrder,
     programKey: program.key,
     publicPath: PublicPathSchema.make(
-      `${CURRICULUM_NAMESPACES[appLocaleCode]}/${translation.publicSlug}`
+      `${CURRICULUM_NAMESPACES[appLocaleCode]}/${translation.value.publicSlug}`
     ),
     sitemap: true,
     sourcePath: CorpusSourcePathSchema.make(
       `packages/corpus/curriculum/${program.key}`
     ),
-    title: translation.title,
+    title: translation.value.title,
   });
 }
 /** Orders curriculum roots by the signed stream's code-unit identity. */
 function compareCurriculum(
   left: ReturnType<typeof technicalCurriculum>,
   right: ReturnType<typeof technicalCurriculum>
-) {
+): -1 | 0 | 1 {
   const leftKey = `${left.programKey}\0${left.appLocale}\0${left.publicPath}`;
   const rightKey = `${right.programKey}\0${right.appLocale}\0${right.publicPath}`;
   if (leftKey < rightKey) {
@@ -152,15 +153,17 @@ export const makeProgramSnapshotData = Effect.fn(
   additionalRoutes: readonly CurriculumRoute[] = []
 ) {
   const catalog = yield* Effect.forEach(programs, makeProgramSnapshotRow);
-  const curriculumRoutes = programs
-    .filter((program) => program.navigation.model === "curriculum-tree")
-    .flatMap((program) =>
-      activeAppLocales.map((appLocale) =>
+  const curriculumRoutes = pipe(
+    programs,
+    Arr.filter((program) => program.navigation.model === "curriculum-tree"),
+    Arr.flatMap((program) =>
+      Arr.map(activeAppLocales, (appLocale) =>
         technicalCurriculum(program, appLocale)
       )
-    )
-    .concat(additionalRoutes)
-    .sort(compareCurriculum);
+    ),
+    Arr.appendAll(additionalRoutes),
+    Arr.sort(Order.make(compareCurriculum))
+  );
   const curriculum = yield* Effect.forEach(
     curriculumRoutes,
     makeCurriculumSnapshotRow
@@ -179,14 +182,16 @@ export const makeProgramSnapshotData = Effect.fn(
     family: "program",
     manifest,
   };
-  const catalogRows = catalog.map(
+  const catalogRows = Arr.map(
+    catalog,
     (record) =>
       ({
         family: "program",
         record,
       }) satisfies ContentSnapshotRow
   );
-  const curriculumRows = curriculum.map(
+  const curriculumRows = Arr.map(
+    curriculum,
     (record) =>
       ({
         family: "program",
@@ -205,7 +210,7 @@ export const makeProgramSnapshotData = Effect.fn(
   };
   return {
     manifestJson: encodeSnapshotJson(snapshot),
-    rowJson: rows.map(canonicalizeContentSnapshotRow),
+    rowJson: Arr.map(rows, canonicalizeContentSnapshotRow),
     rows,
     snapshot,
     snapshotId,

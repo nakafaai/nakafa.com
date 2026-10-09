@@ -26,7 +26,7 @@ import {
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 describe("bounded public program subjects", () => {
   const appLocale = ActiveAppLocaleSchema.make("en");
@@ -191,14 +191,14 @@ describe("bounded public program subjects", () => {
           result.routeJson,
           decodeSnapshotRowJson
         );
-        const featured = decoded.map((entry) => {
+        const featured = Arr.map(decoded, (entry) => {
           assert(
             entry.family === "program" && entry.record.kind === "curriculum"
           );
           return entry.record.row;
         });
         expect(featured).toHaveLength(PROGRAM_FEATURED_SUBJECT_LIMIT);
-        expect(featured.map(({ publicPath }) => publicPath)).toEqual([
+        expect(Arr.map(featured, ({ publicPath }) => publicPath)).toEqual([
           `${first}/b-chemistry`,
           `${first}/b-mathematics`,
           `${second}/hayati`,

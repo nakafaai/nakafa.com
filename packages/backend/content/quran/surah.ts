@@ -7,7 +7,7 @@ import { readQuranChunks } from "@repo/backend/content/quran/chunks";
 import { PublishedQuranSurahSchema } from "@repo/backend/content/quran/contract";
 import { loadQuranOwner } from "@repo/backend/content/quran/owner";
 import { QuranSource } from "@repo/backend/content/quran/source";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Authenticates one signed surah contract. */
 export const verifyQuranSurahRow = Effect.fn(
@@ -82,9 +82,10 @@ export const readQuranSurahVersePrefix = Effect.fn(
     surahNumber,
     toVerse,
   });
-  return chunks.rows
-    .flatMap((chunk) => chunk.verses)
-    .filter((verse) => verse.number.inSurah <= toVerse);
+  return Arr.filter(
+    Arr.flatMap(chunks.rows, (chunk) => chunk.verses),
+    (verse) => verse.number.inSurah <= toVerse
+  );
 });
 
 /** Reads the complete ordered verses for one already validated signed surah. */

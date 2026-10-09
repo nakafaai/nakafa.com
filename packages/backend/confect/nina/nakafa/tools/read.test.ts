@@ -9,7 +9,7 @@ import {
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/agent/schema/read";
-import { Effect, Schema } from "effect";
+import { Effect, MutableList, Schema } from "effect";
 
 vi.mock("@repo/backend/agent/content", () => ({ getNakafaContent: vi.fn() }));
 afterEach(() => vi.restoreAllMocks());
@@ -37,7 +37,7 @@ describe("Nina content evidence", () => {
       read({ input, publish, toolCallId: "read" })
     );
     expect(result).toContain(content.text);
-    expect(artifacts).toMatchObject([
+    expect(MutableList.toArray(artifacts)).toMatchObject([
       { id: "read", data: { status: "loading", input } },
       {
         id: "read",
@@ -47,8 +47,10 @@ describe("Nina content evidence", () => {
         },
       },
     ]);
-    expect(() => encodeContract(artifacts)).not.toThrow();
-    expect(encodeJson(artifacts)).not.toContain(content.text);
+    expect(() => encodeContract(MutableList.toArray(artifacts))).not.toThrow();
+    expect(encodeJson(MutableList.toArray(artifacts))).not.toContain(
+      content.text
+    );
   });
   it.each(["missing", "failed"] as const)(
     "publishes an honest %s result without inventing content",
@@ -71,7 +73,7 @@ describe("Nina content evidence", () => {
           ? "Nakafa content was not found."
           : "Content verification failed."
       );
-      expect(artifacts.at(-1)).toMatchObject({
+      expect(MutableList.toArray(artifacts).at(-1)).toMatchObject({
         data: { status: "error", error: text },
       });
     }

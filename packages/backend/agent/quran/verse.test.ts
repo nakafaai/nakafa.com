@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { projectQuranVerse } from "@repo/backend/agent/quran/verse";
 import { makeQuranChunk } from "@repo/backend/test/quran/rows";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const verse = makeQuranChunk({
   firstQuranNumber: 1,
@@ -24,9 +24,10 @@ describe("signed Quran verse projection", () => {
               ...verse,
               translations: [
                 verse.translations[0],
-                ...verse.translations
-                  .slice(1)
-                  .filter(({ appLocale }) => appLocale !== "de"),
+                ...Arr.filter(
+                  verse.translations.slice(1),
+                  ({ appLocale }) => appLocale !== "de"
+                ),
               ],
             },
             "de",

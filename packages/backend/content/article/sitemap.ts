@@ -7,7 +7,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { readArticlePartition } from "@repo/backend/content/article/partition";
 import { ArticleSource } from "@repo/backend/content/article/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Lists non-empty deterministic sitemap partitions for managed articles. */
 export const readArticleBuckets = Effect.fn(
@@ -51,11 +51,12 @@ export const readArticleBuckets = Effect.fn(
   }
   return {
     activeReleaseId,
-    articleCount: rows.reduce(
-      (total, { articleCount }) => total + articleCount,
-      0
+    articleCount: Arr.reduce(
+      rows,
+      0,
+      (total, { articleCount }) => total + articleCount
     ),
-    buckets: rows.map(({ bucket }) => bucket),
+    buckets: Arr.map(rows, ({ bucket }) => bucket),
     managed: true,
   };
 });
@@ -73,10 +74,10 @@ export const readArticleSitemap = Effect.fn(
   }
   return {
     routes: [
-      ...partition.categories.map(({ route }) => ({
+      ...Arr.map(partition.categories, ({ route }) => ({
         publicPath: `articles/${route}`,
       })),
-      ...partition.articles.map(({ projection }) => ({
+      ...Arr.map(partition.articles, ({ projection }) => ({
         lastModified:
           projection.metadata.dateModified ?? projection.metadata.datePublished,
         publicPath: projection.publicPath,

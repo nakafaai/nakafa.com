@@ -12,7 +12,7 @@ import {
 } from "@repo/backend/content/quran/contract";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 type QuranCatalogResult = FunctionReturnType<
   typeof api.contentRelease.quran.surahs
@@ -68,7 +68,10 @@ export const decodePublishedQuranCatalog = Effect.fn(
   const surahs = yield* Effect.forEach(result.rowJson, (row) =>
     decodeQuranSurahRow(row, source.snapshotId, "catalog")
   );
-  const ordered = surahs.every((surah, index) => surah.number === index + 1);
+  const ordered = Arr.every(
+    surahs,
+    (surah, index) => surah.number === index + 1
+  );
   if (surahs.length !== QURAN_SURAH_COUNT || !ordered) {
     return yield* quranPublicationError(
       "catalog",

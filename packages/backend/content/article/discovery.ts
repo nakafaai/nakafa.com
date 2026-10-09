@@ -3,7 +3,7 @@ import { loadArticleOwner } from "@repo/backend/content/article/owner";
 import { readArticlePartition } from "@repo/backend/content/article/partition";
 import { ArticleSource } from "@repo/backend/content/article/source";
 import { verifyArticle } from "@repo/backend/content/article/verify";
-import { Effect, Struct } from "effect";
+import { Array as Arr, Effect, Struct } from "effect";
 
 const ARTICLE_DISCOVERY_LIMIT = 100;
 /** Validates one bounded discovery read before accessing an article index. */
@@ -28,7 +28,7 @@ function summarizeArticle(
   const { projection } = verified;
   return {
     articleSlug: projection.articleSlug,
-    authors: projection.metadata.authors.map(({ name }) => ({
+    authors: Arr.map(projection.metadata.authors, ({ name }) => ({
       name,
     })),
     category: projection.category,
@@ -73,7 +73,7 @@ export const readArticleBucket = Effect.fn("contentRelease.readArticleBucket")(
     }
     return {
       activeReleaseId: partition.activeReleaseId,
-      articles: partition.articles.map(summarizeArticle),
+      articles: Arr.map(partition.articles, summarizeArticle),
       managed: true,
     };
   }
@@ -99,7 +99,7 @@ export const readLatestArticles = Effect.fn(
   );
   return {
     activeReleaseId,
-    articles: verified.map(summarizeArticle),
+    articles: Arr.map(verified, summarizeArticle),
     managed: true,
   };
 });
@@ -128,7 +128,7 @@ export const readCategoryArticles = Effect.fn(
   );
   return {
     activeReleaseId,
-    articles: verified.map(summarizeArticle),
+    articles: Arr.map(verified, summarizeArticle),
     managed: true,
   };
 });

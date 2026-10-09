@@ -15,7 +15,7 @@ import {
   testSignedArtifact,
 } from "@repo/backend/test/content/proof";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const otherHash = Sha256HashSchema.make(`sha256:${"9".repeat(64)}`);
@@ -67,7 +67,12 @@ describe("protected try-out exchange", () => {
               },
             });
             expect(
-              decoded?.items.map(({ artifact }) => artifact.payload.rawMdx)
+              decoded === undefined || decoded === null
+                ? undefined
+                : Arr.map(
+                    decoded.items,
+                    ({ artifact }) => artifact.payload.rawMdx
+                  )
             ).toEqual(["## Technical question", "#### Technical answer"]);
             expect(
               yield* decodeProtectedRuntimeRow(null, fixture.request).pipe(

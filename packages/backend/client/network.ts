@@ -4,6 +4,7 @@ import {
   Effect,
   HashSet,
   MutableHashSet,
+  MutableList,
   Predicate,
   Result,
   Schedule,
@@ -77,7 +78,7 @@ export function createNetworkRequestError(cause: unknown) {
   const retryable =
     inspection.success.foundCode && !inspection.success.foundTerminalFailure;
   const networkCodes = retryable
-    ? NetworkRetryCodeSchema.literals.filter((code) =>
+    ? Arr.filter(NetworkRetryCodeSchema.literals, (code) =>
         HashSet.has(inspection.success.retryCodes, code)
       )
     : [];
@@ -92,20 +93,21 @@ export function createNetworkRequestError(cause: unknown) {
  */
 const isVisited = Arr.containsWith<object>((node, other) => node === other);
 function inspectNetworkCodes(cause: unknown) {
-  const pending = [cause];
-  const visited: object[] = [];
+  const pending = MutableList.make<unknown>();
+  MutableList.append(pending, cause);
+  const visited = MutableList.make<object>();
   const retryCodes = MutableHashSet.empty<NetworkRetryCode>();
   let foundCode = false;
   let foundTerminalFailure = false;
   while (pending.length > 0 && visited.length < NETWORK_CAUSE_LIMIT) {
-    const current = pending.pop();
+    const current = MutableList.take(pending);
     if (!Predicate.isObjectOrArray(current)) {
       continue;
     }
-    if (isVisited(visited, current)) {
+    if (isVisited(MutableList.toArray(visited), current)) {
       continue;
     }
-    visited.push(current);
+    MutableList.append(visited, current);
     const inspection = inspectNetworkNode(
       current,
       NETWORK_CAUSE_LIMIT - pending.length - visited.length
@@ -115,7 +117,10 @@ function inspectNetworkCodes(cause: unknown) {
     if (inspection.retryCode !== undefined) {
       MutableHashSet.add(retryCodes, inspection.retryCode);
     }
-    pending.push(...inspection.children);
+    // The list is a stack: pushing the children in order leaves the last one at the front.
+    for (const child of inspection.children) {
+      MutableList.prepend(pending, child);
+    }
   }
   return {
     foundCode,
@@ -132,12 +137,12 @@ function inspectNetworkNode(current: object, remainingCapacity: number) {
     Predicate.isString(code) && NETWORK_CODE_PATTERN.test(code);
   const retryCode =
     hasNetworkCode && isNetworkRetryCode(code) ? code : undefined;
-  const children: object[] = [];
+  const children = MutableList.make<object>();
   let foundTerminalFailure = hasCodeProperty && retryCode === undefined;
   if ("cause" in current) {
     const nestedCause = current.cause;
     if (Predicate.isObjectOrArray(nestedCause)) {
-      children.push(nestedCause);
+      MutableList.append(children, nestedCause);
     } else {
       foundTerminalFailure = true;
     }
@@ -152,11 +157,11 @@ function inspectNetworkNode(current: object, remainingCapacity: number) {
         foundTerminalFailure = true;
         break;
       }
-      children.push(error);
+      MutableList.append(children, error);
     }
   }
   return {
-    children,
+    children: MutableList.toArray(children),
     foundTerminalFailure:
       foundTerminalFailure || !(hasNetworkCode || children.length > 0),
     hasNetworkCode,
