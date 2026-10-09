@@ -19,7 +19,7 @@ import {
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import { TRYOUT_START_CONTENT_HASH } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const LANDING_SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 const DISTRACTOR_CONTENT_ROOT =
@@ -32,17 +32,18 @@ const DISTRACTOR_QUESTION_SOURCE_ROOT = `${DISTRACTOR_SOURCE_ROOT}/question-1`;
 /** Adds an earlier signed section without changing the landing target. */
 function makeLeadingSectionHierarchy(locale: ActiveAppLocaleCode) {
   const hierarchy = makeLandingHierarchy(locale, "visible");
-  const target = hierarchy.find(
+  const target = Arr.findFirst(
+    hierarchy,
     (row) =>
       row.kind === "section" &&
       row.sectionKey === LANDING_FEATURED_TRYOUT.sectionKey
   );
-  if (!(target && target.kind === "section")) {
+  if (!(Option.isSome(target) && target.value.kind === "section")) {
     throw new Error("Expected the stable landing section fixture.");
   }
 
   return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
-    ...hierarchy.map((row) => {
+    ...Arr.map(hierarchy, (row) => {
       if (row.kind === "track" || row.kind === "set") {
         return {
           ...row,
@@ -57,7 +58,7 @@ function makeLeadingSectionHierarchy(locale: ActiveAppLocaleCode) {
       return row;
     }),
     {
-      ...target,
+      ...target.value,
       order: 1,
       publicPath: `${LANDING_SET_PATH}/general-reasoning`,
       questionSourcePath: DISTRACTOR_SOURCE_ROOT,
@@ -127,12 +128,16 @@ describe("tryouts/catalog/featured", () => {
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const snapshotId = await activateTryoutSnapshot(ctx, {
-              catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
-                makeLandingHierarchy(locale, "visible").filter(
+              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+                Arr.filter(
+                  makeLandingHierarchy(locale, "visible"),
                   (row) => row.kind !== kind
                 )
               ),
-              placements: ACTIVE_APP_LOCALE_CODES.map(makeLandingPlacement),
+              placements: Arr.map(
+                ACTIVE_APP_LOCALE_CODES,
+                makeLandingPlacement
+              ),
             });
             await insertTestTryoutRuntimeBundle(ctx, snapshotId);
           })
@@ -159,14 +164,17 @@ describe("tryouts/catalog/featured", () => {
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const snapshotId = await activateTryoutSnapshot(ctx, {
-              catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
-                makeLandingHierarchy(locale, "visible").map((row) =>
+              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+                Arr.map(makeLandingHierarchy(locale, "visible"), (row) =>
                   missing === "set" && "setKey" in row
                     ? { ...row, setKey: "set-2" }
                     : row
                 )
               ),
-              placements: ACTIVE_APP_LOCALE_CODES.map(makeLandingPlacement),
+              placements: Arr.map(
+                ACTIVE_APP_LOCALE_CODES,
+                makeLandingPlacement
+              ),
             });
             if (missing !== "bundle") {
               await insertTestTryoutRuntimeBundle(ctx, snapshotId);
@@ -269,10 +277,11 @@ describe("tryouts/catalog/featured", () => {
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const snapshotId = await activateTryoutSnapshot(ctx, {
-              catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
+              catalog: Arr.flatMap(
+                ACTIVE_APP_LOCALE_CODES,
                 makeLeadingSectionHierarchy
               ),
-              placements: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
+              placements: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
                 makeLeadingPlacement(locale),
                 makeLandingPlacement(locale),
               ]),
@@ -301,10 +310,11 @@ describe("tryouts/catalog/featured", () => {
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
             const snapshotId = await activateTryoutSnapshot(ctx, {
-              catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
                 makeLandingHierarchy(locale, "visible")
               ),
-              placements: ACTIVE_APP_LOCALE_CODES.map(
+              placements: Arr.map(
+                ACTIVE_APP_LOCALE_CODES,
                 makeMultipleChoicePlacement
               ),
             });
@@ -329,10 +339,10 @@ describe("tryouts/catalog/featured", () => {
       yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const snapshotId = await activateTryoutSnapshot(ctx, {
-            catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+            catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
               makeLandingHierarchy(locale, "visible")
             ),
-            placements: ACTIVE_APP_LOCALE_CODES.map(makeCategoryPlacement),
+            placements: Arr.map(ACTIVE_APP_LOCALE_CODES, makeCategoryPlacement),
           });
           await insertTestTryoutRuntimeBundle(ctx, snapshotId);
         })

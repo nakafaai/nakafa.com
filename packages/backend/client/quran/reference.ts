@@ -16,7 +16,7 @@ import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismi
 import type { PublishedQuranReferenceFieldsSchema } from "@repo/backend/content/quran/response";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type QuranReferenceResult = FunctionReturnType<
   typeof api.contentRelease.quran.passage
@@ -63,7 +63,8 @@ export const decodePublishedQuranReference = Effect.fn(
       expected.surahNumber
     ),
   ]);
-  const selectedVerses = chunkVerses.filter(
+  const selectedVerses = Arr.filter(
+    chunkVerses,
     (verse) =>
       verse.number.inSurah >= result.fromVerse &&
       verse.number.inSurah <= result.toVerse

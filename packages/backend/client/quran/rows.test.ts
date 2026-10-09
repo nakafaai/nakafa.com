@@ -10,7 +10,7 @@ import {
   makeQuranChunk,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 const snapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
@@ -30,7 +30,9 @@ const second = makeQuranChunk({
 it.effect("preserves contiguous chunk order and exact verse content", () =>
   Effect.gen(function* () {
     const verses = yield* decodeQuranChunkVerses(
-      [first, second].map((chunk) => encodeTestQuranRow(snapshotId, chunk)),
+      Arr.map([first, second], (chunk) =>
+        encodeTestQuranRow(snapshotId, chunk)
+      ),
       snapshotId,
       "reference",
       1
@@ -71,7 +73,7 @@ it.effect.each([
 ])("rejects empty, foreign, missing, and reordered Quran chunks", (chunks) =>
   Effect.gen(function* () {
     const failure = yield* decodeQuranChunkVerses(
-      chunks.map((chunk) => encodeTestQuranRow(snapshotId, chunk)),
+      Arr.map(chunks, (chunk) => encodeTestQuranRow(snapshotId, chunk)),
       snapshotId,
       "reference",
       1

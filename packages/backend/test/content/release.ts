@@ -34,7 +34,7 @@ import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
 import { testMaterialPublicPath } from "@repo/backend/test/content/material";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
 /** Plain codec: writes the same bytes as JSON.stringify. */
@@ -75,7 +75,7 @@ export function testRendererJson(
   const base = [componentName];
   return encodeJson({
     base,
-    domains: RENDERER_DOMAINS.map((name) => ({
+    domains: Arr.map(RENDERER_DOMAINS, (name) => ({
       components: [],
       name,
     })),
@@ -116,7 +116,8 @@ export function testPublicationScope(options?: {
   const snapshots = options?.snapshots ?? inheritContentSnapshots(null);
   return PublicationScopeSchema.make({
     families: options?.families ?? ContentFamilySchema.literals,
-    snapshots: ContentSnapshotKindSchema.literals.filter(
+    snapshots: Arr.filter(
+      ContentSnapshotKindSchema.literals,
       (family) => snapshots[family].mode !== "inherit"
     ),
   });

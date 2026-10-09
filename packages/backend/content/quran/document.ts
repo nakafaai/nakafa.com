@@ -13,7 +13,7 @@ import {
   loadQuranSurah,
   readQuranSurahVerses,
 } from "@repo/backend/content/quran/surah";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type QuranDocument = typeof quranDocumentValidator.Type;
 type QuranDocumentSurah = NonNullable<QuranDocument["surah"]>;
@@ -113,7 +113,7 @@ export const readQuranDocument = Effect.fn("contentRelease.readQuranDocument")(
       ...document,
       preBismillah: projected.preBismillah,
       surah: loaded.surah === null ? null : projectSurah(loaded.surah),
-      verses: projected.verses.map(({ arabic, document, number }) => ({
+      verses: Arr.map(projected.verses, ({ arabic, document, number }) => ({
         arabic,
         number,
         translation: document,

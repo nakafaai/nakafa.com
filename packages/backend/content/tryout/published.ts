@@ -16,7 +16,7 @@ import {
   readPublishedTrackParents,
   sortCatalogRows,
 } from "@repo/backend/content/tryout/hierarchy";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Projects one signed country into the existing public catalog contract. */
 function toPublicCountry(country: TryoutCountry) {
@@ -115,9 +115,10 @@ export const readPublishedHubPage = Effect.fn(
   "tryouts.catalog.readPublishedHubPage"
 )(function* (catalog: PublishedCatalog) {
   const index = yield* indexPublishedCatalog(catalog);
-  const countries = sortCatalogRows(index.countries).map((country) => ({
+  const countries = Arr.map(sortCatalogRows(index.countries), (country) => ({
     ...toPublicCountry(country),
-    examCount: index.exams.filter(
+    examCount: Arr.filter(
+      index.exams,
       (exam) => exam.countryKey === country.countryKey
     ).length,
   }));
@@ -131,16 +132,22 @@ export const readPublishedCountryPage = Effect.fn(
   "tryouts.catalog.readPublishedCountryPage"
 )(function* (catalog: PublishedCatalog, publicPath: string) {
   const index = yield* indexPublishedCatalog(catalog);
-  const country = index.countries.find((row) => row.publicPath === publicPath);
-  if (!country) {
+  const country = Arr.findFirst(
+    index.countries,
+    (row) => row.publicPath === publicPath
+  );
+  if (Option.isNone(country)) {
     return null;
   }
   const exams = sortCatalogRows(
-    index.exams.filter((row) => row.countryKey === country.countryKey)
+    Arr.filter(
+      index.exams,
+      (row) => row.countryKey === country.value.countryKey
+    )
   );
   return {
-    country: toPublicCountry(country),
-    exams: exams.map(toPublicExam),
+    country: toPublicCountry(country.value),
+    exams: Arr.map(exams, toPublicExam),
   };
 });
 
@@ -149,29 +156,35 @@ export const readPublishedExamPage = Effect.fn(
   "tryouts.catalog.readPublishedExamPage"
 )(function* (catalog: PublishedCatalog, publicPath: string) {
   const index = yield* indexPublishedCatalog(catalog);
-  const exam = index.exams.find((row) => row.publicPath === publicPath);
-  if (!exam) {
+  const exam = Arr.findFirst(
+    index.exams,
+    (row) => row.publicPath === publicPath
+  );
+  if (Option.isNone(exam)) {
     return null;
   }
-  const country = index.countries.find(
-    (row) => row.countryKey === exam.countryKey
+  const country = Arr.findFirst(
+    index.countries,
+    (row) => row.countryKey === exam.value.countryKey
   );
-  if (!country) {
+  if (Option.isNone(country)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Signed try-out exam lost its country."
     );
   }
   const tracks = sortCatalogRows(
-    index.tracks.filter(
+    Arr.filter(
+      index.tracks,
       (row) =>
-        row.countryKey === exam.countryKey && row.examKey === exam.examKey
+        row.countryKey === exam.value.countryKey &&
+        row.examKey === exam.value.examKey
     )
   );
   return {
-    country: toPublicCountry(country),
-    exam: toPublicExam(exam),
-    tracks: tracks.map(toPublicTrack),
+    country: toPublicCountry(country.value),
+    exam: toPublicExam(exam.value),
+    tracks: Arr.map(tracks, toPublicTrack),
   };
 });
 
@@ -180,15 +193,18 @@ export const readPublishedTrackPage = Effect.fn(
   "tryouts.catalog.readPublishedTrackPage"
 )(function* (catalog: PublishedCatalog, publicPath: string) {
   const index = yield* indexPublishedCatalog(catalog);
-  const track = index.tracks.find((row) => row.publicPath === publicPath);
-  if (!track) {
+  const track = Arr.findFirst(
+    index.tracks,
+    (row) => row.publicPath === publicPath
+  );
+  if (Option.isNone(track)) {
     return null;
   }
-  const parents = yield* readPublishedTrackParents(index, track);
+  const parents = yield* readPublishedTrackParents(index, track.value);
   return {
     country: toPublicCountry(parents.country),
     exam: toPublicExam(parents.exam),
-    track: toPublicTrack(track),
+    track: toPublicTrack(track.value),
   };
 });
 
@@ -196,17 +212,18 @@ export const readPublishedTrackPage = Effect.fn(
 export const readPublishedSetPageFromIndex = Effect.fn(
   "tryouts.catalog.readPublishedSetPageFromIndex"
 )(function* (index: PublishedCatalogIndex, publicPath: string) {
-  const set = index.sets.find((row) => row.publicPath === publicPath);
-  if (!set) {
+  const set = Arr.findFirst(index.sets, (row) => row.publicPath === publicPath);
+  if (Option.isNone(set)) {
     return null;
   }
-  const parents = yield* readPublishedSetParents(index, set);
-  const sections = yield* readPublishedSetSections(index, set);
-  const visibleSections = sections.filter(
+  const parents = yield* readPublishedSetParents(index, set.value);
+  const sections = yield* readPublishedSetSections(index, set.value);
+  const visibleSections = Arr.filter(
+    sections,
     (section) => section.visibility === "visible"
   );
   const entrySection = yield* readPublishedEntrySection(
-    set,
+    set.value,
     sections,
     visibleSections
   );
@@ -215,8 +232,8 @@ export const readPublishedSetPageFromIndex = Effect.fn(
   return {
     exam: toPublicExam(parents.exam),
     entrySection: toPublicPublishedSection(entry),
-    set: toPublicPublishedSet(set),
-    sections: visibleSections.map(toPublicPublishedSection),
+    set: toPublicPublishedSet(set.value),
+    sections: Arr.map(visibleSections, toPublicPublishedSection),
     track: toPublicTrack(parents.track),
   };
 });
@@ -225,25 +242,26 @@ export const readPublishedSetPageFromIndex = Effect.fn(
 export const readPublishedSectionPageFromIndex = Effect.fn(
   "tryouts.catalog.readPublishedSectionPageFromIndex"
 )(function* (index: PublishedCatalogIndex, publicPath: string) {
-  const section = index.sections.find(
+  const section = Arr.findFirst(
+    index.sections,
     (row) => row.publicPath === publicPath && row.visibility === "visible"
   );
-  if (!section) {
+  if (Option.isNone(section)) {
     return null;
   }
-  const set = findPublishedSet(index, section);
-  if (!set) {
+  const set = findPublishedSet(index, section.value);
+  if (Option.isNone(set)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Signed try-out section lost its set."
     );
   }
-  const parents = yield* readPublishedSetParents(index, set);
-  yield* readPublishedSetSections(index, set);
+  const parents = yield* readPublishedSetParents(index, set.value);
+  yield* readPublishedSetSections(index, set.value);
   return {
     exam: toPublicExam(parents.exam),
-    section: toPublicPublishedSection(section),
-    set: toPublicPublishedSet(set),
+    section: toPublicPublishedSection(section.value),
+    set: toPublicPublishedSet(set.value),
     track: toPublicTrack(parents.track),
   };
 });
@@ -259,14 +277,18 @@ export const readPublishedEntrySection = Effect.fn(
   if (!set.internalEntrySectionKey) {
     return visibleSections.at(0) ?? null;
   }
-  const entrySection = sections.find(
+  const entrySection = Arr.findFirst(
+    sections,
     (section) => section.sectionKey === set.internalEntrySectionKey
   );
-  if (entrySection?.visibility !== "internal-entry") {
+  if (
+    Option.isNone(entrySection) ||
+    entrySection.value.visibility !== "internal-entry"
+  ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Signed try-out set lost its internal entry section."
     );
   }
-  return entrySection;
+  return entrySection.value;
 });

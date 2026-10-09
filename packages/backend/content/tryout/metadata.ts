@@ -13,7 +13,7 @@ import {
   tryoutLocalizedPathArgsValidator,
   tryoutMetadataArgsValidator,
 } from "@repo/backend/content/tryout/spec";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const TryoutMetadataInputSchema = Schema.Struct(tryoutMetadataArgsValidator);
 type TryoutMetadataInput = typeof TryoutMetadataInputSchema.Type;
@@ -51,7 +51,7 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
         snapshotId,
       })
     );
-    const alternates = alternateRows.flatMap((alternate) =>
+    const alternates = Arr.flatMap(alternateRows, (alternate) =>
       alternate ? [alternate] : []
     );
     return {

@@ -6,7 +6,7 @@ import {
   runSpecialist,
 } from "@repo/backend/test/nina/specialist";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 
 vi.mock("@repo/backend/agent/taxonomy", () => ({ getNakafaTaxonomy: vi.fn() }));
 afterEach(() => vi.restoreAllMocks());
@@ -42,7 +42,7 @@ describe("Nina taxonomy evidence", () => {
     );
     expect(getNakafaTaxonomy).toHaveBeenCalledWith("id");
     expect(text).toContain("science");
-    expect(artifacts).toMatchObject([
+    expect(MutableList.toArray(artifacts)).toMatchObject([
       { data: { status: "loading", input: { locale: "id" } } },
       {
         data: {
