@@ -8,13 +8,15 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
-import { undecidedRules } from "#scripts/check/plugin";
+import { divergentRules, undecidedRules } from "#scripts/check/plugin";
 import type { RepositorySource } from "#scripts/check/source";
 
 const PLUGIN_NAME = "@effect/language-service";
 /** The folder of the shared configurations, and the manifest that names their package. */
 const SHARED_ROOT = "packages/typescript-config/";
 const PACKAGE_FILE = "package.json";
+/** The configuration that holds the Effect block of the repository that owns this check. */
+const OWNER_CONFIG = `${SHARED_ROOT}base.json`;
 /** The shared configurations every workspace extends. */
 const SHARED_CONFIG_PATTERN =
   /^packages\/typescript-config\/(?!package\.json$)[^/]+\.json$/u;
@@ -87,6 +89,39 @@ export const sharedPackageName = Effect.fn(
   return manifest.name;
 });
 
+/**
+ * Reads the Effect block of the repository at `owner`, the one that owns this
+ * check, when the check judges another repository at `root`. A repository that
+ * judges itself has no other owner to compare with.
+ */
+export const ownerBlock = Effect.fn("RepositoryPolicy.ownerBlock")(function* (
+  root: string,
+  owner: string
+) {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  if (path.resolve(root) === path.resolve(owner)) {
+    return Option.none<Readonly<Record<string, unknown>>>();
+  }
+  const source = yield* fileSystem
+    .readFileString(path.join(owner, OWNER_CONFIG))
+    .pipe(
+      Effect.mapError(
+        (cause) =>
+          new SharedPackageError({
+            cause,
+            message: `${OWNER_CONFIG} of the repository that owns this check is missing or unreadable, so its rule decisions cannot be compared.`,
+          })
+      )
+    );
+  return Option.flatMap(decodeConfig(source), ({ compilerOptions }) =>
+    Arr.findFirst(
+      compilerOptions?.plugins ?? [],
+      (plugin) => plugin.name === PLUGIN_NAME
+    )
+  );
+});
+
 /** Joins a relative path onto a folder, resolving `.` and `..` segments. */
 function resolveRelative(folder: readonly string[], relative: string) {
   return Arr.join(
@@ -124,12 +159,15 @@ function parentOf(file: string, parent: unknown, sharedPrefix: string) {
  * configuration declares the only one, and every other configuration, shared
  * or not, reaches its Effect block through what it extends. A configuration
  * the check cannot read or follow is reported instead of skipped. The block
- * decides every rule in `rules`, the names the installed plugin defines.
+ * decides every rule in `rules`, the names the installed plugin defines, and
+ * it decides each one as the `owner` block does, when another repository owns
+ * the check.
  */
 export function inspectCompilerConfigs(
   sharedPackage: string,
   configs: readonly (typeof RepositorySource.Type)[],
-  rules: readonly string[]
+  rules: readonly string[],
+  owner: Option.Option<Readonly<Record<string, unknown>>> = Option.none()
 ) {
   const sharedPrefix = `${sharedPackage}/`;
   const inspected = Arr.map(configs, ({ file, sourceText }) => {
@@ -181,6 +219,11 @@ export function inspectCompilerConfigs(
     onNone: () => [],
     onSome: (found) => undecidedRules(found.file, found.block, rules),
   });
+  const divergent = Option.match(Option.all({ owner, reference }), {
+    onNone: () => [],
+    onSome: (found) =>
+      divergentRules(found.reference.file, found.reference.block, found.owner),
+  });
   const reports = Arr.flatMap(inspected, ({ block, config, file, shared }) => {
     if (Option.isNone(config)) {
       return [
@@ -211,5 +254,5 @@ export function inspectCompilerConfigs(
     }
     return [];
   });
-  return Arr.appendAll(reports, undecided);
+  return Arr.flatten([reports, undecided, divergent]);
 }
