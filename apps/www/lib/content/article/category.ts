@@ -101,7 +101,7 @@ export const readPublishedArticleCategory = Effect.fn(
 export const readPublishedCategoryAlternates = Effect.fn(
   "www.articles.readCategoryAlternates"
 )(function* (current: PublishedArticleCategoryModel) {
-  const categories = yield* Effect.forEach(
+  const categories: PublishedArticleCategoryModel[] = yield* Effect.forEach(
     ACTIVE_APP_LOCALE_CODES,
     (locale) =>
       findPublishedCategory(
@@ -140,7 +140,7 @@ export const readPublishedCategoryAlternates = Effect.fn(
     return yield* categoryError(current.appLocale);
   }
 
-  return Arr.map(categories, (category: PublishedArticleCategoryModel) => ({
+  return Arr.map(categories, (category) => ({
     appLocale: category.appLocale,
     publicPath: `articles/${category.route}`,
   }));
