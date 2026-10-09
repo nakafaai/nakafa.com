@@ -1,4 +1,5 @@
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { Array as Arr } from "effect";
 
 const unicodeMarkPattern = /^\p{Mark}$/u;
 const whitespacePrefixPattern = /^\s/u;
@@ -112,7 +113,8 @@ export function separateQuranRuntimeBismillah<
 
 /** Removes Unicode combining marks while preserving base-letter order. */
 function baseLetters(value: string) {
-  return Array.from(value.normalize("NFD")).filter(
+  return Arr.filter(
+    Array.from(value.normalize("NFD")),
     (character) => !isUnicodeMark(character)
   );
 }

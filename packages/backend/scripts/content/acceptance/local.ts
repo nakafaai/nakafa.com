@@ -21,6 +21,7 @@ import {
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
 import {
+  Array as Arr,
   Crypto,
   Effect,
   FileSystem,
@@ -268,17 +269,23 @@ export const initializeLocalRuntime = Effect.fn(
   const jwks = yield* createLocalJwks();
   yield* command(
     ["env", "set", "--force"],
-    [
-      ...Rec.toEntries({
-        ...localEnvironment,
-        AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
-        AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
-        AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
-      }).map(([key, value]) => `${key}=${Schema.encodeSync(JsonText)(value)}`),
-      // Convex reads these lines with dotenv, which keeps a double-quoted
-      // value's escaped quotes but takes a single-quoted one literally.
-      `JWKS='${jwks}'`,
-    ].join("\n")
+    Arr.join(
+      [
+        ...Arr.map(
+          Rec.toEntries({
+            ...localEnvironment,
+            AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
+            AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
+            AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
+          }),
+          ([key, value]) => `${key}=${Schema.encodeSync(JsonText)(value)}`
+        ),
+        // Convex reads these lines with dotenv, which keeps a double-quoted
+        // value's escaped quotes but takes a single-quoted one literally.
+        `JWKS='${jwks}'`,
+      ],
+      "\n"
+    )
   );
   const database = yield* fs.stat(`${backend}/.convex`);
   if (Option.isNone(database.ino)) {

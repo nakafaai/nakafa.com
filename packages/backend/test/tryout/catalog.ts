@@ -18,7 +18,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import type { FunctionArgs } from "convex/server";
-import { Effect, Schema, Struct } from "effect";
+import { Array as Arr, Effect, Option, Schema, Struct } from "effect";
 export const catalogListArgs: FunctionArgs<
   typeof api.tryouts.queries.sets.list
 > = {
@@ -88,26 +88,33 @@ export const activateTryoutSetCatalog = Effect.fn(
         suffix: "signed-sorted-sets",
       });
       const source = makeTryoutStartHierarchy("id", "visible");
-      const parents = source
-        .filter((row) => row.kind !== "set" && row.kind !== "section")
-        .map((row) =>
+      const parents = Arr.map(
+        Arr.filter(
+          source,
+          (row) => row.kind !== "set" && row.kind !== "section"
+        ),
+        (row) =>
           row.kind === "track"
             ? {
                 ...row,
-                questionCount: setDefinitions.reduce(
-                  (total, set) => total + set.questionCount,
-                  0
+                questionCount: Arr.reduce(
+                  setDefinitions,
+                  0,
+                  (total, set) => total + set.questionCount
                 ),
                 sectionCount: setDefinitions.length,
                 setCount: setDefinitions.length,
                 visibleSectionCount: setDefinitions.length,
               }
             : row
-        );
-      const children = setDefinitions.flatMap((definition) =>
-        source
-          .filter((row) => row.kind === "set" || row.kind === "section")
-          .map((row) => ({
+      );
+      const children = Arr.flatMap(setDefinitions, (definition) =>
+        Arr.map(
+          Arr.filter(
+            source,
+            (row) => row.kind === "set" || row.kind === "section"
+          ),
+          (row) => ({
             ...row,
             questionCount: definition.questionCount,
             setKey: definition.setKey,
@@ -127,9 +134,10 @@ export const activateTryoutSetCatalog = Effect.fn(
                   ),
                 }
               : {}),
-          }))
+          })
+        )
       );
-      const placements = setDefinitions.flatMap((definition) =>
+      const placements = Arr.flatMap(setDefinitions, (definition) =>
         Array.from(
           {
             length: definition.questionCount,
@@ -185,9 +193,12 @@ export const activateTryoutSetCatalog = Effect.fn(
           status: "completed",
         });
         const progress = await ctx.db.query("tryoutSetProgress").collect();
-        const selected = progress.find((row) => row.setKey === setKey);
-        if (selected) {
-          await ctx.db.patch(selected._id, {
+        const selected = Arr.findFirst(
+          progress,
+          (row) => row.setKey === setKey
+        );
+        if (Option.isSome(selected)) {
+          await ctx.db.patch(selected.value._id, {
             publishedScore: setKey === "set-1" ? 60 : 80,
             status: "completed",
             statusRank: getTryoutStatusRank("completed"),

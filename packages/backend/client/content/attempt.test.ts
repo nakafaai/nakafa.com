@@ -19,7 +19,7 @@ import {
 } from "@repo/backend/test/content/proof";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const JsonTextSchema = Schema.fromJsonString(Schema.Unknown);
 vi.mock("server-only", () => ({}));
@@ -38,7 +38,8 @@ async function setup(historical = false) {
   assert.isNotNull(row);
   const request = {
     bundleHash: seed.runtime.bundleHash,
-    selectors: seed.request.selectors.map(
+    selectors: Arr.map(
+      seed.request.selectors,
       ({ artifactHash, contentKey, delivery }) => ({
         artifactHash,
         contentKey,
@@ -274,7 +275,7 @@ describe("attempt content verification", () => {
           request,
           {
             ...row,
-            items: [...row.items].reverse(),
+            items: Arr.reverse(row.items),
           },
           TEST_PROOF_RENDERER
         ).pipe(

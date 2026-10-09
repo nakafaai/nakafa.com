@@ -14,7 +14,15 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { TrackIdentity } from "@repo/backend/confect/tryouts/sets/spec";
 import type { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
-import { Effect, MutableHashSet, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashSet,
+  MutableList,
+  Option,
+  Order,
+  Schema,
+} from "effect";
 /** Verified localized catalog selected by the active release owner. */
 export type PublishedCatalog = Effect.Success<
   ReturnType<typeof loadTryoutCatalog>
@@ -32,11 +40,11 @@ export type PublishedCatalogIndex = typeof PublishedCatalogIndexSchema.Type;
 export const indexPublishedCatalog = Effect.fn(
   "tryouts.catalog.indexPublishedCatalog"
 )(function* (catalog: PublishedCatalog) {
-  const countries: TryoutCountry[] = [];
-  const exams: TryoutExam[] = [];
-  const sections: TryoutSection[] = [];
-  const sets: TryoutSet[] = [];
-  const tracks: TryoutTrack[] = [];
+  const countries = MutableList.make<TryoutCountry>();
+  const exams = MutableList.make<TryoutExam>();
+  const sections = MutableList.make<TryoutSection>();
+  const sets = MutableList.make<TryoutSet>();
+  const tracks = MutableList.make<TryoutTrack>();
   const publicPaths = MutableHashSet.empty<string>();
   for (const { row } of catalog.entries) {
     if ("publicPath" in row && row.publicPath !== undefined) {
@@ -49,28 +57,28 @@ export const indexPublishedCatalog = Effect.fn(
     }
     switch (row.kind) {
       case "country":
-        countries.push(row);
+        MutableList.append(countries, row);
         break;
       case "exam":
-        exams.push(row);
+        MutableList.append(exams, row);
         break;
       case "section":
-        sections.push(row);
+        MutableList.append(sections, row);
         break;
       case "set":
-        sets.push(row);
+        MutableList.append(sets, row);
         break;
       default:
-        tracks.push(row);
+        MutableList.append(tracks, row);
         break;
     }
   }
   const index: PublishedCatalogIndex = {
-    countries,
-    exams,
-    sections,
-    sets,
-    tracks,
+    countries: MutableList.toArray(countries),
+    exams: MutableList.toArray(exams),
+    sections: MutableList.toArray(sections),
+    sets: MutableList.toArray(sets),
+    tracks: MutableList.toArray(tracks),
   };
   return index;
 });
@@ -78,38 +86,41 @@ export const indexPublishedCatalog = Effect.fn(
 export const readPublishedTrackParents = Effect.fn(
   "tryouts.catalog.readPublishedTrackParents"
 )(function* (index: PublishedCatalogIndex, track: TryoutTrack) {
-  const country = index.countries.find(
+  const country = Arr.findFirst(
+    index.countries,
     (row) => row.countryKey === track.countryKey
   );
-  const exam = index.exams.find(
+  const exam = Arr.findFirst(
+    index.exams,
     (row) =>
       row.countryKey === track.countryKey && row.examKey === track.examKey
   );
-  if (!(country && exam)) {
+  if (!(Option.isSome(country) && Option.isSome(exam))) {
     return yield* catalogIntegrity("Signed try-out track lost its parents.");
   }
   return {
-    country,
-    exam,
+    country: country.value,
+    exam: exam.value,
   };
 });
 /** Resolves and validates the hierarchy parents of one set. */
 export const readPublishedSetParents = Effect.fn(
   "tryouts.catalog.readPublishedSetParents"
 )(function* (index: PublishedCatalogIndex, set: TryoutSet) {
-  const track = index.tracks.find(
+  const track = Arr.findFirst(
+    index.tracks,
     (row) =>
       row.countryKey === set.countryKey &&
       row.examKey === set.examKey &&
       row.trackKey === set.trackKey
   );
-  if (!track) {
+  if (Option.isNone(track)) {
     return yield* catalogIntegrity("Signed try-out set lost its track.");
   }
-  const parents = yield* readPublishedTrackParents(index, track);
+  const parents = yield* readPublishedTrackParents(index, track.value);
   return {
     ...parents,
-    track,
+    track: track.value,
   };
 });
 /** Reads and validates every ordered section owned by one signed set. */
@@ -117,7 +128,8 @@ export const readPublishedSetSections = Effect.fn(
   "tryouts.catalog.readPublishedSetSections"
 )(function* (index: PublishedCatalogIndex, set: TryoutSet) {
   const sections = sortCatalogRows(
-    index.sections.filter(
+    Arr.filter(
+      index.sections,
       (section) =>
         section.countryKey === set.countryKey &&
         section.examKey === set.examKey &&
@@ -137,26 +149,28 @@ export const readPublishedTrackSets = Effect.fn(
   "tryouts.catalog.readPublishedTrackSets"
 )(function* (catalog: PublishedCatalog, identity: TrackIdentity) {
   const index = yield* indexPublishedCatalog(catalog);
-  const track = index.tracks.find(
+  const track = Arr.findFirst(
+    index.tracks,
     (row) =>
       row.countryKey === identity.countryKey &&
       row.examKey === identity.examKey &&
       row.trackKey === identity.trackKey &&
       row.appLocale === identity.locale
   );
-  if (!track) {
+  if (Option.isNone(track)) {
     return null;
   }
-  yield* readPublishedTrackParents(index, track);
+  yield* readPublishedTrackParents(index, track.value);
   const sets = sortCatalogRows(
-    index.sets.filter(
+    Arr.filter(
+      index.sets,
       (set) =>
-        set.countryKey === track.countryKey &&
-        set.examKey === track.examKey &&
-        set.trackKey === track.trackKey
+        set.countryKey === track.value.countryKey &&
+        set.examKey === track.value.examKey &&
+        set.trackKey === track.value.trackKey
     )
   );
-  if (sets.length !== track.setCount) {
+  if (sets.length !== track.value.setCount) {
     return yield* catalogIntegrity(
       "Signed try-out track lost one or more sets."
     );
@@ -164,7 +178,7 @@ export const readPublishedTrackSets = Effect.fn(
   return {
     index,
     sets,
-    track,
+    track: track.value,
   };
 });
 /** Resolves the set that owns one signed section. */
@@ -172,7 +186,8 @@ export function findPublishedSet(
   index: PublishedCatalogIndex,
   section: TryoutSection
 ) {
-  return index.sets.find(
+  return Arr.findFirst(
+    index.sets,
     (set) =>
       set.countryKey === section.countryKey &&
       set.examKey === section.examKey &&
@@ -186,7 +201,16 @@ export function sortCatalogRows<
     readonly order: number;
   },
 >(rows: readonly Row[]) {
-  return [...rows].sort((left, right) => left.order - right.order);
+  return Arr.sort(
+    rows,
+    Order.make<Row>((left, right) => {
+      const delta = left.order - right.order;
+      if (delta < 0) {
+        return -1;
+      }
+      return delta > 0 ? 1 : 0;
+    })
+  );
 }
 /** Creates one typed fail-closed published catalog error. */
 function catalogIntegrity(message: string) {

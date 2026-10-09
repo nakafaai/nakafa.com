@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import stripAnsi from "strip-ansi";
 
 const MAX_COMMAND_ERROR_LENGTH = 2000;
@@ -16,11 +16,9 @@ export const sanitizeAcceptanceCommandError = (
     }
   }
 
-  return sanitized
-    .trim()
-    .split(WHITESPACE)
-    .join(" ")
-    .slice(-MAX_COMMAND_ERROR_LENGTH);
+  return Arr.join(sanitized.trim().split(WHITESPACE), " ").slice(
+    -MAX_COMMAND_ERROR_LENGTH
+  );
 };
 
 /** Expected failure during isolated fixture preparation or local lifecycle control. */

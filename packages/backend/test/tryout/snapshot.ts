@@ -19,7 +19,6 @@ import {
   TryoutCatalogRowSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import {
-  compareTryoutCatalog,
   digestTryoutCatalog,
   makeTryoutCatalogRecord,
 } from "@nakafa/aksara-contracts/tryout/hash/catalog";
@@ -27,7 +26,10 @@ import {
   digestTryoutPlacements,
   makeTryoutPlacementRecord,
 } from "@nakafa/aksara-contracts/tryout/hash/placement";
-import { compareTryoutPlacements } from "@nakafa/aksara-contracts/tryout/identity";
+import {
+  tryoutCatalogIdentity,
+  tryoutPlacementIdentity,
+} from "@nakafa/aksara-contracts/tryout/identity";
 import {
   type TryoutPlacement,
   TryoutPlacementSchema,
@@ -45,7 +47,7 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
-import { Effect, Schema, Stream } from "effect";
+import { Array as Arr, Effect, Order, Schema, Stream } from "effect";
 
 const artifactHash = Sha256HashSchema.make(`sha256:${"8".repeat(64)}`);
 const technicalCopy = {
@@ -170,21 +172,29 @@ export function makeTryoutPlacementRow(
 export const makeTryoutSnapshotManifest = Effect.fn(
   "backendTest.makeTryoutSnapshotManifest"
 )(function* () {
-  const catalog = ACTIVE_APP_LOCALES.map((appLocale) =>
-    makeTryoutCatalogRow(appLocale)
-  ).sort((left, right) =>
-    compareTryoutCatalog(left.record.row, right.record.row)
+  const catalog = Arr.sort(
+    Arr.map(ACTIVE_APP_LOCALES, (appLocale) => makeTryoutCatalogRow(appLocale)),
+    Order.mapInput(
+      Order.String,
+      (entry: ReturnType<typeof makeTryoutCatalogRow>) =>
+        tryoutCatalogIdentity(entry.record.row)
+    )
   );
-  const placements = ACTIVE_APP_LOCALES.map((appLocale) =>
-    makeTryoutPlacementRow(appLocale)
-  ).sort((left, right) =>
-    compareTryoutPlacements(left.record.row, right.record.row)
+  const placements = Arr.sort(
+    Arr.map(ACTIVE_APP_LOCALES, (appLocale) =>
+      makeTryoutPlacementRow(appLocale)
+    ),
+    Order.mapInput(
+      Order.String,
+      (entry: ReturnType<typeof makeTryoutPlacementRow>) =>
+        tryoutPlacementIdentity(entry.record.row)
+    )
   );
   const catalogEvidence = yield* digestTryoutCatalog(
-    Stream.fromIterable(catalog.map(({ record }) => record))
+    Stream.fromIterable(Arr.map(catalog, ({ record }) => record))
   );
   const placementEvidence = yield* digestTryoutPlacements(
-    Stream.fromIterable(placements.map(({ record }) => record))
+    Stream.fromIterable(Arr.map(placements, ({ record }) => record))
   );
   const manifest = makeTryoutSnapshot({
     activeAppLocales: ACTIVE_APP_LOCALES,
@@ -221,16 +231,28 @@ export async function activateTryoutSnapshot(
   }
 ) {
   const activeAppLocales = Schema.decodeUnknownSync(ActiveAppLocaleListSchema)(
-    APP_LOCALE_CODES.filter((appLocale) =>
-      input.catalog.some((row) => row.appLocale === appLocale)
+    Arr.filter(APP_LOCALE_CODES, (appLocale) =>
+      Arr.some(input.catalog, (row) => row.appLocale === appLocale)
     )
   );
-  const catalog = [...input.catalog]
-    .sort(compareTryoutCatalog)
-    .map(makeTryoutCatalogRecord);
-  const placements = [...input.placements]
-    .sort(compareTryoutPlacements)
-    .map(makeTryoutPlacementRecord);
+  const catalog = Arr.map(
+    Arr.sort(
+      input.catalog,
+      Order.mapInput(Order.String, (row: TryoutCatalogRow) =>
+        tryoutCatalogIdentity(row)
+      )
+    ),
+    makeTryoutCatalogRecord
+  );
+  const placements = Arr.map(
+    Arr.sort(
+      input.placements,
+      Order.mapInput(Order.String, (row: (typeof input.placements)[number]) =>
+        tryoutPlacementIdentity(row)
+      )
+    ),
+    makeTryoutPlacementRecord
+  );
   const [catalogEvidence, placementEvidence] = await Effect.runPromise(
     Effect.all([
       digestTryoutCatalog(Stream.fromIterable(catalog)),
@@ -245,7 +267,8 @@ export async function activateTryoutSnapshot(
       counts: countCatalog(input.catalog),
       placementCount: placementEvidence.count,
       placementDigest: placementEvidence.digest,
-      routeCount: input.catalog.filter(
+      routeCount: Arr.filter(
+        input.catalog,
         (row) => "publicPath" in row && row.publicPath !== undefined
       ).length,
     }),
@@ -306,11 +329,11 @@ export async function activateTryoutSnapshot(
 /** Counts each catalog kind for the signed technical manifest. */
 function countCatalog(rows: readonly TryoutCatalogRow[]) {
   return {
-    country: rows.filter(({ kind }) => kind === "country").length,
-    exam: rows.filter(({ kind }) => kind === "exam").length,
-    section: rows.filter(({ kind }) => kind === "section").length,
-    set: rows.filter(({ kind }) => kind === "set").length,
-    track: rows.filter(({ kind }) => kind === "track").length,
+    country: Arr.filter(rows, ({ kind }) => kind === "country").length,
+    exam: Arr.filter(rows, ({ kind }) => kind === "exam").length,
+    section: Arr.filter(rows, ({ kind }) => kind === "section").length,
+    set: Arr.filter(rows, ({ kind }) => kind === "set").length,
+    track: Arr.filter(rows, ({ kind }) => kind === "track").length,
   };
 }
 

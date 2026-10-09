@@ -12,7 +12,14 @@ import {
   releaseLocalRuntime,
   reserveLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
-import { Array as Arr, Effect, FileSystem, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  MutableList,
+  Option,
+  Schema,
+} from "effect";
 
 const mocks = vi.hoisted(() => ({ command: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
@@ -44,7 +51,7 @@ const fixture = Effect.gen(function* () {
 });
 const initialize = (source = environment) => {
   // Temporary roots that existed while their Convex command ran.
-  const temporaryRoots: string[] = [];
+  const temporaryRoots = MutableList.make<string>();
   mocks.command.mockImplementation(
     (spec: {
       args: readonly string[];
@@ -55,7 +62,7 @@ const initialize = (source = environment) => {
         const fs = yield* FileSystem.FileSystem;
         const root = spec.env.TMPDIR;
         if (root !== undefined && (yield* fs.exists(root))) {
-          temporaryRoots.push(root);
+          MutableList.append(temporaryRoots, root);
         }
         if (spec.args[1] !== "init") {
           return;
@@ -85,8 +92,8 @@ describe("owned signed acceptance runtime", () => {
         yield* reserveLocalRuntime(root);
         const runtime = yield* initializeLocalRuntime(root);
         // Each Convex command ran in its own root, removed once it stopped.
-        expect(Arr.dedupe(temporaryRoots).length).toBe(2);
-        for (const temporaryRoot of temporaryRoots) {
+        expect(Arr.dedupe(MutableList.toArray(temporaryRoots)).length).toBe(2);
+        for (const temporaryRoot of MutableList.toArray(temporaryRoots)) {
           expect(yield* fs.exists(temporaryRoot)).toBe(false);
         }
         expect(yield* readLocalRuntime(root)).toEqual(runtime);

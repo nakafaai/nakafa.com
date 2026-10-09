@@ -8,7 +8,7 @@ import {
   verifyProgram,
 } from "@repo/backend/content/program/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect, HashSet } from "effect";
+import { Array as Arr, Effect, HashSet, Option } from "effect";
 
 /** Reads and authenticates the complete catalog with localized root closure. */
 export const readVerifiedProgramCatalog = Effect.fn(
@@ -53,30 +53,32 @@ export const readVerifiedProgramCatalog = Effect.fn(
     Effect.forEach(programRows, (row) => verifyProgram(row, snapshotId)),
     Effect.forEach(routeRows, (row) => verifyCurriculum(row, snapshotId)),
   ]);
-  const programKeys = HashSet.fromIterable(programs.map(({ key }) => key));
-  const treeProgramKeys = programs.flatMap((program) =>
+  const programKeys = HashSet.fromIterable(Arr.map(programs, ({ key }) => key));
+  const treeProgramKeys = Arr.flatMap(programs, (program) =>
     program.navigation.model === "curriculum-tree" ? [program.key] : []
   );
   const rootProgramKeys = HashSet.fromIterable(
-    routes.map(({ programKey }) => programKey)
+    Arr.map(routes, ({ programKey }) => programKey)
   );
-  const invalidRoot = routes.find(
+  const invalidRoot = Arr.findFirst(
+    routes,
     (route) =>
       route.level !== "track" ||
       route.parentPath !== undefined ||
       !HashSet.has(programKeys, route.programKey)
   );
-  if (invalidRoot) {
+  if (Option.isSome(invalidRoot)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Program root ${invalidRoot.appLocale}/${invalidRoot.publicPath} lost its program.`
+      `Program root ${invalidRoot.value.appLocale}/${invalidRoot.value.publicPath} lost its program.`
     );
   }
-  const missingRoot = treeProgramKeys.find(
+  const missingRoot = Arr.findFirst(
+    treeProgramKeys,
     (programKey) => !HashSet.has(rootProgramKeys, programKey)
   );
   if (
-    missingRoot ||
+    Option.isSome(missingRoot) ||
     HashSet.size(rootProgramKeys) !== routes.length ||
     HashSet.size(rootProgramKeys) !== treeProgramKeys.length
   ) {
@@ -107,8 +109,8 @@ export const readProgramCatalog = Effect.fn(
     activeManifestHash: catalog.activeManifestHash,
     activeReleaseId: catalog.activeReleaseId,
     managed: catalog.managed,
-    programJson: catalog.programRows.map(({ rowJson }) => rowJson),
-    routeJson: catalog.routeRows.map(({ rowJson }) => rowJson),
+    programJson: Arr.map(catalog.programRows, ({ rowJson }) => rowJson),
+    routeJson: Arr.map(catalog.routeRows, ({ rowJson }) => rowJson),
     snapshotId: catalog.snapshotId,
     sourceRevision: catalog.sourceRevision,
   };

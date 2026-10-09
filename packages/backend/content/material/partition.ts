@@ -8,7 +8,12 @@ import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyMaterial } from "@repo/backend/content/material/verify";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, MutableList, Option } from "effect";
+
+/** One verified material of a discovery partition, with its owning catalog row. */
+type PartitionMaterial = Effect.Success<ReturnType<typeof verifyMaterial>> & {
+  readonly row: PublicationRow<"materialCatalog">;
+};
 
 /** Reads a transaction-bounded group of complete material discovery buckets. */
 export const readMaterialPartition = Effect.fn(
@@ -21,7 +26,7 @@ export const readMaterialPartition = Effect.fn(
     buckets.length === 0 ||
     buckets.length > MATERIAL_SITEMAP_BUCKET_LIMIT ||
     Arr.dedupe(buckets).length !== buckets.length ||
-    buckets.some((bucket) => !isProjectionBucket(bucket))
+    Arr.some(buckets, (bucket) => !isProjectionBucket(bucket))
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
@@ -40,9 +45,7 @@ export const readMaterialPartition = Effect.fn(
     };
   }
   const source = yield* MaterialSource;
-  const materials: (Effect.Success<ReturnType<typeof verifyMaterial>> & {
-    readonly row: PublicationRow<"materialCatalog">;
-  })[] = [];
+  const materials = MutableList.make<PartitionMaterial>();
   for (const bucket of buckets) {
     const { count: selectedCount, materials: rows } = yield* source.partition(
       owner.slot,
@@ -81,15 +84,15 @@ export const readMaterialPartition = Effect.fn(
         }))
       )
     );
-    materials.push(...verified);
+    MutableList.appendAll(materials, verified);
   }
   return {
     activeReleaseId,
     kind: "found",
-    materials,
+    materials: MutableList.toArray(materials),
   } satisfies {
     readonly activeReleaseId: typeof activeReleaseId;
     readonly kind: "found";
-    readonly materials: typeof materials;
+    readonly materials: PartitionMaterial[];
   };
 });

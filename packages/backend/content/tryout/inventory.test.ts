@@ -5,20 +5,25 @@ import type {
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { provesSetInventory } from "@repo/backend/content/tryout/inventory";
 import { makeTryoutStartCatalog } from "@repo/backend/test/tryout/source";
+import { Array as Arr, Option } from "effect";
 
 /** Selects the signed set and its sections from the start catalog fixture. */
 function inventoryFixture() {
   const rows = makeTryoutStartCatalog("id", "visible");
-  const set = rows.find((row): row is TryoutSet => row.kind === "set");
-  const sections = rows.filter(
+  const set = Arr.findFirst(
+    rows,
+    (row): row is TryoutSet => row.kind === "set"
+  );
+  const sections = Arr.filter(
+    rows,
     (row): row is TryoutSection => row.kind === "section"
   );
 
-  if (!set || sections.length === 0) {
+  if (Option.isNone(set) || sections.length === 0) {
     throw new Error("Expected the start catalog set and section fixtures.");
   }
 
-  return { sections, set };
+  return { sections, set: set.value };
 }
 
 describe("tryout/inventory", () => {

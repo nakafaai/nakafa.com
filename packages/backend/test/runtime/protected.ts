@@ -21,7 +21,7 @@ import {
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** Plain codec: writes the same bytes as JSON.stringify. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -70,7 +70,7 @@ export async function insertProtectedRuntime(
   }
 ) {
   const locales = ["en", "id"] as const;
-  const bodies = locales.flatMap((appLocale) =>
+  const bodies = Arr.flatMap(locales, (appLocale) =>
     Array.from({ length: options?.questionCount ?? 1 }, (_, index) => {
       const questionKey = `question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-${index + 1}`;
       const question = testSignedArtifact("snbt-quant", {
@@ -106,7 +106,8 @@ export async function insertProtectedRuntime(
       return { answer, placement, question };
     })
   );
-  const english = bodies.filter(
+  const english = Arr.filter(
+    bodies,
     ({ placement }) => placement.appLocale === "en"
   );
   const first = english[0];
@@ -118,7 +119,7 @@ export async function insertProtectedRuntime(
       makeTryoutCatalogRow("en").record.row,
       makeTryoutCatalogRow("id").record.row,
     ],
-    placements: bodies.map(({ placement }) => placement),
+    placements: Arr.map(bodies, ({ placement }) => placement),
   });
   const [release, state] = await Promise.all([
     ctx.db.query("contentReleases").unique(),
@@ -172,15 +173,16 @@ export async function insertProtectedRuntime(
     tryoutRuntimeBundleHash: bundle.bundleHash,
   });
   await Promise.all(
-    bodies
-      .flatMap(({ question, answer }) => [question, answer])
-      .map((artifact) => insertArtifact(ctx, artifact))
+    Arr.map(
+      Arr.flatMap(bodies, ({ question, answer }) => [question, answer]),
+      (artifact) => insertArtifact(ctx, artifact)
+    )
   );
   const question = protectedSelector(first.placement, "authenticated");
   const answer = protectedSelector(first.placement, "entitled");
   const request = Schema.decodeSync(ProtectedContentRuntimeRequestSchema)({
     bundleHash: bundle.bundleHash,
-    selectors: english.flatMap(({ placement }) => [
+    selectors: Arr.flatMap(english, ({ placement }) => [
       protectedSelector(placement, "authenticated"),
       protectedSelector(placement, "entitled"),
     ]),

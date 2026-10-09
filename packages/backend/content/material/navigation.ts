@@ -6,7 +6,7 @@ import { loadMaterialOwner } from "@repo/backend/content/material/owner";
 import type { resolveMaterialRoute } from "@repo/backend/content/material/route";
 import { MaterialSource } from "@repo/backend/content/material/source";
 import { verifyEffectiveMaterial } from "@repo/backend/content/material/verify";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 type AuthenticatedMaterial = NonNullable<
   Effect.Success<ReturnType<typeof resolveMaterialRoute>>["material"]
@@ -44,14 +44,17 @@ export const readMaterialGroup = Effect.fn("contentRelease.readMaterialGroup")(
     const parentPath =
       requested?.row.parentPath ?? verified[0]?.projection.parentPath;
     if (
-      verified.some(({ projection }) => projection.parentPath !== parentPath)
+      Arr.some(
+        verified,
+        ({ projection }) => projection.parentPath !== parentPath
+      )
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Material ${group.appLocale}/${group.materialKey} lost its coherent lesson group.`
       );
     }
-    return verified.map(({ projectionJson }) => projectionJson);
+    return Arr.map(verified, ({ projectionJson }) => projectionJson);
   }
 );
 
