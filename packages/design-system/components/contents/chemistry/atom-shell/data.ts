@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Result, Schema } from "effect";
 
 export const NEON_ID = "neon";
 export const MAGNESIUM_ID = "magnesium";
@@ -58,16 +58,13 @@ export function isAtomShellSampleId(value: string): value is AtomShellSampleId {
   return Arr.some(ATOM_SHELL_SAMPLE_IDS, (sampleId) => sampleId === value);
 }
 
-/**
- * Calculates the maximum electron capacity of a shell from its shell number.
- */
-function getShellMaximumElectrons(principalQuantumNumber: number) {
-  if (!Number.isInteger(principalQuantumNumber) || principalQuantumNumber < 1) {
-    throw new Error("Shell number must be a positive integer.");
+/** Expected failure: the atom-shell examples cover atomic numbers 1 to 20. */
+export class EarlyElementShellRangeError extends Schema.TaggedError<EarlyElementShellRangeError>()(
+  "EarlyElementShellRangeError",
+  {
+    message: Schema.String,
   }
-
-  return 2 * principalQuantumNumber ** 2;
-}
+) {}
 
 /**
  * Builds the simple shell distribution used for neutral atoms up to calcium.
@@ -78,21 +75,25 @@ export function getEarlyElementShellConfiguration(atomicNumber: number) {
     atomicNumber < 1 ||
     atomicNumber > 20
   ) {
-    throw new Error(
-      "Early shell configuration supports atomic numbers 1 to 20."
+    return Result.fail(
+      new EarlyElementShellRangeError({
+        message: "Early shell configuration supports atomic numbers 1 to 20.",
+      })
     );
   }
 
   let remainingElectrons = atomicNumber;
 
-  return Arr.map(EARLY_ELEMENT_FILL_LIMITS, (shell) => {
-    const electronCount = Math.min(remainingElectrons, shell.fillLimit);
-    remainingElectrons -= electronCount;
+  return Result.succeed(
+    Arr.map(EARLY_ELEMENT_FILL_LIMITS, (shell) => {
+      const electronCount = Math.min(remainingElectrons, shell.fillLimit);
+      remainingElectrons -= electronCount;
 
-    return {
-      ...shell,
-      electronCount,
-      maximumElectrons: getShellMaximumElectrons(shell.principalQuantumNumber),
-    };
-  });
+      return {
+        ...shell,
+        electronCount,
+        maximumElectrons: 2 * shell.principalQuantumNumber ** 2,
+      };
+    })
+  );
 }

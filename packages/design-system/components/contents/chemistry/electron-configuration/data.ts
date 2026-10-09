@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Result, Schema } from "effect";
 
 export const HYDROGEN_ID = "hydrogen";
 export const HELIUM_ID = "helium";
@@ -73,13 +73,26 @@ export function isElectronConfigurationSampleId(
   );
 }
 
+/** Expected failure: the electron-configuration examples cover atomic numbers 1 to 20. */
+export class SimpleShellConfigurationError extends Schema.TaggedError<SimpleShellConfigurationError>()(
+  "SimpleShellConfigurationError",
+  {
+    message: Schema.String,
+    reason: Schema.Literals(["notPositiveInteger", "aboveSupportedRange"]),
+  }
+) {}
+
 /**
  * Builds the simple shell configuration used for the first 20 elements.
  */
 export function getSimpleShellConfiguration(atomicNumber: number) {
   if (!Number.isInteger(atomicNumber) || atomicNumber < 1) {
-    throw new Error(
-      "Simple shell configuration requires a positive integer atomic number."
+    return Result.fail(
+      new SimpleShellConfigurationError({
+        message:
+          "Simple shell configuration requires a positive integer atomic number.",
+        reason: "notPositiveInteger",
+      })
     );
   }
 
@@ -96,10 +109,13 @@ export function getSimpleShellConfiguration(atomicNumber: number) {
   });
 
   if (remainingElectrons > 0) {
-    throw new Error(
-      "Simple shell configuration supports atomic numbers up to 20."
+    return Result.fail(
+      new SimpleShellConfigurationError({
+        message: "Simple shell configuration supports atomic numbers up to 20.",
+        reason: "aboveSupportedRange",
+      })
     );
   }
 
-  return shellConfiguration;
+  return Result.succeed(shellConfiguration);
 }

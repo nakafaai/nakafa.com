@@ -21,7 +21,7 @@ import {
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr } from "effect";
+import { Array as Arr, Result } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -56,9 +56,11 @@ export function ElectronConfigurationLab({
     useState<ElectronConfigurationSampleId>(HYDROGEN_ID);
   const selectedSample = ELECTRON_CONFIGURATION_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
-  const shellConfiguration = getSimpleShellConfiguration(
-    selectedSample.atomicNumber
-  );
+  const shellResult = getSimpleShellConfiguration(selectedSample.atomicNumber);
+  if (Result.isFailure(shellResult)) {
+    throw shellResult.failure;
+  }
+  const shellConfiguration = shellResult.success;
   const visibleShells = Arr.filter(
     shellConfiguration,
     (shell) => shell.electronCount > 0
