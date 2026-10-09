@@ -16,7 +16,7 @@ import {
 
 describe("tryouts/queries/attempt", () => {
   it("locks only one exact authenticated in-progress attempt", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
 
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {

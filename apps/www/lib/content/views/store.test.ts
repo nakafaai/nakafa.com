@@ -37,10 +37,10 @@ describe("content views store", () => {
     expect(store.getState().isViewed(key)).toBe(true);
     expect(store.getState().isViewed(otherKey)).toBe(false);
 
-    vi.setSystemTime(new Date(viewedAt.getTime() + SESSION_TTL - 1));
+    vi.setSystemTime(viewedAt.getTime() + SESSION_TTL - 1);
     expect(store.getState().isViewed(key)).toBe(true);
 
-    vi.setSystemTime(new Date(viewedAt.getTime() + SESSION_TTL));
+    vi.setSystemTime(viewedAt.getTime() + SESSION_TTL);
     expect(store.getState().isViewed(key)).toBe(false);
   });
 

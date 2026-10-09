@@ -267,7 +267,7 @@ describe("subscriptions/mutations", () => {
   });
 
   it("upgrades the linked user when an active subscription is created", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createSubscriptionTestConvex();
     const userId = await t.mutation((ctx) =>
@@ -309,7 +309,7 @@ describe("subscriptions/mutations", () => {
   });
 
   it("downgrades the linked user when its subscription is canceled", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createSubscriptionTestConvex();
     const userId = await t.mutation((ctx) =>
@@ -363,7 +363,7 @@ describe("subscriptions/mutations", () => {
   });
 
   it("does not recreate plan history for a prepared user", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createSubscriptionTestConvex();
     const userId = await t.mutation(async (ctx) => {

@@ -193,7 +193,7 @@ async function readDrainState(target: TestConvex<typeof schema>) {
 describe("contents/mutations/analytics", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
   });
 
   afterEach(() => {

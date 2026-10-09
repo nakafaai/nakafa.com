@@ -54,7 +54,7 @@ async function setup(historical = false) {
     seed,
   };
 }
-beforeEach(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW)));
+beforeEach(() => vi.setSystemTime(TRYOUT_TEST_NOW));
 describe("attempt content verification", () => {
   it.effect("recomputes both artifact and bundle payload hashes", () =>
     Effect.gen(function* () {

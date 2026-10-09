@@ -82,7 +82,7 @@ async function insertForum(
 describe("triggers/schools/cleanupDeletedClass", () => {
   it("continues every full batch until a deleted class has no dependent rows", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const classId = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, { now: NOW });
@@ -159,7 +159,7 @@ describe("triggers/schools/cleanupDeletedClass", () => {
     ).toHaveLength(4);
   });
   it("removes top-level rows owned by a deleted class", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {
@@ -211,7 +211,7 @@ describe("triggers/schools/cleanupDeletedClass", () => {
 describe("triggers/schools/cleanupDeletedForum", () => {
   it("removes rows owned by a deleted forum", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {

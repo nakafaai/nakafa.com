@@ -53,7 +53,7 @@ describe("tryouts/start/scale", () => {
   ])(
     "publishes one complete scale with previous official status: %s",
     async ({ official, changed }) => {
-      vi.setSystemTime(new Date(NOW));
+      vi.setSystemTime(NOW);
       const t = createConvexTestWithBetterAuth();
       const seeded = await t.mutation(async (ctx) => {
         const firstIdentity = await seedAuthenticatedUser(ctx, {
@@ -182,7 +182,7 @@ describe("tryouts/start/scale", () => {
     }
   );
   it("rejects an incomplete scale bound to the exact snapshot", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -211,7 +211,7 @@ describe("tryouts/start/scale", () => {
     ).rejects.toThrow("TRYOUT_IRT_SCALE_REQUIRED");
   });
   it("excludes many migrated historical scales before selecting a live scale", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {

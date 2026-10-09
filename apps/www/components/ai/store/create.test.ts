@@ -181,7 +181,7 @@ describe("ai/store/create", () => {
 
   it("moves a resolved composer draft into the chat that is opening", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-10-09T08:00:00Z"));
+    vi.setSystemTime("2026-10-09T08:00:00Z");
     const store = createAiStore();
     store.getState().addChatDraft("draft-1");
     store.getState().addChatDraft("draft-2");

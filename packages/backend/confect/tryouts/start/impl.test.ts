@@ -18,7 +18,7 @@ import type { FunctionArgs } from "convex/server";
 
 describe("tryouts/start/impl", () => {
   it("records the active subscription without shortening an already admitted attempt", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const periodEnd = TRYOUT_START_NOW + 60_000;
     const identity = await t.mutation(async (ctx) => {
@@ -81,7 +81,7 @@ describe("tryouts/start/impl", () => {
   });
 
   it("resumes an active attempt without loading the complete signed catalog", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -122,7 +122,7 @@ describe("tryouts/start/impl", () => {
     ).resolves.toEqual(started);
   });
   it("rejects missing immutable navigation and resumes only the frozen entry scope", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -176,7 +176,7 @@ describe("tryouts/start/impl", () => {
   });
 
   it("scores an expired predecessor before opening the next free attempt", async () => {
-    vi.setSystemTime(new Date(TRYOUT_START_NOW));
+    vi.setSystemTime(TRYOUT_START_NOW);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {

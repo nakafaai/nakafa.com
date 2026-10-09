@@ -38,7 +38,7 @@ const entryStartArgs: FunctionArgs<
 };
 describe("tryouts/mutations/attempts", () => {
   it("resumes from the frozen attempt when the current entry key changed", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -92,7 +92,7 @@ describe("tryouts/mutations/attempts", () => {
   });
 
   it("starts an internal entry section atomically with a new attempt", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -249,7 +249,7 @@ describe("tryouts/mutations/attempts", () => {
   });
 
   it("starts remaining sections from the immutable attempt snapshot", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {

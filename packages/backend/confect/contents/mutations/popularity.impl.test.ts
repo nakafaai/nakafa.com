@@ -225,7 +225,7 @@ async function runRefresh(
 describe("contents/mutations/popularity", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
   });
 
   afterEach(() => {
@@ -318,7 +318,7 @@ describe("contents/mutations/popularity", () => {
     const before = await readPopularitySnapshot(t);
 
     const nextDay = getPopularitySignalDay(NOW) + POPULARITY_DAY_MS;
-    vi.setSystemTime(new Date(nextDay));
+    vi.setSystemTime(nextDay);
     await t.mutation(
       internal.contents.mutations.popularity
         .scheduleLearningPopularityRefreshes,

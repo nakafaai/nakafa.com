@@ -194,7 +194,7 @@ const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
   }
 );
 beforeEach(() => {
-  vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
+  vi.setSystemTime(TRYOUT_TEST_NOW);
   cacheMock.mockReset();
   fetchMock.mockReset();
   queryMock.mockReset();

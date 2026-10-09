@@ -143,7 +143,7 @@ describe("triggers/subscriptions/impl", () => {
     });
   });
   it("returns without side effects when the customer is missing", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       await insertSubscription(ctx, {
@@ -164,7 +164,7 @@ describe("triggers/subscriptions/impl", () => {
     expect(result.creditTransactions).toHaveLength(0);
   });
   it("returns without side effects when the customer user is missing", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "missing-user");
@@ -188,7 +188,7 @@ describe("triggers/subscriptions/impl", () => {
     expect(result.creditTransactions).toHaveLength(0);
   });
   it("returns early when the derived plan is unchanged", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "no-op", {
@@ -225,7 +225,7 @@ describe("triggers/subscriptions/impl", () => {
     });
   });
   it("upgrades a free user to pro and records a purchase transaction", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "upgrade", {
@@ -307,7 +307,7 @@ describe("triggers/subscriptions/impl", () => {
     expect(result.storedResetAt).toBe(Date.UTC(2026, 3, 1, 0, 0, 0));
   });
   it("downgrades a pro user without recording a cancellation for an active subscription", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "downgrade", {
@@ -377,7 +377,7 @@ describe("triggers/subscriptions/impl", () => {
     expect(result.storedResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
   });
   it("records a cancellation only when a canceled subscription downgrades the user", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "canceled-downgrade", {
@@ -439,7 +439,7 @@ describe("triggers/subscriptions/impl", () => {
     ]);
   });
   it("finds Pro beyond unrelated active subscriptions and attributes the earliest matching grant", async () => {
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createWebhookTestConvex();
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "highest-plan", {
