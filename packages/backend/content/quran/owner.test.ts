@@ -50,32 +50,30 @@ describe("contentRelease/quran/owner", () => {
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
             yield* Effect.promise(() => activateQuranSource(tCtx));
-            yield* Effect.gen(function* () {
-              const [release, state] = yield* Effect.promise(() =>
-                Promise.all([
-                  tCtx.db.query("contentReleases").unique(),
-                  tCtx.db.query("contentState").unique(),
-                ])
-              );
-              if (!(release && state)) {
-                throw new Error("Expected one active source release.");
-              }
-              yield* Effect.promise(() =>
-                tCtx.db.patch("contentReleases", release._id, {
+            const [release, state] = yield* Effect.promise(() =>
+              Promise.all([
+                tCtx.db.query("contentReleases").unique(),
+                tCtx.db.query("contentState").unique(),
+              ])
+            );
+            if (!(release && state)) {
+              throw new Error("Expected one active source release.");
+            }
+            yield* Effect.promise(() =>
+              tCtx.db.patch("contentReleases", release._id, {
+                releaseId: nextReleaseId,
+                releaseJson: testReleaseJson({
                   releaseId: nextReleaseId,
-                  releaseJson: testReleaseJson({
-                    releaseId: nextReleaseId,
-                  }),
-                  sequence: 2,
-                })
-              );
-              yield* Effect.promise(() =>
-                tCtx.db.patch("contentState", state._id, {
-                  activeReleaseId: nextReleaseId,
-                  activeSequence: 2,
-                })
-              );
-            });
+                }),
+                sequence: 2,
+              })
+            );
+            yield* Effect.promise(() =>
+              tCtx.db.patch("contentState", state._id, {
+                activeReleaseId: nextReleaseId,
+                activeSequence: 2,
+              })
+            );
             expect(
               yield* loadQuranOwner().pipe(Effect.provide(quranLayer))
             ).toMatchObject({

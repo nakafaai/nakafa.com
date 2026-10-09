@@ -14,18 +14,16 @@ const isLockedByAttemptId = FunctionImpl.make(
   "isLockedByAttemptId",
   Effect.fn("tryouts.queries.attempt.isLockedByAttemptId")(function* (args) {
     const ctx = yield* QueryCtxService;
-    return yield* Effect.gen(function* () {
-      const attemptId = ctx.db.normalizeId("tryoutAttempts", args.attemptId);
-      if (!attemptId) {
-        return false;
-      }
-      const auth = yield* getOptionalAppUserForRead();
-      if (!auth) {
-        return false;
-      }
-      const attempt = yield* readOwnedAttemptById(attemptId, auth.appUser._id);
-      return attempt?.status === "in-progress";
-    });
+    const attemptId = ctx.db.normalizeId("tryoutAttempts", args.attemptId);
+    if (!attemptId) {
+      return false;
+    }
+    const auth = yield* getOptionalAppUserForRead();
+    if (!auth) {
+      return false;
+    }
+    const attempt = yield* readOwnedAttemptById(attemptId, auth.appUser._id);
+    return attempt?.status === "in-progress";
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

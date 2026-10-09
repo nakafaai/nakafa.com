@@ -48,23 +48,21 @@ describe("article reference integrity", () => {
           yield* t.run(
             Effect.gen(function* () {
               const tCtx = yield* MutationCtx;
-              yield* Effect.gen(function* () {
-                yield* Effect.promise(() => insertRuntimeArticles(tCtx, 2));
-                const rows = yield* Effect.promise(() =>
-                  tCtx.db.query("articleCatalog").collect()
-                );
-                const other = Arr.findFirst(
-                  rows,
-                  (row) => row.contentKey !== projection.contentKey
-                );
-                assert(Option.isSome(other));
-                yield* Effect.promise(() =>
-                  tCtx.db.patch("articleCatalog", other.value._id, {
-                    assetId: projection.graph.assetId,
-                    publicPath: projection.publicPath,
-                  })
-                );
-              });
+              yield* Effect.promise(() => insertRuntimeArticles(tCtx, 2));
+              const rows = yield* Effect.promise(() =>
+                tCtx.db.query("articleCatalog").collect()
+              );
+              const other = Arr.findFirst(
+                rows,
+                (row) => row.contentKey !== projection.contentKey
+              );
+              assert(Option.isSome(other));
+              yield* Effect.promise(() =>
+                tCtx.db.patch("articleCatalog", other.value._id, {
+                  assetId: projection.graph.assetId,
+                  publicPath: projection.publicPath,
+                })
+              );
               const input = yield* resolveReferenceInput(
                 kind === "route"
                   ? {

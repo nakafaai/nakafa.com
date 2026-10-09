@@ -74,6 +74,7 @@
           "missingStarInYieldEffectGen": "error",
           "multipleCatchTag": "error",
           "multipleEffectProvide": "error",
+          "nestedEffectGenYield": "error",
           "obsoleteMatchImport": "error",
           "obsoleteSchemaImport": "error",
           "optionMatchToFromOption": "error",

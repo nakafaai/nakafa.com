@@ -12,14 +12,12 @@ const save = FunctionImpl.make(
   spec,
   "save",
   Effect.fn("tryouts.mutations.responses.save")(function* (args) {
-    return yield* Effect.gen(function* () {
-      const { appUser } = yield* requireAuth();
-      const now = yield* Clock.currentTimeMillis;
-      return yield* saveTryoutResponse({
-        args,
-        now,
-        userId: appUser._id,
-      });
+    const { appUser } = yield* requireAuth();
+    const now = yield* Clock.currentTimeMillis;
+    return yield* saveTryoutResponse({
+      args,
+      now,
+      userId: appUser._id,
     });
   })
 );

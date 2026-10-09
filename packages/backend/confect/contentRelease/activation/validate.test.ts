@@ -45,24 +45,22 @@ describe("activation identity validation", () => {
             const tCtx = yield* MutationCtx;
             const { candidate, recovery } = makeActivationPair();
             yield* insertActivationPair(tCtx, candidate, recovery);
-            yield* Effect.gen(function* () {
-              const row = yield* Effect.promise(() =>
-                tCtx.db
-                  .query("contentReleases")
-                  .withIndex("by_releaseId", (q) =>
-                    q.eq("releaseId", recovery.manifest.releaseId)
-                  )
-                  .unique()
-              );
-              if (!row) {
-                throw new Error("Expected the retained inverse.");
-              }
-              yield* Effect.promise(() =>
-                tCtx.db.patch("contentReleases", row._id, {
-                  status: "staging",
-                })
-              );
-            });
+            const row = yield* Effect.promise(() =>
+              tCtx.db
+                .query("contentReleases")
+                .withIndex("by_releaseId", (q) =>
+                  q.eq("releaseId", recovery.manifest.releaseId)
+                )
+                .unique()
+            );
+            if (!row) {
+              throw new Error("Expected the retained inverse.");
+            }
+            yield* Effect.promise(() =>
+              tCtx.db.patch("contentReleases", row._id, {
+                status: "staging",
+              })
+            );
             expect(
               yield* validateCandidate(
                 candidate.manifest.releaseId,

@@ -17,24 +17,22 @@ it.effect(
       yield* t.run(
         Effect.gen(function* () {
           const tCtx = yield* MutationCtx;
-          const build = yield* Effect.gen(function* () {
-            yield* Effect.promise(() =>
-              tCtx.db.insert("contentIndex", {
-                appLocale: "en",
-                contentKey: "article:filtered",
-                family: "article",
-                projectionHash: "sha256:projection",
-                publicPath: "articles/filtered",
-                releaseId: "active",
-                sequence: Number.NaN,
-                slot: "blue",
-                text: "A public article must not silently disappear.",
-              })
-            );
-            return yield* Effect.promise(() =>
-              insertModelBuild(tCtx, "search")
-            );
-          });
+          yield* Effect.promise(() =>
+            tCtx.db.insert("contentIndex", {
+              appLocale: "en",
+              contentKey: "article:filtered",
+              family: "article",
+              projectionHash: "sha256:projection",
+              publicPath: "articles/filtered",
+              releaseId: "active",
+              sequence: Number.NaN,
+              slot: "blue",
+              text: "A public article must not silently disappear.",
+            })
+          );
+          const build = yield* Effect.promise(() =>
+            insertModelBuild(tCtx, "search")
+          );
           const insert = vi.fn(() => Effect.void);
           const replace = vi.fn(() => Effect.void);
           const remove = vi.fn(() => Effect.void);

@@ -24,22 +24,20 @@ describe("bounded release row abort", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            const foreignKey = yield* Effect.gen(function* () {
-              yield* Effect.promise(() => seedAbortRelease(tCtx));
-              const [foreign, removed] = yield* Effect.promise(() =>
-                tCtx.db.query("contentKeys").take(2)
-              );
-              assert(foreign && removed);
-              yield* Effect.promise(() =>
-                tCtx.db.patch("contentKeys", foreign._id, {
-                  createdSequence: 2,
-                })
-              );
-              yield* Effect.promise(() =>
-                tCtx.db.delete("contentKeys", removed._id)
-              );
-              return foreign.contentKey;
-            });
+            yield* Effect.promise(() => seedAbortRelease(tCtx));
+            const [foreign, removed] = yield* Effect.promise(() =>
+              tCtx.db.query("contentKeys").take(2)
+            );
+            assert(foreign && removed);
+            yield* Effect.promise(() =>
+              tCtx.db.patch("contentKeys", foreign._id, {
+                createdSequence: 2,
+              })
+            );
+            yield* Effect.promise(() =>
+              tCtx.db.delete("contentKeys", removed._id)
+            );
+            const foreignKey = foreign.contentKey;
             expect(yield* deleteAbortRows(ABORT_RELEASE_ID, 1)).toBe(
               ABORT_ITEM_COUNT
             );
@@ -66,33 +64,31 @@ describe("bounded release row abort", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            yield* Effect.gen(function* () {
-              yield* Effect.promise(() =>
-                tCtx.db.insert("contentPaths", {
-                  appLocale: "en",
-                  publicPath: "test/foreign",
-                  createdSequence: 2,
-                })
-              );
-              yield* Effect.forEach(
-                ["test/foreign", "test/absent"],
-                (publicPath, index) =>
-                  Effect.promise(() =>
-                    tCtx.db.insert("contentBindings", {
-                      appLocale: "en",
-                      batchHash: TEST_DIGEST,
-                      batchIndex: 0,
-                      index,
-                      operation: "delete",
-                      publicPath,
-                      releaseId: ABORT_RELEASE_ID,
-                      routeJson: "{}",
-                      sequence: 1,
-                    })
-                  ),
-                { discard: true }
-              );
-            });
+            yield* Effect.promise(() =>
+              tCtx.db.insert("contentPaths", {
+                appLocale: "en",
+                publicPath: "test/foreign",
+                createdSequence: 2,
+              })
+            );
+            yield* Effect.forEach(
+              ["test/foreign", "test/absent"],
+              (publicPath, index) =>
+                Effect.promise(() =>
+                  tCtx.db.insert("contentBindings", {
+                    appLocale: "en",
+                    batchHash: TEST_DIGEST,
+                    batchIndex: 0,
+                    index,
+                    operation: "delete",
+                    publicPath,
+                    releaseId: ABORT_RELEASE_ID,
+                    routeJson: "{}",
+                    sequence: 1,
+                  })
+                ),
+              { discard: true }
+            );
             expect(yield* deleteAbortRows(ABORT_RELEASE_ID, 1)).toBe(2);
             expect(
               yield* Effect.promise(() =>
@@ -146,40 +142,35 @@ describe("bounded release row abort", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            yield* Effect.gen(function* () {
-              for (let batchIndex = 0; batchIndex < 3; batchIndex += 1) {
-                yield* Effect.promise(() =>
-                  tCtx.db.insert("snapshotBatches", {
-                    batchHash: TEST_DIGEST,
-                    batchIndex,
-                    createdAt: 0,
-                    family: "program",
-                    firstIndex: batchIndex,
-                    releaseId: ABORT_RELEASE_ID,
-                    rowCount: 1,
-                    sequence: 1,
-                    snapshotId: TEST_DIGEST,
-                  })
-                );
-              }
-            });
-            const first = yield* Effect.gen(function* () {
-              const metrics = yield* Effect.promise(() =>
-                tCtx.meta.getTransactionMetrics()
+            for (let batchIndex = 0; batchIndex < 3; batchIndex += 1) {
+              yield* Effect.promise(() =>
+                tCtx.db.insert("snapshotBatches", {
+                  batchHash: TEST_DIGEST,
+                  batchIndex,
+                  createdAt: 0,
+                  family: "program",
+                  firstIndex: batchIndex,
+                  releaseId: ABORT_RELEASE_ID,
+                  rowCount: 1,
+                  sequence: 1,
+                  snapshotId: TEST_DIGEST,
+                })
               );
-              const inspection = vi
-                .spyOn(tCtx.meta, "getTransactionMetrics")
-                .mockResolvedValue({
-                  ...metrics,
-                  bytesWritten: {
-                    ...metrics.bytesWritten,
-                    remaining: 0,
-                  },
-                });
-              const processed = yield* deleteAbortRows(ABORT_RELEASE_ID, 1);
-              inspection.mockRestore();
-              return processed;
-            });
+            }
+            const metrics = yield* Effect.promise(() =>
+              tCtx.meta.getTransactionMetrics()
+            );
+            const inspection = vi
+              .spyOn(tCtx.meta, "getTransactionMetrics")
+              .mockResolvedValue({
+                ...metrics,
+                bytesWritten: {
+                  ...metrics.bytesWritten,
+                  remaining: 0,
+                },
+              });
+            const first = yield* deleteAbortRows(ABORT_RELEASE_ID, 1);
+            inspection.mockRestore();
             expect(first).toBe(1);
             expect(
               yield* Effect.promise(() =>
