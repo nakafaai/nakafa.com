@@ -1,5 +1,5 @@
 import { encodePrettyJsonText } from "@repo/utilities/json";
-import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
+import { Array as Arr, DateTime, Effect, FileSystem, Schema } from "effect";
 import { SubmissionHistoryError } from "@/scripts/indexing/errors";
 import { indexingFiles } from "@/scripts/indexing/paths";
 
@@ -147,7 +147,7 @@ export const updateSubmissionHistory = Effect.fn(
   service: SubmissionService;
   urls: readonly string[];
 }) {
-  const timestamp = new Date(yield* Clock.currentTimeMillis).toISOString();
+  const timestamp = DateTime.formatIso(yield* DateTime.now);
   const serviceHistory = { ...history[service] };
   for (const url of urls) {
     serviceHistory[url] = timestamp;

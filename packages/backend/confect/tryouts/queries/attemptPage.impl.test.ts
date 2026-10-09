@@ -49,9 +49,7 @@ const retainedRequest = (
   locale: "id" as const,
   publicPath,
 });
-const useTryoutTime = Effect.sync(() =>
-  vi.setSystemTime(new Date(TRYOUT_START_NOW))
-);
+const useTryoutTime = Effect.sync(() => vi.setSystemTime(TRYOUT_START_NOW));
 
 const invoke = <A>(operation: () => PromiseLike<A>) =>
   Effect.promise(operation);

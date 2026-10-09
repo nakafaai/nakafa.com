@@ -34,7 +34,7 @@ const identity = {
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
 const sectionPath = `${setPath}/${TRYOUT_START_SECTION}`;
 const startFixture = Effect.fn("frozenPage.test.startFixture")(function* () {
-  vi.setSystemTime(new Date(TRYOUT_START_NOW));
+  vi.setSystemTime(TRYOUT_START_NOW);
   const t = createConvexTestWithBetterAuth();
   const auth = yield* Effect.promise(() =>
     t.mutation(async (ctx) => {

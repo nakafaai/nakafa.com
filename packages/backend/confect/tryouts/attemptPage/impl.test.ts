@@ -31,7 +31,7 @@ const sectionPath = `${setPath}/${TRYOUT_START_SECTION}`;
 const startFixture = Effect.fn("attemptPage.test.startFixture")(function* (
   visibility: "internal-entry" | "visible"
 ) {
-  vi.setSystemTime(new Date(TRYOUT_START_NOW));
+  vi.setSystemTime(TRYOUT_START_NOW);
   const t = createConvexTestWithBetterAuth();
   const auth = yield* Effect.promise(() =>
     t.mutation(async (ctx) => {

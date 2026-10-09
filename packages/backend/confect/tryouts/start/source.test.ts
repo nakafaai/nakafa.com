@@ -40,7 +40,7 @@ describe("tryouts/start/source", () => {
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
-        vi.setSystemTime(new Date(NOW));
+        vi.setSystemTime(NOW);
         const t = createConvexTestWithBetterAuth();
         yield* Effect.promise(() =>
           t.mutation((ctx) => activateTryoutStartSource(ctx, "visible", "raw"))
@@ -67,7 +67,7 @@ describe("tryouts/start/source", () => {
   it.effect("pins the later release that selects a reused runtime", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
-      vi.setSystemTime(new Date(NOW));
+      vi.setSystemTime(NOW);
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
@@ -136,7 +136,7 @@ describe("tryouts/start/source", () => {
   );
   it.effect("resumes one logical set after its public path changes", () =>
     Effect.gen(function* () {
-      vi.setSystemTime(new Date(NOW));
+      vi.setSystemTime(NOW);
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* Effect.promise(() =>
         t.mutation(async (ctx) => {

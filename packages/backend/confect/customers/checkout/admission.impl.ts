@@ -21,7 +21,7 @@ const admitCheckoutSession = FunctionImpl.make(
             ...(args.timestamp === undefined
               ? {}
               : {
-                  timestamp: new Date(args.timestamp),
+                  timestamp: args.timestamp,
                 }),
           }),
         loadUser: Effect.fn("customers.checkout.loadAdmissionUser")(

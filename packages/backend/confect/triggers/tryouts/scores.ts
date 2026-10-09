@@ -63,7 +63,7 @@ export const tryoutScoresHandler = Effect.fn(
           track_key: identity.trackKey,
         },
       },
-      timestamp: new Date(score.finalizedAt),
+      timestamp: score.finalizedAt,
     });
   },
   Effect.catchDefect(flow(toTryoutScoreAnalyticsError, Effect.fail))

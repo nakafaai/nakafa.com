@@ -47,6 +47,7 @@
           "floatingEffectInVitest": "error",
           "globalConsole": "error",
           "globalConsoleInEffect": "error",
+          "globalDateInEffect": "error",
           "globalErrorInEffectCatch": "error",
           "globalErrorInEffectFailure": "error",
           "globalFetch": "error",
