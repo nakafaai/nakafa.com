@@ -6,10 +6,10 @@ import {
   CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO,
   CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
   ChemistryParticleLabel,
-  getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { DoubleSide } from "three";
@@ -167,7 +167,7 @@ export function Particle({
       {label && (
         <ChemistryParticleLabel
           color={labelColor}
-          fontSize={getChemistryParticleLabelFontSize(radius)}
+          fontSize={getThreeParticleLabelFontSize(radius)}
           outlineColor={labelOutlineColor}
           outlineWidth={CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH}
           position={getChemistryParticleLabelPosition(

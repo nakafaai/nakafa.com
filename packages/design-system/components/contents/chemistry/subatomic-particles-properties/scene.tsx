@@ -2,7 +2,6 @@ import { Line, RoundedBox } from "@react-three/drei";
 import {
   CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO,
   ChemistryParticleLabel,
-  getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import {
@@ -19,6 +18,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import type { SubatomicParticlePropertiesLabProps } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -345,7 +345,7 @@ function Particle({
       </mesh>
       <ChemistryParticleLabel
         color={labelColor}
-        fontSize={getChemistryParticleLabelFontSize(radius)}
+        fontSize={getThreeParticleLabelFontSize(radius)}
         position={getChemistryParticleLabelPosition(
           radius,
           CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO
