@@ -118,23 +118,20 @@ export const readPublishedCategoryAlternates = Effect.fn(
     { concurrency: ACTIVE_APP_LOCALE_CODES.length }
   );
 
-  const match = Arr.findFirst(
+  const selected = Arr.findFirst(
     categories,
     (category) => category.appLocale === current.appLocale
   );
-  if (Option.isNone(match)) {
-    return yield* categoryError(current.appLocale);
-  }
-  const selected = match.value;
   if (
-    selected.route !== current.route ||
-    selected.title !== current.title ||
-    selected.rendererDomain !== current.rendererDomain ||
+    Option.isNone(selected) ||
+    selected.value.route !== current.route ||
+    selected.value.title !== current.title ||
+    selected.value.rendererDomain !== current.rendererDomain ||
     Arr.some(
       categories,
       (category) =>
-        category.activeManifestHash !== selected.activeManifestHash ||
-        category.activeReleaseId !== selected.activeReleaseId
+        category.activeManifestHash !== selected.value.activeManifestHash ||
+        category.activeReleaseId !== selected.value.activeReleaseId
     )
   ) {
     return yield* categoryError(current.appLocale);
