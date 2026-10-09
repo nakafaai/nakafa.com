@@ -461,4 +461,36 @@ describe("runGoogleIndexing", () => {
       });
     }
   );
+
+  it.effect(
+    "reads the second sitemap batch after a first batch whose eligible URLs are all submitted, and keeps the old stamp",
+    () => {
+      const events = MutableList.make<string>();
+      const lines = MutableList.make<string>();
+      const urls = Arr.makeBy(501, pageUrl);
+      return Effect.gen(function* () {
+        const { submissionHistory } = yield* indexingPaths;
+        const memory = memoryFiles(events, [
+          [submissionHistory, historyWith(pageUrl(0))],
+        ]);
+        sitemapOf(urls);
+        answerRun(events, [pageUrl(0), pageUrl(500)], accepted);
+
+        yield* runToEnd(runGoogle(memory.layer, lines));
+
+        expect(MutableList.toArray(events)).toEqual([
+          `publish ${pageUrl(500)}`,
+          `write ${submissionHistory}`,
+        ]);
+        const history = yield* loadSubmissionHistory().pipe(
+          Effect.provide(memory.layer)
+        );
+        expect(Rec.keys(history.googleIndexingApi)).toEqual([
+          pageUrl(0),
+          pageUrl(500),
+        ]);
+        expect(history.googleIndexingApi[pageUrl(0)]).toBe(EARLIER_STAMP);
+      });
+    }
+  );
 });
