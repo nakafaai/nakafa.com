@@ -371,21 +371,18 @@ page.addInitScript(() => {
 });
 
 describe("environment reads", () => {
-  it.effect("keeps writes, build constants, and the createEnv seam", () =>
+  it.effect("keeps writes, build constants, and the readEnvironment seam", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
-        yield* findings(`import { createEnv } from "@t3-oss/env-nextjs";
+        yield* findings(`import { readEnvironment } from "@repo/utilities/env";
 process.env.NODE_ENV === "production";
 process.env.NEXT_RUNTIME === "nodejs";
 process.env.SITE_URL = "https://nakafa.com";
 process.env.SITE_URL ??= "https://nakafa.com";
 delete process.env.SITE_URL;
-export const env = createEnv({
-  runtimeEnv: { SITE_URL: process.env.SITE_URL },
-});
-export const server = createEnv({ runtimeEnv: process.env });
-export const preview = createEnv({
-  experimental__runtimeEnv: { PREVIEW: process.env.PREVIEW },
+export const env = readEnvironment(fields, {
+  PREVIEW: process.env.PREVIEW,
+  SITE_URL: process.env.SITE_URL,
 });
 `),
         []
@@ -396,26 +393,74 @@ export const preview = createEnv({
   it.effect("reports every read outside those seams", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
-        yield* findings(`import { createEnv } from "@t3-oss/env-core";
+        yield* findings(`import { readEnvironment } from "@repo/utilities/env";
 const url = process.env.SITE_URL;
 const name = process.env[key];
 const inherited = { ...process.env };
-const mapping = { runtimeEnv: { SITE_URL: process.env.SITE_URL } };
-const local = makeEnv({ runtimeEnv: process.env });
-const fallback = createEnv({ runtimeEnv: process.env.SITE_URL ?? {} });
+const record = { SITE_URL: process.env.SITE_URL };
+const local = makeEnv(fields, { SITE_URL: process.env.SITE_URL });
+const whole = readEnvironment(fields, process.env);
+const renamed = readEnvironment(fields, { URL: process.env.SITE_URL });
+const computed = readEnvironment(fields, { SITE_URL: process.env["SITE_URL"] });
+const quoted = readEnvironment(fields, { "SITE_URL": process.env.SITE_URL });
+const first = readEnvironment({ SITE_URL: process.env.SITE_URL }, {});
+const fallback = readEnvironment(fields, { SITE_URL: process.env.SITE_URL ?? "" });
+const member = Env.readEnvironment(fields, { SITE_URL: process.env.SITE_URL });
 process.env.SITE_URL += "/";
 process.env.SITE_URL === url;
 `),
-        ["2 env", "3 env", "4 env", "5 env", "6 env", "7 env", "8 env", "9 env"]
+        [
+          "2 env",
+          "3 env",
+          "4 env",
+          "5 env",
+          "6 env",
+          "7 env",
+          "8 env",
+          "9 env",
+          "10 env",
+          "11 env",
+          "12 env",
+          "13 env",
+          "14 env",
+          "15 env",
+        ]
+      );
+    })
+  );
+
+  it.effect("reports a read whose call a local binding shadows", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`import { readEnvironment } from "@repo/utilities/env";
+export const env = readEnvironment(fields, { SITE_URL: process.env.SITE_URL });
+export function local(readEnvironment: (fields: unknown, values: unknown) => unknown) {
+  return readEnvironment(fields, { SITE_URL: process.env.SITE_URL });
+}
+export const viaObject = readEnvironment(fields, {
+  SITE_URL: globalThis.process.env.SITE_URL,
+});
+`),
+        ["4 env", "7 env"]
+      );
+    })
+  );
+
+  it.effect("needs the seam imported as a value from its owner", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`import { readEnvironment } from "@repo/utilities/environment";
+import * as Env from "@repo/utilities/env";
+import { InvalidEnvironmentError } from "@repo/utilities/env";
+export const env = readEnvironment(fields, { SITE_URL: process.env.SITE_URL });
+`),
+        ["4 env"]
       );
       assert.deepStrictEqual(
-        yield* findings(`import { createEnv } from "@t3-oss/env-nextjs/presets";
-import type { Preset } from "@t3-oss/env-nextjs";
-import * as Env from "@t3-oss/env-nextjs";
-import envCore from "@t3-oss/env-core";
-export const env = createEnv({ runtimeEnv: { SITE_URL: process.env.SITE_URL } });
+        yield* findings(`import type { readEnvironment } from "@repo/utilities/env";
+export const env = readEnvironment(fields, { SITE_URL: process.env.SITE_URL });
 `),
-        ["5 env"]
+        ["2 env"]
       );
     })
   );

@@ -5,7 +5,6 @@ import {
   CONSENT_DECISION_MECHANISMS,
   CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
-import { keys } from "@repo/analytics/keys";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import {
   createOperationalException,
@@ -21,6 +20,7 @@ import {
   PageviewWindow,
   startPageviewTracking,
 } from "@repo/analytics/posthog/pageview";
+import { postHogPublicKeys } from "@repo/analytics/public";
 import { Effect, MutableRef, Option, Schema } from "effect";
 import type { PostHog } from "posthog-js";
 
@@ -141,7 +141,7 @@ export const enableBaselineAnalytics = Effect.fn(
       Effect.mapError(browserAnalyticsLoadFailure)
     );
     const runtimeKeys = yield* Effect.try({
-      try: keys,
+      try: postHogPublicKeys,
       catch: browserAnalyticsLoadFailure,
     });
 

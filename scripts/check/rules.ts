@@ -93,7 +93,7 @@ export const RULES = {
   },
   env: {
     message:
-      "read configuration through Config in effect, or the createEnv runtimeEnv seam in Next.js, instead of process.env; only the bundler-inlined NODE_ENV and NEXT_RUNTIME stay direct.",
+      "read configuration through Config in effect, or in code that Next.js bundles through the record of a readEnvironment call from @repo/utilities/env, instead of process.env; only the bundler-inlined NODE_ENV and NEXT_RUNTIME stay direct.",
     scope: "code",
   },
   "error-class": {

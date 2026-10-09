@@ -1,4 +1,4 @@
-import { appUrlKeys } from "@repo/next-config/keys";
+import { appUrlKeys } from "@repo/next-config/public";
 
 /**
  * Returns the configured public app origin for absolute URLs.

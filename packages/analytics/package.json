@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@t3-oss/env-nextjs": "^0.13.11",
+    "@repo/utilities": "workspace:*",
     "effect": "catalog:",
     "posthog-js": "1.438.3",
     "posthog-node": "^5.55.1",
@@ -18,7 +18,6 @@
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@repo/utilities": "workspace:*",
     "@vitest/coverage-istanbul": "catalog:",
     "vitest": "catalog:"
   }

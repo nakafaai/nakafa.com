@@ -4,7 +4,13 @@ import { fileURLToPath } from "node:url";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import { Effect, Stream } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Record as Rec,
+  String as Str,
+  Stream,
+} from "effect";
 import { ChildProcess } from "effect/process";
 import {
   assertRuntimeTarget,
@@ -299,4 +305,186 @@ describe("content runtime target", () => {
   ])("rejects $name", ({ query, site }) =>
     expectFailure(target({ query, site }), "invalid-target")
   );
+});
+
+const LOOPBACK_QUERY = "http://127.0.0.1:3210";
+const LOOPBACK_SITE = "http://127.0.0.1:3211";
+const PROTECTED_ENVIRONMENT = {
+  NEXT_PUBLIC_CONVEX_SITE_URL: productionTarget.site,
+  NEXT_PUBLIC_CONVEX_URL: productionTarget.query,
+  VERCEL: "1",
+  VERCEL_DEPLOYMENT_ID: "dpl_CRMGPNJvKacYy5e7i77WkJXLS3FK",
+  VERCEL_ENV: "production",
+  VERCEL_GIT_COMMIT_REF: "main",
+  VERCEL_GIT_COMMIT_SHA: "c0730ceec243abd58cf8e0cc98bd04f2da5164c2",
+  VERCEL_GIT_PROVIDER: "github",
+  VERCEL_GIT_REPO_OWNER: "nakafaai",
+  VERCEL_GIT_REPO_SLUG: "nakafa.com",
+  VERCEL_PROJECT_ID: "prj_QfxvXBST46wuSTOXPn4PE32NqbF4",
+  VERCEL_TARGET_ENV: "production",
+};
+/** Every name the runtime reader reads. */
+const RUNTIME_ENVIRONMENT_NAMES = [
+  "CONVEX_AGENT_MODE",
+  ...Rec.keys(PROTECTED_ENVIRONMENT),
+] as const;
+/**
+ * The free-text Vercel identity names that the protected production check
+ * compares. The `VERCEL` marker is a literal and has its own case.
+ */
+const PROTECTED_IDENTITY_NAMES = Arr.filter(
+  Rec.keys(PROTECTED_ENVIRONMENT),
+  Str.startsWith("VERCEL_")
+);
+
+/** Sets the whole runtime environment, so an unnamed key never inherits a shell value. */
+function stubRuntimeEnvironment(
+  values: Partial<
+    Record<(typeof RUNTIME_ENVIRONMENT_NAMES)[number], string | undefined>
+  >
+) {
+  for (const name of RUNTIME_ENVIRONMENT_NAMES) {
+    vi.stubEnv(name, values[name]);
+  }
+}
+
+describe("runtime environment parity", () => {
+  it("returns a loopback target from the Convex URL alone", () => {
+    stubRuntimeEnvironment({ NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY });
+
+    expect(readRuntimeConfig()).toStrictEqual({
+      agent: undefined,
+      query: LOOPBACK_QUERY,
+      site: undefined,
+      vercel: undefined,
+    });
+  });
+
+  it("throws when the Convex URL is unset", () => {
+    stubRuntimeEnvironment({});
+
+    expect(readRuntimeConfig).toThrow();
+  });
+
+  it("rejects an empty or unparsable Convex URL as an invalid target", () => {
+    stubRuntimeEnvironment({ NEXT_PUBLIC_CONVEX_URL: "" });
+    expect(readRuntimeConfig).toThrow(
+      new UnsafeRuntimeError({ reason: "invalid-target" })
+    );
+
+    stubRuntimeEnvironment({ NEXT_PUBLIC_CONVEX_URL: "not a url" });
+    expect(readRuntimeConfig).toThrow(
+      new UnsafeRuntimeError({ reason: "invalid-target" })
+    );
+  });
+
+  it("keeps the site URL optional but rejects an empty or unparsable one", () => {
+    stubRuntimeEnvironment({
+      NEXT_PUBLIC_CONVEX_SITE_URL: LOOPBACK_SITE,
+      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+    });
+    expect(readRuntimeConfig().site).toBe(LOOPBACK_SITE);
+
+    stubRuntimeEnvironment({
+      NEXT_PUBLIC_CONVEX_SITE_URL: "",
+      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+    });
+    expect(readRuntimeConfig).toThrow(
+      new UnsafeRuntimeError({ reason: "invalid-target" })
+    );
+
+    stubRuntimeEnvironment({
+      NEXT_PUBLIC_CONVEX_SITE_URL: "not a url",
+      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+    });
+    expect(readRuntimeConfig).toThrow(
+      new UnsafeRuntimeError({ reason: "invalid-target" })
+    );
+  });
+
+  it("reads the agent mode literal and rejects an empty or other value", () => {
+    stubRuntimeEnvironment({
+      CONVEX_AGENT_MODE: "anonymous",
+      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+    });
+    expect(readRuntimeConfig().agent).toBe("anonymous");
+
+    stubRuntimeEnvironment({
+      CONVEX_AGENT_MODE: "",
+      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+    });
+    expect(readRuntimeConfig).toThrow();
+
+    stubRuntimeEnvironment({
+      CONVEX_AGENT_MODE: "agent",
+      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+    });
+    expect(readRuntimeConfig).toThrow();
+  });
+
+  it("reads the Vercel marker literal and rejects an empty or other value", () => {
+    stubRuntimeEnvironment({
+      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VERCEL: "1",
+    });
+    expect(readRuntimeConfig().vercel).toBe("1");
+
+    stubRuntimeEnvironment({
+      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VERCEL: "",
+    });
+    expect(readRuntimeConfig).toThrow();
+
+    stubRuntimeEnvironment({
+      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VERCEL: "0",
+    });
+    expect(readRuntimeConfig).toThrow();
+  });
+
+  it("accepts the complete protected production environment", () => {
+    stubRuntimeEnvironment(PROTECTED_ENVIRONMENT);
+
+    expect(readRuntimeConfig()).toStrictEqual({
+      agent: undefined,
+      query: productionTarget.query,
+      site: productionTarget.site,
+      vercel: "1",
+    });
+  });
+
+  it.each(PROTECTED_IDENTITY_NAMES)(
+    "rejects production when %s is unset",
+    (name) => {
+      stubRuntimeEnvironment(PROTECTED_ENVIRONMENT);
+      vi.stubEnv(name, undefined);
+
+      expect(readRuntimeConfig).toThrow(
+        new UnsafeRuntimeError({ reason: "untrusted-production" })
+      );
+    }
+  );
+
+  it.each(PROTECTED_IDENTITY_NAMES)(
+    "rejects production when %s is empty",
+    (name) => {
+      stubRuntimeEnvironment(PROTECTED_ENVIRONMENT);
+      vi.stubEnv(name, "");
+
+      expect(readRuntimeConfig).toThrow(
+        new UnsafeRuntimeError({ reason: "untrusted-production" })
+      );
+    }
+  );
+
+  it("rejects anonymous agent mode against the protected production environment", () => {
+    stubRuntimeEnvironment({
+      ...PROTECTED_ENVIRONMENT,
+      CONVEX_AGENT_MODE: "anonymous",
+    });
+
+    expect(readRuntimeConfig).toThrow(
+      new UnsafeRuntimeError({ reason: "anonymous-production" })
+    );
+  });
 });

@@ -41,11 +41,6 @@ vi.mock("@/lib/content/material/publication", () => ({
 vi.mock("@/lib/utils/system", () => ({
   getCachedMetadataFromSlug: mocks.getCachedMetadataFromSlug,
 }));
-vi.mock("@/env", () => ({
-  env: {
-    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
-  },
-}));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {

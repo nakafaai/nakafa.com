@@ -2,7 +2,7 @@
 
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { env } from "@/env";
+import { clientEnv } from "@/env.client";
 import { authClient } from "@/lib/auth/client";
 import {
   type AuthSession,
@@ -50,7 +50,7 @@ function PreviewSessionProvider({ children }: { children: ReactNode }) {
 
 /** Provides the one live session for every app authentication reader. */
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
-  if (env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true") {
+  if (clientEnv.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true") {
     return <PreviewSessionProvider>{children}</PreviewSessionProvider>;
   }
   return <BetterAuthSessionProvider>{children}</BetterAuthSessionProvider>;

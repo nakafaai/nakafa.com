@@ -2,8 +2,8 @@ import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   isProtectedProduction,
 } from "@repo/backend/content/deployment";
-import { convexKeys } from "@repo/backend/keys";
-import { createEnv } from "@t3-oss/env-nextjs";
+import { convexKeys } from "@repo/backend/public";
+import { readEnvironment } from "@repo/utilities/env";
 import { Effect, Schema } from "effect";
 
 const VercelIdentitySchema = Schema.Struct({
@@ -170,49 +170,27 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
   }
 );
 
+const optionalText = Schema.UndefinedOr(Schema.String);
+
 /** Reads and validates the content runtime used by Next configuration. */
 export function readRuntimeConfig() {
-  const env = createEnv({
-    extends: [convexKeys()],
-    server: {
-      CONVEX_AGENT_MODE: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.Literal("anonymous"))
-      ),
-      VERCEL: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.Literal("1"))
-      ),
-      VERCEL_DEPLOYMENT_ID: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_ENV: Schema.toStandardSchemaV1(Schema.UndefinedOr(Schema.String)),
-      VERCEL_GIT_COMMIT_REF: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_GIT_COMMIT_SHA: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_GIT_PROVIDER: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_GIT_REPO_OWNER: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_GIT_REPO_SLUG: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_PROJECT_ID: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-      VERCEL_TARGET_ENV: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
+  const convex = convexKeys();
+  const env = readEnvironment(
+    {
+      CONVEX_AGENT_MODE: Schema.UndefinedOr(Schema.Literal("anonymous")),
+      NEXT_PUBLIC_CONVEX_SITE_URL: optionalText,
+      VERCEL: Schema.UndefinedOr(Schema.Literal("1")),
+      VERCEL_DEPLOYMENT_ID: optionalText,
+      VERCEL_ENV: optionalText,
+      VERCEL_GIT_COMMIT_REF: optionalText,
+      VERCEL_GIT_COMMIT_SHA: optionalText,
+      VERCEL_GIT_PROVIDER: optionalText,
+      VERCEL_GIT_REPO_OWNER: optionalText,
+      VERCEL_GIT_REPO_SLUG: optionalText,
+      VERCEL_PROJECT_ID: optionalText,
+      VERCEL_TARGET_ENV: optionalText,
     },
-    client: {
-      NEXT_PUBLIC_CONVEX_SITE_URL: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.String)
-      ),
-    },
-    runtimeEnv: {
+    {
       CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
       VERCEL: process.env.VERCEL,
@@ -225,11 +203,11 @@ export function readRuntimeConfig() {
       VERCEL_GIT_REPO_SLUG: process.env.VERCEL_GIT_REPO_SLUG,
       VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
       VERCEL_TARGET_ENV: process.env.VERCEL_TARGET_ENV,
-    },
-  });
+    }
+  );
   const target = {
     agent: env.CONVEX_AGENT_MODE,
-    query: env.NEXT_PUBLIC_CONVEX_URL,
+    query: convex.NEXT_PUBLIC_CONVEX_URL,
     site: env.NEXT_PUBLIC_CONVEX_SITE_URL,
     vercel: {
       deployment: env.VERCEL_DEPLOYMENT_ID,

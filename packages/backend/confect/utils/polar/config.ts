@@ -1,4 +1,4 @@
-import { polarKeys } from "@repo/backend/keys";
+import { polarKeys } from "@repo/backend/public";
 
 /** Whether Polar should target production or sandbox resources. */
 export const isPolarProduction =
