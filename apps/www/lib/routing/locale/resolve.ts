@@ -1,4 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, Data, Effect, Schema } from "effect";
 import { hasLocale } from "next-intl";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
@@ -31,7 +32,7 @@ class InvalidLocalizedHrefError extends Data.TaggedError(
   href: string;
 }> {}
 
-const URL_BASE = "https://nakafa.com";
+const URL_BASE = COMPANY_IDENTITY.url;
 
 /** Narrows the leading path segment to a configured locale, if present. */
 function readLocale(value: string | undefined) {

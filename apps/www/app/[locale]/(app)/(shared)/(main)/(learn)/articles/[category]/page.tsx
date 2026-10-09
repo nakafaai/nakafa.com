@@ -3,6 +3,7 @@ import {
   type ArticleCategory,
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { Array as Arr, Effect, Option, Schema } from "effect";
@@ -215,11 +216,11 @@ async function CategoryPage({
       <CollectionPageJsonLd
         description={t("description")}
         items={Arr.map(articles, (article) => ({
-          url: `https://nakafa.com/${locale}/${article.publicPath}`,
+          url: `${COMPANY_IDENTITY.url}/${locale}/${article.publicPath}`,
           name: article.title,
         }))}
         name={label}
-        url={`https://nakafa.com/${locale}${categoryPath}`}
+        url={`${COMPANY_IDENTITY.url}/${locale}${categoryPath}`}
       />
       <HeaderContent
         description={t("description")}
