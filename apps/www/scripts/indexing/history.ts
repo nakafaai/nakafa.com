@@ -5,6 +5,7 @@ import {
   Effect,
   FileSystem,
   Option,
+  Record as Rec,
   Schema,
 } from "effect";
 import {
@@ -145,7 +146,7 @@ export function listUnsubmittedUrls({
   service: SubmissionService;
   urls: readonly string[];
 }) {
-  return Arr.filter(urls, (url) => !history[service][url]);
+  return Arr.filter(urls, (url) => !Rec.has(history[service], url));
 }
 /** Adds successful notifications to one service's ignored local history. */
 export const updateSubmissionHistory = Effect.fn(
