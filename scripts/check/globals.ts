@@ -58,6 +58,7 @@ const MEMBERS: Readonly<Record<string, Readonly<Record<string, RuleId>>>> = {
     keys: "object-helper",
     values: "object-helper",
   },
+  crypto: { randomUUID: "random" },
   process: { env: "env" },
 };
 

@@ -142,6 +142,51 @@ export class Holder extends makeBase(JSON.parse(text)) {}
     })
   );
 
+  it.effect(
+    "reports crypto.randomUUID through each name of the crypto global",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`crypto.randomUUID();
+globalThis.crypto.randomUUID();
+window.crypto.randomUUID();
+self.crypto.randomUUID();
+`),
+          ["1 random", "2 random", "3 random", "4 random"]
+        );
+      })
+  );
+
+  it.effect("keeps crypto.subtle and crypto.getRandomValues allowed", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`crypto.getRandomValues(bytes);
+crypto.subtle.digest("SHA-256", bytes);
+`),
+        []
+      );
+    })
+  );
+
+  it.effect(
+    "leaves the Effect Crypto service that randomUuid reads alone",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { Crypto, Effect } from "effect";
+export const randomUuid = Effect.gen(function* () {
+  const crypto = yield* Crypto.Crypto;
+  return yield* crypto.randomUUIDv4;
+});
+`,
+            "packages/utilities/uuid.ts"
+          ),
+          []
+        );
+      })
+  );
+
   it.effect("ignores other members, shadowed names, and lookalikes", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

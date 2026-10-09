@@ -132,7 +132,8 @@ export const RULES = {
     scope: "domain",
   },
   random: {
-    message: "draw random values from Random in effect instead of Math.random.",
+    message:
+      "draw random values from Random in effect instead of Math.random, and draw a UUID with randomUuid from @repo/utilities/uuid, which reads Effect's Crypto service, instead of crypto.randomUUID.",
     scope: "code",
   },
   timer: {
