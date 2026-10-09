@@ -1,10 +1,10 @@
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import {
   encodeJsonText,
   encodePrettyJsonText,
   JsonTextSchema,
 } from "@repo/utilities/json";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Result, Schema } from "effect";
 
 describe("encodeJsonText", () => {
   it("writes the same text as JSON.stringify, keeping escapes and key order", () => {
@@ -60,11 +60,12 @@ describe("JsonTextSchema", () => {
   it.effect("fails with a SchemaError when the text is not JSON", () =>
     Effect.gen(function* () {
       const untrusted: unknown = "{not json";
-      const failure = yield* Schema.decodeUnknownEffect(JsonTextSchema)(
-        untrusted
-      ).pipe(Effect.flip);
+      const result = yield* Effect.result(
+        Schema.decodeUnknownEffect(JsonTextSchema)(untrusted)
+      );
 
-      expect(failure).toBeInstanceOf(Schema.SchemaError);
+      assert(Result.isFailure(result));
+      expect(result.failure).toBeInstanceOf(Schema.SchemaError);
     })
   );
 });
