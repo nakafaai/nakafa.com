@@ -145,3 +145,79 @@ describe("getPowerPreference", () => {
     expect(getPowerPreference()).toBe(expected);
   });
 });
+
+describe("hasHardwareWebGL", () => {
+  type GetContext = (
+    contextId: string,
+    options: WebGLContextAttributes
+  ) => unknown;
+
+  /** The answer is remembered per module instance, so each case loads a fresh one. */
+  async function loadDevice() {
+    vi.resetModules();
+
+    return await import("@repo/design-system/lib/device");
+  }
+
+  /** Makes the probe's canvas answer `getContext` with the given lookup. */
+  function stubCanvas(getContext: GetContext) {
+    vi.stubGlobal("document", {
+      createElement: () => ({ getContext }),
+    });
+  }
+
+  it("answers yes and releases the probe when the browser gives a WebGL2 context", async () => {
+    const loseContext = vi.fn();
+    const getContext = vi.fn<GetContext>(() => ({
+      getExtension: () => ({ loseContext }),
+    }));
+    stubCanvas(getContext);
+
+    const { hasHardwareWebGL } = await loadDevice();
+
+    expect(hasHardwareWebGL()).toBe(true);
+    expect(getContext).toHaveBeenCalledExactlyOnceWith("webgl2", {
+      failIfMajorPerformanceCaveat: true,
+    });
+    expect(loseContext).toHaveBeenCalledOnce();
+  });
+
+  it("answers no when the browser gives no WebGL2 context", async () => {
+    stubCanvas(vi.fn<GetContext>(() => null));
+
+    const { hasHardwareWebGL } = await loadDevice();
+
+    expect(hasHardwareWebGL()).toBe(false);
+  });
+
+  it("answers no when reading the WebGL2 context throws", async () => {
+    stubCanvas(
+      vi.fn<GetContext>(() => {
+        throw new Error("WebGL is blocked.");
+      })
+    );
+
+    const { hasHardwareWebGL } = await loadDevice();
+
+    expect(hasHardwareWebGL()).toBe(false);
+  });
+
+  it("answers yes when the browser offers no context-loss extension", async () => {
+    stubCanvas(vi.fn<GetContext>(() => ({ getExtension: () => null })));
+
+    const { hasHardwareWebGL } = await loadDevice();
+
+    expect(hasHardwareWebGL()).toBe(true);
+  });
+
+  it("asks the browser once and remembers a no answer", async () => {
+    const getContext = vi.fn<GetContext>(() => null);
+    stubCanvas(getContext);
+
+    const { hasHardwareWebGL } = await loadDevice();
+
+    expect(hasHardwareWebGL()).toBe(false);
+    expect(hasHardwareWebGL()).toBe(false);
+    expect(getContext).toHaveBeenCalledOnce();
+  });
+});

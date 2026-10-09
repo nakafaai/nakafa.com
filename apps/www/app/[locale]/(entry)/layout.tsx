@@ -1,9 +1,6 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import {
-  EntryShell,
-  EntryShellArtwork,
-  EntryShellPanel,
-} from "@/components/entry/shell";
+import { EntryShellArtwork } from "@/components/entry/artwork.client";
+import { EntryShell, EntryShellPanel } from "@/components/entry/shell";
 import { ConvexProvider } from "@/components/providers/convex";
 import { env } from "@/env";
 
