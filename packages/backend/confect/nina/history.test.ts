@@ -138,6 +138,14 @@ describe("Nina provider context", () => {
     ]);
   });
 
+  it("keeps a step without a user prompt whole, in its own order", () => {
+    const messages: ModelMessage[] = [
+      { role: "assistant", content: "Earlier answer." },
+      { role: "assistant", content: "Continued answer." },
+    ];
+    expect(boundStep(messages)).toEqual(messages);
+  });
+
   it("keeps malformed or non-JSON stored results as bounded text instead of failing", () => {
     const result = boundStep([
       { role: "user", content: "Check the work" },

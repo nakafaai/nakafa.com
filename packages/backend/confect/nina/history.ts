@@ -7,7 +7,7 @@ import { CapabilityOutputSchema } from "@repo/backend/confect/nina/capability/pr
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { encodeJsonText } from "@repo/utilities/json";
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
-import { Array as Arr, MutableHashSet, Schema } from "effect";
+import { Array as Arr, MutableHashSet, Option, Schema } from "effect";
 
 /**
  * Gemini's flat input cost for one image. Documents count the same, since only
@@ -183,9 +183,9 @@ function splitTurns(messages: readonly ModelMessage[]): ModelMessage[][] {
  */
 export function boundStep(messages: readonly ModelMessage[]) {
   const projected = projectMessages(messages);
-  const start = Math.max(
-    Arr.map(projected, (message) => message.role).lastIndexOf("user"),
-    0
+  const start = Option.getOrElse(
+    Arr.findLastIndex(projected, (message) => message.role === "user"),
+    () => 0
   );
   let turn = Arr.drop(projected, start);
   for (
@@ -222,20 +222,27 @@ export function assembleContext({
     splitTurns(Arr.map(projectMessages(recent), noteDocuments))
   );
   const covered = throughOrder ?? -1;
-  let selected: ModelMessage[][] = [];
-  let used = 0;
-  for (const [offset, turn] of newestFirst.entries()) {
-    const cost = turnTokens(turn);
-    if (
-      currentOrder - 1 - offset <= covered ||
-      (selected.length > 0 && used + cost > NINA_BUDGET.history)
-    ) {
-      break;
+  const [, candidates] = Arr.mapAccum(
+    newestFirst,
+    0,
+    (usedBefore, turn, offset) => {
+      const cost = turnTokens(turn);
+      const kept =
+        cost > NINA_BUDGET.history ? Arr.map(turn, excerptMessage) : turn;
+      return [
+        usedBefore + turnTokens(kept),
+        { cost, kept, offset, usedBefore },
+      ];
     }
-    const kept =
-      cost > NINA_BUDGET.history ? Arr.map(turn, excerptMessage) : turn;
-    selected = Arr.prepend(selected, kept);
-    used += turnTokens(kept);
-  }
-  return [...Arr.flatten(selected), ...boundStep(current)];
+  );
+  const selected = Arr.takeWhile(
+    candidates,
+    ({ cost, offset, usedBefore }) =>
+      currentOrder - 1 - offset > covered &&
+      (offset === 0 || usedBefore + cost <= NINA_BUDGET.history)
+  );
+  const history = Arr.flatten(
+    Arr.reverse(Arr.map(selected, (candidate) => candidate.kept))
+  );
+  return [...history, ...boundStep(current)];
 }

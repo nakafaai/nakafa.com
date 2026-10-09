@@ -38,6 +38,24 @@ describe("scopeSources", () => {
     ]);
   });
 
+  it("keeps the last word as the neighbor of a leading number", () => {
+    const sources = scopeSources({
+      query: "19 Alpha for",
+      task: "19 Alpha for",
+      sourcePreference: "primary",
+      sources: [
+        makeSearchSource("Alpha", "https://alpha.io/guide"),
+        makeSearchSource("Format", "https://format.org/notes"),
+        makeSearchSource("Other", "https://other.net/page"),
+      ],
+    });
+
+    expect(Arr.map(sources, (source) => source.url)).toEqual([
+      "https://alpha.io/guide",
+      "https://format.org/notes",
+    ]);
+  });
+
   it("keeps secondary sources when no official constraint is present", () => {
     const sources = scopeSources({
       query: "Next.js 16 cache components",

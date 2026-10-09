@@ -135,13 +135,19 @@ function getVersionAdjacentKeys(text: string) {
     }
 
     return Arr.flatMap(
-      [tokens.at(index - 1), tokens.at(index + 1)],
+      [
+        index === 0 ? Arr.last(tokens) : Arr.get(tokens, index - 1),
+        Arr.get(tokens, index + 1),
+      ],
       (candidate) => {
-        if (!candidate || sourceKeyNumericPattern.test(candidate)) {
+        if (
+          Option.isNone(candidate) ||
+          sourceKeyNumericPattern.test(candidate.value)
+        ) {
           return [];
         }
 
-        return [normalizeSourceKey(candidate)];
+        return [normalizeSourceKey(candidate.value)];
       }
     );
   });

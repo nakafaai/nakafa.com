@@ -50,4 +50,22 @@ describe("buildContentSearchResult", () => {
   it("returns no items for an offset past the end of the ranked documents", () => {
     expect(titlesOf({ limit: 2, offset: 10 }, RANKED)).toEqual([]);
   });
+
+  it("keeps a markdown URL only on the documents that have one", () => {
+    const result = buildContentSearchResult(
+      { limit: 2, locale: "en", offset: 0 },
+      [
+        {
+          ...createDocument("a"),
+          markdown_url: "https://nakafa.com/en/material/a.md",
+        },
+        createDocument("b"),
+      ],
+      []
+    );
+    expect(Arr.map(result.items, (item) => item.markdown_url)).toEqual([
+      "https://nakafa.com/en/material/a.md",
+      undefined,
+    ]);
+  });
 });
