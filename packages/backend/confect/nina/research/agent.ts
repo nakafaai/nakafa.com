@@ -1,4 +1,5 @@
 import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
+import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
@@ -23,7 +24,6 @@ import {
 } from "@repo/backend/confect/nina/research/prompt";
 import {
   ResearchSourceLimitError,
-  researchMaxSources,
   researchOutputSchema,
   webSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";

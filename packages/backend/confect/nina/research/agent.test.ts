@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import {
   ResearchOutputSchema,
-  researchMaxSources,
   WebSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";

@@ -1,6 +1,7 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { storeFile } from "@convex-dev/agent";
 import { describe, expect, it } from "@effect/vitest";
+import { NINA_DOCUMENT_SIZE } from "@repo/backend/client/nina/uploads";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
@@ -8,7 +9,6 @@ import {
   consumeAttachments,
   requireStoredDocumentLimit,
 } from "@repo/backend/confect/nina/attachments";
-import { NINA_DOCUMENT_SIZE } from "@repo/backend/confect/nina/uploads.spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,

@@ -1,10 +1,10 @@
 "use client";
 
 import type { Ref } from "@confect/core";
+import { NinaReceipt } from "@repo/backend/client/nina/receipt";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import { ModelId } from "@repo/backend/confect/gateway/model";
-import { NinaReceipt } from "@repo/backend/confect/nina/turns.spec";
 import { Schema } from "effect";
 
 /** A prompt Nina is admitting for the learner, shown before its chat exists. */

@@ -8,9 +8,9 @@ import {
   useQuery,
 } from "@confect/react";
 import { type UIMessagesQuery, useUIMessages } from "@convex-dev/agent/react";
+import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/nina/presentation.spec";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {

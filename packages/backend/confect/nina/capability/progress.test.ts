@@ -1,11 +1,11 @@
 import { expect, it } from "@effect/vitest";
+import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import {
   countTextTokens,
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
 import {
   type CapabilityArtifact,
-  CapabilityOutputSchema,
   streamCapability,
 } from "@repo/backend/confect/nina/capability/progress";
 import {
