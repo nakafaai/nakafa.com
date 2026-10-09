@@ -8,7 +8,6 @@ import {
   CONTENT_CACHE_PROFILE,
   CONTENT_CACHE_REVALIDATION,
 } from "@/lib/content/profile";
-import { invalidateSitemapCache } from "@/lib/sitemap/cache";
 
 /** One content cache layer could not be invalidated after publication. */
 export class ContentCacheInvalidationError extends Schema.TaggedError<ContentCacheInvalidationError>()(
@@ -24,7 +23,7 @@ export function applyContentCache(
   cacheLife(CONTENT_CACHE_PROFILE);
 }
 
-/** Invalidates one mutable dependency and the shared sitemap CDN response. */
+/** Invalidates one mutable dependency in the Next data cache. */
 export const invalidateContentCache = Effect.fn("www.content.cache.invalidate")(
   function* (scope: ContentCacheScope) {
     yield* Effect.try({
@@ -32,11 +31,6 @@ export const invalidateContentCache = Effect.fn("www.content.cache.invalidate")(
       try: () =>
         revalidateTag(makeContentCacheTag(scope), CONTENT_CACHE_REVALIDATION),
     });
-    yield* invalidateSitemapCache().pipe(
-      Effect.mapError(
-        () => new ContentCacheInvalidationError({ layer: "sitemap" })
-      )
-    );
     return scope;
   }
 );

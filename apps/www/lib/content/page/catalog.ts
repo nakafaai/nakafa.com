@@ -17,7 +17,7 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
 import { decodeContentReleasePin } from "@/lib/content/published/release";
 import { httpLayer } from "@/lib/convex/http";
-import { isReservedPagePath } from "@/lib/routing/public/ownership";
+import { isReservedPagePath } from "@/lib/ownership/route";
 
 const PublishedPageCatalogSchema = Schema.Struct({
   activeReleaseId: ReleaseIdSchema,

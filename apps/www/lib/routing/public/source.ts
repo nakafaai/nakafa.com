@@ -12,7 +12,7 @@ import { readActiveContentRoute } from "@/lib/content/published/route";
 import {
   isApplicationRoutePath,
   isApplicationRouteRoot,
-} from "@/lib/routing/public/ownership";
+} from "@/lib/ownership/route";
 
 const REJECTED_PUBLIC_ROOTS = HashSet.make("/learn");
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;

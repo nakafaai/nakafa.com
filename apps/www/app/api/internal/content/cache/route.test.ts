@@ -16,6 +16,10 @@ import {
   ContentCacheInvalidationError,
   type invalidateContentCache,
 } from "@/lib/content/cache";
+import {
+  type invalidateSitemapCache,
+  SitemapCacheInvalidationError,
+} from "@/lib/sitemap/cache";
 
 const releaseId = ReleaseIdSchema.make("release-cache-test");
 const artifactHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
@@ -32,6 +36,9 @@ const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const invalidateContentCacheMock = vi.hoisted(() =>
   vi.fn<typeof invalidateContentCache>()
 );
+const invalidateSitemapCacheMock = vi.hoisted(() =>
+  vi.fn<typeof invalidateSitemapCache>()
+);
 
 vi.mock("@/env", () => ({
   /** Provides a deterministic internal key for the route handler. */
@@ -42,6 +49,12 @@ vi.mock("@/lib/content/cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/content/cache")>()),
   /** Records content runtime cache invalidation calls. */
   invalidateContentCache: invalidateContentCacheMock,
+}));
+
+vi.mock("@/lib/sitemap/cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/sitemap/cache")>()),
+  /** Records the shared sitemap invalidation without calling Vercel. */
+  invalidateSitemapCache: invalidateSitemapCacheMock,
 }));
 
 vi.mock("@/lib/content/published/active", () => ({
@@ -59,6 +72,7 @@ beforeEach(() => {
   invalidateContentCacheMock
     .mockReset()
     .mockImplementation((tags) => Effect.succeed(tags));
+  invalidateSitemapCacheMock.mockReset().mockReturnValue(Effect.void);
 });
 
 /** Creates one Next POST request for the cache route. */
@@ -215,6 +229,44 @@ describe("content runtime cache revalidation route", () => {
       error: "Content cache invalidation failed.",
     });
     expect(invalidateContentCacheMock).toHaveBeenCalledWith("material");
+  });
+
+  it("invalidates the sitemap once after the content cache succeeds", async () => {
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(200);
+    expect(invalidateSitemapCacheMock).toHaveBeenCalledOnce();
+  });
+
+  it("reports a failed sitemap invalidation without a false receipt", async () => {
+    invalidateSitemapCacheMock.mockReturnValueOnce(
+      Effect.fail(new SitemapCacheInvalidationError())
+    );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({
+      error: "Content cache invalidation failed.",
+    });
+  });
+
+  it("skips the sitemap when the content cache invalidation fails", async () => {
+    invalidateContentCacheMock.mockReturnValueOnce(
+      Effect.fail(new ContentCacheInvalidationError({ layer: "next" }))
+    );
+    const { POST } = await import("@/app/api/internal/content/cache/route");
+    const response = await POST(
+      createBodyRequest(encodeCacheRequest(exactRequest))
+    );
+
+    expect(response.status).toBe(503);
+    expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
   });
 
   it.each([

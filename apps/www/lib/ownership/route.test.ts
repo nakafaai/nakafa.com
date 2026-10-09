@@ -5,7 +5,7 @@ import {
   isApplicationRoutePath,
   isApplicationRouteRoot,
   isReservedPagePath,
-} from "@/lib/routing/public/ownership";
+} from "@/lib/ownership/route";
 
 describe("public route ownership", () => {
   it.each([
