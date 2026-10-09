@@ -1,6 +1,6 @@
 "use client";
 
-import { Array as Arr } from "effect";
+import { Array as Arr, Match } from "effect";
 import type { CSSProperties, HTMLAttributes } from "react";
 import { useMemo } from "react";
 
@@ -149,179 +149,141 @@ export function GradientBlock({
     // Lightness (L): 0-1 scale (0 is black, 1 is white)
     // Chroma (C): 0+ scale (0 is gray, higher is more saturated)
     // Hue (H): 0-360 scale (same as HSL)
-    let baseL = MEDIUM_LIGHTNESS; // Default lightness
-    let baseC = MEDIUM_CHROMA; // Default chroma (saturation)
-
-    switch (intensity) {
-      case "soft": {
-        baseL = SOFT_LIGHTNESS;
-        baseC = SOFT_CHROMA;
-        break;
-      }
-      case "bold": {
-        baseL = BOLD_LIGHTNESS;
-        baseC = BOLD_CHROMA;
-        break;
-      }
-      default: {
-        // medium
-        baseL = MEDIUM_LIGHTNESS;
-        baseC = MEDIUM_CHROMA;
-        break;
-      }
-    }
-
-    let colors: string[] = [];
+    const { baseL, baseC } = Match.value(intensity).pipe(
+      Match.when("soft", () => ({ baseL: SOFT_LIGHTNESS, baseC: SOFT_CHROMA })),
+      Match.when("bold", () => ({ baseL: BOLD_LIGHTNESS, baseC: BOLD_CHROMA })),
+      Match.orElse(() => ({ baseL: MEDIUM_LIGHTNESS, baseC: MEDIUM_CHROMA }))
+    );
 
     // Generate colors based on the selected color scheme
-    switch (colorScheme) {
-      case "vibrant":
+    const colors = Match.value(colorScheme).pipe(
+      Match.when("vibrant", () => [
         // Create a vibrant, modern gradient with strategic color placement
-        colors = [
-          oklch(baseL, baseC, baseHue),
-          oklch(
-            baseL + LIGHTNESS_ADJ_1,
-            Math.min(baseC + CHROMA_ADJ_1, MAX_CHROMA),
-            (baseHue + HUE_ADJ_ANALOGOUS_1 + hueOffset) % MAX_DEGREES
-          ),
-          oklch(
-            baseL - LIGHTNESS_ADJ_1,
-            baseC,
-            (baseHue + HUE_ADJ_ANALOGOUS_2 + hueOffset * 2) % MAX_DEGREES
-          ),
-        ];
-        break;
-
-      case "split-complementary":
+        oklch(baseL, baseC, baseHue),
+        oklch(
+          baseL + LIGHTNESS_ADJ_1,
+          Math.min(baseC + CHROMA_ADJ_1, MAX_CHROMA),
+          (baseHue + HUE_ADJ_ANALOGOUS_1 + hueOffset) % MAX_DEGREES
+        ),
+        oklch(
+          baseL - LIGHTNESS_ADJ_1,
+          baseC,
+          (baseHue + HUE_ADJ_ANALOGOUS_2 + hueOffset * 2) % MAX_DEGREES
+        ),
+      ]),
+      Match.when("split-complementary", () => [
         // Base color and two colors on either side of its complement
-        colors = [
-          oklch(baseL, baseC, baseHue),
-          oklch(
-            baseL - LIGHTNESS_ADJ_1,
-            baseC,
-            (baseHue + HUE_ADJ_SPLIT_1 + hueOffset) % MAX_DEGREES
-          ),
-          oklch(
-            baseL - LIGHTNESS_ADJ_2,
-            baseC,
-            (baseHue + HUE_ADJ_SPLIT_2 - hueOffset) % MAX_DEGREES
-          ),
-        ];
-        break;
-
-      case "complementary":
+        oklch(baseL, baseC, baseHue),
+        oklch(
+          baseL - LIGHTNESS_ADJ_1,
+          baseC,
+          (baseHue + HUE_ADJ_SPLIT_1 + hueOffset) % MAX_DEGREES
+        ),
+        oklch(
+          baseL - LIGHTNESS_ADJ_2,
+          baseC,
+          (baseHue + HUE_ADJ_SPLIT_2 - hueOffset) % MAX_DEGREES
+        ),
+      ]),
+      Match.when("complementary", () => [
         // Base color and its complement (180 degrees apart)
-        colors = [
-          oklch(baseL, baseC, baseHue),
-          oklch(
-            Math.min(baseL + LIGHTNESS_ADJ_1, MAX_LIGHTNESS),
-            Math.max(baseC - CHROMA_ADJ_1, MIN_CHROMA),
-            (baseHue +
-              HUE_ADJ_COMPLEMENTARY_1 +
-              hueOffset / COMPLEMENTARY_HUE_DIV) %
-              MAX_DEGREES
-          ),
-          oklch(
-            Math.max(baseL - LIGHTNESS_ADJ_1, MIN_LIGHTNESS),
-            baseC,
-            (baseHue + HUE_ADJ_COMPLEMENTARY_2 + hueOffset) % MAX_DEGREES
-          ),
-        ];
-        break;
-
-      case "triadic":
+        oklch(baseL, baseC, baseHue),
+        oklch(
+          Math.min(baseL + LIGHTNESS_ADJ_1, MAX_LIGHTNESS),
+          Math.max(baseC - CHROMA_ADJ_1, MIN_CHROMA),
+          (baseHue +
+            HUE_ADJ_COMPLEMENTARY_1 +
+            hueOffset / COMPLEMENTARY_HUE_DIV) %
+            MAX_DEGREES
+        ),
+        oklch(
+          Math.max(baseL - LIGHTNESS_ADJ_1, MIN_LIGHTNESS),
+          baseC,
+          (baseHue + HUE_ADJ_COMPLEMENTARY_2 + hueOffset) % MAX_DEGREES
+        ),
+      ]),
+      Match.when("triadic", () => [
         // Three colors evenly spaced (120 degrees apart)
-        colors = [
-          oklch(baseL, baseC, baseHue),
-          oklch(
-            Math.max(baseL - LIGHTNESS_ADJ_1, MIN_LIGHTNESS),
-            baseC,
-            (baseHue + HUE_ADJ_TRIADIC_1 + hueOffset) % MAX_DEGREES
-          ),
-          oklch(
-            Math.max(baseL - LIGHTNESS_ADJ_2, MIN_LIGHTNESS),
-            baseC,
-            (baseHue + HUE_ADJ_TRIADIC_2 - hueOffset) % MAX_DEGREES
-          ),
-        ];
-        break;
-
-      case "monochromatic":
+        oklch(baseL, baseC, baseHue),
+        oklch(
+          Math.max(baseL - LIGHTNESS_ADJ_1, MIN_LIGHTNESS),
+          baseC,
+          (baseHue + HUE_ADJ_TRIADIC_1 + hueOffset) % MAX_DEGREES
+        ),
+        oklch(
+          Math.max(baseL - LIGHTNESS_ADJ_2, MIN_LIGHTNESS),
+          baseC,
+          (baseHue + HUE_ADJ_TRIADIC_2 - hueOffset) % MAX_DEGREES
+        ),
+      ]),
+      Match.when("monochromatic", () => [
         // Same hue, varying lightness and chroma
-        colors = [
-          oklch(
-            Math.min(baseL + LIGHTNESS_ADJ_2, MAX_LIGHTNESS),
-            Math.min(baseC + CHROMA_ADJ_1, MAX_CHROMA),
-            (baseHue + (hueOffset % HUE_OFFSET_MONO)) % MAX_DEGREES
-          ),
-          oklch(baseL, baseC, baseHue),
-          oklch(
-            Math.max(baseL - LIGHTNESS_ADJ_2, MIN_LIGHTNESS),
-            Math.max(baseC - CHROMA_ADJ_1, MIN_CHROMA),
-            (baseHue - (hueOffset % HUE_OFFSET_MONO)) % MAX_DEGREES
-          ),
-        ];
-        break;
-
-      default:
+        oklch(
+          Math.min(baseL + LIGHTNESS_ADJ_2, MAX_LIGHTNESS),
+          Math.min(baseC + CHROMA_ADJ_1, MAX_CHROMA),
+          (baseHue + (hueOffset % HUE_OFFSET_MONO)) % MAX_DEGREES
+        ),
+        oklch(baseL, baseC, baseHue),
+        oklch(
+          Math.max(baseL - LIGHTNESS_ADJ_2, MIN_LIGHTNESS),
+          Math.max(baseC - CHROMA_ADJ_1, MIN_CHROMA),
+          (baseHue - (hueOffset % HUE_OFFSET_MONO)) % MAX_DEGREES
+        ),
+      ]),
+      Match.orElse(() => [
         // Analogous colors (adjacent on the color wheel)
-        colors = [
-          oklch(baseL, baseC, baseHue),
-          oklch(
-            Math.max(baseL - LIGHTNESS_ADJ_1, MIN_LIGHTNESS),
-            Math.min(baseC + CHROMA_ADJ_2, MAX_CHROMA),
-            (baseHue +
-              HUE_ADJ_ANALOGOUS_1 +
-              (hueOffset % HUE_OFFSET_ANALOGOUS_1)) %
-              MAX_DEGREES
-          ),
-          oklch(
-            Math.max(baseL - LIGHTNESS_ADJ_2, MIN_LIGHTNESS),
-            baseC,
-            (baseHue +
-              HUE_ADJ_ANALOGOUS_2 +
-              (hueOffset % HUE_OFFSET_ANALOGOUS_2)) %
-              MAX_DEGREES
-          ),
-        ];
-        break;
-    }
+        oklch(baseL, baseC, baseHue),
+        oklch(
+          Math.max(baseL - LIGHTNESS_ADJ_1, MIN_LIGHTNESS),
+          Math.min(baseC + CHROMA_ADJ_2, MAX_CHROMA),
+          (baseHue +
+            HUE_ADJ_ANALOGOUS_1 +
+            (hueOffset % HUE_OFFSET_ANALOGOUS_1)) %
+            MAX_DEGREES
+        ),
+        oklch(
+          Math.max(baseL - LIGHTNESS_ADJ_2, MIN_LIGHTNESS),
+          baseC,
+          (baseHue +
+            HUE_ADJ_ANALOGOUS_2 +
+            (hueOffset % HUE_OFFSET_ANALOGOUS_2)) %
+            MAX_DEGREES
+        ),
+      ])
+    );
 
     // Generate colorstops for the gradient
     const colorStops = generateColorStops(colors);
 
     // Generate different types of gradients based on gradientType
-    let gradientCss = "";
     // Use both hashes for more unique angles
     const angle =
       ((hash % HUE_ADJ_COMPLEMENTARY_2) +
         (secondaryHash % HUE_ADJ_COMPLEMENTARY_1)) %
       MAX_DEGREES;
 
-    switch (gradientType) {
-      case "radial": {
+    const gradientCss = Match.value(gradientType).pipe(
+      Match.when("radial", () => {
         // Create a radial gradient with more variation in position
         const posX =
           (hash % RADIAL_POS_MOD_1) + (secondaryHash % RADIAL_POS_MOD_2);
         const posY =
           ((secondaryHash % RADIAL_POS_MOD_1) + (hash % RADIAL_POS_MOD_2)) %
           RADIAL_POS_Y_MOD;
-        gradientCss = `radial-gradient(circle at ${posX}% ${posY}%, ${colorStops})`;
-        break;
-      }
-      case "conic": {
+        return `radial-gradient(circle at ${posX}% ${posY}%, ${colorStops})`;
+      }),
+      Match.when("conic", () => {
         // Create a conic gradient with more unique angle and position
         const conicX =
           CONIC_CENTER + ((secondaryHash % CONIC_POS_MOD) - CONIC_POS_ADJ);
         const conicY = CONIC_CENTER + ((hash % CONIC_POS_MOD) - CONIC_POS_ADJ);
-        gradientCss = `conic-gradient(from ${angle}deg at ${conicX}% ${conicY}%, ${colorStops})`;
-        break;
-      }
-      default:
+        return `conic-gradient(from ${angle}deg at ${conicX}% ${conicY}%, ${colorStops})`;
+      }),
+      Match.orElse(
         // Create a linear gradient (default) with more unique angle
-        gradientCss = `linear-gradient(${angle}deg, ${colorStops})`;
-        break;
-    }
+        () => `linear-gradient(${angle}deg, ${colorStops})`
+      )
+    );
 
     // Create additional styles for conic gradients to assist with anti-aliasing
     const additionalStyles =

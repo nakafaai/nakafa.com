@@ -15,7 +15,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const PERIOD_END = Date.UTC(2026, 6, 21, 12, 0, 0);
@@ -52,8 +52,10 @@ async function insertSubscription(
     subscriptionId: string;
   }
 ) {
-  const timestamp = new Date(NOW).toISOString();
-  let currentPeriodEnd: string | null = new Date(PERIOD_END).toISOString();
+  const timestamp = DateTime.formatIso(DateTime.makeUnsafe(NOW));
+  let currentPeriodEnd: string | null = DateTime.formatIso(
+    DateTime.makeUnsafe(PERIOD_END)
+  );
   if (args.currentPeriodEnd !== undefined) {
     currentPeriodEnd = args.currentPeriodEnd;
   }
@@ -101,7 +103,7 @@ describe("tryouts/access/impl", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
-  it.each([null, new Date(PERIOD_END).toISOString()])(
+  it.each([null, DateTime.formatIso(DateTime.makeUnsafe(PERIOD_END))])(
     "reads current subscription attribution consistently: %s",
     async (currentPeriodEnd) => {
       const t = convexTest(schema, convexModules);
@@ -155,7 +157,9 @@ describe("tryouts/access/impl", () => {
       await insertCustomer(ctx, userId);
       for (let index = 0; index < 32; index += 1) {
         await insertSubscription(ctx, {
-          currentPeriodEnd: new Date(NOW - index).toISOString(),
+          currentPeriodEnd: DateTime.formatIso(
+            DateTime.makeUnsafe(NOW - index)
+          ),
           status: "active",
           subscriptionId: `expired-${index}`,
         });
@@ -177,7 +181,7 @@ describe("tryouts/access/impl", () => {
     },
     {
       status: "active",
-      currentPeriodEnd: new Date(NOW).toISOString(),
+      currentPeriodEnd: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
     },
     {
       status: "active",

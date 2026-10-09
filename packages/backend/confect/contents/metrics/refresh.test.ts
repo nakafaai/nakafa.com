@@ -216,7 +216,7 @@ async function readBoundedState(target: TestConvex<typeof schema>) {
 describe("contents/metrics/refresh", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
   });
 
   afterEach(() => {

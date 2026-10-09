@@ -1,4 +1,5 @@
 import type { PublicationDates } from "@nakafa/aksara-contracts/date";
+import { DateTime } from "effect";
 import { getFormatter, getTranslations } from "next-intl/server";
 
 /** Provides truthful publication semantics without changing visual layout. */
@@ -11,10 +12,13 @@ export async function ContentDates({
     getTranslations("Common"),
   ]);
   const formatDate = (date: string) =>
-    formatter.dateTime(new Date(`${date}T00:00:00.000Z`), {
-      dateStyle: "medium",
-      timeZone: "UTC",
-    });
+    formatter.dateTime(
+      DateTime.toDateUtc(DateTime.makeUnsafe(`${date}T00:00:00.000Z`)),
+      {
+        dateStyle: "medium",
+        timeZone: "UTC",
+      }
+    );
 
   return (
     <p className="sr-only">

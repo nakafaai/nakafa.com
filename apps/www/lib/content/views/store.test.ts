@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Record as Rec, Schema } from "effect";
+import { DateTime, Record as Rec, Schema } from "effect";
 import { createContentViewsStore } from "@/lib/content/views/store";
 
 const STORAGE_KEY = "nakafa-content-views";
 const SESSION_TTL = 30 * 60 * 1000;
-const viewedAt = new Date("2026-10-09T08:00:00Z");
+const viewedAt = DateTime.toDateUtc(
+  DateTime.makeUnsafe("2026-10-09T08:00:00Z")
+);
 const key = "user:learner-1:id:asset:id:material:mathematics:algebra:linear";
 const otherKey = "anonymous:id:untracked:canonical::";
 const StoredViews = Schema.fromJsonString(
@@ -37,10 +39,10 @@ describe("content views store", () => {
     expect(store.getState().isViewed(key)).toBe(true);
     expect(store.getState().isViewed(otherKey)).toBe(false);
 
-    vi.setSystemTime(new Date(viewedAt.getTime() + SESSION_TTL - 1));
+    vi.setSystemTime(viewedAt.getTime() + SESSION_TTL - 1);
     expect(store.getState().isViewed(key)).toBe(true);
 
-    vi.setSystemTime(new Date(viewedAt.getTime() + SESSION_TTL));
+    vi.setSystemTime(viewedAt.getTime() + SESSION_TTL);
     expect(store.getState().isViewed(key)).toBe(false);
   });
 
@@ -48,7 +50,9 @@ describe("content views store", () => {
     const store = createContentViewsStore();
     store.getState().markAsViewed(key);
 
-    const reviewedAt = new Date(viewedAt.getTime() + SESSION_TTL);
+    const reviewedAt = DateTime.toDateUtc(
+      DateTime.makeUnsafe(viewedAt.getTime() + SESSION_TTL)
+    );
     vi.setSystemTime(reviewedAt);
     expect(store.getState().isViewed(key)).toBe(false);
 

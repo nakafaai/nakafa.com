@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Match } from "effect";
 
 /** Default visualization accents from the Tailwind CSS palette. */
 const COLOR_KEYS = [
@@ -134,6 +134,25 @@ type ShadeColorArgs = {
 }[ShadeColorName];
 type ColorArgs = [color: ColorInput] | ShadeColorArgs;
 
+/** Reads one shade. Each color owns its own set of shades. */
+const readShade = Match.type<ShadeColorArgs>().pipe(
+  Match.discriminatorsExhaustive("0")({
+    AMBER: ([, shade]) => COLOR_SHADES.AMBER[shade],
+    BLUE: ([, shade]) => COLOR_SHADES.BLUE[shade],
+    EMERALD: ([, shade]) => COLOR_SHADES.EMERALD[shade],
+    GRAY: ([, shade]) => COLOR_SHADES.GRAY[shade],
+    NEUTRAL: ([, shade]) => COLOR_SHADES.NEUTRAL[shade],
+    ORANGE: ([, shade]) => COLOR_SHADES.ORANGE[shade],
+    RED: ([, shade]) => COLOR_SHADES.RED[shade],
+    SKY: ([, shade]) => COLOR_SHADES.SKY[shade],
+    SLATE: ([, shade]) => COLOR_SHADES.SLATE[shade],
+    STONE: ([, shade]) => COLOR_SHADES.STONE[shade],
+    TEAL: ([, shade]) => COLOR_SHADES.TEAL[shade],
+    VIOLET: ([, shade]) => COLOR_SHADES.VIOLET[shade],
+    ZINC: ([, shade]) => COLOR_SHADES.ZINC[shade],
+  })
+);
+
 /**
  * Get a color from the shared Tailwind palette.
  * @param color - The key of the color to get
@@ -145,36 +164,7 @@ export function getColor(...args: ColorArgs) {
     return COLOR_VALUES[args[0]];
   }
 
-  switch (args[0]) {
-    case "AMBER":
-      return COLOR_SHADES.AMBER[args[1]];
-    case "BLUE":
-      return COLOR_SHADES.BLUE[args[1]];
-    case "EMERALD":
-      return COLOR_SHADES.EMERALD[args[1]];
-    case "GRAY":
-      return COLOR_SHADES.GRAY[args[1]];
-    case "NEUTRAL":
-      return COLOR_SHADES.NEUTRAL[args[1]];
-    case "ORANGE":
-      return COLOR_SHADES.ORANGE[args[1]];
-    case "RED":
-      return COLOR_SHADES.RED[args[1]];
-    case "SKY":
-      return COLOR_SHADES.SKY[args[1]];
-    case "SLATE":
-      return COLOR_SHADES.SLATE[args[1]];
-    case "STONE":
-      return COLOR_SHADES.STONE[args[1]];
-    case "TEAL":
-      return COLOR_SHADES.TEAL[args[1]];
-    case "VIOLET":
-      return COLOR_SHADES.VIOLET[args[1]];
-    case "ZINC":
-      return COLOR_SHADES.ZINC[args[1]];
-    default:
-      throw new Error(`Unknown shaded color: ${args[0]}`);
-  }
+  return readShade(args);
 }
 
 /**

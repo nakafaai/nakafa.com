@@ -13,7 +13,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -66,7 +66,7 @@ beforeEach(() => {
   vi.setSystemTime(NOW);
   vi.mocked(resolveNinaContext).mockReturnValue(
     openNinaLearningSession({
-      capturedAt: new Date(NOW).toISOString(),
+      capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
       source: "current-page",
       learning: {
         locale: "en",

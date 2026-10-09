@@ -1,6 +1,6 @@
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import type { NinaLearnerProfile } from "@repo/backend/confect/nina/memory.spec";
-import { Array as Arr, pipe } from "effect";
+import { Array as Arr, DateTime, pipe } from "effect";
 
 const FOCUS_LABELS = {
   learning: "learning lessons",
@@ -20,7 +20,9 @@ export function formatLearnerProfile(profile: typeof NinaLearnerProfile.Type) {
   );
   const { tryout } = profile;
   if (tryout) {
-    const date = new Date(tryout.finishedAt).toISOString().slice(0, 10);
+    const date = DateTime.formatIsoDateUtc(
+      DateTime.makeUnsafe(tryout.finishedAt)
+    );
     lines = Arr.appendAll(lines, [
       `- Latest finished try-out: ${tryout.exam} ${tryout.set} on ${date}, score ${tryout.score} (${tryout.status}), ${tryout.correct} of ${tryout.total} correct`,
       ...Arr.map(

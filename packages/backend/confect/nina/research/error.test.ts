@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { makeResearchGenerationError } from "@repo/backend/confect/nina/research/error";
 import { ResearchGenerationError } from "@repo/backend/confect/nina/research/schema";
 import { NoObjectGeneratedError } from "ai";
+import { DateTime } from "effect";
 
 describe("makeResearchGenerationError", () => {
   it.each([
@@ -40,7 +41,9 @@ describe("makeResearchGenerationError", () => {
       response: {
         id: "research-fixture",
         modelId: "fixture",
-        timestamp: new Date("2026-09-05T00:00:00Z"),
+        timestamp: DateTime.toDateUtc(
+          DateTime.makeUnsafe("2026-09-05T00:00:00Z")
+        ),
       },
       usage: {
         inputTokens: 10,

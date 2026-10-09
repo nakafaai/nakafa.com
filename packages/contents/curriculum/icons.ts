@@ -5,6 +5,7 @@ import {
   TeacherIcon,
   UniversityIcon,
 } from "@hugeicons/core-free-icons";
+import { Match } from "effect";
 
 /**
  * Resolves the icon used for a subject category.
@@ -12,17 +13,10 @@ import {
  * @param category - Subject category slug
  * @returns Hugeicons icon for the category
  */
-export function getCategoryIcon(category: string) {
-  switch (category) {
-    case "elementary-school":
-      return Backpack01Icon;
-    case "middle-school":
-      return TeacherIcon;
-    case "high-school":
-      return Building03Icon;
-    case "university":
-      return UniversityIcon;
-    default:
-      return GraduationScrollIcon;
-  }
-}
+export const getCategoryIcon = Match.type<string>().pipe(
+  Match.when("elementary-school", () => Backpack01Icon),
+  Match.when("middle-school", () => TeacherIcon),
+  Match.when("high-school", () => Building03Icon),
+  Match.when("university", () => UniversityIcon),
+  Match.orElse(() => GraduationScrollIcon)
+);

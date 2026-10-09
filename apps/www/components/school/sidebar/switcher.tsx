@@ -35,7 +35,7 @@ import {
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Match } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -164,18 +164,12 @@ export function SchoolSwitcher({
 
 /** Return the icon used for one school type in the school switcher. */
 function getSchoolIcon(type: Docs["schools"]["type"]) {
-  switch (type) {
-    case "elementary-school":
-      return Backpack01Icon;
-    case "middle-school":
-      return Notebook01Icon;
-    case "high-school":
-      return LibraryIcon;
-    case "vocational-school":
-      return Briefcase01Icon;
-    case "university":
-      return UniversityIcon;
-    default:
-      return SchoolIcon;
-  }
+  return Match.value(type).pipe(
+    Match.when("elementary-school", () => Backpack01Icon),
+    Match.when("middle-school", () => Notebook01Icon),
+    Match.when("high-school", () => LibraryIcon),
+    Match.when("vocational-school", () => Briefcase01Icon),
+    Match.when("university", () => UniversityIcon),
+    Match.orElse(() => SchoolIcon)
+  );
 }

@@ -15,7 +15,7 @@ describe("triggers/comments/comments", () => {
 
   it("drains full vote and reply batches after a parent is deleted", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
     const author = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, { now: NOW })
@@ -82,7 +82,7 @@ describe("triggers/comments/comments", () => {
 
   it("keeps parent reply counts in sync through comment mutations", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createConvexTestWithBetterAuth();
     const users = await t.mutation(async (ctx) => ({
@@ -143,7 +143,7 @@ describe("triggers/comments/comments", () => {
 
   it("tolerates deleting a reply after its parent was removed", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(NOW));
+    vi.setSystemTime(NOW);
 
     const t = createConvexTestWithBetterAuth();
     const users = await t.mutation(async (ctx) => ({

@@ -68,7 +68,7 @@ export async function createNinaTest({
     });
     const session = await Effect.runPromise(
       openNinaLearningSession({
-        capturedAt: new Date(now).toISOString(),
+        capturedAt: DateTime.formatIso(DateTime.makeUnsafe(now)),
         learning: {
           locale: "en",
           slug: "home",

@@ -15,6 +15,7 @@ import {
   BAR_REVEAL_STAGGER_MS,
   getOrderedRevealStep,
 } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import { Match } from "effect";
 import type { KeyboardEvent } from "react";
 import { Rectangle } from "recharts";
 import type { RectRadius } from "recharts/types/shape/Rectangle";
@@ -240,26 +241,24 @@ const getVariantFill = (
   dataKey: string,
   index: number,
   colorSlots: number
-): string => {
-  switch (variant) {
-    case "hatched":
-      return `url(#${getChartSeriesId(id, "hatched", dataKey)})`;
-    case "duotone":
-      return `url(#${getChartSeriesId(id, "duotone", dataKey)})`;
-    case "duotone-reverse":
-      return `url(#${getChartSeriesId(id, "duotone-reverse", dataKey)})`;
-    case "gradient":
-      return `url(#${getChartSeriesId(id, "gradient", dataKey)})`;
-    case "stripped":
-      return `url(#${getChartSeriesId(id, "stripped", dataKey)})`;
-    default:
+): string =>
+  Match.value(variant).pipe(
+    Match.whenOr(
+      "hatched",
+      "duotone",
+      "duotone-reverse",
+      "gradient",
+      "stripped",
+      (fill) => `url(#${getChartSeriesId(id, fill, dataKey)})`
+    ),
+    Match.orElse(() => {
       if (colorSlots > 1 && index >= 0) {
         return getChartColorVariable(dataKey, index, colorSlots - 1);
       }
 
       return `url(#${getChartSeriesId(id, "colors", dataKey)})`;
-  }
-};
+    })
+  );
 
 // Computes bar opacity from the click selection and hover-highlight state
 const getBarOpacity = ({

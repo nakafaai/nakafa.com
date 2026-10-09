@@ -84,7 +84,7 @@ async function insertForumPost(
     sequence: number;
   }
 ) {
-  vi.setSystemTime(new Date(createdAt));
+  vi.setSystemTime(createdAt);
   const postId = await ctx.db.insert("schoolClassForumPosts", {
     forumId,
     classId,
@@ -106,7 +106,7 @@ async function insertForumPost(
 }
 describe("classes/forums/queries/forums:getForums", () => {
   it("marks a forum unread when another user posted after the stored read boundary", async () => {
-    vi.setSystemTime(new Date(FORUM_CREATED_AT));
+    vi.setSystemTime(FORUM_CREATED_AT);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {
@@ -240,7 +240,7 @@ describe("classes/forums/queries/forums:getForums", () => {
     ).toEqual([]);
   });
   it("keeps a forum read when only the viewer posted and no read state exists", async () => {
-    vi.setSystemTime(new Date(FORUM_CREATED_AT));
+    vi.setSystemTime(FORUM_CREATED_AT);
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {

@@ -6,7 +6,7 @@ import {
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
-import { Effect } from "effect";
+import { DateTime, Effect } from "effect";
 
 type CreditStateUser = Pick<UsersDoc, "credits" | "creditsResetAt" | "plan">;
 type EffectiveCreditState = ReturnType<
@@ -15,14 +15,12 @@ type EffectiveCreditState = ReturnType<
 
 /** Returns the current UTC reset boundary for a plan. */
 export function getCurrentCreditResetTimestamp(plan: UserPlan, now: number) {
-  const resetDate = new Date(now);
-  if (plan === "free") {
-    resetDate.setUTCHours(0, 0, 0, 0);
-    return resetDate.getTime();
-  }
-  resetDate.setUTCDate(1);
-  resetDate.setUTCHours(0, 0, 0, 0);
-  return resetDate.getTime();
+  return DateTime.toEpochMillis(
+    DateTime.startOf(
+      DateTime.makeUnsafe(now),
+      plan === "free" ? "day" : "month"
+    )
+  );
 }
 
 /** Applies one materialized reset boundary to a stored user credit state. */

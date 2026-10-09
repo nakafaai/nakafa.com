@@ -81,9 +81,10 @@ function staticElement(node: Expression) {
 
 function importedRuntimeKind(node: Node): RuntimeKind | undefined {
   return Match.value(importedModule(node)).pipe(
-    Match.when("effect", (): RuntimeKind => "root"),
-    Match.when("effect/Effect", (): RuntimeKind => "effect"),
-    Match.when("effect/ManagedRuntime", (): RuntimeKind => "managed-module"),
+    Match.withReturnType<RuntimeKind | undefined>(),
+    Match.when("effect", () => "root"),
+    Match.when("effect/Effect", () => "effect"),
+    Match.when("effect/ManagedRuntime", () => "managed-module"),
     Match.orElse(() => undefined)
   );
 }

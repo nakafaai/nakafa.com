@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertRollbackItem } from "@repo/backend/test/content/rollback";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Effect, Match, Schema } from "effect";
 
 /** Selects the exact transition that each corruption test deliberately damages. */
 async function item(ctx: QueryCtx) {
@@ -55,41 +55,41 @@ describe("immutable rollback transition reconstruction", () => {
     await t.mutation(async (ctx) => {
       await insertRollbackItem(ctx, 0, true);
       const row = await item(ctx);
-      switch (corruption) {
-        case "projection":
-          await ctx.db.patch("contentItems", row._id, {
+      await Match.value(corruption).pipe(
+        Match.when("projection", () =>
+          ctx.db.patch("contentItems", row._id, {
             projectionJson: undefined,
-          });
-          break;
-        case "current version":
-          await ctx.db.delete("contentHeads", (await head(ctx, 1))._id);
-          break;
-        case "prior sequence":
-          await ctx.db.patch("contentItems", row._id, {
+          })
+        ),
+        Match.when("current version", async () =>
+          ctx.db.delete("contentHeads", (await head(ctx, 1))._id)
+        ),
+        Match.when("prior sequence", () =>
+          ctx.db.patch("contentItems", row._id, {
             priorSequence: undefined,
-          });
-          break;
-        case "prior version":
-          await ctx.db.delete("contentHeads", (await head(ctx, 0))._id);
-          break;
-        case "prior projection":
-          await ctx.db.patch("contentHeads", (await head(ctx, 0))._id, {
+          })
+        ),
+        Match.when("prior version", async () =>
+          ctx.db.delete("contentHeads", (await head(ctx, 0))._id)
+        ),
+        Match.when("prior projection", async () =>
+          ctx.db.patch("contentHeads", (await head(ctx, 0))._id, {
             projectionJson: undefined,
-          });
-          break;
-        case "version digest":
-          await ctx.db.patch("contentHeads", (await head(ctx, 1))._id, {
+          })
+        ),
+        Match.when("version digest", async () =>
+          ctx.db.patch("contentHeads", (await head(ctx, 1))._id, {
             projectionHash: TEST_DIGEST,
-          });
-          break;
-        case "projection identity":
-          await ctx.db.patch("contentItems", row._id, {
+          })
+        ),
+        Match.when("projection identity", () =>
+          ctx.db.patch("contentItems", row._id, {
             projectionJson: testProjectionJson({
               contentKey: "test:other",
             }),
-          });
-          break;
-        case "snapshot digest": {
+          })
+        ),
+        Match.when("snapshot digest", async () => {
           const snapshot = Schema.decodeSync(
             Schema.fromJsonString(RollbackSnapshotEntrySchema)
           )(row.rollbackJson);
@@ -112,11 +112,11 @@ describe("immutable rollback transition reconstruction", () => {
               },
             }),
           });
-          break;
-        }
-        default:
+        }),
+        Match.orElse(() => {
           throw new Error(`Unexpected corruption fixture: ${corruption}`);
-      }
+        })
+      );
     });
     await expect(
       t.query(async (ctx) =>
