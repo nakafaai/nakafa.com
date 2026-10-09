@@ -16,21 +16,22 @@ import {
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
 import { encodeJsonText } from "@repo/utilities/json";
-import { convexTest } from "convex-test";
+import { convexTest, type TestConvex } from "convex-test";
 import { DateTime, Effect, Schema } from "effect";
+
+/** Runs one compaction step in its own mutation. */
+function compact(t: TestConvex<typeof schema>) {
+  return t.mutation((ctx) =>
+    Effect.runPromise(
+      ensureCompaction().pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
+    )
+  );
+}
 
 describe("contentRelease/compact/state", () => {
   it("distinguishes a newly persisted cycle, a resumed cycle, and its exact completed floor", async () => {
     const t = convexTest(schema, convexModules);
-    expect(
-      await t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).toMatchObject({
+    expect(await compact(t)).toMatchObject({
       complete: false,
       cycle: {
         floor: 1,
@@ -40,13 +41,7 @@ describe("contentRelease/compact/state", () => {
         },
       },
     });
-    const resumed = await t.mutation((ctx) =>
-      Effect.runPromise(
-        ensureCompaction().pipe(
-          Effect.provide(mutationLayer(confectSchema, ctx))
-        )
-      )
-    );
+    const resumed = await compact(t);
     expect(resumed).toMatchObject({
       complete: false,
       cycle: {
@@ -66,15 +61,7 @@ describe("contentRelease/compact/state", () => {
         compactedFloor: 1,
       });
     });
-    expect(
-      await t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).toEqual({
+    expect(await compact(t)).toEqual({
       complete: true,
       floor: 1,
     });
@@ -110,15 +97,7 @@ describe("contentRelease/compact/state", () => {
         assert.ok(state);
         await ctx.db.patch("contentState", state._id, patch);
       });
-      await expect(
-        t.mutation((ctx) =>
-          Effect.runPromise(
-            ensureCompaction().pipe(
-              Effect.provide(mutationLayer(confectSchema, ctx))
-            )
-          )
-        )
-      ).rejects.toMatchObject({
+      await expect(compact(t)).rejects.toMatchObject({
         code: "CONTENT_RELEASE_INTEGRITY",
       });
     }
@@ -133,15 +112,7 @@ describe("contentRelease/compact/state", () => {
         nextSequence: 2,
       });
     });
-    expect(
-      await t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).toMatchObject({
+    expect(await compact(t)).toMatchObject({
       complete: false,
       cycle: {
         floor: 1,
@@ -165,15 +136,7 @@ describe("contentRelease/compact/state", () => {
         activeManifestHash: `sha256:${"e".repeat(64)}`,
       });
     });
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
+    await expect(compact(t)).rejects.toMatchObject({
       code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
@@ -189,15 +152,7 @@ describe("contentRelease/compact/state", () => {
         nextSequence: 2,
       })
     );
-    expect(
-      await t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).toMatchObject({
+    expect(await compact(t)).toMatchObject({
       complete: false,
       cycle: {
         floor: 2,
@@ -218,15 +173,7 @@ describe("contentRelease/compact/state", () => {
         nextSequence: 3,
       });
     });
-    expect(
-      await t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).toMatchObject({
+    expect(await compact(t)).toMatchObject({
       complete: false,
       cycle: {
         floor: 1,
@@ -270,15 +217,7 @@ describe("contentRelease/compact/state", () => {
         });
       }
     });
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
+    await expect(compact(t)).rejects.toMatchObject({
       code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
@@ -313,15 +252,7 @@ describe("contentRelease/compact/state", () => {
         }),
       });
     });
-    expect(
-      await t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).toMatchObject({
+    expect(await compact(t)).toMatchObject({
       complete: false,
       cycle: {
         floor: 1,
@@ -336,15 +267,7 @@ describe("contentRelease/compact/state", () => {
         nextSequence: 1,
       });
     });
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
+    await expect(compact(t)).rejects.toMatchObject({
       code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
@@ -367,15 +290,7 @@ describe("contentRelease/compact/state", () => {
         nextSequence: 3,
       });
     });
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).rejects.toMatchObject({
+    await expect(compact(t)).rejects.toMatchObject({
       code: "CONTENT_RELEASE_INTEGRITY",
     });
   });
@@ -403,15 +318,7 @@ describe("contentRelease/compact/state", () => {
         sourceReleaseId: compactionIdentity(1).releaseId,
       });
     });
-    expect(
-      await t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).toMatchObject({
+    expect(await compact(t)).toMatchObject({
       complete: false,
       cycle: {
         floor: 2,
@@ -428,15 +335,7 @@ describe("contentRelease/compact/state", () => {
         nextSequence: 37,
       });
     });
-    expect(
-      await t.mutation((ctx) =>
-        Effect.runPromise(
-          ensureCompaction().pipe(
-            Effect.provide(mutationLayer(confectSchema, ctx))
-          )
-        )
-      )
-    ).toMatchObject({
+    expect(await compact(t)).toMatchObject({
       complete: false,
       cycle: {
         floor: 33,
