@@ -8,7 +8,6 @@ import {
   Effect,
   FileSystem,
   Layer,
-  Logger,
   MutableList,
   Option,
   Path,
@@ -16,6 +15,7 @@ import {
 } from "effect";
 import { TestClock } from "effect/testing";
 import { IndexNowSubmitError } from "@/scripts/indexing/errors";
+import { recordLogs } from "@/scripts/indexing/fixture";
 import {
   ensureSubmissionHistoryFolder,
   listUnsubmittedUrls,
@@ -60,6 +60,11 @@ const platformFailure = (method: string) =>
     module: "FileSystem",
   });
 
+/** A file system that refuses every history write. */
+const refusedWrites = scriptedFiles({
+  writeFileString: () => Effect.fail(platformFailure("writeFileString")),
+});
+
 /**
  * A file system whose history writes succeed. Each write is recorded in
  * `events` with its file and text, in the order the module makes it.
@@ -71,14 +76,6 @@ const recordWrites = (events: MutableList.MutableList<string>) =>
         MutableList.append(events, `write ${path} ${text}`);
       }),
   });
-
-/** Routes every log line of an effect into `lines`, instead of the console. */
-const recordLogs = (lines: MutableList.MutableList<string>) =>
-  Logger.layer([
-    Logger.make<unknown, void>(({ message }) => {
-      MutableList.append(lines, String(message));
-    }),
-  ]);
 
 describe("loadSubmissionHistory", () => {
   it.effect("returns the empty history when no history file exists", () =>
@@ -135,9 +132,23 @@ describe("loadSubmissionHistory", () => {
       )
   );
 
-  it.effect(
-    "fails with SubmissionHistoryError when the history file cannot be inspected",
-    () =>
+  it.effect.each([
+    {
+      files: scriptedFiles({
+        exists: () => Effect.fail(platformFailure("exists")),
+      }),
+      step: "inspect",
+    },
+    {
+      files: scriptedFiles({
+        exists: () => Effect.succeed(true),
+        readFileString: () => Effect.fail(platformFailure("readFileString")),
+      }),
+      step: "read",
+    },
+  ])(
+    "fails with SubmissionHistoryError when the file system refuses to $step the history file",
+    ({ files, step }) =>
       Effect.gen(function* () {
         const { submissionHistory } = yield* indexingFiles;
 
@@ -145,38 +156,9 @@ describe("loadSubmissionHistory", () => {
 
         expect(error).toMatchObject({
           _tag: "SubmissionHistoryError",
-          message: `Failed to inspect ${submissionHistory}.`,
+          message: `Failed to ${step} ${submissionHistory}.`,
         });
-      }).pipe(
-        Effect.provide(
-          scriptedFiles({
-            exists: () => Effect.fail(platformFailure("exists")),
-          })
-        )
-      )
-  );
-
-  it.effect(
-    "fails with SubmissionHistoryError when the history file cannot be read",
-    () =>
-      Effect.gen(function* () {
-        const { submissionHistory } = yield* indexingFiles;
-
-        const error = yield* loadSubmissionHistory().pipe(Effect.flip);
-
-        expect(error).toMatchObject({
-          _tag: "SubmissionHistoryError",
-          message: `Failed to read ${submissionHistory}.`,
-        });
-      }).pipe(
-        Effect.provide(
-          scriptedFiles({
-            exists: () => Effect.succeed(true),
-            readFileString: () =>
-              Effect.fail(platformFailure("readFileString")),
-          })
-        )
-      )
+      }).pipe(Effect.provide(files))
   );
 });
 
@@ -222,9 +204,23 @@ describe("ensureSubmissionHistoryFolder", () => {
     );
   });
 
-  it.effect(
-    "fails with SubmissionHistoryError when the state folder cannot be inspected",
-    () =>
+  it.effect.each([
+    {
+      files: scriptedFiles({
+        exists: () => Effect.fail(platformFailure("exists")),
+      }),
+      step: "inspect",
+    },
+    {
+      files: scriptedFiles({
+        exists: () => Effect.succeed(false),
+        makeDirectory: () => Effect.fail(platformFailure("makeDirectory")),
+      }),
+      step: "create",
+    },
+  ])(
+    "fails with SubmissionHistoryError when the file system refuses to $step the state folder",
+    ({ files, step }) =>
       Effect.gen(function* () {
         const { stateFolder } = yield* indexingFiles;
 
@@ -232,37 +228,9 @@ describe("ensureSubmissionHistoryFolder", () => {
 
         expect(error).toMatchObject({
           _tag: "SubmissionHistoryError",
-          message: `Failed to inspect ${stateFolder}.`,
+          message: `Failed to ${step} ${stateFolder}.`,
         });
-      }).pipe(
-        Effect.provide(
-          scriptedFiles({
-            exists: () => Effect.fail(platformFailure("exists")),
-          })
-        )
-      )
-  );
-
-  it.effect(
-    "fails with SubmissionHistoryError when the state folder cannot be created",
-    () =>
-      Effect.gen(function* () {
-        const { stateFolder } = yield* indexingFiles;
-
-        const error = yield* ensureSubmissionHistoryFolder().pipe(Effect.flip);
-
-        expect(error).toMatchObject({
-          _tag: "SubmissionHistoryError",
-          message: `Failed to create ${stateFolder}.`,
-        });
-      }).pipe(
-        Effect.provide(
-          scriptedFiles({
-            exists: () => Effect.succeed(false),
-            makeDirectory: () => Effect.fail(platformFailure("makeDirectory")),
-          })
-        )
-      )
+      }).pipe(Effect.provide(files))
   );
 });
 
@@ -305,14 +273,7 @@ describe("saveSubmissionHistory", () => {
           _tag: "SubmissionHistoryError",
           message: `Failed to write ${submissionHistory}.`,
         });
-      }).pipe(
-        Effect.provide(
-          scriptedFiles({
-            writeFileString: () =>
-              Effect.fail(platformFailure("writeFileString")),
-          })
-        )
-      )
+      }).pipe(Effect.provide(refusedWrites))
   );
 });
 
@@ -499,14 +460,7 @@ describe("saveAcceptedUrls", () => {
           _tag: "SubmissionHistoryError",
           message: `Failed to write ${submissionHistory}.`,
         });
-      }).pipe(
-        Effect.provide(
-          scriptedFiles({
-            writeFileString: () =>
-              Effect.fail(platformFailure("writeFileString")),
-          })
-        )
-      )
+      }).pipe(Effect.provide(refusedWrites))
   );
 
   it.effect(
@@ -532,17 +486,7 @@ describe("saveAcceptedUrls", () => {
           message: `Failed to write ${submissionHistory}.`,
         });
         expect(MutableList.toArray(lines)).toContain(failure.message);
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            scriptedFiles({
-              writeFileString: () =>
-                Effect.fail(platformFailure("writeFileString")),
-            }),
-            recordLogs(lines)
-          )
-        )
-      );
+      }).pipe(Effect.provide(Layer.mergeAll(refusedWrites, recordLogs(lines))));
     }
   );
 });

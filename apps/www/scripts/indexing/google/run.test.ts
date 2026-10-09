@@ -6,20 +6,22 @@ import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
   Effect,
-  Fiber,
-  FileSystem,
+  type FileSystem,
   Layer,
-  Logger,
   MutableHashMap,
   MutableHashSet,
   MutableList,
   Path,
-  PlatformError,
   Record as Rec,
   Schema,
 } from "effect";
 import { FetchHttpClient } from "effect/http";
-import { TestClock } from "effect/testing";
+import {
+  memoryFiles,
+  recordLogs,
+  runToEnd,
+  runToFailure,
+} from "@/scripts/indexing/fixture";
 import { runGoogleIndexing } from "@/scripts/indexing/google/run";
 import { loadSubmissionHistory } from "@/scripts/indexing/history";
 import { indexingFiles } from "@/scripts/indexing/paths";
@@ -127,52 +129,6 @@ function answerRun(
   });
 }
 
-/**
- * A file system held in memory for one test, seeded with `seeded` entries and
- * merged with the real path service. Each write is logged in `events`, in the
- * order the module makes it.
- */
-function memoryFiles(
-  events: MutableList.MutableList<string>,
-  seeded: readonly (readonly [string, string])[]
-) {
-  const files = MutableHashMap.fromIterable(seeded);
-  const directories = MutableHashSet.empty<string>();
-  const layer = FileSystem.layerNoop({
-    exists: (path) =>
-      Effect.sync(
-        () =>
-          MutableHashMap.has(files, path) ||
-          MutableHashSet.has(directories, path)
-      ),
-    makeDirectory: (path) =>
-      Effect.sync(() => {
-        MutableHashSet.add(directories, path);
-      }),
-    readFileString: (path) =>
-      Effect.fromOption(MutableHashMap.get(files, path)).pipe(
-        Effect.mapError(() =>
-          PlatformError.systemError({
-            _tag: "NotFound",
-            method: "readFileString",
-            module: "FileSystem",
-            pathOrDescriptor: path,
-          })
-        )
-      ),
-    writeFileString: (path, text) =>
-      Effect.sync(() => {
-        MutableHashMap.set(files, path, text);
-        MutableList.append(events, `write ${path}`);
-      }),
-  });
-  return {
-    directories,
-    files,
-    layer: Layer.merge(Path.layer, layer),
-  };
-}
-
 /** A history file that records one Google URL as submitted. */
 const historyWith = (url: string) =>
   encodePrettyJsonText({
@@ -180,14 +136,6 @@ const historyWith = (url: string) =>
     googleIndexingApi: { [url]: EARLIER_STAMP },
     indexNow: {},
   });
-
-/** Routes every log line of an effect into `lines`, instead of the console. */
-const recordLogs = (lines: MutableList.MutableList<string>) =>
-  Logger.layer([
-    Logger.make<unknown, void>(({ message }) => {
-      MutableList.append(lines, String(message));
-    }),
-  ]);
 
 /** Runs the Google flow with the module's own client, this file's fetch double, and the given files. */
 function runGoogle(
@@ -198,20 +146,6 @@ function runGoogle(
     Effect.provide(Layer.mergeAll(FetchClient, files, recordLogs(lines))),
     Effect.provideService(FetchHttpClient.Fetch, fetcher)
   );
-}
-
-/** Runs an effect to its end while the test clock passes every wait between its requests. */
-function runToEnd<A, E>(effect: Effect.Effect<A, E>) {
-  return Effect.gen(function* () {
-    const fiber = yield* Effect.forkChild(effect);
-    yield* TestClock.adjust("1 minute");
-    return yield* Fiber.join(fiber);
-  });
-}
-
-/** Runs an effect that must fail, and returns its typed failure. */
-function runToFailure<A, E>(effect: Effect.Effect<A, E>) {
-  return runToEnd(Effect.flip(effect));
 }
 
 describe("runGoogleIndexing", () => {
