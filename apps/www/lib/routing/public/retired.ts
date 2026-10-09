@@ -1,11 +1,12 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, HashSet, Option, Schema } from "effect";
 import { readPublishedTryoutExamPage } from "@/lib/content/tryout/catalog";
+import { readRetiredSnbtProduct } from "@/lib/routing/public/tryout/product";
 import {
-  readRetiredSnbtProduct,
+  readPathSegments,
   SNBT_EXAM_PATH,
   SOURCE_APP_LOCALE,
-} from "@/lib/routing/public/tryout";
+} from "@/lib/routing/public/tryout/route";
 
 const decodeAppLocale = Schema.decodeUnknownOption(AppLocaleCodeSchema);
 const RetiredPublicRouteInputSchema = Schema.Struct({
@@ -17,11 +18,6 @@ const REMOVED_PATHNAMES = HashSet.make(
   "/api/chat/finance",
   "/sitemap-domain.xml"
 );
-
-/** Splits one public pathname into its non-empty segments. */
-function readPathSegments(pathname: string) {
-  return Arr.filter(pathname.split("/"), (segment) => segment !== "");
-}
 
 /** Reads whether the segments after an app locale name a removed feature route. */
 function isRemovedLocalizedRoute(segments: readonly string[]) {
