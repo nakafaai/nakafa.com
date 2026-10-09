@@ -212,4 +212,41 @@ Object.keys(routes);
         );
       })
   );
+
+  it.effect(
+    "recognizes a page function only at the top level, so a nested function with its name is ordinary code",
+    () =>
+      Effect.gen(function* () {
+        const sources = [
+          {
+            file: "apps/www/e2e/named.browser.ts",
+            sourceText: `import { test } from "@playwright/test";
+import { render } from "./support/render";
+page.evaluate(render);
+`,
+          },
+          {
+            file: "apps/www/e2e/support/render.ts",
+            sourceText: `export function render() {
+  return Object.keys(window.frames);
+}
+export function outer(values) {
+  function render() {
+    return Object.keys(values);
+  }
+  const nested = () => {
+    const render = () => Array.isArray(values);
+    return render;
+  };
+  return render;
+}
+`,
+          },
+        ];
+        assert.deepStrictEqual(
+          yield* outsideGlobals(sources, "apps/www/e2e/support/render.ts"),
+          ["6 Object", "9 Array"]
+        );
+      })
+  );
 });
