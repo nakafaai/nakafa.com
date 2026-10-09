@@ -12,11 +12,14 @@ import {
 export const TrackedRequestKindSchema = Schema.Literals([
   "javascript",
   "prefetch",
+  "router",
 ]);
 
 /** Matches the JavaScript chunks Next.js serves for the application. */
 export const APP_SCRIPT_PATTERN = /\/_next\/static\/chunks\/.+\.js$/;
 
+/** The header every request of the Next.js client router carries, with the value "1". */
+export const NEXT_ROUTER_REQUEST_HEADER = "rsc";
 export const NEXT_ROUTER_PREFETCH_HEADER = "next-router-prefetch";
 export const NEXT_ROUTER_SEGMENT_PREFETCH_HEADER =
   "next-router-segment-prefetch";

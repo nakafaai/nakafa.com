@@ -6,6 +6,7 @@ import {
   NavigationRequestError,
   readErrorText,
 } from "@/e2e/support/navigation/failure";
+import { settlePrefetch } from "@/e2e/support/navigation/settle";
 
 const DETACHED_ELEMENT_MESSAGE = "Element is not attached to the DOM";
 const VIEWPORT_RETRY_MILLISECONDS = 100;
@@ -161,7 +162,10 @@ const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
   }
 );
 
-/** Loads one source route and returns its hydrated target Link in the viewport. */
+/**
+ * Loads one source route and returns its hydrated target Link in the viewport,
+ * once the route's router is quiet.
+ */
 export const prepareClientNavigation = Effect.fn(
   "NakafaE2E.prepareClientNavigation"
 )(function* <E, R>(
@@ -177,24 +181,33 @@ export const prepareClientNavigation = Effect.fn(
    * Next.js commits `__NA` and its internal tree in HistoryUpdater's
    * useInsertionEffect. Link callback refs are mounted in that commit. The
    * installed `instant()` lock owns exact-target prefetch completion after the
-   * interaction begins, so readiness only prepares the real target Link.
+   * interaction begins, so readiness prepares the real target Link and lets
+   * every other prefetch of the route settle first. The requests are counted
+   * from here, after the source document replaced the last one, because a
+   * request the last document left open never ends.
    *
    * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/app-router.tsx
    * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/app-dir/link.tsx
    * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/navigation-testing-lock.ts
    */
-  yield* waitForCommittedAppRouter(
+  return yield* settlePrefetch(
     page,
-    sourceHref,
     targetHref,
-    timeoutMilliseconds
+    Effect.gen(function* () {
+      yield* waitForCommittedAppRouter(
+        page,
+        sourceHref,
+        targetHref,
+        timeoutMilliseconds
+      );
+      const link = yield* findLink();
+      yield* ensureLinkInViewport(
+        link,
+        sourceHref,
+        targetHref,
+        timeoutMilliseconds
+      );
+      return link;
+    })
   );
-  const link = yield* findLink();
-  yield* ensureLinkInViewport(
-    link,
-    sourceHref,
-    targetHref,
-    timeoutMilliseconds
-  );
-  return link;
 });
