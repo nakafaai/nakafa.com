@@ -10,7 +10,9 @@ import type { ComponentProps, ReactNode } from "react";
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import { resolveMathAppearance } from "@/lib/content/renderer/client/base/visual/palette";
 import type {
+  PlaneObject,
   PlaneVisual,
+  SpaceObject,
   SpacePoint,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
@@ -33,6 +35,11 @@ type MathLabelPlacement = Exclude<
   NonNullable<SpaceVisual["labels"]>[number]["placement"],
   undefined
 >;
+
+/** A label of either scene dimension, so one list can hold both. */
+type VisualLabel =
+  | NonNullable<PlaneVisual["labels"]>[number]
+  | NonNullable<SpaceVisual["labels"]>[number];
 
 function pointTuple({ x, y, z }: SpacePoint): [number, number, number] {
   return [x, y, z];
@@ -66,8 +73,10 @@ export function MathScene({ labels, scene }: MathSceneProps) {
   const view = resolveMathView(scene, projection);
   const origin = projectVisualPoint({ x: 0, y: 0, z: 0 }, projection);
   // Schema validation guarantees that each label has exactly one object owner.
-  const anchors = Arr.flatMap(scene.objects, (object) =>
-    Arr.flatMap(scene.labels ?? [], (label) =>
+  const objects: readonly (PlaneObject | SpaceObject)[] = scene.objects;
+  const sceneLabels: readonly VisualLabel[] = scene.labels ?? [];
+  const anchors = Arr.flatMap(objects, (object) =>
+    Arr.flatMap(sceneLabels, (label) =>
       label.objectId === object.id
         ? [{ ...label, appearance: object.appearance }]
         : []
