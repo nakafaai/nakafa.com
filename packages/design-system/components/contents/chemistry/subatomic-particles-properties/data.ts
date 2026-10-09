@@ -2,7 +2,7 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { getColor } from "@repo/design-system/lib/color";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 export const CHARGE_MODE_ID = "charge";
 export const MASS_MODE_ID = "mass";
@@ -15,6 +15,15 @@ export type SubatomicParticlePropertiesModeId =
 export type SubatomicParticlePropertiesColors = ReturnType<
   typeof getSubatomicParticlePropertiesColors
 >;
+
+const ParticleNameSchema = Schema.Literals(["electron", "neutron", "proton"]);
+const SubatomicMassBarSchema = Schema.Struct({
+  color: ParticleNameSchema,
+  height: Schema.Finite,
+  label: ParticleNameSchema,
+  x: Schema.Finite,
+});
+export type SubatomicMassBar = typeof SubatomicMassBarSchema.Type;
 
 export const SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS = [
   CHARGE_MODE_ID,
