@@ -29,7 +29,7 @@ export function createAiStore() {
         },
         removeChatDraft: (key) =>
           set((state) => {
-            if (!state.chatDrafts.includes(key)) {
+            if (!Arr.contains(state.chatDrafts, key)) {
               return state;
             }
             return {
@@ -56,7 +56,7 @@ export function createAiStore() {
           }),
         resolveChatDraft: (key, receipt) =>
           set((state) => {
-            if (!state.chatDrafts.includes(key)) {
+            if (!Arr.contains(state.chatDrafts, key)) {
               return state;
             }
             // Convex resolves mutations after subscribed queries include the write.
