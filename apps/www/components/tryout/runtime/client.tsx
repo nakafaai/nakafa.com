@@ -1,6 +1,6 @@
 "use client";
 
-import { HashMap, Option } from "effect";
+import { Array as Arr, HashMap, Option } from "effect";
 import type { TryoutQuestionContent } from "@/components/tryout/content/model";
 import { TryoutActiveQuestion } from "@/components/tryout/runtime/question.client";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
@@ -19,9 +19,12 @@ export function TryoutRuntime({ value }: TryoutRuntimeProps) {
   const { expired, questions, runtime } = value;
   const isActive = runtime.section.status === "in-progress";
   const questionBySnapshot = HashMap.fromIterable(
-    questions.map((question) => [getQuestionContentKey(question), question])
+    Arr.map(questions, (question) => [
+      getQuestionContentKey(question),
+      question,
+    ])
   );
-  const runtimeQuestions = runtime.questions.map((question) => {
+  const runtimeQuestions = Arr.map(runtime.questions, (question) => {
     const key = getQuestionContentKey(question);
     const content = Option.getOrUndefined(HashMap.get(questionBySnapshot, key));
 
@@ -31,7 +34,7 @@ export function TryoutRuntime({ value }: TryoutRuntimeProps) {
     };
   });
 
-  if (runtimeQuestions.some(({ content }) => content === null)) {
+  if (Arr.some(runtimeQuestions, ({ content }) => content === null)) {
     return null;
   }
   if (!isActive) {
@@ -40,7 +43,7 @@ export function TryoutRuntime({ value }: TryoutRuntimeProps) {
 
   return (
     <section className="space-y-12">
-      {runtimeQuestions.map(({ content, question }) => (
+      {Arr.map(runtimeQuestions, ({ content, question }) => (
         <TryoutActiveQuestion
           content={content}
           key={question.placementId}
