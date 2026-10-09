@@ -67,16 +67,18 @@ describe("shared file policy", () => {
       }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.effect("compares the exact text, so a line ending alone is a finding", () =>
-    Effect.gen(function* () {
-      const { owner, root } = yield* repositories("bytes");
-      yield* writeFiles(root, { [VERIFY]: "export const verify = 1;\r\n" });
-      yield* writeFiles(owner, { [VERIFY]: VERIFY_COPY });
+  it.effect(
+    "compares the exact text, so a line ending alone is a finding",
+    () =>
+      Effect.gen(function* () {
+        const { owner, root } = yield* repositories("bytes");
+        yield* writeFiles(root, { [VERIFY]: "export const verify = 1;\r\n" });
+        yield* writeFiles(owner, { [VERIFY]: VERIFY_COPY });
 
-      assert.deepStrictEqual(yield* inspectSharedFiles(root, owner), [
-        "scripts/provenance/verify.ts differs from the copy in the repository that owns this check: change that copy first, then copy it here.",
-      ]);
-    }).pipe(Effect.provide(NodeServices.layer))
+        assert.deepStrictEqual(yield* inspectSharedFiles(root, owner), [
+          "scripts/provenance/verify.ts differs from the copy in the repository that owns this check: change that copy first, then copy it here.",
+        ]);
+      }).pipe(Effect.provide(NodeServices.layer))
   );
 
   it.effect("skips a shared file that the repository does not hold", () =>
