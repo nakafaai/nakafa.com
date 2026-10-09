@@ -23,11 +23,10 @@ const CONTENT_REFERENCE_EXAMPLE = {
   learningObjectId: "learning-object:example:linear-equations",
   lensId: "lens:example:secondary-school",
   locale: "en",
-  markdown_url:
-    "https://nakafa.com/en/subjects/mathematics/algebra/linear-equations.md",
+  markdown_url: `${NAKAFA_BASE_URL}/en/subjects/mathematics/algebra/linear-equations.md`,
   route: "subjects/mathematics/algebra/linear-equations",
   section: "material",
-  url: "https://nakafa.com/en/subjects/mathematics/algebra/linear-equations",
+  url: `${NAKAFA_BASE_URL}/en/subjects/mathematics/algebra/linear-equations`,
 };
 const EXAMPLE_LOCALE = "en" as const;
 const EXAMPLE_DIGEST = `sha256:${"1".repeat(64)}`;
@@ -97,7 +96,7 @@ const QURAN_REFERENCE_EXAMPLE = {
   learningObjectId: "learning-object:example:quran:1",
   lensId: "lens:example:quran",
   locale: EXAMPLE_LOCALE,
-  markdown_url: `https://nakafa.com/${EXAMPLE_LOCALE}/quran/1.md`,
+  markdown_url: `${NAKAFA_BASE_URL}/${EXAMPLE_LOCALE}/quran/1.md`,
   meaning: {
     locale: EXAMPLE_LOCALE,
     text: "The Opening",
@@ -112,7 +111,7 @@ const QURAN_REFERENCE_EXAMPLE = {
     translation: TRANSLATION_SOURCE_EXAMPLE,
   },
   tafsir_access: TAFSIR_ACCESS_EXAMPLE,
-  url: `https://nakafa.com/${EXAMPLE_LOCALE}/quran/1`,
+  url: `${NAKAFA_BASE_URL}/${EXAMPLE_LOCALE}/quran/1`,
   verses: [
     {
       arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",

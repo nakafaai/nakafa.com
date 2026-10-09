@@ -24,6 +24,7 @@ import { readProgramContext } from "@repo/backend/content/program/context";
 import { quranLayer } from "@repo/backend/content/quran/confect";
 import { readContentReference } from "@repo/backend/content/reference/read";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
+import { NAKAFA_BASE_URL } from "@repo/contents/agent/constants";
 import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -47,7 +48,7 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
   ) {
     const locale = input.locale;
     const slug = cleanSlug(input.slug);
-    const url = `https://nakafa.com/${locale}${slug ? `/${slug}` : ""}`;
+    const url = `${NAKAFA_BASE_URL}/${locale}${slug ? `/${slug}` : ""}`;
     const previous = chatId
       ? yield* (yield* DatabaseReader)
           .table("ninaTurns")

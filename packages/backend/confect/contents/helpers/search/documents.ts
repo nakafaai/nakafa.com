@@ -1,9 +1,9 @@
-import { NAKAFA_CONTENT_BASE_URL } from "@repo/backend/confect/contents/constants";
 import { learningGraphIdentityValidator } from "@repo/backend/confect/contents/graph";
 import {
   localeValidator,
   nakafaSectionValidator,
 } from "@repo/backend/confect/lib/validators/contents";
+import { NAKAFA_BASE_URL } from "@repo/contents/agent/constants";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Array as Arr, pipe, Schema } from "effect";
 
@@ -75,14 +75,14 @@ export function buildContentSearchRef(
     route: cleanPublicPath,
     section,
     sourcePath: cleanSourcePath,
-    url: `${NAKAFA_CONTENT_BASE_URL}/${localizedPublicPath}`,
+    url: `${NAKAFA_BASE_URL}/${localizedPublicPath}`,
   };
   if (!hasMarkdownSource) {
     return ref;
   }
   return {
     ...ref,
-    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${localizedPublicPath}.md`,
+    markdown_url: `${NAKAFA_BASE_URL}/${localizedPublicPath}.md`,
   };
 }
 
