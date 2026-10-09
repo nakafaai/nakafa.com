@@ -9,13 +9,13 @@ export function resolveConsentError({
   readonly hasSaveError: boolean;
 }) {
   if (hasLoadError) {
-    return "load";
+    return "load" as const;
   }
   if (hasSaveError) {
-    return "save";
+    return "save" as const;
   }
   if (hasRuntimeError) {
-    return "runtime";
+    return "runtime" as const;
   }
   return null;
 }
