@@ -13,14 +13,12 @@ const startAttempt = FunctionImpl.make(
   spec,
   "startAttempt",
   Effect.fn("tryouts.mutations.attempts.startAttempt")(function* (args) {
-    return yield* Effect.gen(function* () {
-      const { appUser } = yield* requireAuth();
-      const now = yield* Clock.currentTimeMillis;
-      return yield* startTryoutAttempt({
-        args,
-        now,
-        userId: appUser._id,
-      });
+    const { appUser } = yield* requireAuth();
+    const now = yield* Clock.currentTimeMillis;
+    return yield* startTryoutAttempt({
+      args,
+      now,
+      userId: appUser._id,
     });
   })
 );

@@ -17,11 +17,9 @@ describe("users/directory", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            yield* Effect.gen(function* () {
-              const get = vi.spyOn(tCtx.db, "get");
-              expect(HashMap.isEmpty(yield* getUserMap([]))).toBe(true);
-              expect(get).not.toHaveBeenCalled();
-            });
+            const get = vi.spyOn(tCtx.db, "get");
+            expect(HashMap.isEmpty(yield* getUserMap([]))).toBe(true);
+            expect(get).not.toHaveBeenCalled();
           })
         );
       })
@@ -34,55 +32,47 @@ describe("users/directory", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            const [firstId, missingId, secondId] = yield* Effect.gen(
-              function* () {
-                let ids: Id<"users">[] = [];
-                for (const suffix of ["first", "missing", "second"]) {
-                  ids = Arr.append(
-                    ids,
-                    yield* Effect.promise(() =>
-                      tCtx.db.insert("users", {
-                        authId: `auth-${suffix}`,
-                        credits: 100,
-                        creditsResetAt: 0,
-                        email: `${suffix}@example.com`,
-                        image: `/avatars/${suffix}.png`,
-                        name: suffix,
-                        plan: "free",
-                      })
-                    )
-                  );
-                }
-                return ids;
-              }
-            );
-            yield* Effect.promise(() => tCtx.db.delete("users", missingId));
-            yield* Effect.gen(function* () {
-              const get = vi.spyOn(tCtx.db, "get");
-              const users = yield* getUserMap([
-                firstId,
-                missingId,
-                firstId,
-                secondId,
-              ]);
-              expect(get).toHaveBeenCalledTimes(3);
-              expect(HashMap.size(users)).toBe(2);
-              expect([...HashMap.keys(users)]).toEqual(
-                expect.arrayContaining([firstId, secondId])
+            let ids: Id<"users">[] = [];
+            for (const suffix of ["first", "missing", "second"]) {
+              ids = Arr.append(
+                ids,
+                yield* Effect.promise(() =>
+                  tCtx.db.insert("users", {
+                    authId: `auth-${suffix}`,
+                    credits: 100,
+                    creditsResetAt: 0,
+                    email: `${suffix}@example.com`,
+                    image: `/avatars/${suffix}.png`,
+                    name: suffix,
+                    plan: "free",
+                  })
+                )
               );
-              expect(
-                Option.getOrUndefined(HashMap.get(users, firstId))
-              ).toEqual({
-                _id: firstId,
-                email: "first@example.com",
-                image: "/avatars/first.png",
-                name: "first",
-              });
-              expect(
-                Option.getOrUndefined(HashMap.get(users, secondId))?.name
-              ).toBe("second");
-              expect(HashMap.has(users, missingId)).toBe(false);
+            }
+            const [firstId, missingId, secondId] = ids;
+            yield* Effect.promise(() => tCtx.db.delete("users", missingId));
+            const get = vi.spyOn(tCtx.db, "get");
+            const users = yield* getUserMap([
+              firstId,
+              missingId,
+              firstId,
+              secondId,
+            ]);
+            expect(get).toHaveBeenCalledTimes(3);
+            expect(HashMap.size(users)).toBe(2);
+            expect([...HashMap.keys(users)]).toEqual(
+              expect.arrayContaining([firstId, secondId])
+            );
+            expect(Option.getOrUndefined(HashMap.get(users, firstId))).toEqual({
+              _id: firstId,
+              email: "first@example.com",
+              image: "/avatars/first.png",
+              name: "first",
             });
+            expect(
+              Option.getOrUndefined(HashMap.get(users, secondId))?.name
+            ).toBe("second");
+            expect(HashMap.has(users, missingId)).toBe(false);
           })
         );
       })
@@ -105,13 +95,11 @@ describe("users/directory", () => {
                 plan: "free",
               })
             );
-            yield* Effect.gen(function* () {
-              expect(yield* getAppUserByAuthId("auth-known")).toMatchObject({
-                _id: userId,
-                name: "Known user",
-              });
-              expect(yield* getAppUserByAuthId("auth-missing")).toBeNull();
+            expect(yield* getAppUserByAuthId("auth-known")).toMatchObject({
+              _id: userId,
+              name: "Known user",
             });
+            expect(yield* getAppUserByAuthId("auth-missing")).toBeNull();
           })
         );
       })

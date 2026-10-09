@@ -18,17 +18,15 @@ const admit = FunctionImpl.make(
   spec,
   "admit",
   Effect.fn("onboarding.mutations.admit")(function* () {
-    return yield* Effect.gen(function* () {
-      const user = yield* getOptionalActiveAppUser();
-      if (!user) {
-        return {
-          isAuthenticated: false as const,
-          isRequired: false as const,
-          profile: null,
-        };
-      }
-      return yield* admitOnboarding(user.appUser);
-    });
+    const user = yield* getOptionalActiveAppUser();
+    if (!user) {
+      return {
+        isAuthenticated: false as const,
+        isRequired: false as const,
+        profile: null,
+      };
+    }
+    return yield* admitOnboarding(user.appUser);
   })
 );
 const saveAnswer = FunctionImpl.make(
@@ -44,10 +42,8 @@ const finish = FunctionImpl.make(
   spec,
   "finish",
   Effect.fn("onboarding.mutations.finish")(function* ({ answers }) {
-    return yield* Effect.gen(function* () {
-      const user = yield* requireSelfSelectableOnboardingUser();
-      return yield* finishOnboarding(user.appUser._id, answers);
-    });
+    const user = yield* requireSelfSelectableOnboardingUser();
+    return yield* finishOnboarding(user.appUser._id, answers);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

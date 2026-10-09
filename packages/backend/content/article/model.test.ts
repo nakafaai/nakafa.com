@@ -128,15 +128,13 @@ describe("contentRelease/article/model", () => {
           Effect.gen(function* () {
             const targetCtx = yield* MutationCtx;
             yield* Effect.promise(() => insertRuntimeArticles(targetCtx, 1));
-            yield* Effect.gen(function* () {
-              const row = yield* Effect.promise(() =>
-                targetCtx.db.query("articleCatalog").unique()
-              );
-              assert(row);
-              yield* Effect.promise(() =>
-                targetCtx.db.delete("articleCatalog", row._id)
-              );
-            });
+            const row = yield* Effect.promise(() =>
+              targetCtx.db.query("articleCatalog").unique()
+            );
+            assert(row);
+            yield* Effect.promise(() =>
+              targetCtx.db.delete("articleCatalog", row._id)
+            );
             expect(
               yield* (yield* QueryRunner)
                 .runQuery(refs.public.contentRelease.article.route, {
@@ -287,27 +285,25 @@ describe("contentRelease/article/model", () => {
           ).toMatchObject({
             code: "CONTENT_RELEASE_STATE",
           });
-          yield* Effect.gen(function* () {
-            const row = yield* Effect.promise(() =>
-              targetCtx.db
-                .query("articleCatalog")
-                .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
-                  index
-                    .eq("slot", "blue")
-                    .eq("appLocale", requested.appLocale)
-                    .eq("publicPath", requested.publicPath)
-                )
-                .unique()
-            );
-            if (!row) {
-              throw new Error("Expected one current article row.");
-            }
-            yield* Effect.promise(() =>
-              targetCtx.db.patch("articleCatalog", row._id, {
-                datePublished: "2020-01-01",
-              })
-            );
-          });
+          const row = yield* Effect.promise(() =>
+            targetCtx.db
+              .query("articleCatalog")
+              .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
+                index
+                  .eq("slot", "blue")
+                  .eq("appLocale", requested.appLocale)
+                  .eq("publicPath", requested.publicPath)
+              )
+              .unique()
+          );
+          if (!row) {
+            throw new Error("Expected one current article row.");
+          }
+          yield* Effect.promise(() =>
+            targetCtx.db.patch("articleCatalog", row._id, {
+              datePublished: "2020-01-01",
+            })
+          );
           expect(
             yield* readArticleModel(
               requested.appLocale,

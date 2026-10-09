@@ -154,30 +154,28 @@ describe("signed try-out attempt destinations", () => {
               const fixture = yield* Effect.promise(() =>
                 activateTryoutStartSource(tCtx, "visible")
               );
-              yield* Effect.gen(function* () {
-                const row = yield* Effect.promise(() =>
-                  tCtx.db
-                    .query("tryoutCatalog")
-                    .withIndex("by_snapshotId_and_identity", (index) =>
-                      index
-                        .eq("snapshotId", fixture.snapshotId)
-                        .eq(
-                          "identity",
-                          kind === "set"
-                            ? fixture.setIdentity
-                            : fixture.sectionIdentity
-                        )
-                    )
-                    .unique()
+              const row = yield* Effect.promise(() =>
+                tCtx.db
+                  .query("tryoutCatalog")
+                  .withIndex("by_snapshotId_and_identity", (index) =>
+                    index
+                      .eq("snapshotId", fixture.snapshotId)
+                      .eq(
+                        "identity",
+                        kind === "set"
+                          ? fixture.setIdentity
+                          : fixture.sectionIdentity
+                      )
+                  )
+                  .unique()
+              );
+              if (row) {
+                yield* Effect.promise(() =>
+                  tCtx.db.patch(row._id, {
+                    kind: "country",
+                  })
                 );
-                if (row) {
-                  yield* Effect.promise(() =>
-                    tCtx.db.patch(row._id, {
-                      kind: "country",
-                    })
-                  );
-                }
-              });
+              }
               expect(
                 yield* readTryoutDestinationPaths({
                   ...identity,

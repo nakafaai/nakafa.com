@@ -62,27 +62,25 @@ describe("contentRelease/program/path", () => {
         Effect.gen(function* () {
           const targetCtx = yield* MutationCtx;
           yield* activateProgramSnapshot(data);
-          yield* Effect.gen(function* () {
-            const route = yield* Effect.promise(() =>
-              targetCtx.db
-                .query("curriculumRoutes")
-                .withIndex("by_snapshotId_and_appLocale_and_path", (query) =>
-                  query
-                    .eq("snapshotId", data.snapshotId)
-                    .eq("appLocale", "en")
-                    .eq("path", "curriculum/technical-program-1")
-                )
-                .unique()
-            );
-            if (!route) {
-              throw new Error("Expected one curriculum route.");
-            }
-            yield* Effect.promise(() =>
-              targetCtx.db.patch("curriculumRoutes", route._id, {
-                programKey: "tampered-program",
-              })
-            );
-          });
+          const route = yield* Effect.promise(() =>
+            targetCtx.db
+              .query("curriculumRoutes")
+              .withIndex("by_snapshotId_and_appLocale_and_path", (query) =>
+                query
+                  .eq("snapshotId", data.snapshotId)
+                  .eq("appLocale", "en")
+                  .eq("path", "curriculum/technical-program-1")
+              )
+              .unique()
+          );
+          if (!route) {
+            throw new Error("Expected one curriculum route.");
+          }
+          yield* Effect.promise(() =>
+            targetCtx.db.patch("curriculumRoutes", route._id, {
+              programKey: "tampered-program",
+            })
+          );
           expect(
             yield* readProgramPath("en", "curriculum/technical-program-1").pipe(
               Effect.provide(programLayer),

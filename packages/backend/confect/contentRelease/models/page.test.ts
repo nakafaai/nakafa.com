@@ -30,10 +30,8 @@ describe("model page advancement", () => {
                 .table("contentReleases")
                 .get("by_releaseId", CANDIDATE.releaseId);
               assert(release);
-              return yield* Effect.gen(function* () {
-                const signed = yield* decodeReleaseJson(release.releaseJson);
-                return yield* advanceModelPage(build, release, signed);
-              });
+              const signed = yield* decodeReleaseJson(release.releaseJson);
+              return yield* advanceModelPage(build, release, signed);
             }).pipe(Effect.flip)
           ).toMatchObject({
             message: expect.stringContaining("cannot advance phase ready"),

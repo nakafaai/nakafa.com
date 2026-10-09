@@ -22,19 +22,17 @@ describe("contentRelease/program/sitemap", () => {
         Effect.gen(function* () {
           const targetCtx = yield* MutationCtx;
           yield* activateProgramSnapshot(data);
-          yield* Effect.gen(function* () {
-            for (let index = 0; index <= CONTENT_BUCKET_LIMIT; index += 1) {
-              yield* Effect.promise(() =>
-                targetCtx.db.insert("programBuckets", {
-                  appLocale: "en",
-                  bucket: "aaa",
-                  index: index + 100,
-                  routeCount: 1,
-                  snapshotId: data.snapshotId,
-                })
-              );
-            }
-          });
+          for (let index = 0; index <= CONTENT_BUCKET_LIMIT; index += 1) {
+            yield* Effect.promise(() =>
+              targetCtx.db.insert("programBuckets", {
+                appLocale: "en",
+                bucket: "aaa",
+                index: index + 100,
+                routeCount: 1,
+                snapshotId: data.snapshotId,
+              })
+            );
+          }
           expect(
             yield* readProgramBuckets("en").pipe(
               Effect.provide(programLayer),
