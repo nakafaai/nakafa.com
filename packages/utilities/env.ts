@@ -24,7 +24,11 @@ export class InvalidEnvironmentError extends Schema.TaggedError<InvalidEnvironme
  * it is valid. An invalid value throws while the module loads, which stops the
  * build or the boot with the name of the variable.
  */
-export const readEnvironment = <const Fields extends Schema.Struct.Fields>(
+export const readEnvironment = <
+  const Fields extends {
+    readonly [name: PropertyKey]: Schema.ConstraintDecoder<unknown>;
+  },
+>(
   fields: Fields,
   values: { readonly [Name in keyof Fields]: string | undefined }
 ) =>
