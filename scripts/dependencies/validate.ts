@@ -11,6 +11,7 @@ import {
   EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
   FORBIDDEN_EFFECT_DEPENDENCIES,
+  NODE_RUNTIME_VERSION,
   PACKAGE_MANAGER,
   SCRIPT_DEPENDENCY_HOLDS,
   VITEST_COHORT_VERSION,
@@ -173,8 +174,8 @@ export function validateDependencyPolicy({
       `packageManager must be ${PACKAGE_MANAGER}.`
     ),
     problemWhen(
-      rootManifest.devEngines?.runtime?.version !== "24.21.0",
-      "The managed Node runtime must be 24.21.0."
+      rootManifest.devEngines?.runtime?.version !== NODE_RUNTIME_VERSION,
+      `The managed Node runtime must be ${NODE_RUNTIME_VERSION}.`
     ),
   ]);
 }

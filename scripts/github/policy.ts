@@ -1,4 +1,5 @@
 import { Array as Arr, HashMap, Option, Record as Rec, Schema } from "effect";
+import { NODE_RUNTIME_VERSION } from "#scripts/dependencies/policy";
 import { problemWhen } from "#scripts/problem";
 
 /** The one folder whose composite actions this policy reads. */
@@ -71,7 +72,7 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/setup-node",
     approvedSha: "820762786026740c76f36085b0efc47a31fe5020",
     expectedInputs: {
-      "node-version": "24.21.0",
+      "node-version": NODE_RUNTIME_VERSION,
       "package-manager-cache": "false",
     },
     expectedTag: "v7.0.0",

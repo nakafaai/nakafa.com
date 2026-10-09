@@ -8,6 +8,7 @@ import {
   Schema,
 } from "effect";
 import { parseDocument } from "yaml";
+import { NODE_RUNTIME_VERSION } from "#scripts/dependencies/policy";
 import { problemWhen } from "#scripts/problem";
 
 const WorkflowStepSchema = Schema.StructWithRest(
@@ -245,7 +246,7 @@ function runtimeProblems(
   );
   return Arr.appendAll(
     problemWhen(
-      setup?.with?.["node-version"] !== "24.21.0",
+      setup?.with?.["node-version"] !== NODE_RUNTIME_VERSION,
       `CLI ${owner} must use the repository Node runtime.`
     ),
     problemWhen(

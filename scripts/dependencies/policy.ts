@@ -20,6 +20,12 @@ type DependencyHold = typeof ApprovedSpecsSchema.Type &
 
 /** The exact package manager the root manifest pins for every checkout and CI job. */
 export const PACKAGE_MANAGER = "pnpm@11.28.5";
+/**
+ * The exact Node release the root manifest downloads. A workflow job that does
+ * not check out the repository cannot read the manifest, so it names the same
+ * release and the workflow checks compare it with this value.
+ */
+export const NODE_RUNTIME_VERSION = "24.21.0";
 const CONTRACT_PACKAGE_VERSION = "0.48.7";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.2";
