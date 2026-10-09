@@ -8,12 +8,16 @@ import {
   isIdentifier,
   isIntersectionTypeNode,
   isParameterDeclaration,
+  isParenthesizedTypeNode,
+  isPropertySignatureDeclaration,
   isSatisfiesExpression,
+  isTypeLiteralNode,
   isTypePredicateNode,
   isVariableDeclaration,
   type Node,
   type ParameterDeclaration,
   type SourceFile,
+  type TypeLiteralNode,
   type TypeNode,
 } from "typescript/unstable/ast";
 import { candidate } from "#scripts/check/rules";
@@ -67,30 +71,52 @@ function isComponentProps(file: string, parameter: ParameterDeclaration) {
 }
 
 /**
- * Returns the type that a node annotates in a data position: the type of a
- * parameter or a variable, the return type of a function, the target of a type
- * predicate, and the target of `satisfies`. Component props are left out.
+ * Returns the object types that a parameter's own type holds inside its named
+ * arguments. The object type that IS the parameter's type names the arguments
+ * of the function, as React props name the inputs of a component, so it is no
+ * data shape. An object type inside it, such as the rows of
+ * `{ rows: readonly { id: string }[] }`, is one.
  */
-function annotation(file: string, node: Node): TypeNode | undefined {
+function argumentShapes(type: TypeNode): readonly TypeLiteralNode[] {
+  if (isParenthesizedTypeNode(type)) {
+    return argumentShapes(type.type);
+  }
+  return isTypeLiteralNode(type)
+    ? Arr.flatMap(type.members, (member) =>
+        isPropertySignatureDeclaration(member) && member.type !== undefined
+          ? objectLiterals(member.type)
+          : []
+      )
+    : objectLiterals(type);
+}
+
+/**
+ * Returns the object types that a node writes in a data position: inside the
+ * named arguments of a parameter, in the type of a variable, in a return type,
+ * in the target of a type predicate, and in the target of `satisfies`.
+ * Component props are left out.
+ */
+function writtenShapes(file: string, node: Node): readonly TypeLiteralNode[] {
   if (isParameterDeclaration(node)) {
-    return isComponentProps(file, node) ? undefined : node.type;
+    return node.type === undefined || isComponentProps(file, node)
+      ? []
+      : argumentShapes(node.type);
   }
   if (isVariableDeclaration(node) || isSatisfiesExpression(node)) {
-    return node.type;
+    return Arr.flatMap(Arr.fromNullishOr(node.type), objectLiterals);
   }
-  if (!isFunctionLikeDeclaration(node)) {
-    return;
+  if (!isFunctionLikeDeclaration(node) || node.type === undefined) {
+    return [];
   }
-  return node.type !== undefined && isTypePredicateNode(node.type)
-    ? node.type.type
-    : node.type;
+  return objectLiterals(
+    isTypePredicateNode(node.type) ? (node.type.type ?? node.type) : node.type
+  );
 }
 
 /**
  * Returns the object types that one module's `runtime` nodes write inline as
  * data: an object type with members, none of which holds a value no Schema
- * describes, in the type of a parameter, a variable, a return type, a type
- * predicate, or a `satisfies` target. One annotation is one candidate.
+ * describes, in a data position. One annotation is one candidate.
  *
  * An object type that an intersection joins to a value, such as the second
  * member of `ResponseInit & { readonly url?: string }`, extends that value and
@@ -105,7 +131,7 @@ export function inlineCandidates(
   const isValue = valueTypes(sourceFile);
   return Arr.flatMap(runtime, (node) => {
     const written = Arr.filter(
-      Arr.flatMap(Arr.fromNullishOr(annotation(file, node)), objectLiterals),
+      writtenShapes(file, node),
       (literal) =>
         Arr.isReadonlyArrayNonEmpty(literal.members) &&
         !Arr.some(literal.members, holdsValue) &&
