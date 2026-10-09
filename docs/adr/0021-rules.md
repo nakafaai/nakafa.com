@@ -227,6 +227,28 @@ import, keeps them equal.
   generated it are not judged. Review rejects a hand-written file that claims
   either.
 
+## Shared Facts With Another Repository
+
+The owner of this check shares three facts with every repository that runs it.
+The check compares each one, so a drifted copy fails the check.
+
+- The rule block: the Effect block of `packages/typescript-config/base.json`.
+- The shared files, listed in `SHARED_FILES` in `scripts/check/shared.ts`:
+  `scripts/osv` and the three verifier files in `scripts/provenance/`. A
+  repository that holds one keeps the owner's exact text.
+- The Effect cohort pins: each `effect`, `typescript`, or `@effect/*` name that
+  both repositories pin, in the root manifest or the default catalog. Both must
+  use one version.
+
+A change starts in the owner. Change the owner's rule, file, or pin first. Then
+copy the file or move the pin in the other repository, and run its check.
+
+Each repository keeps its own choices: the versions of other tools (Biome,
+Turborepo, esbuild, pnpm), its action pins and their review lists, its advisory
+exceptions in `osv.toml`, its entry points, its tests, and the service class in
+`scripts/provenance/service.ts`. The Effect deterministic-key rule puts the
+package name in that class's key, so no two repositories can share its text.
+
 ## Rejected Alternatives
 
 - Per-file overrides for the compiler plugin: they are a second, hidden list of
