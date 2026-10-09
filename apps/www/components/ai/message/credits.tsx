@@ -15,6 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useMessage } from "@/components/ai/message/context";
@@ -32,11 +33,11 @@ export function AiChatMessageCredits() {
   const modelId = turn?.modelId;
   const input =
     turn?.tokens?.input ??
-    turn?.usage.reduce((sum, usage) => sum + usage.input, 0) ??
+    (turn && Arr.reduce(turn.usage, 0, (sum, usage) => sum + usage.input)) ??
     0;
   const output =
     turn?.tokens?.output ??
-    turn?.usage.reduce((sum, usage) => sum + usage.output, 0) ??
+    (turn && Arr.reduce(turn.usage, 0, (sum, usage) => sum + usage.output)) ??
     0;
   const tokens = {
     input,

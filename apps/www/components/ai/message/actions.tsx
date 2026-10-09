@@ -8,6 +8,7 @@ import {
 import { useClipboard } from "@mantine/hooks";
 import { Action, Actions } from "@repo/design-system/components/ai/actions";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 
 import { useChat } from "@/components/ai/chat/context";
@@ -25,17 +26,14 @@ export function AiChatMessageActions() {
       turn?.state.status !== "failed" ||
       ninaResponseFeedback[turn.state.reason ?? "unknown"].action === "retry"
   );
-  const text = useMessage((state) => {
-    const textParts: string[] = [];
-
-    for (const part of state.message.parts) {
-      if (part.type === "text") {
-        textParts.push(part.text);
-      }
-    }
-
-    return textParts.join("\n");
-  });
+  const text = useMessage((state) =>
+    Arr.join(
+      Arr.flatMap(state.message.parts, (part) =>
+        part.type === "text" ? [part.text] : []
+      ),
+      "\n"
+    )
+  );
   const hasText = text.trim().length > 0;
 
   const retry = useChat((state) => state.retry);

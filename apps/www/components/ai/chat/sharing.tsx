@@ -14,7 +14,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { getAppUrl } from "@repo/next-config/app";
 import { cn } from "cn";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
@@ -100,7 +100,7 @@ export function ChatSharing({
       title={t("share-chat")}
     >
       <div className="flex flex-col divide-y overflow-hidden rounded-lg border">
-        {(["public", "private"] as const).map((visibility) => {
+        {Arr.map(["public", "private"] as const, (visibility) => {
           const isSelected = visibility === chat.visibility;
           const isPublic = visibility === "public";
           return (

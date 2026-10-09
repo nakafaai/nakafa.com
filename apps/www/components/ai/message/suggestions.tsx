@@ -2,6 +2,7 @@
 
 import { Add01Icon, QuoteDownIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 
 import { useChat } from "@/components/ai/chat/context";
@@ -20,7 +21,7 @@ export function SuggestionsPart({ suggestions }: Props) {
         <span>{t("follow-up")}</span>
       </div>
       <div className="flex flex-col">
-        {suggestions.map((suggestion) => (
+        {Arr.map(suggestions, (suggestion) => (
           <SuggestionsPartButton key={suggestion} suggestion={suggestion} />
         ))}
       </div>
