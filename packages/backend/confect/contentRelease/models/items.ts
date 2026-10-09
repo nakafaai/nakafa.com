@@ -3,7 +3,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import contentItemsTable from "@repo/backend/confect/_generated/tables/contentItems";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadReleaseItems } from "@repo/backend/confect/contentRelease/model";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const ModelItemPageSchema = Schema.Struct({
   done: Schema.Boolean,
@@ -27,15 +27,20 @@ export const loadModelItems = Effect.fn("contentRelease.loadModelItems")(
       );
     }
     const page = yield* loadReleaseItems(release.releaseId, afterIndex);
-    for (const [offset, row] of page.page.entries()) {
-      if (row.index !== afterIndex + offset + 1) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Model build ${release.releaseId} lost contiguous item ${afterIndex + offset + 1}.`
-        );
-      }
+    const gap = Arr.findFirstIndex(
+      page.page,
+      (row, offset) => row.index !== afterIndex + offset + 1
+    );
+    if (Option.isSome(gap)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Model build ${release.releaseId} lost contiguous item ${afterIndex + gap.value + 1}.`
+      );
     }
-    const nextIndex = page.page.at(-1)?.index ?? afterIndex;
+    const nextIndex = Option.match(Arr.last(page.page), {
+      onNone: () => afterIndex,
+      onSome: (row) => row.index,
+    });
     if (page.isDone && nextIndex !== completedIndex) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

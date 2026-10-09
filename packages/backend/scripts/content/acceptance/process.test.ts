@@ -124,7 +124,7 @@ describe("application process ownership", () => {
               Effect.sync(() => {
                 const listeners = Arr.filter(
                   process.listeners("SIGHUP"),
-                  (listener) => !previous.includes(listener)
+                  (listener) => !Arr.some(previous, (item) => item === listener)
                 );
                 expect(listeners).toHaveLength(1);
                 for (const listener of listeners) {

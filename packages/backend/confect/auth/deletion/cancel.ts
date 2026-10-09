@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/confect/auth/deletion/constants";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/confect/auth/deletion/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Clock, Duration, Effect, flow } from "effect";
+import { Array as Arr, Clock, Duration, Effect, flow } from "effect";
 /** Proves that one opaque attempt was already canceled. */
 export const hasAccountDeletionCancellation = Effect.fn(
   "auth.deletion.hasAccountDeletionCancellation"
@@ -68,8 +68,8 @@ export const sweepAccountDeletionCancellationsProgram = Effect.fn(
       )
       .take(ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE + 1)
       .pipe(Effect.orDie);
-    for (const cancellation of cancellations.slice(
-      0,
+    for (const cancellation of Arr.take(
+      cancellations,
       ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE
     )) {
       yield* writer
@@ -95,8 +95,8 @@ export const deleteAccountDeletionPreparation = Effect.fn(
       )
       .take(ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE + 1)
       .pipe(Effect.orDie);
-    for (const transfer of transfers.slice(
-      0,
+    for (const transfer of Arr.take(
+      transfers,
       ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE
     )) {
       yield* writer

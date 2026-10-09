@@ -23,7 +23,7 @@ import type { TryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/e
 import { requireOwnedAttempt } from "@repo/backend/confect/tryouts/runtime/score";
 import { loadPlacementSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, flow } from "effect";
+import { Array as Arr, Effect, flow, Option } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutSectionAttempt = Docs["tryoutSectionAttempts"];
@@ -151,18 +151,19 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
       ],
       responses: existingResponses,
     });
-    const existing = existingResponses.at(0);
+    const existing = Arr.head(existingResponses);
     const timeSpent = getResponseTimeSpent(section, input.now);
     const selection = input.args.selection;
     if (selection === null) {
-      if (!existing) {
+      if (Option.isNone(existing)) {
         return null;
       }
-      yield* writer.table("tryoutResponses").delete(existing._id);
+      const previous = existing.value;
+      yield* writer.table("tryoutResponses").delete(previous._id);
       yield* updateResponseActivity({
-        answeredDelta: -Number(existing.isComplete),
+        answeredDelta: -Number(previous.isComplete),
         attemptId: attempt._id,
-        correctDelta: -correctCount(readOutcome(existing)),
+        correctDelta: -correctCount(readOutcome(previous)),
         now: input.now,
         section,
       });
@@ -172,14 +173,15 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(
       evaluate(placement.responseSpec, selection)
     ).pipe(Effect.mapError(toTryoutSelectionError));
     const isCorrect = evaluated.outcome.status === "correct";
-    if (existing) {
+    if (Option.isSome(existing)) {
+      const previous = existing.value;
       const correctDelta =
-        correctCount(evaluated.outcome) - correctCount(readOutcome(existing));
+        correctCount(evaluated.outcome) - correctCount(readOutcome(previous));
       const answeredDelta =
-        Number(evaluated.isComplete) - Number(existing.isComplete);
+        Number(evaluated.isComplete) - Number(previous.isComplete);
       yield* writer
         .table("tryoutResponses")
-        .patch(existing._id, {
+        .patch(previous._id, {
           isComplete: evaluated.isComplete,
           isCorrect,
           outcome: evaluated.outcome,

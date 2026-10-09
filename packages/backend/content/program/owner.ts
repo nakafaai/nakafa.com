@@ -3,7 +3,7 @@ import { hasMaterialReadModel } from "@repo/backend/confect/contentRelease/mater
 import { loadReleaseFamilies } from "@repo/backend/confect/contentRelease/scope/family";
 import { loadActiveSnapshot } from "@repo/backend/content/publication/snapshot";
 import type { PublicationRow } from "@repo/backend/content/publication/source";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** Loads one coherent program snapshot and active material catalog owner. */
 export const loadProgramOwner = Effect.fn("contentRelease.loadProgramOwner")(
@@ -16,7 +16,7 @@ export const loadProgramOwner = Effect.fn("contentRelease.loadProgramOwner")(
       };
     }
     const families = yield* loadReleaseFamilies(selected.active.release);
-    if (!families.result.includes("material")) {
+    if (!Arr.contains(families.result, "material")) {
       return {
         managed: false,
         selected,

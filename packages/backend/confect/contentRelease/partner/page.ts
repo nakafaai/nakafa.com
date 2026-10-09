@@ -241,12 +241,12 @@ export const readPartnerApiPage = Effect.fn(
       verify: verifyMaterial,
     });
   }
-  const selected = rows.slice(0, input.limit);
+  const selected = Arr.take(rows, input.limit);
   const isDone = rows.length <= input.limit;
   let continueCursor = "";
   if (!isDone) {
     // Positive page limits guarantee a selected row whenever lookahead exists.
-    const last = yield* Effect.fromNullishOr(selected.at(-1)).pipe(
+    const last = yield* Effect.fromOption(Arr.last(selected)).pipe(
       Effect.orDie
     );
     continueCursor = yield* encodePartnerCursor({

@@ -7,7 +7,7 @@ import { resolveBoundPublicProjection } from "@repo/backend/content/publication/
 import { loadActiveIdentity } from "@repo/backend/content/publication/read";
 import { PublicationSource } from "@repo/backend/content/publication/source";
 import type { routeResultValidator } from "@repo/backend/content/publication/spec";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 /** Resolves one public route from the exact active publication sequence. */
 export const resolveActiveRoute = Effect.fn(
   "contentRelease.resolveActiveRoute"
@@ -33,7 +33,7 @@ export const resolveActiveRoute = Effect.fn(
       active.sequence
     )
   );
-  const managed = families.result.includes(family);
+  const managed = Arr.contains(families.result, family);
   if (!managed) {
     return {
       active,

@@ -3,7 +3,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import type { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolvePublicProjection } from "@repo/backend/content/publication/projection";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 export type SearchModelOwner = NonNullable<
   Effect.Success<ReturnType<typeof loadSearchOwner>>
 >;
@@ -11,7 +11,7 @@ export type SearchModelOwner = NonNullable<
 export const resolveSearchProjection = Effect.fn(
   "contentRelease.resolveSearchProjection"
 )(function* (row: Docs["contentIndex"], owner: SearchModelOwner) {
-  if (row.slot !== owner.slot || !owner.families.includes(row.family)) {
+  if (row.slot !== owner.slot || !Arr.contains(owner.families, row.family)) {
     return yield* staleSearchRow(row);
   }
   const resolved = yield* resolvePublicProjection(

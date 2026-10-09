@@ -1,4 +1,4 @@
-import { Array as Arr, MutableHashSet, pipe, Schema } from "effect";
+import { Array as Arr, MutableHashSet, Option, pipe, Schema } from "effect";
 
 const queryTokenPattern = /[\p{L}\p{N}][\p{L}\p{N}._-]*/gu;
 const mixedCasePattern = /\p{Ll}[\p{L}\p{N}._-]*\p{Lu}/u;
@@ -109,7 +109,7 @@ export function hasSearchableTerms(
     return true;
   }
 
-  const term = terms.at(0)?.text;
+  const term = Option.getOrUndefined(Arr.head(terms))?.text;
 
   if (!term) {
     return false;
@@ -376,7 +376,7 @@ function isDistinctiveNumber(
     return false;
   }
 
-  return Arr.some(tokens.slice(0, index), isSpecificTextToken);
+  return Arr.some(Arr.take(tokens, index), isSpecificTextToken);
 }
 
 /** Detects nonnumeric terms that are specific enough to anchor a short number. */

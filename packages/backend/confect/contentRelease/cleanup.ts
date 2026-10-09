@@ -16,7 +16,7 @@ import {
   ARTIFACT_PAGE_BYTES,
   ARTIFACT_PAGE_COUNT,
 } from "@repo/backend/confect/contentRelease/spec";
-import { Clock, Effect } from "effect";
+import { Array as Arr, Clock, Effect, Option } from "effect";
 
 /** Validates server-owned cleanup counters before advancing a page. */
 export function cleanupCounters(release: Docs["contentReleases"]) {
@@ -137,7 +137,9 @@ export const cleanupProgram = Effect.fn("contentRelease.cleanup")(function* (
       cleanupAt: complete ? now : undefined,
       cleanupDeletedArtifacts: nextArtifacts,
       cleanupFutureAt: exhausted ? undefined : futureAt,
-      cleanupHash: exhausted ? undefined : rows.at(-1)?.artifactHash,
+      cleanupHash: exhausted
+        ? undefined
+        : Option.getOrUndefined(Arr.last(rows))?.artifactHash,
       cleanupRetryAt: nextRetry,
       updatedAt: now,
     })

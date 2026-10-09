@@ -52,7 +52,7 @@ describe("search groups", () => {
     const firstPage = interleaveSearchGroups(groups, 2, identify);
     const fullWindow = interleaveSearchGroups(groups, 4, identify);
 
-    expect(firstPage).toEqual(fullWindow.slice(0, firstPage.length));
+    expect(firstPage).toEqual(Arr.take(fullWindow, firstPage.length));
     expect(interleaveSearchGroups(groups, 0, identify)).toEqual([]);
   });
 });

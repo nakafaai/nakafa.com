@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** Builds every signed row needed by one two-chunk technical document. */
 function documentRows() {
@@ -142,7 +142,9 @@ describe("contentRelease/quran/document", () => {
             },
             tafsirAccess: makeQuranTafsirProjection("de"),
           });
-          expect(german.verses.at(0)?.translation).toEqual({
+          expect(
+            Option.getOrThrow(Arr.head(german.verses)).translation
+          ).toEqual({
             notes: [],
             segments: [
               {
@@ -194,7 +196,7 @@ describe("contentRelease/quran/document", () => {
                   yield* Effect.promise(() =>
                     activateQuranSnapshot(
                       incompleteCtx,
-                      documentRows().slice(0, -1)
+                      Arr.dropRight(documentRows(), 1)
                     )
                   );
                   expect(

@@ -17,7 +17,7 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
-import { DateTime } from "effect";
+import { Array as Arr, DateTime } from "effect";
 
 export const COMPACTION_OLD_TIME =
   DateTime.toEpochMillis(DateTime.nowUnsafe()) - ROLLBACK_RETENTION_MS - 1000;
@@ -117,7 +117,11 @@ export async function seedCompactionHistory(ctx: MutationCtx) {
   const releases = Array.from({ length: 5 }, (_, index) =>
     compactionIdentity(index + 1)
   );
-  for (const [index, release] of releases.entries()) {
+  const indexedReleases = Arr.map(releases, (release, index) => ({
+    index,
+    release,
+  }));
+  for (const { index, release } of indexedReleases) {
     await insertCompletedRelease(
       ctx,
       release,

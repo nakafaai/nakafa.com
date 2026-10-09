@@ -278,6 +278,33 @@ describe("class queries", () => {
       })
     ).rejects.toThrow("CLASS_MEMBER_SEARCH_LIMIT_EXCEEDED");
   });
+  it("counts a negative search page size back from the end, as slice did", async () => {
+    const { t, admin, student, classId, users } = await createClassFixture();
+    await admin.mutation(api.classes.mutations.updateClassVisibility, {
+      classId,
+      visibility: "public",
+    });
+    await student.mutation(api.classes.mutations.joinPublicClass, {
+      classId,
+    });
+    await t.mutation(async (ctx) => {
+      await ctx.db.patch("users", users.admin.userId, {
+        name: "Ada Teacher",
+        email: "teacher@shared.test",
+      });
+      await ctx.db.patch("users", users.student.userId, {
+        name: "Ben Student",
+        email: "student@shared.test",
+      });
+    });
+    const page = await admin.query(api.classes.queries.getPeople, {
+      classId,
+      paginationOpts: { ...paginationOpts, numItems: -1 },
+      q: "shared",
+    });
+    expect(Arr.map(page.page, (row) => row.role)).toEqual(["teacher"]);
+  });
+
   it("omits deleted people from both list and search without exposing stale identities", async () => {
     const { t, admin, student, classId, users } = await createClassFixture();
     await admin.mutation(api.classes.mutations.updateClassVisibility, {

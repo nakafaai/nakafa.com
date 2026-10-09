@@ -399,12 +399,12 @@ describe("auth/deletion/prepare", () => {
     expect(continuedPreparations).toHaveLength(
       (ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE + 1) * 2
     );
-    for (const [index, preparation] of continuedPreparations.entries()) {
+    Arr.forEach(continuedPreparations, (preparation, index) => {
       expect(preparation.recoveryAt).toBe(
         NOW + index * 1000 + ACCOUNT_DELETION_RECOVERY_DELAY_MS
       );
       expect(preparation.recoveryGeneration).toBe(index + 1);
-    }
+    });
   });
   it("schedules continued cancellation after a later school has no successor", async () => {
     const t = convexTest(schema, convexModules);

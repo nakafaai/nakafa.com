@@ -1,4 +1,11 @@
-import { Array as Arr, MutableHashSet, Order, pipe, Schema } from "effect";
+import {
+  Array as Arr,
+  MutableHashSet,
+  Option,
+  Order,
+  pipe,
+  Schema,
+} from "effect";
 
 const DEFAULT_MAX_LENGTH = 2000;
 const MIN_KEYWORD_LENGTH = 3;
@@ -185,7 +192,7 @@ export function selectRelevantContent(
   let currentLength = preserveStructure ? intro.length + 2 : 0;
   const targetLength = maxLength * TARGET_LENGTH_BUFFER;
   const candidates = preserveStructure
-    ? analyzedParagraphs.slice(1, -1)
+    ? Arr.dropRight(Arr.drop(analyzedParagraphs, 1), 1)
     : analyzedParagraphs;
   const paragraphLimit = preserveStructure
     ? maxRelevantParagraphs
@@ -208,13 +215,13 @@ export function selectRelevantContent(
     }
   }
 
-  const conclusion = analyzedParagraphs.at(-1);
+  const conclusion = Arr.last(analyzedParagraphs);
   if (
     preserveStructure &&
-    conclusion &&
-    currentLength + conclusion.length + 2 < targetLength
+    Option.isSome(conclusion) &&
+    currentLength + conclusion.value.length + 2 < targetLength
   ) {
-    selectedParts = Arr.append(selectedParts, conclusion.text);
+    selectedParts = Arr.append(selectedParts, conclusion.value.text);
   }
 
   if (selectedParts.length === 0) {
