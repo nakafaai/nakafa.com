@@ -3,6 +3,7 @@
 import type { Ref } from "@confect/core";
 import { type OptimisticUpdate, useAction, useMutation } from "@confect/react";
 import {
+  NINA_DOCUMENT_SIZE_MESSAGE,
   NinaFileType,
   NinaUploadError,
 } from "@repo/backend/client/nina/uploads";
@@ -207,7 +208,7 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
   if (exceedsDocumentLimit(Arr.map(files, (attachment) => attachment.file))) {
     return yield* new NinaUploadError({
       code: "NINA_UPLOAD_SIZE",
-      message: "The documents in one message can hold at most 10 MiB together.",
+      message: NINA_DOCUMENT_SIZE_MESSAGE,
     });
   }
   return yield* Effect.forEach(files, (attachment) =>

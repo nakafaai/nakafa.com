@@ -4,6 +4,7 @@ import { MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
 import {
   NINA_FILE_COUNT,
   NINA_FILE_SIZE,
+  NINA_FILE_SIZE_MESSAGE,
   NinaUploadError,
 } from "@repo/backend/client/nina/uploads";
 import { components } from "@repo/backend/confect/_generated/components";
@@ -49,7 +50,7 @@ const save = FunctionImpl.make(
       ) {
         return yield* new NinaUploadError({
           code: "NINA_UPLOAD_INVALID",
-          message: "Choose a nonempty attachment no larger than 8 MiB.",
+          message: NINA_FILE_SIZE_MESSAGE,
         });
       }
       const { runMutation: mutate } = yield* MutationRunner;
