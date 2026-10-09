@@ -14,6 +14,7 @@ import type {
   TryoutSetRow,
 } from "@/components/tryout/catalog/table/types";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
+import { isConvexOffline } from "@/lib/convex/online";
 
 const EMPTY_ROWS: TryoutSetRow[] = [];
 
@@ -142,9 +143,7 @@ export function useTryoutSetData({
 
   const fulfilled =
     current !== undefined && requestKey(current.args) === requestKey(args);
-  const offline =
-    (connection.connectionCount > 0 || connection.connectionRetries > 0) &&
-    !connection.isWebSocketConnected;
+  const offline = isConvexOffline(connection);
   const error = QueryResult.isFailure(query) || viewerMismatch;
   const busy = !(fulfilled || error);
 
