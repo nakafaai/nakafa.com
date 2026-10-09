@@ -149,9 +149,11 @@ tests and framework configuration, by `new-promise`. The rule counts only while
 
 ## Consequences
 
-- A compiler rule that is neither an error nor in the table above is open work,
-  not a decision. It becomes an error in the pull request that clears its last
-  site.
+- Both shared configurations list every rule the installed plugin defines,
+  as `error`, or as `off` for a rule in the table above. The source check reads
+  the plugin's own rule list and rejects a rule that has no decision, a name
+  the plugin no longer defines, and any other severity. So a plugin upgrade
+  that adds a rule fails the check until the rule is decided.
 - A new place that a framework forces is added to the source check as a
   construction, with a test for the reported and the unreported form.
 - Keep `new X({...})` for Schema error classes.
