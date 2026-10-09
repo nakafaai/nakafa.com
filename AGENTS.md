@@ -37,7 +37,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 - Keep changes cohesive and complete. Remove dead, redundant, obsolete, repair-only, and legacy paths after proving they are unused in every relevant environment.
 - Prefer direct control flow, early returns, and small domain-owned modules over wrapper chains, compatibility facades, catch-all utility folders, and abstractions that do not reduce complexity. Deleting a proposed module should concentrate meaningful complexity, not merely relocate it.
-- Hand-written `.ts` and `.tsx` modules target 300 LOC or less. A new or touched file over 500 LOC blocks readiness unless it is generated, vendor data, source corpus, or dense curriculum data where splitting reduces locality; record any exception. Before editing such a file, identify its Module, Interface, Implementation, Seam, Depth, Leverage, and Locality, and decompose by real capability.
+- Hand-written `.ts` and `.tsx` modules target 300 LOC or less, and the source check rejects one over 500. Before splitting a module, identify its Module, Interface, Implementation, Seam, Depth, Leverage, and Locality, and decompose by real capability.
 - Name new folders and files with one concise domain word per path segment plus conventional suffixes such as `.client` or `.test`: no hyphenated phrases, no repeated parent wording.
 - Do not create new `index.ts` barrels, facade modules, pass-through re-exports, or generic `utils` or `helpers`. A generated or externally mandated package entrypoint needs an explicit exception.
 - TypeScript is strict. Prefer derived and inferred types, fix the source design when inference is unclear, and avoid `any`, assertions, and workaround casts.

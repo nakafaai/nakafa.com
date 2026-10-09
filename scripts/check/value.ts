@@ -33,15 +33,19 @@ import {
 /**
  * The modules whose types describe values that no Schema describes as data:
  * React and MDX values, the design system's Markdown types (each one names a
- * React or MDX type), and the parser syntax-tree nodes of ESTree and its JSX
- * extension. The AI SDK names only some of its types as values, listed below.
+ * React or MDX type), the scene objects and math classes of three.js, and the
+ * parser syntax-tree nodes of ESTree, its JSX extension, and TypeScript. The
+ * AI SDK names only some of its types as values, listed below.
  */
 const FRAMEWORK_TYPE_MODULES = HashSet.make(
   "@repo/design-system/types/markdown",
   "estree",
   "estree-jsx",
   "mdx/types",
-  "react"
+  "react",
+  "three",
+  "typescript",
+  "typescript/unstable/ast"
 );
 
 /**
@@ -84,6 +88,31 @@ const EFFECT_HANDLE_MODULES = HashSet.make(
   "Sink",
   "Stream",
   "SubscriptionRef"
+);
+
+/**
+ * The platform and framework types that a module names without an import and
+ * that hold a value no Schema describes: a pending result, a request or a
+ * response and its options, a stream, a DOM node, and the route props that
+ * Next.js declares globally. A module that binds one of these names itself
+ * means its own type.
+ */
+const PLATFORM_VALUE_TYPES = HashSet.make(
+  "AbortSignal",
+  "Element",
+  "HTMLElement",
+  "JSX",
+  "LayoutProps",
+  "PageProps",
+  "Promise",
+  "PromiseLike",
+  "React",
+  "ReadableStream",
+  "Request",
+  "RequestInit",
+  "Response",
+  "ResponseInit",
+  "RouteContext"
 );
 
 /** Returns the local names that one import clause binds, such as `React` in `import type * as React from "react"`. */
@@ -206,6 +235,22 @@ export function valueNames(sourceFile: SourceFile): readonly string[] {
   });
 }
 
+/**
+ * Returns the names that a module binds itself: every name its imports bind,
+ * and every interface and type alias it declares at its top level.
+ */
+function boundNames(sourceFile: SourceFile): readonly string[] {
+  return Arr.flatMap(sourceFile.statements, (statement) => {
+    if (isImportDeclaration(statement)) {
+      return clauseNames(statement.importClause);
+    }
+    return isInterfaceDeclaration(statement) ||
+      isTypeAliasDeclaration(statement)
+      ? [statement.name.text]
+      : [];
+  });
+}
+
 /** Returns the interfaces and type aliases that a module declares at its top level, by name. */
 export function localShapes(sourceFile: SourceFile) {
   return HashMap.fromIterable(
@@ -261,7 +306,22 @@ function wrappedTypes(type: TypeNode): readonly TypeNode[] {
  * anywhere else is not followed.
  */
 export function valueMembers(sourceFile: SourceFile) {
+  return valueTests(sourceFile).member;
+}
+
+/**
+ * Returns the test for a whole type of one module, by the rules of
+ * `valueMembers`: whether the type holds a value no Schema describes, such as
+ * `ResponseInit & { readonly url?: string }`.
+ */
+export function valueTypes(sourceFile: SourceFile) {
+  return valueTests(sourceFile).type;
+}
+
+/** Builds the member test and the type test of one module. */
+function valueTests(sourceFile: SourceFile) {
   const names = valueNames(sourceFile);
+  const bound = boundNames(sourceFile);
   const effectNamespaces = namespaceNames(sourceFile, "effect");
   const aiNamespaces = namespaceNames(sourceFile, "ai");
   const shapes = localShapes(sourceFile);
@@ -296,8 +356,11 @@ export function valueMembers(sourceFile: SourceFile) {
     if (!isTypeReferenceNode(type)) {
       return false;
     }
+    const first = leading(type.typeName).text;
     return (
-      Arr.contains(names, leading(type.typeName).text) ||
+      Arr.contains(names, first) ||
+      (HashSet.has(PLATFORM_VALUE_TYPES, first) &&
+        !Arr.contains(bound, first)) ||
       namesMember(type.typeName, effectNamespaces, EFFECT_HANDLE_MODULES) ||
       namesMember(type.typeName, aiNamespaces, AI_VALUE_TYPES) ||
       Arr.some(type.typeArguments ?? [], (argument) =>
@@ -318,5 +381,8 @@ export function valueMembers(sourceFile: SourceFile) {
     return isMethodSignatureDeclaration(member);
   }
 
-  return (member: TypeElement) => memberHolds(member, []);
+  return {
+    member: (member: TypeElement) => memberHolds(member, []),
+    type: (type: TypeNode) => typeHolds(type, []),
+  };
 }

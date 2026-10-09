@@ -69,11 +69,7 @@ const technicalCopy = {
   },
 } as const satisfies Record<
   ActiveAppLocaleCode,
-  {
-    readonly choice: string;
-    readonly contentHashCharacter: string;
-    readonly country: string;
-  }
+  Record<"choice" | "contentHashCharacter" | "country", string>
 >;
 
 /** Creates one hashed technical try-out country row. */

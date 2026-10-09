@@ -2,11 +2,16 @@ import {
   getTryoutHref,
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
+import type { RetainedSectionAttemptPage } from "@/components/tryout/section/model";
+import type {
+  SetPage,
+  TryoutSetRestartTarget,
+} from "@/components/tryout/set/model";
 
 /** Builds the current restart target exposed by one public set page. */
 export function createTryoutSetRestartTarget<EntrySection>(page: {
   readonly entrySection: EntrySection | null;
-  readonly set: { readonly publicPath: string };
+  readonly set: Pick<SetPage["set"], "publicPath">;
 }) {
   if (!page.entrySection) {
     return null;
@@ -23,9 +28,7 @@ export function createTryoutSetRestartTarget<EntrySection>(page: {
  * retained set, or the try-out root when the set is no longer active.
  */
 export function selectTryoutSetLinks(
-  restartTarget: {
-    readonly setPublicPath: string;
-  } | null
+  restartTarget: Pick<TryoutSetRestartTarget, "setPublicPath"> | null
 ) {
   if (!restartTarget) {
     return { currentHref: getTryoutHref(), returnHref: getTryoutHref() };
@@ -50,10 +53,10 @@ export function selectTryoutSectionReturnHref({
   attemptPage,
   publicHref,
 }: {
-  attemptPage: {
-    readonly activeSetPublicPath: string | null;
-    readonly kind: "retained";
-  } | null;
+  attemptPage: Pick<
+    RetainedSectionAttemptPage,
+    "activeSetPublicPath" | "kind"
+  > | null;
   publicHref: string;
 }) {
   if (!attemptPage) {

@@ -26,10 +26,7 @@ import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 type SourceCorruption = "duplicate" | "none" | "stale";
-const corruptSourceCases: ReadonlyArray<{
-  expectedCode: string;
-  kind: SourceCorruption;
-}> = [
+const corruptSourceCases = [
   {
     expectedCode: "TRYOUT_IRT_ITEM_DUPLICATE",
     kind: "duplicate",
@@ -38,7 +35,7 @@ const corruptSourceCases: ReadonlyArray<{
     expectedCode: "TRYOUT_IRT_ITEM_STALE",
     kind: "stale",
   },
-];
+] as const;
 
 /** Seeds one exact scale, attempt, and immutable placement inventory. */
 function seedSectionIrtSource(ctx: MutationCtx, corruption: SourceCorruption) {

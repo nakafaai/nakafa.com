@@ -17,6 +17,7 @@ import { symbolTable } from "#scripts/check/convex";
 import { dispatchCandidates } from "#scripts/check/dispatch";
 import { failureCandidates } from "#scripts/check/failure";
 import { globalCandidates } from "#scripts/check/globals";
+import { inlineCandidates } from "#scripts/check/inline";
 import { nativeCandidates } from "#scripts/check/native";
 import { outsidePage, pageKeysOf } from "#scripts/check/page";
 import { promiseCandidates } from "#scripts/check/promise";
@@ -190,6 +191,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
                 nativeCandidates(sourceFile, runtime),
                 promiseCandidates(sourceFile, runtime),
                 shapeCandidates(file, sourceFile, nodes, runtime),
+                inlineCandidates(file, sourceFile, runtime),
                 assertionCandidates(sourceFile, nodes),
                 dispatchCandidates(sourceFile, nodes),
                 failures,

@@ -1,7 +1,6 @@
 import { Ref } from "@confect/core";
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createClassFixture } from "@repo/backend/test/classes";
 import { Array as Arr } from "effect";
 
@@ -15,11 +14,7 @@ async function seedPeople(
   count: number
 ) {
   return await fixture.t.mutation(async (ctx) => {
-    let rows: {
-      userId: Id<"users">;
-      memberId: Id<"schoolClassMembers">;
-    }[] = [];
-    for (let index = 0; index < count; index += 1) {
+    const seedPerson = async (index: number) => {
       const userId = await ctx.db.insert("users", {
         authId: `roster-${index}`,
         name: `Person ${index}`,
@@ -35,10 +30,11 @@ async function seedPeople(
         role: index % 20 === 0 ? "teacher" : "student",
         updatedAt: now,
       });
-      rows = Arr.append(rows, {
-        userId,
-        memberId,
-      });
+      return { userId, memberId };
+    };
+    let rows = Arr.empty<Awaited<ReturnType<typeof seedPerson>>>();
+    for (let index = 0; index < count; index += 1) {
+      rows = Arr.append(rows, await seedPerson(index));
     }
     return rows;
   });
