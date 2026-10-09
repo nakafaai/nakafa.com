@@ -24,7 +24,8 @@ import {
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { candidate, loadsImport, type Rule } from "#scripts/check/rules";
+import { loadsImport } from "#scripts/check/kinds";
+import { candidate, type Rule } from "#scripts/check/rules";
 import type { Binding } from "#scripts/check/source";
 import { unwrapped, wrapped } from "#scripts/check/wrapper";
 
@@ -34,7 +35,6 @@ type RuleId = typeof Rule.Type;
 const CONSTRUCTED: Readonly<Record<string, RuleId>> = {
   Date: "clock",
   Map: "map-set",
-  Promise: "promise",
   Set: "map-set",
 };
 

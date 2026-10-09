@@ -6,6 +6,7 @@ import {
   type Node,
   type SourceFile,
 } from "typescript/unstable/ast";
+import { effectFindings } from "#scripts/check/effect";
 import { outsidePage, pageFunctionKeys } from "#scripts/check/page";
 import {
   descendants,
@@ -22,6 +23,25 @@ function lineOf(sourceFile: SourceFile, node: Node) {
     sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1
   );
 }
+
+/** Lists the Effect-native findings of one module as `line rule`. */
+const findings = Effect.fn("PageTest.findings")(function* (
+  sourceText: string,
+  file: string
+) {
+  const found = yield* effectFindings(
+    yield* parseSources([{ file, sourceText }])
+  );
+  return Arr.map(found, ({ line, rule }) => `${line} ${rule}`);
+}, Effect.scoped);
+
+/** Lists the Effect-native findings of several modules as `file:line rule`. */
+const fileFindings = Effect.fn("PageTest.fileFindings")(function* (
+  sources: readonly (typeof RepositorySource.Type)[]
+) {
+  const found = yield* effectFindings(yield* parseSources(sources));
+  return Arr.map(found, ({ file, line, rule }) => `${file}:${line} ${rule}`);
+}, Effect.scoped);
 
 /** Lists the function keys that the modules among `sources` pass to the browser page, sorted. */
 const passedKeys = Effect.fn("PageTest.passedKeys")(function* (
@@ -209,6 +229,93 @@ Object.keys(routes);
         assert.deepStrictEqual(
           yield* outsideGlobals(sources, "apps/www/lib/frames.ts"),
           ["2 Object", "5 Object", "8 Array", "10 Object"]
+        );
+      })
+  );
+
+  it.effect(
+    "recognizes a page function only at the top level, so a nested function with its name is ordinary code",
+    () =>
+      Effect.gen(function* () {
+        const sources = [
+          {
+            file: "apps/www/e2e/named.browser.ts",
+            sourceText: `import { test } from "@playwright/test";
+import { render } from "./support/render";
+page.evaluate(render);
+`,
+          },
+          {
+            file: "apps/www/e2e/support/render.ts",
+            sourceText: `export function render() {
+  return Object.keys(window.frames);
+}
+export function outer(values) {
+  function render() {
+    return Object.keys(values);
+  }
+  const nested = () => {
+    const render = () => Array.isArray(values);
+    return render;
+  };
+  return render;
+}
+`,
+          },
+        ];
+        assert.deepStrictEqual(
+          yield* outsideGlobals(sources, "apps/www/e2e/support/render.ts"),
+          ["6 Object", "9 Array"]
+        );
+      })
+  );
+
+  it.effect(
+    "exempts a throw inside a browser page function, however deeply it is nested",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(
+            `import { type Page } from "@playwright/test";
+export function probe(page: Page) {
+  page.evaluate(() => {
+    setTimeout(() => {
+      throw new Error("in page");
+    });
+  });
+  throw new Error("outside");
+}
+`,
+            "apps/www/e2e/support/probe.browser.ts"
+          ),
+          ["8 throw"]
+        );
+      })
+  );
+
+  it.effect(
+    "exempts a throw in a helper that a Playwright module passes to the page by name",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* fileFindings([
+            {
+              file: "apps/www/e2e/support/frames.ts",
+              sourceText:
+                'export function countFrames() {\n  throw new Error("frames");\n}\n',
+            },
+            {
+              file: "apps/www/e2e/frames.browser.ts",
+              sourceText:
+                'import { test } from "@playwright/test";\nimport { countFrames } from "./support/frames";\npage.evaluate(countFrames);\n',
+            },
+            {
+              file: "apps/www/lib/frames.ts",
+              sourceText:
+                'export function countFrames() {\n  throw new Error("frames");\n}\n',
+            },
+          ]),
+          ["apps/www/lib/frames.ts:2 throw"]
         );
       })
   );
