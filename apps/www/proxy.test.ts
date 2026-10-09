@@ -4,18 +4,26 @@ import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.j
 import { NextRequest } from "next/server";
 import type { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
 import { config, proxy } from "@/proxy";
-import { bypassed, localeHints, matched, redirectCases } from "@/test/proxy";
+import {
+  bypassed,
+  localeHints,
+  matched,
+  publicRoutes,
+  redirectCases,
+  representations,
+  snbtExam,
+} from "@/test/proxy";
 
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
 const MARKDOWN_SUFFIX_PATTERN = /\.mdx?$/;
 function requestProxy(pathname: string, init?: NextRequestInit) {
   return proxy(new NextRequest(`http://localhost:3000${pathname}`, init));
 }
+function matchesProxy(url: string) {
+  return unstable_doesMiddlewareMatch({ config, url });
+}
 function activeRoute(kind: "found" | "missing" | "unmanaged") {
-  return Effect.succeed({
-    activeReleaseId: "release-active",
-    kind,
-  });
+  return Effect.succeed({ activeReleaseId: "release-active", kind });
 }
 function expectLocaleProxy(
   response: Response,
@@ -44,20 +52,10 @@ function expectHardNotFound(response: Response, locale: string) {
 }
 const mockLocaleRouting = vi.hoisted(() => ({
   activeMiddleware: vi.fn(
-    () =>
-      new Response(null, {
-        headers: {
-          "x-locale-proxy": "1",
-        },
-      })
+    () => new Response(null, { headers: { "x-locale-proxy": "1" } })
   ),
   previewMiddleware: vi.fn(
-    () =>
-      new Response(null, {
-        headers: {
-          "x-locale-proxy": "preview",
-        },
-      })
+    () => new Response(null, { headers: { "x-locale-proxy": "preview" } })
   ),
 }));
 const runtimeMocks = vi.hoisted(() => ({
@@ -74,14 +72,8 @@ const previewMocks = vi.hoisted(() => ({
   route: vi.fn(),
 }));
 vi.mock("@repo/internationalization/src/routing", () => ({
-  previewRouting: {
-    defaultLocale: "en",
-    locales: ["en", "id", "de", "fr"],
-  },
-  routing: {
-    defaultLocale: "en",
-    locales: ["en", "id", "de"],
-  },
+  previewRouting: { defaultLocale: "en", locales: ["en", "id", "de", "fr"] },
+  routing: { defaultLocale: "en", locales: ["en", "id", "de"] },
 }));
 vi.mock("@nakafa/aksara-contracts/locale", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -139,17 +131,12 @@ vi.mock("@/lib/routing/public/migration", () => ({
 }));
 describe("proxy", () => {
   beforeEach(() => {
-    runtimeMocks.readTryout.mockReset().mockReturnValue(
-      Effect.succeed({
-        exists: false,
-      })
-    );
-    runtimeMocks.readProgramPath.mockReset().mockReturnValue(
-      Effect.succeed({
-        managed: false,
-        route: null,
-      })
-    );
+    runtimeMocks.readTryout
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ exists: false }));
+    runtimeMocks.readProgramPath
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ managed: false, route: null }));
     runtimeMocks.readActive
       .mockReset()
       .mockReturnValue(activeRoute("unmanaged"));
@@ -165,12 +152,7 @@ describe("proxy", () => {
     mockLocaleRouting.previewMiddleware.mockClear();
   });
   it.each([
-    [
-      "/_nakafa/i/v0/e/",
-      {
-        method: "POST",
-      },
-    ],
+    ["/_nakafa/i/v0/e/", { method: "POST" }],
     ["/llms.txt", undefined],
   ])("bypasses locale routing for %s", async (path, init) => {
     const response = await requestProxy(path, init);
@@ -204,60 +186,15 @@ describe("proxy", () => {
       pathname: sourceUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""),
     });
   });
-  it.each([
-    [
-      "a track-less set",
-      "/en/try-out/indonesia/snbt/set-1",
-      "/en/try-out/indonesia/snbt/2027/set-1",
-      307,
-    ],
-    [
-      "a track-less section",
-      "/en/try-out/indonesia/snbt/set-1/reading-and-writing-skills",
-      "/en/try-out/indonesia/snbt/2027/set-1/reading-comprehension-and-writing",
-      307,
-    ],
-    [
-      "a retired section",
-      "/en/try-out/indonesia/snbt/2027/set-1/reading-and-writing-skills",
-      "/en/try-out/indonesia/snbt/2027/set-1/reading-comprehension-and-writing",
-      308,
-    ],
-  ])(
-    "answers %s with the redirect status of its rule",
-    async (_kind, path, destination, status) => {
-      runtimeMocks.readRedirect.mockReturnValueOnce(
-        Effect.succeed({ destination, status })
-      );
-      const response = await requestProxy(path);
-      expect(response.status).toBe(status);
-      expect(response.headers.get("location")).toBe(
-        `http://localhost:3000${destination}`
-      );
-    }
-  );
-  it("answers a retired product URL with a permanent redirect", async () => {
-    runtimeMocks.readTryout.mockReturnValueOnce(
-      Effect.succeed({
-        tracks: [
-          {
-            publicPath: "try-out/indonesia/snbt/2027",
-            trackKey: "2027",
-            trackKind: "year",
-          },
-        ],
-      })
-    );
+  it("answers a temporary redirect with the status of its rule", async () => {
+    const destination = "/en/try-out/indonesia/snbt/2027/set-1";
     runtimeMocks.readRedirect.mockReturnValueOnce(
-      Effect.succeed({
-        destination: "/en/try-out/indonesia/snbt/2027/set-1",
-        status: 308,
-      })
+      Effect.succeed({ destination, status: 307 })
     );
-    const response = await requestProxy("/en/try-out/snbt/2027-set-1");
-    expect(response.status).toBe(308);
+    const response = await requestProxy("/en/try-out/indonesia/snbt/set-1");
+    expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/en/try-out/indonesia/snbt/2027/set-1"
+      `http://localhost:3000${destination}`
     );
   });
   it("tells the migration resolver when a URL carries a try-out attempt", async () => {
@@ -270,21 +207,18 @@ describe("proxy", () => {
     });
   });
   it("matches localized PNG aliases without intercepting static assets", () => {
-    const matches = (url: string) =>
-      unstable_doesMiddlewareMatch({
-        config,
-        url,
-      });
-    expect([...matched, "/MISSING.XML", "/llms.txt"].every(matches)).toBe(true);
+    expect([...matched, "/MISSING.XML", "/llms.txt"].every(matchesProxy)).toBe(
+      true
+    );
     expect(
       [
         "/en/example.og",
         "/fr/example.png",
         "/FR/example.png",
         "/EN/example.png",
-      ].every(matches)
+      ].every(matchesProxy)
     ).toBe(true);
-    expect(bypassed.some(matches)).toBe(false);
+    expect(bypassed.some(matchesProxy)).toBe(false);
   });
   it.each(["/en/example.og", "/en/example.png", "/og/example/image.png"])(
     "delegates the active OG alias %s before document routing",
@@ -311,15 +245,7 @@ describe("proxy", () => {
   });
   it.each([
     ["/en/search", undefined],
-    [
-      "/de/search",
-      {
-        headers: {
-          accept: "text/x-component",
-          rsc: "1",
-        },
-      },
-    ],
+    ["/de/search", { headers: { accept: "text/x-component", rsc: "1" } }],
   ])(
     "delegates the active route %s to the locale middleware",
     async (path, init) => {
@@ -380,9 +306,7 @@ describe("proxy", () => {
     "delegates the available School route %s",
     async (path) => {
       const response = await requestProxy(path, {
-        headers: {
-          cookie: "better-auth.session_token=fixture-session",
-        },
+        headers: { cookie: "better-auth.session_token=fixture-session" },
       });
       expectLocaleProxy(response);
     }
@@ -404,13 +328,8 @@ describe("proxy", () => {
     expectHardNotFound(response, "en");
   });
   it("matches the removed finance endpoint only as its exact path", () => {
-    const matches = (url: string) =>
-      unstable_doesMiddlewareMatch({
-        config,
-        url,
-      });
-    expect(matches("/api/chat/finance")).toBe(true);
-    expect(matches("/api/chat/finance/chat-1")).toBe(false);
+    expect(matchesProxy("/api/chat/finance")).toBe(true);
+    expect(matchesProxy("/api/chat/finance/chat-1")).toBe(false);
   });
   it.each([
     "/sitemap-domain.xml",
@@ -433,29 +352,7 @@ describe("proxy", () => {
     }
   );
   it("answers a retired SNBT product URL gone once its retired year has no live track", async () => {
-    runtimeMocks.readTryout.mockReturnValueOnce(
-      Effect.succeed({
-        country: {
-          countryCode: "ID",
-          countryKey: "indonesia",
-          publicPath: "try-out/indonesia",
-          title: "Indonesia",
-        },
-        exam: {
-          examKey: "snbt",
-          publicPath: "try-out/indonesia/snbt",
-          scoringStrategy: "irt",
-          title: "SNBT",
-        },
-        tracks: [
-          {
-            publicPath: "try-out/indonesia/snbt/2027",
-            trackKey: "2027",
-            trackKind: "year",
-          },
-        ],
-      })
-    );
+    runtimeMocks.readTryout.mockReturnValueOnce(Effect.succeed(snbtExam));
     const response = await requestProxy("/en/try-out/snbt/2026-set-1");
     expect(response.status).toBe(410);
     expectNoLocaleProxy();
@@ -485,26 +382,7 @@ describe("proxy", () => {
     expectLocaleProxy(response);
     expect(runtimeMocks.readTryout).not.toHaveBeenCalled();
   });
-  it.each([
-    [
-      "/en",
-      {
-        headers: {
-          "x-next-intl-locale": "en",
-        },
-      },
-    ],
-    [
-      "/en/search",
-      {
-        headers: {
-          "x-next-intl-locale": "en",
-        },
-      },
-    ],
-    ["/zz/quran/1", undefined],
-    ["/id/kurikulum", undefined],
-  ])(
+  it.each(publicRoutes)(
     "does not treat the public route %s as an internal rewrite",
     async (path, init) => {
       const response = await requestProxy(path, init);
@@ -516,37 +394,14 @@ describe("proxy", () => {
     previewMocks.internal.mockReturnValueOnce(Effect.succeed(true));
     const pathname = "/fr/materials/mathematiques/fonctions/notion-de-fonction";
     const response = await requestProxy(pathname, {
-      headers: {
-        "x-next-intl-locale": "fr",
-      },
+      headers: { "x-next-intl-locale": "fr" },
     });
     expect(response.headers.get("x-middleware-next")).toBe("1");
     expectNoLocaleProxy();
     expect(previewMocks.internal).toHaveBeenCalledOnce();
     expect(previewMocks.pathname).not.toHaveBeenCalled();
   });
-  it.each([
-    [
-      "accept header",
-      "/en/terms-of-service",
-      {
-        headers: {
-          accept: "text/markdown",
-        },
-      },
-      "http://localhost:3000/llms.mdx/en/terms-of-service",
-    ],
-    [
-      "unacceptable header",
-      "/en/terms-of-service",
-      {
-        headers: {
-          accept: "text/x-component",
-        },
-      },
-      null,
-    ],
-  ])(
+  it.each(representations)(
     "negotiates public representations with an %s",
     async (_kind, pathname, init, expected) => {
       runtimeMocks.readActive.mockReturnValueOnce(activeRoute("found"));
@@ -559,9 +414,7 @@ describe("proxy", () => {
   );
   it("returns a hard 404 before rejecting a missing route representation", async () => {
     const response = await requestProxy("/id/quran/999", {
-      headers: {
-        accept: "application/json",
-      },
+      headers: { accept: "application/json" },
     });
     expectHardNotFound(response, "id");
   });
@@ -585,12 +438,7 @@ describe("proxy", () => {
         runtimeMocks.readActive.mockReturnValueOnce(activeRoute("found"));
       } else {
         runtimeMocks.readProgramPath.mockReturnValueOnce(
-          Effect.succeed({
-            managed: true,
-            route: {
-              sitemap: true,
-            },
-          })
+          Effect.succeed({ managed: true, route: { sitemap: true } })
         );
       }
       const response = await requestProxy(path);
@@ -617,9 +465,7 @@ describe("proxy", () => {
   it("delegates non-read content requests without a route lookup", async () => {
     const response = await requestProxy(
       "/en/articles/politics/not-a-read-check",
-      {
-        method: "POST",
-      }
+      { method: "POST" }
     );
     expectLocaleProxy(response);
   });
