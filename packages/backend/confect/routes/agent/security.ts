@@ -1,8 +1,6 @@
 import type { AgentEdgeContract } from "@repo/backend/agent/edge";
-import {
-  getUnknownErrorMessage,
-  NakafaAgentDataReadError,
-} from "@repo/contents/agent/errors";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
+import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { matchesSecret } from "@repo/utilities/digest";
 import { Array as Arr, Config, Effect } from "effect";
 

@@ -9,9 +9,9 @@ import {
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import type { QuranReferenceArgs } from "@repo/backend/confect/contentRelease/quran/spec";
+import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/agent/constants";
 import {
-  getUnknownErrorMessage,
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";

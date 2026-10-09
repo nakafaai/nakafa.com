@@ -1,17 +1,14 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
-import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
+import {
+  appLocaleValidator,
+  releasePageArgs,
+  releasePageValidator,
+} from "@repo/backend/confect/contentRelease/spec";
 import { Schema } from "effect";
 export const programPageValidator = Schema.Struct({
-  activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
-  activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
-  managed: Schema.Boolean,
-  result: PaginationResultSchema(Schema.String),
+  ...releasePageValidator(Schema.String).fields,
   snapshotId: Schema.Union([Schema.String, Schema.Null]),
-  sourceRevision: Schema.Union([Schema.String, Schema.Null]),
-  stale: Schema.Boolean,
 });
 export const programCatalogValidator = Schema.Struct({
   activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
@@ -114,12 +111,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "page",
-      args: () => ({
-        expectedManifestHash: Schema.Union([Schema.String, Schema.Null]),
-        expectedReleaseId: Schema.Union([Schema.String, Schema.Null]),
-        appLocale: appLocaleValidator,
-        paginationOpts: PaginationOptionsSchema,
-      }),
+      args: () => releasePageArgs,
       returns: () => programPageValidator,
       error: () => ReleaseError,
     })

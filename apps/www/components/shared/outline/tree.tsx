@@ -20,7 +20,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import { slugify } from "@repo/utilities/slug";
+import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
@@ -85,7 +85,7 @@ function SidebarTreeTooltip({
  * instead of the whole outline.
  */
 function useActiveHeading({ label }: Pick<ParsedHeading, "label">) {
-  const id = slugify(label);
+  const id = toAnchorSlug(label);
   return useToc((context) => Arr.contains(context.activeHeadings, id));
 }
 

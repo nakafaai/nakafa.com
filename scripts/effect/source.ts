@@ -5,10 +5,10 @@ import {
   Path,
   type PlatformError,
   Schema,
-  Stream,
 } from "effect";
 import { ChildProcess } from "effect/process";
 import { runEntry } from "#scripts/entry";
+import { collectText } from "#scripts/process";
 
 const GIT_OBJECT_PATTERN = /^[0-9a-f]{40}$/u;
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u;
@@ -55,18 +55,6 @@ class EffectSourceUsageError extends Schema.TaggedError<EffectSourceUsageError>(
   "EffectSourceUsageError",
   { message: Schema.String }
 ) {}
-/** Collects one command stream without leaving a child process unscoped. */
-function collectText(
-  stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>
-) {
-  return stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(
-      () => "",
-      (output, chunk) => output + chunk
-    )
-  );
-}
 /** Translates one platform command failure into the CLI error contract. */
 function gitPlatformError(error: PlatformError.PlatformError) {
   return new EffectSourceGitError({ message: error.message });

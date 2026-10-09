@@ -77,3 +77,12 @@ export const validatePublicationPage = Effect.fn(
     maximumRowsRead: publicationRows,
   };
 });
+
+/** Returns the stable empty page of a content family that Aksara does not own yet. */
+export function emptyPage() {
+  return {
+    continueCursor: "",
+    isDone: true,
+    page: [],
+  };
+}

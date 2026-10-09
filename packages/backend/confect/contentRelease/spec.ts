@@ -1,3 +1,5 @@
+import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
+import { PaginationResult as PaginationResultSchema } from "@confect/core/PaginationResult";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { ContentDeliveryClassSchema } from "@nakafa/aksara-contracts/delivery";
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
@@ -131,6 +133,36 @@ export const curriculumLevelValidator = Schema.Literals([
 export const rendererDomainValidator = Schema.Literals([
   ...RendererDomainSchema.literals,
 ]);
+
+/** Arguments shared by every release-bound publication page query. */
+export const releasePageArgs = {
+  expectedManifestHash: Schema.Union([Schema.String, Schema.Null]),
+  expectedReleaseId: Schema.Union([Schema.String, Schema.Null]),
+  appLocale: appLocaleValidator,
+  paginationOpts: PaginationOptionsSchema,
+};
+
+/** Arguments shared by the paginated API page query of each content family. */
+export const releaseApiPageArgs = {
+  cursor: Schema.Union([Schema.String, Schema.Null]),
+  limit: Schema.Finite,
+  appLocale: appLocaleValidator,
+  prefix: Schema.String,
+};
+
+/** Release-bound page envelope around one paginated result of the given item. */
+export function releasePageValidator<
+  Item extends Schema.Codec<unknown, unknown>,
+>(item: Item) {
+  return Schema.Struct({
+    activeManifestHash: Schema.Union([Schema.String, Schema.Null]),
+    activeReleaseId: Schema.Union([Schema.String, Schema.Null]),
+    managed: Schema.Boolean,
+    result: PaginationResultSchema(item),
+    sourceRevision: Schema.Union([Schema.String, Schema.Null]),
+    stale: Schema.Boolean,
+  });
+}
 
 /** Immutable content-version operations owned by the release contract. */
 export const headOperationValidator = Schema.Literals([

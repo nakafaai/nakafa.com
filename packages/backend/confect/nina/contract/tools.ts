@@ -1,13 +1,7 @@
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
+import { describedNonEmptyString } from "@repo/math/schema/shared";
 import { Array as Arr, pipe, Schema, Struct } from "effect";
-
-/** Builds a non-empty string with direct model-facing metadata. */
-function describedNonEmptyString(description: string) {
-  return Schema.String.annotate({ description }).pipe(
-    Schema.check(Schema.isMinLength(1))
-  );
-}
 
 const SpecialistToolInputFields = {
   request: describedNonEmptyString(
