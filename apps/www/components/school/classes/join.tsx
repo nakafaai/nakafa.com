@@ -21,11 +21,13 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
+import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
+import { requireConvexOnline } from "@/lib/convex/online";
 import { useSchool } from "@/lib/school/context";
 
 const form = Schema.Struct({
@@ -48,16 +50,26 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const [isPending, startTransition] = useTransition();
   const joinClass = useMutation(classes.mutations.joinClass);
   const joinPublicClass = useMutation(classes.mutations.joinPublicClass);
+  const convex = useConvex();
   const isPublic = visibility === "public";
   function handlePublicJoin() {
     startTransition(async () => {
       await Effect.runPromise(
-        Effect.tryPromise(() =>
-          joinPublicClass({
-            classId,
-          })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            Effect.tryPromise(() =>
+              joinPublicClass({
+                classId,
+              })
+            ).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tapError((error) =>
+                reportClientException(error, {
+                  source: "school-class-join-public",
+                })
+              )
+            )
+          ),
           Effect.tap(() =>
             Effect.sync(() => {
               router.replace(pathname);
@@ -65,16 +77,10 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
             })
           ),
           Effect.matchEffect({
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "school-class-join-public",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(t("join-class-failed"));
-                  })
-                )
-              ),
+            onFailure: () =>
+              Effect.sync(() => {
+                toast.error(t("join-class-failed"));
+              }),
             onSuccess: () => Effect.void,
           })
         )
@@ -88,8 +94,17 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
     },
     onSubmit: async ({ value }) => {
       await Effect.runPromise(
-        Effect.tryPromise(() => joinClass(value)).pipe(
-          Effect.flatMap(Effect.fromResult),
+        requireConvexOnline(convex).pipe(
+          Effect.andThen(
+            Effect.tryPromise(() => joinClass(value)).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.tapError((error) =>
+                reportClientException(error, {
+                  source: "school-class-join-private",
+                })
+              )
+            )
+          ),
           Effect.tap(() =>
             Effect.sync(() => {
               router.replace(pathname);
@@ -97,16 +112,10 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
             })
           ),
           Effect.matchEffect({
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "school-class-join-private",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(t("join-class-failed"));
-                  })
-                )
-              ),
+            onFailure: () =>
+              Effect.sync(() => {
+                toast.error(t("join-class-failed"));
+              }),
             onSuccess: () => Effect.void,
           })
         )

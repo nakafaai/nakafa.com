@@ -278,7 +278,7 @@ describe("class queries", () => {
       })
     ).rejects.toThrow("CLASS_MEMBER_SEARCH_LIMIT_EXCEEDED");
   });
-  it("counts a negative search page size back from the end, as slice did", async () => {
+  it("refuses a search page size that is not a positive whole number, and pages with a positive one", async () => {
     const { t, admin, student, classId, users } = await createClassFixture();
     await admin.mutation(api.classes.mutations.updateClassVisibility, {
       classId,
@@ -297,12 +297,29 @@ describe("class queries", () => {
         email: "student@shared.test",
       });
     });
+    for (const numItems of [-1, 0, 0.5]) {
+      await expect(
+        admin.query(api.classes.queries.getPeople, {
+          classId,
+          paginationOpts: { ...paginationOpts, numItems },
+          q: "shared",
+        })
+      ).rejects.toThrow("INVALID_PAGINATION_LIMIT");
+    }
     const page = await admin.query(api.classes.queries.getPeople, {
       classId,
-      paginationOpts: { ...paginationOpts, numItems: -1 },
+      paginationOpts: { ...paginationOpts, numItems: 1 },
       q: "shared",
     });
-    expect(Arr.map(page.page, (row) => row.role)).toEqual(["teacher"]);
+    expect(page).toMatchObject({
+      isDone: false,
+      continueCursor: "1",
+      page: [
+        {
+          role: "teacher",
+        },
+      ],
+    });
   });
 
   it("omits deleted people from both list and search without exposing stale identities", async () => {
