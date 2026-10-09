@@ -19,6 +19,7 @@ import { failureCandidates } from "#scripts/check/failure";
 import { globalCandidates } from "#scripts/check/globals";
 import { nativeCandidates } from "#scripts/check/native";
 import { outsidePage, pageKeysOf } from "#scripts/check/page";
+import { promiseCandidates } from "#scripts/check/promise";
 import { covers, RULES, Rule } from "#scripts/check/rules";
 import { effectRunnerViolation } from "#scripts/check/runtime";
 import { shapeCandidates } from "#scripts/check/shapes";
@@ -187,6 +188,7 @@ export const effectFindings = Effect.fn("RepositoryPolicy.effectFindings")(
               Arr.flatten([
                 globalCandidates(sourceFile, runtime),
                 nativeCandidates(sourceFile, runtime),
+                promiseCandidates(sourceFile, runtime),
                 shapeCandidates(file, sourceFile, nodes, runtime),
                 assertionCandidates(sourceFile, nodes),
                 dispatchCandidates(sourceFile, nodes),

@@ -1,21 +1,13 @@
 import { Array as Arr, HashSet } from "effect";
 import {
-  isAsyncKeyword,
-  isAwaitExpression,
   isBinaryExpression,
   isCallExpression,
   isExportDeclaration,
   isExternalModuleReference,
-  isForOfStatement,
-  isFunctionLikeDeclaration,
   isIdentifier,
   isImportDeclaration,
   isImportEqualsDeclaration,
-  isNamedImports,
-  isNewExpression,
-  isObjectLiteralExpression,
   isPropertyAccessExpression,
-  isStringLiteral,
   isStringLiteralLikeNode,
   isTryStatement,
   isTypeOfExpression,
@@ -23,7 +15,6 @@ import {
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { handlerFunctions, insideHandler } from "#scripts/check/handler";
 import { loadsExport, loadsImport } from "#scripts/check/kinds";
 import { candidate } from "#scripts/check/rules";
 import { unwrapped } from "#scripts/check/wrapper";
@@ -48,15 +39,6 @@ const EQUALITY_OPERATORS = HashSet.make(
   SyntaxKind.ExclamationEqualsEqualsToken,
   SyntaxKind.ExclamationEqualsToken
 );
-/** Whether a node declares an async function or waits on a Promise. */
-function isPromiseSyntax(node: Node) {
-  return (
-    (isFunctionLikeDeclaration(node) &&
-      Arr.some(node.modifiers ?? [], isAsyncKeyword)) ||
-    isAwaitExpression(node) ||
-    (isForOfStatement(node) && node.awaitModifier !== undefined)
-  );
-}
 
 /** Whether a module specifier names a Node file system, path, or process module. */
 function namesNodeModule(specifier: Node | undefined) {
@@ -143,115 +125,28 @@ function isTypeofObjectComparison(node: Node) {
   );
 }
 
-/** The Confect module whose `workflow` export defines durable workflows. */
-const WORKFLOW_MODULE = "@repo/backend/confect/workflow";
-const WORKFLOW_EXPORT = "workflow";
-
-/**
- * Returns the local names a module binds to the `workflow` export of the
- * Confect workflow module, such as `workflow` in `import { workflow } from ...`.
- */
-function workflowNames(sourceFile: SourceFile) {
-  return Arr.flatMap(sourceFile.statements, (statement) => {
-    if (
-      !(
-        isImportDeclaration(statement) &&
-        isStringLiteral(statement.moduleSpecifier) &&
-        statement.moduleSpecifier.text === WORKFLOW_MODULE
-      )
-    ) {
-      return [];
-    }
-    const bindings = statement.importClause?.namedBindings;
-    return bindings !== undefined && isNamedImports(bindings)
-      ? Arr.flatMap(bindings.elements, (element) =>
-          (element.propertyName ?? element.name).text === WORKFLOW_EXPORT
-            ? [element.name.text]
-            : []
-        )
-      : [];
-  });
-}
-
-/**
- * Returns the handler functions of each Confect workflow a module defines: the
- * `handler` option of the object that `workflow.define` receives, where
- * `workflow` is bound to the Confect workflow module's export. The Convex
- * workflow engine owns when a handler's steps start, because it starts them in
- * parallel only when their requests are already buffered when it handles the
- * first new one (`@convex-dev/workflow`, `src/client/step.ts`,
- * `StepExecutor.run`). An Effect runtime would start them through its
- * scheduler, so a handler keeps native promise syntax.
- */
-function workflowHandlers(sourceFile: SourceFile, nodes: readonly Node[]) {
-  const names = workflowNames(sourceFile);
-  return Arr.flatMap(nodes, (node) => {
-    if (
-      !(
-        isCallExpression(node) &&
-        isPropertyAccessExpression(node.expression) &&
-        node.expression.name.text === "define" &&
-        isIdentifier(node.expression.expression) &&
-        Arr.contains(names, node.expression.expression.text)
-      )
-    ) {
-      return [];
-    }
-    const [options] = node.arguments;
-    if (options === undefined || !isObjectLiteralExpression(options)) {
-      return [];
-    }
-    return handlerFunctions(options);
-  });
-}
-
-/**
- * Returns the candidate for `new Promise(...)`, which counts while `Promise`
- * binds to the platform global, so a class or a binding named Promise does not.
- */
-function newPromiseCandidates(sourceFile: SourceFile, node: Node) {
-  if (!isNewExpression(node)) {
-    return [];
-  }
-  const callee = unwrapped(node.expression);
-  return isIdentifier(callee) && callee.text === "Promise"
-    ? [candidate("new-promise", sourceFile, node, callee)]
-    : [];
-}
-
-/** Returns the native Promise, module, and failure syntax at one node. */
-function syntaxCandidates(
-  sourceFile: SourceFile,
-  node: Node,
-  handlers: readonly Node[]
-) {
-  if (isPromiseSyntax(node) && !insideHandler(node, handlers)) {
-    return [candidate("promise", sourceFile, node)];
-  }
+/** Returns the native module, failure, and narrowing syntax at one node. */
+function syntaxCandidates(sourceFile: SourceFile, node: Node) {
   if (isNodeModuleLoad(node)) {
     return [candidate("node-module", sourceFile, node)];
   }
   if (isTryStatement(node) && node.catchClause !== undefined) {
     return [candidate("try-catch", sourceFile, node)];
   }
-  if (isTypeofObjectComparison(node)) {
-    return [candidate("typeof-object", sourceFile, node)];
-  }
-  return newPromiseCandidates(sourceFile, node);
+  return isTypeofObjectComparison(node)
+    ? [candidate("typeof-object", sourceFile, node)]
+    : [];
 }
 
 /**
  * Returns the native syntax among one module's value-position `nodes` that
- * Effect replaces: Promise syntax outside Confect workflow handlers, `new Promise`,
- * Node module imports, raw failure handling, and hand-rolled narrowing. Array
- * methods are judged by the typed pass in `arrays.ts`.
+ * Effect replaces: Node module imports, raw failure handling, and hand-rolled
+ * narrowing. Promise syntax is judged by `promise.ts`, and array methods by the
+ * typed pass in `arrays.ts`.
  */
 export function nativeCandidates(
   sourceFile: SourceFile,
   nodes: readonly Node[]
 ) {
-  const handlers = workflowHandlers(sourceFile, nodes);
-  return Arr.flatMap(nodes, (node) =>
-    syntaxCandidates(sourceFile, node, handlers)
-  );
+  return Arr.flatMap(nodes, (node) => syntaxCandidates(sourceFile, node));
 }
