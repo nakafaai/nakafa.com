@@ -109,9 +109,9 @@ describe("Nina learner memory", () => {
       });
     }
     const view = await f.owner.query(get, {});
-    const facts = Arr.fromIterable(
-      Option.getOrThrow(Option.fromNullishOr(view)).facts
-    );
+    const facts: ReadonlyArray<{ readonly text: string }> = Option.getOrThrow(
+      Option.fromNullishOr(view)
+    ).facts;
     expect(facts).toHaveLength(MEMORY_FACTS);
     expect(facts[0]?.text).toBe("Fakta 9-2.");
     expect(Option.getOrThrow(Arr.last(facts)).text).toBe("Fakta 0-0.");
