@@ -70,6 +70,22 @@ export const dynamic = import(name);
       })
   );
 
+  it.effect("reports Node module re-exports and literal require calls", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`export { readFile } from "node:fs";
+export * from "node:path";
+export type { Stats } from "node:fs";
+export { type Dirent } from "fs";
+export * as paths from "node:path";
+const { join } = require("node:path");
+const config = require(name);
+`),
+        ["1 node-module", "2 node-module", "5 node-module", "6 node-module"]
+      );
+    })
+  );
+
   it.effect("reports raw failure handling and typeof-object narrowing", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(

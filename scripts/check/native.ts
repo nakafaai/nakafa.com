@@ -1,15 +1,19 @@
 import { Array as Arr, HashSet } from "effect";
 import {
+  type ExportDeclaration,
+  type ImportDeclaration,
   isAsyncKeyword,
   isAwaitExpression,
   isBinaryExpression,
   isCallExpression,
   isComputedPropertyName,
+  isExportDeclaration,
   isForOfStatement,
   isFunctionLikeDeclaration,
   isIdentifier,
   isImportDeclaration,
   isMethodDeclaration,
+  isNamedExports,
   isNamedImports,
   isObjectLiteralExpression,
   isPropertyAccessExpression,
@@ -58,37 +62,59 @@ function isPromiseSyntax(node: Node) {
   );
 }
 
-/** Whether a node imports a Node file system, path, or process module at runtime. */
-function isNodeModuleImport(node: Node) {
-  if (isImportDeclaration(node)) {
-    const clause = node.importClause;
-    const bindings = clause?.namedBindings;
-    const typeOnly =
-      clause?.phaseModifier === SyntaxKind.TypeKeyword ||
-      (clause?.name === undefined &&
-        bindings !== undefined &&
-        isNamedImports(bindings) &&
-        Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly));
-    return (
-      !typeOnly &&
-      isStringLiteral(node.moduleSpecifier) &&
-      HashSet.has(NODE_MODULES, node.moduleSpecifier.text)
-    );
-  }
-  if (
-    !(
-      isCallExpression(node) &&
-      node.expression.kind === SyntaxKind.ImportKeyword
-    )
-  ) {
-    return false;
-  }
-  const [specifier] = node.arguments;
+/** Whether a module specifier names a Node file system, path, or process module. */
+function namesNodeModule(specifier: Node | undefined) {
   return (
     specifier !== undefined &&
     isStringLiteralLikeNode(specifier) &&
     HashSet.has(NODE_MODULES, specifier.text)
   );
+}
+
+/** Whether an import declaration loads at runtime: it is not `import type`, and it does not name only types. */
+function loadsImport(node: ImportDeclaration) {
+  const clause = node.importClause;
+  const bindings = clause?.namedBindings;
+  return !(
+    clause?.phaseModifier === SyntaxKind.TypeKeyword ||
+    (clause?.name === undefined &&
+      bindings !== undefined &&
+      isNamedImports(bindings) &&
+      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
+  );
+}
+
+/** Whether an export declaration loads at runtime: it is not `export type`, and it does not name only types. */
+function loadsExport(node: ExportDeclaration) {
+  const bindings = node.exportClause;
+  return !(
+    node.isTypeOnly ||
+    (bindings !== undefined &&
+      isNamedExports(bindings) &&
+      Arr.every(bindings.elements, ({ isTypeOnly }) => isTypeOnly))
+  );
+}
+
+/**
+ * Whether a node loads a Node file system, path, or process module at runtime:
+ * an import, a re-export, a dynamic import, or a `require` call, each with a
+ * literal module name.
+ */
+function isNodeModuleLoad(node: Node) {
+  if (isImportDeclaration(node)) {
+    return loadsImport(node) && namesNodeModule(node.moduleSpecifier);
+  }
+  if (isExportDeclaration(node)) {
+    return loadsExport(node) && namesNodeModule(node.moduleSpecifier);
+  }
+  if (!isCallExpression(node)) {
+    return false;
+  }
+  const loader =
+    node.expression.kind === SyntaxKind.ImportKeyword ||
+    (isIdentifier(node.expression) && node.expression.text === "require");
+  const [specifier] = node.arguments;
+  return loader && namesNodeModule(specifier);
 }
 
 /** Whether a node compares a typeof result against the object tag. */
@@ -239,7 +265,7 @@ function syntaxCandidates(
   if (isPromiseSyntax(node) && !insideHandler(node, handlers)) {
     return [candidate("promise", sourceFile, node)];
   }
-  if (isNodeModuleImport(node)) {
+  if (isNodeModuleLoad(node)) {
     return [candidate("node-module", sourceFile, node)];
   }
   if (isTryStatement(node) && node.catchClause !== undefined) {
