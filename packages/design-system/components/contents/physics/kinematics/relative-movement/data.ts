@@ -63,12 +63,6 @@ export function isRelativeMovementCaseId(
   return Arr.some(RELATIVE_MOVEMENT_CASE_IDS, (caseId) => caseId === value);
 }
 
-export function formatSignedSpeedMath(value: number) {
-  const sign = value > 0 ? "+" : "";
-
-  return `${sign}${Math.round(value)}\\text{ m/s}`;
-}
-
 function getSignDirection(value: number): "left" | "right" {
   return value < 0 ? "left" : "right";
 }

@@ -1,6 +1,12 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
+import {
+  formatRoundedSpeedMath,
+  formatTrimmedMeterMath,
+  formatTrimmedSecondMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
@@ -32,10 +38,8 @@ const PAUSE_SECONDS = 0.9;
 const CAMERA_POSITION = [2.8, 2.6, 4.6] as const;
 const CAMERA_TARGET = [0, 1.22, 0] as const;
 const TRAIL_POINT_COUNT = 8;
-const TRAILING_ZERO_PATTERN = /\.0$/;
 
 type Mode = (typeof MODES)[number];
-type DecimalSeparator = "comma" | "dot";
 
 interface VerticalMovementLabProps {
   decimalSeparator?: DecimalSeparator;
@@ -135,7 +139,10 @@ export function VerticalMovementLab({
             label={labels.maxHeight}
             value={
               <InlineMath
-                math={formatMeter(motion.maxHeight, decimalSeparator)}
+                math={formatTrimmedMeterMath(
+                  motion.maxHeight,
+                  decimalSeparator
+                )}
               />
             }
           />
@@ -143,13 +150,18 @@ export function VerticalMovementLab({
             label={labels.time}
             value={
               <InlineMath
-                math={formatSeconds(motion.motionTime, decimalSeparator)}
+                math={formatTrimmedSecondMath(
+                  motion.motionTime,
+                  decimalSeparator
+                )}
               />
             }
           />
           <LabFact
             label={labels.finalVelocity}
-            value={<InlineMath math={formatSpeed(motion.finalVelocity)} />}
+            value={
+              <InlineMath math={formatRoundedSpeedMath(motion.finalVelocity)} />
+            }
           />
         </dl>
         <VisualCardFullscreen />
@@ -313,21 +325,4 @@ function formatInitialConditionMath(motion: MotionState) {
 
 function getInitialConditionKey(motion: MotionState) {
   return `${motion.startVelocity}-${motion.startHeight}`;
-}
-
-function formatMeter(value: number, decimalSeparator?: DecimalSeparator) {
-  return `${formatDecimal(value, decimalSeparator)}\\text{ m}`;
-}
-
-function formatSeconds(value: number, decimalSeparator?: DecimalSeparator) {
-  return `${formatDecimal(value, decimalSeparator)}\\text{ s}`;
-}
-
-function formatSpeed(value: number) {
-  return `${Math.round(value)}\\text{ m/s}`;
-}
-
-function formatDecimal(value: number, decimalSeparator?: DecimalSeparator) {
-  const rounded = value.toFixed(1).replace(TRAILING_ZERO_PATTERN, "");
-  return decimalSeparator === "comma" ? rounded.replace(".", "{,}") : rounded;
 }

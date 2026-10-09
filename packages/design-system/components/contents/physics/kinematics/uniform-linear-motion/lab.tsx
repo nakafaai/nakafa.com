@@ -4,9 +4,11 @@ import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import {
-  formatMeterMath,
-  formatSecondMath,
-  formatSpeedMath,
+  formatRoundedMeterMath,
+  formatRoundedSecondMath,
+  formatRoundedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
   getUniformLinearMotionState,
   isUniformLinearMotionSpeed,
   UNIFORM_LINEAR_MOTION_CAMERA,
@@ -34,6 +36,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
@@ -68,23 +71,23 @@ export function UniformLinearMotionLab({
     {
       id: "speed",
       label: labels.speed,
-      math: formatSpeedMath(motion.speed),
+      math: formatRoundedSpeedMath(motion.speed),
     },
     {
       id: "position-step",
       label: labels.positionStep,
-      math: formatSecondMath(motion.timeStep),
+      math: formatRoundedSecondMath(motion.timeStep),
     },
     {
       id: "step-distance",
       indicatorColor: UNIFORM_LINEAR_MOTION_COLORS.positionMark,
       label: labels.stepDistance,
-      math: formatMeterMath(motion.stepDistance),
+      math: formatRoundedMeterMath(motion.stepDistance),
     },
     {
       id: "duration",
       label: labels.duration,
-      math: formatSecondMath(motion.duration),
+      math: formatRoundedSecondMath(motion.duration),
     },
   ];
 
@@ -117,7 +120,7 @@ export function UniformLinearMotionLab({
         >
           {Arr.map(UNIFORM_LINEAR_MOTION_SPEEDS, (speedOption) => (
             <ToggleGroupItem key={speedOption} value={String(speedOption)}>
-              <InlineMath math={formatSpeedMath(speedOption)} />
+              <InlineMath math={formatRoundedSpeedMath(speedOption)} />
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -162,21 +165,12 @@ export function UniformLinearMotionLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           {Arr.map(facts, (fact) => (
-            <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
-              <dt className="flex items-center gap-2 text-muted-foreground">
-                {fact.indicatorColor ? (
-                  <span
-                    aria-hidden="true"
-                    className="size-2 rounded-full"
-                    style={{ backgroundColor: fact.indicatorColor }}
-                  />
-                ) : null}
-                {fact.label}
-              </dt>
-              <dd className="wrap-break-word text-foreground tabular-nums">
-                <InlineMath math={fact.math} />
-              </dd>
-            </div>
+            <VisualFactIndicator
+              indicatorColor={fact.indicatorColor}
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
           ))}
         </dl>
         <VisualCardFullscreen />

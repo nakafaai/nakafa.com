@@ -1,5 +1,5 @@
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const AccelerationCaseIdSchema = Schema.Literals([
   "speed-up",
@@ -199,7 +199,10 @@ export function getAccelerationPositionSample(
   time: number,
   startX: number
 ) {
-  const safeTime = clamp(time, 0, getAccelerationDuration(scenario));
+  const safeTime = Num.clamp(time, {
+    minimum: 0,
+    maximum: getAccelerationDuration(scenario),
+  });
   const displacement = getAccelerationDisplacementAt(scenario, safeTime);
 
   return {
@@ -242,18 +245,6 @@ export function getMotionPoints() {
   return [firstSegment.start, ...Arr.map(segments, (segment) => segment.end)];
 }
 
-export function formatAccelerationMath(value: number) {
-  return `${formatSignedNumber(value)}\\text{ m/s}^2`;
-}
-
-export function formatMeterPerSecondMath(value: number) {
-  return `${formatNumber(value)}\\text{ m/s}`;
-}
-
-export function formatSecondMath(value: number) {
-  return `${formatNumber(value)}\\text{ s}`;
-}
-
 function getAccelerationDisplacementAt(item: AccelerationCase, time: number) {
   return item.v0 * time + (getAccelerationValue(item) * time ** 2) / 2;
 }
@@ -262,30 +253,4 @@ function getTimeSamples(duration: number) {
   const sampleCount = Math.floor(duration) + 1;
 
   return Array.from({ length: sampleCount }, (_, index) => index);
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
-const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;
-
-function formatNumber(value: number) {
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
-
-  return value.toFixed(1).replace(TRAILING_ZERO_DECIMAL_REGEX, "");
-}
-
-function formatSignedNumber(value: number) {
-  if (value === 0) {
-    return "0";
-  }
-
-  if (value > 0) {
-    return `+${formatNumber(value)}`;
-  }
-
-  return formatNumber(value);
 }

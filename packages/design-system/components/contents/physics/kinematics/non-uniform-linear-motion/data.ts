@@ -1,5 +1,6 @@
+import { formatSignedTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const GlbbScenarioIdSchema = Schema.Literals([
   "from-rest",
@@ -84,8 +85,6 @@ export const GLBB_SCENARIOS: GlbbScenario[] = [
   },
 ];
 
-const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;
-
 export function getGlbbScenarioById(id: GlbbScenarioId) {
   return Option.getOrElse(
     Arr.findFirst(GLBB_SCENARIOS, (scenario) => scenario.id === id),
@@ -143,7 +142,7 @@ export function getGlbbPositionSample(
   time: number,
   trainStartX: number
 ) {
-  const safeTime = clamp(time, 0, scenario.duration);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: scenario.duration });
   const displacement = getDisplacementAt(scenario, safeTime);
 
   return {
@@ -172,20 +171,8 @@ function getDisplacementAt(scenario: GlbbScenario, time: number) {
   );
 }
 
-export function formatAccelerationMath(value: number) {
-  return `${formatSignedNumber(value)}\\text{ m/s}^2`;
-}
-
-export function formatMeterMath(value: number) {
-  return `${formatNumber(value)}\\text{ m}`;
-}
-
 export function formatVelocityMath(value: number) {
-  return `${formatSignedNumber(value)}\\text{ m/s}`;
-}
-
-export function formatSecondMath(value: number) {
-  return `${formatNumber(value)}\\text{ s}`;
+  return `${formatSignedTrimmedNumber(value)}\\text{ m/s}`;
 }
 
 function getTimeSamples(duration: number) {
@@ -198,28 +185,4 @@ function getTimeSamples(duration: number) {
   }
 
   return [...samples, duration];
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function formatNumber(value: number) {
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
-
-  return value.toFixed(1).replace(TRAILING_ZERO_DECIMAL_REGEX, "");
-}
-
-function formatSignedNumber(value: number) {
-  if (value === 0) {
-    return "0";
-  }
-
-  if (value > 0) {
-    return `+${formatNumber(value)}`;
-  }
-
-  return formatNumber(value);
 }

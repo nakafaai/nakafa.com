@@ -137,15 +137,15 @@ export function AtomSymbolLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <AtomCount
+          <VisualFact
             label={labels.protonCount}
             value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
           />
-          <AtomCount
+          <VisualFact
             label={labels.neutronCount}
             value={<InlineMath math={`${neutronCount}`} />}
           />
-          <AtomCount
+          <VisualFact
             label={labels.electronCount}
             value={
               <>
@@ -160,17 +160,5 @@ export function AtomSymbolLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * Renders one compact particle count in the lab footer.
- */
-function AtomCount({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

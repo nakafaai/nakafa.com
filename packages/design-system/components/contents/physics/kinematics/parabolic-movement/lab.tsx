@@ -1,17 +1,19 @@
 "use client";
 
 import {
+  formatTrimmedMeterMath,
+  formatTrimmedSecondMath,
+  formatTrimmedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
+import {
   DEFAULT_PARABOLIC_LAUNCH_ID,
   formatAngleMath,
-  formatMeterMath,
-  formatSecondMath,
-  formatSpeedMath,
   getParabolicMotionState,
   isParabolicLaunchId,
   PARABOLIC_LAUNCHES,
   PARABOLIC_SCENE,
   type ParabolicLaunchId,
-  type ParabolicMovementDecimalSeparator,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { ProjectileBallScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -30,12 +32,13 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 interface ParabolicMovementLabProps {
-  decimalSeparator?: ParabolicMovementDecimalSeparator;
+  decimalSeparator?: DecimalSeparator;
   description: ReactNode;
   labels: {
     chooseLaunch: string;
@@ -64,7 +67,7 @@ export function ParabolicMovementLab({
     {
       id: "initial-speed",
       label: labels.factLabels.initialSpeed,
-      math: `v_0=${formatSpeedMath(
+      math: `v_0=${formatTrimmedSpeedMath(
         motion.scenario.initialSpeed,
         decimalSeparator
       )}`,
@@ -72,17 +75,17 @@ export function ParabolicMovementLab({
     {
       id: "flight-time",
       label: labels.factLabels.flightTime,
-      math: `T=${formatSecondMath(motion.flightTime, decimalSeparator)}`,
+      math: `T=${formatTrimmedSecondMath(motion.flightTime, decimalSeparator)}`,
     },
     {
       id: "range",
       label: labels.factLabels.range,
-      math: `R=${formatMeterMath(motion.range, decimalSeparator)}`,
+      math: `R=${formatTrimmedMeterMath(motion.range, decimalSeparator)}`,
     },
     {
       id: "peak-height",
       label: labels.factLabels.peakHeight,
-      math: `h_{\\max}=${formatMeterMath(motion.peakHeight, decimalSeparator)}`,
+      math: `h_{\\max}=${formatTrimmedMeterMath(motion.peakHeight, decimalSeparator)}`,
     },
   ];
 
@@ -155,7 +158,7 @@ export function ParabolicMovementLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
           {Arr.map(facts, (fact) => (
-            <LabFact
+            <VisualFactTabular
               key={fact.id}
               label={fact.label}
               value={<InlineMath math={fact.math} />}
@@ -165,14 +168,5 @@ export function ParabolicMovementLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }

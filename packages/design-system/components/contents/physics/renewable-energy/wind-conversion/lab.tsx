@@ -15,6 +15,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr } from "effect";
@@ -124,8 +125,8 @@ export function WindEnergyConversionLab({
       </VisualCardBody>
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <WindFact label={labels.flowLabel} value={labels.flow} />
-          <WindFact label={labels.meaningLabel} value={labels.meaning} />
+          <VisualFact label={labels.flowLabel} value={labels.flow} />
+          <VisualFact label={labels.meaningLabel} value={labels.meaning} />
         </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
@@ -330,15 +331,6 @@ function WindBlade({ color, rotation }: { color: string; rotation: number }) {
         <meshStandardMaterial color={color} metalness={0.05} roughness={0.26} />
       </mesh>
     </group>
-  );
-}
-
-function WindFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }
 

@@ -1,5 +1,9 @@
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
-import { Array as Arr, Option, Schema } from "effect";
+import {
+  formatKeptZeroNumber,
+  formatSignedKeptZeroNumber,
+} from "@repo/design-system/components/contents/physics/kinematics/number";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 export const DISPLACEMENT_DISTANCE_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/taxi.glb";
@@ -113,7 +117,8 @@ export function getRouteSampleAtProgress(
   state: DisplacementDistanceState,
   progress: number
 ) {
-  const targetDistance = state.distance * clamp(progress, 0, 1);
+  const targetDistance =
+    state.distance * Num.clamp(progress, { minimum: 0, maximum: 1 });
   let traveled = 0;
 
   for (const segment of state.segments) {
@@ -150,10 +155,6 @@ export function isDisplacementDistanceCaseId(
   return Arr.some(DISPLACEMENT_DISTANCE_CASE_IDS, (caseId) => caseId === value);
 }
 
-export function formatMeterMath(value: number) {
-  return `${formatNumber(value)}\\text{ m}`;
-}
-
 export function formatVectorMath(
   vector: DisplacementDistanceState["displacementVector"]
 ) {
@@ -161,11 +162,12 @@ export function formatVectorMath(
     return "\\Delta\\vec{r}=0";
   }
 
-  const xPart = vector.x === 0 ? "" : `${formatNumber(vector.x)}\\hat{i}`;
+  const xPart =
+    vector.x === 0 ? "" : `${formatKeptZeroNumber(vector.x)}\\hat{i}`;
   const zPart =
     vector.z === 0
       ? ""
-      : `${xPart ? formatSignedNumber(vector.z) : formatNumber(vector.z)}\\hat{j}`;
+      : `${xPart ? formatSignedKeptZeroNumber(vector.z) : formatKeptZeroNumber(vector.z)}\\hat{j}`;
 
   return `\\Delta\\vec{r}=${xPart}${zPart}\\text{ m}`;
 }
@@ -247,10 +249,6 @@ function getPointDistance(start: RoutePoint, end: RoutePoint) {
   return Math.hypot(end.x - start.x, end.z - start.z);
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
 function normalizePoint(point: RoutePoint) {
   const length = Math.hypot(point.x, point.z);
 
@@ -262,12 +260,4 @@ function normalizePoint(point: RoutePoint) {
     x: point.x / length,
     z: point.z / length,
   };
-}
-
-function formatNumber(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-
-function formatSignedNumber(value: number) {
-  return value >= 0 ? `+${formatNumber(value)}` : formatNumber(value);
 }

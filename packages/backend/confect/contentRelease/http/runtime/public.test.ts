@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
@@ -71,10 +72,7 @@ function expectPrivate(response: Response) {
   expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 }
 /** Seeds one active route for an exact stored delivery class. */
-function seedRuntime(
-  t: RuntimeTest,
-  delivery: "authenticated" | "entitled" | "public"
-) {
+function seedRuntime(t: RuntimeTest, delivery: ContentDeliveryClass) {
   return t.mutation(async (ctx) => {
     await insertRuntimeRelease(ctx);
     await insertRuntimeHead(ctx, delivery, runtimeContentKey(delivery));

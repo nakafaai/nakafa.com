@@ -9,7 +9,6 @@ import {
   DISPLACEMENT_DISTANCE_SCENE,
   type DisplacementDistanceCaseId,
   type DisplacementDistanceState,
-  formatMeterMath,
   formatVectorMath,
   getDisplacementDistanceState,
   getDisplacementDistanceView,
@@ -17,6 +16,7 @@ import {
   isDisplacementDistanceCaseId,
   type RouteSegment,
 } from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/data";
+import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
@@ -34,6 +34,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -132,31 +133,33 @@ export function DisplacementDistanceLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <LabFact
+          <VisualFactIndicator
             indicatorColor={ROUTE_COLOR}
             label={labels.factLabels.distance}
             value={
-              <InlineMath math={`s=${formatMeterMath(motion.distance)}`} />
+              <InlineMath
+                math={`s=${formatKeptZeroMeterMath(motion.distance)}`}
+              />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             indicatorColor={DISPLACEMENT_COLOR}
             label={labels.factLabels.displacement}
             value={
               <InlineMath
-                math={`|\\Delta\\vec{r}|=${formatMeterMath(
+                math={`|\\Delta\\vec{r}|=${formatKeptZeroMeterMath(
                   motion.displacement
                 )}`}
               />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             label={labels.factLabels.vector}
             value={
               <InlineMath math={formatVectorMath(motion.displacementVector)} />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             label={labels.factLabels.meaning}
             value={labels.meanings[motion.caseId]}
           />
@@ -357,32 +360,6 @@ function StartEndMarkers({ motion }: { motion: DisplacementDistanceState }) {
         <meshStandardMaterial color={CAR_COLOR} roughness={0.48} />
       </mesh>
     </>
-  );
-}
-
-function LabFact({
-  indicatorColor,
-  label,
-  value,
-}: {
-  indicatorColor?: string;
-  label: ReactNode;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="flex items-center gap-2 text-muted-foreground">
-        {indicatorColor ? (
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: indicatorColor }}
-          />
-        ) : null}
-        {label}
-      </dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }
 

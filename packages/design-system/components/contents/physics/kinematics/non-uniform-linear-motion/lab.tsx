@@ -2,9 +2,11 @@
 
 import { useFrame } from "@react-three/fiber";
 import {
-  DEFAULT_GLBB_SCENARIO_ID,
   formatAccelerationMath,
-  formatMeterMath,
+  formatTrimmedMeterMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
+  DEFAULT_GLBB_SCENARIO_ID,
   formatVelocityMath,
   GLBB_COLORS,
   GLBB_SCENARIOS,
@@ -35,6 +37,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
@@ -142,7 +145,7 @@ export function NonUniformLinearMotionLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <LabFact
+          <VisualFactIndicator
             label={labels.factLabels.initialVelocity}
             value={
               <InlineMath
@@ -152,7 +155,7 @@ export function NonUniformLinearMotionLab({
               />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             indicatorColor={motion.scenario.color}
             label={labels.factLabels.acceleration}
             value={
@@ -163,7 +166,7 @@ export function NonUniformLinearMotionLab({
               />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             label={labels.factLabels.finalVelocity}
             value={
               <InlineMath
@@ -171,11 +174,11 @@ export function NonUniformLinearMotionLab({
               />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             label={labels.factLabels.displacement}
             value={
               <InlineMath
-                math={`\\Delta x=${formatMeterMath(motion.displacement)}`}
+                math={`\\Delta x=${formatTrimmedMeterMath(motion.displacement)}`}
               />
             }
           />
@@ -344,31 +347,5 @@ function PositionMarkers({ motion }: { motion: GlbbMotionState }) {
         </mesh>
       ))}
     </group>
-  );
-}
-
-function LabFact({
-  indicatorColor,
-  label,
-  value,
-}: {
-  indicatorColor?: string;
-  label: ReactNode;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="flex items-center gap-2 text-muted-foreground">
-        {indicatorColor ? (
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: indicatorColor }}
-          />
-        ) : null}
-        {label}
-      </dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }

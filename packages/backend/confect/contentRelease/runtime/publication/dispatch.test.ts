@@ -1,4 +1,5 @@
 import { RegisteredFunction } from "@confect/server";
+import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
@@ -66,10 +67,7 @@ function runDispatch(t: RuntimeAction, source: string) {
   );
 }
 /** Seeds one active route for the requested stored delivery class. */
-function seedSigned(
-  t: RuntimeTest,
-  delivery: "authenticated" | "entitled" | "public"
-) {
+function seedSigned(t: RuntimeTest, delivery: ContentDeliveryClass) {
   return t.mutation(async (ctx) => {
     await insertSignedRelease(ctx);
     await insertSignedHead(ctx, delivery, runtimeContentKey(delivery));

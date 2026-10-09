@@ -1,6 +1,6 @@
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
   "straight",
@@ -10,7 +10,6 @@ export const AVERAGE_VELOCITY_SPEED_CASE_IDS = [
 
 export type AverageVelocitySpeedCaseId =
   (typeof AVERAGE_VELOCITY_SPEED_CASE_IDS)[number];
-export type AverageVelocitySpeedDecimalSeparator = "comma" | "dot";
 
 const Point2Schema = Schema.Struct({
   x: Schema.Finite,
@@ -66,8 +65,6 @@ type DetourRouteConfig = typeof DetourRouteConfigSchema.Type;
 type ReturnRouteConfig = typeof ReturnRouteConfigSchema.Type;
 
 type RouteConfig = DetourRouteConfig | ReturnRouteConfig | StraightRouteConfig;
-
-const TRAILING_ZERO_PATTERN = /\.0$/;
 
 export const AVERAGE_VELOCITY_SPEED_SCENE = {
   ballRadius: 0.22,
@@ -152,7 +149,10 @@ export function getAverageMotionRouteSample(
   motion: AverageVelocitySpeedState,
   elapsedSeconds: number
 ) {
-  const elapsed = Math.min(Math.max(elapsedSeconds, 0), motion.duration);
+  const elapsed = Num.clamp(elapsedSeconds, {
+    minimum: 0,
+    maximum: motion.duration,
+  });
   const targetDistance = (elapsed / motion.duration) * motion.distance;
   let traveled = 0;
 
@@ -226,27 +226,6 @@ export function toWorldRoutePoint(
     x: pointValue.x - Math.sin(sample.heading) * lateralOffset,
     z: pointValue.z + Math.cos(sample.heading) * lateralOffset,
   };
-}
-
-export function formatMeterMath(
-  value: number,
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m}`;
-}
-
-export function formatSecondsMath(
-  value: number,
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ s}`;
-}
-
-export function formatSpeedMath(
-  value: number,
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m/s}`;
 }
 
 function createRouteSegments(config: RouteConfig) {
@@ -385,17 +364,4 @@ function getArcPoint(segment: ArcSegment, progress: number) {
     x: segment.center.x + segment.radius * Math.cos(angle),
     z: segment.center.z + segment.radius * Math.sin(angle),
   };
-}
-
-function formatNumber(
-  value: number,
-  decimalSeparator?: AverageVelocitySpeedDecimalSeparator
-) {
-  const formatted = value.toFixed(1).replace(TRAILING_ZERO_PATTERN, "");
-
-  if (decimalSeparator === "comma") {
-    return formatted.replace(".", "{,}");
-  }
-
-  return formatted;
 }

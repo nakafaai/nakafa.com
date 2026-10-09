@@ -1,10 +1,13 @@
 "use client";
 
 import {
+  formatTrimmedMeterMath,
+  formatTrimmedSecondMath,
+  formatTrimmedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
+import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
-  formatMeterMath,
-  formatSecondMath,
-  formatSpeedMath,
   formatVelocityVectorMath,
   getProjectileMotionState,
   getVelocityAtTime,
@@ -12,7 +15,6 @@ import {
   PROJECTILE_INSTANT_TIME,
   PROJECTILE_SCENARIOS,
   PROJECTILE_SCENE,
-  type ProjectileAnalysisDecimalSeparator,
   type ProjectileScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { PirateProjectileScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/scene";
@@ -32,6 +34,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
@@ -39,7 +42,7 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 const FLASH_COLOR = getColor("ORANGE", 500);
 
 interface ProjectileAnalysisLabProps {
-  decimalSeparator?: ProjectileAnalysisDecimalSeparator;
+  decimalSeparator?: DecimalSeparator;
   description: ReactNode;
   labels: {
     chooseScenario: string;
@@ -75,7 +78,7 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "horizontal-component",
       label: labels.factLabels.horizontalComponent,
-      math: `v_{0x}=${formatSpeedMath(
+      math: `v_{0x}=${formatTrimmedSpeedMath(
         motion.horizontalVelocity,
         decimalSeparator
       )}`,
@@ -83,7 +86,7 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "vertical-component",
       label: labels.factLabels.verticalComponent,
-      math: `v_{0y}=${formatSpeedMath(
+      math: `v_{0y}=${formatTrimmedSpeedMath(
         motion.verticalVelocity,
         decimalSeparator
       )}`,
@@ -91,17 +94,17 @@ export function ParabolicMovementAnalysisLab({
     {
       id: "peak-time",
       label: labels.factLabels.peakTime,
-      math: `t=${formatSecondMath(motion.peakTime, decimalSeparator)}`,
+      math: `t=${formatTrimmedSecondMath(motion.peakTime, decimalSeparator)}`,
     },
     {
       id: "flight-time",
       label: labels.factLabels.flightTime,
-      math: `T=${formatSecondMath(motion.flightTime, decimalSeparator)}`,
+      math: `T=${formatTrimmedSecondMath(motion.flightTime, decimalSeparator)}`,
     },
     {
       id: "range",
       label: labels.factLabels.range,
-      math: `R=${formatMeterMath(motion.range, decimalSeparator)}`,
+      math: `R=${formatTrimmedMeterMath(motion.range, decimalSeparator)}`,
     },
     {
       id: "instantaneous-velocity",
@@ -189,7 +192,7 @@ export function ParabolicMovementAnalysisLab({
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
           {Arr.map(facts, (fact) => (
-            <LabFact
+            <VisualFactTabular
               key={fact.id}
               label={fact.label}
               value={<InlineMath math={fact.math} />}
@@ -199,14 +202,5 @@ export function ParabolicMovementAnalysisLab({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }

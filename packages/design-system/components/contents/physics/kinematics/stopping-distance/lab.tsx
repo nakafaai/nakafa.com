@@ -4,8 +4,10 @@ import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import {
-  formatMeterMath,
-  formatSpeedMath,
+  formatRoundedMeterMath,
+  formatRoundedSpeedMath,
+} from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
   getStoppingDistanceState,
   isStoppingDistanceSpeed,
   STOPPING_DISTANCE_BRAKING_DECELERATION,
@@ -35,6 +37,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
@@ -98,7 +101,7 @@ export function StoppingDistanceLab({
         >
           {Arr.map(STOPPING_DISTANCE_SPEEDS, (speedOption) => (
             <ToggleGroupItem key={speedOption} value={String(speedOption)}>
-              <InlineMath math={formatSpeedMath(speedOption)} />
+              <InlineMath math={formatRoundedSpeedMath(speedOption)} />
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -140,28 +143,34 @@ export function StoppingDistanceLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
-          <LabFact
+          <VisualFactIndicator
             label={labels.speed}
-            value={<InlineMath math={formatSpeedMath(motion.speed)} />}
+            value={<InlineMath math={formatRoundedSpeedMath(motion.speed)} />}
           />
-          <LabFact
+          <VisualFactIndicator
             indicatorColor={REACTION_DISTANCE_COLOR}
             label={labels.reactionDistance}
             value={
-              <InlineMath math={formatMeterMath(motion.reactionDistance)} />
+              <InlineMath
+                math={formatRoundedMeterMath(motion.reactionDistance)}
+              />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             indicatorColor={BRAKING_DISTANCE_COLOR}
             label={labels.brakingDistance}
             value={
-              <InlineMath math={formatMeterMath(motion.brakingDistance)} />
+              <InlineMath
+                math={formatRoundedMeterMath(motion.brakingDistance)}
+              />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             label={labels.stoppingDistance}
             value={
-              <InlineMath math={formatMeterMath(motion.stoppingDistance)} />
+              <InlineMath
+                math={formatRoundedMeterMath(motion.stoppingDistance)}
+              />
             }
           />
         </dl>
@@ -387,32 +396,6 @@ function StopCone({ x }: { x: number }) {
         <meshStandardMaterial color={getColor("GRAY", 800)} roughness={0.65} />
       </mesh>
     </group>
-  );
-}
-
-function LabFact({
-  indicatorColor,
-  label,
-  value,
-}: {
-  indicatorColor?: string;
-  label: ReactNode;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="flex items-center gap-2 text-muted-foreground">
-        {indicatorColor ? (
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: indicatorColor }}
-          />
-        ) : null}
-        {label}
-      </dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }
 

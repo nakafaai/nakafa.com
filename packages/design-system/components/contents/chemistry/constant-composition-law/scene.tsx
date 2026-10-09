@@ -15,6 +15,7 @@ import {
   getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
+import { atomSymbol } from "@repo/design-system/components/contents/chemistry/symbol";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, Schema } from "effect";
@@ -268,8 +269,4 @@ function atom(
 
 function atomRadius(element: AtomElement) {
   return element === "hydrogen" ? HYDROGEN_RADIUS : OXYGEN_RADIUS;
-}
-
-function atomSymbol(element: AtomElement) {
-  return element === "hydrogen" ? "H" : "O";
 }

@@ -1,7 +1,6 @@
+import { formatTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Option, Schema } from "effect";
-
-export type ParabolicMovementDecimalSeparator = "comma" | "dot";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 const ParabolicLaunchIdSchema = Schema.Literals([
   "low-angle",
@@ -105,7 +104,7 @@ export function getParabolicMotionState(id: ParabolicLaunchId) {
 }
 
 export function getProjectilePoint(motion: ParabolicMotionState, time: number) {
-  const safeTime = clamp(time, 0, motion.flightTime);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: motion.flightTime });
   const xMeters = motion.horizontalVelocity * safeTime;
   const yMeters =
     motion.verticalVelocity * safeTime -
@@ -124,7 +123,7 @@ export function getProjectileVelocityAt(
   motion: ParabolicMotionState,
   time: number
 ) {
-  const safeTime = clamp(time, 0, motion.flightTime);
+  const safeTime = Num.clamp(time, { minimum: 0, maximum: motion.flightTime });
 
   return {
     horizontalVelocity: motion.horizontalVelocity,
@@ -152,28 +151,7 @@ export function getParabolicLoopSample(
 }
 
 export function formatAngleMath(value: number) {
-  return `\\theta=${formatNumber(value)}^\\circ`;
-}
-
-export function formatMeterMath(
-  value: number,
-  decimalSeparator?: ParabolicMovementDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m}`;
-}
-
-export function formatSecondMath(
-  value: number,
-  decimalSeparator?: ParabolicMovementDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ s}`;
-}
-
-export function formatSpeedMath(
-  value: number,
-  decimalSeparator?: ParabolicMovementDecimalSeparator
-) {
-  return `${formatNumber(value, decimalSeparator)}\\text{ m/s}`;
+  return `\\theta=${formatTrimmedNumber(value)}^\\circ`;
 }
 
 function getEqualTimeSamples(duration: number, sampleCount: number) {
@@ -182,24 +160,3 @@ function getEqualTimeSamples(duration: number, sampleCount: number) {
     (_, index) => (duration * index) / (sampleCount - 1)
   );
 }
-
-function formatNumber(
-  value: number,
-  decimalSeparator?: ParabolicMovementDecimalSeparator
-) {
-  const rounded = Number.isInteger(value)
-    ? value.toString()
-    : value.toFixed(1).replace(TRAILING_ZERO_DECIMAL_REGEX, "");
-
-  if (decimalSeparator === "comma") {
-    return rounded.replace(".", "{,}");
-  }
-
-  return rounded;
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
-const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;

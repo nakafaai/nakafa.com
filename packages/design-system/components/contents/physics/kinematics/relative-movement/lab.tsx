@@ -3,8 +3,8 @@
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
+import { formatSignedRoundedSpeedMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import {
-  formatSignedSpeedMath,
   getRelativeMovementState,
   isRelativeMovementCaseId,
   RELATIVE_MOVEMENT_CAMERA,
@@ -32,6 +32,7 @@ import {
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -136,31 +137,35 @@ export function RelativeMovementLab({
 
       <VisualCardFooter>
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <LabFact
+          <VisualFactIndicator
             indicatorColor={OBSERVER_COLOR}
             label={labels.factLabels.observer}
             value={
-              <InlineMath math={formatSignedSpeedMath(motion.observerSpeed)} />
+              <InlineMath
+                math={formatSignedRoundedSpeedMath(motion.observerSpeed)}
+              />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             indicatorColor={TARGET_COLOR}
             label={labels.factLabels.target}
             value={
-              <InlineMath math={formatSignedSpeedMath(motion.targetSpeed)} />
+              <InlineMath
+                math={formatSignedRoundedSpeedMath(motion.targetSpeed)}
+              />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             label={labels.factLabels.relativeVelocity}
             value={
               <InlineMath
-                math={`v_{B/A}=${formatSignedSpeedMath(
+                math={`v_{B/A}=${formatSignedRoundedSpeedMath(
                   motion.relativeVelocity
                 )}`}
               />
             }
           />
-          <LabFact
+          <VisualFactIndicator
             label={labels.factLabels.visibleDirection}
             value={labels.directionLabels[motion.relativeDirection]}
           />
@@ -334,32 +339,6 @@ function Road() {
         </mesh>
       ))}
     </group>
-  );
-}
-
-function LabFact({
-  indicatorColor,
-  label,
-  value,
-}: {
-  indicatorColor?: string;
-  label: ReactNode;
-  value: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="flex items-center gap-2 text-muted-foreground">
-        {indicatorColor ? (
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: indicatorColor }}
-          />
-        ) : null}
-        {label}
-      </dt>
-      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }
 
