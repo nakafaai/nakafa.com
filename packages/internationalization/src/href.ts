@@ -51,7 +51,7 @@ export function normalizeLocalizedInternalHref(href: string) {
   const firstSegment = segments[0];
 
   if (firstSegment && hasLocale(previewRouting.locales, firstSegment)) {
-    const localizedPath = Arr.join(segments.slice(1), "/");
+    const localizedPath = Arr.join(Arr.drop(segments, 1), "/");
     url.pathname = localizedPath ? `/${localizedPath}` : "/";
   }
 
