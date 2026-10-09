@@ -2,7 +2,7 @@
 
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, FileSystem, Path } from "effect";
+import { Array as Arr, Effect, FileSystem, Order, Path } from "effect";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import {
   listStaticArtworkPaths,
@@ -59,15 +59,18 @@ describe("public artwork", () => {
       const artworkRoot = path.join(process.cwd(), "public", "open-graph");
       const manifestPaths = listStaticArtworkPaths();
       const entries = yield* fs.readDirectory(artworkRoot, { recursive: true });
-      const filesystemPaths = entries.filter((entry) => entry.endsWith(".png"));
-      const publicFilesystemPaths = filesystemPaths.map(
+      const filesystemPaths = Arr.filter(entries, (entry) =>
+        entry.endsWith(".png")
+      );
+      const publicFilesystemPaths = Arr.map(
+        filesystemPaths,
         (entry) => `/open-graph/${entry}`
       );
 
       expect(manifestPaths).toHaveLength(101);
       expect(Arr.dedupe(manifestPaths)).toHaveLength(101);
-      expect([...publicFilesystemPaths].sort()).toEqual(
-        [...manifestPaths].sort()
+      expect(Arr.sort(publicFilesystemPaths, Order.String)).toEqual(
+        Arr.sort(manifestPaths, Order.String)
       );
       expect(publicFilesystemPaths).not.toContain(
         "/open-graph/tryout/indonesia/en-2026.png"

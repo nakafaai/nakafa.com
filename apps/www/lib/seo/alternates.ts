@@ -3,7 +3,7 @@ import {
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
-import { Record as Rec, Schema } from "effect";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 
 const AlternateLanguagePathSchema = Schema.Record(
   Schema.Literals([...APP_LOCALE_CODES, "x-default"]),
@@ -49,7 +49,7 @@ export function createLocalizedAlternates(
   const languages =
     options.languages ??
     Rec.fromEntries(
-      routing.locales.map((locale) => [
+      Arr.map(routing.locales, (locale): readonly [string, string] => [
         locale,
         `/${locale}${pathWithoutLocale}`,
       ])
@@ -78,7 +78,8 @@ export function createResolvedRouteAlternates(
 ) {
   const routePath = `/${route.appLocale}/${route.publicPath}`;
   const languages = Rec.fromEntries(
-    alternates.map(
+    Arr.map(
+      alternates,
       (alternate): readonly [ResolvedAlternateRoute["appLocale"], string] => [
         alternate.appLocale,
         `/${alternate.appLocale}/${alternate.publicPath}`,
