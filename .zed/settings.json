@@ -36,8 +36,11 @@
       }
     },
     "typescript-ls": {
+      "binary": {
+        "path": "./node_modules/.bin/tsc",
+        "arguments": ["--lsp", "--stdio"]
+      },
       "settings": {
-        "package_version": "7.0.2",
         "typescript": {
           "preferences": {
             "includePackageJsonAutoImports": "on"
