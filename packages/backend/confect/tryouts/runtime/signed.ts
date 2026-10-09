@@ -24,11 +24,10 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { Clock, Effect, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Clock, Effect } from "effect";
 export type ReadCtx = MutationCtx | QueryCtx;
 export type RuntimeReceipt = typeof tryoutRuntimeBundleReceiptValidator.Type;
-/** Encodes a value as JSON text, so a stored identity compares by its exact bytes. */
-const encodeJsonText = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** Reads one permanent runtime bundle by its content-addressed identity. */
 export const findTryoutRuntimeBundleByHash = Effect.fn(

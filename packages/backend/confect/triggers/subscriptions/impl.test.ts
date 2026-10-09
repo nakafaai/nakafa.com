@@ -9,10 +9,10 @@ import { products } from "@repo/backend/confect/utils/polar/products";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { createWebhookTestConvex } from "@repo/backend/test/polar";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const SubscriptionInputSchema = Schema.Struct({
   customerId: Schema.String,
   productId: Schema.String,
@@ -284,7 +284,7 @@ describe("triggers/subscriptions/impl", () => {
           expect.objectContaining({
             distinctId: result.user?._id,
             event: "subscription started",
-            properties: encodeJson({
+            properties: encodeJsonText({
               product_id: products.pro.id,
               status: "active",
             }),
@@ -296,7 +296,7 @@ describe("triggers/subscriptions/impl", () => {
           expect.objectContaining({
             distinctId: result.user?._id,
             event: "plan changed",
-            properties: encodeJson({
+            properties: encodeJsonText({
               new_plan: "pro",
               previous_plan: "free",
             }),
@@ -366,7 +366,7 @@ describe("triggers/subscriptions/impl", () => {
           expect.objectContaining({
             distinctId: result.user?._id,
             event: "plan changed",
-            properties: encodeJson({
+            properties: encodeJsonText({
               new_plan: "free",
               previous_plan: "pro",
             }),
@@ -417,7 +417,7 @@ describe("triggers/subscriptions/impl", () => {
           expect.objectContaining({
             distinctId: result.user?._id,
             event: "subscription canceled",
-            properties: encodeJson({
+            properties: encodeJsonText({
               product_id: products.pro.id,
               status: "canceled",
             }),
@@ -429,7 +429,7 @@ describe("triggers/subscriptions/impl", () => {
           expect.objectContaining({
             distinctId: result.user?._id,
             event: "plan changed",
-            properties: encodeJson({
+            properties: encodeJsonText({
               new_plan: "free",
               previous_plan: "pro",
             }),

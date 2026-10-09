@@ -15,9 +15,8 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { activateTryoutStartSource } from "@repo/backend/test/tryout/source";
-import { Effect, Schema } from "effect";
-
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect } from "effect";
 
 describe("learningPreferences/impl", () => {
   it("clears absent curriculum preferences without creating a row", async () => {
@@ -281,7 +280,9 @@ describe("learningPreferences/impl", () => {
           _tag: "LearningPreferencePersistenceError",
           code: "LEARNING_PREFERENCE_PERSISTENCE_FAILED",
         });
-        expect(encodeJson(failure)).not.toContain("private database detail");
+        expect(encodeJsonText(failure)).not.toContain(
+          "private database detail"
+        );
         const stored = await ctx.db.query("learningPreferences").unique();
         expect(stored?.preferredCurriculumProgramKey).toBeUndefined();
         expect(stored?.preferredTryoutCountryKey).toBe(

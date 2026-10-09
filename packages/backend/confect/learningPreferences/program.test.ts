@@ -24,10 +24,9 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Schema } from "effect";
-
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 describe("learningPreferences/program", () => {
   it.effect("returns no curriculum for a retired saved key", () =>
@@ -126,7 +125,9 @@ describe("learningPreferences/program", () => {
               _tag: "CurriculumPreferenceError",
               code: "CURRICULUM_PREFERENCE_IO_FAILED",
             });
-            expect(encodeJson(failure)).not.toContain("private query detail");
+            expect(encodeJsonText(failure)).not.toContain(
+              "private query detail"
+            );
           })
         );
         yield* Effect.promise(() =>
@@ -147,7 +148,9 @@ describe("learningPreferences/program", () => {
               _tag: "CurriculumPreferenceError",
               code: "CURRICULUM_PREFERENCE_IO_FAILED",
             });
-            expect(encodeJson(failure)).not.toContain("private write detail");
+            expect(encodeJsonText(failure)).not.toContain(
+              "private write detail"
+            );
           })
         );
       })

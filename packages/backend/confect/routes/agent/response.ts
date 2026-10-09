@@ -5,9 +5,9 @@ import type {
   NakafaAgentInputError,
 } from "@repo/contents/agent/errors";
 import type { NakafaProblemDetails } from "@repo/contents/agent/schema/api";
+import { encodeJsonText } from "@repo/utilities/json";
 import { type Cause, Effect, Schema } from "effect";
 
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const AgentProblemStatusSchema = Schema.Literals([
   400, 403, 404, 405, 406, 415, 422, 429, 500, 503,
 ]);
@@ -47,7 +47,7 @@ export function agentJsonResponse(
   status = 200,
   headers?: HeadersInit
 ) {
-  return new Response(body === undefined ? undefined : encodeJson(body), {
+  return new Response(body === undefined ? undefined : encodeJsonText(body), {
     headers: {
       ...PUBLIC_API_HEADERS,
       ...headers,

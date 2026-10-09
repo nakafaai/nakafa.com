@@ -14,6 +14,7 @@ import {
   runSpecialist,
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
+import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Effect, MutableList, Schema } from "effect";
 
@@ -52,7 +53,6 @@ const output = {
   noEvidenceAnswer:
     "I could not verify this from the requested direct sources.",
 };
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const encodeSearchInput = Schema.encodeSync(
   Schema.fromJsonString(WebSearchInputSchema)
 );
@@ -203,7 +203,7 @@ describe("research Agent evidence boundary", () => {
       })
     );
     expect(result).toEqual({ text: output.noEvidenceAnswer });
-    expect(encodeJson(model.doGenerateCalls[2]?.prompt)).not.toContain(
+    expect(encodeJsonText(model.doGenerateCalls[2]?.prompt)).not.toContain(
       "Unverified provider claim."
     );
   });
