@@ -210,6 +210,28 @@ describe("answerAuthDeadline", () => {
       });
     })
   );
+
+  it.effect(
+    "answers 504 when the upstream body never ends, at the 15 second deadline",
+    () =>
+      Effect.gen(function* () {
+        handler.GET.mockResolvedValueOnce(
+          new Response(new ReadableStream<Uint8Array>())
+        );
+        const fiber = yield* Effect.forkChild(
+          readAuthResponse(handler, new Request(GET_URL)).pipe(
+            answerAuthDeadline
+          )
+        );
+
+        yield* TestClock.adjust("14999 millis");
+        // pollUnsafe reads the exit without waiting: no exit means the body is pending.
+        expect(fiber.pollUnsafe()).toBeUndefined();
+        yield* TestClock.adjust("1 millis");
+
+        expect((yield* Fiber.join(fiber)).status).toBe(504);
+      })
+  );
 });
 
 describe("createAuthProxy", () => {

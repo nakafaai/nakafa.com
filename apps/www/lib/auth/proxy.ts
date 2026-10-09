@@ -6,6 +6,7 @@ import {
   type NetworkRequestError,
 } from "@repo/backend/client/network";
 import { Duration, Effect, Schedule, Schema } from "effect";
+import { bufferResponse } from "@/lib/auth/body";
 
 /** One method of the Better Auth route handler that the proxy forwards to. */
 type AuthHandlerMethod = (request: Request) => Promise<Response>;
@@ -37,12 +38,13 @@ export class AuthProxyDeadline extends Schema.TaggedError<AuthProxyDeadline>()(
 ) {}
 
 /**
- * Calls one Better Auth method. The library's own fetch takes no signal, so a
- * deadline ends this wait and does not abort the upstream request.
+ * Calls one Better Auth method and reads its whole body, so the deadline covers
+ * the body too. The library's own fetch takes no signal, so a deadline ends this
+ * wait and does not abort the upstream request or the body read it started.
  */
 const callAuthHandler = (send: AuthHandlerMethod, request: Request) =>
   Effect.tryPromise({
-    try: () => send(request),
+    try: () => send(request).then(bufferResponse),
     catch: (cause) => createNetworkRequestError(cause),
   });
 
