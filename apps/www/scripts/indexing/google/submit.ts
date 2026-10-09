@@ -35,17 +35,9 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
     );
 
     const successfullySubmitted = MutableList.make<string>();
-    let shouldStop = false;
     let currentDelay = RATE_LIMIT_DELAY;
 
     for (const [index, url] of urls.entries()) {
-      if (shouldStop) {
-        yield* Effect.logWarning(
-          `Stopping at URL ${index + 1} due to API errors.`
-        );
-        break;
-      }
-
       const result = yield* submitUrlToGoogle(
         url,
         accessToken,
@@ -54,7 +46,6 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
       );
 
       if (result.shouldStop) {
-        shouldStop = true;
         break;
       }
 
@@ -71,7 +62,7 @@ export const submitUrlsToGoogle = Effect.fn("scripts.google.submit.urls")(
         );
       }
 
-      if (index < urls.length - 1 && !shouldStop) {
+      if (index < urls.length - 1) {
         yield* Effect.sleep(currentDelay);
       }
     }
