@@ -22,7 +22,7 @@ type DependencyHold = typeof ApprovedSpecsSchema.Type &
 export const PACKAGE_MANAGER = "pnpm@11.28.5";
 export const CONTRACT_PACKAGE_VERSION = "0.47.2";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.0.1";
+export const EFFECT_COHORT_VERSION = "4.0.2";
 /**
  * Effect packages that only dependencies declare: the Confect CLI's platform
  * packages and the Confect server's AI providers. An override keeps each one
