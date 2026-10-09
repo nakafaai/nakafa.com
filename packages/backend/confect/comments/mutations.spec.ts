@@ -1,9 +1,10 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import commentsTable from "@repo/backend/confect/_generated/tables/comments";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 /** Expected denial while writing a comment or its vote. */
 export class CommentWriteError extends Schema.TaggedError<CommentWriteError>()(
@@ -31,11 +32,10 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "addComment",
-      args: () => ({
-        slug: Schema.String,
-        text: Schema.String,
-        parentId: Schema.optionalKey(IdSchema("comments")),
-      }),
+      args: () =>
+        commentsTable.Fields.mapFields(
+          Struct.pick(["slug", "text", "parentId"])
+        ).fields,
       returns: () => IdSchema("comments"),
       error: () => Schema.Union([AuthFailure, CommentWriteError]),
     })

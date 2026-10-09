@@ -3,6 +3,7 @@ import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
+import { protectedRuntimeResponseBytes } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import {
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
@@ -14,7 +15,6 @@ import {
   PUBLIC_CONTENT_RUNTIME_BATCH_SIZE,
   PublicContentRuntimeBatchRequestSchema,
   PublicContentRuntimeBatchResponseSchema,
-  publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
@@ -119,7 +119,7 @@ describe("public content runtime batch contract", () => {
     const oversized = foundResponse(
       "x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES)
     );
-    expect(publicRuntimeResponseBytes(oversized)).toBeGreaterThan(
+    expect(protectedRuntimeResponseBytes(oversized)).toBeGreaterThan(
       MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
     );
     expect(
