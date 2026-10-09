@@ -70,14 +70,17 @@ export const matchManifest = Effect.fn("contentRelease.matchManifest")(
     }
   }
 );
+/** The active renderer field that authenticates the permanent try-out bundle. */
+const ActiveRendererSchema = Schema.Struct({
+  rendererManifest: Schema.Unknown,
+});
+
 /** Authenticates the optional permanent bundle against the active renderer. */
 const decodeCurrentRuntimeBundle = Effect.fn(
   "contentRelease.decodeCurrentRuntimeBundle"
 )(function* (
   source: string | null,
-  active: {
-    readonly rendererManifest: unknown;
-  } | null
+  active: typeof ActiveRendererSchema.Type | null
 ) {
   if (source === null) {
     return null;
