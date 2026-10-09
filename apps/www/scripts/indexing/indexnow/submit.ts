@@ -1,4 +1,4 @@
-import { Effect, MutableList } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
 import { IndexNowSubmitError } from "@/scripts/indexing/errors";
 import {
@@ -14,10 +14,7 @@ const INDEXNOW_ENDPOINT = "https://api.indexnow.org";
 
 /** Splits canonical sitemap URLs into IndexNow's supported batch size. */
 export function chunkIndexNowUrls(urls: readonly string[]) {
-  return Array.from(
-    { length: Math.ceil(urls.length / BATCH_SIZE) },
-    (_, index) => urls.slice(index * BATCH_SIZE, (index + 1) * BATCH_SIZE)
-  );
+  return Arr.chunksOf(urls, BATCH_SIZE);
 }
 
 /**
