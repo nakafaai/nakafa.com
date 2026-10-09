@@ -24,9 +24,9 @@ test("the build carries the instant navigation lock", async ({ request }) => {
       const response = yield* Effect.promise(() => request.get("/en"));
       const document = yield* Effect.promise(() => response.text());
       expect(
-        document,
+        document.includes("__next_instant_test"),
         "Build with NEXT_EXPOSE_TESTING_API=true and NODE_ENV=production."
-      ).toContain("__next_instant_test");
+      ).toBe(true);
     })
   );
 });
