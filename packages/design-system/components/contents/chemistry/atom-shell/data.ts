@@ -49,7 +49,7 @@ const EARLY_ELEMENT_FILL_LIMITS = [
   { key: "L", principalQuantumNumber: 2, fillLimit: 8 },
   { key: "M", principalQuantumNumber: 3, fillLimit: 8 },
   { key: "N", principalQuantumNumber: 4, fillLimit: 2 },
-] satisfies readonly (typeof EarlyElementFillLimitSchema.Type)[];
+] as const satisfies readonly (typeof EarlyElementFillLimitSchema.Type)[];
 
 /**
  * Narrows ToggleGroup string values to the available atom-shell examples.

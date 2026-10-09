@@ -22,7 +22,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { cn } from "cn";
-import { Array as Arr, Option, Result } from "effect";
+import { Array as Arr, Result } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -63,10 +63,6 @@ export function ValenceElectronLab({
     throw factsResult.failure;
   }
   const facts = factsResult.success;
-  if (Option.isNone(facts.outerShell)) {
-    throw new Error("Valence electrons require at least one occupied shell.");
-  }
-  const outerShell = facts.outerShell.value;
 
   /** Keeps the current atom selected when ToggleGroup emits an empty value. */
   function handleSampleChange(value: string) {
@@ -110,8 +106,8 @@ export function ValenceElectronLab({
         </ToggleGroup>
 
         <ShellModelCanvas
-          aria-label={`${selectedLabels.name}, ${labels.valenceElectron} ${outerShell.electronCount}`}
-          outerShellKey={outerShell.key}
+          aria-label={`${selectedLabels.name}, ${labels.valenceElectron} ${facts.valenceElectronCount}`}
+          outerShellKey={facts.outerShell.key}
           sample={selectedSample}
           shells={facts.shellConfiguration}
         />
@@ -125,11 +121,11 @@ export function ValenceElectronLab({
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <ValenceFact
             label={labels.valenceElectron}
-            value={<InlineMath math={`${outerShell.electronCount}`} />}
+            value={<InlineMath math={`${facts.valenceElectronCount}`} />}
           />
           <ValenceFact
             label={labels.outerShell}
-            value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
+            value={<InlineMath math={`\\mathrm{${facts.outerShell.key}}`} />}
           />
           <ValenceFact
             label={labels.configuration}

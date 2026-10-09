@@ -64,7 +64,6 @@ export function isValenceElectronSampleId(
 
 /**
  * Reads the outer occupied shell and valence-electron count for a neutral atom up to calcium.
- * The outer shell is an Option: it is absent only when no shell is occupied.
  */
 export function getValenceElectronFacts(atomicNumber: number) {
   return Result.map(
@@ -74,14 +73,20 @@ export function getValenceElectronFacts(atomicNumber: number) {
         configuration,
         (shell) => shell.electronCount > 0
       );
+      const outerShell = Arr.reduce(
+        Arr.tailNonEmpty(configuration),
+        Arr.headNonEmpty(configuration),
+        (outer, shell) => (shell.electronCount > 0 ? shell : outer)
+      );
 
       return {
         configurationMath: Arr.join(
           Arr.map(shellConfiguration, (shell) => String(shell.electronCount)),
           ", "
         ),
-        outerShell: Arr.last(shellConfiguration),
+        outerShell,
         shellConfiguration,
+        valenceElectronCount: outerShell.electronCount,
       };
     }
   );
