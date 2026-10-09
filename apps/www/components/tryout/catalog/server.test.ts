@@ -87,6 +87,9 @@ vi.mock("next/cache", () => ({
   cacheLife: vi.fn(),
   cacheTag: vi.fn(),
 }));
+vi.mock("@/env.client", () => ({
+  clientEnv: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+}));
 vi.mock("@/env", () => ({
   env: {
     NEXT_PUBLIC_CONVEX_SITE_URL: "https://runtime.example.test",
