@@ -1,5 +1,5 @@
 import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
-import { Array as Arr, Effect, MutableList, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Ordered selector batches plus the question and answer partition boundary. */
 export interface TryoutContentBatchPlan<Selector> {
@@ -20,19 +20,8 @@ export function planTryoutContentBatches<Question, Answer>(
   answers: readonly Answer[]
 ): TryoutContentBatchPlan<Question | Answer> {
   const selectors: readonly (Question | Answer)[] = [...questions, ...answers];
-  const batches = MutableList.make<readonly (Question | Answer)[]>();
-  for (
-    let start = 0;
-    start < selectors.length;
-    start += MAX_PROTECTED_RUNTIME_SELECTORS
-  ) {
-    MutableList.append(
-      batches,
-      Arr.take(Arr.drop(selectors, start), MAX_PROTECTED_RUNTIME_SELECTORS)
-    );
-  }
   return {
-    batches: MutableList.toArray(batches),
+    batches: Arr.chunksOf(selectors, MAX_PROTECTED_RUNTIME_SELECTORS),
     questionCount: questions.length,
     selectorCount: selectors.length,
   };
